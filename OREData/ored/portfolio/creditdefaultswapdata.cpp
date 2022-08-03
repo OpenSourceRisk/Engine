@@ -112,7 +112,288 @@ ostream& operator<<(ostream& out, const CdsDocClause& cdsDocClause) {
     }
 }
 
-CdsReferenceInformation::CdsReferenceInformation() :
+// TODO refactor to creditevents.cpp
+IsdaRulesDefinitions parseIsdaRulesDefinitions(const string& s) {
+    if (s == "2003") {
+        return IsdaRulesDefinitions::y2003;
+    } else if (s == "2014") {
+        return IsdaRulesDefinitions::y2014;
+    } else {
+        QL_FAIL("Could not parse \"" << s << "\" to isdaRulesDefinitions");
+    }
+}
+
+ostream& operator<<(ostream& out, const IsdaRulesDefinitions& isdaRulesDefinitions) {
+    switch (isdaRulesDefinitions) {
+    case IsdaRulesDefinitions::y2003:
+        return out << "2003";
+    case IsdaRulesDefinitions::y2014:
+        return out << "2014";
+    default:
+        QL_FAIL("Do not recognise IsdaRulesDefinitions " << static_cast<int>(isdaRulesDefinitions));
+    }
+}
+
+IsdaRulesDefinitions isdaRulesDefinitionsFromDocClause(const CdsDocClause& cdsDocClause) {
+    switch (cdsDocClause) {
+    case CdsDocClause::CR:
+    case CdsDocClause::MR:
+    case CdsDocClause::XR:
+    case CdsDocClause::MM:
+        return IsdaRulesDefinitions::y2003;
+    case CdsDocClause::CR14:
+    case CdsDocClause::MR14:
+    case CdsDocClause::XR14:
+    case CdsDocClause::MM14:
+    default:
+        return IsdaRulesDefinitions::y2014;
+    }
+}
+
+CreditEventType parseCreditEventType(const string& s) {
+    if (s == "BANKRUPTCY") {
+        return CreditEventType::BANKRUPTCY;
+    } else if (s == "FAILURE TO PAY") {
+        return CreditEventType::FAILURE_TO_PAY;
+    } else if (s == "RESTRUCTURING") {
+        return CreditEventType::RESTRUCTURING;
+    } else if (s == "OBLIGATION ACCELERATION") {
+        return CreditEventType::OBLIGATION_ACCELERATION;
+    } else if (s == "OBLIGATION DEFAULT") {
+        return CreditEventType::OBLIGATION_DEFAULT;
+    } else if (s == "REPUDIATION/MORATORIUM") {
+        return CreditEventType::REPUDIATION_MORATORIUM;
+    } else if (s == "GOVERNMENTAL INTERVENTION") {
+        return CreditEventType::GOVERNMENTAL_INTERVENTION;
+    } else {
+        QL_FAIL("Could not parse \"" << s << "\" to a credit event.");
+    }
+}
+
+ostream& operator<<(ostream& out, const CreditEventType& creditEventType) {
+    switch (creditEventType) {
+    case CreditEventType::BANKRUPTCY:
+        return out << "BANKRUPTCY";
+    case CreditEventType::FAILURE_TO_PAY:
+        return out << "FAILURE TO PAY";
+    case CreditEventType::RESTRUCTURING:
+        return out << "RESTRUCTURING";
+    case CreditEventType::OBLIGATION_ACCELERATION:
+        return out << "OBLIGATION ACCELERATION";
+    case CreditEventType::OBLIGATION_DEFAULT:
+        return out << "OBLIGATION DEFAULT";
+    case CreditEventType::REPUDIATION_MORATORIUM:
+        return out << "REPUDIATION/MORATORIUM";
+    case CreditEventType::GOVERNMENTAL_INTERVENTION:
+        return out << "GOVERNMENTAL INTERVENTION";
+    default:
+        QL_FAIL("Do not recognise CreditEventType " << static_cast<int>(creditEventType));
+    }
+}
+
+bool isTriggeredDocClause(CdsDocClause contractDocClause, CreditEventType creditEventType) {
+    switch (creditEventType) {
+    case ore::data::CreditEventType::BANKRUPTCY:
+    case ore::data::CreditEventType::FAILURE_TO_PAY:
+    case ore::data::CreditEventType::REPUDIATION_MORATORIUM:
+        // all of the above include a failure to pay
+        switch (contractDocClause) {
+        case ore::data::CdsDocClause::CR:
+        case ore::data::CdsDocClause::CR14:
+        case ore::data::CdsDocClause::MM:
+        case ore::data::CdsDocClause::MM14:
+        case ore::data::CdsDocClause::MR:
+        case ore::data::CdsDocClause::MR14:
+        case ore::data::CdsDocClause::XR:
+        case ore::data::CdsDocClause::XR14:
+            return true;
+        default:
+            break;
+        }
+        break;
+    case ore::data::CreditEventType::GOVERNMENTAL_INTERVENTION:
+        // typically includes a conversion to shares with a write down
+    case ore::data::CreditEventType::RESTRUCTURING:
+        // it depends on the type of restructure!
+        switch (contractDocClause) {
+        case ore::data::CdsDocClause::CR:
+        case ore::data::CdsDocClause::CR14:
+        case ore::data::CdsDocClause::MM:
+        case ore::data::CdsDocClause::MM14:
+        case ore::data::CdsDocClause::MR:
+        case ore::data::CdsDocClause::MR14:
+            return true;
+        case ore::data::CdsDocClause::XR:
+        case ore::data::CdsDocClause::XR14:
+            return false;
+        default:
+            break;
+        }
+    case ore::data::CreditEventType::OBLIGATION_ACCELERATION:
+    case ore::data::CreditEventType::OBLIGATION_DEFAULT:
+        // not necessarily a default itself, no examples in record.
+        return false;
+        break;
+    default:
+        break;
+    }
+    QL_FAIL("Could not recognize CreditEventType "
+            << static_cast<int>(creditEventType) << " or CdsDocClause " << static_cast<int>(contractDocClause)
+            << " when identifying whether a doc clause is triggrered for a given credit event type.");
+    return false;
+}
+
+CreditEventTiers parseCreditEventTiers(const string& s) {
+    if (s == "SNR") {
+        return CreditEventTiers::SNR;
+    } else if (s == "SUB") {
+        return CreditEventTiers::SUB;
+    } else if (s == "SNRLAC") {
+        return CreditEventTiers::SNRLAC;
+    } else if (s == "SNR/SUB") {
+        return CreditEventTiers::SNR_SUB;
+    } else if (s == "SNR/SNRLAC") {
+        return CreditEventTiers::SNR_SNRLAC;
+    } else if (s == "SUB/SNRLAC") {
+        return CreditEventTiers::SUB_SNRLAC;
+    } else if (s == "SNR/SUB/SNRLAC") {
+        return CreditEventTiers::SNR_SUB_SNRLAC;
+    } else {
+        QL_FAIL("Could not parse \"" << s << "\" to a credit event tiers set.");
+    }
+}
+
+ostream& operator<<(ostream& out, const CreditEventTiers& creditEventTiers) {
+    switch (creditEventTiers) {
+    case CreditEventTiers::SNR:
+        return out << "SNR";
+    case CreditEventTiers::SUB:
+        return out << "SUB";
+    case CreditEventTiers::SNRLAC:
+        return out << "SNRLAC";
+    case CreditEventTiers::SNR_SUB:
+        return out << "SNR/SUB";
+    case CreditEventTiers::SNR_SNRLAC:
+        return out << "SNR/SNRLAC";
+    case CreditEventTiers::SUB_SNRLAC:
+        return out << "SUB/SNRLAC";
+    case CreditEventTiers::SNR_SUB_SNRLAC:
+        return out << "SNR/SUB/SNRLAC";
+    default:
+        QL_FAIL("Do not recognise CreditEventTiers " << static_cast<int>(creditEventTiers));
+    }
+}
+
+bool isAuctionedSeniority(CdsTier contractTier, CreditEventTiers creditEventTiers) {
+    switch (creditEventTiers) {
+    case ore::data::CreditEventTiers::SNR:
+        switch (contractTier) {
+        case ore::data::CdsTier::SNRFOR:
+        case ore::data::CdsTier::SECDOM:
+        case ore::data::CdsTier::PREFT1:
+            return true;
+        case ore::data::CdsTier::SUBLT2:
+        case ore::data::CdsTier::JRSUBUT2:
+        case ore::data::CdsTier::SNRLAC:
+            return false;
+        default:
+            break;
+        }
+        break;
+    case ore::data::CreditEventTiers::SUB:
+        switch (contractTier) {
+        case ore::data::CdsTier::SUBLT2:
+        case ore::data::CdsTier::JRSUBUT2:
+            return true;
+        case ore::data::CdsTier::SNRFOR:
+        case ore::data::CdsTier::SECDOM:
+        case ore::data::CdsTier::PREFT1:
+        case ore::data::CdsTier::SNRLAC:
+            return false;
+        default:
+            break;
+        }
+        break;
+    case ore::data::CreditEventTiers::SNRLAC:
+        switch (contractTier) {
+        case ore::data::CdsTier::SNRLAC:
+            return true;
+        case ore::data::CdsTier::SNRFOR:
+        case ore::data::CdsTier::SECDOM:
+        case ore::data::CdsTier::PREFT1:
+        case ore::data::CdsTier::SUBLT2:
+        case ore::data::CdsTier::JRSUBUT2:
+            return false;
+        default:
+            break;
+        }
+        break;
+    case ore::data::CreditEventTiers::SNR_SUB:
+        switch (contractTier) {
+        case ore::data::CdsTier::SNRFOR:
+        case ore::data::CdsTier::SECDOM:
+        case ore::data::CdsTier::PREFT1:
+        case ore::data::CdsTier::SUBLT2:
+        case ore::data::CdsTier::JRSUBUT2:
+            return true;
+        case ore::data::CdsTier::SNRLAC:
+            return false;
+        default:
+            break;
+        }
+        break;
+    case ore::data::CreditEventTiers::SNR_SNRLAC:
+        switch (contractTier) {
+        case ore::data::CdsTier::SNRFOR:
+        case ore::data::CdsTier::SECDOM:
+        case ore::data::CdsTier::PREFT1:
+        case ore::data::CdsTier::SNRLAC:
+            return true;
+        case ore::data::CdsTier::SUBLT2:
+        case ore::data::CdsTier::JRSUBUT2:
+            return false;
+        default:
+            break;
+        }
+        break;
+    case ore::data::CreditEventTiers::SUB_SNRLAC:
+        switch (contractTier) {
+        case ore::data::CdsTier::SUBLT2:
+        case ore::data::CdsTier::JRSUBUT2:
+        case ore::data::CdsTier::SNRLAC:
+            return true;
+        case ore::data::CdsTier::SNRFOR:
+        case ore::data::CdsTier::SECDOM:
+        case ore::data::CdsTier::PREFT1:
+            return false;
+        default:
+            break;
+        }
+        break;
+    case ore::data::CreditEventTiers::SNR_SUB_SNRLAC:
+        switch (contractTier) {
+        case ore::data::CdsTier::SUBLT2:
+        case ore::data::CdsTier::JRSUBUT2:
+        case ore::data::CdsTier::SNRLAC:
+        case ore::data::CdsTier::SNRFOR:
+        case ore::data::CdsTier::SECDOM:
+        case ore::data::CdsTier::PREFT1:
+            return true;
+        default:
+            break;
+        }
+        break;
+    default:
+        break;
+    }
+    QL_FAIL("Could not recognize CreditEventTiers "
+            << static_cast<int>(creditEventTiers) << " or CdsTier " << static_cast<int>(contractTier)
+            << " when identifying the applicability if an event for a given contract tier.");
+    return false;
+}
+// end TODO refactor to creditevents.cpp
+
+CdsReferenceInformation::CdsReferenceInformation():
     tier_(CdsTier::SNRFOR), docClause_(CdsDocClause::XR14) {}
 
 CdsReferenceInformation::CdsReferenceInformation(const string& referenceEntityId, CdsTier tier,

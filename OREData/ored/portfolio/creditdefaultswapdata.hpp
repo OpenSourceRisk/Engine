@@ -42,6 +42,34 @@ enum class CdsDocClause { CR, MM, MR, XR, CR14, MM14, MR14, XR14 };
 CdsDocClause parseCdsDocClause(const std::string& s);
 std::ostream& operator<<(std::ostream& out, const CdsDocClause& cdsDocClause);
 
+// TODO refactor to creditevents.hpp
+//! ISDA CDS documentation rules set enumeration
+enum class IsdaRulesDefinitions { y2003 = 2003, y2014 = 2014 };
+IsdaRulesDefinitions parseIsdaRulesDefinitions(const std::string& s);
+std::ostream& operator<<(std::ostream& out, const CdsDocClause& cdsDocClause);
+IsdaRulesDefinitions isdaRulesDefinitionsFromDocClause(const CdsDocClause& cdsDocClause);
+
+//! ISDA credit event types enumeration
+enum class CreditEventType {
+    BANKRUPTCY,
+    FAILURE_TO_PAY,
+    RESTRUCTURING,
+    OBLIGATION_ACCELERATION,
+    OBLIGATION_DEFAULT,
+    REPUDIATION_MORATORIUM,
+    GOVERNMENTAL_INTERVENTION
+};
+CreditEventType parseCreditEventType(const std::string& s);
+std::ostream& operator<<(std::ostream& out, const CreditEventType& creditEventType);
+bool isTriggeredDocClause(CdsDocClause contractDocClause, CreditEventType creditEventType);
+
+//! ISDA credit event seniority sets enumeration
+enum class CreditEventTiers { SNR, SUB, SNRLAC, SNR_SUB, SNR_SNRLAC, SUB_SNRLAC, SNR_SUB_SNRLAC };
+CreditEventTiers parseCreditEventTiers(const std::string& s);
+std::ostream& operator<<(std::ostream& out, const CreditEventTiers& creditEventTiers);
+bool isAuctionedSeniority(CdsTier contractTier, CreditEventTiers creditEventTiers);
+// end TODO refactor to creditevents.hpp
+
 /*! Serializable reference information
     \ingroup tradedata
 */
