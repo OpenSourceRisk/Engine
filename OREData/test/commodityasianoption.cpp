@@ -175,7 +175,7 @@ public:
 
          boost::shared_ptr<CommodityAsianOption> asianOption = boost::make_shared<CommodityAsianOption>(
              env, "CommodityAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,
-             boost::make_shared<CommodityUnderlying>("ALU_USD", 1.0, "Spot", 0, 0, ""), Date());
+             boost::make_shared<CommodityUnderlying>("ALU_USD", 1.0, "Spot", 0, 0, ""), Date(), "USD");
          BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
          // Check the underlying instrument was built as expected
@@ -223,14 +223,11 @@ public:
      tradeXml.append("        <Settlement>Cash</Settlement>");
      tradeXml.append("        <PayOffAtExpiry>false</PayOffAtExpiry>");
      tradeXml.append("        <PayoffType>Asian</PayoffType>");
+     tradeXml.append("        <PayoffType2>Arithmetic</PayoffType2>");
      tradeXml.append("        <ExerciseDates>");
      tradeXml.append("          <ExerciseDate>2021-02-26</ExerciseDate>");
      tradeXml.append("        </ExerciseDates>");
      tradeXml.append("      </OptionData>");
-     tradeXml.append("      <AsianData>");
-     tradeXml.append("        <AsianType>Price</AsianType>");
-     tradeXml.append("        <AverageType>Arithmetic</AverageType>");
-     tradeXml.append("      </AsianData>");
      tradeXml.append("      <ObservationDates>");
      tradeXml.append("        <Dates>");
      tradeXml.append("          <Dates>");
@@ -277,12 +274,13 @@ public:
      boost::shared_ptr<Trade> trade = portfolio.trades()[0];
      boost::shared_ptr<CommodityAsianOption> option =
          boost::dynamic_pointer_cast<ore::data::CommodityAsianOption>(trade);
+     BOOST_CHECK(option != nullptr);
 
      // Check fields after checking that the cast was successful
      BOOST_CHECK(option);
      BOOST_CHECK_EQUAL(option->tradeType(), "CommodityAsianOption");
      BOOST_CHECK_EQUAL(option->id(), "CommodityAsianOption_Alu");
-     BOOST_CHECK_EQUAL(option->asset(), "ALU_USD");
+     // BOOST_CHECK_EQUAL(option->asset(), "ALU_USD"); // only available after build()
      BOOST_CHECK_EQUAL(option->payCurrency(), "USD");
      BOOST_CHECK_EQUAL(option->strike(), 2270);
      BOOST_CHECK_EQUAL(option->quantity(), 1);

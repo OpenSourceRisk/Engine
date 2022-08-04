@@ -56,7 +56,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& asset() const { return assetName_; }
+    const string& asset() const { return assetName_; } // only available after build()
     double strike() const { return tradeStrike_.value(); }
     double quantity() const { return quantity_; }
     const OptionData& option() const { return option_; }
