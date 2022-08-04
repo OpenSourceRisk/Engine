@@ -23,8 +23,6 @@ namespace data {
 
 void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
-    populateIndexName();
-
     Currency payCcy = parseCurrency(currency_);
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for AsianOption");
@@ -74,7 +72,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, tradeStrike_.value()));
 
-    auto index = parseIndex(indexName_);
+    auto index = parseIndex(indexName());
 
     if (auto fxIndex = boost::dynamic_pointer_cast<QuantExt::FxIndex>(index)) {
         QL_REQUIRE(fxIndex->targetCurrency() == payCcy,
@@ -105,7 +103,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             if (observationDate < today ||
                 (observationDate == today && Settings::instance().enforcesTodaysHistoricFixings())) {
                 // FIXME all observation dates lead to a required fixing
-                requiredFixings_.addFixingDate(observationDate, indexName_);
+                requiredFixings_.addFixingDate(observationDate, indexName());
                 Real fixingValue = index->fixing(observationDate);
                 if (option_.payoffType2() == "Geometric") {
                     runningAccumulator *= fixingValue;
@@ -198,14 +196,13 @@ XMLNode* AsianOption::toXML(XMLDocument& doc) {
 
 std::map<AssetClass, std::set<std::string>>
 AsianOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
-    populateIndexName();
     std::map<AssetClass, std::set<std::string>> result;
-    if (isEquityIndex(indexName_)) {
-        result[AssetClass::EQ].insert(indexName_);
+    if (isEquityIndex(indexName())) {
+        result[AssetClass::EQ].insert(indexName());
     } else if (isFxIndex(indexName_)) {
-        result[AssetClass::FX].insert(indexName_);
+        result[AssetClass::FX].insert(indexName());
     } else if (isCommodityIndex(indexName_)) {
-        result[AssetClass::COM].insert(indexName_);
+        result[AssetClass::COM].insert(indexName());
     }
     return result;
 }
@@ -252,6 +249,7 @@ void AsianOption::populateIndexName() const {
     } else {
         QL_FAIL("invalid underlying type: " << underlying_->type());
     }
+    std::cout << "populated index name with '" << indexName_ << "' for underlying type " << underlying_->type() << std::endl;
 }
 
 } // namespace data
