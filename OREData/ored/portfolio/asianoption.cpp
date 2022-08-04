@@ -23,6 +23,8 @@ namespace data {
 
 void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    populateIndexName();
+
     Currency payCcy = parseCurrency(currency_);
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for AsianOption");

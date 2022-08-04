@@ -166,7 +166,7 @@
 
          boost::shared_ptr<EquityAsianOption> asianOption = boost::make_shared<EquityAsianOption>(
              env, "EquityAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,
-             boost::make_shared<EquityUnderlying>("COMPANY"), Date());
+             boost::make_shared<EquityUnderlying>("COMPANY"), Date(), "USD");
          BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
          // Check the underlying instrument was built as expected
@@ -265,7 +265,7 @@
 
          boost::shared_ptr<EquityAsianOption> asianOption = boost::make_shared<EquityAsianOption>(
              env, "EquityAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,
-             boost::make_shared<EquityUnderlying>("COMPANY"), Date());
+             boost::make_shared<EquityUnderlying>("COMPANY"), Date(), "USD");
          BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
          // Check the underlying instrument was built as expected

@@ -39,9 +39,11 @@ public:
     explicit AsianOption(const string& tradeType) : Trade(tradeType) {}
     AsianOption(const Envelope& env, const string& tradeType, const double quantity, const TradeStrike& strike,
                 const OptionData& option, const ScheduleData& observationDates,
-                const boost::shared_ptr<Underlying>& underlying, const Date& settlementDate)
+                const boost::shared_ptr<Underlying>& underlying, const Date& settlementDate,
+                const std::string& currency)
         : Trade(tradeType, env), quantity_(quantity), tradeStrike_(strike), option_(option),
-          observationDates_(observationDates), underlying_(underlying), settlementDate_(settlementDate) {}
+          observationDates_(observationDates), underlying_(underlying), settlementDate_(settlementDate),
+          currency_(currency) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
