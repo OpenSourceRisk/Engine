@@ -163,6 +163,9 @@ public:
                                                       {"RequiredSamples", "2047"},    {"Seed", "0"}};
          engineFactory = boost::make_shared<EngineFactory>(engineData, market);
 
+         // Set evaluation date
+         Settings::instance().evaluationDate() = market->asofDate();
+
          // Test the building of a commodity Asian option doesn't throw
 	 PremiumData premiumData;
          OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "",

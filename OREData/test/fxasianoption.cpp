@@ -157,7 +157,7 @@
 
          boost::shared_ptr<FxAsianOption> asianOption = boost::make_shared<FxAsianOption>(
              env, "FxAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,
-             boost::make_shared<FXUnderlying>("FX", "ECB-JPY-USD", 1.0), Date());
+             boost::make_shared<FXUnderlying>("FX", "ECB-JPY-USD", 1.0), Date(), "USD");
          BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
          // Check the underlying instrument was built as expected
