@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include <ored/portfolio/optionasiandata.hpp>
 #include <ored/portfolio/optiondata.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/tradestrike.hpp>
@@ -38,10 +37,10 @@ using std::string;
 class AsianOption : public Trade {
 public:
     explicit AsianOption(const string& tradeType) : Trade(tradeType) {}
-    AsianOption(const Envelope& env, const string& tradeType, double quantity, const TradeStrike& strike,
-                const OptionData& option, const OptionAsianData& asianData, const ScheduleData& observationDates,
+    AsianOption(const Envelope& env, const string& tradeType, const double quantity, const TradeStrike& strike,
+                const OptionData& option, const ScheduleData& observationDates,
                 const boost::shared_ptr<Underlying>& underlying, const Date& settlementDate)
-        : Trade(tradeType, env), quantity_(quantity), strike_(strike), option_(option), asianData_(asianData),
+        : Trade(tradeType, env), quantity_(quantity), tradeStrike_(strike), option_(option),
           observationDates_(observationDates), underlying_(underlying), settlementDate_(settlementDate) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
@@ -56,7 +55,7 @@ public:
     //! \name Inspectors
     //@{
     const string& asset() const { return assetName_; }
-    double strike() const { return strikeValue_; }
+    double strike() const { return tradeStrike_.value(); }
     double quantity() const { return quantity_; }
     const OptionData& option() const { return option_; }
     const ScheduleData& observationDates() const { return observationDates_; }
@@ -73,17 +72,14 @@ protected:
     void populateIndexName() const;
 
     double quantity_ = 0.0;
-    TradeStrike strike_;
+    TradeStrike tradeStrike_;
     OptionData option_;
-    OptionAsianData asianData_;
     ScheduleData observationDates_;
     boost::shared_ptr<Underlying> underlying_;
     Date settlementDate_;
 
     string currency_;
-    string strikeStr_;
     string assetName_;
-    double strikeValue_ = 0.0;
 
     mutable string indexName_;
 };

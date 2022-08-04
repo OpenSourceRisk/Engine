@@ -28,13 +28,30 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for AsianOption");
 
     Option::Type type = parseOptionType(option_.callPut());
-    QL_REQUIRE(option_.payoffType() == "Asian", "Expected PayoffType Asian for AsianOption.");
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Expected exactly one exercise date");
     Date expiryDate = parseDate(option_.exerciseDates().front());
 
     string tradeTypeBuilder = tradeType_;
-    tradeTypeBuilder += to_string(asianData_.averageType()); // Add Arithmetic/Geometric
-    tradeTypeBuilder += to_string(asianData_.asianType());   // Add Price/Strike
+
+    // Add Arithmetic/Geometric
+
+    if (option_.payoffType2() == "Arithmetic")
+        tradeTypeBuilder += "Arithmetic";
+    else if (option_.payoffType2() == "Geometric")
+        tradeTypeBuilder += "Geometric";
+    else {
+        QL_FAIL("payoff type 2 must be 'Arithmetic' or 'Geomtetric'");
+    }
+
+    // Add Price/Strike
+
+    if (option_.payoffType() == "Asian")
+        tradeTypeBuilder += "Price";
+    else if (option_.payoffType() == "AverageStrike")
+        tradeTypeBuilder += "Strike";
+    else {
+        QL_FAIL("payoff type must be 'Asian' or 'AverageStrike'");
+    }
 
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
     QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
@@ -51,14 +68,9 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(asianOptionBuilder, "engine builder is not an AsianOption engine builder" << tradeTypeBuilder);
 
     std::string processType = asianOptionBuilder->processType();
-    QL_REQUIRE(processType != "", "ProcessType must be configured, this is unexpected");
+    QL_REQUIRE(!processType.empty(), "ProcessType must be configured, this is unexpected");
 
-    if (strike_.value() != Null<Real>())
-        strikeValue_ = strike_.value();
-    else
-        strikeValue_ = parseReal(strikeStr_);
-
-    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strikeValue_));
+    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, tradeStrike_.value()));
 
     auto index = parseIndex(indexName_);
 
@@ -78,7 +90,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     auto exercise = boost::make_shared<QuantLib::EuropeanExercise>(expiryDate);
     if (processType == "Discrete") {
         QuantLib::Date today = engineFactory->market()->asofDate();
-        Real runningAccumulator = asianData_.averageType() == Average::Type::Geometric ? 1.0 : 0.0;
+        Real runningAccumulator = option_.payoffType2() == "Geometric" ? 1.0 : 0.0;
         Size pastFixings = 0;
         Schedule observationSchedule = makeSchedule(observationDates_);
         std::vector<QuantLib::Date> observationDates = observationSchedule.dates();
@@ -93,20 +105,24 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 // FIXME all observation dates lead to a required fixing
                 requiredFixings_.addFixingDate(observationDate, indexName_);
                 Real fixingValue = index->fixing(observationDate);
-                if (asianData_.averageType() == Average::Type::Geometric) {
+                if (option_.payoffType2() == "Geometric") {
                     runningAccumulator *= fixingValue;
-                } else if (asianData_.averageType() == Average::Type::Arithmetic) {
+                } else if (option_.payoffType2() == "Arithmetic") {
                     runningAccumulator += fixingValue;
                 }
                 ++pastFixings;
             }
         }
         asian = boost::make_shared<QuantLib::DiscreteAveragingAsianOption>(
-            asianData_.averageType(), runningAccumulator, pastFixings, observationDates, payoff, exercise);
+            option_.payoffType2() == "Geometric" ? QuantLib::Average::Type::Geometric
+                                                 : QuantLib::Average::Type::Arithmetic,
+            runningAccumulator, pastFixings, observationDates, payoff, exercise);
     } else if (processType == "Continuous") {
         // FIXME how is the accumulated average handled in this case?
-        asian =
-            boost::make_shared<QuantLib::ContinuousAveragingAsianOption>(asianData_.averageType(), payoff, exercise);
+        asian = boost::make_shared<QuantLib::ContinuousAveragingAsianOption>(option_.payoffType2() == "Geometric"
+                                                                                 ? QuantLib::Average::Type::Geometric
+                                                                                 : QuantLib::Average::Type::Arithmetic,
+                                                                             payoff, exercise);
     } else {
         QL_FAIL("unexpected ProcessType, valid options are Discrete/Continuous");
     }
@@ -134,7 +150,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     instrument_ = boost::make_shared<VanillaInstrument>(asian, mult, additionalInstruments, additionalMultipliers);
 
     npvCurrency_ = currency_;
-    notional_ = strikeValue_ * quantity_;
+    notional_ = tradeStrike_.value() * quantity_;
     notionalCurrency_ = currency_;
 }
 
@@ -145,12 +161,7 @@ void AsianOption::fromXML(XMLNode* node) {
 
     quantity_ = XMLUtils::getChildValueAsDouble(n, "Quantity", true);
 
-    if (XMLUtils::getChildNode(n, "StrikeData")) {
-        strike_.fromXML(n);
-        currency_ = strike_.currency();
-    } else {
-        strikeStr_ = XMLUtils::getChildValue(n, "Strike", false);
-    }
+    tradeStrike_.fromXML(n);
 
     currency_ = XMLUtils::getChildValue(n, "Currency", false);
 
@@ -163,10 +174,6 @@ void AsianOption::fromXML(XMLNode* node) {
 
     option_.fromXML(XMLUtils::getChildNode(n, "OptionData"));
 
-    XMLNode* asianNode = XMLUtils::getChildNode(n, "AsianData");
-    if (asianNode)
-        asianData_.fromXML(asianNode);
-
     settlementDate_ = parseDate(XMLUtils::getChildValue(n, "SettlementDate", false));
 
     observationDates_.fromXML(XMLUtils::getChildNode(n, "ObservationDates"));
@@ -177,11 +184,7 @@ XMLNode* AsianOption::toXML(XMLDocument& doc) {
     XMLNode* n = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, n);
     XMLUtils::addChild(doc, n, "Quantity", quantity_);
-    if (strike_.value() != Null<Real>()) {
-        XMLUtils::appendNode(n, strike_.toXML(doc));
-    } else {
-        XMLUtils::addChild(doc, n, "Strike", strikeStr_);
-    }
+    XMLUtils::appendNode(n, tradeStrike_.toXML(doc));
     XMLUtils::addChild(doc, n, "Currency", currency_);
     XMLUtils::appendNode(n, underlying_->toXML(doc));
     XMLUtils::appendNode(n, option_.toXML(doc));
@@ -231,7 +234,7 @@ void AsianOption::populateIndexName() const {
             Calendar cal = parseCalendar(comUnderlying->deliveryRollCalendar());
             ConventionsBasedFutureExpiry expiryCalculator(*convention);
             QL_REQUIRE(option_.exerciseDates().size() == 1, "expected exactly one exercise date");
-	    Date expiryDate = parseDate(option_.exerciseDates().front());
+            Date expiryDate = parseDate(option_.exerciseDates().front());
             Date adjustedObsDate =
                 deliveryRollDays != 0 ? cal.advance(expiryDate, deliveryRollDays * Days) : expiryDate;
             auto tmp = parseCommodityIndex(comUnderlying->name(), false, Handle<QuantExt::PriceTermStructure>(),
