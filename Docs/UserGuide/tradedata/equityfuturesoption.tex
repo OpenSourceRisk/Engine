@@ -23,7 +23,12 @@ an example \lstinline!EquityFutureOptionData! node for an equity option is shown
     </OptionData>
     <Name>RIC:.SPX</Name>
     <Currency>USD</Currency>
-    <Strike>2147.56</Strike>
+    <StrikeData>
+		<StrikePrice>
+			<Value>2147.56</Value>
+			<Currency>USD</Currency>
+		</StrikePrice>
+	</StrikeData>
     <Quantity>17000</Quantity>
     <FutureExpiryDate>2021-01-29</FutureExpiryDate>
 </EquityFutureOptionData>
@@ -63,8 +68,8 @@ Allowable values:  See section \ref{ss:premiums}
 	\item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
 	\item Currency: The currency of the equity option. \\
 	Allowable values:  See Table \ref{tab:currency}.	
-	\item Strike: The option strike price.\\
-	Allowable values:  Any positive real number.	
+	\item StrikeData: The option strike price. \\
+	Allowable values: Only supports \lstinline!StrikePrice! as described in Section \ref{ss:strikedata}.
 	\item Quantity: The number of units of the underlying covered by the transaction. \\
 	Allowable values:  Any positive real number.
     \item FutureExpiryDate [Optional]: If \lstinline!IsFuturePrice! is \lstinline!true! and the underlying is a future contract settlement price, this node allows the user to specify the expiry date of the underlying future contract.
