@@ -63,7 +63,10 @@ public:
     const ScheduleData& observationDates() const { return observationDates_; }
     const Date& settlementDate() const { return settlementDate_; }
     const string& payCurrency() const { return currency_; }
-    const string& indexName() const { return indexName_; }
+    const string& indexName() const {
+        populateIndexName();
+        return indexName_;
+    }
     //@}
 
     // underlying asset names
