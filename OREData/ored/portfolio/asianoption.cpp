@@ -249,7 +249,6 @@ void AsianOption::populateIndexName() const {
     } else {
         QL_FAIL("invalid underlying type: " << underlying_->type());
     }
-    std::cout << "populated index name with '" << indexName_ << "' for underlying type " << underlying_->type() << std::endl;
 }
 
 } // namespace data
