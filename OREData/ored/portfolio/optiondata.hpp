@@ -51,10 +51,11 @@ public:
                const vector<string>& exerciseFeeDates = vector<string>(),
                const vector<string>& exerciseFeeTypes = vector<string>(), string exerciseFeeSettlementPeriod = "",
                string exerciseFeeSettlementCalendar = "", string exerciseFeeSettlementConvention = "",
-               string payoffType = "", const boost::optional<bool>& automaticExercise = boost::none,
+               string payoffType = "", string payoffType2 = "",
+               const boost::optional<bool>& automaticExercise = boost::none,
                const boost::optional<OptionExerciseData>& exerciseData = boost::none,
                const boost::optional<OptionPaymentData>& paymentData = boost::none)
-        : longShort_(longShort), callPut_(callPut), payoffType_(payoffType), style_(style),
+        : longShort_(longShort), callPut_(callPut), payoffType_(payoffType), payoffType2_(payoffType2), style_(style),
           payoffAtExpiry_(payoffAtExpiry), exerciseDates_(exerciseDates), noticePeriod_(noticePeriod),
           noticeCalendar_(noticeCalendar), noticeConvention_(noticeConvention), settlement_(settlement),
           settlementMethod_(settlementMethod), premiumData_(premiumData), exerciseFees_(exerciseFees),
@@ -69,6 +70,7 @@ public:
     const string& longShort() const { return longShort_; }
     const string& callPut() const { return callPut_; }
     const string& payoffType() const { return payoffType_; }
+    const string& payoffType2() const { return payoffType2_; }
     const string& style() const { return style_; }
     const bool& payoffAtExpiry() const { return payoffAtExpiry_; }
     const vector<string>& exerciseDates() const { return exerciseDates_; }
@@ -110,7 +112,8 @@ public:
 private:
     string longShort_;    // long or short
     string callPut_;      // call or put
-    string payoffType_;   // Accumulator, Decumulator, TargetExact, TargetFull, TargetTruncated, ...
+    string payoffType_;   // Accumulator, Decumulator, TargetExact, TargetFull, TargetTruncated, Asian, AveragePrice ...
+    string payoffType2_;  // Geometric, Arithmetic
     string style_;        // European, Bermudan, American
     bool payoffAtExpiry_; // Y or N
     vector<string> exerciseDates_;
