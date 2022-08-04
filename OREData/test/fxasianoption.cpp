@@ -147,17 +147,16 @@
 
          // Set evaluation date
          Settings::instance().evaluationDate() = market->asofDate();
-         OptionAsianData asianData(OptionAsianData::AsianType::Price, Average::Type::Arithmetic);
 
          // Test the building of a FX Asian option doesn't throw
 	 PremiumData premiumData;
          OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "",
 			       premiumData,
                                vector<Real>(), vector<Real>(), "", "", "", vector<string>(), vector<string>(), "", "",
-                               "", "Asian", boost::none, boost::none, boost::none);
+                               "", "Asian", "Arithmetic", boost::none, boost::none, boost::none);
 
          boost::shared_ptr<FxAsianOption> asianOption = boost::make_shared<FxAsianOption>(
-             env, "FxAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, asianData, scheduleData,
+             env, "FxAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,
              boost::make_shared<FXUnderlying>("FX", "ECB-JPY-USD", 1.0), Date());
          BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
@@ -271,10 +270,8 @@
      BOOST_CHECK_EQUAL(option->option().exerciseDates()[0], "2021-02-26");
      BOOST_CHECK(option->observationDates().hasData());
 
-     // FIXME use option->option().payoffType()
-     // OptionAsianData oad = option->asianData();
-     // BOOST_CHECK_EQUAL(oad.asianType(), OptionAsianData::AsianType::Price);
-     // BOOST_CHECK_EQUAL(oad.averageType(), Average::Type::Arithmetic);
+     BOOST_CHECK_EQUAL(option->option().payoffType(), "Asian");
+     BOOST_CHECK_EQUAL(option->option().payoffType2(), "Arithmetic");
  }
 
  BOOST_AUTO_TEST_SUITE_END()
