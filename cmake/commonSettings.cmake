@@ -1,10 +1,14 @@
 include(CheckCXXCompilerFlag)
 
+option(MSVC_LINK_DYNAMIC_RUNTIME "Link against dynamic runtime" ON)
+option(MSVC_PARALLELBUILD "Use flag /MP" ON)
+
 # add compiler flag, if not already present
 macro(add_compiler_flag flag supportsFlag)
-  check_cxx_compiler_flag(${flag} ${supportsFlag})
+    check_cxx_compiler_flag(${flag} ${supportsFlag})
+
     if(${supportsFlag} AND NOT "${CMAKE_CXX_FLAGS}" MATCHES "${flag}")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}")
     endif()
 endmacro()
 
@@ -17,17 +21,51 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 if(MSVC)
+    set(BUILD_SHARED_LIBS OFF)
+
     # build static libs always
-    set(BUILD_STATIC_LIBS ON)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY
+        "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<BOOL:${MSVC_LINK_DYNAMIC_RUNTIME}>:DLL>")
 
     # link against static boost libraries
-    set(Boost_USE_STATIC_LIBS ON)
+    if(NOT DEFINED Boost_USE_STATIC_LIBS)
+        if(BUILD_SHARED_LIBS)
+            set(Boost_USE_STATIC_LIBS 0)
+        else()
+            set(Boost_USE_STATIC_LIBS 1)
+        endif()
+    endif()
+
+    # Boost static runtime ON for MSVC
+    if(NOT DEFINED Boost_USE_STATIC_RUNTIME)
+        if(BUILD_SHARED_LIBS OR(MSVC AND MSVC_LINK_DYNAMIC_RUNTIME))
+            set(Boost_USE_STATIC_RUNTIME 0)
+        else()
+            set(Boost_USE_STATIC_RUNTIME 1)
+        endif()
+    endif()
+
+    IF(NOT Boost_USE_STATIC_LIBS)
+        add_definitions(-DBOOST_ALL_DYN_LINK)
+        add_definitions(-DBOOST_TEST_DYN_LINK)
+    endif()
 
     add_compiler_flag("-D_SCL_SECURE_NO_DEPRECATE" supports_D_SCL_SECURE_NO_DEPRECATE)
     add_compiler_flag("-D_CRT_SECURE_NO_DEPRECATE" supports_D_CRT_SECURE_NO_DEPRECATE)
     add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)
     add_compiler_flag("/bigobj" supports_bigobj)
     add_compiler_flag("/W3" supports_w3)
+
+    add_compiler_flag("/we4189" unused_variable_mscv)
+    add_compiler_flag("/wd4834" deactivate_discrading_return_value)
+
+    # add_compiler_flag("/we4389" signed_compare_mscv)
+    add_compiler_flag("/we5038" reorder_msvc)
+
+    if(MSVC_PARALLELBUILD)
+        add_compiler_flag("/MP" parallel_build)
+    endif()
+
 else()
     # build shared libs always
     set(BUILD_SHARED_LIBS ON)
@@ -41,7 +79,7 @@ else()
 
     # switch off blas debug for build types release
     if(NOT("${CMAKE_BUILD_TYPE}" STREQUAL "Debug"))
-      add_definitions(-DBOOST_UBLAS_NDEBUG)
+        add_definitions(-DBOOST_UBLAS_NDEBUG)
     endif()
 
     # enable boost assert handler
@@ -71,9 +109,11 @@ else()
 
     # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
     include_directories("${PROJECT_BINARY_DIR}/QuantLib")
+
     # similar if QuantLib is build separately
     include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
 endif()
+
 
 # set library locations
 get_filename_component(QUANTLIB_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../QuantLib" ABSOLUTE)
@@ -97,25 +137,21 @@ macro(get_library_name LIB_NAME OUTPUT_NAME)
     # message(STATUS "${LIB_NAME} Library name tokens:")
     # MSVC: Give built library different names following code in 'ql/autolink.hpp'
     if(MSVC)
-
-        # - platform
-        if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+        if (${CMAKE_SIZEOF_VOID_P} EQUAL 8)
+            set(LIB_PLATFORM "-x64")
             set(LIB_PLATFORM "-x64")
         endif()
-        #message(STATUS " - Platform: ${LIB_PLATFORM}")
-
         # - thread linkage
         set(LIB_THREAD_OPT "-mt")  # _MT is defined for /MD and /MT runtimes (https://docs.microsoft.com/es-es/cpp/build/reference/md-mt-ld-use-run-time-library)
         #message(STATUS " - Thread opt: ${LIB_THREAD_OPT}")
 
-        # - static/dynamic linkage
-        if("${MSVC_RUNTIME}" STREQUAL "static")
+        if (NOT BUILD_SHARED_LIBS AND (MSVC AND NOT MSVC_LINK_DYNAMIC_RUNTIME))
             set(LIB_RT_OPT "-s")
             set(CMAKE_DEBUG_POSTFIX "gd")
         else()
             set(CMAKE_DEBUG_POSTFIX "-gd")
         endif()
-        #message(STATUS " - Linkage opt: ${LIB_RT_OPT}")
+    
 
         set(${OUTPUT_NAME} "${LIB_NAME}${LIB_PLATFORM}${LIB_THREAD_OPT}${LIB_RT_OPT}")
     else()
@@ -124,53 +160,6 @@ macro(get_library_name LIB_NAME OUTPUT_NAME)
 
     message(STATUS "${LIB_NAME} library name: ${${OUTPUT_NAME}}[${CMAKE_DEBUG_POSTFIX}]")
 endmacro(get_library_name)
-
-macro(configure_msvc_runtime)
-    # Credit: https://stackoverflow.com/questions/10113017/setting-the-msvc-runtime-in-cmake
-    if(MSVC)
-        # Default to dynamically-linked runtime.
-        if("${MSVC_RUNTIME}" STREQUAL "")
-            set(MSVC_RUNTIME "dynamic")
-        endif()
-
-        # Set compiler options.
-        set(variables
-            CMAKE_C_FLAGS_DEBUG
-            CMAKE_C_FLAGS_MINSIZEREL
-            CMAKE_C_FLAGS_RELEASE
-            CMAKE_C_FLAGS_RELWITHDEBINFO
-            CMAKE_CXX_FLAGS_DEBUG
-            CMAKE_CXX_FLAGS_MINSIZEREL
-            CMAKE_CXX_FLAGS_RELEASE
-            CMAKE_CXX_FLAGS_RELWITHDEBINFO
-            )
-
-        if(${MSVC_RUNTIME} STREQUAL "static")
-            message(STATUS "MSVC -> forcing use of statically-linked runtime.")
-            foreach(variable ${variables})
-                if(${variable} MATCHES "/MD")
-                    string(REGEX REPLACE "/MD" "/MT" ${variable} "${${variable}}")
-                endif()
-            endforeach()
-        else()
-            message(STATUS "MSVC -> forcing use of dynamically-linked runtime." )
-            foreach(variable ${variables})
-                if(${variable} MATCHES "/MT")
-                    string(REGEX REPLACE "/MT" "/MD" ${variable} "${${variable}}")
-                endif()
-            endforeach()
-        endif()
-
-      if(${MSVC_RUNTIME} STREQUAL "static")
-        if(USE_BOOST_DYNAMIC_LIBRARIES)
-            message(FATAL_ERROR "Use of shared Boost libraries while compiling with static runtime seems not be a good idea.")
-        endif()
-        set(Boost_USE_STATIC_RUNTIME ON)
-      endif()
-
-    endif()
-
-endmacro()
 
 macro(set_ql_library_name)
   if(USE_GLOBAL_ORE_BUILD)

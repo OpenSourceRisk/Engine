@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
 
+
+cmake_policy(SET CMP0091 NEW)
+
+
 project(ORE CXX)
 
 option(BUILD_DOC "Build documentation" ON)

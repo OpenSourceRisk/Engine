@@ -1,0 +1,75 @@
+{
+  "version": 2,
+  "configurePresets": [
+    {
+      "name": "windows-msvc-x64",
+      "binaryDir": "${sourceDir}/build",
+      "generator": "Visual Studio 17 2022",
+      "cacheVariables": {
+        "Boost_DIR": "$env{BOOST}",
+        "Boost_INCLUDE_DIR": "$env{BOOST_INCLUDE_DIR}",
+        "Boost_LIBRARY_DIR": "$env{BOOST_LIBRARYDIR}",
+        "MSVC_LINK_DYNAMIC_RUNTIME": true,
+        "OREPLUS_LICENSE": false
+      },
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-msvc-x64",
+          "hostOS": [
+            "Windows"
+          ]
+        }
+      }
+    },
+    {
+      "name": "windows-msvc-x64-static",
+      "binaryDir": "${sourceDir}/build",
+      "generator": "Visual Studio 17 2022",
+      "cacheVariables": {
+        "Boost_DIR": "$env{BOOST}",
+        "Boost_INCLUDE_DIR": "$env{BOOST_INCLUDE_DIR}",
+        "Boost_LIBRARY_DIR": "$env{BOOST_LIBRARYDIR}",
+        "MSVC_LINK_DYNAMIC_RUNTIME": false,
+        "OREPLUS_LICENSE": false
+      },
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-msvc-x64",
+          "hostOS": [
+            "Windows"
+          ]
+        }
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-msvc-x64-release",
+      "configurePreset": "windows-msvc-x64",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "windows-msvc-x64-debug",
+      "configurePreset": "windows-msvc-x64",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-x64-static-release",
+      "configurePreset": "windows-msvc-x64-static",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "windows-msvc-x64-static-debug",
+      "configurePreset": "windows-msvc-x64-static",
+      "configuration": "Debug"
+    }
+  ]
+}
