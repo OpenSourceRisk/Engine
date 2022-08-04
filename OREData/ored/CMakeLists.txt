@@ -131,7 +131,6 @@ portfolio/legdatafactory.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetdetails.cpp
 portfolio/nettingsetmanager.cpp
-portfolio/optionasiandata.cpp
 portfolio/optiondata.cpp
 portfolio/optionexercisedata.cpp
 portfolio/optionpaymentdata.cpp
@@ -342,7 +341,6 @@ portfolio/legdatafactory.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetdetails.hpp
 portfolio/nettingsetmanager.hpp
-portfolio/optionasiandata.hpp
 portfolio/optiondata.hpp
 portfolio/optionexercisedata.hpp
 portfolio/optionpaymentdata.hpp
