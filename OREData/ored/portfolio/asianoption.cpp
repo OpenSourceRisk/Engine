@@ -35,7 +35,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Add Arithmetic/Geometric
 
-    if (option_.payoffType2() == "Arithmetic")
+    if (option_.payoffType2() == "Arithmetic" || option_.payoffType2().empty())
         tradeTypeBuilder += "Arithmetic";
     else if (option_.payoffType2() == "Geometric")
         tradeTypeBuilder += "Geometric";
