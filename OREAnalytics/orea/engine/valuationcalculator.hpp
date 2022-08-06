@@ -71,6 +71,8 @@ public:
         boost::shared_ptr<NPVCube>& outputCube,
         //! The cube
         boost::shared_ptr<NPVCube>& outputCubeNettingSet) = 0;
+
+    virtual void init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) = 0;
 };
 
 //! NPVCalculator
@@ -92,11 +94,15 @@ public:
                              const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
                              boost::shared_ptr<NPVCube>& outputCubeNettingSet) override;
 
-    virtual Real npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket);
+    virtual Real npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
+                     const boost::shared_ptr<SimMarket>& simMarket);
+
+    void init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) override;
 
 protected:
     std::string baseCcyCode_;
     Size index_;
+    std::vector<Handle<Quote>> fxBasePerTrade_;
 };
 
 //! CashflowCalculator
@@ -120,11 +126,14 @@ public:
                              const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
                              boost::shared_ptr<NPVCube>& outputCubeNettingSet) override {}
 
+    void init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) override;
+
 private:
     std::string baseCcyCode_;
     Date t0Date_;
     boost::shared_ptr<DateGrid> dateGrid_;
     Size index_;
+    std::vector<std::vector<Handle<Quote>>> fxBasePerTradeAndLeg_;
 };
 
 //! NPVCalculatorFXT0
@@ -149,12 +158,15 @@ public:
                              const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
                              boost::shared_ptr<NPVCube>& outputCubeNettingSet) override;
 
-    Real npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket);
+    Real npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket);
+
+    void init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) override;
 
 private:
     std::string baseCcyCode_;
     boost::shared_ptr<Market> t0Market_;
     Size index_;
+    std::vector<Handle<Quote>> fxBasePerTrade_;
 };
 } // namespace analytics
 } // namespace ore
