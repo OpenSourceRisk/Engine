@@ -27,19 +27,24 @@
 namespace ore {
 namespace analytics {
 
+void MPORCalculator::init(const boost::shared_ptr<Portfolio>& portfolio,
+                          const boost::shared_ptr<SimMarket>& simMarket) {
+    npvCalc_->init(portfolio, simMarket);
+}
+
 void MPORCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                                const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
                                boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                                Size sample, bool isCloseOut) {
     Size index = isCloseOut ? closeOutIndex_ : defaultIndex_;
-    Real npv = npvCalc_->npv(trade, simMarket);
+    Real npv = npvCalc_->npv(tradeIndex, trade, simMarket);
     outputCube->set(npv * (isCloseOut ? simMarket->numeraire() : 1.0), tradeIndex, dateIndex, sample, index);
 }
 
 void MPORCalculator::calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                                  const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
                                  boost::shared_ptr<NPVCube>& outputCubeNettingSet) {
-    Real npv = npvCalc_->npv(trade, simMarket);
+    Real npv = npvCalc_->npv(tradeIndex, trade, simMarket);
     //! note that when we calculate t0 NPV we will always store it according to the defaultIndex_
     // the closeOutIndex_ is not utilised for t=0 and has no meaning
     outputCube->setT0(npv, tradeIndex, defaultIndex_);
