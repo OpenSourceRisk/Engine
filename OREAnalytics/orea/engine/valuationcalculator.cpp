@@ -28,27 +28,45 @@
 namespace ore {
 namespace analytics {
 
+void NPVCalculator::init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) {
+    fxBasePerTrade_.clear();
+    for (auto const& t : portfolio->trades())
+        fxBasePerTrade_.push_back(simMarket->fxRate(t->npvCurrency() + baseCcyCode_));
+}
+
 void NPVCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                               const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
                               boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                               Size sample, bool isCloseOut) {
     if (!isCloseOut)
-        outputCube->set(npv(trade, simMarket), tradeIndex, dateIndex, sample, index_);
+        outputCube->set(npv(tradeIndex,trade, simMarket), tradeIndex, dateIndex, sample, index_);
 }
 
 void NPVCalculator::calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                                 const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
                                 boost::shared_ptr<NPVCube>& outputCubeNettingSet) {
-    outputCube->setT0(npv(trade, simMarket), tradeIndex, index_);
+    outputCube->setT0(npv(tradeIndex,trade, simMarket), tradeIndex, index_);
 }
 
-Real NPVCalculator::npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket) {
+Real NPVCalculator::npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
+                        const boost::shared_ptr<SimMarket>& simMarket) {
     Real npv = trade->instrument()->NPV();
     if (close_enough(npv, 0.0))
         return npv;
-    Real fx = simMarket->fxRate(trade->npvCurrency() + baseCcyCode_)->value();
+    Real fx = fxBasePerTrade_[tradeIndex]->value();
     Real numeraire = simMarket->numeraire();
     return npv * fx / numeraire;
+}
+
+void CashflowCalculator::init(const boost::shared_ptr<Portfolio>& portfolio,
+                              const boost::shared_ptr<SimMarket>& simMarket) {
+    fxBasePerTradeAndLeg_.clear();
+    for (auto const& t : portfolio->trades()) {
+        fxBasePerTradeAndLeg_.push_back(std::vector<Handle<Quote>>());
+        for (Size i = 0; i < t->legs().size(); ++i) {
+            fxBasePerTradeAndLeg_.back().push_back(simMarket->fxRate(t->legCurrencies()[i] + baseCcyCode_));
+        }
+    }
 }
 
 void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
@@ -92,7 +110,7 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
                 }
                 if (legFlow != 0) {
                     // Do FX conversion and add to netFlow
-                    Real fx = simMarket->fxRate(trade->legCurrencies()[i] + baseCcyCode_)->value();
+                    Real fx = fxBasePerTradeAndLeg_[tradeIndex][i]->value();
                     Real direction = trade->legPayers()[i] ? -1.0 : 1.0;
                     netFlow += legFlow * direction * longShort * fx;
                 }
@@ -111,28 +129,33 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
     outputCube->set(netFlow / numeraire, tradeIndex, dateIndex, sample, index_);
 }
 
+void NPVCalculatorFXT0::init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) {
+    fxBasePerTrade_.clear();
+    for (auto const& t : portfolio->trades())
+        fxBasePerTrade_.push_back(t0Market_->fxRate(t->npvCurrency() + baseCcyCode_));
+}
+
 void NPVCalculatorFXT0::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                                   const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
                                   boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                                   Size sample, bool isCloseOut) {
     if (!isCloseOut)
-        outputCube->set(npv(trade, simMarket), tradeIndex, dateIndex, sample, index_);
+        outputCube->set(npv(tradeIndex, trade, simMarket), tradeIndex, dateIndex, sample, index_);
 }
 
 void NPVCalculatorFXT0::calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                                     const boost::shared_ptr<SimMarket>& simMarket,
                                     boost::shared_ptr<NPVCube>& outputCube,
                                     boost::shared_ptr<NPVCube>& outputCubeNettingSet) {
-    outputCube->setT0(npv(trade, simMarket), tradeIndex, index_);
+    outputCube->setT0(npv(tradeIndex, trade, simMarket), tradeIndex, index_);
 }
 
-Real NPVCalculatorFXT0::npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket) {
+Real NPVCalculatorFXT0::npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
+                            const boost::shared_ptr<SimMarket>& simMarket) {
     Real npv = trade->instrument()->NPV();
     if (close_enough(npv, 0.0))
         return npv;
-    Real fx = 1.0;
-    if (trade->npvCurrency() != baseCcyCode_)
-        fx = t0Market_->fxRate(trade->npvCurrency() + baseCcyCode_)->value();
+    Real fx = fxBasePerTrade_[tradeIndex]->value();
     Real numeraire = simMarket->numeraire();
     return npv * fx / numeraire;
 }
