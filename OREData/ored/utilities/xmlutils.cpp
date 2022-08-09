@@ -384,9 +384,6 @@ map<string, string> XMLUtils::getChildrenAttributesAndValues(XMLNode* parent, co
         string second = getNodeValue(child);
         if (first.empty())
             continue;
-        if (mandatory) {
-            QL_REQUIRE(first != "", "empty attribute for " << names);
-        }
         auto it = res.find(first);
         if (it != res.end())
             WLOG("XMLUtils::getChildrenAttributesAndValues: Duplicate entry " << first <<
