@@ -149,11 +149,11 @@ QuantLib::Real CurrencyParser::convertMinorToMajorCurrency(const std::string& s,
 
 void CurrencyParser::addCurrency(const std::string& newName, const QuantLib::Currency& currency) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    auto it = currencies_.find(newName);
-    if (it == currencies_.end()) {
-        currencies_[newName] = currency;
-        addMinorCurrencyCodes(currency);
-    }
+    if (currencies_.find(newName) != currencies_.end() || preciousMetals_.find(newName) != preciousMetals_.end() ||
+        cryptoCurrencies_.find(newName) != cryptoCurrencies_.end())
+        return;
+    currencies_[newName] = currency;
+    addMinorCurrencyCodes(currency);
 }
 
 void CurrencyParser::addMinorCurrencyCodes(const QuantLib::Currency& currency) {
