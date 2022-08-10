@@ -2182,8 +2182,7 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
 
     for (auto c : sensitivityData_->correlationShiftData()) {
         std::string label = c.first;
-        std::vector<std::string> tokens;
-        boost::split(tokens, label, boost::is_any_of(":"));
+        std::vector<std::string> tokens = ore::data::getCorrelationTokens(label);
         std::pair<string, string> pair(tokens[0], tokens[1]);
         Size n_c_exp = simMarketData_->correlationExpiries().size();
         SensitivityScenarioData::VolShiftData data = c.second;
