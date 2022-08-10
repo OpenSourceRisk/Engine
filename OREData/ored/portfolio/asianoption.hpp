@@ -48,6 +48,10 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
 
+    //! Trade interface
+    QuantLib::Real notional() const override;
+    string notionalCurrency() const override;
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
@@ -57,7 +61,7 @@ public:
     //! \name Inspectors
     //@{
     const string& asset() const { return assetName_; } // only available after build()
-    double strike() const { return tradeStrike_.value(); }
+    const TradeStrike& strike() const { return tradeStrike_; }
     double quantity() const { return quantity_; }
     const OptionData& option() const { return option_; }
     const ScheduleData& observationDates() const { return observationDates_; }
@@ -67,6 +71,7 @@ public:
         populateIndexName();
         return indexName_;
     }
+    const boost::shared_ptr<Underlying>& underlying() const { return underlying_; }
     //@}
 
     // underlying asset names
@@ -85,6 +90,8 @@ protected:
 
     string currency_;
     string assetName_;
+
+    boost::shared_ptr<Trade> delegatingBuilderTrade_;
 
     mutable string indexName_;
 };

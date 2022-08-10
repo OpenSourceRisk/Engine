@@ -56,9 +56,23 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
     QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
 
-    // TODO check for delegating engine builder here
+    // check for delegating engine builder
 
-    // ...
+    if (auto db = boost::dynamic_pointer_cast<DelegatingEngineBuilder>(builder)) {
+
+        // let the delegating builder build the trade and link the results to this trade
+
+        delegatingBuilderTrade_ = db->build(this, engineFactory);
+
+        instrument_ = delegatingBuilderTrade_->instrument();
+        maturity_ = delegatingBuilderTrade_->maturity();
+        npvCurrency_ = delegatingBuilderTrade_->npvCurrency();
+        additionalData_ = delegatingBuilderTrade_->additionalData();
+
+        // notional and notional currency are defined in overriden methods!
+
+        return;
+    }
 
     // we do not have a delegating engine builder
 
@@ -144,8 +158,10 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     maturity_ = expiryDate;
-    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0,
-                                                option_.premiumData(), 1.0, payCcy, engineFactory, configuration));
+    maturity_ =
+        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(),
+                                        positionType == QuantLib::Position::Long ? -1.0 : 1.0, payCcy, engineFactory,
+                                        configuration));
 
     instrument_ = boost::make_shared<VanillaInstrument>(asian, mult, additionalInstruments, additionalMultipliers);
 
@@ -249,6 +265,14 @@ void AsianOption::populateIndexName() const {
     } else {
         QL_FAIL("invalid underlying type: " << underlying_->type());
     }
+}
+
+QuantLib::Real AsianOption::notional() const {
+    return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notional() : Trade::notional();
+}
+
+string AsianOption::notionalCurrency() const {
+    return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notionalCurrency() : Trade::notionalCurrency();
 }
 
 } // namespace data

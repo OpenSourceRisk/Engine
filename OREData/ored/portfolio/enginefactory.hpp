@@ -160,6 +160,16 @@ protected:
     set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
 };
 
+//! Delegating Engine Builder
+/* Special interface to consolidate different trade builders for one product. See AsianOption for a use case. */
+class DelegatingEngineBuilder : public EngineBuilder {
+public:
+    using EngineBuilder::EngineBuilder;
+    virtual boost::shared_ptr<ore::data::Trade> build(const ore::data::Trade*,
+                                                      const boost::shared_ptr<EngineFactory>& engineFactory) = 0;
+    virtual std::string effectiveTradeType() const = 0;
+};
+
 //! Pricing Engine Factory class
 /*! A Pricing Engine Factory is used when building a portfolio, it provides
  *  QuantLib::PricingEngines to each of the Trade objects.
