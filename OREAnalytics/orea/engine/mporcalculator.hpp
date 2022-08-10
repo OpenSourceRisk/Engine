@@ -49,6 +49,8 @@ public:
                      const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
                      boost::shared_ptr<NPVCube>& outputCubeNettingSet) override;
 
+    void init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) override;
+
 private:
     boost::shared_ptr<NPVCalculator> npvCalc_;
     Size defaultIndex_, closeOutIndex_;
