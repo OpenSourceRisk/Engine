@@ -257,7 +257,7 @@
      BOOST_CHECK_EQUAL(option->id(), "FxAsianOption_USDJPY");
      // BOOST_CHECK_EQUAL(option->asset(), "USD"); // only available after build
      BOOST_CHECK_EQUAL(option->quantity(), 104.6860);
-     BOOST_CHECK_EQUAL(option->strike(), 104.6860);
+     BOOST_CHECK_EQUAL(option->strike().value(), 104.6860);
      BOOST_CHECK_EQUAL(option->indexName(), "FX-ECB-USD-JPY");
      BOOST_CHECK_EQUAL(option->option().longShort(), "Long");
      BOOST_CHECK_EQUAL(option->option().callPut(), "Call");

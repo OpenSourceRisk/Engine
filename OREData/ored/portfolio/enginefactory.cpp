@@ -132,9 +132,12 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
     QL_REQUIRE(it != builders_.end(), "No EngineBuilder for " << model << "/" << engine << "/" << tradeType);
 
     boost::shared_ptr<EngineBuilder> builder = it->second;
+    string effectiveTradeType = tradeType;
+    if(auto db = boost::dynamic_pointer_cast<DelegatingEngineBuilder>(builder))
+	effectiveTradeType = db->effectiveTradeType();
 
-    builder->init(market_, configurations_, engineData_->modelParameters(tradeType),
-                  engineData_->engineParameters(tradeType), engineData_->globalParameters());
+    builder->init(market_, configurations_, engineData_->modelParameters(effectiveTradeType),
+                  engineData_->engineParameters(effectiveTradeType), engineData_->globalParameters());
 
     return builder;
 }

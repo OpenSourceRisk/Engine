@@ -282,7 +282,7 @@ public:
      BOOST_CHECK_EQUAL(option->id(), "CommodityAsianOption_Alu");
      // BOOST_CHECK_EQUAL(option->asset(), "ALU_USD"); // only available after build()
      BOOST_CHECK_EQUAL(option->payCurrency(), "USD");
-     BOOST_CHECK_EQUAL(option->strike(), 2270);
+     BOOST_CHECK_EQUAL(option->strike().value(), 2270);
      BOOST_CHECK_EQUAL(option->quantity(), 1);
      BOOST_CHECK_EQUAL(option->option().longShort(), "Long");
      BOOST_CHECK_EQUAL(option->option().callPut(), "Call");
