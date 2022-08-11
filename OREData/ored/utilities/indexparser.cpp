@@ -451,6 +451,15 @@ bool isEquityIndex(const string& indexName) {
     return true;
 }
 
+bool isCommodityIndex(const string& indexName) {
+    try {
+        parseCommodityIndex(indexName);
+    } catch (...) {
+        return false;
+    }
+    return true;
+}
+
 bool isGenericIndex(const string& indexName) {
     try {
         parseGenericIndex(indexName);

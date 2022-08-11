@@ -19,13 +19,11 @@
 
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/capfloor.hpp>
-#include <ored/portfolio/commodityasianoption.hpp>
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/commoditydigitaloption.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapoption.hpp>
-#include <ored/portfolio/equityasianoption.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityfuturesoption.hpp>
 #include <ored/portfolio/equityoption.hpp>
@@ -34,7 +32,6 @@
 #include <ored/portfolio/forwardrateagreement.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxaverageforward.hpp>
-#include <ored/portfolio/fxasianoption.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/fxswap.hpp>
 #include <ored/portfolio/swap.hpp>

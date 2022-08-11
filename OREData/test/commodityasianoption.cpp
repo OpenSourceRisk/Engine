@@ -31,47 +31,50 @@
  #include <qle/termstructures/pricecurve.hpp>
  #include <qle/math/flatextrapolation.hpp>
 
- #include <ored/marketdata/marketimpl.hpp>
- #include <ored/portfolio/builders/commodityasianoption.hpp>
- #include <ored/portfolio/commodityasianoption.hpp>
- #include <ored/portfolio/portfolio.hpp>
- #include <ored/utilities/to_string.hpp>
+#include <ored/marketdata/marketimpl.hpp>
+#include <ored/portfolio/builders/commodityasianoption.hpp>
+#include <ored/portfolio/asianoption.hpp>
+#include <ored/portfolio/optionasiandata.hpp>
+#include <ored/portfolio/optiondata.hpp>
+#include <ored/portfolio/portfolio.hpp>
+#include <ored/utilities/to_string.hpp>
 
- using namespace std;
- using namespace boost::unit_test_framework;
- using namespace boost::algorithm;
- using namespace QuantLib;
- using namespace QuantExt;
- using namespace ore::data;
+using namespace std;
+using namespace boost::unit_test_framework;
+using namespace boost::algorithm;
+using namespace QuantLib;
+using namespace QuantExt;
+using namespace ore::data;
 
- namespace {
+namespace {
 
- class TestMarket : public MarketImpl {
- public:
-     TestMarket(const Real spot, const Date& expiry, const Rate riskFreeRate, const Rate convenienceYield,
-                const Volatility flatVolatility) {
-         // Reference date and common day counter
-         asof_ = Date(01, Feb, 2021);
-         //Actual365Fixed dayCounter;
-         DayCounter dayCounter = Actual360();
+class TestMarket : public MarketImpl {
+public:
+    TestMarket(const Real spot, const Date& expiry, const Rate riskFreeRate, const Rate convenienceYield,
+               const Volatility flatVolatility) {
+        // Reference date and common day counter
+        asof_ = Date(01, Feb, 2021);
+        // Actual365Fixed dayCounter;
+        DayCounter dayCounter = Actual360();
 
-         // Add USD discount curve
-         Handle<YieldTermStructure> discount(boost::make_shared<FlatForward>(asof_, riskFreeRate, dayCounter));
-         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = discount;
+        // Add USD discount curve
+        Handle<YieldTermStructure> discount(boost::make_shared<FlatForward>(asof_, riskFreeRate, dayCounter));
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = discount;
 
-         // Add ALU_USD price curve
-         vector<Date> dates = {asof_, expiry};
-         vector<Real> prices = {spot, spot * std::exp((riskFreeRate - convenienceYield) * dayCounter.yearFraction(asof_, expiry))};
-         Handle<PriceTermStructure> priceCurve(
-             boost::make_shared<InterpolatedPriceCurve<QuantExt::LinearFlat>>(asof_, dates, prices, dayCounter, USDCurrency()));
-         Handle<CommodityIndex> commIdx(boost::make_shared<CommoditySpotIndex>("ALU_USD", NullCalendar(), priceCurve));
-         commodityIndices_[make_pair(Market::defaultConfiguration, "ALU_USD")] = commIdx;
+        // Add ALU_USD price curve
+        vector<Date> dates = {asof_, expiry};
+        vector<Real> prices = {
+            spot, spot * std::exp((riskFreeRate - convenienceYield) * dayCounter.yearFraction(asof_, expiry))};
+        Handle<PriceTermStructure> priceCurve(boost::make_shared<InterpolatedPriceCurve<QuantExt::LinearFlat>>(
+            asof_, dates, prices, dayCounter, USDCurrency()));
+        Handle<CommodityIndex> commIdx(boost::make_shared<CommoditySpotIndex>("ALU_USD", NullCalendar(), priceCurve));
+        commodityIndices_[make_pair(Market::defaultConfiguration, "ALU_USD")] = commIdx;
 
-         // Add ALU_USD volatilities
-         Handle<BlackVolTermStructure> volatility(
-             boost::make_shared<BlackConstantVol>(asof_, TARGET(), flatVolatility, dayCounter));
-         commodityVols_[make_pair(Market::defaultConfiguration, "ALU_USD")] = volatility;
-     }
+        // Add ALU_USD volatilities
+        Handle<BlackVolTermStructure> volatility(
+            boost::make_shared<BlackConstantVol>(asof_, TARGET(), flatVolatility, dayCounter));
+        commodityVols_[make_pair(Market::defaultConfiguration, "ALU_USD")] = volatility;
+    }
  };
 
  struct DiscreteAsianTestData {
@@ -173,7 +176,8 @@
                                "", "Asian", boost::none, boost::none, boost::none);
 
          boost::shared_ptr<CommodityAsianOption> asianOption = boost::make_shared<CommodityAsianOption>(
-             env, optionData, asianData, scheduleData, "ALU_USD", "USD", a.strike, 1, false);
+             env, "CommodityAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, asianData, scheduleData,
+             boost::make_shared<CommodityUnderlying>("ALU_USD", 1.0, "Spot", 0, 0, ""), Date());
          BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
          // Check the underlying instrument was built as expected
@@ -281,7 +285,7 @@
      BOOST_CHECK_EQUAL(option->tradeType(), "CommodityAsianOption");
      BOOST_CHECK_EQUAL(option->id(), "CommodityAsianOption_Alu");
      BOOST_CHECK_EQUAL(option->asset(), "ALU_USD");
-     BOOST_CHECK_EQUAL(option->currency(), "USD");
+     BOOST_CHECK_EQUAL(option->payCurrency(), "USD");
      BOOST_CHECK_EQUAL(option->strike(), 2270);
      BOOST_CHECK_EQUAL(option->quantity(), 1);
      BOOST_CHECK_EQUAL(option->option().longShort(), "Long");
@@ -291,9 +295,10 @@
      BOOST_CHECK_EQUAL(option->option().exerciseDates()[0], "2021-02-26");
      BOOST_CHECK(option->observationDates().hasData());
 
-     OptionAsianData oad = option->asianData();
-     BOOST_CHECK_EQUAL(oad.asianType(), OptionAsianData::AsianType::Price);
-     BOOST_CHECK_EQUAL(oad.averageType(), Average::Type::Arithmetic);
+     // FIXME use option->option().payoffType()
+     // OptionAsianData oad = option->asianData();
+     // BOOST_CHECK_EQUAL(oad.asianType(), OptionAsianData::AsianType::Price);
+     // BOOST_CHECK_EQUAL(oad.averageType(), Average::Type::Arithmetic);
  }
 
  BOOST_AUTO_TEST_SUITE_END()

@@ -26,8 +26,8 @@
 
  #include <ored/marketdata/marketimpl.hpp>
  #include <ored/portfolio/builders/fxasianoption.hpp>
- #include <ored/portfolio/fxasianoption.hpp>
  #include <ored/portfolio/portfolio.hpp>
+ #include <ored/portfolio/asianoption.hpp>
  #include <ored/utilities/to_string.hpp>
 
  using namespace std;
@@ -157,7 +157,8 @@
                                "", "Asian", boost::none, boost::none, boost::none);
 
          boost::shared_ptr<FxAsianOption> asianOption = boost::make_shared<FxAsianOption>(
-             env, optionData, asianData, scheduleData, "JPY", 1, "USD", a.strike, "FX-ECB-JPY-USD");
+             env, "FxAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, asianData, scheduleData,
+             boost::make_shared<FXUnderlying>("FX", "ECB-JPY-USD", 1.0), Date());
          BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
          // Check the underlying instrument was built as expected
@@ -259,12 +260,10 @@
      BOOST_CHECK(option);
      BOOST_CHECK_EQUAL(option->tradeType(), "FxAsianOption");
      BOOST_CHECK_EQUAL(option->id(), "FxAsianOption_USDJPY");
-     BOOST_CHECK_EQUAL(option->boughtCurrency(), "USD");
-     BOOST_CHECK_EQUAL(option->soldCurrency(), "JPY");
-     BOOST_CHECK_EQUAL(option->boughtAmount(), 1);
-     BOOST_CHECK_EQUAL(option->soldAmount(), 104.6860);
+     BOOST_CHECK_EQUAL(option->asset(), "USD");
+     BOOST_CHECK_EQUAL(option->quantity(), 104.6860);
      BOOST_CHECK_EQUAL(option->strike(), 104.6860);
-     BOOST_CHECK_EQUAL(option->fxIndex(), "FX-ECB-USD-JPY");
+     BOOST_CHECK_EQUAL(option->indexName(), "FX-ECB-USD-JPY");
      BOOST_CHECK_EQUAL(option->option().longShort(), "Long");
      BOOST_CHECK_EQUAL(option->option().callPut(), "Call");
      BOOST_CHECK_EQUAL(option->option().style(), "European");
@@ -272,9 +271,10 @@
      BOOST_CHECK_EQUAL(option->option().exerciseDates()[0], "2021-02-26");
      BOOST_CHECK(option->observationDates().hasData());
 
-     OptionAsianData oad = option->asianData();
-     BOOST_CHECK_EQUAL(oad.asianType(), OptionAsianData::AsianType::Price);
-     BOOST_CHECK_EQUAL(oad.averageType(), Average::Type::Arithmetic);
+     // FIXME use option->option().payoffType()
+     // OptionAsianData oad = option->asianData();
+     // BOOST_CHECK_EQUAL(oad.asianType(), OptionAsianData::AsianType::Price);
+     // BOOST_CHECK_EQUAL(oad.averageType(), Average::Type::Arithmetic);
  }
 
  BOOST_AUTO_TEST_SUITE_END()
