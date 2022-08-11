@@ -13,76 +13,98 @@
   FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
  */
 
- /*! \file portfolio/asianoption.hpp
-     \brief Asian Option data model
-     \ingroup tradedata
- */
+/*! \file portfolio/asianoption.hpp
+    \brief Asian Option data model
+    \ingroup tradedata
+*/
 
- #pragma once
+#pragma once
 
- #include <ored/portfolio/optionasiandata.hpp>
- #include <ored/portfolio/optiondata.hpp>
- #include <ored/portfolio/trade.hpp>
- #include <ored/utilities/parsers.hpp>
- #include <ql/instruments/averagetype.hpp>
+#include <ored/portfolio/optionasiandata.hpp>
+#include <ored/portfolio/optiondata.hpp>
+#include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/tradestrike.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ql/instruments/averagetype.hpp>
 
- namespace ore {
- namespace data {
- using std::string;
+namespace ore {
+namespace data {
+using std::string;
 
- //! Serializable Asian Option
- /*!
-   \ingroup tradedata
- */
- class AsianOptionTrade : public Trade {
- public:
-     //! Build QuantLib/QuantExt instrument, link pricing engine
-     void build(const boost::shared_ptr<EngineFactory>&) override;
+//! Serializable Asian Option
+/*!
+  \ingroup tradedata
+*/
+class AsianOption : public Trade {
+public:
+    explicit AsianOption(const string& tradeType) : Trade(tradeType) {}
+    AsianOption(const Envelope& env, const string& tradeType, double quantity, const TradeStrike& strike,
+                const OptionData& option, const OptionAsianData& asianData, const ScheduleData& observationDates,
+                const boost::shared_ptr<Underlying>& underlying, const Date& settlementDate)
+        : Trade(tradeType, env), quantity_(quantity), strike_(strike), option_(option), asianData_(asianData),
+          observationDates_(observationDates), underlying_(underlying), settlementDate_(settlementDate) {}
 
-     //! \name Inspectors
-     //@{
-     const OptionData& option() const { return option_; }
-     const OptionAsianData& asianData() const { return asianData_; }
-     const ScheduleData& observationDates() const { return observationDates_; }
-     const string& asset() const { return assetName_; }
-     const string& currency() const { return currency_; }
-     double strike() const { return strike_; }
-     double quantity() const { return quantity_; }
+    //! Build QuantLib/QuantExt instrument, link pricing engine
+    void build(const boost::shared_ptr<EngineFactory>&) override;
 
-     //! \name Serialisation
-     //@{
-     virtual void fromXML(XMLNode* node) override;
-     virtual XMLNode* toXML(XMLDocument& doc) override;
-     //@}
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    //@}
 
- protected:
-     AsianOptionTrade(AssetClass assetClassUnderlying)
-         : Trade("AsianOption"), assetClassUnderlying_(assetClassUnderlying), strike_(0), quantity_(0) {}
-     AsianOptionTrade(const Envelope& env, AssetClass assetClassUnderlying, OptionData option, OptionAsianData asianData,
-                      ScheduleData observationDates, string assetName, string currency, double strike, double quantity,
-                      const boost::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "")
-         : Trade("AsianOption", env), assetClassUnderlying_(assetClassUnderlying), option_(option),
-           asianData_(asianData), observationDates_(observationDates), assetName_(assetName), currency_(currency),
-           strike_(strike), quantity_(quantity), index_(index), indexName_(indexName) {}
+    //! \name Inspectors
+    //@{
+    const string& asset() const { return assetName_; }
+    double strike() const { return strikeValue_; }
+    double quantity() const { return quantity_; }
+    const OptionData& option() const { return option_; }
+    const ScheduleData& observationDates() const { return observationDates_; }
+    const Date& settlementDate() const { return settlementDate_; }
+    const string& payCurrency() const { return currency_; }
+    const string& indexName() const { return indexName_; }
+    //@}
 
-     AssetClass assetClassUnderlying_;
-     OptionData option_;
-     OptionAsianData asianData_;
-     ScheduleData observationDates_;
-     string assetName_;
-     string currency_;
-     double strike_;
-     double quantity_;
+    // underlying asset names
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
-     //! An index is needed if the option is to be automatically exercised on expiry.
-     boost::shared_ptr<QuantLib::Index> index_;
+protected:
+    void populateIndexName() const;
 
-     //! Hold the external index name if needed e.g. in the case of an FX index.
-     std::string indexName_;
+    double quantity_ = 0.0;
+    TradeStrike strike_;
+    OptionData option_;
+    OptionAsianData asianData_;
+    ScheduleData observationDates_;
+    boost::shared_ptr<Underlying> underlying_;
+    Date settlementDate_;
 
-     //! Store the option expiry date.
-     QuantLib::Date expiryDate_;
- };
+    string currency_;
+    string strikeStr_;
+    string assetName_;
+    double strikeValue_ = 0.0;
 
- } // namespace data
- } // namespace ore
+    mutable string indexName_;
+};
+
+class EquityAsianOption : public AsianOption {
+public:
+    EquityAsianOption() : AsianOption("EquityAsianOption") {}
+    using AsianOption::AsianOption;
+};
+
+class FxAsianOption : public AsianOption {
+public:
+    FxAsianOption() : AsianOption("FxAsianOption") {}
+    using AsianOption::AsianOption;
+};
+
+class CommodityAsianOption : public AsianOption {
+public:
+    CommodityAsianOption() : AsianOption("CommodityAsianOption") {}
+    using AsianOption::AsianOption;
+};
+
+} // namespace data
+} // namespace ore

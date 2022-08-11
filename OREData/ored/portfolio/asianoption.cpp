@@ -3,214 +3,251 @@
   All rights reserved.
  */
 
- /*! \file ored/portfolio/asianoption.hpp
- \brief Asian option representation
- \ingroup tradedata
- */
+/*! \file ored/portfolio/asianoption.hpp
+\brief Asian option representation
+\ingroup tradedata
+*/
 
- #include <ored/portfolio/builders/asianoption.hpp>
- #include <ored/portfolio/asianoption.hpp>
- #include <ored/portfolio/optionwrapper.hpp>
- #include <ored/portfolio/schedule.hpp>
- #include <ored/utilities/log.hpp>
- #include <ql/instruments/asianoption.hpp>
- #include <ql/instruments/averagetype.hpp>
- #include <ql/errors.hpp>
+#include <ored/portfolio/asianoption.hpp>
+#include <ored/portfolio/builders/asianoption.hpp>
+#include <ored/portfolio/optionwrapper.hpp>
+#include <ored/portfolio/schedule.hpp>
+#include <ored/utilities/conventionsbasedfutureexpiry.hpp>
+#include <ored/utilities/log.hpp>
+#include <ql/errors.hpp>
+#include <ql/instruments/asianoption.hpp>
+#include <ql/instruments/averagetype.hpp>
 
- namespace ore {
- namespace data {
+namespace ore {
+namespace data {
 
- void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-     QuantLib::Date today = engineFactory->market()->asofDate();
-     Currency ccy = parseCurrency(currency_);
+void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
-     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for AsianOption");
+    Currency payCcy = parseCurrency(currency_);
 
-     // Payoff
-     Option::Type type = parseOptionType(option_.callPut());
-     boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_));
+    QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for AsianOption");
 
-     QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
-     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
-     expiryDate_ = parseDate(option_.exerciseDates().front());
+    Option::Type type = parseOptionType(option_.callPut());
+    QL_REQUIRE(option_.payoffType() == "Asian", "Expected PayoffType Asian for AsianOption.");
+    QL_REQUIRE(option_.exerciseDates().size() == 1, "Expected exactly one exercise date");
+    Date expiryDate = parseDate(option_.exerciseDates().front());
 
-     // Set the maturity date equal to the expiry date. It may get updated below if option is cash settled with
-     // payment after expiry.
-     maturity_ = expiryDate_;
+    string tradeTypeBuilder = tradeType_;
+    tradeTypeBuilder += to_string(asianData_.averageType()); // Add Arithmetic/Geometric
+    tradeTypeBuilder += to_string(asianData_.asianType());   // Add Price/Strike
 
-     // Exercise
-     boost::shared_ptr<Exercise> exercise;
-     switch (exerciseType) {
-     case QuantLib::Exercise::Type::European: {
-         exercise = boost::make_shared<EuropeanExercise>(expiryDate_);
-         break;
-     }
-     case QuantLib::Exercise::Type::American: {
-         ELOG("The implemented Asian pricing engines do not support American options.");
-         QL_FAIL("The implemented Asian pricing engines do not support American options.");
-         //exercise = boost::make_shared<AmericanExercise>(expiryDate_, option_.payoffAtExpiry());
-         break;
-     }
-     default:
-         QL_FAIL("Option style " << option_.style() << " is not supported");
-     }
+    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
+    QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
 
-     // Create the instrument and the populate the name for the engine builder.
-     boost::shared_ptr<Instrument> asian;
-     string tradeTypeBuilder = tradeType_;
-     tradeTypeBuilder += (exerciseType == Exercise::European) ? "" : "American";
-     Settlement::Type settlementType = parseSettlementType(option_.settlement());
+    // TODO check for delegating engine builder here
 
-     bool isEuropDeferredCS = false;
-     if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
-         // We have a European cash-settled option
+    // ...
 
-         // Get payment data
-         const boost::optional<OptionPaymentData>& opd = option_.paymentData();
-         Date paymentDate = expiryDate_;
-         if (opd) {
-             if (opd->rulesBased()) {
-                 const Calendar& cal = opd->calendar();
-                 QL_REQUIRE(cal != Calendar(), "Need non-empty calendar for rules based payment date.");
-                 paymentDate = cal.advance(expiryDate_, opd->lag(), Days, opd->convention());
-             } else {
-                 const vector<Date>& dates = opd->dates();
-                 QL_REQUIRE(dates.size() == 1, "Need exactly one payment date for cash settled European option.");
-                 paymentDate = dates[0];
-             }
-             QL_REQUIRE(paymentDate >= expiryDate_, "Payment date must be greater than or equal to expiry date.");
-         }
+    // we do not have a delegating engine builder
 
-         if (paymentDate > expiryDate_) {
-             isEuropDeferredCS = true;
-             tradeTypeBuilder += "EuropeanCS";
-             // TODO: If support is needed/added, add logic from ored/portfolio/vanillaoption.cpp for updating of maturity date.
-             ELOG("Asian options do not support deferred cash settlement payments, "
-                  << "i.e. where payment date > maturity date.");
-             QL_FAIL("Asian options do not support deferred cash-settlement payments, i.e. where payment date > "
-                     "maturity date.");
-         }
-     }
+    boost::shared_ptr<AsianOptionEngineBuilder> asianOptionBuilder =
+        boost::dynamic_pointer_cast<AsianOptionEngineBuilder>(builder);
 
-     // Create builder in advance to determine if continuous or discrete asian option.
-     Average::Type averageType = asianData_.averageType();
-     OptionAsianData::AsianType asianType = asianData_.asianType();
-     tradeTypeBuilder += to_string(averageType); // Add Arithmetic/Geometric
-     tradeTypeBuilder += to_string(asianType);   // Add Price/Strike
-     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
-     QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
+    QL_REQUIRE(asianOptionBuilder, "engine builder is not an AsianOption engine builder" << tradeTypeBuilder);
 
-     boost::shared_ptr<AsianOptionEngineBuilder> asianOptionBuilder =
-         boost::dynamic_pointer_cast<AsianOptionEngineBuilder>(builder);
-     QL_REQUIRE(asianOptionBuilder, "engine builder is not an AsianOption engine builder" << tradeTypeBuilder);
+    std::string processType = asianOptionBuilder->processType();
+    QL_REQUIRE(processType != "", "ProcessType must be configured, this is unexpected");
 
-     std::string processType = asianOptionBuilder->processType();
-     QL_REQUIRE(processType != "", "ProcessType must be configured, this is unexpected");
+    if (strike_.value() != Null<Real>())
+        strikeValue_ = strike_.value();
+    else
+        strikeValue_ = parseReal(strikeStr_);
 
-     if (!isEuropDeferredCS) {
-         // If the option is not a European deferred CS contract, i.e. the standard European/American physical/cash-settled ones. 
-         if (processType == "Discrete") {
-             Real runningAccumulator = 0;
-             if (averageType == Average::Type::Geometric) {
-                 runningAccumulator = 1;
-             }
-             Size pastFixings = 0;
+    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strikeValue_));
 
-             Schedule observationSchedule;
-             if (observationDates_.hasData())
-                 observationSchedule = makeSchedule(observationDates_);
-             std::vector<QuantLib::Date> observationDates = observationSchedule.dates();
+    auto index = parseIndex(indexName_);
 
-             // Sort for the engine's sake. Not needed - instrument also sorts...?
-             std::sort(observationDates.begin(), observationDates.end());
+    if (auto fxIndex = boost::dynamic_pointer_cast<QuantExt::FxIndex>(index)) {
+        QL_REQUIRE(fxIndex->targetCurrency() == payCcy,
+                   "FX domestic ccy " << fxIndex->targetCurrency() << " must match pay ccy " << payCcy);
+        assetName_ = fxIndex->sourceCurrency().code();
+    } else if (auto eqIndex = boost::dynamic_pointer_cast<QuantExt::EquityIndex>(index)) {
+        // FIXME for EQ and COMM indices check whether EQ, COMM ccy = payCcy (in the engine builders probably)
+        assetName_ = eqIndex->name();
+    } else if (auto commIndex = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
+        assetName_ = commIndex->underlyingName();
+    }
 
-             QL_REQUIRE(index_, "Asian option trade " << id() << " needs a valid index for historical fixings.");
-             // If index name has not been populated, use logic here to populate it from the index object.
-             string indexName = indexName_;
-             if (indexName.empty()) {
-                 indexName = index_->name();
-                 if (assetClassUnderlying_ == AssetClass::EQ)
-                     indexName = "EQ-" + indexName;
-             }
-             for (QuantLib::Date observationDate : observationDates) {
-                 // TODO: Verify. Should today be read too? a enforcesTodaysHistoricFixings() be used? 
-                 if (observationDate < today ||
-                     (observationDate == today && Settings::instance().enforcesTodaysHistoricFixings())) {
-                     requiredFixings_.addFixingDate(observationDate, indexName);
-                     Real fixingValue = index_->fixing(observationDate);
-                     if (averageType == Average::Type::Geometric) {
-                         runningAccumulator *= fixingValue;
-                     } else if (averageType == Average::Type::Arithmetic) {
-                         runningAccumulator += fixingValue;
-                     }
-                     ++pastFixings;
-                 }
-             }
+    // FIXME the engine should handle the historical part of the averaging as well!
+    boost::shared_ptr<QuantLib::Instrument> asian;
+    auto exercise = boost::make_shared<QuantLib::EuropeanExercise>(expiryDate);
+    if (processType == "Discrete") {
+        QuantLib::Date today = engineFactory->market()->asofDate();
+        Real runningAccumulator = asianData_.averageType() == Average::Type::Geometric ? 1.0 : 0.0;
+        Size pastFixings = 0;
+        Schedule observationSchedule = makeSchedule(observationDates_);
+        std::vector<QuantLib::Date> observationDates = observationSchedule.dates();
 
-             asian = boost::make_shared<QuantLib::DiscreteAveragingAsianOption>(
-                 averageType, runningAccumulator, pastFixings, observationDates, payoff, exercise);
-         } else if (processType == "Continuous") {
-             asian = boost::make_shared<QuantLib::ContinuousAveragingAsianOption>(averageType, payoff, exercise);
-         } else {
-             QL_FAIL("unexpected ProcessType, valid options are Discrete/Continuous");
-         }
-     } else {
-         ELOG("Asian options do not support deferred cash settlement payments, "
-              << "i.e. where payment date > maturity date.");
-         QL_FAIL("Asian options do not support deferred cash-settlement payments, i.e. where payment date > "
-                 << "maturity date.");
-     }
+        // Sort for the engine's sake. Not needed - instrument also sorts...?
+        std::sort(observationDates.begin(), observationDates.end());
 
+        for (QuantLib::Date observationDate : observationDates) {
+            // TODO: Verify. Should today be read too? a enforcesTodaysHistoricFixings() be used?
+            if (observationDate < today ||
+                (observationDate == today && Settings::instance().enforcesTodaysHistoricFixings())) {
+                // FIXME all observation dates lead to a required fixing
+                requiredFixings_.addFixingDate(observationDate, indexName_);
+                Real fixingValue = index->fixing(observationDate);
+                if (asianData_.averageType() == Average::Type::Geometric) {
+                    runningAccumulator *= fixingValue;
+                } else if (asianData_.averageType() == Average::Type::Arithmetic) {
+                    runningAccumulator += fixingValue;
+                }
+                ++pastFixings;
+            }
+        }
+        asian = boost::make_shared<QuantLib::DiscreteAveragingAsianOption>(
+            asianData_.averageType(), runningAccumulator, pastFixings, observationDates, payoff, exercise);
+    } else if (processType == "Continuous") {
+        // FIXME how is the accumulated average handled in this case?
+        asian =
+            boost::make_shared<QuantLib::ContinuousAveragingAsianOption>(asianData_.averageType(), payoff, exercise);
+    } else {
+        QL_FAIL("unexpected ProcessType, valid options are Discrete/Continuous");
+    }
 
-     // Only try to set an engine on the option instrument if it is not expired. This avoids errors in
-     // engine builders that rely on the expiry date being in the future.
-     string configuration = Market::defaultConfiguration;
-     if (!asian->isExpired()) {
-         asian->setPricingEngine(
-             asianOptionBuilder->engine(assetName_, ccy, expiryDate_));
+    // Only try to set an engine on the option instrument if it is not expired. This avoids errors in
+    // engine builders that rely on the expiry date being in the future.
+    string configuration = asianOptionBuilder->configuration(MarketContext::pricing);
+    if (!asian->isExpired()) {
+        asian->setPricingEngine(asianOptionBuilder->engine(assetName_, payCcy, expiryDate));
+    } else {
+        DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate)
+                                                       << " because it is expired.");
+    }
 
-         configuration = asianOptionBuilder->configuration(MarketContext::pricing);
-     } else {
-         DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate_)
-                                                        << " because it is expired.");
-     }
+    Position::Type positionType = parsePositionType(option_.longShort());
+    Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
+    Real mult = quantity_ * bsInd;
 
-     Position::Type positionType = parsePositionType(option_.longShort());
-     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
-     Real mult = quantity_ * bsInd;
+    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<Real> additionalMultipliers;
+    maturity_ = expiryDate;
+    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0,
+                                                option_.premiumData(), 1.0, payCcy, engineFactory, configuration));
 
-     // If premium data is provided
-     // 1) build the fee trade and pass it to the instrument wrapper for pricing
-     // 2) add fee payment as additional trade leg for cash flow reporting
-     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
-     std::vector<Real> additionalMultipliers;
-     maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0,
-                                                 option_.premiumData(), 1.0, ccy, engineFactory, configuration));
+    instrument_ = boost::make_shared<VanillaInstrument>(asian, mult, additionalInstruments, additionalMultipliers);
 
-     // TODO: Use something like EuropeanOptionWrapper instead? After all, an asian option is not
-     // a vanilla instrument. However, the available European-/AmericanOptionWrapper is not directly
-     // applicable as it calls for both an instrument and an underlying instrument.
-     // Given how the asians are priced, though, we still manage fine using the VanillaInstrument wrapper
-     // for the time being.
-     instrument_ = boost::shared_ptr<InstrumentWrapper>(
-         new VanillaInstrument(asian, mult, additionalInstruments, additionalMultipliers));
-     //instrument_ = boost::shared_ptr<InstrumentWrapper>(
-     //    boost::make_shared<EuropeanOptionWrapper>(...));
+    npvCurrency_ = currency_;
+    notional_ = strikeValue_ * quantity_;
+    notionalCurrency_ = currency_;
+}
 
-     npvCurrency_ = currency_;
+void AsianOption::fromXML(XMLNode* node) {
+    Trade::fromXML(node);
+    XMLNode* n = XMLUtils::getChildNode(node, tradeType() + "Data");
+    QL_REQUIRE(n, "No " + tradeType_ + "Data node found.");
 
-     // Notional - we really need todays spot to get the correct notional.
-     // But rather than having it move around we use strike * quantity
-     notional_ = strike_ * quantity_;
-     notionalCurrency_ = currency_;
- }
+    quantity_ = XMLUtils::getChildValueAsDouble(n, "Quantity", true);
 
- void AsianOptionTrade::fromXML(XMLNode* node) { Trade::fromXML(node); }
+    if (XMLUtils::getChildNode(n, "StrikeData")) {
+        strike_.fromXML(n);
+        currency_ = strike_.currency();
+    } else {
+        strikeStr_ = XMLUtils::getChildValue(n, "Strike", false);
+    }
 
- XMLNode* AsianOptionTrade::toXML(XMLDocument& doc) {
-     XMLNode* node = Trade::toXML(doc);
-     return node;
- }
+    currency_ = XMLUtils::getChildValue(n, "Currency", false);
 
- } // namespace data
- } // namespace ore
+    XMLNode* tmp = XMLUtils::getChildNode(n, "Underlying");
+    if (!tmp)
+        tmp = XMLUtils::getChildNode(n, "Name");
+    UnderlyingBuilder underlyingBuilder;
+    underlyingBuilder.fromXML(tmp);
+    underlying_ = underlyingBuilder.underlying();
+
+    option_.fromXML(XMLUtils::getChildNode(n, "OptionData"));
+
+    XMLNode* asianNode = XMLUtils::getChildNode(n, "AsianData");
+    if (asianNode)
+        asianData_.fromXML(asianNode);
+
+    settlementDate_ = parseDate(XMLUtils::getChildValue(n, "SettlementDate", false));
+
+    observationDates_.fromXML(XMLUtils::getChildNode(n, "ObservationDates"));
+}
+
+XMLNode* AsianOption::toXML(XMLDocument& doc) {
+    XMLNode* node = Trade::toXML(doc);
+    XMLNode* n = doc.allocNode(tradeType() + "Data");
+    XMLUtils::appendNode(node, n);
+    XMLUtils::addChild(doc, n, "Quantity", quantity_);
+    if (strike_.value() != Null<Real>()) {
+        XMLUtils::appendNode(n, strike_.toXML(doc));
+    } else {
+        XMLUtils::addChild(doc, n, "Strike", strikeStr_);
+    }
+    XMLUtils::addChild(doc, n, "Currency", currency_);
+    XMLUtils::appendNode(n, underlying_->toXML(doc));
+    XMLUtils::appendNode(n, option_.toXML(doc));
+    if (settlementDate_ != Null<Date>())
+        XMLUtils::addChild(doc, n, "SettlementDate", ore::data::to_string(settlementDate_));
+    XMLUtils::appendNode(n, observationDates_.toXML(doc));
+    return node;
+}
+
+std::map<AssetClass, std::set<std::string>>
+AsianOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    populateIndexName();
+    std::map<AssetClass, std::set<std::string>> result;
+    if (isEquityIndex(indexName_)) {
+        result[AssetClass::EQ].insert(indexName_);
+    } else if (isFxIndex(indexName_)) {
+        result[AssetClass::FX].insert(indexName_);
+    } else if (isCommodityIndex(indexName_)) {
+        result[AssetClass::COM].insert(indexName_);
+    }
+    return result;
+}
+
+void AsianOption::populateIndexName() const {
+    if (!indexName_.empty())
+        return;
+    if (underlying_->type() == "Equity") {
+        indexName_ = "EQ-" + underlying_->name();
+    } else if (underlying_->type() == "FX") {
+        indexName_ = "FX-" + underlying_->name();
+    } else if (underlying_->type() == "Commodity") {
+        boost::shared_ptr<CommodityUnderlying> comUnderlying =
+            boost::dynamic_pointer_cast<CommodityUnderlying>(underlying_);
+        std::string tmp = "COMM-" + comUnderlying->name();
+        if (comUnderlying->priceType().empty() || comUnderlying->priceType() == "Spot") {
+            indexName_ = tmp;
+        } else if (comUnderlying->priceType() == "FutureSettlement") {
+            auto conventions = InstrumentConventions::instance().conventions();
+            QL_REQUIRE(conventions->has(comUnderlying->name()),
+                       "future settlement requires conventions for commodity '" << comUnderlying->name() << "'");
+            auto convention =
+                boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(comUnderlying->name()));
+            Size futureMonthsOffset =
+                comUnderlying->futureMonthOffset() == Null<Size>() ? 0 : comUnderlying->futureMonthOffset();
+            Size deliveryRollDays =
+                comUnderlying->deliveryRollDays() == Null<Size>() ? 0 : comUnderlying->deliveryRollDays();
+            Calendar cal = parseCalendar(comUnderlying->deliveryRollCalendar());
+            ConventionsBasedFutureExpiry expiryCalculator(*convention);
+            QL_REQUIRE(option_.exerciseDates().size() == 1, "expected exactly one exercise date");
+	    Date expiryDate = parseDate(option_.exerciseDates().front());
+            Date adjustedObsDate =
+                deliveryRollDays != 0 ? cal.advance(expiryDate, deliveryRollDays * Days) : expiryDate;
+            auto tmp = parseCommodityIndex(comUnderlying->name(), false, Handle<QuantExt::PriceTermStructure>(),
+                                           convention->calendar(), true);
+            tmp = tmp->clone(expiryCalculator.nextExpiry(true, adjustedObsDate, futureMonthsOffset));
+            indexName_ = tmp->name();
+        } else {
+            QL_FAIL("underlying price type '" << comUnderlying->priceType() << "' for commodity underlying '"
+                                              << comUnderlying->name() << "' not handled.");
+        }
+    } else if (underlying_->type() == "Basic") {
+        indexName_ = underlying_->name();
+    } else {
+        QL_FAIL("invalid underlying type: " << underlying_->type());
+    }
+}
+
+} // namespace data
+} // namespace ore
