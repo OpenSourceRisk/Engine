@@ -36,7 +36,9 @@
   </xs:simpleType>
 
   <xs:simpleType name="indexNameType">
-    <xs:restriction base="xs:string"/>
+    <xs:restriction base="xs:string">
+      <xs:minLength value='1'/>
+    </xs:restriction>
   </xs:simpleType>
 
   <xs:simpleType name="bool">
