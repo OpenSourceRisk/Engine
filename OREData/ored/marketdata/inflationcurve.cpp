@@ -214,11 +214,12 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 instrument->unregisterWith(Settings::instance().evaluationDate());
                 instruments.push_back(instrument);
             }
-            curve_ = boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
-                asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), baseRate, instruments,
-                config->tolerance()));
+            curve_ = boost::shared_ptr<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
+                new QuantExt::PiecewiseZeroInflationCurve<Linear>(asof, config->calendar(), config->dayCounter(),
+                                                                  config->lag(), config->frequency(), baseRate,
+                                                                  instruments, conv->index(), config->tolerance()));
             // force bootstrap so that errors are thrown during the build, not later
-            boost::static_pointer_cast<PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);
+            boost::static_pointer_cast<QuantExt::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);
             if (derive_yoy_from_zc) {
                 // set up yoy wrapper with empty ts, so that zero index is used to forecast fixings
                 // for this link the appropriate curve to the zero index
