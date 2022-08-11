@@ -24,6 +24,8 @@
       <xs:element type="creditDefaultSwapOptionData" name="CreditDefaultSwapOptionData"/>
       <xs:element type="commodityOptionData" name="CommodityOptionData"/>
       <xs:element type="commodityDigitalOptionData" name="CommodityDigitalOptionData"/>
+      <xs:element type="singleUnderlyingAsianOptionData" name="EquityAsianOptionData" />
+      <xs:element type="singleUnderlyingAsianOptionData" name="FxAsianOptionData" />
     </xs:choice>
   </xs:group>
 
@@ -697,7 +699,8 @@
       <xs:enumeration value="ForwardBond"/>
       <xs:enumeration value="CreditDefaultSwap"/>
       <xs:enumeration value="CreditDefaultSwapOption"/>
-      <xs:enumeration value="CMS"/>
+      <xs:enumeration value="EquityAsianOption"/>
+      <xs:enumeration value="FxAsianOption"/>
       <xs:enumeration value="Failed"/>
     </xs:restriction>
   </xs:simpleType>
@@ -982,6 +985,19 @@
       <xs:element type="bool" name="KnockOut" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Term" minOccurs="0" maxOccurs="1"/>
       <xs:element type="auctionSettlementInformation" name="AuctionSettlementInformation" minOccurs="0" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="singleUnderlyingAsianOptionData">
+    <xs:all>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:float" name="Quantity"/>
+      <xs:element ref="strikeGroup"/>
+      <xs:element type="underlying" name="Underlying" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="asianData" name="AsianData" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Settlement" minOccurs="0"/>
+      <xs:element type="scheduleData" name="ObservationDates" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
