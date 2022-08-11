@@ -191,7 +191,7 @@ void AsianOption::fromXML(XMLNode* node) {
 
     option_.fromXML(XMLUtils::getChildNode(n, "OptionData"));
 
-    settlementDate_ = parseDate(XMLUtils::getChildValue(n, "SettlementDate", false));
+    settlementDate_ = parseDate(XMLUtils::getChildValue(n, "Settlement", false));
 
     observationDates_.fromXML(XMLUtils::getChildNode(n, "ObservationDates"));
 }
@@ -206,8 +206,10 @@ XMLNode* AsianOption::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(n, underlying_->toXML(doc));
     XMLUtils::appendNode(n, option_.toXML(doc));
     if (settlementDate_ != Null<Date>())
-        XMLUtils::addChild(doc, n, "SettlementDate", ore::data::to_string(settlementDate_));
-    XMLUtils::appendNode(n, observationDates_.toXML(doc));
+        XMLUtils::addChild(doc, n, "Settlement", ore::data::to_string(settlementDate_));
+    auto tmp = observationDates_.toXML(doc);
+    XMLUtils::setNodeName(doc, tmp, "ObservationDates");
+    XMLUtils::appendNode(n, tmp);
     return node;
 }
 
