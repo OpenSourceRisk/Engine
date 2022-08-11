@@ -68,6 +68,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         maturity_ = delegatingBuilderTrade_->maturity();
         npvCurrency_ = delegatingBuilderTrade_->npvCurrency();
         additionalData_ = delegatingBuilderTrade_->additionalData();
+	requiredFixings_ = delegatingBuilderTrade_->requiredFixings();
 
         // notional and notional currency are defined in overriden methods!
 
