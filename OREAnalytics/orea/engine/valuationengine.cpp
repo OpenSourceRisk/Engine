@@ -293,7 +293,7 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<boos
                                      const Size cubeDateIndex, const Size sample, const string& label) {
     ObservationMode::Mode om = ObservationMode::instance().mode();
     for(auto& calc: calculators)
-        calc->initScenario(simMarket_);
+        calc->initScenario();
     // loop over trades
     for (Size j = 0; j < trades.size(); ++j) {
         if (tradeHasError[j])
