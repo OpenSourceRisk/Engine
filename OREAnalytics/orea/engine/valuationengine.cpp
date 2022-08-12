@@ -292,6 +292,8 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<boos
                                      boost::shared_ptr<analytics::NPVCube>& outputCubeNettingSet, const Date& d,
                                      const Size cubeDateIndex, const Size sample, const string& label) {
     ObservationMode::Mode om = ObservationMode::instance().mode();
+    for(auto& calc: calculators)
+        calc->initScenario(simMarket_);
     // loop over trades
     for (Size j = 0; j < trades.size(); ++j) {
         if (tradeHasError[j])
@@ -301,7 +303,7 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<boos
         if (om == ObservationMode::Mode::Disable || om == ObservationMode::Mode::Unregister)
             trade->instrument()->updateQlInstruments();
         try {
-            for (auto calc : calculators)
+            for (auto& calc : calculators)
                 calc->calculate(trade, j, simMarket_, outputCube, outputCubeNettingSet, d, cubeDateIndex, sample,
                                 isCloseOutDate);
         } catch (const std::exception& e) {
