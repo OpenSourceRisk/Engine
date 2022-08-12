@@ -29,24 +29,21 @@ namespace ore {
 namespace analytics {
 
 void NPVCalculator::init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) {
-    tradeCcyIndex_.clear();
-    tradeFxRate_.resize(portfolio->size());
+    tradeCcyIndex_.resize(portfolio->size());
     std::set<std::string> ccys;
-    for (auto const& t : portfolio->trades()) {
-        auto it = ccys.insert(t->npvCurrency()).first;
-        tradeCcyIndex_.push_back(std::distance(ccys.begin(), it));
-    }
-    ccyQuotes_.clear();
-    for (auto const& c : ccys)
-        ccyQuotes_.push_back(simMarket->fxRate(c + baseCcyCode_));
+    for (auto const& t : portfolio->trades())
+        ccys.insert(t->npvCurrency());
+    for (Size i = 0; i < portfolio->trades().size(); ++i)
+        tradeCcyIndex_[i] = std::distance(ccys.begin(), ccys.find(portfolio->trades()[i]->npvCurrency()));
+    ccyQuotes_.resize(ccys.size());
+    for (Size i = 0; i < ccys.size(); ++i)
+        ccyQuotes_[i] = (simMarket->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_));
+    fxRates_.resize(ccys.size());
 }
 
 void NPVCalculator::initScenario() {
-    std::vector<Real> fxRates;
     for (Size i = 0; i < ccyQuotes_.size(); ++i)
-        fxRates.push_back(ccyQuotes_[i]->value());
-    for (Size i = 0; i < tradeFxRate_.size(); ++i)
-        tradeFxRate_[i] = fxRates[tradeCcyIndex_[i]];
+        fxRates_[i] = ccyQuotes_[i]->value();
 }
 
 void NPVCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
@@ -68,7 +65,7 @@ Real NPVCalculator::npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
     Real npv = trade->instrument()->NPV();
     if (close_enough(npv, 0.0))
         return npv;
-    Real fx = tradeFxRate_[tradeIndex];
+    Real fx = fxRates_[tradeCcyIndex_[tradeIndex]];
     Real numeraire = simMarket->numeraire();
     return npv * fx / numeraire;
 }
@@ -76,28 +73,29 @@ Real NPVCalculator::npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
 void CashflowCalculator::init(const boost::shared_ptr<Portfolio>& portfolio,
                               const boost::shared_ptr<SimMarket>& simMarket) {
     tradeAndLegCcyIndex_.clear();
-    tradeAndLegFxRate_.clear();
     std::set<std::string> ccys;
     for (auto const& t : portfolio->trades()) {
         tradeAndLegCcyIndex_.push_back(std::vector<Size>());
         for (auto const& l : t->legCurrencies()) {
-            auto it = ccys.insert(l).first;
-            tradeAndLegCcyIndex_.back().push_back(std::distance(ccys.begin(), it));
+            ccys.insert(l);
         }
-        tradeAndLegFxRate_.push_back(std::vector<double>(t->legCurrencies().size()));
     }
-    ccyQuotes_.clear();
-    for (auto const& c : ccys)
-        ccyQuotes_.push_back(simMarket->fxRate(c + baseCcyCode_));
+    for (Size i = 0; i < portfolio->trades().size(); ++i) {
+        for (Size j = 0; j < portfolio->trades()[i]->legs().size(); ++j) {
+            tradeAndLegCcyIndex_[i][j] =
+                std::distance(ccys.begin(), ccys.find(portfolio->trades()[i]->legCurrencies()[j]));
+        }
+    }
+    ccyQuotes_.resize(ccys.size());
+    for (Size i = 0; i < ccys.size(); ++i)
+        ccyQuotes_[i] = (simMarket->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_));
+    fxRates_.resize(ccys.size());
 }
 
 void CashflowCalculator::initScenario() {
     std::vector<Real> fxRates;
     for (Size i = 0; i < ccyQuotes_.size(); ++i)
-        fxRates.push_back(ccyQuotes_[i]->value());
-    for (Size i = 0; i < tradeAndLegFxRate_.size(); ++i)
-        for (Size j = 0; j < tradeAndLegFxRate_[i].size(); ++j)
-            tradeAndLegFxRate_[i][j] = fxRates[tradeAndLegCcyIndex_[i][j]];
+        fxRates[i] = ccyQuotes_[i]->value();
 }
 
 void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
@@ -141,7 +139,7 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
                 }
                 if (legFlow != 0) {
                     // Do FX conversion and add to netFlow
-                    Real fx = tradeAndLegFxRate_[tradeIndex][i];
+                    Real fx = fxRates_[tradeAndLegCcyIndex_[tradeIndex][i]];
                     Real direction = trade->legPayers()[i] ? -1.0 : 1.0;
                     netFlow += legFlow * direction * longShort * fx;
                 }
@@ -162,24 +160,15 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
 
 void NPVCalculatorFXT0::init(const boost::shared_ptr<Portfolio>& portfolio,
                              const boost::shared_ptr<SimMarket>& simMarket) {
-    tradeCcyIndex_.clear();
-    tradeFxRate_.resize(portfolio->size());
+    tradeCcyIndex_.resize(portfolio->size());
     std::set<std::string> ccys;
-    for (auto const& t : portfolio->trades()) {
-        auto it = ccys.insert(t->npvCurrency()).first;
-        tradeCcyIndex_.push_back(std::distance(ccys.begin(), it));
-    }
-    ccyQuotes_.clear();
-    for (auto const& c : ccys)
-        ccyQuotes_.push_back(t0Market_->fxRate(c + baseCcyCode_));
-}
-
-void NPVCalculatorFXT0::initScenario() {
-    std::vector<Real> fxRates;
-    for (Size i = 0; i < ccyQuotes_.size(); ++i)
-        fxRates.push_back(ccyQuotes_[i]->value());
-    for (Size i = 0; i < tradeFxRate_.size(); ++i)
-        tradeFxRate_[i] = fxRates[tradeCcyIndex_[i]];
+    for (auto const& t : portfolio->trades())
+        ccys.insert(t->npvCurrency());
+    for (Size i = 0; i < portfolio->trades().size(); ++i)
+        tradeCcyIndex_[i] = std::distance(ccys.begin(), ccys.find(portfolio->trades()[i]->npvCurrency()));
+    fxRates_.resize(ccys.size());
+    for (Size i = 0; i < ccys.size(); ++i)
+        fxRates_[i] = t0Market_->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_)->value();
 }
 
 void NPVCalculatorFXT0::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
@@ -202,7 +191,7 @@ Real NPVCalculatorFXT0::npv(Size tradeIndex, const boost::shared_ptr<Trade>& tra
     Real npv = trade->instrument()->NPV();
     if (close_enough(npv, 0.0))
         return npv;
-    Real fx = tradeFxRate_[tradeIndex];
+    Real fx = fxRates_[tradeCcyIndex_[tradeIndex]];
     Real numeraire = simMarket->numeraire();
     return npv * fx / numeraire;
 }
