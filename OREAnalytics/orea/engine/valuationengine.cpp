@@ -101,8 +101,10 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     Real pricingTime = 0.0;
     Real fixingTime = 0.0;
 
-    for (auto const& c : calculators)
+    for (auto const& c : calculators) {
         c->init(portfolio, simMarket_);
+        c->initScenario();
+    }
 
     // Loop is Samples, Dates, Trades
     const auto& dates = dg_->dates();
@@ -122,7 +124,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
 
         // T0 values
         try {
-            for (auto calc : calculators)
+            for (auto& calc : calculators)
                 calc->calculateT0(trades[i], i, simMarket_, outputCube, outputCubeNettingSet);
         } catch (const std::exception& e) {
             string expMsg = string("T0 valuation error: ") + e.what();
