@@ -75,7 +75,7 @@ void IndexedCoupon::accept(AcyclicVisitor& v) {
 }
 
 IndexWrappedCashFlow::IndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c, const Real qty,
-    const boost::shared_ptr<Index>& index,const Date& fixingDate)
+                                           const boost::shared_ptr<Index>& index, const Date& fixingDate)
     : c_(c), qty_(qty), index_(index), fixingDate_(fixingDate), initialFixing_(Null<Real>()) {
     QL_REQUIRE(index, "IndexWrappedCashFlow: index is null");
     QL_REQUIRE(fixingDate != Date(), "IndexWrappedCashFlow: fixingDate is null");
@@ -84,7 +84,7 @@ IndexWrappedCashFlow::IndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c,
 }
 
 IndexWrappedCashFlow::IndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c, const Real qty,
-    const Real initialFixing)
+                                           const Real initialFixing)
     : c_(c), qty_(qty), initialFixing_(initialFixing) {
     QL_REQUIRE(initialFixing != Null<Real>(), "IndexWrappedCashFlow: initial fixing is null");
     registerWith(c);
@@ -95,7 +95,9 @@ void IndexWrappedCashFlow::update() { notifyObservers(); }
 Date IndexWrappedCashFlow::date() const { return c_->date(); }
 Real IndexWrappedCashFlow::amount() const { return c_->amount() * multiplier(); }
 
-Real IndexWrappedCashFlow::multiplier() const { return index_ ? qty_ * index_->fixing(fixingDate_) : qty_ * initialFixing_; }
+Real IndexWrappedCashFlow::multiplier() const {
+    return index_ ? qty_ * index_->fixing(fixingDate_) : qty_ * initialFixing_;
+}
 
 boost::shared_ptr<CashFlow> IndexWrappedCashFlow::underlying() const { return c_; }
 
@@ -204,8 +206,6 @@ IndexedCouponLeg::operator Leg() const {
         } else {
             QL_FAIL("IndexedCouponLeg: coupon or cashflow required");
         }
-
-        
     }
 
     return resultLeg;
@@ -217,6 +217,16 @@ boost::shared_ptr<Coupon> unpackIndexedCoupon(const boost::shared_ptr<Coupon>& c
     if (cpn) {
         boost::shared_ptr<Coupon> unpacked_cpn = cpn->underlying();
         return unpackIndexedCoupon(unpacked_cpn);
+    } else
+        return c;
+}
+
+boost::shared_ptr<CashFlow> unpackIndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c) {
+    boost::shared_ptr<IndexWrappedCashFlow> cf = boost::dynamic_pointer_cast<IndexWrappedCashFlow>(c);
+
+    if (cf) {
+        boost::shared_ptr<CashFlow> unpacked_cf = cf->underlying();
+        return unpackIndexWrappedCashFlow(unpacked_cf);
     } else
         return c;
 }

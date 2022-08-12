@@ -130,6 +130,7 @@ private:
 };
 
 boost::shared_ptr<Coupon> unpackIndexedCoupon(const boost::shared_ptr<Coupon>& c);
+boost::shared_ptr<CashFlow> unpackIndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c);
 
 //! indexed coupon leg
 /*!
