@@ -29,19 +29,22 @@ namespace ore {
 namespace analytics {
 
 void NPVCalculator::init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) {
-    ccys_.clear();
     tradeCcyIndex_.clear();
-    for (auto const& t : portfolio->trades()) {
-        auto it = ccys_.insert(t->npvCurrency()).first;
-        tradeCcyIndex_.push_back(std::distance(ccys_.begin(), it));
-    }
     tradeFxRate_.resize(portfolio->size());
+    std::set<std::string> ccys;
+    for (auto const& t : portfolio->trades()) {
+        auto it = ccys.insert(t->npvCurrency()).first;
+        tradeCcyIndex_.push_back(std::distance(ccys.begin(), it));
+    }
+    ccyQuotes_.clear();
+    for (auto const& c : ccys)
+        ccyQuotes_.push_back(simMarket->fxRate(c + baseCcyCode_));
 }
 
-void NPVCalculator::initScenario(const boost::shared_ptr<SimMarket>& simMarket) {
+void NPVCalculator::initScenario() {
     std::vector<Real> fxRates;
-    for (auto const& c : ccys_)
-        fxRates.push_back(simMarket->fxRate(c + baseCcyCode_)->value());
+    for (Size i = 0; i < ccyQuotes_.size(); ++i)
+        fxRates.push_back(ccyQuotes_[i]->value());
     for (Size i = 0; i < tradeFxRate_.size(); ++i)
         tradeFxRate_[i] = fxRates[tradeCcyIndex_[i]];
 }
@@ -72,23 +75,26 @@ Real NPVCalculator::npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
 
 void CashflowCalculator::init(const boost::shared_ptr<Portfolio>& portfolio,
                               const boost::shared_ptr<SimMarket>& simMarket) {
-    ccys_.clear();
     tradeAndLegCcyIndex_.clear();
     tradeAndLegFxRate_.clear();
+    std::set<std::string> ccys;
     for (auto const& t : portfolio->trades()) {
         tradeAndLegCcyIndex_.push_back(std::vector<Size>());
         for (auto const& l : t->legCurrencies()) {
-            auto it = ccys_.insert(l).first;
-            tradeAndLegCcyIndex_.back().push_back(std::distance(ccys_.begin(), it));
+            auto it = ccys.insert(l).first;
+            tradeAndLegCcyIndex_.back().push_back(std::distance(ccys.begin(), it));
         }
         tradeAndLegFxRate_.push_back(std::vector<double>(t->legCurrencies().size()));
     }
+    ccyQuotes_.clear();
+    for (auto const& c : ccys)
+        ccyQuotes_.push_back(simMarket->fxRate(c + baseCcyCode_));
 }
 
-void CashflowCalculator::initScenario(const boost::shared_ptr<SimMarket>& simMarket) {
+void CashflowCalculator::initScenario() {
     std::vector<Real> fxRates;
-    for (auto const& c : ccys_)
-        fxRates.push_back(simMarket->fxRate(c + baseCcyCode_)->value());
+    for (Size i = 0; i < ccyQuotes_.size(); ++i)
+        fxRates.push_back(ccyQuotes_[i]->value());
     for (Size i = 0; i < tradeAndLegFxRate_.size(); ++i)
         for (Size j = 0; j < tradeAndLegFxRate_[i].size(); ++j)
             tradeAndLegFxRate_[i][j] = fxRates[tradeAndLegCcyIndex_[i][j]];
@@ -156,19 +162,22 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
 
 void NPVCalculatorFXT0::init(const boost::shared_ptr<Portfolio>& portfolio,
                              const boost::shared_ptr<SimMarket>& simMarket) {
-    ccys_.clear();
     tradeCcyIndex_.clear();
-    for (auto const& t : portfolio->trades()) {
-        auto it = ccys_.insert(t->npvCurrency()).first;
-        tradeCcyIndex_.push_back(std::distance(ccys_.begin(), it));
-    }
     tradeFxRate_.resize(portfolio->size());
+    std::set<std::string> ccys;
+    for (auto const& t : portfolio->trades()) {
+        auto it = ccys.insert(t->npvCurrency()).first;
+        tradeCcyIndex_.push_back(std::distance(ccys.begin(), it));
+    }
+    ccyQuotes_.clear();
+    for (auto const& c : ccys)
+        ccyQuotes_.push_back(t0Market_->fxRate(c + baseCcyCode_));
 }
 
-void NPVCalculatorFXT0::initScenario(const boost::shared_ptr<SimMarket>& simMarket) {
+void NPVCalculatorFXT0::initScenario() {
     std::vector<Real> fxRates;
-    for (auto const& c : ccys_)
-        fxRates.push_back(simMarket->fxRate(c + baseCcyCode_)->value());
+    for (Size i = 0; i < ccyQuotes_.size(); ++i)
+        fxRates.push_back(ccyQuotes_[i]->value());
     for (Size i = 0; i < tradeFxRate_.size(); ++i)
         tradeFxRate_[i] = fxRates[tradeCcyIndex_[i]];
 }

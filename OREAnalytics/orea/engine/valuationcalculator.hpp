@@ -76,7 +76,7 @@ public:
     virtual void init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) = 0;
 
     // called after each scenario update before the calculators are run
-    virtual void initScenario(const boost::shared_ptr<SimMarket>& simMarket) {}
+    virtual void initScenario() = 0;
 };
 
 //! NPVCalculator
@@ -102,13 +102,13 @@ public:
                      const boost::shared_ptr<SimMarket>& simMarket);
 
     void init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) override;
-    void initScenario(const boost::shared_ptr<SimMarket>& simMarket) override;
+    void initScenario() override;
 
 protected:
     std::string baseCcyCode_;
     Size index_;
 
-    std::set<std::string> ccys_;
+    std::vector<Handle<Quote>> ccyQuotes_;
     std::vector<Size> tradeCcyIndex_;
     std::vector<double> tradeFxRate_;
 };
@@ -135,7 +135,7 @@ public:
                              boost::shared_ptr<NPVCube>& outputCubeNettingSet) override {}
 
     void init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) override;
-    void initScenario(const boost::shared_ptr<SimMarket>& simMarket) override;
+    void initScenario() override;
 
 private:
     std::string baseCcyCode_;
@@ -143,7 +143,7 @@ private:
     boost::shared_ptr<DateGrid> dateGrid_;
     Size index_;
 
-    std::set<std::string> ccys_;
+    std::vector<Handle<Quote>> ccyQuotes_;
     std::vector<std::vector<Size>> tradeAndLegCcyIndex_;
     std::vector<std::vector<double>> tradeAndLegFxRate_;
 };
@@ -173,14 +173,14 @@ public:
     Real npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket);
 
     void init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) override;
-    void initScenario(const boost::shared_ptr<SimMarket>& simMarket) override;
+    void initScenario() override;
 
 private:
     std::string baseCcyCode_;
     boost::shared_ptr<Market> t0Market_;
     Size index_;
 
-    std::set<std::string> ccys_;
+    std::vector<Handle<Quote>> ccyQuotes_;
     std::vector<Size> tradeCcyIndex_;
     std::vector<double> tradeFxRate_;
 };

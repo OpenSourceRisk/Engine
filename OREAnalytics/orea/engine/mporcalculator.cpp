@@ -32,6 +32,8 @@ void MPORCalculator::init(const boost::shared_ptr<Portfolio>& portfolio,
     npvCalc_->init(portfolio, simMarket);
 }
 
+void MPORCalculator::initScenario() { npvCalc_->initScenario(); }
+
 void MPORCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                                const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
                                boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
