@@ -528,7 +528,7 @@
       <xs:all>
         <xs:element type="xs:float" name="Quantity" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="ReturnType" minOccurs="1" maxOccurs="1"/>
-        <xs:element ref="underlyingNameType"/>
+        <xs:element ref="equityNameType"/>
         <xs:element type="xs:float" name="InitialPrice" minOccurs="0" maxOccurs="1"/>
         <xs:element type="extendedCurrencyCode" name="InitialPriceCurrency" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:float" name="DividendFactor" minOccurs="0" maxOccurs="1"/>
@@ -703,8 +703,6 @@
       <xs:enumeration value="ForwardBond"/>
       <xs:enumeration value="CreditDefaultSwap"/>
       <xs:enumeration value="CreditDefaultSwapOption"/>
-      <xs:enumeration value="EquityAsianOption"/>
-      <xs:enumeration value="FxAsianOption"/>
       <xs:enumeration value="Failed"/>
     </xs:restriction>
   </xs:simpleType>
@@ -855,7 +853,7 @@
   <xs:complexType name="equityOptionData">
     <xs:all>
       <xs:element type="optionData" name="OptionData"/>
-      <xs:element ref="underlyingNameType"/>
+      <xs:element ref="equityNameType"/>
       <xs:element type="extendedCurrencyCode" name="Currency"/>
       <xs:element type="extendedCurrencyCode" name="StrikeCurrency" minOccurs="0"/>
       <xs:element type="xs:float" name="Quantity"/>
@@ -866,7 +864,7 @@
   <xs:complexType name="equityFutureOptionData">
     <xs:all>
       <xs:element type="optionData" name="OptionData"/>
-      <xs:element ref="underlyingNameType"/>
+      <xs:element ref="equityNameType"/>
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="xs:float" name="Strike"/>
       <xs:element type="xs:float" name="Quantity"/>
