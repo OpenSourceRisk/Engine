@@ -9,11 +9,13 @@
       <xs:element type="swapData" name="EquitySwapData"/>
       <xs:element type="swaptionData" name="SwaptionData"/>
       <xs:element type="forwardRateAgreementData" name="ForwardRateAgreementData"/>
+      <xs:element type="fxAsianOptionData" name="FxAsianOptionData"/>
       <xs:element type="fxForwardData" name="FxForwardData"/>
       <xs:element type="fxAverageForwardData" name="FxAverageForwardData"/>
       <xs:element type="fxOptionData" name="FxOptionData"/>
       <xs:element type="fxSwapData" name="FxSwapData"/>
       <xs:element type="capFloorData" name="CapFloorData"/>
+      <xs:element type="equityAsianOptionData" name="EquityAsianOptionData"/>
       <xs:element type="equityFutureOptionData" name="EquityFutureOptionData"/>
       <xs:element type="equityOptionData" name="EquityOptionData"/>
       <xs:element type="equityForwardData" name="EquityForwardData"/>
@@ -22,6 +24,7 @@
       <xs:element type="forwardBondData" name="ForwardBondData"/>
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
       <xs:element type="creditDefaultSwapOptionData" name="CreditDefaultSwapOptionData"/>
+      <xs:element type="commodityAsianOptionData" name="CommodityAsianOptionData"/>
       <xs:element type="commodityOptionData" name="CommodityOptionData"/>
       <xs:element type="commodityDigitalOptionData" name="CommodityDigitalOptionData"/>
       <xs:element type="singleUnderlyingAsianOptionData" name="EquityAsianOptionData" />
@@ -527,7 +530,7 @@
       <xs:all>
         <xs:element type="xs:float" name="Quantity" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="ReturnType" minOccurs="1" maxOccurs="1"/>
-        <xs:element ref="equityNameType"/>
+        <xs:element ref="underlyingNameType"/>
         <xs:element type="xs:float" name="InitialPrice" minOccurs="0" maxOccurs="1"/>
         <xs:element type="extendedCurrencyCode" name="InitialPriceCurrency" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:float" name="DividendFactor" minOccurs="0" maxOccurs="1"/>
@@ -686,15 +689,18 @@
       <xs:enumeration value="FxAverageForward"/>
       <xs:enumeration value="FxForward"/>
       <xs:enumeration value="FxOption"/>
+      <xs:enumeration value="FxAsianOption"/>
       <xs:enumeration value="FxSwap"/>
       <xs:enumeration value="CapFloor"/>
       <xs:enumeration value="EquityOption"/>
       <xs:enumeration value="EquityFutureOption"/>
+      <xs:enumeration value="EquityAsianOption"/>
       <xs:enumeration value="EquityForward"/>
       <xs:enumeration value="EquitySwap"/>
       <xs:enumeration value="CommodityForward"/>
       <xs:enumeration value="CommodityOption"/>
       <xs:enumeration value="CommodityDigitalOption"/>
+      <xs:enumeration value="CommodityAsianOption"/>
       <xs:enumeration value="Bond"/>
       <xs:enumeration value="ForwardBond"/>
       <xs:enumeration value="CreditDefaultSwap"/>
@@ -807,6 +813,19 @@
     </xs:all>
   </xs:complexType>
 
+  <xs:complexType name="fxAsianOptionData">
+    <xs:all>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="asianData" name="AsianData"/>
+      <xs:element type="scheduleData" name="ObservationDates"/>
+      <xs:element type="currencyCode" name="BoughtCurrency"/>
+      <xs:element type="xs:float" name="BoughtAmount"/>
+      <xs:element type="currencyCode" name="SoldCurrency"/>
+      <xs:element type="xs:float" name="SoldAmount"/>
+      <xs:element type="xs:string" name="FXIndex"/>
+    </xs:all>
+  </xs:complexType>
+
   <xs:complexType name="capFloorData">
     <xs:sequence>
       <xs:element type="longShort" name="LongShort"/>
@@ -851,7 +870,7 @@
   <xs:complexType name="equityOptionData">
     <xs:all>
       <xs:element type="optionData" name="OptionData"/>
-      <xs:element ref="equityNameType"/>
+      <xs:element ref="underlyingNameType"/>
       <xs:element type="extendedCurrencyCode" name="Currency"/>
       <xs:element type="extendedCurrencyCode" name="StrikeCurrency" minOccurs="0"/>
       <xs:element type="xs:float" name="Quantity"/>
@@ -862,11 +881,23 @@
   <xs:complexType name="equityFutureOptionData">
     <xs:all>
       <xs:element type="optionData" name="OptionData"/>
-      <xs:element ref="equityNameType"/>
+      <xs:element ref="underlyingNameType"/>
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="xs:float" name="Strike"/>
       <xs:element type="xs:float" name="Quantity"/>
       <xs:element type="date" name="FutureExpiryDate" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="equityAsianOptionData">
+    <xs:all>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="asianData" name="AsianData"/>
+      <xs:element type="scheduleData" name="ObservationDates"/>
+      <xs:element ref="underlyingNameType"/>
+      <xs:element type="extendedCurrencyCode" name="Currency"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="xs:float" name="Quantity"/>
     </xs:all>
   </xs:complexType>
 
@@ -894,11 +925,25 @@
     </xs:all>
   </xs:complexType>
 
+  <xs:complexType name="commodityAsianOptionData">
+    <xs:all>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="asianData" name="AsianData"/>
+      <xs:element type="scheduleData" name="ObservationDates"/>
+      <xs:element ref="underlyingNameType"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="xs:float" name="Quantity"/>
+      <xs:element type="bool" name="IsFuturePrice" minOccurs="0"/>
+      <xs:element type="date" name="FutureExpiryDate" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
   <xs:complexType name="equityForwardData">
     <xs:all>
       <xs:element type="longShort" name="LongShort"/>
       <xs:element type="date" name="Maturity"/>
-      <xs:element ref="equityNameType"/>
+      <xs:element ref="underlyingNameType"/>
       <xs:element type="extendedCurrencyCode" name="Currency"/>
       <xs:element type="xs:float" name="Strike"/>
       <xs:element type="extendedCurrencyCode" name="StrikeCurrency" minOccurs="0"/>
@@ -1085,9 +1130,9 @@
     </xs:all>
   </xs:complexType>
   
-  <xs:element name="equityNameType" abstract="true"/>
-  <xs:element type="xs:string" name="Name" substitutionGroup="equityNameType"/>
-  <xs:element type= "underlying" name="Underlying" substitutionGroup="equityNameType"/>
+  <xs:element name="underlyingNameType" abstract="true"/>
+  <xs:element type="xs:string" name="Name" substitutionGroup="underlyingNameType" />
+  <xs:element type="underlying" name="Underlying" substitutionGroup="underlyingNameType"/>
 
   <xs:element name="nettingSetGroup" abstract="true"/>
   <xs:element type="xs:string" name="NettingSetId" substitutionGroup="nettingSetGroup"/>
