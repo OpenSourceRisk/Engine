@@ -280,4 +280,3 @@ string AsianOption::notionalCurrency() const {
 
 } // namespace data
 } // namespace ore
-
