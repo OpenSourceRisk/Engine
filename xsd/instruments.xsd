@@ -1088,7 +1088,7 @@
   </xs:complexType>
   
   <xs:element name="equityNameType" abstract="true"/>
-  <xs:element type="xs:string" name="Name" substitutionGroup="equityNameType" />
+  <xs:element type="xs:string" name="Name" substitutionGroup="equityNameType"/>
   <xs:element type="underlying" name="Underlying" substitutionGroup="equityNameType"/>
 
   <xs:element name="nettingSetGroup" abstract="true"/>
