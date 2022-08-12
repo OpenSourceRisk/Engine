@@ -32,7 +32,8 @@ void NPVCalculator::init(const boost::shared_ptr<Portfolio>& portfolio, const bo
     ccys_.clear();
     tradeCcyIndex_.clear();
     for (auto const& t : portfolio->trades()) {
-        tradeCcyIndex_.push_back(std::distance(ccys_.begin(), ccys_.insert(t->npvCurrency()).first));
+        auto it = ccys_.insert(t->npvCurrency()).first;
+        tradeCcyIndex_.push_back(std::distance(ccys_.begin(), it));
     }
     tradeFxRate_.resize(portfolio->size());
 }
@@ -76,8 +77,10 @@ void CashflowCalculator::init(const boost::shared_ptr<Portfolio>& portfolio,
     tradeAndLegFxRate_.clear();
     for (auto const& t : portfolio->trades()) {
         tradeAndLegCcyIndex_.push_back(std::vector<Size>());
-        for (auto const& l : t->legCurrencies())
-            tradeAndLegCcyIndex_.back().push_back(std::distance(ccys_.begin(), ccys_.insert(l).first));
+        for (auto const& l : t->legCurrencies()) {
+            auto it = ccys_.insert(l).first;
+            tradeAndLegCcyIndex_.back().push_back(std::distance(ccys_.begin(), it));
+        }
         tradeAndLegFxRate_.push_back(std::vector<double>(t->legCurrencies().size()));
     }
 }
@@ -156,7 +159,8 @@ void NPVCalculatorFXT0::init(const boost::shared_ptr<Portfolio>& portfolio,
     ccys_.clear();
     tradeCcyIndex_.clear();
     for (auto const& t : portfolio->trades()) {
-        tradeCcyIndex_.push_back(std::distance(ccys_.begin(), ccys_.insert(t->npvCurrency()).first));
+        auto it = ccys_.insert(t->npvCurrency()).first;
+        tradeCcyIndex_.push_back(std::distance(ccys_.begin(), it));
     }
     tradeFxRate_.resize(portfolio->size());
 }
