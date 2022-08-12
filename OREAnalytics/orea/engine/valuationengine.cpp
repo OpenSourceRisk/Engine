@@ -115,7 +115,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     Size numFRC = 0;
     // initialise state objects for each trade (required for path-dependent derivatives in particular)
     for (Size i = 0; i < trades.size(); i++) {
-        QL_REQUIRE(trades[i]->npvCurrency() != "", "NPV currency not set for trade " << trades[i]->id());
+        QL_REQUIRE(!trades[i]->npvCurrency().empty(), "NPV currency not set for trade " << trades[i]->id());
 
         DLOG("Initialise wrapper for trade " << trades[i]->id());
         trades[i]->instrument()->initialise(dates);
