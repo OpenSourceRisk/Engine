@@ -28,7 +28,12 @@ an example \lstinline!EquityOptionData! node for an equity option is shown in Li
     </OptionData>
     <Name>RIC:.SPX</Name>
     <Currency>USD</Currency>
-    <Strike>2147.56</Strike>
+    <StrikeData>
+		<StrikePrice>
+			<Value>2147.56</Value>
+			<Currency>USD</Currency>
+		</StrikePrice>
+	</StrikeData>
     <StrikeCurrency>USD</StrikeCurrency>
     <Quantity>17000</Quantity>
 </EquityOptionData>
@@ -75,18 +80,8 @@ Allowable values:  See section \ref{ss:premiums}
 	\ref{tab:allow_stand_data}.	If this is different to the currency that the underlying equity
 	is quoted in, then a Quanto payoff will be applied. Using the corresponding major currency
 	for an equity quoted in the minor currency will not correspond to a Quanto payoff.
-	\item Strike: The option strike price.\\
-	Allowable values: Any positive real number.	
-	\item StrikeCurrency [Optional]: The currency that the \lstinline!Strike! is quoted in. If
-	the option is Quanto, then this field must not be left blank, and must equal the currency
-	that the underlying equity is quoted in, up to the minor/major currency. For example, if 
-	the underlying equity is quoted in GBP, then\lstinline!StrikeCurrency! must be either
-	\emph{GBP} or \emph{GBp}. If the option is a composite option, then this field must not be 
-	left blank, and it must equal the payment currency of the option and different to the 
-	underlying currency.\\
-	Allowable values: See Fiat Currencies and Minor Currencies in Table
-	\ref{tab:currency}.	Must be the major or minor currency of the \lstinline!Currency!
-	field above.
+	\item StrikeData: The option strike price. \\
+	Allowable values: Only supports \lstinline!StrikePrice! as described in Section \ref{ss:strikedata}.
 	\item Quantity: The number of units of the underlying covered by the transaction. \\
 	Allowable values: Any positive real number.
 \end{itemize}

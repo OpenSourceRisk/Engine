@@ -26,8 +26,8 @@
 
  #include <ored/marketdata/marketimpl.hpp>
  #include <ored/portfolio/builders/fxasianoption.hpp>
- #include <ored/portfolio/fxasianoption.hpp>
  #include <ored/portfolio/portfolio.hpp>
+ #include <ored/portfolio/asianoption.hpp>
  #include <ored/utilities/to_string.hpp>
 
  using namespace std;
@@ -147,17 +147,17 @@
 
          // Set evaluation date
          Settings::instance().evaluationDate() = market->asofDate();
-         OptionAsianData asianData(OptionAsianData::AsianType::Price, Average::Type::Arithmetic);
 
          // Test the building of a FX Asian option doesn't throw
 	 PremiumData premiumData;
          OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "",
 			       premiumData,
                                vector<Real>(), vector<Real>(), "", "", "", vector<string>(), vector<string>(), "", "",
-                               "", "Asian", boost::none, boost::none, boost::none);
+                               "", "Asian", "Arithmetic", boost::none, boost::none, boost::none);
 
          boost::shared_ptr<FxAsianOption> asianOption = boost::make_shared<FxAsianOption>(
-             env, optionData, asianData, scheduleData, "JPY", 1, "USD", a.strike, "FX-ECB-JPY-USD");
+             env, "FxAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,
+             boost::make_shared<FXUnderlying>("FX", "ECB-JPY-USD", 1.0), Date(), "USD");
          BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
          // Check the underlying instrument was built as expected
@@ -204,14 +204,11 @@
      tradeXml.append("        <Settlement>Cash</Settlement>");
      tradeXml.append("        <PayOffAtExpiry>false</PayOffAtExpiry>");
      tradeXml.append("        <PayoffType>Asian</PayoffType>");
+     tradeXml.append("        <PayoffType2>Arithmetic</PayoffType2>");
      tradeXml.append("        <ExerciseDates>");
      tradeXml.append("          <ExerciseDate>2021-02-26</ExerciseDate>");
      tradeXml.append("        </ExerciseDates>");
      tradeXml.append("      </OptionData>");
-     tradeXml.append("      <AsianData>");
-     tradeXml.append("        <AsianType>Price</AsianType>");
-     tradeXml.append("        <AverageType>Arithmetic</AverageType>");
-     tradeXml.append("      </AsianData>");
      tradeXml.append("      <ObservationDates>");
      tradeXml.append("        <Dates>");
      tradeXml.append("          <Dates>");
@@ -238,11 +235,9 @@
      tradeXml.append("          </Dates>");
      tradeXml.append("        </Dates>");
      tradeXml.append("      </ObservationDates>");
-     tradeXml.append("      <BoughtCurrency>USD</BoughtCurrency>");
-     tradeXml.append("      <SoldCurrency>JPY</SoldCurrency>");
-     tradeXml.append("      <BoughtAmount>1</BoughtAmount>");
-     tradeXml.append("      <SoldAmount>104.6860</SoldAmount>");
-     tradeXml.append("      <FXIndex>FX-ECB-USD-JPY</FXIndex>");
+     tradeXml.append("      <Name>FX-ECB-USD-JPY</Name>");
+     tradeXml.append("      <Strike>104.6860</Strike>");
+     tradeXml.append("      <Quantity>104.6860</Quantity>");
      tradeXml.append("    </FxAsianOptionData>");
      tradeXml.append("  </Trade>");
      tradeXml.append("</Portfolio>");
@@ -254,17 +249,16 @@
      // Extract FxAsianOption trade from portfolio
      boost::shared_ptr<Trade> trade = portfolio.trades()[0];
      boost::shared_ptr<FxAsianOption> option = boost::dynamic_pointer_cast<ore::data::FxAsianOption>(trade);
+     BOOST_CHECK(option != nullptr);
 
      // Check fields after checking that the cast was successful
      BOOST_CHECK(option);
      BOOST_CHECK_EQUAL(option->tradeType(), "FxAsianOption");
      BOOST_CHECK_EQUAL(option->id(), "FxAsianOption_USDJPY");
-     BOOST_CHECK_EQUAL(option->boughtCurrency(), "USD");
-     BOOST_CHECK_EQUAL(option->soldCurrency(), "JPY");
-     BOOST_CHECK_EQUAL(option->boughtAmount(), 1);
-     BOOST_CHECK_EQUAL(option->soldAmount(), 104.6860);
-     BOOST_CHECK_EQUAL(option->strike(), 104.6860);
-     BOOST_CHECK_EQUAL(option->fxIndex(), "FX-ECB-USD-JPY");
+     // BOOST_CHECK_EQUAL(option->asset(), "USD"); // only available after build
+     BOOST_CHECK_EQUAL(option->quantity(), 104.6860);
+     BOOST_CHECK_EQUAL(option->strike().value(), 104.6860);
+     BOOST_CHECK_EQUAL(option->indexName(), "FX-ECB-USD-JPY");
      BOOST_CHECK_EQUAL(option->option().longShort(), "Long");
      BOOST_CHECK_EQUAL(option->option().callPut(), "Call");
      BOOST_CHECK_EQUAL(option->option().style(), "European");
@@ -272,9 +266,8 @@
      BOOST_CHECK_EQUAL(option->option().exerciseDates()[0], "2021-02-26");
      BOOST_CHECK(option->observationDates().hasData());
 
-     OptionAsianData oad = option->asianData();
-     BOOST_CHECK_EQUAL(oad.asianType(), OptionAsianData::AsianType::Price);
-     BOOST_CHECK_EQUAL(oad.averageType(), Average::Type::Arithmetic);
+     BOOST_CHECK_EQUAL(option->option().payoffType(), "Asian");
+     BOOST_CHECK_EQUAL(option->option().payoffType2(), "Arithmetic");
  }
 
  BOOST_AUTO_TEST_SUITE_END()

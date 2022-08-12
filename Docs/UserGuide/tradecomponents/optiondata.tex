@@ -114,6 +114,13 @@ FX Double Touch Options &  \emph{Call/Put} values are ignored, and the OptionTyp
   
   Index CDS Options must have style  \emph{European}. 
 
+\item PayoffType2 [Optional]: Subtype for payoff of exotic options. Only applicable to specific trade types as indicated in parantheses:
+
+  Allowable values:
+  \begin{itemize}
+  \item \emph{Arithmetic, Geometric} (applies to trade types EquityAsianOption, FxAsianOption only, if not given it defaults to Arithmetic)
+  \end{itemize}
+  
 \item NoticePeriod [Optional]: The notice period defining the date (relative to the exercise date) on which the exercise
   decision has to be taken. If not given the notice period defaults to 0D, i.e. the notice date is identical to the
   exercise date. Only supported for Swaptions and Callable Swaps currently.

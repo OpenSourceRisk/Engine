@@ -26,7 +26,8 @@
 
  #include <ored/marketdata/marketimpl.hpp>
  #include <ored/portfolio/builders/equityasianoption.hpp>
- #include <ored/portfolio/equityasianoption.hpp>
+ #include <ored/portfolio/optiondata.hpp>
+ #include <ored/portfolio/asianoption.hpp>
  #include <ored/portfolio/portfolio.hpp>
  #include <ored/portfolio/schedule.hpp>
  #include <ored/utilities/to_string.hpp>
@@ -155,17 +156,17 @@
 
          // Set evaluation date
          Settings::instance().evaluationDate() = market->asofDate();
-         OptionAsianData asianData(OptionAsianData::AsianType::Price, Average::Type::Arithmetic);
 
          // Test the building of a equity Asian option doesn't throw
 	 PremiumData premiumData;
          OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "",
-			       premiumData,
-                               vector<Real>(), vector<Real>(), "", "", "", vector<string>(), vector<string>(), "", "",
-                               "", "Asian", boost::none, boost::none, boost::none);
+                               premiumData, vector<Real>(), vector<Real>(), "", "", "", vector<string>(),
+                               vector<string>(), "", "", "", "Asian", "Arithmetic", boost::none, boost::none,
+                               boost::none);
 
          boost::shared_ptr<EquityAsianOption> asianOption = boost::make_shared<EquityAsianOption>(
-             env, optionData, asianData, scheduleData, EquityUnderlying("COMPANY"), "USD", a.strike, 1);
+             env, "EquityAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,
+             boost::make_shared<EquityUnderlying>("COMPANY"), Date(), "USD");
          BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
          // Check the underlying instrument was built as expected
@@ -254,17 +255,17 @@
 
          // Set evaluation date
          Settings::instance().evaluationDate() = market->asofDate();
-         OptionAsianData asianData(OptionAsianData::AsianType::Strike, Average::Type::Arithmetic);
 
          // Test the building of a equity Asian option doesn't throw
 	 PremiumData premiumData;
          OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "",
-			       premiumData,
-                               vector<Real>(), vector<Real>(), "", "", "", vector<string>(), vector<string>(), "", "",
-                               "", "Asian", boost::none, boost::none, boost::none);
+                               premiumData, vector<Real>(), vector<Real>(), "", "", "", vector<string>(),
+                               vector<string>(), "", "", "", "AverageStrike", "Arithmetic", boost::none, boost::none,
+                               boost::none);
 
          boost::shared_ptr<EquityAsianOption> asianOption = boost::make_shared<EquityAsianOption>(
-             env, optionData, asianData, scheduleData, EquityUnderlying("COMPANY"), "USD", a.strike, 1);
+             env, "EquityAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,
+             boost::make_shared<EquityUnderlying>("COMPANY"), Date(), "USD");
          BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
          // Check the underlying instrument was built as expected
@@ -311,14 +312,11 @@
      tradeXml.append("        <Settlement>Cash</Settlement>");
      tradeXml.append("        <PayOffAtExpiry>false</PayOffAtExpiry>");
      tradeXml.append("        <PayoffType>Asian</PayoffType>");
+     tradeXml.append("        <PayoffType2>Arithmetic</PayoffType2>");
      tradeXml.append("        <ExerciseDates>");
      tradeXml.append("          <ExerciseDate>2021-02-26</ExerciseDate>");
      tradeXml.append("        </ExerciseDates>");
      tradeXml.append("      </OptionData>");
-     tradeXml.append("      <AsianData>");
-     tradeXml.append("        <AsianType>Price</AsianType>");
-     tradeXml.append("        <AverageType>Arithmetic</AverageType>");
-     tradeXml.append("      </AsianData>");
      tradeXml.append("      <ObservationDates>");
      tradeXml.append("        <Dates>");
      tradeXml.append("          <Dates>");
@@ -363,14 +361,15 @@
      // Extract EquityAsianOption trade from portfolio
      boost::shared_ptr<Trade> trade = portfolio.trades()[0];
      boost::shared_ptr<EquityAsianOption> option = boost::dynamic_pointer_cast<ore::data::EquityAsianOption>(trade);
+     BOOST_CHECK(option != nullptr);
 
      // Check fields after checking that the cast was successful
      BOOST_CHECK(option);
      BOOST_CHECK_EQUAL(option->tradeType(), "EquityAsianOption");
      BOOST_CHECK_EQUAL(option->id(), "EquityAsianOption_Company");
-     BOOST_CHECK_EQUAL(option->equityName(), "COMPANY");
-     BOOST_CHECK_EQUAL(option->currency(), "USD");
-     BOOST_CHECK_EQUAL(option->strike(), 2270);
+     // BOOST_CHECK_EQUAL(option->asset(), "COMPANY"); // only available after build
+     BOOST_CHECK_EQUAL(option->payCurrency(), "USD");
+     BOOST_CHECK_EQUAL(option->strike().value(), 2270);
      BOOST_CHECK_EQUAL(option->quantity(), 1);
      BOOST_CHECK_EQUAL(option->option().longShort(), "Long");
      BOOST_CHECK_EQUAL(option->option().callPut(), "Call");
@@ -379,9 +378,8 @@
      BOOST_CHECK_EQUAL(option->option().exerciseDates()[0], "2021-02-26");
      BOOST_CHECK(option->observationDates().hasData());
 
-     OptionAsianData oad = option->asianData();
-     BOOST_CHECK_EQUAL(oad.asianType(), OptionAsianData::AsianType::Price);
-     BOOST_CHECK_EQUAL(oad.averageType(), Average::Type::Arithmetic);
+     BOOST_CHECK_EQUAL(option->option().payoffType(), "Asian");
+     BOOST_CHECK_EQUAL(option->option().payoffType2(), "Arithmetic");
  }
 
  BOOST_AUTO_TEST_SUITE_END()

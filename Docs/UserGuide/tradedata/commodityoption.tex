@@ -23,7 +23,12 @@ a \lstinline!CommodityOptionData! node for a commodity option is shown in Listin
   </OptionData>
   <Name>NYMEX:CL</Name>
   <Currency>USD</Currency>
-  <Strike>100</Strike>
+  <StrikeData>
+    <StrikePrice>
+      <Value>100</Value>
+      <Currency>USD</Currency>
+    </StrikePrice>
+  </StrikeData>
   <Quantity>500000</Quantity>
   <IsFuturePrice>true<IsFuturePrice>
   <FutureExpiryDate>2029-04-28<FutureExpiryDate>
@@ -64,8 +69,8 @@ Allowable values:  See section \ref{ss:premiums}
 Allowable values: See \lstinline!Name! for commodity trades in Table \ref{tab:commodity_data}.
 \item Currency: The currency of the commodity option. \\
 Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
-\item Strike: The option strike price. It uses the price quotation outlined in the underlying contract specs for the commodity name in question.  \\
-Allowable values: Any positive real number.
+\item StrikeData: The option strike price. It uses the price quotation outlined in the underlying contract specs for the commodity name in question.  \\
+Allowable values: Only supports \lstinline!StrikePrice! as described in Section \ref{ss:strikedata}.
 \item Quantity: The number of units of the underlying commodity covered by the transaction. The unit type is defined in the underlying contract specs for the commodity name in question. For avoidance of doubt, the Quantity is the number of units of the underlying commodity, not the number of contracts. \\
 Allowable values: Any positive real number.
 

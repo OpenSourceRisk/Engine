@@ -101,7 +101,6 @@ portfolio/builders/durationadjustedcms.cpp
 portfolio/builders/swaption.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
-portfolio/commodityasianoption.cpp
 portfolio/commoditydigitaloption.cpp
 portfolio/commodityforward.cpp
 portfolio/commodityoption.cpp
@@ -113,7 +112,6 @@ portfolio/durationadjustedcmslegdata.cpp
 portfolio/enginedata.cpp
 portfolio/enginefactory.cpp
 portfolio/envelope.cpp
-portfolio/equityasianoption.cpp
 portfolio/equityforward.cpp
 portfolio/equityfuturesoption.cpp
 portfolio/equityoption.cpp
@@ -122,7 +120,6 @@ portfolio/failedtrade.cpp
 portfolio/fixingdates.cpp
 portfolio/forwardbond.cpp
 portfolio/forwardrateagreement.cpp
-portfolio/fxasianoption.cpp
 portfolio/fxaverageforward.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
@@ -134,7 +131,6 @@ portfolio/legdatafactory.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetdetails.cpp
 portfolio/nettingsetmanager.cpp
-portfolio/optionasiandata.cpp
 portfolio/optiondata.cpp
 portfolio/optionexercisedata.cpp
 portfolio/optionpaymentdata.cpp
@@ -314,7 +310,6 @@ portfolio/builders/swaption.hpp
 portfolio/builders/vanillaoption.hpp
 portfolio/builders/yoycapfloor.hpp
 portfolio/capfloor.hpp
-portfolio/commodityasianoption.hpp
 portfolio/commoditydigitaloption.hpp
 portfolio/commodityforward.hpp
 portfolio/commodityoption.hpp
@@ -326,7 +321,6 @@ portfolio/durationadjustedcmslegdata.hpp
 portfolio/enginedata.hpp
 portfolio/enginefactory.hpp
 portfolio/envelope.hpp
-portfolio/equityasianoption.hpp
 portfolio/equityforward.hpp
 portfolio/equityfuturesoption.hpp
 portfolio/equityoption.hpp
@@ -335,7 +329,6 @@ portfolio/failedtrade.hpp
 portfolio/fixingdates.hpp
 portfolio/forwardbond.hpp
 portfolio/forwardrateagreement.hpp
-portfolio/fxasianoption.hpp
 portfolio/fxaverageforward.hpp
 portfolio/fxforward.hpp
 portfolio/fxoption.hpp
@@ -348,7 +341,6 @@ portfolio/legdatafactory.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetdetails.hpp
 portfolio/nettingsetmanager.hpp
-portfolio/optionasiandata.hpp
 portfolio/optiondata.hpp
 portfolio/optionexercisedata.hpp
 portfolio/optionpaymentdata.hpp
