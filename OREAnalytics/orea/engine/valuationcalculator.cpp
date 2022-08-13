@@ -77,7 +77,7 @@ void CashflowCalculator::init(const boost::shared_ptr<Portfolio>& portfolio,
     tradeAndLegCcyIndex_.clear();
     std::set<std::string> ccys;
     for (auto const& t : portfolio->trades()) {
-        tradeAndLegCcyIndex_.push_back(std::vector<Size>(t->legCurrencies().size()));
+        tradeAndLegCcyIndex_.push_back(std::vector<Size>(t->legs().size()));
         for (auto const& l : t->legCurrencies()) {
             ccys.insert(l);
         }
@@ -95,9 +95,8 @@ void CashflowCalculator::init(const boost::shared_ptr<Portfolio>& portfolio,
 }
 
 void CashflowCalculator::initScenario() {
-    std::vector<Real> fxRates;
     for (Size i = 0; i < ccyQuotes_.size(); ++i)
-        fxRates[i] = ccyQuotes_[i]->value();
+        fxRates_[i] = ccyQuotes_[i]->value();
 }
 
 void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
