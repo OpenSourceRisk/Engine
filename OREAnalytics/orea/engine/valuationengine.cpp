@@ -324,7 +324,7 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<std:
     // loop over counterparties
     for (Size j = 0; j < counterparties.size(); ++j) {
         auto counterparty = counterparties[j];
-        for (auto calc : calculators)
+        for (auto& calc : calculators)
             calc->calculate(counterparty, j, simMarket_, cptyCube, d, cubeDateIndex, sample, isCloseOutDate);
     }
 }
