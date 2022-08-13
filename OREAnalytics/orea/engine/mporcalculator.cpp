@@ -29,6 +29,7 @@ namespace analytics {
 
 void MPORCalculator::init(const boost::shared_ptr<Portfolio>& portfolio,
                           const boost::shared_ptr<SimMarket>& simMarket) {
+    DLOG("init MPORCalculator")
     npvCalc_->init(portfolio, simMarket);
 }
 

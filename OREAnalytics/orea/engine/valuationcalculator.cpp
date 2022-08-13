@@ -29,6 +29,7 @@ namespace ore {
 namespace analytics {
 
 void NPVCalculator::init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) {
+    DLOG("init NPVCalculator");
     tradeCcyIndex_.resize(portfolio->size());
     std::set<std::string> ccys;
     for (auto const& t : portfolio->trades())
@@ -72,10 +73,11 @@ Real NPVCalculator::npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
 
 void CashflowCalculator::init(const boost::shared_ptr<Portfolio>& portfolio,
                               const boost::shared_ptr<SimMarket>& simMarket) {
+    DLOG("init CashflowCalculator");
     tradeAndLegCcyIndex_.clear();
     std::set<std::string> ccys;
     for (auto const& t : portfolio->trades()) {
-        tradeAndLegCcyIndex_.push_back(std::vector<Size>());
+        tradeAndLegCcyIndex_.push_back(std::vector<Size>(t->legCurrencies().size()));
         for (auto const& l : t->legCurrencies()) {
             ccys.insert(l);
         }
@@ -160,6 +162,7 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
 
 void NPVCalculatorFXT0::init(const boost::shared_ptr<Portfolio>& portfolio,
                              const boost::shared_ptr<SimMarket>& simMarket) {
+    DLOG("init NPVCalculatorFXT0");
     tradeCcyIndex_.resize(portfolio->size());
     std::set<std::string> ccys;
     for (auto const& t : portfolio->trades())
