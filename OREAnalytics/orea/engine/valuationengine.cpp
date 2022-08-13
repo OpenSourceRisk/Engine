@@ -101,6 +101,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     Real pricingTime = 0.0;
     Real fixingTime = 0.0;
 
+    LOG("Initialise " << calculators.size() << " valuation calculators");
     for (auto const& c : calculators) {
         c->init(portfolio, simMarket_);
         c->initScenario();
