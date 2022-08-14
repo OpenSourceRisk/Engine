@@ -28,12 +28,7 @@ an example \lstinline!EquityOptionData! node for an equity option is shown in Li
     </OptionData>
     <Name>RIC:.SPX</Name>
     <Currency>USD</Currency>
-    <StrikeData>
-		<StrikePrice>
-			<Value>2147.56</Value>
-			<Currency>USD</Currency>
-		</StrikePrice>
-	</StrikeData>
+    <Strike>2147.56</Strike>
     <StrikeCurrency>USD</StrikeCurrency>
     <Quantity>17000</Quantity>
 </EquityOptionData>
@@ -70,18 +65,42 @@ Allowable values:  See section \ref{ss:premiums}
 \end{itemize}
 	
 
-	\item Name: The identifier of the underlying equity or equity index. \\
+	\item Name: The identifier of the underlying equity or equity index. 
+	
 	Allowable values: See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data}.
+	
 	\item Underlying: This node may be used as an alternative to the \lstinline!Name! node to
 	specify the underlying equity. This in turn defines the equity curve used for pricing. The
 	\lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
-	\item Currency: The payment currency of the equity option. \\
+	
+	\item Currency: The payment currency of the equity option. 
+	
 	Allowable values: See \lstinline!Currency! and \lstinline!Minor Currencies! in Table
 	\ref{tab:allow_stand_data}.	If this is different to the currency that the underlying equity
 	is quoted in, then a Quanto payoff will be applied. Using the corresponding major currency
 	for an equity quoted in the minor currency will not correspond to a Quanto payoff.
-	\item StrikeData: The option strike price. \\
-	Allowable values: Only supports \lstinline!StrikePrice! as described in Section \ref{ss:strikedata}.
-	\item Quantity: The number of units of the underlying covered by the transaction. \\
+	
+	\item Strike[Mandatory except if StrikeData node is used]: The option strike price.
+	
+	Allowable values: Any positive real number.	
+	
+	\item StrikeCurrency [Optional]: The currency that the \lstinline!Strike! is quoted in. If
+	the option is Quanto, then this field must not be left blank, and must equal the currency
+	that the underlying equity is quoted in, up to the minor/major currency. For example, if 
+	the underlying equity is quoted in GBP, then\lstinline!StrikeCurrency! must be either
+	\emph{GBP} or \emph{GBp}. If the option is a Compo option, then this field must not be 
+	left blank, and it must equal the payment currency of the option and different to the 
+	underlying currency.
+	
+	Allowable values: See Fiat Currencies and Minor Currencies in Table
+	\ref{tab:currency}.	Must be the major or minor currency of the \lstinline!Currency!
+	field above, or in the Quanto case it must be the major or minor currency the underlying is quoted in. If left blank or omitte dit defaults to the \lstinline!Currency!
+	field above.
+
+	
+	\item StrikeData[Optional]: Alternatively, instead of the \lstinline!Strike! and the \lstinline!StrikeCurrency! fields above a \lstinline!StrikeData! node can be used as described in Section \ref{ss:strikedata}. Note that for EquityOptions only \lstinline!StrikePrice!  is supported within the \lstinline!StrikeData! node, and not \lstinline!StrikeYield!. 
+	
+	\item Quantity: The number of units of the underlying covered by the transaction. 
+	
 	Allowable values: Any positive real number.
 \end{itemize}
