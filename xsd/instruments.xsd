@@ -26,6 +26,7 @@
       <xs:element type="commodityDigitalOptionData" name="CommodityDigitalOptionData"/>
       <xs:element type="singleUnderlyingAsianOptionData" name="EquityAsianOptionData" />
       <xs:element type="singleUnderlyingAsianOptionData" name="FxAsianOptionData" />
+      <xs:element type="singleUnderlyingAsianOptionData" name="CommodityAsianOptionData" />
     </xs:choice>
   </xs:group>
 
@@ -686,21 +687,22 @@
       <xs:enumeration value="FxAverageForward"/>
       <xs:enumeration value="FxForward"/>
       <xs:enumeration value="FxOption"/>
+      <xs:enumeration value="FxAsianOption"/>
       <xs:enumeration value="FxSwap"/>
       <xs:enumeration value="CapFloor"/>
       <xs:enumeration value="EquityOption"/>
       <xs:enumeration value="EquityFutureOption"/>
+      <xs:enumeration value="EquityAsianOption"/>
       <xs:enumeration value="EquityForward"/>
       <xs:enumeration value="EquitySwap"/>
       <xs:enumeration value="CommodityForward"/>
       <xs:enumeration value="CommodityOption"/>
       <xs:enumeration value="CommodityDigitalOption"/>
+      <xs:enumeration value="CommodityAsianOption"/>
       <xs:enumeration value="Bond"/>
       <xs:enumeration value="ForwardBond"/>
       <xs:enumeration value="CreditDefaultSwap"/>
       <xs:enumeration value="CreditDefaultSwapOption"/>
-      <xs:enumeration value="EquityAsianOption"/>
-      <xs:enumeration value="FxAsianOption"/>
       <xs:enumeration value="Failed"/>
     </xs:restriction>
   </xs:simpleType>
@@ -1087,7 +1089,7 @@
   
   <xs:element name="equityNameType" abstract="true"/>
   <xs:element type="xs:string" name="Name" substitutionGroup="equityNameType"/>
-  <xs:element type= "underlying" name="Underlying" substitutionGroup="equityNameType"/>
+  <xs:element type="underlying" name="Underlying" substitutionGroup="equityNameType"/>
 
   <xs:element name="nettingSetGroup" abstract="true"/>
   <xs:element type="xs:string" name="NettingSetId" substitutionGroup="nettingSetGroup"/>
