@@ -36,15 +36,12 @@ The structure of an example \lstinline!EquityAsianOptionData! node for an Equity
 			<LongShort>Long</LongShort>
 			<OptionType>Call</OptionType>
 			<PayoffType>Asian</PayoffType>
+                        <PayoffType2>Arithmetic</PayoffType2>
 			<ExerciseDates>
 				<ExerciseDate>2020-07-15</ExerciseDate>
 			 </ExerciseDates>
                          <Premiums> ... </Premiums>       
 		</OptionData>
-                <AsianData><!-- optional -->
-                        <AverageType>Arithmetic</AverageType>
-                        <AsianType>Price</AsianType>
-                </AsianData>
 		<Settlement>2020-07-20</Settlement>
 		<ObservationDates>
 			<Rules>
@@ -94,8 +91,4 @@ The meanings and allowable values of the elements in the \lstinline!EquityAsianO
 	Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. Defaults to the ExerciseDate if left blank or omitted.
 	\item ObservationDates: The observation dates for the asian period, given as a rules-based or dates-based schedule, analogous to a \lstinline!ScheduleData! node but called \lstinline!ObservationDates!.  \\
 	Allowable values: See the definition in \ref{ss:schedule_data}
-	\item AsianData/AverageType[Optional]: Type of the averaging applied. \\
-        Allowable values: \emph{Arithmetic}, \emph{Geometric}. Defaults to \emph{Arithmetic} if the AsianData node is omitted.
-	\item AsianData/AsianType[Optional]: Determines the target quantity to be averaged. \\
-        Allowable values: \emph{Price}, \emph{Strike}. Defaults to \emph{Price} if the AsianData node is omitted
 \end{itemize}

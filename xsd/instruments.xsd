@@ -997,7 +997,6 @@
       <xs:element ref="strikeGroup"/>
       <xs:element type="underlying" name="Underlying" minOccurs="0" maxOccurs="1"/>
       <xs:element type="optionData" name="OptionData"/>
-      <xs:element type="asianData" name="AsianData" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Settlement" minOccurs="0"/>
       <xs:element type="scheduleData" name="ObservationDates" minOccurs="0"/>
     </xs:all>
