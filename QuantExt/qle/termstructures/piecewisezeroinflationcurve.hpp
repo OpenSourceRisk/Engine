@@ -25,7 +25,6 @@
 
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/patterns/lazyobject.hpp>
-#include <ql/termstructures/inflation/inflationtraits.hpp>
 #include <ql/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/inflationtraits.hpp>
 #include <utility>
@@ -88,7 +87,7 @@ private:
     QuantLib::Real accuracy_;
 
     friend class Bootstrap<this_curve>;
-    friend class BootstrapError<this_curve>;
+    friend class QuantLib::BootstrapError<this_curve>;
     Bootstrap<this_curve> bootstrap_;
     boost::shared_ptr<QuantLib::ZeroInflationIndex> index_;
 };
@@ -143,14 +142,12 @@ template <class I, template <class> class B, class T> void PiecewiseZeroInflatio
 
 template <class I, template <class> class B, class T>
 QuantLib::Date PiecewiseZeroInflationCurve<I, B, T>::initialDate() const {
-    std::cout << "get initial date from derived class" << std::endl;
     if (index_) {
         Date availbilityLagFixingDate =
             inflationPeriod(referenceDate() - index_->availabilityLag(), index_->frequency()).first;
         Date requiredFixingDate = inflationPeriod(availbilityLagFixingDate - 1, index_->frequency()).first;
 
         if (index_->hasHistoricalFixing(availbilityLagFixingDate)) {
-            std::cout << "Found availbility lag fixing " << availbilityLagFixingDate << std::endl;
             return availbilityLagFixingDate;
         } else {
             return requiredFixingDate;

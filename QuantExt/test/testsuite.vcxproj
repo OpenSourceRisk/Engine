@@ -674,6 +674,7 @@
     <ClCompile Include="forwardbond.cpp" />
     <ClCompile Include="fxvolsmile.cpp" />
     <ClCompile Include="index.cpp" />
+    <ClCompile Include="inflationcurve.cpp" />
     <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp" />
     <ClCompile Include="logquote.cpp" />
     <ClCompile Include="normalfreeboundarysabr.cpp" />

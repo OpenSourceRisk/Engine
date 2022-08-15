@@ -25,7 +25,7 @@
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
-#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+#include <qle/termstructures/piecewisezeroinflationcurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 #include <algorithm>
@@ -199,25 +199,33 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         boost::shared_ptr<YoYInflationIndex> zc_to_yoy_conversion_index;
         if (config->type() == InflationCurveConfig::Type::ZC || derive_yoy_from_zc) {
             // ZC Curve
-            std::vector<boost::shared_ptr<ZeroInflationTraits::helper>> instruments;
+            std::vector<boost::shared_ptr<QuantExt::ZeroInflationTraits::helper>> instruments;
             boost::shared_ptr<ZeroInflationIndex> index = conv->index();
             for (Size i = 0; i < strQuotes.size(); ++i) {
                 // QL conventions do not incorporate settlement delay => patch here once QL is patched
                 Date maturity = swapStart + terms[i];
-                boost::shared_ptr<ZeroInflationTraits::helper> instrument =
-                    boost::make_shared<ZeroCouponInflationSwapHelper>(quotes[i], conv->observationLag(), maturity,
-                                                                      conv->fixCalendar(), conv->fixConvention(),
-                                                                      conv->dayCounter(), index, interpolatedIndex_ ? CPI::Linear : CPI::Flat, nominalTs, swapStart);
+                boost::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
+                    boost::make_shared<ZeroCouponInflationSwapHelper>(
+                        quotes[i], conv->observationLag(), maturity, conv->fixCalendar(), conv->fixConvention(),
+                        conv->dayCounter(), index, interpolatedIndex_ ? CPI::Linear : CPI::Flat, nominalTs, swapStart);
                 // The instrument gets registered to update on change of evaluation date. This triggers a
                 // rebootstrapping of the curve. In order to avoid this during simulation we unregister from the
                 // evaluationDate.
                 instrument->unregisterWith(Settings::instance().evaluationDate());
                 instruments.push_back(instrument);
             }
-            curve_ = boost::shared_ptr<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
-                new QuantExt::PiecewiseZeroInflationCurve<Linear>(asof, config->calendar(), config->dayCounter(),
-                                                                  config->lag(), config->frequency(), baseRate,
-                                                                  instruments, conv->index(), config->tolerance()));
+            
+            if (config->useLastAvailableFixingAsBaseDate()) {
+                curve_ = boost::shared_ptr<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
+                    new QuantExt::PiecewiseZeroInflationCurve<Linear>(asof, config->calendar(), config->dayCounter(),
+                                                                      config->lag(), config->frequency(), baseRate,
+                                                                      instruments, conv->index(), config->tolerance()));
+            } else {
+                curve_ = boost::shared_ptr<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
+                    new QuantExt::PiecewiseZeroInflationCurve<Linear>(asof, config->calendar(), config->dayCounter(),
+                                                                      config->lag(), config->frequency(), baseRate,
+                                                                      instruments, nullptr, config->tolerance()));
+            }
             // force bootstrap so that errors are thrown during the build, not later
             boost::static_pointer_cast<QuantExt::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);
             if (derive_yoy_from_zc) {
