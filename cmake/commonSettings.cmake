@@ -12,8 +12,9 @@ macro(add_compiler_flag flag supportsFlag)
     endif()
 endmacro()
 
-# use CXX 11 and std::unique_ptr in QuantLib (instead of std::auto_ptr, which is deprecated in C++11)
-set(CMAKE_CXX_STANDARD 11)
+# use CXX 17, disable gnu extensions
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS FALSE)
 
 # On single-configuration builds, select a default build type that gives the same compilation flags as a default autotools build.
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
