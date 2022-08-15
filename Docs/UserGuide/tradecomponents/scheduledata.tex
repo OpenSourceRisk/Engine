@@ -94,9 +94,9 @@ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
-\item \lstinline!AdjustEndDateToPreviousMonthEnd! [Optional]: Allows for different end date convention, restate the end date to the end of previous month.
+\item \lstinline!AdjustEndDateToPreviousMonthEnd! [Optional]: Only relevant for commodity legs. Allows for the \lstinline!EndDate! to be on a date other than the end of the month. If set to \emph{true} the given \lstinline!EndDate! is restated to the end date of the previous month.
 
-Allowable values: \emph{true} or \emph{false}.
+Allowable values: \emph{true} or \emph{false}. Defaults to false if left blank or omitted.
 
 \item \lstinline!Tenor!: The tenor used to generate schedule dates. 
 
