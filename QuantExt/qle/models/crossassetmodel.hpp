@@ -462,7 +462,7 @@ protected:
 
     // move parameter param (e.g. vol, reversion, or all if null) of asset type component t / index at step i (or at all
     // steps if i is null)
-    Disposable<std::vector<bool>> MoveParameter(const AssetType t, const Size param, const Size index, const Size i) {
+    std::vector<bool> MoveParameter(const AssetType t, const Size param, const Size index, const Size i) {
         QL_REQUIRE(param == Null<Size>() || param < arguments(t, index),
                    "parameter for " << t << " at " << index << " (" << param << ") out of bounds 0..."
                                     << arguments(t, index) - 1);

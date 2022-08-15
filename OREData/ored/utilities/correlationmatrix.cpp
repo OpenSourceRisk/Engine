@@ -105,30 +105,30 @@ void CorrelationMatrixBuilder::addCorrelation(const CorrelationFactor& f_1, cons
     DLOG("Added correlation: (" << f_1 << "," << f_2 << ") = " << correlation->value() << ".");
 }
 
-Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const vector<string>& ccys) {
+Matrix CorrelationMatrixBuilder::correlationMatrix(const vector<string>& ccys) {
     ProcessInfo pi = createProcessInfo(ccys);
     return correlationMatrix(pi);
 }
 
-Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const vector<string>& ccys,
+Matrix CorrelationMatrixBuilder::correlationMatrix(const vector<string>& ccys,
     const vector<string>& infIndices) {
     ProcessInfo pi = createProcessInfo(ccys, infIndices);
     return correlationMatrix(pi);
 }
 
-Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const vector<string>& ccys,
+Matrix CorrelationMatrixBuilder::correlationMatrix(const vector<string>& ccys,
     const vector<string>& infIndices, const vector<string>& names) {
     ProcessInfo pi = createProcessInfo(ccys, infIndices, names);
     return correlationMatrix(pi);
 }
 
-Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const vector<string>& ccys,
+Matrix CorrelationMatrixBuilder::correlationMatrix(const vector<string>& ccys,
     const vector<string>& infIndices, const vector<string>& names, const vector<string>& equities) {
     ProcessInfo pi = createProcessInfo(ccys, infIndices, names, equities);
     return correlationMatrix(pi);
 }
 
-Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const ProcessInfo& processInfo) {
+Matrix CorrelationMatrixBuilder::correlationMatrix(const ProcessInfo& processInfo) {
 
     // Check that all IR processes are currency codes and that we have at least one currency
     auto outerIt = processInfo.find(CT::IR);

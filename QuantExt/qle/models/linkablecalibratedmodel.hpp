@@ -75,7 +75,7 @@ public:
     const Array& problemValues() const { return problemValues_; }
 
     //! Returns array of arguments on which calibration is done
-    Disposable<Array> params() const;
+    Array params() const;
 
     virtual void setParams(const Array& params);
 

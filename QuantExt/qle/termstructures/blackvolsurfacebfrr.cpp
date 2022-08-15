@@ -283,7 +283,7 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
             mutable Real bestValue = QL_MAX_REAL;
             mutable boost::shared_ptr<SimpleDeltaInterpolatedSmile> bestSmile;
 
-            Disposable<Array> values(const Array& x) const override {
+            Array values(const Array& x) const override {
 
                 Array rrTmp(rrQuotes.begin(), rrQuotes.end());
                 Array smileBfVol = Exp(x) - atmVol + 0.5 * Abs(rrTmp);
