@@ -25,9 +25,13 @@ The meanings and allowable values of the elements in the \lstinline!StrikePrice!
 
 Allowable values: Any positive real number.
 
-\item \lstinline!Currency! [Optional]: The currency of the amount given in \lstinline!Value!.
+\item \lstinline!Currency! [Mandatory for Quanto/Compo, Optional otherwise]: The currency of the amount given in \lstinline!Value!, i.e. the strike currency.
 
-Allowable values: See Table \ref{tab:currency} \lstinline!Currency!. Minor Currencies in Table \ref{tab:currency} are also allowable. If left blank or omitted it defaults to the currency of the leg.
+	Note:\\
+	Quanto: The payment/leg currency and the currency the underlying asset is quoted in differ. The strike currency is in the currency the asset is quoted in.\\
+	Compo (Composite): The payment/leg currency and the currency the underlying asset is quoted in differ. The strike currency is in the payment/leg currency.
+
+Allowable values: See Table \ref{tab:currency} \lstinline!Currency!. Minor Currencies in Table \ref{tab:currency} are also allowable. In non-quanto/compo cases, if left blank or omitted, it defaults to the currency of the leg for equity and commodity options, and to the currency the underlying bond is quoted in for BondOptions using reference data.
 
 \end{itemize}
 
