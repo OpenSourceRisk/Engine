@@ -25,6 +25,7 @@
 
 #include <ored/configuration/equitycurveconfig.hpp>
 #include <ql/time/date.hpp>
+#include <ql/time/period.hpp>
 #include <sstream>
 
 namespace ore {
@@ -46,6 +47,14 @@ std::string to_string(const QuantLib::Date& date);
     \ingroup utilities
 */
 std::string to_string(bool aBool);
+
+//! Convert QuantLib::Period to std::string
+/*!
+  Returns Period as a string as up to QuantLib 1.25, e.g. 13M is written as 1Y1M etc.
+
+  \ingroup utilities
+*/
+std::string to_string(const QuantLib::Period& period);
 
 //! Convert type to std::string
 /*!

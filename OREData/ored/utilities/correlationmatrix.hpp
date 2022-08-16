@@ -104,20 +104,20 @@ public:
     /*! Return a \f$2n-1\f$ square matrix for an IR/FX model, where \f$n\f$ is the number of currencies in the 
         \p ccys argument. This assumes that \c ccys[0] is the base currency.
     */
-    QuantLib::Disposable<QuantLib::Matrix> correlationMatrix(const std::vector<std::string>& ccys);
+    QuantLib::Matrix correlationMatrix(const std::vector<std::string>& ccys);
 
     /*! Return a \f$2n-1+m\f$ square matrix for an IR/FX/INF model, where \f$n\f$ is the number of currencies in the
         \p ccys argument and \f$m\f$ is the number of inflation indices in the \p infIndices argument. This assumes 
         that \c ccys[0] is the base currency.
     */
-    QuantLib::Disposable<QuantLib::Matrix> correlationMatrix(const std::vector<std::string>& ccys,
+    QuantLib::Matrix correlationMatrix(const std::vector<std::string>& ccys,
         const std::vector<std::string>& infIndices);
 
     /*! Return a \f$2n-1+m+k\f$ square matrix for an IR/FX/INF/CR model, where \f$n\f$ is the number of currencies in 
         the \p ccys argument, \f$m\f$ is the number of inflation indices in the \p infIndices argument and \f$k\f$ is 
         the number of credit names in the \p names argument. This assumes that \c ccys[0] is the base currency.
     */
-    QuantLib::Disposable<QuantLib::Matrix> correlationMatrix(const std::vector<std::string>& ccys,
+    QuantLib::Matrix correlationMatrix(const std::vector<std::string>& ccys,
         const std::vector<std::string>& infIndices,
         const std::vector<std::string>& names);
 
@@ -126,7 +126,7 @@ public:
         \f$k\f$ is the number of credit names in the \p names argument and \f$p\f$ is the number of equity names in 
         the \p equities argument. This assumes that \c ccys[0] is the base currency.
     */
-    QuantLib::Disposable<QuantLib::Matrix> correlationMatrix(const std::vector<std::string>& ccys,
+    QuantLib::Matrix correlationMatrix(const std::vector<std::string>& ccys,
         const std::vector<std::string>& infIndices,
         const std::vector<std::string>& names,
         const std::vector<std::string>& equities);
@@ -143,7 +143,7 @@ public:
     */
     typedef QuantExt::CrossAssetModelTypes::AssetType CamAssetType;
     typedef std::map<CamAssetType, std::vector<std::pair<std::string, QuantLib::Size>>> ProcessInfo;
-    QuantLib::Disposable<QuantLib::Matrix> correlationMatrix(const ProcessInfo& processInfo);
+    QuantLib::Matrix correlationMatrix(const ProcessInfo& processInfo);
     //@}
 
     //! Get the correlation between two factors

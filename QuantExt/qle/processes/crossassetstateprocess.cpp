@@ -127,7 +127,7 @@ void CrossAssetStateProcess::updateSqrtCorrelation() const {
     sqrtCorrelation_ = pseudoSqrt(corr, salvaging_);
 }
 
-Disposable<Array> CrossAssetStateProcess::initialValues() const {
+Array CrossAssetStateProcess::initialValues() const {
     Array res(model_->dimension(), 0.0);
     /* irlgm1f processes have initial value 0 */
     for (Size i = 0; i < model_->components(FX); ++i) {
@@ -158,7 +158,7 @@ Disposable<Array> CrossAssetStateProcess::initialValues() const {
     return res;
 }
 
-Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
+Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
     Array res(model_->dimension(), 0.0);
     Size n = model_->components(IR);
     Size n_eq = model_->components(EQ);
@@ -332,7 +332,7 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
     return res;
 }
 
-Disposable<Matrix> CrossAssetStateProcess::diffusion(Time t, const Array& x) const {
+Matrix CrossAssetStateProcess::diffusion(Time t, const Array& x) const {
     boost::unordered_map<double, Matrix>::const_iterator i = cache_d_.find(t);
     if (i == cache_d_.end()) {
         Matrix tmp = diffusionImpl(t, x);
@@ -346,7 +346,7 @@ Disposable<Matrix> CrossAssetStateProcess::diffusion(Time t, const Array& x) con
     }
 }
 
-Disposable<Array> CrossAssetStateProcess::marginalDiffusion(Time t, const Array& x) const {
+Array CrossAssetStateProcess::marginalDiffusion(Time t, const Array& x) const {
     boost::unordered_map<double, Array>::const_iterator i = cache_md_.find(t);
     if (i == cache_md_.end()) {
         Array tmp = marginalDiffusionImpl(t, x);
@@ -360,7 +360,7 @@ Disposable<Array> CrossAssetStateProcess::marginalDiffusion(Time t, const Array&
     }
 }
 
-Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t, const Array& x) const {
+Matrix CrossAssetStateProcess::diffusionImpl(Time t, const Array& x) const {
     Matrix res(model_->dimension(), model_->dimension(), 0.0);
     Array diag = marginalDiffusion(t, x);
     for (Size i = 0; i < x.size(); ++i) {
@@ -369,7 +369,7 @@ Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t, const Array& x)
     return res * sqrtCorrelation_;
 } // namespace QuantExt
 
-Disposable<Array> CrossAssetStateProcess::marginalDiffusionImpl(Time t, const Array&) const {
+Array CrossAssetStateProcess::marginalDiffusionImpl(Time t, const Array&) const {
     Array res(model_->dimension(), 0.0);
     Size n = model_->components(IR);
     Size m = model_->components(FX);
@@ -430,7 +430,7 @@ Disposable<Array> CrossAssetStateProcess::marginalDiffusionImpl(Time t, const Ar
     return res;
 }
 
-Disposable<Array> CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Array& dw) const {
+Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Array& dw) const {
 
     Array res;
     if (disc_ == euler) {
@@ -470,7 +470,7 @@ CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(const CrossAsse
                                                                  SalvagingAlgorithm::Type salvaging)
     : model_(model), salvaging_(salvaging) {}
 
-Disposable<Array> CrossAssetStateProcess::ExactDiscretization::drift(const StochasticProcess& p, Time t0,
+Array CrossAssetStateProcess::ExactDiscretization::drift(const StochasticProcess& p, Time t0,
                                                                      const Array& x0, Time dt) const {
     Array res;
     cache_key k = {t0, dt};
@@ -488,7 +488,7 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::drift(const Stoch
     return res - x0;
 }
 
-Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::diffusion(const StochasticProcess& p, Time t0,
+Matrix CrossAssetStateProcess::ExactDiscretization::diffusion(const StochasticProcess& p, Time t0,
                                                                           const Array& x0, Time dt) const {
     cache_key k = {t0, dt};
     boost::unordered_map<cache_key, Matrix>::const_iterator i = cache_d_.find(k);
@@ -504,7 +504,7 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::diffusion(const 
     }
 }
 
-Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covariance(const StochasticProcess& p, Time t0,
+Matrix CrossAssetStateProcess::ExactDiscretization::covariance(const StochasticProcess& p, Time t0,
                                                                            const Array& x0, Time dt) const {
     cache_key k = {t0, dt};
     boost::unordered_map<cache_key, Matrix>::const_iterator i = cache_v_.find(k);
@@ -519,7 +519,7 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covariance(const
     }
 }
 
-Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticProcess&, Time t0,
+Array CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticProcess&, Time t0,
                                                                           const Array&, Time dt) const {
     Size n = model_->components(IR);
     Size m = model_->components(FX);
@@ -546,7 +546,7 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl1(const 
     return res;
 }
 
-Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl2(const StochasticProcess&, Time t0,
+Array CrossAssetStateProcess::ExactDiscretization::driftImpl2(const StochasticProcess&, Time t0,
                                                                           const Array& x0, Time dt) const {
     Size n = model_->components(IR);
     Size m = model_->components(FX);
@@ -595,7 +595,7 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl2(const 
     return res;
 }
 
-Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const StochasticProcess&, Time t0,
+Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const StochasticProcess&, Time t0,
                                                                                const Array&, Time dt) const {
     Matrix res(model_->dimension(), model_->dimension());
     Size n = model_->components(IR);

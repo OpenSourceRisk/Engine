@@ -261,7 +261,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
     LOG("DIM by polynomial regression done");
 }
 
-Disposable<Array> RegressionDynamicInitialMarginCalculator::regressorArray(string nettingSet, Size dateIndex,
+Array RegressionDynamicInitialMarginCalculator::regressorArray(string nettingSet, Size dateIndex,
                                                                            Size sampleIndex) {
     Array a(regressors_.size());
     for (Size i = 0; i < regressors_.size(); ++i) {
