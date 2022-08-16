@@ -51,7 +51,7 @@ public:
         return std::sqrt(value);
     }
 
-    virtual Disposable<Array> values(const Array& params) const override {
+    virtual Array values(const Array& params) const override {
         model_->setParams(projection_.include(params));
         Array values(instruments_.size());
         for (Size i = 0; i < instruments_.size(); i++) {
@@ -124,7 +124,7 @@ Real LinkableCalibratedModel::value(const Array& params, const vector<shared_ptr
     return f.value(params);
 }
 
-Disposable<Array> LinkableCalibratedModel::params() const {
+Array LinkableCalibratedModel::params() const {
     Size size = 0, i;
     for (i = 0; i < arguments_.size(); i++)
         size += arguments_[i]->size();

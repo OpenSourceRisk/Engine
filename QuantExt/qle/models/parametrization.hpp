@@ -54,7 +54,7 @@ public:
         a transformation between real and raw values in
         order to implement a constraint (this is generally
         preferable to using a hard constraint) */
-    virtual Disposable<Array> parameterValues(const Size) const;
+    virtual Array parameterValues(const Size) const;
 
     /*! the parameter storing the raw values */
     virtual const boost::shared_ptr<Parameter> parameter(const Size) const;
@@ -112,7 +112,7 @@ inline const Array& Parametrization::parameterTimes(const Size) const { return e
 
 inline const boost::shared_ptr<Parameter> Parametrization::parameter(const Size) const { return emptyParameter_; }
 
-inline Disposable<Array> Parametrization::parameterValues(const Size i) const {
+inline Array Parametrization::parameterValues(const Size i) const {
     const Array& tmp = parameter(i)->params();
     Array res(tmp.size());
     for (Size ii = 0; ii < res.size(); ++ii) {

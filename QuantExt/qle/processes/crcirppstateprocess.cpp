@@ -19,22 +19,22 @@ CrCirppStateProcess::CrCirppStateProcess(CrCirpp* const model,
 
 Size CrCirppStateProcess::size() const { return 2; }
 
-Disposable<Array> CrCirppStateProcess::initialValues() const {
+Array CrCirppStateProcess::initialValues() const {
     Array res(size(), 0.0);
     res[0] = model_->parametrization()->y0(0); // y0
     res[1] = 1.0; // S(0,0) = 1
     return res;
 }
 
-Disposable<Array> CrCirppStateProcess::drift(Time t, const Array& x) const {
+Array CrCirppStateProcess::drift(Time t, const Array& x) const {
     QL_FAIL("not implemented");
 }
 
-Disposable<Matrix> CrCirppStateProcess::diffusion(Time t, const Array& x) const {
+Matrix CrCirppStateProcess::diffusion(Time t, const Array& x) const {
     QL_FAIL("not implemented");
 }
 
-Disposable<Array> CrCirppStateProcess::evolve(Time t0, const Array& x0, Time dt, const Array& dw) const {
+Array CrCirppStateProcess::evolve(Time t0, const Array& x0, Time dt, const Array& dw) const {
     Array retVal(size());
     Real kappa, theta, sigma, y0;
     kappa = model_->parametrization()->kappa(t0);

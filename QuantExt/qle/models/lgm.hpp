@@ -101,7 +101,7 @@ public:
 
     /*! calibration constraints, these can be used directly, or
         through the customized calibrate methods above */
-    Disposable<std::vector<bool>> MoveVolatility(const Size i) {
+    std::vector<bool> MoveVolatility(const Size i) {
         QL_REQUIRE(i < parametrization_->parameter(0)->size(),
                    "volatility index (" << i << ") out of range 0..." << parametrization_->parameter(0)->size() - 1);
         std::vector<bool> res(parametrization_->parameter(0)->size() + parametrization_->parameter(1)->size(), true);
@@ -109,7 +109,7 @@ public:
         return res;
     }
 
-    Disposable<std::vector<bool>> MoveReversion(const Size i) {
+    std::vector<bool> MoveReversion(const Size i) {
         QL_REQUIRE(i < parametrization_->parameter(1)->size(),
                    "reversion index (" << i << ") out of range 0..." << parametrization_->parameter(1)->size() - 1);
         std::vector<bool> res(parametrization_->parameter(0)->size() + parametrization_->parameter(1)->size(), true);
