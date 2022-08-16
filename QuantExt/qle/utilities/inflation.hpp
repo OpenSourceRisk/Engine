@@ -26,6 +26,8 @@
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/instruments/bond.hpp>
+#include <ql/time/period.hpp>
+#include <ql/termstructures/inflation/inflationhelpers.hpp>
 
 namespace QuantExt {
 
@@ -58,6 +60,29 @@ QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTer
    I(t_s)/I(t_0) with I(t_s) the CPI at settlement date and I(t_0) the bond's base CPI
 */
 QuantLib::Real inflationLinkedBondQuoteFactor(const boost::shared_ptr<QuantLib::Bond>& bond);
+
+namespace ZeroInflation {
+
+//! Check if today - availabilityLag is already known, otherwise return the fixingDate of the previous fixing
+QuantLib::Date lastAvailableFixing(const QuantLib::ZeroInflationIndex& index, const QuantLib::Date& asof);
+
+
+//! Computes a CPI fixing giving an zeroIndex, with interpolation if needed 
+QuantLib::Rate cpiFixing(const QuantLib::ZeroInflationIndex& index, const QuantLib::Date maturity,
+                         const QuantLib::Period& obsLag, bool interpolated);
+
+
+/*! Computes the base rate for curve construction so that zero inflation rate is constant up to the first pillar
+* Accounts for the acctual accrued inflation between the ZCIIS base date and the curve base date (e.g. last published fixing date)
+* If curve base date and ZCIIS are the same, then the base rate is the ZCIIS rate
+*/
+QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const QuantLib::ZeroInflationIndex& index,
+                                  bool interpolated, const QuantLib::Date& today, const QuantLib::Period& tenor,
+                                  const QuantLib::Period& obsLag, const QuantLib::DayCounter& dc,
+                                  const QuantLib::Rate zeroRate);
+
+
+}
 
 }
 

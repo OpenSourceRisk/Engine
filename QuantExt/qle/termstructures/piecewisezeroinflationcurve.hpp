@@ -27,6 +27,7 @@
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/inflationtraits.hpp>
+#include <qle/utilities/inflation.hpp>
 #include <utility>
 
 namespace QuantExt {
@@ -143,15 +144,7 @@ template <class I, template <class> class B, class T> void PiecewiseZeroInflatio
 template <class I, template <class> class B, class T>
 QuantLib::Date PiecewiseZeroInflationCurve<I, B, T>::initialDate() const {
     if (index_) {
-        Date availbilityLagFixingDate =
-            inflationPeriod(referenceDate() - index_->availabilityLag(), index_->frequency()).first;
-        Date requiredFixingDate = inflationPeriod(availbilityLagFixingDate - 1, index_->frequency()).first;
-
-        if (index_->hasHistoricalFixing(availbilityLagFixingDate)) {
-            return availbilityLagFixingDate;
-        } else {
-            return requiredFixingDate;
-        }
+        return ZeroInflation::lastAvailableFixing(*index_, referenceDate());
     } else {
         return inflationPeriod(referenceDate() - observationLag(), frequency()).first;
     }

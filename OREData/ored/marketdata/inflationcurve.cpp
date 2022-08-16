@@ -196,6 +196,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         std::vector<Date> pillarDates;
 
         interpolatedIndex_ = conv->interpolated();
+        CPI::InterpolationType observationInterpolation = interpolatedIndex_ ? CPI::Linear : CPI::Flat;
         boost::shared_ptr<YoYInflationIndex> zc_to_yoy_conversion_index;
         if (config->type() == InflationCurveConfig::Type::ZC || derive_yoy_from_zc) {
             // ZC Curve
@@ -207,7 +208,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 boost::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
                     boost::make_shared<ZeroCouponInflationSwapHelper>(
                         quotes[i], conv->observationLag(), maturity, conv->fixCalendar(), conv->fixConvention(),
-                        conv->dayCounter(), index, interpolatedIndex_ ? CPI::Linear : CPI::Flat, nominalTs, swapStart);
+                        conv->dayCounter(), index, observationInterpolation, nominalTs, swapStart);
                 // The instrument gets registered to update on change of evaluation date. This triggers a
                 // rebootstrapping of the curve. In order to avoid this during simulation we unregister from the
                 // evaluationDate.
