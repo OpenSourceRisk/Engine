@@ -47,6 +47,7 @@ marketdata/genericyieldvolcurve.cpp
 marketdata/inflationcapfloorvolcurve.cpp
 marketdata/inflationcurve.cpp
 marketdata/inmemoryloader.cpp
+marketdata/loader.cpp
 marketdata/market.cpp
 marketdata/marketdatum.cpp
 marketdata/marketdatumparser.cpp
