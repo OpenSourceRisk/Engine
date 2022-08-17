@@ -25,7 +25,7 @@
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
-#include <qle/termstructures/piecewisezeroinflationcurve.hpp>
+#include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <algorithm>

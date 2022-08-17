@@ -20,8 +20,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ql/termstructures/inflationtermstructure.hpp>
-#include <qle/termstructures/piecewisezeroinflationcurve.hpp>
-//#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+#include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+
 
 #include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>

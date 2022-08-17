@@ -26,7 +26,7 @@
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/termstructures/iterativebootstrap.hpp>
-#include <qle/termstructures/inflationtraits.hpp>
+#include <qle/termstructures/inflation/inflationtraits.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <utility>
 

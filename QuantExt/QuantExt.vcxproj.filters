@@ -1246,11 +1246,11 @@
     <ClInclude Include="qle\termstructures\atmadjustedsmilesection.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\piecewisezeroinflationcurve.hpp">
-      <Filter>termstructures</Filter>
+    <ClInclude Include="qle\termstructures\inflation\inflationtraits.hpp">
+      <Filter>termstructures\inflation</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\inflationtraits.hpp">
-      <Filter>termstructures</Filter>
+    <ClInclude Include="qle\termstructures\inflation\piecewisezeroinflationcurve.hpp">
+      <Filter>termstructures\inflation</Filter>
     </ClInclude>
     <ClInclude Include="qle\quotes\compositevectorquote.hpp">
       <Filter>quotes</Filter>
@@ -1304,6 +1304,9 @@
     </Filter>
     <Filter Include="interpolators">
       <UniqueIdentifier>{5afe79b0-37bd-4c42-a9f7-5df8719d365c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="termstructures\inflation">
+      <UniqueIdentifier>{0007c505-4a49-436c-802d-ca0ff83ab0f5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
