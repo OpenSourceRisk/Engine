@@ -48,6 +48,33 @@ public:
         QL_FAIL("No MarketDatum for name " << name << " and date " << d);
     }
 
+    std::set<boost::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
+                                                 const QuantLib::Date& asof) const override {
+        std::set<boost::shared_ptr<MarketDatum>> result;
+        if (a_) {
+            auto tmp = a_->get(names, asof);
+            result.insert(tmp.begin(), tmp.end());
+        }
+        if (b_) {
+            auto tmp = b_->get(names, asof);
+            result.insert(tmp.begin(), tmp.end());
+        }
+        return result;
+    }
+
+    std::set<boost::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const override {
+        std::set<boost::shared_ptr<MarketDatum>> result;
+        if (a_) {
+            auto tmp = a_->get(wildcard, asof);
+            result.insert(tmp.begin(), tmp.end());
+        }
+        if (b_) {
+            auto tmp = b_->get(wildcard, asof);
+            result.insert(tmp.begin(), tmp.end());
+        }
+        return result;
+    }
+
     bool has(const std::string& name, const QuantLib::Date& d) const override {
         return (a_ && a_->has(name, d)) || (b_ && b_->has(name, d));
     }
@@ -57,7 +84,7 @@ public:
             return a_->loadFixings();
         if (!a_)
             return b_->loadFixings();
-	std::vector<Fixing> fixings;
+        std::vector<Fixing> fixings;
         fixings.insert(fixings.end(), a_->loadFixings().begin(), a_->loadFixings().end());
         fixings.insert(fixings.end(), b_->loadFixings().begin(), b_->loadFixings().end());
         return fixings;
@@ -68,7 +95,7 @@ public:
             return a_->loadDividends();
         if (!a_)
             return b_->loadDividends();
-	std::vector<Fixing> dividends;
+        std::vector<Fixing> dividends;
         dividends.insert(dividends.end(), a_->loadDividends().begin(), a_->loadDividends().end());
         dividends.insert(dividends.end(), b_->loadDividends().begin(), b_->loadDividends().end());
         return dividends;
