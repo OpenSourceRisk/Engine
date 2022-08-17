@@ -77,6 +77,20 @@ QuantLib::Date curveBaseDate(const bool baseDateLastKnownFixing, const QuantLib:
                              const QuantLib::Period obsLagCurve, const QuantLib::Frequency curveFreq,
                              const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index);
 
+QuantLib::Date effectiveObservationDate(const QuantLib::Date& d, const QuantLib::Period obsLag,
+                                        const QuantLib::Frequency,
+                                        bool interpolated);
+
+QuantLib::Date zeroInflationAtmGrowth(const boost::shared_ptr<QuantLib::ZeroInflationIndex> index,
+                                      const QuantLib::Date& start, const QuantLib::Date& maturity,
+                                      const QuantLib::Period obsLag,
+                                      bool interpolated);
+
+QuantLib::Date zeroInflationAtmRate(const boost::shared_ptr<QuantLib::ZeroInflationIndex> index,
+                                      const QuantLib::Date& start, const QuantLib::Date& maturity,
+                                      const QuantLib::Period obsLag, bool interpolated);
+
+
 
 /*! Computes the base rate for curve construction so that zero inflation rate is constant up to the first pillar
 * Accounts for the acctual accrued inflation between the ZCIIS base date and the curve base date (e.g. last published fixing date)

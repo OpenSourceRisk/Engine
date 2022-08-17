@@ -26,7 +26,7 @@
 
 #include <ql/pricingengines/blackformula.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
-//#include <iostream>
+#include <qle/utilities/inflation.hpp>
 
 using namespace QuantLib;
 
@@ -51,48 +51,55 @@ void CPIBlackCapFloorEngine::calculate() const {
                                              "lag difference must be non-negative: "
                                                  << lagDiff);
     Date maturity = arguments_.payDate;
+    auto index = arguments_.infIndex;
+
+
     DiscountFactor d = arguments_.nominal * discountCurve_->discount(maturity);
 
-    Date effectiveMaturity = arguments_.payDate - arguments_.observationLag - lagDiff;
-    if (arguments_.observationInterpolation == QuantLib::CPI::AsIndex ||
-        arguments_.observationInterpolation == QuantLib::CPI::Flat) {
-        std::pair<Date, Date> ipm = inflationPeriod(effectiveMaturity, arguments_.infIndex->frequency());
-        effectiveMaturity = ipm.first;
-    }
+    bool isInterpolated = arguments_.observationInterpolation == CPI::Linear ||
+                          (arguments_.observationInterpolation == CPI::AsIndex && arguments_.infIndex->interpolated());
 
-    Date baseDate = arguments_.infIndex->zeroInflationTermStructure()->baseDate();
-    Real baseFixing = indexFixing(baseDate, baseDate);
+    Date observationDate = arguments_.payDate - arguments_.observationLag;
 
-    Real baseCPI = arguments_.baseCPI == Null<Real>()
-                       ? indexFixing(arguments_.startDate - arguments_.observationLag, arguments_.startDate)
-                       : arguments_.baseCPI;
+    Date optionBaseDate = arguments_.startDate - arguments_.observationLag;
+    
+    Real optionBaseFixing = arguments_.baseCPI == Null<Real>()
+                          ? ZeroInflation::cpiFixing(*arguments_.infIndex.currentLink(), arguments_.startDate,
+                                                     arguments_.observationLag, isInterpolated)
+                          : arguments_.baseCPI;
 
-    Date effectiveStart = arguments_.startDate - arguments_.observationLag;
-    if (arguments_.observationInterpolation == QuantLib::CPI::AsIndex ||
-        arguments_.observationInterpolation == QuantLib::CPI::Flat) {
-        std::pair<Date, Date> ips = inflationPeriod(effectiveStart, arguments_.infIndex->frequency());
-        effectiveStart = ips.first;
-    }
+    Real expectedCPIFixing = ZeroInflation::cpiFixing(*arguments_.infIndex.currentLink(), maturity,
+                                                      arguments_.observationLag, isInterpolated);
 
-    Real timeFromStart =
-        arguments_.infIndex->zeroInflationTermStructure()->dayCounter().yearFraction(effectiveStart, effectiveMaturity);
-    Real timeFromBase =
-        arguments_.infIndex->zeroInflationTermStructure()->dayCounter().yearFraction(baseDate, effectiveMaturity);
-    Real K = pow(1.0 + arguments_.strike, timeFromStart);
-    Real F = indexFixing(effectiveMaturity, maturity) / baseCPI;
+    Time ttm =
+        inflationYearFraction(index->frequency(), isInterpolated, index->zeroInflationTermStructure()->dayCounter(),
+                              optionBaseDate, observationDate);
+
+    Real atmGrowth = expectedCPIFixing / optionBaseFixing;
+    Real strike = std::pow(1.0 + arguments_.strike, ttm); 
+
+    auto lastKnownFixing = ZeroInflation::lastAvailableFixing(*index.currentLink(), volatilitySurface_->referenceDate());
+    auto observationPeriod = inflationPeriod(observationDate, index->frequency());
+    auto requiredFixing = isInterpolated ? observationPeriod.first : observationPeriod.second + 1 * Days;
+    
 
     // if time from base <= 0 the fixing is already known and stdDev is zero, return the intrinsic value
     Real stdDev = 0.0;
-    if (timeFromBase > 0 && !close_enough(timeFromBase, 0.0)) {
+    if (requiredFixing < lastKnownFixing) {
         // For reading volatility in the current market volatiltiy structure
-        // baseFixing(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t),
+        // baseFixingSwap(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t),
         // solve for strikeRate(t):
-        Real strikeZeroRate =
-            pow(baseCPI / baseFixing * pow(1.0 + arguments_.strike, timeFromStart), 1.0 / timeFromBase) -
-            1.0;
-        stdDev = std::sqrt(volatilitySurface_->totalVariance(maturity, strikeZeroRate));
+        auto baseDate = ZeroInflation::effectiveObservationDate(
+            volatilitySurface_->referenceDate(), volatilitySurface_->observationLag(), volatilitySurface_->frequency(),
+            volatilitySurface_->indexIsInterpolated());
+        auto baseFixing = ZeroInflation::cpiFixing(*index.currentLink(), volatilitySurface_->referenceDate(),
+                                     volatilitySurface_->observationLag(), volatilitySurface_->indexIsInterpolated());
+        auto ttmBase = inflationYearFraction(volatilitySurface_->frequency(), volatilitySurface_->indexIsInterpolated(),
+                                             volatilitySurface_->dayCounter(), baseDate, observationDate);
+        Real strikeZeroRate = pow(optionBaseFixing / baseFixing * strike, 1.0 / ttmBase) - 1.0;
+        stdDev = std::sqrt(volatilitySurface_->totalVariance(observationDate, strikeZeroRate, 0 * Days));
     }
-    results_.value = blackFormula(arguments_.type, K, F, stdDev, d);
+    results_.value = blackFormula(arguments_.type, strike, atmGrowth, stdDev, d);
 
     // std::cout << "CPIBlackCapFloorEngine ==========" << std::endl
     // 	      << "startDate     = " << QuantLib::io::iso_date(arguments_.startDate) << std::endl

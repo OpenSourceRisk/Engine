@@ -156,6 +156,14 @@ QuantLib::Date curveBaseDate(const bool baseDateLastKnownFixing, const QuantLib:
     }
 }
 
+QuantLib::Date effectiveObservationDate(const QuantLib::Date& d, const QuantLib::Period obsLag,
+                                        const QuantLib::Frequency freq, bool interpolated) {
+    Date obsDate = d - obsLag;
+    if (interpolated)
+        obsDate = QuantLib::inflationPeriod(obsDate, freq).first;
+    return obsDate;
+}
+
 QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const QuantLib::Date& swapStart,
                                   const QuantLib::Period& swapTenor, const QuantLib::DayCounter& swapZCLegDayCounter,
                                   const QuantLib::Period& swapObsLag, const QuantLib::Rate zeroCouponRate,

@@ -182,6 +182,9 @@
     <ClCompile Include="inflationcurve.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="inflationvol.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
