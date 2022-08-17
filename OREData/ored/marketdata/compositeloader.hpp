@@ -30,11 +30,13 @@ public:
         std::vector<boost::shared_ptr<MarketDatum>> data;
         // loadQuotes() might throw if no quotes are available in one loader, which is not an error here
         try {
-            data.insert(data.end(), a_->loadQuotes(d).begin(), a_->loadQuotes(d).end());
+	    auto tmp = a_->loadQuotes(d);
+            data.insert(data.end(), tmp.begin(), tmp.end());
         } catch (...) {
         }
         try {
-            data.insert(data.end(), b_->loadQuotes(d).begin(), b_->loadQuotes(d).end());
+	    auto tmp = b_->loadQuotes(d);
+            data.insert(data.end(), tmp.begin(), tmp.end());
         } catch (...) {
         }
         return data;
