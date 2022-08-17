@@ -117,7 +117,8 @@ public:
         COMMODITY_FWD,
         CORRELATION,
         COMMODITY_OPTION,
-        CPR
+        CPR,
+	NONE
     };
 
     //! Supported market quote types
@@ -170,6 +171,14 @@ private:
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
+bool operator<(const MarketDatum& a, const MarketDatum& b);
+
+struct SharedPtrMarketDatumComparator {
+    bool operator()(const boost::shared_ptr<MarketDatum>& a, const boost::shared_ptr<MarketDatum>& b) const {
+        return *a < *b;
+    }
 };
 
 std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type);
