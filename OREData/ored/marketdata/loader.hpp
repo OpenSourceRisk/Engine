@@ -47,7 +47,7 @@ public:
     //! \name Interface
     //@{
 
-    //! get all quotes
+    //! get all quotes, TODO change the return value to std::set
     virtual std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const = 0;
 
     //! get quote by its unique name, throws if not existent or not unique
@@ -73,11 +73,11 @@ public:
      */
     virtual boost::shared_ptr<MarketDatum> get(const std::pair<std::string, bool>& name, const QuantLib::Date& d) const;
 
-    virtual std::vector<Fixing> loadFixings() const = 0;
+    virtual std::set<Fixing> loadFixings() const = 0;
     //@}
 
     //! Optional load dividends method
-    virtual std::vector<Fixing> loadDividends() const;
+    virtual std::set<Fixing> loadDividends() const;
 
 private:
     //! Serialization

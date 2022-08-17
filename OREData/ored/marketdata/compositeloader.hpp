@@ -79,25 +79,25 @@ public:
         return (a_ && a_->has(name, d)) || (b_ && b_->has(name, d));
     }
 
-    std::vector<Fixing> loadFixings() const override {
+    std::set<Fixing> loadFixings() const override {
         if (!b_)
             return a_->loadFixings();
         if (!a_)
             return b_->loadFixings();
-        std::vector<Fixing> fixings;
-        fixings.insert(fixings.end(), a_->loadFixings().begin(), a_->loadFixings().end());
-        fixings.insert(fixings.end(), b_->loadFixings().begin(), b_->loadFixings().end());
+        std::set<Fixing> fixings;
+        fixings.insert(a_->loadFixings().begin(), a_->loadFixings().end());
+        fixings.insert(b_->loadFixings().begin(), b_->loadFixings().end());
         return fixings;
     }
 
-    std::vector<Fixing> loadDividends() const override {
+    std::set<Fixing> loadDividends() const override {
         if (!b_)
             return a_->loadDividends();
         if (!a_)
             return b_->loadDividends();
-        std::vector<Fixing> dividends;
-        dividends.insert(dividends.end(), a_->loadDividends().begin(), a_->loadDividends().end());
-        dividends.insert(dividends.end(), b_->loadDividends().begin(), b_->loadDividends().end());
+        std::set<Fixing> dividends;
+        dividends.insert(a_->loadDividends().begin(), a_->loadDividends().end());
+        dividends.insert(b_->loadDividends().begin(), b_->loadDividends().end());
         return dividends;
     }
 
