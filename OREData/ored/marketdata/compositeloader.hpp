@@ -85,8 +85,10 @@ public:
         if (!a_)
             return b_->loadFixings();
         std::set<Fixing> fixings;
-        fixings.insert(a_->loadFixings().begin(), a_->loadFixings().end());
-        fixings.insert(b_->loadFixings().begin(), b_->loadFixings().end());
+	auto tmp1 = a_->loadFixings();
+	auto tmp2 = b_->loadFixings();
+        fixings.insert(tmp1.begin(), tmp1.end());
+        fixings.insert(tmp2.begin(), tmp2.end());
         return fixings;
     }
 
@@ -96,8 +98,10 @@ public:
         if (!a_)
             return b_->loadDividends();
         std::set<Fixing> dividends;
-        dividends.insert(a_->loadDividends().begin(), a_->loadDividends().end());
-        dividends.insert(b_->loadDividends().begin(), b_->loadDividends().end());
+	auto tmp1 = a_->loadDividends();
+	auto tmp2 = b_->loadDividends();
+        dividends.insert(tmp1.begin(), tmp1.end());
+        dividends.insert(tmp2.begin(), tmp2.end());
         return dividends;
     }
 
