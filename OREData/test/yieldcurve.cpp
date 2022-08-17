@@ -61,10 +61,10 @@ class MarketDataLoader : public Loader {
 public:
     MarketDataLoader();
     MarketDataLoader(vector<string> data);
-    const vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const Date&) const override;
-    const boost::shared_ptr<MarketDatum>& get(const string& name, const Date&) const override;
-    const vector<Fixing>& loadFixings() const override { return fixings_; }
-    const vector<Fixing>& loadDividends() const override { return dividends_; }
+    vector<boost::shared_ptr<MarketDatum>> loadQuotes(const Date&) const override;
+    boost::shared_ptr<MarketDatum> get(const string& name, const Date&) const override;
+    vector<Fixing> loadFixings() const override { return fixings_; }
+    vector<Fixing> loadDividends() const override { return dividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
     void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
     void addDividend(QuantLib::Date date, const string& name, QuantLib::Real value) {}
@@ -75,13 +75,13 @@ private:
     vector<Fixing> dividends_;
 };
 
-const vector<boost::shared_ptr<MarketDatum>>& MarketDataLoader::loadQuotes(const Date& d) const {
+vector<boost::shared_ptr<MarketDatum>> MarketDataLoader::loadQuotes(const Date& d) const {
     auto it = data_.find(d);
     QL_REQUIRE(it != data_.end(), "Loader has no data for date " << d);
     return it->second;
 }
 
-const boost::shared_ptr<MarketDatum>& MarketDataLoader::get(const string& name, const Date& d) const {
+boost::shared_ptr<MarketDatum> MarketDataLoader::get(const string& name, const Date& d) const {
     for (auto& md : loadQuotes(d)) {
         if (md->name() == name)
             return md;

@@ -21,28 +21,21 @@
 namespace ore {
 namespace data {
 
-std::set<boost::shared_ptr<MarketDatum>> Loader::get(const std::set<std::string>& names, const QuantLib::Date& asof,
-                                                     const std::set<MarketDatum::InstrumentType>& instrumentTypes,
-                                                     const std::set<MarketDatum::QuoteType>& quoteTypes) const {
+std::set<boost::shared_ptr<MarketDatum>> Loader::get(const std::set<std::string>& names,
+                                                     const QuantLib::Date& asof) const {
     std::set<boost::shared_ptr<MarketDatum>> result;
     for (auto const& md : loadQuotes(asof)) {
-        if (names.find(md->name()) != names.end() &&
-            (instrumentTypes.empty() || instrumentTypes.find(md->instrumentType()) != instrumentTypes.end()) &&
-            (quoteTypes.empty() || quoteTypes.find(md->quoteType()) != quoteTypes.end())) {
+        if (names.find(md->name()) != names.end()) {
             result.insert(md);
         }
     }
     return result;
 }
 
-std::set<boost::shared_ptr<MarketDatum>> Loader::get(const Wildcard& wildcard, const QuantLib::Date& asof,
-                                                    const std::set<MarketDatum::InstrumentType>& instrumentTypes,
-                                                    const std::set<MarketDatum::QuoteType>& quoteTypes) const {
+std::set<boost::shared_ptr<MarketDatum>> Loader::get(const Wildcard& wildcard, const QuantLib::Date& asof) const {
     std::set<boost::shared_ptr<MarketDatum>> result;
     for (auto const& md : loadQuotes(asof)) {
-        if (wildcard.matches(md->name()) &&
-            (instrumentTypes.empty() || instrumentTypes.find(md->instrumentType()) != instrumentTypes.end()) &&
-            (quoteTypes.empty() || quoteTypes.find(md->quoteType()) != quoteTypes.end())) {
+        if (wildcard.matches(md->name())) {
             result.insert(md);
         }
     }
@@ -72,10 +65,7 @@ boost::shared_ptr<MarketDatum> Loader::get(const std::pair<std::string, bool>& n
     }
 }
 
-const std::vector<Fixing>& Loader::loadDividends() const {
-    static std::vector<Fixing> noFixings;
-    return noFixings;
-}
+std::vector<Fixing> Loader::loadDividends() const { return {}; }
 
 } // namespace data
 } // namespace ore

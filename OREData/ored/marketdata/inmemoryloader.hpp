@@ -31,14 +31,14 @@ public:
     InMemoryLoader() {}
 
     //! Load market quotes
-    const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date& d) const override {
+    std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date& d) const override {
         QL_REQUIRE(data_.find(d) != data_.end(), "There are no quotes available for date " << d);
         return data_.find(d)->second;
     }
 
     //! Get a particular quote by its unique name
-    const boost::shared_ptr<MarketDatum>& get(const string& name, const QuantLib::Date& d) const override {
-        for (auto& md : loadQuotes(d)) {
+    boost::shared_ptr<MarketDatum> get(const string& name, const QuantLib::Date& d) const override {
+        for (const auto& md : loadQuotes(d)) {
             if (md->name() == name)
                 return md;
         }
@@ -46,10 +46,10 @@ public:
     }
 
     //! Load fixings
-    const std::vector<Fixing>& loadFixings() const override { return fixings_; }
+    std::vector<Fixing> loadFixings() const override { return fixings_; }
 
     //! Load Dividends
-    const std::vector<Fixing>& loadDividends() const override { return dividends_; }
+    std::vector<Fixing> loadDividends() const override { return dividends_; }
 
     // add a market datum
     virtual void add(QuantLib::Date date, const string& name, QuantLib::Real value) {
@@ -63,13 +63,11 @@ public:
 
     // add a fixing
     virtual void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {
-        // Don't check against today's date here
         fixings_.emplace_back(Fixing(date, name, value));
     }
 
     // add a dividend
     virtual void addDividend(Date date, const string& name, Real value) {
-        // Don't check against today's date here
         dividends_.emplace_back(Fixing(date, name, value));
     }
 

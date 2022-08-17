@@ -51,10 +51,10 @@ namespace {
 class MarketDataLoader : public Loader {
 public:
     MarketDataLoader();
-    const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date&) const override;
-    const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const override;
-    const std::vector<Fixing>& loadFixings() const override { return fixings_; }
-    const std::vector<Fixing>& loadDividends() const override { return dividends_; }
+    std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
+    boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date&) const override;
+    std::vector<Fixing> loadFixings() const override { return fixings_; }
+    std::vector<Fixing> loadDividends() const override { return dividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
     void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
     void addDividend(QuantLib::Date date, const string& name, QuantLib::Real value) {}
@@ -65,13 +65,13 @@ private:
     std::vector<Fixing> dividends_;
 };
 
-const vector<boost::shared_ptr<MarketDatum>>& MarketDataLoader::loadQuotes(const Date& d) const {
+vector<boost::shared_ptr<MarketDatum>> MarketDataLoader::loadQuotes(const Date& d) const {
     auto it = data_.find(d);
     QL_REQUIRE(it != data_.end(), "Loader has no data for date " << d);
     return it->second;
 }
 
-const boost::shared_ptr<MarketDatum>& MarketDataLoader::get(const string& name, const Date& d) const {
+boost::shared_ptr<MarketDatum> MarketDataLoader::get(const string& name, const Date& d) const {
     for (auto& md : loadQuotes(d)) {
         if (md->name() == name)
             return md;

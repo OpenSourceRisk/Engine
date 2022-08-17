@@ -142,14 +142,14 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
     LOG("CSVLoader completed processing " << filename);
 }
 
-const vector<boost::shared_ptr<MarketDatum>>& CSVLoader::loadQuotes(const QuantLib::Date& d) const {
+vector<boost::shared_ptr<MarketDatum>> CSVLoader::loadQuotes(const QuantLib::Date& d) const {
     auto it = data_.find(d);
     QL_REQUIRE(it != data_.end(), "CSVLoader has no data for date " << d);
     return it->second;
 }
 
-const boost::shared_ptr<MarketDatum>& CSVLoader::get(const string& name, const QuantLib::Date& d) const {
-    for (auto& md : loadQuotes(d)) {
+boost::shared_ptr<MarketDatum> CSVLoader::get(const string& name, const QuantLib::Date& d) const {
+    for (const auto& md : loadQuotes(d)) {
         if (md->name() == name)
             return md;
     }
