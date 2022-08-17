@@ -803,18 +803,18 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
 boost::shared_ptr<Index> parseIndex(const string& s) {
     boost::shared_ptr<QuantLib::Index> ret_idx;
     try {
-        ret_idx = parseIborIndex(s);
+        ret_idx = parseEquityIndex(s);
     } catch (...) {
     }
     if (!ret_idx) {
-	try {
-        ret_idx = parseSwapIndex(s, Handle<YieldTermStructure>(), Handle<YieldTermStructure>());
+        try {
+            ret_idx = parseBondIndex(s);
         } catch (...) {
         }
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseZeroInflationIndex(s, false, Handle<ZeroInflationTermStructure>());
+            ret_idx = parseCommodityIndex(s);
         } catch (...) {
         }
     }
@@ -826,31 +826,31 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseEquityIndex(s);
-        } catch (...) {
-        }
-    }
-    if (!ret_idx) {
-        try {
-            ret_idx = parseBondIndex(s);
+            ret_idx = parseGenericIndex(s);
         } catch (...) {
         }
     }
     if (!ret_idx) {
         try {
             ret_idx = parseConstantMaturityBondIndex(s);
-	} catch (...) {
-        }
-    }
-    if (!ret_idx) {
-        try {
-            ret_idx = parseCommodityIndex(s);
         } catch (...) {
         }
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseGenericIndex(s);
+            ret_idx = parseIborIndex(s);
+        } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseSwapIndex(s, Handle<YieldTermStructure>(), Handle<YieldTermStructure>());
+        } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseZeroInflationIndex(s, false, Handle<ZeroInflationTermStructure>());
         } catch (...) {
         }
     }
