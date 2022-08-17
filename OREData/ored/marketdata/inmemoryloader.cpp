@@ -102,11 +102,11 @@ void InMemoryLoader::add(QuantLib::Date date, const string& name, QuantLib::Real
 }
 
 void InMemoryLoader::addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {
-    fixings_.emplace_back(Fixing(date, name, value));
+    fixings_.insert(Fixing(date, name, value));
 }
 
 void InMemoryLoader::addDividend(Date date, const string& name, Real value) {
-    dividends_.emplace_back(Fixing(date, name, value));
+    dividends_.insert(Fixing(date, name, value));
 }
 
 void InMemoryLoader::reset() {

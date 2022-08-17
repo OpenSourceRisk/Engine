@@ -128,11 +128,11 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
             } else if (dataType == DataType::Fixing) {
                 // process fixings
                 if (date < today || (date == today && !implyTodaysFixings_))
-                    fixings_.emplace_back(Fixing(date, key, value));
+                    fixings_.insert(Fixing(date, key, value));
             } else if (dataType == DataType::Dividend) {
                 // process dividends
                 if (date <= today)
-                    dividends_.emplace_back(Fixing(date, key, value));
+                    dividends_.insert(Fixing(date, key, value));
             } else {
                 QL_FAIL("unknown data type");
             }

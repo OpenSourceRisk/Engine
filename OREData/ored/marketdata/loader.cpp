@@ -65,7 +65,7 @@ boost::shared_ptr<MarketDatum> Loader::get(const std::pair<std::string, bool>& n
     }
 }
 
-std::vector<Fixing> Loader::loadDividends() const { return {}; }
+std::set<Fixing> Loader::loadDividends() const { return {}; }
 
 } // namespace data
 } // namespace ore
