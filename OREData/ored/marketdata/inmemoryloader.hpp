@@ -27,58 +27,30 @@ using std::string;
 
 class InMemoryLoader : public Loader {
 public:
-    //! Constructor
     InMemoryLoader() {}
 
-    //! Load market quotes
-    std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date& d) const override {
-        QL_REQUIRE(data_.find(d) != data_.end(), "There are no quotes available for date " << d);
-        return data_.find(d)->second;
-    }
-
-    //! Get a particular quote by its unique name
-    boost::shared_ptr<MarketDatum> get(const string& name, const QuantLib::Date& d) const override {
-        for (const auto& md : loadQuotes(d)) {
-            if (md->name() == name)
-                return md;
-        }
-        QL_FAIL("No datum for " << name << " on date " << d);
-    }
-
-    //! Load fixings
+    std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date& d) const override;
+    boost::shared_ptr<MarketDatum> get(const string& name, const QuantLib::Date& d) const override;
+    std::set<boost::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
+                                                 const QuantLib::Date& asof) const override;
+    std::set<boost::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const override;
     std::vector<Fixing> loadFixings() const override { return fixings_; }
-
-    //! Load Dividends
     std::vector<Fixing> loadDividends() const override { return dividends_; }
 
     // add a market datum
-    virtual void add(QuantLib::Date date, const string& name, QuantLib::Real value) {
-        try {
-            data_[date].push_back(parseMarketDatum(date, name, value));
-            TLOG("Added MarketDatum " << data_[date].back()->name());
-        } catch (std::exception& e) {
-            WLOG("Failed to parse MarketDatum " << name << ": " << e.what());
-        }
-    }
+    virtual void add(QuantLib::Date date, const string& name, QuantLib::Real value);
 
     // add a fixing
-    virtual void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {
-        fixings_.emplace_back(Fixing(date, name, value));
-    }
+    virtual void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value);
 
     // add a dividend
-    virtual void addDividend(Date date, const string& name, Real value) {
-        dividends_.emplace_back(Fixing(date, name, value));
-    }
+    virtual void addDividend(Date date, const string& name, Real value);
 
-    void reset() { 
-        data_.clear();
-        fixings_.clear();
-        dividends_.clear();
-    }
+    // clear data
+    void reset();
 
 protected:
-    std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
+    std::map<QuantLib::Date, std::set<boost::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>> data_;
     std::vector<Fixing> fixings_;
     std::vector<Fixing> dividends_;
 };
