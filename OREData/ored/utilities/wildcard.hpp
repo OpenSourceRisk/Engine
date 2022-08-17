@@ -40,6 +40,7 @@ public:
     explicit Wildcard(const std::string& pattern, const bool usePrefixes = true, const bool aggressivePrefixes = false);
 
     bool hasWildcard() const;
+    std::size_t wildcardPos() const; // string::npos if hasWildcard() == false
     bool isPrefix() const;
 
     bool matches(const std::string& s) const;
@@ -54,6 +55,7 @@ private:
     bool aggressivePrefixes_;
 
     bool hasWildCard_ = false;
+    std::size_t wildCardPos_;
     boost::optional<std::string> regexString_;
     boost::optional<std::string> prefixString_;
     mutable boost::shared_ptr<std::regex> regex_;
