@@ -27,7 +27,7 @@
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <qle/termstructures/piecewisezeroinflationcurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-
+#include <qle/utilities/inflation.hpp>
 #include <algorithm>
 
 using namespace QuantLib;
@@ -189,10 +189,6 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         Period curveObsLag = p.second == Period() ? config->lag() : p.second;
 
         // construct curve (ZC or YY depending on configuration)
-
-        // base zero / yoy rate: if given, take it, otherwise set it to first quote
-        Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
-
         std::vector<Date> pillarDates;
 
         interpolatedIndex_ = conv->interpolated();
@@ -215,18 +211,22 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 instrument->unregisterWith(Settings::instance().evaluationDate());
                 instruments.push_back(instrument);
             }
-            
-            if (config->useLastAvailableFixingAsBaseDate()) {
-                curve_ = boost::shared_ptr<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
-                    new QuantExt::PiecewiseZeroInflationCurve<Linear>(asof, config->calendar(), config->dayCounter(),
-                                                                      config->lag(), config->frequency(), baseRate,
-                                                                      instruments, conv->index(), config->tolerance()));
-            } else {
-                curve_ = boost::shared_ptr<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
-                    new QuantExt::PiecewiseZeroInflationCurve<Linear>(asof, config->calendar(), config->dayCounter(),
-                                                                      config->lag(), config->frequency(), baseRate,
-                                                                      instruments, nullptr, config->tolerance()));
+            // base zero / yoy rate: if given, take it, otherwise set it to observered zeroRate
+            Real baseRate = quotes[0]->value();
+            if (config->baseRate() != Null<Real>()) {
+                baseRate = config->baseRate();
+            } else if (index) {
+                baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(
+                    config->useLastAvailableFixingAsBaseDate(), swapStart, terms[0], conv->dayCounter(),
+                    conv->observationLag(), quotes[0]->value(), config->lag(), config->dayCounter(), index,
+                    interpolatedIndex_);
             }
+
+            curve_ = boost::shared_ptr<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
+                new QuantExt::PiecewiseZeroInflationCurve<Linear>(
+                    asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), baseRate,
+                    instruments, config->tolerance(), index, config->useLastAvailableFixingAsBaseDate()));
+            
             // force bootstrap so that errors are thrown during the build, not later
             boost::static_pointer_cast<QuantExt::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);
             if (derive_yoy_from_zc) {

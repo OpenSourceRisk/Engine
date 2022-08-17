@@ -52,10 +52,12 @@ public:
                                 const QuantLib::DayCounter& dayCounter, const QuantLib::Period& lag,
                                 QuantLib::Frequency frequency, QuantLib::Rate baseZeroRate,
                                 std::vector<boost::shared_ptr<typename Traits::helper>> instruments,
+                                QuantLib::Real accuracy = 1.0e-12,
                                 boost::shared_ptr<QuantLib::ZeroInflationIndex> index = nullptr,
-                                QuantLib::Real accuracy = 1.0e-12, const Interpolator& i = Interpolator())
+                                bool useLastAvailableFixingAsBaseDate = false, const Interpolator& i = Interpolator())
         : base_curve(referenceDate, calendar, dayCounter, lag, frequency, baseZeroRate, i),
-          instruments_(std::move(instruments)), accuracy_(accuracy), index_(index) {
+          instruments_(std::move(instruments)), accuracy_(accuracy), index_(index),
+          useLastAvailableFixingAsBaseDate_(useLastAvailableFixingAsBaseDate) {
         bootstrap_.setup(this);
     }
     //@}
@@ -91,6 +93,7 @@ private:
     friend class QuantLib::BootstrapError<this_curve>;
     Bootstrap<this_curve> bootstrap_;
     boost::shared_ptr<QuantLib::ZeroInflationIndex> index_;
+    bool useLastAvailableFixingAsBaseDate_;
 };
 
 // inline and template definitions
@@ -143,11 +146,8 @@ template <class I, template <class> class B, class T> void PiecewiseZeroInflatio
 
 template <class I, template <class> class B, class T>
 QuantLib::Date PiecewiseZeroInflationCurve<I, B, T>::initialDate() const {
-    if (index_) {
-        return ZeroInflation::lastAvailableFixing(*index_, referenceDate());
-    } else {
-        return inflationPeriod(referenceDate() - observationLag(), frequency()).first;
-    }
+    return ZeroInflation::curveBaseDate(useLastAvailableFixingAsBaseDate_, referenceDate(), observationLag(),
+                                        frequency(), index_);
 }
 
 } // namespace QuantExt

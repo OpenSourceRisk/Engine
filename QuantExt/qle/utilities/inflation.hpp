@@ -72,14 +72,21 @@ QuantLib::Rate cpiFixing(const QuantLib::ZeroInflationIndex& index, const QuantL
                          const QuantLib::Period& obsLag, bool interpolated);
 
 
+//! computes the baseDate of piecewisezeroinflationcurve
+QuantLib::Date curveBaseDate(const bool baseDateLastKnownFixing, const QuantLib::Date& refDate,
+                             const QuantLib::Period obsLagCurve, const QuantLib::Frequency curveFreq,
+                             const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index);
+
+
 /*! Computes the base rate for curve construction so that zero inflation rate is constant up to the first pillar
 * Accounts for the acctual accrued inflation between the ZCIIS base date and the curve base date (e.g. last published fixing date)
 * If curve base date and ZCIIS are the same, then the base rate is the ZCIIS rate
 */
-QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const QuantLib::ZeroInflationIndex& index,
-                                  bool interpolated, const QuantLib::Date& today, const QuantLib::Period& tenor,
-                                  const QuantLib::Period& obsLag, const QuantLib::DayCounter& dc,
-                                  const QuantLib::Rate zeroRate);
+QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const QuantLib::Date& swapStart,
+                                  const QuantLib::Period& swapTenor, const QuantLib::DayCounter& swapZCLegDayCounter,
+                                  const QuantLib::Period& swapObsLag, const QuantLib::Rate zeroCouponRate, 
+                                  const QuantLib::Period& curveObsLag, const QuantLib::DayCounter& curveDayCounter,
+                                  const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const bool interpolated);
 
 
 }

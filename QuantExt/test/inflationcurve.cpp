@@ -89,19 +89,12 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const boost::sh
                 index, isInterpolated ? CPI::Linear : CPI::Flat, Handle<YieldTermStructure>(discountTS), today);
         helpers.push_back(instrument);
     }
-    Rate baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(useLastKnownFixing, *index, isInterpolated, today,
-                                                                cd.zeroCouponPillars[0], cd.obsLag, cd.dayCounter,
-                                                                cd.zeroCouponQuotes[0]);
-    boost::shared_ptr<ZeroInflationCurve> curve;
-    if (useLastKnownFixing) {
-        curve = boost::make_shared<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
-            today, fixingCalendar, dc, cd.obsLag, index->frequency(), baseRate, helpers, index,
-            1e-10);
-    } else {
-        curve = boost::make_shared<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
-            today, fixingCalendar, dc, cd.obsLag, index->frequency(), baseRate, helpers, nullptr,
-            1e-10);
-    }      
+    Rate baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(useLastKnownFixing, today, cd.zeroCouponPillars[0],
+                                                                cd.dayCounter, cd.obsLag, cd.zeroCouponQuotes[0],
+                                                                cd.obsLag, cd.dayCounter, index, isInterpolated);
+    boost::shared_ptr<ZeroInflationCurve> curve = boost::make_shared<QuantExt::PiecewiseZeroInflationCurve<Linear>>(today, fixingCalendar, dc, cd.obsLag,
+                                                                          index->frequency(), baseRate, helpers, 1e-10,
+                                                                          index, useLastKnownFixing);
     if (seasonality) {
         curve->setSeasonality(seasonality);
     }

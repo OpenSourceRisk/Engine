@@ -145,59 +145,86 @@ QuantLib::Rate cpiFixing(const QuantLib::ZeroInflationIndex& index, const QuantL
     }
 }
 
+QuantLib::Date curveBaseDate(const bool baseDateLastKnownFixing, const QuantLib::Date& refDate,
+                             const QuantLib::Period obsLagCurve, const QuantLib::Frequency curveFreq,
+                             const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index) {
+    if (baseDateLastKnownFixing) {
+        QL_REQUIRE(index, "can not compute curve base date based on the last known index fixing if no index provided");
+        return lastAvailableFixing(*index, refDate);
+    } else {
+        return QuantLib::inflationPeriod(refDate - obsLagCurve, curveFreq).first;
+    }
+}
 
-QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, 
-                                  const QuantLib::ZeroInflationIndex& index, bool interpolated,
-                                  const QuantLib::Date& today, const QuantLib::Period& tenor,
-                                  const QuantLib::Period& obsLag, const QuantLib::DayCounter& dc,
-                                  const QuantLib::Rate zeroRate) {
+QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const QuantLib::Date& swapStart,
+                                  const QuantLib::Period& swapTenor, const QuantLib::DayCounter& swapZCLegDayCounter,
+                                  const QuantLib::Period& swapObsLag, const QuantLib::Rate zeroCouponRate,
+                                  const QuantLib::Period& curveObsLag, const QuantLib::DayCounter& curveDayCounter,
+                                  const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const bool interpolated) {
+    
     // If the baseDate in Curve is today - obsLag then the quoted zeroRate should be used
-    if (!baseDateLastKnownFixing)
-        return zeroRate;
+    if (!baseDateLastKnownFixing && swapObsLag == curveObsLag)
+        return zeroCouponRate;
+    
+    QL_REQUIRE(index, "can not compute base cpi of the zero coupon swap");
     // Otherwise we need to take into account the accrued inflation between rate helper base date and curve base date
     // Check if historical fixings available
     try {
-        checkIfFixingAvailable(today, obsLag, interpolated, index);
+        checkIfFixingAvailable(swapStart, swapObsLag, interpolated, *index);
     } catch (const std::exception& e) {
         QL_FAIL("Can not estimate the curve base date, got " << e.what());
     }
 
-    // TODO check historical fixings available
-    Rate instrumentBaseCPI = cpiFixing(index, today, obsLag, interpolated);
-    Time timeFromInstrumentBase =
-        inflationYearFraction(index.frequency(), interpolated, dc, today - obsLag, today + tenor - obsLag);
-    auto fwdCPI = instrumentBaseCPI * std::pow(1 + zeroRate, timeFromInstrumentBase);
+    Date swapBaseDate = swapStart - swapObsLag;
+    Date swapMaturity = swapStart + swapTenor;
+    Date swapObservationDate = swapMaturity - swapObsLag;
 
-    Date curveBaseDate = lastAvailableFixing(index, today);
-    double curveBaseFixing = index.fixing(curveBaseDate);
+    // TODO check historical fixings available
+    Rate instrumentBaseCPI = cpiFixing(*index, swapStart, swapObsLag, interpolated);
+    Time timeFromSwapBase =
+        inflationYearFraction(index->frequency(), interpolated, swapZCLegDayCounter, swapBaseDate, swapObservationDate);
+
+    auto fwdCPI = instrumentBaseCPI * std::pow(1 + zeroCouponRate, timeFromSwapBase);
+
+    Date curveBaseDt = curveBaseDate(baseDateLastKnownFixing, swapStart, curveObsLag, index->frequency(), index);
+    
+    double curveBaseFixing = index->fixing(curveBaseDt);
 
     if (!interpolated) {
         Time timeFromCurveBase =
-            inflationYearFraction(index.frequency(), interpolated, dc, curveBaseDate, today + tenor - obsLag);
+            inflationYearFraction(index->frequency(), interpolated, curveDayCounter, curveBaseDt,
+                                                       swapObservationDate);
 
         return std::pow(fwdCPI / curveBaseFixing, 1.0 / timeFromCurveBase) - 1.0;
     } else {
         // Compute the interpolated  fixing of the ZCIIS at maturity
-        auto fixingPeriod = inflationPeriod(today + tenor - obsLag, index.frequency());
-        auto paymentPeriod = inflationPeriod(today + tenor, index.frequency());
+        auto fixingPeriod = inflationPeriod(swapObservationDate, index->frequency());
+        auto paymentPeriod = inflationPeriod(swapMaturity, index->frequency());
         // Fixing times from curve base date
-        Time d1 = inflationYearFraction(index.frequency(), false, dc, curveBaseDate, fixingPeriod.first);
-        Time d2 = inflationYearFraction(index.frequency(), false, dc, curveBaseDate, fixingPeriod.second + 1 * Days);
+        Time timeToFixing1 =
+            inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDt, fixingPeriod.first);
+        Time timeToFixing2 = inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDt,
+                                        fixingPeriod.second + 1 * Days);
 
         // Time interpolation
-        Time t = inflationYearFraction(index.frequency(), true, dc, curveBaseDate, today + tenor);
-        Time t1 = inflationYearFraction(index.frequency(), false, dc, curveBaseDate, paymentPeriod.first);
-        Time t2 = inflationYearFraction(index.frequency(), false, dc, curveBaseDate, paymentPeriod.second + 1 * Days);
-        Time interpolationFactor = (t - t1) / (t2 - t1);
+        Time timeToPayment = inflationYearFraction(index->frequency(), true, curveDayCounter, curveBaseDt, swapMaturity);
+        Time timeToStartPaymentPeriod =
+            inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDt, paymentPeriod.first);
+        Time timeToEndPaymenetPeriod = inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDt,
+                                        paymentPeriod.second + 1 * Days);
+        Time interpolationFactor =
+            (timeToPayment - timeToStartPaymentPeriod) / (timeToEndPaymenetPeriod - timeToStartPaymentPeriod);
 
         // Root search for a constant rate that the interpolation of both cpi matches the forward cpi
         Real target = fwdCPI / curveBaseFixing;
 
-        std::function<double(double)> objectiveFunction = [&d1, &d2, &interpolationFactor, &target](Rate r) {
-            return target - (std::pow(1 + r, d1) + (std::pow(1 + r, d2) - std::pow(1 + r, d1)) * interpolationFactor);
+        std::function<double(double)> objectiveFunction = [&timeToFixing1, &timeToFixing2, &interpolationFactor,
+                                                           &target](Rate r) {
+            return target - (std::pow(1 + r, timeToFixing1) +
+                             (std::pow(1 + r, timeToFixing2) - std::pow(1 + r, timeToFixing1)) * interpolationFactor);
         };
 
-        Rate guess = std::pow(fwdCPI / curveBaseFixing, 1.0 / d2) - 1.0;
+        Rate guess = std::pow(fwdCPI / curveBaseFixing, 1.0 / timeToFixing2) - 1.0;
         Rate r = guess;
         try {
             QuantLib::Brent solver;
