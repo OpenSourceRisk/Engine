@@ -23,11 +23,15 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
 #include <ored/marketdata/fixings.hpp>
 #include <ored/marketdata/marketdatum.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/wildcard.hpp>
+
 #include <ql/time/date.hpp>
+
+#include <boost/shared_ptr.hpp>
+
 #include <vector>
 
 namespace ore {
@@ -42,18 +46,27 @@ public:
 
     //! \name Interface
     //@{
+
+    //! get all quotes
     virtual const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date&) const = 0;
 
+    //! get quote by its unique name, throws if not existent or not unique
     virtual const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const = 0;
 
+    //! get quotes matching a set of names, instrument types and quote types
+    virtual std::set<boost::shared_ptr<MarketDatum>>
+    get(const std::set<std::string>& names, const QuantLib::Date& asof,
+        const std::set<MarketDatum::InstrumentType>& instrumentTypes = {},
+        const std::set<MarketDatum::QuoteType>& quoteTypes = {}) const;
+
+    //! get quotes matching a wildcard and a set of instrument types and quote types
+    virtual std::set<boost::shared_ptr<MarketDatum>>
+    get(const Wildcard& wildcard, const QuantLib::Date& asof,
+        const std::set<MarketDatum::InstrumentType>& instrumentTypes = {},
+        const std::set<MarketDatum::QuoteType>& quoteTypes = {}) const;
+
     //! Default implementation, returns false if get throws or returns a null pointer
-    virtual bool has(const std::string& name, const QuantLib::Date& d) const {
-        try {
-            return get(name, d) != nullptr;
-        } catch (...) {
-            return false;
-        }
-    }
+    virtual bool has(const std::string& name, const QuantLib::Date& d) const;
 
     /*! Default implementation for get that allows for the market data item to be optional. The first element of
         the \p name pair is the name of the market point being sought and the second element of the \p name pair
@@ -64,29 +77,13 @@ public:
         - if the quote is not in the loader for date \p d and it is not optional, an exception is thrown
      */
     virtual boost::shared_ptr<MarketDatum> get(const std::pair<std::string, bool>& name,
-                                               const QuantLib::Date& d) const {
-        if (has(name.first, d)) {
-            return get(name.first, d);
-        } else {
-            if (name.second) {
-                DLOG("Could not find quote for ID " << name.first << " with as of date " << QuantLib::io::iso_date(d)
-                                                    << ".");
-                return boost::shared_ptr<MarketDatum>();
-            } else {
-                QL_FAIL("Could not find quote for Mandatory ID " << name.first << " with as of date "
-                                                                 << QuantLib::io::iso_date(d));
-            }
-        }
-    }
+                                               const QuantLib::Date& d) const;
 
     virtual const std::vector<Fixing>& loadFixings() const = 0;
     //@}
 
     //! Optional load dividends method
-    virtual const std::vector<Fixing>& loadDividends() const {
-        static std::vector<Fixing> noFixings;
-        return noFixings;
-    }
+    virtual const std::vector<Fixing>& loadDividends() const;
 
 private:
     //! Serialization
