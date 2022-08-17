@@ -76,15 +76,15 @@ public:
     //! \name Inspectors
     //@{
     //! Load market quotes
-    const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date&) const override;
+    std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
 
     //! Get a particular quote by its unique name
-    const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const override;
+    boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date&) const override;
 
     //! Load fixings
-    const std::vector<Fixing>& loadFixings() const override { return fixings_; }
+    std::vector<Fixing> loadFixings() const override { return fixings_; }
     //! Load dividends
-    const std::vector<Fixing>& loadDividends() const override { return dividends_; }
+    std::vector<Fixing> loadDividends() const override { return dividends_; }
     //@}
 
 private:

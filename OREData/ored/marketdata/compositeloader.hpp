@@ -22,25 +22,25 @@ public:
         QL_REQUIRE(a_ || b_, "CompositeLoader(): at least one loader must be not null");
     }
 
-    const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date& d) const override {
+    std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date& d) const override {
         if (!b_)
             return a_->loadQuotes(d);
         if (!a_)
             return b_->loadQuotes(d);
-        data_.clear();
+        std::vector<boost::shared_ptr<MarketDatum>> data;
         // loadQuotes() might throw if no quotes are available in one loader, which is not an error here
         try {
-            data_.insert(data_.end(), a_->loadQuotes(d).begin(), a_->loadQuotes(d).end());
+            data.insert(data.end(), a_->loadQuotes(d).begin(), a_->loadQuotes(d).end());
         } catch (...) {
         }
         try {
-            data_.insert(data_.end(), b_->loadQuotes(d).begin(), b_->loadQuotes(d).end());
+            data.insert(data.end(), b_->loadQuotes(d).begin(), b_->loadQuotes(d).end());
         } catch (...) {
         }
-        return data_;
+        return data;
     }
 
-    const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date& d) const override {
+    boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date& d) const override {
         if (a_ && a_->has(name, d))
             return a_->get(name, d);
         if (b_ && b_->has(name, d))
@@ -52,32 +52,31 @@ public:
         return (a_ && a_->has(name, d)) || (b_ && b_->has(name, d));
     }
 
-    const std::vector<Fixing>& loadFixings() const override {
+    std::vector<Fixing> loadFixings() const override {
         if (!b_)
             return a_->loadFixings();
         if (!a_)
             return b_->loadFixings();
-        fixings_.clear();
-        fixings_.insert(fixings_.end(), a_->loadFixings().begin(), a_->loadFixings().end());
-        fixings_.insert(fixings_.end(), b_->loadFixings().begin(), b_->loadFixings().end());
-        return fixings_;
+	std::vector<Fixing> fixings;
+        fixings.insert(fixings.end(), a_->loadFixings().begin(), a_->loadFixings().end());
+        fixings.insert(fixings.end(), b_->loadFixings().begin(), b_->loadFixings().end());
+        return fixings;
     }
 
-    const std::vector<Fixing>& loadDividends() const override {
+    std::vector<Fixing> loadDividends() const override {
         if (!b_)
             return a_->loadDividends();
         if (!a_)
             return b_->loadDividends();
-        dividends_.clear();
-        dividends_.insert(dividends_.end(), a_->loadDividends().begin(), a_->loadDividends().end());
-        dividends_.insert(dividends_.end(), b_->loadDividends().begin(), b_->loadDividends().end());
-        return dividends_;
+	std::vector<Fixing> dividends;
+        dividends.insert(dividends.end(), a_->loadDividends().begin(), a_->loadDividends().end());
+        dividends.insert(dividends.end(), b_->loadDividends().begin(), b_->loadDividends().end());
+        return dividends;
     }
 
 private:
     const boost::shared_ptr<Loader> a_, b_;
-    mutable std::vector<boost::shared_ptr<MarketDatum>> data_;
-    mutable std::vector<Fixing> fixings_, dividends_;
 };
+
 } // namespace data
 } // namespace ore

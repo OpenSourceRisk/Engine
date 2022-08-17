@@ -48,22 +48,17 @@ public:
     //@{
 
     //! get all quotes
-    virtual const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date&) const = 0;
+    virtual std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const = 0;
 
     //! get quote by its unique name, throws if not existent or not unique
-    virtual const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const = 0;
+    virtual boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date&) const = 0;
 
-    //! get quotes matching a set of names, instrument types and quote types
-    virtual std::set<boost::shared_ptr<MarketDatum>>
-    get(const std::set<std::string>& names, const QuantLib::Date& asof,
-        const std::set<MarketDatum::InstrumentType>& instrumentTypes = {},
-        const std::set<MarketDatum::QuoteType>& quoteTypes = {}) const;
+    //! get quotes matching a set of names
+    virtual std::set<boost::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
+                                                         const QuantLib::Date& asof) const;
 
     //! get quotes matching a wildcard and a set of instrument types and quote types
-    virtual std::set<boost::shared_ptr<MarketDatum>>
-    get(const Wildcard& wildcard, const QuantLib::Date& asof,
-        const std::set<MarketDatum::InstrumentType>& instrumentTypes = {},
-        const std::set<MarketDatum::QuoteType>& quoteTypes = {}) const;
+    virtual std::set<boost::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const;
 
     //! Default implementation, returns false if get throws or returns a null pointer
     virtual bool has(const std::string& name, const QuantLib::Date& d) const;
@@ -76,14 +71,13 @@ public:
           a warning is logged and a <code>boost::shared_ptr<MarketDatum>()</code> is returned
         - if the quote is not in the loader for date \p d and it is not optional, an exception is thrown
      */
-    virtual boost::shared_ptr<MarketDatum> get(const std::pair<std::string, bool>& name,
-                                               const QuantLib::Date& d) const;
+    virtual boost::shared_ptr<MarketDatum> get(const std::pair<std::string, bool>& name, const QuantLib::Date& d) const;
 
-    virtual const std::vector<Fixing>& loadFixings() const = 0;
+    virtual std::vector<Fixing> loadFixings() const = 0;
     //@}
 
     //! Optional load dividends method
-    virtual const std::vector<Fixing>& loadDividends() const;
+    virtual std::vector<Fixing> loadDividends() const;
 
 private:
     //! Serialization
