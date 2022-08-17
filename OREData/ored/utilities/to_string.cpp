@@ -91,7 +91,9 @@ std::string to_string(const QuantLib::Period& period) {
 	return o.str();
     }
     default:
-        QL_FAIL("unknown time unit (" << Integer(period.units()) << ")");
+        ALOG("unknown time unit (" << Integer(period.units()) << ")");
+	o << period;
+	return o.str();
     }
 }
 
