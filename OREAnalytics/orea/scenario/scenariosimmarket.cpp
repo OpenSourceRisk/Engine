@@ -217,10 +217,12 @@ makeYieldCurve(const std::string& curveId, const bool spreaded, const Handle<Yie
 
 } // namespace
 
-void ScenarioSimMarket::writeSimData(const std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>>& simDataTmp,
-                                     const std::map<RiskFactorKey, Real>& absoluteSimDataTmp) {
+void ScenarioSimMarket::writeSimData(std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>>& simDataTmp,
+                                     std::map<RiskFactorKey, Real>& absoluteSimDataTmp) {
     simData_.insert(simDataTmp.begin(), simDataTmp.end());
     absoluteSimData_.insert(absoluteSimDataTmp.begin(), absoluteSimDataTmp.end());
+    simDataTmp.clear();
+    absoluteSimDataTmp.clear();
 }
 
 void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
