@@ -48,6 +48,9 @@ void applyFixings(const set<Fixing>& fixings) {
     boost::shared_ptr<Index> index;
     std::string lastIndexName;
     for (auto& f : fixings) {
+	if(f.name.empty()) {
+            WLOG("Skipping fixing with empty name, value " << f.fixing << ", date " << f.date);
+        }
         try {
             if (lastIndexName != f.name) {
                 index = parseIndex(f.name);
@@ -74,7 +77,7 @@ void applyDividends(const set<Fixing>& dividends) {
     for (auto& f : dividends) {
         try {
             if (lastIndexName != f.name) {
-                index = parseEquityIndex(f.name);
+                index = boost::make_shared<EquityIndex>(f.name, NullCalendar(), Currency());
                 lastIndexName = f.name;
             }
             index->addDividend(f.date, f.fixing, true);
