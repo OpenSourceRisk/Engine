@@ -322,13 +322,15 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                                      << "') must be set to 'FlatZero' or 'FlatFwd'");
 
     const SmileDynamicsConfig& smileDynamics = curveConfigs.smileDynamicsConfig();
-    
+
     for (const auto& param : parameters->parameters()) {
         try {
             // we populate the temp containers for each curve and write the result to the global
             // containers only if the set of data points is complete for this curve
             std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
             std::map<RiskFactorKey, Real> absoluteSimDataTmp;
+
+	    boost::timer::cpu_timer timer;
 
             switch (param.first) {
             case RiskFactorKey::KeyType::FXSpot:
@@ -2608,6 +2610,12 @@ ScenarioSimMarket::ScenarioSimMarket(
             case RiskFactorKey::KeyType::None:
                 WLOG("RiskFactorKey None not yet implemented");
                 break;
+            }
+
+            if (!param.second.second.empty()) {
+                LOG("built " << std::left << std::setw(25) << param.first << std::right << std::setw(10)
+                             << param.second.second.size() << std::setprecision(3) << std::setw(15)
+                             << static_cast<double>(timer.elapsed().wall) / 1E6 << " ms");
             }
 
         } catch (const std::exception& e) {
