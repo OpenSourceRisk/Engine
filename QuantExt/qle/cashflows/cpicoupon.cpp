@@ -72,7 +72,7 @@ void CappedFlooredCPICoupon::setCommon(Rate cap, Rate floor) {
 CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>& underlying, Date startDate, Rate cap,
                                                Rate floor)
     : CPICoupon(underlying->baseCPI(), underlying->baseDate(), underlying->date(), underlying->nominal(), underlying->accrualStartDate(),
-                underlying->accrualEndDate(), underlying->fixingDays(), underlying->cpiIndex(),
+                underlying->accrualEndDate(), underlying->cpiIndex(),
                 underlying->observationLag(), underlying->observationInterpolation(), underlying->dayCounter(),
                 underlying->fixedRate(), underlying->spread(), underlying->referencePeriodStart(),
                 underlying->referencePeriodEnd(), underlying->exCouponDate(), underlying->subtractInflationNotional()),
@@ -149,9 +149,11 @@ void CappedFlooredCPICoupon::accept(AcyclicVisitor& v) {
 
 CappedFlooredCPICashFlow::CappedFlooredCPICashFlow(const ext::shared_ptr<CPICashFlow>& underlying, Date startDate,
                                                    Period observationLag, Rate cap, Rate floor)
-    : CPICashFlow(underlying->notional(), boost::dynamic_pointer_cast<ZeroInflationIndex>(underlying->index()),
-                  startDate - observationLag, underlying->baseFixing(), underlying->fixingDate(), underlying->date(),
-                  underlying->growthOnly(), underlying->interpolation(), underlying->frequency()),
+    : CPICashFlow(underlying->notional(), underlying->cpiIndex(),
+                  startDate - observationLag, underlying->baseFixing(), underlying->observationDate(),
+                  underlying->observationLag(), underlying->interpolation(), 
+                  underlying->date(),
+                  underlying->growthOnly()),
       underlying_(underlying), startDate_(startDate), observationLag_(observationLag), isFloored_(false),
       isCapped_(false) {
 
@@ -392,7 +394,7 @@ CPILeg::operator Leg() const {
                 coup = ext::make_shared<CPICoupon>(
                     baseCPI_, // all have same base for ratio
                     baseDate,
-                    paymentDate, detail::get(notionals_, i, 0.0), start, end, detail::get(fixingDays_, i, 0.0), index_,
+                    paymentDate, detail::get(notionals_, i, 0.0), start, end, index_,
                     observationLag_, observationInterpolation_, paymentDayCounter_, detail::get(fixedRates_, i, 0.0),
                     detail::get(spreads_, i, 0.0), refStart, refEnd, exCouponDate, subtractInflationNominalAllCoupons_);
 
@@ -414,11 +416,10 @@ CPILeg::operator Leg() const {
 
     // in CPI legs you always have a notional flow of some sort
     Date paymentDate = paymentCalendar_.adjust(schedule_.date(n), paymentAdjustment_);
-    Date fixingDate = paymentDate - observationLag_;
-
+    
     ext::shared_ptr<CPICashFlow> xnl = ext::make_shared<CPICashFlow>(
-        detail::get(notionals_, n, 0.0), index_, baseDate, baseCPI_, fixingDate, paymentDate,
-        subtractInflationNominal_, observationInterpolation_, index_->frequency());
+        detail::get(notionals_, n, 0.0), index_, baseDate, baseCPI_, paymentDate, observationLag_,
+        observationInterpolation_, paymentDate, subtractInflationNominal_);
 
     if (finalFlowCap_ == Null<Real>() && finalFlowFloor_ == Null<Real>()) {
         leg.push_back(xnl);

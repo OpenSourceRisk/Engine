@@ -207,7 +207,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 boost::shared_ptr<ZeroInflationTraits::helper> instrument =
                     boost::make_shared<ZeroCouponInflationSwapHelper>(quotes[i], conv->observationLag(), maturity,
                                                                       conv->fixCalendar(), conv->fixConvention(),
-                                                                      conv->dayCounter(), index, nominalTs, swapStart);
+                                                                      conv->dayCounter(), index, interpolatedIndex_ ? CPI::Linear : CPI::Flat, nominalTs, swapStart);
                 // The instrument gets registered to update on change of evaluation date. This triggers a
                 // rebootstrapping of the curve. In order to avoid this during simulation we unregister from the
                 // evaluationDate.

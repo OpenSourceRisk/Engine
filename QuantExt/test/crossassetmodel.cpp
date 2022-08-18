@@ -1984,7 +1984,7 @@ struct IrFxInfCrModelTestData {
         vector<Real> infRates{ 0.01, 0.01 };
         
         infEurTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(
-            referenceDate, TARGET(), dc, 3 * Months, Monthly, false, infDates, infRates));
+            referenceDate, TARGET(), dc, 3 * Months, Monthly, infDates, infRates));
         infEurTs->enableExtrapolation();
         
         infLag = inflationYearFraction(Monthly, false, dc, infEurTs->baseDate(), infEurTs->referenceDate());
@@ -2006,7 +2006,7 @@ struct IrFxInfCrModelTestData {
         }
 
         infGbpTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(referenceDate,
-            UnitedKingdom(), dc, 3 * Months, Monthly, false, infDates, infRates));
+            UnitedKingdom(), dc, 3 * Months, Monthly, infDates, infRates));
         infGbpTs->enableExtrapolation();
 
         Real infGbpAlpha = 0.01;
@@ -2590,9 +2590,9 @@ struct IrFxInfCrEqModelTestData {
         infRates.push_back(0.01);
         infRates.push_back(0.01);
         infEurTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(
-            referenceDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, false, infDates, infRates));
+            referenceDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, infDates, infRates));
         infGbpTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(
-            referenceDate, UnitedKingdom(), Actual365Fixed(), 3 * Months, Monthly, false, infDates, infRates));
+            referenceDate, UnitedKingdom(), Actual365Fixed(), 3 * Months, Monthly, infDates, infRates));
         infEurTs->enableExtrapolation();
         infGbpTs->enableExtrapolation();
         // same for eur and gbp (doesn't matter anyway, since we are
@@ -3834,7 +3834,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrCorrelationRecovery) {
     infRates.push_back(0.01);
     Handle<ZeroInflationTermStructure> its(
         boost::make_shared<ZeroInflationCurve>(Settings::instance().evaluationDate(), NullCalendar(), Actual365Fixed(),
-                                               3 * Months, Monthly, false, infDates, infRates));
+                                               3 * Months, Monthly, infDates, infRates));
 
     Handle<DefaultProbabilityTermStructure> hts(
         boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.01, Actual365Fixed()));
@@ -4013,7 +4013,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
     infRates.push_back(0.01);
     Handle<ZeroInflationTermStructure> its(
         boost::make_shared<ZeroInflationCurve>(Settings::instance().evaluationDate(), NullCalendar(), Actual365Fixed(),
-                                               3 * Months, Monthly, false, infDates, infRates));
+                                               3 * Months, Monthly, infDates, infRates));
 
     Handle<DefaultProbabilityTermStructure> hts(
         boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.01, Actual365Fixed()));
@@ -4194,7 +4194,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
     infRates.push_back(0.0075);
     infRates.push_back(0.0075);
     Handle<ZeroInflationTermStructure> infEurTs(boost::make_shared<ZeroInflationCurve>(
-        refDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, false, infDates, infRates));
+        refDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, infDates, infRates));
     infEurTs->enableExtrapolation();
     Handle<ZeroInflationIndex> infIndex(boost::make_shared<EUHICPXT>(false, infEurTs));
     
@@ -4323,7 +4323,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     infRates.push_back(0.0075);
     infRates.push_back(0.0075);
     Handle<ZeroInflationTermStructure> infEurTs(boost::make_shared<ZeroInflationCurve>(
-        refDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, false, infDates, infRates));
+        refDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, infDates, infRates));
     infEurTs->enableExtrapolation();
     Handle<ZeroInflationIndex> infIndex(boost::make_shared<EUHICPXT>(false, infEurTs));
     infIndex->addFixing(Date(1, April, 2015), 100);
