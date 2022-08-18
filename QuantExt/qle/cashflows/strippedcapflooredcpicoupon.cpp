@@ -27,9 +27,9 @@ using namespace QuantLib;
 
 StrippedCappedFlooredCPICashFlow::StrippedCappedFlooredCPICashFlow(
     const ext::shared_ptr<CappedFlooredCPICashFlow>& underlying)
-    : CPICashFlow(underlying->notional(), boost::dynamic_pointer_cast<ZeroInflationIndex>(underlying->index()), Date(),
-                  underlying->baseFixing(), underlying->fixingDate(), underlying->date(), underlying->growthOnly(),
-                  underlying->interpolation(), underlying->frequency()),
+    : CPICashFlow(underlying->notional(), underlying->cpiIndex(), underlying->baseDate(), underlying->baseFixing(),
+                  underlying->observationDate(), underlying->observationLag(),
+                  underlying->interpolation(), underlying->date(), underlying->growthOnly()),
       underlying_(underlying) {
     registerWith(underlying_);
 }
@@ -41,7 +41,7 @@ Real StrippedCappedFlooredCPICashFlow::amount() const {
 StrippedCappedFlooredCPICoupon::StrippedCappedFlooredCPICoupon(
     const ext::shared_ptr<CappedFlooredCPICoupon>& underlying)
     : CPICoupon(underlying->baseCPI(), underlying->date(), underlying->nominal(), underlying->accrualStartDate(),
-                underlying->accrualEndDate(), underlying->fixingDays(), underlying->cpiIndex(),
+                underlying->accrualEndDate(), underlying->cpiIndex(),
                 underlying->observationLag(), underlying->observationInterpolation(), underlying->dayCounter(),
                 underlying->fixedRate(), underlying->spread(), underlying->referencePeriodStart(),
                 underlying->referencePeriodEnd(), underlying->exCouponDate()),
