@@ -22,27 +22,32 @@
 */
 #pragma once
 
-#include <fstream>
-#include <iostream>
-#include <ql/errors.hpp>
-#include <vector>
 
-#include <boost/make_shared.hpp>
-#include <boost/serialization/vector.hpp>
 #include <orea/cube/npvsensicube.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/serializationdate.hpp>
 
+#include <ql/errors.hpp>
+
+#include <boost/make_shared.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/math/special_functions/relative_difference.hpp>
+
+#include <fstream>
+#include <iostream>
+#include <vector>
+
+
 namespace ore {
 namespace analytics {
 
-//! Naive concrete implementation of NPVSensiCube
-template <typename T> class SensiCube : public ore::analytics::NPVSensiCube {
+//! SensiCube stores only npvs not equal to the base npvs
+template <typename T> class SensiCube : public NPVSensiCube {
 public:
     SensiCube(const std::vector<std::string>& ids, const QuantLib::Date& asof, QuantLib::Size samples, const T& t = T())
-        : ids_(ids), asof_(asof), dates_(1, asof_), samples_(samples), t0Data_(ids.size(), t),
-          tradeNPVs_(ids.size(), std::map<Size, T>()) {}
+        : ids_(ids), asof_(asof), dates_(1, asof), samples_(samples), t0Data_(ids.size(), t),
+          tradeNPVs_(ids.size(), map<Size, T>()) {}
 
     //! load cube from an archive
     void load(const std::string& fileName) override {
@@ -74,19 +79,19 @@ public:
     QuantLib::Date asof() const override { return asof_; }
 
     //! Get a T0 value from the cube
-    Real getT0(QuantLib::Size i, QuantLib::Size) const override {
+    Real getT0(Size i, Size) const override {
         this->check(i, 0, 0);
         return this->t0Data_[i];
     }
 
     //! Set a value in the cube
-    void setT0(QuantLib::Real value, QuantLib::Size i, QuantLib::Size) override {
+    void setT0(Real value, Size i, Size) override {
         this->check(i, 0, 0);
         this->t0Data_[i] = static_cast<T>(value);
     }
 
     //! Get a value from the cube
-    Real get(QuantLib::Size i, QuantLib::Size j, QuantLib::Size k, QuantLib::Size) const override {
+    Real get(Size i, Size j, Size k, Size) const override {
         this->check(i, j, k);
 
         auto itr = this->tradeNPVs_[i].find(k);
@@ -98,15 +103,16 @@ public:
     }
 
     //! Set a value in the cube
-    void set(QuantLib::Real value, QuantLib::Size i, QuantLib::Size j, QuantLib::Size k, QuantLib::Size) override {
+    void set(Real value, Size i, Size j, Size k, Size) override {
         this->check(i, j, k);
-        this->tradeNPVs_[i][k] = static_cast<T>(value);
-        relevantScenarios_.insert(k);
+        T castValue = static_cast<T>(value);
+        if (boost::math::epsilon_difference<T>(castValue, t0Data_[i]) > 42) {
+            this->tradeNPVs_[i][k] = castValue;
+            relevantScenarios_.insert(k);
+        }
     }
 
-    std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(QuantLib::Size i) const override {
-        return tradeNPVs_[i];
-    }
+    std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(QuantLib::Size i) const override { return tradeNPVs_[i]; }
 
     std::set<QuantLib::Size> relevantScenarios() const override { return relevantScenarios_; }
 

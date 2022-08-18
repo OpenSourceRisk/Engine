@@ -377,7 +377,7 @@ Array DifferentialEvolution_MT::getMutationProbabilities(const std::vector<Candi
 }
 
 Array DifferentialEvolution_MT::rotateArray(Array a) const {
-    std::random_shuffle(a.begin(), a.end());
+    randomize(a.begin(), a.end(), rng_);
     return a;
 }
 

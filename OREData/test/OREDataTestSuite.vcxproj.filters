@@ -154,9 +154,6 @@
     <ClCompile Include="commodityasianoption.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="optionasiandata.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="fxasianoption.cpp">
       <Filter>source</Filter>
     </ClCompile>
