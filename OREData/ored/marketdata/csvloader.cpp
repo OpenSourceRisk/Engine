@@ -127,12 +127,20 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                 }
             } else if (dataType == DataType::Fixing) {
                 // process fixings
-                if (date < today || (date == today && !implyTodaysFixings_))
-                    fixings_.emplace_back(Fixing(date, key, value));
+                if (date < today || (date == today && !implyTodaysFixings_)) {
+                    if(!fixings_.insert(Fixing(date, key, value)).second) {
+                        WLOG("Skipped Fixing " << key << "@" << QuantLib::io::iso_date(date)
+                                               << " - this is already present.");
+                    }
+		}
             } else if (dataType == DataType::Dividend) {
                 // process dividends
-                if (date <= today)
-                    dividends_.emplace_back(Fixing(date, key, value));
+                if (date <= today) {
+                    if(!dividends_.insert(Fixing(date, key, value)).second) {
+                        WLOG("Skipped Dividend " << key << "@" << QuantLib::io::iso_date(date)
+                                                 << " - this is already present.");
+                    }
+		}
             } else {
                 QL_FAIL("unknown data type");
             }
@@ -142,14 +150,14 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
     LOG("CSVLoader completed processing " << filename);
 }
 
-const vector<boost::shared_ptr<MarketDatum>>& CSVLoader::loadQuotes(const QuantLib::Date& d) const {
+vector<boost::shared_ptr<MarketDatum>> CSVLoader::loadQuotes(const QuantLib::Date& d) const {
     auto it = data_.find(d);
     QL_REQUIRE(it != data_.end(), "CSVLoader has no data for date " << d);
     return it->second;
 }
 
-const boost::shared_ptr<MarketDatum>& CSVLoader::get(const string& name, const QuantLib::Date& d) const {
-    for (auto& md : loadQuotes(d)) {
+boost::shared_ptr<MarketDatum> CSVLoader::get(const string& name, const QuantLib::Date& d) const {
+    for (const auto& md : loadQuotes(d)) {
         if (md->name() == name)
             return md;
     }

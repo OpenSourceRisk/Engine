@@ -309,7 +309,7 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
     // force bootstrap so that errors are thrown during the build, not later
     h_->discount(QL_EPSILON);
 
-    LOG("Yield curve " << curveSpec_.name() << " built");
+    DLOG("Yield curve " << curveSpec_.name() << " built");
 }
 
 boost::shared_ptr<YieldTermStructure>
@@ -686,7 +686,7 @@ void YieldCurve::buildZeroCurve() {
     if (data.begin()->first > asofDate_) {
         Rate rate = data.begin()->second;
         data[asofDate_] = rate;
-        LOG("Insert zero curve point at time zero for " << curveSpec_.name() << ": "
+        DLOG("Insert zero curve point at time zero for " << curveSpec_.name() << ": "
                                                         << "date " << QuantLib::io::iso_date(asofDate_) << ", "
                                                         << "zero " << fixed << setprecision(4) << data[asofDate_]);
     }
@@ -715,7 +715,7 @@ void YieldCurve::buildZeroCurve() {
             zeroes.push_back(tempRate.equivalentRate(Continuous, NoFrequency, t));
         }
         discounts.push_back(tempRate.discountFactor(t));
-        LOG("Add zero curve point for " << curveSpec_.name() << ": " << io::iso_date(dates.back()) << " " << fixed
+        DLOG("Add zero curve point for " << curveSpec_.name() << ": " << io::iso_date(dates.back()) << " " << fixed
                                         << setprecision(4) << zeroes.back() << " / " << discounts.back());
     }
 
@@ -921,7 +921,7 @@ void YieldCurve::buildDiscountCurve() {
                                                                        << io::iso_date(asofDate_));
 
     if (data.begin()->first > asofDate_) {
-        LOG("Insert discount curve point at time zero for " << curveSpec_.name());
+        DLOG("Insert discount curve point at time zero for " << curveSpec_.name());
         data[asofDate_] = 1.0;
     }
 
@@ -935,7 +935,7 @@ void YieldCurve::buildDiscountCurve() {
     for (it = data.begin(); it != data.end(); ++it) {
         dates.push_back(it->first);
         discounts.push_back(it->second);
-        LOG("Add discount curve point for " << curveSpec_.name() << ": " << io::iso_date(dates.back()) << " "
+        DLOG("Add discount curve point for " << curveSpec_.name() << ": " << io::iso_date(dates.back()) << " "
                                             << discounts.back());
     }
 
@@ -1961,17 +1961,14 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
 
     DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
 
-    // LOG("YieldCurve::addFXForwards() called");
     // Get the conventions associated with the segment.
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::FX, "Conventions ID does not give FX forward conventions.");
 
-    // LOG("YieldCurve::addFXForwards(), get fxConvention");
     boost::shared_ptr<FXConvention> fxConvention = boost::dynamic_pointer_cast<FXConvention>(convention);
 
-    // LOG("YieldCurve::addFXForwards(), cast to CrossCcyYieldCurveSegment");
     boost::shared_ptr<CrossCcyYieldCurveSegment> fxForwardSegment =
         boost::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(segment);
 
@@ -1987,7 +1984,6 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
                 "instruments needs to match the yield curve currency.");
     }
 
-    // LOG("YieldCurve::addFXForwards(), retrieve known discount curve");
     string knownDiscountID = fxForwardSegment->foreignDiscountCurveID();
     Handle<YieldTermStructure> knownDiscountCurve;
 
@@ -2012,7 +2008,6 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
 
 
     /* Need to retrieve the market FX spot rate */
-    // LOG("YieldCurve::addFXForwards(), retrieve FX rate");
     string spotRateID = fxForwardSegment->spotRateID();
     boost::shared_ptr<FXSpotQuote> fxSpotQuote = getFxSpotQuote(spotRateID);
 
@@ -2020,7 +2015,7 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
     Currency fxSpotSourceCcy = parseCurrency(fxSpotQuote->unitCcy());
     Currency fxSpotTargetCcy = parseCurrency(fxSpotQuote->ccy());
 
-    LOG("YieldCurve::addFXForwards(), create FX forward quotes and helpers");
+    DLOG("YieldCurve::addFXForwards(), create FX forward quotes and helpers");
     auto fxForwardQuoteIDs = fxForwardSegment->quotes();
     for (Size i = 0; i < fxForwardQuoteIDs.size(); i++) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(fxForwardQuoteIDs[i], asofDate_);
@@ -2117,7 +2112,7 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
         }
     }
 
-    LOG("YieldCurve::addFXForwards() done");
+    DLOG("YieldCurve::addFXForwards() done");
 }
 
 void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,

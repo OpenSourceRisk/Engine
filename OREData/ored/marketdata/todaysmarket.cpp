@@ -45,9 +45,9 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <qle/indexes/equityindex.hpp>
-#include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/fallbackovernightindex.hpp>
+#include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
@@ -55,6 +55,7 @@
 #include <boost/graph/topological_sort.hpp>
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/timer/timer.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -85,7 +86,18 @@ TodaysMarket::TodaysMarket(const Date& asof, const boost::shared_ptr<TodaysMarke
     initialise(asof);
 }
 
+namespace {
+struct Count {
+    void inc() { ++count; }
+    std::size_t count = 0;
+};
+} // namespace
+
 void TodaysMarket::initialise(const Date& asof) {
+
+    std::map<std::string, boost::timer::nanosecond_type> timings;
+    std::map<std::string, Count> counts;
+    boost::timer::cpu_timer timer;
 
     asof_ = asof;
 
@@ -97,34 +109,36 @@ void TodaysMarket::initialise(const Date& asof) {
     if (loadFixings_) {
         // Apply them now in case a curve builder needs them
         LOG("Todays Market Loading Fixings");
+        timer.start();
         applyFixings(loader_->loadFixings());
+        timings["1 load fixings"] = timer.elapsed().wall;
         LOG("Todays Market Loading Fixing done.");
     }
 
     // Dividends - apply them now in case a curve builder needs them
 
     LOG("Todays Market Loading Dividends");
+    timer.start();
     applyDividends(loader_->loadDividends());
+    timings["2 load dividends"] = timer.elapsed().wall;
     LOG("Todays Market Loading Dividends done.");
 
     // Add all FX quotes from the loader to Triangulation
-    std::vector<boost::shared_ptr<MarketDatum>> quotes;
-    try {
-        quotes = loader_->loadQuotes(asof_);
-    } catch (...) {
-        WLOG("TodaysMarket::Initialise: no quotes available for date " << asof_);
-        return;
-    }
-
-    for (auto& md : quotes) {
-        if (md->asofDate() == asof_ && md->instrumentType() == MarketDatum::InstrumentType::FX_SPOT) {
+    timer.start();
+    if (loader_->hasQuotes(asof_)) {
+        for (auto& md : loader_->get(Wildcard("FX/RATE/*"), asof_)) {
             boost::shared_ptr<FXSpotQuote> q = boost::dynamic_pointer_cast<FXSpotQuote>(md);
             QL_REQUIRE(q, "Failed to cast " << md->name() << " to FXSpotQuote");
             fxT_.addQuote(q->unitCcy() + q->ccy(), q->quote());
         }
+    } else {
+        WLOG("TodaysMarket::Initialise: no quotes available for date " << asof_);
+        return;
     }
+    timings["3 add all fx quotes"] = timer.elapsed().wall;
 
     // build the dependency graph for all configurations and  build all FX Spots
+    timer.start();
     DependencyGraph dg(asof_, params_, curveConfigs_, iborFallbackConfig_);
     map<string, string> buildErrors;
 
@@ -133,6 +147,7 @@ void TodaysMarket::initialise(const Date& asof) {
         dg.buildDependencyGraph(configuration.first, buildErrors);
     }
     dependencies_ = dg.dependencies();
+    timings["4 build dep graphs"] = timer.elapsed().wall;
 
     // if market is not build lazily, sort the dependency graph and build the objects
 
@@ -140,6 +155,7 @@ void TodaysMarket::initialise(const Date& asof) {
 
         // We need to build all discount curves first, since some curve builds ask for discount
         // curves from specific configurations
+        timer.start();
         for (const auto& configuration : params_->configurations()) {
             map<string, string> discountCurves;
             if (params_->hasMarketObject(MarketObject::DiscountCurve)) {
@@ -148,6 +164,8 @@ void TodaysMarket::initialise(const Date& asof) {
             for (const auto& dc : discountCurves)
                 require(MarketObject::DiscountCurve, dc.first, configuration.first, true);
         }
+        timings["6 build " + ore::data::to_string(MarketObject::DiscountCurve)] += timer.elapsed().wall;
+        counts["6 build " + ore::data::to_string(MarketObject::DiscountCurve)].inc();
 
         for (const auto& configuration : params_->configurations()) {
 
@@ -155,6 +173,7 @@ void TodaysMarket::initialise(const Date& asof) {
 
             // Sort the graph topologically
 
+            timer.start();
             Graph& g = dependencies_[configuration.first];
             IndexMap index = boost::get(boost::vertex_index, g);
             std::vector<Vertex> order;
@@ -168,6 +187,7 @@ void TodaysMarket::initialise(const Date& asof) {
                                                       configuration.first + " (" + ore::data::to_string(e.what()) +
                                                       "). Got cycle(s): " + getCycles(g);
             }
+            timings["5 topological sort dep graphs"] += timer.elapsed().wall;
 
             TLOG("Can build objects in the following order:");
             for (auto const& m : order) {
@@ -178,6 +198,7 @@ void TodaysMarket::initialise(const Date& asof) {
 
             Size countSuccess = 0, countError = 0;
             for (auto const& m : order) {
+                timer.start();
                 try {
                     buildNode(configuration.first, g[m]);
                     ++countSuccess;
@@ -191,6 +212,8 @@ void TodaysMarket::initialise(const Date& asof) {
                     ALOG("error while building node " << g[m] << " in configuration " << configuration.first << ": "
                                                       << e.what());
                 }
+                timings["6 build " + ore::data::to_string(g[m].obj)] += timer.elapsed().wall;
+                counts["6 build " + ore::data::to_string(g[m].obj)].inc();
             }
 
             LOG("Loaded CurvesSpecs: success: " << countSuccess << ", error: " << countError);
@@ -199,6 +222,19 @@ void TodaysMarket::initialise(const Date& asof) {
     } else {
         LOG("Build objects in TodaysMarket lazily, i.e. when requested.");
     }
+
+    // output stats on initialisation phase
+
+    LOG("TodaysMarket build stats:");
+    boost::timer::nanosecond_type sum = 0;
+    for (auto const& t : timings) {
+        std::size_t c = counts[t.first].count == 0 ? 1 : counts[t.first].count;
+        double timing = static_cast<double>(t.second) / 1.0E6;
+        LOG(std::left << std::setw(30) << t.first << ": " << std::right << std::setprecision(3) << std::setw(15)
+                      << timing << " ms" << std::setw(10) << c << std::setw(15) << timing / c << " ms");
+        sum += t.second;
+    }
+    LOG("Total build time              : " << std::setw(15) << static_cast<double>(sum) / 1.0E6 << " ms");
 
     // output errors from initialisation phase
 
@@ -255,9 +291,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredYieldCurves_.end()) {
                 DLOG("Building YieldCurve for asof " << asof_);
                 boost::shared_ptr<YieldCurve> yieldCurve = boost::make_shared<YieldCurve>(
-                    asof_, *ycspec, *curveConfigs_, *loader_, requiredYieldCurves_, requiredDefaultCurves_, fxT_, 
-                    referenceData_, iborFallbackConfig_, preserveQuoteLinkage_,
-                    buildCalibrationInfo_, this);
+                    asof_, *ycspec, *curveConfigs_, *loader_, requiredYieldCurves_, requiredDefaultCurves_, fxT_,
+                    referenceData_, iborFallbackConfig_, preserveQuoteLinkage_, buildCalibrationInfo_, this);
                 calibrationInfo_->yieldCurveCalibrationInfo[ycspec->name()] = yieldCurve->calibrationInfo();
                 itr = requiredYieldCurves_.insert(make_pair(ycspec->name(), yieldCurve)).first;
                 DLOG("Added YieldCurve \"" << ycspec->name() << "\" to requiredYieldCurves map");
@@ -299,14 +334,14 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                                "Found rfr index '"
                                    << fallbackData.rfrIndex << "' as fallback for ibor index '" << node.name
                                    << "', but this is not an overnight index. Are the fallback rules correct here?");
-		    if (auto original = boost::dynamic_pointer_cast<OvernightIndex>(tmpIndex))
-		        tmpIndex = boost::make_shared<QuantExt::FallbackOvernightIndex>(
-			    original, oi, fallbackData.spread, fallbackData.switchDate,
-			    iborFallbackConfig_.useRfrCurveInTodaysMarket());
-		    else 
-		        tmpIndex = boost::make_shared<QuantExt::FallbackIborIndex>(
+                    if (auto original = boost::dynamic_pointer_cast<OvernightIndex>(tmpIndex))
+                        tmpIndex = boost::make_shared<QuantExt::FallbackOvernightIndex>(
+                            original, oi, fallbackData.spread, fallbackData.switchDate,
+                            iborFallbackConfig_.useRfrCurveInTodaysMarket());
+                    else
+                        tmpIndex = boost::make_shared<QuantExt::FallbackIborIndex>(
                             tmpIndex, oi, fallbackData.spread, fallbackData.switchDate,
-			    iborFallbackConfig_.useRfrCurveInTodaysMarket());
+                            iborFallbackConfig_.useRfrCurveInTodaysMarket());
                     TLOG("built ibor fall back index for '" << node.name << "' in configuration " << configuration
                                                             << " using rfr index '" << fallbackData.rfrIndex
                                                             << "', spread " << fallbackData.spread
@@ -330,7 +365,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Building FXSpot for asof " << asof_);
                 boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof_, *fxspec, fxT_, this);
                 itr = requiredFxSpots_.insert(make_pair(fxspec->name(), fxSpot)).first;
-                fxT_.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3), itr->second->handle()->fxQuote(true));
+                fxT_.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3),
+                              itr->second->handle()->fxQuote(true));
             }
             DLOG("Adding FXIndex (" << node.name << ") with spec " << *fxspec << " to configuration " << configuration);
             // add the market spot rate and the rate today, both are needed
@@ -469,9 +505,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredDefaultCurves_.end()) {
                 // build the curve
                 DLOG("Building DefaultCurve for asof " << asof_);
-                boost::shared_ptr<DefaultCurve> defaultCurve =
-                    boost::make_shared<DefaultCurve>(asof_, *defaultspec, *loader_, *curveConfigs_,
-                                                     requiredYieldCurves_, requiredDefaultCurves_);
+                boost::shared_ptr<DefaultCurve> defaultCurve = boost::make_shared<DefaultCurve>(
+                    asof_, *defaultspec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredDefaultCurves_);
                 itr = requiredDefaultCurves_.insert(make_pair(defaultspec->name(), defaultCurve)).first;
             }
             DLOG("Adding DefaultCurve (" << node.name << ") with spec " << *defaultspec << " to configuration "
@@ -547,8 +582,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 QL_REQUIRE(ts,
                            "expected zero inflation term structure for index " << node.name << ", but could not cast");
                 // index is not interpolated
-                auto tmp =
-                    parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>(ts));
+                auto tmp = parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>(ts));
                 zeroInflationIndices_[make_pair(configuration, node.name)] = Handle<ZeroInflationIndex>(tmp);
             }
 
@@ -561,8 +595,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                            "expected yoy inflation term structure for index " << node.name << ", but could not cast");
                 yoyInflationIndices_[make_pair(configuration, node.name)] =
                     Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                        parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>()),
-                        false, Handle<YoYInflationTermStructure>(ts)));
+                        parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>()), false,
+                        Handle<YoYInflationTermStructure>(ts)));
             }
             break;
         }
@@ -699,9 +733,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredCommodityCurves_.find(commodityCurveSpec->name());
             if (itr == requiredCommodityCurves_.end()) {
                 DLOG("Building CommodityCurve for asof " << asof_);
-                boost::shared_ptr<CommodityCurve> commodityCurve = boost::make_shared<CommodityCurve>(
-                    asof_, *commodityCurveSpec, *loader_, *curveConfigs_, fxT_, requiredYieldCurves_,
-                    requiredCommodityCurves_);
+                boost::shared_ptr<CommodityCurve> commodityCurve =
+                    boost::make_shared<CommodityCurve>(asof_, *commodityCurveSpec, *loader_, *curveConfigs_, fxT_,
+                                                       requiredYieldCurves_, requiredCommodityCurves_);
                 itr = requiredCommodityCurves_.insert(make_pair(commodityCurveSpec->name(), commodityCurve)).first;
             }
 
@@ -780,7 +814,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
     node.built = true;
 } // TodaysMarket::buildNode()
 
-void TodaysMarket::require(const MarketObject o, const string& name, const string& configuration, const bool forceBuild) const {
+void TodaysMarket::require(const MarketObject o, const string& name, const string& configuration,
+                           const bool forceBuild) const {
 
     // if the market is not lazily built, do nothing
 

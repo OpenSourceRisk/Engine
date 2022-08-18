@@ -76,15 +76,15 @@ public:
     //! \name Inspectors
     //@{
     //! Load market quotes
-    const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date&) const override;
+    std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
 
     //! Get a particular quote by its unique name
-    const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const override;
+    boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date&) const override;
 
     //! Load fixings
-    const std::vector<Fixing>& loadFixings() const override { return fixings_; }
+    std::set<Fixing> loadFixings() const override { return fixings_; }
     //! Load dividends
-    const std::vector<Fixing>& loadDividends() const override { return dividends_; }
+    std::set<Fixing> loadDividends() const override { return dividends_; }
     //@}
 
 private:
@@ -93,8 +93,8 @@ private:
 
     bool implyTodaysFixings_;
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
-    std::vector<Fixing> fixings_;
-    std::vector<Fixing> dividends_;
+    std::set<Fixing> fixings_;
+    std::set<Fixing> dividends_;
 };
 } // namespace data
 } // namespace ore

@@ -57,10 +57,10 @@ Real testTolerance = 1e-10;
 class MockLoader : public Loader {
 public:
     MockLoader();
-    const vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const Date&) const override { return data_; }
-    const boost::shared_ptr<MarketDatum>& get(const string& name, const Date&) const override { return dummyDatum_; }
-    const vector<Fixing>& loadFixings() const override { return dummyFixings_; }
-    const vector<Fixing>& loadDividends() const override { return dummyDividends_; }
+    vector<boost::shared_ptr<MarketDatum>> loadQuotes(const Date&) const override { return data_; }
+    boost::shared_ptr<MarketDatum> get(const string& name, const Date&) const override { return dummyDatum_; }
+    set<Fixing> loadFixings() const override { return dummyFixings_; }
+    set<Fixing> loadDividends() const override { return dummyDividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
     void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
     void addDividend(Date date, const string& name, Real value) {}
@@ -68,8 +68,8 @@ public:
 private:
     vector<boost::shared_ptr<MarketDatum>> data_;
     boost::shared_ptr<MarketDatum> dummyDatum_;
-    vector<Fixing> dummyFixings_;
-    vector<Fixing> dummyDividends_;
+    set<Fixing> dummyFixings_;
+    set<Fixing> dummyDividends_;
 };
 
 MockLoader::MockLoader() {
