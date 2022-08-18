@@ -125,10 +125,15 @@ void TodaysMarket::initialise(const Date& asof) {
 
     // Add all FX quotes from the loader to Triangulation
     timer.start();
-    for (auto& md : loader_->get(Wildcard("FX/RATE/*"),asof_)) {
-	boost::shared_ptr<FXSpotQuote> q = boost::dynamic_pointer_cast<FXSpotQuote>(md);
-	QL_REQUIRE(q, "Failed to cast " << md->name() << " to FXSpotQuote");
-	fxT_.addQuote(q->unitCcy() + q->ccy(), q->quote());
+    if (loader_->hasQuotes(asof_)) {
+        for (auto& md : loader_->get(Wildcard("FX/RATE/*"), asof_)) {
+            boost::shared_ptr<FXSpotQuote> q = boost::dynamic_pointer_cast<FXSpotQuote>(md);
+            QL_REQUIRE(q, "Failed to cast " << md->name() << " to FXSpotQuote");
+            fxT_.addQuote(q->unitCcy() + q->ccy(), q->quote());
+        }
+    } else {
+        WLOG("TodaysMarket::Initialise: no quotes available for date " << asof_);
+        return;
     }
     timings["3 add all fx quotes"] = timer.elapsed().wall;
 

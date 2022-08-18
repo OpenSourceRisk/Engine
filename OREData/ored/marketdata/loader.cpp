@@ -50,6 +50,14 @@ bool Loader::has(const std::string& name, const QuantLib::Date& d) const {
     }
 }
 
+bool Loader::hasQuotes(const QuantLib::Date& d) const {
+    try {
+        return !loadQuotes(d).empty();
+    } catch (...) {
+        return false;
+    }
+}
+
 boost::shared_ptr<MarketDatum> Loader::get(const std::pair<std::string, bool>& name, const QuantLib::Date& d) const {
     if (has(name.first, d)) {
         return get(name.first, d);
