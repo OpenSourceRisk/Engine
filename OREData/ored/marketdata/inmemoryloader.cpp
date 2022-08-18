@@ -85,6 +85,11 @@ std::set<boost::shared_ptr<MarketDatum>> InMemoryLoader::get(const Wildcard& wil
     return result;
 }
 
+bool InMemoryLoader::hasQuotes(const QuantLib::Date& d) const {
+    auto it = data_.find(d);
+    return it != data_.end();
+}
+
 void InMemoryLoader::add(QuantLib::Date date, const string& name, QuantLib::Real value) {
     boost::shared_ptr<MarketDatum> md;
     try {
@@ -102,11 +107,15 @@ void InMemoryLoader::add(QuantLib::Date date, const string& name, QuantLib::Real
 }
 
 void InMemoryLoader::addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {
-    fixings_.insert(Fixing(date, name, value));
+    if (!fixings_.insert(Fixing(date, name, value)).second) {
+        WLOG("Skipped Fixing " << name << "@" << QuantLib::io::iso_date(date) << " - this is already present.");
+    }
 }
 
 void InMemoryLoader::addDividend(Date date, const string& name, Real value) {
-    dividends_.insert(Fixing(date, name, value));
+    if (!dividends_.insert(Fixing(date, name, value)).second) {
+        WLOG("Skipped Dividend " << name << "@" << QuantLib::io::iso_date(date) << " - this is already present.");
+    }
 }
 
 void InMemoryLoader::reset() {

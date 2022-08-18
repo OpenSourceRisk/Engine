@@ -36,6 +36,7 @@ public:
     std::set<boost::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const override;
     std::set<Fixing> loadFixings() const override { return fixings_; }
     std::set<Fixing> loadDividends() const override { return dividends_; }
+    bool hasQuotes(const QuantLib::Date& d) const override;
 
     // add a market datum
     virtual void add(QuantLib::Date date, const string& name, QuantLib::Real value);

@@ -63,6 +63,9 @@ public:
     //! Default implementation, returns false if get throws or returns a null pointer
     virtual bool has(const std::string& name, const QuantLib::Date& d) const;
 
+    //! check if there are quotes for a date
+    virtual bool hasQuotes(const QuantLib::Date& d) const;
+
     /*! Default implementation for get that allows for the market data item to be optional. The first element of
         the \p name pair is the name of the market point being sought and the second element of the \p name pair
         is a flag to indicate if the market data point is optional, <code>true</code>, or not, <code>false</code>.

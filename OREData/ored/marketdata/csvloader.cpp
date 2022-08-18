@@ -127,12 +127,20 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                 }
             } else if (dataType == DataType::Fixing) {
                 // process fixings
-                if (date < today || (date == today && !implyTodaysFixings_))
-                    fixings_.insert(Fixing(date, key, value));
+                if (date < today || (date == today && !implyTodaysFixings_)) {
+                    if(!fixings_.insert(Fixing(date, key, value)).second) {
+                        WLOG("Skipped Fixing " << key << "@" << QuantLib::io::iso_date(date)
+                                               << " - this is already present.");
+                    }
+		}
             } else if (dataType == DataType::Dividend) {
                 // process dividends
-                if (date <= today)
-                    dividends_.insert(Fixing(date, key, value));
+                if (date <= today) {
+                    if(!dividends_.insert(Fixing(date, key, value)).second) {
+                        WLOG("Skipped Dividend " << key << "@" << QuantLib::io::iso_date(date)
+                                                 << " - this is already present.");
+                    }
+		}
             } else {
                 QL_FAIL("unknown data type");
             }
