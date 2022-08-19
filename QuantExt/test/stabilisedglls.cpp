@@ -40,9 +40,9 @@ BOOST_AUTO_TEST_CASE(testBigInputNumbers) {
     std::vector<Real> x, y;
 
     std::vector<boost::function1<Real, Real> > v;
-    v.push_back(constant<Real, Real>(1.0));
-    v.push_back(identity<Real>());
-    v.push_back(square<Real>());
+    v.push_back([](Real x) { return 1.0; });
+    v.push_back([](Real x) { return x; });
+    v.push_back([](Real x) { return x * x; });
 
     // the following test data is taken from a real use case, where GeneralLinearLeastSquares
     // fails to produce decent regression coefficient estimates

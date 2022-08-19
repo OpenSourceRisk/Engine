@@ -1111,8 +1111,8 @@ void YieldCurve::buildFittedBondCurve() {
                        "Market quote not of type Bond / Price.");
             boost::shared_ptr<BondPriceQuote> bondQuote = boost::dynamic_pointer_cast<BondPriceQuote>(marketQuote);
             QL_REQUIRE(bondQuote, "market quote has type bond quote, but can not be casted, this is unexpected.");
-            Handle<Quote> rescaledBondQuote(
-                boost::make_shared<DerivedQuote<multiply_by<Real>>>(bondQuote->quote(), multiply_by<Real>(100.0)));
+	    auto m = [](Real x) { return 100.0 * x; };
+            Handle<Quote> rescaledBondQuote(boost::make_shared<DerivedQuote<decltype(m)>>(bondQuote->quote(), m));
             string securityID = bondQuote->securityID();
 
             QL_REQUIRE(referenceData_ != nullptr, "reference data required to build fitted bond curve");
@@ -2038,11 +2038,13 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
 
             Handle<Quote> qlFXForwardQuote;
             if (fxForwardQuote->quoteType() == MarketDatum::QuoteType::PRICE) {
-                qlFXForwardQuote = Handle<Quote>(boost::make_shared<DerivedQuote<subtract<Real>>>(
-                    fxForwardQuote->quote(), subtract<Real>(fxSpotQuote->quote()->value())));
+                auto m = [f = fxSpotQuote->quote()->value()](Real x) { return x - f; };
+                qlFXForwardQuote =
+                    Handle<Quote>(boost::make_shared<DerivedQuote<decltype(m)>>(fxForwardQuote->quote(), m));
             } else {
-                qlFXForwardQuote = Handle<Quote>(boost::make_shared<DerivedQuote<divide_by<Real>>>(
-                    fxForwardQuote->quote(), divide_by<Real>(fxConvention->pointsFactor())));
+                auto m = [p = fxConvention->pointsFactor()](Real x) { return x / p; };
+                qlFXForwardQuote =
+                    Handle<Quote>(boost::make_shared<DerivedQuote<decltype(m)>>(fxForwardQuote->quote(), m));
             }
 
             Natural spotDays = fxConvention->spotDays();
@@ -2059,12 +2061,13 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
                 case 0:
                     spotFx = fxSpotQuote->quote();
                     break;
-                case 1:
+                case 1: {
                     // TODO: this isn't registeredWith the ON basis quote
-                    spotFx = Handle<Quote>(boost::make_shared<DerivedQuote<subtract<Real>>>(
-                        fxSpotQuote->quote(), subtract<Real>(qlFXForwardQuote->value())));
+                    auto m = [f = qlFXForwardQuote->value()](Real x) { return x - f; };
+                    spotFx = Handle<Quote>(boost::make_shared<DerivedQuote<decltype(m)>>(fxSpotQuote->quote(), m));
                     break;
-                case 2:
+                }
+                case 2: {
                     // find the TN quote
                     for (auto q : loader_.loadQuotes(asofDate_)) {
                         if (q->instrumentType() == MarketDatum::InstrumentType::FX_FWD) {
@@ -2083,9 +2086,10 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
                     }
                     totalSpread = tnSpread + qlFXForwardQuote->value();
                     // TODO: this isn't registeredWith the ON or TN basis quote
-                    spotFx = Handle<Quote>(boost::make_shared<DerivedQuote<subtract<Real>>>(
-                        fxSpotQuote->quote(), subtract<Real>(totalSpread)));
+                    auto m2 = [totalSpread](Real x) { return x - totalSpread; };
+                    spotFx = Handle<Quote>(boost::make_shared<DerivedQuote<decltype(m2)>>(fxSpotQuote->quote(), m2));
                     break;
+                }
                 default:
                     WLOG("YieldCurve::AddFxForwards cannot use ON rate, when SpotDays are " << spotDays << 
                         ", only valid for SpotDays of 0, 1 or 2.");
@@ -2093,8 +2097,8 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
                 }
             } else if (matchFxFwdStringTerm(fxForwardQuote->term(), FXForwardQuote::FxFwdString::TN)) {
                 // TODO: this isn't registeredWith the TN basis quote
-                spotFx = Handle<Quote>(boost::make_shared<DerivedQuote<subtract<Real>>>(
-                    fxSpotQuote->quote(), subtract<Real>(qlFXForwardQuote->value())));
+                auto m = [f = qlFXForwardQuote->value()](Real x) { return x - f; };
+                spotFx = Handle<Quote>(boost::make_shared<DerivedQuote<decltype(m)>>(fxSpotQuote->quote(), m));
             } else {
                 spotFx = fxSpotQuote->quote();
             }
@@ -2273,8 +2277,9 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
                 Handle<Quote> finalFxSpotQuote = fxSpotQuote->quote();
                 // we might have to flip the given fx spot quote
                 if (foreignIndex->currency().code() != fxSpotQuote->unitCcy()) {
-                    finalFxSpotQuote = Handle<Quote>(
-                        boost::make_shared<DerivedQuote<divide<Real>>>(fxSpotQuote->quote(), divide<Real>(1.0)));
+                    auto m = [](Real x) { return 1.0 / x; };
+                    finalFxSpotQuote =
+                        Handle<Quote>(boost::make_shared<DerivedQuote<decltype(m)>>(fxSpotQuote->quote(), m));
                 }
                 Period foreignTenor = resetsOnFlatLeg ? spreadTenor : flatTenor;
                 Period domesticTenor = resetsOnFlatLeg ? flatTenor : spreadTenor;
@@ -2366,8 +2371,8 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
     if (mdUnitCcy == floatLegCcy && mdCcy == currency_) {
         fxSpotQuote = fxSpotMd->quote();
     } else if (mdUnitCcy == currency_ && mdCcy == floatLegCcy) {
-        fxSpotQuote =
-            Handle<Quote>(boost::make_shared<DerivedQuote<divide<Real>>>(fxSpotMd->quote(), divide<Real>(1.0)));
+	auto m=[](Real x) { return 1.0/x;};
+        fxSpotQuote = Handle<Quote>(boost::make_shared<DerivedQuote<decltype(m)>>(fxSpotMd->quote(), m));
     } else {
         QL_FAIL("The FX spot market quote " << mdUnitCcy << "/" << mdCcy << " cannot be used "
                                             << "in the building of the curve " << curveSpec_.name() << ".");
