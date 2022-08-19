@@ -108,6 +108,9 @@ else()
     # disable some warnings
     add_compiler_flag("-Wno-unknown-pragmas" supportsNoUnknownPragmas)
 
+    # disable warnings from boost
+    add_compiler_flag("--system-header-prefix=boost/" supportsSystemHeaderPrefixBoost)
+
     # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
     include_directories("${PROJECT_BINARY_DIR}/QuantLib")
 
