@@ -146,9 +146,11 @@ const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {
         }
         quote = fxRate_;
     }
-    if (inverseIndex_)
+    if (inverseIndex_) {
         // Create a derived quote to invert
-        quote = Handle<Quote>(boost::make_shared<DerivedQuote<divide<Real>>>(quote, divide<Real>(1.0)));
+        auto m = [](Real x) { return 1.0 / x; };
+        quote = Handle<Quote>(boost::make_shared<DerivedQuote<decltype(m)>>(quote, m));
+    }
     return quote;
 }
 

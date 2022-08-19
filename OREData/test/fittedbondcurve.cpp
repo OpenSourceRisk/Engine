@@ -25,7 +25,6 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/portfolio.hpp>
 
-#include <ql/math/initializers.hpp>
 #include <ql/pricingengines/bond/discountingbondengine.hpp>
 #include <ql/termstructures/yield/bondhelpers.hpp>
 #include <ql/termstructures/yield/nonlinearfittingmethods.hpp>
