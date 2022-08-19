@@ -23,6 +23,7 @@
 
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
+#include <iostream>
 #include <stdio.h>
 
 #ifdef _MSC_VER
@@ -49,6 +50,52 @@ std::string to_string(const QuantLib::Date& date) {
 }
 
 string to_string(bool aBool) { return aBool ? "true" : "false"; }
+
+std::string to_string(const QuantLib::Period& period) {
+    Integer n = period.length();
+    Integer m = 0;
+    std::ostringstream o;
+    switch (period.units()) {
+    case Days:
+        if (n>=7) {
+	    m = n/7;
+	    o << m << "W";
+	    n = n%7;
+	}
+	if (n != 0 || m == 0) {
+	    o << n << "D";
+	    return o.str();
+	}
+	else {
+	    return o.str();
+	}
+    case Weeks: {
+        o << n << "W";
+	return o.str();
+    }
+    case Months:
+        if (n>=12) {
+	    m = n/12;
+	    o << n/12 << "Y";
+	    n = n%12;
+	}
+	if (n != 0 || m == 0) {
+	    o << n << "M";
+	    return o.str();
+	}
+	else {
+	    return o.str();
+	}
+    case Years: {
+        o << n << "Y";
+	return o.str();
+    }
+    default:
+        ALOG("unknown time unit (" << Integer(period.units()) << ")");
+	o << period;
+	return o.str();
+    }
+}
 
 } // namespace data
 } // namespace ore

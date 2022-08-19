@@ -30,7 +30,6 @@
 #include <ored/portfolio/legdata.hpp>
 
 #include <ql/pricingengine.hpp>
-#include <ql/utilities/disposable.hpp>
 
 #include <boost/shared_ptr.hpp>
 
@@ -41,7 +40,6 @@
 namespace ore {
 namespace data {
 using ore::data::Market;
-using QuantLib::Disposable;
 using QuantLib::PricingEngine;
 using std::map;
 using std::pair;
@@ -251,7 +249,7 @@ public:
     }
 
     //! return model builders
-    Disposable<set<std::pair<string, boost::shared_ptr<ModelBuilder>>>> modelBuilders() const;
+    set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders() const;
 
 private:
     boost::shared_ptr<Market> market_;

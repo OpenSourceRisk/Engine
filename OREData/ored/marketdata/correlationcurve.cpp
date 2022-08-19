@@ -69,7 +69,7 @@ public:
         return std::sqrt(value);
     }
 
-    virtual Disposable<Array> values(const Array& params) const override {
+    virtual Array values(const Array& params) const override {
         for (Size i = 0; i < correlations_.size(); i++) {
             boost::shared_ptr<SimpleQuote> q = boost::dynamic_pointer_cast<SimpleQuote>(*correlations_[i]);
             q->setValue(params[i]);

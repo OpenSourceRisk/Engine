@@ -13,8 +13,8 @@
   FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
  */
 
- /*! \file portfolio/fxasianoption.hpp
-     \brief Fx Asian Option data model and serialization
+ /*! \file portfolio/fxaverageforward.hpp
+     \brief Fx Average Forward data model and serialization
      \ingroup tradedata
  */
 

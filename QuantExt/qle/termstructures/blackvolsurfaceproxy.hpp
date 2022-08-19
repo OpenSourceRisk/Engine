@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/termstructures/equityblackvolsurfaceproxy.hpp
+/*! \file qle/termstructures/blackvolsurfaceproxy.hpp
     \brief Wrapper class for a BlackVolTermStructure when using proxy vols.
     \ingroup termstructures
 */

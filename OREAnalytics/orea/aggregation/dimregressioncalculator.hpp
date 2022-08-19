@@ -77,7 +77,7 @@ public:
 
 private:
     //! Compile the array of DIM regressors for the specified netting set, date and sample index
-    Disposable<Array> regressorArray(string nettingSet, Size dateIndex, Size sampleIndex);
+    Array regressorArray(string nettingSet, Size dateIndex, Size sampleIndex);
 
     Size regressionOrder_;
     vector<string> regressors_;

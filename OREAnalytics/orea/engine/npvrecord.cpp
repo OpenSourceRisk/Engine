@@ -17,6 +17,7 @@
 */
 
 #include <orea/engine/npvrecord.hpp>
+#include <iostream>
 
 using std::ostream;
 using std::string;
@@ -25,7 +26,7 @@ namespace ore {
 namespace analytics {
 
 ostream& operator<<(ostream& out, const NpvRecord& nr) {
-    return out << "[" <<
+  return out << "[" <<
         nr.tradeId << ", " <<
         nr.portfolioId << ", " <<
         nr.valuationDate << ", " <<

@@ -34,7 +34,7 @@ void checkTimes(const Array& t) {
     }
 }
 
-Disposable<Array> datesToTimes(const std::vector<Date>& dates, const Handle<YieldTermStructure>& yts) {
+Array datesToTimes(const std::vector<Date>& dates, const Handle<YieldTermStructure>& yts) {
     Array res(dates.size());
     for (Size i = 0; i < dates.size(); ++i) {
         res[i] = yts->timeFromReference(dates[i]);
