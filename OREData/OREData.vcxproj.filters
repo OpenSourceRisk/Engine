@@ -1221,5 +1221,6 @@
     <ClCompile Include="ored\portfolio\asianoption.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
+    <ClCompile Include="ored\marketdata\loader.cpp" />
   </ItemGroup>
 </Project>
