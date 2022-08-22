@@ -302,6 +302,7 @@
     <ClCompile Include="ored\marketdata\fxvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\genericyieldvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\inflationcurve.cpp" />
+    <ClCompile Include="ored\marketdata\loader.cpp" />
     <ClCompile Include="ored\marketdata\market.cpp" />
     <ClCompile Include="ored\marketdata\marketdatum.cpp" />
     <ClCompile Include="ored\marketdata\marketdatumparser.cpp" />
