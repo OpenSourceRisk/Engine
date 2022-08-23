@@ -24,11 +24,24 @@
 #pragma once
 
 #include <ql/types.hpp>
+#include <boost/variant.hpp>
 
 namespace ore {
 namespace data {
 
-typedef QuantLib::Natural PaymentLag;
+typedef boost::variant<QuantLib::Period, QuantLib::Natural> PaymentLag;
+
+struct PaymentLagPeriod : public boost::static_visitor<QuantLib::Period> {
+public:
+    QuantLib::Period operator()(const QuantLib::Natural& n) const { return Period(n, Days); }
+    QuantLib::Period operator()(const QuantLib::Period& p) const { return p; }
+};
+
+struct PaymentLagInteger : public boost::static_visitor<QuantLib::Natural> {
+public:
+    QuantLib::Natural operator()(const QuantLib::Natural& n) const { return n; }
+    QuantLib::Natural operator()(const QuantLib::Period& p) const { return static_cast<QuantLib::Natural>(days(p)); }
+};
 
 } // namespace data
 } // namespace ore

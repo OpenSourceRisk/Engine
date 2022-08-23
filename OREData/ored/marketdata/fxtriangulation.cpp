@@ -116,7 +116,8 @@ Handle<Quote> FXTriangulation::getQuote(const string& pair) const {
     it = std::find_if(map_.begin(), map_.end(),
                       [&reverse](const std::pair<string, Handle<Quote>>& x) { return x.first == reverse; });
     if (it != map_.end()) {
-        Handle<Quote> invertedQuote(boost::make_shared<DerivedQuote<Inverse>>(it->second, Inverse()));
+        auto m = [](Real x) { return 1.0 / x; };
+        Handle<Quote> invertedQuote(boost::make_shared<DerivedQuote<decltype(m)>>(it->second, m));
         map_.push_back(std::make_pair(pair, invertedQuote));
         return invertedQuote;
     }
@@ -227,8 +228,8 @@ Handle<FxIndex> FXIndexTriangulation::getIndex(const string& pair, bool dontThro
         it = std::find_if(map_.begin(), map_.end(),
                           [&reverse](const std::pair<string, Handle<FxIndex>>& x) { return x.first == reverse; });
         if (it != map_.end()) {
-            Handle<Quote> invertedQuote(
-                boost::make_shared<DerivedQuote<Inverse>>(it->second->fxQuote(true), Inverse()));
+            auto m = [](Real x) { return 1.0 / x; };
+            Handle<Quote> invertedQuote(boost::make_shared<DerivedQuote<decltype(m)>>(it->second->fxQuote(true), m));
             Handle<FxIndex> invertedIndex(boost::make_shared<FxIndex>(
                 it->second->referenceDate(), it->second->familyName(), it->second->fixingDays(),
                 it->second->targetCurrency(), it->second->sourceCurrency(), it->second->fixingCalendar(), invertedQuote,

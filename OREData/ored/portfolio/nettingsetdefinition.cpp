@@ -17,7 +17,6 @@
 */
 
 #include <ored/portfolio/nettingsetdefinition.hpp>
-#include <ored/portfolio/structuredconfigurationwarning.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -149,7 +148,6 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
     }
 
     activeCsaFlag_ = XMLUtils::getChildValueAsBool(node, "ActiveCSAFlag", false, true);
-    XMLNode* csaChild = XMLUtils::getChildNode(node, "CSADetails");
 
     // Load "CSA" information, if necessary
     if (activeCsaFlag_) {
@@ -210,12 +208,6 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
                                        parsePeriod(marginPostFreqStr), parsePeriod(mprStr), collatSpreadPay,
                                        collatSpreadRcv, eligCollatCcys, applyInitialMargin,
                                        parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount);
-    } else {
-        if (csaChild) {
-            WLOG(
-                StructuredConfigurationWarningMessage("Netting set definitions", to_string(nettingSetDetails_), "Inconsistent inputs",
-                                                      "ActiveCSAFlag=False, but a CSADetails node was still provided"));
-        }
     }
 
     validate();

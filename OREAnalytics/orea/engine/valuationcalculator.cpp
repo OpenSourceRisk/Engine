@@ -29,9 +29,22 @@ namespace ore {
 namespace analytics {
 
 void NPVCalculator::init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) {
-    fxBasePerTrade_.clear();
+    DLOG("init NPVCalculator");
+    tradeCcyIndex_.resize(portfolio->size());
+    std::set<std::string> ccys;
     for (auto const& t : portfolio->trades())
-        fxBasePerTrade_.push_back(simMarket->fxRate(t->npvCurrency() + baseCcyCode_));
+        ccys.insert(t->npvCurrency());
+    for (Size i = 0; i < portfolio->trades().size(); ++i)
+        tradeCcyIndex_[i] = std::distance(ccys.begin(), ccys.find(portfolio->trades()[i]->npvCurrency()));
+    ccyQuotes_.resize(ccys.size());
+    for (Size i = 0; i < ccys.size(); ++i)
+        ccyQuotes_[i] = (simMarket->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_));
+    fxRates_.resize(ccys.size());
+}
+
+void NPVCalculator::initScenario() {
+    for (Size i = 0; i < ccyQuotes_.size(); ++i)
+        fxRates_[i] = ccyQuotes_[i]->value();
 }
 
 void NPVCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
@@ -39,13 +52,13 @@ void NPVCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeI
                               boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                               Size sample, bool isCloseOut) {
     if (!isCloseOut)
-        outputCube->set(npv(tradeIndex,trade, simMarket), tradeIndex, dateIndex, sample, index_);
+        outputCube->set(npv(tradeIndex, trade, simMarket), tradeIndex, dateIndex, sample, index_);
 }
 
 void NPVCalculator::calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                                 const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
                                 boost::shared_ptr<NPVCube>& outputCubeNettingSet) {
-    outputCube->setT0(npv(tradeIndex,trade, simMarket), tradeIndex, index_);
+    outputCube->setT0(npv(tradeIndex, trade, simMarket), tradeIndex, index_);
 }
 
 Real NPVCalculator::npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
@@ -53,20 +66,37 @@ Real NPVCalculator::npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
     Real npv = trade->instrument()->NPV();
     if (close_enough(npv, 0.0))
         return npv;
-    Real fx = fxBasePerTrade_[tradeIndex]->value();
+    Real fx = fxRates_[tradeCcyIndex_[tradeIndex]];
     Real numeraire = simMarket->numeraire();
     return npv * fx / numeraire;
 }
 
 void CashflowCalculator::init(const boost::shared_ptr<Portfolio>& portfolio,
                               const boost::shared_ptr<SimMarket>& simMarket) {
-    fxBasePerTradeAndLeg_.clear();
+    DLOG("init CashflowCalculator");
+    tradeAndLegCcyIndex_.clear();
+    std::set<std::string> ccys;
     for (auto const& t : portfolio->trades()) {
-        fxBasePerTradeAndLeg_.push_back(std::vector<Handle<Quote>>());
-        for (Size i = 0; i < t->legs().size(); ++i) {
-            fxBasePerTradeAndLeg_.back().push_back(simMarket->fxRate(t->legCurrencies()[i] + baseCcyCode_));
+        tradeAndLegCcyIndex_.push_back(std::vector<Size>(t->legs().size()));
+        for (auto const& l : t->legCurrencies()) {
+            ccys.insert(l);
         }
     }
+    for (Size i = 0; i < portfolio->trades().size(); ++i) {
+        for (Size j = 0; j < portfolio->trades()[i]->legs().size(); ++j) {
+            tradeAndLegCcyIndex_[i][j] =
+                std::distance(ccys.begin(), ccys.find(portfolio->trades()[i]->legCurrencies()[j]));
+        }
+    }
+    ccyQuotes_.resize(ccys.size());
+    for (Size i = 0; i < ccys.size(); ++i)
+        ccyQuotes_[i] = (simMarket->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_));
+    fxRates_.resize(ccys.size());
+}
+
+void CashflowCalculator::initScenario() {
+    for (Size i = 0; i < ccyQuotes_.size(); ++i)
+        fxRates_[i] = ccyQuotes_[i]->value();
 }
 
 void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
@@ -110,7 +140,7 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
                 }
                 if (legFlow != 0) {
                     // Do FX conversion and add to netFlow
-                    Real fx = fxBasePerTradeAndLeg_[tradeIndex][i]->value();
+                    Real fx = fxRates_[tradeAndLegCcyIndex_[tradeIndex][i]];
                     Real direction = trade->legPayers()[i] ? -1.0 : 1.0;
                     netFlow += legFlow * direction * longShort * fx;
                 }
@@ -129,10 +159,18 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
     outputCube->set(netFlow / numeraire, tradeIndex, dateIndex, sample, index_);
 }
 
-void NPVCalculatorFXT0::init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) {
-    fxBasePerTrade_.clear();
+void NPVCalculatorFXT0::init(const boost::shared_ptr<Portfolio>& portfolio,
+                             const boost::shared_ptr<SimMarket>& simMarket) {
+    DLOG("init NPVCalculatorFXT0");
+    tradeCcyIndex_.resize(portfolio->size());
+    std::set<std::string> ccys;
     for (auto const& t : portfolio->trades())
-        fxBasePerTrade_.push_back(t0Market_->fxRate(t->npvCurrency() + baseCcyCode_));
+        ccys.insert(t->npvCurrency());
+    for (Size i = 0; i < portfolio->trades().size(); ++i)
+        tradeCcyIndex_[i] = std::distance(ccys.begin(), ccys.find(portfolio->trades()[i]->npvCurrency()));
+    fxRates_.resize(ccys.size());
+    for (Size i = 0; i < ccys.size(); ++i)
+        fxRates_[i] = t0Market_->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_)->value();
 }
 
 void NPVCalculatorFXT0::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
@@ -155,7 +193,7 @@ Real NPVCalculatorFXT0::npv(Size tradeIndex, const boost::shared_ptr<Trade>& tra
     Real npv = trade->instrument()->NPV();
     if (close_enough(npv, 0.0))
         return npv;
-    Real fx = fxBasePerTrade_[tradeIndex]->value();
+    Real fx = fxRates_[tradeCcyIndex_[tradeIndex]];
     Real numeraire = simMarket->numeraire();
     return npv * fx / numeraire;
 }

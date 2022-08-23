@@ -29,6 +29,13 @@ using boost::lexical_cast;
 namespace ore {
 namespace data {
 
+bool operator<(const MarketDatum& a, const MarketDatum& b) {
+    if (a.asofDate() != b.asofDate())
+        return a.asofDate() < b.asofDate();
+    // the name determines the instrument and quote type uniquely by construction
+    return a.name() < b.name();
+}
+
 std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) {
     switch (type) {
     case MarketDatum::QuoteType::BASIS_SPREAD:

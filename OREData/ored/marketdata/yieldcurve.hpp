@@ -104,6 +104,7 @@ public:
         const bool preserveQuoteLinkage = false,
         //! build calibration info
         const bool buildCalibrationInfo = true,
+	//! market object to look up external discount curves
         const Market* market = nullptr);
 
     //! \name Inspectors

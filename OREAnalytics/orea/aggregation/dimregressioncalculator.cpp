@@ -105,7 +105,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
 
     Size polynomOrder = regressionOrder_;
     LOG("DIM regression polynom order = " << regressionOrder_);
-    LsmBasisSystem::PolynomType polynomType = LsmBasisSystem::Monomial;
+    LsmBasisSystem::PolynomialType polynomType = LsmBasisSystem::Monomial;
     Size regressionDimension = regressors_.empty() ? 1 : regressors_.size();
     LOG("DIM regression dimension = " << regressionDimension);
 #if QL_HEX_VERSION > 0x01150000

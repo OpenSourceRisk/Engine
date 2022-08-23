@@ -701,9 +701,8 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         XMLNode* parent = XMLUtils::addChild(doc, root, "Correlations");
         for (const auto& kv : correlationShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "Correlation");
-            vector<string> tokens;
             string label = kv.first;
-            boost::split(tokens, label, boost::is_any_of(":"));
+            vector<string> tokens = ore::data::getCorrelationTokens(label);
             XMLUtils::addAttribute(doc, node, "index1", tokens[0]);
             XMLUtils::addAttribute(doc, node, "index2", tokens[1]);
             shiftDataToXML(doc, node, kv.second);

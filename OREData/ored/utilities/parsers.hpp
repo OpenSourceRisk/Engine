@@ -250,11 +250,11 @@ boost::variant<QuantLib::Date, QuantLib::Period> parseDateOrPeriod(const string&
 */
 void parseDateOrPeriod(const string& s, QuantLib::Date& d, QuantLib::Period& p, bool& isDate);
 
-//! Convert text to QuantLib::LsmBasisSystem::PolynomType
+//! Convert text to QuantLib::LsmBasisSystem::PolynomialType
 /*!
 \ingroup utilities
 */
-QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s);
+QuantLib::LsmBasisSystem::PolynomialType parsePolynomType(const std::string& s);
 
 //! Convert text to QuantLib::SobolBrownianGenerator::Ordering
 /*!

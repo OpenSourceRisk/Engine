@@ -101,8 +101,11 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     Real pricingTime = 0.0;
     Real fixingTime = 0.0;
 
-    for (auto const& c : calculators)
+    LOG("Initialise " << calculators.size() << " valuation calculators");
+    for (auto const& c : calculators) {
         c->init(portfolio, simMarket_);
+        c->initScenario();
+    }
 
     // Loop is Samples, Dates, Trades
     const auto& dates = dg_->dates();
@@ -113,7 +116,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     Size numFRC = 0;
     // initialise state objects for each trade (required for path-dependent derivatives in particular)
     for (Size i = 0; i < trades.size(); i++) {
-        QL_REQUIRE(trades[i]->npvCurrency() != "", "NPV currency not set for trade " << trades[i]->id());
+        QL_REQUIRE(!trades[i]->npvCurrency().empty(), "NPV currency not set for trade " << trades[i]->id());
 
         DLOG("Initialise wrapper for trade " << trades[i]->id());
         trades[i]->instrument()->initialise(dates);
@@ -122,7 +125,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
 
         // T0 values
         try {
-            for (auto calc : calculators)
+            for (auto& calc : calculators)
                 calc->calculateT0(trades[i], i, simMarket_, outputCube, outputCubeNettingSet);
         } catch (const std::exception& e) {
             string expMsg = string("T0 valuation error: ") + e.what();
@@ -292,6 +295,8 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<boos
                                      boost::shared_ptr<analytics::NPVCube>& outputCubeNettingSet, const Date& d,
                                      const Size cubeDateIndex, const Size sample, const string& label) {
     ObservationMode::Mode om = ObservationMode::instance().mode();
+    for(auto& calc: calculators)
+        calc->initScenario();
     // loop over trades
     for (Size j = 0; j < trades.size(); ++j) {
         if (tradeHasError[j])
@@ -301,7 +306,7 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<boos
         if (om == ObservationMode::Mode::Disable || om == ObservationMode::Mode::Unregister)
             trade->instrument()->updateQlInstruments();
         try {
-            for (auto calc : calculators)
+            for (auto& calc : calculators)
                 calc->calculate(trade, j, simMarket_, outputCube, outputCubeNettingSet, d, cubeDateIndex, sample,
                                 isCloseOutDate);
         } catch (const std::exception& e) {
@@ -320,7 +325,7 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<std:
     // loop over counterparties
     for (Size j = 0; j < counterparties.size(); ++j) {
         auto counterparty = counterparties[j];
-        for (auto calc : calculators)
+        for (auto& calc : calculators)
             calc->calculate(counterparty, j, simMarket_, cptyCube, d, cubeDateIndex, sample, isCloseOutDate);
     }
 }

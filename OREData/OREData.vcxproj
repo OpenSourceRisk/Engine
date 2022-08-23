@@ -225,11 +225,7 @@
     <ClInclude Include="ored\portfolio\builders\commodityasianoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityasianoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxasianoption.hpp" />
-    <ClInclude Include="ored\portfolio\commodityasianoption.hpp" />
-    <ClInclude Include="ored\portfolio\equityasianoption.hpp" />
     <ClInclude Include="ored\portfolio\asianoption.hpp" />
-    <ClInclude Include="ored\portfolio\fxasianoption.hpp" />
-    <ClInclude Include="ored\portfolio\optionasiandata.hpp" />
     <ClInclude Include="ored\report\csvreport.hpp" />
     <ClInclude Include="ored\report\inmemoryreport.hpp" />
     <ClInclude Include="ored\report\report.hpp" />
@@ -306,6 +302,7 @@
     <ClCompile Include="ored\marketdata\fxvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\genericyieldvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\inflationcurve.cpp" />
+    <ClCompile Include="ored\marketdata\loader.cpp" />
     <ClCompile Include="ored\marketdata\market.cpp" />
     <ClCompile Include="ored\marketdata\marketdatum.cpp" />
     <ClCompile Include="ored\marketdata\marketdatumparser.cpp" />
@@ -411,10 +408,6 @@
     <ClCompile Include="ored\portfolio\underlying.cpp" />
     <ClCompile Include="ored\portfolio\vanillaoption.cpp" />
     <ClCompile Include="ored\portfolio\asianoption.cpp" />
-    <ClCompile Include="ored\portfolio\commodityasianoption.cpp" />
-    <ClCompile Include="ored\portfolio\equityasianoption.cpp" />
-    <ClCompile Include="ored\portfolio\fxasianoption.cpp" />
-    <ClCompile Include="ored\portfolio\optionasiandata.cpp" />
     <ClCompile Include="ored\report\csvreport.cpp" />
     <ClCompile Include="ored\utilities\calendaradjustmentconfig.cpp" />
     <ClCompile Include="ored\utilities\calendarparser.cpp" />

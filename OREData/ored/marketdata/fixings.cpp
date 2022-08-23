@@ -38,26 +38,27 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void applyFixings(const vector<Fixing>& fixings) {
-    
+void applyFixings(const set<Fixing>& fixings) {
+
     QuantExt::SavedObservableSettings savedObservableSettings;
     ObservableSettings::instance().disableUpdates(true);
+
     Size count = 0;
-    map<string, boost::shared_ptr<Index>> cache;
     cpu_timer timer;
     boost::shared_ptr<Index> index;
+    std::string lastIndexName;
     for (auto& f : fixings) {
+	if(f.name.empty()) {
+            WLOG("Skipping fixing with empty name, value " << f.fixing << ", date " << f.date);
+        }
         try {
-            auto it = cache.find(f.name);
-            if (it == cache.end()) {
+            if (lastIndexName != f.name) {
                 index = parseIndex(f.name);
-                cache[f.name] = index;
-            } else {
-                index = it->second;
+                lastIndexName = f.name;
             }
             index->addFixing(f.date, f.fixing, true);
             TLOG("Added fixing for " << f.name << " (" << io::iso_date(f.date) << ") value:" << f.fixing);
-            count++;
+            ++count;
         } catch (const std::exception& e) {
             WLOG("Error during adding fixing for " << f.name << ": " << e.what());
         }
@@ -67,19 +68,17 @@ void applyFixings(const vector<Fixing>& fixings) {
                  << " seconds");
 }
 
-void applyDividends(const vector<Fixing>& dividends) {
+void applyDividends(const set<Fixing>& dividends) {
     Size count = 0;
     map<string, boost::shared_ptr<EquityIndex>> cache;
     cpu_timer timer;
     boost::shared_ptr<EquityIndex> index;
+    std::string lastIndexName;
     for (auto& f : dividends) {
         try {
-            auto it = cache.find(f.name);
-            if (it == cache.end()) {
+            if (lastIndexName != f.name) {
                 index = boost::make_shared<EquityIndex>(f.name, NullCalendar(), Currency());
-                cache[f.name] = index;
-            } else {
-                index = it->second;
+                lastIndexName = f.name;
             }
             index->addDividend(f.date, f.fixing, true);
             TLOG("Added dividend for " << f.name << " (" << io::iso_date(f.date) << ") value:" << f.fixing);
@@ -91,6 +90,12 @@ void applyDividends(const vector<Fixing>& dividends) {
     timer.stop();
     DLOG("Added " << count << " of " << dividends.size() << " dividends in " << timer.format(default_places, "%w")
                   << " seconds");
+}
+
+bool operator<(const Fixing& f1, const Fixing& f2) {
+    if (f1.name != f2.name)
+        return f1.name < f2.name;
+    return f1.date < f2.date;
 }
 
 } // namespace data

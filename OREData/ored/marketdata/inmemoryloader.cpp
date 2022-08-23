@@ -28,6 +28,102 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+namespace {
+boost::shared_ptr<MarketDatum> makeDummyMarketDatum(const Date& d, const std::string& name) {
+    return boost::make_shared<MarketDatum>(0.0, d, name, MarketDatum::QuoteType::NONE,
+                                           MarketDatum::InstrumentType::NONE);
+}
+} // namespace
+
+std::vector<boost::shared_ptr<MarketDatum>> InMemoryLoader::loadQuotes(const QuantLib::Date& d) const {
+    auto it = data_.find(d);
+    QL_REQUIRE(it != data_.end(), "There are no quotes available for date " << d);
+    return std::vector<boost::shared_ptr<MarketDatum>>(it->second.begin(), it->second.end());
+}
+
+boost::shared_ptr<MarketDatum> InMemoryLoader::get(const string& name, const QuantLib::Date& d) const {
+    auto it = data_.find(d);
+    QL_REQUIRE(it != data_.end(), "There are no quotes available for date " << d);
+    auto it2 = it->second.find(makeDummyMarketDatum(d, name));
+    QL_REQUIRE(it2 != it->second.end(), "No datum for " << name << " on date " << d);
+    return *it2;
+}
+
+std::set<boost::shared_ptr<MarketDatum>> InMemoryLoader::get(const std::set<std::string>& names,
+                                                             const QuantLib::Date& asof) const {
+    auto it = data_.find(asof);
+    QL_REQUIRE(it != data_.end(), "There are no quotes available for date " << asof);
+    std::set<boost::shared_ptr<MarketDatum>> result;
+    for (auto const& n : names) {
+        auto it2 = it->second.find(makeDummyMarketDatum(asof, n));
+        if (it2 != it->second.end())
+            result.insert(*it2);
+    }
+    return result;
+}
+
+std::set<boost::shared_ptr<MarketDatum>> InMemoryLoader::get(const Wildcard& wildcard,
+                                                             const QuantLib::Date& asof) const {
+    auto it = data_.find(asof);
+    QL_REQUIRE(it != data_.end(), "There are no quotes available for date " << asof);
+    std::set<boost::shared_ptr<MarketDatum>> result;
+    std::set<boost::shared_ptr<MarketDatum>>::iterator it1, it2;
+    if (wildcard.wildcardPos() == std::string::npos || wildcard.wildcardPos() == 0) {
+        // no wildcard => we have to search all of the data
+        it1 = it->second.begin();
+        it2 = it->second.end();
+    } else {
+        // search the range matching the substring of the pattern until the wildcard
+        std::string prefix = wildcard.pattern().substr(0, wildcard.wildcardPos());
+        it1 = it->second.lower_bound(makeDummyMarketDatum(asof, prefix));
+        it2 = it->second.upper_bound(makeDummyMarketDatum(asof, prefix + "\xFF"));
+    }
+    for (auto it = it1; it != it2; ++it) {
+        if (wildcard.isPrefix() || wildcard.matches((*it)->name()))
+            result.insert(*it);
+    }
+    return result;
+}
+
+bool InMemoryLoader::hasQuotes(const QuantLib::Date& d) const {
+    auto it = data_.find(d);
+    return it != data_.end();
+}
+
+void InMemoryLoader::add(QuantLib::Date date, const string& name, QuantLib::Real value) {
+    boost::shared_ptr<MarketDatum> md;
+    try {
+        md = parseMarketDatum(date, name, value);
+    } catch (std::exception& e) {
+        WLOG("Failed to parse MarketDatum " << name << ": " << e.what());
+    }
+    if (md != nullptr) {
+        if (data_[date].insert(md).second) {
+            TLOG("Added MarketDatum " << name);
+        } else {
+            WLOG("Skipped MarketDatum " << name << " - this is already present.");
+        }
+    }
+}
+
+void InMemoryLoader::addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {
+    if (!fixings_.insert(Fixing(date, name, value)).second) {
+        WLOG("Skipped Fixing " << name << "@" << QuantLib::io::iso_date(date) << " - this is already present.");
+    }
+}
+
+void InMemoryLoader::addDividend(Date date, const string& name, Real value) {
+    if (!dividends_.insert(Fixing(date, name, value)).second) {
+        WLOG("Skipped Dividend " << name << "@" << QuantLib::io::iso_date(date) << " - this is already present.");
+    }
+}
+
+void InMemoryLoader::reset() {
+    data_.clear();
+    fixings_.clear();
+    dividends_.clear();
+}
+
 void load(InMemoryLoader& loader, const vector<string>& data, bool isMarket, bool implyTodaysFixings) {
     LOG("MemoryLoader started");
 

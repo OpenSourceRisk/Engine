@@ -496,15 +496,15 @@ void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
     boost::apply_visitor(legacy_date_or_period_visitor(d, p, isDate), r);
 }
 
-QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s) {
-    static map<string, LsmBasisSystem::PolynomType> poly = {
-        {"Monomial", LsmBasisSystem::PolynomType::Monomial},
-        {"Laguerre", LsmBasisSystem::PolynomType::Laguerre},
-        {"Hermite", LsmBasisSystem::PolynomType::Hermite},
-        {"Hyperbolic", LsmBasisSystem::PolynomType::Hyperbolic},
-        {"Legendre", LsmBasisSystem::PolynomType::Legendre},
-        {"Chebyshev", LsmBasisSystem::PolynomType::Chebyshev},
-        {"Chebyshev2nd", LsmBasisSystem::PolynomType::Chebyshev2nd},
+QuantLib::LsmBasisSystem::PolynomialType parsePolynomType(const std::string& s) {
+    static map<string, LsmBasisSystem::PolynomialType> poly = {
+        {"Monomial", LsmBasisSystem::PolynomialType::Monomial},
+        {"Laguerre", LsmBasisSystem::PolynomialType::Laguerre},
+        {"Hermite", LsmBasisSystem::PolynomialType::Hermite},
+        {"Hyperbolic", LsmBasisSystem::PolynomialType::Hyperbolic},
+        {"Legendre", LsmBasisSystem::PolynomialType::Legendre},
+        {"Chebyshev", LsmBasisSystem::PolynomialType::Chebyshev},
+        {"Chebyshev2nd", LsmBasisSystem::PolynomialType::Chebyshev2nd},
     };
 
     auto it = poly.find(s);
@@ -577,15 +577,14 @@ Month parseMonth(const string& s) {
 }
 
 PaymentLag parsePaymentLag(const string& s) {   
-    Natural pl = 0;
-    if (!tryParse<Natural>(s, pl, parseInteger)) {
-        Period p;
-        if (tryParse<Period>(s, p, parsePeriod)) {
-            QL_REQUIRE(p.units() == Days, "parsePaymentLag: PaymentLag must be given in Days");
-            pl = p.length();
-        }
-    }
-    return pl;
+    Period p;
+    Natural n;
+    if (tryParse<Period>(s, p, parsePeriod))
+        return p;
+    else if (tryParse<Natural>(s, n, parseInteger))
+        return n;
+    else
+        return 0;
 }
 
 std::vector<string> parseListOfValues(string s, const char escape, const char delim, const char quote) {

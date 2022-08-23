@@ -12,8 +12,9 @@ macro(add_compiler_flag flag supportsFlag)
     endif()
 endmacro()
 
-# use CXX 11 and std::unique_ptr in QuantLib (instead of std::auto_ptr, which is deprecated in C++11)
-set(CMAKE_CXX_STANDARD 11)
+# use CXX 17, disable gnu extensions
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS FALSE)
 
 # On single-configuration builds, select a default build type that gives the same compilation flags as a default autotools build.
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -106,6 +107,9 @@ else()
 
     # disable some warnings
     add_compiler_flag("-Wno-unknown-pragmas" supportsNoUnknownPragmas)
+
+    # disable warnings from boost
+    add_compiler_flag("--system-header-prefix=boost/" supportsSystemHeaderPrefixBoost)
 
     # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
     include_directories("${PROJECT_BINARY_DIR}/QuantLib")

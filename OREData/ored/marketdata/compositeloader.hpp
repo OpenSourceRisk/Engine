@@ -22,25 +22,27 @@ public:
         QL_REQUIRE(a_ || b_, "CompositeLoader(): at least one loader must be not null");
     }
 
-    const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date& d) const override {
+    std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date& d) const override {
         if (!b_)
             return a_->loadQuotes(d);
         if (!a_)
             return b_->loadQuotes(d);
-        data_.clear();
+        std::vector<boost::shared_ptr<MarketDatum>> data;
         // loadQuotes() might throw if no quotes are available in one loader, which is not an error here
         try {
-            data_.insert(data_.end(), a_->loadQuotes(d).begin(), a_->loadQuotes(d).end());
+	    auto tmp = a_->loadQuotes(d);
+            data.insert(data.end(), tmp.begin(), tmp.end());
         } catch (...) {
         }
         try {
-            data_.insert(data_.end(), b_->loadQuotes(d).begin(), b_->loadQuotes(d).end());
+	    auto tmp = b_->loadQuotes(d);
+            data.insert(data.end(), tmp.begin(), tmp.end());
         } catch (...) {
         }
-        return data_;
+        return data;
     }
 
-    const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date& d) const override {
+    boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date& d) const override {
         if (a_ && a_->has(name, d))
             return a_->get(name, d);
         if (b_ && b_->has(name, d))
@@ -48,36 +50,66 @@ public:
         QL_FAIL("No MarketDatum for name " << name << " and date " << d);
     }
 
+    std::set<boost::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
+                                                 const QuantLib::Date& asof) const override {
+        std::set<boost::shared_ptr<MarketDatum>> result;
+        if (a_) {
+            auto tmp = a_->get(names, asof);
+            result.insert(tmp.begin(), tmp.end());
+        }
+        if (b_) {
+            auto tmp = b_->get(names, asof);
+            result.insert(tmp.begin(), tmp.end());
+        }
+        return result;
+    }
+
+    std::set<boost::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const override {
+        std::set<boost::shared_ptr<MarketDatum>> result;
+        if (a_) {
+            auto tmp = a_->get(wildcard, asof);
+            result.insert(tmp.begin(), tmp.end());
+        }
+        if (b_) {
+            auto tmp = b_->get(wildcard, asof);
+            result.insert(tmp.begin(), tmp.end());
+        }
+        return result;
+    }
+
     bool has(const std::string& name, const QuantLib::Date& d) const override {
         return (a_ && a_->has(name, d)) || (b_ && b_->has(name, d));
     }
 
-    const std::vector<Fixing>& loadFixings() const override {
+    std::set<Fixing> loadFixings() const override {
         if (!b_)
             return a_->loadFixings();
         if (!a_)
             return b_->loadFixings();
-        fixings_.clear();
-        fixings_.insert(fixings_.end(), a_->loadFixings().begin(), a_->loadFixings().end());
-        fixings_.insert(fixings_.end(), b_->loadFixings().begin(), b_->loadFixings().end());
-        return fixings_;
+        std::set<Fixing> fixings;
+	auto tmp1 = a_->loadFixings();
+	auto tmp2 = b_->loadFixings();
+        fixings.insert(tmp1.begin(), tmp1.end());
+        fixings.insert(tmp2.begin(), tmp2.end());
+        return fixings;
     }
 
-    const std::vector<Fixing>& loadDividends() const override {
+    std::set<Fixing> loadDividends() const override {
         if (!b_)
             return a_->loadDividends();
         if (!a_)
             return b_->loadDividends();
-        dividends_.clear();
-        dividends_.insert(dividends_.end(), a_->loadDividends().begin(), a_->loadDividends().end());
-        dividends_.insert(dividends_.end(), b_->loadDividends().begin(), b_->loadDividends().end());
-        return dividends_;
+        std::set<Fixing> dividends;
+	auto tmp1 = a_->loadDividends();
+	auto tmp2 = b_->loadDividends();
+        dividends.insert(tmp1.begin(), tmp1.end());
+        dividends.insert(tmp2.begin(), tmp2.end());
+        return dividends;
     }
 
 private:
     const boost::shared_ptr<Loader> a_, b_;
-    mutable std::vector<boost::shared_ptr<MarketDatum>> data_;
-    mutable std::vector<Fixing> fixings_, dividends_;
 };
+
 } // namespace data
 } // namespace ore

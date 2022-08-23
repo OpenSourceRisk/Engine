@@ -28,6 +28,7 @@
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/types.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
@@ -716,7 +717,7 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
                  const bool notionalInitialExchange, const bool notionalFinalExchange,
                  const bool notionalAmortizingExchange, const bool isNotResetXCCY, const string& foreignCurrency,
                  const double foreignAmount, const string& fxIndex,
-                 const std::vector<AmortizationData>& amortizationData, const PaymentLag paymentLag,
+                 const std::vector<AmortizationData>& amortizationData, const string& paymentLag,
                  const string& paymentCalendar, const vector<string>& paymentDates,
                  const std::vector<Indexing>& indexing, const bool indexingFromAssetLeg,
                  const string& lastPeriodDayCounter)
@@ -746,7 +747,7 @@ void LegData::fromXML(XMLNode* node) {
     currency_ = XMLUtils::getChildValue(node, "Currency", false);
     dayCounter_ = XMLUtils::getChildValue(node, "DayCounter"); // optional
     paymentConvention_ = XMLUtils::getChildValue(node, "PaymentConvention");
-    paymentLag_ = parsePaymentLag(XMLUtils::getChildValue(node, "PaymentLag"));
+    paymentLag_ = XMLUtils::getChildValue(node, "PaymentLag");
     paymentCalendar_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
     // if not given, default of getChildValueAsBool is true, which fits our needs here
     notionals_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Notionals", "Notional", "startDate",
@@ -835,8 +836,8 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Currency", currency_);
     if (paymentConvention_ != "")
         XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
-    if (paymentLag_ != 0)
-        XMLUtils::addChild(doc, node, "PaymentLag", to_string(paymentLag_));
+    if (!paymentLag_.empty())
+        XMLUtils::addChild(doc, node, "PaymentLag", paymentLag_);
     if (!paymentCalendar_.empty())
         XMLUtils::addChild(doc, node, "PaymentCalendar", paymentCalendar_);
     if (dayCounter_ != "")
@@ -925,15 +926,16 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
 
     vector<double> rates = buildScheduledVector(fixedLegData->rates(), fixedLegData->rateDates(), schedule);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    PaymentLag paymentLag = data.paymentLag();
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
     applyAmortization(notionals, data, schedule, true, rates);
     Leg leg = FixedRateLeg(schedule)
                   .withNotionals(notionals)
                   .withCouponRates(rates, dc)
                   .withPaymentAdjustment(bdc)
-                  .withPaymentLag(paymentLag)
+                  .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
                   .withPaymentCalendar(paymentCalendar);
     return leg;
+
 }
 
 Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplacement) {
@@ -1086,6 +1088,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
         return leg;
     }
 
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
     IborLeg iborLeg = IborLeg(schedule, index)
                           .withNotionals(notionals)
                           .withSpreads(spreads)
@@ -1095,7 +1098,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                           .withFixingDays(fixingDays)
                           .inArrears(isInArrears)
                           .withGearings(gearings)
-                          .withPaymentLag(data.paymentLag());
+                          .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag));
 
     // If no caps or floors or in arrears fixing, return the leg
     if (!hasCapsFloors && !isInArrears)
@@ -1152,7 +1155,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     Schedule schedule = makeSchedule(tmp, openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    PaymentLag paymentLag = data.paymentLag();
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
     Calendar paymentCalendar;
 
     if (data.paymentCalendar().empty())
@@ -1192,7 +1195,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                 .withGearings(gearings)
                 .withPaymentDayCounter(dc)
                 .withPaymentAdjustment(bdc)
-                .withPaymentLag(paymentLag)
+                .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
                 .withInArrears(isInArrears)
                 .withLastRecentPeriod(floatData->lastRecentPeriod())
                 .withLastRecentPeriodCalendar(floatData->lastRecentPeriodCalendar().empty()
@@ -1220,7 +1223,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                       .withPaymentDayCounter(dc)
                       .withPaymentAdjustment(bdc)
                       .withPaymentCalendar(paymentCalendar)
-                      .withPaymentLag(paymentLag)
+                      .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
                       .withGearings(gearings)
                       .withInArrears(isInArrears)
                       .withLastRecentPeriod(floatData->lastRecentPeriod())
@@ -2156,7 +2159,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     }
     bool notionalReset = eqLegData->notionalReset();
     Natural fixingDays = eqLegData->fixingDays();
-    PaymentLag paymentLag = data.paymentLag();
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
 
     ScheduleBuilder scheduleBuilder;
 
@@ -2186,7 +2189,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)
                   .withPaymentCalendar(paymentCalendar)
-                  .withPaymentLag(paymentLag)
+                  .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
                   .withReturnType(eqLegData->returnType())
                   .withDividendFactor(dividendFactor)
                   .withInitialPrice(initialPrice)

@@ -35,26 +35,26 @@ class InflationCashFlowPricer;
 class CPICoupon : public QuantLib::CPICoupon {
 public:
     CPICoupon(Real baseCPI, // user provided, could be arbitrary
-              const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
+              const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
               const ext::shared_ptr<ZeroInflationIndex>& index, const Period& observationLag,
               CPI::InterpolationType observationInterpolation, const DayCounter& dayCounter,
               Real fixedRate, // aka gearing
               Spread spread = 0.0, const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
               const Date& exCouponDate = Date(), bool subtractInflationNominal = false)
-        : QuantLib::CPICoupon(baseCPI, paymentDate, nominal, startDate, endDate, fixingDays, index, observationLag,
+        : QuantLib::CPICoupon(baseCPI, paymentDate, nominal, startDate, endDate, index, observationLag,
                               observationInterpolation, dayCounter, fixedRate, spread, refPeriodStart,
                               refPeriodEnd, exCouponDate),
           subtractInflationNominal_(subtractInflationNominal){};
 
     CPICoupon(Real baseCPI,
               const Date& baseDate, // user provided, could be arbitrary
-              const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
+              const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
               const ext::shared_ptr<ZeroInflationIndex>& index, const Period& observationLag,
               CPI::InterpolationType observationInterpolation, const DayCounter& dayCounter,
               Real fixedRate, // aka gearing
               Spread spread = 0.0, const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
               const Date& exCouponDate = Date(), bool subtractInflationNominal = false)
-        : QuantLib::CPICoupon(baseCPI, baseDate, paymentDate, nominal, startDate, endDate, fixingDays, index,
+        : QuantLib::CPICoupon(baseCPI, baseDate, paymentDate, nominal, startDate, endDate, index,
                               observationLag,
                               observationInterpolation, dayCounter, fixedRate, spread, refPeriodStart, refPeriodEnd,
                               exCouponDate),

@@ -110,10 +110,10 @@ void loadFixings(const map<string, set<Date>>& requestedFixings) {
     auto fixingValues = dummyFixings();
 
     // Fetch the relevant fixings using the requestedFixings argument
-    vector<Fixing> relevantFixings;
+    set<Fixing> relevantFixings;
     for (const auto& kv : requestedFixings) {
         for (const auto& d : kv.second) {
-            relevantFixings.push_back(fixingValues.at(make_pair(kv.first, d)));
+            relevantFixings.insert(fixingValues.at(make_pair(kv.first, d)));
         }
     }
 

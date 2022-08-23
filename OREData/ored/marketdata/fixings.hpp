@@ -63,11 +63,14 @@ private:
     }
 };
 
-//! Utility to write a vector of fixings in the QuantLib index manager's fixing history
-void applyFixings(const std::vector<Fixing>& fixings);
+//! Compare fixings
+bool operator<(const Fixing& f1, const Fixing& f2);
 
 //! Utility to write a vector of fixings in the QuantLib index manager's fixing history
-void applyDividends(const std::vector<Fixing>& dividends);
+void applyFixings(const std::set<Fixing>& fixings);
+
+//! Utility to write a vector of fixings in the QuantLib index manager's fixing history
+void applyDividends(const std::set<Fixing>& dividends);
 
 } // namespace data
 } // namespace ore
