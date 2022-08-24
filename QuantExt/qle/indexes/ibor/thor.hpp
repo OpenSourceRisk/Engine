@@ -15,7 +15,7 @@
 */
 
 /*! \file thor.hpp
-    \brief THB_THOR index
+    \brief THB-THOR index
     \ingroup indexes
 */
 
@@ -31,16 +31,16 @@ namespace QuantExt {
 using namespace QuantLib;
 
 //! THB-THOR index
-/*! Benchmark rate for THai Overnight Repurchase Rate (THOR).
+/*! Benchmark rate for Thai Overnight Repurchase Rate (THOR).
     See <https://www.bot.or.th/English/FinancialMarkets/Documents/THOR_userguide_EN.pdf>.
     \remark Using Thai calendar, to be checked whether identical to Bangkok.
     \warning Check roll convention and EOM.
-            \ingroup indexes
+    \ingroup indexes
 */
-class THBThorOis : public OvernightIndex {
+class THBThor : public OvernightIndex {
 public:
-    THBThorOis(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : OvernightIndex("THB-THOR", 2, THBCurrency(), Thailand(), Actual365Fixed(), h) {}
+    THBThor(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : OvernightIndex("THB-THOR", 0, THBCurrency(), Thailand(), Actual365Fixed(), h) {}
 };
 } // namespace QuantExt
 
