@@ -138,6 +138,7 @@
 #include <qle/indexes/ibor/sora.hpp>
 #include <qle/indexes/ibor/termrateindex.hpp>
 #include <qle/indexes/ibor/thbbibor.hpp>
+#include <qle/indexes/ibor/thor.hpp>
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
