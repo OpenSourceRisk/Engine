@@ -169,28 +169,16 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory, con
     Size initialSize = trades_.size();
     Size failedTrades = 0;
     while (trade != trades_.end()) {
-        try {
-            (*trade)->reset();
-            (*trade)->build(engineFactory);
-            TLOG("Required Fixings for trade " << (*trade)->id() << ":");
-            TLOGGERSTREAM((*trade)->requiredFixings());
+        auto [ft, success] = buildTrade(*trade, engineFactory, context, buildFailedTrades());
+        if(success) {
+	    ++trade;
+        } else if (ft) {
+            *trade = ft;
+            ++failedTrades;
             ++trade;
-        } catch (std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(*trade, "Error building trade for context '" + context + "'", e.what()));
-            if (buildFailedTrades_) {
-                boost::shared_ptr<FailedTrade> failed = boost::make_shared<FailedTrade>();
-                failed->id() = (*trade)->id();
-                failed->setUnderlyingTradeType((*trade)->tradeType());
-                failed->envelope() = (*trade)->envelope();
-                failed->build(engineFactory);
-                failed->resetPricingStats((*trade)->getNumberOfPricings(), (*trade)->getCumulativePricingTime());
-                LOG("Added failed trade with id " << failed->id());
-                (*trade) = failed;
-		++failedTrades;
-            } else {
-		tradeLookup_.erase((*trade)->id());
-                trade = trades_.erase(trade);
-            }
+        } else {
+            tradeLookup_.erase((*trade)->id());
+            trade = trades_.erase(trade);
         }
     }
     LOG("Built Portfolio. Initial size = " << initialSize << ", size now " << trades_.size() << ", built "
@@ -316,6 +304,32 @@ Portfolio::underlyingIndices(AssetClass assetClass,
         return it->second;
     }
     return std::set<std::string>();
+}
+
+std::pair<boost::shared_ptr<Trade>, bool> buildTrade(boost::shared_ptr<Trade>& trade,
+                                                     const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                     const std::string& context, const bool buildFailedTrades) {
+    try {
+        trade->reset();
+        trade->build(engineFactory);
+        TLOG("Required Fixings for trade " << trade->id() << ":");
+        TLOGGERSTREAM(trade->requiredFixings());
+        return std::make_pair(nullptr, true);
+    } catch (std::exception& e) {
+        ALOG(StructuredTradeErrorMessage(trade, "Error building trade for context '" + context + "'", e.what()));
+        if (buildFailedTrades) {
+            boost::shared_ptr<FailedTrade> failed = boost::make_shared<FailedTrade>();
+            failed->id() = trade->id();
+            failed->setUnderlyingTradeType(trade->tradeType());
+            failed->envelope() = trade->envelope();
+            failed->build(engineFactory);
+            failed->resetPricingStats(trade->getNumberOfPricings(), trade->getCumulativePricingTime());
+            LOG("Built failed trade with id " << failed->id());
+	    return std::make_pair(failed, false);
+        } else {
+            return std::make_pair(nullptr, false);
+        }
+    }
 }
 
 } // namespace data
