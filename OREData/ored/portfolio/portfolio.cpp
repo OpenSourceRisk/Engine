@@ -35,6 +35,11 @@ namespace data {
 
 using namespace data;
 
+void Portfolio::clear() {
+    trades_.clear();
+    tradeLookup_.clear();
+}
+
 void Portfolio::reset() {
     LOG("Reset portfolio of size " << trades_.size());
     for (auto t : trades_)

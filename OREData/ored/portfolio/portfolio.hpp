@@ -58,7 +58,7 @@ public:
     boost::shared_ptr<Trade> get(const std::string& id) const;
 
     //! Clear the portfolio
-    void clear() { trades_.clear(); }
+    void clear();
 
     //! Reset all trade data
     void reset();
