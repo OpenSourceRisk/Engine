@@ -120,7 +120,7 @@ XMLDocument Portfolio::doc() const {
     XMLDocument doc;
     XMLNode* node = doc.allocNode("Portfolio");
     doc.appendNode(node);
-    for (auto t : trades_)
+    for (auto& t : trades_)
         XMLUtils::appendNode(node, t->toXML(doc));
     return doc;
 }
@@ -136,6 +136,7 @@ string Portfolio::saveToXMLString() const {
 }
 
 bool Portfolio::remove(const std::string& tradeID) {
+    tradeLookup_.erase(tradeID);
     for (auto it = trades_.begin(); it != trades_.end(); ++it) {
         if ((*it)->id() == tradeID) {
             trades_.erase(it);
@@ -149,6 +150,7 @@ void Portfolio::removeMatured(const Date& asof) {
     for (auto it = trades_.begin(); it != trades_.end(); /* manual */) {
         if ((*it)->maturity() < asof) {
             ALOG(StructuredTradeErrorMessage(*it, "Trade is Matured", ""));
+	    tradeLookup_.erase((*it)->id());
             it = trades_.erase(it);
         } else {
             ++it;
@@ -181,6 +183,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory, con
                 (*trade) = failed;
 		++failedTrades;
             } else {
+		tradeLookup_.erase((*trade)->id());
                 trade = trades_.erase(trade);
             }
         }
@@ -201,21 +204,21 @@ Date Portfolio::maturity() const {
 
 vector<string> Portfolio::ids() const {
     vector<string> ids;
-    for (auto t : trades_)
+    for (const auto& t : trades_)
         ids.push_back(t->id());
     return ids;
 }
 
 map<string, string> Portfolio::nettingSetMap() const {
     map<string, string> nettingSetMap;
-    for (auto t : trades_)
+    for (const auto& t : trades_)
         nettingSetMap[t->id()] = t->envelope().nettingSetId();
     return nettingSetMap;
 }
 
 std::vector<std::string> Portfolio::counterparties() const {
     vector<string> counterparties;
-    for (auto t : trades_)
+    for (const auto& t : trades_)
         counterparties.push_back(t->envelope().counterparty());
     sort(counterparties.begin(), counterparties.end());
     counterparties.erase(unique(counterparties.begin(), counterparties.end()), counterparties.end());
@@ -224,7 +227,7 @@ std::vector<std::string> Portfolio::counterparties() const {
 
 map<string, set<string>> Portfolio::counterpartyNettingSets() const {
     map<string, set<string>> cpNettingSets;
-    for (auto t : trades_)
+    for (const auto& t : trades_)
         cpNettingSets[t->envelope().counterparty()].insert(t->envelope().nettingSetId());
     return cpNettingSets;
 }
@@ -233,22 +236,19 @@ void Portfolio::add(const boost::shared_ptr<Trade>& trade, const bool checkForDu
     QL_REQUIRE(!checkForDuplicateIds || !has(trade->id()),
                "Attempted to add a trade to the portfolio with an id, which already exists.");
     trades_.push_back(trade);
+    tradeLookup_[trade->id()] = trade;
 }
 
 bool Portfolio::has(const string& id) {
-    return find_if(trades_.begin(), trades_.end(),
-                   [id](const boost::shared_ptr<Trade>& trade) { return trade->id() == id; }) != trades_.end();
+    return tradeLookup_.find(id) != tradeLookup_.end();
 }
 
 boost::shared_ptr<Trade> Portfolio::get(const string& id) const {
-    auto it = find_if(trades_.begin(), trades_.end(),
-                      [id](const boost::shared_ptr<Trade>& trade) { return trade->id() == id; });
-
-    if (it == trades_.end()) {
+    auto it = tradeLookup_.find(id);
+    if (it != tradeLookup_.end())
+        return it->second;
+    else
         return nullptr;
-    } else {
-        return *it;
-    }
 }
 
 std::set<std::string> Portfolio::portfolioIds() const {

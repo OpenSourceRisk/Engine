@@ -139,6 +139,7 @@ private:
     XMLDocument doc() const;
     bool buildFailedTrades_;
     std::vector<boost::shared_ptr<Trade>> trades_;
+    std::map<std::string, boost::shared_ptr<Trade>> tradeLookup_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
 };
 } // namespace data
