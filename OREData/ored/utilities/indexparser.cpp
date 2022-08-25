@@ -329,7 +329,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"DKK-CITA", boost::make_shared<DKKCita>()},
         {"THB-THOR", boost::make_shared<THBThor>()}};
 
-    // Map from our _unique internal name_ to an ibor index (the period does not matter here)XF
+    // Map from our _unique internal name_ to an ibor index (the period does not matter here)
     static map<string, boost::shared_ptr<IborIndexParser>> iborIndices = {
         {"AUD-BBSW", boost::make_shared<IborIndexParserWithPeriod<AUDbbsw>>()},
         {"AUD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<AUDLibor>>()},
