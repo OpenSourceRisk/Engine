@@ -285,9 +285,13 @@ Portfolio::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& refe
     map<AssetClass, std::set<std::string>> result;
 
     for (const auto& t : trades_) {
-        auto underlyings = t->underlyingIndices(referenceDataManager);
-        for (const auto& kv : underlyings) {
-            result[kv.first].insert(kv.second.begin(), kv.second.end());
+        try {
+            auto underlyings = t->underlyingIndices(referenceDataManager);
+            for (const auto& kv : underlyings) {
+                result[kv.first].insert(kv.second.begin(), kv.second.end());
+            }
+        } catch (const std::exception& e) {
+            ALOG(StructuredTradeErrorMessage(t->id(), t->tradeType(), "Error retrieving underlying indices", e.what()));
         }
     }
     underlyingIndicesCache_ = result;
