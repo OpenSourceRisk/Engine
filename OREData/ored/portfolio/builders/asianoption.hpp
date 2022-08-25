@@ -32,6 +32,7 @@
  #include <ql/pricingengines/asian/analytic_discr_geom_av_strike.hpp>
  #include <ql/pricingengines/asian/mc_discr_arith_av_price.hpp>
  #include <ql/pricingengines/asian/mc_discr_arith_av_strike.hpp>
+ #include <ql/pricingengines/asian/turnbullwakemanasianengine.hpp>
  #include <ql/utilities/null.hpp>
 
  namespace ore {
@@ -260,6 +261,28 @@
          boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
              getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
          return boost::make_shared<AnalyticContinuousGeometricAveragePriceAsianEngine>(gbsp);
+     }
+ };
+
+ //! Discrete Analytic TW Engine Builder for European Asian Arithmetic Average Price Options
+ /*! Pricing engines are cached by asset/currency
+     \ingroup builders
+  */
+ class EuropeanAsianOptionTWEngineBuilder : public AsianOptionEngineBuilder {
+ public:
+     EuropeanAsianOptionTWEngineBuilder(const string& model, const set<string>& tradeTypes,
+                                        const AssetClass& assetClass)
+         : AsianOptionEngineBuilder(model, "TurnbullWakemanAsianEngine", tradeTypes, assetClass, Date()) {}
+
+     std::string processType() override { return "Discrete"; }
+
+ protected:
+     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                         const AssetClass& assetClassUnderlying,
+                                                         const Date& expiryDate) override {
+         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
+         return boost::make_shared<TurnbullWakemanAsianEngine>(gbsp);
      }
  };
 
