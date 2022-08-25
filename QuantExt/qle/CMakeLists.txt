@@ -410,6 +410,7 @@ indexes/ibor/sonia.hpp
 indexes/ibor/sora.hpp
 indexes/ibor/termrateindex.hpp
 indexes/ibor/thbbibor.hpp
+indexes/ibor/thor.hpp
 indexes/ibor/tonar.hpp
 indexes/ibor/twdtaibor.hpp
 indexes/inflationindexobserver.hpp
