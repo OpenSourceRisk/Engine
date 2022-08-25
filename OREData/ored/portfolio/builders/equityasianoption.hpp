@@ -94,5 +94,16 @@
                                                  AssetClass::EQ) {}
  };
 
+ //! Discrete Analytic TW Engine Builder for European Asian Equity Arithmetic Average Price Options
+ /*! Pricing engines are cached by asset/currency
+     \ingroup builders
+  */
+ class EquityEuropeanAsianOptionTWEngineBuilder : public EuropeanAsianOptionTWEngineBuilder {
+ public:
+     EquityEuropeanAsianOptionTWEngineBuilder()
+         : EuropeanAsianOptionTWEngineBuilder("BlackScholesMerton", {"EquityAsianOptionArithmeticPrice"},
+                                              AssetClass::EQ) {}
+ };
+
  } // namespace data
  } // namespace ore

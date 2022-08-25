@@ -180,7 +180,8 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<FxEuropeanAsianOptionACGAPEngineBuilder>());
     registerBuilder(boost::make_shared<FxEuropeanAsianOptionADGAPEngineBuilder>());
     registerBuilder(boost::make_shared<FxEuropeanAsianOptionADGASEngineBuilder>());
-     
+    registerBuilder(boost::make_shared<FxEuropeanAsianOptionTWEngineBuilder>());
+
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredOvernightIndexedCouponLegEngineBuilder>());
@@ -206,6 +207,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityEuropeanAsianOptionACGAPEngineBuilder>());
     registerBuilder(boost::make_shared<EquityEuropeanAsianOptionADGAPEngineBuilder>());
     registerBuilder(boost::make_shared<EquityEuropeanAsianOptionADGASEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityEuropeanAsianOptionTWEngineBuilder>());
     registerBuilder(boost::make_shared<EquityFutureEuropeanOptionEngineBuilder>());
 
     registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
@@ -230,6 +232,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionACGAPEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionADGAPEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionADGASEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionTWEngineBuilder>());
     registerBuilder(boost::make_shared<QuantoEquityEuropeanOptionEngineBuilder>());
 
     registerLegBuilder(boost::make_shared<DurationAdjustedCmsLegBuilder>());
