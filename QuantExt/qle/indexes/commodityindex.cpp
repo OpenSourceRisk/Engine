@@ -137,44 +137,14 @@ boost::shared_ptr<CommodityIndex> CommodityFuturesIndex::clone(const Date& expir
 // overwriting the base fixing to handle QPR-11139 for the patch 1.0.61.8.1
 // This needs to be reviewed with the 1.0.62 release
 Real CommodityFuturesIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
+for (auto days=0; days<45; days++){
+    try{
+        return CommodityIndex::fixing(fixingDate-days, forecastTodaysFixing);
+    }catch (...){
 
-    QL_REQUIRE(isValidFixingDate(fixingDate), "Commodity index " << name() << ": fixing date " <<
-                                                                 io::iso_date(fixingDate) << " is not valid");
-    QL_REQUIRE(expiryDate_ == Date() || fixingDate <= expiryDate_, "Commodity index " << name() <<
-                                                                                      ": fixing requested on fixing date (" << io::iso_date(fixingDate) << ") that is past the expiry date (" <<
-                                                                                      io::iso_date(expiryDate_) << ").");
-
-    Date today = Settings::instance().evaluationDate();
-
-    if (fixingDate > today || (fixingDate == today && forecastTodaysFixing))
-        return forecastFixing(fixingDate);
-
-    Real result = Null<Decimal>();
-
-    if (fixingDate < today || Settings::instance().enforcesTodaysHistoricFixings()) {
-        // must have been fixed
-        // do not catch exceptions
-        result = pastFixing(fixingDate);
-        // here there is the check for last avail fixing if the present result is NaN
-        auto days{0};
-        while(result == Null<Real>() && days < 45){ // 45 is the maximum number of days allowed for delivery (before an expired trade is considered delivered)
-            days++;
-            auto lastAvailFixingDate = fixingDate-days;
-            result = (isValidFixingDate(lastAvailFixingDate))?CommodityIndex::pastFixing(lastAvailFixingDate):Null<Real>();
-        }
-        QL_REQUIRE(result != Null<Real>(), "Missing " << name() << " fixing for " << fixingDate);
-    } else {
-        try {
-            // might have been fixed
-            result = pastFixing(fixingDate);
-        } catch (Error&) {
-            ; // fall through and forecast
-        }
-        if (result == Null<Real>())
-            return forecastFixing(fixingDate);
     }
-
-    return result;
+}
+QL_FAIL("Fixings not available for " << this->name() << " in date range " << fixingDate-44 << "to " << fixingDate);
 }
 
 } // namespace QuantExt
