@@ -35,6 +35,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\oreplus\ore\OREAnalytics\orea\engine\bufferedsensitivitystream.hpp" />
     <ClInclude Include="orea\aggregation\collateralaccount.hpp" />
     <ClInclude Include="orea\aggregation\collatexposurehelper.hpp" />
     <ClInclude Include="orea\aggregation\cvaspreadsensitivitycalculator.hpp" />
@@ -105,6 +106,7 @@
     <ClInclude Include="orea\version.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\oreplus\ore\OREAnalytics\orea\engine\bufferedsensitivitystream.cpp" />
     <ClCompile Include="orea\aggregation\collateralaccount.cpp" />
     <ClCompile Include="orea\aggregation\collatexposurehelper.cpp" />
     <ClCompile Include="orea\aggregation\cvaspreadsensitivitycalculator.cpp" />
