@@ -99,7 +99,7 @@ private:
     Handle<BlackVolTermStructure> vol_;
     std::vector<Time> timePoints_;
 
-    class closeDouble : public std::binary_function<double, double, bool> {
+    class closeDouble {
     public:
         bool operator()(const double& left, const double& right) const {
             return left < right && !QuantLib::close_enough(left, right);
