@@ -31,14 +31,14 @@ using QuantExt::PriceTermStructure;
 namespace QuantExt {
 
 CommodityIndex::CommodityIndex(const std::string& underlyingName, const Date& expiryDate,
-    const Calendar& fixingCalendar, const Handle<QuantExt::PriceTermStructure>& curve)
+                               const Calendar& fixingCalendar, const Handle<QuantExt::PriceTermStructure>& curve)
     : underlyingName_(underlyingName), expiryDate_(expiryDate), fixingCalendar_(fixingCalendar),
       curve_(curve), keepDays_(false) {
     init();
 }
 
 CommodityIndex::CommodityIndex(const string& underlyingName, const Date& expiryDate,
-    const Calendar& fixingCalendar, bool keepDays, const Handle<PriceTermStructure>& curve)
+                               const Calendar& fixingCalendar, bool keepDays, const Handle<PriceTermStructure>& curve)
     : underlyingName_(underlyingName), expiryDate_(expiryDate), fixingCalendar_(fixingCalendar),
       curve_(curve), keepDays_(keepDays) {
     init();
@@ -71,10 +71,10 @@ void CommodityIndex::init() {
 Real CommodityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
 
     QL_REQUIRE(isValidFixingDate(fixingDate), "Commodity index " << name() << ": fixing date " <<
-        io::iso_date(fixingDate) << " is not valid");
+                                                                 io::iso_date(fixingDate) << " is not valid");
     QL_REQUIRE(expiryDate_ == Date() || fixingDate <= expiryDate_, "Commodity index " << name() <<
-        ": fixing requested on fixing date (" << io::iso_date(fixingDate) << ") that is past the expiry date (" <<
-        io::iso_date(expiryDate_) << ").");
+                                                                                      ": fixing requested on fixing date (" << io::iso_date(fixingDate) << ") that is past the expiry date (" <<
+                                                                                      io::iso_date(expiryDate_) << ").");
 
     Date today = Settings::instance().evaluationDate();
 
@@ -121,16 +121,60 @@ Real CommodityIndex::forecastFixing(const Date& fixingDate) const {
 }
 
 boost::shared_ptr<CommodityIndex> CommoditySpotIndex::clone(const Date& expiryDate,
-    const boost::optional<Handle<PriceTermStructure>>& ts) const {
+                                                            const boost::optional<Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();
     return boost::make_shared<CommoditySpotIndex>(underlyingName(), fixingCalendar(), pts);
 }
 
 boost::shared_ptr<CommodityIndex> CommodityFuturesIndex::clone(const Date& expiry,
-    const boost::optional<Handle<PriceTermStructure>>& ts) const {
+                                                               const boost::optional<Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();
     const auto& ed = expiry == Date() ? expiryDate() : expiry;
     return boost::make_shared<CommodityFuturesIndex>(underlyingName(), ed, fixingCalendar(), keepDays(), pts);
+}
+
+
+// overwriting the base fixing to handle QPR-11139 for the patch 1.0.61.8.1
+// This needs to be reviewed with the 1.0.62 release
+Real CommodityFuturesIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
+
+    QL_REQUIRE(isValidFixingDate(fixingDate), "Commodity index " << name() << ": fixing date " <<
+                                                                 io::iso_date(fixingDate) << " is not valid");
+    QL_REQUIRE(expiryDate_ == Date() || fixingDate <= expiryDate_, "Commodity index " << name() <<
+                                                                                      ": fixing requested on fixing date (" << io::iso_date(fixingDate) << ") that is past the expiry date (" <<
+                                                                                      io::iso_date(expiryDate_) << ").");
+
+    Date today = Settings::instance().evaluationDate();
+
+    if (fixingDate > today || (fixingDate == today && forecastTodaysFixing))
+        return forecastFixing(fixingDate);
+
+    Real result = Null<Decimal>();
+
+    if (fixingDate < today || Settings::instance().enforcesTodaysHistoricFixings()) {
+        // must have been fixed
+        // do not catch exceptions
+        result = pastFixing(fixingDate);
+        // here there is the check for last avail fixing if the present result is NaN
+        auto days{0};
+        while(result == Null<Real>() && days < 45){ // 45 is the maximum number of days allowed for delivery (before an expired trade is considered delivered)
+            days++;
+            auto lastAvailFixingDate = fixingDate-days;
+            result = (isValidFixingDate(lastAvailFixingDate))?CommodityIndex::pastFixing(lastAvailFixingDate):Null<Real>();
+        }
+        QL_REQUIRE(result != Null<Real>(), "Missing " << name() << " fixing for " << fixingDate);
+    } else {
+        try {
+            // might have been fixed
+            result = pastFixing(fixingDate);
+        } catch (Error&) {
+            ; // fall through and forecast
+        }
+        if (result == Null<Real>())
+            return forecastFixing(fixingDate);
+    }
+
+    return result;
 }
 
 } // namespace QuantExt
