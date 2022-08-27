@@ -64,6 +64,7 @@ public:
     boost::shared_ptr<Index> index() const; // might be null
     const Date& fixingDate() const;         // might be null
     Real initialFixing() const;             // might be null
+    Real multiplier() const;
     //@}
 
     //! \name Visitability
@@ -72,13 +73,11 @@ public:
     //@}
 
 private:
-    Real multiplier() const;
-
-    const boost::shared_ptr<Coupon> c_;
-    const Real qty_;
-    const boost::shared_ptr<Index> index_;
-    const Date fixingDate_;
-    const Real initialFixing_;
+    boost::shared_ptr<Coupon> c_;
+    Real qty_;
+    boost::shared_ptr<Index> index_;
+    Date fixingDate_;
+    Real initialFixing_;
 };
 
 //! indexed cashflow
@@ -111,6 +110,7 @@ public:
     boost::shared_ptr<Index> index() const; // might be null
     const Date& fixingDate() const;         // might be null
     Real initialFixing() const;             // might be null
+    Real multiplier() const;
     //@}
 
     //! \name Visitability
@@ -119,17 +119,25 @@ public:
     //@}
 
 private:
-    Real multiplier() const;
-
-    const boost::shared_ptr<CashFlow> c_;
-    const Real qty_;
-    const boost::shared_ptr<Index> index_;
-    const Date fixingDate_;
-    const Real initialFixing_;
+    boost::shared_ptr<CashFlow> c_;
+    Real qty_;
+    boost::shared_ptr<Index> index_;
+    Date fixingDate_;
+    Real initialFixing_;
 
 };
 
+// if c casts to Coupon, unpack an indexed coupon, otherwise an index-wrapped cashflow
+boost::shared_ptr<CashFlow> unpackIndexedCouponOrCashFlow(const boost::shared_ptr<CashFlow>& c);
+
+// remove all index wrappers around a coupon
 boost::shared_ptr<Coupon> unpackIndexedCoupon(const boost::shared_ptr<Coupon>& c);
+
+// remove all index wrappers around a cashflow
+boost::shared_ptr<CashFlow> unpackIndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c);
+
+// get cumulated multiplier for indexed coupon or cashflow
+Real getIndexedCouponOrCashFlowMultiplier(const boost::shared_ptr<CashFlow>& c);
 
 //! indexed coupon leg
 /*!
