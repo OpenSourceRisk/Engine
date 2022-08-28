@@ -35,7 +35,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\oreplus\ore\OREAnalytics\orea\engine\bufferedsensitivitystream.hpp" />
+    <ClInclude Include="orea\engine\bufferedsensitivitystream.hpp" />
     <ClInclude Include="orea\aggregation\collateralaccount.hpp" />
     <ClInclude Include="orea\aggregation\collatexposurehelper.hpp" />
     <ClInclude Include="orea\aggregation\cvaspreadsensitivitycalculator.hpp" />
@@ -106,7 +106,7 @@
     <ClInclude Include="orea\version.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\oreplus\ore\OREAnalytics\orea\engine\bufferedsensitivitystream.cpp" />
+    <ClCompile Include="orea\engine\bufferedsensitivitystream.cpp" />
     <ClCompile Include="orea\aggregation\collateralaccount.cpp" />
     <ClCompile Include="orea\aggregation\collatexposurehelper.cpp" />
     <ClCompile Include="orea\aggregation\cvaspreadsensitivitycalculator.cpp" />
@@ -279,7 +279,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>.;..\OREPlus\Base;..\OREPlus\Sensitivity;..\OREPlus\FormulaBasedCoupon;..\OREPlus\ScriptedTrade;..\OREPlus\Credit;..\OREPlus\License;..\OREPlus\AMC;..\.OREPlus\CapitalCalculation;..\OREDataPlus;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;_LIB;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -323,7 +323,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>.;..\OREPlus\Base;..\OREPlus\Sensitivity;..\OREPlus\FormulaBasedCoupon;..\OREPlus\ScriptedTrade;..\OREPlus\Credit;..\OREPlus\License;..\OREPlus\AMC;..\.OREPlus\CapitalCalculation;..\OREDataPlus;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;_LIB;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -365,7 +365,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>.;..\OREPlus\Base;..\OREPlus\Sensitivity;..\OREPlus\FormulaBasedCoupon;..\OREPlus\ScriptedTrade;..\OREPlus\Credit;..\OREPlus\License;..\OREPlus\AMC;..\.OREPlus\CapitalCalculation;..\OREDataPlus;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;WIN32;_LIB;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -407,7 +407,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>.;..\OREPlus\Base;..\OREPlus\Sensitivity;..\OREPlus\FormulaBasedCoupon;..\OREPlus\ScriptedTrade;..\OREPlus\Credit;..\OREPlus\License;..\OREPlus\AMC;..\.OREPlus\CapitalCalculation;..\OREDataPlus;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;WIN32;_LIB;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -451,7 +451,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>.;..\OREPlus\Base;..\OREPlus\Sensitivity;..\OREPlus\FormulaBasedCoupon;..\OREPlus\ScriptedTrade;..\OREPlus\Credit;..\OREPlus\License;..\OREPlus\AMC;..\.OREPlus\CapitalCalculation;..\OREDataPlus;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;_LIB;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -495,7 +495,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>.;..\OREPlus\Base;..\OREPlus\Sensitivity;..\OREPlus\FormulaBasedCoupon;..\OREPlus\ScriptedTrade;..\OREPlus\Credit;..\OREPlus\License;..\OREPlus\AMC;..\.OREPlus\CapitalCalculation;..\OREDataPlus;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;_LIB;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -537,7 +537,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>.;..\OREPlus\Base;..\OREPlus\Sensitivity;..\OREPlus\FormulaBasedCoupon;..\OREPlus\ScriptedTrade;..\OREPlus\Credit;..\OREPlus\License;..\OREPlus\AMC;..\.OREPlus\CapitalCalculation;..\OREDataPlus;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;WIN32;_LIB;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -579,7 +579,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>.;..\OREPlus\Base;..\OREPlus\Sensitivity;..\OREPlus\FormulaBasedCoupon;..\OREPlus\ScriptedTrade;..\OREPlus\Credit;..\OREPlus\License;..\OREPlus\AMC;..\.OREPlus\CapitalCalculation;..\OREDataPlus;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;WIN32;_LIB;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
