@@ -92,7 +92,7 @@ protected:
             bool operator==(const cache_key& o) const { return (t0 == o.t0) && (dt == o.dt); }
         };
 
-        struct cache_hasher : std::unary_function<cache_key, std::size_t> {
+        struct cache_hasher {
             std::size_t operator()(cache_key const& x) const {
                 std::size_t seed = 0;
                 boost::hash_combine(seed, x.t0);
@@ -105,7 +105,7 @@ protected:
     }; // ExactDiscretization
 
     // cache for process drift and diffusion (e.g. used in Euler discretization)
-    struct cache_hasher : std::unary_function<double, std::size_t> {
+    struct cache_hasher {
         std::size_t operator()(double const& x) const {
             std::size_t seed = 0;
             boost::hash_combine(seed, x);

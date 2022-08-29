@@ -76,7 +76,7 @@ private:
         double t0, t;
         bool operator==(const cache_key& o) const { return (t0 == o.t0) && (t == o.t); }
     };
-    struct cache_hasher : std::unary_function<cache_key, std::size_t> {
+    struct cache_hasher {
         std::size_t operator()(cache_key const& x) const {
             std::size_t seed = 0;
             boost::hash_combine(seed, x.t0);
