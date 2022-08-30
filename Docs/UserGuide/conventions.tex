@@ -1102,3 +1102,40 @@ A boolean value indicating if an accrued fee is due on the occurrence of a credi
 A boolean value indicating if the accrued fee, on the occurrence of a credit event, is payable at the credit event date or the end of the fee period. A value of \lstinline!true! indicates that the accrued is payable at the credit event date and a value of \lstinline!false! indicates that it is payable at the end of the fee period. In general, this is set \lstinline!true!.
 
 \end{itemize}
+
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Bond Yield Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+A node with name \lstinline!BondYield! is used to store conventions for the conversion
+of bond prices into bond yields.
+The structure of this node is shown in Listing \ref{lst:bondyield_conventions}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BondYield>
+  <Id>CMB-DE-BUND-10Y</Id>
+  <Compounding>Compounded</Compounding>
+  <Frequency>Annual</Frequency>
+  <PriceType>Clean</PriceType>
+  <Accuracy>1.0e-8</Accuracy>
+  <MaxEvaluations>100</MaxEvaluations>
+  <Guess>0.05</Guess>
+</BondYield>
+\end{minted}
+\caption{Bond yield conventions}
+\label{lst:bondyield_conventions}
+\end{listing}
+
+The meaning of the elements is as follows:
+
+\begin{itemize}
+\item Id: The constant maturity index index name. This must be of the form ``CMB-FAMILY-TENOR'' where FAMILY can consist of any number of tags separated by ``-''
+\item Compounding: Compounding of the yield - Simple, Compounded, Continuous, SimpleThenCompounded
+\item Frequency: Frequency of the cash flows - Annual, Semiannual, Quarterly, Monthly etc.
+\item PriceType: Dirty or Clean
+\item Accuracy/MaxEvaluations/Guess: QuantLib parameters that control the convergence of the numerical price to yield conversion. 
+\end{itemize}
+
+

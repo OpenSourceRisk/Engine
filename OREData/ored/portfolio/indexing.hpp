@@ -25,6 +25,8 @@
 
 #include <ored/portfolio/schedule.hpp>
 
+#include <ql/cashflow.hpp>
+
 namespace ore {
 namespace data {
 

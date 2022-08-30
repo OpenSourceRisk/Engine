@@ -74,8 +74,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         fxIndex = buildFxIndex(fxIndex_, nonPayCcy.code(), payCcy.code(), engineFactory->market(),
                                  engineFactory->configuration(MarketContext::pricing));
         fixingDate = fxIndex->fixingCalendar().adjust(maturityDate);
-        if (maturityDate < Settings::instance().evaluationDate())
-            requiredFixings_.addFixingDate(fixingDate, fxIndex_, payDate);
+	requiredFixings_.addFixingDate(fixingDate, fxIndex_, payDate);
     }
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxForward");

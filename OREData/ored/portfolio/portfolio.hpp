@@ -58,7 +58,7 @@ public:
     boost::shared_ptr<Trade> get(const std::string& id) const;
 
     //! Clear the portfolio
-    void clear() { trades_.clear(); }
+    void clear();
 
     //! Reset all trade data
     void reset();
@@ -119,6 +119,9 @@ public:
     //! Check if at least one trade in the portfolio uses the NettingSetDetails node, and not just NettingSetId
     bool hasNettingSetDetails() const;
 
+    //! Does this portfolio build failed trades?
+    bool buildFailedTrades() const { return buildFailedTrades_; }
+
     /*! Return the fixings that will be requested in order to price every Trade in this Portfolio given
         the \p settlementDate. The map key is the ORE name of the index and the map value is the set of fixing dates.
 
@@ -139,7 +142,13 @@ private:
     void doc(XMLDocument& doc) const;
     bool buildFailedTrades_;
     std::vector<boost::shared_ptr<Trade>> trades_;
+    std::map<std::string, boost::shared_ptr<Trade>> tradeLookup_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
 };
+
+std::pair<boost::shared_ptr<Trade>, bool> buildTrade(boost::shared_ptr<Trade>& trade,
+                                                     const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                     const std::string& context, const bool buildFailedTrades);
+
 } // namespace data
 } // namespace ore
