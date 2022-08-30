@@ -21,6 +21,7 @@
 #include <ored/utilities/indexparser.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/cmbcoupon.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
@@ -28,7 +29,6 @@
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
-#include <qle/cashflows/cmbcoupon.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
@@ -380,7 +380,6 @@ void FixingDateGetter::visit(CPICoupon& c) {
         c.baseDate(), oreIndexName(c.cpiIndex()->name()), c.cpiIndex()->interpolated(), c.cpiIndex()->frequency(),
         c.cpiIndex()->availabilityLag(), c.observationInterpolation(), c.cpiIndex()->frequency(), c.date());
 
-
     requiredFixings_.addZeroInflationFixingDate(
         c.fixingDate(), oreIndexName(c.cpiIndex()->name()), c.cpiIndex()->interpolated(), c.cpiIndex()->frequency(),
         c.cpiIndex()->availabilityLag(), c.observationInterpolation(), c.cpiIndex()->frequency(), c.date());
@@ -457,6 +456,14 @@ void FixingDateGetter::visit(IndexedCoupon& c) {
     c.underlying()->accept(*this);
 }
 
+void FixingDateGetter::visit(IndexWrappedCashFlow& c) {
+    // the cf's index might be null if an initial fixing is provided
+    if (c.index())
+        requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.index()->name()), c.date());
+    QL_REQUIRE(c.underlying(), "FixingDateGetter::visit(IndexWrappedCashFlow): underlying() is null");
+    c.underlying()->accept(*this);
+}
+
 void FixingDateGetter::visit(QuantExt::NonStandardYoYInflationCoupon& c) {
 
     requiredFixings_.addZeroInflationFixingDate(
@@ -503,15 +510,15 @@ void amendInflationFixingDates(map<string, set<Date>>& fixings) {
 }
 
 void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketParameters& mktParams,
-                          const Period& iborLookback, const Period& oisLookback,
-                          const Period& bmaLookback, const Period& inflationLookback, const string& configuration) {
+                          const Period& iborLookback, const Period& oisLookback, const Period& bmaLookback,
+                          const Period& inflationLookback, const string& configuration) {
 
     if (mktParams.hasConfiguration(configuration)) {
 
         LOG("Start adding market fixing dates for configuration '" << configuration << "'");
 
         boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-        
+
         // If there are ibor indices in the market parameters, add the lookback fixings
         // IF there are SIFMA / BMA indices, add lookback fixings for the Libor basis index
         if (mktParams.hasMarketObject(MarketObject::IndexCurve)) {

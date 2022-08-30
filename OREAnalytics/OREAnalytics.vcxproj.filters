@@ -219,7 +219,7 @@
     <ClInclude Include="orea\scenario\clonedscenariogenerator.hpp">
       <Filter>scenario</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\oreplus\ore\OREAnalytics\orea\engine\bufferedsensitivitystream.hpp">
+    <ClInclude Include="orea\engine\bufferedsensitivitystream.hpp">
       <Filter>engine</Filter>
     </ClInclude>
   </ItemGroup>
@@ -389,7 +389,7 @@
     <ClCompile Include="orea\scenario\clonedscenariogenerator.cpp">
       <Filter>scenario</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\oreplus\ore\OREAnalytics\orea\engine\bufferedsensitivitystream.cpp">
+    <ClCompile Include="orea\engine\bufferedsensitivitystream.cpp">
       <Filter>engine</Filter>
     </ClCompile>
   </ItemGroup>
