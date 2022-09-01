@@ -28,17 +28,10 @@ public:
         if (!a_)
             return b_->loadQuotes(d);
         std::vector<boost::shared_ptr<MarketDatum>> data;
-        // loadQuotes() might throw if no quotes are available in one loader, which is not an error here
-        try {
-	    auto tmp = a_->loadQuotes(d);
-            data.insert(data.end(), tmp.begin(), tmp.end());
-        } catch (...) {
-        }
-        try {
-	    auto tmp = b_->loadQuotes(d);
-            data.insert(data.end(), tmp.begin(), tmp.end());
-        } catch (...) {
-        }
+	auto tmp = a_->loadQuotes(d);
+	data.insert(data.end(), tmp.begin(), tmp.end());
+	auto tmp = b_->loadQuotes(d);
+	data.insert(data.end(), tmp.begin(), tmp.end());
         return data;
     }
 
@@ -54,12 +47,12 @@ public:
                                                  const QuantLib::Date& asof) const override {
         std::set<boost::shared_ptr<MarketDatum>> result;
         if (a_) {
-            auto tmp = a_->get(names, asof);
-            result.insert(tmp.begin(), tmp.end());
+	    auto tmp = a_->get(names, asof);
+	    result.insert(tmp.begin(), tmp.end());
         }
         if (b_) {
-            auto tmp = b_->get(names, asof);
-            result.insert(tmp.begin(), tmp.end());
+	    auto tmp = b_->get(names, asof);
+	    result.insert(tmp.begin(), tmp.end());
         }
         return result;
     }
@@ -71,8 +64,8 @@ public:
             result.insert(tmp.begin(), tmp.end());
         }
         if (b_) {
-            auto tmp = b_->get(wildcard, asof);
-            result.insert(tmp.begin(), tmp.end());
+	    auto tmp = b_->get(wildcard, asof);
+	    result.insert(tmp.begin(), tmp.end());
         }
         return result;
     }
@@ -87,8 +80,8 @@ public:
         if (!a_)
             return b_->loadFixings();
         std::set<Fixing> fixings;
-	auto tmp1 = a_->loadFixings();
-	auto tmp2 = b_->loadFixings();
+        auto tmp1 = a_->loadFixings();
+        auto tmp2 = b_->loadFixings();
         fixings.insert(tmp1.begin(), tmp1.end());
         fixings.insert(tmp2.begin(), tmp2.end());
         return fixings;
@@ -100,8 +93,8 @@ public:
         if (!a_)
             return b_->loadDividends();
         std::set<Fixing> dividends;
-	auto tmp1 = a_->loadDividends();
-	auto tmp2 = b_->loadDividends();
+        auto tmp1 = a_->loadDividends();
+        auto tmp2 = b_->loadDividends();
         dividends.insert(tmp1.begin(), tmp1.end());
         dividends.insert(tmp2.begin(), tmp2.end());
         return dividends;

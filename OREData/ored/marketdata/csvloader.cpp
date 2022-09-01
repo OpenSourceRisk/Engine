@@ -152,7 +152,8 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
 
 vector<boost::shared_ptr<MarketDatum>> CSVLoader::loadQuotes(const QuantLib::Date& d) const {
     auto it = data_.find(d);
-    QL_REQUIRE(it != data_.end(), "CSVLoader has no data for date " << d);
+    if (it == data_.end())
+        return {};
     return it->second;
 }
 
