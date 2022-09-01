@@ -145,6 +145,7 @@ private:
 
     // cached market objects, the key of the maps is the curve spec name, except for swap indices, see below
     mutable map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
+    mutable map<string, boost::shared_ptr<FXSpot>> requiredFxSpots_;
     mutable map<string, boost::shared_ptr<FXVolCurve>> requiredFxVolCurves_;
     mutable map<string, boost::shared_ptr<GenericYieldVolCurve>> requiredGenericYieldVolCurves_;
     mutable map<string, boost::shared_ptr<CapFloorVolCurve>> requiredCapFloorVolCurves_;

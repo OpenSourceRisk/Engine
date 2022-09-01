@@ -234,6 +234,7 @@ Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const strin
 
     // require the curves required to build the fx index (FIXME assumption here: default config = xccy discounting !)
 
+    require(MarketObject::FXSpot, forCcy + domCcy, Market::defaultConfiguration);
     require(MarketObject::DiscountCurve, domCcy, Market::defaultConfiguration);
     require(MarketObject::DiscountCurve, forCcy, Market::defaultConfiguration);
 

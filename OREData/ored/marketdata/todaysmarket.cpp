@@ -358,7 +358,19 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
 
         // FX Spot
         case CurveSpec::CurveType::FX: {
-            DLOG("FXSpot for asof " << asof_ << " does not require an explicit build.");
+            boost::shared_ptr<FXSpotSpec> fxspec = boost::dynamic_pointer_cast<FXSpotSpec>(spec);
+            QL_REQUIRE(fxspec, "Failed to convert spec " << *spec << " to fx spot spec");
+            auto itr = requiredFxSpots_.find(fxspec->name());
+            if (itr == requiredFxSpots_.end()) {
+                DLOG("Building FXSpot for asof " << asof_);
+                boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof_, *fxspec, fxT_, this);
+                itr = requiredFxSpots_.insert(make_pair(fxspec->name(), fxSpot)).first;
+                fxT_.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3),
+                              itr->second->handle()->fxQuote(true));
+            }
+            DLOG("Adding FXIndex (" << node.name << ") with spec " << *fxspec << " to configuration " << configuration);
+            // add the market spot rate and the rate today, both are needed
+	    fxIndices_[configuration].addIndex(node.name, itr->second->handle());
             break;
         }
 
