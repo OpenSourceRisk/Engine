@@ -28,10 +28,10 @@ public:
         if (!a_)
             return b_->loadQuotes(d);
         std::vector<boost::shared_ptr<MarketDatum>> data;
-	auto tmp = a_->loadQuotes(d);
-	data.insert(data.end(), tmp.begin(), tmp.end());
-	auto tmp = b_->loadQuotes(d);
-	data.insert(data.end(), tmp.begin(), tmp.end());
+	auto tmp1 = a_->loadQuotes(d);
+	data.insert(data.end(), tmp1.begin(), tmp1.end());
+	auto tmp2 = b_->loadQuotes(d);
+	data.insert(data.end(), tmp2.begin(), tmp2.end());
         return data;
     }
 
