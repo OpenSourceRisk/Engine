@@ -28,10 +28,10 @@ public:
         if (!a_)
             return b_->loadQuotes(d);
         std::vector<boost::shared_ptr<MarketDatum>> data;
-	auto tmp1 = a_->loadQuotes(d);
-	data.insert(data.end(), tmp1.begin(), tmp1.end());
-	auto tmp2 = b_->loadQuotes(d);
-	data.insert(data.end(), tmp2.begin(), tmp2.end());
+        auto tmp1 = a_->loadQuotes(d);
+        data.insert(data.end(), tmp1.begin(), tmp1.end());
+        auto tmp2 = b_->loadQuotes(d);
+        data.insert(data.end(), tmp2.begin(), tmp2.end());
         return data;
     }
 
@@ -47,12 +47,12 @@ public:
                                                  const QuantLib::Date& asof) const override {
         std::set<boost::shared_ptr<MarketDatum>> result;
         if (a_) {
-	    auto tmp = a_->get(names, asof);
-	    result.insert(tmp.begin(), tmp.end());
+            auto tmp = a_->get(names, asof);
+            result.insert(tmp.begin(), tmp.end());
         }
         if (b_) {
-	    auto tmp = b_->get(names, asof);
-	    result.insert(tmp.begin(), tmp.end());
+            auto tmp = b_->get(names, asof);
+            result.insert(tmp.begin(), tmp.end());
         }
         return result;
     }
@@ -64,8 +64,8 @@ public:
             result.insert(tmp.begin(), tmp.end());
         }
         if (b_) {
-	    auto tmp = b_->get(wildcard, asof);
-	    result.insert(tmp.begin(), tmp.end());
+            auto tmp = b_->get(wildcard, asof);
+            result.insert(tmp.begin(), tmp.end());
         }
         return result;
     }
