@@ -343,7 +343,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             new SimpleQuote(initMarket->fxSpot(name, configuration)->value()));
                         Handle<Quote> qh(q);
 
-			// add to the global fx spot repo
+                        // add to the global fx spot repo
                         fxT_.addQuote(name, qh);
 
                         // build the fxIndex
