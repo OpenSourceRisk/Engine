@@ -112,7 +112,7 @@ XMLNode* BondData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
     if (!issueDate_.empty())
         XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
-    if(!priceQuoteMethod_.etmpy())
+    if(!priceQuoteMethod_.empty())
 	XMLUtils::addChild(doc, bondNode, "PriceQuoteMethod", priceQuoteMethod_);
     if(!priceQuoteBaseValue_.empty())
 	XMLUtils::addChild(doc, bondNode, "PriceQuoteBaseValue", priceQuoteBaseValue_);
