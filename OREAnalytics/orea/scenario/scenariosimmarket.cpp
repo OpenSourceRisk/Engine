@@ -343,6 +343,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             new SimpleQuote(initMarket->fxSpot(name, configuration)->value()));
                         Handle<Quote> qh(q);
 
+			// add to the global fx spot repo
+                        fxT_.addQuote(name, qh);
+
                         // build the fxIndex
                         auto initMarFxInd = initMarket->fxIndex(name);
                         auto fxInd = Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(

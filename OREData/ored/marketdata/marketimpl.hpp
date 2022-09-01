@@ -227,6 +227,10 @@ protected:
     mutable map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
     mutable map<pair<string, string>, Handle<Quote>> cprs_;
 
+    /* stores fx quotes, shared between all configurations and expected to contain all quotes that are available
+       from the beginning */
+    mutable FXTriangulation fxT_;
+
     //! add a swap index to the market
     void addSwapIndex(const string& swapindex, const string& discountIndex,
                       const string& configuration = Market::defaultConfiguration) const;
