@@ -333,29 +333,16 @@ ScenarioSimMarket::ScenarioSimMarket(
 	    boost::timer::cpu_timer timer;
 
             switch (param.first) {
-            case RiskFactorKey::KeyType::FXSpot:
+            case RiskFactorKey::KeyType::FXSpot: {
+		std::map<std::string, Handle<Quote>> fxQuotes;
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
                         // constructing fxSpots_
                         DLOG("adding " << name << " FX rates");
-                        boost::shared_ptr<SimpleQuote> q(
-                            new SimpleQuote(initMarket->fxSpot(name, configuration)->value()));
-                        Handle<Quote> qh(q);
-
-                        // add to the global fx spot repo
-                        fxT_.addQuote(name, qh);
-
-                        // build the fxIndex
-                        auto initMarFxInd = initMarket->fxIndex(name);
-                        auto fxInd = Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
-                            name, initMarFxInd->fixingDays(), initMarFxInd->sourceCurrency(),
-                            initMarFxInd->targetCurrency(), 
-                                initMarFxInd->fixingCalendar(), qh,
-                            discountCurve(initMarFxInd->sourceCurrency().code(), configuration),
-                            discountCurve(initMarFxInd->targetCurrency().code(), configuration), false)); 
-                            
-                        fxIndices_[Market::defaultConfiguration].addIndex(name, fxInd);
+			auto q = boost::make_shared<SimpleQuote>(initMarket->fxSpot(name, configuration)->value());
+                        auto qh = Handle<Quote>(q);
+                        fxQuotes[name] = qh;
                         // Check if the risk factor is simulated before adding it
                         if (param.second.first) {
                             simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
@@ -367,7 +354,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         processException(continueOnError, e, name, param.first, simDataWritten);
                     }
                 }
+		fx_ = boost::make_shared<FXTriangulation>(fxQuotes);
                 break;
+            }
 
             case RiskFactorKey::KeyType::DiscountCurve:
             case RiskFactorKey::KeyType::YieldCurve:

@@ -31,7 +31,6 @@
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/equitycurve.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
-#include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/inflationcapfloorvolcurve.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
@@ -126,11 +125,13 @@ void TodaysMarket::initialise(const Date& asof) {
     // Add all FX quotes from the loader to Triangulation
     timer.start();
     if (loader_->hasQuotes(asof_)) {
+	std::map<std::string, Handle<Quote>> fxQuotes;
         for (auto& md : loader_->get(Wildcard("FX/RATE/*"), asof_)) {
             boost::shared_ptr<FXSpotQuote> q = boost::dynamic_pointer_cast<FXSpotQuote>(md);
             QL_REQUIRE(q, "Failed to cast " << md->name() << " to FXSpotQuote");
-            fxT_.addQuote(q->unitCcy() + q->ccy(), q->quote());
+            fxQuotes[q->unitCcy() + q->ccy()] = q->quote();
         }
+	fx_  = boost::make_shared<FXTriangulation>(fxQuotes);
     } else {
         WLOG("TodaysMarket::Initialise: no quotes available for date " << asof_);
         return;
@@ -291,7 +292,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredYieldCurves_.end()) {
                 DLOG("Building YieldCurve for asof " << asof_);
                 boost::shared_ptr<YieldCurve> yieldCurve = boost::make_shared<YieldCurve>(
-                    asof_, *ycspec, *curveConfigs_, *loader_, requiredYieldCurves_, requiredDefaultCurves_, fxT_,
+                    asof_, *ycspec, *curveConfigs_, *loader_, requiredYieldCurves_, requiredDefaultCurves_, *fx_,
                     referenceData_, iborFallbackConfig_, preserveQuoteLinkage_, buildCalibrationInfo_, this);
                 calibrationInfo_->yieldCurveCalibrationInfo[ycspec->name()] = yieldCurve->calibrationInfo();
                 itr = requiredYieldCurves_.insert(make_pair(ycspec->name(), yieldCurve)).first;
@@ -358,19 +359,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
 
         // FX Spot
         case CurveSpec::CurveType::FX: {
-            boost::shared_ptr<FXSpotSpec> fxspec = boost::dynamic_pointer_cast<FXSpotSpec>(spec);
-            QL_REQUIRE(fxspec, "Failed to convert spec " << *spec << " to fx spot spec");
-            auto itr = requiredFxSpots_.find(fxspec->name());
-            if (itr == requiredFxSpots_.end()) {
-                DLOG("Building FXSpot for asof " << asof_);
-                boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof_, *fxspec, fxT_, this);
-                itr = requiredFxSpots_.insert(make_pair(fxspec->name(), fxSpot)).first;
-                fxT_.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3),
-                              itr->second->handle()->fxQuote(true));
-            }
-            DLOG("Adding FXIndex (" << node.name << ") with spec " << *fxspec << " to configuration " << configuration);
-            // add the market spot rate and the rate today, both are needed
-	    fxIndices_[configuration].addIndex(node.name, itr->second->handle());
+            DLOG("Building FXSpot (" << node.name << ") does not require any action.");
             break;
         }
 
@@ -385,7 +374,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredFxVolCurves_.end()) {
                 DLOG("Building FXVolatility for asof " << asof_);
                 boost::shared_ptr<FXVolCurve> fxVolCurve = boost::make_shared<FXVolCurve>(
-                    asof_, *fxvolspec, *loader_, *curveConfigs_, fxT_, requiredYieldCurves_, requiredFxVolCurves_,
+                    asof_, *fxvolspec, *loader_, *curveConfigs_, *fx_, requiredYieldCurves_, requiredFxVolCurves_,
                     requiredCorrelationCurves_, buildCalibrationInfo_);
                 calibrationInfo_->fxVolCalibrationInfo[fxvolspec->name()] = fxVolCurve->calibrationInfo();
                 itr = requiredFxVolCurves_.insert(make_pair(fxvolspec->name(), fxVolCurve)).first;
@@ -661,11 +650,6 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             boost::shared_ptr<EquityVolatilityCurveSpec> eqvolspec =
                 boost::dynamic_pointer_cast<EquityVolatilityCurveSpec>(spec);
 
-            boost::optional<FXIndexTriangulation> fxIndexTri;
-            auto itFxTri = fxIndices_.find(configuration);
-            if (itFxTri != end(fxIndices_))
-                fxIndexTri = itFxTri->second;
-
             QL_REQUIRE(eqvolspec, "Failed to convert spec " << *spec);
             auto itr = requiredEquityVolCurves_.find(eqvolspec->name());
             if (itr == requiredEquityVolCurves_.end()) {
@@ -679,7 +663,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 Handle<EquityIndex> eqIndex = MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration);
                 boost::shared_ptr<EquityVolCurve> eqVolCurve = boost::make_shared<EquityVolCurve>(
                     asof_, *eqvolspec, *loader_, *curveConfigs_, eqIndex, requiredEquityCurves_,
-                    requiredEquityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, fxIndexTri,
+                    requiredEquityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, this,
                     buildCalibrationInfo_);
                 itr = requiredEquityVolCurves_.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
                 calibrationInfo_->eqVolCalibrationInfo[eqvolspec->name()] = eqVolCurve->calibrationInfo();
@@ -734,7 +718,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredCommodityCurves_.end()) {
                 DLOG("Building CommodityCurve for asof " << asof_);
                 boost::shared_ptr<CommodityCurve> commodityCurve =
-                    boost::make_shared<CommodityCurve>(asof_, *commodityCurveSpec, *loader_, *curveConfigs_, fxT_,
+                    boost::make_shared<CommodityCurve>(asof_, *commodityCurveSpec, *loader_, *curveConfigs_, *fx_,
                                                        requiredYieldCurves_, requiredCommodityCurves_);
                 itr = requiredCommodityCurves_.insert(make_pair(commodityCurveSpec->name(), commodityCurve)).first;
             }
@@ -749,11 +733,6 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
         // Commodity Vol
         case CurveSpec::CurveType::CommodityVolatility: {
 
-            boost::optional<FXIndexTriangulation> fxIndexTri;
-            auto itFxTri = fxIndices_.find(configuration);
-            if (itFxTri != end(fxIndices_))
-                fxIndexTri = itFxTri->second;
-
             boost::shared_ptr<CommodityVolatilityCurveSpec> commodityVolSpec =
                 boost::dynamic_pointer_cast<CommodityVolatilityCurveSpec>(spec);
             QL_REQUIRE(commodityVolSpec, "Failed to convert spec " << *spec << " to commodity volatility spec");
@@ -762,7 +741,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Building commodity volatility for asof " << asof_);
                 boost::shared_ptr<CommodityVolCurve> commodityVolCurve = boost::make_shared<CommodityVolCurve>(
                     asof_, *commodityVolSpec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredCommodityCurves_,
-                    requiredCommodityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, fxIndexTri);
+                    requiredCommodityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, this);
                 itr = requiredCommodityVolCurves_.insert(make_pair(commodityVolSpec->name(), commodityVolCurve)).first;
             }
 

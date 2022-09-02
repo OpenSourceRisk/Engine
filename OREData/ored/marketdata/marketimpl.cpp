@@ -197,62 +197,9 @@ Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(const string&
 }
 
 Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const string& configuration) const {
-
-    // set family and ccys for either an index FX-ECB-EUR-USD or a pair EURUSD
-    
-    std::string familyName;
-    std::string forCcy;
-    std::string domCcy;
-
-    if (isFxIndex(fxIndex)) {
-        auto ind = parseFxIndex(fxIndex);
-        familyName = ind->familyName();
-        forCcy = ind->sourceCurrency().code();
-        domCcy = ind->targetCurrency().code();
-    } else {
-        familyName = "GENERIC";
-        forCcy = fxIndex.substr(0, 3);
-        domCcy = fxIndex.substr(3);
-    }
-
-    // try to get the index from the stored indices in configuration and default configuration
-
-    auto it = fxIndices_.find(configuration);
-    if (it != fxIndices_.end()) {
-        auto tmp = it->second.getIndex(fxIndex, true); // don't throw error here
-        if (!tmp.empty())
-            return tmp;
-        if (configuration != Market::defaultConfiguration) {
-            auto it = fxIndices_.find(Market::defaultConfiguration);
-            if (it != fxIndices_.end()) {
-                auto tmp = it->second.getIndex(fxIndex, true); // don't throw error here
-                if (!tmp.empty())
-                    return tmp;
-            }
-        }
-    }
-
-    // require the curves required to build the fx index (FIXME assumption here: default config = xccy discounting !)
-
-    require(MarketObject::FXSpot, forCcy + domCcy, Market::defaultConfiguration);
-    require(MarketObject::DiscountCurve, domCcy, Market::defaultConfiguration);
-    require(MarketObject::DiscountCurve, forCcy, Market::defaultConfiguration);
-
-    // build the index, store it in the cache and return it
-
-    auto sorTS = discountCurve(forCcy);
-    auto tarTS = discountCurve(domCcy);
-
-    auto spot = fxT_.getQuote(forCcy + domCcy);
-
-    Natural spotDays;
-    Calendar calendar;
-    getFxIndexConventions(fxIndex, spotDays, calendar);
-
-    auto fxInd = Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
-        familyName, spotDays, parseCurrency(forCcy), parseCurrency(domCcy), calendar, spot, sorTS, tarTS));
-    fxIndices_[Market::defaultConfiguration].addIndex(fxIndex, fxInd);
-    return fxInd;
+    QL_REQUIRE(fx_ != nullptr,
+               "MarketImpl::fxIndex(" << fxIndex << "): fx_ is null. This is an internal error. Contact dev.");
+    return fx_->getIndex(fxIndex, this);
 }
 
 Handle<Quote> MarketImpl::fxRate(const string& ccypair, const string& configuration) const {
