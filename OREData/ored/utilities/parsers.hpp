@@ -51,10 +51,11 @@
 #include <ql/types.hpp>
 
 #include <qle/cashflows/commoditycashflow.hpp>
-#include <qle/instruments/cdsoption.hpp>
-#include <qle/models/crossassetmodel.hpp>
-#include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/currencies/configurablecurrency.hpp>
+#include <qle/indexes/bondindex.hpp>
+#include <qle/instruments/cdsoption.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/models/crossassetmodel.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
@@ -491,6 +492,14 @@ QuantExt::CdsOption::StrikeType parseCdsOptionStrikeType(const std::string& s);
     \ingroup utilities
 */
 QuantLib::Average::Type parseAverageType(const std::string& s);
+
+/*! Convert text to QuantExt::BondData::PriceQuoteMethod
+\ingroup utilities
+ */
+QuantExt::BondIndex::PriceQuoteMethod parsePriceQuoteMethod(const std::string& s);
+
+//! Write PriceQuoteMethod to stream
+std::ostream& operator<<(std::ostream& os, QuantExt::BondIndex::PriceQuoteMethod);
 
 //! Helper function to get the two tokens in a correlation name Index2:Index1
 std::vector<std::string> getCorrelationTokens(const std::string& name);

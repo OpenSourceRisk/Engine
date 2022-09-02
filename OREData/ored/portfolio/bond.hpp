@@ -36,9 +36,8 @@ namespace data {
 class BondData : public XMLSerializable {
 public:
     //! Default Contructor
-    BondData()
-        : hasCreditRisk_(true), faceAmount_(0.0), zeroBond_(false), bondNotional_(1.0), isPayer_(false),
-          isInflationLinked_(false) {}
+    BondData() : hasCreditRisk_(true),
+               faceAmount_(0.0), zeroBond_(false), bondNotional_(1.0), isPayer_(false), isInflationLinked_(false) {}
 
     //! Constructor to set up a bond from reference data
     BondData(string securityId, Real bondNotional, bool hasCreditRisk = true)
@@ -87,6 +86,8 @@ public:
     const string& settlementDays() const { return settlementDays_; }
     const string& calendar() const { return calendar_; }
     const string& issueDate() const { return issueDate_; }
+    QuantExt::BondIndex::PriceQuoteMethod priceQuoteMethod() const;
+    Real priceQuoteBaseValue() const;
     const std::vector<LegData>& coupons() const { return coupons_; }
     const string& currency() const { return currency_; }
     Real bondNotional() const { return bondNotional_; }
@@ -125,6 +126,8 @@ private:
     string settlementDays_;
     string calendar_;
     string issueDate_;
+    string priceQuoteMethod_;
+    string priceQuoteBaseValue_;
     std::vector<LegData> coupons_;
     bool hasCreditRisk_;
     Real faceAmount_;     // only used for zero bonds
@@ -181,6 +184,8 @@ struct BondBuilder {
         std::string creditCurveId;
         std::string securityId;
         std::string creditGroup;
+        QuantExt::BondIndex::PriceQuoteMethod priceQuoteMethod = QuantExt::BondIndex::PriceQuoteMethod::PercentageOfPar;
+        double priceQuoteBaseValue = 1.0;
     };
     virtual ~BondBuilder() {}
     virtual Result build(const boost::shared_ptr<EngineFactory>& engineFactory,

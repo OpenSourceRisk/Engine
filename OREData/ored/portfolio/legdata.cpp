@@ -2532,9 +2532,9 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
 
     // build and return the index
 
-    return boost::make_shared<QuantExt::BondIndex>(securityId, dirty, relative, fixingCalendar, qlBond, discountCurve,
-                                                   defaultCurve, recovery, spread, incomeCurve, conditionalOnSurvival,
-                                                   data.isInflationLinked());
+    return boost::make_shared<QuantExt::BondIndex>(
+        securityId, dirty, relative, fixingCalendar, qlBond, discountCurve, defaultCurve, recovery, spread, incomeCurve,
+        conditionalOnSurvival, data.priceQuoteMethod(), data.priceQuoteBaseValue(), data.isInflationLinked());
 }
 
 Leg joinLegs(const std::vector<Leg>& legs) {
