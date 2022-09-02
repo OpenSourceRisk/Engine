@@ -70,6 +70,27 @@ private:
     Date refDate_;
 };
 
+class FxSpotQuote : public Quote, public Observer {
+public:
+    FxSpotQuote(Handle<Quote> todaysQuote, const Handle<YieldTermStructure>& sourceYts,
+                const Handle<YieldTermStructure>& targetYts, Natural fixingDays, const Calendar& fixingCalendar,
+                Date refDate = Date());
+    //! \name Quote interface
+    //@{
+    Real value() const override;
+    bool isValid() const override;
+    //@}
+    //! \name Observer interface
+    //@{
+    void update() override;
+    //@}
+private:
+    const Handle<Quote> todaysQuote_;
+    const Handle<YieldTermStructure> sourceYts_, targetYts_;
+    Natural fixingDays_;
+    Calendar fixingCalendar_;
+    Date refDate_;
+};
 
 //! FX Index
 /*! \ingroup indexes */
