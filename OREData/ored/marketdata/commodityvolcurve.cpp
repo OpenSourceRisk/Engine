@@ -165,7 +165,7 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
                                      const map<string, boost::shared_ptr<CommodityVolCurve>>& commodityVolCurves,
                                      const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves,
                                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
-                                     const boost::optional<FXIndexTriangulation>& fxIndices) {
+                                     const Market* fxIndices) {
 
     try {
         LOG("CommodityVolCurve: start building commodity volatility structure with ID " << spec.curveConfigID());
@@ -1423,13 +1423,11 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 }
 
 void CommodityVolCurve::buildVolatility(
-    const QuantLib::Date& asof, const CommodityVolatilityCurveSpec& spec,
-    const CurveConfigurations& curveConfigs, const ProxyVolatilityConfig& pvc,
-    const map<string, boost::shared_ptr<CommodityCurve>>& comCurves,
+    const QuantLib::Date& asof, const CommodityVolatilityCurveSpec& spec, const CurveConfigurations& curveConfigs,
+    const ProxyVolatilityConfig& pvc, const map<string, boost::shared_ptr<CommodityCurve>>& comCurves,
     const map<string, boost::shared_ptr<CommodityVolCurve>>& volCurves,
     const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves,
-    const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
-    const boost::optional<FXIndexTriangulation>& fxIndices) {
+    const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves, const Market* fxIndices) {
 
     DLOG("Build Proxy Vol surface");
     // get all the configurations and the curve needed for proxying
@@ -1463,7 +1461,7 @@ void CommodityVolCurve::buildVolatility(
     boost::shared_ptr<BlackVolTermStructure> fxSurface;
     boost::shared_ptr<FxIndex> fxIndex;
     boost::shared_ptr<QuantExt::CorrelationTermStructure> correlation;
-    if (config.currency() != proxyVolConfig.currency() && fxIndices) {
+    if (config.currency() != proxyVolConfig.currency() && fxIndices != nullptr) {
         QL_REQUIRE(!pvc.fxVolatilityCurve().empty(),
                    "CommodityVolCurve: FXVolatilityCurve must be provided for commodity vol config "
                        << spec.curveConfigID() << " as proxy currencies if different from commodity currency.");
@@ -1492,7 +1490,7 @@ void CommodityVolCurve::buildVolatility(
             fxSurface->enableExtrapolation();
         }
 
-        fxIndex = fxIndices->getIndex(proxyVolConfig.currency() + config.currency()).currentLink();
+        fxIndex = fxIndices->fxIndex(proxyVolConfig.currency() + config.currency()).currentLink();
         FXSpotSpec spotSpec(proxyVolConfig.currency(), config.currency());
         
         CorrelationCurveSpec corrSpec(pvc.correlationCurve());
@@ -1506,7 +1504,6 @@ void CommodityVolCurve::buildVolatility(
     volatility_ = boost::make_shared<BlackVolatilitySurfaceProxy>(
         proxyVolCurve->second->volatility(), curve->second->commodityIndex(), proxyCurve->second->commodityIndex(),
         fxSurface, fxIndex, correlation);
-
 }
 
 Handle<PriceTermStructure> CommodityVolCurve::correctFuturePriceCurve(const Date& asof, const string& contractName,

@@ -60,8 +60,7 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                                const map<string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves,
                                const map<string, boost::shared_ptr<FXVolCurve>>& requiredFxVolCurves,
                                const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
-                               const boost::optional<FXIndexTriangulation>& fxIndices,
-                               const bool buildCalibrationInfo) {
+                               const Market* fxIndices, const bool buildCalibrationInfo) {
 
     try {
         LOG("EquityVolCurve: start building equity volatility structure with ID " << spec.curveConfigID());
@@ -1008,13 +1007,12 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
 }
 
 void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
-                                     const CurveConfigurations& curveConfigs,
-                                     const ProxyVolatilityConfig& epvc,
+                                     const CurveConfigurations& curveConfigs, const ProxyVolatilityConfig& epvc,
                                      const map<string, boost::shared_ptr<EquityCurve>>& eqCurves,
                                      const map<string, boost::shared_ptr<EquityVolCurve>>& eqVolCurves,
                                      const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves,
                                      const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
-                                     const boost::optional<FXIndexTriangulation>& fxIndices) {
+                                     const Market* fxIndices) {
 
     DLOG("Build Proxy Vol surface");
     // get all the configurations and the curve needed for proxying
@@ -1047,7 +1045,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
     boost::shared_ptr<BlackVolTermStructure> fxSurface;
     boost::shared_ptr<FxIndex> fxIndex;
     boost::shared_ptr<QuantExt::CorrelationTermStructure> correlation;
-    if (config.ccy() != proxyVolConfig.ccy() && fxIndices) {
+    if (config.ccy() != proxyVolConfig.ccy() && fxIndices != nullptr) {
         QL_REQUIRE(!epvc.fxVolatilityCurve().empty(), "EquityVolCurve: FXVolatilityCurve must be provided for Equity vol config " << 
             spec.curveConfigID() << " as proxy currencies if different from equity currency.");
         QL_REQUIRE(!epvc.correlationCurve().empty(), "EquityVolCurve: CorrelationCurve must be provided for Equity vol config " <<
@@ -1071,7 +1069,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
             fxSurface->enableExtrapolation();
         }
 
-        fxIndex = fxIndices->getIndex(proxyVolConfig.ccy() + config.ccy()).currentLink();
+        fxIndex = fxIndices->fxIndex(proxyVolConfig.ccy() + config.ccy()).currentLink();
 
         CorrelationCurveSpec corrSpec(epvc.correlationCurve());
         auto corrIt = requiredCorrelationCurves.find(corrSpec.name());
