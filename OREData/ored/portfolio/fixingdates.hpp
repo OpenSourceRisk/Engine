@@ -59,6 +59,7 @@ class FXLinkedCashFlow;
 class AverageFXLinkedCashFlow;
 class SubPeriodsCoupon1;
 class IndexedCoupon;
+class IndexWrappedCashFlow;
 class NonStandardYoYInflationCoupon;
 class CmbCoupon;
 } // namespace QuantExt
@@ -177,6 +178,7 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantExt::AverageFXLinkedCashFlow>,
                          public QuantLib::Visitor<QuantExt::SubPeriodsCoupon1>,
                          public QuantLib::Visitor<QuantExt::IndexedCoupon>,
+                         public QuantLib::Visitor<QuantExt::IndexWrappedCashFlow>,
                          public QuantLib::Visitor<QuantExt::NonStandardYoYInflationCoupon>,
                          public QuantLib::Visitor<QuantExt::CmbCoupon> {
 
@@ -214,6 +216,7 @@ public:
     void visit(QuantExt::AverageFXLinkedCashFlow& c) override;
     void visit(QuantExt::SubPeriodsCoupon1& c) override;
     void visit(QuantExt::IndexedCoupon& c) override;
+    void visit(QuantExt::IndexWrappedCashFlow& c) override;
     void visit(QuantExt::CmbCoupon& c) override;
     //@}
 

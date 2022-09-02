@@ -70,6 +70,13 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     if (strike_.currency() != underlyingCurrency_) {
    
         // We have a composite EQ Trade
+
+        Currency strikeCcy = parseCurrencyWithMinors(strikeCurrency_);
+        QL_REQUIRE(ccy == strikeCcy, "Equity composite option requires pay ccy ("
+                                         << ccy.code() << ") to match strike ccy (" << strikeCcy.code()
+                                         << "), quanto composite options are not supported (underlying currency is "
+                                         << underlyingCurrency_ << ")");
+
         Option::Type type = parseOptionType(option_.callPut());
         boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_.value()));
         QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
@@ -148,7 +155,6 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         // But rather than having it move around we use strike * quantity
         notional_ = strike_.value() * quantity_;
         notionalCurrency_ = ccy.code();
-
     } else {
         VanillaOptionTrade::build(engineFactory);
     }

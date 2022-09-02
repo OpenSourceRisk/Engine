@@ -140,6 +140,8 @@ public:
     boost::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
         const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
 
+    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
+
 };
 
 } // namespace QuantExt
