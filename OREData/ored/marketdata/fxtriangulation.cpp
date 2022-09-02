@@ -16,353 +16,339 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/make_shared.hpp>
+#include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ored/utilities/indexparser.hpp>
-#include <ored/configuration/conventions.hpp>
+#include <ored/utilities/to_string.hpp>
+
+#include <qle/quotes/compositevectorquote.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/quotes/compositequote.hpp>
 #include <ql/quotes/derivedquote.hpp>
 #include <ql/quotes/simplequote.hpp>
 
+#include <boost/make_shared.hpp>
+
 using namespace QuantLib;
 using namespace QuantExt;
-using std::string;
-
-namespace {
-
-// helper classes to enable the building
-// of composite cross-currency fx quotes
-class Triangulation {
-public:
-    Triangulation() {}
-    Real operator()(Real a, Real b) const { return a / b; }
-};
-
-class Product {
-public:
-    Product() {}
-    Real operator()(Real a, Real b) const { return a * b; }
-};
-
-class InverseProduct {
-public:
-    InverseProduct() {}
-    Real operator()(Real a, Real b) const { return 1.0 / (a * b); }
-};
-
-// Inverse a single quote
-class Inverse {
-public:
-    Inverse() {}
-    Real operator()(Real a) const { return 1.0 / a; }
-};
-
-} // namespace
 
 namespace ore {
 namespace data {
 
-FxSpotQuote::FxSpotQuote(Handle<Quote> todaysQuote, const Handle<YieldTermStructure>& sourceYts,
-                         const Handle<YieldTermStructure>& targetYts, Natural fixingDays,
-                         const Calendar& fixingCalendar, Date refDate)
-    : todaysQuote_(todaysQuote), sourceYts_(sourceYts), targetYts_(targetYts), fixingDays_(fixingDays),
-      fixingCalendar_(fixingCalendar), refDate_(refDate) {
-    registerWith(todaysQuote_);
-    registerWith(sourceYts_);
-    registerWith(targetYts_);
+namespace {
+
+std::pair<std::string, std::string> splitPair(const std::string& pair) {
+    QL_REQUIRE(pair.size() == 6, "FXTriangulation: Inavlid currency pair '" << pair << "'");
+    return std::make_pair(pair.substr(0, 3), pair.substr(3));
 }
 
-Real FxSpotQuote::value() const {
-    QL_ENSURE(isValid(), "invalid FxRateQuote");
-
-    Date today = refDate_ == Null<Date>() ? Settings::instance().evaluationDate() : refDate_;
-    Date refValueDate = fixingCalendar_.advance(fixingCalendar_.adjust(today), fixingDays_, Days);
-
-    return todaysQuote_->value() * sourceYts_->discount(refValueDate) / targetYts_->discount(refValueDate);
+Handle<YieldTermStructure> getMarketDiscountCurve(const Market* market, const std::string& ccy) {
+    try {
+        return market->discountCurve(ccy);
+    } catch (const std::exception& e) {
+        QL_FAIL("FXTriangulation: could not get market discount curve '" << ccy << "'");
+    }
 }
 
-bool FxSpotQuote::isValid() const {
-    return !todaysQuote_.empty() && todaysQuote_->isValid() && !sourceYts_.empty() && !targetYts_.empty();
+} // namespace
+
+FXTriangulation::FXTriangulation(std::map<std::string, Handle<Quote>> quotes) : quotes_(std::move(quotes)) {
+
+    // collect all currencies from the pairs
+
+    std::set<std::string> ccys;
+    for (auto const& q : quotes_) {
+        auto [ccy1, ccy2] = splitPair(q.first);
+        ccys.insert(ccy1);
+        ccys.insert(ccy2);
+    }
+
+    // populate node to ccy and ccy to node containers
+
+    nodeToCcy_.insert(nodeToCcy_.begin(), ccys.begin(), ccys.end());
+
+    for (Size i = 0; i < nodeToCcy_.size(); ++i)
+        ccyToNode_[nodeToCcy_[i]] = i;
+
+    // populate neighbours container
+
+    neighbours_.resize(nodeToCcy_.size());
+    for (auto const& q : quotes_) {
+        auto [ccy1, ccy2] = splitPair(q.first);
+        Size n1 = ccyToNode_[ccy1];
+        Size n2 = ccyToNode_[ccy2];
+        neighbours_[n1].insert(n2);
+        neighbours_[n2].insert(n1);
+    }
+
+    LOG("FXTriangulation: initialized with " << quotes_.size() << " quotes, " << ccys.size() << " currencies.");
 }
 
-void FxSpotQuote::update() { notifyObservers(); }
+Handle<Quote> FXTriangulation::getQuote(const std::string& pair, const bool enforceSpotLagConsistency,
+                                        const Date& today) const {
 
-void FXTriangulation::addQuote(const std::string& pair, const Handle<Quote>& spot) {
-    auto it = std::find_if(map_.begin(), map_.end(),
-                           [&pair](const std::pair<string, Handle<Quote>>& x) { return x.first == pair; });
-    if (it != map_.end())
-        *it = std::make_pair(pair, spot);
-    else
-        map_.push_back(std::make_pair(pair, spot));
-}
+    // do we have a cached result?
 
-Handle<Quote> FXTriangulation::getQuote(const string& pair) const {
-    // First, look for the pair in the map
-    auto it = std::find_if(map_.begin(), map_.end(),
-                           [&pair](const std::pair<string, Handle<Quote>>& x) { return x.first == pair; });
-    if (it != map_.end())
+    if (auto it = quoteCache_.find(pair); it != quoteCache_.end())
         return it->second;
 
-    // Now we have to break the pair up and search for it.
-    QL_REQUIRE(pair.size() == 6, "FXTriangulation: Invalid ccypair " << pair);
-    string domestic = pair.substr(0, 3);
-    string foreign = pair.substr(3);
+    // we need to construct the quote from the input quotes
 
-    // check reverse
-    string reverse = foreign + domestic;
-    it = std::find_if(map_.begin(), map_.end(),
-                      [&reverse](const std::pair<string, Handle<Quote>>& x) { return x.first == reverse; });
-    if (it != map_.end()) {
-        auto m = [](Real x) { return 1.0 / x; };
-        Handle<Quote> invertedQuote(boost::make_shared<DerivedQuote<decltype(m)>>(it->second, m));
-        map_.push_back(std::make_pair(pair, invertedQuote));
-        return invertedQuote;
-    }
+    Handle<Quote> result;
+    auto [ccy1, ccy2] = splitPair(pair);
 
-    // check EUREUR
-    if (foreign == domestic) {
-        thread_local static Handle<Quote> unity(boost::make_shared<SimpleQuote>(1.0));
-        return unity;
-    }
+    // get the path from ccy1 to ccy2
 
-    // Now we search for a pair of quotes that we can combine to construct the quote required.
-    // We only search for a pair of quotes a single step apart.
-    //
-    // Suppose we want a USDJPY quote and we have EUR based data, there are 4 combinations to
-    // consider:
-    // EURUSD, EURJPY  => we want EURJPY / EURUSD [Triangulation]
-    // EURUSD, JPYEUR  => we want 1 / (EURUSD * JPYEUR) [InverseProduct]
-    // USDEUR, EURJPY  => we want USDEUR * EURJPY [Product]
-    // USDEUR, JPYEUR  => we want USDEUR / JPYEUR [Triangulation (but in the reverse order)]
-    //
-    // Loop over the map, look for domestic then use the map to find the other side of the pair.
-    for (const auto& kv : map_) {
-        string keyDomestic = kv.first.substr(0, 3);
-        string keyForeign = kv.first.substr(3);
-        const Handle<Quote>& q1 = kv.second;
+    auto path = getPath(ccy1, ccy2);
 
-        if (domestic == keyDomestic) {
-            // we have domestic, now look for foreign/keyForeign
-            // USDEUR, JPYEUR  => we want USDEUR / JPYEUR [Triangulation (but in the reverse order)]
-            it = std::find_if(map_.begin(), map_.end(),
-                              [&foreign, &keyForeign](const std::pair<string, Handle<Quote>>& x) {
-                                  return x.first == foreign + keyForeign;
-                              });
-            if (it != map_.end()) {
-                // Here q1 is USDEUR and it->second is JPYEUR
-                auto tmp =
-                    Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(q1, it->second, Triangulation()));
-                map_.push_back(std::make_pair(pair, tmp));
-                return tmp;
-            }
-            // USDEUR, EURJPY  => we want USDEUR * EURJPY [Product]
-            it = std::find_if(map_.begin(), map_.end(),
-                              [&foreign, &keyForeign](const std::pair<string, Handle<Quote>>& x) {
-                                  return x.first == keyForeign + foreign;
-                              });
-            if (it != map_.end()) {
-                auto tmp = Handle<Quote>(boost::make_shared<CompositeQuote<Product>>(q1, it->second, Product()));
-                map_.push_back(std::make_pair(pair, tmp));
-                return tmp;
-            }
-        }
+    if (path.size() == 2) {
 
-        if (domestic == keyForeign) {
-            // EURUSD, JPYEUR  => we want 1 / (EURUSD * JPYEUR) [InverseProduct]
-            it = std::find_if(map_.begin(), map_.end(),
-                              [&foreign, &keyDomestic](const std::pair<string, Handle<Quote>>& x) {
-                                  return x.first == foreign + keyDomestic;
-                              });
-            if (it != map_.end()) {
-                auto tmp =
-                    Handle<Quote>(boost::make_shared<CompositeQuote<InverseProduct>>(q1, it->second, InverseProduct()));
-                map_.push_back(std::make_pair(pair, tmp));
-                return tmp;
-            }
-            // EURUSD, EURJPY  => we want EURJPY / EURUSD [Triangulation]
-            it = std::find_if(map_.begin(), map_.end(),
-                              [&foreign, &keyDomestic](const std::pair<string, Handle<Quote>>& x) {
-                                  return x.first == keyDomestic + foreign;
-                              });
-            if (it != map_.end()) {
-                // Here q1 is EURUSD and it->second is EURJPY
-                auto tmp =
-                    Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(it->second, q1, Triangulation()));
-                map_.push_back(std::make_pair(pair, tmp));
-                return tmp;
-            }
-        }
-    }
+        // we can use a direct or inverted quote, but do not need a composite
 
-    QL_FAIL("FXTriangulation: Unable to build FXQuote for ccy pair " << pair);
-}
+        result = getQuote(path[0], path[1]);
 
-void FXIndexTriangulation::addIndex(const std::string& pair, const Handle<FxIndex>& index) {
-    auto it = std::find_if(map_.begin(), map_.end(),
-                           [&pair](const std::pair<string, Handle<FxIndex>>& x) { return x.first == pair; });
-    if (it != map_.end())
-        *it = std::make_pair(pair, index);
-    else
-        map_.push_back(std::make_pair(pair, index));
-}
+    } else {
 
-Handle<FxIndex> FXIndexTriangulation::getIndex(const string& pair, bool dontThrow) const {
-    // First, look for the pair in the map
-    auto it = std::find_if(map_.begin(), map_.end(),
-                           [&pair](const std::pair<string, Handle<FxIndex>>& x) { return x.first == pair; });
-    if (it != map_.end())
-        return it->second;
+        // we need a composite quote
 
-    if (!isFxIndex(pair)) {
+        Date refDate = today == Date() ? Settings::instance().evaluationDate() : today;
+        Date settlementDate;
+        std::vector<Handle<Quote>> quotes;
 
-        // Now we have to break the pair up and search for it.
-        QL_REQUIRE(pair.size() == 6, "FXIndexTriangulation: Invalid ccypair " << pair);
-        string domestic = pair.substr(0, 3);
-        string foreign = pair.substr(3);
+        // collect the quotes on the path and check consistency of the settlement dates
 
-        // check reverse
-        string reverse = foreign + domestic;
-        it = std::find_if(map_.begin(), map_.end(),
-                          [&reverse](const std::pair<string, Handle<FxIndex>>& x) { return x.first == reverse; });
-        if (it != map_.end()) {
-            auto m = [](Real x) { return 1.0 / x; };
-            Handle<Quote> invertedQuote(boost::make_shared<DerivedQuote<decltype(m)>>(it->second->fxQuote(true), m));
-            Handle<FxIndex> invertedIndex(boost::make_shared<FxIndex>(
-                it->second->referenceDate(), it->second->familyName(), it->second->fixingDays(),
-                it->second->targetCurrency(), it->second->sourceCurrency(), it->second->fixingCalendar(), invertedQuote,
-                it->second->targetCurve(), it->second->sourceCurve()));
-            map_.push_back(std::make_pair(pair, invertedIndex));
-            return invertedIndex;
-        }
+        for (Size i = 0; i < path.size() - 1; ++i) {
 
-        // check EUREUR
-        if (foreign == domestic) {
-            static Handle<FxIndex> unity(boost::make_shared<FxIndex>(
-                "", 0, parseCurrency(foreign), parseCurrency(domestic), parseCalendar(foreign),
-                Handle<Quote>(boost::make_shared<SimpleQuote>(1.0))));
-            return unity;
-        }
+            quotes.push_back(getQuote(path[i], path[i + 1]));
 
-        // Now we search for a pair of indices that we can combine to construct the indexx required.
-        // We only search for a pair of indices a single step apart.
-        //
-        // Suppose we want a USDJPY quote and we have EUR based data, there are 4 combinations to
-        // consider:
-        // EURUSD, EURJPY  => we want EURJPY / EURUSD [Triangulation]
-        // EURUSD, JPYEUR  => we want 1 / (EURUSD * JPYEUR) [InverseProduct]
-        // USDEUR, EURJPY  => we want USDEUR * EURJPY [Product]
-        // USDEUR, JPYEUR  => we want USDEUR / JPYEUR [Triangulation (but in the reverse order)]
-        //
-        // Loop over the map, look for domestic then use the map to find the other side of the pair.
-
-        // Here q1 is USDEUR and it->second is JPYEUR
-        Natural spotDays;
-        Calendar calendar;
-        getFxIndexConventions(pair, spotDays, calendar);
-
-        for (const auto& kv : map_) {
-            if (!isFxIndex(kv.first)) {
-                string keyDomestic = kv.first.substr(0, 3);
-                string keyForeign = kv.first.substr(3);
-                const Handle<FxIndex>& q1 = kv.second;
-
-                if (domestic == keyDomestic) {
-                    // we have domestic, now look for foreign/keyForeign
-                    // USDEUR, JPYEUR  => we want USDEUR / JPYEUR [Triangulation (but in the reverse order)]
-                    it = std::find_if(map_.begin(), map_.end(),
-                                      [&foreign, &keyForeign](const std::pair<string, Handle<FxIndex>>& x) {
-                                          return x.first == foreign + keyForeign;
-                                      });
-                    if (it != map_.end()) {
-                        // we need a spot quote for the crossed fx index. The two underying spot quotes could
-                        // have different spotDays so we can't just cross them directly. We cross the two 'todays'
-                        // rates and then construst a derived FX Spot quote with the correct fixing days
-                        Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(
-                            q1->fxQuote(), it->second->fxQuote(), Triangulation()));
-                        Handle<Quote> spotCross = Handle<Quote>(
-                            boost::make_shared<FxSpotQuote>(todaysCross, q1->sourceCurve(), it->second->sourceCurve(),
-                                                            spotDays, calendar, q1->referenceDate()));
-
-                        auto tmp = Handle<FxIndex>(
-                            boost::make_shared<FxIndex>(q1->referenceDate(), q1->familyName(), spotDays,
-                                                        q1->sourceCurrency(), it->second->sourceCurrency(), calendar,
-                                                        spotCross, q1->sourceCurve(), it->second->sourceCurve()));
-                        map_.push_back(std::make_pair(pair, tmp));
-                        return tmp;
-                    }
-                    // USDEUR, EURJPY  => we want USDEUR * EURJPY [Product]
-                    it = std::find_if(map_.begin(), map_.end(),
-                                      [&foreign, &keyForeign](const std::pair<string, Handle<FxIndex>>& x) {
-                                          return x.first == keyForeign + foreign;
-                                      });
-                    if (it != map_.end()) {
-                        Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<Product>>(
-                            q1->fxQuote(), it->second->fxQuote(), Product()));
-                        Handle<Quote> spotCross = Handle<Quote>(
-                            boost::make_shared<FxSpotQuote>(todaysCross, q1->sourceCurve(), it->second->targetCurve(),
-                                                            spotDays, calendar, q1->referenceDate()));
-
-                        auto tmp = Handle<FxIndex>(
-                            boost::make_shared<FxIndex>(q1->referenceDate(), q1->familyName(), spotDays,
-                                                        q1->sourceCurrency(), it->second->targetCurrency(), calendar,
-                                                        spotCross, q1->sourceCurve(), it->second->targetCurve()));
-                        map_.push_back(std::make_pair(pair, tmp));
-                        return tmp;
-                    }
-                }
-
-                if (domestic == keyForeign) {
-                    // EURUSD, JPYEUR  => we want 1 / (EURUSD * JPYEUR) [InverseProduct]
-                    it = std::find_if(map_.begin(), map_.end(),
-                                      [&foreign, &keyDomestic](const std::pair<string, Handle<FxIndex>>& x) {
-                                          return x.first == foreign + keyDomestic;
-                                      });
-                    if (it != map_.end()) {
-                        Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<InverseProduct>>(
-                            q1->fxQuote(), it->second->fxQuote(), InverseProduct()));
-                        Handle<Quote> spotCross = Handle<Quote>(
-                            boost::make_shared<FxSpotQuote>(todaysCross, q1->targetCurve(), it->second->sourceCurve(),
-                                                            spotDays, calendar, q1->referenceDate()));
-
-                        auto tmp = Handle<FxIndex>(
-                            boost::make_shared<FxIndex>(q1->referenceDate(), q1->familyName(), spotDays,
-                                                        q1->targetCurrency(), it->second->sourceCurrency(), calendar,
-                                                        spotCross, q1->targetCurve(), it->second->sourceCurve()));
-                        map_.push_back(std::make_pair(pair, tmp));
-                        return tmp;
-                    }
-                    // EURUSD, EURJPY  => we want EURJPY / EURUSD [Triangulation]
-                    it = std::find_if(map_.begin(), map_.end(),
-                                      [&foreign, &keyDomestic](const std::pair<string, Handle<FxIndex>>& x) {
-                                          return x.first == keyDomestic + foreign;
-                                      });
-                    if (it != map_.end()) {
-                        // Here q1 is EURUSD and it->second is EURJPY
-                        Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(
-                            it->second->fxQuote(), q1->fxQuote(), Triangulation()));
-                        Handle<Quote> spotCross = Handle<Quote>(
-                            boost::make_shared<FxSpotQuote>(todaysCross, q1->targetCurve(), it->second->targetCurve(),
-                                                            spotDays, calendar, q1->referenceDate()));
-
-                        auto tmp = Handle<FxIndex>(
-                            boost::make_shared<FxIndex>(q1->referenceDate(), q1->familyName(), spotDays,
-                                                        q1->targetCurrency(), it->second->targetCurrency(), calendar,
-                                                        spotCross, q1->targetCurve(), it->second->targetCurve()));
-                        map_.push_back(std::make_pair(pair, tmp));
-                        return tmp;
-                    }
+            auto [spotDays, calendar] = getFxIndexConventions(path[i] + path[i + 1]);
+            Date tmp = calendar.advance(refDate, spotDays * Days);
+            if (i == 0) {
+                settlementDate = tmp;
+            } else if (settlementDate != tmp) {
+                std::string msg = "FXTriangulation: got different settlement dates for " + path[i - 1] + path[i] +
+                                  " and " + path[i] + path[i + 1] + ": " + ore::data::to_string(settlementDate) + ", " +
+                                  ore::data::to_string(tmp) + " (today = " + ore::data::to_string(refDate) + ").";
+                if (enforceSpotLagConsistency) {
+                    QL_FAIL(msg);
+                } else {
+                    WLOG(msg);
                 }
             }
         }
-    }
-    // if don't throw return an empty handle
-    if (dontThrow)
-        return Handle<FxIndex>();
 
-    QL_FAIL("FXIndexTriangulation: Unable to build FxIndex for ccy pair " << pair);
+        // build the composite quote
+
+        auto f = [](const std::vector<Real>& quotes) {
+            return std::accumulate(quotes.begin(), quotes.end(), 1.0, std::multiplies());
+        };
+        result = Handle<Quote>(boost::make_shared<CompositeVectorQuote<decltype(f)>>(quotes, f));
+    }
+
+    // add the result to the lookup cache and return it
+
+    quoteCache_[pair] = result;
+    return result;
 }
+
+Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const Market* market) const {
+
+    // do we have a cached result?
+
+    if (auto it = indexCache_.find(indexOrPair); it != indexCache_.end()) {
+        return it->second;
+    }
+
+    // otherwise we need to construct the index
+
+    Handle<FxIndex> result;
+
+    std::string familyName;
+    std::string forCcy;
+    std::string domCcy;
+
+    if (isFxIndex(indexOrPair)) {
+        auto ind = parseFxIndex(indexOrPair);
+        familyName = ind->familyName();
+        forCcy = ind->sourceCurrency().code();
+        domCcy = ind->targetCurrency().code();
+    } else {
+        familyName = "GENERIC";
+        std::tie(forCcy, domCcy) = splitPair(indexOrPair);
+    }
+
+    // get the conventions of the result index
+
+    auto [fixingDays, fixingCalendar] = getFxIndexConventions(indexOrPair);
+
+    // get the discount curves for the result index
+
+    auto sourceYts = getMarketDiscountCurve(market, forCcy);
+    auto targetYts = getMarketDiscountCurve(market, domCcy);
+
+    // get the path from ccy1 to ccy2
+
+    auto path = getPath(forCcy, domCcy);
+
+    if (path.size() == 2) {
+
+        // we can use a direct or inverted quote, but do not need a composite
+
+        auto fxSpot = getQuote(path[0], path[1]);
+        result = Handle<FxIndex>(boost::make_shared<FxIndex>(familyName, fixingDays, parseCurrency(forCcy),
+                                                             parseCurrency(domCcy), fixingCalendar, fxSpot, sourceYts,
+                                                             targetYts));
+
+    } else {
+
+        // we need a composite quote
+
+        std::vector<Handle<Quote>> quotes;
+
+        // collect the quotes on the path and check consistency of the settlement dates
+
+        for (Size i = 0; i < path.size() - 1; ++i) {
+
+            auto q = getQuote(path[i], path[i + 1]);
+
+            // we store a quote "as of today" to account for possible spot lag differences
+
+            auto [fd, fc] = getFxIndexConventions(path[i] + path[i + 1]);
+            auto s_yts = getMarketDiscountCurve(market, path[i]);
+            auto t_yts = getMarketDiscountCurve(market, path[i + 1]);
+            quotes.push_back(Handle<Quote>(boost::make_shared<FxRateQuote>(q, s_yts, t_yts, fd, fc)));
+        }
+
+        // build the composite quote "as of today"
+
+        auto f = [](const std::vector<Real>& quotes) {
+            return std::accumulate(quotes.begin(), quotes.end(), 1.0, std::multiplies());
+        };
+        Handle<Quote> compQuote(boost::make_shared<CompositeVectorQuote<decltype(f)>>(quotes, f));
+
+        // build the spot quote
+
+        Handle<Quote> spotQuote(
+            boost::make_shared<FxSpotQuote>(compQuote, sourceYts, targetYts, fixingDays, fixingCalendar));
+
+        // build the idnex
+
+        result = Handle<FxIndex>(boost::make_shared<FxIndex>(familyName, fixingDays, parseCurrency(forCcy),
+                                                             parseCurrency(domCcy), fixingCalendar, spotQuote,
+                                                             sourceYts, targetYts));
+    }
+
+    // add the result to the lookup cache and return it
+
+    indexCache_[indexOrPair] = result;
+    return result;
+}
+
+std::vector<std::string> FXTriangulation::getPath(const std::string& forCcy, const std::string& domCcy) const {
+
+    // see https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+
+    Size sourceNode, targetNode;
+
+    if (auto it = ccyToNode_.find(forCcy); it != ccyToNode_.end()) {
+        sourceNode = it->second;
+    } else {
+        QL_FAIL("FXTriangulation: no conversion from '"
+                << forCcy << "' to '" << domCcy << "' possible, since '" << forCcy
+                << "' is not available as one of the currencies in any of the quotes (" << getAllQuotes() << ")");
+    }
+
+    if (auto it = ccyToNode_.find(domCcy); it != ccyToNode_.end()) {
+        targetNode = it->second;
+    } else {
+        QL_FAIL("FXTriangulation: no conversion from '"
+                << forCcy << "' to '" << domCcy << "' possible, since '" << domCcy
+                << "' is not available as one of the currencies in any of the quotes (" << getAllQuotes() << ")");
+    }
+
+    // previous node on the current shortest path
+    std::vector<Size> prev(nodeToCcy_.size(), Null<Size>());
+    // distance per node
+    std::vector<Size> dist(nodeToCcy_.size(), std::numeric_limits<Size>::max());
+    // visited flag
+    std::vector<bool> visited(nodeToCcy_.size(), false);
+
+    // init source
+    dist[sourceNode] = 0;
+
+    // main loop
+    Size noVisited = 0;
+    while (noVisited < nodeToCcy_.size()) {
+        Size u = Null<Size>(), min = std::numeric_limits<Size>::max();
+        for (Size i = 0; i < dist.size(); ++i) {
+            if (!visited[i] && dist[i] < min) {
+                u = i;
+                min = dist[i];
+            }
+        }
+        QL_REQUIRE(u != Null<Size>(), "FXTriangulation: internal error, no minimum found in dist array for '"
+                                          << forCcy << "' to '" << domCcy << "'. Quotes = " << getAllQuotes());
+        if (u == targetNode)
+            break;
+        visited[u] = true;
+        ++noVisited;
+        for (auto const& n : neighbours_[u]) {
+            if (visited[n])
+                continue;
+            Size alt = dist[u] + 1;
+            if (alt < dist[n]) {
+                dist[n] = alt;
+                prev[n] = u;
+            }
+        }
+    }
+
+    // did we find a path?
+    if (dist[targetNode] < std::numeric_limits<Size>::max()) {
+        std::vector<std::string> result;
+        Size u = targetNode;
+        while (u != sourceNode) {
+            result.insert(result.begin(), nodeToCcy_[u]);
+            u = prev[u];
+            QL_REQUIRE(u != Null<Size>(), "FXTriangulation: internal error u == null for '"
+                                              << forCcy << "' to '" << domCcy
+                                              << "'. Contact dev. Quotes = " << getAllQuotes() << ".");
+        }
+        result.insert(result.begin(), nodeToCcy_[sourceNode]);
+        TLOG("FXTriangulation: found path of length " << result.size() - 1 << " from '" << forCcy << "' to '" << domCcy
+                                                      << "'");
+        return result;
+    }
+
+    QL_FAIL("FXTriangulation: no path from '" << forCcy << "' to '" << domCcy
+                                              << "' found. Quotes = " << getAllQuotes());
+}
+
+Handle<Quote> FXTriangulation::getQuote(const std::string& forCcy, const std::string& domCcy) const {
+    if (auto it = quotes_.find(forCcy + domCcy); it != quotes_.end()) {
+        return it->second;
+    }
+    if (auto it = quotes_.find(domCcy + forCcy); it != quotes_.end()) {
+        auto f = [](Real x) { return 1.0 / x; };
+        return Handle<Quote>(boost::make_shared<DerivedQuote<decltype(f)>>(it->second, f));
+    }
+    QL_FAIL(
+        "FXTriangulation::getQuote(" << forCcy << domCcy
+                                     << ") - no such quote available. This is an internal error. Contact dev. Quotes = "
+                                     << getAllQuotes());
+}
+
+std::string FXTriangulation::getAllQuotes() const {
+    std::string result;
+    for (auto const& d : quotes_) {
+        result += d.first + ",";
+    }
+    result.erase(std::next(result.end(), -1));
+    return result;
+}
+
 } // namespace data
 } // namespace ore
