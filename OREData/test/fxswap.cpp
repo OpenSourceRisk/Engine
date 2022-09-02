@@ -62,9 +62,11 @@ public:
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")] = flatRateYts(0.05);
 
         // add fx rates
-        fxIndices_[Market::defaultConfiguration].addIndex("EURUSD", makeFxIndex("EURUSD", 1.2));
-        fxIndices_[Market::defaultConfiguration].addIndex("EURGBP", makeFxIndex("EURGBP", 1.4));
-        fxIndices_[Market::defaultConfiguration].addIndex("EURCHF", makeFxIndex("EURCHF", 1.3));
+	std::map<std::string, Handle<Quote>> quotes;
+	quotes["EURUSD"] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.2));
+	quotes["EURGBP"] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.4));
+	quotes["EURCHF"] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.3));
+	fx_ = boost::make_shared<FXTriangulation>(quotes);
 
         // build fx vols
         fxVols_[make_pair(Market::defaultConfiguration, "EURUSD")] = flatRateFxv(0.10);
