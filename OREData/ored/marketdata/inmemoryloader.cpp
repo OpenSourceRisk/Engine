@@ -37,13 +37,14 @@ boost::shared_ptr<MarketDatum> makeDummyMarketDatum(const Date& d, const std::st
 
 std::vector<boost::shared_ptr<MarketDatum>> InMemoryLoader::loadQuotes(const QuantLib::Date& d) const {
     auto it = data_.find(d);
-    QL_REQUIRE(it != data_.end(), "There are no quotes available for date " << d);
+    if(it == data_.end())
+	return {};
     return std::vector<boost::shared_ptr<MarketDatum>>(it->second.begin(), it->second.end());
 }
 
 boost::shared_ptr<MarketDatum> InMemoryLoader::get(const string& name, const QuantLib::Date& d) const {
     auto it = data_.find(d);
-    QL_REQUIRE(it != data_.end(), "There are no quotes available for date " << d);
+    QL_REQUIRE(it != data_.end(), "No datum for " << name << " on date " << d);
     auto it2 = it->second.find(makeDummyMarketDatum(d, name));
     QL_REQUIRE(it2 != it->second.end(), "No datum for " << name << " on date " << d);
     return *it2;
@@ -52,7 +53,8 @@ boost::shared_ptr<MarketDatum> InMemoryLoader::get(const string& name, const Qua
 std::set<boost::shared_ptr<MarketDatum>> InMemoryLoader::get(const std::set<std::string>& names,
                                                              const QuantLib::Date& asof) const {
     auto it = data_.find(asof);
-    QL_REQUIRE(it != data_.end(), "There are no quotes available for date " << asof);
+    if(it == data_.end())
+        return {};
     std::set<boost::shared_ptr<MarketDatum>> result;
     for (auto const& n : names) {
         auto it2 = it->second.find(makeDummyMarketDatum(asof, n));
@@ -65,7 +67,8 @@ std::set<boost::shared_ptr<MarketDatum>> InMemoryLoader::get(const std::set<std:
 std::set<boost::shared_ptr<MarketDatum>> InMemoryLoader::get(const Wildcard& wildcard,
                                                              const QuantLib::Date& asof) const {
     auto it = data_.find(asof);
-    QL_REQUIRE(it != data_.end(), "There are no quotes available for date " << asof);
+    if (it == data_.end())
+        return {};
     std::set<boost::shared_ptr<MarketDatum>> result;
     std::set<boost::shared_ptr<MarketDatum>>::iterator it1, it2;
     if (wildcard.wildcardPos() == std::string::npos || wildcard.wildcardPos() == 0) {
