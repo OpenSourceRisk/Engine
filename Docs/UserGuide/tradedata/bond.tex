@@ -76,6 +76,18 @@ Allowable values: See Table \ref{tab:calendar} Calendar.
 
 See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
+\item PriceQuoteMethod [Optional]: The quote method of the bond. Bond price quotes and historical bond prices (stored as
+  ``fixings'') follow this method. Also, the initial price for bond total return swaps follows this method. Defaults to
+  PerentageOfPar.
+
+  Allowable values: PercentageOfPar or CurrencyPerUnit
+
+\item PriceQuoteBaseValue [Optional]: The base value for quote method = CurrencyPerUnit. Bond price quotes, historical
+  bond prices stored as fixings and initial prices in bond total return swaps are divided by this value. Defaults to
+  1.0.
+
+  Allowable values: Any real number.
+
 \end{itemize}
 
 A LegData block then defines the cashflow structure of the bond, this can be of type fixed, floating etc. Note that a LegData block should only be included in the long version. 
@@ -91,6 +103,8 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
         <IssueDate>20160203</IssueDate>
+        <PriceQuoteMethod>PercentageOfPar</PriceQuoteMethod>
+        <PriceQuoteBaseValue>1.0</PriceQuoteBaseValue>
         <LegData>
             <LegType>Fixed</LegType>
             <Payer>false</Payer>

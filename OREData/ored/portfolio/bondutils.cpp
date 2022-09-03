@@ -11,11 +11,12 @@ namespace ore {
 namespace data {
 
 void populateFromBondReferenceData(std::string& issuerId, std::string& settlementDays, std::string& calendar,
-                                   std::string& issueDate, std::string& creditCurveId, std::string& creditGroup,
-                                   std::string& referenceCurveId, std::string& incomeCurveId,
-                                   std::string& volatilityCurveId, std::vector<LegData>& coupons,
-                                   const std::string& name, const boost::shared_ptr<BondReferenceDatum>& bondRefData,
-				   const std::string& startDate, const std::string& endDate) {
+                                   std::string& issueDate, std::string& priceQuoteMethod, string& priceQuoteBaseValue,
+                                   std::string& creditCurveId, std::string& creditGroup, std::string& referenceCurveId,
+                                   std::string& incomeCurveId, std::string& volatilityCurveId,
+                                   std::vector<LegData>& coupons, const std::string& name,
+                                   const boost::shared_ptr<BondReferenceDatum>& bondRefData,
+                                   const std::string& startDate, const std::string& endDate) {
     DLOG("populating data bond from reference data");
     QL_REQUIRE(bondRefData, "populateFromBondReferenceData(): empty bond reference datum given");
     if (issuerId.empty()) {
@@ -33,6 +34,14 @@ void populateFromBondReferenceData(std::string& issuerId, std::string& settlemen
     if (issueDate.empty()) {
         issueDate = bondRefData->bondData().issueDate;
         TLOG("overwrite issueDate with '" << issueDate << "'");
+    }
+    if (priceQuoteMethod.empty()) {
+        priceQuoteMethod = bondRefData->bondData().priceQuoteMethod;
+        TLOG("overwrite priceQuoteMethod with '" << priceQuoteMethod << "'");
+    }
+    if (priceQuoteBaseValue.empty()) {
+        priceQuoteBaseValue = bondRefData->bondData().priceQuoteBaseValue;
+        TLOG("overwrite priceQuoteBaseValue with '" << priceQuoteBaseValue << "'");
     }
     if (creditCurveId.empty()) {
         creditCurveId = bondRefData->bondData().creditCurveId;
