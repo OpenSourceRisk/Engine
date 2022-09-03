@@ -57,6 +57,8 @@ Handle<YieldTermStructure> getMarketDiscountCurve(const Market* market, const st
 
 FXTriangulation::FXTriangulation(std::map<std::string, Handle<Quote>> quotes) : quotes_(std::move(quotes)) {
 
+    LOG("FXTriangulation: initializing");
+
     // collect all currencies from the pairs
 
     std::set<std::string> ccys;
@@ -64,6 +66,7 @@ FXTriangulation::FXTriangulation(std::map<std::string, Handle<Quote>> quotes) : 
         auto [ccy1, ccy2] = splitPair(q.first);
         ccys.insert(ccy1);
         ccys.insert(ccy2);
+        TLOG("FXTriangulation: adding quote " << q.first);
     }
 
     // populate node to ccy and ccy to node containers
@@ -208,7 +211,7 @@ Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const 
 
         std::vector<Handle<Quote>> quotes;
 
-        // collect the quotes on the path and check consistency of the settlement dates
+        // collect the quotes on the path and store them as FxRate quotes ("as of today" - quotes)
 
         for (Size i = 0; i < path.size() - 1; ++i) {
 
@@ -318,8 +321,11 @@ std::vector<std::string> FXTriangulation::getPath(const std::string& forCcy, con
                                               << "'. Contact dev. Quotes = " << getAllQuotes() << ".");
         }
         result.insert(result.begin(), nodeToCcy_[sourceNode]);
-        TLOG("FXTriangulation: found path of length " << result.size() - 1 << " from '" << forCcy << "' to '" << domCcy
-                                                      << "'");
+        TLOG("FXTriangulation: found path of length "
+             << result.size() - 1 << " from '" << forCcy << "' to '" << domCcy << "': "
+             << std::accumulate(
+                    result.begin(), result.end(), std::string(),
+                    [](const std::string& s1, const std::string& s2) { return s1.empty() ? s2 : s1 + "-" + s2; }));
         return result;
     }
 
