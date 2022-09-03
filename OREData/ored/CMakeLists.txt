@@ -40,7 +40,6 @@ marketdata/equityvolcurve.cpp
 marketdata/expiry.cpp
 marketdata/fittedbondcurvehelpermarket.cpp
 marketdata/fixings.cpp
-marketdata/fxspot.cpp
 marketdata/fxtriangulation.cpp
 marketdata/fxvolcurve.cpp
 marketdata/genericyieldvolcurve.cpp
@@ -221,7 +220,6 @@ marketdata/equityvolcurve.hpp
 marketdata/expiry.hpp
 marketdata/fittedbondcurvehelpermarket.hpp
 marketdata/fixings.hpp
-marketdata/fxspot.hpp
 marketdata/fxtriangulation.hpp
 marketdata/fxvolcurve.hpp
 marketdata/genericyieldvolcurve.hpp

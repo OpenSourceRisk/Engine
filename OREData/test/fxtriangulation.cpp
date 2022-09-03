@@ -61,10 +61,12 @@ public:
 
     FxTriFixture() {
         // Initialise FX data
+	std::map<std::string, Handle<Quote>> quotes;
         for (const auto& p : data()) {
             Handle<Quote> q(boost::make_shared<SimpleQuote>(p.second));
-            fx.addQuote(p.first, q);
+            quotes[p.first] = q;
         }
+	fx = FXTriangulation(quotes);
     }
 
     ~FxTriFixture() {}

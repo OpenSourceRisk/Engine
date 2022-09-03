@@ -69,6 +69,33 @@ void FxRateQuote::update() {
     notifyObservers();
 }
 
+FxSpotQuote::FxSpotQuote(Handle<Quote> todaysQuote, const Handle<YieldTermStructure>& sourceYts,
+                         const Handle<YieldTermStructure>& targetYts, Natural fixingDays,
+                         const Calendar& fixingCalendar, Date refDate)
+    : todaysQuote_(todaysQuote), sourceYts_(sourceYts), targetYts_(targetYts), fixingDays_(fixingDays),
+      fixingCalendar_(fixingCalendar), refDate_(refDate) {
+    registerWith(todaysQuote_);
+    registerWith(sourceYts_);
+    registerWith(targetYts_);
+}
+
+Real FxSpotQuote::value() const {
+    QL_ENSURE(isValid(), "invalid FxSpotQuote");
+
+    Date today = refDate_ == Null<Date>() ? Settings::instance().evaluationDate() : refDate_;
+    Date refValueDate = fixingCalendar_.advance(fixingCalendar_.adjust(today), fixingDays_, Days);
+
+    return todaysQuote_->value() / targetYts_->discount(refValueDate) * sourceYts_->discount(refValueDate);
+}
+
+bool FxSpotQuote::isValid() const {
+    return !todaysQuote_.empty() && todaysQuote_->isValid() && !sourceYts_.empty() && !targetYts_.empty();
+}
+
+void FxSpotQuote::update() {
+    notifyObservers();
+}
+
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
                  const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts,
                  const Handle<YieldTermStructure>& targetYts, bool inverseIndex, bool fixingTriangulation)

@@ -153,43 +153,65 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
         return fxInd.currentLink();
 }
 
-void getFxIndexConventions(const string& index, Natural& fixingDays, Calendar& fixingCalendar) {
+std::pair<Natural, Calendar> getFxIndexConventions(const string& index) {
     // can take an fx index or ccy pair e.g. EURUSD
     string ccy1, ccy2;
+    string fixingSource;
     if (isFxIndex(index)) {
         auto ind = parseFxIndex(index);
         ccy1 = ind->sourceCurrency().code();
         ccy2 = ind->targetCurrency().code();
+	fixingSource = ind->familyName();
     } else {
         QL_REQUIRE(index.size() == 6, "getFxIndexConventions: index must be an FXIndex of form FX-ECB-EUR-USD, "
                                           << "or a currency pair e.g. EURUSD.");
         ccy1 = index.substr(0, 3);
         ccy2 = index.substr(3);
+	fixingSource = "GENERIC";
     }
 
+    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> con;
+    // first look for the index and inverse index directly
     try {
-        const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-        boost::shared_ptr<Convention> con;
-        try {
-            // first look for the index directly
-            con = conventions->get(index);
-        } catch (...) {
-            // then by currency pair
-            con = conventions->getFxConvention(ccy1, ccy2);
-        }
-        if (auto fxCon = boost::dynamic_pointer_cast<FXConvention>(con)) {
-            fixingDays = fxCon->spotDays();
-            fixingCalendar = fxCon->advanceCalendar();
-        }
+        con = conventions->get("FX-" + fixingSource + "-" + ccy1 + "-" + ccy2);
     } catch (...) {
-        fixingDays = 2;
-	// default calendar for pseudo currencies is USD
-	if(isPseudoCurrency(ccy1))
-	    ccy1 = "USD";
-	if(isPseudoCurrency(ccy2))
-            ccy2 = "USD";
-        fixingCalendar = parseCalendar(ccy1 + "," + ccy2);
     }
+    if (con == nullptr) {
+        try {
+            con = conventions->get("FX-" + fixingSource + "-" + ccy2 + "-" + ccy1);
+        } catch (...) {
+        }
+    }
+    // then by currency pair and inverse currency pair
+    if (con == nullptr) {
+        try {
+            con = conventions->getFxConvention(ccy1, ccy2);
+        } catch (...) {
+        }
+    }
+    if (con == nullptr) {
+        try {
+            con = conventions->getFxConvention(ccy2, ccy1);
+        } catch (...) {
+        }
+    }
+    if (auto fxCon = boost::dynamic_pointer_cast<FXConvention>(con)) {
+        return std::make_pair(fxCon->spotDays(), fxCon->advanceCalendar());
+    }
+
+    // default calendar for pseudo currencies is USD
+    if (isPseudoCurrency(ccy1))
+        ccy1 = "USD";
+    if (isPseudoCurrency(ccy2))
+        ccy2 = "USD";
+
+    try {
+        return std::make_pair(2, parseCalendar(ccy1 + "," + ccy2));
+    } catch (const std::exception& e) {
+        ALOG("could not get fx index convention for '" << index << "': " << e.what() << ", continue with 'USD'");
+    }
+    return std::make_pair(2, parseCalendar("USD"));
 }
 
 std::pair<std::string, QuantLib::Period> splitCurveIdWithTenor(const std::string& creditCurveId) {

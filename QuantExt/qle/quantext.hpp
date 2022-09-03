@@ -284,6 +284,7 @@
 #include <qle/processes/crcirppstateprocess.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
+#include <qle/quotes/compositevectorquote.hpp>
 #include <qle/quotes/exceptionquote.hpp>
 #include <qle/quotes/logquote.hpp>
 #include <qle/termstructures/adjusteddefaultcurve.hpp>
