@@ -69,9 +69,26 @@ FXTriangulation::FXTriangulation(std::map<std::string, Handle<Quote>> quotes) : 
         TLOG("FXTriangulation: adding quote " << q.first);
     }
 
-    // populate node to ccy and ccy to node containers
+    /* - populate node to ccy vector
+       - we insert currencies in the order we want to use them for triangulation if there
+         are several shortest paths from CCY1 to CCY2 */
 
-    nodeToCcy_.insert(nodeToCcy_.begin(), ccys.begin(), ccys.end());
+    static vector<string> ccyOrder = {"USD", "EUR", "GBP", "CHF", "JPY", "AUD", "CAD", "ZAR"};
+
+    std::set<std::string> remainingCcys(ccys);
+
+    for (auto const& c : ccyOrder) {
+        if (ccys.find(c) != ccys.end()) {
+            nodeToCcy_.push_back(c);
+            remainingCcys.erase(c);
+        }
+    }
+
+    for (auto const& c : remainingCcys) {
+        nodeToCcy_.push_back(c);
+    }
+
+    // populate ccy to node vector
 
     for (Size i = 0; i < nodeToCcy_.size(); ++i)
         ccyToNode_[nodeToCcy_[i]] = i;
@@ -102,6 +119,11 @@ Handle<Quote> FXTriangulation::getQuote(const std::string& pair, const bool enfo
 
     Handle<Quote> result;
     auto [ccy1, ccy2] = splitPair(pair);
+
+    // handle trivial case
+
+    if (ccy1 == ccy2)
+        return Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
 
     // get the path from ccy1 to ccy2
 
