@@ -161,14 +161,17 @@ std::pair<Natural, Calendar> getFxIndexConventions(const string& index) {
         auto ind = parseFxIndex(index);
         ccy1 = ind->sourceCurrency().code();
         ccy2 = ind->targetCurrency().code();
-	fixingSource = ind->familyName();
+        fixingSource = ind->familyName();
     } else {
         QL_REQUIRE(index.size() == 6, "getFxIndexConventions: index must be an FXIndex of form FX-ECB-EUR-USD, "
                                           << "or a currency pair e.g. EURUSD.");
         ccy1 = index.substr(0, 3);
         ccy2 = index.substr(3);
-	fixingSource = "GENERIC";
+        fixingSource = "GENERIC";
     }
+
+    if (ccy1 == ccy2)
+        return std::make_pair(0, NullCalendar());
 
     const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<Convention> con;
@@ -197,6 +200,8 @@ std::pair<Natural, Calendar> getFxIndexConventions(const string& index) {
         }
     }
     if (auto fxCon = boost::dynamic_pointer_cast<FXConvention>(con)) {
+        TLOG("getFxIndexConvention(" << index << "): " << fxCon->spotDays() << " / " << fxCon->advanceCalendar().name()
+                                     << " from convention.");
         return std::make_pair(fxCon->spotDays(), fxCon->advanceCalendar());
     }
 
@@ -207,10 +212,15 @@ std::pair<Natural, Calendar> getFxIndexConventions(const string& index) {
         ccy2 = "USD";
 
     try {
+        TLOG("getFxIndexConvention(" << index << "): 2 (default) / " << ccy1 << "," << ccy2
+                                     << " (default ccys), no convention found.");
         return std::make_pair(2, parseCalendar(ccy1 + "," + ccy2));
     } catch (const std::exception& e) {
         ALOG("could not get fx index convention for '" << index << "': " << e.what() << ", continue with 'USD'");
     }
+    TLOG("getFxIndexConvention(" << index
+                                 << "): 2 (default) / USD (default), no convention found, could not parse calendar '"
+                                 << (ccy1 + "," + ccy2) << "'");
     return std::make_pair(2, parseCalendar("USD"));
 }
 
