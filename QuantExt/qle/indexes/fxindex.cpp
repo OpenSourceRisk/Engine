@@ -189,7 +189,7 @@ Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
 
     Date today = Settings::instance().evaluationDate();
 
-    Real result = Null<Decimal>();
+    Real result = Null<Real>();
 
     if (adjustedFixingDate > today || (adjustedFixingDate == today && forecastTodaysFixing))
         result = forecastFixing(adjustedFixingDate);
@@ -236,11 +236,11 @@ Real FxIndex::forecastFixing(const Time& fixingTime) const {
 
     // time from ref to spot date
     Real spotTime = dc.yearFraction(refValueDate, spotValueDate);
-    Real fowardTime = spotTime + fixingTime;
+    Real forwardTime = spotTime + fixingTime;
 
     // compute the forecast applying the usual no arbitrage principle
-    Real forward = rate * sourceYts_->discount(fowardTime) * targetYts_->discount(spotTime) /
-                   targetYts_->discount(fowardTime) * sourceYts_->discount(spotTime);
+    Real forward = rate * sourceYts_->discount(forwardTime) * targetYts_->discount(spotTime) /
+                   (targetYts_->discount(forwardTime) * sourceYts_->discount(spotTime));
     return forward;
 }
 
