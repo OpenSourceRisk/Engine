@@ -45,13 +45,9 @@ public:
     explicit FXTriangulation(std::map<std::string, QuantLib::Handle<QuantLib::Quote>> quotes);
 
     /*! Get quote, possibly via triangulation
-        If triangulation involves different settlement dates w.r.t. given date "today", a warning will be logged.
-        If today is not specified, the current global evaluation date is used for the check.
-        If enforceSpotLagConsistency is set to true, an exception will be thrown in addition.
         If you need an exact handling of spot lag differences, use getIndex() instead.
     */
-    QuantLib::Handle<QuantLib::Quote> getQuote(const std::string& pair, const bool enforceSpotLagConsistency = false,
-                                               const Date& today = Date()) const;
+    QuantLib::Handle<QuantLib::Quote> getQuote(const std::string& pair) const;
 
     /*! Get fx index, possibly via triangulation. The index name can be of the form FX-TAG-CCY1-CCY2 or also
         be just a currency pair CCY1CCY2. In the latter case, the fixing source is set to TAG = GENERIC.

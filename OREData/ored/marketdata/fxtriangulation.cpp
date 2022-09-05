@@ -109,8 +109,7 @@ FXTriangulation::FXTriangulation(std::map<std::string, Handle<Quote>> quotes) : 
     LOG("FXTriangulation: initialized with " << quotes_.size() << " quotes, " << ccys.size() << " currencies.");
 }
 
-Handle<Quote> FXTriangulation::getQuote(const std::string& pair, const bool enforceSpotLagConsistency,
-                                        const Date& today) const {
+Handle<Quote> FXTriangulation::getQuote(const std::string& pair) const {
 
     // do we have a cached result?
 
@@ -141,30 +140,12 @@ Handle<Quote> FXTriangulation::getQuote(const std::string& pair, const bool enfo
 
         // we need a composite quote
 
-        Date refDate = today == Date() ? Settings::instance().evaluationDate() : today;
-        Date settlementDate;
         std::vector<Handle<Quote>> quotes;
 
         // collect the quotes on the path and check consistency of the settlement dates
 
         for (Size i = 0; i < path.size() - 1; ++i) {
-
             quotes.push_back(getQuote(path[i], path[i + 1]));
-
-            auto [spotDays, calendar] = getFxIndexConventions(path[i] + path[i + 1]);
-            Date tmp = calendar.advance(calendar.adjust(refDate), spotDays * Days);
-            if (i == 0) {
-                settlementDate = tmp;
-            } else if (settlementDate != tmp) {
-                std::string msg = "FXTriangulation: got different settlement dates for " + path[i - 1] + path[i] +
-                                  " and " + path[i] + path[i + 1] + ": " + ore::data::to_string(settlementDate) + ", " +
-                                  ore::data::to_string(tmp) + " (today = " + ore::data::to_string(refDate) + ").";
-                if (enforceSpotLagConsistency) {
-                    QL_FAIL(msg);
-                } else {
-                    WLOG(msg);
-                }
-            }
         }
 
         // build the composite quote
