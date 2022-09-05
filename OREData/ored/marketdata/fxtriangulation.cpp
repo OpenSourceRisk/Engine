@@ -41,7 +41,7 @@ namespace data {
 namespace {
 
 std::pair<std::string, std::string> splitPair(const std::string& pair) {
-    QL_REQUIRE(pair.size() == 6, "FXTriangulation: Inavlid currency pair '" << pair << "'");
+    QL_REQUIRE(pair.size() == 6, "FXTriangulation: Invalid currency pair '" << pair << "'");
     return std::make_pair(pair.substr(0, 3), pair.substr(3));
 }
 
