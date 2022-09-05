@@ -212,9 +212,10 @@ std::pair<Natural, Calendar> getFxIndexConventions(const string& index) {
         ccy2 = "USD";
 
     try {
-        TLOG("getFxIndexConvention(" << index << "): 2 (default) / " << ccy1 << "," << ccy2
-                                     << " (default ccys), no convention found.");
-        return std::make_pair(2, parseCalendar(ccy1 + "," + ccy2));
+	Calendar cal = parseCalendar(ccy1 + "," + ccy2);
+        TLOG("getFxIndexConvention(" << index << "): 2 (default) / " << cal.name()
+                                     << " (from ccys), no convention found.");
+        return std::make_pair(2, cal);
     } catch (const std::exception& e) {
         ALOG("could not get fx index convention for '" << index << "': " << e.what() << ", continue with 'USD'");
     }
