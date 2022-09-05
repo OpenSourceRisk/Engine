@@ -49,7 +49,9 @@ Handle<YieldTermStructure> getMarketDiscountCurve(const Market* market, const st
     try {
         return market->discountCurve(ccy);
     } catch (const std::exception& e) {
-        QL_FAIL("FXTriangulation: could not get market discount curve '" << ccy << "'");
+        WLOG("FXTriangulation: could not get market discount curve '"
+             << ccy << "' - this can cause errors when compounding between today and spot is required");
+        return Handle<YieldTermStructure>();
     }
 }
 
