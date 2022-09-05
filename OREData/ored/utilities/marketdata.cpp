@@ -186,16 +186,10 @@ std::pair<Natural, Calendar> getFxIndexConventions(const string& index) {
         } catch (...) {
         }
     }
-    // then by currency pair and inverse currency pair
+    // then by currency pair and inverse currency pair (getFxConvention() handles both)
     if (con == nullptr) {
         try {
             con = conventions->getFxConvention(ccy1, ccy2);
-        } catch (...) {
-        }
-    }
-    if (con == nullptr) {
-        try {
-            con = conventions->getFxConvention(ccy2, ccy1);
         } catch (...) {
         }
     }
