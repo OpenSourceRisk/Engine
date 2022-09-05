@@ -161,8 +161,6 @@ const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {
 Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
 
     Date adjustedFixingDate = fixingCalendar().adjust(fixingDate, Preceding);
-    QL_REQUIRE(isValidFixingDate(adjustedFixingDate),
-               "Fixing date " << adjustedFixingDate << " is not valid for FxIndex '" << name() << "'");
 
     Date today = Settings::instance().evaluationDate();
 
@@ -193,14 +191,15 @@ Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
 }
 
 Real FxIndex::forecastFixing(const Time& fixingTime) const {
-    QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(), "null term structure set to this instance of " << name());
+    QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(),
+               "FxIndex::forecastFixing(): null term structure set to this instance of " << name());
 
     // we base the forecast always on the exchange rate (and not on today's fixing)
     Real rate;
     if (!useQuote_) {
         rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
     } else {
-        QL_REQUIRE(!fxSpot_.empty(), "FxIndex::forecastFixing(): fx quote required");
+        QL_REQUIRE(!fxSpot_.empty(), "FxIndex::forecastFixing(): fx quote required for " << name());
         rate = fxSpot_->value();
     }
 
@@ -208,11 +207,11 @@ Real FxIndex::forecastFixing(const Time& fixingTime) const {
     DayCounter dc = Actual365Fixed();
 
     // to make the spot adjustment we get the time to spot, and also add this to fixing time
-    Date refValueDate = sourceYts_->referenceDate();
-    Date spotValueDate = valueDate(refValueDate);
+    Date refDate = sourceYts_->referenceDate();
+    Date spotValueDate = valueDate(fixingCalendar().adjust(refDate));
 
     // time from ref to spot date
-    Real spotTime = dc.yearFraction(refValueDate, spotValueDate);
+    Real spotTime = dc.yearFraction(refDate, spotValueDate);
     Real forwardTime = spotTime + fixingTime;
 
     QL_REQUIRE(forwardTime > 0.0 || close_enough(forwardTime, 0.0),
@@ -234,13 +233,13 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     if (!useQuote_) {
         rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
     } else {
-        QL_REQUIRE(!fxSpot_.empty(), "FxIndex::forecastFixing(): fx quote required");
+        QL_REQUIRE(!fxSpot_.empty(), "FxIndex::forecastFixing(): fx quote required for " << name());
         rate = fxSpot_->value();
     }
 
     // the exchange rate is interpreted as the spot rate w.r.t. the index's
     // settlement date
-    Date refValueDate = valueDate(sourceYts_->referenceDate());
+    Date refValueDate = valueDate(fixingCalendar().adjust(sourceYts_->referenceDate()));
 
     // the fixing is obeying the settlement delay as well
     Date fixingValueDate = valueDate(fixingDate);
@@ -249,7 +248,7 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     QL_REQUIRE(fixingValueDate >= refValueDate, "value date for requested fixing as of "
                                                     << fixingDate << " (" << fixingValueDate
                                                     << ") must be greater or equal to today's fixing value date ("
-                                                    << refValueDate << ")");
+                                                    << refValueDate << ") for " << name());
 
     // compute the forecast applying the usual no arbitrage principle
     Real forward = rate * sourceYts_->discount(fixingValueDate) * targetYts_->discount(refValueDate) /
@@ -286,12 +285,16 @@ Date FxIndex::fixingDate(const Date& valueDate) const {
 }
 
 Date FxIndex::valueDate(const Date& fixingDate) const {
-    QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
+    QL_REQUIRE(isValidFixingDate(fixingDate),
+               "FxIndex::valueDate(): " << fixingDate << " is not a valid fixing date for " << name()
+                                        << " (calendar is " << fixingCalendar().name() << ")");
     return fixingCalendar().advance(fixingDate, fixingDays_, Days);
 }
 
 Real FxIndex::pastFixing(const Date& fixingDate) const {
-    QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
+    QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << "FxIndex::pastFixing(): is not a valid fixing date for "
+                                                         << name() << " (calendar is " << fixingCalendar().name()
+                                                         << ")");
 
     Real fixing = timeSeries()[fixingDate];
     if (fixing != Null<Real>())
