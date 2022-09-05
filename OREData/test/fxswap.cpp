@@ -50,9 +50,12 @@ public:
             new ore::data::FXConvention("USD-CHF-FX", "0", "USD", "CHF", "10000", "USD,CHF"));
         boost::shared_ptr<ore::data::Convention> usdGbpConv(
             new ore::data::FXConvention("USD-GBP-FX", "0", "USD", "GBP", "10000", "USD,GBP"));
+        boost::shared_ptr<ore::data::Convention> usdEurConv(
+            new ore::data::FXConvention("USD-EUR-FX", "0", "USD", "EUR", "10000", "USD,EUR"));
 
         conventions->add(usdChfConv);
         conventions->add(usdGbpConv);
+        conventions->add(usdEurConv);
         InstrumentConventions::instance().setConventions(conventions);
 
         // build discount
@@ -76,7 +79,7 @@ public:
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward) {
-        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(4, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
+        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
         return Handle<YieldTermStructure>(yts);
     }
     Handle<BlackVolTermStructure> flatRateFxv(Volatility forward) {

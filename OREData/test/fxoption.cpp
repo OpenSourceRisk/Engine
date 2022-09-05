@@ -51,6 +51,11 @@ public:
         quotes["EURUSD"] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.2));
         fx_ = boost::make_shared<FXTriangulation>(quotes);
 
+        // add fx conventions
+        auto conventions = boost::make_shared<Conventions>();
+        conventions->add(boost::make_shared<FXConvention>("EUR-USD-FX", "0", "EUR", "USD", "10000", "EUR,USD"));
+        InstrumentConventions::instance().setConventions(conventions);
+
         // build fx vols
         fxVols_[make_pair(Market::defaultConfiguration, "EURUSD")] = flatRateFxv(0.10);
     }
@@ -66,6 +71,12 @@ public:
         // add fx rates
         std::map<std::string, QuantLib::Handle<QuantLib::Quote>> quotes;
         quotes["JPYEUR"] = Handle<Quote>(boost::make_shared<SimpleQuote>(spot));
+        fx_ = boost::make_shared<FXTriangulation>(quotes);
+
+        // add fx conventions
+        auto conventions = boost::make_shared<Conventions>();
+        conventions->add(boost::make_shared<FXConvention>("EUR-JPY-FX", "0", "EUR", "JPY", "10000", "EUR,JPY"));
+        InstrumentConventions::instance().setConventions(conventions);
 
         // build fx vols
         fxVols_[make_pair(Market::defaultConfiguration, "JPYEUR")] = flatRateFxv(vol, Actual360());
