@@ -42,3 +42,4 @@ struct CommonData {
           cpiFixings({{Date(1, May, 2022), 98.}, {Date(1, June, 2022), 100.}, {Date(1, July, 2022), 104.}}),
           obsLag(2, Months){};
 };
+} // namespace

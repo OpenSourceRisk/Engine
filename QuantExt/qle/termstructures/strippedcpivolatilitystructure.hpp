@@ -147,8 +147,8 @@ StrippedCPIVolatilitySurface<Interpolator2D>::StrippedCPIVolatilitySurface(
     PriceQuotePreference type, const QuantLib::Handle<QuantLib::CPICapFloorTermPriceSurface>& priceSurface,
     const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
     const boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine>& engine, // const QuantLib::Real& baseCPI,
-    const bool useLastFixingAsBaseDate, const QuantLib::Real& upperVolBound, const QuantLib::Real& lowerVolBound,
-    const QuantLib::Real& solverTolerance, const Interpolator2D& interpolator2d)
+    const QuantLib::Real& upperVolBound, const QuantLib::Real& lowerVolBound, const QuantLib::Real& solverTolerance,
+    const bool useLastFixingAsBaseDate, const Interpolator2D& interpolator2d)
     : CPIVolatilitySurface(priceSurface->settlementDays(), priceSurface->calendar(),
                            priceSurface->businessDayConvention(), priceSurface->dayCounter(),
                            priceSurface->observationLag(), index->frequency(), index->interpolated()),
