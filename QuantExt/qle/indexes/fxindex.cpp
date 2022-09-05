@@ -57,13 +57,16 @@ Real FxRateQuote::value() const {
 
     Date today = refDate_ == Null<Date>() ? Settings::instance().evaluationDate() : refDate_;
     Date refValueDate = fixingCalendar_.advance(fixingCalendar_.adjust(today), fixingDays_, Days);
-
-    return spotQuote_->value() * targetYts_->discount(refValueDate) / sourceYts_->discount(refValueDate);
+    if(today == refValueDate)
+	return spotQuote_->value();
+    else {
+        QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(),
+                   "FxRateQuote: empty curve handles, need curves to discount from spot to today");
+        return spotQuote_->value() * targetYts_->discount(refValueDate) / sourceYts_->discount(refValueDate);
+    }
 }
 
-bool FxRateQuote::isValid() const { 
-    return !spotQuote_.empty() && spotQuote_->isValid() && !sourceYts_.empty() && !targetYts_.empty();
-}
+bool FxRateQuote::isValid() const { return !spotQuote_.empty() && spotQuote_->isValid(); }
 
 void FxRateQuote::update() { 
     notifyObservers();
@@ -84,8 +87,13 @@ Real FxSpotQuote::value() const {
 
     Date today = refDate_ == Null<Date>() ? Settings::instance().evaluationDate() : refDate_;
     Date refValueDate = fixingCalendar_.advance(fixingCalendar_.adjust(today), fixingDays_, Days);
-
-    return todaysQuote_->value() / targetYts_->discount(refValueDate) * sourceYts_->discount(refValueDate);
+    if (today == refValueDate)
+        return todaysQuote_->value();
+    else {
+        QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(),
+                   "FxSpotQuote: empty curve handles, need curve to compound from today to spot");
+        return todaysQuote_->value() / targetYts_->discount(refValueDate) * sourceYts_->discount(refValueDate);
+    }
 }
 
 bool FxSpotQuote::isValid() const {
