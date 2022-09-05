@@ -62,6 +62,10 @@ Real FxRateQuote::value() const {
     else {
         QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(),
                    "FxRateQuote: empty curve handles, need curves to discount from spot to today");
+        QL_REQUIRE(sourceYts_->referenceDate() == today && targetYts_->referenceDate() == today,
+                   "FxRateQuote: curve reference dates (" << sourceYts_->referenceDate() << ", "
+                                                          << targetYts_->referenceDate() << ") must match 'today' ("
+                                                          << today << ")");
         return spotQuote_->value() * targetYts_->discount(refValueDate) / sourceYts_->discount(refValueDate);
     }
 }
@@ -92,6 +96,10 @@ Real FxSpotQuote::value() const {
     else {
         QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(),
                    "FxSpotQuote: empty curve handles, need curve to compound from today to spot");
+        QL_REQUIRE(sourceYts_->referenceDate() == today && targetYts_->referenceDate() == today,
+                   "FxRateQuote: curve reference dates (" << sourceYts_->referenceDate() << ", "
+                                                          << targetYts_->referenceDate() << ") must match 'today' ("
+                                                          << today << ")");
         return todaysQuote_->value() / targetYts_->discount(refValueDate) * sourceYts_->discount(refValueDate);
     }
 }
@@ -246,6 +254,13 @@ Real FxIndex::forecastFixing(const Time& fixingTime) const {
     Real spotTime = dc.yearFraction(refValueDate, spotValueDate);
     Real forwardTime = spotTime + fixingTime;
 
+    QL_REQUIRE(spotTime > 0.0 || close_enough(spotTime, 0.0), "FxIndex::forecastFixing("
+                                                                  << fixingTime << "): spotTime (" << spotTime
+                                                                  << ") is negative for " << name());
+    QL_REQUIRE(forwardTime > 0.0 || close_enough(forwardTime, 0.0),
+               "FxIndex::forecastFixing(" << fixingTime << "): forwardTime (" << forwardTime << ") is negative for "
+                                          << name());
+
     // compute the forecast applying the usual no arbitrage principle
     Real forward = rate * sourceYts_->discount(forwardTime) * targetYts_->discount(spotTime) /
                    (targetYts_->discount(forwardTime) * sourceYts_->discount(spotTime));
@@ -277,6 +292,15 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
                                                     << fixingDate << " (" << fixingValueDate
                                                     << ") must be greater or equal to today's fixing value date ("
                                                     << refValueDate << ")");
+
+    QL_REQUIRE(refValueDate >= sourceYts_->referenceDate(), "FxIndex::forecastFixing("
+                                                                << fixingDate << "): refValueDate (" << refValueDate
+                                                                << ") is earlier than curve ref date ("
+                                                                << sourceYts_->referenceDate() << ") for " << name());
+    QL_REQUIRE(fixingValueDate >= sourceYts_->referenceDate(),
+               "FxIndex::forecastFixing(" << fixingDate << "): fixingValueDate (" << fixingValueDate
+                                          << ") is earlier than curve ref date (" << sourceYts_->referenceDate()
+                                          << ") for " << name());
 
     // compute the forecast applying the usual no arbitrage principle
     Real forward = rate * sourceYts_->discount(fixingValueDate) * targetYts_->discount(refValueDate) /
