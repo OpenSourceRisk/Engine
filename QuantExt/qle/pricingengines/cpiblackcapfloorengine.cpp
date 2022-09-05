@@ -39,27 +39,16 @@ CPIBlackCapFloorEngine::CPIBlackCapFloorEngine(const Handle<YieldTermStructure>&
     registerWith(volatilitySurface_);
 }
 
-void CPIBlackCapFloorEngine::calculate() const {
-
-    QL_REQUIRE(arguments_.observationInterpolation == QuantLib::CPI::AsIndex ||
-                   arguments_.observationInterpolation == QuantLib::CPI::Flat ||
-                   arguments_.observationInterpolation == QuantLib::CPI::Linear,
-               "observation interpolation as index required");
-    // Maturity adjustment for lag difference as in the QuantLib engine
-    Period lagDiff = arguments_.observationLag - volatilitySurface_->observationLag();
-    QL_REQUIRE(lagDiff >= Period(0, Months), "CPIBlackCapFloorEngine: "
-                                             "lag difference must be non-negative: "
-                                                 << lagDiff);
+void CPIBlackCapFloorEngine::calculate() const { 
     Date maturity = arguments_.payDate;
+    
     auto index = arguments_.infIndex;
-
-
     DiscountFactor d = arguments_.nominal * discountCurve_->discount(maturity);
 
     bool isInterpolated = arguments_.observationInterpolation == CPI::Linear ||
                           (arguments_.observationInterpolation == CPI::AsIndex && arguments_.infIndex->interpolated());
 
-    Date observationDate = arguments_.payDate - arguments_.observationLag;
+    Date optionObservationDate = arguments_.payDate - arguments_.observationLag;
 
     Date optionBaseDate = arguments_.startDate - arguments_.observationLag;
     
@@ -68,18 +57,18 @@ void CPIBlackCapFloorEngine::calculate() const {
                                                      arguments_.observationLag, isInterpolated)
                           : arguments_.baseCPI;
 
-    Real expectedCPIFixing = ZeroInflation::cpiFixing(*arguments_.infIndex.currentLink(), maturity,
+    Real atmCPIFixing = ZeroInflation::cpiFixing(*arguments_.infIndex.currentLink(), maturity,
                                                       arguments_.observationLag, isInterpolated);
 
     Time ttm =
         inflationYearFraction(index->frequency(), isInterpolated, index->zeroInflationTermStructure()->dayCounter(),
-                              optionBaseDate, observationDate);
+                              optionBaseDate, optionObservationDate);
 
-    Real atmGrowth = expectedCPIFixing / optionBaseFixing;
+    Real atmGrowth = atmCPIFixing / optionBaseFixing;
     Real strike = std::pow(1.0 + arguments_.strike, ttm); 
 
     auto lastKnownFixing = ZeroInflation::lastAvailableFixing(*index.currentLink(), volatilitySurface_->referenceDate());
-    auto observationPeriod = inflationPeriod(observationDate, index->frequency());
+    auto observationPeriod = inflationPeriod(optionObservationDate, index->frequency());
     auto requiredFixing = isInterpolated ? observationPeriod.first : observationPeriod.second + 1 * Days;
     
 
@@ -89,15 +78,15 @@ void CPIBlackCapFloorEngine::calculate() const {
         // For reading volatility in the current market volatiltiy structure
         // baseFixingSwap(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t),
         // solve for strikeRate(t):
-        auto baseDate = ZeroInflation::effectiveObservationDate(
+        auto surfaceBaseDate = ZeroInflation::effectiveObservationDate(
             volatilitySurface_->referenceDate(), volatilitySurface_->observationLag(), volatilitySurface_->frequency(),
             volatilitySurface_->indexIsInterpolated());
-        auto baseFixing = ZeroInflation::cpiFixing(*index.currentLink(), volatilitySurface_->referenceDate(),
+        auto surfaceBaseFixing = ZeroInflation::cpiFixing(*index.currentLink(), volatilitySurface_->referenceDate(),
                                      volatilitySurface_->observationLag(), volatilitySurface_->indexIsInterpolated());
-        auto ttmBase = inflationYearFraction(volatilitySurface_->frequency(), volatilitySurface_->indexIsInterpolated(),
-                                             volatilitySurface_->dayCounter(), baseDate, observationDate);
-        Real strikeZeroRate = pow(optionBaseFixing / baseFixing * strike, 1.0 / ttmBase) - 1.0;
-        stdDev = std::sqrt(volatilitySurface_->totalVariance(observationDate, strikeZeroRate, 0 * Days));
+        auto ttmSurface = inflationYearFraction(volatilitySurface_->frequency(), volatilitySurface_->indexIsInterpolated(),
+                                  volatilitySurface_->dayCounter(), surfaceBaseDate, optionObservationDate);
+        Real strikeZeroRate = pow(optionBaseFixing / surfaceBaseFixing * strike, 1.0 / ttmSurface) - 1.0;
+        stdDev = std::sqrt(volatilitySurface_->totalVariance(optionObservationDate, strikeZeroRate, 0 * Days));
     }
     results_.value = blackFormula(arguments_.type, strike, atmGrowth, stdDev, d);
 
