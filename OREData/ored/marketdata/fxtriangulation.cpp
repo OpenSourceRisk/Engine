@@ -150,7 +150,7 @@ Handle<Quote> FXTriangulation::getQuote(const std::string& pair, const bool enfo
             quotes.push_back(getQuote(path[i], path[i + 1]));
 
             auto [spotDays, calendar] = getFxIndexConventions(path[i] + path[i + 1]);
-            Date tmp = calendar.advance(refDate, spotDays * Days);
+            Date tmp = calendar.advance(calendar.adjust(refDate), spotDays * Days);
             if (i == 0) {
                 settlementDate = tmp;
             } else if (settlementDate != tmp) {
