@@ -86,15 +86,6 @@ private:
         boost::shared_ptr<BlackVolTermStructure> fxv(new BlackConstantVol(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
         return Handle<BlackVolTermStructure>(fxv);
     }
-    Handle<QuantExt::FxIndex> makeFxIndex(string index, Real spot) {
-        string ccy1 = index.substr(0, 3);
-        string ccy2 = index.substr(3);
-
-        return Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
-            Settings::instance().evaluationDate(), index, 0, parseCurrency(ccy1), parseCurrency(ccy2),
-            parseCalendar(ccy1 + "," + ccy2), Handle<Quote>(boost::make_shared<SimpleQuote>(spot)), discountCurve(ccy1),
-            discountCurve(ccy2), false));
-    }
 };
 } // namespace
 
