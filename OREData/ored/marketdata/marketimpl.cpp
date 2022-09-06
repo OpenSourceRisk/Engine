@@ -197,59 +197,9 @@ Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(const string&
 }
 
 Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const string& configuration) const {
-
-    require(MarketObject::FXSpot, fxIndex, configuration);
-    auto it = fxIndices_.find(configuration);
-    if (it == fxIndices_.end())
-        it = fxIndices_.find(Market::defaultConfiguration);
-    
-    Handle<FxIndex> fxInd;
-    if (it != fxIndices_.end()) {
-        fxInd = it->second.getIndex(fxIndex, true); // don't throw error here
-    }
-
-    // we try the inverse if an empty handle, this in mainly for lazy builds 
-    // where only the inverse is specified in the market
-    if (fxInd.empty() && !isFxIndex(fxIndex)) {
-        string ccypairInverted = fxIndex.substr(3, 3) + fxIndex.substr(0, 3);
-        require(MarketObject::FXSpot, ccypairInverted, configuration);
-        auto iti = fxIndices_.find(configuration);
-        if (iti == fxIndices_.end())
-            iti = fxIndices_.find(Market::defaultConfiguration);
-        QL_REQUIRE(iti != fxIndices_.end(), "did not find object "
-                                                << fxIndex << " of type fx index under configuration '" << configuration
-                                               << "' or 'default'");
-
-        // still look up by ccypair, not inverted ccypair, the triangulation will handle
-        fxInd = iti->second.getIndex(fxIndex); // throws error here is still not found
-    }
-
-    // if an index and doesn't already exist, build and add to cache
-    if (fxInd.empty() && isFxIndex(fxIndex)) {
-        // Parse the index we have with no term structures
-        boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
-
-        // get market data objects - we set up the index using source/target, fixing days
-        // and calendar from legData_[i].fxIndex()
-        string source = fxIndexBase->sourceCurrency().code();
-        string target = fxIndexBase->targetCurrency().code();
-
-        auto sorTS = discountCurve(source);
-        auto tarTS = discountCurve(target);
-        auto spot = fxSpot(source + target);
-
-        Natural spotDays;
-        Calendar calendar;
-        getFxIndexConventions(fxIndex, spotDays, calendar);
-
-        fxInd = Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
-            fxIndexBase->familyName(), spotDays, fxIndexBase->sourceCurrency(),
-            fxIndexBase->targetCurrency(), calendar, spot, sorTS, tarTS));
-
-        fxIndices_[Market::defaultConfiguration].addIndex(fxIndex, fxInd);
-    }
-
-    return fxInd;
+    QL_REQUIRE(fx_ != nullptr,
+               "MarketImpl::fxIndex(" << fxIndex << "): fx_ is null. This is an internal error. Contact dev.");
+    return fx_->getIndex(fxIndex, this);
 }
 
 Handle<Quote> MarketImpl::fxRate(const string& ccypair, const string& configuration) const {

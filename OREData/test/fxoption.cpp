@@ -47,11 +47,14 @@ public:
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = flatRateYts(0.03);
 
         // add fx rates
-        fxIndices_[Market::defaultConfiguration].addIndex(
-            "EURUSD", Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
-                          asof_, "EURUSD", 0, parseCurrency("EUR"), parseCurrency("USD"), parseCalendar("EUR,USD"),
-                          Handle<Quote>(boost::make_shared<SimpleQuote>(1.2)), discountCurve("EUR"),
-                          discountCurve("USD"), false)));
+        std::map<std::string, QuantLib::Handle<QuantLib::Quote>> quotes;
+        quotes["EURUSD"] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.2));
+        fx_ = boost::make_shared<FXTriangulation>(quotes);
+
+        // add fx conventions
+        auto conventions = boost::make_shared<Conventions>();
+        conventions->add(boost::make_shared<FXConvention>("EUR-USD-FX", "0", "EUR", "USD", "10000", "EUR,USD"));
+        InstrumentConventions::instance().setConventions(conventions);
 
         // build fx vols
         fxVols_[make_pair(Market::defaultConfiguration, "EURUSD")] = flatRateFxv(0.10);
@@ -66,10 +69,14 @@ public:
             flatRateYts(q, Actual360());
 
         // add fx rates
-        fxIndices_[Market::defaultConfiguration].addIndex("JPYEUR", 
-            Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
-                asof_, "JPYEUR", 0, parseCurrency("JPY"), parseCurrency("EUR"), parseCalendar("EUR,USD"),
-                Handle<Quote>(boost::make_shared<SimpleQuote>(spot)), discountCurve("JPY"), discountCurve("EUR"), false)));
+        std::map<std::string, QuantLib::Handle<QuantLib::Quote>> quotes;
+        quotes["JPYEUR"] = Handle<Quote>(boost::make_shared<SimpleQuote>(spot));
+        fx_ = boost::make_shared<FXTriangulation>(quotes);
+
+        // add fx conventions
+        auto conventions = boost::make_shared<Conventions>();
+        conventions->add(boost::make_shared<FXConvention>("EUR-JPY-FX", "0", "EUR", "JPY", "10000", "EUR,JPY"));
+        InstrumentConventions::instance().setConventions(conventions);
 
         // build fx vols
         fxVols_[make_pair(Market::defaultConfiguration, "JPYEUR")] = flatRateFxv(vol, Actual360());
