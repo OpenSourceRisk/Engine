@@ -22,7 +22,7 @@ Listing \ref{lst:cmblegdata} shows an example for a leg of type CMB.
           ...
         </ScheduleData>
         <CMBLegData>
-          <Index>CMB-US-TBILL-USD-10Y</Index>
+          <Index>CMB-US-TBILL-13W</Index>
           <FixingDays>2</FixingDays>
           <Spreads>
             <Spread>0.0010</Spread>
@@ -42,13 +42,13 @@ The CMBLegData block contains the following elements:
 \begin{itemize}
 \item Index: The underlying CMB index.
 
-Allowable values: A string of the form CMB-FAMILY-TENOR, where FAMILY might consist of several tokens separated by ``-'' as e.g. in CMB-US-TBILL-5Y or CMB-DE-BUND-10Y, and TENOR is a valid period.
+Allowable values: A string of the form CMB-FAMILY-TENOR, where FAMILY might consist of several tokens separated by ``-'' as e.g. in CMB-US-TBILL-HD or CMB-DE-BUND, and TENOR is a valid period.
 
 \item Spreads [Optional]: The spreads applied to index fixings. As usual, this can be a single value, a vector of values or a dated vector of
   values.
   
   Allowable values: Each child spread element can take any real number. The spread is expressed in decimal form, e.g. 0.005 is
-  a spread of 0.5\% or 50 bp. 
+  a spread of 0.5\% or 50 bp.  Defaults to zero if left blank or omitted.
     
 \item FixingDays: This is the fixing gap, i.e. the number of days
   before the period end date an index fixing is taken. Defaults to the index's fixing gap.
