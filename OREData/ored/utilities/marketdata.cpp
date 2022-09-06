@@ -124,33 +124,23 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
                                                   const boost::shared_ptr<Market>& market, const string& configuration,
                                                   bool useXbsCurves) {
 
-    // get the base index from the market for the currency pair
-    Handle<QuantExt::FxIndex> fxInd = market->fxIndex(fxIndex);
+    auto fxInd = parseFxIndex(fxIndex);
 
-    // check if we need to invert the index
     string source = fxInd->sourceCurrency().code();
     string target = fxInd->targetCurrency().code();
-    bool invertFxIndex = false;
-    if (!domestic.empty() && !foreign.empty()) {
-        if (domestic == target && foreign == source) {
-            invertFxIndex = false;
-        } else if (domestic == source && foreign == target) {
-            invertFxIndex = true;
-        } else {
-            QL_FAIL("Cannot combine FX Index " << fxIndex << " with reset ccy " << domestic
-                                               << " and reset foreignCurrency " << foreign);
-        }
-    }
+    string family = fxInd->familyName();
 
-    Handle<YieldTermStructure> sorTS, tarTS;
-    if (useXbsCurves) {
-        sorTS = xccyYieldCurve(market, source, configuration);
-        tarTS = xccyYieldCurve(market, target, configuration);
-    }
-    if (invertFxIndex || useXbsCurves)
-        return fxInd->clone(Handle<Quote>(), sorTS, tarTS, fxInd->familyName(), invertFxIndex);
-    else
-        return fxInd.currentLink();
+    fxInd = *market->fxIndex("FX-" + family + "-" + foreign + "-" + domestic);
+
+    QL_REQUIRE((domestic == target && foreign == source) || (domestic == source && foreign == target),
+               "buildFxIndex(): index '" << fxIndex << "' does not match given currencies " << domestic << ", "
+                                         << foreign);
+
+    if (!useXbsCurves)
+        return fxInd;
+
+    return fxInd->clone(Handle<Quote>(), xccyYieldCurve(market, foreign, configuration),
+                        xccyYieldCurve(market, domestic, configuration));
 }
 
 std::pair<Natural, Calendar> getFxIndexConventions(const string& index) {

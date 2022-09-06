@@ -100,10 +100,10 @@ void FxSpotQuote::update() { notifyObservers(); }
 
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
                  const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts,
-                 const Handle<YieldTermStructure>& targetYts, bool inverseIndex, bool fixingTriangulation)
+                 const Handle<YieldTermStructure>& targetYts, bool fixingTriangulation)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
       sourceYts_(sourceYts), targetYts_(targetYts), useQuote_(false), fixingCalendar_(fixingCalendar),
-      inverseIndex_(inverseIndex), fixingTriangulation_(fixingTriangulation) {
+      fixingTriangulation_(fixingTriangulation) {
 
     initialise();
 }
@@ -111,10 +111,10 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
                  const Calendar& fixingCalendar, const Handle<Quote> fxSpot,
                  const Handle<YieldTermStructure>& sourceYts, const Handle<YieldTermStructure>& targetYts,
-                 bool inverseIndex, bool fixingTriangulation)
+                 bool fixingTriangulation)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
       sourceYts_(sourceYts), targetYts_(targetYts), fxSpot_(fxSpot), useQuote_(true), fixingCalendar_(fixingCalendar),
-      inverseIndex_(inverseIndex), fixingTriangulation_(fixingTriangulation) {
+      fixingTriangulation_(fixingTriangulation) {
 
     initialise();
 }
@@ -150,11 +150,6 @@ const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {
         }
         quote = fxRate_;
     }
-    if (inverseIndex_) {
-        // Create a derived quote to invert
-        auto m = [](Real x) { return 1.0 / x; };
-        quote = Handle<Quote>(boost::make_shared<DerivedQuote<decltype(m)>>(quote, m));
-    }
     return quote;
 }
 
@@ -187,7 +182,7 @@ Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
         }
     }
 
-    return inverseIndex_ ? 1.0 / result : result;
+    return result;
 }
 
 Real FxIndex::forecastFixing(const Time& fixingTime) const {
@@ -258,14 +253,13 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
 }
 
 boost::shared_ptr<FxIndex> FxIndex::clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
-                                          const Handle<YieldTermStructure>& targetYts, const string& familyName,
-                                          bool inverseIndex) {
+                                          const Handle<YieldTermStructure>& targetYts, const string& familyName) {
     Handle<Quote> quote = fxQuote.empty() ? fxSpot_ : fxQuote;
     Handle<YieldTermStructure> source = sourceYts.empty() ? sourceYts_ : sourceYts;
     Handle<YieldTermStructure> target = targetYts.empty() ? targetYts_ : targetYts;
     string famName = familyName.empty() ? familyName_ : familyName;
-        return boost::make_shared<FxIndex>(famName, fixingDays_, sourceCurrency_, targetCurrency_, fixingCalendar_,
-                                           quote, source, target, inverseIndex);
+    return boost::make_shared<FxIndex>(famName, fixingDays_, sourceCurrency_, targetCurrency_, fixingCalendar_, quote,
+                                       source, target);
 }
 
 std::string FxIndex::name() const { return name_; }
