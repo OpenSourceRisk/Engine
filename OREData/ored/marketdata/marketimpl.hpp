@@ -199,6 +199,8 @@ protected:
                          const bool forceBuild = false) const {}
     
     Date asof_;
+    // fx quotes / indices, this is shared between all configurations
+    boost::shared_ptr<FXTriangulation> fx_;
     // maps (configuration, key) => term structure
     mutable map<tuple<string, YieldCurveType, string>, Handle<YieldTermStructure>> yieldCurves_;
     mutable map<pair<string, string>, Handle<IborIndex>> iborIndices_;
@@ -206,7 +208,6 @@ protected:
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> swaptionCurves_;
     mutable map<pair<string, string>, pair<string, string>> swaptionIndexBases_;
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> yieldVolCurves_;
-    mutable map<string, FXIndexTriangulation> fxIndices_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> fxVols_;
     mutable map<pair<string, string>, Handle<QuantExt::CreditCurve>> defaultCurves_;
     mutable map<pair<string, string>, Handle<QuantExt::CreditVolCurve>> cdsVols_;

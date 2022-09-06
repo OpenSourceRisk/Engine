@@ -54,7 +54,7 @@ public:
                       const std::map<std::string, boost::shared_ptr<CommodityVolCurve>>& commodityVolCurves = {},
                       const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves = {},
                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves = {},
-                      const boost::optional<FXIndexTriangulation>& fxIndices = boost::none);
+                      const Market* fxIndices = nullptr);
     //@}
 
     //! \name Inspectors
@@ -122,7 +122,7 @@ private:
                          const map<string, boost::shared_ptr<CommodityVolCurve>>& volCurves,
                          const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves,
                          const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
-                         const boost::optional<FXIndexTriangulation>& fxIndices = boost::none);
+                         const Market* fxIndices = nullptr);
 
     /*! Assume that the input price curve \p pts is a future price curve giving the price of a sequence of future
         contracts at the contract expiry. Create a copy of this input curve with additional pillar points at
