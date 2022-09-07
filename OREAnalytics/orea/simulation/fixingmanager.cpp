@@ -169,10 +169,6 @@ void FixingManager::applyFixings(Date start, Date end) {
         if (needFixings) {
             Rate currentFixing = m.first->fixing(currentFixingDate);
             // if we read the fixing from an inverted FxIndex we have to undo the inversion
-            if (auto f = boost::dynamic_pointer_cast<FxIndex>(m.first)) {
-                if (f->inverseIndex())
-                    currentFixing = 1.0 / currentFixing;
-            }
             TimeSeries<Real> history;
             for (auto const& d : fixingDates) {
                 if (d >= fixStart && d < fixEnd) {

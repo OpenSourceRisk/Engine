@@ -61,10 +61,12 @@ public:
 
     FxTriFixture() {
         // Initialise FX data
+	std::map<std::string, Handle<Quote>> quotes;
         for (const auto& p : data()) {
             Handle<Quote> q(boost::make_shared<SimpleQuote>(p.second));
-            fx.addQuote(p.first, q);
+            quotes[p.first] = q;
         }
+	fx = FXTriangulation(quotes);
     }
 
     ~FxTriFixture() {}
@@ -113,12 +115,6 @@ BOOST_AUTO_TEST_CASE(testMoreThanOneStep) {
     // Larger tolerance for multiple steps
     Real tol = 1e-8;
 
-    // Check that we don't handle more than one step
-    // EURUSD + EURAUD + AUDNZD => USDNZD
-    BOOST_CHECK_THROW(fx.getQuote("USDNZD"), QuantLib::Error);
-    // but if we cache EURNZD first....
-    BOOST_CHECK_CLOSE(fx.getQuote("EURNZD")->value(), 1.6450, tol);
-    // then we should be able to get it with one step
     BOOST_CHECK_CLOSE(fx.getQuote("USDNZD")->value(), 1.6450 / 1.0861, tol);
 }
 

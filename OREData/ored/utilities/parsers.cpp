@@ -1147,6 +1147,25 @@ Average::Type parseAverageType(const std::string& s) {
     }
 }
 
+QuantExt::BondIndex::PriceQuoteMethod parsePriceQuoteMethod(const std::string& s) {
+    if (s == "CurrencyPerUnit")
+        return QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit;
+    else if (s == "PercentageOfPar")
+        return QuantExt::BondIndex::PriceQuoteMethod::PercentageOfPar;
+    else {
+        QL_FAIL("PriceQuoteMethod '" << s << "' not recognized. Expected CurrencyPerUnit or PercentageOfPar.");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, QuantExt::BondIndex::PriceQuoteMethod p) {
+    if (p == QuantExt::BondIndex::PriceQuoteMethod::PercentageOfPar)
+        os << "PercentageOfPar";
+    else if (p == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit)
+        os << "CurrencyPerUnit";
+    else
+        os << "Unknown PriceQuoteMethod (" << static_cast<int>(p) << ")";
+    return os;
+}
 
 std::vector<std::string> getCorrelationTokens(const std::string& name) {
     // Look for & first as it avoids collisions with : which can be used in an index name

@@ -556,6 +556,7 @@ pricingengines/paymentdiscountingengine.hpp
 processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
+quotes/compositevectorquote.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
 termstructures/adjusteddefaultcurve.hpp
