@@ -75,7 +75,7 @@ void CPIBachelierCapFloorEngine::calculate() const {
 
     // if time from base <= 0 the fixing is already known and stdDev is zero, return the intrinsic value
     Real stdDev = 0.0;
-    if (requiredFixing < lastKnownFixing) {
+    if (requiredFixing > lastKnownFixing) {
         // For reading volatility in the current market volatiltiy structure
         // baseFixingSwap(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t),
         // T-t), solve for strikeRate(t):
@@ -94,33 +94,5 @@ void CPIBachelierCapFloorEngine::calculate() const {
     results_.value = bachelierBlackFormula(arguments_.type, strike, atmGrowth, stdDev, d);
 }
 
-Rate CPIBachelierCapFloorEngine::indexFixing(const Date& observationDate, const Date& payDate) const {
-    // you may want to modify the interpolation of the index
-    // this gives you the chance
-    Rate I1;
-    // what interpolation do we use? Index / flat / linear
-    if (arguments_.observationInterpolation == CPI::AsIndex) {
-        I1 = arguments_.infIndex->fixing(observationDate);
-
-    } else {
-        // work out what it should be
-
-        std::pair<Date, Date> dd = inflationPeriod(observationDate, arguments_.infIndex->frequency());
-        Real indexStart = arguments_.infIndex->fixing(dd.first);
-        if (arguments_.observationInterpolation == CPI::Linear) {
-            std::pair<Date, Date> cpnInflationPeriod = inflationPeriod(payDate, arguments_.infIndex->frequency());
-            // linear interpolation
-            Real indexEnd = arguments_.infIndex->fixing(dd.second + Period(1, Days));
-            I1 = indexStart +
-                 (indexEnd - indexStart) * (payDate - cpnInflationPeriod.first) /
-                     (Real)((cpnInflationPeriod.second + Period(1, Days)) -
-                            cpnInflationPeriod.first); // can't get to next period's value within current period
-        } else {
-            // no interpolation, i.e. flat = constant, so use start-of-period value
-            I1 = indexStart;
-        }
-    }
-    return I1;
-}
 
 } // namespace QuantExt

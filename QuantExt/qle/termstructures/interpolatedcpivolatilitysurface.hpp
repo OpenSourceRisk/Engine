@@ -29,6 +29,7 @@
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/inflation/constantcpivolatility.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
+#include <qle/utilities/inflation.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -43,10 +44,11 @@ template <class Interpolator2D>
 class InterpolatedCPIVolatilitySurface : public QuantLib::CPIVolatilitySurface, public LazyObject {
 public:
     InterpolatedCPIVolatilitySurface(const std::vector<Period>& optionTenors, const std::vector<Real>& strikes,
-                                     const std::vector<std::vector<Handle<Quote> > > quotes,
+                                     const std::vector<std::vector<Handle<Quote>>> quotes,
                                      const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
                                      const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
                                      const DayCounter& dc, const Period& observationLag,
+                                     const bool useLastKnownFixingAsBaseDate_ = false,
                                      const Interpolator2D& interpolator2d = Interpolator2D());
 
     //! \name LazyObject interface
@@ -70,6 +72,7 @@ public:
 
     //! \name Inspectors
     //@{
+    virtual QuantLib::Date baseDate() const override;
     const std::vector<QuantLib::Real>& strikes() { return strikes_; }
     const std::vector<QuantLib::Period>& optionTenors() { return optionTenors_; }
     const std::vector<std::vector<Handle<Quote> > >& quotes() { return quotes_; }
@@ -101,17 +104,21 @@ private:
     boost::shared_ptr<QuantLib::ZeroInflationIndex> index_;
     mutable Matrix volData_;
     mutable QuantLib::Interpolation2D vols_;
+    bool useLastKnownFixingAsBaseDate_;
     Interpolator2D interpolator2d_;
+    
 };
 
 template <class Interpolator2D>
 InterpolatedCPIVolatilitySurface<Interpolator2D>::InterpolatedCPIVolatilitySurface(
     const std::vector<Period>& optionTenors, const std::vector<Real>& strikes,
     const std::vector<std::vector<Handle<Quote> > > quotes,
-    const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const Natural settlementDays, const Calendar& cal,
-    BusinessDayConvention bdc, const DayCounter& dc, const Period& observationLag, const Interpolator2D& interpolator2d)
+    const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
+    const Period& observationLag, const bool useLastKnownFixingAsBaseDate,
+    const Interpolator2D& interpolator2d)
     : CPIVolatilitySurface(settlementDays, cal, bdc, dc, observationLag, index->frequency(), index->interpolated()),
-      optionTenors_(optionTenors), strikes_(strikes), quotes_(quotes), index_(index), interpolator2d_(interpolator2d) {
+      optionTenors_(optionTenors), strikes_(strikes), quotes_(quotes), index_(index),
+      useLastKnownFixingAsBaseDate_(useLastKnownFixingAsBaseDate), interpolator2d_(interpolator2d) {
     for (Size i = 0; i < optionTenors_.size(); ++i) {
         QL_REQUIRE(quotes_[i].size() == strikes_.size(), "quotes row " << i << " length does not match strikes size");
         for (Size j = 0; j < strikes_.size(); ++j)
@@ -155,6 +162,16 @@ QuantLib::Volatility InterpolatedCPIVolatilitySurface<Interpolator2D>::volatilit
                                                                                       QuantLib::Rate strike) const {
     calculate();
     return vols_(length, strike);
+}
+
+template <class Interpolator2D> 
+QuantLib::Date InterpolatedCPIVolatilitySurface<Interpolator2D>::baseDate() const {
+    if (useLastKnownFixingAsBaseDate_) {
+        return ZeroInflation::curveBaseDate(useLastKnownFixingAsBaseDate_, referenceDate(), observationLag(),
+                                            frequency(), index_);
+    } else {
+        return CPIVolatilitySurface::baseDate();
+    }
 }
 
 } // namespace QuantExt

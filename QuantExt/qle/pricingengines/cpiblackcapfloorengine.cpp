@@ -74,7 +74,7 @@ void CPIBlackCapFloorEngine::calculate() const {
 
     // if time from base <= 0 the fixing is already known and stdDev is zero, return the intrinsic value
     Real stdDev = 0.0;
-    if (requiredFixing < lastKnownFixing) {
+    if (requiredFixing > lastKnownFixing) {
         // For reading volatility in the current market volatiltiy structure
         // baseFixingSwap(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t),
         // solve for strikeRate(t):
