@@ -69,9 +69,6 @@
     <ClInclude Include="ored\marketdata\fixings.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
-    <ClInclude Include="ored\marketdata\fxspot.hpp">
-      <Filter>marketdata</Filter>
-    </ClInclude>
     <ClInclude Include="ored\marketdata\fxtriangulation.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
@@ -718,9 +715,6 @@
       <Filter>marketdata</Filter>
     </ClCompile>
     <ClCompile Include="ored\marketdata\fixings.cpp">
-      <Filter>marketdata</Filter>
-    </ClCompile>
-    <ClCompile Include="ored\marketdata\fxspot.cpp">
       <Filter>marketdata</Filter>
     </ClCompile>
     <ClCompile Include="ored\marketdata\fxtriangulation.cpp">
