@@ -110,7 +110,6 @@ EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, co
 void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& builder) {
     const string& modelName = builder->model();
     const string& engineName = builder->engine();
-    DLOG("EngineFactory registering builder for model:" << modelName << " and engine:" << engineName);
     builders_[make_tuple(modelName, engineName, builder->tradeTypes())] = builder;
 }
 
@@ -143,7 +142,6 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
 }
 
 void EngineFactory::registerLegBuilder(const boost::shared_ptr<LegBuilder>& legBuilder) {
-    DLOG("EngineFactory registering builder for leg type " << legBuilder->legType());
     legBuilders_[legBuilder->legType()] = legBuilder;
 }
 

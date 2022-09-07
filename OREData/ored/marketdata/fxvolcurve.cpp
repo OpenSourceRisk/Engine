@@ -16,16 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <algorithm>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
+
 #include <qle/indexes/fxindex.hpp>
 #include <qle/models/carrmadanarbitragecheck.hpp>
 #include <qle/termstructures/blackdeltautilities.hpp>
@@ -34,7 +31,14 @@
 #include <qle/termstructures/blackvolsurfacebfrr.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
+
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
+
 #include <string.h>
+#include <algorithm>
 
 using namespace QuantLib;
 using namespace std;
@@ -53,27 +57,6 @@ template <class T, class K> Handle<T> getHandle(const string& spec, const map<st
 namespace ore {
 namespace data {
 
-Handle<Quote> FXLookupMap::fxPairLookup(const string& fxPair) const {
-    return getHandle<QuantExt::FxIndex>(fxPair, fxSpots_)->fxQuote(true);
-}
-
-Handle<Quote> FXLookupTriangulation::fxPairLookup(const string& fxPair) const {
-    // parse ID to get pair
-    QL_REQUIRE(fxPair.size() == 10, "FX Pair should be of the form: FX/CCY/CCY");
-    QL_REQUIRE(fxPair.substr(0, 3) == "FX/", "FX Pair should be of the form: FX/CCY/CCY");
-    return fxSpots_.getQuote(fxPair.substr(3, 3) + fxPair.substr(7, 3));
-}
-
-FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                       const CurveConfigurations& curveConfigs, const map<string, boost::shared_ptr<FXSpot>>& fxSpots,
-                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                       const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
-                       const bool buildCalibrationInfo) {
-    init(asof, spec, loader, curveConfigs, FXLookupMap(fxSpots), yieldCurves, fxVols, correlationCurves,
-         buildCalibrationInfo);
-}
-
 // second ctor
 FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                        const CurveConfigurations& curveConfigs, const FXTriangulation& fxSpots,
@@ -81,12 +64,11 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
                        const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
                        const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
                        const bool buildCalibrationInfo) {
-    init(asof, spec, loader, curveConfigs, FXLookupTriangulation(fxSpots), yieldCurves, fxVols, correlationCurves,
-         buildCalibrationInfo);
+    init(asof, spec, loader, curveConfigs, fxSpots, yieldCurves, fxVols, correlationCurves, buildCalibrationInfo);
 }
 
 void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
                                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
     vector<Period> unsortedExp;
 
@@ -234,7 +216,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
 }
 
 void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                                     boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                                     boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
                                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
 
     // collect relevant market data and populate expiries (as per regex or configured list)
@@ -373,7 +355,8 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
 }
 
 void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                                           boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                                           boost::shared_ptr<FXVolatilityCurveConfig> config,
+                                           const FXTriangulation& fxSpots,
                                            const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
 
     bool isATM = config->dimension() == FXVolatilityCurveConfig::Dimension::ATM;
@@ -577,7 +560,7 @@ getCorrelationCurve(const std::string& index1, const std::string& index2,
 }
 
 void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
                                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                                       const map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
                                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves) {
@@ -657,7 +640,7 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
 }
 
 void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                      const CurveConfigurations& curveConfigs, const FXLookup& fxSpots,
+                      const CurveConfigurations& curveConfigs, const FXTriangulation& fxSpots,
                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                       const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
@@ -770,7 +753,10 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                                                                              << ", assuming defaults");
         }
 
-        fxSpot_ = fxSpots.fxPairLookup(config->fxSpotID());
+        auto spotSpec = boost::dynamic_pointer_cast<FXSpotSpec>(parseCurveSpec(config->fxSpotID()));
+        QL_REQUIRE(spotSpec != nullptr,
+                   "could not parse '" << config->fxSpotID() << "' to FXSpotSpec, expected FX/CCY1/CCY2");
+        fxSpot_ = fxSpots.getQuote(spotSpec->unitCcy() + spotSpec->ccy());
         if (!config->fxDomesticYieldCurveID().empty())
             domYts_ = getHandle<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
         if (!config->fxForeignYieldCurveID().empty())

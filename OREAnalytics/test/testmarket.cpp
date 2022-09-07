@@ -82,10 +82,12 @@ TestMarket::TestMarket(Date asof) {
     addSwapIndex("JPY-CMS-30Y", "JPY-LIBOR-6M", Market::defaultConfiguration);
 
     // add fx rates
-    fxIndices_[Market::defaultConfiguration].addIndex("EURUSD", makeFxIndex("EURUSD", 1.2));
-    fxIndices_[Market::defaultConfiguration].addIndex("EURGBP", makeFxIndex("EURGBP", 0.8));
-    fxIndices_[Market::defaultConfiguration].addIndex("EURCHF", makeFxIndex("EURCHF", 1.0));
-    fxIndices_[Market::defaultConfiguration].addIndex("EURJPY", makeFxIndex("EURJPY", 128.0));
+    std::map<std::string, Handle<Quote>> quotes;
+    quotes["EURUSD"] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.2));
+    quotes["EURGBP"] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.8));
+    quotes["EURCHF"] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+    quotes["EURJPY"] = Handle<Quote>(boost::make_shared<SimpleQuote>(128.0));
+    fx_ = boost::make_shared<FXTriangulation>(quotes);
 
     // build fx vols
     fxVols_[make_pair(Market::defaultConfiguration, "EURUSD")] = flatRateFxv(0.12);
@@ -305,16 +307,6 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
         parseZeroInflationIndex(index, false), false, Handle<YoYInflationTermStructure>(pYoYts)));
 }
 
-Handle<QuantExt::FxIndex> TestMarket::makeFxIndex(string index, Real spot) {
-    string ccy1 = index.substr(0, 3);
-    string ccy2 = index.substr(3);
-
-    return Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
-        Settings::instance().evaluationDate(), index, 0, parseCurrency(ccy1), parseCurrency(ccy2),
-        parseCalendar(ccy1 + "," + ccy2), Handle<Quote>(boost::make_shared<SimpleQuote>(spot)), discountCurve(ccy1),
-        discountCurve(ccy2), false));
-}
-
 void TestConfigurationObjects::setConventions() {
     boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
 
@@ -380,13 +372,10 @@ void TestConfigurationObjects::setConventions() {
     conventions->add(boost::make_shared<ore::data::DepositConvention>("JPY-DEP-CONVENTIONS", "JPY-LIBOR"));
     conventions->add(boost::make_shared<ore::data::DepositConvention>("CHF-DEP-CONVENTIONS", "CHF-LIBOR"));
 
-    boost::shared_ptr<ore::data::Convention> gbpChfConv(
-        new ore::data::FXConvention("GBP-CHF-FX", "0", "GBP", "CHF", "10000", "GBP,CHF"));
-    boost::shared_ptr<ore::data::Convention> eurUsdConv(
-        new ore::data::FXConvention("EUR-USD-FX", "0", "EUR", "USD", "10000", "EUR,USD"));
-
-    conventions->add(gbpChfConv);
-    conventions->add(eurUsdConv);
+    conventions->add(boost::make_shared<FXConvention>("EUR-USD-FX", "0", "EUR", "USD", "10000", "EUR,USD"));
+    conventions->add(boost::make_shared<FXConvention>("EUR-GBP-FX", "0", "EUR", "GBP", "10000", "EUR,GBP"));
+    conventions->add(boost::make_shared<FXConvention>("EUR-CHF-FX", "0", "EUR", "CHF", "10000", "EUR,CHF"));
+    conventions->add(boost::make_shared<FXConvention>("EUR-JPY-FX", "0", "EUR", "JPY", "10000", "EUR,JPY"));
 
     InstrumentConventions::instance().setConventions(conventions);
 }
