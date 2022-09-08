@@ -218,13 +218,13 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             } else if (index) {
                 baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(
                     config->useLastAvailableFixingAsBaseDate(), swapStart, terms[0], conv->dayCounter(),
-                    conv->observationLag(), quotes[0]->value(), config->lag(), config->dayCounter(), index,
+                    conv->observationLag(), quotes[0]->value(), curveObsLag, config->dayCounter(), index,
                     interpolatedIndex_);
             }
 
             curve_ = boost::shared_ptr<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
                 new QuantExt::PiecewiseZeroInflationCurve<Linear>(
-                    asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), baseRate,
+                    asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), baseRate,
                     instruments, config->tolerance(), index, config->useLastAvailableFixingAsBaseDate()));
             
             // force bootstrap so that errors are thrown during the build, not later

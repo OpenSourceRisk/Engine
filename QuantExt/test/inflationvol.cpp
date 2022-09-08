@@ -65,14 +65,12 @@ struct CommonData {
 
     std::vector<double> cStrikes = {0.06, 0.08};
 
-    QuantLib::Matrix cPrices = {{0.135772354068104, 0.135348153610647},
-                                {0.21019787434837, 0.206948390005824},
-                                {0.279071565433992, 0.273313086782018}};
+    QuantLib::Matrix cPrices = {{0.135772354068104, 0.21019787434837, 0.279071565433992},
+                                {0.135348153610647, 0.206948390005824, 0.273313086782018}};
 
     std::vector<double> fStrikes = {0.02, 0.04};
-    QuantLib::Matrix fPrices = {{0.0988973467221314, 0.116985886476924},
-                                {0.179704866551846, 0.214537382817819},
-                                {0.264516709169814, 0.317492812165558}};
+    QuantLib::Matrix fPrices = {{0.0988973467221314, 0.179704866551846, 0.264516709169814},
+                                 {0.116985886476924, 0.214537382817819, 0.317492812165558}};
 
     CommonData()
         : today(15, Aug, 2022), tolerance(1e-6), dayCounter(Actual365Fixed()), fixingCalendar(NullCalendar()),
@@ -151,7 +149,8 @@ boost::shared_ptr<CPIVolatilitySurface> buildVolSurfaceFromPrices(CommonData& cd
     QuantLib::Handle<CPICapFloorTermPriceSurface> cpiPriceSurfaceHandle(cpiPriceSurfacePtr);
     boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>> cpiCapFloorVolSurface;
     cpiCapFloorVolSurface = boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>>(
-        QuantExt::PriceQuotePreference::CapFloor, cpiPriceSurfaceHandle, index, engine);
+        QuantExt::PriceQuotePreference::CapFloor, cpiPriceSurfaceHandle, index, engine, 1.0, 0.000001, 1.0e-12,
+        useLastKnownFixing);
 
     cpiCapFloorVolSurface->enableExtrapolation();
     return cpiCapFloorVolSurface;
@@ -219,7 +218,31 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
     BOOST_CHECK_CLOSE(seasonedPut.NPV(), 0.11002621921, cd.tolerance);
 }
 
-BOOST_AUTO_TEST_CASE(testPriceVolatilitySurface) {}
+BOOST_AUTO_TEST_CASE(testPriceVolatilitySurface) {
+
+    CommonData cd;
+    Settings::instance().evaluationDate() = cd.today;
+    Date today = Settings::instance().evaluationDate();
+    bool isInterpolated = false;
+    bool useLastKnownFixingDateAsBaseDate = true;
+    boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<EUHICPXT>(false);
+    addFixings(cd.cpiFixings, *curveBuildIndex);
+    auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated);
+
+    BOOST_CHECK_NO_THROW(curve->zeroRate(1.0));
+
+    auto index = curveBuildIndex->clone(Handle<ZeroInflationTermStructure>(curve));
+
+    RelinkableHandle<CPIVolatilitySurface> volSurface;
+
+    auto volSurfaceObsLag = buildVolSurfaceFromPrices(cd, index, useLastKnownFixingDateAsBaseDate);
+
+    BOOST_CHECK_CLOSE(volSurfaceObsLag->volatility(Date(15, Aug, 2023), 0.02), 0.3, cd.tolerance);
+    BOOST_CHECK_CLOSE(volSurfaceObsLag->volatility(Date(15, Aug, 2024), 0.02), 0.35, cd.tolerance);
+    BOOST_CHECK_CLOSE(volSurfaceObsLag->volatility(Date(15, Aug, 2024), 0.03), 0.36, cd.tolerance);
+    BOOST_CHECK_CLOSE(volSurfaceObsLag->volatility(Date(15, Aug, 2024), 0.04), 0.37, cd.tolerance);
+    BOOST_CHECK_CLOSE(volSurfaceObsLag->volatility(Date(15, Aug, 2025), 0.08), 0.46, cd.tolerance);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

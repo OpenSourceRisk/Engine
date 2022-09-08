@@ -44,7 +44,7 @@ void throwExceptionIfHistoricalFixingMissing(const Date& fixingDate, const Quant
                "Historical fixing missing for index " << index.name() << " on " << fixingDate);
 }
 
-// Throws an erro if any fixing required to compute a cpi fixing is missing
+// Throws an error if any fixing required to compute a cpi fixing is missing
 void checkIfFixingAvailable(const Date& maturity, const Period obsLag, bool interpolated,
                             const QuantLib::ZeroInflationIndex& index) {
 
@@ -194,7 +194,8 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
 
     auto fwdCPI = instrumentBaseCPI * std::pow(1 + zeroCouponRate, timeFromSwapBase);
 
-    Date curveBaseDt = curveBaseDate(baseDateLastKnownFixing, swapStart, curveObsLag, index->frequency(), index);
+    Date curveBaseDt = curveBaseDate(baseDateLastKnownFixing, QuantLib::Settings::instance().evaluationDate(), curveObsLag,
+                                     index->frequency(), index);
     
     double curveBaseFixing = index->fixing(curveBaseDt);
 

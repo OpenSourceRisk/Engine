@@ -81,7 +81,9 @@ void CPIBlackCapFloorEngine::calculate() const {
         auto surfaceBaseFixing =
             ZeroInflation::cpiFixing(*index.currentLink(), volatilitySurface_->referenceDate(),
                                      volatilitySurface_->observationLag(), volatilitySurface_->indexIsInterpolated());
-        auto ttmFromSurfaceBaseDate = volatilitySurface_->timeFromBase(optionObservationDate, 0 * Days);
+        auto ttmFromSurfaceBaseDate =
+            inflationYearFraction(volatilitySurface_->frequency(), volatilitySurface_->indexIsInterpolated(),
+            index->zeroInflationTermStructure()->dayCounter(), volatilitySurface_->baseDate(), optionObservationDate);
         Real strikeZeroRate = pow(optionBaseFixing / surfaceBaseFixing * strike, 1.0 / ttmFromSurfaceBaseDate) - 1.0;
         stdDev = std::sqrt(volatilitySurface_->totalVariance(optionObservationDate, strikeZeroRate, 0 * Days));
     }

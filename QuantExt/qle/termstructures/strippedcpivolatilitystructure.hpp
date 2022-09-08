@@ -180,13 +180,13 @@ template <class Interpolator2D> void StrippedCPIVolatilitySurface<Interpolator2D
             Rate I1 = index_->fixing(fixDate);
             
             Time timeToMaturity = timeFromReference(fixDate) - timeFromReference(underlyingBaseDate);
-            QuantLib::Real atmRate = pow(I1 / baseCPI, 1 / timeToMaturity);
+            QuantLib::Real atmRate = pow(I1 / baseCPI, 1 / timeToMaturity) - 1.0;
             
             bool useFloor = chooseFloor(strikes_[i], atmRate);
 
             Date ttmBaseDate = computeTimeToExpiryFromLastAvailableFixingDate_
                                    ? ZeroInflation::lastAvailableFixing(*index_, referenceDate())
-                                   : baseDate();
+                                   : QuantLib::Null<QuantLib::Date>();
 
             // FIXME: Do we need an effective maturity here ?
             QuantLib::Real priceToMatch = useFloor ? priceSurface_->floorPrice(maturities_[j], strikes_[i])
@@ -327,7 +327,7 @@ QuantLib::Volatility StrippedCPIVolatilitySurface<Interpolator2D>::totalVariance
                                                                                      const QuantLib::Period& obsLag,
                                                                                      bool extrapolate) const {
     if (!computeTimeToExpiryFromLastAvailableFixingDate_) {
-        CPIVolatilitySurface::totalVariance(maturityDate, strike, obsLag, extrapolate);
+        return CPIVolatilitySurface::totalVariance(maturityDate, strike, obsLag, extrapolate);
     } else {
         Volatility vol = volatility(maturityDate, strike, obsLag, extrapolate);
         Date lastAvailableFixingDate = ZeroInflation::lastAvailableFixing(*index_, referenceDate());
