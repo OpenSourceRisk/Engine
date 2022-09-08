@@ -17,6 +17,7 @@
 */
 
 #include <boost/variant/static_visitor.hpp>
+#include <boost/filesystem/path.hpp>
 #include <ored/report/csvreport.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -109,7 +110,10 @@ void CSVFileReport::rollover() {
     checkIsOpen("rollover()");
     end();
     version_++;
-    filename_ = baseFilename_ + "_" + to_string(version_);
+    boost::filesystem::path p(baseFilename_);
+    boost::filesystem::path newFilepath =
+        p.parent_path() / p.filename() / boost::filesystem::path("_" + to_string(version_)) / p.extension();
+    filename_ = newFilepath.string();
     open();
 }
 
