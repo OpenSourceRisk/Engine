@@ -112,7 +112,7 @@ void CSVFileReport::rollover() {
     version_++;
     boost::filesystem::path p(baseFilename_);
     boost::filesystem::path newFilepath =
-        p.parent_path() / p.filename() / boost::filesystem::path("_" + to_string(version_)) / p.extension();
+        p.parent_path() / p.stem() / boost::filesystem::path("_" + to_string(version_)) / p.extension();
     filename_ = newFilepath.string();
     open();
 }
