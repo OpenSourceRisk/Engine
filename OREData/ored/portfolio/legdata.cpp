@@ -1736,18 +1736,18 @@ Leg makeCMBLeg(const LegData& data,
     boost::shared_ptr<CMBLegData> cmbData = boost::dynamic_pointer_cast<CMBLegData>(data.concreteLegData());
     QL_REQUIRE(cmbData, "Wrong LegType, expected CMB, got " << data.legType());
 
-    std::string bondId = cmbData->genericBond();
-    // Expected bondId structure with at least two tokens, separated by "-", of the form FAMILY-TERM, for example:
+    std::string bondIndexName = cmbData->genericBond();
+    // Expected bondIndexName structure with at least two tokens, separated by "-", of the form FAMILY-TERM or FAMILY-MUN, for example:
     // US-CMT-5Y, US-TIPS-10Y, UK-GILT-5Y, DE-BUND-10Y
     std::vector<string> tokens;
-    split(tokens, bondId, boost::is_any_of("-"));
-    QL_REQUIRE(tokens.size() >= 2, "Generic Bond ID with at least two tokens separated by - expected, found " << bondId);
+    split(tokens, bondIndexName, boost::is_any_of("-"));
+    QL_REQUIRE(tokens.size() >= 2, "Generic Bond Index with at least two tokens separated by - expected, found " << bondIndexName);
     std::string securityFamily = tokens[0];
     for (Size i = 1; i < tokens.size() - 1; ++i)
         securityFamily = securityFamily + "-" + tokens[i];
     string underlyingTerm = tokens.back();
     Period underlyingPeriod = parsePeriod(underlyingTerm);
-    LOG("Generic bond id " << bondId << " has family " << securityFamily << " and term " << underlyingPeriod); 
+    LOG("Generic bond id " << bondIndexName << " has family " << securityFamily << " and term " << underlyingPeriod); 
 
     Schedule schedule = makeSchedule(data.schedule());
     Calendar calendar = schedule.calendar();
@@ -1756,9 +1756,9 @@ Leg makeCMBLeg(const LegData& data,
     bool creditRisk = cmbData->hasCreditRisk();
 
     // Get the generic bond reference data, notional 1, credit risk as specified in the leg data 
-    BondData bondData(bondId, 1.0, creditRisk);
+    BondData bondData(securityFamily, 1.0, creditRisk);
     bondData.populateFromBondReferenceData(engineFactory->referenceData());
-    DLOG("Bond data for security id " << bondId << " loaded");
+    DLOG("Bond data for security id " << securityFamily << " loaded");
     QL_REQUIRE(bondData.coupons().size() == 1,
 	       "multiple reference bond legs not covered by the CMB leg");
     QL_REQUIRE(bondData.coupons().front().schedule().rules().size() == 1,
@@ -1767,13 +1767,13 @@ Leg makeCMBLeg(const LegData& data,
 	       "dates based bond schedules not covered by the CMB leg");
 
     // Get bond yield conventions
-    auto ret = InstrumentConventions::instance().conventions()->get(bondId, Convention::Type::BondYield);
+    auto ret = InstrumentConventions::instance().conventions()->get(securityFamily, Convention::Type::BondYield);
     boost::shared_ptr<BondYieldConvention> conv;
     if (ret.first)
         conv = boost::dynamic_pointer_cast<BondYieldConvention>(ret.second);
     else {
 	conv = boost::make_shared<BondYieldConvention>();
-        ALOG("BondYield conventions not found for security " << bondId << ", falling back on defaults:"
+        ALOG("BondYield conventions not found for security " << securityFamily << ", falling back on defaults:"
 	     << " compounding=" << conv->compoundingName()
 	     << ", priceType=" << conv->priceTypeName()
 	     << ", accuracy=" << conv->accuracy() 
