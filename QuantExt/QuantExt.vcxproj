@@ -812,6 +812,7 @@
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
     <ClInclude Include="qle\termstructures\futurepricehelper.hpp" />
     <ClInclude Include="qle\termstructures\iborfallbackcurve.hpp" />
+    <ClInclude Include="qle\termstructures\inflation\constantcpivolatility.hpp" />
     <ClInclude Include="qle\termstructures\inflation\inflationtraits.hpp" />
     <ClInclude Include="qle\termstructures\inflation\piecewisezeroinflationcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
@@ -1138,6 +1139,7 @@
     <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp" />
     <ClCompile Include="qle\termstructures\fxvannavolgasmilesection.cpp" />
     <ClCompile Include="qle\termstructures\hazardspreadeddefaulttermstructure.cpp" />
+    <ClCompile Include="qle\termstructures\inflation\constantcpivolatility.cpp" />
     <ClCompile Include="qle\termstructures\oibasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\oiccbasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\oiscapfloorhelper.cpp" />

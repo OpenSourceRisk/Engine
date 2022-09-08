@@ -48,7 +48,7 @@ public:
                                      const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
                                      const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
                                      const DayCounter& dc, const Period& observationLag,
-                                     const bool useLastKnownFixingAsBaseDate_ = false,
+                                     const bool computeTimeToExpiryFromLastAvailableFixingDate = false,
                                      const Interpolator2D& interpolator2d = Interpolator2D());
 
     //! \name LazyObject interface
@@ -72,7 +72,6 @@ public:
 
     //! \name Inspectors
     //@{
-    virtual QuantLib::Date baseDate() const override;
     const std::vector<QuantLib::Real>& strikes() { return strikes_; }
     const std::vector<QuantLib::Period>& optionTenors() { return optionTenors_; }
     const std::vector<std::vector<Handle<Quote> > >& quotes() { return quotes_; }
@@ -80,6 +79,10 @@ public:
     //@}
 
     QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const override;
+
+    QuantLib::Volatility totalVariance(const QuantLib::Date& maturityDate, QuantLib::Rate strike,
+                                                             const QuantLib::Period& obsLag,
+                                                             bool extrapolate = false) const override;
 
 private:
     // Same logic as in CPIVolatilitySurface::volatility(const Date& ....) to compute the relevant time
@@ -104,7 +107,7 @@ private:
     boost::shared_ptr<QuantLib::ZeroInflationIndex> index_;
     mutable Matrix volData_;
     mutable QuantLib::Interpolation2D vols_;
-    bool useLastKnownFixingAsBaseDate_;
+    bool computeTimeToExpiryFromLastAvailableFixingDate_;
     Interpolator2D interpolator2d_;
     
 };
@@ -114,11 +117,12 @@ InterpolatedCPIVolatilitySurface<Interpolator2D>::InterpolatedCPIVolatilitySurfa
     const std::vector<Period>& optionTenors, const std::vector<Real>& strikes,
     const std::vector<std::vector<Handle<Quote> > > quotes,
     const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
-    const Period& observationLag, const bool useLastKnownFixingAsBaseDate,
+    const Period& observationLag, const bool computeTimeToExpiryFromLastAvailableFixingDate,
     const Interpolator2D& interpolator2d)
     : CPIVolatilitySurface(settlementDays, cal, bdc, dc, observationLag, index->frequency(), index->interpolated()),
       optionTenors_(optionTenors), strikes_(strikes), quotes_(quotes), index_(index),
-      useLastKnownFixingAsBaseDate_(useLastKnownFixingAsBaseDate), interpolator2d_(interpolator2d) {
+      computeTimeToExpiryFromLastAvailableFixingDate_(computeTimeToExpiryFromLastAvailableFixingDate),
+      interpolator2d_(interpolator2d) {
     for (Size i = 0; i < optionTenors_.size(); ++i) {
         QL_REQUIRE(quotes_[i].size() == strikes_.size(), "quotes row " << i << " length does not match strikes size");
         for (Size j = 0; j < strikes_.size(); ++j)
@@ -164,13 +168,26 @@ QuantLib::Volatility InterpolatedCPIVolatilitySurface<Interpolator2D>::volatilit
     return vols_(length, strike);
 }
 
-template <class Interpolator2D> 
-QuantLib::Date InterpolatedCPIVolatilitySurface<Interpolator2D>::baseDate() const {
-    if (useLastKnownFixingAsBaseDate_) {
-        return ZeroInflation::curveBaseDate(useLastKnownFixingAsBaseDate_, referenceDate(), observationLag(),
-                                            frequency(), index_);
+template <class Interpolator2D>
+QuantLib::Volatility InterpolatedCPIVolatilitySurface<Interpolator2D>::totalVariance(const QuantLib::Date& maturityDate,
+                                                                                     QuantLib::Rate strike,
+                                                                                     const QuantLib::Period& obsLag,
+                                                                                     bool extrapolate) const {
+    if (!computeTimeToExpiryFromLastAvailableFixingDate_) {
+        return CPIVolatilitySurface::totalVariance(maturityDate, strike, obsLag, extrapolate);
     } else {
-        return CPIVolatilitySurface::baseDate();
+        Volatility vol = volatility(maturityDate, strike, obsLag, extrapolate);
+        Date lastAvailableFixingDate = ZeroInflation::lastAvailableFixing(*index_, referenceDate());
+
+        Period useLag = obsLag;
+        if (obsLag == Period(-1, Days)) {
+            useLag = observationLag();
+        }
+
+        Date effectiveMaturityDate =
+            ZeroInflation::effectiveObservationDate(maturityDate, useLag, index_->frequency(), indexIsInterpolated_);
+        double t = timeFromReference(effectiveMaturityDate) - timeFromReference(lastAvailableFixingDate);
+        return vol * vol * t;
     }
 }
 

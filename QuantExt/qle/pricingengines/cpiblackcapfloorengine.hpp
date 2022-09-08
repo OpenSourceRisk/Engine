@@ -51,8 +51,6 @@ public:
 protected:
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
     QuantLib::Handle<QuantLib::CPIVolatilitySurface> volatilitySurface_;
-
-    QuantLib::Rate indexFixing(const QuantLib::Date& observationDate, const QuantLib::Date& payDate) const;
 };
 
 } // namespace QuantExt

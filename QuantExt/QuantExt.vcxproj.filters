@@ -1252,6 +1252,9 @@
     <ClInclude Include="qle\termstructures\inflation\piecewisezeroinflationcurve.hpp">
       <Filter>termstructures\inflation</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\inflation\constantcpivolatility.hpp">
+      <Filter>termstructures\inflation</Filter>
+    </ClInclude>
     <ClInclude Include="qle\quotes\compositevectorquote.hpp">
       <Filter>quotes</Filter>
     </ClInclude>
@@ -2140,6 +2143,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\proxyswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\inflation\constantcpivolatility.cpp">
+      <Filter>termstructures\inflation</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

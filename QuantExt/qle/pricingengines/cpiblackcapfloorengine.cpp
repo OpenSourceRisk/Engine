@@ -60,12 +60,12 @@ void CPIBlackCapFloorEngine::calculate() const {
     Real atmCPIFixing = ZeroInflation::cpiFixing(*arguments_.infIndex.currentLink(), maturity,
                                                       arguments_.observationLag, isInterpolated);
 
-    Time ttm =
+    Time timeToMaturityFromInception =
         inflationYearFraction(index->frequency(), isInterpolated, index->zeroInflationTermStructure()->dayCounter(),
                               optionBaseDate, optionObservationDate);
 
     Real atmGrowth = atmCPIFixing / optionBaseFixing;
-    Real strike = std::pow(1.0 + arguments_.strike, ttm); 
+    Real strike = std::pow(1.0 + arguments_.strike, timeToMaturityFromInception); 
 
     auto lastKnownFixing = ZeroInflation::lastAvailableFixing(*index.currentLink(), volatilitySurface_->referenceDate());
     auto observationPeriod = inflationPeriod(optionObservationDate, index->frequency());
@@ -78,14 +78,11 @@ void CPIBlackCapFloorEngine::calculate() const {
         // For reading volatility in the current market volatiltiy structure
         // baseFixingSwap(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t),
         // solve for strikeRate(t):
-        auto surfaceBaseDate = ZeroInflation::effectiveObservationDate(
-            volatilitySurface_->referenceDate(), volatilitySurface_->observationLag(), volatilitySurface_->frequency(),
-            volatilitySurface_->indexIsInterpolated());
-        auto surfaceBaseFixing = ZeroInflation::cpiFixing(*index.currentLink(), volatilitySurface_->referenceDate(),
+        auto surfaceBaseFixing =
+            ZeroInflation::cpiFixing(*index.currentLink(), volatilitySurface_->referenceDate(),
                                      volatilitySurface_->observationLag(), volatilitySurface_->indexIsInterpolated());
-        auto ttmSurface = inflationYearFraction(volatilitySurface_->frequency(), volatilitySurface_->indexIsInterpolated(),
-                                  volatilitySurface_->dayCounter(), surfaceBaseDate, optionObservationDate);
-        Real strikeZeroRate = pow(optionBaseFixing / surfaceBaseFixing * strike, 1.0 / ttmSurface) - 1.0;
+        auto ttmFromSurfaceBaseDate = volatilitySurface_->timeFromBase(optionObservationDate, 0 * Days);
+        Real strikeZeroRate = pow(optionBaseFixing / surfaceBaseFixing * strike, 1.0 / ttmFromSurfaceBaseDate) - 1.0;
         stdDev = std::sqrt(volatilitySurface_->totalVariance(optionObservationDate, strikeZeroRate, 0 * Days));
     }
     results_.value = blackFormula(arguments_.type, strike, atmGrowth, stdDev, d);
@@ -104,35 +101,6 @@ void CPIBlackCapFloorEngine::calculate() const {
     // 	      << "F             = " << F << std::endl
     // 	      << "stdDev        = " << stdDev << std::endl
     // 	      << "value         = " <<  results_.value << std::endl;
-}
-
-Rate CPIBlackCapFloorEngine::indexFixing(const Date& observationDate, const Date& payDate) const {
-    // you may want to modify the interpolation of the index
-    // this gives you the chance
-    Rate I1;
-    // what interpolation do we use? Index / flat / linear
-    if (arguments_.observationInterpolation == CPI::AsIndex) {
-        I1 = arguments_.infIndex->fixing(observationDate);
-
-    } else {
-        // work out what it should be
-
-        std::pair<Date, Date> dd = inflationPeriod(observationDate, arguments_.infIndex->frequency());
-        Real indexStart = arguments_.infIndex->fixing(dd.first);
-        if (arguments_.observationInterpolation == CPI::Linear) {
-            std::pair<Date, Date> cpnInflationPeriod = inflationPeriod(payDate, arguments_.infIndex->frequency());
-            // linear interpolation
-            Real indexEnd = arguments_.infIndex->fixing(dd.second + Period(1, Days));
-            I1 = indexStart +
-                 (indexEnd - indexStart) * (payDate - cpnInflationPeriod.first) /
-                     (Real)((cpnInflationPeriod.second + Period(1, Days)) -
-                            cpnInflationPeriod.first); // can't get to next period's value within current period
-        } else {
-            // no interpolation, i.e. flat = constant, so use start-of-period value
-            I1 = indexStart;
-        }
-    }
-    return I1;
 }
 
 } // namespace QuantExt

@@ -159,7 +159,7 @@ QuantLib::Date curveBaseDate(const bool baseDateLastKnownFixing, const QuantLib:
 QuantLib::Date effectiveObservationDate(const QuantLib::Date& d, const QuantLib::Period obsLag,
                                         const QuantLib::Frequency freq, bool interpolated) {
     Date obsDate = d - obsLag;
-    if (interpolated)
+    if (!interpolated)
         obsDate = QuantLib::inflationPeriod(obsDate, freq).first;
     return obsDate;
 }
