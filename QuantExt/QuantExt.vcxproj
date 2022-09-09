@@ -766,6 +766,7 @@
     <ClInclude Include="qle\processes\crcirppstateprocess.hpp" />
     <ClInclude Include="qle\processes\crossassetstateprocess.hpp" />
     <ClInclude Include="qle\processes\irlgm1fstateprocess.hpp" />
+    <ClInclude Include="qle\quotes\compositevectorquote.hpp" />
     <ClInclude Include="qle\quotes\exceptionquote.hpp" />
     <ClInclude Include="qle\quotes\logquote.hpp" />
     <ClInclude Include="qle\quantext.hpp" />
