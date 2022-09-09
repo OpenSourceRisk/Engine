@@ -239,6 +239,7 @@
     <ClInclude Include="ored\utilities\flowanalysis.hpp" />
     <ClInclude Include="ored\utilities\indexnametranslator.hpp" />
     <ClInclude Include="ored\utilities\indexparser.hpp" />
+    <ClInclude Include="ored\utilities\inflationstartdate.hpp" />
     <ClInclude Include="ored\utilities\log.hpp" />
     <ClInclude Include="ored\utilities\marketdata.hpp" />
     <ClInclude Include="ored\utilities\osutils.hpp" />
@@ -418,6 +419,7 @@
     <ClCompile Include="ored\utilities\flowanalysis.cpp" />
     <ClCompile Include="ored\utilities\indexnametranslator.cpp" />
     <ClCompile Include="ored\utilities\indexparser.cpp" />
+    <ClCompile Include="ored\utilities\inflationstartdate.cpp" />
     <ClCompile Include="ored\utilities\log.cpp" />
     <ClCompile Include="ored\utilities\marketdata.cpp" />
     <ClCompile Include="ored\utilities\osutils.cpp" />

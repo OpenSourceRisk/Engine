@@ -77,7 +77,7 @@ QuantLib::Date curveBaseDate(const bool baseDateLastKnownFixing, const QuantLib:
                              const QuantLib::Period obsLagCurve, const QuantLib::Frequency curveFreq,
                              const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index);
 
-QuantLib::Date effectiveObservationDate(const QuantLib::Date& d, const QuantLib::Period obsLag,
+QuantLib::Date fixingDate(const QuantLib::Date& d, const QuantLib::Period obsLag,
                                         const QuantLib::Frequency,
                                         bool interpolated);
 

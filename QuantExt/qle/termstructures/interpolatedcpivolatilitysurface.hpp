@@ -28,7 +28,7 @@
 #include <ql/math/matrix.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/inflation/constantcpivolatility.hpp>
-#include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
+#include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
 #include <qle/utilities/inflation.hpp>
 
 namespace QuantExt {
@@ -41,7 +41,7 @@ using namespace QuantLib;
   When performCalculations is called, current quote values are copied to a matrix and the interpolator is updated.
  */
 template <class Interpolator2D>
-class InterpolatedCPIVolatilitySurface : public QuantLib::CPIVolatilitySurface, public LazyObject {
+class InterpolatedCPIVolatilitySurface : public QuantExt::CPIVolatilitySurface, public LazyObject {
 public:
     InterpolatedCPIVolatilitySurface(const std::vector<Period>& optionTenors, const std::vector<Real>& strikes,
                                      const std::vector<std::vector<Handle<Quote>>> quotes,
@@ -49,6 +49,7 @@ public:
                                      const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
                                      const DayCounter& dc, const Period& observationLag,
                                      const bool computeTimeToExpiryFromLastAvailableFixingDate = false,
+                                     const Date& capFloorStartDate = Date(),
                                      const Interpolator2D& interpolator2d = Interpolator2D());
 
     //! \name LazyObject interface
@@ -85,21 +86,7 @@ public:
                                                              bool extrapolate = false) const override;
 
 private:
-    // Same logic as in CPIVolatilitySurface::volatility(const Date& ....) to compute the relevant time
-    // that is used for calling voaltilityImpl resp. the interpolator. It would be better to move this up
-    // in the hierarchy to CPIVolatilitySurface as this is needed in both InterpolatedCPIVolatilitySurface
-    // and StrippedCPIVolatilitySurface.
-    QuantLib::Time inflationTime(const QuantLib::Date& date) const {
-        QuantLib::Real t;
-        if (indexIsInterpolated_)
-            t = timeFromReference(date - observationLag_);
-        else {
-            std::pair<QuantLib::Date, QuantLib::Date> dd = inflationPeriod(date - observationLag_, frequency_);
-            t = timeFromReference(dd.first);
-        }
-        return t;
-    }
-
+    
     mutable std::vector<QuantLib::Period> optionTenors_;
     mutable std::vector<QuantLib::Time> optionTimes_;
     mutable std::vector<QuantLib::Rate> strikes_;
@@ -118,8 +105,10 @@ InterpolatedCPIVolatilitySurface<Interpolator2D>::InterpolatedCPIVolatilitySurfa
     const std::vector<std::vector<Handle<Quote> > > quotes,
     const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
     const Period& observationLag, const bool computeTimeToExpiryFromLastAvailableFixingDate,
+    const Date& capFloorStartDate,
     const Interpolator2D& interpolator2d)
-    : CPIVolatilitySurface(settlementDays, cal, bdc, dc, observationLag, index->frequency(), index->interpolated()),
+    : CPIVolatilitySurface(settlementDays, cal, bdc, dc, observationLag, index->frequency(), index->interpolated(),
+                           capFloorStartDate),
       optionTenors_(optionTenors), strikes_(strikes), quotes_(quotes), index_(index),
       computeTimeToExpiryFromLastAvailableFixingDate_(computeTimeToExpiryFromLastAvailableFixingDate),
       interpolator2d_(interpolator2d) {
@@ -135,8 +124,9 @@ template <class Interpolator2D> void InterpolatedCPIVolatilitySurface<Interpolat
     QL_REQUIRE(quotes_.size() == optionTenors_.size(), "quotes rows does not match option tenors size");
     optionTimes_.clear();
     for (Size i = 0; i < optionTenors_.size(); ++i) {
-        QuantLib::Date d = optionDateFromTenor(optionTenors_[i]);
-        optionTimes_.push_back(inflationTime(d));
+        QuantLib::Date d = optionMaturityFromTenor(optionTenors_[i]);
+        // Save the vols at their fixing times and not maturity
+        optionTimes_.push_back(fixingTime(d));
         for (QuantLib::Size j = 0; j < strikes_.size(); j++)
             volData_[j][i] = quotes_[i][j]->value();
     }
@@ -184,9 +174,9 @@ QuantLib::Volatility InterpolatedCPIVolatilitySurface<Interpolator2D>::totalVari
             useLag = observationLag();
         }
 
-        Date effectiveMaturityDate =
-            ZeroInflation::effectiveObservationDate(maturityDate, useLag, index_->frequency(), indexIsInterpolated_);
-        double t = timeFromReference(effectiveMaturityDate) - timeFromReference(lastAvailableFixingDate);
+        Date fixingDate =
+            ZeroInflation::fixingDate(maturityDate, useLag, index_->frequency(), indexIsInterpolated_);
+        double t = dayCounter().yearFraction(lastAvailableFixingDate, fixingDate);
         return vol * vol * t;
     }
 }

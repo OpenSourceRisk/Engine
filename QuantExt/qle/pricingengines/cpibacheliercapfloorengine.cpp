@@ -79,7 +79,7 @@ void CPIBachelierCapFloorEngine::calculate() const {
         // For reading volatility in the current market volatiltiy structure
         // baseFixingSwap(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t),
         // T-t), solve for strikeRate(t):
-        auto surfaceBaseDate = ZeroInflation::effectiveObservationDate(
+        auto surfaceBaseDate = ZeroInflation::fixingDate(
             volatilitySurface_->referenceDate(), volatilitySurface_->observationLag(), volatilitySurface_->frequency(),
             volatilitySurface_->indexIsInterpolated());
         auto surfaceBaseFixing =

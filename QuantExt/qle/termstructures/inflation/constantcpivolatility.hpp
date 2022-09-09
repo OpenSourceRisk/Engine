@@ -35,12 +35,20 @@ public:
     ConstantCPIVolatility(QuantLib::Volatility v, QuantLib::Natural settlementDays, const QuantLib::Calendar&,
                           QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
                           const QuantLib::Period& observationLag, QuantLib::Frequency frequency,
-                          bool indexIsInterpolated, const QuantLib::Date& lastAvailableFixingDate = QuantLib::Null<QuantLib::Date>());
+                          bool indexIsInterpolated, const QuantLib::Date& capFloorStartDate = QuantLib::Date(),
+                          const QuantLib::Date& lastAvailableFixingDate = QuantLib::Date());
 
+   
     QuantLib::Volatility totalVariance(const QuantLib::Date& maturityDate, QuantLib::Rate strike,
                                        const QuantLib::Period& obsLag, bool extrapolate = false) const override;
 
+    //! base date will be in the past
+    virtual QuantLib::Date baseDate() const override;
+
 private:
+    QuantLib::Date capFloorStartDate() const;
+
+    QuantLib::Date capFloorStartDate_;
     QuantLib::Date lastAvailableFixingDate_;
 };
 

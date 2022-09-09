@@ -79,8 +79,8 @@ void CPIBlackCapFloorEngine::calculate() const {
         // baseFixingSwap(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t),
         // solve for strikeRate(t):
         auto surfaceBaseFixing =
-            ZeroInflation::cpiFixing(*index.currentLink(), volatilitySurface_->referenceDate(),
-                                     volatilitySurface_->observationLag(), volatilitySurface_->indexIsInterpolated());
+            ZeroInflation::cpiFixing(*index.currentLink(), volatilitySurface_->baseDate(),
+                                     0 * Days, volatilitySurface_->indexIsInterpolated());
         auto ttmFromSurfaceBaseDate =
             inflationYearFraction(volatilitySurface_->frequency(), volatilitySurface_->indexIsInterpolated(),
             index->zeroInflationTermStructure()->dayCounter(), volatilitySurface_->baseDate(), optionObservationDate);
