@@ -81,7 +81,6 @@
     <ClInclude Include="ored\marketdata\expiry.hpp" />
     <ClInclude Include="ored\marketdata\fittedbondcurvehelpermarket.hpp" />
     <ClInclude Include="ored\marketdata\fixings.hpp" />
-    <ClInclude Include="ored\marketdata\fxspot.hpp" />
     <ClInclude Include="ored\marketdata\fxtriangulation.hpp" />
     <ClInclude Include="ored\marketdata\fxvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\genericyieldvolcurve.hpp" />
@@ -297,7 +296,6 @@
     <ClCompile Include="ored\marketdata\expiry.cpp" />
     <ClCompile Include="ored\marketdata\fittedbondcurvehelpermarket.cpp" />
     <ClCompile Include="ored\marketdata\fixings.cpp" />
-    <ClCompile Include="ored\marketdata\fxspot.cpp" />
     <ClCompile Include="ored\marketdata\fxtriangulation.cpp" />
     <ClCompile Include="ored\marketdata\fxvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\genericyieldvolcurve.cpp" />
