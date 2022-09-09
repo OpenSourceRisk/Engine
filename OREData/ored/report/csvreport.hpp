@@ -49,7 +49,7 @@ public:
     */
     CSVFileReport(const string& filename, const char sep = ',', const bool commentCharacter = true,
                   char quoteChar = '\0', const std::string& nullString = "#N/A", bool lowerHeader = false,
-                  QuantLib::Integer rolloverSize = QuantLib::Null<QuantLib::Integer>());
+                  QuantLib::Size rolloverSize = QuantLib::Null<QuantLib::Size>());
     ~CSVFileReport();
 
     void open();
@@ -71,7 +71,7 @@ private:
     char quoteChar_;
     std::string nullString_;
     bool lowerHeader_;
-    QuantLib::Integer rolloverSize_;
+    QuantLib::Size rolloverSize_;
     Size i_, j_ = 0;
     Size version_ = 0;
     FILE* fp_;
