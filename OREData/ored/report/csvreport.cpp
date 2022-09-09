@@ -18,12 +18,12 @@
 
 #include <boost/variant/static_visitor.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <ored/report/csvreport.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/math/rounding.hpp>
-#include <filesystem>
 
 using std::string;
 
@@ -85,7 +85,7 @@ private:
 };
 
 CSVFileReport::CSVFileReport(const string& filename, const char sep, const bool commentCharacter, char quoteChar,
-                             const string& nullString, bool lowerHeader, QuantLib::Integer rolloverSize)
+                             const string& nullString, bool lowerHeader, QuantLib::Size rolloverSize)
     : filename_(filename), sep_(sep), commentCharacter_(commentCharacter), quoteChar_(quoteChar),
       nullString_(nullString), lowerHeader_(lowerHeader), rolloverSize_(rolloverSize), i_(0), fp_(NULL) {    
     baseFilename_ = filename_;
@@ -141,10 +141,10 @@ Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size 
 
 Report& CSVFileReport::next() {
     // check the filesize every for every 1000 rows, and roll if necessary
-    if (rolloverSize_ != Null<Integer>()) {     
-        if (j_ >= 1000) {
-            auto fileSize = std::filesystem::file_size(filename_);
-            LOG("CSV size of " << filename_ << " is " << fileSize);
+    if (rolloverSize_ != Null<Size>()) {     
+        if (j_ >= 10000) {
+            auto fileSize = boost::filesystem::file_size(filename_);
+            TLOG("CSV size of " << filename_ << " is " << fileSize);
             if (fileSize > rolloverSize_ * 1024 * 1024)
                 rollover();
             j_ = 0;
