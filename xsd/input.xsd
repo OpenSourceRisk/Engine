@@ -14,6 +14,26 @@
   <xs:include schemaLocation="calendaradjustment.xsd"/>
   <xs:include schemaLocation="currencyconfig.xsd"/>
   <xs:include schemaLocation="iborfallbackconfig.xsd"/>
-  <xs:include schemaLocation="trade.xsd"/>
+
+  <xs:element type="portfolio" name="Portfolio"/>
+
+  <xs:element type="trade" name="Trade"/>
+
+  <xs:complexType name="portfolio">
+    <xs:sequence>
+      <xs:element type="trade" name="Trade" maxOccurs="unbounded" minOccurs="0">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="trade">
+    <xs:sequence>
+      <xs:element type="oreTradeType" name="TradeType"/>
+      <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+      <xs:element type="tradeActions" name="TradeActions" minOccurs="0"/>
+      <xs:group ref="oreTradeData" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id" use="required"/>
+  </xs:complexType>
 
 </xs:schema>
