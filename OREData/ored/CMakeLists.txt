@@ -88,6 +88,9 @@ model/modeldata.cpp
 model/modelparameter.cpp
 model/utilities.cpp
 portfolio/asianoption.cpp
+portfolio/barrierdata.cpp
+portfolio/barrieroption.cpp
+portfolio/barrieroptionwrapper.cpp
 portfolio/bond.cpp
 portfolio/bondutils.cpp
 portfolio/builders/capfloor.cpp
@@ -112,6 +115,8 @@ portfolio/durationadjustedcmslegdata.cpp
 portfolio/enginedata.cpp
 portfolio/enginefactory.cpp
 portfolio/envelope.cpp
+portfolio/equitybarrieroption.cpp
+portfolio/equitydoublebarrieroption.cpp
 portfolio/equityforward.cpp
 portfolio/equityfuturesoption.cpp
 portfolio/equityoption.cpp
@@ -121,6 +126,8 @@ portfolio/fixingdates.cpp
 portfolio/forwardbond.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxaverageforward.cpp
+portfolio/fxbarrieroption.cpp
+portfolio/fxdoublebarrieroption.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
 portfolio/fxswap.cpp
@@ -272,6 +279,9 @@ model/modelparameter.hpp
 model/structuredmodelerror.hpp
 model/utilities.hpp
 portfolio/asianoption.hpp
+portfolio/barrierdata.hpp
+portfolio/barrieroption.hpp
+portfolio/barrieroptionwrapper.hpp
 portfolio/bond.hpp
 portfolio/bondutils.hpp
 portfolio/builders/asianoption.hpp
@@ -294,12 +304,16 @@ portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/creditdefaultswapoption.hpp
 portfolio/builders/durationadjustedcms.hpp
 portfolio/builders/equityasianoption.hpp
+portfolio/builders/equitybarrieroption.hpp
 portfolio/builders/equitycompositeoption.hpp
+portfolio/builders/equitydoublebarrieroption.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
 portfolio/builders/forwardbond.hpp
 portfolio/builders/fxasianoption.hpp
+portfolio/builders/fxbarrieroption.hpp
+portfolio/builders/fxdoublebarrieroption.hpp
 portfolio/builders/fxforward.hpp
 portfolio/builders/fxoption.hpp
 portfolio/builders/quantoequityoption.hpp
@@ -320,6 +334,8 @@ portfolio/durationadjustedcmslegdata.hpp
 portfolio/enginedata.hpp
 portfolio/enginefactory.hpp
 portfolio/envelope.hpp
+portfolio/equitybarrieroption.hpp
+portfolio/equitydoublebarrieroption.hpp
 portfolio/equityforward.hpp
 portfolio/equityfuturesoption.hpp
 portfolio/equityoption.hpp
@@ -329,6 +345,8 @@ portfolio/fixingdates.hpp
 portfolio/forwardbond.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxaverageforward.hpp
+portfolio/fxbarrieroption.hpp
+portfolio/fxdoublebarrieroption.hpp
 portfolio/fxforward.hpp
 portfolio/fxoption.hpp
 portfolio/fxswap.hpp
