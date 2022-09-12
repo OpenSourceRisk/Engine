@@ -1,0 +1,177 @@
+/*
+  Copyright (C) 2019 Quaternion Risk Management Ltd
+  All rights reserved.
+
+  This file is part of ORE, a free-software/open-source library
+  for transparent pricing and risk analysis - http://opensourcerisk.org
+  
+  ORE is free software: you can redistribute it and/or modify it
+  under the terms of the Modified BSD License.  You should have received a
+  copy of the license along with this program.
+  The license is also available online at <http://opensourcerisk.org>
+  
+  This program is distributed on the basis that it will form a useful
+  contribution to risk analytics and model standardisation, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+#include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
+#include <ored/configuration/conventions.hpp>
+#include <ored/marketdata/csvloader.hpp>
+#include <ored/marketdata/todaysmarket.hpp>
+#include <ored/portfolio/builders/fxbarrieroption.hpp>
+#include <ored/portfolio/builders/fxdigitalbarrieroption.hpp>
+#include <ored/portfolio/builders/fxdigitaloption.hpp>
+#include <ored/portfolio/builders/fxdoublebarrieroption.hpp>
+#include <ored/portfolio/builders/fxdoubletouchoption.hpp>
+#include <ored/portfolio/builders/fxtouchoption.hpp>
+#include <ored/portfolio/compositeinstrumentwrapper.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/fxbarrieroption.hpp>
+#include <ored/portfolio/fxdigitalbarrieroption.hpp>
+#include <ored/portfolio/fxdigitaloption.hpp>
+#include <ored/portfolio/fxdoublebarrieroption.hpp>
+#include <ored/portfolio/fxdoubletouchoption.hpp>
+#include <ored/portfolio/fxkikobarrieroption.hpp>
+#include <ored/portfolio/fxtouchoption.hpp>
+#include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/tradefactory.hpp>
+#include <oret/datapaths.hpp>
+#include <oret/toplevelfixture.hpp>
+
+using namespace QuantLib;
+using namespace boost::unit_test_framework;
+using namespace std;
+using namespace ore::data;
+
+BOOST_FIXTURE_TEST_SUITE(OREPlusEquityFXTestSuite, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(CompositeWrapperTest)
+
+namespace {
+template <class T> void loadFromXMLString(T& t, const std::string& str) {
+    ore::data::XMLDocument doc;
+    doc.fromXMLString(str);
+    t.fromXML(doc.getFirstNode(""));
+}
+
+struct CommonVars {
+
+    CommonVars()
+        : asof(Date(5, Feb, 2016)), baseCurrency("EUR"),
+          portfolio(XMLDocument(TEST_INPUT_FILE("portfolio.xml")).toString()),
+          conventions(XMLDocument(TEST_INPUT_FILE("conventions.xml")).toString()),
+          todaysMarketConfig(XMLDocument(TEST_INPUT_FILE("todaysmarket.xml")).toString()),
+          pricingEngineConfig(XMLDocument(TEST_INPUT_FILE("pricingengine.xml")).toString()),
+          curveConfig(XMLDocument(TEST_INPUT_FILE("curveconfig.xml")).toString()),
+          loader(boost::make_shared<CSVLoader>(TEST_INPUT_FILE("market.csv"), TEST_INPUT_FILE("fixings.csv"), "")) {
+
+        Settings::instance().evaluationDate() = asof;
+    }
+
+    Date asof;
+    string baseCurrency;
+    string portfolio;
+    string conventions;
+    string todaysMarketConfig;
+    string pricingEngineConfig;
+    string curveConfig;
+    boost::shared_ptr<Loader> loader;
+    SavedSettings savedSettings;
+};
+
+std::vector<boost::shared_ptr<ore::data::EngineBuilder>> getExtraEngineBuilders() {
+
+    // add extra builders
+    std::vector<boost::shared_ptr<EngineBuilder>> eb;
+
+    // FX
+    eb.push_back(boost::make_shared<FxDigitalOptionEngineBuilder>());
+    eb.push_back(boost::make_shared<FxDigitalBarrierOptionEngineBuilder>());
+    eb.push_back(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
+    eb.push_back(boost::make_shared<FxBarrierOptionFDEngineBuilder>());
+    eb.push_back(boost::make_shared<FxTouchOptionEngineBuilder>());
+    eb.push_back(boost::make_shared<FxDoubleTouchOptionAnalyticEngineBuilder>());
+    eb.push_back(boost::make_shared<FxDoubleBarrierOptionAnalyticEngineBuilder>());
+
+    return eb;
+}
+
+std::map<string, boost::shared_ptr<AbstractTradeBuilder>> getExtraTradeBuilders() {
+
+    // add extra trade builders
+    std::map<string, boost::shared_ptr<AbstractTradeBuilder>> tb = {
+        {"FxDigitalOption", boost::make_shared<TradeBuilder<FxDigitalOption>>()},
+        {"FxBarrierOption", boost::make_shared<TradeBuilder<FxBarrierOption>>()},
+        {"FxKIKOBarrierOption", boost::make_shared<TradeBuilder<FxKIKOBarrierOption>>()},
+        {"FxDigitalBarrierOption", boost::make_shared<TradeBuilder<FxDigitalBarrierOption>>()},
+        {"FxTouchOption", boost::make_shared<TradeBuilder<FxTouchOption>>()},
+        {"FxDoubleBarrierOption", boost::make_shared<TradeBuilder<FxDoubleBarrierOption>>()},
+        {"FxDoubleTouchOption", boost::make_shared<TradeBuilder<FxDoubleTouchOption>>()}};
+
+    return tb;
+}
+
+} // namespace
+
+// Common variables used in the tests below
+
+BOOST_AUTO_TEST_CASE(testCompositeInstrumentWrapperPrice) {
+    CommonVars vars;
+    boost::shared_ptr<CurveConfigurations> curveConfig = boost::make_shared<CurveConfigurations>();
+    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
+    boost::shared_ptr<TodaysMarketParameters> todaysMarketConfig = boost::make_shared<TodaysMarketParameters>();
+    boost::shared_ptr<EngineData> pricingEngineConfig = boost::make_shared<EngineData>();
+    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+
+    loadFromXMLString(*curveConfig, vars.curveConfig);
+    loadFromXMLString(*conventions, vars.conventions);
+    InstrumentConventions::instance().setConventions(conventions);
+
+    loadFromXMLString(*todaysMarketConfig, vars.todaysMarketConfig);
+    loadFromXMLString(*pricingEngineConfig, vars.pricingEngineConfig);
+
+    auto tradeFactory = boost::make_shared<TradeFactory>();
+    tradeFactory->addExtraBuilders(getExtraTradeBuilders());
+
+    portfolio->loadFromXMLString(vars.portfolio, tradeFactory);
+
+    boost::shared_ptr<Market> market =
+        boost::make_shared<TodaysMarket>(vars.asof, todaysMarketConfig, vars.loader, curveConfig, true);
+    auto configurations = std::map<MarketContext, string>();
+    boost::shared_ptr<EngineFactory> factory =
+        boost::make_shared<EngineFactory>(pricingEngineConfig, market, configurations, getExtraEngineBuilders());
+
+    BOOST_TEST_MESSAGE("number trades " << portfolio->size());
+    portfolio->build(factory);
+    BOOST_TEST_MESSAGE("number trades " << portfolio->size());
+
+    Handle<Quote> fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+    vector<boost::shared_ptr<InstrumentWrapper>> iw;
+    std::vector<Handle<Quote>> fxRates;
+
+    Real totalNPV = 0;
+    for (auto t : portfolio->trades()) {
+        Handle<Quote> fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+        if (t->npvCurrency() != "USD")
+            fx = factory->market()->fxRate(t->npvCurrency() + "USD");
+        fxRates.push_back(fx);
+        iw.push_back(t->instrument());
+        BOOST_TEST_MESSAGE("NPV " << iw.back()->NPV());
+        BOOST_TEST_MESSAGE("FX " << fxRates.back()->value());
+
+        totalNPV += iw.back()->NPV() * fxRates.back()->value();
+    }
+    boost::shared_ptr<InstrumentWrapper> instrument =
+        boost::shared_ptr<InstrumentWrapper>(new ore::data::CompositeInstrumentWrapper(iw, fxRates, vars.asof));
+
+    BOOST_TEST_MESSAGE(instrument->NPV());
+
+    BOOST_CHECK_CLOSE(instrument->NPV(), totalNPV, 0.01);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

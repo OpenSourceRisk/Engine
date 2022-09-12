@@ -37,18 +37,25 @@
 #include <ored/portfolio/builders/creditdefaultswapoption.hpp>
 #include <ored/portfolio/builders/durationadjustedcms.hpp>
 #include <ored/portfolio/builders/equityasianoption.hpp>
+#include <ored/portfolio/builders/equitybarrieroption.hpp>
+#include <ored/portfolio/builders/equitycompositeoption.hpp>
+#include <ored/portfolio/builders/equitydigitaloption.hpp>
+#include <ored/portfolio/builders/equitydoublebarrieroption.hpp>
+#include <ored/portfolio/builders/equitydoubletouchoption.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityfuturesoption.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
-#include <ored/portfolio/builders/equitybarrieroption.hpp>
-#include <ored/portfolio/builders/equitydoublebarrieroption.hpp>
-#include <ored/portfolio/builders/equitycompositeoption.hpp>
+#include <ored/portfolio/builders/equitytouchoption.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/builders/fxasianoption.hpp>
+#include <ored/portfolio/builders/fxbarrieroption.hpp>
+#include <ored/portfolio/builders/fxdigitalbarrieroption.hpp>
+#include <ored/portfolio/builders/fxdigitaloption.hpp>
+#include <ored/portfolio/builders/fxdoublebarrieroption.hpp>
+#include <ored/portfolio/builders/fxdoubletouchoption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
-#include <ored/portfolio/builders/fxbarrieroption.hpp>
-#include <ored/portfolio/builders/fxdoublebarrieroption.hpp>
+#include <ored/portfolio/builders/fxtouchoption.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
@@ -186,7 +193,9 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
     registerBuilder(boost::make_shared<FxBarrierOptionFDEngineBuilder>());
     registerBuilder(boost::make_shared<FxDoubleBarrierOptionAnalyticEngineBuilder>());
-    
+    registerBuilder(boost::make_shared<data::FxTouchOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<data::FxDoubleTouchOptionAnalyticEngineBuilder>());
+
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredOvernightIndexedCouponLegEngineBuilder>());
@@ -217,6 +226,9 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityBarrierOptionAnalyticEngineBuilder>());
     registerBuilder(boost::make_shared<EquityBarrierOptionFDEngineBuilder>());
     registerBuilder(boost::make_shared<EquityDoubleBarrierOptionAnalyticEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityDigitalOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityDoubleTouchOptionAnalyticEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityTouchOptionEngineBuilder>());
 
     registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
     registerBuilder(boost::make_shared<DiscountingForwardBondEngineBuilder>());
