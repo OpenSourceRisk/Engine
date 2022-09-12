@@ -1,0 +1,73 @@
+\subsubsection{Equity Digital Option}
+
+The \lstinline!EquityDigitalOptionData!  node is the trade data container for the \emph{EquityDigitalOption} trade type. The \lstinline!EquityDigitalOptionData!  node includes one  \lstinline!OptionData! trade component sub-node  plus elements
+specific to the Equity Digital  Option. The structure of an example \lstinline!EquityDigitalOptionData! node for an Equity Digital Option is shown in Listing
+\ref{lst:eqdigitaloption_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <EquityDigitalOptionData>
+            <OptionData>
+                <LongShort>Long</LongShort>
+                <OptionType>Call</OptionType>
+                <Style>European</Style>
+                <ExerciseDates>
+                    <ExerciseDate>2027-02-26</ExerciseDate>
+                </ExerciseDates>
+                ...
+            </OptionData>
+            <Strike>3300</Strike>
+            <PayoffCurrency>USD</PayoffCurrency>
+            <PayoffAmount>1000</PayoffAmount>
+            <Name>RIC:.SPX</Name>
+            <Quantity>1000</Quantity>
+        </EquityDigitalOptionData>
+\end{minted}
+\caption{Equity Digital Option data}
+\label{lst:eqdigitaloption_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!EquityDigitalOptionData!  node follow below.
+
+\begin{itemize}
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. The relevant fields in the \lstinline!OptionData! node for an EquityDigitalOption are:
+
+\begin{itemize}
+\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}.
+
+\item \lstinline!OptionType! The allowable values are \emph{Call} or \emph{Put}.  \emph{Call} means that the option is in the money when the underlying equity price is above the strike, and \emph{Put} means that the option is in the money when the underlying equity price is below the strike.
+
+\item  \lstinline!Style! The allowable value is \emph{European}. Note that the Equity Digital Option type allows for \emph{European} option style only.
+%
+%\item  \lstinline!Settlement! The allowable values are \emph{Cash} or \emph{Physical}.
+%
+%\item \lstinline!PayoffatExpiry! The allowable values are \emph{true} for payoff at expiry, or \emph{false} for payoff at exercise (relevant for \emph{American} style FxOptions).
+
+\item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given. 
+
+\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
+
+Allowable values:  See section \ref{ss:premiums}
+
+\end{itemize}
+
+\item Strike: The option strike price per one unit of the underlying, expressed in the currency of the underlying equity .
+
+Allowable values:  Any positive real number.
+
+\item PayoffCurrency: The payoff currency of the Equity Digital Option is the currency of the payoff amount. Must be consistent with the currency of the underlying Equity spot price.  
+
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item PayoffAmount: The fixed payoff amount per unit of underlying expressed in payoff currency. It is cash-or-nothing payoff that depends on the option being in or out of the money.
+
+Allowable values:  Any positive real number.
+
+\item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}.
+
+\item Quantity: The number of units of the underlying covered by the transaction. 
+    
+Allowable values:  Any positive real number.
+
+\end{itemize}
