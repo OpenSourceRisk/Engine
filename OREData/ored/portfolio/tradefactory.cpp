@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016-2022 Quaternion Risk Management Ltd
  Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
@@ -22,6 +22,7 @@
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/commoditydigitaloption.hpp>
+#include <ored/portfolio/compositetrade.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapoption.hpp>
 #include <ored/portfolio/equityforward.hpp>
@@ -29,15 +30,26 @@
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equitybarrieroption.hpp>
 #include <ored/portfolio/equitydoublebarrieroption.hpp>
+#include <ored/portfolio/equitydigitaloption.hpp>
+#include <ored/portfolio/equitydoubletouchoption.hpp>
+#include <ored/portfolio/equityeuropeanbarrieroption.hpp>
 #include <ored/portfolio/equityswap.hpp>
+#include <ored/portfolio/equitytouchoption.hpp>
 #include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
+#include <ored/portfolio/fxbarrieroption.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxaverageforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/fxbarrieroption.hpp>
 #include <ored/portfolio/fxdoublebarrieroption.hpp>
+#include <ored/portfolio/fxdoubletouchoption.hpp>
+#include <ored/portfolio/fxdigitalbarrieroption.hpp>
+#include <ored/portfolio/fxdigitaloption.hpp>
+#include <ored/portfolio/fxeuropeanbarrieroption.hpp>
+#include <ored/portfolio/fxkikobarrieroption.hpp>
 #include <ored/portfolio/fxswap.hpp>
+#include <ored/portfolio/fxtouchoption.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/portfolio/failedtrade.hpp>
@@ -60,11 +72,21 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
     addBuilder("FxAsianOption", boost::make_shared<TradeBuilder<FxAsianOption>>());
     addBuilder("FxBarrierOption", boost::make_shared<TradeBuilder<FxBarrierOption>>());
     addBuilder("FxDoubleBarrierOption", boost::make_shared<TradeBuilder<FxDoubleBarrierOption>>());
+    addBuilder("FxKIKOBarrierOption", boost::make_shared<TradeBuilder<FxKIKOBarrierOption>>());
+    addBuilder("FxDigitalBarrierOption", boost::make_shared<TradeBuilder<FxDigitalBarrierOption>>());
+    addBuilder("FxTouchOption", boost::make_shared<TradeBuilder<FxTouchOption>>());
+    addBuilder("FxDoubleTouchOption", boost::make_shared<TradeBuilder<FxDoubleTouchOption>>());
+    addBuilder("FxEuropeanBarrierOption", boost::make_shared<TradeBuilder<FxEuropeanBarrierOption>>());
+    addBuilder("FxDigitalOption", boost::make_shared<TradeBuilder<FxDigitalOption>>());
     addBuilder("CapFloor", boost::make_shared<TradeBuilder<CapFloor>>());
     addBuilder("EquityOption", boost::make_shared<TradeBuilder<EquityOption>>());
     addBuilder("EquityBarrierOption", boost::make_shared<TradeBuilder<EquityBarrierOption>>());
     addBuilder("EquityDoubleBarrierOption", boost::make_shared<TradeBuilder<EquityDoubleBarrierOption>>());
     addBuilder("EquityAsianOption", boost::make_shared<TradeBuilder<EquityAsianOption>>());
+    addBuilder("EquityEuropeanBarrierOption", boost::make_shared<TradeBuilder<EquityEuropeanBarrierOption>>());
+    addBuilder("EquityDigitalOption", boost::make_shared<TradeBuilder<EquityDigitalOption>>());
+    addBuilder("EquityDoubleTouchOption", boost::make_shared<TradeBuilder<EquityDoubleTouchOption>>());
+    addBuilder("EquityTouchOption", boost::make_shared<TradeBuilder<EquityTouchOption>>());
     addBuilder("EquityForward", boost::make_shared<TradeBuilder<EquityForward>>());
     addBuilder("EquitySwap", boost::make_shared<TradeBuilder<EquitySwap>>());
     addBuilder("Bond", boost::make_shared<TradeBuilder<Bond>>());

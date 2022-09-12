@@ -31,7 +31,6 @@
 #include <ql/processes/blackscholesprocess.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace std;

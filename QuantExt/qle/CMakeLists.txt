@@ -102,6 +102,7 @@ instruments/impliedbondspread.cpp
 instruments/makeaverageois.cpp
 instruments/makecds.cpp
 instruments/makeoiscapfloor.cpp
+instruments/multiccycompositeinstrument.cpp
 instruments/multilegoption.cpp
 instruments/oibasisswap.cpp
 instruments/oiccbasisswap.cpp
@@ -441,6 +442,7 @@ instruments/impliedbondspread.hpp
 instruments/makeaverageois.hpp
 instruments/makecds.hpp
 instruments/makeoiscapfloor.hpp
+instruments/multiccycompositeinstrument.hpp
 instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
 instruments/oibasisswap.hpp
