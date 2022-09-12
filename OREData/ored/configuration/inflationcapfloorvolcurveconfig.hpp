@@ -60,7 +60,8 @@ public:
                                            const BusinessDayConvention& businessDayConvention, const string& index,
                                            const string& indexCurve, const string& yieldTermStructure,
                                            const Period& observationLag, const std::string& quoteIndex = "",
-                                           const std::string& smileDynamics = "", const std::string& conventions = "");
+                                           const std::string& smileDynamics = "", const std::string& conventions = "",
+                                           const bool useLastAvailableFixingDate = false);
 
     //! \name XMLSerializable interface
     //@{
@@ -90,6 +91,7 @@ public:
     const std::string& quoteIndex() const { return quoteIndex_; }
     const std::string& smileDynamics() const { return smileDynamics_; }
     const std::string& conventions() const { return conventions_; }
+    const bool& useLastAvailableFixingDate() const { return useLastAvailableFixingDate_; }
     //@}
 
     //! \name Setters
@@ -112,6 +114,7 @@ public:
     std::string& quoteIndex() { return quoteIndex_; }
     std::string& smileDynamics() { return smileDynamics_; }
     std::string& conventions() { return conventions_; }
+    bool& useLastAvailableFixingDate() { return useLastAvailableFixingDate_; }
     //@}
 
 private:
@@ -137,6 +140,7 @@ private:
     std::string quoteIndex_;
     std::string smileDynamics_;
     std::string conventions_;
+    bool useLastAvailableFixingDate_;
 };
 
 std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::VolatilityType t);

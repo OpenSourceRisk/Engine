@@ -52,11 +52,10 @@ public:
                                  const QuantLib::Handle<QuantLib::CPICapFloorTermPriceSurface>& priceSurface,
                                  const boost::shared_ptr<QuantLib::ZeroInflationIndex>& zeroIndex,
                                  const boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine>& engine,
+                                 const QuantLib::Date& capFloorStartDate = Date(),
                                  const QuantLib::Real& upperVolBound = 1.0,
                                  const QuantLib::Real& lowerVolBound = 0.000001,
                                  const QuantLib::Real& solverTolerance = 1.0e-12,
-                                 const bool computeTimeToExpiryFromLastAvailableFixingDate = false,
-                                 const QuantLib::Date& capFloorStartDate = Date(),
                                  const Interpolator2D& interpolator2d = Interpolator2D());
 
     //! \name LazyObject interface
@@ -81,9 +80,6 @@ public:
     const QuantLib::Matrix& volData() { return volData_; }
     //@}
 
-    QuantLib::Volatility totalVariance(const QuantLib::Date& maturityDate, QuantLib::Rate strike,
-                                       const QuantLib::Period& obsLag, bool extrapolate = false) const override;
-
 private:
     QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const override;
 
@@ -96,8 +92,7 @@ private:
                           QuantLib::Date maturityDate, QuantLib::Real baseCPI,
                           QuantLib::Handle<QuantLib::CPICapFloorTermPriceSurface> priceSurface,
                           const boost::shared_ptr<QuantLib::ZeroInflationIndex>& zeroIndex,
-                          const boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine>& engine,
-                          const QuantLib::Date& lastAvailableFixingDate);
+                          const boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine>& engine);
         // Update the engine's volatility, return difference between capfloor NPV and priceToMatch
         QuantLib::Real operator()(QuantLib::Volatility guess) const;
 
@@ -136,16 +131,15 @@ StrippedCPIVolatilitySurface<Interpolator2D>::StrippedCPIVolatilitySurface(
     PriceQuotePreference type, const QuantLib::Handle<QuantLib::CPICapFloorTermPriceSurface>& priceSurface,
     const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
     const boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine>& engine, // const QuantLib::Real& baseCPI,
-    const QuantLib::Real& upperVolBound, const QuantLib::Real& lowerVolBound, const QuantLib::Real& solverTolerance,
-    const bool computeTimeToExpiryFromLastAvailableFixingDate, const QuantLib::Date& capFloorStartDate,
+    const QuantLib::Date& capFloorStartDate,
+    const QuantLib::Real& upperVolBound, const QuantLib::Real& lowerVolBound, const QuantLib::Real& solverTolerance,    
     const Interpolator2D& interpolator2d)
     : CPIVolatilitySurface(priceSurface->settlementDays(), priceSurface->calendar(),
                            priceSurface->businessDayConvention(), priceSurface->dayCounter(),
                            priceSurface->observationLag(), index->frequency(), index->interpolated(),
                            capFloorStartDate),
       preference_(type), priceSurface_(priceSurface), index_(index), engine_(engine), upperVolBound_(upperVolBound),
-      lowerVolBound_(lowerVolBound), solverTolerance_(solverTolerance), interpolator2d_(interpolator2d),
-      computeTimeToExpiryFromLastAvailableFixingDate_(computeTimeToExpiryFromLastAvailableFixingDate) {
+      lowerVolBound_(lowerVolBound), solverTolerance_(solverTolerance), interpolator2d_(interpolator2d) {
 
     performCalculations();
 }
@@ -171,16 +165,12 @@ template <class Interpolator2D> void StrippedCPIVolatilitySurface<Interpolator2D
             
             bool useFloor = chooseFloor(strikes_[i], atmRate);
 
-            Date ttmBaseDate = computeTimeToExpiryFromLastAvailableFixingDate_
-                                   ? ZeroInflation::lastAvailableFixing(*index_, referenceDate())
-                                   : QuantLib::Null<QuantLib::Date>();
-
             // FIXME: Do we need an effective maturity here ?
             QuantLib::Real priceToMatch = useFloor ? priceSurface_->floorPrice(maturities_[j], strikes_[i])
                                                    : priceSurface_->capPrice(maturities_[j], strikes_[i]);
             try {
                 ObjectiveFunction func(priceToMatch, useFloor, strikes_[i], startDate, maturityDate, baseCPI,
-                                       priceSurface_, index_, engine_, ttmBaseDate);
+                                       priceSurface_, index_, engine_);
                 QuantLib::Real found = solver.solve(func, solverTolerance_, guess, lowerVolBound_, upperVolBound_);
                 volData_[i][j] = found;
             } catch (std::exception& e) {
@@ -276,11 +266,9 @@ StrippedCPIVolatilitySurface<Interpolator2D>::ObjectiveFunction::ObjectiveFuncti
     QuantLib::Date maturityDate, QuantLib::Real baseCPI,
     QuantLib::Handle<QuantLib::CPICapFloorTermPriceSurface> priceSurface,
     const boost::shared_ptr<QuantLib::ZeroInflationIndex>& zeroIndex,
-    const boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine>& engine, 
-    const QuantLib::Date& ttmBaseDate)
+    const boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine>& engine)
     : priceToMatch_(priceToMatch), useFloor_(useFloor), strike_(strike), startDate_(startDate),
       maturityDate_(maturityDate), baseCPI_(baseCPI), priceSurface_(priceSurface), index_(zeroIndex), engine_(engine),
-      lastAvailableFixingDate_(ttmBaseDate),
       cpiCapFloor_(QuantLib::CPICapFloor(useFloor_ ? QuantLib::Option::Put : QuantLib::Option::Call,
                                          1.0, // unit nominal, because the price surface returns unit nominal prices
                                          startDate_, baseCPI_, maturityDate_, priceSurface_->calendar(),
@@ -300,35 +288,12 @@ StrippedCPIVolatilitySurface<Interpolator2D>::ObjectiveFunction::operator()(Quan
     boost::shared_ptr<QuantExt::ConstantCPIVolatility> vol = boost::make_shared<QuantExt::ConstantCPIVolatility>(
         guess, priceSurface_->settlementDays(), priceSurface_->calendar(), priceSurface_->businessDayConvention(),
         priceSurface_->dayCounter(), priceSurface_->observationLag(), priceSurface_->frequency(),
-        index_->interpolated(), startDate_, lastAvailableFixingDate_);
+        index_->interpolated(), startDate_);
 
     engine_->setVolatility(QuantLib::Handle<QuantLib::CPIVolatilitySurface>(vol));
 
     QuantLib::Real npv = cpiCapFloor_.NPV();
     return priceToMatch_ - npv;
-}
-
-template <class Interpolator2D>
-QuantLib::Volatility StrippedCPIVolatilitySurface<Interpolator2D>::totalVariance(const QuantLib::Date& maturityDate,
-                                                                                     QuantLib::Rate strike,
-                                                                                     const QuantLib::Period& obsLag,
-                                                                                     bool extrapolate) const {
-    if (!computeTimeToExpiryFromLastAvailableFixingDate_) {
-        return CPIVolatilitySurface::totalVariance(maturityDate, strike, obsLag, extrapolate);
-    } else {
-        Volatility vol = volatility(maturityDate, strike, obsLag, extrapolate);
-        Date lastAvailableFixingDate = ZeroInflation::lastAvailableFixing(*index_, referenceDate());
-
-        Period useLag = obsLag;
-        if (obsLag == Period(-1, Days)) {
-            useLag = observationLag();
-        }
-
-        Date effectiveMaturityDate =
-            ZeroInflation::fixingDate(maturityDate, useLag, index_->frequency(), indexIsInterpolated_);
-        double t = timeFromReference(effectiveMaturityDate) - timeFromReference(lastAvailableFixingDate);
-        return vol * vol * t;
-    }
 }
 
 } // namespace QuantExt

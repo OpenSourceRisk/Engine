@@ -239,7 +239,7 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
 
         cpiVolSurface_ = boost::make_shared<InterpolatedCPIVolatilitySurface<Bilinear>>(
             tenors, strikes, quotes, index, config->settleDays(), config->calendar(), config->businessDayConvention(),
-            config->dayCounter(), config->observationLag(), false, startDate);
+            config->dayCounter(), config->observationLag(), startDate);
         if (config->extrapolate())
             cpiVolSurface_->enableExtrapolation();
         DLOG("Building surface done");
@@ -415,7 +415,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
 
         boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine =
             boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(
-                discountCurve_, QuantLib::Handle<QuantLib::CPIVolatilitySurface>()); // vol surface can be empty, will
+                discountCurve_, QuantLib::Handle<QuantLib::CPIVolatilitySurface>(), config->useLastAvailableFixingDate()); // vol surface can be empty, will
                                                                                      // be set in the striping process
 
         try {
@@ -429,8 +429,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
             QuantLib::Handle<CPICapFloorTermPriceSurface> cpiPriceSurfaceHandle(cpiPriceSurfacePtr);
             boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>> cpiCapFloorVolSurface;
             cpiCapFloorVolSurface = boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>>(
-                QuantExt::PriceQuotePreference::CapFloor, cpiPriceSurfaceHandle, index, engine, 1.0, 0.000001, 1.0e-12,
-                false, startDate);
+                QuantExt::PriceQuotePreference::CapFloor, cpiPriceSurfaceHandle, index, engine, startDate);
 
             // cast
             cpiVolSurface_ = cpiCapFloorVolSurface;

@@ -91,7 +91,7 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
     string tol = XMLUtils::getChildValue(node, "Tolerance", true);
     tolerance_ = parseReal(tol);
 
-    useLastAvailableFixingAsBaseDate_ = XMLUtils::getChildValueAsBool(node, "LastAvailableFixingBaseDate", false, false);
+    useLastAvailableFixingAsBaseDate_ = XMLUtils::getChildValueAsBool(node, "UseLastFixingDate", false, false);
 
     XMLNode* seasonalityNode = XMLUtils::getChildNode(node, "Seasonality");
     seasonalityBaseDate_ = QuantLib::Null<Date>();
@@ -142,7 +142,7 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Tolerance", tolerance_);
 
     if (useLastAvailableFixingAsBaseDate_)
-        XMLUtils::addChild(doc, node, "LastAvailableFixingBaseDate", to_string(useLastAvailableFixingAsBaseDate_));
+        XMLUtils::addChild(doc, node, "UseLastFixingDate", to_string(useLastAvailableFixingAsBaseDate_));
 
     if (seasonalityBaseDate_ != QuantLib::Null<Date>()) {
         XMLNode* seasonalityNode = XMLUtils::addChild(doc, node, "Seasonality");

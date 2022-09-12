@@ -61,7 +61,8 @@ protected:
 class BlackCPICashFlowPricer : public InflationCashFlowPricer {
 public:
     BlackCPICashFlowPricer(const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
-                           const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
+                           const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
+                           const bool useLastFixing = false);
     boost::shared_ptr<PricingEngine> engine() { return engine_; }
 
 private:
@@ -72,7 +73,8 @@ private:
 class BlackCPICouponPricer : public CPICouponPricer {
 public:
     BlackCPICouponPricer(const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
-                         const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
+                         const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
+                         const bool useLastFixing = false);
     Handle<YieldTermStructure> yieldCurve() { return nominalTermStructure(); }
     Handle<CPIVolatilitySurface> volatility() { return capletVolatility(); }
     boost::shared_ptr<PricingEngine> engine() { return engine_; }

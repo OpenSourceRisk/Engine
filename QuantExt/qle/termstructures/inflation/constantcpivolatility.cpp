@@ -25,31 +25,9 @@ ConstantCPIVolatility::ConstantCPIVolatility(const QuantLib::Volatility v, Quant
                                              const QuantLib::Calendar& cal, QuantLib::BusinessDayConvention bdc,
                                              const QuantLib::DayCounter& dc, const QuantLib::Period& observationLag,
                                              QuantLib::Frequency frequency, bool indexIsInterpolated,
-                                             const QuantLib::Date& capFloorStartDate,
-                                             const QuantLib::Date& lastAvailableFixingDate)
+                                             const QuantLib::Date& capFloorStartDate)
     : QuantLib::ConstantCPIVolatility(v, settlementDays, cal, bdc, dc, observationLag, frequency, indexIsInterpolated),
-      capFloorStartDate_(capFloorStartDate), lastAvailableFixingDate_(lastAvailableFixingDate) {}
-
-QuantLib::Volatility ConstantCPIVolatility::totalVariance(const QuantLib::Date& maturityDate, QuantLib::Rate strike,
-                                                          const QuantLib::Period& obsLag,
-                                                          bool extrapolate) const {
-    if (lastAvailableFixingDate_ == QuantLib::Date()) {
-        return CPIVolatilitySurface::totalVariance(maturityDate, strike, obsLag, extrapolate);
-    } else {
-        QuantLib::Volatility vol = volatility(maturityDate, strike, obsLag, extrapolate);
-        
-        QuantLib::Period useLag = obsLag;
-        if (obsLag == QuantLib::Period(-1, QuantLib::Days)) {
-            useLag = observationLag();
-        }
-
-        QuantLib::Date fixingDate =
-            ZeroInflation::fixingDate(maturityDate, useLag, frequency_, indexIsInterpolated_);
-        double t = dayCounter().yearFraction(lastAvailableFixingDate_, fixingDate);
-        return vol * vol * t;
-    }
-
-}
+      capFloorStartDate_(capFloorStartDate) {}
 
 QuantLib::Date ConstantCPIVolatility::capFloorStartDate() const {
     if (capFloorStartDate_ == QuantLib::Date()) {
