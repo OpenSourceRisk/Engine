@@ -14,6 +14,12 @@
       <xs:element type="fxOptionData" name="FxOptionData"/>
       <xs:element type="fxBarrierOptionData" name="FxBarrierOptionData"/>
       <xs:element type="fxBarrierOptionData" name="FxDoubleBarrierOptionData"/>
+      <xs:element type="fxDigitalOptionData" name="FxDigitalOptionData"/>
+      <xs:element type="fxBarrierOptionData" name="FxEuropeanBarrierOptionData"/>
+      <xs:element type="fxKIKOBarrierOptionData" name="FxKIKOBarrierOptionData"/>
+      <xs:element type="fxDigitalBarrierOptionData" name="FxDigitalBarrierOptionData"/>
+      <xs:element type="fxTouchOptionData" name="FxTouchOptionData"/>
+      <xs:element type="fxTouchOptionData" name="FxDoubleTouchOptionData"/>
       <xs:element type="fxSwapData" name="FxSwapData"/>
       <xs:element type="capFloorData" name="CapFloorData"/>
       <xs:element type="equityFutureOptionData" name="EquityFutureOptionData"/>
@@ -21,6 +27,10 @@
       <xs:element type="eqBarrierOptionData" name="EquityBarrierOptionData"/>
       <xs:element type="eqBarrierOptionData" name="EquityDoubleBarrierOptionData"/>
       <xs:element type="equityForwardData" name="EquityForwardData"/>
+      <xs:element type="eqBarrierOptionData" name="EquityEuropeanBarrierOptionData"/>
+      <xs:element type="eqDigitalOptionData" name="EquityDigitalOptionData"/>
+      <xs:element type="eqTouchOptionData" name="EquityDoubleTouchOptionData"/>
+      <xs:element type="eqTouchOptionData" name="EquityTouchOptionData"/>
       <xs:element type="commodityForwardData" name="CommodityForwardData"/>
       <xs:element type="bondData" name="BondData"/>
       <xs:element type="forwardBondData" name="ForwardBondData"/>
@@ -697,12 +707,22 @@
       <xs:enumeration value="FxBarrierOption"/>
       <xs:enumeration value="FxDoubleBarrierOption"/>
       <xs:enumeration value="FxSwap"/>
+      <xs:enumeration value="FxDigitalOption"/>
+      <xs:enumeration value="FxEuropeanBarrierOption"/>
+      <xs:enumeration value="FxKIKOBarrierOption"/>
+      <xs:enumeration value="FxTouchOption"/>
+      <xs:enumeration value="FxDoubleTouchOption"/>
+      <xs:enumeration value="FxDigitalBarrierOption"/>
       <xs:enumeration value="CapFloor"/>
       <xs:enumeration value="EquityOption"/>
       <xs:enumeration value="EquityFutureOption"/>
       <xs:enumeration value="EquityAsianOption"/>
       <xs:enumeration value="EquityBarrierOption"/>
       <xs:enumeration value="EquityDoubleBarrierOption"/>
+      <xs:enumeration value="EquityEuropeanBarrierOption"/>
+      <xs:enumeration value="EquityTouchOption"/>
+      <xs:enumeration value="EquityDoubleTouchOption"/>
+      <xs:enumeration value="EquityDigitalOption"/>
       <xs:enumeration value="EquityForward"/>
       <xs:enumeration value="EquitySwap"/>
       <xs:enumeration value="CommodityForward"/>
@@ -802,6 +822,37 @@
     </xs:all>
   </xs:complexType>
 
+  <xs:complexType name="fxDigitalOptionData">
+    <xs:sequence>
+      <xs:element type="optionData" name="OptionData"  maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="currencyCode" name="PayoffCurrency" minOccurs="0"/>
+      <xs:element type="xs:float" name="PayoffAmount"/>
+      <xs:element type="currencyCode" name="ForeignCurrency"/>
+      <xs:element type="currencyCode" name="DomesticCurrency"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="fxKIKOBarrierOptionData">
+    <xs:all>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element name="Barriers">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="barrierData" name="BarrierData"  maxOccurs="2" minOccurs="2"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="date" name="StartDate"  minOccurs="0"/>
+      <xs:element type="calendar" name="Calendar"  minOccurs="0"/>
+      <xs:element type="xs:string" name="FXIndex"  minOccurs="0"/>
+      <xs:element type="currencyCode" name="BoughtCurrency"/>
+      <xs:element type="xs:float" name="BoughtAmount"/>
+      <xs:element type="currencyCode" name="SoldCurrency"/>
+      <xs:element type="xs:float" name="SoldAmount"/>
+    </xs:all>
+  </xs:complexType>
+
   <xs:simpleType name="barrierType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="UpAndOut"/>
@@ -859,6 +910,35 @@
       <xs:element type="xs:float" name="BoughtAmount"/>
       <xs:element type="currencyCode" name="SoldCurrency"/>
       <xs:element type="xs:float" name="SoldAmount"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="fxDigitalBarrierOptionData">
+    <xs:sequence>
+      <xs:element type="optionData" name="OptionData"  maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="barrierData" name="BarrierData"  maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="date" name="StartDate"  minOccurs="0"/>
+      <xs:element type="calendar" name="Calendar"  minOccurs="0"/>
+      <xs:element type="xs:string" name="FXIndex"  minOccurs="0"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="xs:float" name="PayoffAmount"/>
+      <xs:element type="currencyCode" name="PayoffCurrency" minOccurs="0"/>
+      <xs:element type="currencyCode" name="ForeignCurrency"/>
+      <xs:element type="currencyCode" name="DomesticCurrency"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="fxTouchOptionData">
+    <xs:sequence>
+      <xs:element type="optionData" name="OptionData"  maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="barrierData" name="BarrierData"  maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="currencyCode" name="ForeignCurrency"/>
+      <xs:element type="currencyCode" name="DomesticCurrency"/>
+      <xs:element type="currencyCode" name="PayoffCurrency"/>
+      <xs:element type="xs:float" name="PayoffAmount"/>
+      <xs:element type="date" name="StartDate" minOccurs="0"/>
+      <xs:element type="xs:string" name="FXIndex" minOccurs="0"/>
+      <xs:element type="xs:string" name="Calendar" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -953,6 +1033,30 @@
       <xs:element type="xs:float" name="Strike"/>
       <xs:element type="xs:float" name="Quantity"/>
       <xs:element type="date" name="FutureExpiryDate" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="eqDigitalOptionData">
+    <xs:all>
+      <xs:element type="optionData" name="OptionData" minOccurs="1"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="currencyCode" name="PayoffCurrency" minOccurs="0"/>
+      <xs:element type="xs:float" name="PayoffAmount"/>
+      <xs:element ref="equityNameType"/>
+      <xs:element type="xs:float" name="Quantity"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="eqTouchOptionData">
+    <xs:all>
+      <xs:element type="optionData" name="OptionData" minOccurs="1"/>
+      <xs:element type="barrierData" name="BarrierData" minOccurs="1"/>
+      <xs:element ref="equityNameType"/>
+      <xs:element type="currencyCode" name="PayoffCurrency"/>
+      <xs:element type="xs:float" name="PayoffAmount"/>
+      <xs:element type="date" name="StartDate" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="EQIndex" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
