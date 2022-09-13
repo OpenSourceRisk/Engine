@@ -126,31 +126,29 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const boost::sh
 }
 
 boost::shared_ptr<CPIVolatilitySurface>
-buildVolSurface(CommonData& cd, const boost::shared_ptr<ZeroInflationIndex>& index, const bool useLastKnownFixing) {
+buildVolSurface(CommonData& cd, const boost::shared_ptr<ZeroInflationIndex>& index) {
     auto surface = boost::make_shared<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear>>(
-        cd.tenors, cd.strikes, cd.vols, index, 0, cd.fixingCalendar, ModifiedFollowing, cd.dayCounter, cd.obsLag,
-        useLastKnownFixing);
+        cd.tenors, cd.strikes, cd.vols, index, 0, cd.fixingCalendar, ModifiedFollowing, cd.dayCounter, cd.obsLag);
     surface->enableExtrapolation();
     return surface;
 }
 
 boost::shared_ptr<CPIVolatilitySurface> buildVolSurfaceFromPrices(CommonData& cd,
                                                                   const boost::shared_ptr<ZeroInflationIndex>& index,
-                                                                  const bool useLastKnownFixing) {
+                                                                  const bool useLastKnownFixing,
+                                                                  const Date& startDate = Date()) {
     boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>> cpiPriceSurfacePtr =
         boost::make_shared<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>>(
             1.0, 0.0, cd.obsLag, cd.fixingCalendar, cd.bdc, cd.dayCounter, Handle<ZeroInflationIndex>(index),
             cd.discountTS, cd.cStrikes, cd.fStrikes, cd.tenors, cd.cPrices, cd.fPrices);
 
     boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(
-        cd.discountTS, QuantLib::Handle<QuantLib::CPIVolatilitySurface>()); // vol surface can be empty, will
-                                                                            // be set in the striping process
+        cd.discountTS, QuantLib::Handle<QuantLib::CPIVolatilitySurface>(), useLastKnownFixing); 
 
     QuantLib::Handle<CPICapFloorTermPriceSurface> cpiPriceSurfaceHandle(cpiPriceSurfacePtr);
     boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>> cpiCapFloorVolSurface;
     cpiCapFloorVolSurface = boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>>(
-        QuantExt::PriceQuotePreference::CapFloor, cpiPriceSurfaceHandle, index, engine, 1.0, 0.000001, 1.0e-12,
-        useLastKnownFixing);
+        QuantExt::PriceQuotePreference::CapFloor, cpiPriceSurfaceHandle, index, engine, startDate);
 
     cpiCapFloorVolSurface->enableExtrapolation();
     return cpiCapFloorVolSurface;
@@ -178,7 +176,7 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
 
     RelinkableHandle<CPIVolatilitySurface> volSurface;
 
-    auto volSurfaceObsLag = buildVolSurface(cd, index, false);
+    auto volSurfaceObsLag = buildVolSurface(cd, index);
 
     volSurface.linkTo(volSurfaceObsLag);
 
@@ -188,15 +186,6 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
     BOOST_CHECK_EQUAL(volSurface->baseDate(), Date(1, Jun, 2022));
     BOOST_CHECK_CLOSE(volSurface->timeFromBase(Date(1, Jun, 2023), 0 * Days), 1.0, cd.tolerance);
     BOOST_CHECK_CLOSE(vol, expected_vol, cd.tolerance);
-
-    auto volSurfaceLastFixing = buildVolSurface(cd, index, true);
-
-    volSurface.linkTo(volSurfaceLastFixing);
-
-    BOOST_CHECK_EQUAL(volSurface->baseDate(), Date(1, Jun, 2022));
-    BOOST_CHECK_CLOSE(volSurface->timeFromBase(Date(1, Jun, 2023), 0 * Days),
-                      cd.dayCounter.yearFraction(Date(1, Jun, 2022), Date(1, Jun, 2023)), cd.tolerance);
-    BOOST_CHECK_CLOSE(volSurface->volatility(Date(1, Jun, 2023), 0.02, 0 * Days), expected_vol, cd.tolerance);
 
     // Pricing
 
@@ -208,7 +197,7 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
                             ModifiedFollowing, cd.fixingCalendar, ModifiedFollowing, 0.025,
                             Handle<ZeroInflationIndex>(index), 2 * Months, CPI::Flat);
 
-    auto pricingEngine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(cd.discountTS, volSurface);
+    auto pricingEngine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(cd.discountTS, volSurface, true);
 
     put.setPricingEngine(pricingEngine);
     seasonedPut.setPricingEngine(pricingEngine);
