@@ -44,8 +44,6 @@ QuantLib::Real dontThrowFallback(const QuantLib::BootstrapError<Curve>& error, Q
 
     QL_REQUIRE(xMin < xMax, "Expected xMin to be less than xMax");
 
-    std::cout << "xmin = " << xMin << " xmax = " << xMax << std::endl;
-
     QuantLib::Real result = xMin;
     QuantLib::Real minError = QL_MAX_REAL;
     QuantLib::Real stepSize = (xMax - xMin) / steps;
