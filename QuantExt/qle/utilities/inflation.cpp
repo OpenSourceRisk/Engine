@@ -126,23 +126,10 @@ QuantLib::Date lastAvailableFixing(const QuantLib::ZeroInflationIndex& index, co
     }
 }
 
-QuantLib::Rate cpiFixing(const QuantLib::ZeroInflationIndex& index, const QuantLib::Date maturity,
+QuantLib::Rate cpiFixing(const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const QuantLib::Date& maturity,
                          const QuantLib::Period& obsLag, bool interpolated) {
-    if (interpolated) {
-        QuantLib::Period oneDay = 1 * QuantLib::Days;
-        auto fixingPeriod = inflationPeriod(maturity - obsLag, index.frequency());
-        auto paymentPeriod = inflationPeriod(maturity, index.frequency());
-        Date I0Date = fixingPeriod.first;
-        Date I1Date = fixingPeriod.second + oneDay;
-        Rate I0 = index.fixing(I0Date);
-        Rate I1 = index.fixing(I1Date);
-        return I0 +
-               (I1 - I0) * (maturity - paymentPeriod.first) / (paymentPeriod.second + oneDay - paymentPeriod.first);
-
-    } else {
-        Date observationDate = inflationPeriod(maturity - obsLag, index.frequency()).first;
-        return index.fixing(observationDate);
-    }
+    QuantLib::CPI::InterpolationType interpolation = interpolated ? QuantLib::CPI::Linear : QuantLib::CPI::Flat;
+    return QuantLib::CPI::laggedFixing(index, maturity, obsLag, interpolation);
 }
 
 QuantLib::Date curveBaseDate(const bool baseDateLastKnownFixing, const QuantLib::Date& refDate,
@@ -188,7 +175,7 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
     Date swapObservationDate = swapMaturity - swapObsLag;
 
     // TODO check historical fixings available
-    Rate instrumentBaseCPI = cpiFixing(*index, swapStart, swapObsLag, interpolated);
+    Rate instrumentBaseCPI = cpiFixing(index, swapStart, swapObsLag, interpolated);
     Time timeFromSwapBase =
         inflationYearFraction(index->frequency(), interpolated, swapZCLegDayCounter, swapBaseDate, swapObservationDate);
 

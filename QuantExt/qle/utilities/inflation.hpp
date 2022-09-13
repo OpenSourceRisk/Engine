@@ -68,28 +68,23 @@ QuantLib::Date lastAvailableFixing(const QuantLib::ZeroInflationIndex& index, co
 
 
 //! Computes a CPI fixing giving an zeroIndex, with interpolation if needed 
-QuantLib::Rate cpiFixing(const QuantLib::ZeroInflationIndex& index, const QuantLib::Date maturity,
+QuantLib::Rate cpiFixing(const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const QuantLib::Date& maturity,
                          const QuantLib::Period& obsLag, bool interpolated);
 
 
-//! computes the baseDate of piecewisezeroinflationcurve
+//! derives the zero inflation curve base date based on the useLastKnownFixing rule
 QuantLib::Date curveBaseDate(const bool baseDateLastKnownFixing, const QuantLib::Date& refDate,
                              const QuantLib::Period obsLagCurve, const QuantLib::Frequency curveFreq,
                              const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index);
 
+
+//! computes the fixingDate for ZC CPI Swap following the rule
+//! for an interpolated index it is d - obsLag but 
+//! for an interpolated index the fixing date is per definition on the start of the 
+//! inflation period in which d - obsLag falls
 QuantLib::Date fixingDate(const QuantLib::Date& d, const QuantLib::Period obsLag,
                                         const QuantLib::Frequency,
                                         bool interpolated);
-
-QuantLib::Date zeroInflationAtmGrowth(const boost::shared_ptr<QuantLib::ZeroInflationIndex> index,
-                                      const QuantLib::Date& start, const QuantLib::Date& maturity,
-                                      const QuantLib::Period obsLag,
-                                      bool interpolated);
-
-QuantLib::Date zeroInflationAtmRate(const boost::shared_ptr<QuantLib::ZeroInflationIndex> index,
-                                      const QuantLib::Date& start, const QuantLib::Date& maturity,
-                                      const QuantLib::Period obsLag, bool interpolated);
-
 
 
 /*! Computes the base rate for curve construction so that zero inflation rate is constant up to the first pillar
