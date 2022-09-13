@@ -50,7 +50,7 @@ QuantLib::Real dontThrowFallback(const QuantLib::BootstrapError<Curve>& error, Q
 
     for (QuantLib::Size i = 0; i <= steps; ++i) {
         Real x = xMin + stepSize * static_cast<double>(i);
-	Real absError = QL_MAX_REAL;
+        Real absError = QL_MAX_REAL;
         try {
             absError = std::abs(error(x));
         } catch (...) {
