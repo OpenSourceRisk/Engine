@@ -271,6 +271,7 @@
 				<xs:enumeration value="GBX" />
 				<xs:enumeration value="ILa" />
 				<xs:enumeration value="ILX" />
+				<xs:enumeration value="KWf" />
 				<xs:enumeration value="ZAc" />
 				<xs:enumeration value="ZAC" />
 				<xs:enumeration value="ZAX" />

@@ -45,6 +45,8 @@ class DiscountingRiskyBondEngine;
 /*! \ingroup indexes */
 class BondIndex : public Index, public Observer {
 public:
+    enum class PriceQuoteMethod { PercentageOfPar, CurrencyPerUnit };
+
     /*! The values that this index return are of the form
 
         - 1.02 meaning 102% price clean or dirty (depending on the flag dirty in the ctor) i.e.
@@ -81,6 +83,8 @@ public:
         on survival until the associated bond settlement date, otherwise it will include
         the default probability between today and the settlement date.
 
+	If priceQuoteMethod = CurrencyPerUnit, a fixing in the fixing history will be divided
+	by priceQuoteBaseValue before returning it.
     */
     BondIndex(const std::string& securityName, const bool dirty = false, const bool relative = true,
               const Calendar& fixingCalendar = NullCalendar(), const boost::shared_ptr<QuantLib::Bond>& bond = nullptr,
@@ -89,7 +93,9 @@ public:
               const Handle<Quote>& recoveryRate = Handle<Quote>(),
               const Handle<Quote>& securitySpread = Handle<Quote>(),
               const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-              const bool conditionalOnSurvival = true, const bool isInflationLinked = false,
+              const bool conditionalOnSurvival = true,
+              const PriceQuoteMethod priceQuoteMethod = PriceQuoteMethod::PercentageOfPar,
+              const double priceQuoteBaseValue = 1.0, const bool isInflationLinked = false,
               const double bidAskAdjustment = 0.0);
 
     //! \name Index interface
@@ -123,6 +129,8 @@ public:
     Handle<Quote> securitySpread() const { return securitySpread_; }
     Handle<YieldTermStructure> incomeCurve() const { return incomeCurve_; }
     bool conditionalOnSurvival() const { return conditionalOnSurvival_; }
+    PriceQuoteMethod priceQuoteMethod() const { return priceQuoteMethod_; }
+    double priceQuoteBaseValue() const { return priceQuoteBaseValue_; }
     //@}
 
 protected:
@@ -136,6 +144,8 @@ protected:
     Handle<Quote> securitySpread_;
     Handle<YieldTermStructure> incomeCurve_;
     bool conditionalOnSurvival_;
+    PriceQuoteMethod priceQuoteMethod_;
+    double priceQuoteBaseValue_;
     bool isInflationLinked_;
     double bidAskAdjustment_;
     boost::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
@@ -153,7 +163,9 @@ public:
         const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
         const Handle<Quote>& recoveryRate = Handle<Quote>(), const Handle<Quote>& securitySpread = Handle<Quote>(),
         const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-        const bool conditionalOnSurvival = true);
+        const bool conditionalOnSurvival = true,
+        const PriceQuoteMethod priceQuoteMethod = PriceQuoteMethod::PercentageOfPar,
+        const double priceQuoteBaseValue = 1.0);
 
     //! \name Index interface
     //@{

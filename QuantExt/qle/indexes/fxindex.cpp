@@ -32,9 +32,9 @@
 
 #include <boost/algorithm/string.hpp>
 #include <ql/currencies/exchangeratemanager.hpp>
+#include <ql/math/functional.hpp>
 #include <ql/quotes/derivedquote.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <ql/math/functional.hpp>
 #include <qle/indexes/fxindex.hpp>
 
 using namespace std;
@@ -44,9 +44,9 @@ namespace QuantExt {
 
 FxRateQuote::FxRateQuote(Handle<Quote> spotQuote, const Handle<YieldTermStructure>& sourceYts,
                          const Handle<YieldTermStructure>& targetYts, Natural fixingDays,
-                         const Calendar& fixingCalendar, Date refDate)
+                         const Calendar& fixingCalendar)
     : spotQuote_(spotQuote), sourceYts_(sourceYts), targetYts_(targetYts), fixingDays_(fixingDays),
-      fixingCalendar_(fixingCalendar), refDate_(refDate) {
+      fixingCalendar_(fixingCalendar) {
     registerWith(spotQuote_);
     registerWith(sourceYts_);
     registerWith(targetYts_);
@@ -54,63 +54,67 @@ FxRateQuote::FxRateQuote(Handle<Quote> spotQuote, const Handle<YieldTermStructur
 
 Real FxRateQuote::value() const {
     QL_ENSURE(isValid(), "invalid FxRateQuote");
-
-    Date today = refDate_ == Null<Date>() ? Settings::instance().evaluationDate() : refDate_;
-    Date refValueDate = fixingCalendar_.advance(fixingCalendar_.adjust(today), fixingDays_, Days);
-
-    return spotQuote_->value() * targetYts_->discount(refValueDate) / sourceYts_->discount(refValueDate);
+    if (fixingDays_ == 0)
+        return spotQuote_->value();
+    else {
+        QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(),
+                   "FxRateQuote: empty curve handles, need curves to discount from spot to today");
+        Date today = sourceYts_->referenceDate();
+        Date refValueDate = fixingCalendar_.advance(today, fixingDays_, Days);
+        return spotQuote_->value() * targetYts_->discount(refValueDate) / sourceYts_->discount(refValueDate);
+    }
 }
 
-bool FxRateQuote::isValid() const { 
-    return !spotQuote_.empty() && spotQuote_->isValid() && !sourceYts_.empty() && !targetYts_.empty();
+bool FxRateQuote::isValid() const { return !spotQuote_.empty() && spotQuote_->isValid(); }
+
+void FxRateQuote::update() { notifyObservers(); }
+
+FxSpotQuote::FxSpotQuote(Handle<Quote> todaysQuote, const Handle<YieldTermStructure>& sourceYts,
+                         const Handle<YieldTermStructure>& targetYts, Natural fixingDays,
+                         const Calendar& fixingCalendar)
+    : todaysQuote_(todaysQuote), sourceYts_(sourceYts), targetYts_(targetYts), fixingDays_(fixingDays),
+      fixingCalendar_(fixingCalendar) {
+    registerWith(todaysQuote_);
+    registerWith(sourceYts_);
+    registerWith(targetYts_);
 }
 
-void FxRateQuote::update() { 
-    notifyObservers();
+Real FxSpotQuote::value() const {
+    QL_ENSURE(isValid(), "invalid FxSpotQuote");
+    if (fixingDays_ == 0)
+        return todaysQuote_->value();
+    else {
+        QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(),
+                   "FxSpotQuote: empty curve handles, need curve to compound from today to spot");
+        Date today = sourceYts_->referenceDate();
+        Date refValueDate = fixingCalendar_.advance(today, fixingDays_, Days);
+        return todaysQuote_->value() / targetYts_->discount(refValueDate) * sourceYts_->discount(refValueDate);
+    }
 }
+
+bool FxSpotQuote::isValid() const {
+    return !todaysQuote_.empty() && todaysQuote_->isValid() && !sourceYts_.empty() && !targetYts_.empty();
+}
+
+void FxSpotQuote::update() { notifyObservers(); }
 
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
                  const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts,
-                 const Handle<YieldTermStructure>& targetYts, bool inverseIndex, bool fixingTriangulation)
+                 const Handle<YieldTermStructure>& targetYts, bool fixingTriangulation)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
       sourceYts_(sourceYts), targetYts_(targetYts), useQuote_(false), fixingCalendar_(fixingCalendar),
-      inverseIndex_(inverseIndex), fixingTriangulation_(fixingTriangulation) {
+      fixingTriangulation_(fixingTriangulation) {
 
     initialise();
-    registerWith(Settings::instance().evaluationDate());
 }
 
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
                  const Calendar& fixingCalendar, const Handle<Quote> fxSpot,
                  const Handle<YieldTermStructure>& sourceYts, const Handle<YieldTermStructure>& targetYts,
-                 bool inverseIndex, bool fixingTriangulation)
+                 bool fixingTriangulation)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
       sourceYts_(sourceYts), targetYts_(targetYts), fxSpot_(fxSpot), useQuote_(true), fixingCalendar_(fixingCalendar),
-      inverseIndex_(inverseIndex), fixingTriangulation_(fixingTriangulation) {
-
-    initialise();
-    registerWith(Settings::instance().evaluationDate());
-}
-
-FxIndex::FxIndex(const Date& referenceDate, const std::string& familyName, Natural fixingDays, const Currency& source,
-        const Currency& target, const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts,
-        const Handle<YieldTermStructure>& targetYts, bool inverseIndex,
-        bool fixingTriangulation)
-    : referenceDate_(referenceDate), familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source),
-      targetCurrency_(target), sourceYts_(sourceYts), targetYts_(targetYts), useQuote_(true),
-      fixingCalendar_(fixingCalendar), inverseIndex_(inverseIndex), fixingTriangulation_(fixingTriangulation) {
-    
-    initialise();
-}
-
-FxIndex::FxIndex(const Date& referenceDate, const std::string& familyName, Natural fixingDays, const Currency& source,
-        const Currency& target, const Calendar& fixingCalendar, const Handle<Quote> fxSpot,
-        const Handle<YieldTermStructure>& sourceYts, const Handle<YieldTermStructure>& targetYts, 
-        bool inverseIndex, bool fixingTriangulation)
-    : referenceDate_(referenceDate), familyName_(familyName),
-    fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target), sourceYts_(sourceYts),
-    targetYts_(targetYts), fxSpot_(fxSpot), useQuote_(true), fixingCalendar_(fixingCalendar),
-    inverseIndex_(inverseIndex), fixingTriangulation_(fixingTriangulation) {
+      fixingTriangulation_(fixingTriangulation) {
 
     initialise();
 }
@@ -119,18 +123,18 @@ void FxIndex::initialise() {
     std::ostringstream tmp;
     tmp << familyName_ << " " << sourceCurrency_.code() << "/" << targetCurrency_.code();
     name_ = tmp.str();
-        
+
     registerWith(IndexManager::instance().notifier(name()));
     registerWith(fxSpot_);
     registerWith(sourceYts_);
     registerWith(targetYts_);
 }
 
-const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {   
+const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {
     Handle<Quote> quote;
     if (withSettlementLag || fixingDays_ == 0)
         quote = fxSpot_;
-    
+
     if (quote.empty()) {
         if (fxRate_.empty()) {
             Handle<Quote> tmpQuote;
@@ -141,15 +145,10 @@ const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {
                 tmpQuote = fxSpot_;
 
             // adjust for spot
-            fxRate_ = Handle<Quote>(boost::make_shared<FxRateQuote>(tmpQuote, sourceYts_, targetYts_, 
-                fixingDays_, fixingCalendar_, referenceDate_));
+            fxRate_ = Handle<Quote>(
+                boost::make_shared<FxRateQuote>(tmpQuote, sourceYts_, targetYts_, fixingDays_, fixingCalendar_));
         }
         quote = fxRate_;
-    }
-    if (inverseIndex_) {
-        // Create a derived quote to invert
-        auto m = [](Real x) { return 1.0 / x; };
-        quote = Handle<Quote>(boost::make_shared<DerivedQuote<decltype(m)>>(quote, m));
     }
     return quote;
 }
@@ -157,12 +156,10 @@ const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {
 Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
 
     Date adjustedFixingDate = fixingCalendar().adjust(fixingDate, Preceding);
-    QL_REQUIRE(isValidFixingDate(adjustedFixingDate),
-               "Fixing date " << adjustedFixingDate << " is not valid for FxIndex '" << name() << "'");
 
     Date today = Settings::instance().evaluationDate();
 
-    Real result = Null<Decimal>();
+    Real result = Null<Real>();
 
     if (adjustedFixingDate > today || (adjustedFixingDate == today && forecastTodaysFixing))
         result = forecastFixing(adjustedFixingDate);
@@ -185,18 +182,19 @@ Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
         }
     }
 
-    return inverseIndex_ ? 1.0 / result : result;
+    return result;
 }
 
 Real FxIndex::forecastFixing(const Time& fixingTime) const {
-    QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(), "null term structure set to this instance of " << name());
+    QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(),
+               "FxIndex::forecastFixing(): null term structure set to this instance of " << name());
 
     // we base the forecast always on the exchange rate (and not on today's fixing)
     Real rate;
     if (!useQuote_) {
         rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
     } else {
-        QL_REQUIRE(!fxSpot_.empty(), "FxIndex::forecastFixing(): fx quote required");
+        QL_REQUIRE(!fxSpot_.empty(), "FxIndex::forecastFixing(): fx quote required for " << name());
         rate = fxSpot_->value();
     }
 
@@ -204,16 +202,20 @@ Real FxIndex::forecastFixing(const Time& fixingTime) const {
     DayCounter dc = Actual365Fixed();
 
     // to make the spot adjustment we get the time to spot, and also add this to fixing time
-    Date refValueDate = fixingCalendar().adjust(Settings::instance().evaluationDate());
-    Date spotValueDate = valueDate(refValueDate);
+    Date refDate = sourceYts_->referenceDate();
+    Date spotValueDate = valueDate(fixingCalendar().adjust(refDate));
 
     // time from ref to spot date
-    Real spotTime = dc.yearFraction(refValueDate, spotValueDate);
-    Real fowardTime = spotTime + fixingTime;
+    Real spotTime = dc.yearFraction(refDate, spotValueDate);
+    Real forwardTime = spotTime + fixingTime;
+
+    QL_REQUIRE(forwardTime > 0.0 || close_enough(forwardTime, 0.0),
+               "FxIndex::forecastFixing(" << fixingTime << "): forwardTime (" << forwardTime << ") is negative for "
+                                          << name());
 
     // compute the forecast applying the usual no arbitrage principle
-    Real forward = rate * sourceYts_->discount(fowardTime) * targetYts_->discount(spotTime) /
-                   targetYts_->discount(fowardTime) * sourceYts_->discount(spotTime);
+    Real forward = rate * sourceYts_->discount(forwardTime) * targetYts_->discount(spotTime) /
+                   (targetYts_->discount(forwardTime) * sourceYts_->discount(spotTime));
     return forward;
 }
 
@@ -226,13 +228,13 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     if (!useQuote_) {
         rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
     } else {
-        QL_REQUIRE(!fxSpot_.empty(), "FxIndex::forecastFixing(): fx quote required");
+        QL_REQUIRE(!fxSpot_.empty(), "FxIndex::forecastFixing(): fx quote required for " << name());
         rate = fxSpot_->value();
     }
 
     // the exchange rate is interpreted as the spot rate w.r.t. the index's
     // settlement date
-    Date refValueDate = valueDate(fixingCalendar().adjust(Settings::instance().evaluationDate()));
+    Date refValueDate = valueDate(fixingCalendar().adjust(sourceYts_->referenceDate()));
 
     // the fixing is obeying the settlement delay as well
     Date fixingValueDate = valueDate(fixingDate);
@@ -241,7 +243,7 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     QL_REQUIRE(fixingValueDate >= refValueDate, "value date for requested fixing as of "
                                                     << fixingDate << " (" << fixingValueDate
                                                     << ") must be greater or equal to today's fixing value date ("
-                                                    << refValueDate << ")");
+                                                    << refValueDate << ") for " << name());
 
     // compute the forecast applying the usual no arbitrage principle
     Real forward = rate * sourceYts_->discount(fixingValueDate) * targetYts_->discount(refValueDate) /
@@ -251,35 +253,24 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
 }
 
 boost::shared_ptr<FxIndex> FxIndex::clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
-                                          const Handle<YieldTermStructure>& targetYts, const string& familyName, bool inverseIndex) {
+                                          const Handle<YieldTermStructure>& targetYts, const string& familyName) {
     Handle<Quote> quote = fxQuote.empty() ? fxSpot_ : fxQuote;
     Handle<YieldTermStructure> source = sourceYts.empty() ? sourceYts_ : sourceYts;
     Handle<YieldTermStructure> target = targetYts.empty() ? targetYts_ : targetYts;
     string famName = familyName.empty() ? familyName_ : familyName;
-    if (referenceDate_ == Null<Date>())
-        return boost::make_shared<FxIndex>(famName, fixingDays_, sourceCurrency_, targetCurrency_,
-            fixingCalendar_, quote, source, target, inverseIndex);
-    else
-        return boost::make_shared<FxIndex>(referenceDate_, famName, fixingDays_, sourceCurrency_, targetCurrency_,
-            fixingCalendar_, quote, source, target, inverseIndex);
-
+    return boost::make_shared<FxIndex>(famName, fixingDays_, sourceCurrency_, targetCurrency_, fixingCalendar_, quote,
+                                       source, target);
 }
 
-std::string FxIndex::name() const { 
-    return name_; 
-}
+std::string FxIndex::name() const { return name_; }
 
-Calendar FxIndex::fixingCalendar() const { 
-    return fixingCalendar_; 
-}
+Calendar FxIndex::fixingCalendar() const { return fixingCalendar_; }
 
-bool FxIndex::isValidFixingDate(const Date& d) const { 
-    return fixingCalendar().isBusinessDay(d); 
-}
+bool FxIndex::isValidFixingDate(const Date& d) const { return fixingCalendar().isBusinessDay(d); }
 
 void FxIndex::update() {
     fxRate_ = Handle<Quote>();
-    notifyObservers(); 
+    notifyObservers();
 }
 
 Date FxIndex::fixingDate(const Date& valueDate) const {
@@ -288,18 +279,22 @@ Date FxIndex::fixingDate(const Date& valueDate) const {
 }
 
 Date FxIndex::valueDate(const Date& fixingDate) const {
-    QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
+    QL_REQUIRE(isValidFixingDate(fixingDate),
+               "FxIndex::valueDate(): " << fixingDate << " is not a valid fixing date for " << name()
+                                        << " (calendar is " << fixingCalendar().name() << ")");
     return fixingCalendar().advance(fixingDate, fixingDays_, Days);
 }
 
 Real FxIndex::pastFixing(const Date& fixingDate) const {
-    QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
+    QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << "FxIndex::pastFixing(): is not a valid fixing date for "
+                                                         << name() << " (calendar is " << fixingCalendar().name()
+                                                         << ")");
 
     Real fixing = timeSeries()[fixingDate];
     if (fixing != Null<Real>())
         return fixing;
 
-    if (fixingTriangulation_) {        
+    if (fixingTriangulation_) {
         // check reverse
         string revName = familyName_ + " " + targetCurrency_.code() + "/" + sourceCurrency_.code();
         if (IndexManager::instance().hasHistoricalFixing(revName, fixingDate))
@@ -324,7 +319,7 @@ Real FxIndex::pastFixing(const Date& fixingDate) const {
                 // check for a fixing
                 Real fixing = IndexManager::instance().getHistory(i)[fixingDate];
                 if (fixing != Null<Real>()) {
-                    
+
                     Size l = i.size();
                     string keyDomestic = i.substr(l - 7, 3);
                     string keyForeign = i.substr(l - 3);

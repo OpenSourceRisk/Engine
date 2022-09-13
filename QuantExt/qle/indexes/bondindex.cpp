@@ -31,10 +31,12 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
                      const Handle<YieldTermStructure>& discountCurve,
                      const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
                      const Handle<Quote>& securitySpread, const Handle<YieldTermStructure>& incomeCurve,
-                     const bool conditionalOnSurvival, const bool isInflationLinked, const double bidAskAdjustment)
+                     const bool conditionalOnSurvival, const PriceQuoteMethod priceQuoteMethod,
+                     const double priceQuoteBaseValue, const bool isInflationLinked, const double bidAskAdjustment)
     : securityName_(securityName), dirty_(dirty), relative_(relative), fixingCalendar_(fixingCalendar), bond_(bond),
       discountCurve_(discountCurve), defaultCurve_(defaultCurve), recoveryRate_(recoveryRate),
       securitySpread_(securitySpread), incomeCurve_(incomeCurve), conditionalOnSurvival_(conditionalOnSurvival),
+      priceQuoteMethod_(priceQuoteMethod), priceQuoteBaseValue_(priceQuoteBaseValue),
       isInflationLinked_(isInflationLinked), bidAskAdjustment_(bidAskAdjustment) {
 
     registerWith(Settings::instance().evaluationDate());
@@ -64,18 +66,19 @@ Real BondIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const 
     Date today = Settings::instance().evaluationDate();
     if (fixingDate > today || (fixingDate == today && forecastTodaysFixing))
         return forecastFixing(fixingDate);
+    Real adj = priceQuoteMethod_ == PriceQuoteMethod::CurrencyPerUnit ? 1.0 / priceQuoteBaseValue_ : 1.0;
     if (fixingDate < today || Settings::instance().enforcesTodaysHistoricFixings()) {
         // must have been fixed
         // do not catch exceptions
         Rate result = pastFixing(fixingDate);
         QL_REQUIRE(result != Null<Real>(), "Missing " << name() << " fixing for " << fixingDate);
-        return result;
+        return result * adj;
     }
     try {
         // might have been fixed
         Rate result = pastFixing(fixingDate);
         if (result != Null<Real>())
-            return result;
+            return result * adj;
         else
             ; // fall through and forecast
     } catch (Error&) {
@@ -153,9 +156,10 @@ BondFuturesIndex::BondFuturesIndex(const QuantLib::Date& expiryDate, const std::
                                    const Handle<YieldTermStructure>& discountCurve,
                                    const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                    const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
-                                   const Handle<YieldTermStructure>& incomeCurve, const bool conditionalOnSurvival)
+                                   const Handle<YieldTermStructure>& incomeCurve, const bool conditionalOnSurvival,
+                                   const PriceQuoteMethod priceQuoteMethod, const double priceQuoteBaseValue)
     : BondIndex(securityName, dirty, relative, fixingCalendar, bond, discountCurve, defaultCurve, recoveryRate,
-                securitySpread, incomeCurve, conditionalOnSurvival),
+                securitySpread, incomeCurve, conditionalOnSurvival, priceQuoteMethod, priceQuoteBaseValue),
       expiryDate_(expiryDate) {}
 
 std::string BondFuturesIndex::name() const {

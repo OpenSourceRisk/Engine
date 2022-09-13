@@ -53,6 +53,8 @@ void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
     settlementDays = XMLUtils::getChildValue(node, "SettlementDays", true);
     calendar = XMLUtils::getChildValue(node, "Calendar", true);
     issueDate = XMLUtils::getChildValue(node, "IssueDate", true);
+    priceQuoteMethod = XMLUtils::getChildValue(node, "PriceQuoteMethod", false);
+    priceQuoteBaseValue = XMLUtils::getChildValue(node, "PriceQuoteBaseValue", false);
 
     legData.clear();
     XMLNode* legNode = XMLUtils::getChildNode(node, "LegData");
@@ -67,14 +69,16 @@ void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
 XMLNode* BondReferenceDatum::BondData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("BondData");
     XMLUtils::addChild(doc, node, "IssuerId", issuerId);
-    XMLUtils::addChild(doc, node, "CreditCurveId", issuerId);
+    XMLUtils::addChild(doc, node, "CreditCurveId", creditCurveId);
     XMLUtils::addChild(doc, node, "CreditGroup", creditGroup);
     XMLUtils::addChild(doc, node, "ReferenceCurveId", issuerId);
     XMLUtils::addChild(doc, node, "IncomeCurveId", incomeCurveId);
     XMLUtils::addChild(doc, node, "VolatilityCurveId", volatilityCurveId);
-    XMLUtils::addChild(doc, node, "SettlementDays", issuerId);
-    XMLUtils::addChild(doc, node, "Calendar", issuerId);
-    XMLUtils::addChild(doc, node, "IssueDate", issuerId);
+    XMLUtils::addChild(doc, node, "SettlementDays", settlementDays);
+    XMLUtils::addChild(doc, node, "Calendar", calendar);
+    XMLUtils::addChild(doc, node, "IssueDate", issueDate);
+    XMLUtils::addChild(doc, node, "PriceQuoteMethod", priceQuoteMethod);
+    XMLUtils::addChild(doc, node, "PriceQuoteBaseValue", priceQuoteBaseValue);
     for (auto& bd : legData)
         XMLUtils::appendNode(node, bd.toXML(doc));
     return node;

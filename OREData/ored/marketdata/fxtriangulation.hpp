@@ -23,94 +23,63 @@
 
 #pragma once
 
+#include <ored/marketdata/market.hpp>
+
 #include <qle/indexes/fxindex.hpp>
+
 #include <ql/handle.hpp>
 #include <ql/quote.hpp>
 #include <ql/types.hpp>
+
 #include <vector>
 
 namespace ore {
 namespace data {
 
-class FxSpotQuote : public QuantLib::Quote, public QuantLib::Observer {
-public:
-    FxSpotQuote(QuantLib::Handle<QuantLib::Quote> todaysQuote,
-                const QuantLib::Handle<QuantLib::YieldTermStructure>& sourceYts,
-                const QuantLib::Handle<QuantLib::YieldTermStructure>& targetYts, QuantLib::Natural fixingDays,
-                const QuantLib::Calendar& fixingCalendar, QuantLib::Date refDate = QuantLib::Date());
-    //! \name Quote interface
-    //@{
-    QuantLib::Real value() const override;
-    bool isValid() const override;
-    //@}
-    //! \name Observer interface
-    //@{
-    void update() override;
-    //@}
-private:
-    const QuantLib::Handle<QuantLib::Quote> todaysQuote_;
-    const QuantLib::Handle<QuantLib::YieldTermStructure> sourceYts_, targetYts_;
-    QuantLib::Natural fixingDays_;
-    QuantLib::Calendar fixingCalendar_;
-    QuantLib::Date refDate_;
-};
-
-//! Intelligent FX price repository
-/*! FX Triangulation is an intelligent price repository that will attempt to calculate FX spot values
- *
- *  As quotes for currency pairs are added to the repository they are stored in an internal map
- *  If the repository is asked for the FX spot price for a given pair it will attempt the following:
- *  1) Look in the map for the pair
- *  2) Look for the reverse quote (EURUSD -> USDEUR), if found it will return an inverse quote.
- *  3) Look through the map and attempt to find a bridging pair (e.g EURUSD and EURJPY for USDJPY)
- *     and return the required composite quote.
- *
- *  In cases (2) and (3) the constructed quote is then stored in the map so subsequent calls will hit (1).
- *
- *  The constructed quotes all reference the original quotes which are added by the addQuote() method
- *  and so if these original quotes change in the future, the constructed quotes will reflect the new
- *  value
- *
- *  Warning: The result of getQuote() can depend on previous calls to getQuote(), since newly added
- *  pairs in 3) are candidates for bridging pairs in future calls and the bridging only uses one
- *  intermediate currency. This state-dependent behaviour will be removed in a future release.
- *
- *  \ingroup marketdata
- */
 class FXTriangulation {
 public:
-    //! Default ctor, once built the repo is empty
+    /*! Set up empty repository */
     FXTriangulation() {}
 
-    //! Add a quote to the repo
-    void addQuote(const std::string& pair, const QuantLib::Handle<QuantLib::Quote>& spot);
+    /*! Set up fx quote repository with available market quotes ccypair => quote */
+    explicit FXTriangulation(std::map<std::string, QuantLib::Handle<QuantLib::Quote>> quotes);
 
-    //! Get a quote from the repo, this will follow the algorithm described above
-    QuantLib::Handle<QuantLib::Quote> getQuote(const std::string&) const;
+    /*! Get quote, possibly via triangulation
+        If you need an exact handling of spot lag differences, use getIndex() instead.
+    */
+    QuantLib::Handle<QuantLib::Quote> getQuote(const std::string& pair) const;
 
-    //! Get all quotes currently stored in the triangulation
-    const std::vector<std::pair<std::string, QuantLib::Handle<QuantLib::Quote>>>& quotes() const { return map_; }
-
-private:
-    mutable std::vector<std::pair<std::string, QuantLib::Handle<QuantLib::Quote>>> map_;
-};
-
-class FXIndexTriangulation {
-public:
-    //! Default ctor, once built the repo is empty
-    FXIndexTriangulation() {}
-
-    //! Add an index to the repo
-    void addIndex(const std::string& pair, const QuantLib::Handle<QuantExt::FxIndex>& index);
-
-    //! Get a quote from the repo, this will follow the algorithm described above
-    QuantLib::Handle<QuantExt::FxIndex> getIndex(const std::string& pair, bool dontThrow = false) const;
-
-    //! Get all quotes currently stored in the triangulation
-    const std::vector<std::pair<std::string, QuantLib::Handle<QuantExt::FxIndex>>>& indices() const { return map_; }
+    /*! Get fx index, possibly via triangulation. The index name can be of the form FX-TAG-CCY1-CCY2 or also
+        be just a currency pair CCY1CCY2. In the latter case, the fixing source is set to TAG = GENERIC.
+        The fx index requires discount curves from a market. The assumption is that the market provides discount
+        curves consistent with cross-currency discounting under its default configuration. If the triangulation
+        is not possible or required curves are not available an exception is thrown.
+    */
+    QuantLib::Handle<QuantExt::FxIndex> getIndex(const std::string& indexOrPair, const Market* market) const;
 
 private:
-    mutable std::vector<std::pair<std::string, QuantLib::Handle<QuantExt::FxIndex>>> map_;
+    /* get path for conversion forCcy => domCcy, throws if such a path does not exist     */
+    std::vector<std::string> getPath(const std::string& forCcy, const std::string& domCcy) const;
+
+    /* return quote or inverse quote to convert forCcy => domCcy, there must be an input quote for the pair in either
+       order, otherwise throws */
+    Handle<Quote> getQuote(const std::string& forCcy, const std::string& domCcy) const;
+
+    /* return a string enumerating all quotes as a comma separated list (for error messages) */
+    std::string getAllQuotes() const;
+
+    // the input quotes
+    std::map<std::string, QuantLib::Handle<QuantLib::Quote>> quotes_;
+
+    // caches to improve perfomance
+    mutable std::map<std::string, QuantLib::Handle<QuantLib::Quote>> quoteCache_;
+    mutable std::map<std::string, QuantLib::Handle<QuantExt::FxIndex>> indexCache_;
+
+    // internal data structure to represent the undirected graph of currencies
+    std::vector<std::string> nodeToCcy_;
+    std::map<std::string, std::size_t> ccyToNode_;
+    std::vector<std::set<std::size_t>> neighbours_;
 };
+
 } // namespace data
 } // namespace ore

@@ -216,9 +216,9 @@ boost::shared_ptr<FxIndex> parseFxIndex(const string& s, const Handle<Quote>& fx
     Natural fixingDays = 0;
     Calendar fixingCalendar = NullCalendar();
     if (useConventions)
-        getFxIndexConventions(s, fixingDays, fixingCalendar);
-    auto index = boost::make_shared<FxIndex>(tokens[0] + "/" + tokens[1], fixingDays, parseCurrency(tokens[2]),
-                                       parseCurrency(tokens[3]), fixingCalendar, fxSpot, sourceYts, targetYts);
+        std::tie(fixingDays, fixingCalendar) = getFxIndexConventions(s);
+    auto index = boost::make_shared<FxIndex>(tokens[1], fixingDays, parseCurrency(tokens[2]), parseCurrency(tokens[3]),
+                                             fixingCalendar, fxSpot, sourceYts, targetYts);
 
     IndexNameTranslator::instance().add(index->name(), s);
     return index;
