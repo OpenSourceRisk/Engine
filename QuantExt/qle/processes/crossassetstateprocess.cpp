@@ -55,7 +55,6 @@ CrossAssetStateProcess::CrossAssetStateProcess(const CrossAssetModel* const mode
     : StochasticProcess(), model_(model), disc_(disc), salvaging_(salvaging), cirppCount_(0) {
 
     updateSqrtCorrelation();
-    updateBlowUpBrownians();
     if (disc_ == euler) {
         discretization_ = boost::make_shared<EulerDiscretization>();
     } else {
@@ -75,7 +74,7 @@ CrossAssetStateProcess::CrossAssetStateProcess(const CrossAssetModel* const mode
 
 Size CrossAssetStateProcess::size() const { return model_->dimension(); }
 
-Size CrossAssetStateProcess::factors() const { return model_->brownians(); }
+Size CrossAssetStateProcess::factors() const { return disc_ == euler ? model_->brownians() : model_->dimension(); }
 
 void CrossAssetStateProcess::flushCache() const {
     cache_m_.clear();
@@ -83,38 +82,12 @@ void CrossAssetStateProcess::flushCache() const {
     if(auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess::ExactDiscretization>(discretization_))
 	tmp->flushCache();
     updateSqrtCorrelation();
-    updateBlowUpBrownians();
 }
 
 void CrossAssetStateProcess::updateSqrtCorrelation() const {
     if (disc_ != euler)
         return;
     sqrtCorrelation_ = pseudoSqrt(model_->correlation(), salvaging_);
-}
-
-void CrossAssetStateProcess::updateBlowUpBrownians() const {
-    if (disc_ != exact)
-        return;
-    blowUpBrownians_ = Matrix(model_->dimension(), model_->brownians(), 0.0);
-    Size row = 0, col = 0;
-    for (Size a = 0; a < CrossAssetModelTypes::crossAssetModelAssetTypes; ++a) {
-        auto assetType = CrossAssetModelTypes::AssetType(a);
-        for (Size c = 0; c < model_->components(assetType); ++c) {
-            Size n = model_->stateVariables(assetType, c);
-            Size m = model_->brownians(assetType, c);
-            if (n == m) {
-                for (Size j = 0; j < n; ++j) {
-                    blowUpBrownians_(row++, col++) = 1.0;
-                }
-            } else {
-                QL_REQUIRE(m == 1, "CrossAssetStateProcess::blowUpBrownians(): internal error n=" << n << ", m=" << m
-                                                                                                  << " not handled");
-                for (Size j = 0; j < n; ++j) {
-                    blowUpBrownians_(row++, col) = 1.0;
-                }
-            }
-        }
-    }
 }
 
 Array CrossAssetStateProcess::initialValues() const {
@@ -429,7 +402,7 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
         }
     } else {
         QL_REQUIRE(cirppCount_ == 0, "only euler discretization is supported for CIR++");
-        res = StochasticProcess::evolve(t0, x0, dt, blowUpBrownians_ * dw);
+        res = StochasticProcess::evolve(t0, x0, dt, dw);
     }
 
     return res;

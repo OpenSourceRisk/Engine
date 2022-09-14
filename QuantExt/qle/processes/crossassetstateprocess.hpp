@@ -61,7 +61,6 @@ protected:
     virtual Matrix diffusionOnCorrelatedBrownians(Time t, const Array& x) const;
     virtual Matrix diffusionOnCorrelatedBrowniansImpl(Time t, const Array& x) const;
     void updateSqrtCorrelation() const;
-    void updateBlowUpBrownians() const;
 
     const CrossAssetModel* const model_;
     std::vector<boost::shared_ptr<StochasticProcess>> crCirpp_;
@@ -69,7 +68,6 @@ protected:
     SalvagingAlgorithm::Type salvaging_;
     Size cirppCount_;
     mutable Matrix sqrtCorrelation_;
-    mutable Matrix blowUpBrownians_;
 
     class ExactDiscretization : public StochasticProcess::discretization {
     public:
