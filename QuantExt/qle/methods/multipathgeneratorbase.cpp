@@ -70,7 +70,7 @@ const Sample<MultiPath>& MultiPathGeneratorSobolBrownianBridge::next() const {
         path[j].front() = asset[j];
     }
     next_.weight = gen_->nextPath();
-    std::vector<Real> output(asset.size());
+    std::vector<Real> output(process_->factors());
     for (Size i = 1; i < grid_.size(); ++i) {
         Real t = grid_[i - 1];
         Real dt = grid_.dt(i - 1);
