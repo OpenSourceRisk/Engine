@@ -38,13 +38,13 @@ using namespace QuantLib;
 //! Base class for CPI CashFLow and Coupon pricers
 class InflationCashFlowPricer : public virtual Observer, public virtual Observable {
 public:
-    InflationCashFlowPricer(const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
+    InflationCashFlowPricer(const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
                             const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
     virtual ~InflationCashFlowPricer() {}
 
     //! Inspectors
     //@{
-    Handle<CPIVolatilitySurface> volatility() { return vol_; }
+    Handle<QuantLib::CPIVolatilitySurface> volatility() { return vol_; }
     Handle<YieldTermStructure> yieldCurve() { return yts_; }
     //@}
 
@@ -53,14 +53,14 @@ public:
     virtual void update() override { notifyObservers(); }
     //@}
 protected:
-    Handle<CPIVolatilitySurface> vol_;
+    Handle<QuantLib::CPIVolatilitySurface> vol_;
     Handle<YieldTermStructure> yts_;
 };
 
 //! Black CPI CashFlow Pricer.
 class BlackCPICashFlowPricer : public InflationCashFlowPricer {
 public:
-    BlackCPICashFlowPricer(const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
+    BlackCPICashFlowPricer(const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
                            const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
                            const bool useLastFixing = false);
     boost::shared_ptr<PricingEngine> engine() { return engine_; }
@@ -72,11 +72,11 @@ private:
 
 class BlackCPICouponPricer : public CPICouponPricer {
 public:
-    BlackCPICouponPricer(const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
+    BlackCPICouponPricer(const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
                          const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
                          const bool useLastFixing = false);
     Handle<YieldTermStructure> yieldCurve() { return nominalTermStructure(); }
-    Handle<CPIVolatilitySurface> volatility() { return capletVolatility(); }
+    Handle<QuantLib::CPIVolatilitySurface> volatility() { return capletVolatility(); }
     boost::shared_ptr<PricingEngine> engine() { return engine_; }
 
 private:

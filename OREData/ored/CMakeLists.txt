@@ -162,6 +162,7 @@ utilities/dategrid.cpp
 utilities/flowanalysis.cpp
 utilities/indexnametranslator.cpp
 utilities/indexparser.cpp
+utilities/inflationstartdate.cpp
 utilities/log.cpp
 utilities/marketdata.cpp
 utilities/osutils.cpp
@@ -378,6 +379,7 @@ utilities/dategrid.hpp
 utilities/flowanalysis.hpp
 utilities/indexnametranslator.hpp
 utilities/indexparser.hpp
+utilities/inflationstartdate.hpp
 utilities/log.hpp
 utilities/marketdata.hpp
 utilities/osutils.hpp

@@ -235,6 +235,8 @@ termstructures/fxvannavolgasmilesection.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
+termstructures/inflation/constantcpivolatility.cpp
+termstructures/inflation/cpivolatilitystructure.cpp
 termstructures/oibasisswaphelper.cpp
 termstructures/oiccbasisswaphelper.cpp
 termstructures/oiscapfloorhelper.cpp
@@ -616,6 +618,8 @@ termstructures/fxvannavolgasmilesection.hpp
 termstructures/hazardspreadeddefaulttermstructure.hpp
 termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
+termstructures/inflation/constantcpivolatility.hpp
+termstructures/inflation/cpivolatilitystructure.hpp
 termstructures/inflation/piecewisezeroinflationcurve.hpp
 termstructures/inflation/inflationtraits.hpp
 termstructures/interpolatedcorrelationcurve.hpp
