@@ -152,14 +152,14 @@ template <class Interpolator2D> void StrippedCPIVolatilitySurface<Interpolator2D
     QuantLib::Date startDate = capFloorStartDate();
     QuantLib::Date underlyingBaseDate =
         ZeroInflation::fixingDate(startDate, observationLag(), frequency(), indexIsInterpolated());
-    double baseCPI = ZeroInflation::cpiFixing(*index_, startDate, observationLag(), indexIsInterpolated());
+    double baseCPI = ZeroInflation::cpiFixing(index_, startDate, observationLag(), indexIsInterpolated());
     for (QuantLib::Size i = 0; i < strikes_.size(); i++) {
         for (QuantLib::Size j = 0; j < maturities_.size(); j++) {
 
             QuantLib::Date maturityDate = optionMaturityFromTenor(maturities_[j]);
             QuantLib::Date fixDate =
                 ZeroInflation::fixingDate(maturityDate, observationLag(), frequency(), indexIsInterpolated());
-            Rate I1 = ZeroInflation::cpiFixing(*index_, maturityDate, observationLag(), indexIsInterpolated());
+            Rate I1 = ZeroInflation::cpiFixing(index_, maturityDate, observationLag(), indexIsInterpolated());
 
             Time timeToMaturity = dayCounter().yearFraction(underlyingBaseDate, fixDate);
             QuantLib::Real atmRate = pow(I1 / baseCPI, 1 / timeToMaturity) - 1.0;

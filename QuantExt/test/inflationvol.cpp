@@ -5,6 +5,7 @@
 #include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/matrix.hpp>
+#include <ql/pricingengines/blackcalculator.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
@@ -61,7 +62,7 @@ struct CommonData {
          Handle<Quote>(boost::make_shared<SimpleQuote>(0.34)), Handle<Quote>(boost::make_shared<SimpleQuote>(0.36))},
         {Handle<Quote>(boost::make_shared<SimpleQuote>(0.35)), Handle<Quote>(boost::make_shared<SimpleQuote>(0.37)),
          Handle<Quote>(boost::make_shared<SimpleQuote>(0.39)), Handle<Quote>(boost::make_shared<SimpleQuote>(0.41))},
-        {Handle<Quote>(boost::make_shared<SimpleQuote>(0.04)), Handle<Quote>(boost::make_shared<SimpleQuote>(0.42)),
+        {Handle<Quote>(boost::make_shared<SimpleQuote>(0.40)), Handle<Quote>(boost::make_shared<SimpleQuote>(0.42)),
          Handle<Quote>(boost::make_shared<SimpleQuote>(0.44)), Handle<Quote>(boost::make_shared<SimpleQuote>(0.46))}};
 
     std::vector<double> cStrikes = {0.06, 0.08};
@@ -95,7 +96,7 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const boost::sh
                         const QuantLib::Date& startDate = Date()) {
     Date today = Settings::instance().evaluationDate();
     Date start = startDate;
-    if (start == Date()) {
+    if (startDate == Date()) {
         start = today;
     }
     DayCounter dc = cd.dayCounter;
@@ -104,7 +105,7 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const boost::sh
 
     std::vector<boost::shared_ptr<QuantExt::ZeroInflationTraits::helper>> helpers;
     for (size_t i = 0; i < cd.zeroCouponQuotes.size(); ++i) {
-        Date maturity = startDate + cd.zeroCouponPillars[i];
+        Date maturity = start + cd.zeroCouponPillars[i];
         Rate quote = cd.zeroCouponQuotes[i];
         boost::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
             boost::make_shared<ZeroCouponInflationSwapHelper>(
@@ -161,75 +162,112 @@ BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(InflationCPIVolatilityTest)
 
-BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
+BOOST_AUTO_TEST_CASE(testVolatiltiySurface) {
+    // Test case when the ZCIIS and Cap/Floors start today with using todays fixing
     CommonData cd;
-    Settings::instance().evaluationDate() = cd.today;
-    bool isInterpolated = false;
-    bool useLastKnownFixingDateAsBaseDate = true;
-    boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<EUHICPXT>(false);
-    addFixings(cd.cpiFixings, *curveBuildIndex);
-    auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated);
+    Date today(15, Aug, 2022);
+    cd.today = today;
+    cd.obsLag = 2 * Months;
+    Settings::instance().evaluationDate() = today;
+    std::map<Date, double> fixings{{Date(1, Mar, 2022), 100.0}};
+    Date lastKnownFixing(1, Jul, 2022);
 
-    BOOST_CHECK_NO_THROW(curve->zeroRate(1.0));
+    boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<QuantLib::EUHICPXT>(false);
+    for (const auto& [date, fixing] : cd.cpiFixings) {
+        curveBuildIndex->addFixing(date, fixing);
+    }
+
+    auto curve = buildZeroInflationCurve(cd, true, curveBuildIndex, false, nullptr);
 
     auto index = curveBuildIndex->clone(Handle<ZeroInflationTermStructure>(curve));
 
-    RelinkableHandle<CPIVolatilitySurface> volSurface;
+    BOOST_CHECK_EQUAL(curve->baseDate(), lastKnownFixing);
 
-    auto volSurfaceObsLag = buildVolSurface(cd, index);
+    auto volSurface = buildVolSurface(cd, index);
 
-    volSurface.linkTo(volSurfaceObsLag);
-
-    auto expected_vol = 0.3;
-    auto vol = volSurface->volatility(Date(1, Jun, 2023), 0.02, 0 * Days);
-
+    // Expect the base fixing date of the cap/floor today - 2M 
     BOOST_CHECK_EQUAL(volSurface->baseDate(), Date(1, Jun, 2022));
-    BOOST_CHECK_CLOSE(volSurface->timeFromBase(Date(1, Jun, 2023), 0 * Days), 1.0, cd.tolerance);
-    BOOST_CHECK_CLOSE(vol, expected_vol, cd.tolerance);
 
-    // Pricing
+    double baseCPI = index->fixing(volSurface->baseDate());
 
-    CPICapFloor put(Option::Put, 1, cd.today, Null<Real>(), Date(15, Aug, 2023), cd.fixingCalendar, ModifiedFollowing,
-                    cd.fixingCalendar, ModifiedFollowing, 0.02, Handle<ZeroInflationIndex>(index), 2 * Months,
-                    CPI::Flat);
+    BOOST_CHECK_CLOSE(baseCPI, 100.0, cd.tolerance);
 
-    CPICapFloor seasonedPut(Option::Put, 1, Date(15, Aug, 2021), Null<Real>(), Date(15, Aug, 2023), cd.fixingCalendar,
-                            ModifiedFollowing, cd.fixingCalendar, ModifiedFollowing, 0.025,
-                            Handle<ZeroInflationIndex>(index), 2 * Months, CPI::Flat);
+    Matrix cPrices(cd.strikes.size(), cd.tenors.size(), 0.0);
+    Matrix fPrices(cd.strikes.size(), cd.tenors.size(), 0.0);
 
-    auto pricingEngine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(cd.discountTS, volSurface, true);
+    for (size_t i = 0; i < cd.strikes.size(); ++i) {
+        for (size_t j = 0; j < cd.tenors.size(); ++j) {
+            double expectedVol = cd.vols[j][i]->value();
+            Date optionFixingDate = volSurface->baseDate() + cd.tenors[j];
+            Date optionPaymentDate = today + cd.tenors[j];
 
-    put.setPricingEngine(pricingEngine);
-    seasonedPut.setPricingEngine(pricingEngine);
+            double vol = volSurface->volatility(optionFixingDate, cd.strikes[i], 0 * Days, false);
+            BOOST_CHECK_CLOSE(vol, expectedVol, cd.tolerance);
+            double ttm = cd.dayCounter.yearFraction(volSurface->baseDate(), optionFixingDate);
+            double atmf = index->fixing(optionFixingDate) / baseCPI;
+            double strike = std::pow(1 + cd.strikes[i], ttm);
+            double discountFactor = cd.discountTS->discount(optionPaymentDate);
+            double volTimeFrom = cd.dayCounter.yearFraction(lastKnownFixing, optionFixingDate);
 
-    BOOST_CHECK_CLOSE(put.NPV(), 0.09889734672, cd.tolerance);
+            QuantLib::BlackCalculator callPricer(Option::Call, strike, atmf, sqrt(volTimeFrom) * vol, discountFactor);
+            QuantLib::BlackCalculator putPricer(Option::Put, strike, atmf, sqrt(volTimeFrom) * vol, discountFactor);
 
-    BOOST_CHECK_CLOSE(seasonedPut.NPV(), 0.11002621921, cd.tolerance);
-}
+            cPrices[i][j] = callPricer.value();
+            fPrices[i][j] = putPricer.value();
+        }
+    }
 
-BOOST_AUTO_TEST_CASE(testPriceVolatilitySurface) {
+    cd.cPrices = cPrices;
+    cd.fPrices = fPrices;
+    cd.cStrikes = cd.strikes;
+    cd.fStrikes = cd.strikes;
 
-    CommonData cd;
-    Settings::instance().evaluationDate() = cd.today;
-    bool isInterpolated = false;
-    bool useLastKnownFixingDateAsBaseDate = true;
-    boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<EUHICPXT>(false);
-    addFixings(cd.cpiFixings, *curveBuildIndex);
-    auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated);
+    auto priceSurface = buildVolSurfaceFromPrices(cd, index, true);
 
-    BOOST_CHECK_NO_THROW(curve->zeroRate(1.0));
+    for (size_t i = 0; i < cd.strikes.size(); ++i) {
+        for (size_t j = 0; j < cd.tenors.size(); ++j) {
+            double expectedVol = cd.vols[j][i]->value();
+            Date optionFixingDate = priceSurface->baseDate() + cd.tenors[j];
+            Date optionPaymentDate = today + cd.tenors[j];
+            double vol = priceSurface->volatility(optionFixingDate, cd.strikes[i], 0 * Days, false);
+            BOOST_CHECK_CLOSE(vol, expectedVol, cd.tolerance);
+        }
+    }
 
-    auto index = curveBuildIndex->clone(Handle<ZeroInflationTermStructure>(curve));
+    {
+        // Pricing seasoned cap/floors
 
-    RelinkableHandle<CPIVolatilitySurface> volSurface;
+        Date seasonedStartDate(15, Aug, 2021);
+        Date seasonedMaturity(15, Aug, 2024);
+        Date seasonedBaseFixingDate(1, Jun, 2021);
+        Date seasonedFixingDate(1, Jun, 2024);
+        double seasonedStrike = 0.03;
+        double seasonedBaseCPI = index->fixing(seasonedBaseFixingDate);
 
-    auto volSurfaceObsLag = buildVolSurfaceFromPrices(cd, index, useLastKnownFixingDateAsBaseDate);
+        double K = pow(1 + seasonedStrike, cd.dayCounter.yearFraction(seasonedBaseFixingDate, seasonedFixingDate));
+        double atm = index->fixing(seasonedFixingDate) / seasonedBaseCPI;
 
-    BOOST_CHECK_CLOSE(volSurfaceObsLag->volatility(Date(15, Aug, 2023), 0.02), 0.3, cd.tolerance);
-    BOOST_CHECK_CLOSE(volSurfaceObsLag->volatility(Date(15, Aug, 2024), 0.02), 0.35, cd.tolerance);
-    BOOST_CHECK_CLOSE(volSurfaceObsLag->volatility(Date(15, Aug, 2024), 0.03), 0.36, cd.tolerance);
-    BOOST_CHECK_CLOSE(volSurfaceObsLag->volatility(Date(15, Aug, 2024), 0.04), 0.37, cd.tolerance);
-    BOOST_CHECK_CLOSE(volSurfaceObsLag->volatility(Date(15, Aug, 2025), 0.08), 0.46, cd.tolerance);
+        double adjustedStrike = std::pow(K * seasonedBaseCPI / baseCPI,
+                                         1.0 / cd.dayCounter.yearFraction(volSurface->baseDate(), seasonedFixingDate)) -
+                                1.0;
+
+        double volTimeFrom = cd.dayCounter.yearFraction(lastKnownFixing, seasonedFixingDate);
+        double vol = volSurface->volatility(seasonedFixingDate, adjustedStrike, 0 * Days, false);
+        double discountFactor = cd.discountTS->discount(seasonedMaturity);
+        QuantLib::BlackCalculator callPricer(Option::Call, K, atm, sqrt(volTimeFrom) * vol, discountFactor);
+
+        boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine =
+            boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(
+                cd.discountTS, Handle<QuantLib::CPIVolatilitySurface>(volSurface), true);
+
+        QuantLib::CPICapFloor cap(Option::Call, 1.0, seasonedStartDate, Null<double>(), seasonedMaturity,
+                                  cd.fixingCalendar, cd.bdc, cd.fixingCalendar, cd.bdc, seasonedStrike,
+                                  Handle<ZeroInflationIndex>(index), cd.obsLag, CPI::Flat);
+
+        cap.setPricingEngine(engine);
+
+        BOOST_CHECK_CLOSE(cap.NPV(), callPricer.value(), cd.tolerance);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(testVolatiltiySurfaceWithStartDate) {
@@ -238,11 +276,13 @@ BOOST_AUTO_TEST_CASE(testVolatiltiySurfaceWithStartDate) {
     CommonData cd;
     Date today(15, July, 2022);
     cd.today = today;
+    cd.obsLag = 3 * Months;
     Settings::instance().evaluationDate() = today;
     std::map<Date, double> fixings{{Date(1, Mar, 2022), 100.0}};
     // the Q2 fixing not published yet, the zciis swaps and caps start on 15th Jun and
     // reference on the Q1 fixing
     Date startDate(15, Jun, 2022);
+    Date lastKnownFixing(1, Jan, 2022);
 
     boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<QuantLib::AUCPI>(Quarterly, true, false);
     for (const auto& [date, fixing] : fixings) {
@@ -253,9 +293,64 @@ BOOST_AUTO_TEST_CASE(testVolatiltiySurfaceWithStartDate) {
 
     auto index = curveBuildIndex->clone(Handle<ZeroInflationTermStructure>(curve));
 
-    BOOST_CHECK_EQUAL(curve->baseDate(), Date(1, Mar, 2022));
+    BOOST_CHECK_EQUAL(curve->baseDate(), lastKnownFixing);
 
     BOOST_CHECK_EQUAL(curve->dates()[1], Date(1, Jan, 2023));
+    BOOST_CHECK_CLOSE(curve->data()[0], cd.zeroCouponQuotes[0], cd.tolerance);
+    BOOST_CHECK_CLOSE(curve->data()[1], cd.zeroCouponQuotes[0], cd.tolerance);
+    BOOST_CHECK_CLOSE(curve->data()[2], cd.zeroCouponQuotes[1], cd.tolerance);
+
+    auto volSurface = buildVolSurface(cd, index, startDate);
+    
+    BOOST_CHECK_EQUAL(volSurface->baseDate(), Date(1, Jan, 2022));
+    
+    double baseCPI = index->fixing(volSurface->baseDate());
+
+    BOOST_CHECK_CLOSE(baseCPI, 100.0, cd.tolerance);
+
+    Matrix cPrices(cd.strikes.size(), cd.tenors.size(), 0.0);
+    Matrix fPrices(cd.strikes.size(), cd.tenors.size(), 0.0);
+
+    for (size_t i = 0; i < cd.strikes.size(); ++i) {
+        for (size_t j = 0; j < cd.tenors.size(); ++j) {
+            double expectedVol = cd.vols[j][i]->value();
+            Date optionFixingDate = volSurface->baseDate() + cd.tenors[j];
+            Date optionPaymentDate = startDate + cd.tenors[j];
+
+            double vol = volSurface->volatility(optionFixingDate, cd.strikes[i], 0 * Days, false);
+            BOOST_CHECK_CLOSE(vol, expectedVol, cd.tolerance);
+            double ttm = cd.dayCounter.yearFraction(volSurface->baseDate(), optionFixingDate);
+            double atmf = index->fixing(optionFixingDate) / baseCPI;
+            double strike = std::pow(1 + cd.strikes[i], ttm);
+            double discountFactor = cd.discountTS->discount(optionPaymentDate);
+            double volTimeFrom = cd.dayCounter.yearFraction(lastKnownFixing, optionFixingDate);
+            QuantLib::BlackCalculator callPricer(Option::Call, strike, atmf, sqrt(volTimeFrom) * vol, discountFactor);
+            QuantLib::BlackCalculator putPricer(Option::Put, strike, atmf, sqrt(volTimeFrom) * vol, discountFactor);
+            
+            cPrices[i][j] = callPricer.value();
+            fPrices[i][j] = putPricer.value();
+        }   
+    }
+
+    cd.cPrices = cPrices;
+    cd.fPrices = fPrices;
+    cd.cStrikes = cd.strikes;
+    cd.fStrikes = cd.strikes;
+
+    auto priceSurface = buildVolSurfaceFromPrices(cd, index, true, startDate);
+
+    for (size_t i = 0; i < cd.strikes.size(); ++i) {
+        for (size_t j = 0; j < cd.tenors.size(); ++j) {
+            double expectedVol = cd.vols[j][i]->value();
+            Date optionFixingDate = priceSurface->baseDate() + cd.tenors[j];
+            Date optionPaymentDate = startDate + cd.tenors[j];
+            double vol = priceSurface->volatility(optionFixingDate, cd.strikes[i], 0 * Days, false);
+            BOOST_CHECK_CLOSE(vol, expectedVol, cd.tolerance);
+        }
+    }
+
+    
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()
