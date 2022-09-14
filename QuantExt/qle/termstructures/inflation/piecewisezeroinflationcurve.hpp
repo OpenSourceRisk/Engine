@@ -36,7 +36,7 @@ namespace QuantExt {
 template <class Interpolator, template <class> class Bootstrap = QuantLib::IterativeBootstrap,
           class Traits = QuantExt::ZeroInflationTraits>
 class PiecewiseZeroInflationCurve : public QuantLib::InterpolatedZeroInflationCurve<Interpolator>,
-                                    public LazyObject,
+                                    public QuantLib::LazyObject,
                                     public Traits::BootstrapFirstDateInitializer {
 private:
     typedef QuantLib::InterpolatedZeroInflationCurve<Interpolator> base_curve;
@@ -146,8 +146,8 @@ template <class I, template <class> class B, class T> void PiecewiseZeroInflatio
 
 template <class I, template <class> class B, class T>
 QuantLib::Date PiecewiseZeroInflationCurve<I, B, T>::initialDate() const {
-    return ZeroInflation::curveBaseDate(useLastAvailableFixingAsBaseDate_, referenceDate(), observationLag(),
-                                        frequency(), index_);
+    return ZeroInflation::curveBaseDate(useLastAvailableFixingAsBaseDate_, base_curve::referenceDate(),
+                                        base_curve::observationLag(), base_curve::frequency(), index_);
 }
 
 } // namespace QuantExt

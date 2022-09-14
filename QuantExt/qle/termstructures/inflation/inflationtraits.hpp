@@ -38,6 +38,7 @@ class ZeroInflationTraits {
 public:
     class BootstrapFirstDateInitializer {
     public:
+        virtual ~BootstrapFirstDateInitializer() = default;
         virtual QuantLib::Date initialDate() const = 0;
     };
 
@@ -69,7 +70,7 @@ public:
                                         QuantLib::Size) // firstAliveHelper
     {
         if (validData) {
-            Rate r = *(std::min_element(c->data().begin(), c->data().end()));
+            QuantLib::Rate r = *(std::min_element(c->data().begin(), c->data().end()));
             return r < 0.0 ? r * 2.0 : r / 2.0;
         }
         return -detail::maxInflation;
@@ -79,7 +80,7 @@ public:
                                         QuantLib::Size) // firstAliveHelper
     {
         if (validData) {
-            Rate r = *(std::max_element(c->data().begin(), c->data().end()));
+            QuantLib::Rate r = *(std::max_element(c->data().begin(), c->data().end()));
             return r < 0.0 ? r / 2.0 : r * 2.0;
         }
         // no constraints.

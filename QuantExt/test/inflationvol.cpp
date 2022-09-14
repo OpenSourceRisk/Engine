@@ -1,6 +1,7 @@
 #include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
 
+#include <ql/indexes/inflation/aucpi.hpp>
 #include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/matrix.hpp>
@@ -70,7 +71,7 @@ struct CommonData {
 
     std::vector<double> fStrikes = {0.02, 0.04};
     QuantLib::Matrix fPrices = {{0.0988973467221314, 0.179704866551846, 0.264516709169814},
-                                 {0.116985886476924, 0.214537382817819, 0.317492812165558}};
+                                {0.116985886476924, 0.214537382817819, 0.317492812165558}};
 
     CommonData()
         : today(15, Aug, 2022), tolerance(1e-6), dayCounter(Actual365Fixed()), fixingCalendar(NullCalendar()),
@@ -88,32 +89,30 @@ void addFixings(const std::map<Date, Rate> fixings, ZeroInflationIndex& index) {
     }
 };
 
-boost::shared_ptr<Seasonality> buildSeasonalityCurve() {
-    std::vector<double> factors{0.99, 1.01, 0.98, 1.02, 0.97, 1.03, 0.96, 1.04, 0.95, 1.05, 0.94, 1.06};
-    Date seasonalityBaseDate(1, Jan, 2022);
-    return boost::make_shared<MultiplicativePriceSeasonality>(seasonalityBaseDate, Monthly, factors);
-}
-
 boost::shared_ptr<ZeroInflationCurve>
 buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const boost::shared_ptr<ZeroInflationIndex>& index,
-                        const bool isInterpolated, const boost::shared_ptr<Seasonality>& seasonality = nullptr) {
+                        const bool isInterpolated, const boost::shared_ptr<Seasonality>& seasonality = nullptr,
+                        const QuantLib::Date& startDate = Date()) {
     Date today = Settings::instance().evaluationDate();
-
+    Date start = startDate;
+    if (start == Date()) {
+        start = today;
+    }
     DayCounter dc = cd.dayCounter;
 
     BusinessDayConvention bdc = ModifiedFollowing;
 
     std::vector<boost::shared_ptr<QuantExt::ZeroInflationTraits::helper>> helpers;
     for (size_t i = 0; i < cd.zeroCouponQuotes.size(); ++i) {
-        Date maturity = today + cd.zeroCouponPillars[i];
+        Date maturity = startDate + cd.zeroCouponPillars[i];
         Rate quote = cd.zeroCouponQuotes[i];
         boost::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
             boost::make_shared<ZeroCouponInflationSwapHelper>(
                 Handle<Quote>(boost::make_shared<SimpleQuote>(quote)), cd.obsLag, maturity, cd.fixingCalendar, bdc, dc,
-                index, isInterpolated ? CPI::Linear : CPI::Flat, Handle<YieldTermStructure>(cd.discountTS), today);
+                index, isInterpolated ? CPI::Linear : CPI::Flat, Handle<YieldTermStructure>(cd.discountTS), start);
         helpers.push_back(instrument);
     }
-    Rate baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(useLastKnownFixing, today, cd.zeroCouponPillars[0],
+    Rate baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(useLastKnownFixing, start, cd.zeroCouponPillars[0],
                                                                 cd.dayCounter, cd.obsLag, cd.zeroCouponQuotes[0],
                                                                 cd.obsLag, cd.dayCounter, index, isInterpolated);
     boost::shared_ptr<ZeroInflationCurve> curve = boost::make_shared<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
@@ -125,10 +124,12 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const boost::sh
     return curve;
 }
 
-boost::shared_ptr<CPIVolatilitySurface>
-buildVolSurface(CommonData& cd, const boost::shared_ptr<ZeroInflationIndex>& index) {
+boost::shared_ptr<CPIVolatilitySurface> buildVolSurface(CommonData& cd,
+                                                        const boost::shared_ptr<ZeroInflationIndex>& index,
+                                                        const QuantLib::Date& startDate = QuantLib::Date()) {
     auto surface = boost::make_shared<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear>>(
-        cd.tenors, cd.strikes, cd.vols, index, 0, cd.fixingCalendar, ModifiedFollowing, cd.dayCounter, cd.obsLag);
+        cd.tenors, cd.strikes, cd.vols, index, 0, cd.fixingCalendar, ModifiedFollowing, cd.dayCounter, cd.obsLag,
+        startDate);
     surface->enableExtrapolation();
     return surface;
 }
@@ -143,7 +144,7 @@ boost::shared_ptr<CPIVolatilitySurface> buildVolSurfaceFromPrices(CommonData& cd
             cd.discountTS, cd.cStrikes, cd.fStrikes, cd.tenors, cd.cPrices, cd.fPrices);
 
     boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(
-        cd.discountTS, QuantLib::Handle<QuantLib::CPIVolatilitySurface>(), useLastKnownFixing); 
+        cd.discountTS, QuantLib::Handle<QuantLib::CPIVolatilitySurface>(), useLastKnownFixing);
 
     QuantLib::Handle<CPICapFloorTermPriceSurface> cpiPriceSurfaceHandle(cpiPriceSurfacePtr);
     boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>> cpiCapFloorVolSurface;
@@ -163,7 +164,6 @@ BOOST_AUTO_TEST_SUITE(InflationCPIVolatilityTest)
 BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
     CommonData cd;
     Settings::instance().evaluationDate() = cd.today;
-    Date today = Settings::instance().evaluationDate();
     bool isInterpolated = false;
     bool useLastKnownFixingDateAsBaseDate = true;
     boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<EUHICPXT>(false);
@@ -211,7 +211,6 @@ BOOST_AUTO_TEST_CASE(testPriceVolatilitySurface) {
 
     CommonData cd;
     Settings::instance().evaluationDate() = cd.today;
-    Date today = Settings::instance().evaluationDate();
     bool isInterpolated = false;
     bool useLastKnownFixingDateAsBaseDate = true;
     boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<EUHICPXT>(false);
@@ -231,6 +230,32 @@ BOOST_AUTO_TEST_CASE(testPriceVolatilitySurface) {
     BOOST_CHECK_CLOSE(volSurfaceObsLag->volatility(Date(15, Aug, 2024), 0.03), 0.36, cd.tolerance);
     BOOST_CHECK_CLOSE(volSurfaceObsLag->volatility(Date(15, Aug, 2024), 0.04), 0.37, cd.tolerance);
     BOOST_CHECK_CLOSE(volSurfaceObsLag->volatility(Date(15, Aug, 2025), 0.08), 0.46, cd.tolerance);
+}
+
+BOOST_AUTO_TEST_CASE(testVolatiltiySurfaceWithStartDate) {
+    // Test case when the ZCIIS and Cap/Floors don't start today
+    // but depend on the publishing schedule of the fixings
+    CommonData cd;
+    Date today(15, July, 2022);
+    cd.today = today;
+    Settings::instance().evaluationDate() = today;
+    std::map<Date, double> fixings{{Date(1, Mar, 2022), 100.0}};
+    // the Q2 fixing not published yet, the zciis swaps and caps start on 15th Jun and
+    // reference on the Q1 fixing
+    Date startDate(15, Jun, 2022);
+
+    boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<QuantLib::AUCPI>(Quarterly, true, false);
+    for (const auto& [date, fixing] : fixings) {
+        curveBuildIndex->addFixing(date, fixing);
+    }
+
+    auto curve = buildZeroInflationCurve(cd, true, curveBuildIndex, false, nullptr, startDate);
+
+    auto index = curveBuildIndex->clone(Handle<ZeroInflationTermStructure>(curve));
+
+    BOOST_CHECK_EQUAL(curve->baseDate(), Date(1, Mar, 2022));
+
+    BOOST_CHECK_EQUAL(curve->dates()[1], Date(1, Jan, 2023));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

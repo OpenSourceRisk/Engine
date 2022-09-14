@@ -26,9 +26,9 @@
 #include <iostream>
 #include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/math/solvers1d/brent.hpp>
-#include <qle/termstructures/inflation/constantcpivolatility.hpp>
-#include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
+#include <qle/termstructures/inflation/constantcpivolatility.hpp>
+#include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
 #include <qle/utilities/inflation.hpp>
 
 namespace QuantExt {
@@ -131,13 +131,12 @@ StrippedCPIVolatilitySurface<Interpolator2D>::StrippedCPIVolatilitySurface(
     PriceQuotePreference type, const QuantLib::Handle<QuantLib::CPICapFloorTermPriceSurface>& priceSurface,
     const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
     const boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine>& engine, // const QuantLib::Real& baseCPI,
-    const QuantLib::Date& capFloorStartDate,
-    const QuantLib::Real& upperVolBound, const QuantLib::Real& lowerVolBound, const QuantLib::Real& solverTolerance,    
-    const Interpolator2D& interpolator2d)
-    : CPIVolatilitySurface(priceSurface->settlementDays(), priceSurface->calendar(),
-                           priceSurface->businessDayConvention(), priceSurface->dayCounter(),
-                           priceSurface->observationLag(), index->frequency(), index->interpolated(),
-                           capFloorStartDate),
+    const QuantLib::Date& capFloorStartDate, const QuantLib::Real& upperVolBound, const QuantLib::Real& lowerVolBound,
+    const QuantLib::Real& solverTolerance, const Interpolator2D& interpolator2d)
+    : QuantExt::CPIVolatilitySurface(priceSurface->settlementDays(), priceSurface->calendar(),
+                                     priceSurface->businessDayConvention(), priceSurface->dayCounter(),
+                                     priceSurface->observationLag(), index->frequency(), index->interpolated(),
+                                     capFloorStartDate),
       preference_(type), priceSurface_(priceSurface), index_(index), engine_(engine), upperVolBound_(upperVolBound),
       lowerVolBound_(lowerVolBound), solverTolerance_(solverTolerance), interpolator2d_(interpolator2d) {
 
@@ -151,18 +150,20 @@ template <class Interpolator2D> void StrippedCPIVolatilitySurface<Interpolator2D
     QuantLib::Brent solver;
     QuantLib::Real guess = (upperVolBound_ + lowerVolBound_) / 2.0;
     QuantLib::Date startDate = capFloorStartDate();
-    QuantLib::Date underlyingBaseDate = ZeroInflation::fixingDate(startDate, observationLag(), frequency(), indexIsInterpolated());
-    double baseCPI = ZeroInflation::cpiFixing(index_, startDate, observationLag(), indexIsInterpolated());
+    QuantLib::Date underlyingBaseDate =
+        ZeroInflation::fixingDate(startDate, observationLag(), frequency(), indexIsInterpolated());
+    double baseCPI = ZeroInflation::cpiFixing(*index_, startDate, observationLag(), indexIsInterpolated());
     for (QuantLib::Size i = 0; i < strikes_.size(); i++) {
-        for (QuantLib::Size j = 0; j < maturities_.size(); j++) {            
-            
+        for (QuantLib::Size j = 0; j < maturities_.size(); j++) {
+
             QuantLib::Date maturityDate = optionMaturityFromTenor(maturities_[j]);
-            QuantLib::Date fixDate = ZeroInflation::fixingDate(maturityDate, observationLag(), frequency(), indexIsInterpolated());
-            Rate I1 = ZeroInflation::cpiFixing(index_, maturityDate, observationLag(), indexIsInterpolated());
-            
+            QuantLib::Date fixDate =
+                ZeroInflation::fixingDate(maturityDate, observationLag(), frequency(), indexIsInterpolated());
+            Rate I1 = ZeroInflation::cpiFixing(*index_, maturityDate, observationLag(), indexIsInterpolated());
+
             Time timeToMaturity = dayCounter().yearFraction(underlyingBaseDate, fixDate);
             QuantLib::Real atmRate = pow(I1 / baseCPI, 1 / timeToMaturity) - 1.0;
-            
+
             bool useFloor = chooseFloor(strikes_[i], atmRate);
 
             // FIXME: Do we need an effective maturity here ?
