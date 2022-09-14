@@ -413,10 +413,11 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
                     continue; // ignore non-cir cr model
                 Size idx1 = model_->pIdx(CR, i, 0);
                 Size idx2 = model_->pIdx(CR, i, 1);
+                Size idxw = model_->cIdx(CR, i, 0);
                 Array x0Tmp(2), dwTmp(2);
                 x0Tmp[0] = x0[idx1];
                 x0Tmp[1] = x0[idx2];
-                dwTmp[0] = dz[idx1];
+                dwTmp[0] = dz[idxw];
                 dwTmp[1] = 0.0; // not used
                 // evolve original process
                 auto r = crCirpp_[i]->evolve(t0, x0Tmp, dt, dwTmp);
