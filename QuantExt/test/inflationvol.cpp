@@ -65,14 +65,12 @@ struct CommonData {
         {Handle<Quote>(boost::make_shared<SimpleQuote>(0.40)), Handle<Quote>(boost::make_shared<SimpleQuote>(0.42)),
          Handle<Quote>(boost::make_shared<SimpleQuote>(0.44)), Handle<Quote>(boost::make_shared<SimpleQuote>(0.46))}};
 
-    std::vector<double> cStrikes = {0.06, 0.08};
+    std::vector<double> cStrikes;
 
-    QuantLib::Matrix cPrices = {{0.135772354068104, 0.21019787434837, 0.279071565433992},
-                                {0.135348153610647, 0.206948390005824, 0.273313086782018}};
+    QuantLib::Matrix cPrices;
 
-    std::vector<double> fStrikes = {0.02, 0.04};
-    QuantLib::Matrix fPrices = {{0.0988973467221314, 0.179704866551846, 0.264516709169814},
-                                {0.116985886476924, 0.214537382817819, 0.317492812165558}};
+    std::vector<double> fStrikes;
+    QuantLib::Matrix fPrices;
 
     CommonData()
         : today(15, Aug, 2022), tolerance(1e-6), dayCounter(Actual365Fixed()), fixingCalendar(NullCalendar()),
@@ -81,13 +79,6 @@ struct CommonData {
               boost::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(flatZero), dayCounter))){
 
           };
-};
-
-void addFixings(const std::map<Date, Rate> fixings, ZeroInflationIndex& index) {
-    index.clearFixings();
-    for (const auto& fixing : fixings) {
-        index.addFixing(fixing.first, fixing.second, true);
-    }
 };
 
 boost::shared_ptr<ZeroInflationCurve>
@@ -228,7 +219,6 @@ BOOST_AUTO_TEST_CASE(testVolatiltiySurface) {
         for (size_t j = 0; j < cd.tenors.size(); ++j) {
             double expectedVol = cd.vols[j][i]->value();
             Date optionFixingDate = priceSurface->baseDate() + cd.tenors[j];
-            Date optionPaymentDate = today + cd.tenors[j];
             double vol = priceSurface->volatility(optionFixingDate, cd.strikes[i], 0 * Days, false);
             BOOST_CHECK_CLOSE(vol, expectedVol, cd.tolerance);
         }
@@ -343,7 +333,6 @@ BOOST_AUTO_TEST_CASE(testVolatiltiySurfaceWithStartDate) {
         for (size_t j = 0; j < cd.tenors.size(); ++j) {
             double expectedVol = cd.vols[j][i]->value();
             Date optionFixingDate = priceSurface->baseDate() + cd.tenors[j];
-            Date optionPaymentDate = startDate + cd.tenors[j];
             double vol = priceSurface->volatility(optionFixingDate, cd.strikes[i], 0 * Days, false);
             BOOST_CHECK_CLOSE(vol, expectedVol, cd.tolerance);
         }
