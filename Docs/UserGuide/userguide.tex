@@ -1730,12 +1730,10 @@ direction ({\tt UP}, {\tt DOWN}, {\tt CROSS}), the base NPV, the scenario NPV an
 trade and sensitivity key. For an overview over the possible scenario keys see \ref{sec:sensitivity}.
 
 The second file, {\tt sensitivity.csv}, contains the shift size (in absolute terms always) and first (``Delta'') and second
-(``Gamma'') order finite differences computed from the scenario results. Note that the Delta and Gamma results pure
+(``Gamma'') order finite differences computed from the scenario results. Note that the Delta and Gamma results are pure
 differences, i.e. they are not divided by the shift size.
 
-The third file, {\tt crossgamma.csv} contains second order mixed differences according to the specified cross gamma
-filter, along with the shift sizes for the two factors involved. Again the reported result is not divided by the shift
-sizes.
+The second file also contains second order mixed differences according to the specified cross gamma filter, along with the shift sizes for the two factors involved.
 
 The stress scenario definition in {\tt stresstest.xml} defines two stress tests:
 
@@ -2863,9 +2861,8 @@ The parameters have the following interpretation:
 \item {\tt scenarioOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
   NPV, the scenario NPV and their difference.
 \item {\tt sensitivityOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
-  NPV, the shift size and the resulting first and (pure) second order finite differences
-\item {\tt crossGammaOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
-  NPV, two shift sizes and a (mixed) second order finite difference associated to a cross gamma calculation
+  NPV, the shift size together with the risk-factor and the resulting first and (pure) second order finite differences.
+  Also included is a second set of shift sizes together with the risk-factor with a (mixed) second order finite difference associated to a cross gamma calculation
 %\item {\tt parRateSensitivityOutputFile:} File containing par sensitivities (only available in ORE+)
 \item {\tt outputSensitivityThreshold:} Only finite differences with absolute value greater than this number are written
   to the output files.
