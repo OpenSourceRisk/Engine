@@ -43,7 +43,7 @@
 #ifndef quantext_cds_option_hpp
 #define quantext_cds_option_hpp
 
-#include <qle/instruments/creditdefaultswap.hpp>
+#include <ql/instruments/creditdefaultswap.hpp>
 
 #include <ql/option.hpp>
 
