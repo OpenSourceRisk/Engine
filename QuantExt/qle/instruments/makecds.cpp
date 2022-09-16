@@ -86,13 +86,13 @@ MakeCreditDefaultSwap::operator CreditDefaultSwap() const {
 
     Schedule schedule(protectionStart, end, couponTenor_, WeekendsOnly(), Following, Unadjusted, rule_, false);
 
-    QuantExt::CreditDefaultSwap::ProtectionPaymentTime timing = paysAtDefaultTime_ ?
-        QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault :
-        QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd;
-    boost::shared_ptr<QuantExt::CreditDefaultSwap> cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
+    CreditDefaultSwap::ProtectionPaymentTime timing = paysAtDefaultTime_ ?
+        CreditDefaultSwap::ProtectionPaymentTime::atDefault :
+        CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd;
+    boost::shared_ptr<CreditDefaultSwap> cds = boost::make_shared<CreditDefaultSwap>(
         side_, nominal_, upfrontRate_, couponRate_, schedule, Following, dayCounter_, settlesAccrual_,
         timing, protectionStart, upfrontDate, boost::shared_ptr<Claim>(),
-        lastPeriodDayCounter_, tradeDate, cashSettlementDays_); // FIXME: QLE CDS missing rebatesAccrual_
+        lastPeriodDayCounter_, rebatesAccrual_, tradeDate, cashSettlementDays_); 
 
     cds->setPricingEngine(engine_);
     return cds;

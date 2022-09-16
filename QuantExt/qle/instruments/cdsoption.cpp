@@ -48,6 +48,7 @@
 #include <boost/make_shared.hpp>
 
 namespace QuantExt {
+using namespace QuantLib;
 
 namespace {
 

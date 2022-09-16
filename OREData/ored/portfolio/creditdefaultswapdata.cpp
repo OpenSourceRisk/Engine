@@ -459,15 +459,17 @@ bool tryParseCdsInformation(const string& strInfo, CdsReferenceInformation& cdsI
 
 CreditDefaultSwapData::CreditDefaultSwapData()
     : settlesAccrual_(true), protectionPaymentTime_(QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault),
-      upfrontFee_(Null<Real>()), recoveryRate_(Null<Real>()), cashSettlementDays_(3) {}
+      upfrontFee_(Null<Real>()), rebatesAccrual_(true), recoveryRate_(Null<Real>()), cashSettlementDays_(3) {}
 
 CreditDefaultSwapData::CreditDefaultSwapData(const string& issuerId, const string& creditCurveId, const LegData& leg,
     const bool settlesAccrual, const PPT protectionPaymentTime,
     const Date& protectionStart, const Date& upfrontDate, const Real upfrontFee, Real recoveryRate,
-    const string& referenceObligation, const Date& tradeDate, const string& cashSettlementDays)
+    const string& referenceObligation, const Date& tradeDate, const string& cashSettlementDays,
+    const bool rebatesAccrual)
     : issuerId_(issuerId), creditCurveId_(creditCurveId), leg_(leg), settlesAccrual_(settlesAccrual),
       protectionPaymentTime_(protectionPaymentTime), protectionStart_(protectionStart), upfrontDate_(upfrontDate),
-      upfrontFee_(upfrontFee), recoveryRate_(recoveryRate), referenceObligation_(referenceObligation),
+      upfrontFee_(upfrontFee), rebatesAccrual_(rebatesAccrual), recoveryRate_(recoveryRate),
+      referenceObligation_(referenceObligation),
       tradeDate_(tradeDate), strCashSettlementDays_(cashSettlementDays),
       cashSettlementDays_(strCashSettlementDays_.empty() ? 3 : parseInteger(strCashSettlementDays_)) {}
 
@@ -475,9 +477,10 @@ CreditDefaultSwapData::CreditDefaultSwapData(
     const string& issuerId, const CdsReferenceInformation& referenceInformation, const LegData& leg,
     bool settlesAccrual, const PPT protectionPaymentTime,
     const Date& protectionStart, const Date& upfrontDate, Real upfrontFee, Real recoveryRate,
-    const std::string& referenceObligation, const Date& tradeDate, const string& cashSettlementDays)
+    const std::string& referenceObligation, const Date& tradeDate, const string& cashSettlementDays,
+    const bool rebatesAccrual)
     : issuerId_(issuerId), leg_(leg), settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime),
-      protectionStart_(protectionStart), upfrontDate_(upfrontDate), upfrontFee_(upfrontFee),
+      protectionStart_(protectionStart), upfrontDate_(upfrontDate), upfrontFee_(upfrontFee), rebatesAccrual_(rebatesAccrual),
       recoveryRate_(recoveryRate), referenceObligation_(referenceObligation),
       tradeDate_(tradeDate), strCashSettlementDays_(cashSettlementDays),
       cashSettlementDays_(strCashSettlementDays_.empty() ? 3 : parseInteger(strCashSettlementDays_)),
@@ -503,6 +506,8 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
     }
 
     settlesAccrual_ = XMLUtils::getChildValueAsBool(node, "SettlesAccrual", false);
+    rebatesAccrual_ = XMLUtils::getChildValueAsBool(node, "RebatesAccrual", false);
+    
     protectionPaymentTime_ = PPT::atDefault;
 
     // for backwards compatibility only
@@ -576,6 +581,8 @@ XMLNode* CreditDefaultSwapData::toXML(XMLDocument& doc) {
     }
 
     XMLUtils::addChild(doc, node, "SettlesAccrual", settlesAccrual_);
+    if (!rebatesAccrual_)
+        XMLUtils::addChild(doc, node, "RebatesAccrual", rebatesAccrual_);
     if (protectionPaymentTime_ == PPT::atDefault) {
         XMLUtils::addChild(doc, node, "ProtectionPaymentTime", "atDefault");
     } else if (protectionPaymentTime_ == PPT::atPeriodEnd) {
