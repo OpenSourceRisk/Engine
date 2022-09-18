@@ -1141,6 +1141,7 @@
       <xs:element ref="creditCurveIdType"/>
       <xs:element type="xs:string" name="ReferenceObligation" minOccurs="0"/>
       <xs:element type="bool" name="SettlesAccrual" minOccurs="0"/>
+      <xs:element type="bool" name="RebatesAccrual" minOccurs="0"/>
       <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0"/>
       <xs:element type="xs:string" name="ProtectionPaymentTime" minOccurs="0"/>
       <xs:element type="date" name="ProtectionStart" minOccurs="0"/>

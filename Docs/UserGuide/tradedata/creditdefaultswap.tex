@@ -34,6 +34,9 @@ Allowable values: Any real number, expressed in decimal form as a percentage of 
 \item FixedRecoveryRate [Optional]: This node holds the fixed recovery rate if the CDS is a fixed recovery CDS. For a standard CDS, this field should be omitted.
 \item TradeDate [Optional]: The CDS trade date. If omitted, the trade date is deduced from the protection start date. If the schedule provided in the \lstinline!LegData! has a rule that is either \lstinline!CDS! or \lstinline!CDS2015!, the trade date is set equal to the protection start date. This is the standard for CDS traded after the CDS Big Bang in 2009. Otherwise, the trade date is set equal to the protection start date minus 1 day as it was standard before the CDS Big Bang to have protection starting on the day after the trade date.
 \item CashSettlementDays [Optional]: The number of business days between the trade date and the cash settlement date. For standard CDS, this is 3 business days. If omitted, this defaults to 3.
+\item RebatesAccrual [Optional]: The protection seller pays the accrued scheduled current coupon at the start of the contract. The rebate date is not provided but computed to be two days after protection start. This defaults to \lstinline!true! if not provided.
+
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
 \end{itemize}
 
 The \lstinline!LegData! block then defines the CDS premium leg structure. This premium leg must be be of type \lstinline!Fixed! as described in Section \ref{ss:fixedleg_data}.
