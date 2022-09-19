@@ -193,8 +193,10 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
     registerBuilder(boost::make_shared<FxBarrierOptionFDEngineBuilder>());
     registerBuilder(boost::make_shared<FxDoubleBarrierOptionAnalyticEngineBuilder>());
-    registerBuilder(boost::make_shared<data::FxTouchOptionEngineBuilder>());
-    registerBuilder(boost::make_shared<data::FxDoubleTouchOptionAnalyticEngineBuilder>());
+    registerBuilder(boost::make_shared<FxTouchOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<FxDoubleTouchOptionAnalyticEngineBuilder>());
+    registerBuilder(boost::make_shared<FxDigitalOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<FxDigitalBarrierOptionEngineBuilder>());
 
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());
