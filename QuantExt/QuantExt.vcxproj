@@ -650,7 +650,6 @@
     <ClInclude Include="qle\instruments\makeoiscapfloor.hpp" />
     <ClInclude Include="qle\instruments\multiccycompositeinstrument.hpp" />
     <ClInclude Include="qle\instruments\multilegoption.hpp" />
-    <ClInclude Include="qle\instruments\multiccycompositeinstrument.hpp" />
     <ClInclude Include="qle\instruments\nullinstrument.hpp" />
     <ClInclude Include="qle\instruments\oibasisswap.hpp" />
     <ClInclude Include="qle\instruments\oiccbasisswap.hpp" />

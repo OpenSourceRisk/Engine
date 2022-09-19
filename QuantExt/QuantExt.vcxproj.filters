@@ -396,9 +396,6 @@
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp">
-      <Filter>pricingengines</Filter>
-    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -410,12 +407,6 @@
     </ClInclude>
     <ClInclude Include="qle\instruments\makecds.hpp">
       <Filter>instruments</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\instruments\creditdefaultswap.hpp">
-      <Filter>instruments</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\defaultprobabilityhelpers.hpp">
-      <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp">
       <Filter>pricingengines</Filter>
@@ -1249,6 +1240,9 @@
     <ClInclude Include="qle\quotes\compositevectorquote.hpp">
       <Filter>quotes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\multiccycompositeinstrument.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1574,17 +1568,8 @@
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp">
-      <Filter>pricingengines</Filter>
-    </ClCompile>
     <ClCompile Include="qle\instruments\makecds.cpp">
       <Filter>instruments</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\instruments\creditdefaultswap.cpp">
-      <Filter>instruments</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp">
-      <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp">
       <Filter>termstructures</Filter>
@@ -2131,6 +2116,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\proxyswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\multiccycompositeinstrument.cpp">
+      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

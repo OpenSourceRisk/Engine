@@ -373,6 +373,7 @@
     <ClCompile Include="ored\model\modelparameter.cpp" />
     <ClCompile Include="ored\model\utilities.cpp" />
     <ClCompile Include="ored\portfolio\barrierdata.cpp" />
+    <ClCompile Include="ored\portfolio\barrieroption.cpp" />
     <ClCompile Include="ored\portfolio\barrieroptionwrapper.cpp" />
     <ClCompile Include="ored\portfolio\bond.cpp" />
     <ClCompile Include="ored\portfolio\bondutils.cpp" />
