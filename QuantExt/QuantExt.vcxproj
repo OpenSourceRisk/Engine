@@ -633,7 +633,6 @@
     <ClInclude Include="qle\instruments\cdsoption.hpp" />
     <ClInclude Include="qle\instruments\commodityapo.hpp" />
     <ClInclude Include="qle\instruments\commodityforward.hpp" />
-    <ClInclude Include="qle\instruments\creditdefaultswap.hpp" />
     <ClInclude Include="qle\instruments\crossccybasismtmresetswap.hpp" />
     <ClInclude Include="qle\instruments\crossccybasisswap.hpp" />
     <ClInclude Include="qle\instruments\crossccyfixfloatmtmresetswap.hpp" />
@@ -649,7 +648,9 @@
     <ClInclude Include="qle\instruments\makeaverageois.hpp" />
     <ClInclude Include="qle\instruments\makecds.hpp" />
     <ClInclude Include="qle\instruments\makeoiscapfloor.hpp" />
+    <ClInclude Include="qle\instruments\multiccycompositeinstrument.hpp" />
     <ClInclude Include="qle\instruments\multilegoption.hpp" />
+    <ClInclude Include="qle\instruments\multiccycompositeinstrument.hpp" />
     <ClInclude Include="qle\instruments\nullinstrument.hpp" />
     <ClInclude Include="qle\instruments\oibasisswap.hpp" />
     <ClInclude Include="qle\instruments\oiccbasisswap.hpp" />
@@ -759,7 +760,6 @@
     <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp" />
     <ClInclude Include="qle\pricingengines\inflationcapfloorengines.hpp" />
     <ClInclude Include="qle\pricingengines\lgmconvolutionsolver.hpp" />
-    <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp" />
     <ClInclude Include="qle\pricingengines\numericlgmmultilegoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp" />
@@ -835,7 +835,6 @@
     <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionletadapter.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionletbase.hpp" />
-    <ClInclude Include="qle\termstructures\defaultprobabilityhelpers.hpp" />
     <ClInclude Include="qle\termstructures\dynamicblackvoltermstructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicstype.hpp" />
@@ -985,7 +984,6 @@
     <ClCompile Include="qle\instruments\cdsoption.cpp" />
     <ClCompile Include="qle\instruments\commodityapo.cpp" />
     <ClCompile Include="qle\instruments\commodityforward.cpp" />
-    <ClCompile Include="qle\instruments\creditdefaultswap.cpp" />
     <ClCompile Include="qle\instruments\crossccybasismtmresetswap.cpp" />
     <ClCompile Include="qle\instruments\crossccybasisswap.cpp" />
     <ClCompile Include="qle\instruments\crossccyfixfloatmtmresetswap.cpp" />
@@ -1001,6 +999,7 @@
     <ClCompile Include="qle\instruments\makeaverageois.cpp" />
     <ClCompile Include="qle\instruments\makecds.cpp" />
     <ClCompile Include="qle\instruments\makeoiscapfloor.cpp" />
+    <ClCompile Include="qle\instruments\multiccycompositeinstrument.cpp" />
     <ClCompile Include="qle\instruments\multilegoption.cpp" />
     <ClCompile Include="qle\instruments\oibasisswap.cpp" />
     <ClCompile Include="qle\instruments\oiccbasisswap.cpp" />
@@ -1084,7 +1083,6 @@
     <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp" />
     <ClCompile Include="qle\pricingengines\inflationcapfloorengines.cpp" />
     <ClCompile Include="qle\pricingengines\lgmconvolutionsolver.cpp" />
-    <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp" />
     <ClCompile Include="qle\pricingengines\numericlgmmultilegoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\oiccbasisswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\paymentdiscountingengine.cpp" />
@@ -1121,7 +1119,6 @@
     <ClCompile Include="qle\termstructures\crosscurrencypricetermstructure.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionlet.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionletadapter.cpp" />
-    <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp" />
     <ClCompile Include="qle\termstructures\discountratiomodifiedcurve.cpp" />
     <ClCompile Include="qle\termstructures\dynamiccpivolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\dynamicoptionletvolatilitystructure.cpp" />
