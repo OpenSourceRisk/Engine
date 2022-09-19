@@ -237,7 +237,7 @@ BaseCorrelationCurve::BaseCorrelationCurve(
         for (Size i = 0; i < tmpDps.size(); ++i)
             quotes[i].push_back(quotes[i][tmpTerms.size() - 2]);
 
-        baseCorrelation_ = boost::make_shared<BilinearBaseCorrelationTermStructure>(
+        baseCorrelation_ = boost::make_shared<QuantExt::InterpolatedBaseCorrelationTermStructure<Bilinear>>(
             config.settlementDays(), config.calendar(), config.businessDayConvention(), tmpTerms, tmpDps, quotes,
             config.dayCounter(), config.startDate(), config.rule());
 

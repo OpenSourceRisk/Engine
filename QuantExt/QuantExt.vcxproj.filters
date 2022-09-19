@@ -1249,6 +1249,9 @@
     <ClInclude Include="qle\quotes\compositevectorquote.hpp">
       <Filter>quotes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\credit\basecorrelationstructure.hpp">
+      <Filter>termstructures\credit</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1298,6 +1301,9 @@
     </Filter>
     <Filter Include="interpolators">
       <UniqueIdentifier>{5afe79b0-37bd-4c42-a9f7-5df8719d365c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="termstructures\credit">
+      <UniqueIdentifier>{de46d9a6-5326-4299-ad70-e0c79f1afb34}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -2131,6 +2137,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\proxyswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\credit\basecorrelationstructure.cpp">
+      <Filter>termstructures\credit</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

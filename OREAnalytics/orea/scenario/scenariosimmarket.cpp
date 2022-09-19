@@ -94,8 +94,6 @@ using namespace QuantExt;
 using namespace ore::data;
 using namespace std;
 
-typedef QuantLib::BaseCorrelationTermStructure<QuantLib::BilinearInterpolation> BilinearBaseCorrelationTermStructure;
-
 namespace {
 
 // Utility function that is in catch blocks below
@@ -1832,11 +1830,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        Handle<BaseCorrelationTermStructure<BilinearInterpolation>> wrapper =
+                        Handle<BaseCorrelationTermStructureBase> wrapper =
                             initMarket->baseCorrelation(name, configuration);
                         if (!param.second.first)
                             baseCorrelations_.insert(
-                                pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
+                                pair<pair<string, string>, Handle<BaseCorrelationTermStructureBase>>(
                                     make_pair(Market::defaultConfiguration, name), wrapper));
                         else {
                             Size nd = parameters->baseCorrelationDetachmentPoints().size();
@@ -1868,15 +1866,15 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     quotes[i].push_back(quotes[i][0]);
                             }
                             DayCounter dc = wrapper->dayCounter();
-                            boost::shared_ptr<BilinearBaseCorrelationTermStructure> bcp =
-                                boost::make_shared<BilinearBaseCorrelationTermStructure>(
+                            boost::shared_ptr<InterpolatedBaseCorrelationTermStructure<Bilinear>> bcp =
+                                boost::make_shared<InterpolatedBaseCorrelationTermStructure<Bilinear>>(
                                     wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(),
                                     terms, parameters->baseCorrelationDetachmentPoints(), quotes, dc);
 
                             bcp->enableExtrapolation(wrapper->allowsExtrapolation());
-                            Handle<BilinearBaseCorrelationTermStructure> bch(bcp);
+                            Handle<BaseCorrelationTermStructureBase> bch(bcp);
                             baseCorrelations_.insert(
-                                pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
+                                pair<pair<string, string>, Handle<BaseCorrelationTermStructureBase>>(
                                     make_pair(Market::defaultConfiguration, name), bch));
                         }
                         DLOG("Base correlations built for " << name);
