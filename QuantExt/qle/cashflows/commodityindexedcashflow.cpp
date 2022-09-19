@@ -53,6 +53,9 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
         paymentDate_ = paymentCalendar.advance(paymentDate_, paymentLag, Days, paymentConvention);
     }
 
+    // the pricing date has to lie on or before the payment date
+    pricingDate_ = index_->fixingCalendar().adjust(std::min(paymentDate_, pricingDate_), Preceding);
+
     // We may not need the month and year if we are not using a future settlement price but get them
     // and pass them here in any case to init
     Date ref = isInArrears ? endDate : startDate;
