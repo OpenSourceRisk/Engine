@@ -211,7 +211,7 @@ protected:
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> fxVols_;
     mutable map<pair<string, string>, Handle<QuantExt::CreditCurve>> defaultCurves_;
     mutable map<pair<string, string>, Handle<QuantExt::CreditVolCurve>> cdsVols_;
-    mutable map<pair<string, string>, Handle<BaseCorrelationTermStructureBase>> baseCorrelations_;
+    mutable map<pair<string, string>, Handle<QuantExt::BaseCorrelationTermStructure>> baseCorrelations_;
     mutable map<pair<string, string>, Handle<Quote>> recoveryRates_;
     mutable map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
     mutable map<pair<string, string>, Handle<YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;

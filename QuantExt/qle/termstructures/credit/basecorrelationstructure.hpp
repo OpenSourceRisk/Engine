@@ -24,9 +24,9 @@
 
 #include <boost/optional/optional.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
-#include <ql/time/dategenerationrule.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
+#include <ql/time/dategenerationrule.hpp>
 
 #include <qle/termstructures/correlationtermstructure.hpp>
 
@@ -36,15 +36,15 @@ using namespace QuantLib;
 
 class BaseCorrelationTermStructure : public CorrelationTermStructure {
 public:
+    BaseCorrelationTermStructure();
+
     BaseCorrelationTermStructure(const Date& referenceDate, const Calendar& cal, BusinessDayConvention bdc,
-                                 const std::vector<Period>& tenors, 
-                                 const std::vector<Real>& lossLevel,
+                                 const std::vector<Period>& tenors, const std::vector<double>& detachmentPoints,
                                  const DayCounter& dc = DayCounter(), const Date& startDate = Date(),
                                  boost::optional<DateGeneration::Rule> rule = boost::none);
 
     BaseCorrelationTermStructure(Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
-                                 const std::vector<Period>& tenors,
-                                 const std::vector<Real>& lossLevel,
+                                 const std::vector<Period>& tenors, const std::vector<double>& detachmentPoints,
                                  const DayCounter& dc = DayCounter(), const Date& startDate = Date(),
                                  boost::optional<DateGeneration::Rule> rule = boost::none);
 
@@ -52,26 +52,31 @@ public:
 
     // TermStructure interface
     Date maxDate() const override { return dates_.back(); }
+    Time maxTime() const override { return times_.back(); }
 
     std::vector<double> times() const { return times_; }
 
-    std::vector<double> lossLevels() const { return detachmentPoints_; }
+    std::vector<double> detachmentPoints() const { return detachmentPoints_; }
 
     std::vector<Date> dates() const { return dates_; }
 
+    BusinessDayConvention businessDayConvention() const { return bdc_; }
+
 private:
+    BusinessDayConvention bdc_;
+
     void validate() const;
 
-    void initializeDatesAndTimes(const std::vector<Period>& tenors, const Date& startDate, BusinessDayConvention bdc,
-                                  boost::optional<DateGeneration::Rule> rule) const;
-    
-protected:    
+    void initializeDatesAndTimes(const Date& startDate,
+                                 boost::optional<DateGeneration::Rule> rule) const;
+
+protected:
     virtual void checkRange(Time t, Real strike, bool extrapolate) const override;
 
     std::vector<Period> tenors_;
-    std::vector<Real> detachmentPoints_;
+    std::vector<double> detachmentPoints_;
     mutable std::vector<Date> dates_;
-    mutable std::vector<Time> times_;
+    mutable std::vector<double> times_;
 };
 
 template <class Interpolator>
@@ -84,18 +89,14 @@ public:
                                              const DayCounter& dc = DayCounter(), const Date& startDate = Date(),
                                              boost::optional<DateGeneration::Rule> rule = boost::none,
                                              Interpolator interpolator = Interpolator())
-        : BaseCorrelationTermStructureBase(settlementDays, cal, bdc, tenors, lossLevel, dc, startDate, rule),
-          correlHandles_(correls), nLosses_(lossLevel.size()), interpolator_(interpolator),
-          data_(tenors.size(), detachmentPoints_.size(), 0.0) {
-        
-        
+        : BaseCorrelationTermStructure(settlementDays, cal, bdc, tenors, detachmentPoints, dc, startDate, rule),
+          quotes_(baseCorrelations), data_(tenors.size(), detachmentPoints.size(), 0.0), interpolator_(interpolator) {
 
-        // Initialize quotes
-        QL_REQUIRE(baseCorrelations.size() == times.size(), "Mismatch between tenors and correlation quotes");
-        for (const auto& row : baseCorrelations) {
+        // check quotes
+        QL_REQUIRE(quotes_.size() == times_.size(), "Mismatch between tenors and correlation quotes");
+        for (const auto& row : this->quotes_) {
             QL_REQUIRE(row.size() == detachmentPoints_.size(),
                        "Mismatch between number of detachment points and quotes");
-            data_.push_back(vector<double>(row.size(), 0.0));
         }
 
         this->interpolation_ =
@@ -105,24 +106,30 @@ public:
 
         // register with each of the quotes
         for (Size i = 0; i < this->quotes_.size(); i++) {
-            QL_REQUIRE(this->quotes_[i]->value() >= 0.0 && this->quotes_[i]->value() <= 1.0,
-                       "correlation not in range (0.0,1.0): " << this->data_[i]);
+            for (Size j = 0; j < this->quotes_.size(); ++j) {
 
-            registerWith(this->quotes_[i]);
+                QL_REQUIRE(this->quotes_[i][j]->value() >= 0.0 && this->quotes_[i][j]->value() <= 1.0,
+                           "correlation not in range (0.0,1.0): " << this->quotes_[i][j]->value());
+
+                registerWith(this->quotes_[i][j]);
+            }
         }
     }
-
- //@}
-    //! \name TermStructure interface
-    //@{
-    Date maxDate() const override { return Date::maxDate(); } // flat extrapolation
-    Time maxTime() const override { return QL_MAX_REAL; }
 
     //@}
     //! \name Observer interface
     //@{
     void update() override;
     //@}
+protected:
+    //! \name CorrelationTermStructure implementation
+    //@{
+    Real correlationImpl(Time t, Real detachmentPoint) const override;
+    //@}
+    std::vector<std::vector<Handle<Quote>>> quotes_;
+    mutable Matrix data_;
+
+
 private:
     //! \name LazyObject interface
     //@{
@@ -130,22 +137,14 @@ private:
     //@}
 
     Interpolator interpolator_;
-        
-    boost::shared_ptr<Interpolation> interpolation_;
+
+    mutable Interpolation2D interpolation_;
 
 
-protected:
-    //! \name CorrelationTermStructure implementation
-    //@{
-    Real correlationImpl(Time t, Real) const override;
-    //@}
-    std::vector<std::vector<<Handle<Quote>>> quotes_;
-    vector<vector<double>> data_;
 };
 
-template <class Interpolator>
-void InterpolatedBaseCorrelationTermStructure<Interpolator>::performCalculations() const {
-    
+template <class Interpolator> void InterpolatedBaseCorrelationTermStructure<Interpolator>::performCalculations() const {
+
     for (Size i = 0; i < this->times_.size(); ++i)
         for (Size j = 0; j < this->detachmentPoints_.size(); ++j)
             this->data_[i][j] = quotes_[i][j]->value();
@@ -155,15 +154,15 @@ void InterpolatedBaseCorrelationTermStructure<Interpolator>::performCalculations
     this->interpolation_.update();
 }
 
-
 template <class Interpolator> void InterpolatedBaseCorrelationTermStructure<Interpolator>::update() {
     LazyObject::update();
     CorrelationTermStructure::update();
 }
 
-template <class T> Real InterpolatedBaseCorrelationTermStructure<T>::correlationImpl(Time t, Real x) const {
+template <class T>
+Real InterpolatedBaseCorrelationTermStructure<T>::correlationImpl(Time t, Real detachmentPoint) const {
     calculate();
-    return this->interpolation_(t, x, true);
+    return this->interpolation_(t, detachmentPoint, true);
 }
 
 typedef InterpolatedBaseCorrelationTermStructure<QuantLib::Bilinear> BilinearBaseCorrelationCurve;

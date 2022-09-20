@@ -24,7 +24,7 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
-#include <ql/experimental/credit/basecorrelationstructure.hpp>
+#include <qle/termstructures/credit/basecorrelationstructure.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
@@ -1830,11 +1830,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        Handle<BaseCorrelationTermStructureBase> wrapper =
+                        Handle<QuantExt::BaseCorrelationTermStructure> wrapper =
                             initMarket->baseCorrelation(name, configuration);
                         if (!param.second.first)
                             baseCorrelations_.insert(
-                                pair<pair<string, string>, Handle<BaseCorrelationTermStructureBase>>(
+                                pair<pair<string, string>, Handle<QuantExt::BaseCorrelationTermStructure>>(
                                     make_pair(Market::defaultConfiguration, name), wrapper));
                         else {
                             Size nd = parameters->baseCorrelationDetachmentPoints().size();
@@ -1872,9 +1872,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     terms, parameters->baseCorrelationDetachmentPoints(), quotes, dc);
 
                             bcp->enableExtrapolation(wrapper->allowsExtrapolation());
-                            Handle<BaseCorrelationTermStructureBase> bch(bcp);
+                            Handle<QuantExt::BaseCorrelationTermStructure> bch(bcp);
                             baseCorrelations_.insert(
-                                pair<pair<string, string>, Handle<BaseCorrelationTermStructureBase>>(
+                                pair<pair<string, string>, Handle<QuantExt::BaseCorrelationTermStructure>>(
                                     make_pair(Market::defaultConfiguration, name), bch));
                         }
                         DLOG("Base correlations built for " << name);

@@ -27,7 +27,7 @@
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
 
-#include <ql/experimental/credit/basecorrelationstructure.hpp>
+#include <qle/termstructures/credit/basecorrelationstructure.hpp>
 
 namespace ore {
 namespace data {
