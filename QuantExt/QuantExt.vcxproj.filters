@@ -1252,6 +1252,9 @@
     <ClInclude Include="qle\termstructures\credit\basecorrelationstructure.hpp">
       <Filter>termstructures\credit</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\credit\spreadedbasecorrelationcurve.hpp">
+      <Filter>termstructures\credit</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -2139,6 +2142,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\credit\basecorrelationstructure.cpp">
+      <Filter>termstructures\credit</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\credit\spreadedbasecorrelationcurve.cpp">
       <Filter>termstructures\credit</Filter>
     </ClCompile>
   </ItemGroup>

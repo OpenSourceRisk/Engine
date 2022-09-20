@@ -1848,10 +1848,16 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     if (i == 0)
                                         terms[j] = term;
                                     Real bc = wrapper->correlation(asof_ + term, lossLevel, true); // extrapolate
-                                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(bc));
+                                    boost::shared_ptr<SimpleQuote> q =
+                                        boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : bc);
                                     simDataTmp.emplace(std::piecewise_construct,
                                                        std::forward_as_tuple(param.first, name, i * nt + j),
                                                        std::forward_as_tuple(q));
+                                    if (useSpreadedTermStructures_) {
+                                        absoluteSimDataTmp.emplace(std::piecewise_construct,
+                                                                   std::forward_as_tuple(param.first, name, i * nt + j),
+                                                                   std::forward_as_tuple(bc));
+                                    }
                                     quotes[i][j] = Handle<Quote>(q);
                                 }
                             }
@@ -1865,17 +1871,27 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 for (Size i = 0; i < nd; ++i)
                                     quotes[i].push_back(quotes[i][0]);
                             }
-                            DayCounter dc = wrapper->dayCounter();
-                            boost::shared_ptr<InterpolatedBaseCorrelationTermStructure<Bilinear>> bcp =
-                                boost::make_shared<InterpolatedBaseCorrelationTermStructure<Bilinear>>(
-                                    wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(),
-                                    terms, parameters->baseCorrelationDetachmentPoints(), quotes, dc);
 
-                            bcp->enableExtrapolation(wrapper->allowsExtrapolation());
-                            Handle<QuantExt::BaseCorrelationTermStructure> bch(bcp);
-                            baseCorrelations_.insert(
-                                pair<pair<string, string>, Handle<QuantExt::BaseCorrelationTermStructure>>(
-                                    make_pair(Market::defaultConfiguration, name), bch));
+                            if (useSpreadedTermStructures_) {
+                                
+
+                            } else {
+                            
+                                
+
+                                
+                                DayCounter dc = wrapper->dayCounter();
+                                boost::shared_ptr<InterpolatedBaseCorrelationTermStructure<Bilinear>> bcp =
+                                    boost::make_shared<InterpolatedBaseCorrelationTermStructure<Bilinear>>(
+                                        wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(),
+                                        terms, parameters->baseCorrelationDetachmentPoints(), quotes, dc);
+
+                                bcp->enableExtrapolation(wrapper->allowsExtrapolation());
+                                Handle<QuantExt::BaseCorrelationTermStructure> bch(bcp);
+                                baseCorrelations_.insert(
+                                    pair<pair<string, string>, Handle<QuantExt::BaseCorrelationTermStructure>>(
+                                        make_pair(Market::defaultConfiguration, name), bch));
+                                }
                         }
                         DLOG("Base correlations built for " << name);
                     } catch (const std::exception& e) {

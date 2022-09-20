@@ -40,7 +40,8 @@ BaseCorrelationTermStructure::BaseCorrelationTermStructure(Natural settlementDay
                                                            const std::vector<Real>& detachmentPoints,
                                                            const DayCounter& dc, const Date& startDate,
                                                            boost::optional<DateGeneration::Rule> rule)
-    : CorrelationTermStructure(settlementDays, cal, dc), bdc_(bdc), tenors_(tenors), detachmentPoints_(detachmentPoints) {
+    : CorrelationTermStructure(settlementDays, cal, dc), bdc_(bdc), tenors_(tenors),
+      detachmentPoints_(detachmentPoints) {
     validate();
     initializeDatesAndTimes(startDate, rule);
 }
@@ -94,13 +95,12 @@ void BaseCorrelationTermStructure::initializeDatesAndTimes(const Date& startDate
 }
 
 void BaseCorrelationTermStructure::checkRange(Time t, Real strike, bool extrapolate) const {
-    bool extrapolationNeeded = t < times_.front() || t > times_.back() || strike < detachmentPoints_.front() ||
-                               strike > detachmentPoints_.back();
+    bool extrapolationNeeded =
+        t < minTime() || t > maxTime() || strike < minDetachmentPoint() || strike > maxDetachmentPoint();
     QL_REQUIRE(extrapolate || allowsExtrapolation() || !extrapolationNeeded,
-               "No extrapolation allowed,  require t = " << t << " to be between (" << times_.front() << ", "
-                                                         << times_.back() << ") and detachmentPoint = " << strike
-                                                         << " to be between (" << detachmentPoints_.front() << ", "
-                                                         << detachmentPoints_.back() << ").");
+               "No extrapolation allowed,  require t = "
+                   << t << " to be between (" << minTime() << ", " << maxTime() << ") and detachmentPoint = " << strike
+                   << " to be between (" << minDetachmentPoint() << ", " << maxDetachmentPoint() << ").");
 }
 
 } // namespace QuantExt

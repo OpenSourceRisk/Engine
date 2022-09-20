@@ -792,6 +792,7 @@
     <ClInclude Include="qle\termstructures\creditcurve.hpp" />
     <ClInclude Include="qle\termstructures\creditvolcurve.hpp" />
     <ClInclude Include="qle\termstructures\credit\basecorrelationstructure.hpp" />
+    <ClInclude Include="qle\termstructures\credit\spreadedbasecorrelationcurve.hpp" />
     <ClInclude Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfaceproxy.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
@@ -1110,6 +1111,7 @@
     <ClCompile Include="qle\termstructures\creditcurve.cpp" />
     <ClCompile Include="qle\termstructures\creditvolcurve.cpp" />
     <ClCompile Include="qle\termstructures\credit\basecorrelationstructure.cpp" />
+    <ClCompile Include="qle\termstructures\credit\spreadedbasecorrelationcurve.cpp" />
     <ClCompile Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfaceproxy.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />

@@ -51,8 +51,13 @@ public:
     virtual ~BaseCorrelationTermStructure() = default;
 
     // TermStructure interface
-    Date maxDate() const override { return dates_.back(); }
-    Time maxTime() const override { return times_.back(); }
+    virtual Date maxDate() const override { return dates_.back(); }
+
+    virtual Time maxTime() const override { return times_.back(); }
+    virtual Time minTime() const override { return times_.front(); }
+
+    virtual double minDetachmentPoint() const { return detachmentPoints_.front(); }
+    virtual double maxDetachmentPoint() const { return detachmentPoints_.back(); }
 
     std::vector<double> times() const { return times_; }
 
@@ -63,7 +68,9 @@ public:
     BusinessDayConvention businessDayConvention() const { return bdc_; }
 
 private:
+    Date startDate_;
     BusinessDayConvention bdc_;
+    boost::optional<DateGeneration> rule_;
 
     void validate() const;
 
@@ -72,7 +79,7 @@ private:
 
 protected:
     virtual void checkRange(Time t, Real strike, bool extrapolate) const override;
-
+    
     std::vector<Period> tenors_;
     std::vector<double> detachmentPoints_;
     mutable std::vector<Date> dates_;
@@ -90,12 +97,12 @@ public:
                                              boost::optional<DateGeneration::Rule> rule = boost::none,
                                              Interpolator interpolator = Interpolator())
         : BaseCorrelationTermStructure(settlementDays, cal, bdc, tenors, detachmentPoints, dc, startDate, rule),
-          quotes_(baseCorrelations), data_(tenors.size(), detachmentPoints.size(), 0.0), interpolator_(interpolator) {
+          quotes_(baseCorrelations), data_(detachmentPoints.size(), tenors.size(), 0.0), interpolator_(interpolator) {
 
         // check quotes
-        QL_REQUIRE(quotes_.size() == times_.size(), "Mismatch between tenors and correlation quotes");
+        QL_REQUIRE(quotes_.size() == detachmentPoints_.size(), "Mismatch between tenors and correlation quotes");
         for (const auto& row : this->quotes_) {
-            QL_REQUIRE(row.size() == detachmentPoints_.size(),
+            QL_REQUIRE(row.size() == tenors_.size(),
                        "Mismatch between number of detachment points and quotes");
         }
 
@@ -106,7 +113,7 @@ public:
 
         // register with each of the quotes
         for (Size i = 0; i < this->quotes_.size(); i++) {
-            for (Size j = 0; j < this->quotes_.size(); ++j) {
+            for (Size j = 0; j < this->quotes_[i].size(); ++j) {
 
                 QL_REQUIRE(this->quotes_[i][j]->value() >= 0.0 && this->quotes_[i][j]->value() <= 1.0,
                            "correlation not in range (0.0,1.0): " << this->quotes_[i][j]->value());
@@ -145,8 +152,8 @@ private:
 
 template <class Interpolator> void InterpolatedBaseCorrelationTermStructure<Interpolator>::performCalculations() const {
 
-    for (Size i = 0; i < this->times_.size(); ++i)
-        for (Size j = 0; j < this->detachmentPoints_.size(); ++j)
+    for (Size i = 0; i < this->detachmentPoints_.size(); ++i)
+        for (Size j = 0; j < this->times_.size(); ++j)
             this->data_[i][j] = quotes_[i][j]->value();
     this->interpolation_ =
         this->interpolator_.interpolate(this->times_.begin(), this->times_.end(), this->detachmentPoints_.begin(),
@@ -156,7 +163,7 @@ template <class Interpolator> void InterpolatedBaseCorrelationTermStructure<Inte
 
 template <class Interpolator> void InterpolatedBaseCorrelationTermStructure<Interpolator>::update() {
     LazyObject::update();
-    CorrelationTermStructure::update();
+    BaseCorrelationTermStructure::update();
 }
 
 template <class T>
