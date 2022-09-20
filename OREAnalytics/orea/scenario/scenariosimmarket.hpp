@@ -31,6 +31,7 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
 #include <ql/quotes/all.hpp>
+#include <ql/termstructures/credit/defaultprobabilityhelpers.hpp>
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
@@ -42,7 +43,6 @@
 #include <qle/termstructures/datedstrippedoptionlet.hpp>
 #include <qle/termstructures/datedstrippedoptionletadapter.hpp>
 #include <qle/termstructures/datedstrippedoptionletbase.hpp>
-#include <qle/termstructures/defaultprobabilityhelpers.hpp>
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>

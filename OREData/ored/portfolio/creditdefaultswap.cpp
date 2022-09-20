@@ -82,31 +82,35 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     QL_REQUIRE(fixedData->rates().size() == 1, "CreditDefaultSwap requires single rate");
 
-    boost::shared_ptr<QuantExt::CreditDefaultSwap> cds;
+    boost::shared_ptr<QuantLib::CreditDefaultSwap> cds;
 
     if (notionals.size() == 1) {
         if (swap_.upfrontFee() == Null<Real>()) {
-            cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
+            cds = boost::make_shared<QuantLib::CreditDefaultSwap>(
                 prot, notional_, fixedData->rates().front(), schedule, payConvention, dc,
                 swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(),
-                boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.tradeDate(), swap_.cashSettlementDays());
+                boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.rebatesAccrual(), swap_.tradeDate(),
+		swap_.cashSettlementDays());
         } else {
-            cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
+            cds = boost::make_shared<QuantLib::CreditDefaultSwap>(
                 prot, notional_, swap_.upfrontFee(), fixedData->rates().front(), schedule, payConvention, dc,
                 swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), swap_.upfrontDate(),
-                boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.tradeDate(), swap_.cashSettlementDays());
+                boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.rebatesAccrual(), swap_.tradeDate(),
+		swap_.cashSettlementDays());
         }
     } else {
         if (swap_.upfrontFee() == Null<Real>()) {
-            cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
+            cds = boost::make_shared<QuantLib::CreditDefaultSwap>(
                 prot, notional_, amortized_leg, fixedData->rates().front(), schedule, payConvention, dc,
                 swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(),
-                boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.tradeDate(), swap_.cashSettlementDays());
+                boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.rebatesAccrual(), swap_.tradeDate(),
+		swap_.cashSettlementDays());
         } else {
-            cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
+            cds = boost::make_shared<QuantLib::CreditDefaultSwap>(
                 prot, notional_, amortized_leg, swap_.upfrontFee(), fixedData->rates().front(), schedule, payConvention,
                 dc, swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), swap_.upfrontDate(),
-                boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.tradeDate(), swap_.cashSettlementDays());
+                boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.rebatesAccrual(), swap_.tradeDate(),
+		swap_.cashSettlementDays());
         }
     }
 

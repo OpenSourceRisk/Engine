@@ -31,7 +31,7 @@ MultiPathGeneratorMersenneTwister::MultiPathGeneratorMersenneTwister(
 }
 
 void MultiPathGeneratorMersenneTwister::reset() {
-    PseudoRandom::rsg_type rsg = PseudoRandom::make_sequence_generator(process_->size() * (grid_.size() - 1), seed_);
+    PseudoRandom::rsg_type rsg = PseudoRandom::make_sequence_generator(process_->factors() * (grid_.size() - 1), seed_);
     pg_ = boost::make_shared<MultiPathGenerator<PseudoRandom::rsg_type> >(process_, grid_, rsg, false);
     antitheticVariate_ = true;
 }
@@ -47,7 +47,7 @@ void MultiPathGeneratorSobol::reset() {
     pg_ = boost::make_shared<MultiPathGenerator<InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal> > >(
         process_, grid_,
         InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal>(
-            SobolRsg(process_->size() * (grid_.size() - 1), seed_, directionIntegers_)));
+            SobolRsg(process_->factors() * (grid_.size() - 1), seed_, directionIntegers_)));
 }
 
 MultiPathGeneratorSobolBrownianBridge::MultiPathGeneratorSobolBrownianBridge(
@@ -59,7 +59,7 @@ MultiPathGeneratorSobolBrownianBridge::MultiPathGeneratorSobolBrownianBridge(
 }
 
 void MultiPathGeneratorSobolBrownianBridge::reset() {
-    gen_ = boost::make_shared<SobolBrownianGenerator>(process_->size(), grid_.size() - 1, ordering_, seed_,
+    gen_ = boost::make_shared<SobolBrownianGenerator>(process_->factors(), grid_.size() - 1, ordering_, seed_,
                                                       directionIntegers_);
 }
 
@@ -70,7 +70,7 @@ const Sample<MultiPath>& MultiPathGeneratorSobolBrownianBridge::next() const {
         path[j].front() = asset[j];
     }
     next_.weight = gen_->nextPath();
-    std::vector<Real> output(asset.size());
+    std::vector<Real> output(process_->factors());
     for (Size i = 1; i < grid_.size(); ++i) {
         Real t = grid_[i - 1];
         Real dt = grid_.dt(i - 1);

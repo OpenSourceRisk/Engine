@@ -13,6 +13,8 @@ commoditycurveconfig.cpp
 commodityoption.cpp
 commodityvolcurve.cpp
 commodityvolcurveconfig.cpp
+compositetrade.cpp
+compositewrapper.cpp
 conventions.cpp
 conventionsbasedfutureexpiry.cpp
 correlationcurveconfig.cpp
@@ -31,6 +33,7 @@ expiry.cpp
 fittedbondcurve.cpp
 fixings.cpp
 fxasianoption.cpp
+fxexotics.cpp
 fxoption.cpp
 fxswap.cpp
 fxtriangulation.cpp

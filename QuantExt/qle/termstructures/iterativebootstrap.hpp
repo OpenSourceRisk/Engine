@@ -44,22 +44,20 @@ QuantLib::Real dontThrowFallback(const QuantLib::BootstrapError<Curve>& error, Q
 
     QL_REQUIRE(xMin < xMax, "Expected xMin to be less than xMax");
 
-    // Set the initial value of the result to xMin and store the absolute bootstrap error at xMin
     QuantLib::Real result = xMin;
-    QuantLib::Real absError = std::abs(error(xMin));
-    QuantLib::Real minError = absError;
-
-    // Step out to xMax
+    QuantLib::Real minError = QL_MAX_REAL;
     QuantLib::Real stepSize = (xMax - xMin) / steps;
-    for (QuantLib::Size i = 0; i < steps; i++) {
 
-        // Get absolute bootstrap error at updated x value
-        xMin += stepSize;
-        absError = std::abs(error(xMin));
+    for (QuantLib::Size i = 0; i <= steps; ++i) {
+        Real x = xMin + stepSize * static_cast<double>(i);
+        Real absError = QL_MAX_REAL;
+        try {
+            absError = std::abs(error(x));
+        } catch (...) {
+        }
 
-        // If this absolute bootstrap error is less than the minimum, update result and minError
         if (absError < minError) {
-            result = xMin;
+            result = x;
             minError = absError;
         }
     }

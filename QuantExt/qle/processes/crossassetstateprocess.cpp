@@ -30,6 +30,7 @@ using namespace CrossAssetAnalytics;
 using namespace QuantLib;
 
 namespace {
+
 inline void setValue(Matrix& m, const Real& value, const QuantExt::CrossAssetModel* model,
                      const QuantExt::CrossAssetModelTypes::AssetType& t1, const Size& i1,
                      const QuantExt::CrossAssetModelTypes::AssetType& t2, const Size& i2, const Size& offset1 = 0,
@@ -38,9 +39,14 @@ inline void setValue(Matrix& m, const Real& value, const QuantExt::CrossAssetMod
     Size j = model->pIdx(t2, i2, offset2);
     m[i][j] = m[j][i] = value;
 }
-inline void setValue(Array& a, const Real& value, const QuantExt::CrossAssetModel* model,
-                     const QuantExt::CrossAssetModelTypes::AssetType& t, const Size& i, const Size& offset = 0) {
-    a[model->pIdx(t, i, offset)] = value;
+
+inline void setValue2(Matrix& m, const Real& value, const QuantExt::CrossAssetModel* model,
+                     const QuantExt::CrossAssetModelTypes::AssetType& t1, const Size& i1,
+                     const QuantExt::CrossAssetModelTypes::AssetType& t2, const Size& i2, const Size& offset1 = 0,
+                     const Size& offset2 = 0) {
+    Size i = model->pIdx(t1, i1, offset1);
+    Size j = model->cIdx(t2, i2, offset2);
+    m[i][j] = value;
 }
 } // anonymous namespace
 
@@ -68,63 +74,20 @@ CrossAssetStateProcess::CrossAssetStateProcess(const CrossAssetModel* const mode
 
 Size CrossAssetStateProcess::size() const { return model_->dimension(); }
 
+Size CrossAssetStateProcess::factors() const { return disc_ == euler ? model_->brownians() : model_->dimension(); }
+
 void CrossAssetStateProcess::flushCache() const {
     cache_m_.clear();
-    cache_md_.clear();
-    cache_v_.clear();
     cache_d_.clear();
-    boost::shared_ptr<CrossAssetStateProcess::ExactDiscretization> tmp =
-        boost::dynamic_pointer_cast<CrossAssetStateProcess::ExactDiscretization>(discretization_);
-    if (tmp != NULL) {
-        tmp->flushCache();
-    }
+    if(auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess::ExactDiscretization>(discretization_))
+	tmp->flushCache();
     updateSqrtCorrelation();
 }
 
 void CrossAssetStateProcess::updateSqrtCorrelation() const {
     if (disc_ != euler)
         return;
-    // build sqrt corr (for correlation matrix that covers all state variables)
-    // this can be simplified once we use as many brownians as model->brownians()
-    // instead of the full state vector
-    Matrix corr(model_->dimension(), model_->dimension(), 1.0);
-    Size brownianIndex = 0;
-    std::vector<Size> brownianIndices;
-    for (Size t = 0; t < crossAssetModelAssetTypes; ++t) {
-        AssetType assetType = AssetType(t);
-        for (Size i = 0; i < model_->components(assetType); ++i) {
-
-            // 3 possibilities for number of state variables vs. the number of Brownian motions for the i-th component
-            // within the current asset type.
-            // 1) They are equal. Make the assumption that there is a 1-1 correspondence. This is essentially what has
-            //    been happening until now outside of DK model i.e. always 1 state var and 1 Brownian motion.
-            // 2) number of state vars > number of Brownian motions. Happens with DK model. Think the code below will
-            //    only work when number of Brownian motions equals 1. Not changing it as not sure what was intended.
-            // 3) number of state vars < number of Brownian motions. Not covered below.
-            auto brownians = model_->brownians(assetType, i);
-            auto stateVars = model_->stateVariables(assetType, i);
-
-            if (brownians == stateVars) {
-                for (Size k = 0; k < brownians; ++k) {
-                    brownianIndices.push_back(brownianIndex++);
-                }
-            } else {
-                for (Size j = 0; j < brownians; ++j) {
-                    for (Size k = 0; k < stateVars; ++k) {
-                        brownianIndices.push_back(brownianIndex);
-                    }
-                    ++brownianIndex;
-                }
-            }
-        }
-    }
-    for (Size i = 0; i < corr.rows(); ++i) {
-        for (Size j = 0; j < i; ++j) {
-            corr[i][j] = corr[j][i] = model_->correlation()(brownianIndices[i], brownianIndices[j]);
-        }
-    }
-
-    sqrtCorrelation_ = pseudoSqrt(corr, salvaging_);
+    sqrtCorrelation_ = pseudoSqrt(model_->correlation(), salvaging_);
 }
 
 Array CrossAssetStateProcess::initialValues() const {
@@ -166,7 +129,7 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
     Real Hprime0 = model_->irlgm1f(0)->Hprime(t);
     Real alpha0 = model_->irlgm1f(0)->alpha(t);
     Real zeta0 = model_->irlgm1f(0)->zeta(t);
-    boost::unordered_map<double, Array>::const_iterator i = cache_m_.find(t);
+    auto i = cache_m_.find(t);
     if (i == cache_m_.end()) {
         /* z0 has drift 0 in the LGM measure but non-zero drift in the bank account measure, so start loop at i = 0 */
         for (Size i = 0; i < n; ++i) {
@@ -333,44 +296,22 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
 }
 
 Matrix CrossAssetStateProcess::diffusion(Time t, const Array& x) const {
-    boost::unordered_map<double, Matrix>::const_iterator i = cache_d_.find(t);
+    return diffusionOnCorrelatedBrownians(t, x) * sqrtCorrelation_;
+}
+
+Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrownians(Time t, const Array& x) const {
+    auto i = cache_d_.find(t);
     if (i == cache_d_.end()) {
-        Matrix tmp = diffusionImpl(t, x);
+        Matrix tmp = diffusionOnCorrelatedBrowniansImpl(t, x);
         cache_d_.insert(std::make_pair(t, tmp));
         return tmp;
     } else {
-        // we have to make a copy, otherwise we destroy the map entry
-        // since a disposable is returned
-        Matrix tmp = i->second;
-        return tmp;
+        return i->second;
     }
 }
 
-Array CrossAssetStateProcess::marginalDiffusion(Time t, const Array& x) const {
-    boost::unordered_map<double, Array>::const_iterator i = cache_md_.find(t);
-    if (i == cache_md_.end()) {
-        Array tmp = marginalDiffusionImpl(t, x);
-        cache_md_.insert(std::make_pair(t, tmp));
-        return tmp;
-    } else {
-        // we have to make a copy, otherwise we destroy the map entry
-        // since a disposable is returned
-        Array tmp = i->second;
-        return tmp;
-    }
-}
-
-Matrix CrossAssetStateProcess::diffusionImpl(Time t, const Array& x) const {
-    Matrix res(model_->dimension(), model_->dimension(), 0.0);
-    Array diag = marginalDiffusion(t, x);
-    for (Size i = 0; i < x.size(); ++i) {
-        res[i][i] = diag[i];
-    }
-    return res * sqrtCorrelation_;
-} // namespace QuantExt
-
-Array CrossAssetStateProcess::marginalDiffusionImpl(Time t, const Array&) const {
-    Array res(model_->dimension(), 0.0);
+Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const Array&) const {
+    Matrix res(model_->dimension(), model_->brownians(), 0.0);
     Size n = model_->components(IR);
     Size m = model_->components(FX);
     Size d = model_->components(INF);
@@ -379,12 +320,12 @@ Array CrossAssetStateProcess::marginalDiffusionImpl(Time t, const Array&) const 
     // ir-ir
     for (Size i = 0; i < n; ++i) {
         Real alphai = model_->irlgm1f(i)->alpha(t);
-        setValue(res, alphai, model_, IR, i, 0);
+        setValue2(res, alphai, model_, IR, i, IR, i, 0, 0);
     }
     // fx-fx
     for (Size i = 0; i < m; ++i) {
         Real sigmai = model_->fxbs(i)->sigma(t);
-        setValue(res, sigmai, model_, FX, i, 0);
+        setValue2(res, sigmai, model_, FX, i, FX, i, 0, 0);
     }
     // inf-inf
     for (Size i = 0; i < d; ++i) {
@@ -392,15 +333,15 @@ Array CrossAssetStateProcess::marginalDiffusionImpl(Time t, const Array&) const 
             Real alphai = model_->infdk(i)->alpha(t);
             Real Hi = model_->infdk(i)->H(t);
             // DK z diffusion coefficient
-            setValue(res, alphai, model_, INF, i, 0);
+            setValue2(res, alphai, model_, INF, i, INF, i, 0, 0);
             // DK y diffusion coefficient
-            setValue(res, alphai * Hi, model_, INF, i, 1);
+            setValue2(res, alphai * Hi, model_, INF, i, INF, i, 1, 0);
         } else {
             auto p = model_->infjy(i);
             // JY z diffusion coefficient
-            setValue(res, p->realRate()->alpha(t), model_, INF, i, 0);
+            setValue2(res, p->realRate()->alpha(t), model_, INF, i, INF, i, 0, 0);
             // JY I diffusion coefficient
-            setValue(res, p->index()->sigma(t), model_, INF, i, 1);
+            setValue2(res, p->index()->sigma(t), model_, INF, i, INF, i, 1, 1);
         }
     }
     for (Size i = 0; i < c; ++i) {
@@ -410,21 +351,21 @@ Array CrossAssetStateProcess::marginalDiffusionImpl(Time t, const Array&) const 
         Real alphai = model_->crlgm1f(i)->alpha(t);
         Real Hi = model_->crlgm1f(i)->H(t);
         // crz-crz
-        setValue(res, alphai, model_, CR, i, 0);
+        setValue2(res, alphai, model_, CR, i, CR, i, 0, 0);
         // cry-cry
-        setValue(res, alphai * Hi, model_, CR, i, 1);
+        setValue2(res, alphai * Hi, model_, CR, i, CR, i, 1, 0);
     }
     // eq-eq
     for (Size i = 0; i < e; ++i) {
         Real sigmai = model_->eqbs(i)->sigma(t);
-        setValue(res, sigmai, model_, EQ, i, 0);
+        setValue2(res, sigmai, model_, EQ, i, EQ, i, 0, 0);
     }
 
     if (model_->measure() == Measure::BA) {
         // aux-aux
         Real H0 = model_->irlgm1f(0)->H(t);
         Real alpha0 = model_->irlgm1f(0)->alpha(t);
-        setValue(res, alpha0 * H0, model_, AUX, 0, 0);
+        setValue2(res, alpha0 * H0, model_, AUX, 0, AUX, 0, 0, 0);
     }
 
     return res;
@@ -435,7 +376,7 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
     Array res;
     if (disc_ == euler) {
         const Array dz = sqrtCorrelation_ * dw;
-        const Array df = marginalDiffusion(t0, x0);
+        const Matrix df = diffusionOnCorrelatedBrownians(t0, x0);
         res = apply(expectation(t0, x0, dt), df * dz * std::sqrt(dt));
 
         // CR CIRPP components
@@ -445,10 +386,11 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
                     continue; // ignore non-cir cr model
                 Size idx1 = model_->pIdx(CR, i, 0);
                 Size idx2 = model_->pIdx(CR, i, 1);
+                Size idxw = model_->cIdx(CR, i, 0);
                 Array x0Tmp(2), dwTmp(2);
                 x0Tmp[0] = x0[idx1];
                 x0Tmp[1] = x0[idx2];
-                dwTmp[0] = dz[idx1];
+                dwTmp[0] = dz[idxw];
                 dwTmp[1] = 0.0; // not used
                 // evolve original process
                 auto r = crCirpp_[i]->evolve(t0, x0Tmp, dt, dwTmp);
@@ -474,7 +416,7 @@ Array CrossAssetStateProcess::ExactDiscretization::drift(const StochasticProcess
                                                                      const Array& x0, Time dt) const {
     Array res;
     cache_key k = {t0, dt};
-    boost::unordered_map<cache_key, Array>::const_iterator i = cache_m_.find(k);
+    auto i = cache_m_.find(k);
     if (i == cache_m_.end()) {
         res = driftImpl1(p, t0, x0, dt);
         cache_m_.insert(std::make_pair(k, res));
@@ -491,31 +433,27 @@ Array CrossAssetStateProcess::ExactDiscretization::drift(const StochasticProcess
 Matrix CrossAssetStateProcess::ExactDiscretization::diffusion(const StochasticProcess& p, Time t0,
                                                                           const Array& x0, Time dt) const {
     cache_key k = {t0, dt};
-    boost::unordered_map<cache_key, Matrix>::const_iterator i = cache_d_.find(k);
+    auto i = cache_d_.find(k);
     if (i == cache_d_.end()) {
         Matrix res = pseudoSqrt(covariance(p, t0, x0, dt), salvaging_);
         // note that covariance actually does not depend on x0
         cache_d_.insert(std::make_pair(k, res));
         return res;
     } else {
-        // see above about the copy
-        Matrix tmp = i->second;
-        return tmp;
+        return i->second;
     }
 }
 
 Matrix CrossAssetStateProcess::ExactDiscretization::covariance(const StochasticProcess& p, Time t0,
                                                                            const Array& x0, Time dt) const {
     cache_key k = {t0, dt};
-    boost::unordered_map<cache_key, Matrix>::const_iterator i = cache_v_.find(k);
+    auto i = cache_v_.find(k);
     if (i == cache_v_.end()) {
         Matrix res = covarianceImpl(p, t0, x0, dt);
         cache_v_.insert(std::make_pair(k, res));
         return res;
     } else {
-        // see above about the copy
-        Matrix tmp = i->second;
-        return tmp;
+        return i->second;
     }
 }
 
