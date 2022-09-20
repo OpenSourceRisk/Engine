@@ -267,7 +267,10 @@ QuantLib::Real OptionInterpolator2d<IS, IE>::getValueForStrike(QuantLib::Real st
                                                                const std::vector<QuantLib::Real>& strks,
                                                                const std::vector<QuantLib::Real>& vars,
                                                                const QuantLib::Interpolation& intrp) const {
-
+    QL_REQUIRE(!strks.empty(), "OptionInterpolator2d: no strikes given");
+    QL_REQUIRE(strks.size() == vars.size(), "OptionInterpolator2d: strikes size ("
+                                                << strks.size() << ") does not match vars size (" << vars.size()
+                                                << ")");
     QuantLib::Real retVar;
     if (strike > strks.back() && upperStrikeConstExtrap_) {
         retVar = vars.back(); // force flat extrapolate far strike if requested
@@ -288,11 +291,16 @@ QuantLib::Real OptionInterpolator2d<IS, IE>::getValue(QuantLib::Time t, QuantLib
     using std::vector;
     QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
     QL_REQUIRE(t >= 0, "Variance requested for date before reference date: " << referenceDate_);
-    Real varReturn;
     if (t == 0.0) {
         // requested at reference date
-        varReturn = values_[0][0];
+        QL_REQUIRE(!values_.empty(), "OptionInterpolator2d: no expiries given");
+        QL_REQUIRE(!values_.front().empty(), "OptionInterpolator2d: no value for first expiry given");
+        return values_[0][0];
     } else {
+        QL_REQUIRE(!expiries_.empty(), "OptionInterpolator2d: no expiry given");
+        if (expiries_.size() == 1) {
+            return getValueForStrike(strike, strikes_[0], values_[0], interpolations_[0]);
+        }
         // ind1 and ind2 two expiries on either side of requested time.
         Size ind1, ind2;
         if (t <= times_.front()) {
@@ -319,9 +327,8 @@ QuantLib::Real OptionInterpolator2d<IS, IE>::getValue(QuantLib::Time t, QuantLib
         Interpolation interp = interpolatorExpiry_.interpolate(xAxis.begin(), xAxis.end(), tmpVars.begin());
         // linear extrapolation of expiries in case t > time_.back() above.
         interp.enableExtrapolation(true);
-        varReturn = interp(t);
+        return interp(t);
     }
-    return varReturn;
 }
 
 template <class IS, class IE>
