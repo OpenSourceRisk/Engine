@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/termstructures/piecewisezeroinflationcurve.hpp
+/*! \file qle/termstructures/inflation/piecewisezeroinflationcurve.hpp
     \brief Piecewise interpolated zero inflation term structure
     \ingroup termstructures
 */
