@@ -28,7 +28,7 @@ SpreadedBaseCorrelationCurve::SpreadedBaseCorrelationCurve(const Handle<BaseCorr
                                                            const std::vector<double>& detachmentPoints,
                                                            const std::vector<std::vector<Handle<Quote>>>& corrSpreads)
     : BaseCorrelationTermStructure(baseCurve->settlementDays(), baseCurve->calendar(),
-                                   baseCurve->businessDayConvention(), tenors, detachmentPoints),
+                                   baseCurve->businessDayConvention(), tenors, detachmentPoints, baseCurve->dayCounter()),
       baseCurve_(baseCurve), corrSpreads_(corrSpreads), data_(detachmentPoints_.size(), tenors.size(), 0.0),
       interpolation_(nullptr) {
     // Check times and detachment points

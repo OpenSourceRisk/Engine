@@ -59,6 +59,7 @@
 #include <qle/instruments/makeoiscapfloor.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
 #include <qle/termstructures/blackvolconstantspread.hpp>
+#include <qle/termstructures/credit/spreadedbasecorrelationcurve.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamiccpivolatilitystructure.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
@@ -1871,27 +1872,23 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 for (Size i = 0; i < nd; ++i)
                                     quotes[i].push_back(quotes[i][0]);
                             }
-
+                            boost::shared_ptr<QuantExt::BaseCorrelationTermStructure> bcp;
                             if (useSpreadedTermStructures_) {
-                                
-
+                                bcp = boost::make_shared<QuantExt::SpreadedBaseCorrelationCurve>(
+                                    wrapper, terms, parameters->baseCorrelationDetachmentPoints(), quotes);
+                                bcp->enableExtrapolation(wrapper->allowsExtrapolation());
                             } else {
-                            
-                                
-
-                                
                                 DayCounter dc = wrapper->dayCounter();
-                                boost::shared_ptr<InterpolatedBaseCorrelationTermStructure<Bilinear>> bcp =
-                                    boost::make_shared<InterpolatedBaseCorrelationTermStructure<Bilinear>>(
-                                        wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(),
-                                        terms, parameters->baseCorrelationDetachmentPoints(), quotes, dc);
+                                bcp = boost::make_shared<InterpolatedBaseCorrelationTermStructure<Bilinear>>(
+                                    wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(),
+                                    terms, parameters->baseCorrelationDetachmentPoints(), quotes, dc);
 
                                 bcp->enableExtrapolation(wrapper->allowsExtrapolation());
-                                Handle<QuantExt::BaseCorrelationTermStructure> bch(bcp);
-                                baseCorrelations_.insert(
-                                    pair<pair<string, string>, Handle<QuantExt::BaseCorrelationTermStructure>>(
-                                        make_pair(Market::defaultConfiguration, name), bch));
-                                }
+                            }
+                            Handle<QuantExt::BaseCorrelationTermStructure> bch(bcp);
+                            baseCorrelations_.insert(
+                                pair<pair<string, string>, Handle<QuantExt::BaseCorrelationTermStructure>>(
+                                    make_pair(Market::defaultConfiguration, name), bch));
                         }
                         DLOG("Base correlations built for " << name);
                     } catch (const std::exception& e) {
