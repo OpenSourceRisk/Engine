@@ -1842,8 +1842,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                             Size nt = parameters->baseCorrelationTerms().size();
                             vector<vector<Handle<Quote>>> quotes(nd, vector<Handle<Quote>>(nt));
                             vector<Period> terms(nt);
+                            vector<double> detachmentPoints(nd);
                             for (Size i = 0; i < nd; ++i) {
                                 Real lossLevel = parameters->baseCorrelationDetachmentPoints()[i];
+                                detachmentPoints[i] = lossLevel;
                                 for (Size j = 0; j < nt; ++j) {
                                     Period term = parameters->baseCorrelationTerms()[j];
                                     if (i == 0)
@@ -1866,22 +1868,32 @@ ScenarioSimMarket::ScenarioSimMarket(
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
 
+                            
+
                             // FIXME: Same change as in ored/market/basecorrelationcurve.cpp
-                            if (nt == 1) {
+                            if (nt == 1) {                           
                                 terms.push_back(terms[0] + 1 * Days); // arbitrary, but larger than the first term
                                 for (Size i = 0; i < nd; ++i)
                                     quotes[i].push_back(quotes[i][0]);
                             }
+
+                            if (nd == 1) {
+                                detachmentPoints.push_back(detachmentPoints[0] + 0.01);
+                                quotes.push_back(vector<Handle<Quote>>(terms.size()));
+                                for (Size j = 0; j < terms.size(); ++j)
+                                    quotes[1][j] = quotes[0][j];
+                            }
+
                             boost::shared_ptr<QuantExt::BaseCorrelationTermStructure> bcp;
                             if (useSpreadedTermStructures_) {
                                 bcp = boost::make_shared<QuantExt::SpreadedBaseCorrelationCurve>(
-                                    wrapper, terms, parameters->baseCorrelationDetachmentPoints(), quotes);
+                                    wrapper, terms, detachmentPoints, quotes);
                                 bcp->enableExtrapolation(wrapper->allowsExtrapolation());
                             } else {
                                 DayCounter dc = wrapper->dayCounter();
                                 bcp = boost::make_shared<InterpolatedBaseCorrelationTermStructure<Bilinear>>(
                                     wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(),
-                                    terms, parameters->baseCorrelationDetachmentPoints(), quotes, dc);
+                                    terms, detachmentPoints, quotes, dc);
 
                                 bcp->enableExtrapolation(wrapper->allowsExtrapolation());
                             }

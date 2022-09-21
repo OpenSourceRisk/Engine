@@ -58,7 +58,9 @@ void SpreadedBaseCorrelationCurve::update() {
 
 Real SpreadedBaseCorrelationCurve::correlationImpl(Time t, Real detachmentPoint) const {
     calculate();
-    return baseCurve_->correlation(t, detachmentPoint) + interpolation_->operator()(t, detachmentPoint);
+    return std::min(1.0 - QL_EPSILON, std::max(baseCurve_->correlation(t, detachmentPoint) +
+                                                   interpolation_->operator()(t, detachmentPoint),
+                                               QL_EPSILON));
 }
 
 void SpreadedBaseCorrelationCurve::performCalculations() const {
