@@ -32,11 +32,13 @@ InflationCurveConfig::InflationCurveConfig(
     const string& curveID, const string& curveDescription, const string& nominalTermStructure, const Type type,
     const vector<string>& swapQuotes, const string& conventions, const bool extrapolate, const Calendar& calendar,
     const DayCounter& dayCounter, const Period& lag, const Frequency& frequency, const Real baseRate,
-    const Real tolerance, const Date& seasonalityBaseDate, const Frequency& seasonalityFrequency,
+    const Real tolerance, const bool useLastAvailableFixingAsBaseDate, const Date& seasonalityBaseDate,
+    const Frequency& seasonalityFrequency,
     const vector<string>& seasonalityFactors, const vector<double>& overrideSeasonalityFactors)
     : CurveConfig(curveID, curveDescription), swapQuotes_(swapQuotes), nominalTermStructure_(nominalTermStructure),
       type_(type), conventions_(conventions), extrapolate_(extrapolate), calendar_(calendar), dayCounter_(dayCounter),
       lag_(lag), frequency_(frequency), baseRate_(baseRate), tolerance_(tolerance),
+      useLastAvailableFixingAsBaseDate_(useLastAvailableFixingAsBaseDate),
       seasonalityBaseDate_(seasonalityBaseDate), seasonalityFrequency_(seasonalityFrequency),
       seasonalityFactors_(seasonalityFactors), overrideSeasonalityFactors_(overrideSeasonalityFactors) {
     quotes_ = swapQuotes;
@@ -89,6 +91,8 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
     string tol = XMLUtils::getChildValue(node, "Tolerance", true);
     tolerance_ = parseReal(tol);
 
+    useLastAvailableFixingAsBaseDate_ = XMLUtils::getChildValueAsBool(node, "UseLastFixingDate", false, false);
+
     XMLNode* seasonalityNode = XMLUtils::getChildNode(node, "Seasonality");
     seasonalityBaseDate_ = QuantLib::Null<Date>();
     seasonalityFrequency_ = QuantLib::NoFrequency;
@@ -136,6 +140,9 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Frequency", to_string(frequency_));
     XMLUtils::addChild(doc, node, "BaseRate", baseRateStr);
     XMLUtils::addChild(doc, node, "Tolerance", tolerance_);
+
+    if (useLastAvailableFixingAsBaseDate_)
+        XMLUtils::addChild(doc, node, "UseLastFixingDate", to_string(useLastAvailableFixingAsBaseDate_));
 
     if (seasonalityBaseDate_ != QuantLib::Null<Date>()) {
         XMLNode* seasonalityNode = XMLUtils::addChild(doc, node, "Seasonality");

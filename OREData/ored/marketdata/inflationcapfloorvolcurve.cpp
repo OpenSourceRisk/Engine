@@ -18,6 +18,7 @@
 
 #include <ored/marketdata/inflationcapfloorvolcurve.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/inflationstartdate.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <ql/experimental/inflation/interpolatedyoyoptionletstripper.hpp>
@@ -84,7 +85,7 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
     map<string, boost::shared_ptr<InflationCurve>>& inflationCurves) {
 
     DLOG("Build InflationCapFloorVolCurve " << spec.name() << " from vols");
-
+    
     // Volatility type
     MarketDatum::QuoteType volatilityType;
     VolatilityType quoteVolatilityType;
@@ -226,11 +227,19 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
                                                  << ", required in building the inflation cap floor vol surface "
                                                  << spec.name() << ", was not found");
         }
-
+        
         DLOG("Building surface");
+        Date startDate = Date();
+        const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+        if (!config->conventions().empty() && conventions->has(config->conventions())) {
+            boost::shared_ptr<InflationSwapConvention> conv =
+                boost::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(config->conventions()));
+            startDate = getStartAndLag(asof, *conv).first;
+        }
+
         cpiVolSurface_ = boost::make_shared<InterpolatedCPIVolatilitySurface<Bilinear>>(
             tenors, strikes, quotes, index, config->settleDays(), config->calendar(), config->businessDayConvention(),
-            config->dayCounter(), config->observationLag());
+            config->dayCounter(), config->observationLag(), startDate);
         if (config->extrapolate())
             cpiVolSurface_->enableExtrapolation();
         DLOG("Building surface done");
@@ -263,6 +272,8 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
 
     // Quotes index can differ from the index for which we are building the surface.
     string quoteIndex = config->quoteIndex().empty() ? config->index() : config->quoteIndex();
+
+    
 
     // We loop over all market data, looking for quotes that match the configuration
     for (auto& md : loader.loadQuotes(asof)) {
@@ -404,15 +415,21 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
 
         boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine =
             boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(
-                discountCurve_, QuantLib::Handle<QuantLib::CPIVolatilitySurface>()); // vol surface can be empty, will
+                discountCurve_, QuantLib::Handle<QuantLib::CPIVolatilitySurface>(), config->useLastAvailableFixingDate()); // vol surface can be empty, will
                                                                                      // be set in the striping process
 
         try {
-
+            const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+            Date startDate = Date();
+            if (!config->conventions().empty() && conventions->has(config->conventions())) {
+                boost::shared_ptr<InflationSwapConvention> conv =
+                    boost::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(config->conventions()));
+                startDate = getStartAndLag(asof, *conv).first;
+            }
             QuantLib::Handle<CPICapFloorTermPriceSurface> cpiPriceSurfaceHandle(cpiPriceSurfacePtr);
             boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>> cpiCapFloorVolSurface;
             cpiCapFloorVolSurface = boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>>(
-                QuantExt::PriceQuotePreference::CapFloor, cpiPriceSurfaceHandle, index, engine);
+                QuantExt::PriceQuotePreference::CapFloor, cpiPriceSurfaceHandle, index, engine, startDate);
 
             // cast
             cpiVolSurface_ = cpiCapFloorVolSurface;

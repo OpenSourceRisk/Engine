@@ -60,7 +60,8 @@ public:
                                            const BusinessDayConvention& businessDayConvention, const string& index,
                                            const string& indexCurve, const string& yieldTermStructure,
                                            const Period& observationLag, const std::string& quoteIndex = "",
-					   const std::string& smileDynamics = "");
+                                           const std::string& smileDynamics = "", const std::string& conventions = "",
+                                           const bool useLastAvailableFixingDate = false);
 
     //! \name XMLSerializable interface
     //@{
@@ -89,6 +90,8 @@ public:
     const Period& observationLag() const { return observationLag_; }
     const std::string& quoteIndex() const { return quoteIndex_; }
     const std::string& smileDynamics() const { return smileDynamics_; }
+    const std::string& conventions() const { return conventions_; }
+    const bool& useLastAvailableFixingDate() const { return useLastAvailableFixingDate_; }
     //@}
 
     //! \name Setters
@@ -110,6 +113,8 @@ public:
     Period& observationLag() { return observationLag_; }
     std::string& quoteIndex() { return quoteIndex_; }
     std::string& smileDynamics() { return smileDynamics_; }
+    std::string& conventions() { return conventions_; }
+    bool& useLastAvailableFixingDate() { return useLastAvailableFixingDate_; }
     //@}
 
 private:
@@ -134,6 +139,8 @@ private:
     // Can be different from the index_ string to allow the surface to be configured against another index's quotes.
     std::string quoteIndex_;
     std::string smileDynamics_;
+    std::string conventions_;
+    bool useLastAvailableFixingDate_;
 };
 
 std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::VolatilityType t);
