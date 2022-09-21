@@ -48,8 +48,8 @@ public:
     virtual Time maxTime() const override { return baseCurve_->maxTime(); }
     virtual Time minTime() const override { return baseCurve_->minTime(); }
 
-    virtual double minDetachmentPoint() const { return baseCurve_->minDetachmentPoint(); }
-    virtual double maxDetachmentPoint() const { return baseCurve_->minDetachmentPoint(); }
+    virtual double minDetachmentPoint() const override { return baseCurve_->minDetachmentPoint(); }
+    virtual double maxDetachmentPoint() const override { return baseCurve_->minDetachmentPoint(); }
 
 private:
     Real correlationImpl(Time t, Real strike) const override;

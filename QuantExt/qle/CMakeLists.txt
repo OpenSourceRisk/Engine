@@ -211,6 +211,9 @@ termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
 termstructures/capfloortermvolsurface.cpp
 termstructures/correlationtermstructure.cpp
+termstructures/credit/basecorrelationstructure.cpp
+termstructures/credit/spreadedbasecorrelationcurve.cpp
+termstructures/creditcurve.cpp
 termstructures/creditcurve.cpp
 termstructures/creditvolcurve.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
@@ -588,6 +591,8 @@ termstructures/capfloortermvolsurfacesparse.hpp
 termstructures/commodityaveragebasispricecurve.hpp
 termstructures/commoditybasispricecurve.hpp
 termstructures/correlationtermstructure.hpp
+termstructures/credit/basecorrelationstructure.hpp
+termstructures/credit/spreadedbasecorrelationcurve.hpp
 termstructures/creditcurve.hpp
 termstructures/creditvolcurve.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
