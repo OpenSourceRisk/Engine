@@ -27,11 +27,11 @@ Allowable values: See \lstinline!Name! for equity trades in Table \ref{tab:equit
 
 \item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
 
-\item InitialPrice [Mandatory for forward starting, Optional otherwise]: Initial Price of the equity, if not present, the first valuation date is used to
+\item InitialPrice [Optional]: Initial Price of the equity, if not present, the first valuation date is used to
   determine the initial price. If InitialPrice is zero then each coupon's price is just the discounted fixing from the coupon's FixingEndDate. For any divisions we assume the value is one, i.e. when NotionalReset = true we have instead Quantity = Notional. The Initial price can be either given in the currency of the equity or in the leg
   currency, see InitialPriceCurrency.
 
-Allowable values: Any positive real number. If omitted or left blank it defaults to the equity price of the fixing at the valuation date associated with the start date. Note that when this valuation date is in the future there is no fixing, and in these cases there is no default and the InitialPrice must be set.
+Allowable values: Any positive real number. If omitted or left blank it defaults to the equity price of the fixing at the valuation date associated with the start date. Note that when this valuation date is in the future the forward equity price is used.
 
 \item InitialPriceCurrency [Optional]: If an initial price is given, it can be either given in the original equity ccy
   or the leg currency (if these are different). This field determines in which currency the initial price is given. If

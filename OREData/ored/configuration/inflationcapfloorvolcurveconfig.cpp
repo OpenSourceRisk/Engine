@@ -60,13 +60,14 @@ InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
     const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
     const BusinessDayConvention& businessDayConvention, const string& index, const string& indexCurve,
     const string& yieldTermStructure, const Period& observationLag, const string& quoteIndex,
-    const string& smileDynamics)
+    const string& smileDynamics, const string& conventions, const bool useLastAvailableFixingDate)
     : CurveConfig(curveID, curveDescription), type_(type), quoteType_(quoteType), volatilityType_(volatilityType),
       extrapolate_(extrapolate), tenors_(tenors), capStrikes_(capStrikes), floorStrikes_(floorStrikes),
       strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index_(index), indexCurve_(indexCurve),
       yieldTermStructure_(yieldTermStructure), observationLag_(observationLag), quoteIndex_(quoteIndex),
-      smileDynamics_(smileDynamics) {
+      smileDynamics_(smileDynamics), conventions_(conventions),
+      useLastAvailableFixingDate_(useLastAvailableFixingDate) {
     populateRequiredCurveIds();
 }
 
@@ -196,6 +197,9 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     observationLag_ = parsePeriod(XMLUtils::getChildValue(node, "ObservationLag", true));
     quoteIndex_ = XMLUtils::getChildValue(node, "QuoteIndex", false);
     smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
+    conventions_ = XMLUtils::getChildValue(node, "Conventions", false, "");
+    useLastAvailableFixingDate_ =
+        XMLUtils::getChildValueAsBool(node, "UseLastFixingDate", false, false);
     populateRequiredCurveIds();
 }
 
@@ -246,7 +250,10 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     if (!quoteIndex_.empty())
         XMLUtils::addChild(doc, node, "QuoteIndex", quoteIndex_);
     XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
-    
+    if (!conventions_.empty())
+        XMLUtils::addChild(doc, node, "Conventions", smileDynamics_);
+    if (useLastAvailableFixingDate_)
+        XMLUtils::addChild(doc, node, "UseLastFixingDate", useLastAvailableFixingDate_);
     return node;
 }
 } // namespace data

@@ -18,9 +18,9 @@
 
 #include <qle/termstructures/creditvolcurve.hpp>
 
-#include <qle/instruments/creditdefaultswap.hpp>
+#include <ql/instruments/creditdefaultswap.hpp>
+#include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <qle/math/flatextrapolation.hpp>
-#include <qle/pricingengines/midpointcdsengine.hpp>
 #include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/time.hpp>
 
@@ -173,18 +173,18 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
                                           : refData.lastPeriodDayCounter;
     underlyings[terms_[termIndex_m]] = boost::make_shared<CreditDefaultSwap>(
         Protection::Buyer, 1.0, refData.runningSpread, schedule, refData.payConvention, refData.dayCounter, true,
-        CreditDefaultSwap::atDefault, protectionStartDate, boost::shared_ptr<Claim>(), lastPeriodDayCounter, effExp,
-        refData.cashSettlementDays);
+        CreditDefaultSwap::atDefault, protectionStartDate, boost::shared_ptr<Claim>(), lastPeriodDayCounter, true,
+	effExp, refData.cashSettlementDays);
 
     QL_REQUIRE(!termCurves_[termIndex_m]->rateCurve().empty() && !termCurves_[termIndex_p]->rateCurve().empty(),
                "CreditVolCurve: need discounting rate curve of index for ATM strike computation.");
     QL_REQUIRE(!termCurves_[termIndex_m]->recovery().empty() && !termCurves_[termIndex_p]->recovery().empty(),
                "CreditVolCurve: need recovery rate of index for ATM strike computation.");
 
-    auto engine = boost::make_shared<QuantExt::MidPointCdsEngine>(termCurves_[termIndex_m]->curve(),
-                                                                  termCurves_[termIndex_m]->recovery()->value(),
-                                                                  termCurves_[termIndex_m]->rateCurve());
-
+    auto engine = boost::make_shared<MidPointCdsEngine>(termCurves_[termIndex_m]->curve(),
+							termCurves_[termIndex_m]->recovery()->value(),
+							termCurves_[termIndex_m]->rateCurve());
+    
     underlyings[terms_[termIndex_m]]->setPricingEngine(engine);
 
     // compute (interpolated) ATM strike
@@ -222,11 +222,11 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
                                        : schedule.dates().front();
         underlyings[terms_[termIndex_p]] = boost::make_shared<CreditDefaultSwap>(
             Protection::Buyer, 1.0, refData.runningSpread, schedule, refData.payConvention, refData.dayCounter, true,
-            CreditDefaultSwap::atDefault, protectionStartDate, boost::shared_ptr<Claim>(), lastPeriodDayCounter, effExp,
-            refData.cashSettlementDays);
-        auto engine = boost::make_shared<QuantExt::MidPointCdsEngine>(termCurves_[termIndex_p]->curve(),
-                                                                      termCurves_[termIndex_p]->recovery()->value(),
-                                                                      termCurves_[termIndex_p]->rateCurve());
+            CreditDefaultSwap::atDefault, protectionStartDate, boost::shared_ptr<Claim>(), lastPeriodDayCounter,
+	    true, effExp, refData.cashSettlementDays);
+        auto engine = boost::make_shared<MidPointCdsEngine>(termCurves_[termIndex_p]->curve(),
+							    termCurves_[termIndex_p]->recovery()->value(),
+							    termCurves_[termIndex_p]->rateCurve());
         underlyings[terms_[termIndex_p]]->setPricingEngine(engine);
 
         fep2 = (1.0 - termCurves_[termIndex_p]->recovery()->value()) *

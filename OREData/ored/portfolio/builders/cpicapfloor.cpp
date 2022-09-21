@@ -35,8 +35,9 @@ boost::shared_ptr<PricingEngine> CpiCapFloorEngineBuilder::engineImpl(const stri
         market_->cpiInflationCapFloorVolatilitySurface(indexName, configuration(MarketContext::pricing));
     // QL_REQUIRE(!ovs.empty(),
     //            "engineFactory error: cpi cap/floor vol surface for index " << indexName << " not found");
-
-    return boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, ovs);
+    bool useLastFixingDate =
+        parseBool(engineParameter("useLastFixingDate", std::vector<std::string>(), false, "false"));
+    return boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, ovs, useLastFixingDate);
 }
 } // namespace data
 } // namespace ore

@@ -33,7 +33,8 @@ namespace QuantExt {
 class CPIBachelierCapFloorEngine : public QuantLib::CPICapFloor::engine {
 public:
     CPIBachelierCapFloorEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                               const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface);
+                               const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface,
+                               const bool measureTimeToExpiryFromLastAvailableFixing = false);
 
     virtual void calculate() const override;
     virtual std::string name() const { return "CPIBachelierCapFloorEngine"; }
@@ -51,7 +52,7 @@ public:
 protected:
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
     QuantLib::Handle<QuantLib::CPIVolatilitySurface> volatilitySurface_;
-    QuantLib::Rate indexFixing(const QuantLib::Date& observationDate, const QuantLib::Date& payDate) const;
+    bool measureTimeFromLastAvailableFixing_;
 };
 
 } // namespace QuantExt

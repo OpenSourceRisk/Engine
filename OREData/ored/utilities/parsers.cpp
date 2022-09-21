@@ -967,6 +967,41 @@ QuantLib::Rounding::Type parseRoundingType(const std::string& s) {
     }
 }
 
+Barrier::Type parseBarrierType(const std::string& s) {
+    static map<string, Barrier::Type> type = {{"DownAndIn", Barrier::Type::DownIn},
+                                              {"UpAndIn", Barrier::Type::UpIn},
+                                              {"DownAndOut", Barrier::Type::DownOut},
+                                              {"UpAndOut", Barrier::Type::UpOut},
+                                              // Maintain old versions for backwards compatibility
+                                              {"Down&In", Barrier::Type::DownIn},
+                                              {"Up&In", Barrier::Type::UpIn},
+                                              {"Down&Out", Barrier::Type::DownOut},
+                                              {"Up&Out", Barrier::Type::UpOut}};
+
+    auto it = type.find(s);
+    if (it != type.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Barrier type \"" << s << "\" not recognized");
+    }
+}
+
+DoubleBarrier::Type parseDoubleBarrierType(const std::string& s) {
+    static map<string, DoubleBarrier::Type> type = {
+        {"KnockIn", DoubleBarrier::Type::KnockIn},
+        {"KnockOut", DoubleBarrier::Type::KnockOut},
+        {"KIKO", DoubleBarrier::Type::KIKO},
+        {"KOKI", DoubleBarrier::Type::KOKI},
+    };
+
+    auto it = type.find(s);
+    if (it != type.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("DoubleBarrier type \"" << s << "\" not recognized");
+    }
+}
+  
 ostream& operator<<(ostream& os, InflationSwapConvention::PublicationRoll pr) {
     using IPR = InflationSwapConvention::PublicationRoll;
     if (pr == IPR::None) {

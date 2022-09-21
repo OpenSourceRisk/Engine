@@ -1,6 +1,7 @@
 /*
   Copyright (C) 2020 Skandinaviska Enskilda Banken AB (publ)
   All rights reserved.
+
   This file is part of ORE, a free-software/open-source library
   for transparent pricing and risk analysis - http://opensourcerisk.org
   ORE is free software: you can redistribute it and/or modify it

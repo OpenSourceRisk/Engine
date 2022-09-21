@@ -59,6 +59,8 @@ class OreExample(object):
                 self.ore_exe = "../../build/App/ore"
             elif os.path.isfile("../../App/ore"):
                 self.ore_exe = "../../App/ore"
+            elif os.path.isfile("../../../build/ore/App/ore"):
+                self.ore_exe = "../../../build/ore/App/ore"
             else:
                 print_on_console("ORE executable not found.")
                 quit()

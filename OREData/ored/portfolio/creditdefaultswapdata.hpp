@@ -27,7 +27,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
 
-#include <qle/instruments/creditdefaultswap.hpp>
+#include <ql/instruments/creditdefaultswap.hpp>
 
 namespace ore {
 namespace data {
@@ -134,7 +134,7 @@ public:
     //! Default constructor
     CreditDefaultSwapData();
 
-    using PPT = QuantExt::CreditDefaultSwap::ProtectionPaymentTime;
+    using PPT = QuantLib::CreditDefaultSwap::ProtectionPaymentTime;
 
     //! Constructor that takes an explicit \p creditCurveId
     CreditDefaultSwapData(const string& issuerId, const string& creditCurveId, const LegData& leg,
@@ -145,7 +145,8 @@ public:
                           QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>(),
                           const std::string& referenceObligation = "",
                           const Date& tradeDate = Date(),
-                          const std::string& cashSettlementDays = "");
+                          const std::string& cashSettlementDays = "",
+			  const bool rebatesAccrual = true);
 
     //! Constructor that takes a \p referenceInformation object
     CreditDefaultSwapData(const std::string& issuerId, const CdsReferenceInformation& referenceInformation,
@@ -157,7 +158,8 @@ public:
                           QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>(),
                           const std::string& referenceObligation = "",
                           const Date& tradeDate = Date(),
-                          const std::string& cashSettlementDays = "");
+                          const std::string& cashSettlementDays = "",
+			  const bool rebatesAccrual = true);
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
@@ -170,6 +172,7 @@ public:
     const Date& protectionStart() const { return protectionStart_; }
     const Date& upfrontDate() const { return upfrontDate_; }
     Real upfrontFee() const { return upfrontFee_; }
+    bool rebatesAccrual() const { return rebatesAccrual_; }
 
     /*! If the CDS is a fixed recovery CDS, this returns the recovery rate.
         For a standard CDS, it returns Null<Real>().
@@ -199,6 +202,7 @@ private:
     QuantLib::Date protectionStart_;
     QuantLib::Date upfrontDate_;
     QuantLib::Real upfrontFee_;
+    bool rebatesAccrual_;
 
     //! Populated if the CDS is a fixed recovery rate CDS, otherwise \c Null<Real>()
     QuantLib::Real recoveryRate_;

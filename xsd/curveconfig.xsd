@@ -590,6 +590,7 @@
       <xs:element type="xs:decimal" name="BaseRate" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="Tolerance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="seasonalityType" name="Seasonality" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="UseLastFixingDate" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -634,6 +635,8 @@
       <xs:element type="xs:string" name="YieldTermStructure" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="QuoteIndex" minOccurs="0" maxOccurs="1"/>
       <xs:element type="smileDynamicsType" name="SmileDynamics" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="UseLastFixingDate" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
