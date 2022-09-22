@@ -29,16 +29,14 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! Spreaded Correlation Curve
+//! Spreaded Base Correlation Curve
 class SpreadedBaseCorrelationCurve : public BaseCorrelationTermStructure, public LazyObject {
 public:
-    /*! - times should be consistent with reference ts day counter
-        - if useAtmReferenceCorrsOnly, only corrs with strike Null<Real>() are read from the referenceVol,
-          otherwise the full reference vol surface (if it is one) is used
-     */
     SpreadedBaseCorrelationCurve(const Handle<BaseCorrelationTermStructure>& baseCurve,
                                  const std::vector<Period>& tenors, const std::vector<double>& detachmentPoints,
-                                 const std::vector<std::vector<Handle<Quote>>>& corrSpreads);
+                                 const std::vector<std::vector<Handle<Quote>>>& corrSpreads,
+                                 const Date& startDate = Date(),
+                                 boost::optional<DateGeneration::Rule> rule = boost::none);
     //@}
     void update() override;
 
@@ -49,7 +47,7 @@ public:
     virtual Time minTime() const override { return baseCurve_->minTime(); }
 
     virtual double minDetachmentPoint() const override { return baseCurve_->minDetachmentPoint(); }
-    virtual double maxDetachmentPoint() const override { return baseCurve_->minDetachmentPoint(); }
+    virtual double maxDetachmentPoint() const override { return baseCurve_->maxDetachmentPoint(); }
 
 private:
     Real correlationImpl(Time t, Real strike) const override;

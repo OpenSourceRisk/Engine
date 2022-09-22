@@ -26,10 +26,12 @@ using namespace QuantLib;
 SpreadedBaseCorrelationCurve::SpreadedBaseCorrelationCurve(const Handle<BaseCorrelationTermStructure>& baseCurve,
                                                            const std::vector<Period>& tenors,
                                                            const std::vector<double>& detachmentPoints,
-                                                           const std::vector<std::vector<Handle<Quote>>>& corrSpreads)
+                                                           const std::vector<std::vector<Handle<Quote>>>& corrSpreads,
+                                                           const Date& startDate,
+                                                           boost::optional<DateGeneration::Rule> rule)
     : BaseCorrelationTermStructure(baseCurve->settlementDays(), baseCurve->calendar(),
                                    baseCurve->businessDayConvention(), tenors, detachmentPoints,
-                                   baseCurve->dayCounter()),
+                                   baseCurve->dayCounter(), startDate, rule),
       baseCurve_(baseCurve), corrSpreads_(corrSpreads), data_(detachmentPoints_.size(), tenors.size(), 0.0) {
     // Check times and detachment points
 
