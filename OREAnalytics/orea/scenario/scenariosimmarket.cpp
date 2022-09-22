@@ -1253,7 +1253,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 }
                                 cvh = Handle<CreditVolCurve>(boost::make_shared<SpreadedCreditVolCurve>(
                                     wrapper, expiryDates, quotes, stickyMoney, simTerms, simTermCurves));
-                                }
                             } else {
                                 // TODO support strike and term dependence
                                 cvh = Handle<CreditVolCurve>(boost::make_shared<CreditVolCurveWrapper>(
