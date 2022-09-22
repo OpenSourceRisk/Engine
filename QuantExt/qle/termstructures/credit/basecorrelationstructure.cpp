@@ -74,15 +74,6 @@ void BaseCorrelationTermStructure::initializeDatesAndTimes(const Date& startDate
             if (*rule == DateGeneration::CDS2015 || *rule == DateGeneration::CDS || *rule == DateGeneration::OldCDS) {
                 d = cdsMaturity(start, tenors_[i], *rule);
             }
-            Schedule schedule = MakeSchedule()
-                                    .from(start)
-                                    .to(d)
-                                    .withFrequency(Quarterly)
-                                    .withCalendar(cldr)
-                                    .withConvention(bdc_)
-                                    .withTerminationDateConvention(Unadjusted)
-                                    .withRule(*rule);
-            d = cldr.adjust(schedule.dates().back(), bdc_);
         } else {
             d = cldr.advance(start, tenors_[i], bdc_);
         }

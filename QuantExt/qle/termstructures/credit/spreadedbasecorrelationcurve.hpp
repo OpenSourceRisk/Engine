@@ -57,7 +57,7 @@ private:
     Handle<BaseCorrelationTermStructure> baseCurve_;
     std::vector<std::vector<Handle<Quote>>> corrSpreads_;
     mutable Matrix data_;
-    mutable std::unique_ptr<Interpolation2D> interpolation_;
+    mutable Interpolation2D interpolation_;
 };
 
 } // namespace QuantExt

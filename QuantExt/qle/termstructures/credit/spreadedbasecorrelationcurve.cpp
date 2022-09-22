@@ -18,7 +18,7 @@
 
 #include <qle/termstructures/credit/spreadedbasecorrelationcurve.hpp>
 
-#include <ql/math/interpolations/flatextrapolation2d.hpp>
+#include <qle/math/flatextrapolation2d.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -28,9 +28,9 @@ SpreadedBaseCorrelationCurve::SpreadedBaseCorrelationCurve(const Handle<BaseCorr
                                                            const std::vector<double>& detachmentPoints,
                                                            const std::vector<std::vector<Handle<Quote>>>& corrSpreads)
     : BaseCorrelationTermStructure(baseCurve->settlementDays(), baseCurve->calendar(),
-                                   baseCurve->businessDayConvention(), tenors, detachmentPoints, baseCurve->dayCounter()),
-      baseCurve_(baseCurve), corrSpreads_(corrSpreads), data_(detachmentPoints_.size(), tenors.size(), 0.0),
-      interpolation_(nullptr) {
+                                   baseCurve->businessDayConvention(), tenors, detachmentPoints,
+                                   baseCurve->dayCounter()),
+      baseCurve_(baseCurve), corrSpreads_(corrSpreads), data_(detachmentPoints_.size(), tenors.size(), 0.0) {
     // Check times and detachment points
 
     QL_REQUIRE(!times_.empty(), "SpreadedCorrelationCurve: time points are empty");
@@ -45,9 +45,9 @@ SpreadedBaseCorrelationCurve::SpreadedBaseCorrelationCurve(const Handle<BaseCorr
         for (auto const& q : row)
             registerWith(q);
 
-    interpolation_ = std::make_unique<FlatExtrapolator2D>(boost::make_shared<BilinearInterpolation>(
-        times_.begin(), times_.end(), detachmentPoints_.begin(), detachmentPoints_.end(), data_));
-    interpolation_->enableExtrapolation();
+    interpolation_ = BilinearFlat().interpolate(times_.begin(), times_.end(), detachmentPoints_.begin(),
+                                                detachmentPoints_.end(), data_);
+    interpolation_.enableExtrapolation();
     registerWith(baseCurve_);
 }
 
@@ -58,16 +58,16 @@ void SpreadedBaseCorrelationCurve::update() {
 
 Real SpreadedBaseCorrelationCurve::correlationImpl(Time t, Real detachmentPoint) const {
     calculate();
-    return std::min(1.0 - QL_EPSILON, std::max(baseCurve_->correlation(t, detachmentPoint) +
-                                                   interpolation_->operator()(t, detachmentPoint),
-                                               QL_EPSILON));
+    return std::min(
+        1.0 - QL_EPSILON,
+        std::max(baseCurve_->correlation(t, detachmentPoint) + interpolation_(t, detachmentPoint), QL_EPSILON));
 }
 
 void SpreadedBaseCorrelationCurve::performCalculations() const {
     for (Size i = 0; i < this->detachmentPoints_.size(); ++i)
         for (Size j = 0; j < this->times_.size(); ++j)
             this->data_[i][j] = corrSpreads_[i][j]->value();
-    interpolation_->update();
+    interpolation_.update();
 }
 
 } // namespace QuantExt
