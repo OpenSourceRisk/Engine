@@ -460,6 +460,7 @@ math/deltagammavar.hpp
 math/differentialevolution_mt.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
+math/flatextrapolation2d.hpp
 math/logquadraticinterpolation.hpp
 math/method_mt.hpp
 math/nadarayawatson.hpp
