@@ -82,7 +82,7 @@ boost::shared_ptr<NettingSetDefinition> NettingSetManager::get(const NettingSetD
 
 boost::shared_ptr<NettingSetDefinition> NettingSetManager::get(const string& id) const {
     auto found = std::find_if(data_.begin(), data_.end(),
-                              [&](const auto& details) { return details.first.nettingSetId() == id; });
+                              [&id](const auto& details) { return details.first.nettingSetId() == id; });
     if (found != data_.end())
         return found->second;
     else
