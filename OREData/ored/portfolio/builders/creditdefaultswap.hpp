@@ -27,7 +27,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
 
-#include <qle/pricingengines/midpointcdsengine.hpp>
+#include <ql/pricingengines/credit/midpointcdsengine.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -155,7 +155,7 @@ protected:
             recoveryRate = market_->recoveryRate(creditCurveId, cfg)->value();
         }
 
-        return boost::make_shared<QuantExt::MidPointCdsEngine>(dpts->curve(), recoveryRate, yts);
+        return boost::make_shared<MidPointCdsEngine>(dpts->curve(), recoveryRate, yts);
     }
 };
 

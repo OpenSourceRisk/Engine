@@ -649,6 +649,8 @@
     <ClCompile Include="commodityoption.cpp" />
     <ClCompile Include="commodityvolcurve.cpp" />
     <ClCompile Include="commodityvolcurveconfig.cpp" />
+    <ClCompile Include="compositetrade.cpp" />
+    <ClCompile Include="compositewrapper.cpp" />
     <ClCompile Include="conventions.cpp" />
     <ClCompile Include="conventionsbasedfutureexpiry.cpp" />
     <ClCompile Include="correlationcurveconfig.cpp" />
@@ -668,6 +670,7 @@
     <ClCompile Include="fixings.cpp" />
     <ClCompile Include="fxasianoption.cpp" />
     <ClCompile Include="fxoption.cpp" />
+    <ClCompile Include="fxexotics.cpp" />
     <ClCompile Include="fxswap.cpp" />
     <ClCompile Include="fxtriangulation.cpp" />
     <ClCompile Include="fxvolcurve.cpp" />

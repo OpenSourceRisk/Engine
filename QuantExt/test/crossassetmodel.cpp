@@ -70,7 +70,6 @@
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
-#include <qle/pricingengines/midpointcdsengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
@@ -94,6 +93,7 @@
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 #include <ql/models/shortrate/onefactormodels/gsr.hpp>
 #include <ql/pricingengines/swaption/gaussian1dswaptionengine.hpp>
+#include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/inflation/interpolatedzeroinflationcurve.hpp>
@@ -4542,7 +4542,7 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > cdso;
 
-    boost::shared_ptr<QuantExt::CreditDefaultSwap> underlying =
+    boost::shared_ptr<CreditDefaultSwap> underlying =
         boost::static_pointer_cast<CdsOptionHelper>(cdsoHelpers.back())->underlying();
     Real K = underlying->fairSpreadClean();
     BOOST_TEST_MESSAGE("Last CDSO fair spread is " << K);

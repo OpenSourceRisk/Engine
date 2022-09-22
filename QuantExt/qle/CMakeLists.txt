@@ -86,7 +86,6 @@ instruments/cashsettledeuropeanoption.cpp
 instruments/cdsoption.cpp
 instruments/commodityapo.cpp
 instruments/commodityforward.cpp
-instruments/creditdefaultswap.cpp
 instruments/crossccybasismtmresetswap.cpp
 instruments/crossccybasisswap.cpp
 instruments/crossccyfixfloatmtmresetswap.cpp
@@ -102,6 +101,7 @@ instruments/impliedbondspread.cpp
 instruments/makeaverageois.cpp
 instruments/makecds.cpp
 instruments/makeoiscapfloor.cpp
+instruments/multiccycompositeinstrument.cpp
 instruments/multilegoption.cpp
 instruments/oibasisswap.cpp
 instruments/oiccbasisswap.cpp
@@ -183,7 +183,6 @@ pricingengines/discountingriskybondengine.cpp
 pricingengines/discountingswapenginemulticurve.cpp
 pricingengines/inflationcapfloorengines.cpp
 pricingengines/lgmconvolutionsolver.cpp
-pricingengines/midpointcdsengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
@@ -223,7 +222,6 @@ termstructures/crossccyfixfloatswaphelper.cpp
 termstructures/crosscurrencypricetermstructure.cpp
 termstructures/datedstrippedoptionlet.cpp
 termstructures/datedstrippedoptionletadapter.cpp
-termstructures/defaultprobabilityhelpers.cpp
 termstructures/discountratiomodifiedcurve.cpp
 termstructures/dynamiccpivolatilitystructure.cpp
 termstructures/dynamicoptionletvolatilitystructure.cpp
@@ -238,6 +236,8 @@ termstructures/fxvannavolgasmilesection.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
+termstructures/inflation/constantcpivolatility.cpp
+termstructures/inflation/cpivolatilitystructure.cpp
 termstructures/oibasisswaphelper.cpp
 termstructures/oiccbasisswaphelper.cpp
 termstructures/oiscapfloorhelper.cpp
@@ -428,7 +428,6 @@ instruments/cashsettledeuropeanoption.hpp
 instruments/cdsoption.hpp
 instruments/commodityapo.hpp
 instruments/commodityforward.hpp
-instruments/creditdefaultswap.hpp
 instruments/crossccybasismtmresetswap.hpp
 instruments/crossccybasisswap.hpp
 instruments/crossccyfixfloatmtmresetswap.hpp
@@ -444,6 +443,7 @@ instruments/impliedbondspread.hpp
 instruments/makeaverageois.hpp
 instruments/makecds.hpp
 instruments/makeoiscapfloor.hpp
+instruments/multiccycompositeinstrument.hpp
 instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
 instruments/oibasisswap.hpp
@@ -552,7 +552,6 @@ pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingswapenginemulticurve.hpp
 pricingengines/inflationcapfloorengines.hpp
 pricingengines/lgmconvolutionsolver.hpp
-pricingengines/midpointcdsengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
@@ -603,7 +602,6 @@ termstructures/crosscurrencypricetermstructure.hpp
 termstructures/datedstrippedoptionlet.hpp
 termstructures/datedstrippedoptionletadapter.hpp
 termstructures/datedstrippedoptionletbase.hpp
-termstructures/defaultprobabilityhelpers.hpp
 termstructures/discountratiomodifiedcurve.hpp
 termstructures/dynamicblackvoltermstructure.hpp
 termstructures/dynamiccpivolatilitystructure.hpp
@@ -621,6 +619,10 @@ termstructures/fxvannavolgasmilesection.hpp
 termstructures/hazardspreadeddefaulttermstructure.hpp
 termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
+termstructures/inflation/constantcpivolatility.hpp
+termstructures/inflation/cpivolatilitystructure.hpp
+termstructures/inflation/piecewisezeroinflationcurve.hpp
+termstructures/inflation/inflationtraits.hpp
 termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolatedcpivolatilitysurface.hpp
 termstructures/interpolateddiscountcurve.hpp

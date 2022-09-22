@@ -2020,14 +2020,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                     bool simDataWritten = false;
                     try {
                         LOG("building " << name << " zero inflation cap/floor volatility curve...");
-                        Handle<CPIVolatilitySurface> wrapper =
+                        Handle<QuantLib::CPIVolatilitySurface> wrapper =
                             initMarket->cpiInflationCapFloorVolatilitySurface(name, configuration);
                         Handle<ZeroInflationIndex> zeroInflationIndex =
                             initMarket->zeroInflationIndex(name, configuration);
                         // LOG("Initial market zero inflation cap/floor volatility type = " <<
                         // wrapper->volatilityType());
 
-                        Handle<CPIVolatilitySurface> hCpiVol;
+                        Handle<QuantLib::CPIVolatilitySurface> hCpiVol;
 
                         // Check if the risk factor is simulated before adding it
                         if (param.second.first) {
@@ -2063,10 +2063,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                             simDataWritten = true;
 
                             if (useSpreadedTermStructures_) {
-                                hCpiVol = Handle<CPIVolatilitySurface>(boost::make_shared<SpreadedCPIVolatilitySurface>(
+                                hCpiVol = Handle<QuantLib::CPIVolatilitySurface>(
+                                    boost::make_shared<SpreadedCPIVolatilitySurface>(
                                     wrapper, optionDates, strikes, quotes));
                             } else {
-                                hCpiVol = Handle<CPIVolatilitySurface>(
+                                hCpiVol = Handle<QuantLib::CPIVolatilitySurface>(
                                     boost::make_shared<InterpolatedCPIVolatilitySurface<Bilinear>>(
                                         optionTenors, strikes, quotes, zeroInflationIndex.currentLink(),
                                         wrapper->settlementDays(), wrapper->calendar(),

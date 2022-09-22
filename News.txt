@@ -1,3 +1,89 @@
+Changes for the 7th ORE release (1.8.7.0):
+============================================
+
+ORE 1.8.7.0 includes the following notable changes, details can be
+found in the commits between June 2021 and September 2022.
+
+INSTRUMENTS
+
+- add FX Asian option support, thanks to Fredrik Gerdin Börjesson
+- add Equity/Commodity Asian option support
+- add Equity/FX Barrier, Double Barrier and European Barrier options
+- add Equity/FX Digital options
+- add Equity/FX Touch and Double Touch options
+- add FX KI/KO Barrier and Digital Barrier options
+- add support for FX Average Forwards
+- add support for legs referencing a constant maturity bond index in analogy to CMS
+- add support for Commodity Digital Option
+- expose the Turnbull-Wakeman moment-matching engine for arithmetic average price options,
+  thanks to Fredrik Gerdin Börjesson
+- additional pricing engine results for Caps/Floors, thanks to Fredrik Gerdin Börjesson
+- additional results for Commodity Swaps
+- introduce user-defined minimum time value for the AmericanOptionFDEngineBuilder,
+  thanks to Fredrik Gerdin Börjesson
+- revised the inflation derivative setup, adopt changes in QuantLib 1.27
+- improve CPI swap and cap pricing by using the last known fixing date as a base date
+  in the zero inflation curve resp. volatility term structure
+- support Cap/Floor with CMS Spread leg
+
+MARKETS
+
+- add support for SOFR and SONIA term rates
+- add support for DKK-CITA and SEK-STINA indices, thanks to Fredrik Gerdin Börjesson
+- add crypto currency (BTC, ETH) parsers to support crypto currency Forwards as FX Forwards
+- add support for minor currencies (GBp, etc.) across all Equity derivatives
+- make minor currency unit codes configurable
+- add support for FX Forward outright quotes in curve building
+- refactor parseCalendar() and parseCurrency() using Singletons to be able to reset state
+- introduce instrument conventions Singleton, fix Commodity forward fixing errors 
+- revised the FX index implementation, fix lazy market building errors related to FX indices
+
+TERM STRUCTURES
+
+- add support for RFR (SOFR, SONIA, ...) Cap/Floor volatility surfaces
+- add support for RFR Swaption volatility surfaces
+- introduce a moneyness adjustment when proxying the Swaption surface with a different tenor
+- support Cap/Floor volatility surfaces by index name
+- add CubicSpline interpolation for delta volatility surfaces, thanks to Fredrik Gerdin Börjesson
+- add Hermite interpolation to Commodity curves, thanks to Fredrik Gerdin Börjesson
+- enable extrapolation of sparse Cap/Floor volatility data, thanks to Fredrik Gerdin Börjesson
+- fixes to the Equity forward curve builder
+- fixes to the Equity proxy volatility surface, thanks to Fredrik Gerdin Börjesson
+- speed up OIS curve bootstrap
+- add IBOR fallback support for EONIA
+
+ANALYTICS
+
+- introduce pricing timing/stats report
+- revise the LGM grid engine speeding up Bermudan Swaption pricing significantly
+- speed up CMS coupon pricing
+- extend CMS coupon pricers to cover OIS underlyings
+- changes to the central “valuation engine” in ORE Analytics to enhance performance for large portfolios
+
+TESTS
+
+- QuantExt: 214 test functions (vs 203 in the previous release)
+- OREData: 192 test functions (vs. 160 in the previous release)
+
+DOCUMENTATION
+
+- added ORE Design documentation, thanks to Roland Kapl
+- the user guide is maintained continuously incorporating user feedback, in particular from Acadia service clients; it has grown from 326 to 404 pages
+- various User Guide improvement, thanks to Fredrik Gerdin Börjesson
+- various corrections to doxygen docs (referenced file names), thanks to Fredrik Gerdin Börjesson
+
+LANGUAGE BINDUNGS
+
+- Maintenance to ensure ORE SWIG wrappers build with the current ORE release, QuantLib-1.27.1 and QuantLib-SWIG-1.27
+- Various extensions of the SWIG wrappers, thanks to Farah Khashman
+- Various changes to resurrect Python examples and test cases, thanks to Farah Khashman
+
+OTHER
+
+- changes to build with QuantLib 1.27.1
+- allow for C++17 in CMake build
+
+
 Changes for the 6th ORE release (1.8.6.0):
 ============================================
 

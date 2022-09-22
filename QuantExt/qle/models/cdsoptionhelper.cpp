@@ -18,8 +18,8 @@
 
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
-#include <qle/pricingengines/midpointcdsengine.hpp>
 
+#include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <ql/exercise.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
