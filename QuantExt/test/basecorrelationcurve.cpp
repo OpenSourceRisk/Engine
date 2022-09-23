@@ -34,16 +34,22 @@ BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(BaseCorrelationTests)
 
-BOOST_AUTO_TEST_CASE(testBaseCorrelationCurve) {
+struct CommonData {
+    Date today;
+    std::vector<double> detachmentPoints;
+    std::vector<Period> tenors;
+    Date startDate;
 
-    Date today(20, Sep, 2022);
+    CommonData()
+        : today(22, Sep, 2022), detachmentPoints({0.03, 0.07, 0.15, 1.0}), tenors({3 * Years, 5 * Years}),
+          startDate(20, Sep, 2021) {}
+};
 
-    Settings::instance().evaluationDate() = today;
+void initializeSettings(CommonData& cd) {
+    Settings::instance().evaluationDate() = cd.today;
+}
 
-    Date startDate(20, Sep, 2021);
-
-    std::vector<double> detachmentPoints{0.03, 0.07, 0.15, 1.0};
-    std::vector<Period> tenors{3 * Years, 5 * Years};
+Handle<QuantExt::BaseCorrelationTermStructure> buildBilinearFlatBaseCorrelationCurve(CommonData& cd) {    
     // Correlation matrix detachmentPoints x tenors
     std::vector<std::vector<double>> correlations{
         {0.409223169, 0.405249307}, {0.507498351, 0.486937064}, {0.614741119, 0.623673691}, {1.0, 1.0}};
@@ -56,39 +62,58 @@ BOOST_AUTO_TEST_CASE(testBaseCorrelationCurve) {
         }
     }
 
-    QuantExt::InterpolatedBaseCorrelationTermStructure<QuantExt::BilinearFlat> baseCorrCurve(
-        0, WeekendsOnly(), ModifiedFollowing, tenors, detachmentPoints, quotes, Actual365Fixed(), startDate,
-        DateGeneration::CDS2015);
+    return Handle<QuantExt::BaseCorrelationTermStructure>(boost::make_shared<QuantExt::InterpolatedBaseCorrelationTermStructure<QuantExt::BilinearFlat>>(
+        0, WeekendsOnly(), ModifiedFollowing, cd.tenors, cd.detachmentPoints, quotes, Actual365Fixed(), cd.startDate,
+        DateGeneration::CDS2015));
+}
 
-    baseCorrCurve.enableExtrapolation();
+BOOST_AUTO_TEST_CASE(testBaseCorrelationCurve) {
+    CommonData cd;
 
-    BOOST_CHECK_EQUAL(baseCorrCurve.dates()[0], Date(20, Dec, 2024));
-    BOOST_CHECK_EQUAL(baseCorrCurve.dates()[1], Date(20, Dec, 2026));
+    initializeSettings(cd);
+
+    auto curve = buildBilinearFlatBaseCorrelationCurve(cd);
+   
+
+    BOOST_CHECK_EQUAL(curve->dates()[0], Date(20, Dec, 2024));
+    BOOST_CHECK_EQUAL(curve->dates()[1], Date(20, Dec, 2026));
 
     // Check quoted points
-    BOOST_CHECK_CLOSE(baseCorrCurve.correlation(Date(20, Dec, 2026), 0.03), 0.405249307, 1e-10);
-    BOOST_CHECK_CLOSE(baseCorrCurve.correlation(Date(20, Dec, 2026), 0.07), 0.486937064, 1e-10);
+    BOOST_CHECK_CLOSE(curve->correlation(Date(20, Dec, 2026), 0.03), 0.405249307, 1e-10);
+    BOOST_CHECK_CLOSE(curve->correlation(Date(20, Dec, 2026), 0.07), 0.486937064, 1e-10);
     // Check detachment point interpolation
-    BOOST_CHECK_CLOSE(baseCorrCurve.correlation(Date(20, Dec, 2026), 0.05), (0.405249307 + 0.486937064) / 2.0, 1e-10);
-    // Check detachment point extrapolation
-    BOOST_CHECK_CLOSE(baseCorrCurve.correlation(Date(20, Dec, 2026), 0.01), 0.405249307, 1e-10);
-    // Check time extrapolation
-    BOOST_CHECK_CLOSE(baseCorrCurve.correlation(Date(20, Dec, 2028), 0.05), (0.405249307 + 0.486937064) / 2.0, 1e-10);
-    BOOST_CHECK_CLOSE(baseCorrCurve.correlation(Date(20, Dec, 2022), 0.05), (0.409223169 + 0.507498351) / 2.0, 1e-10);
+    BOOST_CHECK_CLOSE(curve->correlation(Date(20, Dec, 2026), 0.05), (0.405249307 + 0.486937064) / 2.0, 1e-10);
+    // Check if exceptions are thrown for extrapolation without enable extrapolation
+    curve->disableExtrapolation();
+    BOOST_CHECK_THROW(curve->correlation(Date(20, Dec, 2026), 0.01), std::exception);
+    BOOST_CHECK_THROW(curve->correlation(Date(20, Dec, 2021), 0.03), std::exception);
+    curve->enableExtrapolation();
+    // Check if extrapolation is flat 
+    BOOST_CHECK_CLOSE(curve->correlation(Date(20, Dec, 2026), 0.01), 0.405249307, 1e-10);
+    BOOST_CHECK_CLOSE(curve->correlation(Date(20, Dec, 2028), 0.05), (0.405249307 + 0.486937064) / 2.0, 1e-10);
+    BOOST_CHECK_CLOSE(curve->correlation(Date(20, Dec, 2022), 0.05), (0.409223169 + 0.507498351) / 2.0, 1e-10);
+
+    
+}
+
+
+BOOST_AUTO_TEST_CASE(testSpreadedCorrelationCurve) {
+    CommonData cd;
+
+    initializeSettings(cd);
+
+    auto curve = buildBilinearFlatBaseCorrelationCurve(cd);
 
     std::vector<std::vector<Handle<Quote>>> shifts;
-    for (const auto& row : correlations) {
-        shifts.push_back(std::vector<Handle<Quote>>(row.size(), Handle<Quote>(boost::make_shared<SimpleQuote>(0.0))));
+
+    for (Size i = 0; i < cd.detachmentPoints.size(); ++i) {
+        shifts.push_back(std::vector<Handle<Quote>>());
+        for (Size j = 0; j < cd.tenors.size(); ++j) {
+            shifts[i].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)));
+        }
     }
-
-    Handle<QuantExt::BaseCorrelationTermStructure> baseCurve(
-        boost::make_shared<QuantExt::InterpolatedBaseCorrelationTermStructure<QuantExt::BilinearFlat>>(baseCorrCurve));
-
-    baseCurve->enableExtrapolation();
-
-    QuantExt::SpreadedBaseCorrelationCurve shiftedCurve(baseCurve, tenors, detachmentPoints, shifts, startDate,
-                                                        DateGeneration::CDS2015);
-    // shiftedCurve.enableExtrapolation();
+    
+    QuantExt::SpreadedBaseCorrelationCurve shiftedCurve(curve, cd.tenors, cd.detachmentPoints, shifts, cd.startDate, DateGeneration::CDS2015);
 
     BOOST_CHECK_CLOSE(shiftedCurve.correlation(Date(20, Dec, 2026), 0.03), 0.405249307, 1e-10);
     BOOST_CHECK_CLOSE(shiftedCurve.correlation(Date(20, Dec, 2026), 0.07), 0.486937064, 1e-10);
@@ -99,18 +124,46 @@ BOOST_AUTO_TEST_CASE(testBaseCorrelationCurve) {
     BOOST_CHECK_CLOSE(shiftedCurve.correlation(Date(20, Dec, 2026), 0.07), 0.486937064, 1e-10);
 
     BOOST_CHECK_CLOSE(shiftedCurve.correlation(Date(20, Dec, 2026), 0.05), (0.415249307 + 0.486937064) / 2.0, 1e-10);
+}
 
+BOOST_AUTO_TEST_CASE(testParallelShift) {
+    CommonData cd;
+
+    initializeSettings(cd);
+
+    auto curve = buildBilinearFlatBaseCorrelationCurve(cd);
     // Simple parallel shift, we need at least a 2 x 2 matrix for the interpolation
     // but the actual tenor and detachments points doesn't matter
     auto parallelShift = boost::make_shared<SimpleQuote>(0.0);
 
-    QuantExt::SpreadedBaseCorrelationCurve shiftedCurveParallel(
-        baseCurve, {1 * Days, 2 * Days}, {0.01, 0.02},
-        {{Handle<Quote>(parallelShift), Handle<Quote>(parallelShift)},
-         {Handle<Quote>(parallelShift), Handle<Quote>(parallelShift)}});
+    std::vector<std::vector<Handle<Quote>>> quotes{{Handle<Quote>(parallelShift)}};
 
-    shiftedCurveParallel.enableExtrapolation();
+    std::vector<Period> terms{1 * Days};
+    std::vector<double> detachmentPoints{1.0};
 
+    Size nt = terms.size();
+    Size nd = detachmentPoints.size();
+
+    if (nt == 1) {
+        terms.push_back(terms[0] + 1 * Days); // arbitrary, but larger than the first term
+        for (Size i = 0; i < nd; ++i)
+            quotes[i].push_back(quotes[i][0]);
+    }
+
+    if (nd == 1) {
+        quotes.push_back(std::vector<Handle<Quote>>(terms.size()));
+        for (Size j = 0; j < terms.size(); ++j)
+            quotes[1][j] = quotes[0][j];
+
+        if (detachmentPoints[0] < 1.0 && !QuantLib::close_enough(detachmentPoints[0], 1.0)) {
+            detachmentPoints.push_back(1.0);
+        } else {
+            detachmentPoints.insert(detachmentPoints.begin(), 0.01);
+        }
+    }
+
+
+    QuantExt::SpreadedBaseCorrelationCurve shiftedCurveParallel(curve, terms, detachmentPoints, quotes);
     BOOST_CHECK_CLOSE(shiftedCurveParallel.correlation(Date(20, Dec, 2026), 0.03), 0.405249307, 1e-10);
     BOOST_CHECK_CLOSE(shiftedCurveParallel.correlation(Date(20, Dec, 2026), 0.07), 0.486937064, 1e-10);
 
@@ -118,11 +171,23 @@ BOOST_AUTO_TEST_CASE(testBaseCorrelationCurve) {
 
     BOOST_CHECK_CLOSE(shiftedCurveParallel.correlation(Date(20, Dec, 2026), 0.03), 0.415249307, 1e-10);
     BOOST_CHECK_CLOSE(shiftedCurveParallel.correlation(Date(20, Dec, 2026), 0.07), 0.496937064, 1e-10);
+    BOOST_CHECK_CLOSE(shiftedCurveParallel.correlation(Date(20, Dec, 2026), 1.0), 1.0, 1e-10);
 
     BOOST_CHECK_CLOSE(shiftedCurveParallel.correlation(Date(20, Dec, 2026), 0.05), (0.415249307 + 0.496937064) / 2.0,
                       1e-10);
 
-    std::cout << baseCorrCurve.correlation(1, 0.01);
+    BOOST_CHECK_THROW(shiftedCurveParallel.correlation(Date(20, Dec, 2026), 0.01), std::exception);
+    BOOST_CHECK_THROW(shiftedCurveParallel.correlation(Date(20, Dec, 2028), 0.03), std::exception);
+
+    shiftedCurveParallel.enableExtrapolation();
+    BOOST_CHECK_THROW(shiftedCurveParallel.correlation(Date(20, Dec, 2026), 0.01), std::exception);
+    BOOST_CHECK_THROW(shiftedCurveParallel.correlation(Date(20, Dec, 2028), 0.03), std::exception);
+
+    // No to enable extrapolation on both curves before extrapolate
+    shiftedCurveParallel.enableExtrapolation();
+    curve->enableExtrapolation();
+    BOOST_CHECK_NO_THROW(shiftedCurveParallel.correlation(Date(20, Dec, 2026), 0.01));
+    BOOST_CHECK_NO_THROW(shiftedCurveParallel.correlation(Date(20, Dec, 2028), 0.03));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

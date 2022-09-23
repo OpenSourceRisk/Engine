@@ -1868,8 +1868,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
 
-                            
-
                             // FIXME: Same change as in ored/market/basecorrelationcurve.cpp
                             if (nt == 1) {                           
                                 terms.push_back(terms[0] + 1 * Days); // arbitrary, but larger than the first term
@@ -1878,12 +1876,17 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
 
                             if (nd == 1) {
-                                detachmentPoints.push_back(detachmentPoints[0] + 0.01);
                                 quotes.push_back(vector<Handle<Quote>>(terms.size()));
                                 for (Size j = 0; j < terms.size(); ++j)
                                     quotes[1][j] = quotes[0][j];
-                            }
 
+                                if (detachmentPoints[0] < 1.0 && !QuantLib::close_enough(detachmentPoints[0], 1.0)) {
+                                    detachmentPoints.push_back(1.0);
+                                } else {
+                                    detachmentPoints.insert(detachmentPoints.begin(), 0.01); // arbitrary, but larger than then 0 and less than 1.0
+                                }
+                            }
+                            
                             boost::shared_ptr<QuantExt::BaseCorrelationTermStructure> bcp;
                             if (useSpreadedTermStructures_) {
                                 bcp = boost::make_shared<QuantExt::SpreadedBaseCorrelationCurve>(
