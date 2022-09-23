@@ -50,7 +50,11 @@ protected:
         std::string ccyCode = cpiIndex->currency().code();
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
-        return boost::make_shared<QuantExt::BlackCPICouponPricer>(vol, discountCurve);
+
+         bool useLastFixingDate =
+            parseBool(engineParameter("useLastFixingDate", std::vector<std::string>(), false, "false"));
+
+        return boost::make_shared<QuantExt::BlackCPICouponPricer>(vol, discountCurve, useLastFixingDate);
     }
 };
 
@@ -69,7 +73,11 @@ protected:
         std::string ccyCode = cpiIndex->currency().code();
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
-        return boost::make_shared<QuantExt::BlackCPICashFlowPricer>(vol, discountCurve);
+
+        bool useLastFixingDate =
+            parseBool(engineParameter("useLastFixingDate", std::vector<std::string>(), false, "false"));
+
+        return boost::make_shared<QuantExt::BlackCPICashFlowPricer>(vol, discountCurve, useLastFixingDate);
     }
 };
 } // namespace data

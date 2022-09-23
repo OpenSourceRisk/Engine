@@ -50,9 +50,9 @@ public:
     InflationCurveConfig(const string& curveID, const string& curveDescription, const string& nominalTermStructure,
                          const Type type, const vector<string>& quotes, const string& conventions,
                          const bool extrapolate, const Calendar& calendar, const DayCounter& dayCounter,
-                         const Period& lag, const Frequency& frequency, const Real baseRate, const Real tolerance,
-                         const Date& seasonalityBaseDate, const Frequency& seasonalityFrequency,
-                         const vector<string>& seasonalityFactors,
+                         const Period& lag, const Frequency& frequency, const Real baseRate, const Real tolerance, 
+                         const bool useLastAvailableFixingAsBaseDate, const Date& seasonalityBaseDate, 
+                         const Frequency& seasonalityFrequency, const vector<string>& seasonalityFactors,
                          const vector<double>& overrideSeasonalityFactors = std::vector<double>());
 
     void fromXML(XMLNode* node) override;
@@ -69,6 +69,7 @@ public:
     const Frequency& frequency() const { return frequency_; }
     const Real& baseRate() const { return baseRate_; }
     const Real& tolerance() const { return tolerance_; }
+    const bool& useLastAvailableFixingAsBaseDate() const { return useLastAvailableFixingAsBaseDate_; }
     const Date& seasonalityBaseDate() const { return seasonalityBaseDate_; }
     const Frequency& seasonalityFrequency() const { return seasonalityFrequency_; }
     const vector<string>& seasonalityFactors() const { return seasonalityFactors_; }
@@ -86,6 +87,7 @@ public:
     Frequency& frequency() { return frequency_; }
     Real& baseRate() { return baseRate_; }
     Real& tolerance() { return tolerance_; }
+    bool& useLastAvailableFixingAsBaseDate() { return useLastAvailableFixingAsBaseDate_; }
     Date& seasonalityBaseDate() { return seasonalityBaseDate_; }
     Frequency& seasonalityFrequency() { return seasonalityFrequency_; }
     vector<string>& seasonalityFactors() { return seasonalityFactors_; }
@@ -106,6 +108,7 @@ private:
     Frequency frequency_;
     Real baseRate_;
     Real tolerance_;
+    bool useLastAvailableFixingAsBaseDate_;
     Date seasonalityBaseDate_;
     Frequency seasonalityFrequency_;
     vector<string> seasonalityFactors_;

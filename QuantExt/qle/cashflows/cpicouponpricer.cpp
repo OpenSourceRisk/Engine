@@ -38,18 +38,18 @@ InflationCashFlowPricer::InflationCashFlowPricer(const Handle<CPIVolatilitySurfa
 }
 
 BlackCPICashFlowPricer::BlackCPICashFlowPricer(const Handle<CPIVolatilitySurface>& vol,
-                                               const Handle<YieldTermStructure>& yts)
+                                               const Handle<YieldTermStructure>& yts, const bool useLastFixing)
     : InflationCashFlowPricer(vol, yts) {
-    engine_ = boost::make_shared<CPIBlackCapFloorEngine>(yieldCurve(), volatility());
+    engine_ = boost::make_shared<CPIBlackCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
 }
 
 BlackCPICouponPricer::BlackCPICouponPricer(const Handle<CPIVolatilitySurface>& vol,
-                                           const Handle<YieldTermStructure>& yts)
+                                           const Handle<YieldTermStructure>& yts, const bool useLastFixing)
     : CPICouponPricer(vol, yts) {
     if (nominalTermStructure_.empty())
         nominalTermStructure_ = Handle<YieldTermStructure>(
             boost::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
-    engine_ = boost::make_shared<CPIBlackCapFloorEngine>(yieldCurve(), volatility());
+    engine_ = boost::make_shared<CPIBlackCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
 }
 
 } // namespace QuantExt

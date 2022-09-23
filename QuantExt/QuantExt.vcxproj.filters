@@ -396,9 +396,6 @@
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp">
-      <Filter>pricingengines</Filter>
-    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -410,12 +407,6 @@
     </ClInclude>
     <ClInclude Include="qle\instruments\makecds.hpp">
       <Filter>instruments</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\instruments\creditdefaultswap.hpp">
-      <Filter>instruments</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\defaultprobabilityhelpers.hpp">
-      <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp">
       <Filter>pricingengines</Filter>
@@ -1246,8 +1237,23 @@
     <ClInclude Include="qle\termstructures\atmadjustedsmilesection.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\inflation\inflationtraits.hpp">
+      <Filter>termstructures\inflation</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\inflation\piecewisezeroinflationcurve.hpp">
+      <Filter>termstructures\inflation</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\inflation\constantcpivolatility.hpp">
+      <Filter>termstructures\inflation</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\inflation\cpivolatilitystructure.hpp">
+      <Filter>termstructures\inflation</Filter>
+    </ClInclude>
     <ClInclude Include="qle\quotes\compositevectorquote.hpp">
       <Filter>quotes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\multiccycompositeinstrument.hpp">
+      <Filter>instruments</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1298,6 +1304,9 @@
     </Filter>
     <Filter Include="interpolators">
       <UniqueIdentifier>{5afe79b0-37bd-4c42-a9f7-5df8719d365c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="termstructures\inflation">
+      <UniqueIdentifier>{0007c505-4a49-436c-802d-ca0ff83ab0f5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1574,17 +1583,8 @@
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp">
-      <Filter>pricingengines</Filter>
-    </ClCompile>
     <ClCompile Include="qle\instruments\makecds.cpp">
       <Filter>instruments</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\instruments\creditdefaultswap.cpp">
-      <Filter>instruments</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp">
-      <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp">
       <Filter>termstructures</Filter>
@@ -2131,6 +2131,15 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\proxyswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\multiccycompositeinstrument.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\inflation\constantcpivolatility.cpp">
+      <Filter>termstructures\inflation</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\inflation\cpivolatilitystructure.cpp">
+      <Filter>termstructures\inflation</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
