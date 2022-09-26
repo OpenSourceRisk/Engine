@@ -1235,7 +1235,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 				    string text = !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
 				    LOG("Using cds smile dynamics " << smileDynamicsType << " from global config for name " << name << ", " << text);
 				}
-			        bool stickyMoney = true;//smileDynamicsType == "StickyMoneyness" ? true : false;
+                                bool stickyMoney = smileDynamicsType == "StickyMoneyness" ? true : false;
                                 std::vector<QuantLib::Period> simTerms;
                                 std::vector<Handle<CreditCurve>> simTermCurves;
                                 if (curveConfigs.hasCdsVolCurveConfig(name)) {
