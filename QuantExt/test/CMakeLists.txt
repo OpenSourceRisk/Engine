@@ -40,6 +40,8 @@ forwardbond.cpp
 fxvolsmile.cpp
 index.cpp
 interpolatedyoycapfloortermpricesurface.cpp
+inflationcurve.cpp
+inflationvol.cpp
 logquote.cpp
 normalfreeboundarysabr.cpp
 optionletstripper.cpp

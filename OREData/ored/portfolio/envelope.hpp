@@ -52,28 +52,29 @@ public:
     //! Constructor with netting set id and portfolio ids, without additional fields
     Envelope(const string& counterparty, const string& nettingSetId,
              const set<string>& portfolioIds = set<string>())
-        : counterparty_(counterparty), nettingSetId_(nettingSetId), nettingSetDetails_(NettingSetDetails(nettingSetId)),
+        : counterparty_(counterparty), nettingSetDetails_(NettingSetDetails(nettingSetId)),
           portfolioIds_(portfolioIds) {}
 
-    //! Constructor with netting set id and portfolio ids, without additional fields
+    //! Constructor with netting set details and portfolio ids, without additional fields
     Envelope(const string& counterparty, const NettingSetDetails& nettingSetDetails = NettingSetDetails(),
              const set<string>& portfolioIds = set<string>())
         : counterparty_(counterparty), nettingSetDetails_(nettingSetDetails), portfolioIds_(portfolioIds) {}
-
-    // For some reason have a ctor with:
-    // map<string, string>& additionalFields = map<string,string>()
-    // fails under gcc, apparently it's a gcc bug! So to workaround we just have
-    // 2 explicit tors.
 
     //! Constructor without netting set / portfolio ids, with additional fields
     Envelope(const string& counterparty, const map<string, string>& additionalFields)
         : counterparty_(counterparty), nettingSetDetails_(NettingSetDetails()), additionalFields_(additionalFields) {}
 
-    //! Constructor with netting set / portfolio ids, with additional fields
+    //! Constructor with netting set, with additional fields
     Envelope(const string& counterparty, const string& nettingSetId, const map<string, string>& additionalFields,
              const set<string>& portfolioIds = set<string>())
-        : counterparty_(counterparty), nettingSetId_(nettingSetId), nettingSetDetails_(NettingSetDetails()),
-          portfolioIds_(portfolioIds), additionalFields_(additionalFields) {}
+        : counterparty_(counterparty), nettingSetDetails_(NettingSetDetails(nettingSetId)), portfolioIds_(portfolioIds),
+          additionalFields_(additionalFields) {}
+
+    //! Constructor with netting set details, with additional fields
+    Envelope(const string& counterparty, const NettingSetDetails& nettingSetDetails,
+             const map<string, string>& additionalFields, const set<string>& portfolioIds = set<string>())
+        : counterparty_(counterparty), nettingSetDetails_(nettingSetDetails), portfolioIds_(portfolioIds),
+          additionalFields_(additionalFields) {}
 
     //! \name Serialisation
     //@{
@@ -100,7 +101,6 @@ public:
 
 private:
     string counterparty_;
-    string nettingSetId_;
     NettingSetDetails nettingSetDetails_;
     set<string> portfolioIds_;
     map<string, string> additionalFields_;

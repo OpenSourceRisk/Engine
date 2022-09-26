@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/engine/bufferedsensitivitycubestream.hpp
+/*! \file orea/engine/bufferedsensitivitystream.hpp
     \brief a wrapper to buffer sensi stream records
  */
 

@@ -43,7 +43,7 @@
 #define quantext_makecds_hpp
 
 #include <boost/optional.hpp>
-#include <qle/instruments/creditdefaultswap.hpp>
+#include <ql/instruments/creditdefaultswap.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
