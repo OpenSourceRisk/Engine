@@ -1868,9 +1868,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
 
-                            // FIXME: Same change as in ored/market/basecorrelationcurve.cpp
+                            //
                             if (nt == 1) {                           
-                                terms.push_back(terms[0] + 1 * Days); // arbitrary, but larger than the first term
+                                terms.push_back(terms[0] + 1 * terms[0].units()); // arbitrary, but larger than the first term
                                 for (Size i = 0; i < nd; ++i)
                                     quotes[i].push_back(quotes[i][0]);
                             }

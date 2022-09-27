@@ -67,15 +67,18 @@ public:
 
     BusinessDayConvention businessDayConvention() const { return bdc_; }
 
+    Date startDate() const { return startDate_; }
+
+    boost::optional<DateGeneration::Rule> rule() const { return rule_; }
+
 private:
-    Date startDate_;
     BusinessDayConvention bdc_;
-    boost::optional<DateGeneration> rule_;
+    Date startDate_;
+    boost::optional<DateGeneration::Rule> rule_;
 
     void validate() const;
 
-    void initializeDatesAndTimes(const Date& startDate,
-                                 boost::optional<DateGeneration::Rule> rule) const;
+    void initializeDatesAndTimes() const;
 
 protected:
     virtual void checkRange(Time t, Real strike, bool extrapolate) const override;

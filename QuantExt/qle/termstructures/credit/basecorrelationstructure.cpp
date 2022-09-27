@@ -22,28 +22,29 @@
 
 namespace QuantExt {
 
-BaseCorrelationTermStructure::BaseCorrelationTermStructure() : CorrelationTermStructure(), bdc_(Unadjusted) {}
+BaseCorrelationTermStructure::BaseCorrelationTermStructure()
+    : CorrelationTermStructure(), bdc_(Unadjusted) {}
 
 BaseCorrelationTermStructure::BaseCorrelationTermStructure(const Date& refDate, const Calendar& cal,
                                                            BusinessDayConvention bdc, const std::vector<Period>& tenors,
                                                            const std::vector<Real>& detachmentPoints,
                                                            const DayCounter& dc, const Date& startDate,
                                                            boost::optional<DateGeneration::Rule> rule)
-    : CorrelationTermStructure(refDate, cal, dc), bdc_(bdc), tenors_(tenors), detachmentPoints_(detachmentPoints) {
+    : CorrelationTermStructure(refDate, cal, dc), bdc_(bdc), startDate_(startDate), rule_(rule), tenors_(tenors), detachmentPoints_(detachmentPoints) {
     // Ensure tenors are sorted and positive
     validate();
-    initializeDatesAndTimes(startDate, rule);
+    initializeDatesAndTimes();
 }
 
 BaseCorrelationTermStructure::BaseCorrelationTermStructure(Natural settlementDays, const Calendar& cal,
                                                            BusinessDayConvention bdc, const std::vector<Period>& tenors,
-                                                           const std::vector<Real>& detachmentPoints,
+                                                           const std::vector<double>& detachmentPoints,
                                                            const DayCounter& dc, const Date& startDate,
                                                            boost::optional<DateGeneration::Rule> rule)
-    : CorrelationTermStructure(settlementDays, cal, dc), bdc_(bdc), tenors_(tenors),
+    : CorrelationTermStructure(settlementDays, cal, dc), bdc_(bdc), startDate_(startDate), rule_(rule), tenors_(tenors),
       detachmentPoints_(detachmentPoints) {
     validate();
-    initializeDatesAndTimes(startDate, rule);
+    initializeDatesAndTimes();
 }
 
 void BaseCorrelationTermStructure::validate() const {
@@ -61,18 +62,18 @@ void BaseCorrelationTermStructure::validate() const {
     }
 }
 
-void BaseCorrelationTermStructure::initializeDatesAndTimes(const Date& startDate,
-                                                           boost::optional<DateGeneration::Rule> rule) const {
+void BaseCorrelationTermStructure::initializeDatesAndTimes() const {
     const Date& refDate = referenceDate();
-    Date start = startDate == Date() ? refDate : startDate;
+    Date start = startDate_ == Date() ? refDate : startDate_;
     Calendar cldr = calendar();
 
     for (Size i = 0; i < tenors_.size(); i++) {
         Date d;
-        if (rule) {
+        if (rule_) {
             d = start + tenors_[i];
-            if (*rule == DateGeneration::CDS2015 || *rule == DateGeneration::CDS || *rule == DateGeneration::OldCDS) {
-                d = cdsMaturity(start, tenors_[i], *rule);
+            if (*rule_ == DateGeneration::CDS2015 || *rule_ == DateGeneration::CDS ||
+                *rule_ == DateGeneration::OldCDS) {
+                d = cdsMaturity(start, tenors_[i], *rule_);
             }
         } else {
             d = cldr.advance(start, tenors_[i], bdc_);
