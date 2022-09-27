@@ -1221,35 +1221,36 @@ ScenarioSimMarket::ScenarioSimMarket(
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
                             if (useSpreadedTermStructures_) {
-			        string smileDynamicsType;
-				boost::shared_ptr<CDSVolatilityCurveConfig> config;
-				if (curveConfigs.hasCdsVolCurveConfig(name))
-			            config = curveConfigs.cdsVolCurveConfig(name);
-				if (config && config->smileDynamics() != "") {
-				    smileDynamicsType = config->smileDynamics();
-				    LOG("Using cds smile dynamics " << smileDynamicsType << " from vol curve config " << name);
-				}
-				else {
-				    smileDynamicsType = smileDynamics.cds();
-				    string text = !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
-				    LOG("Using cds smile dynamics " << smileDynamicsType << " from global config for name " << name << ", " << text);
-				}
-			        bool stickyMoney = smileDynamicsType == "StickyMoneyness" ? true : false;
+                                string smileDynamicsType;
+                                boost::shared_ptr<CDSVolatilityCurveConfig> config;
+                                if (curveConfigs.hasCdsVolCurveConfig(name))
+                                    config = curveConfigs.cdsVolCurveConfig(name);
+                                if (config && config->smileDynamics() != "") {
+                                    smileDynamicsType = config->smileDynamics();
+                                    LOG("Using cds smile dynamics " << smileDynamicsType << " from vol curve config "
+                                                                    << name);
+                                } else {
+                                    smileDynamicsType = smileDynamics.cds();
+                                    string text =
+                                        !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
+                                    LOG("Using cds smile dynamics " << smileDynamicsType
+                                                                    << " from global config for name " << name << ", "
+                                                                    << text);
+                                }
+                                bool stickyMoney = smileDynamicsType == "StickyMoneyness" ? true : false;
                                 std::vector<QuantLib::Period> simTerms;
                                 std::vector<Handle<CreditCurve>> simTermCurves;
-                                if (stickyMoney) {
-                                    if (curveConfigs.hasCdsVolCurveConfig(name)) {
-                                        // get the term curves from the curve config if possible
-                                        auto cc = curveConfigs.cdsVolCurveConfig(name);
-                                        simTerms = cc->terms();
-                                        for (auto const& c : cc->termCurves())
-                                            simTermCurves.push_back(defaultCurve(parseCurveSpec(c)->curveConfigID()));
-                                    } else {
-                                        // assume the default curve names follow the naming convention volName_5Y
-                                        simTerms = wrapper->terms();
-                                        for (auto const& t : simTerms) {
-                                            simTermCurves.push_back(defaultCurve(name + "_" + ore::data::to_string(t)));
-                                        }
+                                if (curveConfigs.hasCdsVolCurveConfig(name)) {
+                                    // get the term curves from the curve config if possible
+                                    auto cc = curveConfigs.cdsVolCurveConfig(name);
+                                    simTerms = cc->terms();
+                                    for (auto const& c : cc->termCurves())
+                                        simTermCurves.push_back(defaultCurve(parseCurveSpec(c)->curveConfigID()));
+                                } else {
+                                    // assume the default curve names follow the naming convention volName_5Y
+                                    simTerms = wrapper->terms();
+                                    for (auto const& t : simTerms) {
+                                        simTermCurves.push_back(defaultCurve(name + "_" + ore::data::to_string(t)));
                                     }
                                 }
                                 cvh = Handle<CreditVolCurve>(boost::make_shared<SpreadedCreditVolCurve>(
