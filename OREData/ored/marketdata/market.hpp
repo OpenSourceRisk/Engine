@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ql/experimental/credit/basecorrelationstructure.hpp>
+
 #include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/experimental/inflation/yoycapfloortermpricesurface.hpp>
 #include <ql/indexes/iborindex.hpp>
@@ -39,10 +39,11 @@
 #include <ql/time/date.hpp>
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 
+#include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
-#include <qle/indexes/commodityindex.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
+#include <qle/termstructures/credit/basecorrelationstructure.hpp>
 #include <qle/termstructures/creditcurve.hpp>
 #include <qle/termstructures/creditvolcurve.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
@@ -51,8 +52,6 @@ namespace ore {
 namespace data {
 using namespace QuantLib;
 using std::string;
-
-typedef BaseCorrelationTermStructure<BilinearInterpolation> BilinearBaseCorrelationTermStructure;
 
 enum class YieldCurveType {
     Discount = 0, // Chosen to match MarketObject::DiscountCurve
@@ -160,7 +159,7 @@ public:
 
     //! \name Base Correlation term structures
     //@{
-    virtual Handle<BilinearBaseCorrelationTermStructure>
+    virtual Handle<QuantExt::BaseCorrelationTermStructure>
     baseCorrelation(const string&, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 

@@ -544,7 +544,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             DLOG("Adding Base Correlation (" << node.name << ") with spec " << *baseCorrelationSpec
                                              << " to configuration " << configuration);
             baseCorrelations_[make_pair(configuration, node.name)] =
-                Handle<BaseCorrelationTermStructure<BilinearInterpolation>>(
+                Handle<QuantExt::BaseCorrelationTermStructure>(
                     itr->second->baseCorrelationTermStructure());
             break;
         }

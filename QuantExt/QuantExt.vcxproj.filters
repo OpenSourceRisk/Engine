@@ -1237,11 +1237,20 @@
     <ClInclude Include="qle\termstructures\atmadjustedsmilesection.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\inflation\inflationtraits.hpp">
-      <Filter>termstructures\inflation</Filter>
+    <ClInclude Include="qle\quotes\compositevectorquote.hpp">
+      <Filter>quotes</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\inflation\piecewisezeroinflationcurve.hpp">
-      <Filter>termstructures\inflation</Filter>
+    <ClInclude Include="qle\instruments\multiccycompositeinstrument.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\flatextrapolation2d.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\credit\spreadedbasecorrelationcurve.hpp">
+      <Filter>termstructures\credit</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\credit\basecorrelationstructure.hpp">
+      <Filter>termstructures\credit</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\inflation\constantcpivolatility.hpp">
       <Filter>termstructures\inflation</Filter>
@@ -1249,11 +1258,11 @@
     <ClInclude Include="qle\termstructures\inflation\cpivolatilitystructure.hpp">
       <Filter>termstructures\inflation</Filter>
     </ClInclude>
-    <ClInclude Include="qle\quotes\compositevectorquote.hpp">
-      <Filter>quotes</Filter>
+    <ClInclude Include="qle\termstructures\inflation\inflationtraits.hpp">
+      <Filter>termstructures\inflation</Filter>
     </ClInclude>
-    <ClInclude Include="qle\instruments\multiccycompositeinstrument.hpp">
-      <Filter>instruments</Filter>
+    <ClInclude Include="qle\termstructures\inflation\piecewisezeroinflationcurve.hpp">
+      <Filter>termstructures\inflation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1305,8 +1314,11 @@
     <Filter Include="interpolators">
       <UniqueIdentifier>{5afe79b0-37bd-4c42-a9f7-5df8719d365c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="termstructures\credit">
+      <UniqueIdentifier>{96a5a6c0-5339-472b-afed-0a81fd0372f2}</UniqueIdentifier>
+    </Filter>
     <Filter Include="termstructures\inflation">
-      <UniqueIdentifier>{0007c505-4a49-436c-802d-ca0ff83ab0f5}</UniqueIdentifier>
+      <UniqueIdentifier>{0fb74c56-7b22-48db-9ff0-362b83ac0fe1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -2132,14 +2144,20 @@
     <ClCompile Include="qle\termstructures\proxyswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\instruments\multiccycompositeinstrument.cpp">
-      <Filter>instruments</Filter>
+    <ClCompile Include="qle\termstructures\credit\spreadedbasecorrelationcurve.cpp">
+      <Filter>termstructures\credit</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\credit\basecorrelationstructure.cpp">
+      <Filter>termstructures\credit</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\inflation\constantcpivolatility.cpp">
       <Filter>termstructures\inflation</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\inflation\cpivolatilitystructure.cpp">
       <Filter>termstructures\inflation</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\multiccycompositeinstrument.cpp">
+      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
