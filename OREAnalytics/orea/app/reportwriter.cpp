@@ -268,17 +268,19 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                     flowType = "InterestProjected";
                                 // for ON coupons the fixing value is the compounded / averaged rate, not the last
                                 // single ON fixing
-                                if (boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(ptrFloat) !=
-                                        nullptr ||
-                                    boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(ptrFloat) !=
-                                        nullptr) {
-                                    fixingValue = ptrFloat->rate();
+                                if (auto on = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(ptrFloat)) {
+                                    fixingValue = (on->rate() - on->spread()) / on->gearing();
+                                } else if (auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(
+                                               ptrFloat)) {
+                                    fixingValue = (on->rate() - on->effectiveSpread()) / on->gearing();
                                 } else if (auto c = boost::dynamic_pointer_cast<
                                                QuantExt::CappedFlooredAverageONIndexedCoupon>(ptrFloat)) {
-                                    fixingValue = c->underlying()->rate();
+                                    fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
+                                                  c->underlying()->gearing();
                                 } else if (auto c = boost::dynamic_pointer_cast<
                                                QuantExt::CappedFlooredOvernightIndexedCoupon>(ptrFloat)) {
-                                    fixingValue = c->underlying()->rate();
+                                    fixingValue = (c->underlying()->rate() - c->underlying()->effectiveSpread()) /
+                                                  c->underlying()->gearing();
                                 }
                             } else if (ptrInfl) {
                                 fixingDate = ptrInfl->fixingDate();

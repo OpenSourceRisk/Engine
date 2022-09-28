@@ -1958,8 +1958,11 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
                         }
 
                         RiskFactorKey key(RFType::BaseCorrelation, name, idx);
-                        scenario->add(key, shiftedBcData[jj][kk]);
-
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedBcData[jj][kk] - bcData[jj][kk]);
+                        } else {
+                            scenario->add(key, shiftedBcData[jj][kk]);
+                        }
                         // Possibly store valid shift size
                         if (validShiftSize && up && j == jj && k == kk) {
                             shiftSizes_[key] = shiftedBcData[jj][kk] - bcData[jj][kk];

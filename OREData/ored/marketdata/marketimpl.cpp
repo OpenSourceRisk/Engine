@@ -259,10 +259,10 @@ Handle<QuantExt::CreditVolCurve> MarketImpl::cdsVol(const string& key, const str
     return lookup<Handle<QuantExt::CreditVolCurve>>(cdsVols_, key, configuration, "cds vol curve");
 }
 
-Handle<BaseCorrelationTermStructure<BilinearInterpolation>>
+Handle<QuantExt::BaseCorrelationTermStructure>
 MarketImpl::baseCorrelation(const string& key, const string& configuration) const {
     require(MarketObject::BaseCorrelation, key, configuration);
-    return lookup<Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(baseCorrelations_, key, configuration,
+    return lookup<Handle<QuantExt::BaseCorrelationTermStructure>>(baseCorrelations_, key, configuration,
                                                                                "base correlation curve");
 }
 

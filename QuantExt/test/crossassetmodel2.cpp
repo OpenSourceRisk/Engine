@@ -1125,7 +1125,7 @@ BOOST_AUTO_TEST_CASE(testLgm31fMoments) {
     Array x0 = p_exact->initialValues();
 
     // check the expectation and covariance over 0...T against euler
-    Real T = 10.0;
+    Real T = 2.0;
     Size steps = static_cast<Size>(T * 10.0);
     Size paths = 25000;
     Size seed = 42;
@@ -1244,7 +1244,7 @@ BOOST_AUTO_TEST_CASE(testLgm31fMartingaleProperty) {
     boost::shared_ptr<StochasticProcess> p_exact = d.xmodel->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> p_euler = d.xmodel->stateProcess(CrossAssetStateProcess::euler);
 
-    Real T = 10.0;
+    Real T = 2.0;
     Size steps = static_cast<Size>(T * 10.0);
     Size paths = 25000;
     Size seed = 42;

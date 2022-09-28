@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/termstructures/inflationtraits.hpp
+/*! \file qle/termstructures/inflation/inflationtraits.hpp
     \brief interpolated correlation term structure
 */
 

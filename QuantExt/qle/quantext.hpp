@@ -315,6 +315,8 @@
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
+#include <qle/termstructures/credit/basecorrelationstructure.hpp>
+#include <qle/termstructures/credit/spreadedbasecorrelationcurve.hpp>
 #include <qle/termstructures/creditcurve.hpp>
 #include <qle/termstructures/creditvolcurve.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
