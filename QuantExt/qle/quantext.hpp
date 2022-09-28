@@ -185,6 +185,7 @@
 #include <qle/math/differentialevolution_mt.hpp>
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/flatextrapolation.hpp>
+#include <qle/math/flatextrapolation2d.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/method_mt.hpp>
 #include <qle/math/nadarayawatson.hpp>
