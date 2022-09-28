@@ -3,6 +3,9 @@ include(CheckCXXCompilerFlag)
 option(MSVC_LINK_DYNAMIC_RUNTIME "Link against dynamic runtime" ON)
 option(MSVC_PARALLELBUILD "Use flag /MP" ON)
 
+# define build type clang address sanitizer + undefined behaviour + LIBCPP assertions, but keep O2
+set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_ENABLE_ASSERTIONS=1 -g -O2")
+
 # add compiler flag, if not already present
 macro(add_compiler_flag flag supportsFlag)
     check_cxx_compiler_flag(${flag} ${supportsFlag})
