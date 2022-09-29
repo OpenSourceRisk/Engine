@@ -3807,19 +3807,20 @@ to be able to achieve a perfect fit (as with calibration of piecewise volatility
 \item {\tt Volatility/VolatilityType: } Choose volatility parametrisation a la {\em HullWhite} or {\em Hagan}
 \item {\tt Volatility/ParamType: } Choose between {\em Constant} and {\em Piecewise}
 \item {\tt Volatility/TimeGrid: } Initial time grid for this parameter, can be left empty if ParamType is Constant
-\item {\tt Volatility/InitialValue: } Vector of initial values, matching number of entries in time, or single value if
-the time grid is empty
+\item {\tt Volatility/InitialValue: } Vector of initial values, matching number of entries in time (for CalibrationType {\em BestFit} this should be one more entry than the {\tt Volatility/TimeGrid} entries, for {\em Bootstrap} this is ignored), or single value if the time grid is empty
 \item {\tt Reversion/Calibrate: } Flag to enable/disable calibration of this particular parameter
 \item {\tt Reversion/VolatilityType: } Choose reversion parametrisation a la {\em HullWhite} or {\em Hagan}
 \item {\tt Reversion/ParamType: } Choose between {\em Constant} and {\em Piecewise}
 \item {\tt Reversion/TimeGrid: } Initial time grid for this parameter, can be left empty if ParamType is Constant
 \item {\tt Reversion/InitialValue: } Vector of initial values, matching number of entries in time, or single value if
 the time grid is empty
-\item {\tt CalibrationSwaptions: } Choice of calibration instruments by expiry, underlying Swap term and strike
+\item {\tt CalibrationSwaptions: } Choice of calibration instruments by expiry, underlying Swap term and strike. There have to be at least one more calibration options configured than {\tt Volatility/TimeGrid} entries were given.
 \item {\tt ParameterTransformation: } LGM model prices are invariant under scaling and shift transformations
 \cite{Lichters} with advantages for numerical convergence of results in long term simulations. These transformations can
 be chosen here. Default settings are shiftHorizon 0 (time in years) and scaling factor 1.
 \end{itemize}
+
+The reason for having to specify one more {\tt Volatility/InitialValue} entries than {\tt Volatility/TimeGrid} entries (and at least one more calibration option than {\tt Volatility/TimeGrid} entries) is the fact that the intervals defined by the {\tt Volatility/TimeGrid} entries are spanning from $[0,t_1],[t_1,t_2]\ldots[t_n,\infty]$, which results in $n+1$ intervals.
 
 \medskip
 
@@ -3869,11 +3870,10 @@ model parametrisations.  Within each CrossCcyLGM section, the interpretation of 
 \item {\tt Sigma/Calibrate: } Flag to enable/disable calibration of this particular parameter
 \item {\tt Sigma/ParamType: } Choose between {\em Constant} and {\em Piecewise}
 \item {\tt Sigma/TimeGrid: } Initial time grid for this parameter, can be left empty if ParamType is Constant
-\item {\tt Sigma/InitialValue: } Vector of initial values, matching number of entries in time, or single value if the
-time grid is empty
+\item {\tt Sigma/InitialValue: } Vector of initial values, matching number of entries in time (for CalibrationType {\em BestFit} this should be one more entry than the {\tt Sigma/TimeGrid} entries, for {\em Bootstrap} this is ignored), or single value if the time grid is empty
 \item {\tt CalibrationOptions: } Choice of calibration instruments by expiry and strike, strikes can be empty (implying
 the default, ATMF options), or explicitly specified (in terms of FX rates as absolute strike values, in delta notation
-such as $\pm 25D$, $ATMF$ for at the money)
+such as $\pm 25D$, $ATMF$ for at the money). There have to be at least one more calibration options configured than {\tt Sigma/TimeGrid} entries were given
 \end{itemize}
 
 
@@ -3925,10 +3925,9 @@ FX model parameterisations.  Within each CrossAssetLGM section, the interpretati
 	\item {\tt Sigma/Calibrate: } Flag to enable/disable calibration of this particular parameter
 	\item {\tt Sigma/ParamType: } Choose between {\em Constant} and {\em Piecewise}
 	\item {\tt Sigma/TimeGrid: } Initial time grid for this parameter, can be left empty if ParamType is Constant
-	\item {\tt Sigma/InitialValue: } Vector of initial values, matching number of entries in time, or single value if 
-	the time grid is empty
+	\item {\tt Sigma/InitialValue: } Vector of initial values, matching number of entries in time (for CalibrationType {\em BestFit} this should be one more entry than the {\tt Sigma/TimeGrid} entries, for {\em Bootstrap} this is ignored), or single value if the time grid is empty
 	\item {\tt CalibrationOptions: } Choice of calibration instruments by expiry and strike, strikes can be empty 
-	(implying the default, ATMF options), or explicitly specified (in terms of equity prices as absolute strike values)
+	(implying the default, ATMF options), or explicitly specified (in terms of equity prices as absolute strike values). There have to be at least one more calibration options configured than {\tt Sigma/TimeGrid} entries were given
 \end{itemize}
 
 \medskip
