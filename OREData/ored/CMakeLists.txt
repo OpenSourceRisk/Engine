@@ -111,6 +111,7 @@ portfolio/compositetrade.cpp
 portfolio/creditdefaultswap.cpp
 portfolio/creditdefaultswapdata.cpp
 portfolio/creditdefaultswapoption.cpp
+portfolio/crosscurrencyswap.cpp
 portfolio/durationadjustedcmslegbuilder.cpp
 portfolio/durationadjustedcmslegdata.cpp
 portfolio/enginedata.cpp
@@ -143,6 +144,7 @@ portfolio/fxoption.cpp
 portfolio/fxswap.cpp
 portfolio/fxtouchoption.cpp
 portfolio/indexing.cpp
+portfolio/inflationswap.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
 portfolio/legdatafactory.cpp
@@ -350,6 +352,7 @@ portfolio/compositetrade.hpp
 portfolio/creditdefaultswap.hpp
 portfolio/creditdefaultswapdata.hpp
 portfolio/creditdefaultswapoption.hpp
+portfolio/crosscurrencyswap.hpp
 portfolio/durationadjustedcmslegbuilder.hpp
 portfolio/durationadjustedcmslegdata.hpp
 portfolio/enginedata.hpp
@@ -382,6 +385,7 @@ portfolio/fxoption.hpp
 portfolio/fxswap.hpp
 portfolio/fxtouchoption.hpp
 portfolio/indexing.hpp
+portfolio/inflationswap.hpp
 portfolio/instrumentwrapper.hpp
 portfolio/legbuilders.hpp
 portfolio/legdata.hpp
