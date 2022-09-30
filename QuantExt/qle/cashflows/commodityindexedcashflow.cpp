@@ -82,7 +82,7 @@ void CommodityIndexedCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator
         QL_REQUIRE(calc, "CommodityIndexedCashFlow needs a valid future expiry calculator when using "
                              << "the future settlement price as reference price");
         expiry = calc->expiryDate(contractDate, futureMonthOffset_);
-        index_ = index_->clone(expiry, calc->applyFutureMonthOffset(contractDate, futureMonthOffset_));
+        index_ = index_->clone(expiry);
     }
 
     // Derive the payment date if an explicit override has not been provided
