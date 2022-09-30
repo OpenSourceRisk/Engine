@@ -186,6 +186,8 @@
     <ClInclude Include="ored\portfolio\creditdefaultswap.hpp" />
     <ClInclude Include="ored\portfolio\creditdefaultswapdata.hpp" />
     <ClInclude Include="ored\portfolio\creditdefaultswapoption.hpp" />
+    <ClInclude Include="ored\portfolio\crosscurrencyswap.hpp" />
+    <ClInclude Include="ored\portfolio\inflationswap.hpp" />
     <ClInclude Include="ored\portfolio\failedtrade.hpp" />
     <ClInclude Include="ored\portfolio\durationadjustedcmslegbuilder.hpp" />
     <ClInclude Include="ored\portfolio\durationadjustedcmslegdata.hpp" />
@@ -396,6 +398,8 @@
     <ClCompile Include="ored\portfolio\creditdefaultswap.cpp" />
     <ClCompile Include="ored\portfolio\creditdefaultswapdata.cpp" />
     <ClCompile Include="ored\portfolio\creditdefaultswapoption.cpp" />
+    <ClCompile Include="ored\portfolio\crosscurrencyswap.cpp" />
+    <ClCompile Include="ored\portfolio\inflationswap.cpp" />
     <ClCompile Include="ored\portfolio\failedtrade.cpp" />
     <ClCompile Include="ored\portfolio\durationadjustedcmslegbuilder.cpp" />
     <ClCompile Include="ored\portfolio\durationadjustedcmslegdata.cpp" />
