@@ -30,6 +30,8 @@ namespace QuantExt {
 class CommodityIndexedAverageCashFlow : public CashFlow, public Observer {
 
 public:
+    enum class PaymentTiming { InAdvance, InArrears };
+
     //! Constructor taking an explicit \p paymentDate
     CommodityIndexedAverageCashFlow(QuantLib::Real quantity, const QuantLib::Date& startDate,
                                     const QuantLib::Date& endDate, const QuantLib::Date& paymentDate,
@@ -54,14 +56,13 @@ public:
         QuantLib::Natural paymentLag, QuantLib::Calendar paymentCalendar,
         QuantLib::BusinessDayConvention paymentConvention, const ext::shared_ptr<CommodityIndex>& index,
         const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(), QuantLib::Real spread = 0.0,
-        QuantLib::Real gearing = 1.0, bool payInAdvance = false, bool useFuturePrice = false,
-        QuantLib::Natural deliveryDateRoll = 0, QuantLib::Natural futureMonthOffset = 0,
+        QuantLib::Real gearing = 1.0, PaymentTiming paymentTiming = PaymentTiming::InArrears,
+        bool useFuturePrice = false, QuantLib::Natural deliveryDateRoll = 0, QuantLib::Natural futureMonthOffset = 0,
         const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr, bool includeEndDate = true,
-        bool excludeStartDate = true, const QuantLib::Date& paymentDateOverride = Date(),
-        bool useBusinessDays = true, CommodityQuantityFrequency quantityFrequency =
-        CommodityQuantityFrequency::PerCalculationPeriod, QuantLib::Natural hoursPerDay =
-        QuantLib::Null<QuantLib::Natural>(), QuantLib::Natural dailyExpiryOffset =
-        QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
+        bool excludeStartDate = true, const QuantLib::Date& paymentDateOverride = Date(), bool useBusinessDays = true,
+        CommodityQuantityFrequency quantityFrequency = CommodityQuantityFrequency::PerCalculationPeriod,
+        QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
+        QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
         const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData = boost::none);
 
     //! \name Inspectors
@@ -167,7 +168,7 @@ public:
     CommodityIndexedAverageLeg& withSpreads(const std::vector<QuantLib::Real>& spreads);
     CommodityIndexedAverageLeg& withGearings(QuantLib::Real gearing);
     CommodityIndexedAverageLeg& withGearings(const std::vector<QuantLib::Real>& gearings);
-    CommodityIndexedAverageLeg& payInAdvance(bool flag = false);
+    CommodityIndexedAverageLeg& paymentTiming(CommodityIndexedAverageCashFlow::PaymentTiming paymentTiming);
     CommodityIndexedAverageLeg& useFuturePrice(bool flag = false);
     CommodityIndexedAverageLeg& withDeliveryDateRoll(QuantLib::Natural deliveryDateRoll);
     CommodityIndexedAverageLeg& withFutureMonthOffset(QuantLib::Natural futureMonthOffset);
@@ -196,7 +197,7 @@ private:
     QuantLib::Calendar pricingCalendar_;
     std::vector<QuantLib::Real> spreads_;
     std::vector<QuantLib::Real> gearings_;
-    bool payInAdvance_;
+    CommodityIndexedAverageCashFlow::PaymentTiming paymentTiming_;
     bool useFuturePrice_;
     QuantLib::Natural deliveryDateRoll_;
     QuantLib::Natural futureMonthOffset_;
