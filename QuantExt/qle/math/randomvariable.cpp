@@ -169,10 +169,10 @@ RandomVariable::RandomVariable(const Filter& f, const Real valueTrue, const Real
     time_ = time;
 }
 
-RandomVariable::RandomVariable(const QuantLib::Array& array) {
+RandomVariable::RandomVariable(const QuantLib::Array& array, const Real time) {
     n_ = array.size();
     deterministic_ = false;
-    time_ = Null<Real>();
+    time_ = time;
     data_ = std::vector<Real>(array.begin(), array.end());
 }
 
