@@ -84,7 +84,7 @@ struct RandomVariable {
     explicit RandomVariable(const Filter& f, const Real valueTrue = 1.0, const Real valueFalse = 0.0,
                             const Real time = Null<Real>());
     // interop with ql classes
-    explicit RandomVariable(const QuantLib::Array& array);
+    explicit RandomVariable(const QuantLib::Array& array, const Real time = Null<Real>());
     void copyToMatrixCol(QuantLib::Matrix&, const Size j) const;
     void copyToArray(QuantLib::Array& array) const;
     // modifiers
