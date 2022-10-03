@@ -21,7 +21,6 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/wildcard.hpp>
 
-#include <qle/termstructures/defaultprobabilityhelpers.hpp>
 #include <qle/termstructures/interpolatedhazardratecurve.hpp>
 #include <qle/termstructures/interpolatedsurvivalprobabilitycurve.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
@@ -35,6 +34,7 @@
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/termstructures/credit/defaultprobabilityhelpers.hpp>
 
 #include <algorithm>
 #include <set>
@@ -360,12 +360,12 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
 
     if (config.type() == DefaultCurveConfig::Config::Type::SpreadCDS) {
         for (auto quote : quotes) {
-            boost::shared_ptr<QuantExt::SpreadCdsHelper> tmp;
+            boost::shared_ptr<SpreadCdsHelper> tmp;
             try {
-                tmp = boost::make_shared<QuantExt::SpreadCdsHelper>(
+                tmp = boost::make_shared<SpreadCdsHelper>(
                     quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                    config.startDate(), cdsConv->settlesAccrual(), ppt, cdsConv->lastPeriodDayCounter());
+                    cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter());
 
             } catch (exception& e) {
                 if (quote.term == Period(0, Months)) {
@@ -394,11 +394,11 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                                << "string so it must be provided in the config for CDS upfront curve " << curveID);
                 runningSpread = config.runningSpread();
             }
-            auto tmp = boost::make_shared<QuantExt::UpfrontCdsHelper>(
+            auto tmp = boost::make_shared<UpfrontCdsHelper>(
                 quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
                 cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
-                recoveryRate_, discountCurve, config.startDate(), cdsConv->upfrontSettlementDays(),
-                cdsConv->settlesAccrual(), ppt, cdsConv->lastPeriodDayCounter());
+                recoveryRate_, discountCurve, cdsConv->upfrontSettlementDays(),
+                cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter());
             if (tmp->latestDate() > asof) {
                 helpers.push_back(tmp);
             }

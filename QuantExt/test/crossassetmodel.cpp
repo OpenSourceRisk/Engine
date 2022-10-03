@@ -70,7 +70,6 @@
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
-#include <qle/pricingengines/midpointcdsengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
@@ -94,6 +93,7 @@
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 #include <ql/models/shortrate/onefactormodels/gsr.hpp>
 #include <ql/pricingengines/swaption/gaussian1dswaptionengine.hpp>
+#include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/inflation/interpolatedzeroinflationcurve.hpp>
@@ -1201,7 +1201,7 @@ BOOST_AUTO_TEST_CASE(testLgm5fMoments) {
     boost::shared_ptr<StochasticProcess> p_exact = d.ccLgm->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> p_euler = d.ccLgm->stateProcess(CrossAssetStateProcess::euler);
 
-    Real T = 10.0;                            // horizon at which we compare the moments
+    Real T = 2.0;                             // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10.0); // number of simulation steps
     Size paths = 25000;                       // number of paths
 
@@ -1458,7 +1458,7 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCirppMartingaleProperty) {
 
     Size n = 50000;                         // number of paths
     Size seed = 18;                         // rng seed
-    Time T = 10.0;                          // maturity of payoff
+    Time T = 2.0;                           // maturity of payoff
     Time T2 = 20.0;                         // zerobond maturity
     Size steps = static_cast<Size>(T * 24); // number of steps taken (euler / Brigo-Alfonsi)
 
@@ -1678,7 +1678,7 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMoments) {
     boost::shared_ptr<StochasticProcess> p_exact = d.model->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> p_euler = d.model->stateProcess(CrossAssetStateProcess::euler);
 
-    Real T = 10;                            // horizon at which we compare the moments
+    Real T = 2.0;                            // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10); // number of simulation steps (Euler and exact)
     Size paths = 50000;                     // number of paths
 
@@ -2198,14 +2198,11 @@ struct IrFxInfCrModelTestData {
 
 } // anonymous namespace
 
-// Test case options
-vector<bool> infEurFlags{ true, false };
-vector<bool> infGbpFlags{ true, false };
-vector<bool> flatVolsFlags{ true, false };
+BOOST_AUTO_TEST_CASE(testIrFxInfCrMartingaleProperty) {
 
-BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
-    bdata::make(infEurFlags) * bdata::make(infGbpFlags) * bdata::make(flatVolsFlags),
-    infEurIsDk, infGbpIsDk, flatVols) {
+    bool infEurIsDk = true;
+    bool infGbpIsDk = false;
+    bool flatVols = false;
 
     BOOST_TEST_MESSAGE("Testing martingale property in ir-fx-inf-cr model for Euler and exact discretizations...");
     BOOST_TEST_MESSAGE("EUR inflation model is: " << (infEurIsDk ? "DK" : "JY"));
@@ -2219,7 +2216,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
 
     Size n = 50000;                         // number of paths
     Size seed = 18;                         // rng seed
-    Time T = 10.0;                          // maturity of payoff
+    Time T = 2.0;                           // maturity of payoff
     Time T2 = 20.0;                         // zerobond maturity
     Size steps = static_cast<Size>(T * 40); // number of steps taken (euler)
 
@@ -2425,9 +2422,11 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
 
 } // testIrFxInfCrMartingaleProperty
 
-BOOST_DATA_TEST_CASE(testIrFxInfCrMoments,
-    bdata::make(infEurFlags) * bdata::make(infGbpFlags) * bdata::make(flatVolsFlags),
-    infEurIsDk, infGbpIsDk, flatVols) {
+BOOST_AUTO_TEST_CASE(testIrFxInfCrMoments) {
+
+    bool infEurIsDk = true;
+    bool infGbpIsDk = false;
+    bool flatVols = false;
 
     BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler and exact discretization in ir-fx-inf-cr model...");
     BOOST_TEST_MESSAGE("EUR inflation model is: " << (infEurIsDk ? "DK" : "JY"));
@@ -2441,7 +2440,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMoments,
     boost::shared_ptr<StochasticProcess> p_exact = d.model->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> p_euler = d.model->stateProcess(CrossAssetStateProcess::euler);
 
-    Real T = 10;                            // horizon at which we compare the moments
+    Real T = 2.0;                           // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10); // number of simulation steps (Euler and exact)
     Size paths = 30000;                     // number of paths
 
@@ -2788,7 +2787,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
 
     Size n = 50000;                         // number of paths
     Size seed = 18;                         // rng seed
-    Time T = 10.0;                          // maturity of payoff
+    Time T = 2.0;                           // maturity of payoff
     Time T2 = 20.0;                         // zerobond maturity
     Size steps = static_cast<Size>(T * 24); // number of steps taken (euler)
 
@@ -3025,7 +3024,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMoments) {
     boost::shared_ptr<StochasticProcess> p_exact = d.model->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> p_euler = d.model->stateProcess(CrossAssetStateProcess::euler);
 
-    Real T = 10;                            // horizon at which we compare the moments
+    Real T = 2.0;                            // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10); // number of simulation steps (Euler and exact)
     Size paths = 60000;                     // number of paths
 
@@ -3523,7 +3522,7 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
     boost::shared_ptr<StochasticProcess> p_exact = d.ccLgm->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> p_euler = d.ccLgm->stateProcess(CrossAssetStateProcess::euler);
 
-    Real T = 10.0;                                  // horizon at which we compare the moments
+    Real T = 2.0;                                   // horizon at which we compare the moments
     Size steps_euler = static_cast<Size>(T * 50.0); // number of simulation steps
     Size steps_exact = 1;
     Size paths = 25000; // number of paths
@@ -4542,7 +4541,7 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > cdso;
 
-    boost::shared_ptr<QuantExt::CreditDefaultSwap> underlying =
+    boost::shared_ptr<CreditDefaultSwap> underlying =
         boost::static_pointer_cast<CdsOptionHelper>(cdsoHelpers.back())->underlying();
     Real K = underlying->fairSpreadClean();
     BOOST_TEST_MESSAGE("Last CDSO fair spread is " << K);

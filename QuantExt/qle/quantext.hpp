@@ -153,7 +153,6 @@
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/instruments/commodityapo.hpp>
 #include <qle/instruments/commodityforward.hpp>
-#include <qle/instruments/creditdefaultswap.hpp>
 #include <qle/instruments/crossccybasismtmresetswap.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
 #include <qle/instruments/crossccyfixfloatmtmresetswap.hpp>
@@ -169,6 +168,7 @@
 #include <qle/instruments/makeaverageois.hpp>
 #include <qle/instruments/makecds.hpp>
 #include <qle/instruments/makeoiscapfloor.hpp>
+#include <qle/instruments/multiccycompositeinstrument.hpp>
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/instruments/nullinstrument.hpp>
 #include <qle/instruments/oibasisswap.hpp>
@@ -185,6 +185,7 @@
 #include <qle/math/differentialevolution_mt.hpp>
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/flatextrapolation.hpp>
+#include <qle/math/flatextrapolation2d.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/method_mt.hpp>
 #include <qle/math/nadarayawatson.hpp>
@@ -277,7 +278,6 @@
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/pricingengines/lgmconvolutionsolver.hpp>
-#include <qle/pricingengines/midpointcdsengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
@@ -316,6 +316,8 @@
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
+#include <qle/termstructures/credit/basecorrelationstructure.hpp>
+#include <qle/termstructures/credit/spreadedbasecorrelationcurve.hpp>
 #include <qle/termstructures/creditcurve.hpp>
 #include <qle/termstructures/creditvolcurve.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
@@ -326,7 +328,6 @@
 #include <qle/termstructures/datedstrippedoptionlet.hpp>
 #include <qle/termstructures/datedstrippedoptionletadapter.hpp>
 #include <qle/termstructures/datedstrippedoptionletbase.hpp>
-#include <qle/termstructures/defaultprobabilityhelpers.hpp>
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamiccpivolatilitystructure.hpp>
@@ -344,6 +345,10 @@
 #include <qle/termstructures/hazardspreadeddefaulttermstructure.hpp>
 #include <qle/termstructures/iborfallbackcurve.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
+#include <qle/termstructures/inflation/constantcpivolatility.hpp>
+#include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
+#include <qle/termstructures/inflation/inflationtraits.hpp>
+#include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/interpolateddiscountcurve.hpp>

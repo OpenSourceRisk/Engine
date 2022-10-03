@@ -638,6 +638,7 @@
   <ItemGroup>
     <ClCompile Include="analyticcashsettledeuropeanengine.cpp" />
     <ClCompile Include="analyticlgmswaptionengine.cpp" />
+    <ClCompile Include="basecorrelationcurve.cpp" />
     <ClCompile Include="blackvariancecurve.cpp" />
     <ClCompile Include="blackvariancesurfacesparse.cpp" />
     <ClCompile Include="blackvariancesurfacestddevs.cpp" />
@@ -674,6 +675,8 @@
     <ClCompile Include="forwardbond.cpp" />
     <ClCompile Include="fxvolsmile.cpp" />
     <ClCompile Include="index.cpp" />
+    <ClCompile Include="inflationcurve.cpp" />
+    <ClCompile Include="inflationvol.cpp" />
     <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp" />
     <ClCompile Include="logquote.cpp" />
     <ClCompile Include="normalfreeboundarysabr.cpp" />

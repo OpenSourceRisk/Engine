@@ -31,7 +31,7 @@ CorrelationTermStructure::CorrelationTermStructure(Natural settlementDays, const
     : TermStructure(settlementDays, cal, dc) {}
 
 Real CorrelationTermStructure::correlation(Time t, Real strike, bool extrapolate) const {
-    checkRange(t, extrapolate);
+    checkRange(t, strike, extrapolate);
 
     // Fail if correlation is negative
     Real correlation = correlationImpl(t, strike);
@@ -50,7 +50,7 @@ Time CorrelationTermStructure::minTime() const {
     return 0.0;
 }
 
-void CorrelationTermStructure::checkRange(Time t, bool extrapolate) const {
+void CorrelationTermStructure::checkRange(Time t, Real strike,  bool extrapolate) const {
     QL_REQUIRE(extrapolate || allowsExtrapolation() || t >= minTime() || close_enough(t, minTime()),
                "time (" << t << ") is before min curve time (" << minTime() << ")");
 

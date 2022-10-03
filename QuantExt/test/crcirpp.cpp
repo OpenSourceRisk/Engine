@@ -9,6 +9,7 @@
 #include <ql/experimental/callablebonds/callablebond.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
 #include <ql/instruments/callabilityschedule.hpp>
+#include <ql/instruments/creditdefaultswap.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/math/randomnumbers/rngtraits.hpp>
 #include <ql/math/statistics/incrementalstatistics.hpp>
@@ -22,14 +23,12 @@
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
+#include <ql/pricingengines/credit/midpointcdsengine.hpp>
 
 #include <qle/instruments/cdsoption.hpp>
-#include <qle/instruments/creditdefaultswap.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
-#include <qle/pricingengines/midpointcdsengine.hpp>
-
 #include <qle/models/crcirpp.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/crossassetmodel.hpp>

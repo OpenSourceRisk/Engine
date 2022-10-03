@@ -20,6 +20,7 @@
 
 #include <ql/errors.hpp>
 #include <ql/math/array.hpp>
+#include <ql/math/matrix.hpp>
 #include <ql/types.hpp>
 
 #include <boost/function.hpp>
@@ -37,8 +38,6 @@ struct Filter {
     // ctors
     Filter() : n_(0), deterministic_(false) {}
     explicit Filter(const Size n, const bool value = false) : n_(n), data_(1, value), deterministic_(true) {}
-    template <class I> Filter(I begin, I end) : n_(end - begin), data_(begin, end), deterministic_(false) {}
-    template <class T> Filter(std::initializer_list<T> init) : Filter(init.begin(), init.end()) {}
     // modifiers
     void clear();
     void set(const Size i, const bool v);
@@ -59,9 +58,6 @@ struct Filter {
     friend Filter operator!(Filter);
     friend bool operator==(const Filter&, const Filter&);
 
-    // the raw data
-    const std::vector<bool>& data() const { return data_; }
-    std::vector<bool>& data() { return data_; }
     // expand vector to full size and set deterministic to false
     void expand();
 
@@ -85,15 +81,12 @@ struct RandomVariable {
     RandomVariable() : n_(0), deterministic_(false), time_(Null<Real>()) {}
     explicit RandomVariable(const Size n, const Real value = 0.0, const Real time = Null<Real>())
         : n_(n), data_(1, value), deterministic_(true), time_(time) {}
-    template <class I>
-    RandomVariable(I begin, I end, const Real time = Null<Real>())
-        : n_(end - begin), data_(begin, end), deterministic_(false), time_(time) {}
-    template <class T>
-    RandomVariable(std::initializer_list<T> init, const Real time = Null<Real>())
-        : RandomVariable(init.begin(), init.end(), time) {}
-    // ctor from filter, set components to valueTrue where filter is true and to valueFalse otherwise
     explicit RandomVariable(const Filter& f, const Real valueTrue = 1.0, const Real valueFalse = 0.0,
                             const Real time = Null<Real>());
+    // interop with ql classes
+    explicit RandomVariable(const QuantLib::Array& array, const Real time = Null<Real>());
+    void copyToMatrixCol(QuantLib::Matrix&, const Size j) const;
+    void copyToArray(QuantLib::Array& array) const;
     // modifiers
     void clear();
     void set(const Size i, const Real v);
@@ -110,12 +103,6 @@ struct RandomVariable {
     Real operator[](const Size i) const; // no bound check
     Real at(const Size i) const;         // with bound check
     Real time() const { return time_; }
-    // iterators
-    Real* begin();
-    Real* end();
-    const Real* begin() const;
-    const Real* end() const;
-    //
     RandomVariable& operator+=(const RandomVariable&);
     RandomVariable& operator-=(const RandomVariable&);
     RandomVariable& operator*=(const RandomVariable&);
@@ -149,10 +136,6 @@ struct RandomVariable {
     friend RandomVariable indicatorGt(RandomVariable, const RandomVariable&, const Real trueVal, const Real falseVal);
     friend RandomVariable indicatorGeq(RandomVariable, const RandomVariable&, const Real trueVal, const Real falseVal);
 
-    // the raw data
-    const std::vector<Real>& data() const { return data_; }
-    std::vector<Real>& data() { return data_; }
-    // expand vector to full size and set determinisitc to false
     void expand();
 
     static std::function<void(RandomVariable&)> deleter;

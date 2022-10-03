@@ -33,6 +33,8 @@
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/experimental/barrieroption/doublebarriertype.hpp>
+#include <ql/instruments/barriertype.hpp>
 #include <ql/instruments/averagetype.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/instruments/capfloor.hpp>
@@ -373,6 +375,18 @@ QuantLib::DeltaVolQuote::DeltaType parseDeltaType(const std::string& s);
 */
 QuantLib::Rounding::Type parseRoundingType(const std::string& s);
   
+//! Convert std::string to QuantLib::BarrierType
+/*!
+  \ingroup utilities
+*/
+QuantLib::Barrier::Type parseBarrierType(const string& s);
+
+//! Convert std::string to QuantLib::DoubleBarrierType
+/*!
+  \ingroup utilities
+*/
+QuantLib::DoubleBarrier::Type parseDoubleBarrierType(const string& s);
+
 /*! Attempt to parse string \p str to \p obj of type \c T using \p parser
     \param[in]  str    The string we wish to parse.
     \param[out] obj    The resulting object if the parsing was successful.

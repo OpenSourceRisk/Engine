@@ -212,9 +212,9 @@ void CreditDefaultSwapOption::buildNoDefault(const boost::shared_ptr<EngineFacto
         "Upfront fee on the CDS underlying a CDS option is not supported.");
 
     // The underlying CDS trade
-    auto cds = boost::make_shared<QuantExt::CreditDefaultSwap>(side, notional_, runningCoupon, schedule,
+    auto cds = boost::make_shared<QuantLib::CreditDefaultSwap>(side, notional_, runningCoupon, schedule,
         payConvention, dc, swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(),
-        boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.tradeDate(), swap_.cashSettlementDays());
+        boost::shared_ptr<Claim>(), lastPeriodDayCounter, true, swap_.tradeDate(), swap_.cashSettlementDays());
 
     // Set engine on the underlying CDS.
     auto cdsBuilder = boost::dynamic_pointer_cast<CreditDefaultSwapEngineBuilder>(

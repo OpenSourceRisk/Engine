@@ -32,8 +32,8 @@ void Envelope::fromXML(XMLNode* node) {
     if (nettingSetDetailsNode) {
         nettingSetDetails_.fromXML(nettingSetDetailsNode);
     } else {
-        nettingSetId_ = XMLUtils::getChildValue(node, "NettingSetId", false);
-        nettingSetDetails_ = NettingSetDetails(nettingSetId_);
+        string nettingSetId = XMLUtils::getChildValue(node, "NettingSetId", false);
+        nettingSetDetails_ = NettingSetDetails(nettingSetId);
     }   
 
     portfolioIds_.clear();
@@ -56,7 +56,7 @@ XMLNode* Envelope::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Envelope");
     XMLUtils::addChild(doc, node, "CounterParty", counterparty_);
     if (nettingSetDetails_.emptyOptionalFields()) {
-        XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId_);
+        XMLUtils::addChild(doc, node, "NettingSetId", nettingSetDetails_.nettingSetId());
     } else {
         XMLUtils::appendNode(node, nettingSetDetails_.toXML(doc));
     }

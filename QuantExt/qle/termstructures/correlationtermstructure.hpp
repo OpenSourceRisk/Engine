@@ -66,7 +66,7 @@ protected:
     //@}
 
     //! Extra time range check for minimum time, then calls TermStructure::checkRange
-    void checkRange(Time t, bool extrapolate) const;
+    virtual void checkRange(Time t, Real strike, bool extrapolate) const;
 };
 
 //! Wrapper class that inverts the correlation

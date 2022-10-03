@@ -633,7 +633,6 @@
     <ClInclude Include="qle\instruments\cdsoption.hpp" />
     <ClInclude Include="qle\instruments\commodityapo.hpp" />
     <ClInclude Include="qle\instruments\commodityforward.hpp" />
-    <ClInclude Include="qle\instruments\creditdefaultswap.hpp" />
     <ClInclude Include="qle\instruments\crossccybasismtmresetswap.hpp" />
     <ClInclude Include="qle\instruments\crossccybasisswap.hpp" />
     <ClInclude Include="qle\instruments\crossccyfixfloatmtmresetswap.hpp" />
@@ -649,6 +648,7 @@
     <ClInclude Include="qle\instruments\makeaverageois.hpp" />
     <ClInclude Include="qle\instruments\makecds.hpp" />
     <ClInclude Include="qle\instruments\makeoiscapfloor.hpp" />
+    <ClInclude Include="qle\instruments\multiccycompositeinstrument.hpp" />
     <ClInclude Include="qle\instruments\multilegoption.hpp" />
     <ClInclude Include="qle\instruments\nullinstrument.hpp" />
     <ClInclude Include="qle\instruments\oibasisswap.hpp" />
@@ -666,6 +666,7 @@
     <ClInclude Include="qle\math\deltagammavar.hpp" />
     <ClInclude Include="qle\math\fillemptymatrix.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
+    <ClInclude Include="qle\math\flatextrapolation2d.hpp" />
     <ClInclude Include="qle\math\logquadraticinterpolation.hpp" />
     <ClInclude Include="qle\math\nadarayawatson.hpp" />
     <ClInclude Include="qle\math\quadraticinterpolation.hpp" />
@@ -759,7 +760,6 @@
     <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp" />
     <ClInclude Include="qle\pricingengines\inflationcapfloorengines.hpp" />
     <ClInclude Include="qle\pricingengines\lgmconvolutionsolver.hpp" />
-    <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp" />
     <ClInclude Include="qle\pricingengines\numericlgmmultilegoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp" />
@@ -791,6 +791,8 @@
     <ClInclude Include="qle\termstructures\capfloortermvolsurfacesparse.hpp" />
     <ClInclude Include="qle\termstructures\creditcurve.hpp" />
     <ClInclude Include="qle\termstructures\creditvolcurve.hpp" />
+    <ClInclude Include="qle\termstructures\credit\basecorrelationstructure.hpp" />
+    <ClInclude Include="qle\termstructures\credit\spreadedbasecorrelationcurve.hpp" />
     <ClInclude Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfaceproxy.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
@@ -812,6 +814,10 @@
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
     <ClInclude Include="qle\termstructures\futurepricehelper.hpp" />
     <ClInclude Include="qle\termstructures\iborfallbackcurve.hpp" />
+    <ClInclude Include="qle\termstructures\inflation\constantcpivolatility.hpp" />
+    <ClInclude Include="qle\termstructures\inflation\cpivolatilitystructure.hpp" />
+    <ClInclude Include="qle\termstructures\inflation\inflationtraits.hpp" />
+    <ClInclude Include="qle\termstructures\inflation\piecewisezeroinflationcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedhazardratecurve.hpp" />
@@ -835,7 +841,6 @@
     <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionletadapter.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionletbase.hpp" />
-    <ClInclude Include="qle\termstructures\defaultprobabilityhelpers.hpp" />
     <ClInclude Include="qle\termstructures\dynamicblackvoltermstructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicstype.hpp" />
@@ -985,7 +990,6 @@
     <ClCompile Include="qle\instruments\cdsoption.cpp" />
     <ClCompile Include="qle\instruments\commodityapo.cpp" />
     <ClCompile Include="qle\instruments\commodityforward.cpp" />
-    <ClCompile Include="qle\instruments\creditdefaultswap.cpp" />
     <ClCompile Include="qle\instruments\crossccybasismtmresetswap.cpp" />
     <ClCompile Include="qle\instruments\crossccybasisswap.cpp" />
     <ClCompile Include="qle\instruments\crossccyfixfloatmtmresetswap.cpp" />
@@ -1001,6 +1005,7 @@
     <ClCompile Include="qle\instruments\makeaverageois.cpp" />
     <ClCompile Include="qle\instruments\makecds.cpp" />
     <ClCompile Include="qle\instruments\makeoiscapfloor.cpp" />
+    <ClCompile Include="qle\instruments\multiccycompositeinstrument.cpp" />
     <ClCompile Include="qle\instruments\multilegoption.cpp" />
     <ClCompile Include="qle\instruments\oibasisswap.cpp" />
     <ClCompile Include="qle\instruments\oiccbasisswap.cpp" />
@@ -1084,7 +1089,6 @@
     <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp" />
     <ClCompile Include="qle\pricingengines\inflationcapfloorengines.cpp" />
     <ClCompile Include="qle\pricingengines\lgmconvolutionsolver.cpp" />
-    <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp" />
     <ClCompile Include="qle\pricingengines\numericlgmmultilegoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\oiccbasisswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\paymentdiscountingengine.cpp" />
@@ -1108,6 +1112,8 @@
     <ClCompile Include="qle\termstructures\blackvolsurfacedelta.cpp" />
     <ClCompile Include="qle\termstructures\creditcurve.cpp" />
     <ClCompile Include="qle\termstructures\creditvolcurve.cpp" />
+    <ClCompile Include="qle\termstructures\credit\basecorrelationstructure.cpp" />
+    <ClCompile Include="qle\termstructures\credit\spreadedbasecorrelationcurve.cpp" />
     <ClCompile Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfaceproxy.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />
@@ -1121,7 +1127,6 @@
     <ClCompile Include="qle\termstructures\crosscurrencypricetermstructure.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionlet.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionletadapter.cpp" />
-    <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp" />
     <ClCompile Include="qle\termstructures\discountratiomodifiedcurve.cpp" />
     <ClCompile Include="qle\termstructures\dynamiccpivolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\dynamicoptionletvolatilitystructure.cpp" />
@@ -1136,6 +1141,8 @@
     <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp" />
     <ClCompile Include="qle\termstructures\fxvannavolgasmilesection.cpp" />
     <ClCompile Include="qle\termstructures\hazardspreadeddefaulttermstructure.cpp" />
+    <ClCompile Include="qle\termstructures\inflation\constantcpivolatility.cpp" />
+    <ClCompile Include="qle\termstructures\inflation\cpivolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\oibasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\oiccbasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\oiscapfloorhelper.cpp" />

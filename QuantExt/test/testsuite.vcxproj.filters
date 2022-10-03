@@ -179,6 +179,15 @@
     <ClCompile Include="calendars.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="inflationcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="inflationvol.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="basecorrelationcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
