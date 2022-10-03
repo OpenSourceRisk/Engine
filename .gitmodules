@@ -1,5 +1,5 @@
 [submodule "QuantLib"]
 	path = QuantLib
-	url = git@gitlab.acadiasoft.net:qs/quantlib.git
+	url = https://github.com/OpenSourceRisk/QuantLib.git
 	branch = master
 	ignore = dirty
