@@ -806,8 +806,8 @@ The ORE-SWIG source code is hosted in a separate git repository at \url{https://
 \medskip
 To build the wrappers on Windows, Linux, mac OS
 \begin{enumerate}
-\item build ORE and QuantLib first, as shown in the previous section
-\item check out the ORE-SWIG repository into a project directory {\tt oreswig}, change into that directory
+\item build ORE and QuantLib first, as shown in the previous section. It is strongly advised to switch the codebase to a release tag here (e.g. 1.8.7.0), as the versions of the master branch are not always aligned!
+\item check out the ORE-SWIG repository into a project directory {\tt oreswig}, change into that directory (the same advice as above applies here as well, switch to the same release tag as ORE)
 \item pull in the QuantLib-SWIG project by running \\
 {\tt git submodule init} \\
 {\tt git submodule update}
