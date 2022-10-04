@@ -51,6 +51,8 @@
 #include <ored/portfolio/fxswap.hpp>
 #include <ored/portfolio/fxtouchoption.hpp>
 #include <ored/portfolio/swap.hpp>
+#include <ored/portfolio/crosscurrencyswap.hpp>
+#include <ored/portfolio/inflationswap.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/portfolio/failedtrade.hpp>
 #include <ored/portfolio/tradefactory.hpp>
@@ -63,6 +65,8 @@ namespace data {
 
 TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders) {
     addBuilder("Swap", boost::make_shared<TradeBuilder<Swap>>());
+    addBuilder("CrossCurrencySwap", boost::make_shared<TradeBuilder<CrossCurrencySwap>>());
+    addBuilder("InflationSwap", boost::make_shared<TradeBuilder<InflationSwap>>());
     addBuilder("Swaption", boost::make_shared<TradeBuilder<Swaption>>());
     addBuilder("FxAverageForward", boost::make_shared<TradeBuilder<FxAverageForward>>());
     addBuilder("FxForward", boost::make_shared<TradeBuilder<FxForward>>());

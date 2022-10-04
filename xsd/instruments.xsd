@@ -5,6 +5,8 @@
 
   <xs:group name="oreTradeData">
     <xs:choice>
+      <xs:element type="swapData" name="CrossCurrencySwapData"/>
+      <xs:element type="swapData" name="InflationSwapData"/>
       <xs:element type="swapData" name="SwapData"/>
       <xs:element type="swapData" name="EquitySwapData"/>
       <xs:element type="swaptionData" name="SwaptionData"/>
@@ -697,6 +699,8 @@
 
   <xs:simpleType name="oreTradeType">
     <xs:restriction base="xs:string">
+      <xs:enumeration value="CrossCurrencySwap"/>
+      <xs:enumeration value="InflationSwap"/>
       <xs:enumeration value="Swap"/>
       <xs:enumeration value="Swaption"/>
       <xs:enumeration value="ForwardRateAgreement"/>
