@@ -2,6 +2,7 @@
 
 set(QuantExt-Test_SRC analyticcashsettledeuropeanengine.cpp
 analyticlgmswaptionengine.cpp
+basecorrelationcurve.cpp
 bfrrvolsurface.cpp
 blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
@@ -39,9 +40,9 @@ fillemptymatrix.cpp
 forwardbond.cpp
 fxvolsmile.cpp
 index.cpp
-interpolatedyoycapfloortermpricesurface.cpp
 inflationcurve.cpp
 inflationvol.cpp
+interpolatedyoycapfloortermpricesurface.cpp
 logquote.cpp
 normalfreeboundarysabr.cpp
 optionletstripper.cpp

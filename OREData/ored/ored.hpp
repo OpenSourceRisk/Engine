@@ -168,6 +168,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/equitybarrieroption.hpp>
+#include <ored/portfolio/equityderivative.hpp>
 #include <ored/portfolio/equitydigitaloption.hpp>
 #include <ored/portfolio/equitydoublebarrieroption.hpp>
 #include <ored/portfolio/equitydoubletouchoption.hpp>
@@ -183,6 +184,7 @@
 #include <ored/portfolio/forwardrateagreement.hpp>
 #include <ored/portfolio/fxaverageforward.hpp>
 #include <ored/portfolio/fxbarrieroption.hpp>
+#include <ored/portfolio/fxderivative.hpp>
 #include <ored/portfolio/fxdigitalbarrieroption.hpp>
 #include <ored/portfolio/fxdigitaloption.hpp>
 #include <ored/portfolio/fxdoublebarrieroption.hpp>

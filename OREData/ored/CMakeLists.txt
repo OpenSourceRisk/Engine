@@ -359,6 +359,7 @@ portfolio/enginedata.hpp
 portfolio/enginefactory.hpp
 portfolio/envelope.hpp
 portfolio/equitybarrieroption.hpp
+portfolio/equityderivative.hpp
 portfolio/equitydigitaloption.hpp
 portfolio/equitydoublebarrieroption.hpp
 portfolio/equitydoubletouchoption.hpp
@@ -374,6 +375,7 @@ portfolio/forwardbond.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxaverageforward.hpp
 portfolio/fxbarrieroption.hpp
+portfolio/fxderivative.hpp
 portfolio/fxdigitalbarrieroption.hpp
 portfolio/fxdigitaloption.hpp
 portfolio/fxdoublebarrieroption.hpp
