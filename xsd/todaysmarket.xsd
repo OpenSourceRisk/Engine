@@ -6,8 +6,8 @@
     <xs:sequence>
       <xs:element type="configurationType" name="Configuration" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="yieldCurvesType"  name= "YieldCurves" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element type="discountCurvesType" name="DiscountingCurves" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="indexForwardingCurvesType" name="IndexForwardingCurves" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="discountCurvesType" name="DiscountingCurves" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="indexForwardingCurvesType" name="IndexForwardingCurves" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="swapIndexCurvesType" name="SwapIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="zeroInflationIndexCurvesType" name="ZeroInflationIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="yyInflationIndexCurvesType" name="YYInflationIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
