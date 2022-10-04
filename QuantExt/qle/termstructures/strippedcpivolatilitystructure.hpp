@@ -162,7 +162,7 @@ template <class Interpolator2D> void StrippedCPIVolatilitySurface<Interpolator2D
             Rate I1 = ZeroInflation::cpiFixing(index_, maturityDate, observationLag(), indexIsInterpolated());
 
             Time timeToMaturity = dayCounter().yearFraction(underlyingBaseDate, fixDate);
-            QuantLib::Real atmRate = pow(I1 / baseCPI, 1 / timeToMaturity) - 1.0;
+            QuantLib::Real atmRate = std::pow(I1 / baseCPI, 1 / timeToMaturity) - 1.0;
 
             bool useFloor = chooseFloor(strikes_[i], atmRate);
 
