@@ -213,7 +213,6 @@ termstructures/correlationtermstructure.cpp
 termstructures/credit/basecorrelationstructure.cpp
 termstructures/credit/spreadedbasecorrelationcurve.cpp
 termstructures/creditcurve.cpp
-termstructures/creditcurve.cpp
 termstructures/creditvolcurve.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
@@ -622,8 +621,8 @@ termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
 termstructures/inflation/constantcpivolatility.hpp
 termstructures/inflation/cpivolatilitystructure.hpp
-termstructures/inflation/piecewisezeroinflationcurve.hpp
 termstructures/inflation/inflationtraits.hpp
+termstructures/inflation/piecewisezeroinflationcurve.hpp
 termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolatedcpivolatilitysurface.hpp
 termstructures/interpolateddiscountcurve.hpp
