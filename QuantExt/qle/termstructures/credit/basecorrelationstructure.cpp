@@ -58,7 +58,8 @@ void BaseCorrelationTermStructure::validate() const {
     for (size_t i = 0; i < detachmentPoints_.size(); ++i) {
         QL_REQUIRE(detachmentPoints_[i] > prevDetachmentPoint,
                    "Detachmentpoints need to be sorted and between (0, 1].");
-        QL_REQUIRE(detachmentPoints_[i] <= 1.0, "Detachmentpoints need to be sorted and between (0, 1].");
+        QL_REQUIRE(detachmentPoints_[i] < 1.0 || QuantLib::close_enough(detachmentPoints_[i], 1.0),
+                   "Detachmentpoints need to be sorted and between (0, 1].");
     }
 }
 

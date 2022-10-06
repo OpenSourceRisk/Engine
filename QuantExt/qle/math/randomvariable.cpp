@@ -37,10 +37,10 @@ void Filter::updateDeterministic() {
     if (deterministic_ || !initialised())
         return;
     for (Size i = 1; i < n_; ++i) {
-        if (data_[i] != data_[0])
+        if (data_[i] != data_.front())
             return;
     }
-    setAll(data_[0]);
+    setAll(data_.front());
 }
 
 void Filter::set(const Size i, const bool v) {
@@ -93,9 +93,9 @@ bool operator==(const Filter& a, const Filter& b) {
 Filter operator&&(Filter x, const Filter& y) {
     QL_REQUIRE(!x.initialised() || !y.initialised() || x.size() == y.size(),
                "RandomVariable: x && y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
-    if (x.deterministic() && !x.data_[0])
+    if (x.deterministic() && !x.data_.front())
         return Filter(x.size(), false);
-    if (y.deterministic() && !y.data_[0])
+    if (y.deterministic() && !y.data_.front())
         return Filter(y.size(), false);
     if (!x.initialised() || !y.initialised())
         return Filter();
@@ -114,9 +114,9 @@ Filter operator&&(Filter x, const Filter& y) {
 Filter operator||(Filter x, const Filter& y) {
     QL_REQUIRE(!x.initialised() || !y.initialised() || x.size() == y.size(),
                "RandomVariable: x || y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
-    if (x.deterministic() && x.data_[0])
+    if (x.deterministic() && x.data_.front())
         return Filter(x.size(), true);
-    if (y.deterministic() && y.data_[0])
+    if (y.deterministic() && y.data_.front())
         return Filter(y.size(), true);
     if (!x.initialised() || !y.initialised())
         return Filter();
@@ -169,6 +169,27 @@ RandomVariable::RandomVariable(const Filter& f, const Real valueTrue, const Real
     time_ = time;
 }
 
+RandomVariable::RandomVariable(const QuantLib::Array& array, const Real time) {
+    n_ = array.size();
+    deterministic_ = false;
+    time_ = time;
+    data_ = std::vector<Real>(array.begin(), array.end());
+}
+
+void RandomVariable::copyToMatrixCol(QuantLib::Matrix& m, const Size j) const {
+    if (deterministic_)
+        std::fill(m.column_begin(j), std::next(m.column_end(j), n_), data_.front());
+    else
+        std::copy(data_.begin(), data_.end(), m.column_begin(j));
+}
+
+void RandomVariable::copyToArray(QuantLib::Array& array) const {
+    if (deterministic_)
+        std::fill(array.begin(), array.end(), data_.front());
+    else
+        std::copy(data_.begin(), data_.end(), array.begin());
+}
+
 void RandomVariable::clear() {
     n_ = 0;
     data_.clear();
@@ -181,10 +202,10 @@ void RandomVariable::updateDeterministic() {
     if (deterministic_ || !initialised())
         return;
     for (Size i = 1; i < n_; ++i) {
-        if (!QuantLib::close_enough(data_[i], data_[0]))
+        if (!QuantLib::close_enough(data_[i], data_.front()))
             return;
     }
-    setAll(data_[0]);
+    setAll(data_.front());
 }
 
 void RandomVariable::set(const Size i, const Real v) {
@@ -225,22 +246,22 @@ void RandomVariable::expand() {
     data_.resize(size(), data_.front());
 }
 
-Real* RandomVariable::begin() {
-    QL_REQUIRE(!deterministic_, "Deterministic_ RandomVariable does not provide iterators");
-    return &data_[0];
-}
-Real* RandomVariable::end() {
-    QL_REQUIRE(!deterministic_, "Deterministic_ RandomVariable does not provide iterators");
-    return &data_[0] + n_;
-}
-const Real* RandomVariable::begin() const {
-    QL_REQUIRE(!deterministic_, "Deterministic_ RandomVariable does not provide iterators");
-    return &data_[0];
-}
-const Real* RandomVariable::end() const {
-    QL_REQUIRE(!deterministic_, "Deterministic_ RandomVariable does not provide iterators");
-    return &data_[0] + n_;
-}
+// Real* RandomVariable::begin() {
+//     QL_REQUIRE(!deterministic_, "Deterministic_ RandomVariable does not provide iterators");
+//     return &data_.front();
+// }
+// Real* RandomVariable::end() {
+//     QL_REQUIRE(!deterministic_, "Deterministic_ RandomVariable does not provide iterators");
+//     return &data_.front() + n_;
+// }
+// const Real* RandomVariable::begin() const {
+//     QL_REQUIRE(!deterministic_, "Deterministic_ RandomVariable does not provide iterators");
+//     return &data_.front();
+// }
+// const Real* RandomVariable::end() const {
+//     QL_REQUIRE(!deterministic_, "Deterministic_ RandomVariable does not provide iterators");
+//     return &data_.front() + n_;
+// }
 
 void RandomVariable::checkTimeConsistencyAndUpdate(const Real t) {
     QL_REQUIRE((time_ == Null<Real>() || t == Null<Real>()) || QuantLib::close_enough(time_, t),
@@ -695,7 +716,7 @@ Array regressionCoefficients(
         if (a.deterministic())
             std::fill(A.column_begin(j), A.column_end(j), a[0]);
         else
-            std::copy(a.begin(), a.end(), A.column_begin(j));
+            a.copyToMatrixCol(A, j);
     }
 
     if (filter.size() > 0) {
@@ -705,7 +726,7 @@ Array regressionCoefficients(
     if (r.deterministic())
         std::fill(b.begin(), b.end(), r[0]);
     else
-        std::copy(r.begin(), r.end(), b.begin());
+        r.copyToArray(b);
     Array res = qrSolve(A, b);
     return res;
 }
@@ -742,8 +763,10 @@ RandomVariable conditionalExpectation(
 RandomVariable expectation(const RandomVariable& r) {
     if (r.deterministic())
         return r;
-    return RandomVariable(r.size(),
-                          std::accumulate(r.begin(), r.end(), 0.0, std::plus<Real>()) / static_cast<Real>(r.size()));
+    Real sum = 0.0;
+    for (Size i = 0; i < r.size(); ++i)
+        sum += r[i];
+    return RandomVariable(r.size(), sum / static_cast<Real>(r.size()));
 }
 
 RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const RandomVariable& strike,

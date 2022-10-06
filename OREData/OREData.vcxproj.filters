@@ -771,6 +771,12 @@
     <ClInclude Include="ored\utilities\inflationstartdate.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\crosscurrencyswap.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\inflationswap.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -1344,5 +1350,11 @@
       <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="ored\marketdata\loader.cpp" />
+    <ClCompile Include="ored\portfolio\crosscurrencyswap.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\inflationswap.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

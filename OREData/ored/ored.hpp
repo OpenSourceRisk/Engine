@@ -161,12 +161,14 @@
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/portfolio/creditdefaultswapoption.hpp>
+#include <ored/portfolio/crosscurrencyswap.hpp>
 #include <ored/portfolio/durationadjustedcmslegbuilder.hpp>
 #include <ored/portfolio/durationadjustedcmslegdata.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/equitybarrieroption.hpp>
+#include <ored/portfolio/equityderivative.hpp>
 #include <ored/portfolio/equitydigitaloption.hpp>
 #include <ored/portfolio/equitydoublebarrieroption.hpp>
 #include <ored/portfolio/equitydoubletouchoption.hpp>
@@ -182,6 +184,7 @@
 #include <ored/portfolio/forwardrateagreement.hpp>
 #include <ored/portfolio/fxaverageforward.hpp>
 #include <ored/portfolio/fxbarrieroption.hpp>
+#include <ored/portfolio/fxderivative.hpp>
 #include <ored/portfolio/fxdigitalbarrieroption.hpp>
 #include <ored/portfolio/fxdigitaloption.hpp>
 #include <ored/portfolio/fxdoublebarrieroption.hpp>
@@ -193,6 +196,7 @@
 #include <ored/portfolio/fxswap.hpp>
 #include <ored/portfolio/fxtouchoption.hpp>
 #include <ored/portfolio/indexing.hpp>
+#include <ored/portfolio/inflationswap.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
