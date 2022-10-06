@@ -184,9 +184,13 @@ void Log::log(unsigned m) {
             l.second->log(m, msg);
         }
     } else if (writeSuppressedMessagesHint_) {
+        std::string suffix;
+        if (msg.find(ore::data::StructuredErrorMessage::name) == string::npos) {
+            suffix = " ... suppressing more messages from same source code location (cutoff = " +
+                     std::to_string(sameSourceLocationCutoff_) + " lines)";
+        }
         for (auto& l : loggers_) {
-            l.second->log(m, msg + " ... suppressing more messages from same source code location (cutoff = " +
-                                 std::to_string(sameSourceLocationCutoff_) + " lines)");
+            l.second->log(m, msg + suffix);
         }
         writeSuppressedMessagesHint_ = false;
     }
