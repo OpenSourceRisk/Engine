@@ -1456,7 +1456,7 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCirppMartingaleProperty) {
     boost::shared_ptr<StochasticProcess> process1 = d.model->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> process2 = d_cirpp.model->stateProcess(CrossAssetStateProcess::euler);
 
-    Size n = 50000;                         // number of paths
+    Size n = 10000;                         // number of paths
     Size seed = 18;                         // rng seed
     Time T = 2.0;                           // maturity of payoff
     Time T2 = 20.0;                         // zerobond maturity
@@ -4530,7 +4530,7 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
 
     // reprice last CDSO with Monte Carlo
     // note that the IR vol is zero (same as assumption in CDSO analytic engine)
-    Size n = 100000; // number of paths
+    Size n = 10000; // number of paths
     Size seed = 18;  // rng seed
     Size steps = 1;  // number of discretization steps
 
