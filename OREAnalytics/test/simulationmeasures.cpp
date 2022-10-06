@@ -214,8 +214,8 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
     if (discName == "exact")
         tenorGrid = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     else {
-        for (Size i = 1; i <= 120; ++i)
-            tenorGrid.push_back(i * Months);
+        for (Size i = 1; i <= 60; ++i)
+            tenorGrid.push_back(i * 2 * Months);
     }
     boost::shared_ptr<DateGrid> grid = boost::make_shared<DateGrid>(tenorGrid);
 
@@ -225,8 +225,7 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
     // Simulation market parameters, we just need the yield curve structure here
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
     simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
-                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
-                                              30 * Years, 40 * Years, 50 * Years});
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years});
     simMarketConfig->setSimulateFXVols(false);
     simMarketConfig->setSimulateEquityVols(false);
 
@@ -253,14 +252,14 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
     simMarket->scenarioGenerator() = sg;
 
     // Basic Martingale tests
-    Size samples = 10000;
+    Size samples = 5000;
     Real eur = 0.0, usd = 0.0, gbp = 0.0, eur2 = 0.0, usd2 = 0.0, gbp2 = 0.0;
     Real eur3 = 0.0, usd3 = 0.0, gbp3 = 0.0;
     int horizon = 10;
 
     Date d1 = grid->dates().back();
     Date d2 = d1 + horizon * Years;
-    Real relTolerance = 0.003;
+    Real relTolerance = 0.005;
     Real eurExpected = d.market->discountCurve("EUR")->discount(d2);
     Real eurExpected2 = d.market->discountCurve("EUR")->discount(d1);
     Real gbpExpected = d.market->fxRate("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(d2);
