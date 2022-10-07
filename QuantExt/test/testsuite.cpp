@@ -23,7 +23,6 @@
 
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
 // Boost
 #include <boost/timer/timer.hpp>
@@ -31,7 +30,7 @@ using namespace boost;
 
 // Boost.Test
 #define BOOST_TEST_MODULE QuantExtTestSuite
-#include <boost/test/unit_test.hpp>
+#include <oret/paralleltestrunner.hpp>
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
@@ -62,12 +61,12 @@ public:
         seconds -= hours * 3600;
         int minutes = int(seconds / 60);
         seconds -= minutes * 60;
-        cout << endl << "QuantExt tests completed in ";
+        /* std::cout << std::endl << "QuantExt tests completed in ";
         if (hours > 0)
-            cout << hours << " h ";
+            std::cout << hours << " h ";
         if (hours > 0 || minutes > 0)
-            cout << minutes << " m ";
-        cout << fixed << setprecision(0) << seconds << " s" << endl;
+            std::cout << minutes << " m ";
+        std::cout << std::fixed << std::setprecision(0) << seconds << " s" << std::endl;*/
     }
 
 private:
