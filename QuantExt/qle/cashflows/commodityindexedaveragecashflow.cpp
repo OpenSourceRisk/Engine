@@ -71,19 +71,23 @@ Real CommodityIndexedAverageCashFlow::amount() const {
 
     // Calculate the average price
     Real averagePrice = 0.0;
+    Real fxRate = 0.0;
     if (weights_.empty()) {
         for (const auto& kv : indices_) {
-            averagePrice += kv.second->fixing(kv.first);
+            fxRate = (fxIndex_)? this->fxIndex()->fixing(kv.first):1.0;
+            averagePrice += fxRate*kv.second->fixing(kv.first);
         }
         averagePrice /= indices_.size();
     } else {
         // weights_ will be populated when offPeakPowerData_ is provided.
         for (const auto& kv : indices_) {
-            averagePrice += kv.second->fixing(kv.first) * weights_.at(kv.first);
+            fxRate = (fxIndex_)? this->fxIndex()->fixing(kv.first):1.0;
+            averagePrice += fxRate*kv.second->fixing(kv.first) * weights_.at(kv.first);
         }
     }
 
     // Amount is just average price times quantity
+    // In case of Foreign currency settlement, the spread must be expressed in Foreign currency units
     return periodQuantity_ * (gearing_ * averagePrice + spread_);
 }
 
@@ -383,8 +387,12 @@ CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::unrealisedQuantity(bool 
     return *this;
 }
 
-CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withOffPeakPowerData(
-    const boost::optional<pair<Calendar, Real>>& offPeakPowerData) {
+CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withFxIndex(const ext::shared_ptr<FxIndex>& fxIndex) {
+    fxIndex_ = fxIndex;
+    return *this;
+}
+
+CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withOffPeakPowerData(const boost::optional<pair<Calendar, Real> >& offPeakPowerData) {
     offPeakPowerData_ = offPeakPowerData;
     return *this;
 }
