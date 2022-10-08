@@ -447,7 +447,7 @@ CommodityIndexedAverageLeg::operator Leg() const {
             quantity, start, end, paymentLag_, paymentCalendar_, paymentConvention_, index_, pricingCalendar_, spread,
             gearing, payInAdvance_, useFuturePrice_, deliveryDateRoll_, futureMonthOffset_, calc_, includeEnd,
             excludeStart, paymentDate, useBusinessDays_, quantityFrequency_, hoursPerDay_, dailyExpiryOffset_,
-            unrealisedQuantity_, offPeakPowerData_));
+            unrealisedQuantity_, offPeakPowerData_, fxIndex_));
     }
 
     return leg;
