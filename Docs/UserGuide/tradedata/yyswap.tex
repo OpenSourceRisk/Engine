@@ -1,6 +1,6 @@
 \subsubsection{Year on Year Inflation Swap}
 
-A Year on Year inflation swap is set up as a swap, with one leg of type {\tt YY}. Listing \ref{lst:yyswap} shows an
+A Year on Year inflation swap can be set up with trade type \emph{Swap}, with one leg of type {\tt YY}. Listing \ref{lst:yyswap} shows an
 example. The YY leg contains an additional {\tt YYLegData} block. See \ref{ss:yylegdata} for details on the YY leg
 specification.
 
@@ -23,6 +23,31 @@ specification.
       </LegData>
     </SwapData>
 \end{minted}
-\caption{Year on Year Swap Data}
+\caption{Year on Year Swap Data (using \emph{Swap} trade type)}
 \label{lst:yyswap}
+\end{listing}
+
+Alternatively, a Year on Year inflation swap can be set up using the \emph{InflationSwap} trade type, see Listing \ref{lst:yyinflationswap}. The structure of the {\tt InflationSwapData} container is the same as for {\tt SwapData} above.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <InflationSwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        ...
+      </LegData>
+      <LegData>
+        <LegType>YY</LegType>
+        <Payer>false</Payer>
+        ...
+        <YYLegData>
+        ...
+        </YYLegData>
+      </LegData>
+    </InflationSwapData>
+\end{minted}
+\caption{Year on Year Swap Data (using \emph{InflationSwap} trade type)}
+\label{lst:yyinflationswap}
 \end{listing}

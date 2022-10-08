@@ -1,0 +1,32 @@
+\subsubsection{Cross Currency Swap}
+\label{ss:cross_currency_swap}
+
+A Cross Currency Swap can be represented with either trade type \emph{Swap} or \emph{CrossCurrencySwap}. In the case of \emph{Swap}, it is set up using a {\tt SwapData} container. For \emph{CrossCurrencySwap}, we use {\tt CrossCurrencySwapData} with the same {\tt LegData} sub-nodes within the container, and it is explicitly required for this trade type to have exactly two legs (each of type \emph{Fixed} or \emph{Floating}). Listing \ref{lst:crosscurrencyswap} shows an example of the \emph{CrossCurrencySwapData} node. Note that the structure is the same for the \emph{Swap} trade type with the only difference being the top node name as described, i.e.\ \emph{SwapData}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <CrossCurrencySwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <DayCounter>ACT/365</DayCounter>
+        ...
+        <FloatingLegData>
+        ...
+        </FloatingLegData>
+      </LegData>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <DayCounter>ACT/365</DayCounter>
+        ...
+        <FixedLegData>
+        ...
+        </FixedLegData>
+      </LegData>
+    </EquitySwapData>
+\end{minted}
+\caption{Cross Currency Swap Data}
+\label{lst:crosscurrencyswap}
+\end{listing}
