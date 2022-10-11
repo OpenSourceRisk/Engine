@@ -66,13 +66,6 @@ using namespace boost::unit_test_framework;
 namespace {
 int worker(const std::string& cmd) { return std::system(cmd.c_str()); }
 
-counter_t test_enabled(test_unit_id id) {
-    test_case_counter tcc;
-    boost::unit_test::traverse_test_tree(id, tcc);
-
-    return tcc.p_count;
-}
-
 class TestCaseCollector : public test_tree_visitor {
 public:
     typedef std::map<test_unit_id, std::list<test_unit_id>> id_map_t;
@@ -80,7 +73,7 @@ public:
     const id_map_t& map() const { return idMap_; }
     test_unit_id testSuiteId() const { return testSuiteId_; }
 
-    bool visit(test_unit const& tu) {
+    bool visit(test_unit const& tu) override {
         if (tu.p_parent_id == framework::master_test_suite().p_id) {
             testSuiteId_ = tu.p_id;
         } else if (tu.p_type == test_unit_type::TUT_SUITE && tu.p_parent_id == testSuiteId_) {
@@ -104,7 +97,7 @@ private:
 
 class TestCaseReportAggregator : public test_tree_visitor {
 public:
-    void test_suite_finish(test_suite const& ts) {
+    void test_suite_finish(test_suite const& ts) override {
         results_collect_helper ch(s_rc_impl().m_results_store[ts.p_id], ts);
         traverse_test_tree(ts, ch);
     }
@@ -380,7 +373,7 @@ int main(int argc, char* argv[]) {
                 double T = std::chrono::duration_cast<std::chrono::microseconds>(stopTime - startTime).count() * 1e-6;
                 runTimeLogs.push_back(std::make_pair(framework::get(id.id, TUT_ANY).p_name, T));
 
-                //output_logstream(log_stream(), oldBuf, logBuf);
+                output_logstream(log_stream(), oldBuf, logBuf);
 
                 QualifiedTestResults results = {id.id, boost::unit_test::results_collector.results(id.id)};
 
@@ -389,8 +382,8 @@ int main(int argc, char* argv[]) {
                 mq.receive(&id, sizeof(TestCaseId), recvd_size, priority);
             }
 
-            //output_logstream(log_stream(), oldBuf, logBuf);
-            //log_stream().rdbuf(oldBuf);
+            output_logstream(log_stream(), oldBuf, logBuf);
+            log_stream().rdbuf(oldBuf);
 
             RuntimeLog log;
             log.testCaseName[sizeof(log.testCaseName) - 1] = '\0';
