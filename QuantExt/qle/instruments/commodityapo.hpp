@@ -31,7 +31,8 @@ public:
                                 const ext::shared_ptr<Exercise>& exercise, const Real& quantity,
                                 const Real& strikePrice, QuantLib::Option::Type type,
                                 QuantLib::Settlement::Type delivery = QuantLib::Settlement::Physical,
-                                QuantLib::Settlement::Method settlementMethod = QuantLib::Settlement::PhysicalOTC);
+                                QuantLib::Settlement::Method settlementMethod = QuantLib::Settlement::PhysicalOTC,
+                                const boost::shared_ptr<FxIndex>& fxIndex= nullptr);
     
     //! \name Instrument interface
     //@{
@@ -44,6 +45,7 @@ public:
     Settlement::Type settlementType() const { return settlementType_; }
     Settlement::Method settlementMethod() const { return settlementMethod_; }
     const boost::shared_ptr<CommodityIndexedAverageCashFlow>& underlyingFlow() const { return flow_; }
+    const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     //@}
 
 private:
@@ -54,6 +56,7 @@ private:
     Option::Type type_;
     QuantLib::Settlement::Type settlementType_;
     QuantLib::Settlement::Method settlementMethod_;
+    boost::shared_ptr<FxIndex> fxIndex_;
 };
 
 //! %Arguments for commodity APO calculation
@@ -67,6 +70,7 @@ public:
     Option::Type type;
     QuantLib::Settlement::Type settlementType;
     QuantLib::Settlement::Method settlementMethod;
+    boost::shared_ptr<FxIndex> fxIndex;
     void validate() const override;
 };
 
