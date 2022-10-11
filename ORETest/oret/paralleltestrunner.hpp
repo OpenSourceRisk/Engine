@@ -121,37 +121,37 @@ struct QualifiedTestResults {
     test_results results;
 };
 
-const char* const namesLogMutexName = "named_log_mutex";
-
-void output_logstream(std::ostream& out, std::streambuf* outBuf, std::stringstream& s) {
-
-    static named_mutex mutex(open_or_create, namesLogMutexName);
-    scoped_lock<named_mutex> lock(mutex);
-
-    out.flush();
-    out.rdbuf(outBuf);
-
-    std::vector<std::string> tok;
-    const std::string lines = s.str();
-    boost::split(tok, lines, boost::is_any_of("\n"));
-
-    for (std::vector<std::string>::const_iterator iter = tok.begin(); iter != tok.end(); ++iter) {
-        if ((iter->length() != 0u) && (iter->compare("Running 1 test case...") != 0)) {
-            out << *iter << std::endl;
-        }
-    }
-
-    s.str(std::string());
-    out.rdbuf(s.rdbuf());
-}
-
-std::ostream& log_stream() {
-#if BOOST_VERSION < 106200
-    return s_log_impl().stream();
-#else
-    return s_log_impl().m_log_formatter_data.front().stream();
-#endif
-}
+//const char* const namesLogMutexName = "named_log_mutex";
+//
+//void output_logstream(std::ostream& out, std::streambuf* outBuf, std::stringstream& s) {
+//
+//    static named_mutex mutex(open_or_create, namesLogMutexName);
+//    scoped_lock<named_mutex> lock(mutex);
+//
+//    out.flush();
+//    out.rdbuf(outBuf);
+//
+//    std::vector<std::string> tok;
+//    const std::string lines = s.str();
+//    boost::split(tok, lines, boost::is_any_of("\n"));
+//
+//    for (std::vector<std::string>::const_iterator iter = tok.begin(); iter != tok.end(); ++iter) {
+//        if ((iter->length() != 0u) && (iter->compare("Running 1 test case...") != 0)) {
+//            out << *iter << std::endl;
+//        }
+//    }
+//
+//    s.str(std::string());
+//    out.rdbuf(s.rdbuf());
+//}
+//
+//std::ostream& log_stream() {
+//#if BOOST_VERSION < 106200
+//    return s_log_impl().stream();
+//#else
+//    return s_log_impl().m_log_formatter_data.front().stream();
+//#endif
+//}
 } // namespace
 
 test_suite* init_unit_test_suite(int, char*[]);
@@ -227,9 +227,9 @@ int main(int argc, char* argv[]) {
             TestCaseCollector tcc;
             traverse_test_tree(framework::master_test_suite(), tcc, true);
 
-            log_stream() << "Total number of test cases: " << tcc.numberOfTests() << std::endl;
+            //log_stream() << "Total number of test cases: " << tcc.numberOfTests() << std::endl;
 
-            log_stream() << "Total number of worker processes: " << nProc << std::endl;
+            //log_stream() << "Total number of worker processes: " << nProc << std::endl;
 
             message_queue::remove(testUnitIdQueueName);
             message_queue mq(create_only, testUnitIdQueueName, tcc.numberOfTests() + nProc, sizeof(TestCaseId));
@@ -250,13 +250,12 @@ int main(int argc, char* argv[]) {
                     newCmd << "--log_sink=" << logSink[0] << "_" << i << "." << logSink[1] << " ";
                 }
                 newCmd << clientModeStr;
-                std::cout << newCmd.str() << "\n";
                 threadGroup.emplace_back([&]() { worker(newCmd.str()); });
             }
 
-            struct mutex_remove {
+            /*struct mutex_remove {
                 ~mutex_remove() { named_mutex::remove(namesLogMutexName); }
-            } mutex_remover;
+            } mutex_remover;*/
 
             struct queue_remove {
                 explicit queue_remove(const char* name) : name_(name) {}
@@ -335,21 +334,21 @@ int main(int argc, char* argv[]) {
                 thread.join();
             }
         } else {
-            std::stringstream logBuf;
-            std::streambuf* const oldBuf = log_stream().rdbuf();
-            log_stream().rdbuf(logBuf.rdbuf());
+            //std::stringstream logBuf;
+            //std::streambuf* const oldBuf = log_stream().rdbuf();
+            //log_stream().rdbuf(logBuf.rdbuf());
 
             std::stringstream sup; 
             for (int i = 1; i < argc; ++i) {
                 sup << argv[i] << " ";
             }
-            std::cout << "starting process with args: " << sup.str() << "; \n";
+            //std::cout << "starting process with args: " << sup.str() << "; \n";
             framework::init(init_unit_test_suite, argc - 1, argv);
             framework::finalize_setup_phase();
 
             framework::impl::s_frk_state().deduce_run_status(framework::master_test_suite().p_id);
 
-            logBuf.str(std::string());
+            //logBuf.str(std::string());
 
             message_queue mq(open_only, testUnitIdQueueName);
 
@@ -374,7 +373,7 @@ int main(int argc, char* argv[]) {
                 to->test_finish();
 #else
                 // works for BOOST_VERSION > 106100, needed for >106500
-                std::cout << "running for test case " << id.id << " ";
+                //std::cout << "running for test case " << id.id << " ";
                 framework::run(id.id, false);
 #endif
 
@@ -382,7 +381,7 @@ int main(int argc, char* argv[]) {
                 double T = std::chrono::duration_cast<std::chrono::microseconds>(stopTime - startTime).count() * 1e-6;
                 runTimeLogs.push_back(std::make_pair(framework::get(id.id, TUT_ANY).p_name, T));
 
-                output_logstream(log_stream(), oldBuf, logBuf);
+                //output_logstream(log_stream(), oldBuf, logBuf);
 
                 QualifiedTestResults results = {id.id, boost::unit_test::results_collector.results(id.id)};
 
@@ -391,8 +390,8 @@ int main(int argc, char* argv[]) {
                 mq.receive(&id, sizeof(TestCaseId), recvd_size, priority);
             }
 
-            output_logstream(log_stream(), oldBuf, logBuf);
-            log_stream().rdbuf(oldBuf);
+            //output_logstream(log_stream(), oldBuf, logBuf);
+            //log_stream().rdbuf(oldBuf);
 
             RuntimeLog log;
             log.testCaseName[sizeof(log.testCaseName) - 1] = '\0';
