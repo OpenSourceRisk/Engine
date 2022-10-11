@@ -128,6 +128,8 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["payment_date"] = arguments_.flow->date();
     mp["accrued"] = accrued.first;
     mp["discount"] = discount;
+    if(arguments_.fxIndex)
+        mp["FXIndex"] = arguments_.fxIndex->name();
 
     // If not model dependent, return early.
     if (!isModelDependent(accrued)) {
