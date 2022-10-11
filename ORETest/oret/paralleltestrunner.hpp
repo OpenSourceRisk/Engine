@@ -59,6 +59,9 @@
 #include <thread>
 #include <utility>
 
+#ifndef BOOST_TEST_MODULE
+#define BOOST_TEST_MODULE "TestSuite"
+#endif
 using boost::unit_test::test_results;
 using namespace boost::interprocess;
 using namespace boost::unit_test_framework;
@@ -156,10 +159,15 @@ test_suite* init_unit_test_suite(int, char*[]);
 int main(int argc, char* argv[]) {
     typedef QuantLib::Time Time;
 
-    const char* const profileFileName = ".unit_test_profile.txt";
-    const char* const testUnitIdQueueName = "test_unit_queue";
-    const char* const testResultQueueName = "test_result_queue";
-    const char* const testRuntimeLogName = "test_runtime_log_queue";
+    std::string moduleName = BOOST_TEST_MODULE;
+    std::string profileFileNameStr = moduleName + "_unit_test_profile.txt";
+    const char* const profileFileName = profileFileNameStr.c_str();
+    std::string testUnitIdQueueNameStr = moduleName + "_test_unit_queue";
+    const char* const testUnitIdQueueName = testUnitIdQueueNameStr.c_str();
+    std::string testResultQueueNameStr = moduleName + "_test_result_queue";
+    const char* const testResultQueueName = testResultQueueNameStr.c_str();
+    std::string testRuntimeLogNameStr = moduleName + "_test_runtime_log_queue";
+    const char* const testRuntimeLogName = testRuntimeLogNameStr.c_str();
 
     const std::string clientModeStr = "--client_mode=true";
     const bool clientMode = (std::string(argv[argc - 1]) == clientModeStr);
@@ -231,7 +239,7 @@ int main(int argc, char* argv[]) {
 
             message_queue::remove(testRuntimeLogName);
             message_queue lq(create_only, testRuntimeLogName, nProc, sizeof(RuntimeLog));
-                       
+
             // fork worker processes
 
             std::vector<std::thread> threadGroup;
@@ -242,6 +250,7 @@ int main(int argc, char* argv[]) {
                     newCmd << "--log_sink=" << logSink[0] << "_" << i << "." << logSink[1] << " ";
                 }
                 newCmd << clientModeStr;
+                std::cout << newCmd.str() << "\n";
                 threadGroup.emplace_back([&]() { worker(newCmd.str()); });
             }
 
