@@ -67,7 +67,10 @@ using namespace boost::interprocess;
 using namespace boost::unit_test_framework;
 
 namespace {
-int worker(const std::string& cmd) { return std::system(cmd.c_str()); }
+int worker(std::string cmd) {
+    std::cout << cmd << "\n";
+    return std::system(cmd.c_str());
+}
 
 class TestCaseCollector : public test_tree_visitor {
 public:
@@ -241,16 +244,20 @@ int main(int argc, char* argv[]) {
             message_queue lq(create_only, testRuntimeLogName, nProc, sizeof(RuntimeLog));
 
             // fork worker processes
-
+            std::string cmdStr = cmd.str();
             std::vector<std::thread> threadGroup;
+            std::vector<std::string> cmdStrs(nProc, cmdStr);
             for (unsigned i = 0; i < nProc; ++i) {
                 std::stringstream newCmd;
-                newCmd << cmd.str();
                 if (logSink.size() == 2) {
                     newCmd << "--log_sink=" << logSink[0] << "_" << i << "." << logSink[1] << " ";
                 }
                 newCmd << clientModeStr;
-                threadGroup.emplace_back([&]() { worker(newCmd.str()); });
+                cmdStrs[i] += newCmd.str();
+            }
+
+            for (unsigned i = 0; i < nProc; ++i) {
+                threadGroup.push_back(std::thread(worker, cmdStrs[i]));
             }
 
             /*struct mutex_remove {
@@ -329,10 +336,11 @@ int main(int argc, char* argv[]) {
                 out << iter->first << ":" << iter->second << std::endl;
             }
             out.close();
-
+            
             for (auto& thread : threadGroup) {
                 thread.join();
             }
+
         } else {
             //std::stringstream logBuf;
             //std::streambuf* const oldBuf = log_stream().rdbuf();
