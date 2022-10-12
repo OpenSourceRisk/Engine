@@ -627,7 +627,7 @@ void EquityLegData::fromXML(XMLNode* node) {
 
     XMLNode* fxt = XMLUtils::getChildNode(node, "FXTerms");
     if (fxt) {
-        eqCurrency_ = XMLUtils::getChildValue(fxt, "EquityCurrency", true);
+        eqCurrency_ = XMLUtils::getChildValue(fxt, "EquityCurrency", false);
         fxIndex_ = XMLUtils::getChildValue(fxt, "FXIndex", true);
         if (XMLUtils::getChildNode(fxt, "FXIndexFixingDays")) {
             WLOG("EquityLegData::fromXML, node FXIndexFixingDays has been deprecated, fixing days are "
