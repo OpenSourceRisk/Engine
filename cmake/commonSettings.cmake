@@ -54,6 +54,8 @@ if(MSVC)
         add_definitions(-DBOOST_TEST_DYN_LINK)
     endif()
 
+    add_compile_definitions(_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
+    add_compile_definitions(_SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING)
     add_compiler_flag("-D_SCL_SECURE_NO_DEPRECATE" supports_D_SCL_SECURE_NO_DEPRECATE)
     add_compiler_flag("-D_CRT_SECURE_NO_DEPRECATE" supports_D_CRT_SECURE_NO_DEPRECATE)
     add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)
