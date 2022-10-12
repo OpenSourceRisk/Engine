@@ -61,12 +61,12 @@ public:
         seconds -= hours * 3600;
         int minutes = int(seconds / 60);
         seconds -= minutes * 60;
-        /* std::cout << std::endl << "QuantExt tests completed in ";
+         std::cout << std::endl << "QuantExt tests completed in ";
         if (hours > 0)
             std::cout << hours << " h ";
         if (hours > 0 || minutes > 0)
             std::cout << minutes << " m ";
-        std::cout << std::fixed << std::setprecision(0) << seconds << " s" << std::endl;*/
+        std::cout << std::fixed << std::setprecision(0) << seconds << " s" << std::endl;
     }
 
 private:
