@@ -29,7 +29,7 @@ using boost::timer::cpu_timer;
 #define BOOST_TEST_MODULE OREAnalyticsTestSuite
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/test_tools.hpp>
-#include <boost/test/unit_test.hpp>
+#include <test-suite/paralleltestrunner.hpp>
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
@@ -61,27 +61,7 @@ public:
         setupTestLogging(argc, argv);
     }
 
-    ~OreaGlobalFixture() { stopTimer(); }
-
-    // Method called in destructor to log time taken
-    void stopTimer() {
-        t.stop();
-        double seconds = t.elapsed().wall * 1e-9;
-        int hours = int(seconds / 3600);
-        seconds -= hours * 3600;
-        int minutes = int(seconds / 60);
-        seconds -= minutes * 60;
-        cout << endl << "OREAnalytics tests completed in ";
-        if (hours > 0)
-            cout << hours << " h ";
-        if (hours > 0 || minutes > 0)
-            cout << minutes << " m ";
-        cout << fixed << setprecision(0) << seconds << " s" << endl;
-    }
-
 private:
-    // Timing the test run
-    cpu_timer t;
 };
 
 // Breaking change in 1.65.0
