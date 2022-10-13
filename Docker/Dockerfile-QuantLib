@@ -29,7 +29,9 @@ WORKDIR /ore/QuantLib/build.ql
 RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
   && make install \
   && cd / \
+  && cp -r /ore/QuantLib/test-suite /usr/local/include \
   && rm -rf ore \
   && ldconfig
+  
 
 CMD bash
