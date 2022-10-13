@@ -30,7 +30,7 @@ using namespace boost;
 
 // Boost.Test
 #define BOOST_TEST_MODULE "QuantExtTestSuite"
-#include <oret/paralleltestrunner.hpp>
+#include <test-suite/paralleltestrunner.hpp>
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
