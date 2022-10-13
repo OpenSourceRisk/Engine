@@ -47,11 +47,3 @@ using boost::unit_test::framework::master_test_suite;
 #include <boost/config/auto_link.hpp>
 #endif
 
-// Breaking change in 1.65.0
-// https://www.boost.org/doc/libs/1_65_0/libs/test/doc/html/boost_test/change_log.html
-// Deprecating BOOST_GLOBAL_FIXTURE in favor of BOOST_TEST_GLOBAL_FIXTURE
-#if BOOST_VERSION < 106500
-BOOST_GLOBAL_FIXTURE(QleGlobalFixture);
-#else
-BOOST_TEST_GLOBAL_FIXTURE(QleGlobalFixture);
-#endif
