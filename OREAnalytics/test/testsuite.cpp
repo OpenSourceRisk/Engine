@@ -18,7 +18,6 @@
 
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
 // Boost
 #include <boost/timer/timer.hpp>
