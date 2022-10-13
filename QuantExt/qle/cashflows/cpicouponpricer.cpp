@@ -33,10 +33,12 @@ InflationCashFlowPricer::InflationCashFlowPricer(const Handle<CPIVolatilitySurfa
     : vol_(vol), yts_(yts) {
     if (!vol_.empty())
         registerWith(vol_);
-    if (yts_.empty())
+    if (yts_.empty()) {
         yts_ = Handle<YieldTermStructure>(
             boost::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
-    registerWith(yts_);
+    } else {
+        registerWith(yts_);
+    }   
 }
 
 BlackCPICashFlowPricer::BlackCPICashFlowPricer(const Handle<CPIVolatilitySurface>& vol,
@@ -51,21 +53,24 @@ BachelierCPICashFlowPricer::BachelierCPICashFlowPricer(const Handle<CPIVolatilit
     engine_ = boost::make_shared<CPIBachelierCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
 }
 
-BlackCPICouponPricer::BlackCPICouponPricer(const Handle<CPIVolatilitySurface>& vol,
-                                           const Handle<YieldTermStructure>& yts, const bool useLastFixing)
+
+CappedFlooredCPICouponPricer::CappedFlooredCPICouponPricer(const Handle<CPIVolatilitySurface>& vol,
+    const Handle<YieldTermStructure>& yts)
     : CPICouponPricer(vol, yts) {
     if (nominalTermStructure_.empty())
         nominalTermStructure_ = Handle<YieldTermStructure>(
             boost::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
+}
+
+BlackCPICouponPricer::BlackCPICouponPricer(const Handle<CPIVolatilitySurface>& vol,
+                                           const Handle<YieldTermStructure>& yts, const bool useLastFixing)
+    : CappedFlooredCPICouponPricer(vol, yts){
     engine_ = boost::make_shared<CPIBlackCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
 }
 
 BachelierCPICouponPricer::BachelierCPICouponPricer(const Handle<CPIVolatilitySurface>& vol,
                                            const Handle<YieldTermStructure>& yts, const bool useLastFixing)
-    : CPICouponPricer(vol, yts) {
-    if (nominalTermStructure_.empty())
-        nominalTermStructure_ = Handle<YieldTermStructure>(
-            boost::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
+    : CappedFlooredCPICouponPricer(vol, yts) {
     engine_ = boost::make_shared<CPIBachelierCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
 }
 

@@ -58,9 +58,11 @@ void CPICapFloorEngine::calculate() const {
     bool isInterpolated = arguments_.observationInterpolation == CPI::Linear ||
                           (arguments_.observationInterpolation == CPI::AsIndex && arguments_.infIndex->interpolated());
 
-    Date optionObservationDate = arguments_.payDate - arguments_.observationLag;
+    Date optionObservationDate = QuantExt::ZeroInflation::fixingDate(arguments_.payDate, arguments_.observationLag,
+                                                                     index->frequency(), isInterpolated);
 
-    Date optionBaseDate = arguments_.startDate - arguments_.observationLag;
+    Date optionBaseDate = QuantExt::ZeroInflation::fixingDate(arguments_.startDate, arguments_.observationLag,
+                                                              index->frequency(), isInterpolated);
     
     Real optionBaseFixing = arguments_.baseCPI == Null<Real>()
                           ? ZeroInflation::cpiFixing(arguments_.infIndex.currentLink(), arguments_.startDate,
@@ -84,19 +86,23 @@ void CPICapFloorEngine::calculate() const {
 
     // if time from base <= 0 the fixing is already known and stdDev is zero, return the intrinsic value
     Real stdDev = 0.0;
+    Real vol = 0.0;
+    Real strikeZeroRate = 0.0;
+    Real ttmFromSurfaceBaseDate = 0.0;
+    Real surfaceBaseFixing = 0.0;
     if (requiredFixing > lastKnownFixingDate) {
         // For reading volatility in the current market volatiltiy structure
         // baseFixingSwap(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t),
         // solve for strikeRate(t):
-        auto surfaceBaseFixing =
+        surfaceBaseFixing =
             ZeroInflation::cpiFixing(index.currentLink(), volatilitySurface_->baseDate(),
                                      0 * Days, volatilitySurface_->indexIsInterpolated());
-        auto ttmFromSurfaceBaseDate =
+        ttmFromSurfaceBaseDate =
             inflationYearFraction(volatilitySurface_->frequency(), volatilitySurface_->indexIsInterpolated(),
             index->zeroInflationTermStructure()->dayCounter(), volatilitySurface_->baseDate(), optionObservationDate);
-        Real strikeZeroRate = pow(optionBaseFixing / surfaceBaseFixing * strike, 1.0 / ttmFromSurfaceBaseDate) - 1.0;
+        strikeZeroRate = pow(optionBaseFixing / surfaceBaseFixing * strike, 1.0 / ttmFromSurfaceBaseDate) - 1.0;
+        vol = volatilitySurface_->volatility(optionObservationDate, strikeZeroRate, 0 * Days);
         if (ttmFromLastAvailableFixing_) {
-            auto vol = volatilitySurface_->volatility(optionObservationDate, strikeZeroRate, 0 * Days);
             auto ttm =
                 inflationYearFraction(volatilitySurface_->frequency(), volatilitySurface_->indexIsInterpolated(),
                                       volatilitySurface_->dayCounter(), lastKnownFixingDate, optionObservationDate);
@@ -107,6 +113,28 @@ void CPICapFloorEngine::calculate() const {
     }
     results_.value = optionPriceImpl(arguments_.type, strike, atmGrowth, stdDev, d);
 
+    results_.additionalResults["npv"] = results_.value;
+    results_.additionalResults["strike"] = strike;
+    results_.additionalResults["forward"] = atmGrowth;
+    results_.additionalResults["stdDev"] = stdDev;
+    results_.additionalResults["discount"] = d;
+    results_.additionalResults["vol"] = vol;
+    results_.additionalResults["timeToExpiry"] = stdDev * stdDev / (vol * vol);
+    results_.additionalResults["BaseDate_trade"] = optionBaseDate;        
+    results_.additionalResults["BaseDate_today"] = volatilitySurface_->baseDate();
+    results_.additionalResults["FixingDate"] = optionObservationDate;        
+    results_.additionalResults["PaymentDate"] = maturity;
+    results_.additionalResults["BaseCPI_trade"] = optionBaseFixing;
+    results_.additionalResults["BaseCPI_today"] = surfaceBaseFixing;
+    results_.additionalResults["ForwardCPI"] = atmCPIFixing;
+    results_.additionalResults["strike_asof_trade"] = arguments_.strike;
+    results_.additionalResults["strike_asof_today"] = strikeZeroRate;
+    results_.additionalResults["timeToExpiry_from_trade_baseDate"] = timeToMaturityFromInception;
+    results_.additionalResults["timeToExpiry_from_todays_baseDate"] = ttmFromSurfaceBaseDate;
+
+
+
+         
     // std::cout << "CPIBlackCapFloorEngine ==========" << std::endl
     // 	      << "startDate     = " << QuantLib::io::iso_date(arguments_.startDate) << std::endl
     // 	      << "maturityDate  = " << QuantLib::io::iso_date(maturity) << std::endl
