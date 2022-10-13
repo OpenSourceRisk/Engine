@@ -262,20 +262,16 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                "Inflation cap floor pricevolatility surfaces must be of type 'ZC' or 'YY'");
 
     // Volatility type
-    MarketDatum::QuoteType volatilityType;
     VolatilityType quoteVolatilityType;
 
     switch (config->volatilityType()) {
     case InflationCapFloorVolatilityCurveConfig::VolatilityType::Lognormal:
-        volatilityType = MarketDatum::QuoteType::RATE_LNVOL;
         quoteVolatilityType = ShiftedLognormal;
         break;
     case InflationCapFloorVolatilityCurveConfig::VolatilityType::Normal:
-        volatilityType = MarketDatum::QuoteType::RATE_NVOL;
         quoteVolatilityType = Normal;
         break;
     case InflationCapFloorVolatilityCurveConfig::VolatilityType::ShiftedLognormal:
-        volatilityType = MarketDatum::QuoteType::RATE_SLNVOL;
         quoteVolatilityType = ShiftedLognormal;
         break;
     default:
