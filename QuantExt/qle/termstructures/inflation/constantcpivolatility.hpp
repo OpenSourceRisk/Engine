@@ -22,28 +22,28 @@
 */
 #pragma once
 
-#include <ql/termstructures/volatility/inflation/constantcpivolatility.hpp>
+#include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
 
 namespace QuantExt {
 
-//! Constant surface, no K or T dependence.
-class ConstantCPIVolatility : public QuantLib::ConstantCPIVolatility {
+class ConstantCPIVolatility : public QuantExt::CPIVolatilitySurface {
 public:
-    //! \name Constructor
-    //@{
-    //! calculate the reference date based on the global evaluation date
+
     ConstantCPIVolatility(QuantLib::Volatility v, QuantLib::Natural settlementDays, const QuantLib::Calendar&,
                           QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
                           const QuantLib::Period& observationLag, QuantLib::Frequency frequency,
-                          bool indexIsInterpolated, const QuantLib::Date& capFloorStartDate = QuantLib::Date());
+                          bool indexIsInterpolated, const QuantLib::Date& capFloorStartDate = QuantLib::Date(),
+                          QuantLib::VolatilityType volType = QuantLib::ShiftedLognormal, double displacement = 0.0);
 
-    //! base date will be in the past
-    virtual QuantLib::Date baseDate() const override;
+    QuantLib::Date maxDate() const override { return QuantLib::Date::maxDate(); }
+
+    QuantLib::Real minStrike() const override { return QL_MIN_REAL; }
+
+    QuantLib::Real maxStrike() const override { return QL_MAX_REAL; }
 
 private:
-    QuantLib::Date capFloorStartDate() const;
-
-    QuantLib::Date capFloorStartDate_;
+    virtual QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const override;
+    double constantVol_;
 };
 
 } // namespace QuantExt

@@ -24,6 +24,7 @@
 #include <ql/time/daycounters/thirty360.hpp>
 #include <qle/cashflows/cpicouponpricer.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
+#include <qle/pricingengines/cpibacheliercapfloorengine.hpp>
 
 namespace QuantExt {
 
@@ -35,12 +36,19 @@ InflationCashFlowPricer::InflationCashFlowPricer(const Handle<CPIVolatilitySurfa
     if (yts_.empty())
         yts_ = Handle<YieldTermStructure>(
             boost::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
+    registerWith(yts_);
 }
 
 BlackCPICashFlowPricer::BlackCPICashFlowPricer(const Handle<CPIVolatilitySurface>& vol,
                                                const Handle<YieldTermStructure>& yts, const bool useLastFixing)
     : InflationCashFlowPricer(vol, yts) {
     engine_ = boost::make_shared<CPIBlackCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
+}
+
+BachelierCPICashFlowPricer::BachelierCPICashFlowPricer(const Handle<CPIVolatilitySurface>& vol,
+                                               const Handle<YieldTermStructure>& yts, const bool useLastFixing)
+    : InflationCashFlowPricer(vol, yts) {
+    engine_ = boost::make_shared<CPIBachelierCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
 }
 
 BlackCPICouponPricer::BlackCPICouponPricer(const Handle<CPIVolatilitySurface>& vol,
@@ -50,6 +58,15 @@ BlackCPICouponPricer::BlackCPICouponPricer(const Handle<CPIVolatilitySurface>& v
         nominalTermStructure_ = Handle<YieldTermStructure>(
             boost::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
     engine_ = boost::make_shared<CPIBlackCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
+}
+
+BachelierCPICouponPricer::BachelierCPICouponPricer(const Handle<CPIVolatilitySurface>& vol,
+                                           const Handle<YieldTermStructure>& yts, const bool useLastFixing)
+    : CPICouponPricer(vol, yts) {
+    if (nominalTermStructure_.empty())
+        nominalTermStructure_ = Handle<YieldTermStructure>(
+            boost::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
+    engine_ = boost::make_shared<CPIBachelierCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
 }
 
 } // namespace QuantExt

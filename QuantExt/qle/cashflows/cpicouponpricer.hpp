@@ -70,9 +70,38 @@ private:
     boost::shared_ptr<PricingEngine> engine_;
 };
 
+//! Bachelier CPI CashFlow Pricer.
+class BachelierCPICashFlowPricer : public InflationCashFlowPricer {
+public:
+    BachelierCPICashFlowPricer(
+        const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
+                           const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
+                           const bool useLastFixing = false);
+    boost::shared_ptr<PricingEngine> engine() { return engine_; }
+
+private:
+    // engine to price the underlying cap/floor
+    boost::shared_ptr<PricingEngine> engine_;
+};
+
 class BlackCPICouponPricer : public CPICouponPricer {
 public:
     BlackCPICouponPricer(const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
+                         const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
+                         const bool useLastFixing = false);
+    Handle<YieldTermStructure> yieldCurve() { return nominalTermStructure(); }
+    Handle<QuantLib::CPIVolatilitySurface> volatility() { return capletVolatility(); }
+    boost::shared_ptr<PricingEngine> engine() { return engine_; }
+
+private:
+    // engine to price the underlying cap/floor
+    boost::shared_ptr<PricingEngine> engine_;
+};
+
+class BachelierCPICouponPricer : public CPICouponPricer {
+public:
+    BachelierCPICouponPricer(
+        const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
                          const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
                          const bool useLastFixing = false);
     Handle<YieldTermStructure> yieldCurve() { return nominalTermStructure(); }

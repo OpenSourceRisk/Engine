@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016,2021 Quaternion Risk Management Ltd
+ Copyright (C) 2016,2021,2022 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -23,7 +23,6 @@
  */
 
 #include <ql/time/daycounters/actualactual.hpp>
-
 #include <ql/pricingengines/blackformula.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 #include <qle/utilities/inflation.hpp>
@@ -32,16 +31,25 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-CPIBlackCapFloorEngine::CPIBlackCapFloorEngine(const Handle<YieldTermStructure>& discountCurve,
-                                               const Handle<CPIVolatilitySurface>& volatilitySurface,
-                                               const bool measureTimeToExpiryFromLastAvailableFixing)
-    : discountCurve_(discountCurve), volatilitySurface_(volatilitySurface),
-      measureTimeFromLastAvailableFixing_(measureTimeToExpiryFromLastAvailableFixing) {
+CPICapFloorEngine::CPICapFloorEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+                                     const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface,
+                                     const bool ttmFromLastAvailableFixing)
+    : discountCurve_(discountCurve), volatilitySurface_(surface),
+      ttmFromLastAvailableFixing_(ttmFromLastAvailableFixing) {
     registerWith(discountCurve_);
     registerWith(volatilitySurface_);
 }
 
-void CPIBlackCapFloorEngine::calculate() const { 
+
+void CPICapFloorEngine::setVolatility(const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface) {
+    if (!volatilitySurface_.empty())
+        unregisterWith(volatilitySurface_);
+    volatilitySurface_ = surface;
+    registerWith(volatilitySurface_);
+    update();
+}
+
+void CPICapFloorEngine::calculate() const { 
     Date maturity = arguments_.payDate;
     
     auto index = arguments_.infIndex;
@@ -87,7 +95,7 @@ void CPIBlackCapFloorEngine::calculate() const {
             inflationYearFraction(volatilitySurface_->frequency(), volatilitySurface_->indexIsInterpolated(),
             index->zeroInflationTermStructure()->dayCounter(), volatilitySurface_->baseDate(), optionObservationDate);
         Real strikeZeroRate = pow(optionBaseFixing / surfaceBaseFixing * strike, 1.0 / ttmFromSurfaceBaseDate) - 1.0;
-        if (measureTimeFromLastAvailableFixing_) {
+        if (ttmFromLastAvailableFixing_) {
             auto vol = volatilitySurface_->volatility(optionObservationDate, strikeZeroRate, 0 * Days);
             auto ttm =
                 inflationYearFraction(volatilitySurface_->frequency(), volatilitySurface_->indexIsInterpolated(),
@@ -97,7 +105,7 @@ void CPIBlackCapFloorEngine::calculate() const {
             stdDev = std::sqrt(volatilitySurface_->totalVariance(optionObservationDate, strikeZeroRate, 0 * Days));
         }
     }
-    results_.value = blackFormula(arguments_.type, strike, atmGrowth, stdDev, d);
+    results_.value = optionPriceImpl(arguments_.type, strike, atmGrowth, stdDev, d);
 
     // std::cout << "CPIBlackCapFloorEngine ==========" << std::endl
     // 	      << "startDate     = " << QuantLib::io::iso_date(arguments_.startDate) << std::endl
@@ -115,4 +123,10 @@ void CPIBlackCapFloorEngine::calculate() const {
     // 	      << "value         = " <<  results_.value << std::endl;
 }
 
+
+
+double CPIBlackCapFloorEngine::optionPriceImpl(QuantLib::Option::Type type, double strike, double forward,
+                                               double stdDev, double discount) const {
+    return blackFormula(type, strike, forward, stdDev, discount);
+}
 } // namespace QuantExt
