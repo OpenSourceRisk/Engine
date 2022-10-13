@@ -223,9 +223,11 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         for (Size j = 0; j < legs_[i].size(); ++j) {
             for (Size k = exercise_->dates().size(); k > 0; --k) {
                 Date exerciseDate = exercise_->dates()[k - 1];
-                if (isCashflowRelevantForExercise(refDate, exerciseDate, legs_[i][j])) {
-                    optionDates[exerciseDate].insert(std::make_pair(i, j));
-                    break;
+                if (exerciseDate > refDate) {
+                    if (isCashflowRelevantForExercise(refDate, exerciseDate, legs_[i][j])) {
+                        optionDates[exerciseDate].insert(std::make_pair(i, j));
+                        break;
+                    }
                 }
             }
         }
