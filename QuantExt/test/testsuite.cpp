@@ -47,33 +47,6 @@ using boost::unit_test::framework::master_test_suite;
 #include <boost/config/auto_link.hpp>
 #endif
 
-class QleGlobalFixture {
-public:
-    QleGlobalFixture() {}
-
-    ~QleGlobalFixture() { stopTimer(); }
-
-    // Method called in destructor to log time taken
-    void stopTimer() {
-        t.stop();
-        double seconds = t.elapsed().wall * 1e-9;
-        int hours = int(seconds / 3600);
-        seconds -= hours * 3600;
-        int minutes = int(seconds / 60);
-        seconds -= minutes * 60;
-         std::cout << std::endl << "QuantExt tests completed in ";
-        if (hours > 0)
-            std::cout << hours << " h ";
-        if (hours > 0 || minutes > 0)
-            std::cout << minutes << " m ";
-        std::cout << std::fixed << std::setprecision(0) << seconds << " s" << std::endl;
-    }
-
-private:
-    // Timing the test run
-    boost::timer::cpu_timer t;
-};
-
 // Breaking change in 1.65.0
 // https://www.boost.org/doc/libs/1_65_0/libs/test/doc/html/boost_test/change_log.html
 // Deprecating BOOST_GLOBAL_FIXTURE in favor of BOOST_TEST_GLOBAL_FIXTURE

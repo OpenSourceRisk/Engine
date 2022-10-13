@@ -130,6 +130,7 @@ test_suite* init_unit_test_suite(int, char*[]);
 
 int main(int argc, char* argv[]) {
     typedef QuantLib::Time Time;
+    boost::timer::cpu_timer testTimer;
 
     std::string moduleName = BOOST_TEST_MODULE;
     std::string profileFileNameStr = moduleName + "_unit_test_profile.txt";
@@ -301,6 +302,19 @@ int main(int argc, char* argv[]) {
             for (auto& thread : threadGroup) {
                 thread.join();
             }
+
+            testTimer.stop();
+            double seconds = testTimer.elapsed().wall * 1e-9;
+            int hours = int(seconds / 3600);
+            seconds -= hours * 3600;
+            int minutes = int(seconds / 60);
+            seconds -= minutes * 60;
+            std::cout << std::endl << BOOST_TEST_MODULE << " tests completed in ";
+            if (hours > 0)
+                std::cout << hours << " h ";
+            if (hours > 0 || minutes > 0)
+                std::cout << minutes << " m ";
+            std::cout << std::fixed << std::setprecision(0) << seconds << " s" << std::endl;
 
         } else {
             framework::init(init_unit_test_suite, argc - 1, argv);
