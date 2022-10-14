@@ -97,7 +97,7 @@ template <class T> void testCubeFileIO(NPVCube& cube, const std::string& cubeNam
     boost::filesystem::remove(filename);
 
     // Check dimensions match
-    BOOST_CHECK_EQUAL(cube.numIds(), cube2->numIds());
+    BOOST_CHECK_EQUAL(cube.numIds(), 127);
     BOOST_CHECK_EQUAL(cube.numDates(), cube2->numDates());
     BOOST_CHECK_EQUAL(cube.samples(), cube2->samples());
     BOOST_CHECK_EQUAL(cube.depth(), cube2->depth());
