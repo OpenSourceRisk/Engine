@@ -25,9 +25,10 @@ namespace QuantExt {
 CPIVolatilitySurface::CPIVolatilitySurface(QuantLib::Natural settlementDays, const QuantLib::Calendar& cal,
                                            QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
                                            const QuantLib::Period& observationLag, QuantLib::Frequency frequency,
-                                           bool indexIsInterpolated, const QuantLib::Date& startDate)
+                                           bool indexIsInterpolated, const QuantLib::Date& startDate,
+                                           QuantLib::VolatilityType volType, double displacement)
     : QuantLib::CPIVolatilitySurface(settlementDays, cal, bdc, dc, observationLag, frequency, indexIsInterpolated),
-      capFloorStartDate_(startDate) {}
+      volType_(volType), displacement_(displacement), capFloorStartDate_(startDate) {}
 
 QuantLib::Date CPIVolatilitySurface::capFloorStartDate() const {
     if (capFloorStartDate_ == QuantLib::Date()) {
