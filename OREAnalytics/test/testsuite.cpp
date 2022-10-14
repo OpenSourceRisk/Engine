@@ -26,9 +26,9 @@ using boost::timer::cpu_timer;
 
 // Boost.Test
 #define BOOST_TEST_MODULE "OREAnalyticsTestSuite"
+#include <test-suite/paralleltestrunner.hpp>
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/test_tools.hpp>
-#include <test-suite/paralleltestrunner.hpp>
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
