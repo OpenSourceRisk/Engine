@@ -44,23 +44,23 @@ CPIBlackCapFloorEngine::CPIBlackCapFloorEngine(const Handle<YieldTermStructure>&
 void CPIBlackCapFloorEngine::calculate() const { 
     Date maturity = arguments_.payDate;
     
-    auto index = arguments_.infIndex;
+    auto index = arguments_.index;
     DiscountFactor d = arguments_.nominal * discountCurve_->discount(maturity);
 
     bool isInterpolated = arguments_.observationInterpolation == CPI::Linear ||
-                          (arguments_.observationInterpolation == CPI::AsIndex && arguments_.infIndex->interpolated());
+                          (arguments_.observationInterpolation == CPI::AsIndex && index->interpolated());
 
     Date optionObservationDate = arguments_.payDate - arguments_.observationLag;
 
     Date optionBaseDate = arguments_.startDate - arguments_.observationLag;
     
     Real optionBaseFixing = arguments_.baseCPI == Null<Real>()
-                          ? ZeroInflation::cpiFixing(arguments_.infIndex.currentLink(), arguments_.startDate,
+                          ? ZeroInflation::cpiFixing(index, arguments_.startDate,
                                                      arguments_.observationLag, isInterpolated)
                           : arguments_.baseCPI;
 
-    Real atmCPIFixing = ZeroInflation::cpiFixing(arguments_.infIndex.currentLink(), maturity,
-                                                      arguments_.observationLag, isInterpolated);
+    Real atmCPIFixing = ZeroInflation::cpiFixing(index, maturity,
+                                                 arguments_.observationLag, isInterpolated);
 
     Time timeToMaturityFromInception =
         inflationYearFraction(index->frequency(), isInterpolated, index->zeroInflationTermStructure()->dayCounter(),
@@ -69,7 +69,7 @@ void CPIBlackCapFloorEngine::calculate() const {
     Real atmGrowth = atmCPIFixing / optionBaseFixing;
     Real strike = std::pow(1.0 + arguments_.strike, timeToMaturityFromInception); 
 
-    auto lastKnownFixingDate = ZeroInflation::lastAvailableFixing(*index.currentLink(), volatilitySurface_->referenceDate());
+    auto lastKnownFixingDate = ZeroInflation::lastAvailableFixing(*index, volatilitySurface_->referenceDate());
     auto observationPeriod = inflationPeriod(optionObservationDate, index->frequency());
     auto requiredFixing = isInterpolated ? observationPeriod.first : observationPeriod.second + 1 * Days;
     
@@ -81,7 +81,7 @@ void CPIBlackCapFloorEngine::calculate() const {
         // baseFixingSwap(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t),
         // solve for strikeRate(t):
         auto surfaceBaseFixing =
-            ZeroInflation::cpiFixing(index.currentLink(), volatilitySurface_->baseDate(),
+            ZeroInflation::cpiFixing(index, volatilitySurface_->baseDate(),
                                      0 * Days, volatilitySurface_->indexIsInterpolated());
         auto ttmFromSurfaceBaseDate =
             inflationYearFraction(volatilitySurface_->frequency(), volatilitySurface_->indexIsInterpolated(),
