@@ -274,8 +274,7 @@ StrippedCPIVolatilitySurface<Interpolator2D>::ObjectiveFunction::ObjectiveFuncti
                                          1.0, // unit nominal, because the price surface returns unit nominal prices
                                          startDate_, baseCPI_, maturityDate_, priceSurface_->calendar(),
                                          priceSurface_->businessDayConvention(), priceSurface_->calendar(),
-                                         priceSurface_->businessDayConvention(), strike_,
-                                         QuantLib::Handle<QuantLib::ZeroInflationIndex>(index_),
+                                         priceSurface_->businessDayConvention(), strike_, index_,
                                          priceSurface_->observationLag(), QuantLib::CPI::AsIndex)) {
 
     // FIXME: observation interpolation (last argument) uses default setting here CPI::AsIndex
