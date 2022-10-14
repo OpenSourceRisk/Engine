@@ -31,7 +31,6 @@ using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
 #include <oret/oret.hpp>
-using ore::test::setupTestLogging;
 
 #ifdef BOOST_MSVC
 #include <orea/auto_link.hpp>
@@ -53,9 +52,6 @@ public:
     OreaGlobalFixture() {
         int argc = master_test_suite().argc;
         char** argv = master_test_suite().argv;
-
-        // Set up test logging
-        setupTestLogging(argc, argv);
     }
 
 private:
