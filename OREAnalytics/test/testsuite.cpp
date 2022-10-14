@@ -20,9 +20,7 @@
 #include <iostream>
 
 // Boost
-#include <boost/timer/timer.hpp>
 using namespace boost;
-using boost::timer::cpu_timer;
 
 // Boost.Test
 #define BOOST_TEST_MODULE "OREAnalyticsTestSuite"

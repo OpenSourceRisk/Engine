@@ -25,7 +25,6 @@
 #include <iostream>
 
 // Boost
-#include <boost/timer/timer.hpp>
 using namespace boost;
 
 // Boost.Test
