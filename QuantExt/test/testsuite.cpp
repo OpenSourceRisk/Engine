@@ -24,12 +24,12 @@
 #include <iomanip>
 #include <iostream>
 
-// Boost
-using namespace boost;
-
 // Boost.Test
 #define BOOST_TEST_MODULE "QuantExtTestSuite"
 #include <test-suite/paralleltestrunner.hpp>
+
+// Boost
+using namespace boost;
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
