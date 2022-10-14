@@ -31,6 +31,7 @@ using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
 #include <oret/oret.hpp>
+using ore::test::setupTestLogging;
 
 #ifdef BOOST_MSVC
 #include <orea/auto_link.hpp>
@@ -45,4 +46,24 @@ using boost::unit_test::framework::master_test_suite;
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_chrono
 #include <boost/config/auto_link.hpp>
+#endif
+
+class OreaGlobalFixture {
+public:
+    OreaGlobalFixture() {
+        int argc = master_test_suite().argc;
+        char** argv = master_test_suite().argv;
+
+        // Set up test logging
+        setupTestLogging(argc, argv);
+    }
+};
+
+// Breaking change in 1.65.0
+// https://www.boost.org/doc/libs/1_65_0/libs/test/doc/html/boost_test/change_log.html
+// Deprecating BOOST_GLOBAL_FIXTURE in favor of BOOST_TEST_GLOBAL_FIXTURE
+#if BOOST_VERSION < 106500
+BOOST_GLOBAL_FIXTURE(OreaGlobalFixture);
+#else
+BOOST_TEST_GLOBAL_FIXTURE(OreaGlobalFixture);
 #endif
