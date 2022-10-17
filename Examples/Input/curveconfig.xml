@@ -2874,7 +2874,7 @@
           <CurveDescription>EUHICPXT CPI Cap/Floor vol surface derived from price quotes</CurveDescription>
           <Type>ZC</Type>
           <QuoteType>Price</QuoteType>
-	  <VolatilityType>Normal</VolatilityType>
+	  <VolatilityType>Lognormal</VolatilityType>
 	  <Extrapolation>Y</Extrapolation>
           <DayCounter>ACT</DayCounter>
           <Calendar>TARGET</Calendar>
