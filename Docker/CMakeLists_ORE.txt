@@ -8,6 +8,8 @@ include("cmake/commonSettings.cmake")
 
 add_link_directory_if_exists("${QUANTLIB_SOURCE_DIR}/build/ql")
 
+option(ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER "Enable the parallel unit test runner" OFF)
+
 add_subdirectory("QuantExt")
 add_subdirectory("OREData")
 add_subdirectory("OREAnalytics")
