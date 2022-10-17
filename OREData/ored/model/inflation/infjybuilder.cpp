@@ -295,6 +295,7 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
     auto bdc = cpiVolatility_->businessDayConvention();
     auto obsLag = cpiVolatility_->observationLag();
     
+    Handle<ZeroInflationIndex> inflationIndex(zeroInflationIndex_);
     Date today = Settings::instance().evaluationDate();
     Real nominal = 1.0;
 
@@ -338,7 +339,7 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
         // Build the helper using the NPV as the premium.
         auto premium = inst->NPV();
         auto helper = boost::make_shared<CpiCapFloorHelper>(capfloor, baseCpi, maturity, calendar, bdc, calendar, bdc,
-                                                            strikeValue, zeroInflationIndex_, obsLag, premium);
+                                                            strikeValue, inflationIndex, obsLag, premium);
 
 
         // Add the helper's time to expiry.

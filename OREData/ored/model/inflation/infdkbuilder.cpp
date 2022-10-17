@@ -229,7 +229,6 @@ bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
     Date baseDate = inflationIndex_->zeroInflationTermStructure()->baseDate();
     Real baseCPI = inflationIndex_->fixing(baseDate);
     Period lag = infVol_->observationLag();
-    //Handle<ZeroInflationIndex> hIndex(inflationIndex_);
 
     // if cache doesn't exist resize vector
     if (infPriceCache_.size() != optionBasket_.size())
@@ -294,7 +293,7 @@ void InfDkBuilder::buildCapFloorBasket() const {
     } else {
         engine = boost::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, infVol_);
     }
-
+       
     Calendar fixCalendar = inflationIndex_->fixingCalendar();
     Date baseDate = inflationIndex_->zeroInflationTermStructure()->baseDate();
     Real baseCPI = dontCalibrate_ ? 100. : inflationIndex_->fixing(baseDate);
@@ -321,7 +320,7 @@ void InfDkBuilder::buildCapFloorBasket() const {
             Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
             boost::shared_ptr<CPICapFloor> cf =
                 boost::make_shared<CPICapFloor>(capfloor, nominal, startDate, baseCPI, expiryDate, fixCalendar, bdc,
-                                                fixCalendar, bdc, strikeValue, hIndex, lag);
+                                                fixCalendar, bdc, strikeValue, inflationIndex_, lag);
             cf->setPricingEngine(engine);
             Real tte = inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
                                              inflationIndex_->zeroInflationTermStructure()->dayCounter(), baseDate,
