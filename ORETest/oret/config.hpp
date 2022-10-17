@@ -24,5 +24,5 @@
 
 /* Define this to enable the parallel unit test runner */
 #ifndef ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
-#    define ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
+//#    define ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
 #endif
