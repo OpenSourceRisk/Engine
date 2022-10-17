@@ -19,9 +19,15 @@
 #include <iomanip>
 #include <iostream>
 
+#include <oret/config.hpp>
+
 // Boost.Test
 #define BOOST_TEST_MODULE "OREAnalyticsTestSuite"
+#ifdef ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
 #include <test-suite/paralleltestrunner.hpp>
+#else
+#include <boost/test/included/unit_test.hpp>
+#endif
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/test_tools.hpp>
 

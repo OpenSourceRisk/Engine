@@ -14,7 +14,7 @@ set_ql_library_name()
 
 
 find_package (Boost REQUIRED COMPONENTS unit_test_framework regex date_time thread serialization system filesystem timer OPTIONAL_COMPONENTS chrono)
-if (UNIX AND NOT APPLE)
+if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER AND UNIX AND NOT APPLE)
     find_library(RT_LIBRARY rt REQUIRED)
 endif()
 
