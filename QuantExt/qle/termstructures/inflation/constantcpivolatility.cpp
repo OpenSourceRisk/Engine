@@ -25,29 +25,14 @@ ConstantCPIVolatility::ConstantCPIVolatility(const QuantLib::Volatility v, Quant
                                              const QuantLib::Calendar& cal, QuantLib::BusinessDayConvention bdc,
                                              const QuantLib::DayCounter& dc, const QuantLib::Period& observationLag,
                                              QuantLib::Frequency frequency, bool indexIsInterpolated,
-                                             const QuantLib::Date& capFloorStartDate)
-    : QuantLib::ConstantCPIVolatility(v, settlementDays, cal, bdc, dc, observationLag, frequency, indexIsInterpolated),
-      capFloorStartDate_(capFloorStartDate) {}
+                                             const QuantLib::Date& capFloorStartDate, QuantLib::VolatilityType volType,
+                                             double displacement)
+    : QuantExt::CPIVolatilitySurface(settlementDays, cal, bdc, dc, observationLag, frequency, indexIsInterpolated,
+                                     capFloorStartDate, volType, displacement),
+      constantVol_(v){}
 
-QuantLib::Date ConstantCPIVolatility::capFloorStartDate() const {
-    if (capFloorStartDate_ == QuantLib::Date()) {
-        return referenceDate();
-    } else {
-        return capFloorStartDate_;
-    }
-}
-
-
-QuantLib::Date ConstantCPIVolatility::baseDate() const {
-    // Depends on interpolation, or not, of observed index
-    // and observation lag with which it was built.
-    // We want this to work even if the index does not
-    // have a term structure.
-    if (indexIsInterpolated()) {
-        return capFloorStartDate() - observationLag();
-    } else {
-        return QuantLib::inflationPeriod(capFloorStartDate() - observationLag(), frequency()).first;
-    }
-}
+QuantLib::Volatility ConstantCPIVolatility::volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const {
+    return constantVol_;
+};
 
 } // namespace QuantExt

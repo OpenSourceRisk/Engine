@@ -46,6 +46,7 @@ public:
     //@{
     Handle<QuantLib::CPIVolatilitySurface> volatility() { return vol_; }
     Handle<YieldTermStructure> yieldCurve() { return yts_; }
+    boost::shared_ptr<PricingEngine> engine() { return engine_; }
     //@}
 
     //! \name Observer interface
@@ -55,6 +56,7 @@ public:
 protected:
     Handle<QuantLib::CPIVolatilitySurface> vol_;
     Handle<YieldTermStructure> yts_;
+    boost::shared_ptr<PricingEngine> engine_;
 };
 
 //! Black CPI CashFlow Pricer.
@@ -63,25 +65,46 @@ public:
     BlackCPICashFlowPricer(const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
                            const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
                            const bool useLastFixing = false);
+};
+
+//! Bachelier CPI CashFlow Pricer.
+class BachelierCPICashFlowPricer : public InflationCashFlowPricer {
+public:
+    BachelierCPICashFlowPricer(
+        const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
+                           const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
+                           const bool useLastFixing = false);
+};
+
+class CappedFlooredCPICouponPricer : public QuantLib::CPICouponPricer {
+public:
+    CappedFlooredCPICouponPricer(const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
+                         const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
+
+    Handle<YieldTermStructure> yieldCurve() { return nominalTermStructure(); }
+    Handle<QuantLib::CPIVolatilitySurface> volatility() { return capletVolatility(); }
+
     boost::shared_ptr<PricingEngine> engine() { return engine_; }
 
-private:
+protected:
     // engine to price the underlying cap/floor
     boost::shared_ptr<PricingEngine> engine_;
 };
 
-class BlackCPICouponPricer : public CPICouponPricer {
+
+class BlackCPICouponPricer : public CappedFlooredCPICouponPricer {
 public:
     BlackCPICouponPricer(const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
                          const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
                          const bool useLastFixing = false);
-    Handle<YieldTermStructure> yieldCurve() { return nominalTermStructure(); }
-    Handle<QuantLib::CPIVolatilitySurface> volatility() { return capletVolatility(); }
-    boost::shared_ptr<PricingEngine> engine() { return engine_; }
+};
 
-private:
-    // engine to price the underlying cap/floor
-    boost::shared_ptr<PricingEngine> engine_;
+class BachelierCPICouponPricer : public CappedFlooredCPICouponPricer {
+public:
+    BachelierCPICouponPricer(
+        const Handle<QuantLib::CPIVolatilitySurface>& vol = Handle<QuantLib::CPIVolatilitySurface>(),
+                         const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>(),
+                         const bool useLastFixing = false);
 };
 
 } // namespace QuantExt
