@@ -812,7 +812,8 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
     } else if (anyType.type() == typeid(double)) {
         resultType = "double";
         double r = boost::any_cast<double>(anyType);
-        oss << std::fixed << std::setprecision(precision) << r;
+        if(r != Null<Real>())
+            oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(std::string)) {
         resultType = "string";
         std::string r = boost::any_cast<std::string>(anyType);
@@ -841,9 +842,13 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::fixed << std::setprecision(precision) << "\"" << r[0];
+            oss << std::fixed << std::setprecision(precision) << "\"";
+            if (r[0] != Null<Real>())
+                oss << r[0];
             for (Size i = 1; i < r.size(); i++) {
-                oss << ", " << r[i];
+                oss << ", ";
+                if (r[i] != Null<Real>())
+                    oss << r[i];
             }
         }
         oss << "\"";
