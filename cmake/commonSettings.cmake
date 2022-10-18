@@ -53,8 +53,8 @@ if(MSVC)
         add_definitions(-DBOOST_ALL_DYN_LINK)
         add_definitions(-DBOOST_TEST_DYN_LINK)
     endif()
-    #add_compile_options(/external:env:BOOST)
-    #add_compile_options(/external:W0)
+    add_compile_options(/external:env:BOOST)
+    add_compile_options(/external:W0)
     add_compile_definitions(_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
     add_compile_definitions(_SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING)
     add_compile_definitions(_SCL_SECURE_NO_DEPRECATE)
@@ -63,7 +63,7 @@ if(MSVC)
     add_compile_options(/bigobj)
     add_compile_options(/W3)
     #add_compile_options(/we4265) #no-virtual-destructor
-    add_compile_options(/we4388) # 'equality-operator' : signed/unsigned mismatch
+    #add_compile_options(/we4388) # 'equality-operator' : signed/unsigned mismatch
     add_compile_options(/we5038) # reorder 
     # add_compile_options(/we4101) # unreferenced local variable (too strict)
     add_compile_options(/we4189) # 'identifier' : local variable is initialized but not referenced
