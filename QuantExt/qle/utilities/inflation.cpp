@@ -20,6 +20,7 @@
 #include <ql/math/solvers1d/brent.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <ql/termstructures/inflation/interpolatedzeroinflationcurve.hpp>
+#include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
 
 using QuantLib::Date;
 using QuantLib::DayCounter;
@@ -229,6 +230,15 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
             r = guess;
         }
         return r;
+    }
+}
+
+bool isCPIVolSurfaceLogNormal(const boost::shared_ptr<QuantLib::CPIVolatilitySurface>& surface) {
+    if (auto qvs = boost::dynamic_pointer_cast<QuantExt::CPIVolatilitySurface>(surface)) {
+        return qvs->isLogNormal();
+    } else {
+        // QuantLib::CPIVolatilitySurface doesn't support volType so assume it's log normal
+        return true;
     }
 }
 

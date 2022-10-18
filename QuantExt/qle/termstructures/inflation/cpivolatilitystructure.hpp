@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
 
 namespace QuantExt {
@@ -39,7 +40,8 @@ public:
     CPIVolatilitySurface(QuantLib::Natural settlementDays,
                          const QuantLib::Calendar&, QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
                          const QuantLib::Period& observationLag, QuantLib::Frequency frequency,
-                         bool indexIsInterpolated, const QuantLib::Date& capFloorStartDate = QuantLib::Date());
+                         bool indexIsInterpolated, const QuantLib::Date& capFloorStartDate = QuantLib::Date(),
+                         QuantLib::VolatilityType volType = QuantLib::ShiftedLognormal, double displacement = 0.0);
 
     //! Computes the expiry date from the capFloorStartDate()
     virtual QuantLib::Date optionMaturityFromTenor(const QuantLib::Period& tenor) const;
@@ -47,13 +49,23 @@ public:
     //! base date will be in the past
     virtual QuantLib::Date baseDate() const override;
 
+    //! Returns the volatility type
+    virtual QuantLib::VolatilityType volatilityType() const { return volType_; }
+    //! Returns the displacement for lognormal volatilities
+    virtual double displacement() const { return displacement_; }
+
+    virtual bool isLogNormal() const { return volatilityType() == QuantLib::ShiftedLognormal; }
+
 protected:
     //! Computes the expiry time from the capFloorStartDate()
     //  time from reference till relevant fixing Date for a capFloor expiriy at maturityDate
     virtual double fixingTime(const QuantLib::Date& maturityDate) const;
     QuantLib::Date capFloorStartDate() const;
+    QuantLib::VolatilityType volType_;
+    double displacement_;
 
 private:
+    
     QuantLib::Date capFloorStartDate_;
 
 };

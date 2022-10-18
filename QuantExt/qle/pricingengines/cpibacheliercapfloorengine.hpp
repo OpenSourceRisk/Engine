@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016, 2022 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -24,35 +24,21 @@
 #ifndef quantext_cpi_bachelier_capfloor_engine_hpp
 #define quantext_cpi_bachelier_capfloor_engine_hpp
 
-#include <ql/instruments/cpicapfloor.hpp>
-#include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
+#include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 
 namespace QuantExt {
 
-class CPIBachelierCapFloorEngine : public QuantLib::CPICapFloor::engine {
+class CPIBachelierCapFloorEngine : public CPICapFloorEngine {
 public:
     CPIBachelierCapFloorEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                               const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface,
-                               const bool measureTimeToExpiryFromLastAvailableFixing = false);
-
-    virtual void calculate() const override;
-    virtual std::string name() const { return "CPIBachelierCapFloorEngine"; }
-
-    virtual ~CPIBachelierCapFloorEngine() {}
-
-    void setVolatility(const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface) {
-        if (!volatilitySurface_.empty())
-            unregisterWith(volatilitySurface_);
-        volatilitySurface_ = surface;
-        registerWith(volatilitySurface_);
-        update();
-    }
+                           const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface,
+                           const bool ttmFromLastAvailableFixing = false)
+        : CPICapFloorEngine(discountCurve, surface, ttmFromLastAvailableFixing){};
+    virtual ~CPIBachelierCapFloorEngine() = default;
 
 protected:
-    QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
-    QuantLib::Handle<QuantLib::CPIVolatilitySurface> volatilitySurface_;
-    bool measureTimeFromLastAvailableFixing_;
+    virtual double optionPriceImpl(QuantLib::Option::Type type, double forward, double strike, double stdDev,
+                                   double discount) const override;
 };
 
 } // namespace QuantExt

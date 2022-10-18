@@ -110,8 +110,9 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
 
 Rate CappedFlooredCPICoupon::rate() const {
     // rate = spread + fixedRate * capped/floored index
-    boost::shared_ptr<BlackCPICouponPricer> blackPricer = boost::dynamic_pointer_cast<BlackCPICouponPricer>(pricer_);
-    QL_REQUIRE(blackPricer, "BlackCPICouponPricer expected");
+    boost::shared_ptr<CappedFlooredCPICouponPricer> blackPricer =
+        boost::dynamic_pointer_cast<CappedFlooredCPICouponPricer>(pricer_);
+    QL_REQUIRE(blackPricer, "BlackCPICouponPricer or BachelierCPICouponPricer expected");
     Real capValue = 0.0, floorValue = 0.0;
     if (isCapped_) {
         cpiCap_->setPricingEngine(blackPricer->engine());
@@ -204,18 +205,16 @@ void CappedFlooredCPICashFlow::setPricer(const ext::shared_ptr<InflationCashFlow
 
 Real CappedFlooredCPICashFlow::amount() const {
     QL_REQUIRE(pricer_, "pricer not set for capped/floored CPI cashflow");
-    boost::shared_ptr<BlackCPICashFlowPricer> blackPricer =
-        boost::dynamic_pointer_cast<BlackCPICashFlowPricer>(pricer_);
     Real capValue = 0.0, floorValue = 0.0;
     if (isCapped_) {
-        cpiCap_->setPricingEngine(blackPricer->engine());
+        cpiCap_->setPricingEngine(pricer_->engine());
         capValue = cpiCap_->NPV();
     }
     if (isFloored_) {
-        cpiFloor_->setPricingEngine(blackPricer->engine());
+        cpiFloor_->setPricingEngine(pricer_->engine());
         floorValue = cpiFloor_->NPV();
     }
-    Real discount = blackPricer->yieldCurve()->discount(underlying_->date());
+    Real discount = pricer_->yieldCurve()->discount(underlying_->date());
     Real capAmount = capValue / discount;
     Real floorAmount = floorValue / discount;
     Real underlyingAmount = underlying_->amount();
