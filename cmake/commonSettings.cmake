@@ -132,8 +132,11 @@ get_filename_component(OREANALYTICS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ORE
 get_filename_component(ORETEST_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ORETest" ABSOLUTE)
 get_filename_component(RAPIDXML_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ThirdPartyLibs/rapidxml-1.13" ABSOLUTE)
 
-# parallel runner
+# parallel unit test runner
 option(ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER "Enable the parallel unit test runner" OFF)
+if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER)
+    add_definitions(-DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER)
+endif()
 
 # convenience function that adds a link directory dir, but only if it exists
 function(add_link_directory_if_exists dir)
