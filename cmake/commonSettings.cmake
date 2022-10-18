@@ -53,23 +53,38 @@ if(MSVC)
         add_definitions(-DBOOST_ALL_DYN_LINK)
         add_definitions(-DBOOST_TEST_DYN_LINK)
     endif()
-
+    #add_compile_options(/external:env:BOOST)
+    #add_compile_options(/external:W0)
     add_compile_definitions(_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
     add_compile_definitions(_SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING)
-    add_compiler_flag("-D_SCL_SECURE_NO_DEPRECATE" supports_D_SCL_SECURE_NO_DEPRECATE)
-    add_compiler_flag("-D_CRT_SECURE_NO_DEPRECATE" supports_D_CRT_SECURE_NO_DEPRECATE)
-    add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)
-    add_compiler_flag("/bigobj" supports_bigobj)
-    add_compiler_flag("/W3" supports_w3)
-
-    add_compiler_flag("/we4189" unused_variable_mscv)
-    add_compiler_flag("/wd4834" deactivate_discrading_return_value)
-
+    add_compile_definitions(_SCL_SECURE_NO_DEPRECATE)
+    add_compile_definitions(_CRT_SECURE_NO_DEPRECATE)
+    add_compile_definitions(BOOST_ENABLE_ASSERT_HANDLER)
+    add_compile_options(/bigobj)
+    add_compile_options(/W3)
+    #add_compile_options(/we4265) #no-virtual-destructor
+    add_compile_options(/we4388) # 'equality-operator' : signed/unsigned mismatch
+    add_compile_options(/we5038) # reorder 
+    # add_compile_options(/we4101) # unreferenced local variable (too strict)
+    add_compile_options(/we4189) # 'identifier' : local variable is initialized but not referenced
+    add_compile_options(/we4700) # uninitialized local variable 'name' used
+    add_compile_options(/we5233) # unused lambda 
+    add_compile_options(/we4508) # 'function' : function should return a value; 'void' return type assumed
+    add_compile_options(/wd4834)
     # add_compiler_flag("/we4389" signed_compare_mscv)
-    add_compiler_flag("/we5038" reorder_msvc)
+    
+    add_link_options(/LARGEADDRESSAWARE)
+
+    add_compile_options("$<$<CONFIG:RelWithDebInfo>:/GF>")
+    add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Gy>")
+    add_compile_options("$<$<CONFIG:RelWithDebInfo>:/GT>")
+
+    add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Ob2>")
+    add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Oi>")
+    add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Ot>")
 
     if(MSVC_PARALLELBUILD)
-        add_compiler_flag("/MP" parallel_build)
+        add_compile_options(/MP)
     endif()
 
 else()
