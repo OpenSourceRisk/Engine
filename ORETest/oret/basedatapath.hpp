@@ -31,7 +31,6 @@
 using boost::filesystem::exists;
 using boost::filesystem::is_directory;
 using boost::filesystem::path;
-using std::string;
 
 #ifdef BOOST_MSVC
 #define BOOST_LIB_NAME boost_system
@@ -54,21 +53,21 @@ namespace test {
     A default base data path of ".." and "." on Windows and Unix respectively
     is returned.
 */
-string getBaseDataPath(int argc, char** argv) {
+std::string getBaseDataPath(int argc, char** argv) {
 
     // Default initial value for the base data path
     // Allows a standard run on Unix or Windows from the executable directory without having
     // to specify a base_data_path on the command line
 #ifdef BOOST_MSVC
-    string strPath = "..";
+    std::string strPath = "..";
 #else
-    string strPath = ".";
+    std::string strPath = ".";
 #endif
 
     // Check if a base data path has been provided in the command line arguments
     for (int i = 1; i < argc; ++i) {
         if (boost::starts_with(argv[i], "--base_data_path")) {
-            vector<string> strs;
+            std::vector<std::string> strs;
             boost::split(strs, argv[i], boost::is_any_of("="));
             if (strs.size() > 1) {
                 strPath = strs[1];

@@ -64,7 +64,7 @@ using namespace ore::analytics;
 
 using testsuite::TestMarket;
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsPerformanceTestSuite, ore::test::OreaTopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(SwapPerformaceTest, *boost::unit_test::disabled())
 
