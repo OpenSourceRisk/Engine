@@ -16,7 +16,6 @@
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": true,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
-        "OREPLUS_LICENSE": false,
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       },
       "architecture": {
@@ -47,7 +46,6 @@
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": false,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": false,
-        "OREPLUS_LICENSE": false,
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       },
       "architecture": {
@@ -75,7 +73,6 @@
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": true,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
-        "OREPLUS_LICENSE": false,
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       },
       "architecture": {
@@ -103,7 +100,6 @@
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": false,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
-        "OREPLUS_LICENSE": false,
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       },
       "architecture": {
