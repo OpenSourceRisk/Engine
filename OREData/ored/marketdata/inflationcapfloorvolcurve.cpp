@@ -24,6 +24,7 @@
 #include <ql/experimental/inflation/interpolatedyoyoptionletstripper.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
+#include <qle/math/flatextrapolation.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolcurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
@@ -42,6 +43,39 @@ using namespace std;
 
 namespace ore {
 namespace data {
+
+//! a slice are all prices/vols for a given expiry, including missing values
+//! the function replace Null values with a linearFlat interpolated value
+void fillMissingPriceSurface(Matrix& surface, const std::vector<double>& strikes,
+                       const std::vector<Period>& terms) {
+    for (int j = 0; j < terms.size(); ++j) {
+        std::vector<double> xs;
+        std::vector<double> ys;
+        std::vector<size_t> missingIds;
+        for (int i = 0; i < strikes.size(); ++i) {
+            if (surface[i][j] == Null<double>()) {
+                missingIds.push_back(i);
+            } else {
+                xs.push_back(strikes[i]);
+                ys.push_back(surface[i][j]);
+            }
+        }
+        if (!missingIds.empty() && xs.size()>=2) {
+            auto interpolation = Linear().interpolate(xs.begin(), xs.end(), ys.begin());
+            for (auto i : missingIds) {
+                // Only interpolation of the prices
+                if (strikes[i] > interpolation.xMin() && strikes[i] <  interpolation.xMax()) {
+                    auto value = interpolation(strikes[i], false);
+                    WLOG("quote for cap floor price surface, type cap, strike "
+                         << strikes[i] << ", term " << terms[j] << ", not found. Replace NULL with " << value);
+                    surface[i][j] = value;
+                }
+            }
+        }
+    }
+}
+
+
 
 InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloorVolatilityCurveSpec spec,
                                                      const Loader& loader, const CurveConfigurations& curveConfigs,
@@ -160,7 +194,41 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
     LOG("InflationCapFloorVolCurve: read " << quotesRead << " vols");
 
     // Check that we have all the data we need
+    size_t filledValues = 0;
     if (remainingQuotes != 0) {
+        // Fill missing quotes
+        for (size_t i = 0; i < tenors.size(); ++i) {
+            std::vector<double> xs;
+            std::vector<double> ys;
+            std::vector<size_t> missingIds;
+            for (size_t j = 0; j < strikes.size(); ++j) {
+                if (found[i][j]) {
+                    xs.push_back(strikes[j]);
+                    ys.push_back(vols[i][j]);
+                } else {
+                    missingIds.push_back(j);
+                }
+            }
+            if (!missingIds.empty() && xs.size() >= 1) {
+                if (xs.size() == 1) {
+                    xs.push_back(xs.front() + 0.01);
+                    ys.push_back(ys.front());
+                }
+                auto interpolation = LinearFlat().interpolate(xs.begin(), xs.end(), ys.begin());
+                for (auto j : missingIds) {
+                    auto value = interpolation(strikes[j], true);
+
+                    WLOG("vol for cap floor price surface, strike " << strikes[j] << ", term " << tenors[i]
+                                                                    << ", not found. Replace NULL with " << value);
+                    vols[i][j] = value;
+                    filledValues++;
+                }
+            }
+        }
+    }
+
+    if (remainingQuotes - filledValues != 0){
+        
         ostringstream m;
         m << "Not all quotes found for spec " << spec << endl;
         if (remainingQuotes != 0) {
@@ -332,6 +400,9 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
             }
         }
     }
+
+    fillMissingPriceSurface(cPrice, capStrikes, terms);
+    fillMissingPriceSurface(fPrice, floorStrikes, terms);
 
     for (Size j = 0; j < terms.size(); ++j) {
         for (Size i = 0; i < capStrikes.size(); ++i)
