@@ -615,7 +615,7 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
 }
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsPerformanceTestSuite, ore::test::OreaTopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(SensitivityPerformanceTest, *boost::unit_test::disabled())
 

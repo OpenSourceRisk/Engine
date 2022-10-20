@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2020 Quaternion Risk Management Ltd
+ Copyright (C) 2022 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,24 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/structuredanalyticserror.hpp
-    \brief Structured analytics error
-    \ingroup app
+/*! \file oret/config.hpp
+    \brief ORE Test utilities
 */
 
 #pragma once
 
-#include <ored/utilities/log.hpp>
-
-namespace ore {
-namespace analytics {
-
-class StructuredAnalyticsErrorMessage : public ore::data::StructuredMessage {
-public:
-    StructuredAnalyticsErrorMessage(const std::string& exceptionType, const std::string& exceptionWhat)
-        : StructuredMessage("Error", "Analytics", exceptionWhat,
-                            std::map<std::string, std::string>({{"exceptionType", exceptionType}})) {}
-};
-
-} // namespace analytics
-} // namespace ore
+/* Define this to enable the parallel unit test runner */
+#ifndef ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
+//#    define ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
+#endif

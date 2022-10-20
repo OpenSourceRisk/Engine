@@ -2,19 +2,82 @@
   "version": 2,
   "configurePresets": [
     {
-      "name": "windows-msvc-x64",
+      "name": "windows-ninja-x64-relWithDebInfo",
       "binaryDir": "${sourceDir}/build",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Ninja",
       "cacheVariables": {
-        "Boost_DIR": "$env{BOOST}",
-        "Boost_INCLUDE_DIR": "$env{BOOST_INCLUDE_DIR}",
-        "Boost_LIBRARY_DIR": "$env{BOOST_LIBRARYDIR}",
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "BOOST_INCLUDEDIR": "$env{BOOST}",
+        "BOOST_LIBRARYDIR": "$env{BOOST_LIB64}",
+        "QL_BUILD_EXAMPLES": false,
+        "QL_BUILD_TEST_SUITE": false,
+        "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": true,
-        "OREPLUS_LICENSE": false
+        "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       },
       "architecture": {
         "value": "x64",
         "strategy": "external"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-msvc-x64",
+          "hostOS": [
+            "Windows"
+          ]
+        }
+      }
+    },
+    {
+      "name": "windows-ninja-x64-debug",
+      "binaryDir": "${sourceDir}/build",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BOOST_INCLUDEDIR": "$env{BOOST}",
+        "BOOST_LIBRARYDIR": "$env{BOOST_LIB64}",
+        "QL_BUILD_EXAMPLES": false,
+        "QL_BUILD_TEST_SUITE": false,
+        "QL_BUILD_BENCHMARK": false,
+        "MSVC_LINK_DYNAMIC_RUNTIME": false,
+        "MSVC_WHOLE_PROGRAM_OPTIMIZATION": false,
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      },
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-msvc-x64",
+          "hostOS": [
+            "Windows"
+          ]
+        }
+      }
+    },
+    {
+      "name": "windows-msvc-x64",
+      "binaryDir": "${sourceDir}/build",
+      "generator": "Visual Studio 17 2022",
+      "cacheVariables": {
+        "BOOST_INCLUDEDIR": "$env{BOOST}",
+        "BOOST_LIBRARYDIR": "$env{BOOST_LIB64}",
+        "QL_BUILD_EXAMPLES": false,
+        "QL_BUILD_TEST_SUITE": false,
+        "QL_BUILD_BENCHMARK": false,
+        "MSVC_LINK_DYNAMIC_RUNTIME": true,
+        "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      },
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -30,15 +93,18 @@
       "binaryDir": "${sourceDir}/build",
       "generator": "Visual Studio 17 2022",
       "cacheVariables": {
-        "Boost_DIR": "$env{BOOST}",
-        "Boost_INCLUDE_DIR": "$env{BOOST_INCLUDE_DIR}",
-        "Boost_LIBRARY_DIR": "$env{BOOST_LIBRARYDIR}",
+        "BOOST_INCLUDEDIR": "$env{BOOST}",
+        "BOOST_LIBRARYDIR": "$env{BOOST_LIB64}",
+        "QL_BUILD_EXAMPLES": false,
+        "QL_BUILD_TEST_SUITE": false,
+        "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": false,
-        "OREPLUS_LICENSE": false
+        "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       },
       "architecture": {
         "value": "x64",
-        "strategy": "external"
+        "strategy": "set"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -52,24 +118,46 @@
   ],
   "buildPresets": [
     {
-      "name": "windows-msvc-x64-release",
-      "configurePreset": "windows-msvc-x64",
+      "name": "windows-ninja-x64-relWithDebInfo",
+      "configurePreset": "windows-ninja-x64-relWithDebInfo",
       "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "windows-ninja-x64-debug",
+      "configurePreset": "windows-ninja-x64-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-x64-relWithDebInfo",
+      "configurePreset": "windows-msvc-x64",
+      "configuration": "RelWithDebInfo",
+      "nativeToolOptions": [
+        "-m"
+      ]
     },
     {
       "name": "windows-msvc-x64-debug",
       "configurePreset": "windows-msvc-x64",
-      "configuration": "Debug"
+      "configuration": "Debug",
+      "nativeToolOptions": [
+        "-m"
+      ]
     },
     {
-      "name": "windows-msvc-x64-static-release",
+      "name": "windows-msvc-x64-static-relWithDebInfo",
       "configurePreset": "windows-msvc-x64-static",
-      "configuration": "RelWithDebInfo"
+      "configuration": "RelWithDebInfo",
+      "nativeToolOptions": [
+        "-m"
+      ]
     },
     {
       "name": "windows-msvc-x64-static-debug",
       "configurePreset": "windows-msvc-x64-static",
-      "configuration": "Debug"
+      "configuration": "Debug",
+      "nativeToolOptions": [
+        "-m"
+      ]
     }
   ]
 }
