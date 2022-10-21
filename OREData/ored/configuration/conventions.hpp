@@ -1589,6 +1589,7 @@ public:
     OptionAnchorType optionAnchorType() const { return optionAnchorType_; }
     QuantLib::Natural optionNth() const { return optionNth_; }
     QuantLib::Weekday optionWeekday() const { return optionWeekday_; }
+    const std::string& savingsTime() const { return savingsTime_; }
     //@}
 
     //! Serialisation
@@ -1654,6 +1655,9 @@ private:
     QuantLib::Natural optionNth_;
     QuantLib::Weekday optionWeekday_;
     QuantLib::Natural optionExpiryDay_;
+
+    std::string savingsTime_;
+
     //! Populate and check frequency.
     Frequency parseAndValidateFrequency(const std::string& strFrequency);
 

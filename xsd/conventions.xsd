@@ -439,6 +439,7 @@
       <xs:element type="xs:nonNegativeInteger" name="HoursPerDay" minOccurs="0" maxOccurs="1"/>
       <xs:element type="offPeakPowerIndexDataType" name="OffPeakPowerIndexData" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="IndexName" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SavingsTime" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
