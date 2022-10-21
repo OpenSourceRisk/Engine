@@ -44,6 +44,8 @@ public:
         Real endFxFixing;
         Real pastDividends;
         Real forecastDividends;
+
+        void clear();
     };
 
     virtual ~EquityCouponPricer() {}

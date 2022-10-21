@@ -20,7 +20,20 @@
 
 namespace QuantExt {
 
+void EquityCouponPricer::AdditionalResultCache::clear() {
+    startFixingTotal = Null<Real>();
+    startFixing = Null<Real>();
+    startFxFixing = Null<Real>();
+    endFixingTotal = Null<Real>();
+    endFixing = Null<Real>();
+    endFxFixing = Null<Real>();
+    pastDividends = Null<Real>();
+    forecastDividends = Null<Real>();
+}
+
 Rate EquityCouponPricer::swapletRate() {
+    additionalResultCache_.clear();
+
     // Start fixing shouldn't include dividends as the assumption of continuous dividends means they will have been paid
     // as they accrued in the previous period (or at least at the end when performance is measured).
     additionalResultCache_.startFixing = coupon_->initialPrice();
