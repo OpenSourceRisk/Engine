@@ -1131,6 +1131,8 @@ CommodityQuantityFrequency parseCommodityQuantityFrequency(const string& s) {
         return CQF::PerPricingDay;
     } else if (iequals(s, "PerHour")) {
         return CQF::PerHour;
+    } else if (iequals(s, "PerHourAndCalendarDay")) {
+        return CQF::PerHourAndCalendarDay;
     } else {
         QL_FAIL("Could not parse " << s << " to CommodityQuantityFrequency");
     }
@@ -1145,6 +1147,8 @@ ostream& operator<<(ostream& os, CommodityQuantityFrequency cqf) {
         return os << "PerPricingDay";
     } else if (cqf == CQF::PerHour) {
         return os << "PerHour";
+    } else if (cqf == CQF::PerHourAndCalendarDay) {
+        return os << "PerHourAndCalendarDay";
     } else {
         QL_FAIL("Do not recognise CommodityQuantityFrequency " << static_cast<int>(cqf));
     }
