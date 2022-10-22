@@ -850,8 +850,8 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
                 if (r[i] != Null<Real>())
                     oss << r[i];
             }
+            oss << "\"";
         }
-        oss << "\"";
     } else if (anyType.type() == typeid(std::vector<Date>)) {
         resultType = "vector_date";
         std::vector<Date> r = boost::any_cast<std::vector<Date>>(anyType);
