@@ -185,7 +185,7 @@ void Log::log(unsigned m) {
         }
     } else if (writeSuppressedMessagesHint_) {
         std::string suffix;
-        if (msg.find(ore::data::StructuredErrorMessage::name) == string::npos) {
+        if (msg.find(StructuredMessage::name) == string::npos) {
             suffix = " ... suppressing more messages from same source code location (cutoff = " +
                      std::to_string(sameSourceLocationCutoff_) + " lines)";
         }
