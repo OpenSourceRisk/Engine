@@ -128,6 +128,8 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["payment_date"] = arguments_.flow->date();
     mp["accrued"] = accrued.first;
     mp["discount"] = discount;
+    if(arguments_.fxIndex)
+        mp["FXIndex"] = arguments_.fxIndex->name();
 
     // If not model dependent, return early.
     if (!isModelDependent(accrued)) {
@@ -160,7 +162,12 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
             // so that the following adjustment is not necessary.
             //forwards.push_back(p.second->fixing(p.first));
             Date fixingDate = p.second->fixingCalendar().adjust(p.first, Preceding);
-            forwards.push_back(p.second->fixing(fixingDate));
+            /* Here the FX index is applied.
+             * This implementation completely neglects the fx index volatility.
+             * To include it the correlation between the commodity index and the fx index is required
+             */
+            Real fxRate = (arguments_.fxIndex)?arguments_.fxIndex->fixing(fixingDate):1.0;
+            forwards.push_back(fxRate*p.second->fixing(fixingDate)); // apply the fx rate daily on the relevant future prices
             times.push_back(volStructure_->timeFromReference(p.first));
             if (arguments_.flow->useFuturePrice()) {
                 Date expiry = p.second->expiryDate();
