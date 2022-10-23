@@ -14,9 +14,10 @@ CommodityAveragePriceOption::CommodityAveragePriceOption(const boost::shared_ptr
                                                          const Real& quantity, const Real& strikePrice,
                                                          QuantLib::Option::Type type,
                                                          QuantLib::Settlement::Type delivery,
-                                                         QuantLib::Settlement::Method settlementMethod)
+                                                         QuantLib::Settlement::Method settlementMethod,
+                                                         const boost::shared_ptr<FxIndex>& fxIndex)
     : Option(ext::shared_ptr<Payoff>(), exercise), flow_(flow), quantity_(quantity), strikePrice_(strikePrice),
-      type_(type), settlementType_(delivery), settlementMethod_(settlementMethod) {
+      type_(type), settlementType_(delivery), settlementMethod_(settlementMethod), fxIndex_(fxIndex) {
     registerWith(flow_);
 }
 
@@ -38,6 +39,7 @@ void CommodityAveragePriceOption::setupArguments(PricingEngine::arguments* args)
     arguments->settlementMethod = settlementMethod_;
     arguments->exercise = exercise_;
     arguments->flow = flow_;
+    arguments->fxIndex = fxIndex_;
 }
 
 CommodityAveragePriceOption::arguments::arguments()
@@ -46,7 +48,7 @@ CommodityAveragePriceOption::arguments::arguments()
       effectiveStrike(0.0),
       type(Option::Call),
       settlementType(Settlement::Physical),
-      settlementMethod(Settlement::PhysicalOTC) {}
+      settlementMethod(Settlement::PhysicalOTC){}
 
 void CommodityAveragePriceOption::arguments::validate() const {
     QL_REQUIRE(flow, "underlying not set");
