@@ -93,7 +93,7 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
 Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& market, const string& ccyCode,
                                           const string& configuration);
 
-std::pair<Natural, Calendar> getFxIndexConventions(const string& index);
+std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const string& index);
 
 } // namespace data
 } // namespace ore
