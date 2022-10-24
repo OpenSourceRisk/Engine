@@ -250,8 +250,10 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
                     boost::shared_ptr<EquityCoupon> eqc = boost::dynamic_pointer_cast<EquityCoupon>(flow);
                     if (eqc) {
                         EquityCouponPricer::AdditionalResultCache arc = eqc->pricer()->additionalResultCache();
-                        additionalData_["startEquityFixing[" + legID + "][" + couponId + "]"] = arc.startFixing;
+                        additionalData_["initialPrice[" + legID + "][" + couponId + "]"] = arc.initialPrice;
                         additionalData_["endEquityFixing[" + legID + "][" + couponId + "]"] = arc.endFixing;
+                        if (arc.startFixing != Null<Real>())
+                            additionalData_["startEquityFixing[" + legID + "][" + couponId + "]"] = arc.startFixing;
                         if (arc.startFixingTotal != Null<Real>())
                             additionalData_["startEquityFixingTotal[" + legID + "][" + couponId + "]"] =
                                 arc.startFixingTotal;
