@@ -1,4 +1,3 @@
-
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
  Copyright (C) 2017 Aareal Bank AG
@@ -1485,6 +1484,22 @@ void ReportWriter::writeFixings(Report& report, const boost::shared_ptr<Loader>&
 
     report.end();
     LOG("Fixings report written");
+}
+
+void ReportWriter::writeDividends(Report& report, const boost::shared_ptr<Loader>& loader) {
+
+    LOG("Writing Dividends report");
+
+    report.addColumn("dividendDate", Date())
+        .addColumn("equityId", string())
+        .addColumn("dividendRate", double(), 10);
+
+    for (const auto& f : loader->loadDividends()) {
+        report.next().add(f.date).add(f.name).add(f.fixing);
+    }
+
+    report.end();
+    LOG("Dividends report written");
 }
 
 void ReportWriter::writePricingStats(ore::data::Report& report, const boost::shared_ptr<Portfolio>& portfolio) {

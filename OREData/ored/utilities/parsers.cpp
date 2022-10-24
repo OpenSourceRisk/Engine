@@ -850,8 +850,8 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
                 if (r[i] != Null<Real>())
                     oss << r[i];
             }
+            oss << "\"";
         }
-        oss << "\"";
     } else if (anyType.type() == typeid(std::vector<Date>)) {
         resultType = "vector_date";
         std::vector<Date> r = boost::any_cast<std::vector<Date>>(anyType);
@@ -1131,6 +1131,8 @@ CommodityQuantityFrequency parseCommodityQuantityFrequency(const string& s) {
         return CQF::PerPricingDay;
     } else if (iequals(s, "PerHour")) {
         return CQF::PerHour;
+    } else if (iequals(s, "PerHourAndCalendarDay")) {
+        return CQF::PerHourAndCalendarDay;
     } else {
         QL_FAIL("Could not parse " << s << " to CommodityQuantityFrequency");
     }
@@ -1145,6 +1147,8 @@ ostream& operator<<(ostream& os, CommodityQuantityFrequency cqf) {
         return os << "PerPricingDay";
     } else if (cqf == CQF::PerHour) {
         return os << "PerHour";
+    } else if (cqf == CQF::PerHourAndCalendarDay) {
+        return os << "PerHourAndCalendarDay";
     } else {
         QL_FAIL("Do not recognise CommodityQuantityFrequency " << static_cast<int>(cqf));
     }

@@ -308,6 +308,12 @@ private:
     unsigned mask_;
     std::ostringstream ls_;
 
+    std::size_t sameSourceLocationSince_ = 0;
+    bool writeSuppressedMessagesHint_ = true;
+    std::size_t sameSourceLocationCutoff_ = 1000;
+    string lastFileName_;
+    int lastLineNo_ = 0;
+
     int pid_ = 0;
 
     mutable boost::shared_mutex mutex_;
