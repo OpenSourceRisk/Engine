@@ -923,6 +923,7 @@ public:
     std::vector<Indexing>& indexing() { return indexing_; }
     bool& indexingFromAssetLeg() { return indexingFromAssetLeg_; }
     string& paymentConvention() { return paymentConvention_; }
+    std::vector<std::string>& paymentDates() { return paymentDates_; }
     //@}
 
     virtual boost::shared_ptr<LegAdditionalData> initialiseConcreteLegData(const string&);
