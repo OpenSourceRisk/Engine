@@ -42,7 +42,7 @@ std::tuple<Real, Size, bool> CommodityAveragePriceOptionBaseEngine::calculateAcc
     }
 
     // Calculate accrued
-    bool alive = true;
+    bool barrierTriggered = false;
     for (const auto& kv : arguments_.flow->indices()) {
 
         // Break on the first pricing date that is greater than today
@@ -56,13 +56,10 @@ std::tuple<Real, Size, bool> CommodityAveragePriceOptionBaseEngine::calculateAcc
         ++std::get<1>(result);
 
         // check barrier
-        if(!checkBarrier(tmp, false)) {
-            alive = false;
-            break;
-        }
+        barrierTriggered = barrierTriggered || this->barrierTriggered(tmp, false);
     }
 
-    std::get<2>(result) = alive;
+    std::get<2>(result) = alive(barrierTriggered);
 
     // We should have pricing dates in the period but check.
     auto n = arguments_.flow->indices().size();
@@ -124,19 +121,24 @@ bool CommodityAveragePriceOptionBaseEngine::isModelDependent(const std::tuple<Re
     return std::get<2>(accrued);
 }
 
-bool CommodityAveragePriceOptionBaseEngine::checkBarrier(const Real price, const bool logPrice) const {
+bool CommodityAveragePriceOptionBaseEngine::barrierTriggered(const Real price, const bool logPrice) const {
+    if (arguments_.barrierLevel == Null<Real>())
+        return false;
+    Real tmp = logPrice ? logBarrier_ : arguments_.barrierLevel;
+    if (arguments_.barrierType == Barrier::DownIn || arguments_.barrierType == Barrier::DownOut)
+        return price <= tmp;
+    else if (arguments_.barrierType == Barrier::UpIn || arguments_.barrierType == Barrier::UpOut)
+        return price >= tmp;
+    return false;
+}
+
+bool CommodityAveragePriceOptionBaseEngine::alive(const bool barrierTriggered) const {
     if (arguments_.barrierLevel == Null<Real>())
         return true;
-    Real tmp = logPrice ? logBarrier_ : arguments_.barrierLevel;
-    if (arguments_.barrierType == Barrier::DownIn)
-        return price <= tmp;
-    else if (arguments_.barrierType == Barrier::UpIn)
-        return price >= tmp;
-    else if (arguments_.barrierType == Barrier::DownOut)
-        return price >= tmp;
-    else if (arguments_.barrierType == Barrier::UpOut)
-        return price <= tmp;
-    return true;
+    return ((arguments_.barrierType == Barrier::DownIn || arguments_.barrierType == Barrier::UpIn) &&
+            barrierTriggered) ||
+           ((arguments_.barrierType == Barrier::DownOut || arguments_.barrierType == Barrier::UpOut) &&
+            !barrierTriggered);
 }
 
 void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
@@ -329,7 +331,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const std::tuple
         Real samplePayoff = 0.0;
         Array path(sequence.begin(), sequence.end());
         path = Exp(path * fwdStdDev) * factors;
-        bool alive = true;
+        bool barrierTriggered = false;
         for (Size i = 0; i < dt.size(); i++) {
 
             // Update price
@@ -339,12 +341,9 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const std::tuple
             samplePayoff += price;
 
             // check barrier
-            if (!checkBarrier(price, false)) {
-                alive = false;
-                break;
-            }
+            barrierTriggered = barrierTriggered || this->barrierTriggered(price, false);
         }
-        if (!alive)
+        if (!alive(barrierTriggered))
             samplePayoff = 0.0;
 
         // Average price on this sample
@@ -437,15 +436,12 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const std::tup
 
         // Calculate the sum of the commodity future prices on the pricing dates after today
         Real samplePayoff = 0.0;
-        bool alive = true;
+        bool barrierTriggered = false;
         for (Size j = 0; j < dt.size(); ++j) {
-            if (!checkBarrier(paths[futureIndex[j]][j], true)) {
-                alive = false;
-                break;
-            }
+            barrierTriggered = barrierTriggered || this->barrierTriggered(paths[futureIndex[j]][j], true);
             samplePayoff += std::exp(paths[futureIndex[j]][j]);
         }
-        if (!alive)
+        if (!alive(barrierTriggered))
             samplePayoff = 0.0;
 
         // Average price on this sample
