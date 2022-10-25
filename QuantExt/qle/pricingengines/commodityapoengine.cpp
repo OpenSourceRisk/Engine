@@ -343,14 +343,15 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const std::tuple
             // check barrier
             barrierTriggered = barrierTriggered || this->barrierTriggered(price, false);
         }
-        if (!alive(barrierTriggered))
-            samplePayoff = 0.0;
-
         // Average price on this sample
         samplePayoff /= m;
 
         // Finally, the payoff on this sample
         samplePayoff = max(omega * (samplePayoff - effectiveStrike), 0.0);
+
+        // account for barrier
+        if (!alive(barrierTriggered))
+            samplePayoff = 0.0;
 
         // Update the final average
         // Note: payoff * k / (k + 1) - left to right precedence => double division.
@@ -441,14 +442,16 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const std::tup
             barrierTriggered = barrierTriggered || this->barrierTriggered(paths[futureIndex[j]][j], true);
             samplePayoff += std::exp(paths[futureIndex[j]][j]);
         }
-        if (!alive(barrierTriggered))
-            samplePayoff = 0.0;
 
         // Average price on this sample
         samplePayoff /= m;
 
         // Finally, the payoff on this sample
         samplePayoff = max(omega * (samplePayoff - effectiveStrike), 0.0);
+
+        // account for barrier
+        if (!alive(barrierTriggered))
+            samplePayoff = 0.0;
 
         // Update the final average
         // Note: payoff * k / (k + 1) - left to right precedence => double division.
