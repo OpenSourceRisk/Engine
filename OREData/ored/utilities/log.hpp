@@ -308,6 +308,12 @@ private:
     unsigned mask_;
     std::ostringstream ls_;
 
+    std::size_t sameSourceLocationSince_ = 0;
+    bool writeSuppressedMessagesHint_ = true;
+    std::size_t sameSourceLocationCutoff_ = 1000;
+    string lastFileName_;
+    int lastLineNo_ = 0;
+
     int pid_ = 0;
 
     mutable boost::shared_mutex mutex_;
@@ -420,30 +426,57 @@ private:
 #define DLOGGERSTREAM(text) CHECKED_LOGGERSTREAM(ORE_DEBUG, text)
 #define TLOGGERSTREAM(text) CHECKED_LOGGERSTREAM(ORE_DATA, text)
 
-//! Utility class for having structured Error messages
 // This can be used directly in log messages, e.g.
 // ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error Parsing Trade", "Invalid XML Node foo"));
 // And in the log file you will get
 //
-// .... StructuredErrorMessage { "errorType":"Trade", "tradeId":"foo", "tradeType":"SWAP" }
-class StructuredErrorMessage {
+// .... StructuredMessage {
+//    "category": "Error",
+//    "group": "Trade",
+//    "message": "Invalid XML Node foo",
+//    "subFields": [
+//        {
+//            "fieldName": "exceptionType",
+//            "fieldValue": "Error Parsing Trade"
+//        },
+//        {
+//            "fieldName": "tradeId",
+//            "fieldValue": "foo"
+//        },
+//        {
+//            "fieldName": "tradeType",
+//            "fieldValue": "Swap"
+//        }
+//    ]
+//}
+class StructuredMessage {
 public:
-    virtual ~StructuredErrorMessage() {}
-    static constexpr const char* name = "StructuredErrorMessage";
+    StructuredMessage(const string& category, const string& group, const string& message,
+                      const std::map<string, string>& subFields = std::map<string, string>())
+        : category_(category), group_(group), message_(message), subFields_(subFields) {}
+
+    StructuredMessage(const string& category, const string& group, const string& message,
+                      const std::pair<string, string>& subField = std::pair<string, string>())
+        : StructuredMessage(category, group, message, std::map<string, string>({subField})) {}
+
+    virtual ~StructuredMessage() {}
+
+    static constexpr const char* name = "StructuredMessage";
 
     //! return a string for the log file
-    std::string msg() const { return string(name) + string(" ") + json(); }
+    string msg() const { return string(name) + string(" ") + json(); }
 
-protected:
-    // This should return a structured string, ideally in JSON, and should contain a field
-    // errorType
-    virtual std::string json() const = 0;
+    string json() const;
 
-    // utility function to delimit string for json, handles \" and \\ and control characters
-    std::string jsonify(const std::string& s) const;
+private:
+    // utility function to delimate string for json, handles \" and \\ and control characters
+    string jsonify(const string& s) const;
+
+    string category_, group_, message_;
+    std::map<string, string> subFields_;
 };
 
-inline std::ostream& operator<<(std::ostream& out, const StructuredErrorMessage& sem) { return out << sem.msg(); }
+inline std::ostream& operator<<(std::ostream& out, const StructuredMessage& sm) { return out << sm.msg(); }
 
 } // namespace data
 } // namespace ore

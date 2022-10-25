@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2022 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,25 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*!
- \file cpibacheliercapfloorengines.cpp
- \brief Engines for CPI options
- \ingroup PricingEngines
- */
+/*! \file oret/config.hpp
+    \brief ORE Test utilities
+*/
 
-#include <ql/time/daycounters/actualactual.hpp>
+#pragma once
 
-#include <ql/pricingengines/blackformula.hpp>
-#include <qle/pricingengines/cpibacheliercapfloorengine.hpp>
-#include <qle/utilities/inflation.hpp>
-
-using namespace QuantLib;
-
-namespace QuantExt {
-
-double CPIBachelierCapFloorEngine::optionPriceImpl(QuantLib::Option::Type type, double strike, double forward,
-                                               double stdDev, double discount) const {
-    return bachelierBlackFormula(type, strike, forward, stdDev, discount);
-}
-
-} // namespace QuantExt
+/* Define this to enable the parallel unit test runner */
+#ifndef ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
+//#    define ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
+#endif

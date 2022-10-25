@@ -34,6 +34,14 @@ target_link_libraries(ore ${QLE_LIB_NAME})
 target_link_libraries(ore ${QL_LIB_NAME})
 target_link_libraries(ore ${Boost_LIBRARIES})
 
+if(MSVC AND MSVC_WHOLE_PROGRAM_OPTIMIZATION)
+    target_compile_options(ore PRIVATE "$<$<CONFIG:RelWithDebInfo>:/GL>")
+    target_link_options(ore PRIVATE "$<$<CONFIG:RelWithDebInfo>:/INCREMENTAL:NO>")
+    target_link_options(ore PRIVATE "$<$<CONFIG:RelWithDebInfo>:/LTCG>")
+    target_link_options(ore PRIVATE "$<$<CONFIG:RelWithDebInfo>:/OPT:REF>")
+    target_link_options(ore PRIVATE "$<$<CONFIG:RelWithDebInfo>:/OPT:ICF>")
+endif()
+
 install(TARGETS ore
         RUNTIME DESTINATION bin
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE

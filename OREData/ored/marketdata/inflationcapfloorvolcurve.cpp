@@ -34,6 +34,7 @@
 #include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 #include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
+#include <qle/pricingengines/cpibacheliercapfloorengine.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -239,7 +240,7 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
 
         cpiVolSurface_ = boost::make_shared<InterpolatedCPIVolatilitySurface<Bilinear>>(
             tenors, strikes, quotes, index, config->settleDays(), config->calendar(), config->businessDayConvention(),
-            config->dayCounter(), config->observationLag(), startDate);
+            config->dayCounter(), config->observationLag(), startDate, Bilinear(), quoteVolatilityType, 0.0);
         if (config->extrapolate())
             cpiVolSurface_->enableExtrapolation();
         DLOG("Building surface done");
@@ -259,6 +260,23 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
     QL_REQUIRE((config->type() == InflationCapFloorVolatilityCurveConfig::Type::ZC) ||
                    (config->type() == InflationCapFloorVolatilityCurveConfig::Type::YY),
                "Inflation cap floor pricevolatility surfaces must be of type 'ZC' or 'YY'");
+
+    // Volatility type
+    VolatilityType quoteVolatilityType;
+
+    switch (config->volatilityType()) {
+    case InflationCapFloorVolatilityCurveConfig::VolatilityType::Lognormal:
+        quoteVolatilityType = ShiftedLognormal;
+        break;
+    case InflationCapFloorVolatilityCurveConfig::VolatilityType::Normal:
+        quoteVolatilityType = Normal;
+        break;
+    case InflationCapFloorVolatilityCurveConfig::VolatilityType::ShiftedLognormal:
+        quoteVolatilityType = ShiftedLognormal;
+        break;
+    default:
+        QL_FAIL("unexpected volatility type");
+    }
 
     // Required by QuantLib price surface constructors but apparently not used
     Real startRate = 0.0;
@@ -413,10 +431,19 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         // cast
         surface_ = cpiPriceSurfacePtr;
 
-        boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine =
-            boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(
-                discountCurve_, QuantLib::Handle<QuantLib::CPIVolatilitySurface>(), config->useLastAvailableFixingDate()); // vol surface can be empty, will
-                                                                                     // be set in the striping process
+        boost::shared_ptr<QuantExt::CPICapFloorEngine> engine;
+
+        bool isLogNormalVol = quoteVolatilityType == QuantLib::ShiftedLognormal;
+
+        if (isLogNormalVol) {
+            engine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(
+                discountCurve_, QuantLib::Handle<QuantLib::CPIVolatilitySurface>(),
+                config->useLastAvailableFixingDate());
+        } else {
+            engine = boost::make_shared<QuantExt::CPIBachelierCapFloorEngine>(
+                discountCurve_, QuantLib::Handle<QuantLib::CPIVolatilitySurface>(),
+                config->useLastAvailableFixingDate());
+        }
 
         try {
             const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
@@ -429,7 +456,9 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
             QuantLib::Handle<CPICapFloorTermPriceSurface> cpiPriceSurfaceHandle(cpiPriceSurfacePtr);
             boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>> cpiCapFloorVolSurface;
             cpiCapFloorVolSurface = boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>>(
-                QuantExt::PriceQuotePreference::CapFloor, cpiPriceSurfaceHandle, index, engine, startDate);
+                QuantExt::PriceQuotePreference::CapFloor, cpiPriceSurfaceHandle, index, engine, startDate,
+                StrippedCPIVolSurfaceDefaultValues::upperVolBound, StrippedCPIVolSurfaceDefaultValues::lowerVolBound,
+                StrippedCPIVolSurfaceDefaultValues::solverTolerance, Bilinear(), quoteVolatilityType, 0.0);
 
             // cast
             cpiVolSurface_ = cpiCapFloorVolSurface;

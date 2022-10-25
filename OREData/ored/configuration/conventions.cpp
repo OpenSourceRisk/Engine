@@ -1933,6 +1933,8 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
 
     indexName_ = XMLUtils::getChildValue(node, "IndexName", false);
 
+    savingsTime_ = XMLUtils::getChildValue(node, "SavingsTime", false, "US");
+
     build();
 }
 
@@ -2041,6 +2043,9 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
 
     if (!indexName_.empty())
         XMLUtils::addChild(doc, node, "IndexName", indexName_);
+
+    if (!savingsTime_.empty())
+        XMLUtils::addChild(doc, node, "SavingsTime", savingsTime_);
 
     return node;
 }
