@@ -292,9 +292,14 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const pair<Real,
         expHalfFwdVar[i] = volStructure_->blackForwardVariance(t - dt[i], t, effectiveStrike);
         fwdStdDev[i] = sqrt(expHalfFwdVar[i]);
         expHalfFwdVar[i] = exp(-expHalfFwdVar[i] / 2.0);
-        fwdRatio[i] = arguments_.flow->index()->fixing(dates[i + 1]);
+        Real fxRate{1.};
+        if(arguments_.flow->fxIndex())
+            fxRate=arguments_.flow->fxIndex()->fixing(dates[i+1]);
+        fwdRatio[i] = fxRate * arguments_.flow->index()->fixing(dates[i + 1]);
         if (i > 0) {
-            fwdRatio[i] /= arguments_.flow->index()->fixing(dates[i]);
+            if(arguments_.flow->fxIndex())
+                fxRate=arguments_.flow->fxIndex()->fixing(dates[i]);
+            fwdRatio[i] /= (fxRate * arguments_.flow->index()->fixing(dates[i]));
         }
     }
     Array factors = expHalfFwdVar * fwdRatio;
@@ -458,7 +463,10 @@ void CommodityAveragePriceOptionMonteCarloEngine::setupFuture(vector<Real>& outV
             // If expiry has not been encountered yet
             if (expiryDates.insert(expiry).second) {
                 outVolatilities.push_back(volStructure_->blackVol(expiry, strike));
-                prices.push_back(p.second->fixing(today));
+                Real fxRate{1.};
+                if(arguments_.flow->fxIndex())
+                    fxRate=arguments_.flow->fxIndex()->fixing(today);
+                prices.push_back(fxRate*p.second->fixing(today));//check if today should not be p.first
             }
             futureIndex.push_back(expiryDates.size() - 1);
         }
