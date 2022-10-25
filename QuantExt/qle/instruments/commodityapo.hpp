@@ -10,6 +10,7 @@
 #ifndef quantext_instruments_commodityapo_hpp
 #define quantext_instruments_commodityapo_hpp
 
+#include <ql/instruments/barriertype.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/option.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
@@ -28,11 +29,12 @@ public:
     class arguments;
     class engine;
     CommodityAveragePriceOption(const boost::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
-                                const ext::shared_ptr<Exercise>& exercise, const Real& quantity,
-                                const Real& strikePrice, QuantLib::Option::Type type,
-                                QuantLib::Settlement::Type delivery = QuantLib::Settlement::Physical,
-                                QuantLib::Settlement::Method settlementMethod = QuantLib::Settlement::PhysicalOTC);
-    
+                                const ext::shared_ptr<Exercise>& exercise, const Real quantity, const Real strikePrice,
+                                Option::Type type, Settlement::Type delivery = Settlement::Physical,
+                                Settlement::Method settlementMethod = Settlement::PhysicalOTC,
+                                const Real barrierLevel = Null<Real>(),
+                                Barrier::Type barrierType = Barrier::Type::DownIn);
+
     //! \name Instrument interface
     //@{
     bool isExpired() const override;
@@ -44,6 +46,8 @@ public:
     Settlement::Type settlementType() const { return settlementType_; }
     Settlement::Method settlementMethod() const { return settlementMethod_; }
     const boost::shared_ptr<CommodityIndexedAverageCashFlow>& underlyingFlow() const { return flow_; }
+    Real barrierLevel() const { return barrierLevel_; }
+    Barrier::Type barrierType() const { return barrierType_; }
     //@}
 
 private:
@@ -52,8 +56,10 @@ private:
     Real quantity_;
     Real strikePrice_;
     Option::Type type_;
-    QuantLib::Settlement::Type settlementType_;
-    QuantLib::Settlement::Method settlementMethod_;
+    Settlement::Type settlementType_;
+    Settlement::Method settlementMethod_;
+    Real barrierLevel_;
+    Barrier::Type barrierType_;
 };
 
 //! %Arguments for commodity APO calculation
@@ -65,8 +71,10 @@ public:
     Real strikePrice;
     Real effectiveStrike;
     Option::Type type;
-    QuantLib::Settlement::Type settlementType;
-    QuantLib::Settlement::Method settlementMethod;
+    Settlement::Type settlementType;
+    Settlement::Method settlementMethod;
+    Real barrierLevel;
+    Barrier::Type barrierType;
     void validate() const override;
 };
 
