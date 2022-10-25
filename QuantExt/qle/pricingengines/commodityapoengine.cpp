@@ -48,9 +48,12 @@ pair<Real, Size> CommodityAveragePriceOptionBaseEngine::calculateAccrued() const
         if (today < kv.first) {
             break;
         }
+        Real fXrate{1.};
+        if(arguments_.fxIndex)
+            fXrate = arguments_.fxIndex->fixing(kv.first);
 
         // Update accrued where pricing date is on or before today
-        result.first += kv.second->fixing(kv.first);
+        result.first += fXrate*kv.second->fixing(kv.first);
         result.second++;
     }
 
