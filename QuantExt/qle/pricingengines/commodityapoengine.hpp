@@ -49,8 +49,11 @@ protected:
     */
     bool isModelDependent(const std::tuple<QuantLib::Real, QuantLib::Size, bool>& accrued) const;
 
-    /*! Check barriers on given (log-)price and return whether the option is alive */
-    bool checkBarrier(const Real price, const bool logPrice) const;
+    /*! Check barriers on given (log-)price */
+    bool barrierTriggered(const Real price, const bool logPrice) const;
+
+    /*! Check whether option is alive depending on whether barrier was triggered */
+    bool alive(const bool barrierTriggered) const;
 
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
     QuantLib::Handle<QuantLib::BlackVolTermStructure> volStructure_;
