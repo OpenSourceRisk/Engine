@@ -34,8 +34,11 @@ protected:
 
         The return value contains the accrued average price and the number of <em>Pricing Dates</em> that were on or
         before the valuation date. If there has been no accrual, the return value is (0.0, 0).
+
+        The third components whether a barrier option is still alive as of the pricing date. If not applicable, this
+        value is true.
     */
-    std::pair<QuantLib::Real, QuantLib::Size> calculateAccrued() const;
+    std::tuple<QuantLib::Real, QuantLib::Size, bool> calculateAccrued() const;
 
     //! Return the correlation between two future expiry dates \p ed_1 and \p ed_2
     QuantLib::Real rho(const QuantLib::Date& ed_1, const QuantLib::Date& ed_2) const;
@@ -44,11 +47,16 @@ protected:
         dependent. If the APO value is not model dependent, this method returns \c false and populates the results
         with the model independent value.
     */
-    bool isModelDependent(const std::pair<QuantLib::Real, QuantLib::Size>& accrued) const;
+    bool isModelDependent(const std::tuple<QuantLib::Real, QuantLib::Size, bool>& accrued) const;
+
+    /*! Check barriers on given (log-)price and return whether the option is alive */
+    bool checkBarrier(const Real price, const bool logPrice) const;
 
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
     QuantLib::Handle<QuantLib::BlackVolTermStructure> volStructure_;
     QuantLib::Real beta_;
+    // used in checkBarrier() for efficiency, must be set by methods calling checkBarrier(p, true)
+    mutable QuantLib::Real logBarrier_;
 };
 
 /*! Commodity APO Analytical Engine
@@ -82,10 +90,10 @@ public:
 
 private:
     //! Calculations when underlying swap references a commodity spot price
-    void calculateSpot(const std::pair<QuantLib::Real, QuantLib::Size>& accrued) const;
+    void calculateSpot(const std::tuple<QuantLib::Real, QuantLib::Size, bool>& accrued) const;
 
     //! Calculations when underlying swap references a commodity spot price
-    void calculateFuture(const std::pair<QuantLib::Real, QuantLib::Size>& accrued) const;
+    void calculateFuture(const std::tuple<QuantLib::Real, QuantLib::Size, bool>& accrued) const;
 
     /*! Prepare data for APO calculation. The \p outVolatilities parameter will be populated with separate future
         contract volatilities taking into account the \p strike level. The number of elements of \p outVolatilities

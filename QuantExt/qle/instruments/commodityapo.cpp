@@ -9,14 +9,13 @@
 
 namespace QuantExt {
 
-CommodityAveragePriceOption::CommodityAveragePriceOption(const boost::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
-                                                         const ext::shared_ptr<Exercise>& exercise,
-                                                         const Real& quantity, const Real& strikePrice,
-                                                         QuantLib::Option::Type type,
-                                                         QuantLib::Settlement::Type delivery,
-                                                         QuantLib::Settlement::Method settlementMethod)
+CommodityAveragePriceOption::CommodityAveragePriceOption(
+    const boost::shared_ptr<CommodityIndexedAverageCashFlow>& flow, const ext::shared_ptr<Exercise>& exercise,
+    const Real quantity, const Real strikePrice, QuantLib::Option::Type type, QuantLib::Settlement::Type delivery,
+    QuantLib::Settlement::Method settlementMethod, const Real barrierLevel, Barrier::Type barrierType)
     : Option(ext::shared_ptr<Payoff>(), exercise), flow_(flow), quantity_(quantity), strikePrice_(strikePrice),
-      type_(type), settlementType_(delivery), settlementMethod_(settlementMethod) {
+      type_(type), settlementType_(delivery), settlementMethod_(settlementMethod), barrierLevel_(barrierLevel),
+      barrierType_(barrierType) {
     registerWith(flow_);
 }
 
@@ -36,17 +35,15 @@ void CommodityAveragePriceOption::setupArguments(PricingEngine::arguments* args)
     arguments->type = type_;
     arguments->settlementType = settlementType_;
     arguments->settlementMethod = settlementMethod_;
+    arguments->barrierLevel = barrierLevel_;
+    arguments->barrierType = barrierType_;
     arguments->exercise = exercise_;
     arguments->flow = flow_;
 }
 
 CommodityAveragePriceOption::arguments::arguments()
-    : quantity(0.0),
-      strikePrice(0.0),
-      effectiveStrike(0.0),
-      type(Option::Call),
-      settlementType(Settlement::Physical),
-      settlementMethod(Settlement::PhysicalOTC) {}
+    : quantity(0.0), strikePrice(0.0), effectiveStrike(0.0), type(Option::Call), settlementType(Settlement::Physical),
+      settlementMethod(Settlement::PhysicalOTC), barrierLevel(Null<Real>()), barrierType(Barrier::DownIn) {}
 
 void CommodityAveragePriceOption::arguments::validate() const {
     QL_REQUIRE(flow, "underlying not set");
@@ -54,4 +51,4 @@ void CommodityAveragePriceOption::arguments::validate() const {
     QuantLib::Settlement::checkTypeAndMethodConsistency(settlementType, settlementMethod);
 }
 
-}
+} // namespace QuantExt
