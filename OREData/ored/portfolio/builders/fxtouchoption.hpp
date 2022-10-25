@@ -68,7 +68,7 @@ protected:
         } else if (type == "No-Touch") {
             return boost::make_shared<AnalyticDigitalAmericanKOEngine>(gbsp);
         } else {
-            QL_FAIL("Unknwon FX touch option type: " << type);
+            QL_FAIL("Unknown FX touch option type: " << type);
         }
     }
 };
