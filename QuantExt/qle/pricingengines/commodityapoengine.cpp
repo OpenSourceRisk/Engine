@@ -362,48 +362,42 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const pair<Rea
     LowDiscrepancy::rsg_type rsg = LowDiscrepancy::make_sequence_generator(vols.size() * dt.size(), seed_);
 
     // Precalculate exp(-0.5 \sigma_i^2 \delta t_j) and std dev = sqrt(\delta t_j) \sigma_i
-    Matrix factors(vols.size(), dt.size(), 0.0);
+    Matrix drifts(vols.size(), dt.size(), 0.0);
     Matrix stdDev(vols.size(), dt.size(), 0.0);
-    for (Size j = 0; j < factors.columns(); j++) {
-        for (Size i = 0; i < factors.rows(); i++) {
-            factors[i][j] = exp(-vols[i] * vols[i] * dt[j] / 2.0);
+    Array logPrices(vols.size());
+    for (Size i = 0; i < drifts.rows(); i++) {
+        logPrices[i] = std::log(prices[i]);
+        for (Size j = 0; j < drifts.columns(); j++) {
+            drifts[i][j] = -vols[i] * vols[i] * dt[j] / 2.0;
             stdDev[i][j] = vols[i] * sqrt(dt[j]);
         }
     }
 
     // Loop over each sample
     auto m = arguments_.flow->indices().size();
-    for (Size k = 0; k < samples_; k++) {
+    Matrix paths(vols.size(), dt.size());
+    for (Size k = 0; k < samples_; ++k) {
 
         // Sequence is N x n independent standard normal random variables
-        vector<Real> sequence = rsg.nextSequence().value;
+        const vector<Real>& sequence = rsg.nextSequence().value;
 
         // paths initially holds independent standard normal random variables
-        Matrix paths(vols.size(), dt.size(), sequence.begin(), sequence.end());
+        std::copy(sequence.begin(), sequence.end(), paths.begin());
 
         // Correlate the random variables in each column
         paths = sqrtCorr * paths;
 
         // Fill the paths
-        for (Size i = 0; i < paths.rows(); i++) {
-            for (Size j = 0; j < paths.columns(); j++) {
-                // This is \exp(-\sigma_i^2 \delta t_j / 2) * \exp(\sigma_i \sqrt(\delta t_j) \delta W_{i,j})
-                paths[i][j] = factors[i][j] * exp(stdDev[i][j] * paths[i][j]);
-                if (j == 0) {
-                    // If on first timestep, multiply by F_i(0)
-                    paths[i][j] *= prices[i];
-                } else {
-                    // If on timestep greater than t_0, multiply by F_i(t_{j-1}) i.e. value of contract at
-                    // previous time
-                    paths[i][j] *= paths[i][j - 1];
-                }
+        for (Size i = 0; i < paths.rows(); ++i) {
+            for (Size j = 0; j < paths.columns(); ++j) {
+                paths[i][j] = (j == 0 ? logPrices[i] : paths[i][j - 1]) + drifts[i][j] + stdDev[i][j] * paths[i][j];
             }
         }
 
         // Calculate the sum of the commodity future prices on the pricing dates after today
         Real samplePayoff = 0.0;
-        for (Size j = 0; j < dt.size(); j++) {
-            samplePayoff += paths[futureIndex[j]][j];
+        for (Size j = 0; j < dt.size(); ++j) {
+            samplePayoff += std::exp(paths[futureIndex[j]][j]);
         }
 
         // Average price on this sample
