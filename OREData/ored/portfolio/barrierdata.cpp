@@ -43,6 +43,7 @@ void BarrierData::fromXML(XMLNode* node) {
     rebate_ = XMLUtils::getChildValueAsDouble(node, "Rebate", false);
     rebateCurrency_ = XMLUtils::getChildValue(node, "RebateCurrency", false);
     rebatePayTime_ = XMLUtils::getChildValue(node, "RebatePayTime", false);
+    initialized_ = true;
 }
 
 XMLNode* BarrierData::toXML(XMLDocument& doc) {
