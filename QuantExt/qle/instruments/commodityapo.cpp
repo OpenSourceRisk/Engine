@@ -9,13 +9,16 @@
 
 namespace QuantExt {
 
-CommodityAveragePriceOption::CommodityAveragePriceOption(
-    const boost::shared_ptr<CommodityIndexedAverageCashFlow>& flow, const ext::shared_ptr<Exercise>& exercise,
-    const Real quantity, const Real strikePrice, QuantLib::Option::Type type, QuantLib::Settlement::Type delivery,
-    QuantLib::Settlement::Method settlementMethod, const Real barrierLevel, Barrier::Type barrierType)
+CommodityAveragePriceOption::CommodityAveragePriceOption(const boost::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
+                                                         const ext::shared_ptr<Exercise>& exercise, const Real quantity,
+                                                         const Real strikePrice, QuantLib::Option::Type type,
+                                                         QuantLib::Settlement::Type delivery,
+                                                         QuantLib::Settlement::Method settlementMethod,
+                                                         const Real barrierLevel, Barrier::Type barrierType,
+                                                         Exercise::Type barrierStyle)
     : Option(ext::shared_ptr<Payoff>(), exercise), flow_(flow), quantity_(quantity), strikePrice_(strikePrice),
       type_(type), settlementType_(delivery), settlementMethod_(settlementMethod), barrierLevel_(barrierLevel),
-      barrierType_(barrierType) {
+      barrierType_(barrierType), barrierStyle_(barrierStyle) {
     registerWith(flow_);
 }
 
@@ -37,13 +40,15 @@ void CommodityAveragePriceOption::setupArguments(PricingEngine::arguments* args)
     arguments->settlementMethod = settlementMethod_;
     arguments->barrierLevel = barrierLevel_;
     arguments->barrierType = barrierType_;
+    arguments->barrierStyle = barrierStyle_;
     arguments->exercise = exercise_;
     arguments->flow = flow_;
 }
 
 CommodityAveragePriceOption::arguments::arguments()
     : quantity(0.0), strikePrice(0.0), effectiveStrike(0.0), type(Option::Call), settlementType(Settlement::Physical),
-      settlementMethod(Settlement::PhysicalOTC), barrierLevel(Null<Real>()), barrierType(Barrier::DownIn) {}
+      settlementMethod(Settlement::PhysicalOTC), barrierLevel(Null<Real>()), barrierType(Barrier::DownIn),
+      barrierStyle(Exercise::American) {}
 
 void CommodityAveragePriceOption::arguments::validate() const {
     QL_REQUIRE(flow, "underlying not set");

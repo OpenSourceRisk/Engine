@@ -43,6 +43,7 @@ std::tuple<Real, Size, bool> CommodityAveragePriceOptionBaseEngine::calculateAcc
 
     // Calculate accrued
     bool barrierTriggered = false;
+    Real lastFixing = 0.0;
     for (const auto& kv : arguments_.flow->indices()) {
 
         // Break on the first pricing date that is greater than today
@@ -51,13 +52,17 @@ std::tuple<Real, Size, bool> CommodityAveragePriceOptionBaseEngine::calculateAcc
         }
 
         // Update accrued where pricing date is on or before today
-        Real tmp = kv.second->fixing(kv.first);
-        std::get<0>(result) += tmp;
+        lastFixing = kv.second->fixing(kv.first);
+        std::get<0>(result) += lastFixing;
         ++std::get<1>(result);
 
         // check barrier
-        barrierTriggered = barrierTriggered || this->barrierTriggered(tmp, false);
+        if (arguments_.barrierStyle == Exercise::American)
+            barrierTriggered = barrierTriggered || this->barrierTriggered(lastFixing, false);
     }
+
+    if (arguments_.barrierStyle == Exercise::European)
+        barrierTriggered = this->barrierTriggered(lastFixing, false);
 
     std::get<2>(result) = alive(barrierTriggered);
 
@@ -341,7 +346,8 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const std::tuple
             samplePayoff += price;
 
             // check barrier
-            barrierTriggered = barrierTriggered || this->barrierTriggered(price, false);
+            if (arguments_.barrierStyle == Exercise::American)
+                barrierTriggered = barrierTriggered || this->barrierTriggered(price, false);
         }
         // Average price on this sample
         samplePayoff /= m;
@@ -350,6 +356,9 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const std::tuple
         samplePayoff = max(omega * (samplePayoff - effectiveStrike), 0.0);
 
         // account for barrier
+        if (arguments_.barrierStyle == Exercise::European)
+            barrierTriggered = this->barrierTriggered(price, false);
+
         if (!alive(barrierTriggered))
             samplePayoff = 0.0;
 
@@ -438,9 +447,12 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const std::tup
         // Calculate the sum of the commodity future prices on the pricing dates after today
         Real samplePayoff = 0.0;
         bool barrierTriggered = false;
+        Real price = 0.0;
         for (Size j = 0; j < dt.size(); ++j) {
-            barrierTriggered = barrierTriggered || this->barrierTriggered(paths[futureIndex[j]][j], true);
-            samplePayoff += std::exp(paths[futureIndex[j]][j]);
+            price = paths[futureIndex[j]][j];
+            if (arguments_.barrierStyle == Exercise::American)
+                barrierTriggered = barrierTriggered || this->barrierTriggered(price, true);
+            samplePayoff += std::exp(price);
         }
 
         // Average price on this sample
@@ -450,6 +462,9 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const std::tup
         samplePayoff = max(omega * (samplePayoff - effectiveStrike), 0.0);
 
         // account for barrier
+        if (arguments_.barrierStyle == Exercise::European)
+            barrierTriggered = this->barrierTriggered(price, true);
+
         if (!alive(barrierTriggered))
             samplePayoff = 0.0;
 

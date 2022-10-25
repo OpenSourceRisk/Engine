@@ -13,6 +13,7 @@
 #include <ql/instruments/barriertype.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/option.hpp>
+#include <ql/exercise.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
@@ -33,7 +34,8 @@ public:
                                 Option::Type type, Settlement::Type delivery = Settlement::Physical,
                                 Settlement::Method settlementMethod = Settlement::PhysicalOTC,
                                 const Real barrierLevel = Null<Real>(),
-                                Barrier::Type barrierType = Barrier::Type::DownIn);
+                                Barrier::Type barrierType = Barrier::Type::DownIn,
+                                Exercise::Type barrierStyle = Exercise::American);
 
     //! \name Instrument interface
     //@{
@@ -48,6 +50,7 @@ public:
     const boost::shared_ptr<CommodityIndexedAverageCashFlow>& underlyingFlow() const { return flow_; }
     Real barrierLevel() const { return barrierLevel_; }
     Barrier::Type barrierType() const { return barrierType_; }
+    Exercise::Type barrierStyle() const { return barrierStyle_; }
     //@}
 
 private:
@@ -60,6 +63,7 @@ private:
     Settlement::Method settlementMethod_;
     Real barrierLevel_;
     Barrier::Type barrierType_;
+    Exercise::Type barrierStyle_;
 };
 
 //! %Arguments for commodity APO calculation
@@ -75,6 +79,7 @@ public:
     Settlement::Method settlementMethod;
     Real barrierLevel;
     Barrier::Type barrierType;
+    Exercise::Type barrierStyle;
     void validate() const override;
 };
 
