@@ -24,6 +24,32 @@ CommodityAveragePriceOption::CommodityAveragePriceOption(const boost::shared_ptr
 
 bool CommodityAveragePriceOption::isExpired() const { return detail::simple_event(flow_->date()).hasOccurred(); }
 
+Real CommodityAveragePriceOption::effectiveStrike() const {
+    return (strikePrice_ - flow_->spread()) / flow_->gearing();
+}
+
+Real CommodityAveragePriceOption::accrued(const Date& refDate) const {
+    Real tmp = 0.0;
+
+    // If all of the pricing dates are greater than today => no accrued
+    if (refDate >= flow_->indices().begin()->first) {
+        for (const auto& kv : flow_->indices()) {
+            // Break on the first pricing date that is greater than today
+            if (refDate < kv.first) {
+                break;
+            }
+            // Update accrued where pricing date is on or before today
+            tmp += kv.second->fixing(kv.first);
+        }
+        // We should have pricing dates in the period but check.
+        auto n = flow_->indices().size();
+        QL_REQUIRE(n > 0, "APO coupon accrued calculation has a degenerate coupon.");
+        tmp /= n;
+    }
+
+    return tmp;
+}
+
 void CommodityAveragePriceOption::setupArguments(PricingEngine::arguments* args) const {
     Option::setupArguments(args);
 
@@ -32,9 +58,12 @@ void CommodityAveragePriceOption::setupArguments(PricingEngine::arguments* args)
     QL_REQUIRE(arguments != 0, "wrong argument type");
     QL_REQUIRE(flow_->gearing() > 0.0, "The gearing on an APO must be positive");
 
+    Date today = Settings::instance().evaluationDate();
+
     arguments->quantity = quantity_;
     arguments->strikePrice = strikePrice_;
-    arguments->effectiveStrike = (strikePrice_ - flow_->spread()) / flow_->gearing();
+    arguments->effectiveStrike = effectiveStrike();
+    arguments->accrued = accrued(today);
     arguments->type = type_;
     arguments->settlementType = settlementType_;
     arguments->settlementMethod = settlementMethod_;
