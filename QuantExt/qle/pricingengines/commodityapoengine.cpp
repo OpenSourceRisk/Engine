@@ -22,60 +22,23 @@ using std::vector;
 namespace QuantExt {
 
 CommodityAveragePriceOptionBaseEngine::CommodityAveragePriceOptionBaseEngine(
-    const Handle<YieldTermStructure>& discountCurve, const Handle<BlackVolTermStructure>& vol, Real beta)
-    : discountCurve_(discountCurve), volStructure_(vol), beta_(beta) {
+    const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,
+    Real beta)
+    : discountCurve_(discountCurve), volStructure_(model->processes().front()->blackVolatility()), beta_(beta) {
+    QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
+    registerWith(model);
+}
 
+CommodityAveragePriceOptionBaseEngine::CommodityAveragePriceOptionBaseEngine(
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol, Real beta)
+    : discountCurve_(discountCurve), volStructure_(vol), beta_(beta) {
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
     registerWith(discountCurve_);
     registerWith(volStructure_);
 }
 
-std::tuple<Real, Size, bool> CommodityAveragePriceOptionBaseEngine::calculateAccrued() const {
-
-    auto result = std::make_tuple(0.0, 0, true);
-
-    Date today = Settings::instance().evaluationDate();
-
-    // If all of the pricing dates are greater than today => no accrued
-    if (today < arguments_.flow->indices().begin()->first) {
-        return result;
-    }
-
-    // Calculate accrued
-    bool barrierTriggered = false;
-    Real lastFixing = 0.0;
-    for (const auto& kv : arguments_.flow->indices()) {
-
-        // Break on the first pricing date that is greater than today
-        if (today < kv.first) {
-            break;
-        }
-
-        // Update accrued where pricing date is on or before today
-        lastFixing = kv.second->fixing(kv.first);
-        std::get<0>(result) += lastFixing;
-        ++std::get<1>(result);
-
-        // check barrier
-        if (arguments_.barrierStyle == Exercise::American)
-            barrierTriggered = barrierTriggered || this->barrierTriggered(lastFixing, false);
-    }
-
-    if (arguments_.barrierStyle == Exercise::European)
-        barrierTriggered = this->barrierTriggered(lastFixing, false);
-
-    std::get<2>(result) = alive(barrierTriggered);
-
-    // We should have pricing dates in the period but check.
-    auto n = arguments_.flow->indices().size();
-    QL_REQUIRE(n > 0, "APO coupon accrued calculation has a degenerate coupon.");
-    std::get<0>(result) /= n;
-
-    return result;
-}
-
 Real CommodityAveragePriceOptionBaseEngine::rho(const Date& ed_1, const Date& ed_2) const {
-
     if (beta_ == 0.0 || ed_1 == ed_2) {
         return 1.0;
     } else {
@@ -85,7 +48,7 @@ Real CommodityAveragePriceOptionBaseEngine::rho(const Date& ed_1, const Date& ed
     }
 }
 
-bool CommodityAveragePriceOptionBaseEngine::isModelDependent(const std::tuple<Real, Size, bool>& accrued) const {
+bool CommodityAveragePriceOptionBaseEngine::isModelDependent() const {
 
     // Discount factor to the APO payment date
     Real discount = discountCurve_->discount(arguments_.flow->date());
@@ -101,7 +64,7 @@ bool CommodityAveragePriceOptionBaseEngine::isModelDependent(const std::tuple<Re
         Real omega = arguments_.type == Option::Call ? 1.0 : -1.0;
 
         // Populate the result value
-        Real payoff = arguments_.flow->gearing() * max(omega * (std::get<0>(accrued) - arguments_.effectiveStrike), 0.0);
+        Real payoff = arguments_.flow->gearing() * max(omega * (arguments_.accrued - arguments_.effectiveStrike), 0.0);
         results_.value = arguments_.quantity * payoff * discount;
 
         return false;
@@ -109,7 +72,7 @@ bool CommodityAveragePriceOptionBaseEngine::isModelDependent(const std::tuple<Re
 
     // If a portion of the average price has already accrued, the effective strike of the APO will
     // have changed by the accrued amount. The strike could be non-positive.
-    Real effectiveStrike = arguments_.effectiveStrike - std::get<0>(accrued);
+    Real effectiveStrike = arguments_.effectiveStrike - arguments_.accrued;
     if (effectiveStrike <= 0.0) {
 
         // If the effective strike is <= 0, put payoff is 0.0 and call payoff is [A - K]
@@ -122,8 +85,31 @@ bool CommodityAveragePriceOptionBaseEngine::isModelDependent(const std::tuple<Re
         return false;
     }
 
-    // If we get to here, value is model dependent if and only if the option is still alive
-    return std::get<2>(accrued);
+    // If we get to here, value is model dependent except the option was knocked out
+
+    bool barrierTriggered = false;
+    Real lastFixing = 0.0;
+
+    for (const auto& kv : arguments_.flow->indices()) {
+        // Break on the first pricing date that is greater than today
+        if (today < kv.first) {
+            break;
+        }
+        // Update accrued where pricing date is on or before today
+        lastFixing = kv.second->fixing(kv.first);
+        if (arguments_.barrierStyle == Exercise::American)
+            barrierTriggered = barrierTriggered || this->barrierTriggered(lastFixing, false);
+    }
+
+    if (arguments_.barrierStyle == Exercise::European)
+        barrierTriggered = this->barrierTriggered(lastFixing, false);
+
+    if(barrierTriggered && (arguments_.barrierType == Barrier::DownOut || arguments_.barrierType == Barrier::UpOut)) {
+        results_.value = 0.0;
+        return false;
+    }
+
+    return true;
 }
 
 bool CommodityAveragePriceOptionBaseEngine::barrierTriggered(const Real price, const bool logPrice) const {
@@ -151,9 +137,6 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     QL_REQUIRE(arguments_.barrierLevel == Null<Real>(),
                "CommodityAveragePriceOptionAnalyticalEngine does not support barrier feature. Use MC engine instead.");
 
-    // Calculate the accrued portion
-    auto accrued = calculateAccrued();
-
     // Populate some additional results that don't change
     auto& mp = results_.additionalResults;
     Real discount = discountCurve_->discount(arguments_.flow->date());
@@ -161,11 +144,11 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["spread"] = arguments_.flow->spread();
     mp["strike"] = arguments_.strikePrice;
     mp["payment_date"] = arguments_.flow->date();
-    mp["accrued"] = std::get<0>(accrued);
+    mp["accrued"] = arguments_.accrued;
     mp["discount"] = discount;
 
     // If not model dependent, return early.
-    if (!isModelDependent(accrued)) {
+    if (!isModelDependent()) {
         mp["effective_strike"] = arguments_.effectiveStrike;
         mp["npv"] = results_.value;
         return;
@@ -173,7 +156,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
 
     // We will read the volatility off the surface at the effective strike
     // We should only get this far when the effectiveStrike > 0 but will check anyway
-    Real effectiveStrike = arguments_.effectiveStrike - std::get<0>(accrued);
+    Real effectiveStrike = arguments_.effectiveStrike - arguments_.accrued;
     QL_REQUIRE(effectiveStrike > 0.0, "calculateSpot: expected effectiveStrike to be positive");
 
     // Valuation date
@@ -264,21 +247,17 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculate() const {
-
-    // Calculate the accrued portion
-    auto accrued = calculateAccrued();
-
-    if (isModelDependent(accrued)) {
+    if (isModelDependent()) {
         // Switch implementation depending on whether underlying swap references a spot or future price
         if (arguments_.flow->useFuturePrice()) {
-            calculateFuture(accrued);
+            calculateFuture();
         } else {
-            calculateSpot(accrued);
+            calculateSpot();
         }
     }
 }
 
-void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const std::tuple<Real, Size, bool>& accrued) const {
+void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot() const {
 
     // Discount factor to the APO payment date
     Real discount = discountCurve_->discount(arguments_.flow->date());
@@ -299,7 +278,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const std::tuple
 
     // We will read the volatility off the surface at the effective strike
     // We will only call this method when the effectiveStrike > 0 but will check anyway
-    Real effectiveStrike = arguments_.effectiveStrike - std::get<0>(accrued);
+    Real effectiveStrike = arguments_.effectiveStrike - arguments_.accrued;
     QL_REQUIRE(effectiveStrike > 0.0, "calculateSpot: expected effectiveStrike to be positive");
 
     // Precalculate:
@@ -371,7 +350,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const std::tuple
     results_.value = arguments_.quantity * arguments_.flow->gearing() * payoff * discount;
 }
 
-void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const std::tuple<Real, Size, bool>& accrued) const {
+void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture() const {
 
     // this method uses checkBarrier() on log prices, therefore we have to init the log barrier level
     if (arguments_.barrierLevel != Null<Real>())
@@ -388,7 +367,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const std::tup
 
     // We will read the volatility off the surface the effective strike
     // We will only call this method when the effectiveStrike > 0 but will check anyway
-    Real effectiveStrike = arguments_.effectiveStrike - std::get<0>(accrued);
+    Real effectiveStrike = arguments_.effectiveStrike - arguments_.accrued;
     QL_REQUIRE(effectiveStrike > 0.0, "calculateFuture: expected effectiveStrike to be positive");
 
     // Unique future expiry dates i.e. contracts, their volatilities and the correlation matrix between them

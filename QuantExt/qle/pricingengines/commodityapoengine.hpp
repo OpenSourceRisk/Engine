@@ -11,10 +11,12 @@
 #ifndef quantext_commodity_apo_engine_hpp
 #define quantext_commodity_apo_engine_hpp
 
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/instruments/commodityapo.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/models/blackscholesmodelwrapper.hpp>
+
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
 
@@ -25,21 +27,15 @@ namespace QuantExt {
 class CommodityAveragePriceOptionBaseEngine : public CommodityAveragePriceOption::engine {
 public:
     CommodityAveragePriceOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+                                          const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,
+                                          Real beta = 0.0);
+
+    // if you want speed-optimized observability, use the other constructor
+    CommodityAveragePriceOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                           const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
                                           Real beta = 0.0);
 
 protected:
-    /*! Calculate accrued portion of the average commodity price if any. There will be an accrued portion of the
-        average price if any of the <em>Pricing Dates</em> are on or before the valuation date.
-
-        The return value contains the accrued average price and the number of <em>Pricing Dates</em> that were on or
-        before the valuation date. If there has been no accrual, the return value is (0.0, 0).
-
-        The third components whether a barrier option is still alive as of the pricing date. If not applicable, this
-        value is true.
-    */
-    std::tuple<QuantLib::Real, QuantLib::Size, bool> calculateAccrued() const;
-
     //! Return the correlation between two future expiry dates \p ed_1 and \p ed_2
     QuantLib::Real rho(const QuantLib::Date& ed_1, const QuantLib::Date& ed_2) const;
 
@@ -47,7 +43,7 @@ protected:
         dependent. If the APO value is not model dependent, this method returns \c false and populates the results
         with the model independent value.
     */
-    bool isModelDependent(const std::tuple<QuantLib::Real, QuantLib::Size, bool>& accrued) const;
+    bool isModelDependent() const;
 
     /*! Check barriers on given (log-)price */
     bool barrierTriggered(const Real price, const bool logPrice) const;
@@ -69,11 +65,7 @@ protected:
 */
 class CommodityAveragePriceOptionAnalyticalEngine : public CommodityAveragePriceOptionBaseEngine {
 public:
-    CommodityAveragePriceOptionAnalyticalEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                                const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
-                                                QuantLib::Real beta = 0.0)
-        : CommodityAveragePriceOptionBaseEngine(discountCurve, vol, beta) {}
-
+    using CommodityAveragePriceOptionBaseEngine::CommodityAveragePriceOptionBaseEngine;
     void calculate() const override;
 };
 
@@ -84,6 +76,13 @@ public:
 class CommodityAveragePriceOptionMonteCarloEngine : public CommodityAveragePriceOptionBaseEngine {
 public:
     CommodityAveragePriceOptionMonteCarloEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+                                                const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,
+                                                QuantLib::Size samples, QuantLib::Real beta = 0.0,
+                                                const QuantLib::Size seed = 42)
+        : CommodityAveragePriceOptionBaseEngine(discountCurve, model, beta), samples_(samples), seed_(seed) {}
+
+    // if you want speed-optimized observability, use the other constructor
+    CommodityAveragePriceOptionMonteCarloEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                                 const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
                                                 QuantLib::Size samples, QuantLib::Real beta = 0.0,
                                                 const QuantLib::Size seed = 42)
@@ -93,10 +92,10 @@ public:
 
 private:
     //! Calculations when underlying swap references a commodity spot price
-    void calculateSpot(const std::tuple<QuantLib::Real, QuantLib::Size, bool>& accrued) const;
+    void calculateSpot() const;
 
     //! Calculations when underlying swap references a commodity spot price
-    void calculateFuture(const std::tuple<QuantLib::Real, QuantLib::Size, bool>& accrued) const;
+    void calculateFuture() const;
 
     /*! Prepare data for APO calculation. The \p outVolatilities parameter will be populated with separate future
         contract volatilities taking into account the \p strike level. The number of elements of \p outVolatilities

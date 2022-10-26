@@ -63,6 +63,10 @@ BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
     }
 }
 
+BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
+    const Handle<YieldTermStructure>& curve, const boost::shared_ptr<GeneralizedBlackScholesProcess>& process)
+    : BlackScholesModelBuilderBase(curve, process, {}, {}, 1) {}
+
 Handle<BlackScholesModelWrapper> BlackScholesModelBuilderBase::model() const {
     calculate();
     return model_;

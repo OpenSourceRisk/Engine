@@ -51,6 +51,8 @@ public:
     Real barrierLevel() const { return barrierLevel_; }
     Barrier::Type barrierType() const { return barrierType_; }
     Exercise::Type barrierStyle() const { return barrierStyle_; }
+    Real effectiveStrike() const;
+    Real accrued(const Date& refDate) const;
     //@}
 
 private:
@@ -73,6 +75,7 @@ public:
     boost::shared_ptr<CommodityIndexedAverageCashFlow> flow;
     Real quantity;
     Real strikePrice;
+    Real accrued;
     Real effectiveStrike;
     Option::Type type;
     Settlement::Type settlementType;

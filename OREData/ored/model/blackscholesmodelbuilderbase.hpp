@@ -59,14 +59,19 @@ public:
     //@}
 
 protected:
+    // generic ctor, you should override setupDateAndTimes() if using this one
+    BlackScholesModelBuilderBase(const Handle<YieldTermStructure>& curve,
+                                 const boost::shared_ptr<GeneralizedBlackScholesProcess>& process);
+
+    virtual void setupDatesAndTimes() const;
+
     virtual std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const = 0;
     virtual std::vector<std::vector<Real>> getCurveTimes() const = 0;
     virtual std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const = 0;
 
+
     void performCalculations() const override;
     bool calibrationPointsChanged(const bool updateCache) const;
-
-    void setupDatesAndTimes() const;
 
     const std::vector<Handle<YieldTermStructure>> curves_;
     const std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> processes_;
