@@ -148,7 +148,7 @@ OptionInterpolator2d<InterpolatorStrike, InterpolatorExpiry>::OptionInterpolator
     const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes,
     const std::vector<QuantLib::Real>& values, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap,
     const InterpolatorStrike& interpolatorStrike,
-    const InterpolatorExpiry& interpolatorExpiryconst, 
+    const InterpolatorExpiry& interpolatorExpiry, 
     const QuantLib::Date& baseDate)
     : OptionInterpolatorBase(referenceDate), dayCounter_(dayCounter), lowerStrikeConstExtrap_(lowerStrikeConstExtrap),
       upperStrikeConstExtrap_(upperStrikeConstExtrap), interpolatorStrike_(interpolatorStrike),
