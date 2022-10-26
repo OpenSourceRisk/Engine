@@ -60,12 +60,15 @@ marketdata/todaysmarketparameters.cpp
 marketdata/wrappedmarket.cpp
 marketdata/yieldcurve.cpp
 marketdata/yieldvolcurve.cpp
+model/blackscholesmodelbuilder.cpp
+model/blackscholesmodelbuilderbase.cpp
 model/calibrationbasket.cpp
 model/calibrationconfiguration.cpp
 model/calibrationinstrumentfactory.cpp
 model/calibrationinstruments/cpicapfloor.cpp
 model/calibrationinstruments/yoycapfloor.cpp
 model/calibrationinstruments/yoyswap.cpp
+model/calibrationpointcache.cpp
 model/crcirbuilder.cpp
 model/crcirdata.cpp
 model/crlgmbuilder.cpp
@@ -84,6 +87,7 @@ model/inflation/inflationmodeldata.cpp
 model/irlgmdata.cpp
 model/lgmbuilder.cpp
 model/lgmdata.cpp
+model/localvolmodelbuilder.cpp
 model/modeldata.cpp
 model/modelparameter.cpp
 model/utilities.cpp
@@ -262,12 +266,15 @@ marketdata/todaysmarketparameters.hpp
 marketdata/wrappedmarket.hpp
 marketdata/yieldcurve.hpp
 marketdata/yieldvolcurve.hpp
+model/blackscholesmodelbuilder.hpp
+model/blackscholesmodelbuilderbase.hpp
 model/calibrationbasket.hpp
 model/calibrationconfiguration.hpp
 model/calibrationinstrumentfactory.hpp
 model/calibrationinstruments/cpicapfloor.hpp
 model/calibrationinstruments/yoycapfloor.hpp
 model/calibrationinstruments/yoyswap.hpp
+model/calibrationpointcache.hpp
 model/crcirbuilder.hpp
 model/crcirdata.hpp
 model/crlgmbuilder.hpp
@@ -286,6 +293,7 @@ model/inflation/inflationmodeldata.hpp
 model/irlgmdata.hpp
 model/lgmbuilder.hpp
 model/lgmdata.hpp
+model/localvolmodelbuilder.hpp
 model/marketobserver.hpp
 model/modelbuilder.hpp
 model/modeldata.hpp

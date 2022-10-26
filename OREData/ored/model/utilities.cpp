@@ -424,5 +424,9 @@ Real yoyCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
     }
 }
 
+Real atmForward(const Real s0, const Handle<YieldTermStructure>& r, const Handle<YieldTermStructure>& q, const Real t) {
+    return s0 * q->discount(t) / r->discount(t);
+}
+
 } // namespace data
 } // namespace ore

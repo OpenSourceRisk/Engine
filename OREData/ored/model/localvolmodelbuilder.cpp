@@ -1,14 +1,29 @@
 /*
  Copyright (C) 2020 Quaternion Risk Management Ltd
  All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orepscriptedtrade/ored/models/localvolmodelbuilder.hpp>
-#include <orepscriptedtrade/ored/scripting/utilities.hpp>
-#include <orepscriptedtrade/qle/models/carrmadanarbitragecheck.hpp>
+#include <ored/model/utilities.hpp>
 
+#include <ored/model/localvolmodelbuilder.hpp>
 #include <ored/utilities/log.hpp>
 
+#include <qle/models/carrmadanarbitragecheck.hpp>
+
+#include <ql/exercise.hpp>
 #include <ql/instruments/payoffs.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <ql/termstructures/volatility/equityfx/andreasenhugelocalvoladapter.hpp>
@@ -16,8 +31,9 @@
 #include <ql/termstructures/volatility/equityfx/localconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/localvolsurface.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 
-namespace oreplus {
+namespace ore {
 namespace data {
 
 LocalVolModelBuilder::LocalVolModelBuilder(
@@ -52,7 +68,8 @@ std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuil
             // for checking arbitrage free input prices, just for logging purposes at this point
             // notice that we need a uniform strike grid here, so this is not the same as the one below
             // we choose the strike grid to be the one for the last calibration point
-            std::vector<Real> checkMaturities, checkStrikes;
+            std::vector<Real> checkMaturities, checkMoneynesses, atmForwards;
+            std::vector<std::vector<Real>> callPrices;
 
             // set up Andreasen Huge Volatility interpolation for each underyling
             // we choose the calibration set to be OTM options on the effective future simulation dates
@@ -66,6 +83,8 @@ std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuil
                 Real atmLevel =
                     atmForward(processes_[l]->x0(), processes_[l]->riskFreeRate(), processes_[l]->dividendYield(), t);
                 Real atmMarketVol = processes_[l]->blackVolatility()->blackVol(t, atmLevel);
+                callPrices.push_back(std::vector<Real>());
+                atmForwards.push_back(atmLevel);
                 for (Size i = 0; i < calibrationMoneyness_.size(); ++i) {
                     Real strike = atmLevel * std::exp(calibrationMoneyness_[i] * atmMarketVol * std::sqrt(t));
                     Real marketVol = processes_[l]->blackVolatility()->blackVol(t, strike);
@@ -76,18 +95,27 @@ std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuil
                         boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Call, strike),
                                                           boost::make_shared<EuropeanExercise>(d));
                     calSet.push_back(std::make_pair(option, boost::make_shared<SimpleQuote>(marketVol)));
-                    if (d == *effectiveSimulationDates_.rbegin())
-                        checkStrikes.push_back(strike);
+                    option->setPricingEngine(boost::make_shared<AnalyticEuropeanEngine>(processes_[l]));
+                    callPrices.back().push_back(option->NPV());
+                    if (d == *effectiveSimulationDates_.rbegin()) {
+                        checkMoneynesses.push_back(strike / atmLevel);
+                    }
                 }
             }
 
             // arbitrage check
-            CarrMadanArbitrageCheck cmCheck(processes_[l]->x0(), processes_[l]->blackVolatility(), checkMaturities,
-                                            checkStrikes);
+            QuantExt::CarrMadanSurface cmCheck(checkMaturities, checkMoneynesses, processes_[l]->x0(), atmForwards,
+                                               callPrices);
             if (!cmCheck.arbitrageFree()) {
                 WLOG("Andreasen-Huge local vol calibration for process #" << l
                                                                           << ":, input vol is not arbitrage free:");
-                DLOGGERSTREAM(cmCheck.violationsAsMatrix());
+                DLOG("time,moneyness,callSpread,butterfly,calendar");
+                for (Size i = 0; i < checkMaturities.size(); ++i)
+                    for (Size j = 0; j < checkMoneynesses.size(); ++j)
+                        DLOG(checkMaturities[i] << "," << checkMoneynesses[i] << "," << std::boolalpha
+                                                << cmCheck.callSpreadArbitrage()[i][j] << ","
+                                                << cmCheck.butterflyArbitrage()[i][j] << ","
+                                                << cmCheck.calendarArbitrage()[i][j]);
             }
 
             // TODO using some hardcoded values here, expose to configuration?
@@ -161,4 +189,4 @@ std::vector<std::vector<std::pair<Real, Real>>> LocalVolModelBuilder::getVolTime
 }
 
 } // namespace data
-} // namespace oreplus
+} // namespace ore
