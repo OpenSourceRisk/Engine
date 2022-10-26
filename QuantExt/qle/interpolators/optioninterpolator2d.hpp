@@ -76,11 +76,11 @@ public:
                          bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
                          const InterpolatorStrike& interpolatorStrike = InterpolatorStrike(),
                          const InterpolatorExpiry& interpolatorExpiry = InterpolatorExpiry(),
-                         const Date& baseDate = Date())
+                         const QuantLib::Date& baseDate = QuantLib::Date())
         : OptionInterpolatorBase(referenceDate), dayCounter_(dayCounter),
           lowerStrikeConstExtrap_(lowerStrikeConstExtrap), upperStrikeConstExtrap_(upperStrikeConstExtrap),
           interpolatorStrike_(interpolatorStrike), interpolatorExpiry_(interpolatorExpiry), initialised_(false),
-          baseDate_(baseDate == Date() ? referenceDate : baseDate){};
+          baseDate_(baseDate == QuantLib::Date() ? referenceDate : baseDate){};
     
     //! OptionInterpolator2d Constructor with dates
     OptionInterpolator2d(const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dayCounter,
@@ -89,7 +89,7 @@ public:
                          bool upperStrikeConstExtrap = true,
                          const InterpolatorStrike& interpolatorStrike = InterpolatorStrike(),
                          const InterpolatorExpiry& interpolatorExpiry = InterpolatorExpiry(),
-                         const Date& baseDate = Date());
+                         const QuantLib::Date& baseDate = QuantLib::Date());
 
     //! OptionInterpolator2d Constructor with Tenors
     OptionInterpolator2d(const QuantLib::Date& referenceDate, const QuantLib::Calendar& calendar,
@@ -99,7 +99,7 @@ public:
         bool upperStrikeConstExtrap = true,
         const InterpolatorStrike& interpolatorStrike = InterpolatorStrike(),
         const InterpolatorExpiry& interpolatorExpiry = InterpolatorExpiry(),
-        const Date& baseDate = Date());
+        const QuantLib::Date& baseDate = QuantLib::Date());
 
     /* delete copy and copy assignment operators because of the stored Interpolation objects, which would
        still point to the source object's data after the copy */
@@ -137,7 +137,7 @@ private:
     InterpolatorStrike interpolatorStrike_;
     InterpolatorExpiry interpolatorExpiry_;
     bool initialised_;
-    Date baseDate_;
+    QuantLib::Date baseDate_;
 
 };
 
@@ -149,11 +149,11 @@ OptionInterpolator2d<InterpolatorStrike, InterpolatorExpiry>::OptionInterpolator
     const std::vector<QuantLib::Real>& values, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap,
     const InterpolatorStrike& interpolatorStrike,
     const InterpolatorExpiry& interpolatorExpiryconst, 
-    const Date& baseDate = Date())
+    const QuantLib::Date& baseDate)
     : OptionInterpolatorBase(referenceDate), dayCounter_(dayCounter), lowerStrikeConstExtrap_(lowerStrikeConstExtrap),
       upperStrikeConstExtrap_(upperStrikeConstExtrap), interpolatorStrike_(interpolatorStrike),
       interpolatorExpiry_(interpolatorExpiry), initialised_(false),
-      baseDate_(baseDate == Date() ? referenceDate : baseDate) {
+      baseDate_(baseDate == QuantLib::Date() ? referenceDate : baseDate) {
 
     initialise(dates, strikes, values);
 };
@@ -164,11 +164,11 @@ OptionInterpolator2d<InterpolatorStrike, InterpolatorExpiry>::OptionInterpolator
     const QuantLib::BusinessDayConvention& bdc, const QuantLib::DayCounter& dayCounter,
     const std::vector<QuantLib::Period>& tenors, const std::vector<QuantLib::Real>& strikes,
     const std::vector<QuantLib::Real>& values, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap, const InterpolatorStrike& interpolatorStrike,
-    const InterpolatorExpiry& interpolatorExpiry, const Date& baseDate = Date()) 
+    const InterpolatorExpiry& interpolatorExpiry, const QuantLib::Date& baseDate) 
     : OptionInterpolatorBase(referenceDate), dayCounter_(dayCounter), lowerStrikeConstExtrap_(lowerStrikeConstExtrap),
     upperStrikeConstExtrap_(upperStrikeConstExtrap), interpolatorStrike_(interpolatorStrike),
       interpolatorExpiry_(interpolatorExpiry), initialised_(false),
-      baseDate_(baseDate == Date() ? referenceDate : baseDate) {
+      baseDate_(baseDate == QuantLib::Date() ? referenceDate : baseDate) {
 
     initialise(tenors, strikes, values, calendar, bdc);
 }
