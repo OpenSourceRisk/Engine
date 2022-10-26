@@ -1898,6 +1898,15 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
         }
     }
 
+    if (contractFrequency_ == Monthly) {
+        auto validContractMonthNode = XMLUtils::getChildNode(node, "ValidContractMonths");
+        if (validContractMonthNode) {
+            auto monthNodes = XMLUtils::getChildrenNodes(validContractMonthNode, "Month");
+            for (const auto& month : monthNodes) {
+                validContractMonths_.insert(parseMonth(XMLUtils::getNodeValue(month)));
+            }
+        }
+    }
     
     strOptionBdc_ = XMLUtils::getChildValue(node, "OptionBusinessDayConvention", false);
 
@@ -2046,6 +2055,14 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
 
     if (!savingsTime_.empty())
         XMLUtils::addChild(doc, node, "SavingsTime", savingsTime_);
+
+    if (contractFrequency_ == Monthly && !validContractMonths_.empty() && validContractMonths_.size() < 12) {
+        XMLNode* validContractMonthNode = doc.allocNode("ValidContractMonths");
+        for (auto  month : validContractMonths_) {
+            XMLUtils::addChild(doc, validContractMonthNode, "Month", to_string(month));
+        }
+        XMLUtils::appendNode(node, validContractMonthNode);
+    }
 
     return node;
 }
