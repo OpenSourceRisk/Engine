@@ -69,6 +69,91 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) 
     }
 }
 
+std::ostream& operator<<(std::ostream& out, const MarketDatum::InstrumentType& type) {
+    switch (type) {
+    case MarketDatum::InstrumentType::ZERO:
+        return out << "ZERO";
+    case MarketDatum::InstrumentType::DISCOUNT:
+        return out << "DISCOUNT";
+    case MarketDatum::InstrumentType::MM:
+        return out << "MM";
+    case MarketDatum::InstrumentType::MM_FUTURE:
+        return out << "MM_FUTURE";
+    case MarketDatum::InstrumentType::OI_FUTURE:
+        return out << "OI_FUTURE";
+    case MarketDatum::InstrumentType::FRA:
+        return out << "FRA";
+    case MarketDatum::InstrumentType::IMM_FRA:
+        return out << "IMM_FRA";
+    case MarketDatum::InstrumentType::IR_SWAP:
+        return out << "IR_SWAP";
+    case MarketDatum::InstrumentType::BASIS_SWAP:
+        return out << "BASIS_SWAP";
+    case MarketDatum::InstrumentType::BMA_SWAP:
+        return out << "BMA_SWAP";
+    case MarketDatum::InstrumentType::CC_BASIS_SWAP:
+        return out << "CC_BASIS_SWAP";
+    case MarketDatum::InstrumentType::CC_FIX_FLOAT_SWAP:
+        return out << "CC_FIX_FLOAT_SWAP";
+    case MarketDatum::InstrumentType::CDS:
+        return out << "CDS";
+    case MarketDatum::InstrumentType::CDS_INDEX:
+        return out << "CDS_INDEX";
+    case MarketDatum::InstrumentType::FX_SPOT:
+        return out << "FX_SPOT";
+    case MarketDatum::InstrumentType::FX_FWD:
+        return out << "FX_FWD";
+    case MarketDatum::InstrumentType::HAZARD_RATE:
+        return out << "HAZARD_RATE";
+    case MarketDatum::InstrumentType::RECOVERY_RATE:
+        return out << "RECOVERY_RATE";
+    case MarketDatum::InstrumentType::SWAPTION:
+        return out << "SWAPTION";
+    case MarketDatum::InstrumentType::CAPFLOOR:
+        return out << "CAPFLOOR";
+    case MarketDatum::InstrumentType::FX_OPTION:
+        return out << "FX_OPTION";
+    case MarketDatum::InstrumentType::ZC_INFLATIONSWAP:
+        return out << "ZC_INFLATIONSWAP";
+    case MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR:
+        return out << "ZC_INFLATIONCAPFLOOR";
+    case MarketDatum::InstrumentType::YY_INFLATIONSWAP:
+        return out << "YY_INFLATIONSWAP";
+    case MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR:
+        return out << "YY_INFLATIONCAPFLOOR";
+    case MarketDatum::InstrumentType::SEASONALITY:
+        return out << "SEASONALITY";
+    case MarketDatum::InstrumentType::EQUITY_SPOT:
+        return out << "EQUITY_SPOT";
+    case MarketDatum::InstrumentType::EQUITY_FWD:
+        return out << "EQUITY_FWD";
+    case MarketDatum::InstrumentType::EQUITY_DIVIDEND:
+        return out << "EQUITY_DIVIDEND";
+    case MarketDatum::InstrumentType::EQUITY_OPTION:
+        return out << "EQUITY_OPTION";
+    case MarketDatum::InstrumentType::BOND:
+        return out << "BOND";
+    case MarketDatum::InstrumentType::BOND_OPTION:
+        return out << "BOND_OPTION";
+    case MarketDatum::InstrumentType::INDEX_CDS_OPTION:
+        return out << "INDEX_CDS_OPTION";
+    case MarketDatum::InstrumentType::COMMODITY_SPOT:
+        return out << "COMMODITY_SPOT";
+    case MarketDatum::InstrumentType::COMMODITY_FWD:
+        return out << "COMMODITY_FWD";
+    case MarketDatum::InstrumentType::CORRELATION:
+        return out << "CORRELATION";
+    case MarketDatum::InstrumentType::COMMODITY_OPTION:
+        return out << "COMMODITY_OPTION";
+    case MarketDatum::InstrumentType::CPR:
+        return out << "CPR";
+    case MarketDatum::InstrumentType::NONE:
+        return out << "NONE";
+    default:
+        return out << "?";
+    }
+}
+
 EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
                                      string equityName, string ccy, string expiry,
                                      const boost::shared_ptr<BaseStrike>& strike, bool isCall)
