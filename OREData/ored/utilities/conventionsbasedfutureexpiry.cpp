@@ -169,6 +169,12 @@ Date ConventionsBasedFutureExpiry::expiry(Day dayOfMonth, Month contractMonth, Y
             contractYear = newDate.year();
         }
 
+        if (convention_.contractFrequency() == Monthly && !convention_.validContractMonths().empty() &&
+            convention_.validContractMonths().size() < 12 &&
+            convention_.validContractMonths().count(contractMonth) == 0) {
+            // contractMonth is in the not in the list of valid contract months
+            return Date();
+        } 
         // Calculate the relevant date in the expiry month and year
         if (convention_.anchorType() == CommodityFutureConvention::AnchorType::DayOfMonth) {
             Date last = Date::endOfMonth(Date(1, contractMonth, contractYear));
