@@ -93,5 +93,8 @@ Real yoyCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
                             const boost::shared_ptr<YoYInflationTermStructure>& curve,
                             const QuantLib::Date& optionMaturityDate);
 
+//! helper function that computes the atm forward
+Real atmForward(const Real s0, const Handle<YieldTermStructure>& r, const Handle<YieldTermStructure>& q, const Real t);
+
 } // namespace data
 } // namespace ore
