@@ -28,6 +28,7 @@
 
 #include <ql/time/calendars/target.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/instruments/currencyswap.hpp>
 
@@ -224,6 +225,7 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
                 additionalData_["amount[" + legID + "]"] = flowAmount;
                 additionalData_["paymentDate[" + legID + "]"] = to_string(flow->date());
                 boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
+                string couponId = to_string(j);
                 if (coupon) {
                     Real currentNotional = 0;
                     try { currentNotional = coupon->nominal(); }
@@ -237,12 +239,36 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
                     catch(std::exception& e) {
                         ALOG("coupon rate could not be determined for trade " << id() << ", set to zero: " << e.what());
                     }
-                    additionalData_["rate[" + legID + "]"] = rate;
+                    additionalData_["rate[" + legID + "][" + couponId + "]"] = rate;
 
                     boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
                     if (frc) {
                         additionalData_["index[" + legID + "]"] = frc->index()->name();
                         additionalData_["spread[" + legID + "]"] = frc->spread();                        
+                    }
+
+                    boost::shared_ptr<EquityCoupon> eqc = boost::dynamic_pointer_cast<EquityCoupon>(flow);
+                    if (eqc) {
+                        EquityCouponPricer::AdditionalResultCache arc = eqc->pricer()->additionalResultCache();
+                        additionalData_["initialPrice[" + legID + "][" + couponId + "]"] = arc.initialPrice;
+                        additionalData_["endEquityFixing[" + legID + "][" + couponId + "]"] = arc.endFixing;
+                        if (arc.startFixing != Null<Real>())
+                            additionalData_["startEquityFixing[" + legID + "][" + couponId + "]"] = arc.startFixing;
+                        if (arc.startFixingTotal != Null<Real>())
+                            additionalData_["startEquityFixingTotal[" + legID + "][" + couponId + "]"] =
+                                arc.startFixingTotal;
+                        if (arc.endFixingTotal != Null<Real>())
+                            additionalData_["endEquityFixingTotal[" + legID + "][" + couponId + "]"] =
+                                arc.endFixingTotal;
+                        if (arc.startFxFixing != Null<Real>())
+                            additionalData_["startFxFixing[" + legID + "][" + couponId + "]"] = arc.startFxFixing;
+                        if (arc.endFxFixing != Null<Real>())
+                            additionalData_["endFxFixing[" + legID + "][" + couponId + "]"] = arc.endFxFixing;
+                        if (arc.pastDividends != Null<Real>())
+                            additionalData_["pastDividends[" + legID + "][" + couponId + "]"] = arc.pastDividends;
+                        if (arc.forecastDividends != Null<Real>())
+                            additionalData_["forecastDividends[" + legID + "][" + couponId + "]"] =
+                                arc.forecastDividends;
                     }
                 }
                 break;
