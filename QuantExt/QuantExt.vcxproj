@@ -680,6 +680,7 @@
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
     <ClInclude Include="qle\methods\pathgeneratorfactory.hpp" />
     <ClInclude Include="qle\models\annuitymapping.hpp" />
+    <ClInclude Include="qle\models\blackscholesmodelwrapper.hpp" />
     <ClInclude Include="qle\models\carrmadanarbitragecheck.hpp" />
     <ClInclude Include="qle\models\cdsoptionhelper.hpp" />
     <ClInclude Include="qle\models\cirppconstantfellerparametrization.hpp" />
