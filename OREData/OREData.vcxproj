@@ -102,12 +102,15 @@
     <ClInclude Include="ored\marketdata\yieldcurve.hpp" />
     <ClInclude Include="ored\marketdata\inflationcapfloorvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\yieldvolcurve.hpp" />
+    <ClInclude Include="ored\model\blackscholesmodelbuilder.hpp" />
+    <ClInclude Include="ored\model\blackscholesmodelbuilderbase.hpp" />
     <ClInclude Include="ored\model\calibrationbasket.hpp" />
     <ClInclude Include="ored\model\calibrationconfiguration.hpp" />
     <ClInclude Include="ored\model\calibrationinstrumentfactory.hpp" />
     <ClInclude Include="ored\model\calibrationinstruments\cpicapfloor.hpp" />
     <ClInclude Include="ored\model\calibrationinstruments\yoycapfloor.hpp" />
     <ClInclude Include="ored\model\calibrationinstruments\yoyswap.hpp" />
+    <ClInclude Include="ored\model\calibrationpointcache.hpp" />
     <ClInclude Include="ored\model\crcirbuilder.hpp" />
     <ClInclude Include="ored\model\crcirdata.hpp" />
     <ClInclude Include="ored\model\crlgmbuilder.hpp" />
@@ -126,6 +129,7 @@
     <ClInclude Include="ored\model\irlgmdata.hpp" />
     <ClInclude Include="ored\model\lgmbuilder.hpp" />
     <ClInclude Include="ored\model\lgmdata.hpp" />
+    <ClInclude Include="ored\model\localvolmodelbuilder.hpp" />
     <ClInclude Include="ored\model\marketobserver.hpp" />
     <ClInclude Include="ored\model\modelbuilder.hpp" />
     <ClInclude Include="ored\model\modeldata.hpp" />
@@ -348,12 +352,15 @@
     <ClCompile Include="ored\marketdata\yieldcurve.cpp" />
     <ClCompile Include="ored\marketdata\inflationcapfloorvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\yieldvolcurve.cpp" />
+    <ClCompile Include="ored\model\blackscholesmodelbuilder.cpp" />
+    <ClCompile Include="ored\model\blackscholesmodelbuilderbase.cpp" />
     <ClCompile Include="ored\model\calibrationbasket.cpp" />
     <ClCompile Include="ored\model\calibrationconfiguration.cpp" />
     <ClCompile Include="ored\model\calibrationinstrumentfactory.cpp" />
     <ClCompile Include="ored\model\calibrationinstruments\cpicapfloor.cpp" />
     <ClCompile Include="ored\model\calibrationinstruments\yoycapfloor.cpp" />
     <ClCompile Include="ored\model\calibrationinstruments\yoyswap.cpp" />
+    <ClCompile Include="ored\model\calibrationpointcache.cpp" />
     <ClCompile Include="ored\model\crcirbuilder.cpp" />
     <ClCompile Include="ored\model\crcirdata.cpp" />
     <ClCompile Include="ored\model\crlgmbuilder.cpp" />
@@ -372,6 +379,7 @@
     <ClCompile Include="ored\model\irlgmdata.cpp" />
     <ClCompile Include="ored\model\lgmbuilder.cpp" />
     <ClCompile Include="ored\model\lgmdata.cpp" />
+    <ClCompile Include="ored\model\localvolmodelbuilder.cpp" />
     <ClCompile Include="ored\model\modeldata.cpp" />
     <ClCompile Include="ored\model\modelparameter.cpp" />
     <ClCompile Include="ored\model\utilities.cpp" />
