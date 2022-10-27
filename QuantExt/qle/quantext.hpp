@@ -346,6 +346,7 @@
 #include <qle/termstructures/iborfallbackcurve.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/inflation/constantcpivolatility.hpp>
+#include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
 #include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
 #include <qle/termstructures/inflation/inflationtraits.hpp>
 #include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>

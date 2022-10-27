@@ -33,9 +33,10 @@
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
 #include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
-#include <qle/termstructures/strippedcpivolatilitystructure.hpp>
+
 #include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
 #include <qle/pricingengines/cpibacheliercapfloorengine.hpp>
+#include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -43,39 +44,6 @@ using namespace std;
 
 namespace ore {
 namespace data {
-
-//! a slice are all prices/vols for a given expiry, including missing values
-//! the function replace Null values with a linearFlat interpolated value
-void fillMissingPriceSurface(Matrix& surface, const std::vector<double>& strikes,
-                       const std::vector<Period>& terms) {
-    for (int j = 0; j < terms.size(); ++j) {
-        std::vector<double> xs;
-        std::vector<double> ys;
-        std::vector<size_t> missingIds;
-        for (int i = 0; i < strikes.size(); ++i) {
-            if (surface[i][j] == Null<double>()) {
-                missingIds.push_back(i);
-            } else {
-                xs.push_back(strikes[i]);
-                ys.push_back(surface[i][j]);
-            }
-        }
-        if (!missingIds.empty() && xs.size()>=2) {
-            auto interpolation = Linear().interpolate(xs.begin(), xs.end(), ys.begin());
-            for (auto i : missingIds) {
-                // Only interpolation of the prices
-                if (strikes[i] > interpolation.xMin() && strikes[i] <  interpolation.xMax()) {
-                    auto value = interpolation(strikes[i], false);
-                    WLOG("quote for cap floor price surface, type cap, strike "
-                         << strikes[i] << ", term " << terms[j] << ", not found. Replace NULL with " << value);
-                    surface[i][j] = value;
-                }
-            }
-        }
-    }
-}
-
-
 
 InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloorVolatilityCurveSpec spec,
                                                      const Loader& loader, const CurveConfigurations& curveConfigs,
@@ -400,10 +368,6 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
             }
         }
     }
-
-    fillMissingPriceSurface(cPrice, capStrikes, terms);
-    fillMissingPriceSurface(fPrice, floorStrikes, terms);
-
     for (Size j = 0; j < terms.size(); ++j) {
         for (Size i = 0; i < capStrikes.size(); ++i)
             QL_REQUIRE(cPrice[i][j] != Null<Real>(), "quote for cap floor price surface, type cap, strike "
@@ -486,22 +450,6 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                                                  << ", required in building the inflation cap floor price surface "
                                                  << spec.name() << ", was not found");
         }
-        // Build the term structure
-        surface_ = boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>>(
-            new InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>(
-                1.0, startRate, config->observationLag(), config->calendar(), config->businessDayConvention(),
-                config->dayCounter(), Handle<ZeroInflationIndex>(index), discountCurve_, capStrikes, floorStrikes,
-                terms, cPrice, fPrice));
-
-        boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>> cpiPriceSurfacePtr =
-            boost::make_shared<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>>(
-                1.0, startRate, config->observationLag(), config->calendar(), config->businessDayConvention(),
-                config->dayCounter(), Handle<ZeroInflationIndex>(index), discountCurve_, capStrikes, floorStrikes,
-                terms, cPrice, fPrice);
-
-        // cast
-        surface_ = cpiPriceSurfacePtr;
-
         boost::shared_ptr<QuantExt::CPICapFloorEngine> engine;
 
         bool isLogNormalVol = quoteVolatilityType == QuantLib::ShiftedLognormal;
@@ -524,20 +472,23 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                     boost::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(config->conventions()));
                 startDate = getStartAndLag(asof, *conv).first;
             }
-            QuantLib::Handle<CPICapFloorTermPriceSurface> cpiPriceSurfaceHandle(cpiPriceSurfacePtr);
-            boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>> cpiCapFloorVolSurface;
-            cpiCapFloorVolSurface = boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>>(
-                QuantExt::PriceQuotePreference::CapFloor, cpiPriceSurfaceHandle, index, engine, startDate,
-                StrippedCPIVolSurfaceDefaultValues::upperVolBound, StrippedCPIVolSurfaceDefaultValues::lowerVolBound,
-                StrippedCPIVolSurfaceDefaultValues::solverTolerance, Bilinear(), quoteVolatilityType, 0.0);
+            boost::shared_ptr<QuantExt::CPIPriceVolatilitySurface<Linear, Linear>> cpiCapFloorVolSurface;
+            cpiCapFloorVolSurface = boost::make_shared<QuantExt::CPIPriceVolatilitySurface<Linear, Linear>>(
+                QuantExt::PriceQuotePreference::CapFloor, config->observationLag(), config->calendar(),
+                config->businessDayConvention(), config->dayCounter(), index, discountCurve_, capStrikes, floorStrikes, terms, cPrice, fPrice,
+                engine, false, true, true, startDate, quoteVolatilityType, 0.0,
+                CPIPriceVolatilitySurfaceDefaultValues::upperVolBound,
+                CPIPriceVolatilitySurfaceDefaultValues::lowerVolBound,
+                CPIPriceVolatilitySurfaceDefaultValues::solverTolerance);
 
             // cast
             cpiVolSurface_ = cpiCapFloorVolSurface;
 
-            cpiVolSurface_->enableExtrapolation();
+            cpiVolSurface_->enableExtrapolation();          
 
             for (Size i = 0; i < cpiCapFloorVolSurface->strikes().size(); ++i) {
                 for (Size j = 0; j < cpiCapFloorVolSurface->maturities().size(); ++j) {
+                    
                     DLOG("Implied CPI CapFloor BlackVol,strike," << cpiCapFloorVolSurface->strikes()[i] << ",maturity,"
                                                                  << cpiCapFloorVolSurface->maturities()[j] << ",index,"
                                                                  << index->name() << ",Vol,"

@@ -620,6 +620,7 @@ termstructures/hazardspreadeddefaulttermstructure.hpp
 termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
 termstructures/inflation/constantcpivolatility.hpp
+termstructures/inflation/cpipricevolatilitysurface.hpp
 termstructures/inflation/cpivolatilitystructure.hpp
 termstructures/inflation/inflationtraits.hpp
 termstructures/inflation/piecewisezeroinflationcurve.hpp
