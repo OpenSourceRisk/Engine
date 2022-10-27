@@ -203,13 +203,14 @@ void CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::performCal
         double ttm =
             QuantLib::inflationYearFraction(frequency(), indexIsInterpolated(), dayCounter(), baseDate(), fixingDate);
         fixingDates_.push_back(fixingDate);
+        double atmAvgRate = std::pow(atm, 1.0 / ttm) - 1.0;
         for (QuantLib::Size strikeIdx = 0; strikeIdx < strikes_.size(); strikeIdx++) {
             double strike = strikes_[strikeIdx];
             double strikeGrowth = std::pow(1.0 + strike, ttm);
-            bool useFloor = chooseFloor(strike, atm);
+            bool useFloor = chooseFloor(strike, atmAvgRate);
             double vol = Null<Real>();
-            QuantLib::Real priceToMatch = useFloor ? capPrice(strike, tenorIdx, atm, strikeGrowth, df)
-                                                   : floorPrice(strike, tenorIdx, atm, strikeGrowth, df);
+            QuantLib::Real priceToMatch = useFloor ? floorPrice(strike, tenorIdx, atm, strikeGrowth, df)
+                                                   : capPrice(strike, tenorIdx, atm, strikeGrowth, df);
             if (priceToMatch != Null<Real>()) {
                 try {
                     vol = implyVol(strike, maturityDate, priceToMatch, useFloor);
@@ -344,6 +345,36 @@ void CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::validateIn
                "mismatch between cap price matrix dimension and number of strikes and tenors");
     QL_REQUIRE(floorPrices_.rows() == floorStrikes_.size() && floorPrices_.columns() == expiries_.size(),
                "mismatch between cap price matrix dimension and number of strikes and tenors");
+    
+    // Some basic arbitrage checks
+    for (size_t tenorIdx = 0; tenorIdx < capPrices_.columns(); ++tenorIdx) {
+        double prevPrice = std::numeric_limits<double>::max();
+        for (size_t strikeIdx = 0; strikeIdx < capPrices_.rows(); ++strikeIdx) {
+            double currentPrice = capPrices_[strikeIdx][tenorIdx];
+            QL_REQUIRE(ignoreMissingPrices_ || currentPrice != QuantLib::Null<QuantLib::Real>(),
+                       "Input prices can not be null");
+            QL_REQUIRE(!QuantLib::close_enough(0.0, currentPrice) && currentPrice > 0.0, "No zero cap prices allowd");
+            if (currentPrice != QuantLib::Null<Real>()) {
+                QL_REQUIRE(currentPrice <= prevPrice, "Non decreasing cap prices");
+                prevPrice = currentPrice;
+            }
+        }
+    }
+
+    for (size_t tenorIdx = 0; tenorIdx < floorPrices_.columns(); ++tenorIdx) {
+        double prevPrice = QL_EPSILON;
+        for (size_t strikeIdx = 0; strikeIdx < floorPrices_.rows(); ++strikeIdx) {
+            double currentPrice = floorPrices_[strikeIdx][tenorIdx];
+            QL_REQUIRE(ignoreMissingPrices_ || currentPrice != QuantLib::Null<QuantLib::Real>(),
+                       "Input prices can not be null");
+            QL_REQUIRE(!QuantLib::close_enough(0.0, currentPrice) && currentPrice > 0.0, "No zero cap prices allowd");
+            if (currentPrice != QuantLib::Null<Real>()) {
+                QL_REQUIRE(currentPrice >= prevPrice, "Non increasing floor prices");
+                prevPrice = currentPrice;
+            }
+        }
+    }
+
 }
 
 template <class InterpolatorStrike, class InterpolatorTime>
@@ -426,6 +457,8 @@ double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::implyVol
                                    indexIsInterpolated() ? CPI::Linear : CPI::Flat);
 
     boost::shared_ptr<QuantExt::CPICapFloorEngine> engine = engine_;
+
+    capFloor.setPricingEngine(engine);
 
     auto targetFunction = [&engine, &cal, &dc, &bdc, &startDate, &index, &obsLag, &freq, &price,
                            &capFloor](const double& guess) {
