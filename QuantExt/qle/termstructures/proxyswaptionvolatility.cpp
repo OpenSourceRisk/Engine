@@ -31,7 +31,9 @@ ProxySwaptionVolatility::ProxySwaptionVolatility(const QuantLib::Handle<Swaption
                                                  boost::shared_ptr<SwapIndex> targetShortSwapIndexBase)
     : SwaptionVolatilityStructure(baseVol->businessDayConvention(), baseVol->dayCounter()), baseVol_(baseVol),
       baseSwapIndexBase_(baseSwapIndexBase), baseShortSwapIndexBase_(baseShortSwapIndexBase),
-      targetSwapIndexBase_(targetSwapIndexBase), targetShortSwapIndexBase_(targetShortSwapIndexBase) {}
+      targetSwapIndexBase_(targetSwapIndexBase), targetShortSwapIndexBase_(targetShortSwapIndexBase) {
+    enableExtrapolation(baseVol->allowsExtrapolation());
+}
 
 boost::shared_ptr<SmileSection> ProxySwaptionVolatility::smileSectionImpl(Time optionTime, Time swapLength) const {
     // imply option date from option time
