@@ -1028,7 +1028,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 for (Size j = 0; j < strikes.size(); ++j) {
                                     strike = isAtm ? strike : strikes[j];
                                     Real vol =
-                                        wrapper->volatility(optionDates[i], strike, wrapper->allowsExtrapolation());
+                                        wrapper->volatility(optionDates[i], strike, true);
                                     DLOG("Vol at [date, strike] pair [" << optionDates[i] << ", " << std::fixed
                                                                         << std::setprecision(4) << strike << "] is "
                                                                         << std::setprecision(12) << vol);
