@@ -10,8 +10,8 @@
 namespace QuantExt {
 
 CommodityAveragePriceOption::CommodityAveragePriceOption(const boost::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
-                                                         const ext::shared_ptr<Exercise>& exercise, const Real& quantity,
-                                                         const Real& strikePrice, QuantLib::Option::Type type,
+                                                         const ext::shared_ptr<Exercise>& exercise, const Real quantity,
+                                                         const Real strikePrice, QuantLib::Option::Type type,
                                                          QuantLib::Settlement::Type delivery,
                                                          QuantLib::Settlement::Method settlementMethod,
                                                          const Real barrierLevel, Barrier::Type barrierType,
@@ -39,9 +39,6 @@ Real CommodityAveragePriceOption::accrued(const Date& refDate) const {
             if (refDate < kv.first) {
                 break;
             }
-            Real fxRate{1.};
-            if(fxIndex_)
-                fxRate = fxIndex_->fixing(kv.first);
             // Update accrued where pricing date is on or before today
             Real fxRate = (fxIndex_)?fxIndex_->fixing(kv.first):1.;
             tmp += fxRate*kv.second->fixing(kv.first);
