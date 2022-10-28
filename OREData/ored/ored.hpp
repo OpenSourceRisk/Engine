@@ -71,12 +71,15 @@
 #include <ored/marketdata/wrappedmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/yieldvolcurve.hpp>
+#include <ored/model/blackscholesmodelbuilder.hpp>
+#include <ored/model/blackscholesmodelbuilderbase.hpp>
 #include <ored/model/calibrationbasket.hpp>
 #include <ored/model/calibrationconfiguration.hpp>
 #include <ored/model/calibrationinstrumentfactory.hpp>
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
 #include <ored/model/calibrationinstruments/yoycapfloor.hpp>
 #include <ored/model/calibrationinstruments/yoyswap.hpp>
+#include <ored/model/calibrationpointcache.hpp>
 #include <ored/model/crcirbuilder.hpp>
 #include <ored/model/crcirdata.hpp>
 #include <ored/model/crlgmbuilder.hpp>
@@ -95,6 +98,7 @@
 #include <ored/model/irlgmdata.hpp>
 #include <ored/model/lgmbuilder.hpp>
 #include <ored/model/lgmdata.hpp>
+#include <ored/model/localvolmodelbuilder.hpp>
 #include <ored/model/marketobserver.hpp>
 #include <ored/model/modelbuilder.hpp>
 #include <ored/model/modeldata.hpp>

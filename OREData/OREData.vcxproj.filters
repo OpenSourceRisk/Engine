@@ -777,6 +777,10 @@
     <ClInclude Include="ored\portfolio\inflationswap.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\model\blackscholesmodelbuilder.hpp" />
+    <ClInclude Include="ored\model\blackscholesmodelbuilderbase.hpp" />
+    <ClInclude Include="ored\model\calibrationpointcache.hpp" />
+    <ClInclude Include="ored\model\localvolmodelbuilder.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -1356,5 +1360,9 @@
     <ClCompile Include="ored\portfolio\inflationswap.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
+    <ClCompile Include="ored\model\blackscholesmodelbuilder.cpp" />
+    <ClCompile Include="ored\model\blackscholesmodelbuilderbase.cpp" />
+    <ClCompile Include="ored\model\calibrationpointcache.cpp" />
+    <ClCompile Include="ored\model\localvolmodelbuilder.cpp" />
   </ItemGroup>
 </Project>
