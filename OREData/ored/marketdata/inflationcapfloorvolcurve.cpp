@@ -475,8 +475,8 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
             boost::shared_ptr<QuantExt::CPIPriceVolatilitySurface<Linear, Linear>> cpiCapFloorVolSurface;
             cpiCapFloorVolSurface = boost::make_shared<QuantExt::CPIPriceVolatilitySurface<Linear, Linear>>(
                 QuantExt::PriceQuotePreference::CapFloor, config->observationLag(), config->calendar(),
-                config->businessDayConvention(), config->dayCounter(), index, discountCurve_, capStrikes, floorStrikes, terms, cPrice, fPrice,
-                engine, false, true, true, startDate, quoteVolatilityType, 0.0,
+                config->businessDayConvention(), config->dayCounter(), index, discountCurve_, capStrikes, floorStrikes,
+                terms, cPrice, fPrice, engine, startDate, false, true, true, quoteVolatilityType, 0.0,
                 CPIPriceVolatilitySurfaceDefaultValues::upperVolBound,
                 CPIPriceVolatilitySurfaceDefaultValues::lowerVolBound,
                 CPIPriceVolatilitySurfaceDefaultValues::solverTolerance);

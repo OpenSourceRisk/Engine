@@ -13,9 +13,9 @@
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
+#include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
 #include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
-#include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 #include <qle/utilities/inflation.hpp>
 
 using namespace boost::unit_test_framework;
@@ -129,19 +129,17 @@ boost::shared_ptr<CPIVolatilitySurface> buildVolSurface(CommonData& cd,
 boost::shared_ptr<CPIVolatilitySurface> buildVolSurfaceFromPrices(CommonData& cd,
                                                                   const boost::shared_ptr<ZeroInflationIndex>& index,
                                                                   const bool useLastKnownFixing,
-                                                                  const Date& startDate = Date()) {
-    boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>> cpiPriceSurfacePtr =
-        boost::make_shared<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>>(
-            1.0, 0.0, cd.obsLag, cd.fixingCalendar, cd.bdc, cd.dayCounter, Handle<ZeroInflationIndex>(index),
-            cd.discountTS, cd.cStrikes, cd.fStrikes, cd.tenors, cd.cPrices, cd.fPrices);
+                                                                  const Date& startDate = Date(), 
+                                                                  bool ignoreMissingQuotes = false) {
 
     boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(
         cd.discountTS, QuantLib::Handle<QuantLib::CPIVolatilitySurface>(), useLastKnownFixing);
 
-    QuantLib::Handle<CPICapFloorTermPriceSurface> cpiPriceSurfaceHandle(cpiPriceSurfacePtr);
-    boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>> cpiCapFloorVolSurface;
-    cpiCapFloorVolSurface = boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>>(
-        QuantExt::PriceQuotePreference::CapFloor, cpiPriceSurfaceHandle, index, engine, startDate);
+    boost::shared_ptr<QuantExt::CPIPriceVolatilitySurface<QuantLib::Linear, QuantLib::Linear>> cpiCapFloorVolSurface;
+    cpiCapFloorVolSurface = boost::make_shared<QuantExt::CPIPriceVolatilitySurface<QuantLib::Linear, QuantLib::Linear>>(
+        QuantExt::PriceQuotePreference::CapFloor, cd.obsLag, cd.fixingCalendar, cd.bdc, cd.dayCounter, index,
+        cd.discountTS, cd.cStrikes, cd.fStrikes, cd.tenors, cd.cPrices, cd.fPrices, engine, startDate,
+        ignoreMissingQuotes);
 
     cpiCapFloorVolSurface->enableExtrapolation();
     return cpiCapFloorVolSurface;
@@ -223,7 +221,110 @@ BOOST_AUTO_TEST_CASE(testVolatiltiySurface) {
             BOOST_CHECK_CLOSE(vol, expectedVol, cd.tolerance);
         }
     }
+    
+    // Remove some quotes and price it again
+    {
+        // Remove first tenor, 2nd strike
+        auto cdWithMissingData = cd;
+        cdWithMissingData.cPrices[1][0] = Null<Real>();
+        cdWithMissingData.fPrices[1][0] = Null<Real>();
+        auto priceSurface = buildVolSurfaceFromPrices(cdWithMissingData, index, true, Date(), true);
+        double expectedVol = cd.vols[0][0]->value() + (cd.vols[0][2]->value() - cd.vols[0][0]->value()) *
+                                                          (cd.strikes[1] - cd.strikes[0]) /
+                                                          (cd.strikes[2] - cd.strikes[0]);
+        double actualVol = priceSurface->volatility(cd.tenors[0], cd.strikes[1]);
+        BOOST_CHECK_CLOSE(actualVol, expectedVol, cd.tolerance);
+        Date optionFixingDate = priceSurface->baseDate() + cd.tenors[0];
+        actualVol = priceSurface->volatility(optionFixingDate, cd.strikes[1], 0 * Days, false);
+        BOOST_CHECK_CLOSE(actualVol, expectedVol, cd.tolerance);
+    }
+    
+    // Check extrapolation of the vols at missing edges
+    {
+        auto cdWithMissingData = cd;
+        // Remove first strike at 2nd Tenor
+        cdWithMissingData.cPrices[0][1] = Null<Real>();
+        cdWithMissingData.fPrices[0][1] = Null<Real>();
+        auto priceSurface = buildVolSurfaceFromPrices(cdWithMissingData, index, true, Date(), true);
+        double expectedVol = cd.vols[1][1]->value();
+        double actualVol = priceSurface->volatility(cd.tenors[1], cd.strikes[0]);
+        BOOST_CHECK_CLOSE(actualVol, expectedVol, cd.tolerance);
+    }
 
+    // Check if only one quote valid
+    {
+        auto cdWithMissingData = cd;
+        // Remove all but the 2nd strike at 2nd Tenor
+        cdWithMissingData.cPrices[0][1] = Null<Real>();
+        cdWithMissingData.fPrices[0][1] = Null<Real>();
+        for (auto i = 2; i < cd.strikes.size(); ++i) {
+            cdWithMissingData.cPrices[i][1] = Null<Real>();
+            cdWithMissingData.fPrices[i][1] = Null<Real>();
+        }
+        auto priceSurface = buildVolSurfaceFromPrices(cdWithMissingData, index, true, Date(), true);
+        double expectedVol = cd.vols[1][1]->value();
+        for (auto i = 0; i < cd.strikes.size(); ++i) {
+            BOOST_CHECK_CLOSE(expectedVol, priceSurface->volatility(cd.tenors[1], cd.strikes[i]), cd.tolerance);
+        }
+
+    }
+
+    // Check build vol only from one strike quote
+    {
+        auto cdWithMissingData = cd;
+
+        cdWithMissingData.strikes = {cd.strikes[2]};
+        cdWithMissingData.cStrikes = {cd.strikes[2]};
+        cdWithMissingData.fStrikes = {};
+
+        cdWithMissingData.fPrices = Matrix(0, cd.tenors.size(), Null<Real>());
+        cdWithMissingData.cPrices = Matrix(1, cd.tenors.size(), Null<Real>());
+
+        for (auto i = 0; i < cd.tenors.size(); ++i) {
+            cdWithMissingData.cPrices[0][i] = cd.cPrices[2][i];
+        }
+
+        auto priceSurface = buildVolSurfaceFromPrices(cdWithMissingData, index, true, Date(), true);
+        
+        for (auto i = 0; i < cd.strikes.size(); ++i) {
+            for (auto j = 0; j < cd.tenors.size(); ++j) {
+                double expectedVol = cd.vols[j][2]->value();
+                BOOST_CHECK_CLOSE(expectedVol, priceSurface->volatility(cd.tenors[j], cd.strikes[i]), cd.tolerance);
+            }
+        }
+    }
+
+
+    // Check build vol only from one cap strike and one floor quote
+    {
+        auto cdWithMissingData = cd;
+
+        cdWithMissingData.strikes = {cd.strikes[2]};
+        cdWithMissingData.cStrikes = {cd.strikes[2]};
+        cdWithMissingData.fStrikes = {cd.strikes[1]};
+
+        cdWithMissingData.cPrices = Matrix();
+        cdWithMissingData.fPrices = Matrix(1, cd.tenors.size(), Null<Real>());
+        cdWithMissingData.cPrices = Matrix(1, cd.tenors.size(), Null<Real>());
+
+        for (auto i = 0; i < cd.tenors.size(); ++i) {
+            cdWithMissingData.cPrices[0][i] = cd.cPrices[2][i];
+            cdWithMissingData.fPrices[0][i] = cd.fPrices[1][i];
+        }
+
+        auto priceSurface = buildVolSurfaceFromPrices(cdWithMissingData, index, true, Date(), true);
+
+        for (auto i = 0; i < cd.strikes.size(); ++i) {
+            for (auto j = 0; j < cd.tenors.size(); ++j) {
+                double expectedVol = cd.vols[j][1]->value();
+                if ( i > 1)
+                    expectedVol = cd.vols[j][2]->value();
+                BOOST_CHECK_CLOSE(expectedVol, priceSurface->volatility(cd.tenors[j], cd.strikes[i]), cd.tolerance);
+            }
+        }
+    }
+
+    
     {
         // Pricing seasoned cap/floors
 
@@ -258,6 +359,7 @@ BOOST_AUTO_TEST_CASE(testVolatiltiySurface) {
 
         BOOST_CHECK_CLOSE(cap.NPV(), callPricer.value(), cd.tolerance);
     }
+    
 }
 
 BOOST_AUTO_TEST_CASE(testVolatiltiySurfaceWithStartDate) {

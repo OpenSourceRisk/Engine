@@ -299,9 +299,9 @@ QuantLib::Real OptionInterpolator2d<IS, IE>::getValue(QuantLib::Time t, QuantLib
     using QuantLib::Size;
     using QuantLib::Time;
     using std::vector;
-    Time baseTime = dayCounter_.yearFraction(baseDate_, referenceDate_);
+    Time baseTime = dayCounter_.yearFraction(referenceDate_, baseDate_);
     QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
-    QL_REQUIRE(t >= baseTime, "Variance requested for date before reference date: " << referenceDate_);
+    QL_REQUIRE(t >= baseTime, "Variance requested for date before base date: " << baseDate_);
     if (QuantLib::close_enough(t,baseTime)) {
         // requested at reference date
         QL_REQUIRE(!values_.empty(), "OptionInterpolator2d: no expiries given");
