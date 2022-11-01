@@ -17,7 +17,25 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 #include "unitedarabemirates.hpp"
+namespace {
 
+bool isGregorianPublicHoliday(QuantLib::Date const& d){
+    auto n = d.dayOfMonth();
+    switch (d.month()) {
+    case QuantLib::Jan:
+        if(n==1)
+            return true;
+    case QuantLib::Dec:
+        if(n==1)
+            return true;
+        if(n==2)
+            return true;
+    // no break, so if I reach this point, it returns false.
+    default:
+        return false;
+}
+}
+}
 namespace QuantExt {
 UnitedArabEmirates::UnitedArabEmirates() {
     // all calendar instances share the same implementation instance
@@ -30,30 +48,7 @@ bool UnitedArabEmirates::Impl::isWeekend(QuantLib::Weekday w) const {
 }
 
 bool UnitedArabEmirates::Impl::isBusinessDay(const QuantLib::Date& d) const {
-    /*Introduction to public holidays in the UAE
-
-    There are 14 official public holidays in the UAE.
-
-    One of the biggest public holiday events is Eid al-Fitr, which marks the end of Ramadan.
-    It begins the day after the sighting of the crescent moon, so the dates can only be estimated and may vary by a day or two. */
-
-    const static std::vector<Date> publiHolidays{
-        Date(1, Jan,2022), //New Year’s Day
-        Date(30,Apr,2022), //Eid al-Fitr holiday
-        Date(1, May,2022), //Eid al-Fitr holiday
-        Date(2, May,2022), //Eid al-Fitr
-        Date(3, May,2022), //Eid al-Fitr holiday
-        Date(4, May,2022), //Eid al-Fitr holiday
-        Date(8, Jul,2022), //Arafat (Hajj) Day
-        Date(9, Jul,2022), //Eid al-Adha (Feast of Sacrifice)
-        Date(10,Jul,2022), //Eid al-Adha holiday
-        Date(11,Jul,2022), //Eid al-Adha holiday
-        Date(30,Jul,2022), //Al-Hijra (Islamic New Year)
-        Date(1, Dec,2022), //Commemoration Day
-        Date(2, Dec,2022), //National Day
-        Date(3, Dec,2022)  //National Day holiday
-    };
-    bool isPublicHoliday = std::count(publiHolidays.begin(), publiHolidays.end(), d)>0;
+    bool isPublicHoliday = isGregorianPublicHoliday(d);
     return !isWeekend(d.weekday()) && !isPublicHoliday;
 }
 }
