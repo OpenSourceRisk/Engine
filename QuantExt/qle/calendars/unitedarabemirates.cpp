@@ -49,6 +49,10 @@ bool UnitedArabEmirates::Impl::isWeekend(QuantLib::Weekday w) const {
 
 bool UnitedArabEmirates::Impl::isBusinessDay(const QuantLib::Date& d) const {
     bool isPublicHoliday = isGregorianPublicHoliday(d);
-    return !isWeekend(d.weekday()) && !isPublicHoliday;
+    if(d<Date(1,Jan,2022)) {
+        return !isWeekend((d+1).weekday()) && !isPublicHoliday; // historical weekend
+    }else{
+        return !isWeekend(d.weekday()) && !isPublicHoliday; // current weekend
+    }
 }
 }
