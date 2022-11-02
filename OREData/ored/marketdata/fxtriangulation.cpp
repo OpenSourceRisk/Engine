@@ -190,7 +190,7 @@ Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const 
 
     // get the conventions of the result index
 
-    auto [fixingDays, fixingCalendar] = getFxIndexConventions(indexOrPair);
+    auto [fixingDays, fixingCalendar, bdc] = getFxIndexConventions(indexOrPair);
 
     // get the discount curves for the result index
 
@@ -224,7 +224,7 @@ Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const 
 
             // we store a quote "as of today" to account for possible spot lag differences
 
-            auto [fd, fc] = getFxIndexConventions(path[i] + path[i + 1]);
+            auto [fd, fc, bdc] = getFxIndexConventions(path[i] + path[i + 1]);
             auto s_yts = getMarketDiscountCurve(market, path[i]);
             auto t_yts = getMarketDiscountCurve(market, path[i + 1]);
             quotes.push_back(Handle<Quote>(boost::make_shared<FxRateQuote>(q, s_yts, t_yts, fd, fc)));
@@ -354,10 +354,12 @@ Handle<Quote> FXTriangulation::getQuote(const std::string& forCcy, const std::st
 
 std::string FXTriangulation::getAllQuotes() const {
     std::string result;
-    for (auto const& d : quotes_) {
-        result += d.first + ",";
+    if (quotes_.size() > 0) {
+        for (auto const& d : quotes_) {
+            result += d.first + ",";
+        }
+        result.erase(std::next(result.end(), -1));
     }
-    result.erase(std::next(result.end(), -1));
     return result;
 }
 
