@@ -58,8 +58,8 @@ namespace QuantExt {
         AnalyticDigitalAmericanEngine(const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
                                       const bool flipResults = false)
               : QuantLib::AnalyticDigitalAmericanEngine(process), flipResults_(flipResults){};
-        void calculate() const;
-        virtual bool knock_in() const {
+        void calculate() const override;
+        virtual bool knock_in() const override {
            return true;
         }
       private:
