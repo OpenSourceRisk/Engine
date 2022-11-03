@@ -294,6 +294,7 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
     auto baseCpi = zeroInflationIndex_->fixing(baseDate);
     auto bdc = cpiVolatility_->businessDayConvention();
     auto obsLag = cpiVolatility_->observationLag();
+    
     Handle<ZeroInflationIndex> inflationIndex(zeroInflationIndex_);
     Date today = Settings::instance().evaluationDate();
     Real nominal = 1.0;
@@ -331,14 +332,14 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
         Real strikeValue =
             cpiCapFloorStrikeValue(cpiCapFloor->strike(), *zeroInflationIndex_->zeroInflationTermStructure(), maturity);
         Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
-        auto inst = boost::make_shared<CPICapFloor>(capfloor, nominal, today, baseCpi, maturity, calendar,
-                bdc, calendar, bdc, strikeValue, inflationIndex, obsLag);
+        auto inst = boost::make_shared<CPICapFloor>(capfloor, nominal, today, baseCpi, maturity, calendar, bdc,
+                                                    calendar, bdc, strikeValue, zeroInflationIndex_, obsLag);
         inst->setPricingEngine(engine);
 
         // Build the helper using the NPV as the premium.
         auto premium = inst->NPV();
-        auto helper = boost::make_shared<CpiCapFloorHelper>(capfloor, baseCpi, maturity, calendar, bdc,
-            calendar, bdc, strikeValue, inflationIndex, obsLag, premium);
+        auto helper = boost::make_shared<CpiCapFloorHelper>(capfloor, baseCpi, maturity, calendar, bdc, calendar, bdc,
+                                                            strikeValue, inflationIndex, obsLag, premium);
 
 
         // Add the helper's time to expiry.

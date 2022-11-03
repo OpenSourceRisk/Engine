@@ -32,8 +32,8 @@ AnalyticDkCpiCapFloorEngine::AnalyticDkCpiCapFloorEngine(const boost::shared_ptr
 void AnalyticDkCpiCapFloorEngine::calculate() const {
 
     bool interpolate = arguments_.observationInterpolation == CPI::Linear ||
-                       (arguments_.observationInterpolation == CPI::AsIndex && arguments_.infIndex->interpolated());
-    Real t = inflationYearFraction(arguments_.infIndex->frequency(), interpolate,
+                       (arguments_.observationInterpolation == CPI::AsIndex && arguments_.index->interpolated());
+    Real t = inflationYearFraction(arguments_.index->frequency(), interpolate,
                                    model_->infdk(index_)->termStructure()->dayCounter(),
                                    model_->infdk(index_)->termStructure()->baseDate(), arguments_.fixDate);
 
@@ -52,7 +52,7 @@ void AnalyticDkCpiCapFloorEngine::calculate() const {
     Real nTilde = arguments_.nominal / arguments_.baseCPI;
 
     Real m = baseCPI_ * std::pow(1.0 + model_->infdk(index_)->termStructure()->zeroRate(arguments_.fixDate, Period(0, Days)), t);
-    m = arguments_.infIndex->fixing(arguments_.fixDate); 
+    m = arguments_.index->fixing(arguments_.fixDate); 
     Real Ht = Hy(index_).eval(x, t);
     Real v = Ht * Ht * zetay(index_).eval(x, t) -
              2.0 * Ht * integral(x, P(Hy(index_), ay(index_), ay(index_)), 0.0, t) +
