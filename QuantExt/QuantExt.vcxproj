@@ -747,6 +747,7 @@
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticeuropeanforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcclgmfxoptionengine.hpp" />
+    <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticdkcpicapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticjycpicapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticjyyoycapfloorengine.hpp" />
@@ -1088,6 +1089,7 @@
     <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticeuropeanforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticcclgmfxoptionengine.cpp" />
+    <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticdkcpicapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticjycpicapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticjyyoycapfloorengine.cpp" />
