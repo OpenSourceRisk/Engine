@@ -1265,6 +1265,9 @@
       <Filter>termstructures\inflation</Filter>
     </ClInclude>
     <ClInclude Include="qle\models\blackscholesmodelwrapper.hpp" />
+    <ClInclude Include="qle\calendars\unitedarabemirates.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -2160,5 +2163,8 @@
     <ClCompile Include="qle\instruments\multiccycompositeinstrument.cpp">
       <Filter>instruments</Filter>
     </ClCompile>
+    <ClInclude Include="qle\calendars\unitedarabemirates.cpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
