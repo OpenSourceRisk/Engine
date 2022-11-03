@@ -354,10 +354,12 @@ Handle<Quote> FXTriangulation::getQuote(const std::string& forCcy, const std::st
 
 std::string FXTriangulation::getAllQuotes() const {
     std::string result;
-    for (auto const& d : quotes_) {
-        result += d.first + ",";
+    if (quotes_.size() > 0) {
+        for (auto const& d : quotes_) {
+            result += d.first + ",";
+        }
+        result.erase(std::next(result.end(), -1));
     }
-    result.erase(std::next(result.end(), -1));
     return result;
 }
 

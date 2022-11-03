@@ -224,16 +224,15 @@ string StructuredMessage::json() const {
 
     if (!subFields_.empty()) {
         msg += "\", \"sub_fields\": [ ";
-        QuantLib::Size i = 1;
+        QuantLib::Size i = 0;
         for (const auto& p : subFields_) {
             // Only include subFields that are non-empty.
             if (!p.second.empty()) {
-                msg += "{ \"name\": \"" + p.first + "\", \"value\": \"" + jsonify(p.second) + "\" }";
-                if (i < subFields_.size()) {
+                if (i > 0)
                     msg += ", ";
-                }
+                msg += "{ \"name\": \"" + p.first + "\", \"value\": \"" + jsonify(p.second) + "\" }";
+                i++;
             }
-            i++;
         }
         msg += " ]";
     }

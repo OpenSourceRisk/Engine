@@ -1590,6 +1590,7 @@ public:
     QuantLib::Natural optionNth() const { return optionNth_; }
     QuantLib::Weekday optionWeekday() const { return optionWeekday_; }
     const std::string& savingsTime() const { return savingsTime_; }
+    const std::set<QuantLib::Month>& validContractMonths() const { return validContractMonths_; }
     //@}
 
     //! Serialisation
@@ -1656,6 +1657,7 @@ private:
     QuantLib::Weekday optionWeekday_;
     QuantLib::Natural optionExpiryDay_;
 
+    std::set<QuantLib::Month> validContractMonths_;
     std::string savingsTime_;
 
     //! Populate and check frequency.
