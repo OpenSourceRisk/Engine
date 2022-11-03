@@ -18,22 +18,12 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 #include "unitedarabemirates.hpp"
 namespace {
-
-bool isGregorianPublicHoliday(QuantLib::Date const& d){
-    auto n = d.dayOfMonth();
-    switch (d.month()) {
-    case QuantLib::Jan:
-        if(n==1)
-            return true;
-    case QuantLib::Dec:
-        if(n==1)
-            return true;
-        if(n==2)
-            return true;
-    // no break, so if I reach this point, it returns false.
-    default:
-        return false;
-}
+bool isTrueWeekend(QuantLib::Date d) {
+    // The UAE weekend was changed from 1st Jan 2022
+    auto w = d.weekday();
+    return (d < QuantLib::Date(1, QuantLib::Jan, 2022)) ?
+          (w == QuantLib::Friday || w == QuantLib::Saturday) :
+          (w == QuantLib::Saturday || w == QuantLib::Sunday);
 }
 }
 namespace QuantExt {
@@ -48,11 +38,14 @@ bool UnitedArabEmirates::Impl::isWeekend(QuantLib::Weekday w) const {
 }
 
 bool UnitedArabEmirates::Impl::isBusinessDay(const QuantLib::Date& d) const {
-    bool isPublicHoliday = isGregorianPublicHoliday(d);
-    if(d<Date(1,Jan,2022)) {
-        return !isWeekend((d+1).weekday()) && !isPublicHoliday; // historical weekend
-    }else{
-        return !isWeekend(d.weekday()) && !isPublicHoliday; // current weekend
-    }
+    Day n = d.dayOfMonth();
+    Month m = d.month();
+
+    if (isTrueWeekend(d) ||
+    (n==1 && m == Jan)   || // Gregorian new year
+    (n==2 && m == Dec))     // National Day
+        return false;
+    else
+        return true;
 }
 }
