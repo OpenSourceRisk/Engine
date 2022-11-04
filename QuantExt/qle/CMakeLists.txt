@@ -85,6 +85,7 @@ instruments/brlcdiswap.cpp
 instruments/cashflowresults.cpp
 instruments/cashsettledeuropeanoption.cpp
 instruments/cdsoption.cpp
+instruments/cliquetoption.cpp
 instruments/commodityapo.cpp
 instruments/commodityforward.cpp
 instruments/crossccybasismtmresetswap.cpp
@@ -427,6 +428,7 @@ instruments/brlcdiswap.hpp
 instruments/cashflowresults.hpp
 instruments/cashsettledeuropeanoption.hpp
 instruments/cdsoption.hpp
+instruments/cliquetoption.hpp
 instruments/commodityapo.hpp
 instruments/commodityforward.hpp
 instruments/crossccybasismtmresetswap.hpp

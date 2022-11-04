@@ -105,6 +105,9 @@
     <ClInclude Include="qle\instruments\averageois.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\cliquetoption.hpp">
+      <Filter>qle\instruments</Filter>
+    </ClInclude>
     <ClInclude Include="qle\instruments\crossccybasisswap.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
@@ -1370,6 +1373,9 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\tenorbasisswap.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\cliquetoption.cpp">
+      <Filter>qle\instruments</Filter>
     </ClCompile>
     <ClCompile Include="qle\instruments\cashflowresults.cpp">
       <Filter>instruments</Filter>

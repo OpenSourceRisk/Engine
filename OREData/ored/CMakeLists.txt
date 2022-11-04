@@ -108,6 +108,7 @@ portfolio/builders/durationadjustedcms.cpp
 portfolio/builders/swaption.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
+portfolio/cliquetoption.cpp
 portfolio/commoditydigitaloption.cpp
 portfolio/commodityforward.cpp
 portfolio/commodityoption.cpp
@@ -316,6 +317,7 @@ portfolio/builders/capfloorediborleg.hpp
 portfolio/builders/capfloorednonstandardyoyleg.hpp
 portfolio/builders/capflooredovernightindexedcouponleg.hpp
 portfolio/builders/capflooredyoyleg.hpp
+portfolio/builders/cliquetoption.hpp
 portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
 portfolio/builders/commodityasianoption.hpp
@@ -352,6 +354,7 @@ portfolio/builders/swaption.hpp
 portfolio/builders/vanillaoption.hpp
 portfolio/builders/yoycapfloor.hpp
 portfolio/capfloor.hpp
+portfolio/cliquetoption.hpp
 portfolio/commoditydigitaloption.hpp
 portfolio/commodityforward.hpp
 portfolio/commodityoption.hpp

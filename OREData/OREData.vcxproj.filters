@@ -345,6 +345,12 @@
     <ClInclude Include="ored\portfolio\builders\equityasianoption.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\cliquetoption.hpp">
+      <Filter>ored\portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\cliquetoption.hpp">
+      <Filter>ored\portfolio</Filter>
+    </ClInclude>
     <ClInclude Include="ored\portfolio\builders\commodityasianoption.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
@@ -908,6 +914,9 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\capfloor.cpp">
       <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\cliquetoption.cpp">
+      <Filter>ored\portfolio</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\failedtrade.cpp">
       <Filter>portfolio</Filter>
