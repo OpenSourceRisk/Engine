@@ -315,8 +315,6 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
     }
 
     // Required by QuantLib price surface constructors but apparently not used
-    Real startRate = 0.0;
-
     std::vector<Period> terms = parseVectorOfValues<Period>(config->tenors(), &parsePeriod);
     std::vector<Real> capStrikes = parseVectorOfValues<Real>(config->capStrikes(), &parseReal);
     std::vector<Real> floorStrikes = parseVectorOfValues<Real>(config->floorStrikes(), &parseReal);
@@ -326,8 +324,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
 
     // Quotes index can differ from the index for which we are building the surface.
     string quoteIndex = config->quoteIndex().empty() ? config->index() : config->quoteIndex();
-
-    
+        
 
     // We loop over all market data, looking for quotes that match the configuration
     for (auto& md : loader.loadQuotes(asof)) {
@@ -368,61 +365,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
             }
         }
     }
-    for (Size j = 0; j < terms.size(); ++j) {
-        for (Size i = 0; i < capStrikes.size(); ++i)
-            QL_REQUIRE(cPrice[i][j] != Null<Real>(), "quote for cap floor price surface, type cap, strike "
-                                                         << capStrikes[i] << ", term " << terms[j] << ", not found.");
-        for (Size i = 0; i < floorStrikes.size(); ++i)
-            QL_REQUIRE(fPrice[i][j] != Null<Real>(), "quote for cap floor price surface, type floor, strike "
-                                                         << floorStrikes[i] << ", term " << terms[j] << ", not found.");
-    }
-
-    // The strike grids have some minimum requirements which we fulfill here at
-    // least technically; note that the extrapolated prices will not be sensible,
-    // instead only the given strikes for the given option type may be sensible
-    // in the end
-
-    static const Real largeStrike = 1.0;
-    static const Real largeStrikeFactor = 0.99;
-
-    Size addFloor = 0, addCap = 0;
-    if (floorStrikes.size() == 0) {
-        floorStrikes.push_back(-largeStrike);
-        floorStrikes.push_back(-(largeStrike * largeStrikeFactor));
-        addFloor = 2;
-    }
-    if (floorStrikes.size() == 1) {
-        floorStrikes.insert(floorStrikes.begin(), -largeStrike);
-        addFloor = 1;
-    }
-    if (capStrikes.size() == 0) {
-        capStrikes.push_back(largeStrike * largeStrikeFactor);
-        capStrikes.push_back(largeStrike);
-        addCap = 2;
-    }
-    if (capStrikes.size() == 1) {
-        capStrikes.push_back(largeStrike);
-        addCap = 1;
-    }
-    if (addFloor > 0) {
-        Matrix tmp(fPrice.rows() + addFloor, terms.size(), 1E-10);
-        for (Size i = addFloor; i < fPrice.rows() + addFloor; ++i) {
-            for (Size j = 0; j < fPrice.columns(); ++j) {
-                tmp[i][j] = fPrice[i - addFloor][j];
-            }
-        }
-        fPrice = tmp;
-    }
-    if (addCap > 0) {
-        Matrix tmp(cPrice.rows() + addCap, terms.size(), 1E-10);
-        for (Size i = 0; i < cPrice.rows(); ++i) {
-            for (Size j = 0; j < cPrice.columns(); ++j) {
-                tmp[i][j] = cPrice[i][j];
-            }
-        }
-        cPrice = tmp;
-    }
-
+    
     ostringstream capStrikesString, floorStrikesString;
     for (Size i = 0; i < floorStrikes.size(); ++i)
         floorStrikesString << floorStrikes[i] << ",";
@@ -435,7 +378,6 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
 
     if (config->type() == InflationCapFloorVolatilityCurveConfig::Type::ZC) {
         // ZC Curve
-
         boost::shared_ptr<ZeroInflationIndex> index;
         auto it2 = inflationCurves.find(config->indexCurve());
         if (it2 != inflationCurves.end()) {
@@ -473,10 +415,15 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                 startDate = getStartAndLag(asof, *conv).first;
             }
             boost::shared_ptr<QuantExt::CPIPriceVolatilitySurface<Linear, Linear>> cpiCapFloorVolSurface;
+            
+            // We ignore missing prices and convert all available prices to vols and interpolate misisng vols linear and 
+            // extrapolate them flat
+            bool ignoreMissingPrices = true;
+
             cpiCapFloorVolSurface = boost::make_shared<QuantExt::CPIPriceVolatilitySurface<Linear, Linear>>(
                 QuantExt::PriceQuotePreference::CapFloor, config->observationLag(), config->calendar(),
                 config->businessDayConvention(), config->dayCounter(), index, discountCurve_, capStrikes, floorStrikes,
-                terms, cPrice, fPrice, engine, startDate, false, true, true, quoteVolatilityType, 0.0,
+                terms, cPrice, fPrice, engine, startDate, ignoreMissingPrices, true, true, quoteVolatilityType, 0.0,
                 CPIPriceVolatilitySurfaceDefaultValues::upperVolBound,
                 CPIPriceVolatilitySurfaceDefaultValues::lowerVolBound,
                 CPIPriceVolatilitySurfaceDefaultValues::solverTolerance);
@@ -484,11 +431,10 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
             // cast
             cpiVolSurface_ = cpiCapFloorVolSurface;
 
-            cpiVolSurface_->enableExtrapolation();          
+            cpiVolSurface_->enableExtrapolation();   
 
             for (Size i = 0; i < cpiCapFloorVolSurface->strikes().size(); ++i) {
                 for (Size j = 0; j < cpiCapFloorVolSurface->maturities().size(); ++j) {
-                    
                     DLOG("Implied CPI CapFloor BlackVol,strike," << cpiCapFloorVolSurface->strikes()[i] << ",maturity,"
                                                                  << cpiCapFloorVolSurface->maturities()[j] << ",index,"
                                                                  << index->name() << ",Vol,"
@@ -502,6 +448,63 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         }
     }
     if (config->type() == InflationCapFloorVolatilityCurveConfig::Type::YY) {
+
+        for (Size j = 0; j < terms.size(); ++j) {
+            for (Size i = 0; i < capStrikes.size(); ++i)
+                QL_REQUIRE(cPrice[i][j] != Null<Real>(), "quote for cap floor price surface, type cap, strike "
+                                                             << capStrikes[i] << ", term " << terms[j]
+                                                             << ", not found.");
+            for (Size i = 0; i < floorStrikes.size(); ++i)
+                QL_REQUIRE(fPrice[i][j] != Null<Real>(), "quote for cap floor price surface, type floor, strike "
+                                                             << floorStrikes[i] << ", term " << terms[j]
+                                                             << ", not found.");
+        }
+
+        // The strike grids have some minimum requirements which we fulfill here at
+        // least technically; note that the extrapolated prices will not be sensible,
+        // instead only the given strikes for the given option type may be sensible
+        // in the end
+
+        static const Real largeStrike = 1.0;
+        static const Real largeStrikeFactor = 0.99;
+
+        Size addFloor = 0, addCap = 0;
+        if (floorStrikes.size() == 0) {
+            floorStrikes.push_back(-largeStrike);
+            floorStrikes.push_back(-(largeStrike * largeStrikeFactor));
+            addFloor = 2;
+        }
+        if (floorStrikes.size() == 1) {
+            floorStrikes.insert(floorStrikes.begin(), -largeStrike);
+            addFloor = 1;
+        }
+        if (capStrikes.size() == 0) {
+            capStrikes.push_back(largeStrike * largeStrikeFactor);
+            capStrikes.push_back(largeStrike);
+            addCap = 2;
+        }
+        if (capStrikes.size() == 1) {
+            capStrikes.push_back(largeStrike);
+            addCap = 1;
+        }
+        if (addFloor > 0) {
+            Matrix tmp(fPrice.rows() + addFloor, terms.size(), 1E-10);
+            for (Size i = addFloor; i < fPrice.rows() + addFloor; ++i) {
+                for (Size j = 0; j < fPrice.columns(); ++j) {
+                    tmp[i][j] = fPrice[i - addFloor][j];
+                }
+            }
+            fPrice = tmp;
+        }
+        if (addCap > 0) {
+            Matrix tmp(cPrice.rows() + addCap, terms.size(), 1E-10);
+            for (Size i = 0; i < cPrice.rows(); ++i) {
+                for (Size j = 0; j < cPrice.columns(); ++j) {
+                    tmp[i][j] = cPrice[i][j];
+                }
+            }
+            cPrice = tmp;
+        }
 
         boost::shared_ptr<YoYInflationIndex> index;
         auto it2 = inflationCurves.find(config->indexCurve());
@@ -531,7 +534,8 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                                             << ", required in building the inflation cap floor price surface "
                                             << spec.name() << ", was not found");
         }
-
+        // Required by the QL pricesurface but not used
+        Rate startRate = 0.0;
         // Build the term structure
         boost::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>
             yoySurface = boost::make_shared<
