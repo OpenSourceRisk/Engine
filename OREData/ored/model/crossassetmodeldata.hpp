@@ -44,6 +44,7 @@
 namespace ore {
 namespace data {
 using namespace QuantLib;
+using QuantExt::CrossAssetModel;
 using std::map;
 using std::pair;
 using std::string;
@@ -115,7 +116,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CrossAssetModelData() : bootstrapTolerance_(0.0) {
+    CrossAssetModelData() : bootstrapTolerance_(0.0), discretization_(CrossAssetModel::Discretization::Exact) {
         correlations_ = boost::make_shared<InstantaneousCorrelations>();
     }
 
@@ -129,9 +130,11 @@ public:
         //! Bootstrap tolerance used in model calibration
         Real tolerance = 1e-4,
         //! Choice of probability measure
-        const std::string& measure = "LGM")
+        const std::string& measure = "LGM",
+        //! Choice of discretization
+        const CrossAssetModel::Discretization discretization = CrossAssetModel::Discretization::Exact)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(std::vector<boost::shared_ptr<EqBsData>>()),
-          bootstrapTolerance_(tolerance), measure_(measure) {
+          bootstrapTolerance_(tolerance), measure_(measure), discretization_(discretization) {
         correlations_ = boost::make_shared<InstantaneousCorrelations>(c);
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
@@ -152,9 +155,11 @@ public:
         //! Bootstrap tolerance used in model calibration
         Real tolerance = 1e-4,
         //! Choice of probability measure
-        const std::string& measure = "LGM")
+        const std::string& measure = "LGM",
+        //! Choice of discretization
+        const CrossAssetModel::Discretization discretization = CrossAssetModel::Discretization::Exact)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs), bootstrapTolerance_(tolerance),
-          measure_(measure) {
+          measure_(measure), discretization_(discretization) {
         correlations_ = boost::make_shared<InstantaneousCorrelations>(c);
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
@@ -181,9 +186,12 @@ public:
         //! Bootstrap tolerance used in model calibration
         Real tolerance = 1e-4,
         //! Choice of probability measure
-        const std::string& measure = "LGM")
+        const std::string& measure = "LGM",
+        //! Choice of discretization
+        const CrossAssetModel::Discretization discretization = CrossAssetModel::Discretization::Exact)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs), infConfigs_(infConfigs),
-          crLgmConfigs_(crLgmConfigs), crCirConfigs_(crCirConfigs), bootstrapTolerance_(tolerance), measure_(measure) {
+          crLgmConfigs_(crLgmConfigs), crCirConfigs_(crCirConfigs), bootstrapTolerance_(tolerance), measure_(measure),
+          discretization_(discretization) {
         correlations_ = boost::make_shared<InstantaneousCorrelations>(c);
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
@@ -217,6 +225,7 @@ public:
     const vector<boost::shared_ptr<CrCirData>>& crCirConfigs() const { return crCirConfigs_; }
     Real bootstrapTolerance() const { return bootstrapTolerance_; }
     const std::string& measure() const { return measure_; }
+    CrossAssetModel::Discretization discretization() const { return discretization_; }
     //@}
 
     //! \name Setters
@@ -238,13 +247,12 @@ public:
     void setCorrelations(const boost::shared_ptr<InstantaneousCorrelations>& corrs) { correlations_ = corrs; }
     Real& bootstrapTolerance() { return bootstrapTolerance_; }
     std::string& measure() { return measure_; }
+    CrossAssetModel::Discretization& discretization() { return discretization_; }
     //@}
 
     //! \name Serialisation
     //@{
-    //! Populate members from XML
     virtual void fromXML(XMLNode* node) override;
-    //! Write class members to XML
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
@@ -286,6 +294,10 @@ private:
     boost::shared_ptr<InstantaneousCorrelations> correlations_;
     Real bootstrapTolerance_;
     std::string measure_;
+    CrossAssetModel::Discretization discretization_;
 };
+
+CrossAssetModel::Discretization parseDiscretization(const string& s);
+
 } // namespace data
 } // namespace ore
