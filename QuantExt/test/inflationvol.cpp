@@ -132,8 +132,8 @@ boost::shared_ptr<CPIVolatilitySurface> buildVolSurfaceFromPrices(CommonData& cd
                                                                   const Date& startDate = Date()) {
     boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>> cpiPriceSurfacePtr =
         boost::make_shared<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>>(
-            1.0, 0.0, cd.obsLag, cd.fixingCalendar, cd.bdc, cd.dayCounter, Handle<ZeroInflationIndex>(index),
-            cd.discountTS, cd.cStrikes, cd.fStrikes, cd.tenors, cd.cPrices, cd.fPrices);
+        1.0, 0.0, cd.obsLag, cd.fixingCalendar, cd.bdc, cd.dayCounter, index, CPI::AsIndex,
+        cd.discountTS, cd.cStrikes, cd.fStrikes, cd.tenors, cd.cPrices, cd.fPrices);
 
     boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(
         cd.discountTS, QuantLib::Handle<QuantLib::CPIVolatilitySurface>(), useLastKnownFixing);
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(testVolatiltiySurface) {
 
         QuantLib::CPICapFloor cap(Option::Call, 1.0, seasonedStartDate, Null<double>(), seasonedMaturity,
                                   cd.fixingCalendar, cd.bdc, cd.fixingCalendar, cd.bdc, seasonedStrike,
-                                  Handle<ZeroInflationIndex>(index), cd.obsLag, CPI::Flat);
+                                  index, cd.obsLag, CPI::Flat);
 
         cap.setPricingEngine(engine);
 

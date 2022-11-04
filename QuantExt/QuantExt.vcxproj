@@ -511,6 +511,7 @@
     <ClInclude Include="qle\calendars\russia.hpp" />
     <ClInclude Include="qle\calendars\spain.hpp" />
     <ClInclude Include="qle\calendars\switzerland.hpp" />
+    <ClInclude Include="qle\calendars\unitedarabemirates.hpp" />
     <ClInclude Include="qle\calendars\wmr.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcoupon.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcouponpricer.hpp" />
@@ -929,6 +930,7 @@
     <ClCompile Include="qle\calendars\russia.cpp" />
     <ClCompile Include="qle\calendars\spain.cpp" />
     <ClCompile Include="qle\calendars\switzerland.cpp" />
+    <ClCompile Include="qle\calendars\unitedarabemirates.cpp" />
     <ClCompile Include="qle\calendars\wmr.cpp" />
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp" />
     <ClCompile Include="qle\cashflows\averageonindexedcouponpricer.cpp" />
