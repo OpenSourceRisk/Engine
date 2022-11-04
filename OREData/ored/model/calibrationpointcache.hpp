@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file models/calibrationpointcache.hpp
+/*! \file ored/model/calibrationpointcache.hpp
     \brief cache for relevant points on curve / vol surfaces
     \ingroup utilities
 */
