@@ -41,18 +41,6 @@ void ScenarioGeneratorData::clear() {
         grid_->truncate(0);
 }
 
-CrossAssetStateProcess::discretization parseDiscretization(const string& s) {
-    static map<string, QuantExt::CrossAssetStateProcess::discretization> m = {
-        {"Exact", QuantExt::CrossAssetStateProcess::exact}, {"Euler", QuantExt::CrossAssetStateProcess::euler}};
-
-    auto it = m.find(s);
-    if (it != m.end()) {
-        return it->second;
-    } else {
-        QL_FAIL("Cannot convert \"" << s << "\" to QuantExt::CrossAssetStateProcess::discretization");
-    }
-}
-
 void ScenarioGeneratorData::setGrid(boost::shared_ptr<DateGrid> grid) { 
     grid_ = grid;
     
@@ -73,10 +61,6 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     XMLNode* sim = XMLUtils::locateNode(root, "Simulation");
     XMLNode* node = XMLUtils::getChildNode(sim, "Parameters");
     XMLUtils::checkNode(node, "Parameters");
-
-    std::string discString = XMLUtils::getChildValue(node, "Discretization", true); // mandatory
-    discretization_ = parseDiscretization(discString);
-    LOG("ScenarioGeneratorData discretization = " << discString);
 
     std::string calString = XMLUtils::getChildValue(node, "Calendar", true);
     Calendar cal = parseCalendar(calString);
@@ -149,8 +133,6 @@ XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Simulation");
     XMLNode* pNode = XMLUtils::addChild(doc, node, "Parameters");
 
-    XMLUtils::addChild(doc, pNode, "Discretization", ore::data::to_string((QuantExt::CrossAssetStateProcess::discretization) discretization_));
-
     if (grid_) {
         XMLUtils::addChild(doc, pNode, "Calendar", grid_->calendar().name());
         XMLUtils::addChild(doc, pNode, "DayCounter", grid_->dayCounter().name());
@@ -161,7 +143,6 @@ XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) {
         }
     }
 
-    
     XMLUtils::addChild(doc, pNode, "Sequence", ore::data::to_string( sequenceType_));
     XMLUtils::addChild(doc, pNode, "Seed", to_string(seed_));
     XMLUtils::addChild(doc, pNode, "Samples", to_string(samples_));

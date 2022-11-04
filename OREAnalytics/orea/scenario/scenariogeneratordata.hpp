@@ -52,19 +52,17 @@ using namespace QuantExt;
 class ScenarioGeneratorData : public XMLSerializable {
 public:
     ScenarioGeneratorData()
-        : discretization_(CrossAssetStateProcess::discretization::exact), grid_(boost::make_shared<DateGrid>()),
-          sequenceType_(SobolBrownianBridge), seed_(0), samples_(0), ordering_(SobolBrownianGenerator::Steps),
-          directionIntegers_(SobolRsg::JoeKuoD7), withCloseOutLag_(false), withMporStickyDate_(false) {}
+        : grid_(boost::make_shared<DateGrid>()), sequenceType_(SobolBrownianBridge), seed_(0), samples_(0),
+          ordering_(SobolBrownianGenerator::Steps), directionIntegers_(SobolRsg::JoeKuoD7), withCloseOutLag_(false),
+          withMporStickyDate_(false) {}
 
     //! Constructor
-    ScenarioGeneratorData(CrossAssetStateProcess::discretization discretization, boost::shared_ptr<DateGrid> dateGrid,
-                          SequenceType sequenceType, long seed, Size samples,
+    ScenarioGeneratorData(boost::shared_ptr<DateGrid> dateGrid, SequenceType sequenceType, long seed, Size samples,
                           SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                           SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
                           bool withCloseOutLag = false, bool withMporStickyDate = false)
-        : discretization_(discretization), sequenceType_(sequenceType), seed_(seed), samples_(samples),
-          ordering_(ordering), directionIntegers_(directionIntegers), withCloseOutLag_(false),
-          withMporStickyDate_(false) {
+        : sequenceType_(sequenceType), seed_(seed), samples_(samples), ordering_(ordering),
+          directionIntegers_(directionIntegers), withCloseOutLag_(false), withMporStickyDate_(false) {
         setGrid(dateGrid);
     }
 
@@ -78,7 +76,6 @@ public:
 
     //! \name Inspectors
     //@{
-    CrossAssetStateProcess::discretization discretization() const { return discretization_; }
     boost::shared_ptr<DateGrid> getGrid() const { return grid_; }
     SequenceType sequenceType() const { return sequenceType_; }
     long seed() const { return seed_; }
@@ -93,7 +90,6 @@ public:
 
     //! \name Setters
     //@{
-    CrossAssetStateProcess::discretization& discretization() { return discretization_; }
     void setGrid(boost::shared_ptr<DateGrid> grid);
     SequenceType& sequenceType() { return sequenceType_; }
     long& seed() { return seed_; }
@@ -105,7 +101,6 @@ public:
     Period& closeOutLag() { return closeOutLag_; }
     //@}
 private:
-    CrossAssetStateProcess::discretization discretization_;
     boost::shared_ptr<DateGrid> grid_;
     SequenceType sequenceType_;
     long seed_;
@@ -119,9 +114,6 @@ private:
 
     string gridString_;
 };
-
-//! Enum parsers used in ScenarioGeneratorBuilder's fromXML
-CrossAssetStateProcess::discretization parseDiscretization(const string& s);
 
 } // namespace analytics
 } // namespace ore

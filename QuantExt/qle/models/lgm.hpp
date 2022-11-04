@@ -25,6 +25,7 @@
 #define quantext_lgm_model_hpp
 
 #include <qle/models/irlgm1fparametrization.hpp>
+#include <qle/models/irmodel.hpp>
 #include <qle/models/lgmcalibrationinfo.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 
@@ -37,19 +38,42 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! Linear Gauss Markov Model
+//! Linear Gauss Morkov Model
 /*! LGM 1f interest rate model
     Basically the same remarks as for CrossAssetModel hold
     \ingroup models
 */
-class LinearGaussMarkovModel : public LinkableCalibratedModel {
-
+class LinearGaussMarkovModel : public IrModel {
 public:
+    enum class Discretization { Euler, Exact };
+
     LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization>& parametrization,
+                           const Measure measure = Measure::LGM, const Discretization = Discretization::Euler,
                            const boost::shared_ptr<Integrator>& integrator = boost::make_shared<SimpsonIntegral>(1.0E-8,
                                                                                                                  100));
 
-    const boost::shared_ptr<StochasticProcess1D> stateProcess() const;
+    //! IrModel interface
+
+    Measure measure() const override { return measure_; }
+    const boost::shared_ptr<Parametrization> parametrizationBase() const override { return parametrization_; }
+    Handle<YieldTermStructure> termStructure() const override { return parametrization_->termStructure(); }
+    Size n() const override { return 1; }
+    Size m() const override { return 1; }
+    Size n_aux() const override { return measure_ == Measure::BA ? 1 : 0; }
+    Size m_aux() const override { return measure_ == Measure::BA && discretization_ == Discretization::Exact ? 1 : 0; }
+    boost::shared_ptr<StochasticProcess> stateProcess() const override;
+
+    QuantLib::Real discountBond(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
+                                const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
+                                    Handle<YieldTermStructure>()) const override;
+
+    QuantLib::Real
+    numeraire(const QuantLib::Time t, const QuantLib::Array& x,
+              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+              const QuantLib::Array& aux = Array()) const override;
+
+    //! LGM specific methods
+
     const boost::shared_ptr<IrLgm1fParametrization> parametrization() const;
 
     Real numeraire(const Time t, const Real x,
@@ -125,6 +149,8 @@ public:
 private:
     boost::shared_ptr<IrLgm1fParametrization> parametrization_;
     boost::shared_ptr<Integrator> integrator_;
+    Measure measure_;
+    Discretization discretization_;
     boost::shared_ptr<StochasticProcess1D> stateProcess_;
     LgmCalibrationInfo calibrationInfo_;
 };
@@ -140,8 +166,30 @@ inline void LinearGaussMarkovModel::update() {
 
 inline void LinearGaussMarkovModel::generateArguments() { update(); }
 
-inline const boost::shared_ptr<StochasticProcess1D> LinearGaussMarkovModel::stateProcess() const {
+inline boost::shared_ptr<StochasticProcess> LinearGaussMarkovModel::stateProcess() const {
+    QL_REQUIRE(measure_ == Measure::LGM, "LinearGaussMarkovModel::stateProcess() only supports measure = LGM");
     return stateProcess_;
+}
+
+inline QuantLib::Real
+LinearGaussMarkovModel::discountBond(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
+                                     const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
+    QL_REQUIRE(x.size() == n(), "LinearGaussMarkovModel::discountBond() requires input state of dimension " << n());
+    return discountBond(t, T, x[0], discountCurve);
+}
+
+inline QuantLib::Real
+LinearGaussMarkovModel::numeraire(const QuantLib::Time t, const QuantLib::Array& x,
+                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+                                  const QuantLib::Array& aux) const {
+    QL_REQUIRE(x.size() == n(), "LinearGaussMarkovModel::numeraire() requires input state of dimension " << n());
+    QL_REQUIRE(aux.size() == n_aux(),
+               "LinearGaussMarkovModel::numeraire() requires aux input state of dimension " << n_aux());
+    if (measure() == Measure::LGM) {
+        return numeraire(t, x[0], discountCurve);
+    } else {
+        return bankAccountNumeraire(t, x[0], aux[0], discountCurve);
+    }
 }
 
 inline const boost::shared_ptr<IrLgm1fParametrization> LinearGaussMarkovModel::parametrization() const {

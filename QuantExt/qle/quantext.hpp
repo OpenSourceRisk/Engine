@@ -226,6 +226,9 @@
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
 #include <qle/models/gaussian1dcrossassetadaptor.hpp>
+#include <qle/models/hwconstantparametrization.hpp>
+#include <qle/models/hwmodel.hpp>
+#include <qle/models/hwparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infjyparameterization.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
@@ -233,6 +236,7 @@
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
+#include <qle/models/irmodel.hpp>
 #include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgm.hpp>
@@ -243,6 +247,7 @@
 #include <qle/models/lgmvectorised.hpp>
 #include <qle/models/linearannuitymapping.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
+#include <qle/models/modelimpliedyieldtermstructure.hpp>
 #include <qle/models/normalsabr.hpp>
 #include <qle/models/normalsabrinterpolation.hpp>
 #include <qle/models/normalsabrsmilesection.hpp>
@@ -285,6 +290,7 @@
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 #include <qle/processes/crcirppstateprocess.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
+#include <qle/processes/irhwstateprocess.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
 #include <qle/quotes/compositevectorquote.hpp>
 #include <qle/quotes/exceptionquote.hpp>
