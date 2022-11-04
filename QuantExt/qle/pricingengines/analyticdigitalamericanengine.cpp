@@ -37,8 +37,6 @@ namespace QuantExt {
         QuantLib::AnalyticDigitalAmericanEngine::calculate();
         
         if (flipResults_) {
-            ext::shared_ptr<AmericanExercise> ex = ext::dynamic_pointer_cast<AmericanExercise>(arguments_.exercise);
-
             // Invert spot, forward, strike
             auto resToInvert = vector<string>({"spot", "forward", "strike"});
             for (const string& res : resToInvert) {
