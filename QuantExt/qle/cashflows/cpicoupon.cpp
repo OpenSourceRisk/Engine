@@ -88,7 +88,7 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
         Rate effectiveCap = cap_;
         cpiCap_ = boost::make_shared<CPICapFloor>(
             Option::Call, underlying_->nominal(), startDate_, underlying_->baseCPI(), underlying_->date(), cal, conv,
-            cal, conv, effectiveCap, Handle<ZeroInflationIndex>(underlying_->cpiIndex()), underlying_->observationLag(),
+            cal, conv, effectiveCap, underlying_->cpiIndex(), underlying_->observationLag(),
             underlying_->observationInterpolation());
         // std::cout << "Capped/Floored CPI Coupon" << std::endl
         // 	  << "  nominal = " << underlying_->nominal() << std::endl
@@ -102,7 +102,7 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
         Rate effectiveFloor = floor_;
         cpiFloor_ = boost::make_shared<CPICapFloor>(
             Option::Put, underlying_->nominal(), startDate_, underlying_->baseCPI(), underlying_->date(), cal, conv,
-            cal, conv, effectiveFloor, Handle<ZeroInflationIndex>(underlying_->cpiIndex()),
+            cal, conv, effectiveFloor, underlying_->cpiIndex(),
             underlying_->observationLag(),
             underlying_->observationInterpolation());
     }
@@ -161,19 +161,19 @@ CappedFlooredCPICashFlow::CappedFlooredCPICashFlow(const ext::shared_ptr<CPICash
     setCommon(cap, floor);
     registerWith(underlying);
 
-    Handle<ZeroInflationIndex> ih(boost::dynamic_pointer_cast<ZeroInflationIndex>(underlying->index()));
-    Calendar cal = ih->fixingCalendar();     // not used by the CPICapFloor engine
+    auto index = boost::dynamic_pointer_cast<ZeroInflationIndex>(underlying->index());
+    Calendar cal = index->fixingCalendar();     // not used by the CPICapFloor engine
     BusinessDayConvention conv = Unadjusted; // not used by the CPICapFloor engine
 
     if (isCapped_) {
         cpiCap_ = boost::make_shared<CPICapFloor>(Option::Call, underlying_->notional(), startDate_,
                                                   underlying_->baseFixing(), underlying_->date(), cal, conv, cal, conv,
-                                                  cap_, ih, observationLag_, underlying_->interpolation());
+                                                  cap_, index, observationLag_, underlying_->interpolation());
     }
     if (isFloored_) {
         cpiFloor_ = boost::make_shared<CPICapFloor>(Option::Put, underlying_->notional(), startDate_,
                                                     underlying_->baseFixing(), underlying_->date(), cal, conv, cal,
-                                                    conv, floor_, ih, observationLag_, underlying_->interpolation());
+                                                    conv, floor_, index, observationLag_, underlying_->interpolation());
     }
 }
 

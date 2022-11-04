@@ -44,6 +44,7 @@
 #include <qle/calendars/russia.hpp>
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
+#include <qle/calendars/unitedarabemirates.hpp>
 #include <qle/calendars/wmr.hpp>
 
 #include <boost/algorithm/string.hpp>
@@ -324,9 +325,9 @@ void CalendarParser::reset() {
         {"ZAX", SouthAfrica()},
 
         // fallback to IslamicWeekendsOnly for these ccys and use amendmends
-        {"AED", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
-        {"AE", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
-        {"ARE", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
+        {"AED", AmendedCalendar(UnitedArabEmirates(), "AED")},
+        {"AE", AmendedCalendar(UnitedArabEmirates(), "AED")},
+        {"ARE", AmendedCalendar(UnitedArabEmirates(), "AED")},
 
         // fallback to WeekendsOnly for these emerging ccys
         {"BHD", AmendedCalendar(WeekendsOnly(), "BHD")},
