@@ -154,7 +154,7 @@ std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const
         fixingSource = ind->familyName();
     } else {
         QL_REQUIRE(index.size() == 6, "getFxIndexConventions: index must be an FXIndex of form FX-ECB-EUR-USD, "
-                                          << "or a currency pair e.g. EURUSD.");
+                                          << "or a currency pair e.g. EURUSD, got '" + index + "'");
         ccy1 = index.substr(0, 3);
         ccy2 = index.substr(3);
         fixingSource = "GENERIC";
