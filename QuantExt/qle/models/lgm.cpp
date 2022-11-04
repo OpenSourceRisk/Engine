@@ -24,8 +24,9 @@
 namespace QuantExt {
 
 LinearGaussMarkovModel::LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization>& parametrization,
+                                               const Measure measure, const Discretization discretization,
                                                const boost::shared_ptr<Integrator>& integrator)
-    : parametrization_(parametrization) {
+    : parametrization_(parametrization), measure_(measure), discretization_(discretization) {
     stateProcess_ = boost::make_shared<IrLgm1fStateProcess>(parametrization_);
     arguments_.resize(2);
     arguments_[0] = parametrization_->parameter(0);

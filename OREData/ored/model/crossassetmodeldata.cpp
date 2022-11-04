@@ -227,6 +227,26 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
         QL_REQUIRE(modelNode, "Simulation / CrossAssetModel not found, can not read cross asset model data");
     }
 
+    std::string discString = XMLUtils::getChildValue(modelNode, "Discretization", false);
+
+    // check deprecated way of providing Discretization under Simulation/Parameters
+    if (discString.empty()) {
+        if (XMLNode* sim = XMLUtils::getChildNode(root, "Simulation")) {
+            if (XMLNode* node = XMLUtils::getChildNode(sim, "Parameters")) {
+                discString = XMLUtils::getChildValue(node, "Discretization", false);
+                WLOG(
+                    "Simulation/Parameters/Discretization is deprecated, use Simulation/CrossAssetModel/Discretization "
+                    "instead.");
+            }
+        }
+    }
+
+    QL_REQUIRE(!discString.empty(),
+               "CrossAssetModelData: Discretization is not given. Expected this in Simulation/CrossAssetModel "
+               "or in Simulation/Parameters/Discretization (deprecated)");
+
+    discretization_ = parseDiscretization(discString);
+
     domesticCurrency_ = XMLUtils::getChildValue(modelNode, "DomesticCcy", true); // mandatory
     LOG("CrossAssetModelData: domesticCcy " << domesticCurrency_);
 
@@ -285,8 +305,7 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     buildIrConfigs(irDataMap);
 
     for (Size i = 0; i < irConfigs_.size(); i++)
-        LOG("CrossAssetModelData: IR config currency " << i << " = " << irConfigs_[i]->ccy() << " for qualifier "
-                                                       << irConfigs_[i]->qualifier());
+        LOG("CrossAssetModelData: IR config currency " << i << " = " << irConfigs_[i]->ccy());
 
     // Configure FX model components
 
@@ -619,6 +638,8 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, crossAssetModelNode, "CreditNames", "CreditName", creditNames_);
     XMLUtils::addChild(doc, crossAssetModelNode, "BootstrapTolerance", bootstrapTolerance_);
     XMLUtils::addChild(doc, crossAssetModelNode, "Measure", measure_);
+    XMLUtils::addChild(doc, crossAssetModelNode, "Discretization",
+                       discretization_ == CrossAssetModel::Discretization::Exact ? "Exact" : "Euler");
 
     XMLNode* interestRateModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "InterestRateModels");
     for (Size irConfigs_Iterator = 0; irConfigs_Iterator < irConfigs_.size(); irConfigs_Iterator++) {
@@ -659,5 +680,19 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
 
     return crossAssetModelNode;
 }
+
+QuantExt::CrossAssetModel::Discretization parseDiscretization(const string& s) {
+    static std::map<string, QuantExt::CrossAssetModel::Discretization> m = {
+        {"Exact", QuantExt::CrossAssetModel::Discretization::Exact},
+        {"Euler", QuantExt::CrossAssetModel::Discretization::Euler}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Cannot convert \"" << s << "\" to QuantExt::CrossAssetStateProcess::discretization");
+    }
+}
+
 } // namespace data
 } // namespace ore

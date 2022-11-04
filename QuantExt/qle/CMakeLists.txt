@@ -138,6 +138,7 @@ models/fxbsparametrization.cpp
 models/fxbspiecewiseconstantparametrization.cpp
 models/fxeqoptionhelper.cpp
 models/gaussian1dcrossassetadaptor.cpp
+models/hwmodel.cpp
 models/infjyparameterization.cpp
 models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
@@ -149,6 +150,7 @@ models/lgmimpliedyieldtermstructure.cpp
 models/lgmvectorised.cpp
 models/linearannuitymapping.cpp
 models/linkablecalibratedmodel.cpp
+models/modelimpliedyieldtermstructure.cpp
 models/normalsabr.cpp
 models/normalsabrsmilesection.cpp
 models/parametrization.cpp
@@ -501,6 +503,9 @@ models/fxbsparametrization.hpp
 models/fxbspiecewiseconstantparametrization.hpp
 models/fxeqoptionhelper.hpp
 models/gaussian1dcrossassetadaptor.hpp
+models/hwconstantparametrization.hpp
+models/hwmodel.hpp
+models/hwparametrization.hpp
 models/infdkparametrization.hpp
 models/infjyparameterization.hpp
 models/irlgm1fconstantparametrization.hpp
@@ -508,6 +513,7 @@ models/irlgm1fparametrization.hpp
 models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp
 models/irlgm1fpiecewiseconstantparametrization.hpp
 models/irlgm1fpiecewiselinearparametrization.hpp
+models/irmodel.hpp
 models/jyimpliedyoyinflationtermstructure.hpp
 models/jyimpliedzeroinflationtermstructure.hpp
 models/lgm.hpp
@@ -518,6 +524,7 @@ models/lgmimpliedyieldtermstructure.hpp
 models/lgmvectorised.hpp
 models/linearannuitymapping.hpp
 models/linkablecalibratedmodel.hpp
+models/modelimpliedyieldtermstructure.hpp
 models/normalsabr.hpp
 models/normalsabrinterpolation.hpp
 models/normalsabrsmilesection.hpp
@@ -560,6 +567,7 @@ pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
 processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
+processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
 quotes/compositevectorquote.hpp
 quotes/exceptionquote.hpp

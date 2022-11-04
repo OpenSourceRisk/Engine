@@ -373,8 +373,8 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
                                                      sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 
     map<CorrelationKey, Handle<Quote>> corr;
-    CorrelationFactor f_1{ CrossAssetModelTypes::IR, "EUR", 0 };
-    CorrelationFactor f_2{ CrossAssetModelTypes::IR, "USD", 0 };
+    CorrelationFactor f_1{ CrossAssetModel::AssetType::IR, "EUR", 0 };
+    CorrelationFactor f_2{ CrossAssetModel::AssetType::IR, "USD", 0 };
     corr[make_pair(f_1, f_2)] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.6));
 
     boost::shared_ptr<CrossAssetModelData> config(boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, corr));
