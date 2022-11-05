@@ -267,8 +267,9 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
     std::vector<boost::shared_ptr<Scenario>> scenarios(dates_.size());
+    QL_REQUIRE(pathGenerator_ != nullptr, "CrossAssetModelScenarioGenerator::nextPath(): pathGenerator is null");
     Sample<MultiPath> sample = pathGenerator_->next();
-    DayCounter dc = model_->irlgm1f(0)->termStructure()->dayCounter();
+    DayCounter dc = model_->irModel(0)->termStructure()->dayCounter();
 
     for (Size i = 0; i < dates_.size(); i++) {
         Real t = timeGrid_[i + 1]; // recall: time grid has inserted t=0
