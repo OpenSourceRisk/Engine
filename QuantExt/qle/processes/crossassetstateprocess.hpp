@@ -60,7 +60,6 @@ protected:
     void updateSqrtCorrelation() const;
 
     const CrossAssetModel* const model_;
-    boost::shared_ptr<StochasticProcess::discretization> discretization_;
 
     std::vector<boost::shared_ptr<StochasticProcess>> crCirpp_;
     Size cirppCount_;

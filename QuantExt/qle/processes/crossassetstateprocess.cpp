@@ -469,7 +469,7 @@ CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(const CrossAsse
                                                                  SalvagingAlgorithm::Type salvaging)
     : model_(model), salvaging_(salvaging) {
 
-    QL_REQUIRE(model->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
+    QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                "CrossAssetStateProces::ExactDiscretization is only supported by LGM1F IR model types.");
 }
 
