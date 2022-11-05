@@ -325,7 +325,7 @@ Size CrossAssetModel::getNumberOfAuxBrownians(const Size i) const {
     if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
         return discretization_ == Discretization::Exact ? 1 : 0;
     if (boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]))
-        return 1;
+        return 0;
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return 0;
     QL_FAIL("parametrization " << i << " has unknown type");
