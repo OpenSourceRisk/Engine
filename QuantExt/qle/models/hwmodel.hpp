@@ -35,7 +35,7 @@ public:
     enum class Discretization { Euler, Exact };
 
     HwModel(const boost::shared_ptr<IrHwParametrization>& parametrization, const Measure measure = Measure::BA,
-            const Discretization discretization = Discretization::Euler);
+            const Discretization discretization = Discretization::Euler, const bool evaluateBankAccount = true);
 
     // IrModel interface
 
@@ -45,12 +45,10 @@ public:
 
     Handle<YieldTermStructure> termStructure() const override { return parametrization_->termStructure(); }
 
-    Size n() const override { return parametrization_->n(); }
-    Size m() const override { return parametrization_->m(); }
-    Size n_aux() const override { return measure_ == Measure::BA ? n() : 0; }
-    Size m_aux() const override {
-        return measure_ == Measure::BA && discretization_ == Discretization::Exact ? m() : 0;
-    }
+    Size n() const override;
+    Size m() const override;
+    Size n_aux() const override;
+    Size m_aux() const override;
 
     boost::shared_ptr<StochasticProcess> stateProcess() const override { return stateProcess_; }
 
@@ -76,6 +74,7 @@ private:
     Measure measure_;
     Discretization discretization_;
     boost::shared_ptr<StochasticProcess> stateProcess_;
+    bool evaluateBankAccount_;
 };
 
 } // namespace QuantExt

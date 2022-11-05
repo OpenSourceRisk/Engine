@@ -311,10 +311,10 @@ Size CrossAssetModel::getNumberOfBrownians(const Size i) const {
 
 Size CrossAssetModel::getNumberOfAuxBrownians(const Size i) const {
     if (auto p = boost::dynamic_pointer_cast<IrHwParametrization>(p_[i])) {
-        return HwModel(p, measure_, getHwDiscretization(discretization_)).m_aux();
+        return HwModel(p, measure_, getHwDiscretization(discretization_), i == 0).m_aux();
     }
     if (auto p = boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i])) {
-        return LGM(p, measure_, getLgm1fDiscretization(discretization_)).m_aux();
+        return LGM(p, measure_, getLgm1fDiscretization(discretization_), i == 0).m_aux();
     }
     if (boost::dynamic_pointer_cast<FxBsParametrization>(p_[i]))
         return 0;
@@ -333,11 +333,11 @@ Size CrossAssetModel::getNumberOfAuxBrownians(const Size i) const {
 
 Size CrossAssetModel::getNumberOfStateVariables(const Size i) const {
     if (auto p = boost::dynamic_pointer_cast<IrHwParametrization>(p_[i])) {
-        HwModel m(p, measure_, getHwDiscretization(discretization_));
+        HwModel m(p, measure_, getHwDiscretization(discretization_), i == 0);
         return m.n() + m.n_aux();
     }
     if (auto p = boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i])) {
-        LGM m(p, measure_, getLgm1fDiscretization(discretization_));
+        LGM m(p, measure_, getLgm1fDiscretization(discretization_), i == 0);
         return m.n() + m.n_aux();
     }
     if (boost::dynamic_pointer_cast<FxBsParametrization>(p_[i]))
@@ -406,14 +406,16 @@ void CrossAssetModel::initializeParametrizations() {
         QL_REQUIRE(j == 0 || getComponentType(i).second == getComponentType(0).second,
                    "All IR models must be of the same type (HW, LGM can not be mixed)");
         // initialize ir model, if generic constructor was used
+        // evaluate bank account for j = 0 (domestic process
         if (genericCtor) {
             if (getComponentType(i).second == ModelType::LGM1F) {
                 irModels_.push_back(boost::make_shared<LinearGaussMarkovModel>(
                     boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i]), measure_,
-                    getLgm1fDiscretization(discretization_)));
+                    getLgm1fDiscretization(discretization_), j == 0));
             } else if (getComponentType(i).second == ModelType::HW) {
                 irModels_.push_back(boost::make_shared<HwModel>(boost::dynamic_pointer_cast<IrHwParametrization>(p_[i]),
-                                                                measure_, getHwDiscretization(discretization_)));
+                                                                measure_, getHwDiscretization(discretization_),
+                                                                j == 0));
             } else {
                 irModels_.push_back(nullptr);
             }
