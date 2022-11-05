@@ -186,8 +186,7 @@ void CrossAssetModelBuilder::buildModel() const {
 
     // Store information on the number of factors for each process. This is used when requesting a correlation matrix
     // from the CorrelationMatrixBuilder below.
-    using ProcessInfo = CorrelationMatrixBuilder::ProcessInfo;
-    ProcessInfo processInfo;
+    CorrelationMatrixBuilder::ProcessInfo processInfo;
 
     // Set the measure
     IrModel::Measure measure = IrModel::Measure::LGM;
@@ -365,6 +364,10 @@ void CrossAssetModelBuilder::buildModel() const {
     DLOG("CrossAssetModelBuilder: adding correlations.");
     CorrelationMatrixBuilder cmb;
 
+    for (auto it = config_->correlations().begin(); it != config_->correlations().end(); it++) {
+        cmb.addCorrelation(it->first.first, it->first.second, it->second);
+    }
+
     Matrix corrMatrix = cmb.correlationMatrix(processInfo);
 
     TLOG("CAM correlation matrix:");
@@ -374,7 +377,8 @@ void CrossAssetModelBuilder::buildModel() const {
      * Build the cross asset model
      */
 
-    model_.linkTo(boost::make_shared<QuantExt::CrossAssetModel>(parametrizations, corrMatrix, salvaging_, measure));
+    model_.linkTo(boost::make_shared<QuantExt::CrossAssetModel>(parametrizations, corrMatrix, salvaging_, measure,
+                                                                config_->discretization()));
 
     /*************************
      * Calibrate IR components

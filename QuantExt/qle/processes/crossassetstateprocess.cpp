@@ -443,7 +443,7 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
                     continue; // ignore non-cir cr model
                 Size idx1 = model_->pIdx(CrossAssetModel::AssetType::CR, i, 0);
                 Size idx2 = model_->pIdx(CrossAssetModel::AssetType::CR, i, 1);
-                Size idxw = model_->cIdx(CrossAssetModel::AssetType::CR, i, 0);
+                Size idxw = model_->wIdx(CrossAssetModel::AssetType::CR, i, 0);
                 Array x0Tmp(2), dwTmp(2);
                 x0Tmp[0] = x0[idx1];
                 x0Tmp[1] = x0[idx2];

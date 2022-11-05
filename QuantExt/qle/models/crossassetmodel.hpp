@@ -56,7 +56,7 @@ public:
     enum class ModelType { LGM1F, HW, BS, DK, CIRPP, JY };
     enum class Discretization { Euler, Exact };
 
-    static constexpr Size numberOfAssetTypes = 4;
+    static constexpr Size numberOfAssetTypes = 5;
 
     /*! Parametrizations must be given in the following order
         - IR  (first parametrization defines the domestic currency)

@@ -24,6 +24,7 @@ namespace QuantExt {
 HwModel::HwModel(const boost::shared_ptr<IrHwParametrization>& parametrization, const Measure measure,
                  const Discretization discretization)
     : parametrization_(parametrization), measure_(measure), discretization_(discretization) {
+    QL_REQUIRE(parametrization_ != nullptr, "HwModel: parametrization is null");
     stateProcess_ = boost::make_shared<IrHwStateProcess>(parametrization_, measure_, discretization_);
 }
 
