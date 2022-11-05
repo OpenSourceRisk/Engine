@@ -317,17 +317,17 @@ Size CrossAssetModel::getNumberOfAuxBrownians(const Size i) const {
         return LGM(p, measure_, getLgm1fDiscretization(discretization_)).m_aux();
     }
     if (boost::dynamic_pointer_cast<FxBsParametrization>(p_[i]))
-        return 1;
+        return 0;
     if (boost::dynamic_pointer_cast<InfDkParametrization>(p_[i]))
         return discretization_ == Discretization::Exact ? 1 : 0;
     if (boost::dynamic_pointer_cast<InfJyParameterization>(p_[i]))
-        return 2;
+        return 0;
     if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
         return discretization_ == Discretization::Exact ? 1 : 0;
     if (boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]))
         return 1;
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
-        return 1;
+        return 0;
     QL_FAIL("parametrization " << i << " has unknown type");
 }
 
@@ -369,12 +369,14 @@ void CrossAssetModel::updateIndices(const AssetType& t, const Size i, const Size
     aIdx_[(Size)t].push_back(aIdx);
     if (discretization_ == Discretization::Euler) {
         QL_REQUIRE(wIdx_[(Size)t].back() == cIdx_[(Size)t].back(),
-                   "CrossAssetModel::updateIndices(): assertion error, wIdx != cIdx for asset type "
-                       << t << " at index " << wIdx_[(Size)t].size() << " for Euler discretization");
+                   "CrossAssetModel::updateIndices(): assertion error, wIdx ("
+                       << wIdx_[(Size)t].back() << ") != cIdx (" << cIdx_[(Size)t].back() << ") for asset type " << t
+                       << " at index " << wIdx_[(Size)t].size() << " for Euler discretization");
     } else {
         QL_REQUIRE(wIdx_[(Size)t].back() == pIdx_[(Size)t].back(),
-                   "CrossAssetModel::updateIndices(): assertion error, wIdx != cIdx for asset type "
-                       << t << " at index " << wIdx_[(Size)t].size() << " for Exact discretization");
+                   "CrossAssetModel::updateIndices(): assertion error, wIdx ("
+                       << wIdx_[(Size)t].back() << ") != pIdx (" << pIdx_[(Size)t].back() << ") for asset type " << t
+                       << " at index " << wIdx_[(Size)t].size() << " for Exact discretization");
     }
 }
 
@@ -391,6 +393,7 @@ void CrossAssetModel::initializeParametrizations() {
     pIdx_.resize(numberOfAssetTypes);
     aIdx_.resize(numberOfAssetTypes);
     brownians_.resize(numberOfAssetTypes);
+    auxBrownians_.resize(numberOfAssetTypes);
     stateVariables_.resize(numberOfAssetTypes);
     numArguments_.resize(numberOfAssetTypes);
     modelType_.resize(numberOfAssetTypes);

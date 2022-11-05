@@ -231,13 +231,10 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
 
     // check deprecated way of providing Discretization under Simulation/Parameters
     if (discString.empty()) {
-        if (XMLNode* sim = XMLUtils::getChildNode(root, "Simulation")) {
-            if (XMLNode* node = XMLUtils::getChildNode(sim, "Parameters")) {
-                discString = XMLUtils::getChildValue(node, "Discretization", false);
-                WLOG(
-                    "Simulation/Parameters/Discretization is deprecated, use Simulation/CrossAssetModel/Discretization "
-                    "instead.");
-            }
+        if (XMLNode* node = XMLUtils::getChildNode(root, "Parameters")) {
+            discString = XMLUtils::getChildValue(node, "Discretization", false);
+            WLOG("Simulation/Parameters/Discretization is deprecated, use Simulation/CrossAssetModel/Discretization "
+                 "instead.");
         }
     }
 
