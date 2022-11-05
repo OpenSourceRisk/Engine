@@ -38,18 +38,23 @@ using namespace QuantLib;
 class IrHwStateProcess : public StochasticProcess {
 public:
     IrHwStateProcess(const boost::shared_ptr<IrHwParametrization>& parametrization, const IrModel::Measure measure,
-                     const HwModel::Discretization discretization = HwModel::Discretization::Euler)
+                     const HwModel::Discretization discretization = HwModel::Discretization::Euler,
+                     const bool evaluateBankAccount = true)
         : StochasticProcess(discretization == HwModel::Discretization::Euler ? boost::make_shared<EulerDiscretization>()
                                                                              : nullptr),
-          parametrization_(parametrization), measure_(measure), discretization_(discretization) {}
+          parametrization_(parametrization), measure_(measure), discretization_(discretization),
+          evaluateBankAccount_(evaluateBankAccount) {
+        QL_REQUIRE(measure_ == IrModel::Measure::BA, "IrHwStateProcess only supports measure BA");
+    }
     Size size() const override {
-        return parametrization_->n() + (measure_ == IrModel::Measure::BA ? parametrization_->n() : 0);
+        return parametrization_->n() +
+               (evaluateBankAccount_ && measure_ == IrModel::Measure::BA ? parametrization_->n() : 0);
     }
     Size factors() const override {
-        return parametrization_->m() +
-               (measure_ == IrModel::Measure::BA && discretization_ == HwModel::Discretization::Exact
-                    ? parametrization_->m()
-                    : 0);
+        return parametrization_->m() + (evaluateBankAccount_ && measure_ == IrModel::Measure::BA &&
+                                                discretization_ == HwModel::Discretization::Exact
+                                            ? parametrization_->m()
+                                            : 0);
     }
     Array initialValues() const override;
     Array drift(Time t, const Array& s) const override;
@@ -59,6 +64,7 @@ private:
     boost::shared_ptr<IrHwParametrization> parametrization_;
     IrModel::Measure measure_;
     HwModel::Discretization discretization_;
+    bool evaluateBankAccount_;
 };
 
 // inline
@@ -69,7 +75,7 @@ Array IrHwStateProcess::drift(Time t, const Array& s) const {
     Array ones(parametrization_->n(), 1.0);
     Array x(s.begin(), std::next(s.begin(), parametrization_->n()));
     Array drift_x = parametrization_->y(t) * ones - parametrization_->kappa(t) * x;
-    if (measure_ != IrModel::Measure::BA)
+    if (!(evaluateBankAccount_ && measure_ == IrModel::Measure::BA))
         return drift_x;
     Array drift_int_x = x;
     Array result(2 * parametrization_->n());

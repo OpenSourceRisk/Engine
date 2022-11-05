@@ -49,6 +49,7 @@ public:
 
     LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization>& parametrization,
                            const Measure measure = Measure::LGM, const Discretization = Discretization::Euler,
+                           const bool evaluateBankAccount = true,
                            const boost::shared_ptr<Integrator>& integrator = boost::make_shared<SimpsonIntegral>(1.0E-8,
                                                                                                                  100));
 
@@ -57,10 +58,10 @@ public:
     Measure measure() const override { return measure_; }
     const boost::shared_ptr<Parametrization> parametrizationBase() const override { return parametrization_; }
     Handle<YieldTermStructure> termStructure() const override { return parametrization_->termStructure(); }
-    Size n() const override { return 1; }
-    Size m() const override { return 1; }
-    Size n_aux() const override { return measure_ == Measure::BA ? 1 : 0; }
-    Size m_aux() const override { return measure_ == Measure::BA && discretization_ == Discretization::Exact ? 1 : 0; }
+    Size n() const override;
+    Size m() const override;
+    Size n_aux() const override;
+    Size m_aux() const override;
     boost::shared_ptr<StochasticProcess> stateProcess() const override;
 
     QuantLib::Real discountBond(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
@@ -151,6 +152,7 @@ private:
     boost::shared_ptr<Integrator> integrator_;
     Measure measure_;
     Discretization discretization_;
+    bool evaluateBankAccount_;
     boost::shared_ptr<StochasticProcess1D> stateProcess_;
     LgmCalibrationInfo calibrationInfo_;
 };

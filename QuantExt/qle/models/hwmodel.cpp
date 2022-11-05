@@ -22,10 +22,12 @@
 namespace QuantExt {
 
 HwModel::HwModel(const boost::shared_ptr<IrHwParametrization>& parametrization, const Measure measure,
-                 const Discretization discretization)
-    : parametrization_(parametrization), measure_(measure), discretization_(discretization) {
+                 const Discretization discretization, const bool evaluateBankAccount)
+    : parametrization_(parametrization), measure_(measure), discretization_(discretization),
+      evaluateBankAccount_(evaluateBankAccount) {
     QL_REQUIRE(parametrization_ != nullptr, "HwModel: parametrization is null");
-    stateProcess_ = boost::make_shared<IrHwStateProcess>(parametrization_, measure_, discretization_);
+    stateProcess_ =
+        boost::make_shared<IrHwStateProcess>(parametrization_, measure_, discretization_, evaluateBankAccount_);
 }
 
 QuantLib::Real HwModel::discountBond(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
@@ -56,5 +58,12 @@ void HwModel::update() {
 }
 
 void HwModel::generateArguments() { update(); }
+
+Size HwModel::n() const { return parametrization_->n(); }
+Size HwModel::m() const { return parametrization_->m(); }
+Size HwModel::n_aux() const { return evaluateBankAccount_ && measure_ == Measure::BA ? n() : 0; }
+Size HwModel::m_aux() const {
+    return evaluateBankAccount_ && measure_ == Measure::BA && discretization_ == Discretization::Exact ? m() : 0;
+}
 
 } // namespace QuantExt
