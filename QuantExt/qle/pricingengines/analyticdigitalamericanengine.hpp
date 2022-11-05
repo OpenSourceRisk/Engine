@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file analyticdigitalamericanengine.hpp
+/*! \file qle/pricingengines/analyticdigitalamericanengine.hpp
     \brief Wrapper of QuantLib analytic digital American option engine to allow for flipping back some of the additional
    results in the case of FX instruments where the trade builder may have inverted the underlying pair
 */
@@ -24,38 +24,36 @@
 #pragma once
 
 #include <ql/instruments/vanillaoption.hpp>
-#include <ql/processes/blackscholesprocess.hpp>
 #include <ql/pricingengines/vanilla/analyticdigitalamericanengine.hpp>
+#include <ql/processes/blackscholesprocess.hpp>
 
 namespace QuantExt {
 
-    using namespace QuantLib;
+using namespace QuantLib;
 
-    //! Analytic pricing engine for American vanilla options with digital payoff
+//! Analytic pricing engine for American vanilla options with digital payoff
 
-    class AnalyticDigitalAmericanEngine : public QuantLib::AnalyticDigitalAmericanEngine {
-      public:
-        AnalyticDigitalAmericanEngine(const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
-                                      const bool flipResults = false)
-              : QuantLib::AnalyticDigitalAmericanEngine(process), flipResults_(flipResults){};
-        void calculate() const override;
-        virtual bool knock_in() const override {
-           return true;
-        }
-      private:
-        boost::shared_ptr<GeneralizedBlackScholesProcess> process_;
-        bool flipResults_;
-    };
+class AnalyticDigitalAmericanEngine : public QuantLib::AnalyticDigitalAmericanEngine {
+public:
+    AnalyticDigitalAmericanEngine(const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
+                                  const bool flipResults = false)
+        : QuantLib::AnalyticDigitalAmericanEngine(process), flipResults_(flipResults){};
+    void calculate() const override;
+    virtual bool knock_in() const override { return true; }
 
-    //! Analytic pricing engine for American Knock-out options with digital payoff
+private:
+    boost::shared_ptr<GeneralizedBlackScholesProcess> process_;
+    bool flipResults_;
+};
 
-    class AnalyticDigitalAmericanKOEngine : 
-                              public AnalyticDigitalAmericanEngine {
-      public:
-        AnalyticDigitalAmericanKOEngine(const boost::shared_ptr<GeneralizedBlackScholesProcess>& engine,
-                                        const bool flipResults = false)
-            : AnalyticDigitalAmericanEngine(engine, flipResults) {}
-        bool knock_in() const override { return false; }
-    };
+//! Analytic pricing engine for American Knock-out options with digital payoff
+
+class AnalyticDigitalAmericanKOEngine : public AnalyticDigitalAmericanEngine {
+public:
+    AnalyticDigitalAmericanKOEngine(const boost::shared_ptr<GeneralizedBlackScholesProcess>& engine,
+                                    const bool flipResults = false)
+        : AnalyticDigitalAmericanEngine(engine, flipResults) {}
+    bool knock_in() const override { return false; }
+};
 
 } // namespace QuantExt
