@@ -141,8 +141,8 @@ public:
         IR is assumed to be the base currency.
 
     */
-    typedef QuantExt::CrossAssetModel::AssetType CamAssetType;
-    typedef std::map<CamAssetType, std::vector<std::pair<std::string, QuantLib::Size>>> ProcessInfo;
+    typedef std::map<QuantExt::CrossAssetModel::AssetType, std::vector<std::pair<std::string, QuantLib::Size>>>
+        ProcessInfo;
     QuantLib::Matrix correlationMatrix(const ProcessInfo& processInfo);
     //@}
 
