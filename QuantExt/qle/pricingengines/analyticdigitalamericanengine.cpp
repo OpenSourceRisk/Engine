@@ -22,34 +22,34 @@
 #include <qle/pricingengines/analyticdigitalamericanengine.hpp>
 #include <utility>
 
+using QuantLib::Rate;
+using QuantLib::Real;
+using QuantLib::StrikedTypePayoff;
 using std::string;
 using std::vector;
-using QuantLib::Real;
-using QuantLib::Rate;
-using QuantLib::StrikedTypePayoff;
 
 namespace QuantExt {
 
-    using namespace QuantLib;
+using namespace QuantLib;
 
-    void AnalyticDigitalAmericanEngine::calculate() const {
+void AnalyticDigitalAmericanEngine::calculate() const {
 
-        QuantLib::AnalyticDigitalAmericanEngine::calculate();
-        
-        if (flipResults_) {
-            // Invert spot, forward, strike
-            auto resToInvert = vector<string>({"spot", "forward", "strike"});
-            for (const string& res : resToInvert) {
-                auto it = results_.additionalResults.find(res);
-                if (it != results_.additionalResults.end())
-                    it->second = 1. / boost::any_cast<Real>(it->second);
-            }
+    QuantLib::AnalyticDigitalAmericanEngine::calculate();
 
-            // Swap riskFreeDiscount and dividendDiscount
-            auto rfDiscountIt = results_.additionalResults.find("riskFreeDiscount");
-            auto divDiscountIt = results_.additionalResults.find("dividendDiscount");
-            if (rfDiscountIt != results_.additionalResults.end() && divDiscountIt != results_.additionalResults.end())
-                std::swap(rfDiscountIt->second, divDiscountIt->second);
+    if (flipResults_) {
+        // Invert spot, forward, strike
+        auto resToInvert = vector<string>({"spot", "forward", "strike"});
+        for (const string& res : resToInvert) {
+            auto it = results_.additionalResults.find(res);
+            if (it != results_.additionalResults.end())
+                it->second = 1. / boost::any_cast<Real>(it->second);
         }
+
+        // Swap riskFreeDiscount and dividendDiscount
+        auto rfDiscountIt = results_.additionalResults.find("riskFreeDiscount");
+        auto divDiscountIt = results_.additionalResults.find("dividendDiscount");
+        if (rfDiscountIt != results_.additionalResults.end() && divDiscountIt != results_.additionalResults.end())
+            std::swap(rfDiscountIt->second, divDiscountIt->second);
     }
+}
 } // namespace QuantExt

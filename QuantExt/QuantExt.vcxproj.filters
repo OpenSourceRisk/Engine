@@ -396,9 +396,6 @@
     <ClInclude Include="qle\models\lgmimplieddefaulttermstructure.hpp">
       <Filter>models</Filter>
     </ClInclude>
-    <ClInclude Include="qle\pricingengines\analyticdigitalamericanengine.hpp">
-      <Filter>pricingengines</Filter>
-    </ClInclude>
     <ClInclude Include="qle\pricingengines\analyticdkcpicapfloorengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
@@ -1305,6 +1302,9 @@
     </ClInclude>
     <ClInclude Include="qle\calendars\mauritius.hpp">
       <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticdoublebarrierbinaryengine.hpp">
+      <Filter>pricingengines</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -2239,6 +2239,12 @@
     </ClCompile>
     <ClCompile Include="qle\calendars\mauritius.cpp">
       <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticdoublebarrierbinaryengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.hpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

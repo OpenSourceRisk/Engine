@@ -88,12 +88,14 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     QL_REQUIRE(levelLow < levelHigh, "barrier levels are not in ascending order");
 
     // Handle PayoffCurrency, we might have to flip the trade here
+    bool flipResults = false;
     if (payoffCurrency_ == foreignCurrency_) {
         // Invert the trade, switch dom and for and flip Put/Call
         levelLow = 1.0 / levelLow;
         levelHigh = 1.0 / levelHigh;
         std::swap(levelLow, levelHigh);
         std::swap(fgnCcy, domCcy);
+        flipResults = true;
     } else if (payoffCurrency_ != domesticCurrency_) {
         QL_FAIL("Invalid Payoff currency (" << payoffCurrency_ << ") for FxDoubleTouchOption " << foreignCurrency_
                                             << domesticCurrency_);
@@ -125,7 +127,7 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
     boost::shared_ptr<FxDoubleTouchOptionEngineBuilder> fxDoubleTouchOptBuilder =
         boost::dynamic_pointer_cast<FxDoubleTouchOptionEngineBuilder>(builder);
-    doubleTouch->setPricingEngine(fxDoubleTouchOptBuilder->engine(fgnCcy, domCcy));
+    doubleTouch->setPricingEngine(fxDoubleTouchOptBuilder->engine(fgnCcy, domCcy, flipResults));
 
     // if a knock-in option is triggered it becomes a simple forward cashflow
     // which we price as a swap

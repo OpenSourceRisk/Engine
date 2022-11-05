@@ -745,6 +745,7 @@
     <ClInclude Include="qle\models\yoyswaphelper.hpp" />
     <ClInclude Include="qle\models\zeroinflationmodeltermstructure.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp" />
+    <ClInclude Include="qle\pricingengines\analyticdoublebarrierbinaryengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticeuropeanforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcclgmfxoptionengine.hpp" />
     <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.hpp" />
@@ -1087,6 +1088,7 @@
     <ClCompile Include="qle\models\zeroinflationmodeltermstructure.cpp" />
     <ClCompile Include="qle\models\projectedcrossassetmodel.cpp" />
     <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp" />
+    <ClCompile Include="qle\pricingengines\analyticdoublebarrierbinaryengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticeuropeanforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticcclgmfxoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.cpp" />
