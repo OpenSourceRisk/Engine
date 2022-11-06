@@ -3555,7 +3555,7 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
     boost::shared_ptr<StochasticProcess> p_exact = d.ccLgmExact->stateProcess();
     boost::shared_ptr<StochasticProcess> p_euler = d.ccLgmEuler->stateProcess();
 
-    Real T = 10.0;                                  // horizon at which we compare the moments
+    Real T = 2.0;                                   // horizon at which we compare the moments
     Size steps_euler = static_cast<Size>(T * 50.0); // number of simulation steps
     Size steps_exact = 1;
     Size paths = 25000; // number of paths
@@ -4137,15 +4137,15 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
                     }
 
                     // get QuantLib::Error: negative eigenvalue(s) (-3.649315e-16) with SalvagingAlgorithm::None
+                    boost::shared_ptr<CrossAssetModel> modelEuler = boost::make_shared<CrossAssetModel>(
+                        parametrizations, c, SalvagingAlgorithm::Spectral, IrModel::Measure::LGM,
+                        CrossAssetModel::Discretization::Euler);
                     boost::shared_ptr<CrossAssetModel> modelExact = boost::make_shared<CrossAssetModel>(
                         parametrizations, c, SalvagingAlgorithm::Spectral, IrModel::Measure::LGM,
                         CrossAssetModel::Discretization::Exact);
-                    boost::shared_ptr<CrossAssetModel> modelEuler = boost::make_shared<CrossAssetModel>(
-                        parametrizations, c, SalvagingAlgorithm::Spectral, IrModel::Measure::LGM,
-                        CrossAssetModel::Discretization::Exact);
 
-                    boost::shared_ptr<StochasticProcess> peuler = modelExact->stateProcess();
-                    boost::shared_ptr<StochasticProcess> pexact = modelEuler->stateProcess();
+                    boost::shared_ptr<StochasticProcess> peuler = modelEuler->stateProcess();
+                    boost::shared_ptr<StochasticProcess> pexact = modelExact->stateProcess();
 
                     Matrix c1 = peuler->covariance(dt, peuler->initialValues(), dt);
                     Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);

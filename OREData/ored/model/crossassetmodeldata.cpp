@@ -238,9 +238,12 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
         }
     }
 
-    QL_REQUIRE(!discString.empty(),
-               "CrossAssetModelData: Discretization is not given. Expected this in Simulation/CrossAssetModel "
-               "or in Simulation/Parameters/Discretization (deprecated)");
+    // default discString to Exact if not found
+    if(discString.empty()) {
+        discString = "Exact";
+        WLOG("CrossAssetModelData: Discretization is not given. Expected this in Simulation/CrossAssetModel or in "
+             "Simulation/Parameters/Discretization (deprecated). Fall back to Exact.");
+    }
 
     discretization_ = parseDiscretization(discString);
 
