@@ -38,6 +38,8 @@ cashflows/durationadjustedcmscoupon.cpp
 cashflows/durationadjustedcmscoupontsrpricer.cpp
 cashflows/equitycoupon.cpp
 cashflows/equitycouponpricer.cpp
+cashflows/equitymargincoupon.cpp
+cashflows/equitymargincouponpricer.cpp
 cashflows/fixedratefxlinkednotionalcoupon.cpp
 cashflows/floatingannuitycoupon.cpp
 cashflows/floatingannuitynominal.cpp
@@ -99,6 +101,7 @@ instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/forwardbond.cpp
 instruments/fxforward.cpp
+instruments/genericswaption.cpp
 instruments/impliedbondspread.cpp
 instruments/makeaverageois.cpp
 instruments/makecds.cpp
@@ -111,6 +114,7 @@ instruments/payment.cpp
 instruments/rebatedexercise.cpp
 instruments/subperiodsswap.cpp
 instruments/tenorbasisswap.cpp
+instruments/varianceswap.cpp
 math/deltagammavar.cpp
 math/differentialevolution_mt.cpp
 math/fillemptymatrix.cpp
@@ -171,6 +175,7 @@ pricingengines/analyticxassetlgmeqoptionengine.cpp
 pricingengines/baroneadesiwhaleyengine.cpp
 pricingengines/blackcdsoptionengine.cpp
 pricingengines/commodityapoengine.cpp
+pricingengines/commodityswaptionengine.cpp
 pricingengines/cpibacheliercapfloorengine.cpp
 pricingengines/cpiblackcapfloorengine.cpp
 pricingengines/cpicapfloorengines.cpp
@@ -188,6 +193,8 @@ pricingengines/lgmconvolutionsolver.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
+pricingengines/varianceswapgeneralreplicationengine.cpp
+pricingengines/volatilityfromvarianceswapengine.cpp
 processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
@@ -319,6 +326,8 @@ cashflows/durationadjustedcmscoupon.hpp
 cashflows/durationadjustedcmscoupontsrpricer.hpp
 cashflows/equitycoupon.hpp
 cashflows/equitycouponpricer.hpp
+cashflows/equitymargincoupon.hpp
+cashflows/equitymargincouponpricer.hpp
 cashflows/fixedratefxlinkednotionalcoupon.hpp
 cashflows/floatingannuitycoupon.hpp
 cashflows/floatingannuitynominal.hpp
@@ -442,6 +451,7 @@ instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
 instruments/forwardbond.hpp
 instruments/fxforward.hpp
+instruments/genericswaption.hpp
 instruments/impliedbondspread.hpp
 instruments/makeaverageois.hpp
 instruments/makecds.hpp
@@ -456,6 +466,7 @@ instruments/rebatedexercise.hpp
 instruments/subperiodsswap.hpp
 instruments/tenorbasisswap.hpp
 instruments/vanillaforwardoption.hpp
+instruments/varianceswap.hpp
 interpolators/optioninterpolator2d.hpp
 math/constantinterpolation.hpp
 math/covariancesalvage.hpp
@@ -543,6 +554,7 @@ pricingengines/analyticxassetlgmeqoptionengine.hpp
 pricingengines/baroneadesiwhaleyengine.hpp
 pricingengines/blackcdsoptionengine.hpp
 pricingengines/commodityapoengine.hpp
+pricingengines/commodityswaptionengine.hpp
 pricingengines/cpibacheliercapfloorengine.hpp
 pricingengines/cpiblackcapfloorengine.hpp
 pricingengines/cpicapfloorengines.hpp
@@ -560,6 +572,8 @@ pricingengines/lgmconvolutionsolver.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
+pricingengines/varianceswapgeneralreplicationengine.hpp
+pricingengines/volatilityfromvarianceswapengine.hpp
 processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
 processes/irlgm1fstateprocess.hpp

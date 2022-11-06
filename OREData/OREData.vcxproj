@@ -155,6 +155,10 @@
     <ClInclude Include="ored\portfolio\builders\cmsspread.hpp" />
     <ClInclude Include="ored\portfolio\builders\commodityforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\commodityoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\commodityapo.hpp" />
+    <ClInclude Include="ored\portfolio\builders\commodityapomodelbuilder.hpp" />
+    <ClInclude Include="ored\portfolio\builders\commodityswap.hpp" />
+    <ClInclude Include="ored\portfolio\builders\commodityswaption.hpp" />
     <ClInclude Include="ored\portfolio\builders\cpicapfloor.hpp" />
     <ClInclude Include="ored\portfolio\builders\creditdefaultswap.hpp" />
     <ClInclude Include="ored\portfolio\builders\creditdefaultswapoption.hpp" />
@@ -181,12 +185,19 @@
     <ClInclude Include="ored\portfolio\builders\quantoequityoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\quantovanillaoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\vanillaoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\varianceswap.hpp" />
     <ClInclude Include="ored\portfolio\builders\yoycapfloor.hpp" />
     <ClInclude Include="ored\portfolio\capfloor.hpp" />
     <ClInclude Include="ored\portfolio\cliquetoption.hpp" />
     <ClInclude Include="ored\portfolio\commodityforward.hpp" />
     <ClInclude Include="ored\portfolio\commodityoption.hpp" />
     <ClInclude Include="ored\portfolio\commoditydigitaloption.hpp" />
+    <ClInclude Include="ored\portfolio\commodityapo.hpp" />
+    <ClInclude Include="ored\portfolio\commoditylegbuilder.hpp" />
+    <ClInclude Include="ored\portfolio\commoditylegdata.hpp" />
+    <ClInclude Include="ored\portfolio\commodityoptionstrip.hpp" />
+    <ClInclude Include="ored\portfolio\commodityswap.hpp" />
+    <ClInclude Include="ored\portfolio\commodityswaption.hpp" />
     <ClInclude Include="ored\portfolio\compositeinstrumentwrapper.hpp" />
     <ClInclude Include="ored\portfolio\compositetrade.hpp" />
     <ClInclude Include="ored\portfolio\creditdefaultswap.hpp" />
@@ -257,6 +268,7 @@
     <ClInclude Include="ored\portfolio\tradestrike.hpp" />
     <ClInclude Include="ored\portfolio\underlying.hpp" />
     <ClInclude Include="ored\portfolio\vanillaoption.hpp" />
+    <ClInclude Include="ored\portfolio\varianceswap.hpp" />
     <ClInclude Include="ored\portfolio\builders\asianoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\commodityasianoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityasianoption.hpp" />
@@ -394,6 +406,7 @@
     <ClCompile Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloorediborleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.cpp" />
+    <ClCompile Include="ored\portfolio\builders\commodityapomodelbuilder.cpp" />
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />
     <ClCompile Include="ored\portfolio\builders\cmsspread.cpp" />
     <ClCompile Include="ored\portfolio\builders\cpicapfloor.cpp" />
@@ -405,6 +418,12 @@
     <ClCompile Include="ored\portfolio\commodityforward.cpp" />
     <ClCompile Include="ored\portfolio\commodityoption.cpp" />
     <ClCompile Include="ored\portfolio\commoditydigitaloption.cpp" />
+    <ClCompile Include="ored\portfolio\commodityapo.cpp" />
+    <ClCompile Include="ored\portfolio\commoditylegbuilder.cpp" />
+    <ClCompile Include="ored\portfolio\commoditylegdata.cpp" />
+    <ClCompile Include="ored\portfolio\commodityoptionstrip.cpp" />
+    <ClCompile Include="ored\portfolio\commodityswap.cpp" />
+    <ClCompile Include="ored\portfolio\commodityswaption.cpp" />
     <ClCompile Include="ored\portfolio\compositetrade.cpp" />
     <ClCompile Include="ored\portfolio\creditdefaultswap.cpp" />
     <ClCompile Include="ored\portfolio\creditdefaultswapdata.cpp" />
@@ -468,6 +487,7 @@
     <ClCompile Include="ored\portfolio\tradestrike.cpp" />
     <ClCompile Include="ored\portfolio\underlying.cpp" />
     <ClCompile Include="ored\portfolio\vanillaoption.cpp" />
+    <ClCompile Include="ored\portfolio\varianceswap.cpp" />
     <ClCompile Include="ored\portfolio\asianoption.cpp" />
     <ClCompile Include="ored\report\csvreport.cpp" />
     <ClCompile Include="ored\utilities\calendaradjustmentconfig.cpp" />
