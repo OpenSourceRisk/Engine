@@ -45,6 +45,8 @@ public:
           parametrization_(parametrization), measure_(measure), discretization_(discretization),
           evaluateBankAccount_(evaluateBankAccount) {
         QL_REQUIRE(measure_ == IrModel::Measure::BA, "IrHwStateProcess only supports measure BA");
+        QL_REQUIRE(discretization_ == HwModel::Discretization::Euler,
+                   "IrHwStateProcess only supports dicsretization Euler");
     }
     Size size() const override {
         return parametrization_->n() +
