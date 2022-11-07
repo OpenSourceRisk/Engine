@@ -187,8 +187,6 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
-    additionalData_["effectiveDomesticCurrency"] = domCcy.code();
-    additionalData_["effectiveForeignCurrency"] = fgnCcy.code();
 }
 
 bool FxTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
