@@ -1,0 +1,54 @@
+\subsubsection{Equity Variance Swap}
+\label{SubSectionEqVarianceSwap}
+
+The \lstinline!EqutiyVarianceSwapData! node is the trade data container for the \emph{EquityVarianceSwap}  trade type. Only vanilla variance swaps are supported. The structure of an example \lstinline!EqutiyVarianceSwapData! node for an equity variance swap is shown in Listing \ref{lst:varswap_data}.
+
+\begin{listing}[H]
+	%\hrule\medskip
+	\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityVarianceSwapData>
+    <StartDate>2016-01-29</StartDate>
+    <EndDate>2016-05-05</EndDate>
+    <Currency>USD</Currency>
+    <Underlying>
+      <Type>Equity</Type>
+      <Name>.SPX</Name>
+      <IdentifierType>RIC</IdentifierType>
+    </Underlying>
+    <LongShort>Long</LongShort>
+    <Strike>0.20</Strike>
+    <Notional>50000</Notional>
+    <Calendar>US</Calendar>
+    <MomentType>Variance</MomentType>
+    <AddPastDividends>true</AddPastDividends>
+</EqutiyVarianceSwapData>
+    \end{minted}
+    \caption{Variance Swap data}
+	\label{lst:varswap_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!EquityVarianceSwapData! node below.
+
+\begin{itemize}
+	\item StartDate: The variance swap start date. \\
+	Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+	\item EndDate: The variance swap end date. \\
+	Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+	\item Currency: The bought currency of the variance swap. \\
+	Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+	\item Name: The identifier of the underlying equity or equity index. \\
+	Allowable values: See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data}. \\
+	\item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
+	\item LongShort: Defines whether the trade is long in the equity variance. For the avoidance of doubt, a long variance swap has positive value if the realised variance exceeds the variance strike. \\
+	Allowable values: \emph{Long, Short}
+	\item Strike: The volatility strike $K_{vol}$ of the variance swap quoted absolutely (i.e. not as a percent). If the swap was struck in terms of variance, the square root of that variance should be used here.\\
+	Allowable values: Any positive real number.
+	\item Notional: The vega notional of the variance swap. This is the notional in terms of volatility units (like the strike). If the swap was struck in terms of a variance notional $N_{var}$, the corresponding vega notional is given by $N_{vol} = N_{var} * 2 * 100 * K_{vol}$ (where $K_{vol}$ is in absolute terms).\\
+	Allowable values: Any non-negative real number.
+	\item Calendar: The calendar determining the observation/fixing dates according to which variance is accrued is the combination of the calendar(s) given here plus the calendar associated with the equity in the equity curve configuration. If no such calendar is given in the equity curve configuration the standard calendar for the equity currency (also defined in the curve config) is used instead. \\
+	Allowable values: See Table \ref{tab:calendar}.
+	\item MomentType[Optional]: A flag to distinguish if the swap is struck in terms of volatility or variance. The MomentType should be set to \emph{Volatility} or \emph{Variance} depending on the payoff.  Note that MomentType does not necessarily need to be equivalent to the way the Strike is quoted which is always as a Volatility. \\
+	Allowable values: \emph{Volatility} or \emph{Variance}. Defaults to \emph{Variance} if left blank or omitted.
+	\item AddPastDividends[Optional]: A flag to distinguish if past dividend payments should be added to the fixings when calculating accrued variance. \\
+	Allowable values: \emph{true} or \emph{false}. Defaults to \emph{false} if left blank or omitted.
+\end{itemize}

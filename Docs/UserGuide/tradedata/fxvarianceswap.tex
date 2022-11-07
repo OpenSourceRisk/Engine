@@ -1,0 +1,54 @@
+\subsubsection{FX Variance and Volatility Swap}
+\label{SubSectionFxVarianceSwap}
+
+The \lstinline!FxVarianceSwapData! node is the trade data container for the \emph{FxVarianceSwap} trade type. Only vanilla variance swaps are supported by this trade type - exotic variance swaps are supported by ScriptedTrade\ifdefined\OrePlusDoc. \else, see  \ref{SubSectionExoticVarianceSwap}. \fi
+The structure of an example \lstinline!VarianceSwapData! node for an FX variance swap is shown in Listing \ref{lst:fxvarswap_data}.
+
+\begin{listing}[H]
+	%\hrule\medskip
+	\begin{minted}[fontsize=\footnotesize]{xml}
+<FxVarianceSwapData>
+        <StartDate>2018-05-10</StartDate>
+        <EndDate>2018-11-12</EndDate>
+        <Currency>EUR</Currency>
+        <Underlying>
+          <Type>FX</Type>
+          <Name>ECB-EUR-JPY</Name>
+        </Underlying>
+        <LongShort>Long</LongShort>
+        <Strike>0.05</Strike>
+        <Notional>200000</Notional>
+        <Calendar>EUR</Calendar>
+        <MomentType>Variance</MomentType>
+</FxVarianceSwapData>
+	\end{minted}
+	\caption{Variance Swap data}
+	\label{lst:fxvarswap_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!FxVarianceSwapData! node below.
+
+\begin{itemize}
+	\item StartDate: The variance swap start date. \\
+	Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+	\item EndDate: The variance swap end date. \\
+	Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+	\item Currency: The bought currency of the variance swap. \\
+	Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.		
+	\item Name: The identifier of the underlying currency pair.  \\
+	Allowable values:  A string of the form SOURCE-CCY1-CCY2, where SOURCE is the fixing source and the fixing is expressed as amount in CCY2 per one unit of CCY1. \\ See Table \ref{tab:fxindex_data}. Note that FxVarianceSwap is an exception in that the ordering of CCY1 and CCY2 must be set up as for {\tt FxIndex}.
+	\item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying FX.  The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
+	\item LongShort: Defines whether the trade is long in the FX variance. For the avoidance of doubt, a long FX swap has positive value if the realised variance exceeds the variance strike. \\
+	Allowable values: \emph{Long, Short}	
+	\item Strike: The volatility strike $K_{vol}$ of the variance swap quoted absolutely (i.e. not as a percent). If the swap was struck in terms of variance, the square root of that variance should be used here.\\
+	Allowable values: Any positive real number.	
+	\item Notional: The vega notional of the variance swap. This is the notional in terms of volatility units (like the strike). If the swap was struck in terms of a variance notional $N_{var}$, the corresponding vega notional is given by $N_{vol} = N_{var} * 2 * 100 * K_{vol}$ (where $K_{vol}$ is in absolute terms).\\
+	Allowable values: Any non-negative real number.
+	\item Calendar: The calendar determining the observation/fixing dates according to which variance is accrued is the combination of the calendar(s) given here plus the combined calendars of the two involved currencies. \\
+	Allowable values: See Table \ref{tab:calendar}.	
+	\item MomentType[Optional]: A flag to distinguish if the swap is struck in terms of volatility or variance. The MomentType should be set to \emph{Volatility} or \emph{Variance} depending on the payoff.  Note that MomentType does not necessarily need to be equivalent to the way the Strike is quoted which is always as a Volatility.\\
+	Allowable values: \emph{Volatility} or \emph{Variance}. Defaults to \emph{Variance} if left blank or omitted.
+\end{itemize}
+
+Note that FX Variance and Volatility Swaps also cover Precious Metals, i.e. with
+currencies XAU, XAG, XPT, XPD, and Cryptocurrencies,  see supported Cryptocurrencies in Table \ref{tab:currency}.

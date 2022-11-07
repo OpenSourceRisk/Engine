@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file models/localvolmodelbuilder.hpp
+/*! \file ored/model/localvolmodelbuilder.hpp
     \brief builder for an array of local vol processes
     \ingroup utilities
 */

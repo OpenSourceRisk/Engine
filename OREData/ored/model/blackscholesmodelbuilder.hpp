@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file models/blackscholesmodelbuilder.hpp
+/*! \file ored/model/blackscholesmodelbuilder.hpp
     \brief builder for an array of black scholes processes
     \ingroup utilities
 */
