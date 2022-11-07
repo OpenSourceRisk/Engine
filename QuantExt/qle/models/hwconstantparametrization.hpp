@@ -19,30 +19,29 @@ namespace QuantExt {
  */
 template <class TS> class HwConstantParametrization : public HwParametrization<TS> {
 public:
-    HwConstantParametrization(QuantLib::Array kappa, QuantLib::Matrix sigma, const QuantLib::Currency& currency,
-                              const QuantLib::Handle<TS>& termStructure,
-                              const std::string& name = std::string());
+    HwConstantParametrization(const QuantLib::Currency& currency, const QuantLib::Handle<TS>& termStructure,
+                              QuantLib::Matrix sigma, QuantLib::Array kappa, const std::string& name = std::string());
 
-    QuantLib::Array kappa(const QuantLib::Time t) const override { return kappa_; };
     QuantLib::Matrix sigma_x(const QuantLib::Time t) const override { return sigma_; }
+    QuantLib::Array kappa(const QuantLib::Time t) const override { return kappa_; };
     QuantLib::Matrix y(const QuantLib::Time t) const override;
     QuantLib::Array g(const QuantLib::Time t, const QuantLib::Time T) const override;
 
 private:
     static constexpr QuantLib::Real zeroKappaCutoff_ = 1.0E-6;
-    QuantLib::Array kappa_;
     QuantLib::Matrix sigma_;
+    QuantLib::Array kappa_;
 };
 
 // implementation
 
 template <class TS>
-HwConstantParametrization<TS>::HwConstantParametrization(QuantLib::Array kappa, QuantLib::Matrix sigma,
-                                                         const QuantLib::Currency& currency,
+HwConstantParametrization<TS>::HwConstantParametrization(const QuantLib::Currency& currency,
                                                          const QuantLib::Handle<TS>& termStructure,
+                                                         QuantLib::Matrix sigma, QuantLib::Array kappa,
                                                          const std::string& name)
     : HwParametrization<TS>(kappa.size(), sigma.rows(), currency, termStructure, name.empty() ? currency.code() : name),
-      kappa_(std::move(kappa)), sigma_(std::move(sigma)) {
+      sigma_(std::move(sigma)), kappa_(std::move(kappa)) {
     QL_REQUIRE(sigma.columns() == kappa.size(), "HwConstantParametrization: sigma ("
                                                     << sigma.rows() << "x" << sigma.columns()
                                                     << ") not consistent with kappa (" << kappa.size() << ")");
