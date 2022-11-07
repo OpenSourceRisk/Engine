@@ -31,20 +31,10 @@
 namespace ore {
 namespace data {
 
-bool HwModelData::operator==(const HwModelData& rhs) {
-
-    if (qualifier_ != rhs.qualifier_ || calibrationType_ != rhs.calibrationType_ || 
-        calibrateKappa_ != rhs.calibrateKappa_ || kappaType_ != rhs.kappaType_ || kappaTimes_ != rhs.kappaTimes_ ||
-        kappaValues_ != rhs.kappaValues_ || calibrateSigma_ != rhs.calibrateSigma_ || sigmaType_ != rhs.sigmaType_ ||
-        sigmaTimes_ != rhs.sigmaTimes_ || sigmaValues_ != rhs.sigmaValues_ ) {
-        return false;
-    }
-    return true;
-}
-
-bool HwModelData::operator!=(const HwModelData& rhs) { return !(*this == rhs); }
-
 void HwModelData::clear() {
+    optionExpiries_.clear();
+    optionTerms_.clear();
+    optionStrikes_.clear();
 }
 
 void HwModelData::reset() {
@@ -133,8 +123,8 @@ void HwModelData::fromXML(XMLNode* node) {
         QL_REQUIRE(!matrix.empty(), "Sigma not provided");
         QL_REQUIRE(!matrix.front().empty(), "Sigma not provided");
         Matrix sigma(matrix.size(), matrix.front().size(), 0.0);
-        for (int i = 0; i < matrix.size(); ++i) {
-            for (int j = 0; j < nFactors; ++j)
+        for (size_t i = 0; i < matrix.size(); ++i) {
+            for (size_t j = 0; j < nFactors; ++j)
                 sigma[i][j] = matrix[i][j];
         }
         sigmaValues_.push_back(sigma);

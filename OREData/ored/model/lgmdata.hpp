@@ -69,9 +69,9 @@ public:
 
     //! Default constructor
     LgmData()
-        : IrModelData("LGM"), revType_(ReversionType::Hagan), volType_(VolatilityType::Hagan),
-          calibrateH_(false), hType_(ParamType::Constant), calibrateA_(false), aType_(ParamType::Constant),
-          shiftHorizon_(0.0), scaling_(1.0) {}
+        : IrModelData("LGM", "", CalibrationType::None), revType_(ReversionType::Hagan),
+          volType_(VolatilityType::Hagan), calibrateH_(false), hType_(ParamType::Constant), calibrateA_(false),
+          aType_(ParamType::Constant), shiftHorizon_(0.0), scaling_(1.0) {}
 
     //! Detailed constructor
     LgmData(std::string qualifier, CalibrationType calibrationType, ReversionType revType, VolatilityType volType,
@@ -86,10 +86,10 @@ public:
           optionExpiries_(optionExpiries), optionTerms_(optionTerms), optionStrikes_(optionStrikes) {}
 
     //! Clear list of calibration instruments
-    virtual void clear();
+    void clear() override;
 
     //! Reset member variables to defaults
-    virtual void reset();
+    void reset() override;
 
     //! \name Serialisation
     //@{
@@ -124,11 +124,7 @@ public:
     bool operator!=(const LgmData& rhs);
     //@}
 
-protected:
-    std::string qualifier_;
-
 private:
-    CalibrationType calibrationType_;
     ReversionType revType_;
     VolatilityType volType_;
     bool calibrateH_;

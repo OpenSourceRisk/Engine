@@ -49,27 +49,26 @@ class HwModelData : public IrModelData {
 public:
     //! Default constructor
     HwModelData()
-        : IrModelData("HwModel"), calibrationType_(CalibrationType::None), calibrateKappa_(false), kappaType_(ParamType::Constant),
+        : IrModelData("HwModel", "", CalibrationType::None), calibrateKappa_(false), kappaType_(ParamType::Constant),
           calibrateSigma_(false), sigmaType_(ParamType::Constant) {}
 
     //! Detailed constructor
     HwModelData(std::string qualifier, CalibrationType calibrationType, bool calibrateKappa, ParamType kappaType,
                 std::vector<Time> kappaTimes, std::vector<QuantLib::Array> kappaValues, bool calibrateSigma,
-                ParamType sigmaType, std::vector<Time> sigmaTimes,
-                std::vector<QuantLib::Matrix> sigmaValues,std::vector<std::string> optionExpiries = std::vector<std::string>(),
-            std::vector<std::string> optionTerms = std::vector<std::string>(),
-            std::vector<std::string> optionStrikes = std::vector<std::string>())
-        : IrModelData("HwModel", qualifier, calibrationType), 
-          calibrateKappa_(calibrateKappa),
-          kappaType_(kappaType), kappaTimes_(kappaTimes), kappaValues_(kappaValues), calibrateSigma_(calibrateSigma), sigmaType_(sigmaType_),
+                ParamType sigmaType, std::vector<Time> sigmaTimes, std::vector<QuantLib::Matrix> sigmaValues,
+                std::vector<std::string> optionExpiries = std::vector<std::string>(),
+                std::vector<std::string> optionTerms = std::vector<std::string>(),
+                std::vector<std::string> optionStrikes = std::vector<std::string>())
+        : IrModelData("HwModel", qualifier, calibrationType), calibrateKappa_(calibrateKappa), kappaType_(kappaType),
+          kappaTimes_(kappaTimes), kappaValues_(kappaValues), calibrateSigma_(calibrateSigma), sigmaType_(sigmaType),
           sigmaTimes_(sigmaTimes), sigmaValues_(sigmaValues), optionExpiries_(optionExpiries),
           optionTerms_(optionTerms), optionStrikes_(optionStrikes) {}
 
     //! Clear list of calibration instruments
-    virtual void clear();
+    void clear() override;
 
     //! Reset member variables to defaults
-    virtual void reset();
+    void reset() override;
 
     //! \name Serialisation
     //@{
@@ -94,17 +93,7 @@ public:
     std::vector<std::string>& optionStrikes() { return optionStrikes_; }
     //@}
 
-    //! \name Operators
-    //@{
-    bool operator==(const HwModelData& rhs);
-    bool operator!=(const HwModelData& rhs);
-    //@}
-
-protected:
-    std::string qualifier_;
-
 private:
-    CalibrationType calibrationType_;
     bool calibrateKappa_;
     ParamType kappaType_;
     std::vector<Time> kappaTimes_;

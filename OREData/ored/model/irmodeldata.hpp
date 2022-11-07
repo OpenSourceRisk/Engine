@@ -92,7 +92,7 @@ public:
 
     //! Detailed constructor
     IrModelData(const std::string& name,const std::string& qualifier, CalibrationType calibrationType)
-        : name_(name_), qualifier_(qualifier), calibrationType_(calibrationType) {}
+        : name_(name), qualifier_(qualifier), calibrationType_(calibrationType) {}
 
     //! Clear list of calibration instruments
     virtual void clear();
