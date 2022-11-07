@@ -44,7 +44,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
     // TODO, curve tenors might be overwritten by dates in simMarketConfig_, here we just take the tenors
 
-    DayCounter dc = model_->irlgm1f(0)->termStructure()->dayCounter();
+    DayCounter dc = model_->irModel(0)->termStructure()->dayCounter();
     n_ccy_ = model_->components(CrossAssetModel::AssetType::IR);
     n_eq_ = model_->components(CrossAssetModel::AssetType::EQ);
     n_inf_ = model_->components(CrossAssetModel::AssetType::INF);
@@ -55,7 +55,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     // Cache yield curve keys
     discountCurveKeys_.reserve(n_ccy_ * simMarketConfig_->yieldCurveTenors("").size());
     for (Size j = 0; j < model_->components(CrossAssetModel::AssetType::IR); j++) {
-        std::string ccy = model_->irlgm1f(j)->currency().code();
+        std::string ccy = model_->parametrizations()[j]->currency().code();
         ten_dsc_.push_back(simMarketConfig_->yieldCurveTenors(ccy));
         Size n_ten = ten_dsc_.back().size();
         for (Size k = 0; k < n_ten; k++)
@@ -86,14 +86,16 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     // Cache FX rate keys
     fxKeys_.reserve(n_ccy_ - 1);
     for (Size k = 0; k < n_ccy_ - 1; k++) {
-        const string& foreign = model_->irlgm1f(k + 1)->currency().code(); // Is this safe?
-        const string& domestic = model_->irlgm1f(0)->currency().code();
+        const string& foreign = model_->parametrizations()[k + 1]->currency().code();
+        const string& domestic = model_->parametrizations()[0]->currency().code();
         fxKeys_.emplace_back(RiskFactorKey::KeyType::FXSpot, foreign + domestic); // k
     }
 
     // set up CrossAssetModelImpliedFxVolTermStructures
     if (simMarketConfig_->simulateFXVols()) {
         LOG("CrossAssetModel is simulating FX vols");
+        QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
+                   "Simulation of FX vols is only supported for LGM1F ir model type.");
         for (Size k = 0; k < simMarketConfig_->fxVolCcyPairs().size(); k++) {
             // Calculating the index is messy
             const string pair = simMarketConfig_->fxVolCcyPairs()[k];
@@ -101,7 +103,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             QL_REQUIRE(pair.size() == 6, "Invalid ccypair " << pair);
             const string& domestic = pair.substr(0, 3);
             const string& foreign = pair.substr(3);
-            QL_REQUIRE(domestic == model_->irlgm1f(0)->currency().code(), "Only DOM-FOR fx vols supported");
+            QL_REQUIRE(domestic == model_->parametrizations()[0]->currency().code(), "Only DOM-FOR fx vols supported");
             Size index = model->ccyIndex(parseCurrency(foreign)); // will throw if foreign not there
             QL_REQUIRE(index > 0, "Invalid index for ccy " << foreign << " should be > 0");
             // fxVols_ are indexed by ccyPairs
@@ -123,6 +125,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     // equity vols
     if (simMarketConfig_->equityVolNames().size() > 0 && simMarketConfig_->simulateEquityVols()) {
         LOG("CrossAssetModel is simulating EQ vols");
+        QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
+                   "Simulation of EQ vols is only supported for LGM1F ir model type.");
         for (Size k = 0; k < simMarketConfig_->equityVolNames().size(); k++) {
             // Calculating the index is messy
             const string equityName = simMarketConfig_->equityVolNames()[k];
@@ -186,15 +190,15 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     // cache curves
 
     for (Size j = 0; j < n_ccy_; ++j) {
-        curves_.push_back(boost::make_shared<QuantExt::LgmImpliedYieldTermStructure>(model_->lgm(j), dc, true));
+        curves_.push_back(boost::make_shared<QuantExt::ModelImpliedYieldTermStructure>(model_->irModel(j), dc, true));
     }
 
     for (Size j = 0; j < n_indices_; ++j) {
         std::string indexName = simMarketConfig_->indices()[j];
         boost::shared_ptr<IborIndex> index = *initMarket_->iborIndex(indexName, configuration_);
         Handle<YieldTermStructure> fts = index->forwardingTermStructure();
-        auto impliedFwdCurve = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
-            model_->lgm(model_->ccyIndex(index->currency())), fts, dc, false);
+        auto impliedFwdCurve = boost::make_shared<ModelImpliedYtsFwdFwdCorrected>(
+            model_->irModel(model_->ccyIndex(index->currency())), fts, dc, false);
         fwdCurves_.push_back(impliedFwdCurve);
         indices_.push_back(index->clone(Handle<YieldTermStructure>(impliedFwdCurve)));
     }
@@ -204,7 +208,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         Currency ccy = ore::data::parseCurrency(simMarketConfig_->yieldCurveCurrencies().at(curveName));
         Handle<YieldTermStructure> yts = initMarket_->yieldCurve(curveName, configuration_);
         auto impliedYieldCurve =
-            boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model_->lgm(model_->ccyIndex(ccy)), yts, dc, false);
+            boost::make_shared<ModelImpliedYtsFwdFwdCorrected>(model_->irModel(model_->ccyIndex(ccy)), yts, dc, false);
         yieldCurves_.push_back(impliedYieldCurve);
         yieldCurveCurrency_.push_back(ccy);
     }
@@ -223,9 +227,13 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
                    "CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
         boost::shared_ptr<ZeroInflationModelTermStructure> ts;
         if (mt == CrossAssetModel::ModelType::DK) {
-            ts = boost::make_shared<DkImpliedZeroInflationTermStructure>(model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
+            ts = boost::make_shared<DkImpliedZeroInflationTermStructure>(
+                model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
         } else {
-            ts = boost::make_shared<JyImpliedZeroInflationTermStructure>(model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
+            ts = boost::make_shared<JyImpliedZeroInflationTermStructure>(
+                model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
+            QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
+                       "Simulation of INF JY model is only supported for LGM1F ir model type.");
         }
         zeroInfCurves_.emplace_back(idx, ccyIdx, mt, ts);
     }
@@ -239,10 +247,14 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
                    "CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
         boost::shared_ptr<YoYInflationModelTermStructure> ts;
         if (mt == CrossAssetModel::ModelType::DK) {
-            ts = boost::make_shared<DkImpliedYoYInflationTermStructure>(model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
+            ts = boost::make_shared<DkImpliedYoYInflationTermStructure>(
+                model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
         } else {
-            ts = boost::make_shared<JyImpliedYoYInflationTermStructure>(model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
+            ts = boost::make_shared<JyImpliedYoYInflationTermStructure>(
+                model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
         }
+        QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
+                   "Simulation of INF DK or JY model for YoY curves is only supported for LGM1F ir model type.");
         yoyInfCurves_.emplace_back(idx, ccyIdx, mt, ts);
     }
 
@@ -258,12 +270,14 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         }
     }
 
-    for (Size j = 0; j < n_eq; ++j) {
-        std::string curveName = simMarketConfig_->equityNames()[j];
-        Currency ccy = model_->eqbs(j)->currency();
-        equityForecastCurrency_.push_back(ccy);
-    }
 }
+
+namespace {
+void copyPathToArray(const MultiPath& p, Size t, Size a, Array& target) {
+    for (Size k = 0; k < target.size(); ++k)
+        target[k] = p[a + k][t];
+}
+} // namespace
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
     std::vector<boost::shared_ptr<Scenario>> scenarios(dates_.size());
@@ -271,29 +285,38 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     Sample<MultiPath> sample = pathGenerator_->next();
     DayCounter dc = model_->irModel(0)->termStructure()->dayCounter();
 
+    std::vector<Array> ir_state(n_ccy_);
+    for (Size j = 0; j < n_ccy_; ++j)
+        ir_state[j] = Array(model_->irModel(j)->n());
+
+    Array ir_state_aux(model_->irModel(0)->n_aux());
+
+    std::vector<Size> indexCcyIdx(n_indices_);
+    for (Size j = 0; j < n_indices_; ++j)
+        indexCcyIdx[j] = model_->ccyIndex(indices_[j]->currency());
+
+    std::vector<Size> yieldCurveCcyIdx(n_curves_);
+    for (Size j = 0; j < n_curves_; ++j)
+        yieldCurveCcyIdx[j] = model_->ccyIndex(yieldCurveCurrency_[j]);
+
     for (Size i = 0; i < dates_.size(); i++) {
         Real t = timeGrid_[i + 1]; // recall: time grid has inserted t=0
 
         scenarios[i] = scenarioFactory_->buildScenario(dates_[i]);
 
-        // Set numeraire, numeraire currency and the (deterministic) domestic discount
-        // Asset index 0 in sample.value[0][i+1] refers to the domestic currency process.
-        Real z0 = sample.value[0][i + 1]; // domestic LGM factor, second index = 0 holds initial values
-        if (model_->measure() == IrModel::Measure::LGM) {
-            scenarios[i]->setNumeraire(model_->numeraire(0, t, z0));
-        } else if (model_->measure() == IrModel::Measure::BA) {
-            // last state variable is the auxiliary state variable for the bank account measure dynamics
-            Real y0 = sample.value[model_->pIdx(CrossAssetModel::AssetType::IR, 0, 1)][i + 1];
-            scenarios[i]->setNumeraire(model_->bankAccountNumeraire(0, t, z0, y0));
-        } else {
-            QL_FAIL("Measure not covered");
-        }
+        // populate IR states
+        copyPathToArray(sample.value, i + 1, model_->pIdx(CrossAssetModel::AssetType::IR, 0), ir_state[0]);
+        copyPathToArray(sample.value, i + 1, model_->pIdx(CrossAssetModel::AssetType::IR, 0) + ir_state[0].size(),
+                        ir_state_aux);
+        for (Size j = 1; j < n_ccy_; ++j)
+            copyPathToArray(sample.value, i + 1, model_->pIdx(CrossAssetModel::AssetType::IR, j), ir_state[j]);
+
+        // Set numeraire from domestic ir process
+        scenarios[i]->setNumeraire(model_->numeraire(0, t, ir_state[0], Handle<YieldTermStructure>(), ir_state_aux));
 
         // Discount curves
         for (Size j = 0; j < n_ccy_; j++) {
-            // LGM factor value, second index = 0 holds initial values
-            Real z = sample.value[model_->pIdx(CrossAssetModel::AssetType::IR, j)][i + 1];
-            curves_[j]->move(t, z);
+            curves_[j]->move(t, ir_state[j]);
             for (Size k = 0; k < ten_dsc_[j].size(); k++) {
                 Date d = dates_[i] + ten_dsc_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
@@ -304,9 +327,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
         // Index curves and Index fixings
         for (Size j = 0; j < n_indices_; ++j) {
-            Real z = sample.value[model_->pIdx(CrossAssetModel::AssetType::IR,
-                                               model_->ccyIndex(indices_[j]->currency()))][i + 1];
-            fwdCurves_[j]->move(dates_[i], z);
+            fwdCurves_[j]->move(dates_[i], ir_state[indexCcyIdx[j]]);
             for (Size k = 0; k < ten_idx_[j].size(); ++k) {
                 Date d = dates_[i] + ten_idx_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
@@ -317,9 +338,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
         // Yield curves
         for (Size j = 0; j < n_curves_; ++j) {
-            Real z = sample.value[model_->pIdx(CrossAssetModel::AssetType::IR,
-                                               model_->ccyIndex(yieldCurveCurrency_[j]))][i + 1];
-            yieldCurves_[j]->move(dates_[i], z);
+            yieldCurves_[j]->move(dates_[i], ir_state[yieldCurveCcyIdx[j]]);
             for (Size k = 0; k < ten_yc_[j].size(); ++k) {
                 Date d = dates_[i] + ten_yc_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
@@ -343,7 +362,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                 Size fxIndex = fxVols_[k]->fxIndex();
                 Real zFor = sample.value[fxIndex + 1][i + 1];
                 Real logFx = sample.value[n_ccy_ + fxIndex][i + 1]; // multiplies USD amount to get EUR
-                fxVols_[k]->move(dates_[i], z0, zFor, logFx);
+                fxVols_[k]->move(dates_[i], ir_state[0][0], zFor, logFx);
 
                 for (Size j = 0; j < expires.size(); j++) {
                     Real vol = fxVols_[k]->blackVol(dates_[i] + expires[j], Null<Real>(), true);
@@ -417,7 +436,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             if (std::get<2>(tup) == CrossAssetModel::ModelType::DK) {
                 state.resize(2);
             } else {
-                state[2] = sample.value[model_->pIdx(CrossAssetModel::AssetType::IR, std::get<1>(tup))][i + 1];
+                state[2] = ir_state[std::get<1>(tup)][0];
             }
 
             // Update the term structure's date and state.
@@ -441,7 +460,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             Array state(3);
             state[0] = sample.value[model_->pIdx(CrossAssetModel::AssetType::INF, idx, 0)][i + 1];
             state[1] = sample.value[model_->pIdx(CrossAssetModel::AssetType::INF, idx, 1)][i + 1];
-            state[2] = sample.value[model_->pIdx(CrossAssetModel::AssetType::IR, std::get<1>(tup))][i + 1];
+            state[2] = ir_state[std::get<1>(tup)][0];
 
             // Update the term structure's date and state.
             auto ts = std::get<3>(tup);

@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file hwmodel.hpp
-    \brief hull white n Factor model class
+/*! \file irmodel.hpp
+    \brief ir model base class
     \ingroup models
 */
 
