@@ -68,7 +68,7 @@ public:
         const std::vector<QuantLib::Period>& cfMaturities, const QuantLib::Matrix& cPrice,
         const QuantLib::Matrix& fPrice,
         const boost::shared_ptr<QuantExt::CPICapFloorEngine>& engine,
-        const QuantLib::Date& capFloorStartDate = Date(),
+        const QuantLib::Date& capFloorStartDate = QuantLib::Date(),
         bool ignoreMissingPrices = false, // if true, it allows prices to be Null and work as long there is one
         bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
         const QuantLib::VolatilityType& volType = QuantLib::ShiftedLognormal, const double displacement = 0.0,
@@ -78,7 +78,7 @@ public:
 
     //! \name LazyObject interface
     //@{
-    void performCalculations() const;
+    void performCalculations() const override;
     //@}
 
     void update() override {
@@ -221,10 +221,10 @@ void CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::performCal
             double strike = strikes_[strikeIdx];
             double strikeGrowth = std::pow(1.0 + strike, ttm);
             bool useFloor = chooseFloor(strike, atmAvgRate);
-            double vol = Null<Real>();
+            double vol = QuantLib::Null<QuantLib::Real>();
             QuantLib::Real priceToMatch = useFloor ? floorPrice(strike, tenorIdx, atm, strikeGrowth, df)
                                                    : capPrice(strike, tenorIdx, atm, strikeGrowth, df);
-            if (priceToMatch != Null<Real>()) {
+            if (priceToMatch != QuantLib::Null<QuantLib::Real>()) {
                 try {
                     vol = implyVol(strike, maturityDate, priceToMatch, useFloor);
                 } catch (const std::exception& e) {
@@ -236,7 +236,7 @@ void CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::performCal
                 QL_REQUIRE(ignoreMissingPrices_, "Missing price for cpi capfloor vol for tenor "
                                                      << expiries_[tenorIdx] << " and strike " << strike);
             }
-            if (vol != Null<Real>()) {
+            if (vol != QuantLib::Null<QuantLib::Real>()) {
                 dates.push_back(fixingDate);
                 strikes.push_back(strike);
                 vols.push_back(vol);
@@ -425,7 +425,7 @@ double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::floorPri
         double capPrice = capPrices_[capPriceIdx][tenorIdx];
         return priceFromPutCallParity(capPrice, true, atm, strikeGrowth, df);
     } else {
-        return Null<double>();
+        return QuantLib::Null<double>();
     }
 }
 
@@ -445,7 +445,7 @@ double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::capPrice
         double floorPrice = floorPrices_[floorPriceIdx][tenorIdx];
         return priceFromPutCallParity(floorPrice, false, atm, strikeGrowth, df);
     } else {
-        return Null<double>();
+        return QuantLib::Null<double>();
     }
 }
 
@@ -454,7 +454,7 @@ double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::implyVol
                                                                                  const QuantLib::Date& maturity,
                                                                                  double price, bool isFloor) const {
     QuantLib::Date startDate = capFloorStartDate();
-    Calendar cal = calendar();
+    QuantLib::Calendar cal = calendar();
     auto bdc = businessDayConvention();
     auto dc = dayCounter();
     auto index = index_;
@@ -466,7 +466,7 @@ double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::implyVol
                                    capFloorStartDate(), baseCPI(), maturity, calendar(), businessDayConvention(),
                                    calendar(), businessDayConvention(), strike,
                                    QuantLib::Handle<QuantLib::ZeroInflationIndex>(index_), observationLag(),
-                                   indexIsInterpolated() ? CPI::Linear : CPI::Flat);
+                                   indexIsInterpolated() ? QuantLib::CPI::Linear : QuantLib::CPI::Flat);
 
     boost::shared_ptr<QuantExt::CPICapFloorEngine> engine = engine_;
 
