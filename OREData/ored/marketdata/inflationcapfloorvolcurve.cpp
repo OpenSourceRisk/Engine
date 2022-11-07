@@ -419,13 +419,13 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         surface_ = boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>>(
             new InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>(
                 1.0, startRate, config->observationLag(), config->calendar(), config->businessDayConvention(),
-                config->dayCounter(), Handle<ZeroInflationIndex>(index), discountCurve_, capStrikes, floorStrikes,
+                config->dayCounter(), index, CPI::AsIndex, discountCurve_, capStrikes, floorStrikes,
                 terms, cPrice, fPrice));
 
         boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>> cpiPriceSurfacePtr =
             boost::make_shared<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>>(
                 1.0, startRate, config->observationLag(), config->calendar(), config->businessDayConvention(),
-                config->dayCounter(), Handle<ZeroInflationIndex>(index), discountCurve_, capStrikes, floorStrikes,
+                config->dayCounter(), index, CPI::AsIndex, discountCurve_, capStrikes, floorStrikes,
                 terms, cPrice, fPrice);
 
         // cast

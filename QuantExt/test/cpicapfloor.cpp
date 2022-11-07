@@ -293,7 +293,7 @@ struct CommonVars {
         Real nominal = 1.0;
         boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<Bilinear> > intplCpiCFsurfUK(
             new InterpolatedCPICapFloorTermPriceSurface<Bilinear>(
-                nominal, baseZeroRate, observationLag, calendar, convention, dcZCIIS, hii, nominalUK, cStrikesUK,
+                nominal, baseZeroRate, observationLag, calendar, convention, dcZCIIS, ii, CPI::AsIndex, nominalUK, cStrikesUK,
                 fStrikesUK, cfMaturitiesUK, *(cPriceUK), *(fPriceUK)));
 
         cpiCFsurfUK = intplCpiCFsurfUK;
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
             Date maturityDate = startDate + maturity;
 
             CPICapFloor aCap(Option::Call, nominal, startDate, baseCPI, maturityDate, fixCalendar, fixConvention,
-                             payCalendar, payConvention, strike, common.hii, common.observationLag,
+                             payCalendar, payConvention, strike, common.hii.currentLink(), common.observationLag,
                              observationInterpolation);
 
             aCap.setPricingEngine(engine);
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
             Date maturityDate = startDate + maturity;
 
             CPICapFloor aFloor(Option::Put, nominal, startDate, baseCPI, maturityDate, fixCalendar, fixConvention,
-                               payCalendar, payConvention, strike, common.hii, common.observationLag,
+                               payCalendar, payConvention, strike, common.hii.currentLink(), common.observationLag,
                                observationInterpolation);
 
             aFloor.setPricingEngine(engine);
@@ -478,12 +478,12 @@ BOOST_AUTO_TEST_CASE(testPutCallParity) {
             Date maturityDate = startDate + mat[j];
 
             CPICapFloor aCap(Option::Call, nominal, startDate, baseCPI, maturityDate, fixCalendar, fixConvention,
-                             payCalendar, payConvention, strike[i], common.hii, common.observationLag,
+                             payCalendar, payConvention, strike[i], common.hii.currentLink(), common.observationLag,
                              observationInterpolation);
             aCap.setPricingEngine(blackEngine);
 
             CPICapFloor aFloor(Option::Put, nominal, startDate, baseCPI, maturityDate, fixCalendar, fixConvention,
-                               payCalendar, payConvention, strike[i], common.hii, common.observationLag,
+                               payCalendar, payConvention, strike[i], common.hii.currentLink(), common.observationLag,
                                observationInterpolation);
             aFloor.setPricingEngine(blackEngine);
 
@@ -600,18 +600,18 @@ BOOST_AUTO_TEST_CASE(testSimpleCapFloor) {
 
     Rate capStrike = 0.03;
     CPICapFloor atmCap(Option::Call, nominal, start, baseCPI, end, fixCalendar, bdc, payCalendar, bdc, inflationRate,
-                       index, observationLag);
+                       index.currentLink(), observationLag);
     atmCap.setPricingEngine(engine);
-    CPICapFloor cap(Option::Call, nominal, start, baseCPI, end, fixCalendar, bdc, payCalendar, bdc, capStrike, index,
-                    observationLag);
+    CPICapFloor cap(Option::Call, nominal, start, baseCPI, end, fixCalendar, bdc, payCalendar, bdc, capStrike,
+                    index.currentLink(), observationLag);
     cap.setPricingEngine(engine);
 
     Rate floorStrike = 0.01;
     CPICapFloor atmFloor(Option::Put, nominal, start, baseCPI, end, fixCalendar, bdc, fixCalendar, bdc, inflationRate,
-                         index, observationLag);
+                         index.currentLink(), observationLag);
     atmFloor.setPricingEngine(engine);
-    CPICapFloor floor(Option::Put, nominal, start, baseCPI, end, fixCalendar, bdc, fixCalendar, bdc, floorStrike, index,
-                      observationLag);
+    CPICapFloor floor(Option::Put, nominal, start, baseCPI, end, fixCalendar, bdc, fixCalendar, bdc, floorStrike,
+                      index.currentLink(), observationLag);
     floor.setPricingEngine(engine);
 
     DayCounter cpiDayCounter = QuantExt::YearCounter();

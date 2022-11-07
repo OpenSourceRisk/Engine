@@ -21,6 +21,7 @@ calendars/philippines.cpp
 calendars/russia.cpp
 calendars/spain.cpp
 calendars/switzerland.cpp
+calendars/unitedarabemirates.cpp
 calendars/wmr.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
@@ -300,6 +301,7 @@ calendars/philippines.hpp
 calendars/russia.hpp
 calendars/spain.hpp
 calendars/switzerland.hpp
+calendars/unitedarabemirates.hpp
 calendars/wmr.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
