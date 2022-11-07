@@ -58,48 +58,6 @@ bool LgmData::operator==(const LgmData& rhs) {
 
 bool LgmData::operator!=(const LgmData& rhs) { return !(*this == rhs); }
 
-std::ostream& operator<<(std::ostream& oss, const ParamType& type) {
-    if (type == ParamType::Constant)
-        oss << "CONSTANT";
-    else if (type == ParamType::Piecewise)
-        oss << "PIECEWISE";
-    else
-        QL_FAIL("Parameter type not covered by <<");
-    return oss;
-}
-
-ParamType parseParamType(const string& s) {
-    if (boost::algorithm::to_upper_copy(s) == "CONSTANT")
-        return ParamType::Constant;
-    else if (boost::algorithm::to_upper_copy(s) == "PIECEWISE")
-        return ParamType::Piecewise;
-    else
-        QL_FAIL("Parameter type " << s << " not recognized");
-}
-
-CalibrationType parseCalibrationType(const string& s) {
-    if (boost::algorithm::to_upper_copy(s) == "BOOTSTRAP")
-        return CalibrationType::Bootstrap;
-    else if (boost::algorithm::to_upper_copy(s) == "BESTFIT")
-        return CalibrationType::BestFit;
-    else if (boost::algorithm::to_upper_copy(s) == "NONE")
-        return CalibrationType::None;
-    else
-        QL_FAIL("Calibration type " << s << " not recognized");
-}
-
-std::ostream& operator<<(std::ostream& oss, const CalibrationType& type) {
-    if (type == CalibrationType::Bootstrap)
-        oss << "BOOTSTRAP";
-    else if (type == CalibrationType::BestFit)
-        oss << "BESTFIT";
-    else if (type == CalibrationType::None)
-        oss << "NONE";
-    else
-        QL_FAIL("Calibration type not covered");
-    return oss;
-}
-
 LgmData::ReversionType parseReversionType(const string& s) {
     if (boost::algorithm::to_upper_copy(s) == "HULLWHITE")
         return LgmData::ReversionType::HullWhite;
@@ -135,37 +93,6 @@ std::ostream& operator<<(std::ostream& oss, const LgmData::VolatilityType& type)
         oss << "HAGAN";
     else
         QL_FAIL("Volatility type not covered");
-    return oss;
-}
-
-CalibrationStrategy parseCalibrationStrategy(const string& s) {
-    if (boost::algorithm::to_upper_copy(s) == "COTERMINALATM")
-        return CalibrationStrategy::CoterminalATM;
-    else if (boost::algorithm::to_upper_copy(s) == "COTERMINALDEALSTRIKE")
-        return CalibrationStrategy::CoterminalDealStrike;
-    else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGATM")
-        return CalibrationStrategy::UnderlyingATM;
-    else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGDEALSTRIKE")
-        return CalibrationStrategy::UnderlyingDealStrike;
-    else if (boost::algorithm::to_upper_copy(s) == "NONE")
-        return CalibrationStrategy::None;
-    else
-        QL_FAIL("Calibration strategy " << s << " not recognized");
-}
-
-std::ostream& operator<<(std::ostream& oss, const CalibrationStrategy& type) {
-    if (type == CalibrationStrategy::CoterminalATM)
-        oss << "COTERMINALATM";
-    else if (type == CalibrationStrategy::CoterminalDealStrike)
-        oss << "COTERMINALDEALSTRIKE";
-    else if (type == CalibrationStrategy::UnderlyingATM)
-        oss << "UNDERLYINGATM";
-    else if (type == CalibrationStrategy::UnderlyingDealStrike)
-        oss << "UNDERLYINGDEALSTRIKE";
-    else if (type == CalibrationStrategy::None)
-        oss << "NONE";
-    else
-        QL_FAIL("Calibration strategy not covered");
     return oss;
 }
 
