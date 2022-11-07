@@ -20,8 +20,6 @@
 #include <qle/pricingengines/analyticdoublebarrierbinaryengine.hpp>
 #include <utility>
 
-using QuantLib::Real;
-
 namespace QuantExt {
 
 using namespace QuantLib;
@@ -37,7 +35,7 @@ void AnalyticDoubleBarrierBinaryEngine::calculate() const {
             it->second = 1. / boost::any_cast<Real>(it->second);
         it = results_.additionalResults.find("costOfCarry");
         if (it != results_.additionalResults.end())
-            it->second = -1.* boost::any_cast<Real>(it->second);
+            it->second = -1. * boost::any_cast<Real>(it->second);
 
         // Swap riskFreeRate and dividendYield
         auto rfDiscountIt = results_.additionalResults.find("riskFreeRate");
