@@ -78,7 +78,7 @@ void HwModelData::fromXML(XMLNode* node) {
 
     calibrateKappa_ = XMLUtils::getChildValueAsBool(reversionNode, "Calibrate", true);
     LOG("Hull White mean reversion calibrate = " << calibrateKappa_);
-    QL_REQUIRE(!calibrateKappa, "Calibration of kappa not supported yet");
+    QL_REQUIRE(!calibrateKappa_, "Calibration of kappa not supported yet");
 
     std::string kappaCalibrationString = XMLUtils::getChildValue(reversionNode, "ParamType", true);
     kappaType_ = parseParamType(kappaCalibrationString);
@@ -121,12 +121,13 @@ void HwModelData::fromXML(XMLNode* node) {
     sigmaTimes_ = XMLUtils::getChildrenValuesAsDoublesCompact(volatilityNode, "TimeGrid", true);
     LOG("Hull White volatility time grid size = " << sigmaTimes_.size());
 
-    XMLNode* initialValuesNode = XMLUtils::getChildNode(volatilityNode, "InitialValue");
-    for (XMLNode* child = XMLUtils::getChildNode(initialValuesNode, "Sigma"); child;
-         child = XMLUtils::getNextSibling(child, "Sigma")) {
+    XMLNode* initialSigmasNode = XMLUtils::getChildNode(volatilityNode, "InitialValue");
+    for (XMLNode* sigmaNode = XMLUtils::getChildNode(initialSigmasNode, "Sigma"); sigmaNode;
+         sigmaNode = XMLUtils::getNextSibling(sigmaNode, "Sigma")) {
         std::vector<std::vector<double>> matrix;
-        for (XMLNode* row = XMLUtils::getChildNode(child, "Row"); row; row = XMLUtils::getNextSibling(child, "Row")) {
-            matrix.push_back(XMLUtils::getNodeValueAsDoublesCompact(row));
+        for (XMLNode* rowNode = XMLUtils::getChildNode(sigmaNode, "Row"); rowNode;
+             rowNode = XMLUtils::getNextSibling(rowNode, "Row")) {
+            matrix.push_back(XMLUtils::getNodeValueAsDoublesCompact(rowNode));
             QL_REQUIRE(matrix.back().size() == nFactors, "Mismatch between kappa and sigma");
         }
         QL_REQUIRE(!matrix.empty(), "Sigma not provided");
