@@ -27,7 +27,6 @@
       <xs:element type="fxTouchOptionData" name="FxTouchOptionData"/>
       <xs:element type="fxTouchOptionData" name="FxDoubleTouchOptionData"/>
       <xs:element type="fxSwapData" name="FxSwapData"/>
-      <xs:element type="varianceSwapData" name="FxVarianceSwapData"/>
       <xs:element type="capFloorData" name="CapFloorData"/>
       <xs:element type="equityFutureOptionData" name="EquityFutureOptionData"/>
       <xs:element type="equityOptionData" name="EquityOptionData"/>
@@ -38,9 +37,7 @@
       <xs:element type="eqDigitalOptionData" name="EquityDigitalOptionData"/>
       <xs:element type="eqTouchOptionData" name="EquityDoubleTouchOptionData"/>
       <xs:element type="eqTouchOptionData" name="EquityTouchOptionData"/>
-      <xs:element type="varianceSwapData" name="EquityVarianceSwapData"/>
       <xs:element type="cliquetOptionData" name="EquityCliquetOptionData"/>
-      <xs:element type="commodityForwardData" name="CommodityForwardData"/>
       <xs:element type="bondData" name="BondData"/>
       <xs:element type="forwardBondData" name="ForwardBondData"/>
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
@@ -52,8 +49,6 @@
       <xs:element type="commoditySwaptionData" name="CommoditySwaptionData"/>
       <xs:element type="commodityAveragePriceOptionData" name="CommodityAveragePriceOptionData"/>
       <xs:element type="commodityOptionStripData" name="CommodityOptionStripData"/>
-      <xs:element type="varianceSwapData" name="VarianceSwapData"/>
-      <xs:element type="varianceSwapData" name="CommodityVarianceSwapData"/>
       <xs:element type="singleUnderlyingAsianOptionData" name="EquityAsianOptionData" />
       <xs:element type="singleUnderlyingAsianOptionData" name="FxAsianOptionData" />
       <xs:element type="singleUnderlyingAsianOptionData" name="CommodityAsianOptionData" />
