@@ -22,9 +22,6 @@
 #include <qle/pricingengines/analyticdigitalamericanengine.hpp>
 #include <utility>
 
-using QuantLib::Rate;
-using QuantLib::Real;
-using QuantLib::StrikedTypePayoff;
 using std::string;
 using std::vector;
 
@@ -52,4 +49,5 @@ void AnalyticDigitalAmericanEngine::calculate() const {
             std::swap(rfDiscountIt->second, divDiscountIt->second);
     }
 }
+
 } // namespace QuantExt

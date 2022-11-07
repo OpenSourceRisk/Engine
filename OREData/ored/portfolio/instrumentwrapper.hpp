@@ -132,8 +132,8 @@ protected:
 
     // all NPV calls to be logged in the timings should go through this method
     Real getTimedNPV(const boost::shared_ptr<QuantLib::Instrument>& instr) const {
-	if(instr == nullptr)
-	    return 0.0;
+        if (instr == nullptr)
+            return 0.0;
         if (instr->isCalculated() || instr->isExpired())
             return instr->NPV();
         boost::timer::cpu_timer timer_;
@@ -167,9 +167,9 @@ public:
 
     QuantLib::Real NPV() const override { return getTimedNPV(instrument_) * multiplier_ + additionalInstrumentsNPV(); }
     const std::map<std::string, boost::any>& additionalResults() const override {
-	static std::map<std::string, boost::any> empty;
-	if(instrument_ == nullptr)
-	    return empty;
+        static std::map<std::string, boost::any> empty;
+        if (instrument_ == nullptr)
+            return empty;
         getTimedNPV(instrument_);
         return instrument_->additionalResults();
     }
