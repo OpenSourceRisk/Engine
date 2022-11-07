@@ -47,10 +47,9 @@ QuantLib::Real HwModel::discountBond(const QuantLib::Time t, const QuantLib::Tim
 QuantLib::Real HwModel::numeraire(const QuantLib::Time t, const QuantLib::Array& x,
                                   const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                   const QuantLib::Array& aux) const {
-    QL_REQUIRE(measure_ == IrModel::BA, "HwModel::numeraire() supports BA measure only currently.");
-    return std::accumulate(aux.begin(), aux.end()) / discountCurve.empty()
-               ? parametrization_->termStructure()->discount(t)
-               : discountCurve->discount(t);
+    QL_REQUIRE(measure_ == IrModel::Measure::BA, "HwModel::numeraire() supports BA measure only currently.");
+    return std::accumulate(aux.begin(), aux.end(), 0.0) /
+           (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
 }
 
 void HwModel::update() {
