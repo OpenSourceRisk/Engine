@@ -106,7 +106,7 @@ protected:
                                          << " found, fall back to zero correlation");
     }
 
-    return boost::make_shared<QuantLib::QuantoEngine<VanillaOption, AnalyticEuropeanEngine>>(
+    return boost::make_shared<QuantLib::QuantoEngine<VanillaOption, QuantLib::AnalyticEuropeanEngine>>(
         gbsp, discountCurve, fxVolatility,
         Handle<Quote>(
             boost::make_shared<QuantExt::CorrelationValue>(corrCurve, corrCurve->timeFromReference(expiryDate))));

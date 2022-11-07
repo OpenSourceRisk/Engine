@@ -204,6 +204,10 @@ void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engi
     }
     boost::shared_ptr<Instrument> rebateInstrument = boost::make_shared<VanillaOption>(rebatePayoff, exercise);
 
+    // This is for when/if a PayoffCurrency is added to the instrument,
+    // which would require flipping the underlying currency pair
+    const bool flipResults = false;
+
     // set pricing engines
     boost::shared_ptr<EngineBuilder> builder;
 
@@ -224,10 +228,10 @@ void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engi
     boost::shared_ptr<FxDigitalOptionEngineBuilder> fxDigitalOptBuilder =
         boost::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
 
-    digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy));
+    digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
     vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, std::max({expiryDate, paymentDate})));
     vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, std::max({expiryDate, paymentDate})));
-    rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy));
+    rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
 
 
     boost::shared_ptr<CompositeInstrument> qlInstrument = boost::make_shared<CompositeInstrument>();
