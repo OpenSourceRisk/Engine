@@ -1306,6 +1306,9 @@
     <ClInclude Include="qle\pricingengines\analyticdoublebarrierbinaryengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticeuropeanengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -2244,6 +2247,9 @@
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticeuropeanengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
