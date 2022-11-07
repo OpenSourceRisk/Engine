@@ -32,7 +32,7 @@ namespace QuantExt {
    a state process component index of the small model to the corresponding index of the big model. */
 boost::shared_ptr<CrossAssetModel>
 getProjectedCrossAssetModel(const boost::shared_ptr<CrossAssetModel>& model,
-                            const std::vector<std::pair<CrossAssetModelTypes::AssetType, Size> >& selectedComponents,
+                            const std::vector<std::pair<CrossAssetModel::AssetType, Size>>& selectedComponents,
                             std::vector<Size>& projectedStateProcessIndices);
 
 /* Input is a "big" and a "small" (projected) model, where the small model's components are assumed to be a subset of
