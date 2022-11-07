@@ -354,9 +354,10 @@ template <class InterpolatorStrike, class InterpolatorTime>
 void CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::validateInputParameters() const {
     QL_REQUIRE(!expiries_.empty(), "Need at least one tenor");
     QL_REQUIRE(!floorStrikes_.empty() || !capStrikes_.empty(), "cap and floor strikes can not be both empty");
-    QL_REQUIRE(capPrices_.rows() == capStrikes_.size() && capPrices_.columns() == expiries_.size(),
+    QL_REQUIRE(capPrices_.rows() == capStrikes_.size() && capPrices_.columns() == (capStrikes_.empty() ? 0 : expiries_.size()),
                "mismatch between cap price matrix dimension and number of strikes and tenors");
-    QL_REQUIRE(floorPrices_.rows() == floorStrikes_.size() && floorPrices_.columns() == expiries_.size(),
+    QL_REQUIRE(floorPrices_.rows() == floorStrikes_.size() &&
+                   floorPrices_.columns() == (floorStrikes_.empty() ? 0 : expiries_.size()),
                "mismatch between cap price matrix dimension and number of strikes and tenors");
 
     // Some basic arbitrage checks
