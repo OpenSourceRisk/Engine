@@ -79,6 +79,7 @@ model/eqbsbuilder.cpp
 model/eqbsdata.cpp
 model/fxbsbuilder.cpp
 model/fxbsdata.cpp
+model/hwbuilder.cpp
 model/inflation/infdkbuilder.cpp
 model/inflation/infdkdata.cpp
 model/inflation/infjybuilder.cpp
@@ -287,6 +288,7 @@ model/eqbsbuilder.hpp
 model/eqbsdata.hpp
 model/fxbsbuilder.hpp
 model/fxbsdata.hpp
+model/hwbuilder.hpp
 model/inflation/infdkbuilder.hpp
 model/inflation/infdkdata.hpp
 model/inflation/infjybuilder.hpp
