@@ -97,7 +97,7 @@ private:
         boost::shared_ptr<CPICapFloorTermPriceSurface> ts(
             new InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>(
                 1.0, 0.0, infIndex->availabilityLag(), infIndex->zeroInflationTermStructure()->calendar(), Following,
-                ActualActual(ActualActual::ISDA), infIndex, discountCurve(infIndex->currency().code()), cStrikes, fStrikes, cfMaturities,
+                ActualActual(ActualActual::ISDA), infIndex.currentLink(), CPI::AsIndex, discountCurve(infIndex->currency().code()), cStrikes, fStrikes, cfMaturities,
                 cPrice, fPrice));
         return Handle<CPICapFloorTermPriceSurface>(ts);
     }

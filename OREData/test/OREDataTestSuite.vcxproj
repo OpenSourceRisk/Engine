@@ -643,6 +643,8 @@
     <ClCompile Include="ccyswapwithresets.cpp" />
     <ClCompile Include="cds.cpp" />
     <ClCompile Include="cms.cpp" />
+    <ClCompile Include="commodityapo.cpp" />
+    <ClCompile Include="commodityswaption.cpp" />
     <ClCompile Include="commodityasianoption.cpp" />
     <ClCompile Include="commoditycurve.cpp" />
     <ClCompile Include="commoditycurveconfig.cpp" />

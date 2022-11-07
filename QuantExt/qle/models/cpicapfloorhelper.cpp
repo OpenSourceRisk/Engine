@@ -34,7 +34,7 @@ CpiCapFloorHelper::CpiCapFloorHelper(Option::Type type, Real baseCPI, const Date
       // start date does not really matter ?
       instrument_(boost::shared_ptr<CPICapFloor>(new CPICapFloor(
           type, 1.0, Settings::instance().evaluationDate(), baseCPI, maturity, fixCalendar, fixConvention, payCalendar,
-          payConvention, strike, infIndex, observationLag, observationInterpolation))) {
+          payConvention, strike, infIndex.currentLink(), observationLag, observationInterpolation))) {
     QL_REQUIRE(errorType == BlackCalibrationHelper::PriceError ||
                    errorType == BlackCalibrationHelper::RelativePriceError,
                "CpiCapFloorHelper supports only PriceError and "

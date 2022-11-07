@@ -6,6 +6,7 @@
 #include "utilities.hpp"
 #include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
+#include <ql/currencies/europe.hpp>
 #include <ql/experimental/callablebonds/callablebond.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
 #include <ql/instruments/callabilityschedule.hpp>
@@ -15,7 +16,6 @@
 #include <ql/math/statistics/incrementalstatistics.hpp>
 #include <ql/methods/montecarlo/multipathgenerator.hpp>
 #include <ql/methods/montecarlo/pathgenerator.hpp>
-#include <ql/quantlib.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>

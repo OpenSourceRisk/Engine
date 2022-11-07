@@ -7,10 +7,12 @@ calendars.cpp
 ccyswapwithresets.cpp
 cds.cpp
 cms.cpp
+commodityapo.cpp
 commodityasianoption.cpp
 commoditycurve.cpp
 commoditycurveconfig.cpp
 commodityoption.cpp
+commodityswaption.cpp
 commodityvolcurve.cpp
 commodityvolcurveconfig.cpp
 compositetrade.cpp

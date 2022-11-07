@@ -58,4 +58,16 @@ double CPIVolatilitySurface::fixingTime(const QuantLib::Date& maturityDate) cons
     return timeFromReference(ZeroInflation::fixingDate(maturityDate, observationLag(), frequency(), indexIsInterpolated()));
 }
 
+QuantLib::Volatility CPIVolatilitySurface::volatility(const QuantLib::Period& optionTenor, QuantLib::Rate strike,
+                                                      const QuantLib::Period& obsLag, bool extrapolate) const {
+    QuantLib::Date maturityDate = optionMaturityFromTenor(optionTenor);
+    return QuantLib::CPIVolatilitySurface::volatility(maturityDate, strike, obsLag, extrapolate);
+}
+
+QuantLib::Volatility CPIVolatilitySurface::totalVariance(const QuantLib::Period& optionTenor, QuantLib::Rate strike,
+                                                         const QuantLib::Period& obsLag, bool extrapolate) const {
+    QuantLib::Date maturityDate = optionMaturityFromTenor(optionTenor);
+    return QuantLib::CPIVolatilitySurface::totalVariance(maturityDate, strike, obsLag, extrapolate);
+}
+
 } // namespace QuantExt

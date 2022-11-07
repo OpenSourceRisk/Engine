@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
+#include <ql/termstructures/volatility/volatilitytype.hpp>
 
 namespace QuantExt {
 
@@ -37,8 +37,8 @@ public:
     /*!  the capfloor startdate is the start date of the quoted market instruments,
      * usually its today, but it could be in the future (e.g. AUCPI)
      */
-    CPIVolatilitySurface(QuantLib::Natural settlementDays,
-                         const QuantLib::Calendar&, QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
+    CPIVolatilitySurface(QuantLib::Natural settlementDays, const QuantLib::Calendar&,
+                         QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
                          const QuantLib::Period& observationLag, QuantLib::Frequency frequency,
                          bool indexIsInterpolated, const QuantLib::Date& capFloorStartDate = QuantLib::Date(),
                          QuantLib::VolatilityType volType = QuantLib::ShiftedLognormal, double displacement = 0.0);
@@ -56,6 +56,18 @@ public:
 
     virtual bool isLogNormal() const { return volatilityType() == QuantLib::ShiftedLognormal; }
 
+    using QuantLib::CPIVolatilitySurface::volatility;
+
+    virtual QuantLib::Volatility volatility(const QuantLib::Period& optionTenor, QuantLib::Rate strike,
+                                            const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days),
+                                            bool extrapolate = false) const override;
+
+    using QuantLib::CPIVolatilitySurface::totalVariance;
+
+    virtual QuantLib::Volatility totalVariance(const QuantLib::Period& tenor, QuantLib::Rate strike,
+                                               const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days),
+                                               bool extrapolate = false) const override;
+
 protected:
     //! Computes the expiry time from the capFloorStartDate()
     //  time from reference till relevant fixing Date for a capFloor expiriy at maturityDate
@@ -65,9 +77,7 @@ protected:
     double displacement_;
 
 private:
-    
     QuantLib::Date capFloorStartDate_;
-
 };
 
 } // namespace QuantExt
