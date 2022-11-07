@@ -40,7 +40,7 @@
 #include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgmimplieddefaulttermstructure.hpp>
-#include <qle/models/lgmimpliedyieldtermstructure.hpp>
+#include <qle/models/modelimpliedyieldtermstructure.hpp>
 
 namespace ore {
 namespace analytics {
@@ -93,11 +93,9 @@ private:
     std::vector<bool> modelCcyRelevant_;
     Size n_ccy_, n_eq_, n_inf_, n_cr_, n_indices_, n_curves_;
 
-    vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> curves_, fwdCurves_, yieldCurves_;
+    vector<boost::shared_ptr<QuantExt::ModelImpliedYieldTermStructure>> curves_, fwdCurves_, yieldCurves_;
     vector<boost::shared_ptr<IborIndex>> indices_;
     vector<Currency> yieldCurveCurrency_;
-    vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> equityForecastCurves_;
-    vector<Currency> equityForecastCurrency_;
     vector<string> zeroInflationIndex_, yoyInflationIndex_;
     vector<tuple<Size, Size, CrossAssetModel::ModelType, boost::shared_ptr<ZeroInflationModelTermStructure>>>
         zeroInfCurves_;
