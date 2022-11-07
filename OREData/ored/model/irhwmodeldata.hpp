@@ -28,8 +28,7 @@
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/types.hpp>
 
-#include <ored/model/lgmdata.hpp>
-#include <qle/models/hwmodel.hpp>
+#include <ored/model/irmodeldata.hpp>
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/market.hpp>
@@ -46,24 +45,25 @@ using namespace QuantLib;
 
   \ingroup models
  */
-class HwModelData : public XMLSerializable {
+class HwModelData : public IrModelData {
 public:
     //! Default constructor
     HwModelData()
-        : calibrationType_(CalibrationType::None), calibrateKappa_(false), kappaType_(ParamType::Constant),
-          calibrateSigma_(false), sigmaType_(ParamType::Constant),
-          shiftHorizon_(0.0), scaling_(1.0) {}
+        : IrModelData("HwModel"), calibrationType_(CalibrationType::None), calibrateKappa_(false), kappaType_(ParamType::Constant),
+          calibrateSigma_(false), sigmaType_(ParamType::Constant) {}
 
     //! Detailed constructor
     HwModelData(std::string qualifier, CalibrationType calibrationType, bool calibrateKappa, ParamType kappaType,
                 std::vector<Time> kappaTimes, std::vector<QuantLib::Array> kappaValues, bool calibrateSigma,
                 ParamType sigmaType, std::vector<Time> sigmaTimes,
-                std::vector<QuantLib::Matrix> sigmaValues, Real shiftHorizon = 0.0, Real scaling = 1.0)
-        : qualifier_(qualifier), calibrationType_(calibrationType), 
+                std::vector<QuantLib::Matrix> sigmaValues,std::vector<std::string> optionExpiries = std::vector<std::string>(),
+            std::vector<std::string> optionTerms = std::vector<std::string>(),
+            std::vector<std::string> optionStrikes = std::vector<std::string>())
+        : IrModelData("HwModel", qualifier, calibrationType), 
           calibrateKappa_(calibrateKappa),
-          kappaType_(kappaType), kappaTimes_(kappaTimes), kappaValues_(kappaValues), calibrateSigma_(calibrateSigma),
-          sigmaType_(sigmaType_), sigmaTimes_(sigmaTimes), sigmaValues_(sigmaValues), shiftHorizon_(shiftHorizon),
-          scaling_(scaling) {}
+          kappaType_(kappaType), kappaTimes_(kappaTimes), kappaValues_(kappaValues), calibrateSigma_(calibrateSigma), sigmaType_(sigmaType_),
+          sigmaTimes_(sigmaTimes), sigmaValues_(sigmaValues), optionExpiries_(optionExpiries),
+          optionTerms_(optionTerms), optionStrikes_(optionStrikes) {}
 
     //! Clear list of calibration instruments
     virtual void clear();
@@ -89,8 +89,9 @@ public:
     ParamType& sigmaType() { return sigmaType_; }
     std::vector<Time>& sigmaTimes() { return sigmaTimes_; }
     std::vector<QuantLib::Matrix>& sigmaValues() { return sigmaValues_; }
-    Real& shiftHorizon() { return shiftHorizon_; }
-    Real& scaling() { return scaling_; }
+    std::vector<std::string>& optionExpiries() { return optionExpiries_; }
+    std::vector<std::string>& optionTerms() { return optionTerms_; }
+    std::vector<std::string>& optionStrikes() { return optionStrikes_; }
     //@}
 
     //! \name Operators
@@ -113,9 +114,9 @@ private:
     ParamType sigmaType_;
     std::vector<Time> sigmaTimes_;
     std::vector<QuantLib::Matrix> sigmaValues_;
-
-
-    Real shiftHorizon_, scaling_;
+    std::vector<std::string> optionExpiries_;
+    std::vector<std::string> optionTerms_;
+    std::vector<std::string> optionStrikes_;
 };
 
 

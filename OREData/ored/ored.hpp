@@ -95,7 +95,9 @@
 #include <ored/model/inflation/infjybuilder.hpp>
 #include <ored/model/inflation/infjydata.hpp>
 #include <ored/model/inflation/inflationmodeldata.hpp>
+#include <ored/model/irhwmodeldata.hpp>
 #include <ored/model/irlgmdata.hpp>
+#include <ored/model/irmodeldata.hpp>
 #include <ored/model/lgmbuilder.hpp>
 #include <ored/model/lgmdata.hpp>
 #include <ored/model/localvolmodelbuilder.hpp>

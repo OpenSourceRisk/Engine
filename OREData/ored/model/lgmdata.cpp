@@ -170,17 +170,13 @@ std::ostream& operator<<(std::ostream& oss, const CalibrationStrategy& type) {
 }
 
 void LgmData::clear() {
-
     optionExpiries_.clear();
     optionTerms_.clear();
     optionStrikes_.clear();
 }
 
 void LgmData::reset() {
-    clear();
-
-    qualifier_ = "";
-    calibrationType_ = CalibrationType::Bootstrap;
+    IrModelData::reset();
     revType_ = ReversionType::HullWhite;
     volType_ = VolatilityType::HullWhite;
     calibrateH_ = false;
@@ -193,18 +189,10 @@ void LgmData::reset() {
     aValues_ = {0.01};
     shiftHorizon_ = 0.0;
     scaling_ = 1.0;
+    
 }
 
 void LgmData::fromXML(XMLNode* node) {
-    // XMLUtils::checkNode(node, "Models");
-    // XMLNode* modelNode = XMLUtils::getChildNode(node, "LGM");
-
-    std::string calibTypeString = XMLUtils::getChildValue(node, "CalibrationType", true);
-    calibrationType_ = parseCalibrationType(calibTypeString);
-    LOG("LGM calibration type = " << calibTypeString);
-
-    // Volatility config
-
     XMLNode* volNode = XMLUtils::getChildNode(node, "Volatility");
 
     calibrateA_ = XMLUtils::getChildValueAsBool(volNode, "Calibrate", true);
@@ -254,14 +242,14 @@ void LgmData::fromXML(XMLNode* node) {
     scaling_ = XMLUtils::getChildValueAsDouble(tranformNode, "Scaling", true);
     LOG("LGM scaling = " << scaling_);
 
+    IrModelData::fromXML(node);
+
     LOG("LgmData done");
 }
 
 XMLNode* LgmData::toXML(XMLDocument& doc) {
 
-    XMLNode* lgmNode = doc.allocNode("LGM");
-
-    XMLUtils::addGenericChild(doc, lgmNode, "CalibrationType", calibrationType_);
+    XMLNode* lgmNode = IrModelData::toXML(doc);
 
     // volatility
     XMLNode* volatilityNode = XMLUtils::addChild(doc, lgmNode, "Volatility");
