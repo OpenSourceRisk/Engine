@@ -136,6 +136,8 @@ portfolio/equitydoubletouchoption.cpp
 portfolio/equityeuropeanbarrieroption.cpp
 portfolio/equityforward.cpp
 portfolio/equityfuturesoption.cpp
+portfolio/equityfxlegbuilder.cpp
+portfolio/equityfxlegdata.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
 portfolio/equitytouchoption.cpp
@@ -396,6 +398,8 @@ portfolio/equitydoubletouchoption.hpp
 portfolio/equityeuropeanbarrieroption.hpp
 portfolio/equityforward.hpp
 portfolio/equityfuturesoption.hpp
+portfolio/equityfxlegbuilder.hpp
+portfolio/equityfxlegdata.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
 portfolio/equitytouchoption.hpp

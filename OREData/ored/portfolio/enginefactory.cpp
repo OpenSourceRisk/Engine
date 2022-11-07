@@ -68,6 +68,8 @@
 #include <ored/portfolio/durationadjustedcmslegbuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/legbuilders.hpp>
+#include <ored/portfolio/commoditylegbuilder.hpp>
+#include <ored/portfolio/equityfxlegbuilder.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <boost/algorithm/string/join.hpp>
@@ -282,6 +284,9 @@ void EngineFactory::addDefaultBuilders() {
     registerLegBuilder(boost::make_shared<CMSSpreadLegBuilder>());
     registerLegBuilder(boost::make_shared<DigitalCMSSpreadLegBuilder>());
     registerLegBuilder(boost::make_shared<EquityLegBuilder>());
+    registerLegBuilder(boost::make_shared<CommodityFixedLegBuilder>());
+    registerLegBuilder(boost::make_shared<CommodityFloatingLegBuilder>());
+    registerLegBuilder(boost::make_shared<EquityMarginLegBuilder>());
 }
 
 void EngineFactory::addExtraBuilders(const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,

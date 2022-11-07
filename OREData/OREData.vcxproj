@@ -221,6 +221,8 @@
     <ClInclude Include="ored\portfolio\equitydoublebarrieroption.hpp" />
     <ClInclude Include="ored\portfolio\equityeuropeanbarrieroption.hpp" />
     <ClInclude Include="ored\portfolio\equitytouchoption.hpp" />
+    <ClInclude Include="ored\portfolio\equityfxlegbuilder.hpp" />
+    <ClInclude Include="ored\portfolio\equityfxlegdata.hpp" />
     <ClInclude Include="ored\portfolio\fxbarrieroption.hpp" />
     <ClInclude Include="ored\portfolio\fxdigitalbarrieroption.hpp" />
     <ClInclude Include="ored\portfolio\fxdigitaloption.hpp" />
@@ -446,6 +448,8 @@
     <ClCompile Include="ored\portfolio\equitydigitaloption.cpp" />
     <ClCompile Include="ored\portfolio\equityeuropeanbarrieroption.cpp" />
     <ClCompile Include="ored\portfolio\equitytouchoption.cpp" />
+    <ClCompile Include="ored\portfolio\equityfxlegbuilder.cpp" />
+    <ClCompile Include="ored\portfolio\equityfxlegdata.cpp" />
     <ClCompile Include="ored\portfolio\fxbarrieroption.cpp" />
     <ClCompile Include="ored\portfolio\fxdigitalbarrieroption.cpp" />
     <ClCompile Include="ored\portfolio\fxdigitaloption.cpp" />

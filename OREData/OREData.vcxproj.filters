@@ -579,6 +579,12 @@
     <ClInclude Include="ored\portfolio\optionexercisedata.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\equityfxlegbuilder.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\equityfxlegdata.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
     <ClInclude Include="ored\model\modelparameter.hpp">
       <Filter>model</Filter>
     </ClInclude>
@@ -753,6 +759,12 @@
     <ClInclude Include="ored\portfolio\equitytouchoption.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClCompile Include="ored\portfolio\equityfxlegbuilder.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\equityfxlegdata.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
     <ClInclude Include="ored\portfolio\builders\fxbarrieroption.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
