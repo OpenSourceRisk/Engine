@@ -434,7 +434,7 @@ protected:
         bool operator==(const cache_key& o) const { return (i == o.i) && (ccy == o.ccy) && (t == o.t) && (T == o.T); }
     };
 
-    struct cache_hasher {
+    struct cache_hasher : std::unary_function<cache_key, std::size_t> {
         std::size_t operator()(cache_key const& x) const {
             std::size_t seed = 0;
             boost::hash_combine(seed, x.i);
