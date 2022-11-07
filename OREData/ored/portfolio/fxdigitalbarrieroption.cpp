@@ -166,6 +166,8 @@ void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engin
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
+    additionalData_["effectiveForeignCurrency"] = boughtCcy.code();
+    additionalData_["effectiveDomesticCurrency"] = soldCcy.code();
 }
 
 bool checkBarrier(Real spot, Barrier::Type type, Real barrier) {

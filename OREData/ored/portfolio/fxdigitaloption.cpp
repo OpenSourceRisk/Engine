@@ -101,8 +101,6 @@ void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
-    additionalData_["effectiveForeignCurrency"] = forCcy.code();
-    additionalData_["effectiveDomesticCurrency"] = domCcy.code();
 }
 
 void FxDigitalOption::fromXML(XMLNode* node) {
