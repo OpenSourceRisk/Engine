@@ -220,7 +220,8 @@ void test_lgm(bool sobol, bool antithetic, bool brownianBridge) {
     boost::shared_ptr<QuantExt::LGM> model = d.lgm;
 
     // State process
-    boost::shared_ptr<StochasticProcess1D> stateProcess = model->stateProcess();
+    boost::shared_ptr<StochasticProcess1D> stateProcess =
+        boost::dynamic_pointer_cast<StochasticProcess1D>(model->stateProcess());
 
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
@@ -325,8 +326,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
 
     // State process
-    QuantExt::CrossAssetStateProcess::discretization discretization = QuantExt::CrossAssetStateProcess::exact;
-    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess(discretization);
+    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
 
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
@@ -488,8 +488,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
 
     // State process
-    QuantExt::CrossAssetStateProcess::discretization discretization = QuantExt::CrossAssetStateProcess::exact;
-    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess(discretization);
+    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
 
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
@@ -511,7 +510,6 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
-    sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
     sgd->sequenceType() = Sobol;
     sgd->seed() = 42;
     sgd->setGrid(grid);
@@ -632,8 +630,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
 
     // State process
-    QuantExt::CrossAssetStateProcess::discretization discretization = QuantExt::CrossAssetStateProcess::exact;
-    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess(discretization);
+    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
 
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
@@ -655,7 +652,6 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
-    sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
     sgd->sequenceType() = Sobol;
     sgd->directionIntegers() = SobolRsg::JoeKuoD7;
     sgd->seed() = 42;
@@ -679,9 +675,12 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     Real tol1 = 1.0E-4;    // for curves (different interpolation, this is 0.1bp in zero yield)
 
     // manual copy of the initial index curves with fixed reference date (in market, they have floating ref date)
-    Handle<YieldTermStructure> eurIndexCurve(boost::make_shared<FlatForward>(d.referenceDate, 0.02, ActualActual(ActualActual::ISDA)));
-    Handle<YieldTermStructure> usdIndexCurve(boost::make_shared<FlatForward>(d.referenceDate, 0.03, ActualActual(ActualActual::ISDA)));
-    Handle<YieldTermStructure> gbpIndexCurve(boost::make_shared<FlatForward>(d.referenceDate, 0.04, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> eurIndexCurve(
+        boost::make_shared<FlatForward>(d.referenceDate, 0.02, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> usdIndexCurve(
+        boost::make_shared<FlatForward>(d.referenceDate, 0.03, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> gbpIndexCurve(
+        boost::make_shared<FlatForward>(d.referenceDate, 0.04, ActualActual(ActualActual::ISDA)));
 
     cpu_timer timer;
 
@@ -775,28 +774,28 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     Size samples = 5000;
 
     // State process
-    QuantExt::CrossAssetStateProcess::discretization discretization = QuantExt::CrossAssetStateProcess::exact;
-    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess(discretization);
+    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
 
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
     simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
-                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years});
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->setSimulateFXVols(false);
     simMarketConfig->setSimulateEquityVols(false);
 
     simMarketConfig->baseCcy() = "EUR";
-    simMarketConfig->setDiscountCurveNames({"EUR", "USD"});
-    simMarketConfig->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M"});
+    simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
+    simMarketConfig->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"});
     simMarketConfig->interpolation() = "LogLinear";
     simMarketConfig->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
     simMarketConfig->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years});
-    simMarketConfig->setFxCcyPairs({"USDEUR"});
+    simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
+    simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
-    sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
     sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
     sgd->setGrid(grid);
@@ -810,7 +809,7 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
 
-    // swaps for exposure generation
+    // swaps for expsoure generation
 
     boost::shared_ptr<VanillaSwap> swap_eur =
         MakeVanillaSwap(20 * Years, *simMarket->iborIndex("EUR-EURIBOR-6M"), 0.02);
@@ -914,8 +913,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
 
     // State process
-    QuantExt::CrossAssetStateProcess::discretization discretization = QuantExt::CrossAssetStateProcess::exact;
-    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess(discretization);
+    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
 
     // Simulation market parameters
     BOOST_TEST_MESSAGE("set up sim market parameters");
@@ -940,7 +938,6 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
-    sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
     sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
     sgd->setGrid(grid);
@@ -956,7 +953,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
 
     Size samples = 5000;
 
-    // fx forward for exposure generation (otm) and engine
+    // fx forward for expsoure generation (otm) and engine
     boost::shared_ptr<FxForward> fxfwd =
         boost::make_shared<FxForward>(1.0, EURCurrency(), 1.3, USDCurrency(), grid->dates().back() + 1, false);
     boost::shared_ptr<PricingEngine> fxFwdEngine =
@@ -1043,8 +1040,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     model->update();
 
     // State process
-    QuantExt::CrossAssetStateProcess::discretization discretization = QuantExt::CrossAssetStateProcess::exact;
-    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess(discretization);
+    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
 
     // Simulation market parameters
     BOOST_TEST_MESSAGE("set up sim market parameters");
@@ -1065,7 +1061,6 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
-    sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
     sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
     sgd->setGrid(grid);
@@ -1081,7 +1076,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
 
     Size samples = 10000;
 
-    // fx forward for exposure generation (otm) and engine
+    // fx forward for expsoure generation (otm) and engine
     Date maturity = grid->dates().back() + 1; // make sure the option is live on last grid date
     boost::shared_ptr<FxForward> fxfwd =
         boost::make_shared<FxForward>(1.0, EURCurrency(), 1.3, USDCurrency(), maturity, false);
@@ -1171,8 +1166,7 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     model->update();
 
     // State process
-    QuantExt::CrossAssetStateProcess::discretization discretization = QuantExt::CrossAssetStateProcess::exact;
-    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess(discretization);
+    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
 
     // Simulation market parameters
     BOOST_TEST_MESSAGE("set up sim market parameters");
@@ -1195,7 +1189,6 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
-    sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
     sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
     sgd->setGrid(grid);

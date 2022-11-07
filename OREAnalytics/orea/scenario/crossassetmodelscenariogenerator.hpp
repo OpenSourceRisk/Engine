@@ -99,9 +99,9 @@ private:
     vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> equityForecastCurves_;
     vector<Currency> equityForecastCurrency_;
     vector<string> zeroInflationIndex_, yoyInflationIndex_;
-    vector<tuple<Size, Size, CrossAssetModelTypes::ModelType, boost::shared_ptr<ZeroInflationModelTermStructure>>>
+    vector<tuple<Size, Size, CrossAssetModel::ModelType, boost::shared_ptr<ZeroInflationModelTermStructure>>>
         zeroInfCurves_;
-    vector<tuple<Size, Size, CrossAssetModelTypes::ModelType, boost::shared_ptr<YoYInflationModelTermStructure>>>
+    vector<tuple<Size, Size, CrossAssetModel::ModelType, boost::shared_ptr<YoYInflationModelTermStructure>>>
         yoyInfCurves_;
     vector<boost::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>> lgmDefaultCurves_;
     vector<boost::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>> cirppDefaultCurves_;

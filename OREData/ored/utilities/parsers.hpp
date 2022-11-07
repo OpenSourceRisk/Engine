@@ -445,7 +445,7 @@ QuantLib::YoYInflationCapFloor::Type parseYoYInflationCapFloorType(const std::st
 /*! Convert text to QuantExt::CrossAssetModelTypes::AssetType
     \ingroup utilities
 */
-QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const std::string& s);
+QuantExt::CrossAssetModel::AssetType parseCamAssetType(const std::string& s);
 
 /*! Convert boost::any to pair<string,string>, including the valueType and the value
     \ingroup utilities
@@ -477,7 +477,7 @@ std::ostream& operator<<(std::ostream& os, SobolBrownianGenerator::Ordering t);
 std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t);
     
 //! Enum to string used in ScenarioGeneratorData's toXML
-std::ostream& operator<<(std::ostream& os, QuantExt::CrossAssetStateProcess::discretization type);
+std::ostream& operator<<(std::ostream& os, QuantExt::CrossAssetModel::Discretization type);
 
 //! Convert text to CommodityFutureConvention::AveragingData::CalculationPeriod
 CommodityFutureConvention::AveragingData::CalculationPeriod parseAveragingDataPeriod(const std::string& s);

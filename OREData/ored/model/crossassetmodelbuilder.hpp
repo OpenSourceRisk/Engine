@@ -126,8 +126,8 @@ private:
     mutable std::vector<Real> inflationCalibrationErrors_;
 
     //! Store model builders for each asset under each asset type.
-    mutable std::map<QuantExt::CrossAssetModelTypes::AssetType,
-        std::map<QuantLib::Size, boost::shared_ptr<ModelBuilder>>> subBuilders_;
+    mutable std::map<QuantExt::CrossAssetModel::AssetType, std::map<QuantLib::Size, boost::shared_ptr<ModelBuilder>>>
+        subBuilders_;
 
     const boost::shared_ptr<ore::data::Market> market_;
     const boost::shared_ptr<CrossAssetModelData> config_;

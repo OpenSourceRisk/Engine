@@ -781,18 +781,17 @@ YoYInflationCapFloor::Type parseYoYInflationCapFloorType(const string& s) {
     }
 }
 
-QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const string& s) {
-    namespace CT = QuantExt::CrossAssetModelTypes;
+QuantExt::CrossAssetModel::AssetType parseCamAssetType(const string& s) {
     if (s == "IR") {
-        return CT::IR;
+        return QuantExt::CrossAssetModel::AssetType::IR;
     } else if (s == "FX") {
-        return CT::FX;
+        return QuantExt::CrossAssetModel::AssetType::FX;
     } else if (s == "INF") {
-        return CT::INF;
+        return QuantExt::CrossAssetModel::AssetType::INF;
     } else if (s == "CR") {
-        return CT::CR;
+        return QuantExt::CrossAssetModel::AssetType::CR;
     } else if (s == "EQ") {
-        return CT::EQ;
+        return QuantExt::CrossAssetModel::AssetType::EQ;
     } else {
         QL_FAIL("Unknown cross asset model type " << s);
     }
@@ -1055,11 +1054,11 @@ std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t) {
     }
 }
 
-std::ostream& operator<<(std::ostream& out, QuantExt::CrossAssetStateProcess::discretization dis) {
+std::ostream& operator<<(std::ostream& out, QuantExt::CrossAssetModel::Discretization dis) {
     switch (dis) {
-    case QuantExt::CrossAssetStateProcess::exact:
+    case QuantExt::CrossAssetModel::Discretization::Exact:
         return out << "Exact";
-    case QuantExt::CrossAssetStateProcess::euler:
+    case QuantExt::CrossAssetModel::Discretization::Euler:
         return out << "Euler";
     default:
         return out << "?";
