@@ -126,13 +126,7 @@
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Acadia Inc.}
-%\date{7 October 2016}
-%\date{28 April 2017}
-%\date{7 December 2017}
-%\date{28 May 2019}
-%\date{19 June 2020}
-%\date{30 June 2021}
-\date{26 August 2022}
+\date{\today}
 \maketitle
 
 \newpage
@@ -152,6 +146,7 @@ Date & Author & Comment \\
 19 June 2020 & Quaternion & updates for release 5\\
 30 June 2021 & Acadia & updates for release 6\\
 16 September 2022 & Acadia & updates for release 7\\
+12 December & Acadia & updates for release 8\\
 \hline
 \end{supertabular}
 \end{center}
@@ -5737,7 +5732,7 @@ This node should hold a real number. It provides an upper bound for the search d
 
 
 %========================================================
-%\section{Trade Data}\label{sec:portfolio_data}
+\section{Trade Data}\label{sec:portfolio_data}
 %========================================================
 \input{tradedata/intro}
 \input{tradedata/envelope}
@@ -5761,6 +5756,7 @@ This node should hold a real number. It provides an upper bound for the search d
 \input{tradedata/fx_europeanbarrieroption}
 \input{tradedata/fx_kikobarrieroption}
 \input{tradedata/fx_touchoption}
+\input{tradedata/fxvarianceswap}
 \input{tradedata/equityoption}
 \input{tradedata/equityfuturesoption}
 \input{tradedata/equityforward}
@@ -5772,13 +5768,20 @@ This node should hold a real number. It provides an upper bound for the search d
 \input{tradedata/eq_doubletouchoption}
 \input{tradedata/eq_europeanbarrieroption}
 \input{tradedata/eq_touchoption}
+\input{tradedata/equityvarianceswap}
+\input{tradedata/equitycliquetoption}
 \input{tradedata/cpiswap}
 \input{tradedata/yyswap}
 \input{tradedata/bond}
 \input{tradedata/forwardbond}
 \input{tradedata/creditdefaultswap}
-\input{tradedata/commodityoption}
 \input{tradedata/commodityforward}
+\input{tradedata/commodityswap}
+\input{tradedata/commodityswaption}
+\input{tradedata/commodityoption}
+\input{tradedata/commodityapo}
+\input{tradedata/commodityoptionstrip}
+\input{tradedata/commodityvarianceswap}
 
 %\include{tradecomponents}
 \input{tradecomponents/tradecomponentsintro}
@@ -5801,6 +5804,9 @@ This node should hold a real number. It provides an upper bound for the search d
 \input{tradecomponents/cpileg}
 \input{tradecomponents/yyleg}
 \input{tradecomponents/zerocouponleg}
+\input{tradecomponents/commodityfixedleg}
+\input{tradecomponents/commodityfloatingleg}
+\input{tradecomponents/equitymarginleg}
 \input{tradecomponents/cdsreferenceinformation}
 \input{tradecomponents/underlying}
 \input{tradecomponents/strikedata}

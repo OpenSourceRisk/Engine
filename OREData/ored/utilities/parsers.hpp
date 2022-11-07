@@ -518,5 +518,32 @@ std::ostream& operator<<(std::ostream& os, QuantExt::BondIndex::PriceQuoteMethod
 //! Helper function to get the two tokens in a correlation name Index2:Index1
 std::vector<std::string> getCorrelationTokens(const std::string& name);
 
+//! Convert FX pair to market standard dominance
+/*!
+ Convert FX pair to market standard dominance, e.g. "USD" & "GBP" -> "GBPUSD", "USD" & "JPY" -> "USDJPY"
+  \ingroup utilities
+*/
+string fxDominance(const string& s1, const string& s2);
+
+//! Convert FX index name to market standard dominance
+string normaliseFxIndex(const std::string& indexName);
+
+enum class MomentType { Variance, Volatility };
+
+//! Convert text to oreplus::data::MomentType
+/*!
+\ingroup utilities
+*/
+MomentType parseMomentType(const std::string& s);
+
+//! Enumeration CreditPortfolioSensitivityDecomposition
+enum class CreditPortfolioSensitivityDecomposition { Underlying, NotionalWeighted, LossWeighted, DeltaWeighted };
+
+//! Convert text to CreditPortfolioSensitivitiyDecomposition
+CreditPortfolioSensitivityDecomposition parseCreditPortfolioSensitivityDecomposition(const std::string& s);
+
+//! Output operator for CreditPortfolioSensitivityDecomposition
+std::ostream& operator<<(std::ostream& os, const CreditPortfolioSensitivityDecomposition d);
+    
 } // namespace data
 } // namespace ore
