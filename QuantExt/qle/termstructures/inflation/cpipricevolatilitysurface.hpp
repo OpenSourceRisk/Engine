@@ -465,14 +465,14 @@ double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::implyVol
                                    1.0, // unit nominal, because the price surface returns unit nominal prices
                                    capFloorStartDate(), baseCPI(), maturity, calendar(), businessDayConvention(),
                                    calendar(), businessDayConvention(), strike,
-                                   QuantLib::Handle<QuantLib::ZeroInflationIndex>(index_), observationLag(),
+                                   index_, observationLag(),
                                    indexIsInterpolated() ? QuantLib::CPI::Linear : QuantLib::CPI::Flat);
 
     boost::shared_ptr<QuantExt::CPICapFloorEngine> engine = engine_;
 
     capFloor.setPricingEngine(engine);
 
-    auto targetFunction = [&engine, &cal, &dc, &bdc, &startDate, &index, &obsLag, &freq, &price,
+    auto targetFunction = [&engine, &cal, &dc, &bdc, &index, &obsLag, &freq, &price,
                            &capFloor](const double& guess) {
         boost::shared_ptr<QuantExt::ConstantCPIVolatility> vol = boost::make_shared<QuantExt::ConstantCPIVolatility>(
             guess, 0, cal, bdc, dc, obsLag, freq, index->interpolated());

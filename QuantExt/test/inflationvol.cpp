@@ -217,7 +217,6 @@ BOOST_AUTO_TEST_CASE(testCPIVolatilitySurface) {
     CommonData cd;
 
     Date lastKnownFixing(1, Jul, 2022);
-    Date capFloorStartDate = cd.today;
     Date capFloorBaseDate(1, Jun, 2022); // first day of the month of today - 2M
 
     auto index = buildIndexWithForwardTermStructure(cd);
@@ -235,9 +234,9 @@ BOOST_AUTO_TEST_CASE(testCPIVolatilitySurface) {
 
     BOOST_CHECK_CLOSE(baseCPI, cd.cpiFixings[capFloorBaseDate], cd.tolerance);
 
-    for (int i = 0; i < cd.tenors.size(); ++i) {
+    for (size_t i = 0; i < cd.tenors.size(); ++i) {
         auto fixingDate = volSurface->baseDate() + cd.tenors[i];
-        for (int j = 0; j < cd.strikes.size(); ++j) {   
+        for (size_t j = 0; j < cd.strikes.size(); ++j) {   
             auto expectedVol = cd.vols[i][j]->value();
             auto volByTenor = volSurface->volatility(cd.tenors[i], cd.strikes[j]);
             auto volByFixingDate = volSurface->volatility(fixingDate, cd.strikes[j], 0 * Days);
@@ -252,8 +251,6 @@ BOOST_AUTO_TEST_CASE(testCPIBlackCapFloorEngine) {
     CommonData cd;
     auto index = buildIndexWithForwardTermStructure(cd);
 
-    Handle<ZeroInflationIndex> hindex(index);
-
     auto volSurface = buildVolSurface(cd, index);
 
     double baseCPI = index->fixing(volSurface->baseDate());
@@ -263,23 +260,23 @@ BOOST_AUTO_TEST_CASE(testCPIBlackCapFloorEngine) {
     boost::shared_ptr<PricingEngine> engine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(
         cd.discountTS, Handle<CPIVolatilitySurface>(volSurface), true);
 
-    for (int i = 0; i < priceData.cStrikes.size(); ++i) {
+    for (size_t i = 0; i < priceData.cStrikes.size(); ++i) {
         double strike = priceData.cStrikes[i];
-        for (int j = 0; j < priceData.tenors.size(); ++j) {
+        for (size_t j = 0; j < priceData.tenors.size(); ++j) {
             Period tenor = priceData.tenors[j];
             CPICapFloor cap(Option::Call, 1.0, cd.today, baseCPI, cd.today + tenor, cd.fixingCalendar, cd.bdc,
-                            cd.fixingCalendar, cd.bdc, strike, hindex, cd.obsLag, CPI::Flat);
+                            cd.fixingCalendar, cd.bdc, strike, index, cd.obsLag, CPI::Flat);
             cap.setPricingEngine(engine);
             BOOST_CHECK_CLOSE(cap.NPV(), priceData.cPrices[i][j], cd.tolerance);
         }
     }
 
-    for (int i = 0; i < priceData.fStrikes.size(); ++i) {
+    for (size_t i = 0; i < priceData.fStrikes.size(); ++i) {
         double strike = priceData.fStrikes[i];
-        for (int j = 0; j < priceData.tenors.size(); ++j) {
+        for (size_t j = 0; j < priceData.tenors.size(); ++j) {
             Period tenor = priceData.tenors[j];
             CPICapFloor put(Option::Put, 1.0, cd.today, baseCPI, cd.today + tenor, cd.fixingCalendar, cd.bdc,
-                            cd.fixingCalendar, cd.bdc, strike, hindex, cd.obsLag, CPI::Flat);
+                            cd.fixingCalendar, cd.bdc, strike, index, cd.obsLag, CPI::Flat);
             put.setPricingEngine(engine);
             BOOST_CHECK_CLOSE(put.NPV(), priceData.fPrices[i][j], cd.tolerance);
         }
@@ -291,12 +288,9 @@ BOOST_AUTO_TEST_CASE(testCPIBlackCapFloorEngineSeasonedCapFloors) {
     CommonData cd;
 
     Date lastKnownFixing(1, Jul, 2022);
-    Date capFloorStartDate = cd.today;
     Date capFloorBaseDate(1, Jun, 2022); // first day of the month of today - 2M
 
     auto index = buildIndexWithForwardTermStructure(cd);
-
-    Handle<ZeroInflationIndex> hindex(index);
 
     auto volSurface = buildVolSurface(cd, index);
 
@@ -325,7 +319,7 @@ BOOST_AUTO_TEST_CASE(testCPIBlackCapFloorEngineSeasonedCapFloors) {
     QuantLib::BlackCalculator callPricer(Option::Call, K, atm, sqrt(volTimeFrom) * vol, discountFactor);
 
     QuantLib::CPICapFloor cap(Option::Call, 1.0, seasonedStartDate, Null<double>(), seasonedMaturity, cd.fixingCalendar,
-                              cd.bdc, cd.fixingCalendar, cd.bdc, seasonedStrike, Handle<ZeroInflationIndex>(index),
+                              cd.bdc, cd.fixingCalendar, cd.bdc, seasonedStrike, index,
                               cd.obsLag, CPI::Flat);
 
     cap.setPricingEngine(engine);
@@ -342,9 +336,9 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurface) {
 
     auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), false);
 
-    for (int i = 0; i < cd.tenors.size(); ++i) {
+    for (size_t i = 0; i < cd.tenors.size(); ++i) {
         auto fixingDate = volSurface->baseDate() + cd.tenors[i];
-        for (int j = 0; j < cd.strikes.size(); ++j) {
+        for (size_t j = 0; j < cd.strikes.size(); ++j) {
             auto expectedVol = cd.vols[i][j]->value();
             auto volByTenor = volSurface->volatility(cd.tenors[i], cd.strikes[j]);
             auto volByFixingDate = volSurface->volatility(fixingDate, cd.strikes[j], 0 * Days);
