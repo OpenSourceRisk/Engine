@@ -51,7 +51,11 @@ template <typename Helper> Real getCalibrationError(const std::vector<boost::sha
     }
     return std::sqrt(rmse / static_cast<Real>(basket.size()));
 }
-
+/*
+std::string getCalibrationDetails(
+    LgmCalibrationInfo& info, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+    const boost::shared_ptr<Parametrization>& parametrization = boost::shared_ptr<IrLgm1fParametrization>());
+    */
 std::string getCalibrationDetails(
     LgmCalibrationInfo& info, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
     const boost::shared_ptr<IrLgm1fParametrization>& parametrization = boost::shared_ptr<IrLgm1fParametrization>());
@@ -59,7 +63,17 @@ std::string getCalibrationDetails(
 std::string getCalibrationDetails(
     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
     const boost::shared_ptr<FxBsParametrization>& parametrization = boost::shared_ptr<FxBsParametrization>(),
+    const boost::shared_ptr<Parametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
+
+std::string getCalibrationDetails(
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+    const boost::shared_ptr<FxBsParametrization>& parametrization = boost::shared_ptr<FxBsParametrization>(),
     const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
+
+std::string getCalibrationDetails(
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+    const boost::shared_ptr<EqBsParametrization>& parametrization = boost::shared_ptr<EqBsParametrization>(),
+    const boost::shared_ptr<Parametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
 
 std::string getCalibrationDetails(
     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
@@ -76,8 +90,10 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<Calibratio
                                   const boost::shared_ptr<InfJyParameterization>& parameterization,
                                   bool calibrateRealRateVol = false);
 
+std::string getCalibrationDetails(const boost::shared_ptr<Parametrization>& irModelParametrization);
+/*
 std::string getCalibrationDetails(const boost::shared_ptr<IrLgm1fParametrization>& parametrization);
-
+*/
 //! Return an option's maturity date, given an explicit date or a period.
 QuantLib::Date optionMaturity(const boost::variant<QuantLib::Date, QuantLib::Period>& maturity,
                               const QuantLib::Calendar& calendar,

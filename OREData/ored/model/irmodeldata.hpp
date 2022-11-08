@@ -111,6 +111,9 @@ public:
     const std::string& name() { return name_; }
     std::string& qualifier() { return qualifier_; }
     CalibrationType& calibrationType() { return calibrationType_; }
+
+    // ccy associated to qualifier, which might be an ibor / ois index name or a currency
+    virtual std::string ccy() const;       
     //@}
 
 protected:

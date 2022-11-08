@@ -71,10 +71,5 @@ XMLNode* IrLgmData::toXML(XMLDocument& doc) {
     return node;
 }
 
-std::string IrLgmData::ccy() const {
-    boost::shared_ptr<IborIndex> index;
-    return tryParseIborIndex(qualifier_, index) ? index->currency().code() : qualifier_;
-}
-
 } // namespace data
 } // namespace ore

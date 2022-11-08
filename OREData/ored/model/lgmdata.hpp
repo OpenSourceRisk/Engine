@@ -99,8 +99,6 @@ public:
 
     //! \name Setters/Getters
     //@{
-    std::string& qualifier() { return qualifier_; }
-    CalibrationType& calibrationType() { return calibrationType_; }
     ReversionType& reversionType() { return revType_; }
     VolatilityType& volatilityType() { return volType_; }
     bool& calibrateH() { return calibrateH_; }
