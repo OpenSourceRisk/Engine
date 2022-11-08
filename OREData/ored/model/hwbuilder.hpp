@@ -80,10 +80,10 @@ private:
     IrModel::Measure measure_;
     HwModel::Discretization discretization_;
     bool evaluateBankAccount_;
-    const Real bootstrapTolerance_;
-    const bool continueOnError_;
+    // const Real bootstrapTolerance_;
+    // const bool continueOnError_;
     const std::string referenceCalibrationGrid_;
-    const bool setCalibrationInfo_;
+    // const bool setCalibrationInfo_;
     bool requiresCalibration_ = false;
     std::string currency_; // derived from data->qualifier()
 
@@ -109,7 +109,7 @@ private:
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
-    BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
+    // BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
 
     // Cache the swaption volatilities
     mutable std::vector<QuantLib::Real> swaptionVolCache_;

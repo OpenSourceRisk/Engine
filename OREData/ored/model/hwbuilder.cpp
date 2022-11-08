@@ -46,11 +46,11 @@ HwBuilder::HwBuilder(const boost::shared_ptr<ore::data::Market>& market, const b
                      const bool continueOnError, const std::string& referenceCalibrationGrid,
                      const bool setCalibrationInfo)
     : market_(market), configuration_(configuration), data_(data), measure_(measure), discretization_(discretization),
-      bootstrapTolerance_(bootstrapTolerance), continueOnError_(continueOnError),
-      referenceCalibrationGrid_(referenceCalibrationGrid), setCalibrationInfo_(setCalibrationInfo),
+      /*bootstrapTolerance_(bootstrapTolerance), continueOnError_(continueOnError),*/
+      referenceCalibrationGrid_(referenceCalibrationGrid), /*setCalibrationInfo_(setCalibrationInfo),*/
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
-      endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)),
-      calibrationErrorType_(BlackCalibrationHelper::RelativePriceError) {
+      endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8))
+      /*,calibrationErrorType_(BlackCalibrationHelper::RelativePriceError)*/ {
 
     marketObserver_ = boost::make_shared<MarketObserver>();
     string qualifier = data_->qualifier();
