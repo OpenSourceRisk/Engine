@@ -75,14 +75,14 @@ Real CommodityIndexedAverageCashFlow::amount() const {
     if (weights_.empty()) {
         for (const auto& kv : indices_) {
             fxRate = (fxIndex_)? this->fxIndex()->fixing(kv.first):1.0;
-            averagePrice += fxRate*kv.second->fixing(kv.first);
+            averagePrice += fxRate * kv.second->fixing(kv.first);
         }
         averagePrice /= indices_.size();
     } else {
         // weights_ will be populated when offPeakPowerData_ is provided.
         for (const auto& kv : indices_) {
             fxRate = (fxIndex_)? this->fxIndex()->fixing(kv.first):1.0;
-            averagePrice += fxRate*kv.second->fixing(kv.first) * weights_.at(kv.first);
+            averagePrice += fxRate * kv.second->fixing(kv.first) * weights_.at(kv.first);
         }
     }
 
