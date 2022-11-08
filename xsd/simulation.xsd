@@ -40,6 +40,7 @@
   <xs:simpleType name="discretizationType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Exact"/>
+      <xs:enumeration value="Euler"/>
     </xs:restriction>
   </xs:simpleType>
 
