@@ -30,8 +30,6 @@ bool Mauritius::SemImpl::isBusinessDay(const Date& date) const {
     Day d = date.dayOfMonth();
     Month m = date.month();
     Year y = date.year();
-    Day dd = date.dayOfYear();
-    Day em = easterMonday(y);
 
     if(isWeekend(w)
         // New year's day
