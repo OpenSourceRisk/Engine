@@ -21,7 +21,8 @@
    results in the case of FX instruments where the trade builder may have inverted the underlying pair
 */
 
-#pragma once
+#ifndef quantext_analytic_digital_american_engine_hpp
+#define quantext_analytic_digital_american_engine_hpp
 
 #include <ql/instruments/vanillaoption.hpp>
 #include <ql/pricingengines/vanilla/analyticdigitalamericanengine.hpp>
@@ -57,3 +58,5 @@ public:
 };
 
 } // namespace QuantExt
+
+#endif
