@@ -15,6 +15,7 @@ calendars/israel.cpp
 calendars/largejointcalendar.cpp
 calendars/luxembourg.cpp
 calendars/malaysia.cpp
+calendars/mauritius.cpp
 calendars/netherlands.cpp
 calendars/peru.cpp
 calendars/philippines.cpp
@@ -305,6 +306,7 @@ calendars/israel.hpp
 calendars/largejointcalendar.hpp
 calendars/luxembourg.hpp
 calendars/malaysia.hpp
+calendars/mauritius.hpp
 calendars/netherlands.hpp
 calendars/peru.hpp
 calendars/philippines.hpp
