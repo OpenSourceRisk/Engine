@@ -41,7 +41,7 @@ QuantLib::Real HwModel::discountBond(const QuantLib::Time t, const QuantLib::Tim
     return (discountCurve.empty()
                 ? parametrization_->termStructure()->discount(T) / parametrization_->termStructure()->discount(t)
                 : discountCurve->discount(T) / discountCurve->discount(t)) *
-           std::exp(-QuantLib::DotProduct(gt, x) - 0.5 * QuantLib::DotProduct(gt, yt * x));
+           std::exp(-QuantLib::DotProduct(gt, x) - 0.5 * QuantLib::DotProduct(gt, yt * gt));
 }
 
 QuantLib::Real HwModel::numeraire(const QuantLib::Time t, const QuantLib::Array& x,
