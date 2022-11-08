@@ -48,7 +48,7 @@ QuantLib::Real HwModel::numeraire(const QuantLib::Time t, const QuantLib::Array&
                                   const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                   const QuantLib::Array& aux) const {
     QL_REQUIRE(measure_ == IrModel::Measure::BA, "HwModel::numeraire() supports BA measure only currently.");
-    return std::accumulate(aux.begin(), aux.end(), 0.0) /
+    return std::exp(std::accumulate(aux.begin(), aux.end(), 0.0)) /
            (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
 }
 
