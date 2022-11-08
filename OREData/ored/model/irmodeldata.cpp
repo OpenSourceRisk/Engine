@@ -20,6 +20,7 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/lexical_cast.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/indexparser.hpp>
 
 namespace ore {
 namespace data {
@@ -118,6 +119,11 @@ XMLNode* IrModelData::toXML(XMLDocument& doc) {
 
     XMLUtils::addGenericChild(doc, irModelNode, "CalibrationType", calibrationType_);
     return irModelNode;
+}
+
+std::string IrModelData::ccy() const{
+    boost::shared_ptr<QuantLib::IborIndex> index;
+    return tryParseIborIndex(qualifier_, index) ? index->currency().code() : qualifier_;
 }
 
 } // namespace data

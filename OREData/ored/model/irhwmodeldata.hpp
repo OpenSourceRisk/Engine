@@ -78,8 +78,6 @@ public:
 
     //! \name Setters/Getters
     //@{
-    std::string& qualifier() { return qualifier_; }
-    CalibrationType& calibrationType() { return calibrationType_; }
     bool& calibrateKappa() { return calibrateKappa_; }
     ParamType& kappaType() { return kappaType_; }
     std::vector<Time>& kappaTimes() { return kappaTimes_; }

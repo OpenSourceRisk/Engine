@@ -122,6 +122,18 @@ map<Date, HelperValues> jyHelperValues(const vector<boost::shared_ptr<Calibratio
 } // namespace
 
 std::string getCalibrationDetails(LgmCalibrationInfo& info,
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+    const boost::shared_ptr<Parametrization>& parametrization) {
+    auto lgmParametrization = boost::dynamic_pointer_cast<IrLgm1fParametrization>(parametrization);
+    if (lgmParametrization){
+        return getCalibrationDetails(info, basket, parametrization);
+    } else {
+        return std::string();
+    }
+}
+
+
+std::string getCalibrationDetails(LgmCalibrationInfo& info,
                                   const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                                   const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
     std::ostringstream log;
@@ -165,6 +177,16 @@ std::string getCalibrationDetails(LgmCalibrationInfo& info,
         << " irlgm1fHwSigma = " << modelHwSigma << "\n";
     return log.str();
 }
+std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const boost::shared_ptr<FxBsParametrization>& parametrization,
+                                  const boost::shared_ptr<Parametrization>& domesticIrModel) {
+    auto lgmParametrization = boost::dynamic_pointer_cast<IrLgm1fParametrization>(parametrization);
+    if (lgmParametrization) {
+        return getCalibrationDetails(basket, parametrization, lgmParametrization);
+    } else {
+        return std::string();
+    }
+}
 
 std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                                   const boost::shared_ptr<FxBsParametrization>& parametrization,
@@ -198,6 +220,17 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
     }
     log << "t >= " << t << ": fxbsSigma = " << modelSigma << "\n";
     return log.str();
+}
+
+std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const boost::shared_ptr<EqBsParametrization>& parametrization,
+                                  const boost::shared_ptr<Parametrization>& domesticIrModel) {
+    auto lgmParametrization = boost::dynamic_pointer_cast<IrLgm1fParametrization>(parametrization);
+    if (lgmParametrization) {
+        return getCalibrationDetails(basket, parametrization, lgmParametrization);
+    } else {
+        return std::string();
+    }
 }
 
 std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
@@ -338,6 +371,15 @@ string getCalibrationDetails(const vector<boost::shared_ptr<CalibrationHelper>>&
     }
 
     return log.str();
+}
+
+std::string getCalibrationDetails(const boost::shared_ptr<Parametrization>& irModelParametrization) {
+    auto lgmParametrization = boost::dynamic_pointer_cast<IrLgm1fParametrization>(irModelParametrization);
+    if (lgmParametrization) {
+        return getCalibrationDetails(lgmParametrization);
+    } else {
+        return std::string();
+    }
 }
 
 string getCalibrationDetails(const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
