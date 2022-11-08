@@ -650,5 +650,13 @@ Real aux_fx_covariance(const CrossAssetModel* x, const Size j, const Time t0, co
     return res;
 }
 
+Real com_com_covariance(const CrossAssetModel* x, const Size k, const Size l, const Time t0, const Time dt) {
+    // Size i = x->ccyIndex(x->combs(k)->currency()); // ccy underlying commodity k
+    // Size j = x->ccyIndex(x->combs(l)->currency()); // ccy underlying commodity l
+    // FIXME: Relax assumption that all commodity currencies = numeraire currency
+    Real res = integral(x, P(rcc(k, l), coms(k), coms(l)), t0, t0 + dt);
+    return res;
+}
+
 } // namespace CrossAssetAnalytics
 } // namespace QuantExt

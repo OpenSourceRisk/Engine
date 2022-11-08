@@ -126,6 +126,9 @@ models/carrmadanarbitragecheck.cpp
 models/cdsoptionhelper.cpp
 models/cirppimplieddefaulttermstructure.cpp
 models/cmscaphelper.cpp
+models/combsconstantparametrization.cpp
+models/combsparametrization.cpp
+models/combspiecewiseconstantparametrization.cpp
 models/cpicapfloorhelper.cpp
 models/crcirpp.cpp
 models/crossassetanalytics.cpp
@@ -497,6 +500,9 @@ models/cirppconstantparametrization.hpp
 models/cirppimplieddefaulttermstructure.hpp
 models/cirppparametrization.hpp
 models/cmscaphelper.hpp
+models/combsconstantparametrization.hpp
+models/combsparametrization.hpp
+models/combspiecewiseconstantparametrization.hpp
 models/cpicapfloorhelper.hpp
 models/crcirpp.hpp
 models/crlgm1fparametrization.hpp

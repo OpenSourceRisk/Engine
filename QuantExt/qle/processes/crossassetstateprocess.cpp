@@ -119,7 +119,7 @@ Array CrossAssetStateProcess::initialValues() const {
                 std::log(model_->infjy(i)->index()->fxSpotToday()->value());
         }
     }
-    /* infdk, crlgm1f processes have initial value 0 */
+    /* infdk, crlgm1f and commodity processes have initial value 0 */
     return res;
 }
 
@@ -309,6 +309,8 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
     }
 
     /* no drift for infdk, crlgm1f components */
+    /* no drift in the one-factor non mean-reverting commodity case, 
+       this is different with non-zero kappa or in the two-factor Gabillon model where the first state variable has a drift */
     return res;
 }
 
@@ -334,6 +336,7 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const 
     Size d = model_->components(CrossAssetModel::AssetType::INF);
     Size c = model_->components(CrossAssetModel::AssetType::CR);
     Size e = model_->components(CrossAssetModel::AssetType::EQ);
+    Size com = model_->components(CrossAssetModel::AssetType::COM);
     // ir-ir
     for (Size i = 0; i < n; ++i) {
         Real alphai = model_->irlgm1f(i)->alpha(t);
@@ -380,6 +383,11 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const 
     for (Size i = 0; i < e; ++i) {
         Real sigmai = model_->eqbs(i)->sigma(t);
         setValue2(res, sigmai, model_, CrossAssetModel::AssetType::EQ, i, CrossAssetModel::AssetType::EQ, i, 0, 0);
+    }
+    // com-com
+    for (Size i = 0; i < com; ++i) {
+        Real sigmai = model_->combs(i)->sigma(t);
+        setValue2(res, sigmai, model_, CrossAssetModel::AssetType::COM, i, CrossAssetModel::AssetType::COM, i, 0, 0);
     }
 
     if (model_->measure() == IrModel::Measure::BA) {
@@ -543,6 +551,8 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticPr
         }
     }
 
+    /* no COM driftImpl1 contribution for one-factor non mean-reverting commodity case */
+    
     return res;
 }
 
@@ -603,6 +613,14 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl2(const StochasticPr
         res[model_->pIdx(CrossAssetModel::AssetType::CR, i, 1)] =
             x0[model_->pIdx(CrossAssetModel::AssetType::CR, i, 1)];
     }
+
+    /* commodity components are drift-free in the one-factor non mean-reverting case */
+    Size com = model_->components(CrossAssetModel::AssetType::COM);
+    for (Size i = 0; i < com; ++i) {
+        res[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)] =
+            x0[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)];
+    }
+    
     return res;
 }
 
@@ -614,6 +632,7 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
     Size d = model_->components(CrossAssetModel::AssetType::INF);
     Size c = model_->components(CrossAssetModel::AssetType::CR);
     Size e = model_->components(CrossAssetModel::AssetType::EQ);
+    Size com = model_->components(CrossAssetModel::AssetType::COM);
 
     if (model_->measure() == IrModel::Measure::BA) {
         // aux-aux
@@ -763,6 +782,17 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
                      CrossAssetModel::AssetType::EQ, j, 1, 0);
         }
     }
+    
+    // xyz - com
+    for (Size j = 0; j < com; ++j) {
+        for (Size i = 0; i <= j; ++i) {
+            // com-com
+            setValue(res, com_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::COM, i,
+                     CrossAssetModel::AssetType::COM, j, 0, 0);
+        }
+        // FIXME: All covariances between COM and other asset classes set to zero, overriding any non-zero factor correlation
+    }
+    
     return res;
 }
 

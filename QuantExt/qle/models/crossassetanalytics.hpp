@@ -405,6 +405,14 @@ Real aux_ir_covariance(const CrossAssetModel* model, const Size j, const Time t0
 */
 Real aux_fx_covariance(const CrossAssetModel* model, const Size j, const Time t0, const Time dt);
 
+/*! COM-COM state variable covariance, non mean-reverting single-factor case
+\f{eqnarray}{
+Cov \left[\Delta X_i, \Delta X_j] \right] &=&
+ \rho_{X_i,X_j} \int_{s}^{t} \sigma_{X_i}(u) \sigma_{X_j}(u) du\\
+\f}
+*/
+Real com_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+
 /*! IR H component */
 struct Hz {
     Hz(const Size i) : i_(i) {}
@@ -548,6 +556,13 @@ struct ss {
 struct vs {
     vs(const Size i) : i_(i) {}
     Real eval(const CrossAssetModel* x, const Real t) const { return x->eqbs(i_)->variance(t); }
+    const Size i_;
+};
+
+/*! COM sigma component, non mean-reverting single-factor case */
+struct coms {
+    coms(const Size i) : i_(i) {}
+    Real eval(const CrossAssetModel* x, const Real t) const { return x->combs(i_)->sigma(t); }
     const Size i_;
 };
 
@@ -707,6 +722,15 @@ struct rls {
     rls(const Size i, const Size j) : i_(i), j_(j) {}
     Real eval(const CrossAssetModel* x, const Real) const {
         return x->correlation(CrossAssetModel::AssetType::CR, i_, CrossAssetModel::AssetType::EQ, j_, 0, 0);
+    }
+    const Size i_, j_;
+};
+
+/*! COM-COM correlation component, non mean-reverting single-factor case */
+struct rcc {
+    rcc(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel* x, const Real) const {
+        return x->correlation(CrossAssetModel::AssetType::COM, i_, CrossAssetModel::AssetType::COM, j_, 0, 0);
     }
     const Size i_, j_;
 };
