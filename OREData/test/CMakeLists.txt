@@ -40,6 +40,7 @@ fxoption.cpp
 fxswap.cpp
 fxtriangulation.cpp
 fxvolcurve.cpp
+generalisedreplicatingvarianceswapengine.cpp
 indices.cpp
 inflationcapfloor.cpp
 inflationcurve.cpp
