@@ -31,26 +31,12 @@
 namespace ore {
 namespace data {
 
-namespace {
-bool compareVecMatrix(const std::vector<Matrix>& a, const std::vector<Matrix>& b) {
-    if (a.size() != b.size())
-        return false;
-    for (Size k = 0; k < a.size(); ++k) {
-        if (a[k].rows() != b[k].rows() || a[k].columns() != b[k].columns())
-            return false;
-        if (!std::equal(a[k].begin(), a[k].end(), b[k].begin()))
-            return false;
-    }
-    return true;
-}
-} // namespace
-
 bool HwModelData::operator==(const HwModelData& rhs) {
 
     if (qualifier_ != rhs.qualifier_ || calibrationType_ != rhs.calibrationType_ ||
         calibrateKappa_ != rhs.calibrateKappa_ || kappaType_ != rhs.kappaType_ || kappaTimes_ != rhs.kappaTimes_ ||
         kappaValues_ != rhs.kappaValues_ || calibrateSigma_ != rhs.calibrateSigma_ || sigmaType_ != rhs.sigmaType_ ||
-        sigmaTimes_ != rhs.sigmaTimes_ || !compareVecMatrix(sigmaValues_, rhs.sigmaValues_)) {
+        sigmaTimes_ != rhs.sigmaTimes_ || sigmaValues_ != rhs.sigmaValues_) {
         return false;
     }
     return true;
