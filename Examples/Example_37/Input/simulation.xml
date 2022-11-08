@@ -58,7 +58,7 @@
           <TimeGrid/>
           <InitialValue>
             <Kappa>
-              0.01
+              0.0
             </Kappa>
             <!-- <Kappa> -->
             <!--   0.0867495,0.0812171,0.0243276,0.0250822 -->
@@ -82,7 +82,7 @@
       <!--     <ReversionType>HullWhite</ReversionType> -->
       <!--     <ParamType>Constant</ParamType> -->
       <!--     <TimeGrid/> -->
-      <!--     <InitialValue>0.01</InitialValue> -->
+      <!--     <InitialValue>0.0</InitialValue> -->
       <!--   </Reversion> -->
       <!--   <CalibrationSwaptions> -->
       <!--     <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries> -->
