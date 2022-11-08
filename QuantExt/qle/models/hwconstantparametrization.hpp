@@ -60,8 +60,11 @@ template <class TS> QuantLib::Matrix HwConstantParametrization<TS>::y(const Quan
             for (Size k = 0; k < this->m_; ++k) {
                 y(i, j) += sigma_x(t)(k, i) * sigma_x(t)(k, j) * tmp;
             }
-            if (j < i)
-                y(j, i) = y(i, j);
+        }
+    }
+    for (Size i = 0; i < this->n_; ++i) {
+        for (Size j = 0; j < i; ++j) {
+            y(j, i) = y(i, j);
         }
     }
     return y;
@@ -73,9 +76,9 @@ QuantLib::Array HwConstantParametrization<TS>::g(const QuantLib::Time t, const Q
     QuantLib::Array g(this->n_, 0.0);
     for (Size i = 0; i < this->n_; ++i) {
         if (std::abs(kappa_[i]) < zeroKappaCutoff_) {
-            g[i] = (1.0 - std::exp(-kappa_[i] * (T - t)));
-        } else {
             g[i] = T - t;
+        } else {
+            g[i] = (1.0 - std::exp(-kappa_[i] * (T - t))) / kappa_[i];
         }
     }
     return g;
