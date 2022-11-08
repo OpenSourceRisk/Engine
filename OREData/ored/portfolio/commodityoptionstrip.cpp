@@ -399,7 +399,6 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const boost::sha
                     effectiveStrike, cf->useFuturePrice(), cf->index()->expiryDate());
             } else {
                 auto undCcy = cf->index()->priceCurve()->currency();
-                //FIXME: add support the cross-currency trades after 1.0.63.1 (QPR-11128) is merged in master, as it allows for specification of an fxIndex
                 QL_REQUIRE(undCcy.code() == legData_.currency(), "Strips of commodity digital options do not support intra-currency trades yet.");
                 commOption = boost::make_shared<CommodityDigitalOption>(
                     envelope(), optionData, commLegData_->name(), legData_.currency(), effectiveStrike.value(), effectiveQuantity*payoffPerUnit(),
