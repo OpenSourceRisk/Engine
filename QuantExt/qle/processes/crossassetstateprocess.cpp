@@ -93,7 +93,7 @@ void CrossAssetStateProcess::updateSqrtCorrelation() const {
 
 Array CrossAssetStateProcess::initialValues() const {
     Array res(model_->dimension(), 0.0);
-    /* irlgm1f processes have initial value 0 */
+    /* irlgm1f / irhw processes have initial value 0 */
     for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::FX); ++i) {
         /* fxbs processes are in log spot */
         res[model_->pIdx(CrossAssetModel::AssetType::FX, i, 0)] = std::log(model_->fxbs(i)->fxSpotToday()->value());
@@ -416,7 +416,7 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
             Array dwTmp(model_->irModel(i)->m() + model_->irModel(i)->m_aux());
             Size startw = model_->wIdx(CrossAssetModel::AssetType::IR, i, 0);
             Size endw = startw + model_->irModel(i)->m() + model_->irModel(i)->m_aux();
-            std::copy(std::next(dw.begin(), startw), std::next(dw.end(), endw), dwTmp.begin());
+            std::copy(std::next(dw.begin(), startw), std::next(dw.begin(), endw), dwTmp.begin());
 
             auto r = p->evolve(t0, x0Tmp, dt, dwTmp);
 

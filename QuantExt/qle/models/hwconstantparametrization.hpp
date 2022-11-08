@@ -58,7 +58,7 @@ template <class TS> QuantLib::Matrix HwConstantParametrization<TS>::y(const Quan
                 tmp = (1.0 - std::exp(-(kappa_[i] + kappa_[j]) * t)) / (kappa_[i] + kappa_[j]);
             }
             for (Size k = 0; k < this->m_; ++k) {
-                y(i, j) += sigma_x(t)(i, k) * sigma_x(t)(j, k) * tmp;
+                y(i, j) += sigma_x(t)(k, i) * sigma_x(t)(k, j) * tmp;
             }
             if (j < i)
                 y(j, i) = y(i, j);
