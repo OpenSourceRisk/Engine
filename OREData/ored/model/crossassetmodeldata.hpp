@@ -255,6 +255,13 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
+
+    //! \name Operators
+    //@{
+    bool operator==(const CrossAssetModelData& rhs);
+    bool operator!=(const CrossAssetModelData& rhs);
+    //@}
+
     //! helper to convert LGM data, possibly including defaults, into an IR config vector
     void buildIrConfigs(map<string, boost::shared_ptr<IrModelData>>& irMap);
     //! helper to convert FX data, possibly including defaults, into an FX config vector

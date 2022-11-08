@@ -142,7 +142,19 @@ bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
     }
 
     for (Size i = 0; i < irConfigs_.size(); i++) {
-        if (*irConfigs_[i] != *(rhs.irConfigs_[i])) {
+        auto c1 = boost::dynamic_pointer_cast<LgmData>(irConfigs_[i]);
+        auto c2 = boost::dynamic_pointer_cast<LgmData>(irConfigs_[i]);
+        auto c3 = boost::dynamic_pointer_cast<HwModelData>(irConfigs_[i]);
+        auto c4 = boost::dynamic_pointer_cast<HwModelData>(irConfigs_[i]);
+        if (c1 != nullptr && c2 != nullptr) {
+            if (*c1 != *c2) {
+                return false;
+            }
+        } else if (c3 != nullptr && c4 != nullptr) {
+            if (*c3 != *c4) {
+                return false;
+            }
+        } else {
             return false;
         }
     }
