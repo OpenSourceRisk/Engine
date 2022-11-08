@@ -122,20 +122,8 @@ map<Date, HelperValues> jyHelperValues(const vector<boost::shared_ptr<Calibratio
 } // namespace
 
 std::string getCalibrationDetails(LgmCalibrationInfo& info,
-    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-    const boost::shared_ptr<Parametrization>& parametrization) {
-    auto lgmParametrization = boost::dynamic_pointer_cast<IrLgm1fParametrization>(parametrization);
-    if (lgmParametrization){
-        return getCalibrationDetails(info, basket, parametrization);
-    } else {
-        return std::string();
-    }
-}
-
-
-std::string getCalibrationDetails(LgmCalibrationInfo& info,
-                                  const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-                                  const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
+                                     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+                                     const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
         << "marketVol" << std::setw(14) << "(diff)" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
@@ -371,15 +359,6 @@ string getCalibrationDetails(const vector<boost::shared_ptr<CalibrationHelper>>&
     }
 
     return log.str();
-}
-
-std::string getCalibrationDetails(const boost::shared_ptr<Parametrization>& irModelParametrization) {
-    auto lgmParametrization = boost::dynamic_pointer_cast<IrLgm1fParametrization>(irModelParametrization);
-    if (lgmParametrization) {
-        return getCalibrationDetails(lgmParametrization);
-    } else {
-        return std::string();
-    }
 }
 
 string getCalibrationDetails(const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {

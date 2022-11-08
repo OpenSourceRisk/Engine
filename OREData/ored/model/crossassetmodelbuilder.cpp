@@ -260,7 +260,7 @@ void CrossAssetModelBuilder::buildModel() const {
             irParametrizations.push_back(parametrization);
             irDiscountCurves.push_back(builder->discountCurve());
             subBuilders_[CrossAssetModel::AssetType::IR][i] = builder;
-            processInfo[CrossAssetModel::AssetType::IR].emplace_back(ir->ccy(), 1);
+            processInfo[CrossAssetModel::AssetType::IR].emplace_back(ir->ccy(), parametrization->m());
         }
     }
 

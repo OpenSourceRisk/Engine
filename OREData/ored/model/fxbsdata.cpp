@@ -64,7 +64,7 @@ void FxBsData::fromXML(XMLNode* node) {
     // Add FX Option calibration instruments
     XMLNode* optionsNode = XMLUtils::getChildNode(node, "CalibrationOptions");
 
-    optionExpiries_ = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Expiries", true);
+    optionExpiries_ = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Expiries", false);
     optionStrikes_ = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Strikes", false);
 
     if (optionStrikes_.size() > 0) {
