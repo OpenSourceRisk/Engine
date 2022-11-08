@@ -93,6 +93,12 @@ public:
     std::vector<std::string>& optionStrikes() { return optionStrikes_; }
     //@}
 
+    //! \name Operators
+    //@{
+    bool operator==(const HwModelData& rhs);
+    bool operator!=(const HwModelData& rhs);
+    //@}
+
 private:
     bool calibrateKappa_;
     ParamType kappaType_;

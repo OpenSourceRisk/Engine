@@ -31,6 +31,33 @@
 namespace ore {
 namespace data {
 
+namespace {
+bool compareVecMatrix(const std::vector<Matrix>& a, const std::vector<Matrix>& b) {
+    if (a.size() != b.size())
+        return false;
+    for (Size k = 0; k < a.size(); ++k) {
+        if (a[k].rows() != b[k].rows() || a[k].columns() != b[k].columns())
+            return false;
+        if (!std::equal(a[k].begin(), a[k].end(), b[k].begin()))
+            return false;
+    }
+    return true;
+}
+} // namespace
+
+bool HwModelData::operator==(const HwModelData& rhs) {
+
+    if (qualifier_ != rhs.qualifier_ || calibrationType_ != rhs.calibrationType_ ||
+        calibrateKappa_ != rhs.calibrateKappa_ || kappaType_ != rhs.kappaType_ || kappaTimes_ != rhs.kappaTimes_ ||
+        kappaValues_ != rhs.kappaValues_ || calibrateSigma_ != rhs.calibrateSigma_ || sigmaType_ != rhs.sigmaType_ ||
+        sigmaTimes_ != rhs.sigmaTimes_ || !compareVecMatrix(sigmaValues_, rhs.sigmaValues_)) {
+        return false;
+    }
+    return true;
+}
+
+bool HwModelData::operator!=(const HwModelData& rhs) { return !(*this == rhs); }
+
 void HwModelData::clear() {
     optionExpiries_.clear();
     optionTerms_.clear();
@@ -47,11 +74,11 @@ void HwModelData::reset() {
     calibrateSigma_ = false;
     sigmaType_ = ParamType::Constant;
     sigmaTimes_ = {};
-    sigmaValues_ = {Matrix(1,1,0.03)};
+    sigmaValues_ = {Matrix(1, 1, 0.03)};
 }
 
 void HwModelData::fromXML(XMLNode* node) {
-    
+
     qualifier_ = XMLUtils::getAttribute(node, "key");
     if (qualifier_.empty()) {
         std::string ccy = XMLUtils::getAttribute(node, "ccy");
@@ -78,9 +105,7 @@ void HwModelData::fromXML(XMLNode* node) {
     kappaTimes_ = XMLUtils::getChildrenValuesAsDoublesCompact(reversionNode, "TimeGrid", true);
     LOG("Hull White Reversion time grid size = " << kappaTimes_.size());
 
-
-    
-    XMLNode* initialValuesNode = XMLUtils::getChildNode(reversionNode, "InitialValue");     
+    XMLNode* initialValuesNode = XMLUtils::getChildNode(reversionNode, "InitialValue");
     for (XMLNode* child = XMLUtils::getChildNode(initialValuesNode, "Kappa"); child;
          child = XMLUtils::getNextSibling(child, "Kappa")) {
         auto kappa_t = XMLUtils::getNodeValueAsDoublesCompact(child);
@@ -135,7 +160,7 @@ void HwModelData::fromXML(XMLNode* node) {
     for (size_t i = 0; i < sigmaValues_.size(); ++i) {
         QL_REQUIRE(sigmaValues_[i].rows() == m_brownians, "all sigma matrixes need to have the same row dimension");
     }
-    
+
     IrModelData::fromXML(node);
     LOG("HwModelData done");
 }
@@ -143,12 +168,12 @@ void HwModelData::fromXML(XMLNode* node) {
 XMLNode* HwModelData::toXML(XMLDocument& doc) {
 
     XMLNode* hwModelNode = IrModelData::toXML(doc);
-     // reversion
+    // reversion
     XMLNode* reversionNode = XMLUtils::addChild(doc, hwModelNode, "Reversion");
     XMLUtils::addChild(doc, reversionNode, "Calibrate", calibrateKappa_);
     XMLUtils::addGenericChild(doc, reversionNode, "ParamType", kappaType_);
     XMLUtils::addGenericChildAsList(doc, reversionNode, "TimeGrid", kappaTimes_);
-    
+
     auto kappaNode = XMLUtils::addChild(doc, reversionNode, "InitialValue");
     for (const auto& kappa : kappaValues_) {
         std::ostringstream oss;
@@ -168,7 +193,6 @@ XMLNode* HwModelData::toXML(XMLDocument& doc) {
 
     XMLUtils::addGenericChild(doc, volatilityNode, "ParamType", sigmaType_);
     XMLUtils::addGenericChildAsList(doc, volatilityNode, "TimeGrid", sigmaTimes_);
-    
 
     auto sigmaValues = XMLUtils::addChild(doc, reversionNode, "InitialValue");
     for (const auto& sigma : sigmaValues_) {
@@ -179,7 +203,7 @@ XMLNode* HwModelData::toXML(XMLDocument& doc) {
                 oss << "";
             } else {
                 oss << sigma[row][0];
-                for (Size col = 0;  col < sigma.columns(); col++) {
+                for (Size col = 0; col < sigma.columns(); col++) {
                     oss << ", " << sigma[row][col];
                 }
             }
