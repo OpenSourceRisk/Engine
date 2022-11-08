@@ -323,6 +323,31 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 
 BOOST_FIXTURE_TEST_SUITE(CrossAssetModelDataTests, F)
 
+BOOST_AUTO_TEST_CASE(testToXMLFromXML) {
+
+    BOOST_TEST_MESSAGE("Testing toXML/fromXML...");
+
+    data::CrossAssetModelData data = *crossAssetData();
+    XMLDocument OutDoc;
+
+    XMLNode* simulationNode = OutDoc.allocNode("Simulation");
+    OutDoc.appendNode(simulationNode);
+
+    XMLNode* crossAssetModelNode = data.toXML(OutDoc);
+    XMLUtils::appendNode(simulationNode, crossAssetModelNode);
+
+    std::string filename = TEST_OUTPUT_FILE("simulationtest.xml");
+    OutDoc.toFile(filename);
+
+    data::CrossAssetModelData newData;
+    newData.fromFile(filename);
+
+    BOOST_CHECK(data == newData);
+
+    newData.irConfigs() = {};
+    BOOST_CHECK(data != newData);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

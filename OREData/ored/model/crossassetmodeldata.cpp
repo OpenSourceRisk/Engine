@@ -126,6 +126,59 @@ bool InstantaneousCorrelations::operator==(const InstantaneousCorrelations& rhs)
     return true;
 }
 
+bool InstantaneousCorrelations::operator!=(const InstantaneousCorrelations& rhs) { return !(*this == rhs); }
+
+bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
+
+    if (*correlations_ != *rhs.correlations_)
+        return false;
+
+    if (domesticCurrency_ != rhs.domesticCurrency_ || currencies_ != rhs.currencies_ || equities_ != rhs.equities_ ||
+        infindices_ != rhs.infindices_ || bootstrapTolerance_ != rhs.bootstrapTolerance_ ||
+        irConfigs_.size() != rhs.irConfigs_.size() || fxConfigs_.size() != rhs.fxConfigs_.size() ||
+        eqConfigs_.size() != rhs.eqConfigs_.size() || infConfigs_.size() != rhs.infConfigs_.size() ||
+        crLgmConfigs_.size() != rhs.crLgmConfigs_.size() || crCirConfigs_.size() != rhs.crCirConfigs_.size()) {
+        return false;
+    }
+
+    for (Size i = 0; i < irConfigs_.size(); i++) {
+        if (*irConfigs_[i] != *(rhs.irConfigs_[i])) {
+            return false;
+        }
+    }
+
+    for (Size i = 0; i < fxConfigs_.size(); i++) {
+        if (*fxConfigs_[i] != *(rhs.fxConfigs_[i])) {
+            return false;
+        }
+    }
+
+    for (Size i = 0; i < eqConfigs_.size(); i++) {
+        if (*eqConfigs_[i] != *(rhs.eqConfigs_[i])) {
+            return false;
+        }
+    }
+
+    // Not checking inflation model data for equality. The equality operators were only written to support
+    // unit testing toXML and fromXML. Questionable if it should be done this way.
+
+    for (Size i = 0; i < crLgmConfigs_.size(); i++) {
+        if (*crLgmConfigs_[i] != *(rhs.crLgmConfigs_[i])) {
+            return false;
+        }
+    }
+
+    for (Size i = 0; i < crCirConfigs_.size(); i++) {
+        if (*crCirConfigs_[i] != *(rhs.crCirConfigs_[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool CrossAssetModelData::operator!=(const CrossAssetModelData& rhs) { return !(*this == rhs); }
+
 void CrossAssetModelData::clear() {
     currencies_.clear();
     equities_.clear();
