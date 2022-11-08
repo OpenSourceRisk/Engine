@@ -126,13 +126,7 @@
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Acadia Inc.}
-%\date{7 October 2016}
-%\date{28 April 2017}
-%\date{7 December 2017}
-%\date{28 May 2019}
-%\date{19 June 2020}
-%\date{30 June 2021}
-\date{26 August 2022}
+\date{\today}
 \maketitle
 
 \newpage
@@ -152,6 +146,7 @@ Date & Author & Comment \\
 19 June 2020 & Quaternion & updates for release 5\\
 30 June 2021 & Acadia & updates for release 6\\
 16 September 2022 & Acadia & updates for release 7\\
+12 December & Acadia & updates for release 8\\
 \hline
 \end{supertabular}
 \end{center}
@@ -2094,7 +2089,6 @@ The relevant configuration changes that trigger this modelling are in the Parame
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
   <Parameters>
-    <Discretization> ... </Discretization>
     <Grid> ... </Grid>
     <Calendar> ... </Calendar>
     <Sequence> ... </Sequence>
@@ -3657,7 +3651,6 @@ Let us discuss this section using the following example
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Parameters>
-  <Discretization>Exact</Discretization>
   <Grid>80,3M</Grid>
   <Calendar>EUR,USD,GBP,CHF</Calendar>
   <DayCounter>ACT/ACT</DayCounter>
@@ -3676,10 +3669,6 @@ Let us discuss this section using the following example
 \end{listing}
 
 \begin{itemize}
-\item {\tt Discretization:} Chooses between time discretization schemes for the risk factor evolution. {\em Exact} means
-exploiting the analytical tractability of the model to avoid any time discretization error. {\em Euler} uses a naive time
-discretization scheme which has numerical error and requires small time steps for accurate results (useful for testing
-purposes)
 \item {\tt Grid:} Specifies the simulation time grid, here 80 quarterly steps.\footnote{For exposure calculation under DIM, the second parameter has to match the Margin Period of Risk, i.e. if {\tt MarginPeriodOfRisk} is set to for instance {\tt 2W} in a netting set definition in {\tt netting.xml}, then one has to set {\tt Grid} to for instance {\tt 80,2W}.}
 \item {\tt Calendar:} Calendar or combination of calendars used to adjust the dates of the grid. Date adjustment is
 required because the simulation must step over 'good' dates on which index fixings can be stored.
@@ -3734,6 +3723,7 @@ exceptions, but add to the run time of ORE.
   </Currencies>
   <BootstrapTolerance>0.0001</BootstrapTolerance>
   <Measure>LGM</Measure><!-- Choices: LGM, BA -->
+  <Discretization>Exact</Discretization>
   <!-- ... -->
 </CrossAssetModel>
 \end{minted}
@@ -3744,7 +3734,12 @@ exceptions, but add to the run time of ORE.
 Bootstrap tolerance is a global parameter that applies to the calibration of all model components. If the calibration
 error of any component exceeds this tolerance, this will trigger an exception at runtime, early in the ORE process.
 
-The Measure tag allows switching between the LGM and the Bank Account (BA) measure for the risk-neutral market simulations using the Cross Asset Model. Note that within LGM one can shift the horizon (see ParameterTransformation below) to effectively switch to a T-Forward measure. 
+The Measure tag allows switching between the LGM and the Bank Account (BA) measure for the risk-neutral market simulations using the Cross Asset Model. Note that within LGM one can shift the horizon (see ParameterTransformation below) to effectively switch to a T-Forward measure.
+
+The Discretization tag chooses between time discretization schemes for the risk factor evolution. {\em Exact} means
+exploiting the analytical tractability of the model to avoid any time discretization error. {\em Euler} uses a naive
+time discretization scheme which has numerical error and requires small time steps for accurate results (useful for
+testing purposes or if more sophisticated component models are used.)
  
 \medskip
 
@@ -5737,7 +5732,7 @@ This node should hold a real number. It provides an upper bound for the search d
 
 
 %========================================================
-%\section{Trade Data}\label{sec:portfolio_data}
+\section{Trade Data}\label{sec:portfolio_data}
 %========================================================
 \input{tradedata/intro}
 \input{tradedata/envelope}
@@ -5761,6 +5756,7 @@ This node should hold a real number. It provides an upper bound for the search d
 \input{tradedata/fx_europeanbarrieroption}
 \input{tradedata/fx_kikobarrieroption}
 \input{tradedata/fx_touchoption}
+\input{tradedata/fxvarianceswap}
 \input{tradedata/equityoption}
 \input{tradedata/equityfuturesoption}
 \input{tradedata/equityforward}
@@ -5772,13 +5768,20 @@ This node should hold a real number. It provides an upper bound for the search d
 \input{tradedata/eq_doubletouchoption}
 \input{tradedata/eq_europeanbarrieroption}
 \input{tradedata/eq_touchoption}
+\input{tradedata/equityvarianceswap}
+\input{tradedata/equitycliquetoption}
 \input{tradedata/cpiswap}
 \input{tradedata/yyswap}
 \input{tradedata/bond}
 \input{tradedata/forwardbond}
 \input{tradedata/creditdefaultswap}
-\input{tradedata/commodityoption}
 \input{tradedata/commodityforward}
+\input{tradedata/commodityswap}
+\input{tradedata/commodityswaption}
+\input{tradedata/commodityoption}
+\input{tradedata/commodityapo}
+\input{tradedata/commodityoptionstrip}
+\input{tradedata/commodityvarianceswap}
 
 %\include{tradecomponents}
 \input{tradecomponents/tradecomponentsintro}
@@ -5801,6 +5804,9 @@ This node should hold a real number. It provides an upper bound for the search d
 \input{tradecomponents/cpileg}
 \input{tradecomponents/yyleg}
 \input{tradecomponents/zerocouponleg}
+\input{tradecomponents/commodityfixedleg}
+\input{tradecomponents/commodityfloatingleg}
+\input{tradecomponents/equitymarginleg}
 \input{tradecomponents/cdsreferenceinformation}
 \input{tradecomponents/underlying}
 \input{tradecomponents/strikedata}

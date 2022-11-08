@@ -120,6 +120,18 @@
     <ClInclude Include="qle\instruments\tenorbasisswap.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\genericswaption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\varianceswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\volatilityfromvarianceswapengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
     <ClInclude Include="qle\pricingengines\crossccyswapengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
@@ -212,6 +224,9 @@
     </ClInclude>
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp">
       <Filter>methods</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\commodityswaptionengine.hpp">
+      <Filter>pricingengines</Filter>
     </ClInclude>
     <ClInclude Include="qle\pricingengines\analyticcclgmfxoptionengine.hpp">
       <Filter>pricingengines</Filter>
@@ -574,6 +589,12 @@
       <Filter>cashflows</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\equitycouponpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\equitymargincoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\equitymargincouponpricer.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\brlcdi.hpp">
@@ -1264,9 +1285,14 @@
     <ClInclude Include="qle\termstructures\inflation\piecewisezeroinflationcurve.hpp">
       <Filter>termstructures\inflation</Filter>
     </ClInclude>
-    <ClInclude Include="qle\models\blackscholesmodelwrapper.hpp" />
     <ClInclude Include="qle\calendars\unitedarabemirates.hpp">
       <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\cliquetoption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\blackscholesmodelwrapper.hpp">
+      <Filter>models</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1536,6 +1562,15 @@
     <ClCompile Include="qle\pricingengines\depositengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
+    <ClCompile Include="qle\instruments\varianceswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\volatilityfromvarianceswapengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\varianceswapgeneralreplicationengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
     <ClCompile Include="qle\termstructures\strippedoptionletadapter2.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
@@ -1692,6 +1727,12 @@
     <ClCompile Include="qle\cashflows\equitycouponpricer.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
+    <ClCompile Include="qle\cashflows\equitymargincoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\equitymargincouponpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
     <ClCompile Include="qle\termstructures\discountratiomodifiedcurve.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
@@ -1795,6 +1836,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\discountingforwardbondengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\commodityswaptionengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.cpp">
@@ -2165,6 +2209,12 @@
     </ClCompile>
     <ClCompile Include="qle\calendars\unitedarabemirates.cpp">
       <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\genericswaption.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\cliquetoption.cpp">
+      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

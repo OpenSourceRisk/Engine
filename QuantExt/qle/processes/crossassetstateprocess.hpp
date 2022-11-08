@@ -41,10 +41,7 @@ class CrossAssetModel;
  */
 class CrossAssetStateProcess : public StochasticProcess {
 public:
-    enum discretization { exact, euler };
-
-    CrossAssetStateProcess(const CrossAssetModel* const model, discretization disc,
-                           SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::Spectral);
+    CrossAssetStateProcess(const CrossAssetModel* const model);
 
     /*! StochasticProcess interface */
     Size size() const override;
@@ -63,10 +60,10 @@ protected:
     void updateSqrtCorrelation() const;
 
     const CrossAssetModel* const model_;
+
     std::vector<boost::shared_ptr<StochasticProcess>> crCirpp_;
-    const discretization disc_;
-    SalvagingAlgorithm::Type salvaging_;
     Size cirppCount_;
+
     mutable Matrix sqrtCorrelation_;
 
     class ExactDiscretization : public StochasticProcess::discretization {
