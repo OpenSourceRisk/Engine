@@ -505,6 +505,7 @@
     <ClInclude Include="qle\calendars\amendedcalendar.hpp" />
     <ClInclude Include="qle\calendars\luxembourg.hpp" />
     <ClInclude Include="qle\calendars\malaysia.hpp" />
+    <ClInclude Include="qle\calendars\mauritius.hpp" />
     <ClInclude Include="qle\calendars\netherlands.hpp" />
     <ClInclude Include="qle\calendars\peru.hpp" />
     <ClInclude Include="qle\calendars\philippines.hpp" />
@@ -713,6 +714,7 @@
     <ClInclude Include="qle\models\fxbspiecewiseconstantparametrization.hpp" />
     <ClInclude Include="qle\models\fxeqoptionhelper.hpp" />
     <ClInclude Include="qle\models\gaussian1dcrossassetadaptor.hpp" />
+    <ClInclude Include="qle\models\hwmodel.hpp" />
     <ClInclude Include="qle\models\infdkparametrization.hpp" />
     <ClInclude Include="qle\models\infjyparameterization.hpp" />
     <ClInclude Include="qle\models\irlgm1fconstantparametrization.hpp" />
@@ -730,6 +732,7 @@
     <ClInclude Include="qle\models\lgmvectorised.hpp" />
     <ClInclude Include="qle\models\linearannuitymapping.hpp" />
     <ClInclude Include="qle\models\linkablecalibratedmodel.hpp" />
+    <ClInclude Include="qle\models\modelimpliedyieldtermstructure.hpp" />
     <ClInclude Include="qle\models\normalsabr.hpp" />
     <ClInclude Include="qle\models\normalsabrinterpolation.hpp" />
     <ClInclude Include="qle\models\normalsabrsmilesection.hpp" />
@@ -931,6 +934,7 @@
     <ClCompile Include="qle\calendars\amendedcalendar.cpp" />
     <ClCompile Include="qle\calendars\luxembourg.cpp" />
     <ClCompile Include="qle\calendars\malaysia.cpp" />
+    <ClCompile Include="qle\calendars\mauritius.cpp" />
     <ClCompile Include="qle\calendars\netherlands.cpp" />
     <ClCompile Include="qle\calendars\peru.cpp" />
     <ClCompile Include="qle\calendars\philippines.cpp" />
@@ -1059,6 +1063,7 @@
     <ClCompile Include="qle\models\fxbspiecewiseconstantparametrization.cpp" />
     <ClCompile Include="qle\models\fxeqoptionhelper.cpp" />
     <ClCompile Include="qle\models\gaussian1dcrossassetadaptor.cpp" />
+    <ClCompile Include="qle\models\hwmodel.cpp" />
     <ClCompile Include="qle\models\infjyparameterization.cpp" />
     <ClCompile Include="qle\models\jyimpliedyoyinflationtermstructure.cpp" />
     <ClCompile Include="qle\models\jyimpliedzeroinflationtermstructure.cpp" />
@@ -1070,6 +1075,7 @@
     <ClCompile Include="qle\models\lgmvectorised.cpp" />
     <ClCompile Include="qle\models\linearannuitymapping.cpp" />
     <ClCompile Include="qle\models\linkablecalibratedmodel.cpp" />
+    <ClCompile Include="qle\models\modelimpliedyieldtermstructure.cpp" />
     <ClCompile Include="qle\models\normalsabr.cpp" />
     <ClCompile Include="qle\models\normalsabrsmilesection.cpp" />
     <ClCompile Include="qle\models\parametrization.cpp" />
