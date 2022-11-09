@@ -26,6 +26,7 @@
 #include <ored/portfolio/commodityapo.hpp>
 #include <ored/portfolio/commoditylegbuilder.hpp>
 #include <ored/portfolio/commodityoptionstrip.hpp>
+#include <ored/portfolio/commoditydigitaloption.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
@@ -63,11 +64,12 @@ CommodityOptionStrip::CommodityOptionStrip(const Envelope& envelope, const LegDa
                                            const vector<Position::Type>& putPositions, const vector<Real>& putStrikes,
                                            Real premium, const string& premiumCurrency, const Date& premiumPayDate,
                                            const string& style, const string& settlement,
-                                           const BarrierData& callBarrierData, const BarrierData& putBarrierData)
+                                           const BarrierData& callBarrierData, const BarrierData& putBarrierData,
+                                           const bool isDigital, Real payoffPerUnit)
     : Trade("CommodityOptionStrip", envelope), legData_(legData), callPositions_(callPositions),
       callStrikes_(callStrikes), putPositions_(putPositions), putStrikes_(putStrikes), premium_(premium),
       premiumCurrency_(premiumCurrency), premiumPayDate_(premiumPayDate), style_(style), settlement_(settlement),
-      callBarrierData_(callBarrierData), putBarrierData_(putBarrierData) {}
+      callBarrierData_(callBarrierData), putBarrierData_(putBarrierData), isDigital_(isDigital), unaryPayoff_(payoffPerUnit) {}
 
 void CommodityOptionStrip::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
@@ -97,6 +99,7 @@ void CommodityOptionStrip::build(const boost::shared_ptr<EngineFactory>& engineF
 
     // Build the strip of option trades
     legData_.concreteLegData();
+
     if (commLegData_->isAveraged() && !cflb->allAveraging()) {
         buildAPOs(leg, engineFactory);
     } else {
@@ -162,6 +165,15 @@ void CommodityOptionStrip::fromXML(XMLNode* node) {
     settlement_ = "";
     if (XMLNode* n = XMLUtils::getChildNode(stripNode, "Settlement"))
         settlement_ = XMLUtils::getNodeValue(n);
+
+    isDigital_ = false;
+    if (XMLNode* n = XMLUtils::getChildNode(stripNode, "IsDigital") )
+        isDigital_ = parseBool(XMLUtils::getNodeValue(n));
+    if (isDigital_) {
+        XMLNode* n = XMLUtils::getChildNode(stripNode, "PayoffPerUnit");
+        QL_REQUIRE(n, "A strip of commodity digital options requires PayoffPerUnit node");
+        unaryPayoff_ = parseReal(XMLUtils::getNodeValue(n));
+    }
 }
 
 XMLNode* CommodityOptionStrip::toXML(XMLDocument& doc) {
@@ -207,6 +219,10 @@ XMLNode* CommodityOptionStrip::toXML(XMLDocument& doc) {
     if (!settlement_.empty())
         XMLUtils::addChild(doc, stripNode, "Settlement", settlement_);
 
+    if (isDigital_){
+        XMLUtils::addChild(doc, stripNode, "IsDigital", isDigital_);
+        XMLUtils::addChild(doc, stripNode, "PayoffPerUnit", unaryPayoff_);
+    }
     return node;
 }
 
@@ -375,19 +391,28 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const boost::sha
                                   settlement, "", PremiumData(), {}, {}, "", "", "", {}, {}, "", "", "", "", "",
                                   automaticExercise, boost::none, paymentData);
 
-            CommodityOption commOption(envelope(), optionData, commLegData_->name(), legData_.currency(),
-                                       effectiveQuantity, effectiveStrike, cf->useFuturePrice(),
-                                       cf->index()->expiryDate());
 
-            commOption.id() = tempDatum.id;
-            commOption.build(engineFactory);
-            boost::shared_ptr<InstrumentWrapper> instWrapper = commOption.instrument();
+            boost::shared_ptr<Trade> commOption;
+            if(!isDigital()) {
+                commOption = boost::make_shared<CommodityOption>(
+                    envelope(), optionData, commLegData_->name(), legData_.currency(), effectiveQuantity,
+                    effectiveStrike, cf->useFuturePrice(), cf->index()->expiryDate());
+            } else {
+                auto undCcy = cf->index()->priceCurve()->currency();
+                QL_REQUIRE(undCcy.code() == legData_.currency(), "Strips of commodity digital options do not support intra-currency trades yet.");
+                commOption = boost::make_shared<CommodityDigitalOption>(
+                    envelope(), optionData, commLegData_->name(), legData_.currency(), effectiveStrike.value(), effectiveQuantity*payoffPerUnit(),
+                    cf->useFuturePrice(), cf->index()->expiryDate());
+            }
+            commOption->id() = tempDatum.id;
+            commOption->build(engineFactory);
+            boost::shared_ptr<InstrumentWrapper> instWrapper = commOption->instrument();
             additionalInstruments.push_back(instWrapper->qlInstrument());
             additionalMultipliers.push_back(instWrapper->multiplier());
 
             // Update the notional_ each time. It will hold the notional of the last instrument which is arbitrary
             // but reasonable as this is the instrument that we use as the main instrument below.
-            notional_ = commOption.notional();
+            notional_ = commOption->notional();
         }
     }
 

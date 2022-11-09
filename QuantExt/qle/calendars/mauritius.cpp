@@ -19,7 +19,7 @@
 #include <qle/calendars/mauritius.hpp>
 
 namespace QuantExt {
-Mauritius::Mauritius(Market) {
+Mauritius::Mauritius(Market m) {
     // all calendar instances share the same implementation instance
     static ext::shared_ptr<Calendar::Impl> impl(new Mauritius::SemImpl);
     impl_ = impl;
