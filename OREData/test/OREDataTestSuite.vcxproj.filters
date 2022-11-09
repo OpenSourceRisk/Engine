@@ -160,5 +160,23 @@
     <ClCompile Include="equityasianoption.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="fxexotics.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityapo.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityswaption.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="compositetrade.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="compositewrapper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="generalisedreplicatingvarianceswapengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
