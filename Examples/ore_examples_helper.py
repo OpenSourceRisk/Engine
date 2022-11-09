@@ -225,13 +225,16 @@ class OreExample(object):
         self.ax.legend(loc="upper left", shadow=True)
         self.ax.set_title(title)
 
-    def decorate_plot(self, title, ylabel="Exposure", xlabel="Time / Years", legend_loc="upper right"):
+    def decorate_plot(self, title, ylabel="Exposure", xlabel="Time / Years", legend_loc="upper right", y_format_as_int = True, display_grid = False):
         self.ax.set_title(title)
         self.ax.set_xlabel(xlabel)
         self.ax.set_ylabel(ylabel)
         self.ax.legend(loc=legend_loc, shadow=True)
-        self.ax.get_yaxis().set_major_formatter(
-            matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+        if y_format_as_int:
+            self.ax.get_yaxis().set_major_formatter(
+                matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+        if display_grid:
+            self.ax.grid()
 
     def plot_line(self, xvals, yvals, color, label):
         self.ax.plot(xvals, yvals, color=color, label=label, linewidth=2)
