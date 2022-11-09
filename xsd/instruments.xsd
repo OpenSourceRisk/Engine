@@ -970,6 +970,8 @@
       <xs:element type="premiumData" name="Premiums" minOccurs="0"/>
       <xs:element type="xs:string" name="Style" minOccurs="0"/>
       <xs:element type="settlementType" name="Settlement" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="IsDigital" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:double" name="PayoffPerUnit" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 

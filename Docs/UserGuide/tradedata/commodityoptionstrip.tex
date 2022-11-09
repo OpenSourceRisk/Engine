@@ -1,4 +1,4 @@
-\subsubsection{Commodity Option Strip}
+\usepackage{listings}\subsubsection{Commodity Option Strip}
 \label{ss:commodityoptionstrip}
 
 The structure of a trade node representing a commodity option strip is shown in listing \ref{lst:commodity_option_strip}. This node can be used to represent a strip of commodity average price options as described in section \ref{ss:input_commodityapo} or a strip of European commodity options as described in section \ref{ss:input_commodity_option}. It consists of the generic \lstinline!Envelope! and the specific \lstinline!CommodityOptionStripData! node.
@@ -26,6 +26,10 @@ The \lstinline!Premiums! node allows for the addition of premiums. If the \lstin
 The optional \lstinline!Style! node can be set to \lstinline!European! or \lstinline!American! to change the exercise style for the strip of options. If not set, \lstinline!European! is assumed. If the strip is a strip of APOs, \lstinline!European! is assumed and a warning is issued if \lstinline!Style! is not \lstinline!European!.
 
 The optional \lstinline!Settlement! node can be set to \lstinline!Cash! or \lstinline!Physical! to change the settlement method for the strip of options. If not set, \lstinline!Cash! is assumed. If the strip is a strip of APOs, \lstinline!Cash! is assumed and a warning is issued if \lstinline!Settlement! is not \lstinline!Cash!.
+
+The optional \lstinline!IsDigital! node allows the creation of a strip of \lstinline!CommodityDigitalOption!s (see \ref{ss:input_commodity_digital_option}). If set to \lstinline!true! the node \lstinline!PayoffPerUnit! needs to be set.
+
+Node \lstinline!PayoffPerUnit! [Optional] specifies the payoff per commodity unit, expressed in leg currency, in case a digital option is exercised. If the trade is a strip of digital options, this node must be set. It accepts real numbers as input.
 
 \begin{listing}[h!]
 \begin{minted}[fontsize=\footnotesize]{xml}
