@@ -643,6 +643,8 @@
     <ClCompile Include="ccyswapwithresets.cpp" />
     <ClCompile Include="cds.cpp" />
     <ClCompile Include="cms.cpp" />
+    <ClCompile Include="commodityapo.cpp" />
+    <ClCompile Include="commodityswaption.cpp" />
     <ClCompile Include="commodityasianoption.cpp" />
     <ClCompile Include="commoditycurve.cpp" />
     <ClCompile Include="commoditycurveconfig.cpp" />
@@ -674,6 +676,7 @@
     <ClCompile Include="fxswap.cpp" />
     <ClCompile Include="fxtriangulation.cpp" />
     <ClCompile Include="fxvolcurve.cpp" />
+    <ClCompile Include="generalisedreplicatingvarianceswapengine.cpp" />
     <ClCompile Include="indices.cpp" />
     <ClCompile Include="inflationcapfloor.cpp" />
     <ClCompile Include="inflationcurve.cpp" />
