@@ -91,6 +91,13 @@ struct YoYInflationCurveCalibrationInfo : public InflationCurveCalibrationInfo {
     std::vector<double> yoyRates;
 };
 
+// commodity curves
+
+struct CommodityCurveCalibrationInfo {
+    virtual ~CommodityCurveCalibrationInfo() {}
+    double commDummyInfo{0.0};
+};
+
 // fx, eq vols
 
 struct FxEqVolCalibrationInfo {
@@ -161,6 +168,8 @@ struct TodaysMarketCalibrationInfo {
     std::map<std::string, boost::shared_ptr<YieldCurveCalibrationInfo>> dividendCurveCalibrationInfo;
     // inflation curves
     std::map<std::string, boost::shared_ptr<InflationCurveCalibrationInfo>> inflationCurveCalibrationInfo;
+    // commodity curves
+    std::map<std::string, boost::shared_ptr<CommodityCurveCalibrationInfo>> commodityCurveCalibrationInfo;
     // fx vols
     std::map<std::string, boost::shared_ptr<FxEqVolCalibrationInfo>> fxVolCalibrationInfo;
     // eq vols

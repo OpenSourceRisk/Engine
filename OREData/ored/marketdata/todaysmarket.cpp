@@ -716,10 +716,10 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             QL_REQUIRE(commodityCurveSpec, "Failed to convert spec, " << *spec << ", to CommodityCurveSpec");
             auto itr = requiredCommodityCurves_.find(commodityCurveSpec->name());
             if (itr == requiredCommodityCurves_.end()) {
-                DLOG("Building CommodityCurve for asof " << asof_);
+                DLOG("Building CommodityCurve " << commodityCurveSpec->name() << " for asof " << asof_);
                 boost::shared_ptr<CommodityCurve> commodityCurve =
                     boost::make_shared<CommodityCurve>(asof_, *commodityCurveSpec, *loader_, *curveConfigs_, *fx_,
-                                                       requiredYieldCurves_, requiredCommodityCurves_);
+                                                       requiredYieldCurves_, requiredCommodityCurves_, buildCalibrationInfo_);
                 itr = requiredCommodityCurves_.insert(make_pair(commodityCurveSpec->name(), commodityCurve)).first;
             }
 

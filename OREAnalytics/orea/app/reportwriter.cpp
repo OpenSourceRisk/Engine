@@ -1252,6 +1252,13 @@ void addInflationCurveCalibrationInfo(ore::data::Report& report, const std::stri
     }
 }
 
+void addCommodityCurveCalibrationInfo(ore::data::Report& report, const std::string& id,
+                                      boost::shared_ptr<CommodityCurveCalibrationInfo> const& info) {
+    if(info == nullptr)
+        return ;
+    addRowMktCalReport(report, "commodityCurve", id, "commodityDummyInfo", "", "", "", info->commDummyInfo);
+}
+
 void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& type, const std::string& id,
                                boost::shared_ptr<FxEqVolCalibrationInfo> info) {
     if (info == nullptr)
@@ -1402,6 +1409,12 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
 
     for (auto const& r : calibrationInfo->inflationCurveCalibrationInfo) {
         addInflationCurveCalibrationInfo(report, r.first, r.second);
+    }
+
+    // commodity curve results
+
+    for (auto const& r :calibrationInfo->commodityCurveCalibrationInfo) {
+        addCommodityCurveCalibrationInfo(report, r.first, r.second);
     }
 
     // fx vol results
