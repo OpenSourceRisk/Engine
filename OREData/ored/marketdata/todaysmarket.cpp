@@ -727,6 +727,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                                            << configuration);
             Handle<CommodityIndex> commIdx(itr->second->commodityIndex());
             commodityIndices_[make_pair(configuration, node.name)] = commIdx;
+            calibrationInfo_->commodityCurveCalibrationInfo[commodityCurveSpec->name()] = CommodityCurve().calibrationInfo();
             break;
         }
 
