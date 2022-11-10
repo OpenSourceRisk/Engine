@@ -394,6 +394,8 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const 
 
 namespace {
 Array getProjectedArray(const Array& source, Size start, Size length) {
+    QL_REQUIRE(source.size() >= start + length, "getProjectedArray(): internal errors: source size "
+                                                    << source.size() << ", start" << start << ", length " << length);
     return Array(std::next(source.begin(), start), std::next(source.begin(), start + length));
 }
 
@@ -465,7 +467,7 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
                 getProjectedArray(x0, model_->pIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->n());
             Array dwTmp =
                 getProjectedArray(dz, model_->wIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->m());
-            auto r = model_->fxModel(i)->eulerStep(t0, x0Tmp, dt, dwTmp, shortRates[0], shortRates[i]);
+            auto r = model_->fxModel(i)->eulerStep(t0, x0Tmp, dt, dwTmp, shortRates[0], shortRates[i + 1]);
             std::copy(r.begin(), r.end(), std::next(res.begin(), model_->pIdx(CrossAssetModel::AssetType::FX, i, 0)));
         }
 
