@@ -33,21 +33,22 @@ namespace QuantExt {
 /*! COM parametrization for the Schwartz (1997) mean-reverting one-factor model
     with log-normal forward price dynamics and forward volatility sigma * exp(-kappa*(T-t)):
     dF(t,T) / F(t,T) = sigma * exp(-kappa * (T-t)) * dW    
-    The model can be propagated in terms of an artificial spot price process S(t) = A(t) * exp(B(t) * X(t))
+    The model can be propagated in terms of an artificial spot price process of the form 
+    S(t) = A(t) * exp(B(t) * X(t))
     where    
         dX(t) = -kappa * X(t) * dt + sigma * dW(t)
-    and the stochastic future price curve in terms of X is
+    The stochastic future price curve in terms of X(t) is
         F(t,T) = F(0,T) * exp( X(t) * exp(-kappa*(T-t) - 1/2 * (V(0,T) - V(t,T))
-               = F(0,t) * exp( Y(t) * exp(-kappa*T) - 1/2 * (V(0,T) - V(t,T))
+    with
         V(t,T) = sigma^2 * (1 - exp(-2*kappa*(T-t))) / (2*kappa)
     Instead of state variable X we can use 
         Y(t) = exp(kappa * t) * X(t) 
-    with
+    with drift-free
         dY(t) = sigma * exp(kappa * t) * dW
-    or 
         Y(t) = int_0^t sigma * exp(kappa * s) * dW(s)
-    with zero drift and variance
         Var(Y(t)) = sigma^2 * (exp(2*kappa*t) - 1) / (2*kappa)
+    The stochastic future price curve in terms of Y(t) is 
+        F(t,T) = F(0,t) * exp( Y(t) * exp(-kappa*T) - 1/2 * (V(0,T) - V(t,T))
 
     \ingroup models
 */
