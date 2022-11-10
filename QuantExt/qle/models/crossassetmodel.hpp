@@ -32,7 +32,7 @@
 #include <qle/models/hwmodel.hpp>
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infjyparameterization.hpp>
-#include <qle/models/combsparametrization.hpp>
+#include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/lgm.hpp>
 
 #include <qle/processes/crossassetstateprocess.hpp>
@@ -54,7 +54,7 @@ using namespace QuantLib;
 class CrossAssetModel : public LinkableCalibratedModel {
 public:
     enum class AssetType : Size { IR = 0, FX = 1, INF = 2, CR = 3, EQ = 4, COM = 5 };
-    enum class ModelType { LGM1F, HW, BS, DK, CIRPP, JY };
+    enum class ModelType { LGM1F, HW, BS, DK, CIRPP, JY, GAB };
     enum class Discretization { Euler, Exact };
 
     static constexpr Size numberOfAssetTypes = 6;
@@ -213,7 +213,7 @@ public:
     const boost::shared_ptr<EqBsParametrization> eqbs(const Size ccy) const;
 
     /*! COMBS components */
-    const boost::shared_ptr<ComBsParametrization> combs(const Size ccy) const;
+    const boost::shared_ptr<CommoditySchwartzParametrization> combs(const Size ccy) const;
 
     /* ... add more components here ...*/
 
@@ -592,9 +592,9 @@ inline const boost::shared_ptr<EqBsParametrization> CrossAssetModel::eqbs(const 
     return tmp;
 }
 
-inline const boost::shared_ptr<ComBsParametrization> CrossAssetModel::combs(const Size name) const {
-    boost::shared_ptr<ComBsParametrization> tmp =
-        boost::dynamic_pointer_cast<ComBsParametrization>(p_[idx(CrossAssetModel::AssetType::COM, name)]);
+inline const boost::shared_ptr<CommoditySchwartzParametrization> CrossAssetModel::combs(const Size name) const {
+    boost::shared_ptr<CommoditySchwartzParametrization> tmp =
+        boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[idx(CrossAssetModel::AssetType::COM, name)]);
     QL_REQUIRE(tmp, "model at " << name << " is not COM-BS");
     return tmp;
 }

@@ -126,9 +126,8 @@ models/carrmadanarbitragecheck.cpp
 models/cdsoptionhelper.cpp
 models/cirppimplieddefaulttermstructure.cpp
 models/cmscaphelper.cpp
-models/combsconstantparametrization.cpp
-models/combsparametrization.cpp
-models/combspiecewiseconstantparametrization.cpp
+models/commodityschwartzparametrization.cpp
+models/commodityschwartzmodel.cpp
 models/cpicapfloorhelper.cpp
 models/crcirpp.cpp
 models/crossassetanalytics.cpp
@@ -200,6 +199,7 @@ pricingengines/oiccbasisswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
 pricingengines/varianceswapgeneralreplicationengine.cpp
 pricingengines/volatilityfromvarianceswapengine.cpp
+processes/commodityschwartzstateprocess.cpp
 processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
@@ -500,9 +500,9 @@ models/cirppconstantparametrization.hpp
 models/cirppimplieddefaulttermstructure.hpp
 models/cirppparametrization.hpp
 models/cmscaphelper.hpp
-models/combsconstantparametrization.hpp
-models/combsparametrization.hpp
-models/combspiecewiseconstantparametrization.hpp
+models/commoditymodel.hpp
+models/commodityschwartzmodel.hpp
+models/commodityschwartzparametrization.hpp
 models/cpicapfloorhelper.hpp
 models/crcirpp.hpp
 models/crlgm1fparametrization.hpp
@@ -587,6 +587,7 @@ pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
 pricingengines/varianceswapgeneralreplicationengine.hpp
 pricingengines/volatilityfromvarianceswapengine.hpp
+processes/commodityschwartzstateprocess.hpp
 processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
 processes/irhwstateprocess.hpp

@@ -14,6 +14,7 @@ calendars.cpp
 capfloortermvolcurve.cpp
 cashflow.cpp
 commodityforward.cpp
+commodityschwartzmodel.cpp
 correlationtermstructure.cpp
 cpicapfloor.cpp
 crcirpp.cpp

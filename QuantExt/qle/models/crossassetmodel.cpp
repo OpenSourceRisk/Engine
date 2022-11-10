@@ -293,7 +293,7 @@ CrossAssetModel::getComponentType(const Size i) const {
         return std::make_pair(CrossAssetModel::AssetType::CR, CrossAssetModel::ModelType::CIRPP);
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return std::make_pair(CrossAssetModel::AssetType::EQ, CrossAssetModel::ModelType::BS);
-    if (boost::dynamic_pointer_cast<ComBsParametrization>(p_[i]))
+    if (boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]))
         return std::make_pair(CrossAssetModel::AssetType::COM, CrossAssetModel::ModelType::BS);
     QL_FAIL("parametrization " << i << " has unknown type");
 }
@@ -319,7 +319,7 @@ Size CrossAssetModel::getNumberOfBrownians(const Size i) const {
         return 1;
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return 1;
-    if (boost::dynamic_pointer_cast<ComBsParametrization>(p_[i]))
+    if (boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]))
         return 1;
     QL_FAIL("parametrization " << i << " has unknown type");
 }
@@ -343,7 +343,7 @@ Size CrossAssetModel::getNumberOfAuxBrownians(const Size i) const {
         return 0;
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return 0;
-    if (boost::dynamic_pointer_cast<ComBsParametrization>(p_[i]))
+    if (boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]))
         return 0;
     QL_FAIL("parametrization " << i << " has unknown type");
 }
@@ -369,7 +369,7 @@ Size CrossAssetModel::getNumberOfStateVariables(const Size i) const {
         return 2;
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return 1;
-    if (boost::dynamic_pointer_cast<ComBsParametrization>(p_[i]))
+    if (boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]))
         return 1;
     QL_FAIL("parametrization " << i << " has unknown type");
 }

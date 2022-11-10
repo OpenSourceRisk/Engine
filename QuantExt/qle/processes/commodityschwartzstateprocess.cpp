@@ -16,13 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/combsparametrization.hpp>
+#include <qle/processes/commodityschwartzstateprocess.hpp>
 
 namespace QuantExt {
 
-ComBsParametrization::ComBsParametrization(const Currency& comCcy, const std::string& comName,
-                                           const Handle<CommodityIndex>& comIndex,
-                                           const Handle<Quote>& fxSpotToday)
-    : Parametrization(comCcy, comName), comIndex_(comIndex), fxSpotToday_(fxSpotToday) {}
+    CommoditySchwartzStateProcess::CommoditySchwartzStateProcess(const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization,
+                                                                 const CommoditySchwartzModel::Discretization discretization)
+    : p_(parametrization) {}
 
 } // namespace QuantExt
