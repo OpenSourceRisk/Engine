@@ -187,8 +187,8 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
              * This implementation completely neglects the fx index volatility.
              * To include it the correlation between the commodity index and the fx index is required
              */
-            Real fxRate = (arguments_.fxIndex)?arguments_.fxIndex->fixing(fixingDate):1.0;
-            forwards.push_back(fxRate*p.second->fixing(fixingDate)); // apply the fx rate daily on the relevant future prices
+            Real fxRate = (arguments_.fxIndex) ? arguments_.fxIndex->fixing(fixingDate) : 1.0;
+            forwards.push_back(fxRate * p.second->fixing(fixingDate)); // apply the fx rate daily on the relevant future prices
             times.push_back(volStructure_->timeFromReference(p.first));
             if (arguments_.flow->useFuturePrice()) {
                 Date expiry = p.second->expiryDate();
@@ -308,11 +308,11 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot() const {
         expHalfFwdVar[i] = exp(-expHalfFwdVar[i] / 2.0);
         Real fxRate{1.};
         if(arguments_.flow->fxIndex())
-            fxRate=arguments_.flow->fxIndex()->fixing(dates[i+1]);
+            fxRate = arguments_.flow->fxIndex()->fixing(dates[i+1]);
         fwdRatio[i] = fxRate * arguments_.flow->index()->fixing(dates[i + 1]);
         if (i > 0) {
             if(arguments_.flow->fxIndex())
-                fxRate=arguments_.flow->fxIndex()->fixing(dates[i]);
+                fxRate = arguments_.flow->fxIndex()->fixing(dates[i]);
             fwdRatio[i] /= (fxRate * arguments_.flow->index()->fixing(dates[i]));
         }
     }
