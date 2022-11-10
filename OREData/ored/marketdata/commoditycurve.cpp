@@ -170,10 +170,11 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
         Handle<PriceTermStructure> pts(commodityPriceCurve_);
         commodityIndex_ = parseCommodityIndex(spec_.curveConfigID(), false, pts);
 
-        if(buildCalibrationInfo){
-            calibrationInfo_->commDummyInfo = -1.0;
+        if (buildCalibrationInfo) {
+            auto calInfo = boost::make_shared<CommodityCurveCalibrationInfo>();
+            calInfo->commDummyInfo = -1.0;
+            calibrationInfo_ = calInfo;
         }
-
     } catch (std::exception& e) {
         QL_FAIL("commodity curve building failed: " << e.what());
     } catch (...) {
