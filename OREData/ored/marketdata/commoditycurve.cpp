@@ -112,7 +112,8 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
                                const CurveConfigurations& curveConfigs,
                                const FXTriangulation& fxSpots,
                                const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                               const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves)
+                               const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
+                               bool const buildCalibrationInfo)
     : spec_(spec), commoditySpot_(Null<Real>()), onValue_(Null<Real>()), tnValue_(Null<Real>()), regexQuotes_(false) {
 
     try {
@@ -168,6 +169,10 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
         
         Handle<PriceTermStructure> pts(commodityPriceCurve_);
         commodityIndex_ = parseCommodityIndex(spec_.curveConfigID(), false, pts);
+
+        if(buildCalibrationInfo){
+            calibrationInfo_->commDummyInfo = -1.0;
+        }
 
     } catch (std::exception& e) {
         QL_FAIL("commodity curve building failed: " << e.what());
