@@ -162,12 +162,16 @@ void LgmData::fromXML(XMLNode* node) {
 
     // Parameter transformation config
 
-    XMLNode* tranformNode = XMLUtils::getChildNode(node, "ParameterTransformation");
-    shiftHorizon_ = XMLUtils::getChildValueAsDouble(tranformNode, "ShiftHorizon", true);
-    LOG("LGM shift horizon = " << shiftHorizon_);
+    if (XMLNode* tranformNode = XMLUtils::getChildNode(node, "ParameterTransformation")) {
+        shiftHorizon_ = XMLUtils::getChildValueAsDouble(tranformNode, "ShiftHorizon", true);
+        LOG("LGM shift horizon = " << shiftHorizon_);
 
-    scaling_ = XMLUtils::getChildValueAsDouble(tranformNode, "Scaling", true);
-    LOG("LGM scaling = " << scaling_);
+        scaling_ = XMLUtils::getChildValueAsDouble(tranformNode, "Scaling", true);
+        LOG("LGM scaling = " << scaling_);
+    } else {
+        shiftHorizon_ = 0.0;
+        scaling_ = 1.0;
+    }
 
     IrModelData::fromXML(node);
 
