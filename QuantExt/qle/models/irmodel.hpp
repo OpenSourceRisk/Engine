@@ -69,6 +69,11 @@ public:
     numeraire(const QuantLib::Time t, const QuantLib::Array& x,
               const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
               const QuantLib::Array& aux = Array()) const = 0;
+
+    /*! short rate at t */
+    virtual QuantLib::Real shortRate(
+        const QuantLib::Time t, const QuantLib::Array& x,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const = 0;
 };
 
 } // namespace QuantExt

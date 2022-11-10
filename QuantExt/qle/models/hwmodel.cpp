@@ -52,6 +52,13 @@ QuantLib::Real HwModel::numeraire(const QuantLib::Time t, const QuantLib::Array&
            (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
 }
 
+QuantLib::Real HwModel::shortRate(const QuantLib::Time t, const QuantLib::Array& x,
+                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
+    return std::accumulate(x.begin(), x.end(), 0.0) +
+           (discountCurve.empty() ? parametrization_->termStructure()->forwardRate(t, t, Compounding::Continuous)
+                                  : discountCurve->forwardRate(t, t, Compounding::Continuous));
+}
+
 void HwModel::update() {
     parametrization_->update();
     notifyObservers();
