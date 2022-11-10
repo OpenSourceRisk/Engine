@@ -521,11 +521,11 @@ inline const boost::shared_ptr<Parametrization> CrossAssetModel::eq(const Size i
 }
 
 inline const boost::shared_ptr<IrModel> CrossAssetModel::irModel(const Size ccy) const {
-    return irModels_[idx(CrossAssetModel::AssetType::IR, ccy)];
+    return irModels_[ccy];
 }
 
 inline const boost::shared_ptr<FxModel> CrossAssetModel::fxModel(const Size ccy) const {
-    return fxModels_[idx(CrossAssetModel::AssetType::FX, ccy)];
+    return fxModels_[ccy];
 }
 
 inline const boost::shared_ptr<HwModel> CrossAssetModel::hw(const Size ccy) const {
