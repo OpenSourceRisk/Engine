@@ -169,10 +169,19 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
         
         Handle<PriceTermStructure> pts(commodityPriceCurve_);
         commodityIndex_ = parseCommodityIndex(spec_.curveConfigID(), false, pts);
+        commodityPriceCurve_->pillarDates();
 
-        if (buildCalibrationInfo) {
+        if (buildCalibrationInfo) { // the curve is built, save info for later usage
             auto calInfo = boost::make_shared<CommodityCurveCalibrationInfo>();
-            calInfo->commDummyInfo = -1.0;
+            calInfo->dayCounter = dayCounter_.name();
+            calInfo->interpolationMethod = interpolationMethod_;
+            calInfo->calendar = commodityPriceCurve_->calendar().name();
+            calInfo->currency = commodityPriceCurve_->currency().code();
+            for (auto d : commodityPriceCurve_->pillarDates()){
+                calInfo->times.emplace_back(commodityPriceCurve_->timeFromReference(d));
+                calInfo->pillarDates.emplace_back(d);
+                calInfo->futurePrices.emplace_back(commodityPriceCurve_->price(d, true));
+            }
             calibrationInfo_ = calInfo;
         }
     } catch (std::exception& e) {

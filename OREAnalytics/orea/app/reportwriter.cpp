@@ -1256,7 +1256,16 @@ void addCommodityCurveCalibrationInfo(ore::data::Report& report, const std::stri
                                       boost::shared_ptr<CommodityCurveCalibrationInfo> const& info) {
     if(info == nullptr)
         return ;
-    addRowMktCalReport(report, "commodityCurve", id, "commodityDummyInfo", "", "", "", info->commDummyInfo);
+    addRowMktCalReport(report, "commodityCurve", id, "calendar", "", "", "", info->calendar);
+    addRowMktCalReport(report, "commodityCurve", id, "dayCounter", "", "", "", info->dayCounter);
+    addRowMktCalReport(report, "commodityCurve", id, "currenct", "", "", "", info->currency);
+    addRowMktCalReport(report, "commodityCurve", id, "interpolationMethod", "", "", "", info->interpolationMethod);
+
+    for (Size i = 0; i < info->pillarDates.size(); ++i){
+        auto date = to_string(info->pillarDates.at(i));
+        addRowMktCalReport(report, "commodityCurve", id, "time", date, "", "", info->times.at(i));
+        addRowMktCalReport(report, "commodityCurve", id, "price", date, "", "", info->futurePrices.at(i));
+    }
 }
 
 void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& type, const std::string& id,

@@ -94,8 +94,14 @@ struct YoYInflationCurveCalibrationInfo : public InflationCurveCalibrationInfo {
 // commodity curves
 
 struct CommodityCurveCalibrationInfo {
-    virtual ~CommodityCurveCalibrationInfo() {}
-    double commDummyInfo{0.0};
+    virtual ~CommodityCurveCalibrationInfo() = default;
+    std::string dayCounter;
+    std::string calendar;
+    std::string currency;
+    std::string interpolationMethod;
+    std::vector<QuantLib::Date> pillarDates;
+    std::vector<QuantLib::Real> futurePrices;
+    std::vector<QuantLib::Real> times;
 };
 
 // fx, eq vols
