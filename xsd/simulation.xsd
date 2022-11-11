@@ -582,7 +582,7 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
-      <xs:element name="CalibrationOptions">
+      <xs:element name="CalibrationOptions" minOccurs="0">
         <xs:complexType>
           <xs:all>
             <xs:element type="xs:string" name="Expiries"/>
