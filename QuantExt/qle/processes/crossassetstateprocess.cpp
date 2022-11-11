@@ -445,13 +445,15 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
         Array shortRates(model_->components(CrossAssetModel::AssetType::IR));
         for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::IR); ++i) {
             auto p = model_->irModel(i)->stateProcess();
-            Array x0Tmp = getProjectedArray(x0, model_->pIdx(CrossAssetModel::AssetType::IR, i, 0),
-                                            model_->irModel(i)->n() + model_->irModel(i)->n_aux());
-            Array dwTmp = getProjectedArray(dz, model_->wIdx(CrossAssetModel::AssetType::IR, i, 0),
-                                            model_->irModel(i)->m() + model_->irModel(i)->m_aux());
-            auto r = p->evolve(t0, x0Tmp, dt, dwTmp);
+            auto r = p->evolve(t0,
+                               getProjectedArray(x0, model_->pIdx(CrossAssetModel::AssetType::IR, i, 0),
+                                                 model_->irModel(i)->n() + model_->irModel(i)->n_aux()),
+                               dt,
+                               getProjectedArray(dz, model_->wIdx(CrossAssetModel::AssetType::IR, i, 0),
+                                                 model_->irModel(i)->m() + model_->irModel(i)->m_aux()));
             std::copy(r.begin(), r.end(), std::next(res.begin(), model_->pIdx(CrossAssetModel::AssetType::IR, i, 0)));
-            shortRates[i] = model_->irModel(i)->shortRate(t0, x0Tmp);
+            shortRates[i] = model_->irModel(i)->shortRate(
+                t0, getProjectedArray(x0, model_->pIdx(CrossAssetModel::AssetType::IR, i, 0), model_->irModel(i)->n()));
         }
 
         // apply drift adjustment to ir processes in non-domestic currency
@@ -463,11 +465,10 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
         // eolve fx processes
 
         for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::FX); ++i) {
-            Array x0Tmp =
-                getProjectedArray(x0, model_->pIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->n());
-            Array dwTmp =
-                getProjectedArray(dz, model_->wIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->m());
-            auto r = model_->fxModel(i)->eulerStep(t0, x0Tmp, dt, dwTmp, shortRates[0], shortRates[i + 1]);
+            auto r = model_->fxModel(i)->eulerStep(
+                t0, getProjectedArray(x0, model_->pIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->n()),
+                dt, getProjectedArray(dz, model_->wIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->m()),
+                shortRates[0], shortRates[i + 1]);
             std::copy(r.begin(), r.end(), std::next(res.begin(), model_->pIdx(CrossAssetModel::AssetType::FX, i, 0)));
         }
 
