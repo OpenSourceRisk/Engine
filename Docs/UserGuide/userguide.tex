@@ -958,6 +958,8 @@ Example & Description \\
 36 & Choice of Measure \\
 \hline
 37 & Multifactor Hull-White scenario generation \\
+\hline
+38 & Cross Currency Exposure using Multifactor Hull-White Models \\
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -2388,6 +2390,20 @@ The example also produces a plot comparing the input eigenvectors and the model 
   vector.}
 \label{fig:ex37}
 \end{figure}
+
+%--------------------------------------------------------------------
+\subsection{Cross Currency Swap Exposure using Multifactor Hull-White Models}% Example 38
+\label{example:38}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_38} is similar to Example 8 (EPE, ENE for xccy swap), but uses a
+multifactor HW model for EUR and USD to generate scenarios. The parametrization of the HW models is taken from Example
+37.
+
+Each of the two factors of each HW model is correlated with each of the two factors of the other currency's HW model and
+with the FX factors. Remember that the factors represent principal components of interest rate movements and so the
+correlations can be interpreted as correlations of these principal components with each other and the fx rate processes.
+
 
 \clearpage
 %========================================================
