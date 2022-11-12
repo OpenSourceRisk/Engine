@@ -24,6 +24,8 @@
 
 #include <boost/make_shared.hpp>
 
+#include <iostream>
+
 namespace QuantExt {
 
 using namespace CrossAssetAnalytics;
@@ -309,8 +311,7 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
     }
 
     /* no drift for infdk, crlgm1f components */
-    /* no drift in the one-factor non mean-reverting commodity case, 
-       this is different with non-zero kappa or in the two-factor Gabillon model where the first state variable has a drift */
+    /* no drift in the one-factor non mean-reverting commodity case with state variable y(t) = int_0^t sigma exp(kappa*s) dW(s) */
     return res;
 }
 
@@ -747,6 +748,7 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
                      CrossAssetModel::AssetType::CR, j, 1, 1);
         }
     }
+
     // ir,fx,inf,cr,eq - eq
     for (Size j = 0; j < e; ++j) {
         for (Size i = 0; i <= j; ++i) {
@@ -783,14 +785,53 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
         }
     }
     
-    // xyz - com
+    // ir,fx,inf,cr,eq, com - com
     for (Size j = 0; j < com; ++j) {
         for (Size i = 0; i <= j; ++i) {
             // com-com
-            setValue(res, com_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::COM, i,
+            setValue(res, com_com_covariance(model_, i, j, t0, dt), model_,
+                     CrossAssetModel::AssetType::COM, i,
+                     CrossAssetModel::AssetType::COM, j, 0, 0);
+        }       
+        for (Size i = 0; i < n; ++i) {
+            // ir-com
+            setValue(res, ir_com_covariance(model_, i, j, t0, dt), model_,
+                     CrossAssetModel::AssetType::IR, i,
                      CrossAssetModel::AssetType::COM, j, 0, 0);
         }
-        // FIXME: All covariances between COM and other asset classes set to zero, overriding any non-zero factor correlation
+        for (Size i = 0; i < (n - 1); ++i) {
+            // fx-com
+            setValue(res, fx_com_covariance(model_, i, j, t0, dt), model_,
+                     CrossAssetModel::AssetType::FX, i,
+                     CrossAssetModel::AssetType::COM, j, 0, 0);
+        }
+        for (Size i = 0; i < d; ++i) {
+            // inf-com
+            setValue(res, infz_com_covariance(model_, i, j, t0, dt), model_,
+                     CrossAssetModel::AssetType::INF, i,
+                     CrossAssetModel::AssetType::COM, j, 0, 0);
+            setValue(res, infy_com_covariance(model_, i, j, t0, dt), model_,
+                     CrossAssetModel::AssetType::INF, i,
+                     CrossAssetModel::AssetType::COM, j, 1, 0);
+        }
+        for (Size i = 0; i < c; ++i) {
+            // Skip CR components that are not LGM
+            if (model_->modelType(CrossAssetModel::AssetType::CR, i) != CrossAssetModel::ModelType::LGM1F)
+                continue;
+            // cr-com
+            setValue(res, crz_com_covariance(model_, i, j, t0, dt), model_,
+                     CrossAssetModel::AssetType::CR, i,
+                     CrossAssetModel::AssetType::COM, j, 0, 0);
+            setValue(res, cry_com_covariance(model_, i, j, t0, dt), model_,
+                     CrossAssetModel::AssetType::CR, i,
+                     CrossAssetModel::AssetType::COM, j, 1, 0);
+        }
+        for (Size i = 0; i < e; ++i) {
+            // eq-com
+            setValue(res, eq_com_covariance(model_, i, j, t0, dt), model_,
+                     CrossAssetModel::AssetType::EQ, i,
+                     CrossAssetModel::AssetType::COM, j, 0, 0);
+        }       
     }
     
     return res;

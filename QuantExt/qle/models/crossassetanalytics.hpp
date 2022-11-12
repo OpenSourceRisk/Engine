@@ -405,13 +405,22 @@ Real aux_ir_covariance(const CrossAssetModel* model, const Size j, const Time t0
 */
 Real aux_fx_covariance(const CrossAssetModel* model, const Size j, const Time t0, const Time dt);
 
-/*! COM-COM state variable covariance, non mean-reverting single-factor case
+/*! COM-COM state variable covariance, mean-reverting single-factor case
 \f{eqnarray}{
-Cov \left[\Delta X_i, \Delta X_j] \right] &=&
- \rho_{X_i,X_j} \int_{s}^{t} \sigma_{X_i}(u) \sigma_{X_j}(u) du\\
+Cov \left[\Delta Y_i, \Delta Y_j] \right] &=&
+ \rho_{Y_i,Y_j} \int_{s}^{t} \sigma_{Y_i}(u) \exp(\kappa_i u) \sigma_{Y_j}(u) \exp(\kappa_j u) du\\
 \f}
 */
 Real com_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+
+/*! TODO: COM covariance with all other risk factors */    
+Real ir_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real fx_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real infz_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real infy_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real cry_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real crz_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real eq_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! IR H component */
 struct Hz {
@@ -726,7 +735,7 @@ struct rls {
     const Size i_, j_;
 };
 
-/*! COM-COM correlation component, non mean-reverting single-factor case */
+/*! COM-COM correlation component, single-factor case */
 struct rcc {
     rcc(const Size i, const Size j) : i_(i), j_(j) {}
     Real eval(const CrossAssetModel* x, const Real) const {

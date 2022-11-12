@@ -659,7 +659,7 @@ void CrossAssetModel::checkModelConsistency() const {
     QL_REQUIRE(components(CrossAssetModel::AssetType::IR) > 0, "at least one IR component must be given");
     QL_REQUIRE(components(CrossAssetModel::AssetType::IR) + components(CrossAssetModel::AssetType::FX) +
                        components(CrossAssetModel::AssetType::INF) + components(CrossAssetModel::AssetType::CR) +
-                       components(CrossAssetModel::AssetType::EQ) ==
+                       components(CrossAssetModel::AssetType::EQ) + components(CrossAssetModel::AssetType::COM) ==
                    p_.size(),
                "the parametrizations must be given in the following order: ir, "
                "fx, inf, cr, eq, com, found "

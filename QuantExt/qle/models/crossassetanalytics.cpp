@@ -658,5 +658,54 @@ Real com_com_covariance(const CrossAssetModel* x, const Size k, const Size l, co
     return res;
 }
 
+Real ir_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
+    Real corr = model->correlation(CrossAssetModel::AssetType::IR, i, CrossAssetModel::AssetType::COM, j, 0, 0);
+    //FIXME
+    QL_REQUIRE(close_enough(corr, 0.0), "non-zero IR-COM correlation not implemented yet"); 
+    return 0.0;
+}
+
+Real fx_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
+    Real corr = model->correlation(CrossAssetModel::AssetType::FX, i, CrossAssetModel::AssetType::COM, j, 0, 0);
+    //FIXME
+    QL_REQUIRE(close_enough(corr, 0.0), "non-zero FX-COM correlation not implemented yet"); 
+    return 0.0;
+}
+
+Real infz_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
+    Real corr = model->correlation(CrossAssetModel::AssetType::INF, i, CrossAssetModel::AssetType::COM, j, 0, 0);
+    //FIXME
+    QL_REQUIRE(close_enough(corr, 0.0), "non-zero INF-COM correlation not implemented yet"); 
+    return 0.0;
+}
+
+Real infy_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
+    Real corr = model->correlation(CrossAssetModel::AssetType::INF, i, CrossAssetModel::AssetType::COM, j, 0, 0);
+    //FIXME
+    QL_REQUIRE(close_enough(corr, 0.0), "non-zero INF-COM correlation not implemented yet"); 
+    return 0.0;
+}
+
+Real cry_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
+    Real corr = model->correlation(CrossAssetModel::AssetType::CR, i, CrossAssetModel::AssetType::COM, j, 0, 0);
+    //FIXME
+    QL_REQUIRE(close_enough(corr, 0.0), "non-zero CR-COM correlation not implemented yet"); 
+    return 0.0;
+}
+
+Real crz_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
+    Real corr = model->correlation(CrossAssetModel::AssetType::CR, i, CrossAssetModel::AssetType::COM, j, 0, 0);
+    //FIXME
+    QL_REQUIRE(close_enough(corr, 0.0), "non-zero CR-COM correlation not implemented yet"); 
+    return 0.0;
+}
+    
+Real eq_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
+    Real corr = model->correlation(CrossAssetModel::AssetType::EQ, i, CrossAssetModel::AssetType::COM, j, 0, 0);
+    //FIXME
+    QL_REQUIRE(close_enough(corr, 0.0), "non-zero EQ-COM correlation not implemented yet"); 
+    return 0.0;
+}
+    
 } // namespace CrossAssetAnalytics
 } // namespace QuantExt
