@@ -86,7 +86,16 @@ Array IrHwStateProcess::drift(Time t, const Array& s) const {
     return result;
 }
 
-Matrix IrHwStateProcess::diffusion(Time t, const Array& s) const { return parametrization_->sigma_x(t); }
+Matrix IrHwStateProcess::diffusion(Time t, const Array& s) const {
+    Matrix res(size(), factors(), 0.0);
+    for (Size i = 0; i < parametrization_->n(); ++i) {
+        for (Size j = 0; j < res.columns(); ++j) {
+            res(i, j) = parametrization_->sigma_x(t)(j, i);
+        }
+    }
+    // the rest of the diffusion rows (if present for the aux state) is zero
+    return res;
+}
 
 } // namespace QuantExt
 

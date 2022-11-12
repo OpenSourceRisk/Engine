@@ -58,48 +58,6 @@ bool LgmData::operator==(const LgmData& rhs) {
 
 bool LgmData::operator!=(const LgmData& rhs) { return !(*this == rhs); }
 
-std::ostream& operator<<(std::ostream& oss, const ParamType& type) {
-    if (type == ParamType::Constant)
-        oss << "CONSTANT";
-    else if (type == ParamType::Piecewise)
-        oss << "PIECEWISE";
-    else
-        QL_FAIL("Parameter type not covered by <<");
-    return oss;
-}
-
-ParamType parseParamType(const string& s) {
-    if (boost::algorithm::to_upper_copy(s) == "CONSTANT")
-        return ParamType::Constant;
-    else if (boost::algorithm::to_upper_copy(s) == "PIECEWISE")
-        return ParamType::Piecewise;
-    else
-        QL_FAIL("Parameter type " << s << " not recognized");
-}
-
-CalibrationType parseCalibrationType(const string& s) {
-    if (boost::algorithm::to_upper_copy(s) == "BOOTSTRAP")
-        return CalibrationType::Bootstrap;
-    else if (boost::algorithm::to_upper_copy(s) == "BESTFIT")
-        return CalibrationType::BestFit;
-    else if (boost::algorithm::to_upper_copy(s) == "NONE")
-        return CalibrationType::None;
-    else
-        QL_FAIL("Calibration type " << s << " not recognized");
-}
-
-std::ostream& operator<<(std::ostream& oss, const CalibrationType& type) {
-    if (type == CalibrationType::Bootstrap)
-        oss << "BOOTSTRAP";
-    else if (type == CalibrationType::BestFit)
-        oss << "BESTFIT";
-    else if (type == CalibrationType::None)
-        oss << "NONE";
-    else
-        QL_FAIL("Calibration type not covered");
-    return oss;
-}
-
 LgmData::ReversionType parseReversionType(const string& s) {
     if (boost::algorithm::to_upper_copy(s) == "HULLWHITE")
         return LgmData::ReversionType::HullWhite;
@@ -138,49 +96,14 @@ std::ostream& operator<<(std::ostream& oss, const LgmData::VolatilityType& type)
     return oss;
 }
 
-CalibrationStrategy parseCalibrationStrategy(const string& s) {
-    if (boost::algorithm::to_upper_copy(s) == "COTERMINALATM")
-        return CalibrationStrategy::CoterminalATM;
-    else if (boost::algorithm::to_upper_copy(s) == "COTERMINALDEALSTRIKE")
-        return CalibrationStrategy::CoterminalDealStrike;
-    else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGATM")
-        return CalibrationStrategy::UnderlyingATM;
-    else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGDEALSTRIKE")
-        return CalibrationStrategy::UnderlyingDealStrike;
-    else if (boost::algorithm::to_upper_copy(s) == "NONE")
-        return CalibrationStrategy::None;
-    else
-        QL_FAIL("Calibration strategy " << s << " not recognized");
-}
-
-std::ostream& operator<<(std::ostream& oss, const CalibrationStrategy& type) {
-    if (type == CalibrationStrategy::CoterminalATM)
-        oss << "COTERMINALATM";
-    else if (type == CalibrationStrategy::CoterminalDealStrike)
-        oss << "COTERMINALDEALSTRIKE";
-    else if (type == CalibrationStrategy::UnderlyingATM)
-        oss << "UNDERLYINGATM";
-    else if (type == CalibrationStrategy::UnderlyingDealStrike)
-        oss << "UNDERLYINGDEALSTRIKE";
-    else if (type == CalibrationStrategy::None)
-        oss << "NONE";
-    else
-        QL_FAIL("Calibration strategy not covered");
-    return oss;
-}
-
 void LgmData::clear() {
-
     optionExpiries_.clear();
     optionTerms_.clear();
     optionStrikes_.clear();
 }
 
 void LgmData::reset() {
-    clear();
-
-    qualifier_ = "";
-    calibrationType_ = CalibrationType::Bootstrap;
+    IrModelData::reset();
     revType_ = ReversionType::HullWhite;
     volType_ = VolatilityType::HullWhite;
     calibrateH_ = false;
@@ -193,18 +116,10 @@ void LgmData::reset() {
     aValues_ = {0.01};
     shiftHorizon_ = 0.0;
     scaling_ = 1.0;
+    
 }
 
 void LgmData::fromXML(XMLNode* node) {
-    // XMLUtils::checkNode(node, "Models");
-    // XMLNode* modelNode = XMLUtils::getChildNode(node, "LGM");
-
-    std::string calibTypeString = XMLUtils::getChildValue(node, "CalibrationType", true);
-    calibrationType_ = parseCalibrationType(calibTypeString);
-    LOG("LGM calibration type = " << calibTypeString);
-
-    // Volatility config
-
     XMLNode* volNode = XMLUtils::getChildNode(node, "Volatility");
 
     calibrateA_ = XMLUtils::getChildValueAsBool(volNode, "Calibrate", true);
@@ -247,21 +162,25 @@ void LgmData::fromXML(XMLNode* node) {
 
     // Parameter transformation config
 
-    XMLNode* tranformNode = XMLUtils::getChildNode(node, "ParameterTransformation");
-    shiftHorizon_ = XMLUtils::getChildValueAsDouble(tranformNode, "ShiftHorizon", true);
-    LOG("LGM shift horizon = " << shiftHorizon_);
+    if (XMLNode* tranformNode = XMLUtils::getChildNode(node, "ParameterTransformation")) {
+        shiftHorizon_ = XMLUtils::getChildValueAsDouble(tranformNode, "ShiftHorizon", true);
+        LOG("LGM shift horizon = " << shiftHorizon_);
 
-    scaling_ = XMLUtils::getChildValueAsDouble(tranformNode, "Scaling", true);
-    LOG("LGM scaling = " << scaling_);
+        scaling_ = XMLUtils::getChildValueAsDouble(tranformNode, "Scaling", true);
+        LOG("LGM scaling = " << scaling_);
+    } else {
+        shiftHorizon_ = 0.0;
+        scaling_ = 1.0;
+    }
+
+    IrModelData::fromXML(node);
 
     LOG("LgmData done");
 }
 
 XMLNode* LgmData::toXML(XMLDocument& doc) {
 
-    XMLNode* lgmNode = doc.allocNode("LGM");
-
-    XMLUtils::addGenericChild(doc, lgmNode, "CalibrationType", calibrationType_);
+    XMLNode* lgmNode = IrModelData::toXML(doc);
 
     // volatility
     XMLNode* volatilityNode = XMLUtils::addChild(doc, lgmNode, "Volatility");

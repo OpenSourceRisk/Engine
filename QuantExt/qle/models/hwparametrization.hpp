@@ -27,10 +27,10 @@ public:
                       const QuantLib::Handle<TS>& termStructure,
                       const std::string& name = std::string());
 
-    /* kappa(t), this is an n-array representing the diag matrix in 1.8 */
-    virtual QuantLib::Array kappa(const QuantLib::Time t) const = 0;
     /*! sigma_x, 1.12, this is a m x n matrix */
     virtual QuantLib::Matrix sigma_x(const QuantLib::Time t) const = 0;
+    /* kappa(t), this is an n-array representing the diag matrix in 1.8 */
+    virtual QuantLib::Array kappa(const QuantLib::Time t) const = 0;
 
     /*! y(t), 1.19, this is an n x n matrix */
     virtual QuantLib::Matrix y(const QuantLib::Time t) const;

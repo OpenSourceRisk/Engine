@@ -61,6 +61,10 @@ public:
               const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
               const QuantLib::Array& aux = Array()) const override;
 
+    QuantLib::Real shortRate(const QuantLib::Time t, const QuantLib::Array& x,
+                             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
+                                 Handle<YieldTermStructure>()) const override;
+
     // HwModel specific methods
 
     const boost::shared_ptr<IrHwParametrization> parametrization() const { return parametrization_; }

@@ -73,6 +73,10 @@ public:
               const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
               const QuantLib::Array& aux = Array()) const override;
 
+    QuantLib::Real shortRate(const QuantLib::Time t, const QuantLib::Array& x,
+                             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
+                                 Handle<YieldTermStructure>()) const override;
+
     //! LGM specific methods
 
     const boost::shared_ptr<IrLgm1fParametrization> parametrization() const;
@@ -217,6 +221,12 @@ inline Real LinearGaussMarkovModel::discountBond(const Time t, const Time T, con
                 ? parametrization_->termStructure()->discount(T) / parametrization_->termStructure()->discount(t)
                 : discountCurve->discount(T) / discountCurve->discount(t)) *
            std::exp(-(HT - Ht) * x - 0.5 * (HT * HT - Ht * Ht) * parametrization_->zeta(t));
+}
+
+inline QuantLib::Real
+LinearGaussMarkovModel::shortRate(const QuantLib::Time t, const QuantLib::Array& x,
+                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
+    QL_FAIL("LGM does not provide short rate.");
 }
 
 inline Real LinearGaussMarkovModel::reducedDiscountBond(const Time t, const Time T, const Real x,

@@ -19,6 +19,8 @@
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/model/inflation/infdkdata.hpp>
 #include <ored/model/inflation/infjydata.hpp>
+#include <ored/model/irhwmodeldata.hpp>
+#include <ored/model/irlgmdata.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -140,7 +142,19 @@ bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
     }
 
     for (Size i = 0; i < irConfigs_.size(); i++) {
-        if (*irConfigs_[i] != *(rhs.irConfigs_[i])) {
+        auto c1 = boost::dynamic_pointer_cast<LgmData>(irConfigs_[i]);
+        auto c2 = boost::dynamic_pointer_cast<LgmData>(irConfigs_[i]);
+        auto c3 = boost::dynamic_pointer_cast<HwModelData>(irConfigs_[i]);
+        auto c4 = boost::dynamic_pointer_cast<HwModelData>(irConfigs_[i]);
+        if (c1 != nullptr && c2 != nullptr) {
+            if (*c1 != *c2) {
+                return false;
+            }
+        } else if (c3 != nullptr && c4 != nullptr) {
+            if (*c3 != *c4) {
+                return false;
+            }
+        } else {
             return false;
         }
     }
@@ -191,18 +205,33 @@ void CrossAssetModelData::clear() {
 
 void CrossAssetModelData::validate() {
     QL_REQUIRE(irConfigs_.size() > 0, "no IR data provided");
+    bool useHwModel = false;
+    // All IR configs need to be either HullWhite or LGM
+    if (auto hwModelData = boost::dynamic_pointer_cast<HwModelData>(irConfigs_.front())) {
+        useHwModel = true;
+    }
+    for (const auto& modelData : irConfigs_) {
+        if (useHwModel) {
+            QL_REQUIRE(boost::dynamic_pointer_cast<HwModelData>(modelData),
+                       "expect all ir models to be of hull white models");
+        } else {
+            QL_REQUIRE(boost::dynamic_pointer_cast<IrLgmData>(modelData), "expect all ir models to be lgm models"); 
+        }
+    }
+
     QL_REQUIRE(fxConfigs_.size() == irConfigs_.size() - 1, "inconsistent number of FX data provided");
     for (Size i = 0; i < fxConfigs_.size(); ++i)
         QL_REQUIRE(fxConfigs_[i]->foreignCcy() == irConfigs_[i + 1]->ccy(),
                    "currency mismatch between IR and FX config vectors");
 
-    if (measure_ == "BA") {
+    if (measure_ == "BA" && !useHwModel) {
         // ensure that the domestic LGM has shift = 0 and scaling = 1
         for (Size i = 0; i < irConfigs_.size(); ++i)
             if (irConfigs_[i]->ccy() == domesticCurrency_) {
-                QL_REQUIRE(close_enough(irConfigs_[i]->scaling(), 1.0),
+                auto irConfig = boost::dynamic_pointer_cast<IrLgmData>(irConfigs_[i]);
+                QL_REQUIRE(close_enough(irConfig->scaling(), 1.0),
                            "scaling for the domestic LGM must be 1 for BA measure simulations");
-                QL_REQUIRE(close_enough(irConfigs_[i]->shiftHorizon(), 0.0),
+                QL_REQUIRE(close_enough(irConfig->shiftHorizon(), 0.0),
                            "shift horizon for the domestic LGM must be 0 for BA measure simulations");
             }
     }
@@ -278,9 +307,15 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
 
     // Configure IR model components
 
-    std::map<std::string, boost::shared_ptr<IrLgmData>> irDataMap;
+    std::map<std::string, boost::shared_ptr<IrModelData>> irDataMap;
     XMLNode* irNode = XMLUtils::getChildNode(modelNode, "InterestRateModels");
     if (irNode) {
+        
+        bool hasLgmAndHwModels = XMLUtils::getChildNode(irNode, "LGM") && XMLUtils::getChildNode(irNode, "HWModel");
+
+        QL_REQUIRE(!hasLgmAndHwModels, "CrossAssetModelData: Found configuration for HullWhiteModel and LGM model, use "
+                                       "only one. Please check your simulation.xml");
+
         for (XMLNode* child = XMLUtils::getChildNode(irNode, "LGM"); child;
              child = XMLUtils::getNextSibling(child, "LGM")) {
 
@@ -297,6 +332,25 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
             LOG("CrossAssetModelData: IR config built for key " << config->qualifier());
 
         } // end of  for (XMLNode* child = XMLUtils::getChildNode(irNode, "LGM"); child;
+
+        
+        for (XMLNode* child = XMLUtils::getChildNode(irNode, "HWModel"); child;
+             child = XMLUtils::getNextSibling(child, "HWModel")) {
+
+            boost::shared_ptr<HwModelData> config(new HwModelData());
+            config->fromXML(child);
+
+            for (Size i = 0; i < config->optionExpiries().size(); i++) {
+                LOG("LGM calibration swaption " << config->optionExpiries()[i] << " x " << config->optionTerms()[i]
+                                                << " " << config->optionStrikes()[i]);
+            }
+
+            irDataMap[config->qualifier()] = config;
+
+            LOG("CrossAssetModelData: HullWhite IR config built for key " << config->qualifier());
+
+        } // end of  for (XMLNode* child = XMLUtils::getChildNode(irNode, "LGM"); child;
+
     }     // end of if (irNode)
     else {
         LOG("No IR model section found");
@@ -463,7 +517,7 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     LOG("CrossAssetModelData loading from XML done");
 }
 
-void CrossAssetModelData::buildIrConfigs(std::map<std::string, boost::shared_ptr<IrLgmData>>& irDataMap) {
+void CrossAssetModelData::buildIrConfigs(std::map<std::string, boost::shared_ptr<IrModelData>>& irDataMap) {
     // Append IR configurations into the irConfigs vector in the order of the currencies
     // in the currencies vector.
     // If there is an IR configuration for any of the currencies missing, then we will
@@ -472,13 +526,13 @@ void CrossAssetModelData::buildIrConfigs(std::map<std::string, boost::shared_ptr
     irConfigs_.resize(currencies_.size());
     for (Size i = 0; i < currencies_.size(); i++) {
         string ccy = currencies_[i];
-	std::string ccyKey;
-	for(auto const& d: irDataMap) {
-	    if(d.second->ccy() == ccy) {
+        std::string ccyKey;
+        for (auto const& d : irDataMap) {
+            if (d.second->ccy() == ccy) {
                 QL_REQUIRE(ccyKey.empty(), "CrossAssetModelData: duplicate ir config for ccy " << ccy);
                 ccyKey = d.first;
             }
-	}
+        }
         if (!ccyKey.empty())
             irConfigs_[i] = irDataMap.at(ccyKey);
         else { // copy from default
@@ -487,13 +541,24 @@ void CrossAssetModelData::buildIrConfigs(std::map<std::string, boost::shared_ptr
                 ALOG("Both default IR and " << ccy << " IR configuration missing");
                 QL_FAIL("Both default IR and " << ccy << " IR configuration missing");
             }
-            boost::shared_ptr<IrLgmData> def = irDataMap["default"];
-            irConfigs_[i] = boost::make_shared<IrLgmData>(
-                ccy, // overwrite this and keep the others
-                def->calibrationType(), def->reversionType(), def->volatilityType(), def->calibrateH(),
-                def->hParamType(), def->hTimes(), def->hValues(), def->calibrateA(), def->aParamType(), def->aTimes(),
-                def->aValues(), def->shiftHorizon(), def->scaling(), def->optionExpiries(), def->optionTerms(),
-                def->optionStrikes());
+            if (auto def = boost::dynamic_pointer_cast<HwModelData>(irDataMap["default"])) {
+                irConfigs_[i] = boost::make_shared<HwModelData>(
+                    ccy, // overwrite this and keep the others
+                    def->calibrationType(), def->calibrateKappa(),
+                    def->kappaType(), def->kappaTimes(), def->kappaValues(), def->calibrateSigma(), def->sigmaType(),
+                    def->sigmaTimes(), def->sigmaValues(), def->optionExpiries(),
+                    def->optionTerms(), def->optionStrikes());
+                
+            } else if (auto def = boost::dynamic_pointer_cast<IrLgmData>(irDataMap["default"])) {
+                irConfigs_[i] = boost::make_shared<IrLgmData>(
+                    ccy, // overwrite this and keep the others
+                    def->calibrationType(), def->reversionType(), def->volatilityType(), def->calibrateH(),
+                    def->hParamType(), def->hTimes(), def->hValues(), def->calibrateA(), def->aParamType(),
+                    def->aTimes(), def->aValues(), def->shiftHorizon(), def->scaling(), def->optionExpiries(),
+                    def->optionTerms(), def->optionStrikes());
+            } else {
+                QL_FAIL("Unexpected model data type,expect either HwModelData or IrLgmData");
+            } 
         }
         LOG("CrossAssetModelData: IR config added for ccy " << ccy << " " << irConfigs_[i]->ccy());
     }

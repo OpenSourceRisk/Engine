@@ -37,7 +37,7 @@
 #include <ored/model/eqbsdata.hpp>
 #include <ored/model/fxbsdata.hpp>
 #include <ored/model/inflation/inflationmodeldata.hpp>
-#include <ored/model/irlgmdata.hpp>
+#include <ored/model/irmodeldata.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
@@ -122,7 +122,7 @@ public:
 
     //! Detailed constructor (IR/FX only)
     CrossAssetModelData( //! Vector of IR model specifications
-        const vector<boost::shared_ptr<IrLgmData>>& irConfigs,
+        const vector<boost::shared_ptr<IrModelData>>& irConfigs,
         //! Vector of FX model specifications
         const vector<boost::shared_ptr<FxBsData>>& fxConfigs,
         //! Correlation map
@@ -145,7 +145,7 @@ public:
 
     //! Detailed constructor (IR/FX/EQ only)
     CrossAssetModelData( //! Vector of IR model specifications
-        const std::vector<boost::shared_ptr<IrLgmData>>& irConfigs,
+        const std::vector<boost::shared_ptr<IrModelData>>& irConfigs,
         //! Vector of FX model specifications
         const std::vector<boost::shared_ptr<FxBsData>>& fxConfigs,
         //! Vector of EQ model specifications
@@ -170,7 +170,7 @@ public:
 
     //! Detailed constructor (all asset classes) - TODO: add inflation, credit, commodity
     CrossAssetModelData( //! Vector of IR model specifications
-        const std::vector<boost::shared_ptr<IrLgmData>>& irConfigs,
+        const std::vector<boost::shared_ptr<IrModelData>>& irConfigs,
         //! Vector of FX model specifications
         const std::vector<boost::shared_ptr<FxBsData>>& fxConfigs,
         //! Vector of EQ model specifications
@@ -214,7 +214,7 @@ public:
     const vector<string>& equities() const { return equities_; }
     const vector<string>& infIndices() const { return infindices_; }
     const vector<string>& creditNames() const { return creditNames_; }
-    const vector<boost::shared_ptr<IrLgmData>>& irConfigs() const { return irConfigs_; }
+    const vector<boost::shared_ptr<IrModelData>>& irConfigs() const { return irConfigs_; }
     const vector<boost::shared_ptr<FxBsData>>& fxConfigs() const { return fxConfigs_; }
     const vector<boost::shared_ptr<EqBsData>>& eqConfigs() const { return eqConfigs_; }
     const vector<boost::shared_ptr<InflationModelData>>& infConfigs() const { return infConfigs_; }
@@ -235,7 +235,7 @@ public:
     vector<string>& equities() { return equities_; }
     vector<string>& infIndices() { return infindices_; }
     vector<string>& creditNames() { return creditNames_; }
-    vector<boost::shared_ptr<IrLgmData>>& irConfigs() { return irConfigs_; }
+    vector<boost::shared_ptr<IrModelData>>& irConfigs() { return irConfigs_; }
     vector<boost::shared_ptr<FxBsData>>& fxConfigs() { return fxConfigs_; }
     vector<boost::shared_ptr<EqBsData>>& eqConfigs() { return eqConfigs_; }
     vector<boost::shared_ptr<InflationModelData>>& infConfigs() { return infConfigs_; }
@@ -261,8 +261,9 @@ public:
     bool operator==(const CrossAssetModelData& rhs);
     bool operator!=(const CrossAssetModelData& rhs);
     //@}
+
     //! helper to convert LGM data, possibly including defaults, into an IR config vector
-    void buildIrConfigs(map<string, boost::shared_ptr<IrLgmData>>& irMap);
+    void buildIrConfigs(map<string, boost::shared_ptr<IrModelData>>& irMap);
     //! helper to convert FX data, possibly including defaults, into an FX config vector
     void buildFxConfigs(std::map<std::string, boost::shared_ptr<FxBsData>>& fxMap);
     //! helper to convert EQ data, possibly including defaults, into an EQ config vector
@@ -285,7 +286,7 @@ private:
     vector<std::string> equities_;
     vector<std::string> infindices_;
     vector<std::string> creditNames_;
-    vector<boost::shared_ptr<IrLgmData>> irConfigs_;
+    vector<boost::shared_ptr<IrModelData>> irConfigs_;
     vector<boost::shared_ptr<FxBsData>> fxConfigs_;
     vector<boost::shared_ptr<EqBsData>> eqConfigs_;
     vector<boost::shared_ptr<InflationModelData>> infConfigs_;
