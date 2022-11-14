@@ -49,7 +49,7 @@ public:
                          const QuantLib::Date& premiumPayDate = QuantLib::Date(), const std::string& style = "",
                          const std::string& settlement = "", const BarrierData& callBarrierData = {},
                          const BarrierData& putBarrierData = {},
-                         const std::string& fxIndex = ""), 
+                         const std::string& fxIndex = "", 
                          const bool isDigital = false, 
                          Real payoffPerUnit = 0.0);
 
