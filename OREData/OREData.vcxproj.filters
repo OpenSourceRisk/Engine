@@ -843,6 +843,15 @@
     <ClInclude Include="ored\model\localvolmodelbuilder.hpp">
       <Filter>model</Filter>
     </ClInclude>
+    <ClInclude Include="ored\model\irmodeldata.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\irhwmodeldata.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\hwbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -1459,6 +1468,15 @@
       <Filter>marketdata</Filter>
     </ClCompile>
     <ClCompile Include="ored\model\localvolmodelbuilder.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\irmodeldata.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\irhwmodeldata.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\hwbuilder.cpp">
       <Filter>model</Filter>
     </ClCompile>
   </ItemGroup>
