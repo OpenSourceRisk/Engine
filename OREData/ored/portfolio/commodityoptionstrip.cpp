@@ -69,7 +69,8 @@ CommodityOptionStrip::CommodityOptionStrip(const Envelope& envelope, const LegDa
     : Trade("CommodityOptionStrip", envelope), legData_(legData), callPositions_(callPositions),
       callStrikes_(callStrikes), putPositions_(putPositions), putStrikes_(putStrikes), premium_(premium),
       premiumCurrency_(premiumCurrency), premiumPayDate_(premiumPayDate), style_(style), settlement_(settlement),
-      fxIndex_(fxIndex), callBarrierData_(callBarrierData), putBarrierData_(putBarrierData), isDigital_(isDigital), unaryPayoff_(payoffPerUnit) {}
+      callBarrierData_(callBarrierData), putBarrierData_(putBarrierData), fxIndex_(fxIndex), isDigital_(isDigital),
+      unaryPayoff_(payoffPerUnit) {}
 
 void CommodityOptionStrip::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
