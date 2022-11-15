@@ -157,6 +157,7 @@ models/lgmimpliedyieldtermstructure.cpp
 models/lgmvectorised.cpp
 models/linearannuitymapping.cpp
 models/linkablecalibratedmodel.cpp
+models/modelimpliedpricetermstructure.cpp
 models/modelimpliedyieldtermstructure.cpp
 models/normalsabr.cpp
 models/normalsabrsmilesection.cpp
@@ -543,6 +544,7 @@ models/lgmimpliedyieldtermstructure.hpp
 models/lgmvectorised.hpp
 models/linearannuitymapping.hpp
 models/linkablecalibratedmodel.hpp
+models/modelimpliedpricetermstructure.hpp
 models/modelimpliedyieldtermstructure.hpp
 models/normalsabr.hpp
 models/normalsabrinterpolation.hpp

@@ -567,6 +567,9 @@ void CrossAssetModel::initializeParametrizations() {
 
     j = 0;
     while (i < p_.size() && getComponentType(i).first == CrossAssetModel::AssetType::COM) {
+        boost::shared_ptr<CommoditySchwartzParametrization> csp = boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]);
+        boost::shared_ptr<CommoditySchwartzModel> csm = csp ? boost::make_shared<CommoditySchwartzModel>(csp) : nullptr;
+        comModels_.push_back(csm);
         updateIndices(CrossAssetModel::AssetType::COM, i, cIdxTmp, wIdxTmp, pIdxTmp, aIdxTmp);
         cIdxTmp += getNumberOfBrownians(i);
         wIdxTmp += getNumberOfBrownians(i) + getNumberOfAuxBrownians(i);

@@ -32,6 +32,8 @@
 #include <qle/models/hwmodel.hpp>
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infjyparameterization.hpp>
+#include <qle/models/commoditymodel.hpp>
+#include <qle/models/commodityschwartzmodel.hpp>
 #include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/lgm.hpp>
 
@@ -150,6 +152,9 @@ public:
 
     /* ir model */
     const boost::shared_ptr<IrModel> irModel(const Size ccy) const;
+
+    /* com model */
+    const boost::shared_ptr<CommodityModel> comModel(const Size com) const;
 
     /*! numeraire */
     QuantLib::Real
@@ -471,6 +476,7 @@ protected:
     std::vector<boost::shared_ptr<Parametrization>> p_;
     std::vector<boost::shared_ptr<IrModel>> irModels_; // HwModel or LGM1F
     std::vector<boost::shared_ptr<CrCirpp>> crcirppModel_;
+    std::vector<boost::shared_ptr<CommodityModel>> comModels_; 
     Matrix rho_;
     SalvagingAlgorithm::Type salvaging_;
     IrModel::Measure measure_;
@@ -530,6 +536,10 @@ inline const boost::shared_ptr<Parametrization> CrossAssetModel::com(const Size 
 
 inline const boost::shared_ptr<IrModel> CrossAssetModel::irModel(const Size ccy) const {
     return irModels_[idx(CrossAssetModel::AssetType::IR, ccy)];
+}
+
+inline const boost::shared_ptr<CommodityModel> CrossAssetModel::comModel(const Size com) const {
+    return comModels_[idx(CrossAssetModel::AssetType::COM, com)];
 }
 
 inline const boost::shared_ptr<HwModel> CrossAssetModel::hw(const Size ccy) const {

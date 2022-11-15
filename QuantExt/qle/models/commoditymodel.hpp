@@ -36,6 +36,12 @@ public:
     /*! parametrization (as base class) */
     virtual const boost::shared_ptr<Parametrization> parametrizationBase() const = 0;
 
+    /*! price term structure to which the model is (initially) calibrated */
+    virtual Handle<PriceTermStructure> termStructure() const = 0;
+
+    /*! currency of the commodity */
+    virtual const Currency& currency() const = 0;
+
     /*! dimension of model state */
     virtual Size n() const = 0;
 

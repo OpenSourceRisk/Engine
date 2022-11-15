@@ -56,6 +56,10 @@ public:
 
     const boost::shared_ptr<Parametrization> parametrizationBase() const override { return parametrization_; }
 
+    Handle<PriceTermStructure> termStructure() const override { return parametrization_->priceCurve(); }
+
+    const Currency& currency() const override { return parametrization_->currency(); }
+
     Size n() const override { return 1; }
     Size m() const override { return 1; }
 

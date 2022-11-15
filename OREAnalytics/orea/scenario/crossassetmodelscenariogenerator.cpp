@@ -49,6 +49,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     n_eq_ = model_->components(CrossAssetModel::AssetType::EQ);
     n_inf_ = model_->components(CrossAssetModel::AssetType::INF);
     n_cr_ = model_->components(CrossAssetModel::AssetType::CR);
+    n_com_ = model_->components(CrossAssetModel::AssetType::COM);
     n_indices_ = simMarketConfig_->indices().size();
     n_curves_ = simMarketConfig_->yieldCurveNames().size();
 
@@ -81,6 +82,16 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         for (Size k = 0; k < n_ten; ++k) {
             yieldCurveKeys_.emplace_back(RiskFactorKey::KeyType::YieldCurve, simMarketConfig_->yieldCurveNames()[j], k);
         }
+    }
+
+    // Cache commodity curve keys
+    commodityCurveKeys_.reserve(n_com_ * simMarketConfig_->commodityCurveTenors("").size());
+    for (Size j = 0; j < n_com_; j++) {
+        std::string name = simMarketConfig_->commodityNames()[j];
+        ten_com_.push_back(simMarketConfig_->commodityCurveTenors(name));
+        Size n_ten = ten_com_.back().size();
+        for (Size k = 0; k < n_ten; k++)
+            commodityCurveKeys_.emplace_back(RiskFactorKey::KeyType::CommodityCurve, name, k); // j * n_ten + k
     }
 
     // Cache FX rate keys
@@ -211,6 +222,10 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             boost::make_shared<ModelImpliedYtsFwdFwdCorrected>(model_->irModel(model_->ccyIndex(ccy)), yts, dc, false);
         yieldCurves_.push_back(impliedYieldCurve);
         yieldCurveCurrency_.push_back(ccy);
+    }
+
+    for (Size j = 0; j < n_com_; ++j) {
+        comCurves_.push_back(boost::make_shared<QuantExt::ModelImpliedPriceTermStructure>(model_->comModel(j), dc, true));
     }
 
     // Cache data regarding the zero inflation curves to avoid repeating in date loop below.
