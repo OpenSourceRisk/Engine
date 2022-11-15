@@ -102,9 +102,9 @@ private:
     QuantLib::Date premiumPayDate_;
     std::string style_;
     std::string settlement_;
-    std::string fxIndex_;
     BarrierData callBarrierData_;
     BarrierData putBarrierData_;
+    std::string fxIndex_;
     bool isDigital_;
     Real unaryPayoff_;
 
