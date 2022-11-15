@@ -85,15 +85,17 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // Cache commodity curve keys
-    commodityCurveKeys_.reserve(n_com_ * simMarketConfig_->commodityCurveTenors("").size());
-    for (Size j = 0; j < n_com_; j++) {
-        std::string name = simMarketConfig_->commodityNames()[j];
-        ten_com_.push_back(simMarketConfig_->commodityCurveTenors(name));
-        Size n_ten = ten_com_.back().size();
-        for (Size k = 0; k < n_ten; k++)
-            commodityCurveKeys_.emplace_back(RiskFactorKey::KeyType::CommodityCurve, name, k); // j * n_ten + k
+    if (n_com_ > 0) {
+        commodityCurveKeys_.reserve(n_com_ * simMarketConfig_->commodityCurveTenors("").size());
+        for (Size j = 0; j < n_com_; j++) {
+            std::string name = simMarketConfig_->commodityNames()[j];
+            ten_com_.push_back(simMarketConfig_->commodityCurveTenors(name));
+            Size n_ten = ten_com_.back().size();
+            for (Size k = 0; k < n_ten; k++)
+                commodityCurveKeys_.emplace_back(RiskFactorKey::KeyType::CommodityCurve, name, k); // j * n_ten + k
+        }
     }
-
+    
     // Cache FX rate keys
     fxKeys_.reserve(n_ccy_ - 1);
     for (Size k = 0; k < n_ccy_ - 1; k++) {
@@ -517,7 +519,18 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             }
         }
 
-        // TODO: Further risk factor classes are added here
+        // Commodity curves
+        Array comState(1, 0.0); // FIXME: single-factor for now
+        for (Size j = 0; j < n_com_; j++) {
+            comState[0] = sample.value[model_->pIdx(CrossAssetModel::AssetType::COM, j)][i + 1];
+            comCurves_[j]->move(t, comState);
+            for (Size k = 0; k < ten_com_[j].size(); k++) {
+                Date d = dates_[i] + ten_com_[j][k];
+                Time T = dc.yearFraction(dates_[i], d);
+                Real price = std::max(comCurves_[j]->price(T), 0.00001);
+                scenarios[i]->add(commodityCurveKeys_[j * ten_com_[j].size() + k], price);
+            }
+        }
     }
     return scenarios;
 }
