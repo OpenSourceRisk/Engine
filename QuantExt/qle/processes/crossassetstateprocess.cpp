@@ -95,7 +95,7 @@ void CrossAssetStateProcess::updateSqrtCorrelation() const {
 
 Array CrossAssetStateProcess::initialValues() const {
     Array res(model_->dimension(), 0.0);
-    /* irlgm1f processes have initial value 0 */
+    /* irlgm1f / irhw processes have initial value 0 */
     for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::FX); ++i) {
         /* fxbs processes are in log spot */
         res[model_->pIdx(CrossAssetModel::AssetType::FX, i, 0)] = std::log(model_->fxbs(i)->fxSpotToday()->value());
@@ -401,6 +401,39 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const 
     return res;
 }
 
+namespace {
+Array getProjectedArray(const Array& source, Size start, Size length) {
+    QL_REQUIRE(source.size() >= start + length, "getProjectedArray(): internal errors: source size "
+                                                    << source.size() << ", start" << start << ", length " << length);
+    return Array(std::next(source.begin(), start), std::next(source.begin(), start + length));
+}
+
+void applyFxDriftAdjustment(Array& state, const CrossAssetModel* model, Size i, Time t0, Time dt) {
+
+    // the specifics depend on the ir and fx model types and their discretizations
+
+    if (model->modelType(CrossAssetModel::AssetType::IR, i) == CrossAssetModel::ModelType::HW &&
+        model->modelType(CrossAssetModel::AssetType::FX, i - 1) == CrossAssetModel::ModelType::BS) {
+
+        QL_REQUIRE(model->discretization() == CrossAssetModel::Discretization::Euler,
+                   "applyFxDrifAdjustment(): can only handle discretization Euler at the moment.");
+        Matrix corrTmp(model->irModel(i)->m(), 1);
+        for (Size k = 0; k < model->irModel(i)->m(); ++k) {
+            corrTmp(k, 0) =
+                model->correlation(CrossAssetModel::AssetType::IR, i, CrossAssetModel::AssetType::FX, i - 1, k, 0);
+        }
+        Matrix driftAdj = dt * model->fxbs(i - 1)->sigma(t0) * (transpose(model->irhw(i)->sigma_x(t0)) * corrTmp);
+        auto s = std::next(state.begin(), model->pIdx(CrossAssetModel::AssetType::IR, i, 0));
+        for (auto c = driftAdj.column_begin(0); c != driftAdj.column_end(0); ++c, ++s) {
+            *s += *c;
+        }
+
+    } else {
+        QL_FAIL("applyFxDriftAdjustment(): can only handle ir model type HW and fx model type BS currently.");
+    }
+}
+} // namespace
+
 Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Array& dw) const {
 
     Array res;
@@ -412,29 +445,48 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
         QL_REQUIRE(model_->discretization() == CrossAssetModel::Discretization::Euler,
                    "CrossAssetStateProcess::evolve(): hw-based model only supports Euler discretization.");
 
+        const Array dz = sqrtCorrelation_ * dw;
+
         res = Array(model_->dimension());
 
+        // eolve ir processes and store current short rates which are needed to evolve the fx components below
+
+        Array shortRates(model_->components(CrossAssetModel::AssetType::IR));
         for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::IR); ++i) {
             auto p = model_->irModel(i)->stateProcess();
-
-            Array x0Tmp(model_->irModel(i)->n() + model_->irModel(i)->n_aux());
-            Size startx = model_->pIdx(CrossAssetModel::AssetType::IR, i, 0);
-            Size endx = startx + model_->irModel(i)->n() + model_->irModel(i)->n_aux();
-            std::copy(std::next(x0.begin(), startx), std::next(x0.begin(), endx), x0Tmp.begin());
-
-            Array dwTmp(model_->irModel(i)->m() + model_->irModel(i)->m_aux());
-            Size startw = model_->wIdx(CrossAssetModel::AssetType::IR, i, 0);
-            Size endw = startw + model_->irModel(i)->m() + model_->irModel(i)->m_aux();
-            std::copy(std::next(dw.begin(), startw), std::next(dw.end(), endw), dwTmp.begin());
-
-            auto r = p->evolve(t0, x0Tmp, dt, dwTmp);
-
-            std::copy(r.begin(), r.end(), std::next(res.begin(), startx));
+            auto r = p->evolve(t0,
+                               getProjectedArray(x0, model_->pIdx(CrossAssetModel::AssetType::IR, i, 0),
+                                                 model_->irModel(i)->n() + model_->irModel(i)->n_aux()),
+                               dt,
+                               getProjectedArray(dz, model_->wIdx(CrossAssetModel::AssetType::IR, i, 0),
+                                                 model_->irModel(i)->m() + model_->irModel(i)->m_aux()));
+            std::copy(r.begin(), r.end(), std::next(res.begin(), model_->pIdx(CrossAssetModel::AssetType::IR, i, 0)));
+            shortRates[i] = model_->irModel(i)->shortRate(
+                t0, getProjectedArray(x0, model_->pIdx(CrossAssetModel::AssetType::IR, i, 0), model_->irModel(i)->n()));
         }
 
-        // todo fx etc. ...
-        QL_REQUIRE(model_->parametrizations().size() == 1,
-                   "CrossAssetStateProcess::evolve(): hw-based model only supports single ccy at the moment.");
+        // apply drift adjustment to ir processes in non-domestic currency
+
+        for (Size i = 1; i < model_->components(CrossAssetModel::AssetType::IR); ++i) {
+            applyFxDriftAdjustment(res, model_, i, t0, dt);
+        }
+
+        // eolve fx processes
+
+        for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::FX); ++i) {
+            auto r = model_->fxModel(i)->eulerStep(
+                t0, getProjectedArray(x0, model_->pIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->n()),
+                dt, getProjectedArray(dz, model_->wIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->m()),
+                shortRates[0], shortRates[i + 1]);
+            std::copy(r.begin(), r.end(), std::next(res.begin(), model_->pIdx(CrossAssetModel::AssetType::FX, i, 0)));
+        }
+
+        // TODO other components ...
+        QL_REQUIRE(model_->components(CrossAssetModel::AssetType::IR) +
+                           model_->components(CrossAssetModel::AssetType::FX) ==
+                       model_->parametrizations().size(),
+                   "CrossAssetStateProcess::evolve(): currently only IR and FX supported.");
+
         return res;
     }
 

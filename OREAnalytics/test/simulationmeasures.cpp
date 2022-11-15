@@ -27,6 +27,7 @@
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/model/irlgmdata.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
@@ -112,7 +113,7 @@ struct TestData {
         vector<Time> hTimes = {};
         vector<Time> aTimes = {};
 
-        std::vector<boost::shared_ptr<IrLgmData>> irConfigs;
+        std::vector<boost::shared_ptr<IrModelData>> irConfigs;
 
         vector<Real> hValues = {0.02};
         vector<Real> aValues = {0.08};

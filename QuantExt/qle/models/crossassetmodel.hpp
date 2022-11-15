@@ -36,6 +36,7 @@
 #include <qle/models/commodityschwartzmodel.hpp>
 #include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/lgm.hpp>
+#include <qle/models/fxbsmodel.hpp>
 
 #include <qle/processes/crossassetstateprocess.hpp>
 
@@ -167,11 +168,11 @@ public:
         const Size ccy, const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const;
 
-    /*! DEPRECATED HW components, ccy=0 refers to the domestic currency */
+    /*! HW components, ccy=0 refers to the domestic currency */
     const boost::shared_ptr<HwModel> hw(const Size ccy) const;
     const boost::shared_ptr<IrHwParametrization> irhw(const Size ccy) const;
 
-    /*! DEPRECATED LGM1F components, ccy=0 refers to the domestic currency */
+    /*! LGM1F components, ccy=0 refers to the domestic currency */
     const boost::shared_ptr<LinearGaussMarkovModel> lgm(const Size ccy) const;
     const boost::shared_ptr<IrLgm1fParametrization> irlgm1f(const Size ccy) const;
 
@@ -184,17 +185,20 @@ public:
     Real bankAccountNumeraire(const Size ccy, const Time t, const Real x, const Real y,
                               Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
-    /*! DEPRECATED LGM specific */
+    /*! DEPRECATED LGM specific discountBond */
     Real discountBond(const Size ccy, const Time t, const Time T, const Real x,
                       Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
-    /*! DEPRECATED LGM specific */
+    /*! DEPRECATED LGM specific discountBond */
     Real reducedDiscountBond(const Size ccy, const Time t, const Time T, const Real x,
                              Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
-    /*! DEPRECATED LGM specific */
+    /*! DEPRECATED LGM specific discountBond */
     Real discountBondOption(const Size ccy, Option::Type type, const Real K, const Time t, const Time S, const Time T,
                             Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
+
+    /* fx model */
+    const boost::shared_ptr<FxModel> fxModel(const Size ccy) const;
 
     /*! FXBS components, ccy=0 referes to the first foreign currency,
         so it corresponds to ccy+1 if you want to get the corresponding
@@ -448,7 +452,7 @@ protected:
         bool operator==(const cache_key& o) const { return (i == o.i) && (ccy == o.ccy) && (t == o.t) && (T == o.T); }
     };
 
-    struct cache_hasher : std::unary_function<cache_key, std::size_t> {
+    struct cache_hasher {
         std::size_t operator()(cache_key const& x) const {
             std::size_t seed = 0;
             boost::hash_combine(seed, x.i);
@@ -475,6 +479,7 @@ protected:
     // parametrizations, models
     std::vector<boost::shared_ptr<Parametrization>> p_;
     std::vector<boost::shared_ptr<IrModel>> irModels_; // HwModel or LGM1F
+    std::vector<boost::shared_ptr<FxModel>> fxModels_; // FxBsModel
     std::vector<boost::shared_ptr<CrCirpp>> crcirppModel_;
     std::vector<boost::shared_ptr<CommodityModel>> comModels_; 
     Matrix rho_;
@@ -535,11 +540,15 @@ inline const boost::shared_ptr<Parametrization> CrossAssetModel::com(const Size 
 }
 
 inline const boost::shared_ptr<IrModel> CrossAssetModel::irModel(const Size ccy) const {
-    return irModels_[idx(CrossAssetModel::AssetType::IR, ccy)];
+    return irModels_[ccy];
+}
+
+inline const boost::shared_ptr<FxModel> CrossAssetModel::fxModel(const Size ccy) const {
+    return fxModels_[ccy];
 }
 
 inline const boost::shared_ptr<CommodityModel> CrossAssetModel::comModel(const Size com) const {
-    return comModels_[idx(CrossAssetModel::AssetType::COM, com)];
+    return comModels_[com];
 }
 
 inline const boost::shared_ptr<HwModel> CrossAssetModel::hw(const Size ccy) const {

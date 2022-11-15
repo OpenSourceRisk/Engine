@@ -39,6 +39,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
       scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig), initMarket_(initMarket),
       configuration_(configuration) {
 
+    LOG("CrossAssetModelScenarioGenerator ctor called");
+    
     QL_REQUIRE(initMarket != NULL, "CrossAssetScenarioGenerator: initMarket is null");
     QL_REQUIRE(timeGrid_.size() == dates_.size() + 1, "date/time grid size mismatch");
 
@@ -85,6 +87,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // Cache commodity curve keys
+    LOG("Cache commodity curve keys");
     if (n_com_ > 0) {
         commodityCurveKeys_.reserve(n_com_ * simMarketConfig_->commodityCurveTenors("").size());
         for (Size j = 0; j < n_com_; j++) {
@@ -226,8 +229,15 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         yieldCurveCurrency_.push_back(ccy);
     }
 
+    LOG("Cache commodity curves");
     for (Size j = 0; j < n_com_; ++j) {
-        comCurves_.push_back(boost::make_shared<QuantExt::ModelImpliedPriceTermStructure>(model_->comModel(j), dc, true));
+        LOG("COM curve " << j);
+        boost::shared_ptr<CommodityModel> cm = model_->comModel(j);
+        LOG("COM curve " << j << ", model set");
+        auto pts = boost::make_shared<QuantExt::ModelImpliedPriceTermStructure>(model_->comModel(j), dc, true);
+        LOG("COM curve " << j << ", pts set");
+        comCurves_.push_back(pts);
+        LOG("COM curve " << j << ", curve added");
     }
 
     // Cache data regarding the zero inflation curves to avoid repeating in date loop below.
@@ -287,6 +297,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         }
     }
 
+    LOG("CrossAssetModelScenarioGenerator ctor done");
 }
 
 namespace {

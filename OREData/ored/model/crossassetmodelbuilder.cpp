@@ -26,6 +26,8 @@
 #include <ored/model/inflation/infjybuilder.hpp>
 #include <ored/model/inflation/infjydata.hpp>
 #include <ored/model/lgmbuilder.hpp>
+#include <ored/model/irhwmodeldata.hpp>
+#include <ored/model/hwbuilder.hpp>
 #include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
@@ -215,32 +217,61 @@ void CrossAssetModelBuilder::buildModel() const {
     /*******************************************************
      * Build the IR parametrizations and calibration baskets
      */
-    std::vector<boost::shared_ptr<QuantExt::IrLgm1fParametrization>> irParametrizations;
+    std::vector<boost::shared_ptr<QuantExt::Parametrization>> irParametrizations;
     std::vector<RelinkableHandle<YieldTermStructure>> irDiscountCurves;
     std::vector<std::string> currencies, regions, crNames, eqNames, infIndices, comNames;
-    std::vector<boost::shared_ptr<LgmBuilder>> irBuilder;
+    std::vector<boost::shared_ptr<LgmBuilder>> lgmBuilder;
+    std::vector<boost::shared_ptr<HwBuilder>> hwBuilder;
 
     for (Size i = 0; i < config_->irConfigs().size(); i++) {
-        boost::shared_ptr<IrLgmData> ir = config_->irConfigs()[i];
-        DLOG("IR Parametrization " << i << " qualifier " << ir->qualifier());
-        boost::shared_ptr<LgmBuilder> builder =
-            boost::make_shared<LgmBuilder>(market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance(),
-                                           continueOnError_, referenceCalibrationGrid_);
-        if (dontCalibrate_)
-            builder->freeze();
-        irBuilder.push_back(builder);
-        boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization = builder->parametrization();
-        swaptionBaskets_[i] = builder->swaptionBasket();
-        QL_REQUIRE(std::find(currencies.begin(), currencies.end(), parametrization->currency().code()) ==
-                       currencies.end(),
-                   "Duplicate IR parameterization for currency "
-                       << parametrization->currency().code()
-                       << " - are there maybe two indices with the same currency in CrossAssetModelData?");
-        currencies.push_back(parametrization->currency().code());
-        irParametrizations.push_back(parametrization);
-        irDiscountCurves.push_back(builder->discountCurve());
-        subBuilders_[CrossAssetModel::AssetType::IR][i] = builder;
-        processInfo[CrossAssetModel::AssetType::IR].emplace_back(ir->ccy(), 1);
+        auto irConfig = config_->irConfigs()[i];
+        DLOG("IR Parametrization " << i << " qualifier " << irConfig->qualifier());
+        
+        if (auto ir = boost::dynamic_pointer_cast<IrLgmData>(irConfig)) {
+        
+            auto builder = boost::make_shared<LgmBuilder>(market_, ir, configurationLgmCalibration_,
+                                                   config_->bootstrapTolerance(),
+                                               continueOnError_, referenceCalibrationGrid_);
+            if (dontCalibrate_)
+                builder->freeze();
+            lgmBuilder.push_back(builder);
+            auto parametrization = builder->parametrization();
+            swaptionBaskets_[i] = builder->swaptionBasket();
+            QL_REQUIRE(std::find(currencies.begin(), currencies.end(), parametrization->currency().code()) ==
+                           currencies.end(),
+                       "Duplicate IR parameterization for currency "
+                           << parametrization->currency().code()
+                           << " - are there maybe two indices with the same currency in CrossAssetModelData?");
+            currencies.push_back(parametrization->currency().code());
+            irParametrizations.push_back(parametrization);
+            irDiscountCurves.push_back(builder->discountCurve());
+            subBuilders_[CrossAssetModel::AssetType::IR][i] = builder;
+            processInfo[CrossAssetModel::AssetType::IR].emplace_back(ir->ccy(), 1);
+        }
+        else if(auto ir = boost::dynamic_pointer_cast<HwModelData>(irConfig)) {
+            // TODO read from config
+            bool evaluateBankAccount = true;
+            bool setCalibrationInfo = false;
+            HwModel::Discretization discr = HwModel::Discretization::Euler;
+            auto builder = boost::make_shared<HwBuilder>(
+                market_, ir, measure, discr, evaluateBankAccount, configurationLgmCalibration_,
+                config_->bootstrapTolerance(), continueOnError_, referenceCalibrationGrid_, setCalibrationInfo);
+            if (dontCalibrate_)
+                builder->freeze();
+            hwBuilder.push_back(builder);
+            auto parametrization = builder->parametrization();
+            swaptionBaskets_[i] = builder->swaptionBasket();
+            QL_REQUIRE(std::find(currencies.begin(), currencies.end(), parametrization->currency().code()) ==
+                           currencies.end(),
+                       "Duplicate IR parameterization for currency "
+                           << parametrization->currency().code()
+                           << " - are there maybe two indices with the same currency in CrossAssetModelData?");
+            currencies.push_back(parametrization->currency().code());
+            irParametrizations.push_back(parametrization);
+            irDiscountCurves.push_back(builder->discountCurve());
+            subBuilders_[CrossAssetModel::AssetType::IR][i] = builder;
+            processInfo[CrossAssetModel::AssetType::IR].emplace_back(ir->ccy(), parametrization->m());
+        }
     }
 
     QL_REQUIRE(irParametrizations.size() > 0, "missing IR parametrizations");
@@ -417,9 +448,14 @@ void CrossAssetModelBuilder::buildModel() const {
      * Calibrate IR components
      */
 
-    for (Size i = 0; i < irBuilder.size(); i++) {
+    for (Size i = 0; i < lgmBuilder.size(); i++) {
         DLOG("IR Calibration " << i);
-        swaptionCalibrationErrors_[i] = irBuilder[i]->error();
+        swaptionCalibrationErrors_[i] = lgmBuilder[i]->error();
+    }
+
+    for (Size i = 0; i < hwBuilder.size(); i++) {
+        DLOG("IR Calibration " << i);
+        swaptionCalibrationErrors_[i] = hwBuilder[i]->error();
     }
 
     /*************************

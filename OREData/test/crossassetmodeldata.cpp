@@ -21,6 +21,8 @@
 #include <oret/fileutilities.hpp>
 #include <oret/toplevelfixture.hpp>
 
+#include <ored/model/irlgmdata.hpp>
+
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/model/inflation/infdkdata.hpp>
@@ -37,7 +39,7 @@ using ore::test::TopLevelFixture;
 
 namespace {
 
-boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> irConfigsData() {
+boost::shared_ptr<vector<boost::shared_ptr<IrModelData>>> irConfigsData() {
 
     // Create three instances
     boost::shared_ptr<IrLgmData> lgmData1(new data::IrLgmData());
@@ -128,7 +130,7 @@ boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> irConfigsData() {
 
     lgmData3->scaling() = 1.0;
 
-    boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> lgmDataVector(new vector<boost::shared_ptr<IrLgmData>>);
+    boost::shared_ptr<vector<boost::shared_ptr<IrModelData>>> lgmDataVector(new vector<boost::shared_ptr<IrModelData>>);
     *lgmDataVector = {lgmData1, lgmData2, lgmData3};
     return lgmDataVector;
 }

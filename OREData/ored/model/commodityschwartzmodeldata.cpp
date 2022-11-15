@@ -60,19 +60,20 @@ void CommoditySchwartzData::fromXML(XMLNode* node) {
     LOG("Cross-Asset Commodity Kappa initial value = " << kappaValue_);
 
     XMLNode* optionsNode = XMLUtils::getChildNode(node, "CalibrationOptions");
-    optionExpiries_ = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Expiries", true);
-    optionStrikes_ = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Strikes", false);
-
-    if (optionStrikes_.size() > 0) {
-        QL_REQUIRE(optionExpiries_.size() == optionStrikes_.size(),
-                   "size mismatch in commodity option expiries/strike for name " << name_);
-    } else // default ATMF
-        optionStrikes_.resize(optionExpiries_.size(), "ATMF");
+    if (optionsNode) {
+        optionExpiries_ = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Expiries", true);
+        optionStrikes_ = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Strikes", false);
+        if (optionStrikes_.size() > 0) {
+            QL_REQUIRE(optionExpiries_.size() == optionStrikes_.size(),
+                       "size mismatch in commodity option expiries/strike for name " << name_);
+        } else // default ATMF
+            optionStrikes_.resize(optionExpiries_.size(), "ATMF");
+    }
 }
 
 XMLNode* CommoditySchwartzData::toXML(XMLDocument& doc) {
 
-    XMLNode* crossCcyLGMNode = doc.allocNode("CrossAssetLGM");
+    XMLNode* crossCcyLGMNode = doc.allocNode("CommoditySchwartz");
     XMLUtils::addAttribute(doc, crossCcyLGMNode, "name", name_);
 
     XMLUtils::addChild(doc, crossCcyLGMNode, "Currency", ccy_);

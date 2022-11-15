@@ -453,6 +453,7 @@ void CrossAssetModel::initializeParametrizations() {
 
     j = 0;
     while (i < p_.size() && getComponentType(i).first == CrossAssetModel::AssetType::FX) {
+        fxModels_.push_back(boost::make_shared<FxBsModel>(boost::dynamic_pointer_cast<FxBsParametrization>(p_[i])));
         updateIndices(CrossAssetModel::AssetType::FX, i, cIdxTmp, wIdxTmp, pIdxTmp, aIdxTmp);
         cIdxTmp += getNumberOfBrownians(i);
         wIdxTmp += getNumberOfBrownians(i) + getNumberOfAuxBrownians(i);

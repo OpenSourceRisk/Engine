@@ -957,6 +957,9 @@ Example & Description \\
 \hline
 36 & Choice of Measure \\
 \hline
+37 & Multifactor Hull-White scenario generation \\
+\hline
+38 & Cross Currency Exposure using Multifactor Hull-White Models \\
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -2269,6 +2272,138 @@ However, peak exposures are dependent on the measure choice as confirmed graphic
 \caption{Evolution of expected exposures (EPE) and peak exposures (PFE at the 95\% quantile) in three measures, LGM, Bank Account, T-Forward with T=20, with 10k Monte Carlo samples.}
 \label{fig:36}
 \end{figure}
+
+%--------------------------------------------------------------------
+\subsection{Multifactor Hull-White Scenario Generation}% Example 37
+\label{example:37}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_37} illustrates the scenario generation under a Hull-White multifactor
+model. The model is driven by two independent Brownian motions and has four states. The diffusion matrix sigma is
+therefore 2 x 4. The reversion matrix is a 4 x 4 diagonal matrix and entered as an array. Both diffusion and reversion
+are constant in time. Their values are not calibrated to the option market, but hardcoded in simulation.xml.
+
+The values for the diffusion and reversion matrices were fitted to the first two principal components of a
+(hypothetical) analyis of absolute rate curve movements. These input principal components can be found in
+inputeigenvectors.csv in the input folder. The tenor is given in years, and the two components are given as column
+vectors, see table \ref{tab:ex37_1}.
+
+\begin{table}[hbt]
+\begin{center}
+\begin{tabular}{r|r|r}
+tenor & eigenvector 1  & eigenvector 2   \\
+\hline      
+1     & 0.353553390593 & -0.537955502871 \\
+2     & 0.353553390593 & -0.374924478795 \\
+3     & 0.353553390593 & -0.252916811525 \\
+5     & 0.353553390593 & -0.087587539893 \\
+10    & 0.353553390593 & 0.12267800393   \\
+15    & 0.353553390593 & 0.240659435416  \\
+20    & 0.353553390593 & 0.339148675322  \\
+30    & 0.353553390593 & 0.552478951238
+\end{tabular}
+\caption{Input principal components}
+\label{tab:ex37_1}
+\end{center}
+\end{table}
+
+The first eigenvector represent perfectly parallel movements. The second eigenvector represent a rotation around the 7y
+point of the curve. Furthermore we prescribe an annual volatility of 0.0070 for the first components and 0.0030 for the
+second one. The values can be compared to normal (bp) volatilities.
+
+We follow \cite{Andersen_Piterbarg_2010} chapter 12.1.5 ``Multi-Factor Statistical Gaussian Model'' to calibrate the
+diffusion and reversion matrices to the prescribed components and volatilities. We do not detail the procedure here and
+refer the interested reader to the given reference.
+
+The example generates a single monte carlo path with 5000 daily steps and outputs the generated scenarios in
+scenariodump.csv. The python script pca.py performs a principal component analysis on this output. The model implied
+eigenvalues are given in table \ref{tab:ex37_2}.
+
+\begin{table}[hbt]
+\begin{center}
+\begin{tabular}{r|r}
+number & value                  \\
+\hline      
+1      & 4.9144936649319346e-05 \\
+2      & 8.846877641067412e-06  \\
+3      & 5.82566039467854e-10   \\
+4      & 2.1298948225571415e-10 \\
+5      & 9.254913949332787e-11  \\
+6      & 1.0861256211767673e-11 \\
+7      & 8.478795662698618e-14  \\
+8      & 9.74468069377584e-13   \\
+\end{tabular}
+\caption{Input principal components}
+\label{tab:ex37_2}
+\end{center}
+\end{table}
+
+Only the first two values are relevant, the following are all close to zero. The square root of the first two
+eigenvalues is given in table \ref{tab:ex37_3}.
+
+\begin{table}[hbt]
+\begin{center}
+\begin{tabular}{r|r}
+number & sqrt(value)                \\
+\hline      
+1      & 0.007010344973631422       \\
+2      & 0.0029743701250966414      \\
+\end{tabular}
+\caption{Input principal components}
+\label{tab:ex37_3}
+\end{center}
+\end{table}
+
+matching the prescribed input values of 0.0070 and 0.0030 quite well. The correpsonding eigenvectors are given in etable
+\ref{tab:ex37_4}.
+
+\begin{table}[hbt]
+\begin{center}
+\begin{tabular}{r|r|r}
+tenor & eigenvector 1       & eigenvector 2       \\
+\hline      
+1     & 0.34688826736335926 & 0.5441204725042812  \\
+2     & 0.3489303472083185  & 0.380259707350115   \\
+3     & 0.350362134519783   & 0.2581408080614405  \\
+5     & 0.3523983915961889  & 0.09230899007104967 \\
+10    & 0.3550169593982022  & -0.11856777284904292\\
+15    & 0.35647835947136625 & -0.23676104168229614\\
+20    & 0.3577146190751303  & -0.3354486339442275 \\
+30    & 0.36042236352102563 & -0.549124709243042  \\
+\end{tabular}
+\caption{Input principal components}
+\label{tab:ex37_4}
+\end{center}
+\end{table}
+
+again matching the input principal components quite well. The second eigenvector is the negative of the input vector
+here (the principal compoennt analysis can not distinguish these of course).
+
+The example also produces a plot comparing the input eigenvectors and the model implied eigenvectors as shown in figure \ref{fig:ex37}.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.50]{mpl_eigenvectors_ex37.pdf}
+\end{center}
+\caption{Input and model implied eigenvectors for a Hull-White 4-factor model calibrated to 2 principal components of
+  rate curve movements (parallel + rotation). Notice that the model implied 2nd eigenvector is the negative of the input
+  vector.}
+\label{fig:ex37}
+\end{figure}
+
+%--------------------------------------------------------------------
+\subsection{Cross Currency Swap Exposure using Multifactor Hull-White Models}% Example 38
+\label{example:38}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_38} is similar to Example 8 (EPE, ENE for xccy swap), but uses a
+multifactor HW model for EUR and USD to generate scenarios. The parametrization of the HW models is taken from Example
+37.
+
+Each of the two factors of each HW model is correlated with each of the two factors of the other currency's HW model and
+with the FX factors. Remember that the factors represent principal components of interest rate movements and so the
+correlations can be interpreted as correlations of these principal components with each other and the fx rate processes.
+
 
 \clearpage
 %========================================================
@@ -6922,6 +7057,8 @@ implementation of the inverse cumulative normal distribution to transform $U[0,1
 
   % \bibitem{OO} http://www.openoffice.org
 
+\bibitem{Andersen_Piterbarg_2010} Andersen, L., and Piterbarg, V. (2010): Interest Rate Modeling, Volume I-III
+  
 \bibitem{LichtersEtAl} Peter Caspers, Paul Giltinan, Paul; Lichters, Roland; Nowaczyk , Nikolai. {\em Forecasting Initial Margin Requirements – A Model Evaluation}, Journal of Risk Management in Financial Institutions, Vol. 10 (2017), No. 4, \url{https://ssrn.com/abstract=2911167}
 
 \bibitem{corrSalv} R. Rebonato and P. Jaeckel, The most general methodology to create a valid correlation matrix for

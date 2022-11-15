@@ -20,6 +20,7 @@
 #include <qle/calendars/largejointcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
+#include <qle/calendars/mauritius.hpp>
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
@@ -43,6 +44,8 @@
 #include <qle/cashflows/durationadjustedcmscoupontsrpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
+#include <qle/cashflows/equitymargincoupon.hpp>
+#include <qle/cashflows/equitymargincouponpricer.hpp>
 #include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 #include <qle/cashflows/floatingannuitynominal.hpp>
@@ -152,6 +155,7 @@
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
 #include <qle/instruments/cdsoption.hpp>
+#include <qle/instruments/cliquetoption.hpp>
 #include <qle/instruments/commodityapo.hpp>
 #include <qle/instruments/commodityforward.hpp>
 #include <qle/instruments/crossccybasismtmresetswap.hpp>
@@ -165,6 +169,7 @@
 #include <qle/instruments/fixedbmaswap.hpp>
 #include <qle/instruments/forwardbond.hpp>
 #include <qle/instruments/fxforward.hpp>
+#include <qle/instruments/genericswaption.hpp>
 #include <qle/instruments/impliedbondspread.hpp>
 #include <qle/instruments/makeaverageois.hpp>
 #include <qle/instruments/makecds.hpp>
@@ -179,6 +184,7 @@
 #include <qle/instruments/subperiodsswap.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
 #include <qle/instruments/vanillaforwardoption.hpp>
+#include <qle/instruments/varianceswap.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 #include <qle/math/constantinterpolation.hpp>
 #include <qle/math/covariancesalvage.hpp>
@@ -271,6 +277,7 @@
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
+#include <qle/pricingengines/commodityswaptionengine.hpp>
 #include <qle/pricingengines/cpibacheliercapfloorengine.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 #include <qle/pricingengines/cpicapfloorengines.hpp>
@@ -288,6 +295,8 @@
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
+#include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
+#include <qle/pricingengines/volatilityfromvarianceswapengine.hpp>
 #include <qle/processes/crcirppstateprocess.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
 #include <qle/processes/irhwstateprocess.hpp>

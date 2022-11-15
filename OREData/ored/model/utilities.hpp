@@ -59,7 +59,17 @@ std::string getCalibrationDetails(
 std::string getCalibrationDetails(
     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
     const boost::shared_ptr<FxBsParametrization>& parametrization = boost::shared_ptr<FxBsParametrization>(),
+    const boost::shared_ptr<Parametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
+
+std::string getCalibrationDetails(
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+    const boost::shared_ptr<FxBsParametrization>& parametrization = boost::shared_ptr<FxBsParametrization>(),
     const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
+
+std::string getCalibrationDetails(
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+    const boost::shared_ptr<EqBsParametrization>& parametrization = boost::shared_ptr<EqBsParametrization>(),
+    const boost::shared_ptr<Parametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
 
 std::string getCalibrationDetails(
     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,

@@ -105,9 +105,6 @@
     <ClInclude Include="qle\instruments\averageois.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
-    <ClInclude Include="qle\instruments\cliquetoption.hpp">
-      <Filter>qle\instruments</Filter>
-    </ClInclude>
     <ClInclude Include="qle\instruments\crossccybasisswap.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
@@ -1116,10 +1113,19 @@
     <ClInclude Include="qle\termstructures\averageoffpeakpowerhelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\blackscholesmodelwrapper.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
     <ClInclude Include="qle\models\carrmadanarbitragecheck.hpp">
       <Filter>models</Filter>
     </ClInclude>
     <ClInclude Include="qle\models\exactbachelierimpliedvolatility.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\hwmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\modelimpliedyieldtermstructure.hpp">
       <Filter>models</Filter>
     </ClInclude>
     <ClInclude Include="qle\models\normalsabr.hpp">
@@ -1288,8 +1294,13 @@
     <ClInclude Include="qle\termstructures\inflation\piecewisezeroinflationcurve.hpp">
       <Filter>termstructures\inflation</Filter>
     </ClInclude>
-    <ClInclude Include="qle\models\blackscholesmodelwrapper.hpp" />
     <ClInclude Include="qle\calendars\unitedarabemirates.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\cliquetoption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\mauritius.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1392,17 +1403,11 @@
     <ClCompile Include="qle\instruments\fxforward.cpp">
       <Filter>instruments</Filter>
     </ClCompile>
-    <ClCompile Include="qle\instruments\genericswaption.cpp">
-      <Filter>qle\instruments</Filter>
-    </ClCompile>
     <ClCompile Include="qle\instruments\makeaverageois.cpp">
       <Filter>instruments</Filter>
     </ClCompile>
     <ClCompile Include="qle\instruments\tenorbasisswap.cpp">
       <Filter>instruments</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\instruments\cliquetoption.cpp">
-      <Filter>qle\instruments</Filter>
     </ClCompile>
     <ClCompile Include="qle\instruments\cashflowresults.cpp">
       <Filter>instruments</Filter>
@@ -2139,10 +2144,16 @@
     <ClCompile Include="qle\cashflows\nonstandardinflationcouponpricer.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
+    <ClCompile Include="qle\models\hwmodel.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
     <ClCompile Include="qle\models\lgmconvolutionsolver2.cpp">
       <Filter>models</Filter>
     </ClCompile>
     <ClCompile Include="qle\models\lgmvectorised.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\modelimpliedyieldtermstructure.cpp">
       <Filter>models</Filter>
     </ClCompile>
     <ClCompile Include="qle\math\randomvariable.cpp">
@@ -2212,6 +2223,15 @@
       <Filter>instruments</Filter>
     </ClCompile>
     <ClCompile Include="qle\calendars\unitedarabemirates.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\genericswaption.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\cliquetoption.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\mauritius.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
   </ItemGroup>

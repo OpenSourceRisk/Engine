@@ -37,24 +37,23 @@ void IrLgmData::fromXML(XMLNode* node) {
 
     // Calibration Swaptions
 
-    XMLNode* optionsNode = XMLUtils::getChildNode(node, "CalibrationSwaptions");
+    if (XMLNode* optionsNode = XMLUtils::getChildNode(node, "CalibrationSwaptions")) {
+        optionExpiries() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Expiries", false);
+        optionTerms() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Terms", false);
+        QL_REQUIRE(optionExpiries().size() == optionTerms().size(),
+                   "vector size mismatch in swaption expiries/terms for ccy " << qualifier_);
+        optionStrikes() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Strikes", false);
+        if (optionStrikes().size() > 0) {
+            QL_REQUIRE(optionStrikes().size() == optionExpiries().size(),
+                       "vector size mismatch in swaption expiries/strikes for ccy " << qualifier_);
+        } else // Default: ATM
+            optionStrikes().resize(optionExpiries().size(), "ATM");
 
-    optionExpiries() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Expiries", false);
-    optionTerms() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Terms", false);
-    QL_REQUIRE(optionExpiries().size() == optionTerms().size(),
-               "vector size mismatch in swaption expiries/terms for ccy " << qualifier_);
-    optionStrikes() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Strikes", false);
-    if (optionStrikes().size() > 0) {
-        QL_REQUIRE(optionStrikes().size() == optionExpiries().size(),
-                   "vector size mismatch in swaption expiries/strikes for ccy " << qualifier_);
-    } else // Default: ATM
-        optionStrikes().resize(optionExpiries().size(), "ATM");
-
-    for (Size i = 0; i < optionExpiries().size(); i++) {
-        LOG("LGM calibration swaption " << optionExpiries()[i] << " x " << optionTerms()[i] << " "
-                                        << optionStrikes()[i]);
+        for (Size i = 0; i < optionExpiries().size(); i++) {
+            LOG("LGM calibration swaption " << optionExpiries()[i] << " x " << optionTerms()[i] << " "
+                                            << optionStrikes()[i]);
+        }
     }
-
     LgmData::fromXML(node);
 }
 
@@ -69,11 +68,6 @@ XMLNode* IrLgmData::toXML(XMLDocument& doc) {
     XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Strikes", optionStrikes());
 
     return node;
-}
-
-std::string IrLgmData::ccy() const {
-    boost::shared_ptr<IborIndex> index;
-    return tryParseIborIndex(qualifier_, index) ? index->currency().code() : qualifier_;
 }
 
 } // namespace data

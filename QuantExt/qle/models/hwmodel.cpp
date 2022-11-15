@@ -41,15 +41,22 @@ QuantLib::Real HwModel::discountBond(const QuantLib::Time t, const QuantLib::Tim
     return (discountCurve.empty()
                 ? parametrization_->termStructure()->discount(T) / parametrization_->termStructure()->discount(t)
                 : discountCurve->discount(T) / discountCurve->discount(t)) *
-           std::exp(-QuantLib::DotProduct(gt, x) - 0.5 * QuantLib::DotProduct(gt, yt * x));
+           std::exp(-QuantLib::DotProduct(gt, x) - 0.5 * QuantLib::DotProduct(gt, yt * gt));
 }
 
 QuantLib::Real HwModel::numeraire(const QuantLib::Time t, const QuantLib::Array& x,
                                   const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                   const QuantLib::Array& aux) const {
     QL_REQUIRE(measure_ == IrModel::Measure::BA, "HwModel::numeraire() supports BA measure only currently.");
-    return std::accumulate(aux.begin(), aux.end(), 0.0) /
+    return std::exp(std::accumulate(aux.begin(), aux.end(), 0.0)) /
            (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
+}
+
+QuantLib::Real HwModel::shortRate(const QuantLib::Time t, const QuantLib::Array& x,
+                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
+    return std::accumulate(x.begin(), x.end(), 0.0) +
+           (discountCurve.empty() ? parametrization_->termStructure()->forwardRate(t, t, Compounding::Continuous)
+                                  : discountCurve->forwardRate(t, t, Compounding::Continuous));
 }
 
 void HwModel::update() {

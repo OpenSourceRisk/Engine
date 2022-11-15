@@ -439,9 +439,20 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                                                                  << cpiCapFloorVolSurface->maturities()[j] << ",index,"
                                                                  << index->name() << ",Vol,"
                                                                  << cpiCapFloorVolSurface->volData()[i][j]);
+                    if (cpiCapFloorVolSurface->missingValues()[i][j]) {
+                        WLOG("Implied CPI CapFloor Surface, price misisng for strike "
+                             << cpiCapFloorVolSurface->strikes()[i] << ", maturity, "
+                             << cpiCapFloorVolSurface->maturities()[j] << ",index," << index->name()
+                             << ", ignore missing point and try interpolate the missing vol.")
+                    }
+                    if (cpiCapFloorVolSurface->pricesFailedToConvert()[i][j]) {
+                        WLOG("Implied CPI CapFloor Surface, couldn't imply vol from price for strike "
+                             << cpiCapFloorVolSurface->strikes()[i] << ", maturity, "
+                             << cpiCapFloorVolSurface->maturities()[j] << ",index," << index->name()
+                             << "ignore missing point and try to interpolate the missing vol.");
+                    }
                 }
             }
-
             DLOG("CPIVolSurfaces built for spec " << spec.name());
         } catch (std::exception& e) {
             QL_FAIL("Building CPIVolSurfaces failed for spec " << spec.name() << ": " << e.what());

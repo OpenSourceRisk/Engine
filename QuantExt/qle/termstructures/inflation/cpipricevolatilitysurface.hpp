@@ -109,6 +109,16 @@ public:
         return volData_;
     }
 
+    const std::vector<std::vector<bool>>& missingValues() const { 
+        calculate();
+        return missingPrices_;
+    }
+
+    const std::vector<std::vector<bool>>& pricesFailedToConvert() const { 
+        calculate();
+        return failedPrices_;
+    }
+
     //@}
 
 protected:
@@ -163,6 +173,8 @@ private:
     QuantLib::Matrix floorPrices_;
     mutable std::vector<QuantLib::Date> fixingDates_;
     mutable QuantLib::Matrix volData_;
+    mutable std::vector<std::vector<bool>> missingPrices_;
+    mutable std::vector<std::vector<bool>> failedPrices_;
 
     mutable boost::shared_ptr<QuantExt::OptionInterpolator2d<InterpolatorStrike, InterpolatorTime>> volSurface_;
 };
@@ -202,6 +214,9 @@ CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::CPIPriceVolatil
 template <class InterpolatorStrike, class InterpolatorTime>
 void CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::performCalculations() const {
     volData_ = QuantLib::Matrix(strikes_.size(), expiries_.size(), QuantLib::Null<QuantLib::Real>());
+    missingPrices_ = std::vector<std::vector<bool>>(strikes_.size(), std::vector<bool>(expiries_.size(), false));
+    failedPrices_ = std::vector<std::vector<bool>>(strikes_.size(), std::vector<bool>(expiries_.size(), false));
+
 
     std::vector<QuantLib::Date> dates;
     std::vector<double> strikes;
@@ -228,11 +243,12 @@ void CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::performCal
                 try {
                     vol = implyVol(strike, maturityDate, priceToMatch, useFloor);
                 } catch (const std::exception& e) {
-                    QL_FAIL("Can not imply cpi capfloor vol for tenor " << expiries_[tenorIdx] << " and strike "
-                                                                        << strike << " from price " << priceToMatch
-                                                                        << ", got " << e.what());
+                    // implied failed, we try to interpolate the failed values
+                    vol = QuantLib::Null<QuantLib::Real>();
+                    failedPrices_[strikeIdx][tenorIdx] = true;
                 }
             } else {
+                missingPrices_[strikeIdx][tenorIdx] = true;
                 QL_REQUIRE(ignoreMissingPrices_, "Missing price for cpi capfloor vol for tenor "
                                                      << expiries_[tenorIdx] << " and strike " << strike);
             }
