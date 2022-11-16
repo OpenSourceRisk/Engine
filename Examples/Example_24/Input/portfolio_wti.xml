@@ -19,7 +19,7 @@
   </Trade>
   -->
   
-  <Trade id="CommodityForward_WTI_Oct_21">
+  <Trade id="CommodityForward">
     <TradeType>CommodityForward</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>

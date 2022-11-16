@@ -96,7 +96,10 @@ inline Real CommoditySchwartzParametrization::inverse(const Size, const Real y) 
 inline Real CommoditySchwartzParametrization::variance(const Time t) const {
     Real sig = direct(0, sigma_->params()[0]);
     Real kap = direct(0, kappa_->params()[0]);
-    return sig * sig * (std::exp(2.0 * kap * t) - 1.0) / (2.0 * kap);
+    if (kap < QL_EPSILON)
+        return sig * sig * t;
+    else
+        return sig * sig * (std::exp(2.0 * kap * t) - 1.0) / (2.0 * kap);
 }
 
 inline Real CommoditySchwartzParametrization::sigma(const Time u) const {

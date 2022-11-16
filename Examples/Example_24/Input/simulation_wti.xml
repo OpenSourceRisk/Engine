@@ -2,7 +2,7 @@
 
   <Parameters>
     <Discretization>Exact</Discretization>
-    <Grid>241,1M</Grid>
+    <Grid>80,1M</Grid>
     <Calendar>EUR,USD</Calendar>
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
@@ -18,12 +18,6 @@
       <Currency>USD</Currency>
       <Currency>EUR</Currency>
     </Currencies>
-
-    <!--
-    <Equities>
-      <Equity>Lufthansa</Equity>
-    </Equities>
-    -->
     
     <Commodities>
       <Commodity>COMDTY_WTI_USD</Commodity>
@@ -76,25 +70,6 @@
         </CalibrationOptions>
       </CrossCcyLGM>
     </ForeignExchangeModels>
-
-    <!--
-    <EquityModels>
-      <CrossAssetLGM name="default">
-        <Currency>EUR</Currency>
-        <CalibrationType>Bootstrap</CalibrationType>
-        <Sigma>
-          <Calibrate>Y</Calibrate>
-          <ParamType>Piecewise</ParamType>
-          <TimeGrid>    1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1,  0.1, 0.1</InitialValue>
-        </Sigma>
-        <CalibrationOptions>
-          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
-          <Strikes/>
-        </CalibrationOptions>
-      </CrossAssetLGM>    
-    </EquityModels>
-    -->
     
     <CommodityModels>
       <CommoditySchwartz name="COMDTY_WTI_USD">
@@ -124,11 +99,14 @@
   </CrossAssetModel>
 
   <Market>
+
     <BaseCurrency>USD</BaseCurrency>
+
     <Currencies>
       <Currency>EUR</Currency>
       <Currency>USD</Currency>
     </Currencies>
+
     <YieldCurves>
       <Configuration>
         <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
@@ -136,6 +114,7 @@
         <Extrapolation>Y</Extrapolation>
       </Configuration>
     </YieldCurves>
+
     <Indices>
       <Index>EUR-EURIBOR-6M</Index>
       <Index>EUR-EURIBOR-3M</Index>
@@ -143,6 +122,7 @@
       <Index>USD-LIBOR-3M</Index>
       <Index>USD-FedFunds</Index>
     </Indices>
+
     <SwapIndices>
       <SwapIndex>
         <Name>EUR-CMS-1Y</Name>
@@ -153,18 +133,12 @@
         <DiscountingIndex>EUR-EONIA</DiscountingIndex>
       </SwapIndex>
     </SwapIndices>
+
     <DefaultCurves>
       <Names/>
       <Tenors>6M,1Y,2Y</Tenors>
     </DefaultCurves>
-    <!--
-    <Equities>
-      <Names>
-        <Name>Lufthansa</Name>
-      </Names>
-      <DividendTenors>6M,1Y,2Y</DividendTenors>
-    </Equities>
-    -->
+
     <SwaptionVolatilities>
       <Simulate>false</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
@@ -175,6 +149,7 @@
       <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
       <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
     </SwaptionVolatilities>
+
     <FxVolatilities>
       <Simulate>false</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
@@ -183,16 +158,7 @@
       </CurrencyPairs>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
     </FxVolatilities>
-    <!--
-    <EquityVolatilities>
-      <Simulate>true</Simulate>
-      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
-      <Names>
-        <Name>Lufthansa</Name>
-      </Names>
-      <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
-    </EquityVolatilities>
-    -->
+
     <Commodities>
       <Simulate>true</Simulate>
       <Names>

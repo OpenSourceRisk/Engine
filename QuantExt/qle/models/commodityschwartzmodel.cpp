@@ -34,7 +34,7 @@ QuantLib::Real CommoditySchwartzModel::forwardPrice(const QuantLib::Time t, cons
     Real f0T = priceCurve.empty() ? parametrization_->priceCurve()->price(T) : priceCurve->price(T);
     Real VtT = parametrization_->VtT(t, T);
     Real V0T = parametrization_->VtT(0, T);
-    Real k = parametrization_->kappaParameter();    
+    Real k = parametrization_->kappaParameter();
     return f0T * std::exp(-state[0] * std::exp(-k*T) - 0.5 * (V0T - VtT));
 }
 

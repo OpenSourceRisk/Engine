@@ -34,7 +34,10 @@ CommoditySchwartzParametrization::CommoditySchwartzParametrization(const Currenc
 Real CommoditySchwartzParametrization::VtT(Real t, Real T) {
     Real sig = sigmaParameter();
     Real kap = kappaParameter();
-    return sig * sig * (1.0 - std::exp(-2.0 * kap * (T-t))) / (2.0 * kap);    
+    if (fabs(kap) < QL_EPSILON)
+        return sig * sig * (T-t);
+    else
+        return sig * sig * (1.0 - std::exp(-2.0 * kap * (T-t))) / (2.0 * kap);    
 }
 
 } // namespace QuantExt

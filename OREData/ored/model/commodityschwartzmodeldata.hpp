@@ -71,7 +71,7 @@ public:
     Real& sigmaValue() { return sigmaValue_; }
     bool& calibrateKappa() { return calibrateSigma_; }
     ParamType& kappaParamType() { return sigmaType_; }
-    Real& kappaValue() { return sigmaValue_; }
+    Real& kappaValue() { return kappaValue_; }
     std::vector<std::string>& optionExpiries() { return optionExpiries_; }
     std::vector<std::string>& optionStrikes() { return optionStrikes_; }
     //@}
