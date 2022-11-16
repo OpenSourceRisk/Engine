@@ -171,7 +171,10 @@ models/yoyswaphelper.cpp
 models/zeroinflationmodeltermstructure.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
 pricingengines/analyticcclgmfxoptionengine.cpp
+pricingengines/analyticdigitalamericanengine.cpp
 pricingengines/analyticdkcpicapfloorengine.cpp
+pricingengines/analyticdoublebarrierbinaryengine.cpp
+pricingengines/analyticeuropeanengine.cpp
 pricingengines/analyticeuropeanforwardengine.cpp
 pricingengines/analyticjycpicapfloorengine.cpp
 pricingengines/analyticjyyoycapfloorengine.cpp
@@ -561,7 +564,10 @@ models/yoyswaphelper.hpp
 models/zeroinflationmodeltermstructure.hpp
 pricingengines/analyticcashsettledeuropeanengine.hpp
 pricingengines/analyticcclgmfxoptionengine.hpp
+pricingengines/analyticdigitalamericanengine.hpp
+pricingengines/analyticdoublebarrierbinaryengine.hpp
 pricingengines/analyticdkcpicapfloorengine.hpp
+pricingengines/analyticeuropeanengine.hpp
 pricingengines/analyticeuropeanforwardengine.hpp
 pricingengines/analyticjycpicapfloorengine.hpp
 pricingengines/analyticjyyoycapfloorengine.hpp

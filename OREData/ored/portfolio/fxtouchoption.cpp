@@ -92,6 +92,7 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
                "Payoff at hit not supported for FxNoTouchOptions");
 
     // Handle PayoffCurrency, we might have to flip the trade here
+    bool flipResults = false;
     if (payoffCurrency_ == foreignCurrency_) {
         // Invert the trade, switch dom and for and flip Put/Call
         level = 1.0 / level;
@@ -111,6 +112,7 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
             barrierType = Barrier::DownOut;
             break;
         }
+        flipResults = true;
     } else if (payoffCurrency_ != domesticCurrency_) {
         QL_FAIL("Invalid Payoff currency (" << payoffCurrency_ << ") for FxTouchOption " << foreignCurrency_
                                             << domesticCurrency_);
@@ -148,7 +150,7 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
     boost::shared_ptr<FxTouchOptionEngineBuilder> fxTouchOptBuilder =
         boost::dynamic_pointer_cast<FxTouchOptionEngineBuilder>(builder);
-    barrier->setPricingEngine(fxTouchOptBuilder->engine(fgnCcy, domCcy, type_));
+    barrier->setPricingEngine(fxTouchOptBuilder->engine(fgnCcy, domCcy, type_, flipResults));
     if (type_ == "One-Touch") {
         // if a one-touch option is triggered it becomes a simple forward cashflow
         // which we price as a swap
@@ -185,8 +187,6 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
-    additionalData_["effectiveDomesticCurrency"] = domCcy.code();
-    additionalData_["effectiveForeignCurrency"] = fgnCcy.code();
 }
 
 bool FxTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {

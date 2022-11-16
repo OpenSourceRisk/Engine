@@ -65,11 +65,12 @@ CommodityOptionStrip::CommodityOptionStrip(const Envelope& envelope, const LegDa
                                            Real premium, const string& premiumCurrency, const Date& premiumPayDate,
                                            const string& style, const string& settlement,
                                            const BarrierData& callBarrierData, const BarrierData& putBarrierData,
-                                           const bool isDigital, Real payoffPerUnit)
+                                           const string& fxIndex, const bool isDigital, Real payoffPerUnit)
     : Trade("CommodityOptionStrip", envelope), legData_(legData), callPositions_(callPositions),
       callStrikes_(callStrikes), putPositions_(putPositions), putStrikes_(putStrikes), premium_(premium),
       premiumCurrency_(premiumCurrency), premiumPayDate_(premiumPayDate), style_(style), settlement_(settlement),
-      callBarrierData_(callBarrierData), putBarrierData_(putBarrierData), isDigital_(isDigital), unaryPayoff_(payoffPerUnit) {}
+      callBarrierData_(callBarrierData), putBarrierData_(putBarrierData), fxIndex_(fxIndex), isDigital_(isDigital),
+      unaryPayoff_(payoffPerUnit) {}
 
 void CommodityOptionStrip::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
@@ -81,7 +82,8 @@ void CommodityOptionStrip::build(const boost::shared_ptr<EngineFactory>& engineF
     auto conLegData = legData_.concreteLegData();
     commLegData_ = boost::dynamic_pointer_cast<CommodityFloatingLegData>(conLegData);
     QL_REQUIRE(commLegData_, "CommodityOptionStrip leg data should be of type CommodityFloating");
-
+    if(!commLegData_->fxIndex().empty())
+        fxIndex_= commLegData_->fxIndex();
     // Build the commodity floating leg data
     auto legBuilder = engineFactory->legBuilder(legData_.legType());
     auto cflb = boost::dynamic_pointer_cast<CommodityFloatingLegBuilder>(legBuilder);
@@ -240,12 +242,12 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
              << settlement_ << " and proceeding as if Cash.");
     }
 
+
     // Populate these with the call/put options requested in each period
     vector<boost::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
 
     for (Size i = 0; i < leg.size(); i++) {
-
         auto cf = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(leg[i]);
         QL_REQUIRE(cf, "Expected a CommodityIndexedAverageCashFlow while building APO");
 
@@ -283,7 +285,8 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
                 legData_.paymentLag(), legData_.paymentConvention(), commLegData_->pricingCalendar(),
                 to_string(cf->date()), cf->gearing(), cf->spread(), cf->quantityFrequency(),
                 CommodityPayRelativeTo::CalculationPeriodEndDate, commLegData_->futureMonthOffset(),
-                commLegData_->deliveryRollDays(), true, tempDatum.type == "Call" ? callBarrierData_ : putBarrierData_);
+                commLegData_->deliveryRollDays(), true, tempDatum.type == "Call" ? callBarrierData_ : putBarrierData_,
+                fxIndex_);
 
             commOption.id() = tempDatum.id;
             commOption.build(engineFactory);
@@ -294,6 +297,11 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
             // Update the notional_ each time. It will hold the notional of the last instrument which is arbitrary
             // but reasonable as this is the instrument that we use as the main instrument below.
             notional_ = commOption.notional();
+
+            if (!fxIndex_.empty()) { // if fx is applied, the notional is still quoted in the domestic ccy
+                auto underlyingCcy = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(leg[0])->index()->priceCurve()->currency();
+                notionalCurrency_ = underlyingCcy.code();
+            }
         }
     }
 
@@ -306,7 +314,8 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
     additionalMultipliers.pop_back();
 
     // Possibly add a premium to the additional instruments and multipliers
-    // We expect here that the fee already has the correct sign
+    // We expect here that the fee alrea minimal
+    // dy has the correct sign
     if (!close(0.0, premium_)) {
         maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, qlInstMult,
                                                     PremiumData(premium_, premiumCurrency_, premiumPayDate_), 1.0,

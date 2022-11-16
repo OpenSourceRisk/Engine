@@ -117,7 +117,7 @@ public:
         bool excludePeriodStart = true, QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
         bool useBusinessDays = true, const std::string& tag = "", QuantLib::Natural dailyExpiryOffset =
         QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
-        QuantLib::Natural lastNDays = QuantLib::Null<QuantLib::Natural>());
+        QuantLib::Natural lastNDays = QuantLib::Null<QuantLib::Natural>(), std::string fxIndex = "");
 
     //! \name Inspectors
     //@{
@@ -147,6 +147,7 @@ public:
     QuantLib::Natural dailyExpiryOffset() const { return dailyExpiryOffset_; }
     bool unrealisedQuantity() const { return unrealisedQuantity_; }
     QuantLib::Natural lastNDays() const { return lastNDays_; }
+    std::string const& fxIndex() const { return fxIndex_; }
     //@}
 
     //! \name Serialisation
@@ -182,6 +183,7 @@ private:
     QuantLib::Natural dailyExpiryOffset_;
     bool unrealisedQuantity_;
     QuantLib::Natural lastNDays_;
+    std::string fxIndex_;
 
     static ore::data::LegDataRegister<CommodityFloatingLegData> reg_;
 };

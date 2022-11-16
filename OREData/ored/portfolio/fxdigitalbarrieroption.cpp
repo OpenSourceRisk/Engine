@@ -65,6 +65,7 @@ void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engin
 
     // Handle PayoffCurrency, we might have to flip the trade here
     Real strike = strike_;
+    bool flipResults = false;
     if (payoffCurrency_ == "") {
         DLOG("PayoffCurrency defaulting to " << domesticCurrency_ << " for FxDigitalBarrierOption " << id());
     } else if (payoffCurrency_ == foreignCurrency_) {
@@ -87,6 +88,7 @@ void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engin
             barrierType = Barrier::DownOut;
             break;
         }
+        flipResults = true;
     } else if (payoffCurrency_ != domesticCurrency_) {
         QL_FAIL("Invalid Payoff currency (" << payoffCurrency_ << ") for FxDigitalBarrierOption " << foreignCurrency_
                                             << domesticCurrency_);
@@ -130,7 +132,7 @@ void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engin
         boost::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
 
     barrier->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
-    vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy));
+    vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, flipResults));
 
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
@@ -164,6 +166,8 @@ void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engin
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
+    additionalData_["effectiveForeignCurrency"] = boughtCcy.code();
+    additionalData_["effectiveDomesticCurrency"] = soldCcy.code();
 }
 
 bool checkBarrier(Real spot, Barrier::Type type, Real barrier) {

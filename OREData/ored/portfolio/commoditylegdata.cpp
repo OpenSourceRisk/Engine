@@ -182,7 +182,7 @@ CommodityFloatingLegData::CommodityFloatingLegData()
       pricingLag_(0), isAveraged_(false), isInArrears_(true), futureMonthOffset_(0),
       deliveryRollDays_(0), includePeriodEnd_(true), excludePeriodStart_(true),
       hoursPerDay_(Null<Natural>()), useBusinessDays_(true), dailyExpiryOffset_(0),
-      unrealisedQuantity_(false), lastNDays_(Null<Natural>()) {}
+      unrealisedQuantity_(false), lastNDays_(Null<Natural>()), fxIndex_("") {}
 
 CommodityFloatingLegData::CommodityFloatingLegData(
     const string& name, CommodityPriceType priceType, const vector<Real>& quantities,
@@ -192,7 +192,7 @@ CommodityFloatingLegData::CommodityFloatingLegData(
     const string& pricingCalendar, Natural pricingLag, const vector<string>& pricingDates, bool isAveraged,
     bool isInArrears, Natural futureMonthOffset, Natural deliveryRollDays, bool includePeriodEnd,
     bool excludePeriodStart, Natural hoursPerDay, bool useBusinessDays, const string& tag,
-    Natural dailyExpiryOffset, bool unrealisedQuantity, QuantLib::Natural lastNDays)
+    Natural dailyExpiryOffset, bool unrealisedQuantity, QuantLib::Natural lastNDays, std::string fxIndex)
     : LegAdditionalData("CommodityFloating"), name_(name), priceType_(priceType), quantities_(quantities),
       quantityDates_(quantityDates), commodityQuantityFrequency_(commodityQuantityFrequency),
       commodityPayRelativeTo_(commodityPayRelativeTo), spreads_(spreads), spreadDates_(spreadDates),
@@ -201,7 +201,7 @@ CommodityFloatingLegData::CommodityFloatingLegData(
       isInArrears_(isInArrears), futureMonthOffset_(futureMonthOffset), deliveryRollDays_(deliveryRollDays),
       includePeriodEnd_(includePeriodEnd), excludePeriodStart_(excludePeriodStart), hoursPerDay_(hoursPerDay),
       useBusinessDays_(useBusinessDays), tag_(tag), dailyExpiryOffset_(dailyExpiryOffset),
-      unrealisedQuantity_(unrealisedQuantity), lastNDays_(lastNDays) {
+      unrealisedQuantity_(unrealisedQuantity), lastNDays_(lastNDays), fxIndex_(fxIndex) {
     indices_.insert("COMM-" + name_);
 }
 
@@ -289,6 +289,9 @@ void CommodityFloatingLegData::fromXML(XMLNode* node) {
         lastNDays_ = parseInteger(XMLUtils::getNodeValue(n));
     }
 
+    if (XMLNode* n = XMLUtils::getChildNode(node, "FXIndex")) {
+        fxIndex_ = XMLUtils::getNodeValue(n);
+    }
 }
 
 XMLNode* CommodityFloatingLegData::toXML(XMLDocument& doc) {
@@ -337,6 +340,8 @@ XMLNode* CommodityFloatingLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "UnrealisedQuantity", unrealisedQuantity_);
     if (lastNDays_ != Null<Natural>())
         XMLUtils::addChild(doc, node, "LastNDays", static_cast<int>(lastNDays_));
+    if (!fxIndex_.empty())
+        XMLUtils::addChild(doc, node, "FXIndex", fxIndex_);
 
     return node;
 }

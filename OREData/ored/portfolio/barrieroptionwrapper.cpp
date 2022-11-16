@@ -77,9 +77,14 @@ Real BarrierOptionWrapper::NPV() const {
 const std::map<std::string, boost::any>& BarrierOptionWrapper::additionalResults() const {
     static std::map<std::string, boost::any> emptyMap;
     NPV();
-    if (exercised_ && !(barrierType_ == Barrier::DownOut || barrierType_ == Barrier::UpOut))
-        return activeUnderlyingInstrument_->additionalResults();
-    return emptyMap;
+    if (exercised_) {
+        if (!(barrierType_ == Barrier::DownOut || barrierType_ == Barrier::UpOut))
+            return activeUnderlyingInstrument_->additionalResults();
+        else
+            return emptyMap;
+    } else {
+        return instrument_->additionalResults();
+    }
 }
 
 bool SingleBarrierOptionWrapper::checkBarrier(Real spot, Barrier::Type type, Real barrier) const {

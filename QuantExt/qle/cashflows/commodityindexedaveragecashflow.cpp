@@ -32,13 +32,13 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     const ext::shared_ptr<FutureExpiryCalculator>& calc, bool includeEndDate, bool excludeStartDate,
     bool useBusinessDays, CommodityQuantityFrequency quantityFrequency, Natural hoursPerDay,
     Natural dailyExpiryOffset, bool unrealisedQuantity,
-    const boost::optional<pair<Calendar, Real>>& offPeakPowerData)
+    const boost::optional<pair<Calendar, Real>>& offPeakPowerData, const ext::shared_ptr<FxIndex>& fxIndex)
     : quantity_(quantity), startDate_(startDate), endDate_(endDate), paymentDate_(paymentDate), index_(index),
       pricingCalendar_(pricingCalendar), spread_(spread), gearing_(gearing), useFuturePrice_(useFuturePrice),
       deliveryDateRoll_(deliveryDateRoll), futureMonthOffset_(futureMonthOffset), includeEndDate_(includeEndDate),
       excludeStartDate_(excludeStartDate), useBusinessDays_(useBusinessDays), quantityFrequency_(quantityFrequency),
       hoursPerDay_(hoursPerDay), dailyExpiryOffset_(dailyExpiryOffset), unrealisedQuantity_(unrealisedQuantity),
-      offPeakPowerData_(offPeakPowerData) {
+      offPeakPowerData_(offPeakPowerData), fxIndex_(fxIndex) {
     init(calc);
 }
 
@@ -50,13 +50,13 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     const ext::shared_ptr<FutureExpiryCalculator>& calc, bool includeEndDate, bool excludeStartDate,
     const QuantLib::Date& paymentDateOverride, bool useBusinessDays, CommodityQuantityFrequency quantityFrequency,
     Natural hoursPerDay, Natural dailyExpiryOffset, bool unrealisedQuantity,
-    const boost::optional<pair<Calendar, Real>>& offPeakPowerData)
+    const boost::optional<pair<Calendar, Real>>& offPeakPowerData, const ext::shared_ptr<FxIndex>& fxIndex)
     : quantity_(quantity), startDate_(startDate), endDate_(endDate), paymentDate_(paymentDateOverride),
       index_(index), pricingCalendar_(pricingCalendar), spread_(spread), gearing_(gearing),
       useFuturePrice_(useFuturePrice), deliveryDateRoll_(deliveryDateRoll), futureMonthOffset_(futureMonthOffset),
       includeEndDate_(includeEndDate), excludeStartDate_(excludeStartDate), useBusinessDays_(useBusinessDays),
       quantityFrequency_(quantityFrequency), hoursPerDay_(hoursPerDay), dailyExpiryOffset_(dailyExpiryOffset),
-      unrealisedQuantity_(unrealisedQuantity), offPeakPowerData_(offPeakPowerData) {
+      unrealisedQuantity_(unrealisedQuantity), offPeakPowerData_(offPeakPowerData), fxIndex_(fxIndex) {
 
     // Derive the payment date
     if (paymentDate_ == Date()) {
@@ -71,19 +71,23 @@ Real CommodityIndexedAverageCashFlow::amount() const {
 
     // Calculate the average price
     Real averagePrice = 0.0;
+    Real fxRate = 0.0;
     if (weights_.empty()) {
         for (const auto& kv : indices_) {
-            averagePrice += kv.second->fixing(kv.first);
+            fxRate = (fxIndex_)? this->fxIndex()->fixing(kv.first):1.0;
+            averagePrice += fxRate * kv.second->fixing(kv.first);
         }
         averagePrice /= indices_.size();
     } else {
         // weights_ will be populated when offPeakPowerData_ is provided.
         for (const auto& kv : indices_) {
-            averagePrice += kv.second->fixing(kv.first) * weights_.at(kv.first);
+            fxRate = (fxIndex_)? this->fxIndex()->fixing(kv.first):1.0;
+            averagePrice += fxRate * kv.second->fixing(kv.first) * weights_.at(kv.first);
         }
     }
 
     // Amount is just average price times quantity
+    // In case of Foreign currency settlement, the spread must be expressed in Foreign currency units
     return periodQuantity_ * (gearing_ * averagePrice + spread_);
 }
 
@@ -385,8 +389,12 @@ CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::unrealisedQuantity(bool 
     return *this;
 }
 
-CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withOffPeakPowerData(
-    const boost::optional<pair<Calendar, Real>>& offPeakPowerData) {
+CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withFxIndex(const ext::shared_ptr<FxIndex>& fxIndex) {
+    fxIndex_ = fxIndex;
+    return *this;
+}
+
+CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withOffPeakPowerData(const boost::optional<pair<Calendar, Real> >& offPeakPowerData) {
     offPeakPowerData_ = offPeakPowerData;
     return *this;
 }
@@ -441,7 +449,7 @@ CommodityIndexedAverageLeg::operator Leg() const {
             quantity, start, end, paymentLag_, paymentCalendar_, paymentConvention_, index_, pricingCalendar_, spread,
             gearing, paymentTiming_, useFuturePrice_, deliveryDateRoll_, futureMonthOffset_, calc_, includeEnd,
             excludeStart, paymentDate, useBusinessDays_, quantityFrequency_, hoursPerDay_, dailyExpiryOffset_,
-            unrealisedQuantity_, offPeakPowerData_));
+            unrealisedQuantity_, offPeakPowerData_, fxIndex_));
     }
 
     return leg;

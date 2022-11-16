@@ -1303,6 +1303,12 @@
     <ClInclude Include="qle\calendars\mauritius.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticdoublebarrierbinaryengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticeuropeanengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1630,6 +1636,9 @@
     </ClCompile>
     <ClCompile Include="qle\models\lgmimplieddefaulttermstructure.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\analyticdkcpicapfloorengine.cpp">
       <Filter>pricingengines</Filter>
@@ -2233,6 +2242,15 @@
     </ClCompile>
     <ClCompile Include="qle\calendars\mauritius.cpp">
       <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticdoublebarrierbinaryengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticeuropeanengine.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
