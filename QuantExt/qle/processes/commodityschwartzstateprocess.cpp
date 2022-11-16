@@ -20,8 +20,43 @@
 
 namespace QuantExt {
 
-    CommoditySchwartzStateProcess::CommoditySchwartzStateProcess(const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization,
+CommoditySchwartzStateProcess::CommoditySchwartzStateProcess(const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization,
                                                                  const CommoditySchwartzModel::Discretization discretization)
     : p_(parametrization) {}
+
+Real CommoditySchwartzStateProcess::drift(Time t, Real x0) const {
+    if (p_->driftFreeState())
+        return 0.0;
+    else
+        return -x0 * p_->kappaParameter(); 
+}
+
+Real CommoditySchwartzStateProcess::diffusion(Time t, Real) const {
+    return p_->sigma(t);
+}
+
+Real CommoditySchwartzStateProcess::expectation(Time t, Real x0, Time dt) const {
+    if (p_->driftFreeState())
+        return x0;
+    else {
+        // Ornstein-Uhlenbeck expectation
+        return x0 * exp(-p_->kappaParameter() * dt);
+    }
+}
+
+Real CommoditySchwartzStateProcess::variance(Time t0, Real x0, Time dt) const {
+    if (p_->driftFreeState())
+        return p_->variance(t0 + dt) - p_->variance(t0);
+    else {
+        // Ornstein-Uhlenbeck variance
+        Real kap = p_->kappaParameter();
+        Real sig = p_->sigmaParameter();
+        return sig * sig * (1.0 - std::exp(-2.0 * kap * dt)) / (2.0 * kap);
+    }
+}
+
+Real CommoditySchwartzStateProcess::stdDeviation(Time t0, Real x0, Time dt) const {
+    return std::sqrt(variance(t0, x0, dt));
+}
 
 } // namespace QuantExt

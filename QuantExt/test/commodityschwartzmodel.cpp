@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/test/data/test_case.hpp>
 
 #include <ql/currencies/america.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
@@ -49,6 +50,7 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 using namespace boost::accumulators;
+namespace bdata = boost::unit_test::data;
 
 namespace {
     
@@ -56,7 +58,7 @@ std::vector<Period> periods = { 1*Days, 1*Years, 2*Years, 3*Years, 5*Years, 10*Y
 std::vector<Real> prices { 100, 101, 102, 103, 105, 110, 115, 120, 130 };
 
 struct CommoditySchwartzModelTestData : public qle::test::TopLevelFixture {
-    CommoditySchwartzModelTestData() :
+    CommoditySchwartzModelTestData(bool driftFreeState) :
         ts(boost::make_shared<InterpolatedPriceCurve<Linear>>(periods, prices, ActualActual(ActualActual::ISDA), USDCurrency())) {
 
         referenceDate = Date(10, November, 2022);
@@ -66,7 +68,7 @@ struct CommoditySchwartzModelTestData : public qle::test::TopLevelFixture {
         sigma = 0.1;
         kappa = 0.05;
 
-        parametrization = boost::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "WTI", ts, fx, sigma, kappa);
+        parametrization = boost::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "WTI", ts, fx, sigma, kappa, driftFreeState);
         QL_REQUIRE(parametrization != NULL, "CommoditySchwartzParametrization has null pointer");
 
         model = boost::make_shared<CommoditySchwartzModel>(parametrization);
@@ -84,22 +86,31 @@ struct CommoditySchwartzModelTestData : public qle::test::TopLevelFixture {
 
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, CommoditySchwartzModelTestData)
+//BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, CommoditySchwartzModelTestData)
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CommoditySchwartzModelTest)
 
-BOOST_AUTO_TEST_CASE(testMartingaleProperty) {
+std::vector<bool> driftFreeState{ true, false };
+std::vector<Size> steps{ 1, 52 };
 
+BOOST_DATA_TEST_CASE(testMartingaleProperty,
+                     bdata::make(driftFreeState) * bdata::make(steps),
+                     driftFreeState, steps) {
+
+    //BOOST_AUTO_TEST_CASE(testMartingaleProperty) {
+    
     BOOST_TEST_MESSAGE("Testing martingale property in the COM Schwartz model ...");
 
-    boost::shared_ptr<StochasticProcess> process = model->stateProcess();
+    CommoditySchwartzModelTestData data(driftFreeState);
+    boost::shared_ptr<StochasticProcess> process = data.model->stateProcess();
     QL_REQUIRE(process != NULL, "process has null pointer!");
 
     Size n = 100000; // number of paths
     Size seed = 42; // rng seed
     Time t = 10.0;  // simulation horizon
     Time T = 20.0;  // forward price maturity
-    Size steps = 1; // static_cast<Size>(t * 52); // number of weekly steps taken (euler)
+    //Size steps = 1; 
 
     TimeGrid grid(t, steps);
     LowDiscrepancy::rsg_type sg = LowDiscrepancy::make_sequence_generator(steps, seed);
@@ -113,13 +124,13 @@ BOOST_AUTO_TEST_CASE(testMartingaleProperty) {
         Sample<MultiPath> path = pg.next();
         Size l = path.value[0].length() - 1;
         state[0] = path.value[0][l];
-        Real price = model->forwardPrice(t, T, state);
+        Real price = data.model->forwardPrice(t, T, state);
         acc_price(price);
         acc_state(state[0]);
     }
 
-    BOOST_TEST_MESSAGE("sigma = " << model->parametrization()->sigmaParameter());
-    BOOST_TEST_MESSAGE("kappa = " << model->parametrization()->kappaParameter());
+    BOOST_TEST_MESSAGE("sigma = " << data.model->parametrization()->sigmaParameter());
+    BOOST_TEST_MESSAGE("kappa = " << data.model->parametrization()->kappaParameter());
     BOOST_TEST_MESSAGE("samples = " << n);
     BOOST_TEST_MESSAGE("steps = " << steps);
     BOOST_TEST_MESSAGE("t = " << t);
@@ -128,7 +139,7 @@ BOOST_AUTO_TEST_CASE(testMartingaleProperty) {
     // Martingale test for F(t,T)
     {
         Real found = mean(acc_price);
-        Real expected = parametrization->priceCurve()->price(T);
+        Real expected = data.parametrization->priceCurve()->price(T);
         Real error = error_of<tag::mean>(acc_price);
         
         BOOST_TEST_MESSAGE("Check that E[F(t,T)] = F(0,T)");
@@ -154,7 +165,7 @@ BOOST_AUTO_TEST_CASE(testMartingaleProperty) {
     // Variance test for the state variable, implicit in the first test above 
     {
         Real found = variance(acc_state);
-        Real expected = parametrization->variance(t);
+        Real expected = data.parametrization->variance(t);
         // FIXME: What's the MC error here? I assume that the mean error is smaller than the error of variance estimate, so re-using it.
         Real error = error_of<tag::mean>(acc_state); 
 

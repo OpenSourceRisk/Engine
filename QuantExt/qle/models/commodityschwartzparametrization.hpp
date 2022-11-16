@@ -33,20 +33,27 @@ namespace QuantExt {
 /*! COM parametrization for the Schwartz (1997) mean-reverting one-factor model
     with log-normal forward price dynamics and forward volatility sigma * exp(-kappa*(T-t)):
     dF(t,T) / F(t,T) = sigma * exp(-kappa * (T-t)) * dW    
+
     The model can be propagated in terms of an artificial spot price process of the form 
     S(t) = A(t) * exp(B(t) * X(t))
     where    
         dX(t) = -kappa * X(t) * dt + sigma * dW(t)
+        X(t) - X(s) = -X(s) * (1 - exp(-kappa*(t-s)) + int_s^t sigma * exp(-kappa*(t-u)) dW(u)
+        E[X(t)|s] = X(s) * exp(-kappa*(t-s))
+        Var[X(t)-X(s)|s] = sigma^2 * (1 - exp(-2*kappa*(t-s))) / (2*kappa)
+
     The stochastic future price curve in terms of X(t) is
         F(t,T) = F(0,T) * exp( X(t) * exp(-kappa*(T-t) - 1/2 * (V(0,T) - V(t,T))
     with
         V(t,T) = sigma^2 * (1 - exp(-2*kappa*(T-t))) / (2*kappa)
+
     Instead of state variable X we can use 
         Y(t) = exp(kappa * t) * X(t) 
     with drift-free
         dY(t) = sigma * exp(kappa * t) * dW
         Y(t) = int_0^t sigma * exp(kappa * s) * dW(s)
-        Var(Y(t)) = sigma^2 * (exp(2*kappa*t) - 1) / (2*kappa)
+        Var[Y(t)] = sigma^2 * (exp(2*kappa*t) - 1) / (2*kappa)
+        Var[Y(t)-Y(s)|s] = \int_s^t sigma * exp(kappa * u) * dW(u) = Var[Y(t)] - Var[Y(s)]
     The stochastic future price curve in terms of Y(t) is 
         F(t,T) = F(0,t) * exp( Y(t) * exp(-kappa*T) - 1/2 * (V(0,T) - V(t,T))
 
@@ -58,8 +65,9 @@ public:
         fx spot is as of today (i.e. the discounted spot) */
     CommoditySchwartzParametrization(const Currency& currency, const std::string& name,
                                      const Handle<QuantExt::PriceTermStructure>& priceCurve,
-                                     const Handle<Quote>& fxSpotToday, const Real sigma, const Real kappa);
-    //! State variable Y's variance on [0, t]: sigma^2 * (exp(2*kappa*t) - 1) / (2*kappa)
+                                     const Handle<Quote>& fxSpotToday, const Real sigma, const Real kappa,
+                                     bool driftFreeState = false);
+    //! State variable variance on [0, t]
     Real variance(const Time t) const;
     //! State variable Y's diffusion at time t: sigma * exp(kappa * t)
     Real sigma(const Time t) const;
@@ -74,6 +82,8 @@ public:
     //! Variance V(t,T) used in the computation of F(t,T)
     Real VtT(Real t, Real T);
 
+    bool driftFreeState() const { return driftFreeState_; }
+    
 protected:
     Real direct(const Size i, const Real x) const override;
     Real inverse(const Size i, const Real y) const override;
@@ -85,6 +95,7 @@ private:
     std::string comName_;
     const boost::shared_ptr<PseudoParameter> sigma_;
     const boost::shared_ptr<PseudoParameter> kappa_;
+    bool driftFreeState_;
 };
 
 // inline
@@ -98,14 +109,19 @@ inline Real CommoditySchwartzParametrization::variance(const Time t) const {
     Real kap = direct(0, kappa_->params()[0]);
     if (kap < QL_EPSILON)
         return sig * sig * t;
-    else
+    else if (driftFreeState_)
         return sig * sig * (std::exp(2.0 * kap * t) - 1.0) / (2.0 * kap);
+    else
+        return sig * sig * (1.0 - std::exp(-2.0 * kap * t)) / (2.0 * kap);
 }
 
 inline Real CommoditySchwartzParametrization::sigma(const Time u) const {
     Real sig = direct(0, sigma_->params()[0]);
     Real kap = direct(0, kappa_->params()[0]);
-    return sig * std::exp(kap * u);
+    if (driftFreeState_)
+        return sig * std::exp(kap * u);
+    else
+        return sig;
 }
 
 inline Real CommoditySchwartzParametrization::sigmaParameter() const {

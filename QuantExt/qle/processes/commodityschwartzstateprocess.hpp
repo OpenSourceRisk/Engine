@@ -55,17 +55,6 @@ private:
 
 inline Real CommoditySchwartzStateProcess::x0() const { return 0.0; }
 
-inline Real CommoditySchwartzStateProcess::drift(Time, Real) const { return 0.0; }
-
-inline Real CommoditySchwartzStateProcess::diffusion(Time t, Real) const { return p_->sigma(t); }
-
-inline Real CommoditySchwartzStateProcess::expectation(Time, Real x0, Time) const { return x0; }
-
-inline Real CommoditySchwartzStateProcess::variance(Time t0, Real, Time dt) const { return p_->variance(t0 + dt) - p_->variance(t0); }
-
-inline Real CommoditySchwartzStateProcess::stdDeviation(Time t0, Real x0, Time dt) const {
-    return std::sqrt(variance(t0, x0, dt));
-}
 
 } // namespace QuantExt
 

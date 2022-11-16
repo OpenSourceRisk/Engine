@@ -37,13 +37,15 @@ namespace QuantExt {
       dF(t,T) / F(t,T) = sigma * exp(-kappa * (T-t)) * dW
 
     Model-implied price curve:
-        F(t,T) = F(0,T) * exp{ Y(t) * exp(-kappa*T)) - 1/2 * (V(0,T)-V(t,T)) }, 
+        F(t,T) = F(0,T) * exp{ X(t) * exp(-kappa*(T-t))) - 1/2 * (V(0,T)-V(t,T)) }, 
     with    
         V(t,T) = sigma^2 * (1 - exp(-2*kappa*(T-t))) / (2*kappa),
-    state variable
-        Y(t) = int_0^t sigma * exp(kappa * s) * dW(s),
-    zero mean and variance
-        Var(Y(t)) = sigma^2 * (exp(2*kappa*t) - 1) / (2*kappa)   
+    and
+        dX(t) = -kappa * X(t) * dt + sigma * dW(t), X(0) = 0
+
+    In terms of drift-free state variable Y(t) = exp(kappa*t) * X(t):
+        F(t,T) = F(0,T) * exp{ Y(t) * exp(-kappa*T)) - 1/2 * (V(0,T)-V(t,T)) }, 
+        dY(t) = sigma * exp(kappa * t) dW(t), Y(0) = 0
 */
 class CommoditySchwartzModel : public CommodityModel {
 public:

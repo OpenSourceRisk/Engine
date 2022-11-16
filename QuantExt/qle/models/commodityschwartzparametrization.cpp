@@ -24,9 +24,11 @@ namespace QuantExt {
 CommoditySchwartzParametrization::CommoditySchwartzParametrization(const Currency& currency, const std::string& name,
                                                                    const Handle<QuantExt::PriceTermStructure>& priceCurve,
                                                                    const Handle<Quote>& fxSpotToday,
-                                                                   const Real sigma, const Real kappa)
+                                                                   const Real sigma, const Real kappa,
+                                                                   bool driftFreeState)
     : Parametrization(currency, name), priceCurve_(priceCurve), fxSpotToday_(fxSpotToday),
-      sigma_(boost::make_shared<PseudoParameter>(1)), kappa_(boost::make_shared<PseudoParameter>(1)) {
+      sigma_(boost::make_shared<PseudoParameter>(1)), kappa_(boost::make_shared<PseudoParameter>(1)),
+      driftFreeState_(driftFreeState) {
     sigma_->setParam(0, inverse(0, sigma));
     kappa_->setParam(0, inverse(0, kappa));
 }
