@@ -46,7 +46,7 @@ public:
     explicit Portfolio(bool buildFailedTrades = true) : buildFailedTrades_(buildFailedTrades) {}
 
     //! Add a trade to the portfolio
-    void add(const boost::shared_ptr<Trade>& trade, const bool checkForDuplicateIds = true);
+    void add(const boost::shared_ptr<Trade>& trade);
 
     //! Check if a trade id is already in the portfolio
     bool has(const string& id);
@@ -64,21 +64,18 @@ public:
     void reset();
 
     //! Portfolio size
-    QuantLib::Size size() const { return trades_.size(); }
+    QuantLib::Size size() const { return tradeLookup_.size(); }
 
     //! Load using a default or user supplied TradeFactory, existing trades are kept
     void load(const std::string& fileName,
-              const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>(),
-              const bool checkForDuplicateIds = true);
+              const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
 
     //! Load from an XML string using a default or user supplied TradeFactory, existing trades are kept
     void loadFromXMLString(const std::string& xmlString,
-                           const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>(),
-                           const bool checkForDuplicateIds = true);
+                           const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
 
     //! Load from XML Node
-    void fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>(),
-                 const bool checkForDuplicateIds = true);
+    void fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
 
     //! Save portfolio to an XML file
     void save(const std::string& fileName) const;
@@ -100,8 +97,8 @@ public:
     QuantLib::Date maturity() const;
 
     //! Return trade list
-    const std::vector<boost::shared_ptr<Trade>>& trades() const { return trades_; }
-
+    std::vector<boost::shared_ptr<Trade>> trades() const;
+    
     //! Build a vector of tradeIds
     std::vector<std::string> ids() const;
 
@@ -142,7 +139,7 @@ private:
     // get representation as XMLDocument
     void doc(XMLDocument& doc) const;
     bool buildFailedTrades_;
-    std::vector<boost::shared_ptr<Trade>> trades_;
+    //std::vector<boost::shared_ptr<Trade>> trades_;
     std::map<std::string, boost::shared_ptr<Trade>> tradeLookup_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
 };
