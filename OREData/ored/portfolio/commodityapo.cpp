@@ -29,7 +29,7 @@
 #include <ored/portfolio/commodityapo.hpp>
 #include <ored/portfolio/commoditylegbuilder.hpp>
 #include <ored/portfolio/fixingdates.hpp>
-
+#include <ored/utilities/marketdata.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/indexes/commodityindex.hpp>
@@ -51,20 +51,22 @@ CommodityAveragePriceOption::CommodityAveragePriceOption(
     const string& pricingCalendar, const string& paymentDate, Real gearing, Spread spread,
     CommodityQuantityFrequency commodityQuantityFrequency, CommodityPayRelativeTo commodityPayRelativeTo,
     QuantLib::Natural futureMonthOffset, QuantLib::Natural deliveryRollDays, bool includePeriodEnd,
-    const BarrierData& barrierData)
+    const BarrierData& barrierData, const std::string& fxIndex)
     : Trade("CommodityAveragePriceOption", envelope), optionData_(optionData), barrierData_(barrierData),
       quantity_(quantity), strike_(strike), currency_(currency), name_(name), priceType_(priceType),
       startDate_(startDate), endDate_(endDate), paymentCalendar_(paymentCalendar), paymentLag_(paymentLag),
       paymentConvention_(paymentConvention), pricingCalendar_(pricingCalendar), paymentDate_(paymentDate),
       gearing_(gearing), spread_(spread), commodityQuantityFrequency_(commodityQuantityFrequency),
       commodityPayRelativeTo_(commodityPayRelativeTo), futureMonthOffset_(futureMonthOffset),
-      deliveryRollDays_(deliveryRollDays), includePeriodEnd_(includePeriodEnd), allAveraging_(false) {}
+      deliveryRollDays_(deliveryRollDays), includePeriodEnd_(includePeriodEnd), fxIndex_(fxIndex), allAveraging_(false) {}
 
 void CommodityAveragePriceOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     reset();
 
+
     DLOG("CommodityAveragePriceOption::build() called for trade " << id());
+
 
     QL_REQUIRE(gearing_ > 0.0, "Gearing (" << gearing_ << ") should be positive.");
     QL_REQUIRE(spread_ < strike_, "Spread (" << spread_ << ") should be less than strike (" << strike_ << ").");
@@ -105,7 +107,7 @@ void CommodityAveragePriceOption::build(const boost::shared_ptr<EngineFactory>& 
 
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = strike_;
-    additionalData_["strikeCurrency"] = currency_;    
+    additionalData_["strikeCurrency"] = currency_;
 }
 
 std::map<AssetClass, std::set<std::string>> CommodityAveragePriceOption::underlyingIndices(
@@ -162,6 +164,10 @@ void CommodityAveragePriceOption::fromXML(XMLNode* node) {
     if (XMLNode* n = XMLUtils::getChildNode(apoNode, "IncludePeriodEnd")) {
         includePeriodEnd_ = parseBool(XMLUtils::getNodeValue(n));
     }
+
+    if (XMLNode* n = XMLUtils::getChildNode(apoNode, "FXIndex")){
+        fxIndex_ = XMLUtils::getNodeValue(n);
+    }
 }
 
 XMLNode* CommodityAveragePriceOption::toXML(XMLDocument& doc) {
@@ -193,6 +199,9 @@ XMLNode* CommodityAveragePriceOption::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, apoNode, "FutureMonthOffset", static_cast<int>(futureMonthOffset_));
     XMLUtils::addChild(doc, apoNode, "DeliveryRollDays", static_cast<int>(deliveryRollDays_));
     XMLUtils::addChild(doc, apoNode, "IncludePeriodEnd", includePeriodEnd_);
+    if(!fxIndex_.empty()){
+        XMLUtils::addChild(doc, apoNode, "FXIndex", fxIndex_);
+    }
 
     return node;
 }
@@ -216,7 +225,9 @@ Leg CommodityAveragePriceOption::buildLeg(const boost::shared_ptr<EngineFactory>
     boost::shared_ptr<CommodityFloatingLegData> commLegData = boost::make_shared<CommodityFloatingLegData>(
         name_, priceType_, quantities, quantityDates, commodityQuantityFrequency_, commodityPayRelativeTo_, spreads,
         spreadDates, gearings, gearingDates, CommodityPricingDateRule::FutureExpiryDate, pricingCalendar_, 0,
-        pricingDates, isAveraged, isInArrears, futureMonthOffset_, deliveryRollDays_, includePeriodEnd_);
+        pricingDates, isAveraged, isInArrears, futureMonthOffset_, deliveryRollDays_, includePeriodEnd_, true,
+        QuantLib::Null<QuantLib::Natural>(), true, "", QuantLib::Null<QuantLib::Natural>(), false, QuantLib::Null<QuantLib::Natural>(),
+            fxIndex_);
 
     // Create the LegData. All defaults are as in the LegData ctor.
     vector<string> paymentDates = paymentDate_.empty() ? vector<string>() : vector<string>(1, paymentDate_);
@@ -315,6 +326,36 @@ void CommodityAveragePriceOption::buildApo(const boost::shared_ptr<EngineFactory
                                                                   << ", should be on or before payment date, "
                                                                   << io::iso_date(apoFlow->date()));
 
+    // If the apo is payout and the underlying are quoted in different currencies, handle the fxIndex
+    boost::shared_ptr<FxIndex> fxIndex;
+    if(!fxIndex_.empty()) {
+        auto underlyingCcy =
+            boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(leg[0])->index()->priceCurve()->currency();
+        // check currencies consistency
+        QL_REQUIRE(npvCurrency_ == underlyingCcy.code() || npvCurrency_ == currency_, "Commodity cross-currency APO: inconsistent currencies in trade.");
+        
+        // only add an fx index if underlying currency differs from trade currency
+        if (npvCurrency_ != underlyingCcy.code()) {
+            fxIndex = buildFxIndex(fxIndex_, npvCurrency_, underlyingCcy.code(), engineFactory->market(),
+                                   engineFactory->configuration(MarketContext::pricing));
+            for (auto cf : leg) { // request appropriate fixings
+                auto cacf = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf);
+                for (auto kv : cacf->indices()) {
+                    if (!fxIndex->fixingCalendar().isBusinessDay(
+                            kv.first)) { // If fx index is not available for the commodity pricing day,
+                                         // this ensures to require the previous valid one which will be used in pricing
+                                         // from fxIndex()->fixing(...)
+                        Date adjustedFixingDate = fxIndex->fixingCalendar().adjust(kv.first, Preceding);
+                        requiredFixings_.addFixingDate(adjustedFixingDate, fxIndex_);
+
+                    } else {
+                        requiredFixings_.addFixingDate(kv.first, fxIndex_);
+                    }
+                }
+            }
+        }
+    }
+
     // get barrier info
     Real barrierLevel = Null<Real>();
     Barrier::Type barrierType = Barrier::DownIn;
@@ -334,7 +375,7 @@ void CommodityAveragePriceOption::buildApo(const boost::shared_ptr<EngineFactory
     boost::shared_ptr<QuantLib::Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
     auto apo = boost::make_shared<QuantExt::CommodityAveragePriceOption>(
         apoFlow, exercise, apoFlow->periodQuantity(), strike_, parseOptionType(optionData_.callPut()),
-        Settlement::Physical, Settlement::PhysicalOTC, barrierLevel, barrierType, barrierStyle);
+        Settlement::Physical, Settlement::PhysicalOTC, barrierLevel, barrierType, barrierStyle, fxIndex);
 
     // Set the pricing engine
     Currency ccy = parseCurrency(currency_);

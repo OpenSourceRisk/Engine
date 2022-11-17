@@ -27,7 +27,7 @@ Allowable values:  See section \ref{ss:premiums}
 
 Allowable values:  See \lstinline!Name! for commodity trades in Table \ref{tab:commodity_data}.
 
-\item \lstinline!Currency!: The currency of the payoff which must be consistent with the currency of the market data set up for the commodity.
+\item \lstinline!Currency!: The currency of the payoff which must be consistent with either currency of the market data set up for the commodity or the other currency specified in !lstinline!FXIndex! (see below).
 
 Allowable values: See \lstinline!Currency!  in Table \ref{tab:allow_stand_data}.
 
@@ -87,6 +87,10 @@ Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. Defaults to
 
 \item \lstinline!IncludePeriodEnd! [Optional]: This is as described in section \ref{ss:commodity_floating_leg_data}.
 
+\item \lstinline!FXIndex! [Optional]: This is an FX index used to apply currency conversion daily in the average. The currencies pair must include the currency used in the underlying commodity trade and the currency used for settlement.
+
+Allowable values:  See Table \ref{tab:fxindex_data} for supported fx indices.
+
 \end{itemize}
 
 \begin{listing}[h!]
@@ -137,6 +141,7 @@ Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. Defaults to
     <FutureMonthOffset>0</FutureMonthOffset>
     <DeliveryRollDays>0</DeliveryRollDays>
     <IncludePeriodEnd>true</IncludePeriodEnd>
+    <FXIndex>FX-ECB-EUR-USD</FXIndex>
   </CommodityAveragePriceOptionData>
 </Trade>
 \end{minted}

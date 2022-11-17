@@ -20,6 +20,7 @@
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/portfolio/builders/commodityswap.hpp>
 #include <ored/portfolio/commoditylegbuilder.hpp>
 #include <ored/portfolio/commoditylegdata.hpp>
@@ -533,14 +534,14 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
                 << commName);
         daylightSavingLocation = commFutureConv->savingsTime();
     }
-
+    boost::shared_ptr<FxIndex> fxIndex;
     // Build the leg. Different ctor depending on whether cashflow is averaging or not.
     Leg leg;
 
-    if ( (floatingLegData->isAveraged()||
-         (( floatingLegData->dailyExpiryOffset()!= Null<Natural>() ) && (floatingLegData->dailyExpiryOffset() > 0)) ) &&
-        !allAveraging_ && floatingLegData->lastNDays() == Null<Natural>()) {
-
+    bool isCashFlowAveraged = (floatingLegData->isAveraged()||
+                               (( floatingLegData->dailyExpiryOffset()!= Null<Natural>() ) && (floatingLegData->dailyExpiryOffset() > 0)) ) &&
+                              !allAveraging_ && floatingLegData->lastNDays() == Null<Natural>();
+    if ( isCashFlowAveraged ) {
         // If daily expiry offset is given, check that referenced future contract has a daily frequency.
         auto dailyExpOffset = floatingLegData->dailyExpiryOffset();
         if (dailyExpOffset != Null<Natural>() && dailyExpOffset > 0) {
@@ -562,6 +563,14 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
         } else {
             QL_FAIL("CommodityLegBuilder: CommodityPayRelativeTo " << floatingLegData->commodityPayRelativeTo()
                                                                    << " not handled. This is an internal error.");
+        }
+
+        if(!floatingLegData->fxIndex().empty()){// build the fxIndex for daily average conversion
+            auto underlyingCcy = priceCurve->currency().code();
+            auto npvCurrency = data.currency();
+            if (underlyingCcy != npvCurrency) // only need an FX Index if currencies differ
+                fxIndex = buildFxIndex(floatingLegData->fxIndex(), npvCurrency, underlyingCcy, engineFactory->market(),
+                                   engineFactory->configuration(MarketContext::pricing));
         }
 
         leg = CommodityIndexedAverageLeg(schedule, index)
@@ -587,9 +596,9 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
                   .withHoursPerDay(hoursPerDay)
                   .withDailyExpiryOffset(dailyExpOffset)
                   .unrealisedQuantity(floatingLegData->unrealisedQuantity())
-                  .withOffPeakPowerData(offPeakPowerData);
+                  .withOffPeakPowerData(offPeakPowerData)
+                  .withFxIndex(fxIndex);
     } else {
-
         CommodityIndexedCashFlow::PaymentTiming paymentTiming = CommodityIndexedCashFlow::PaymentTiming::InArrears;
         if (floatingLegData->commodityPayRelativeTo() == CommodityPayRelativeTo::CalculationPeriodStartDate) {
             paymentTiming = CommodityIndexedCashFlow::PaymentTiming::InAdvance;
@@ -661,7 +670,25 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
     }
 
     std::map<std::string, std::string> qlToOREIndexNames;
-    applyIndexing(leg, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
+    if (fxIndex){ // fx daily indexing needed
+        qlToOREIndexNames[index->name()] = commName;
+        qlToOREIndexNames[fxIndex->name()] = floatingLegData->fxIndex();
+        for (auto cf : leg) {
+            auto cacf = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf);
+            QL_REQUIRE(cacf, "Commodity Indexed averaged cashflow is required to compute daily converted average.");
+            for (auto kv : cacf->indices()) {
+                if(!fxIndex->fixingCalendar().isBusinessDay(kv.first)){ // If fx index is not available for the commodity pricing day,
+                                                           // this ensures to require the previous valid one which will be used in pricing from fxIndex()->fixing(...)
+                    Date adjustedFixingDate = fxIndex->fixingCalendar().adjust(kv.first, Preceding);
+                    requiredFixings.addFixingDate(adjustedFixingDate, floatingLegData->fxIndex());
+
+                } else
+                    requiredFixings.addFixingDate(kv.first, floatingLegData->fxIndex());
+            }
+        }
+    } else // standard indexing approach
+        applyIndexing(leg, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
+
     addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
 
     return leg;

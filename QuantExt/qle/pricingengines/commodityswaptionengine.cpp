@@ -292,20 +292,32 @@ Real CommoditySwaptionEngine::crossTerms(const boost::shared_ptr<CashFlow>& cf_1
         if (ccf_1->useFuturePrice()) {
             for (const auto& p_1 : ccf_1->indices()) {
                 Date e_1 = p_1.second->expiryDate();
-                Real fwd_1 = p_1.second->fixing(e_1);
+                Real fxRate1{1.};
+                if (ccf_1->fxIndex())
+                    fxRate1 = ccf_1->fxIndex()->fixing(e_1);
+                Real fwd_1 = fxRate1 * p_1.second->fixing(e_1);
                 Real v_1 = volStructure_->blackVol(e_1, strike);
                 for (const auto& p_2 : ccf_2->indices()) {
                     Date e_2 = p_2.second->expiryDate();
-                    Real fwd_2 = p_2.second->fixing(e_2);
+                    Real fxRate2{1.};
+                    if(ccf_2->fxIndex())
+                        fxRate2 = ccf_2->fxIndex()->fixing(e_2);
+                    Real fwd_2 = fxRate2 * p_2.second->fixing(e_2);
                     Real v_2 = volStructure_->blackVol(e_2, strike);
                     cross += fwd_1 * fwd_2 * exp(rho(e_1, e_2) * v_1 * v_2 * t_e);
                 }
             }
         } else {
             for (const auto& p_1 : ccf_1->indices()) {
-                Real fwd_1 = p_1.second->fixing(p_1.first);
+                Real fxRate1{1.};
+                if(ccf_1->fxIndex())
+                    fxRate1 = ccf_1->fxIndex()->fixing(p_1.first);
+                Real fwd_1 = fxRate1 * p_1.second->fixing(p_1.first);
                 for (const auto& p_2 : ccf_2->indices()) {
-                    Real fwd_2 = p_2.second->fixing(p_2.first);
+                    Real fxRate2{1.};
+                    if(ccf_2->fxIndex())
+                        fxRate2 = ccf_2->fxIndex()->fixing(p_2.first);
+                    Real fwd_2 = fxRate2 * p_2.second->fixing(p_2.first);
                     cross += fwd_1 * fwd_2;
                 }
             }
@@ -590,7 +602,10 @@ void CommoditySwaptionMonteCarloEngine::futureFloatLegFactors(Size idxFloat, Rea
                 auto it = find(expiries.begin(), expiries.end(), expiry);
                 QL_REQUIRE(it != expiries.end(), "futureFloatLegFactors: expected to find expiry in expiries vector");
                 auto idx = distance(expiries.begin(), it);
-                floatLegFactors[i][idx] += p.second->fixing(expiry) / numObs;
+                Real fxRate{1.};
+                if(ccf->fxIndex())
+                    fxRate=ccf->fxIndex()->fixing(expiry);
+                floatLegFactors[i][idx] += fxRate*p.second->fixing(expiry) / numObs;
             }
             discounts[i] = discountCurve_->discount(ccf->date());
             amounts[i] = ccf->periodQuantity();

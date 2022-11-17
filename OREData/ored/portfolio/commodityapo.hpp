@@ -50,7 +50,7 @@ public:
             QuantExt::CommodityQuantityFrequency::PerCalculationPeriod,
         CommodityPayRelativeTo commodityPayRelativeTo = CommodityPayRelativeTo::CalculationPeriodEndDate,
         QuantLib::Natural futureMonthOffset = 0, QuantLib::Natural deliveryRollDays = 0, bool includePeriodEnd = true,
-        const BarrierData& barrierData = {});
+        const BarrierData& barrierData = {}, const std::string& fxIndex = "");
 
     void build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
 
@@ -81,6 +81,7 @@ public:
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
     QuantLib::Natural deliveryRollDays() const { return deliveryRollDays_; }
     bool includePeriodEnd() const { return includePeriodEnd_; }
+    const std::string& fxIndex() const { return fxIndex_; }
     //@}
 
     //! \name Serialisation
@@ -116,6 +117,7 @@ private:
     QuantLib::Natural futureMonthOffset_;
     QuantLib::Natural deliveryRollDays_;
     bool includePeriodEnd_;
+    std::string fxIndex_;
 
     /*! Flag indicating if the commodity contract itself is averaging. This is used to decide if we build a
         standard non-averaging commodity option or an averaging commodity option.

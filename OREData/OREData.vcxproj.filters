@@ -768,9 +768,6 @@
     <ClInclude Include="ored\portfolio\fxdigitalbarrieroption.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\builders\fxdigitaloption.hpp">
-      <Filter>portfolio</Filter>
-    </ClInclude>
     <ClInclude Include="ored\portfolio\fxdigitaloption.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
@@ -851,6 +848,9 @@
     </ClInclude>
     <ClInclude Include="ored\model\hwbuilder.hpp">
       <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\fxdigitaloption.hpp">
+      <Filter>portfolio\builders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

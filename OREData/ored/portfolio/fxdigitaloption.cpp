@@ -48,6 +48,7 @@ void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
 
     // Handle PayoffCurrency, we might have to flip the trade here
     Real strike = strike_;
+    bool flipResults = false;
     if (payoffCurrency_ == "") {
         DLOG("PayoffCurrency defaulting to " << domesticCurrency_ << " for FxDigitalOption " << id());
     } else if (payoffCurrency_ == foreignCurrency_) {
@@ -55,6 +56,7 @@ void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
         strike = 1.0 / strike;
         std::swap(domCcy, forCcy);
         type = type == Option::Call ? Option::Put : Option::Call;
+        flipResults = true;
     } else if (payoffCurrency_ != domesticCurrency_) {
         QL_FAIL("Invalid Payoff currency (" << payoffCurrency_ << ") for FxDigitalOption " << forCcy << domCcy);
     }
@@ -76,7 +78,7 @@ void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
     boost::shared_ptr<FxDigitalOptionEngineBuilder> fxOptBuilder =
         boost::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
-    vanilla->setPricingEngine(fxOptBuilder->engine(forCcy, domCcy));
+    vanilla->setPricingEngine(fxOptBuilder->engine(forCcy, domCcy, flipResults));
 
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);

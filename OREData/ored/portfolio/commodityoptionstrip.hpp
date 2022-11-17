@@ -48,7 +48,11 @@ public:
                          const std::string& premiumCurrency = "",
                          const QuantLib::Date& premiumPayDate = QuantLib::Date(), const std::string& style = "",
                          const std::string& settlement = "", const BarrierData& callBarrierData = {},
-                         const BarrierData& putBarrierData = {}, const bool isDigital = false, Real payoffPerUnit = 0.);
+                         const BarrierData& putBarrierData = {},
+                         const std::string& fxIndex = "", 
+                         const bool isDigital = false, 
+                         Real payoffPerUnit = 0.0);
+
 
     //! Implement the build method
     void build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
@@ -69,6 +73,7 @@ public:
     const QuantLib::Date& premiumPayDate() const { return premiumPayDate_; }
     const std::string& style() const { return style_; }
     const std::string& settlement() const { return settlement_; }
+    const std::string& fxIndex() const { return fxIndex_; }
     const BarrierData& callBarrierData() const { return callBarrierData_; }
     const BarrierData& putBarrierData() const { return putBarrierData_; }
     const bool isDigital() const { return isDigital_; }
@@ -99,6 +104,7 @@ private:
     std::string settlement_;
     BarrierData callBarrierData_;
     BarrierData putBarrierData_;
+    std::string fxIndex_;
     bool isDigital_;
     Real unaryPayoff_;
 

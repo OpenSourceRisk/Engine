@@ -234,6 +234,9 @@ Allowable values: \emph{true}, \emph{false}. Defaults to \emph{false} if omitted
 
 If this node is omitted, it defaults to zero. This node indicates which future contract is being referenced on each \textit{Pricing Date} in the averaging period by acting as a business day offset, using the commodity \lstinline!Name!'s expiry calendar, from the \textit{Pricing Date}. It is useful in the base metals market where the future contract being averaged on each \textit{Pricing Date} is the cash contract on that \textit{Pricing Date} i.e.\ the contract with expiry date two business days after the \textit{Pricing Date}. In this case, the \lstinline!DailyExpiryOffset! would be set to \lstinline!2!.
 
+\item \lstinline!FXIndex! [Optional]: If \lstinline!IsAveraged! is \emph{true} this node allows the fx conversion to be applied daily in the computation of averaged cash flows. It cannot be used with the \lstinline!Indexing! node.
+
+Allowable values:  See Table \ref{tab:fxindex_data} for supported fx indices.
 \end{itemize}
 
 \begin{listing}[h!]
