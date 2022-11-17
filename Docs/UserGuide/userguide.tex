@@ -262,7 +262,7 @@ Equity Exotic Options (see below)  & Y & Y & Y & Y \\
 \hline
 Equity Future Options & Y & Y & Y & Y \\
 \hline
-Commodity Forwards & Y & Y & N & N\\
+Commodity Forwards & Y & Y & Y & Y\\
 \hline
 Commodity European and Asian Options & Y & Y & N & N \\
 \hline
@@ -1922,17 +1922,25 @@ using a minimal portfolio of four trades, one FRA and three OIS. The essential r
 four {\tt exposure\_trade\_*.csv} files.
 
 %--------------------------------------------------------
-\subsection{Commodity Forward and Option}% Example 24
+\subsection{Commodity Forward and Option, Pricing, Sensitivity, Exposure}% Example 24
 \label{example:24}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_24} demonstrates pricing and sensitivity analysis for
+Calling
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+in folder {\tt Examples/Example\_24} will launch two ORE runs. The first one determined by {\tt ore.xml} demonstrates pricing and sensitivity analysis for
 \begin{itemize}
 \item Commodity Forwards
 \item European Commodity Options
 \end{itemize}
 using a minimal portfolio of four forwards and two options referencing WTI and Gold. 
 The essential results are in {\tt npv.csv} and {\tt sensitivity.csv}.
+
+The second run determined by {\tt ore\_wti.xml} demonstrates Commodity exposure simulation for a single Commodity Forward, with the usual results, exposure reports and graphs. 
 
 %--------------------------------------------------------
 \subsection{CMS Spread with (Digital) Cap/Floor}% Example 25
@@ -3835,6 +3843,8 @@ component's calibration. It is currently made of
 \item $n_c-1$ FX models for each exchange rate to the base currency, 
 \item $n_e$ equity models,
 \item $n_i$ inflation models, 
+\item $n_{cr}$ credit models, 
+\item $n_{com}$ commodity models, 
 \item a specification of the correlation structure between all components.
 \end{itemize}
 
@@ -3856,6 +3866,18 @@ exceptions, but add to the run time of ORE.
     <Currency>CHF</Currency>
     <Currency>JPY</Currency>
   </Currencies>
+  <Equities>
+	<!-- ... -->
+  </Equities>
+  <InflationIndices>
+	<!-- ... -->
+  </InflationIndices>
+  <CreditNames>
+	<!-- ... -->
+  </CreditNames>
+  <Commodities>
+	<!-- ... -->
+  </Commodities>
   <BootstrapTolerance>0.0001</BootstrapTolerance>
   <Measure>LGM</Measure><!-- Choices: LGM, BA -->
   <Discretization>Exact</Discretization>
@@ -4257,6 +4279,62 @@ be a maturity period e.g.\ \lstinline!5Y!. The \lstinline!Strike! should be an a
 \label{lst:yoy_cf_calibration_inst}
 \end{listing}
 
+% credit models: todo
+
+% commodity models
+
+For commodity simulation we currently provide one model choice, as described in the methodology appendix. 
+Commodity model components are specified by commodity name, by a block as follows
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>	
+  <!-- ... -->
+  <CommodityModels>
+    <CommoditySchwartz name="default">
+      <Currency>EUR</Currency>
+      <CalibrationType>None</CalibrationType>
+      <Sigma>
+        <Calibrate>Y</Calibrate>
+        <InitialValue>0.1</InitialValue>
+      </Sigma>
+      <Kappa>
+        <Calibrate>Y</Calibrate>
+        <InitialValue>0.1</InitialValue>
+      </Kappa>
+      <CalibrationOptions/>
+    </CommoditySchwartz>
+    <CommoditySchwartz name="WTI">
+      <!-- ... -->
+    </CommoditySchwartz>
+    <CommoditySchwartz name="NG">
+      <!-- ... -->
+    </CommoditySchwartz>
+      <!-- ... -->
+  </CommodityModels>
+  <!-- ... -->
+<CrossAssetModel>	
+\end{minted}
+\caption{Simulation model commodity configuration}
+\label{lst:simulation_model_com_configuration}
+\end{listing}
+
+CommoditySchwartz sections are defined by commodity name, but we also support a default configuration as above for the IR and 
+FX model parameterisations.  Each component is parameterised in terms of two constant, non time-dependent parameters $\sigma$ and $\kappa$ so far (see appendix).
+Within each CommoditySchwartz section, the interpretation of elements is as follows:
+
+\begin{itemize}
+	\item {\tt Currency: } Currency of denomination
+	\item {\tt CalibrationType: } Choose between {\em Bootstrap}, {\em BestFit} and {\em None}.   
+	\item {\tt Sigma/Calibrate: } Flag to enable/disable calibration of this particular parameter
+	\item {\tt Sigma/InitialValue: } Initial value of the constant parameter
+	\item {\tt Kappa/Calibrate: } Flag to enable/disable calibration of this particular parameter
+	\item {\tt Kappa/InitialValue: } Initial value of the constant parameter
+	\item {\tt CalibrationOptions: } Choice of calibration instruments by expiry and strike, strikes can be empty 	(implying the default, ATMF options), or explicitly specified (in terms of commodity prices as absolute strike values). 
+\end{itemize}
+
+Note that calibration to Commodity options is not implemented yet, the simulation is based on the initial parameter values provided.
+
 \medskip
 Finally, the instantaneous correlation structure is specified as follows.
 
@@ -4284,7 +4362,7 @@ Finally, the instantaneous correlation structure is specified as follows.
 \label{lst:simulation_model_correlation_configuration}
 \end{listing}
 
-Any risk factor pair not specified explicitly here will be assumed to have zero correlation.
+Any risk factor pair not specified explicitly here will be assumed to have zero correlation. Note that the commodity components can have non-zero correlations among each other, but correlations to all other CAM components must remain set to zero for the time being.
 
 \subsubsection{Market}\label{sec:sim_market}
 
@@ -5982,7 +6060,7 @@ ORE applies the cross asset model described in detail in \cite{Lichters} to evol
 evolution model in ORE supports IR and FX risk factors for any number of currencies, Equity and Inflation as well as Credit. Extensions to full simulation of Commodity is planned. \\
 
 The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates, lognormal FX and equity 
-processes, Dodgson-Kainth model for inflation, LGM or Extended Cox-Ingersoll-Ross model (CIR++) for credit.
+processes, Dodgson-Kainth model for inflation, LGM or Extended Cox-Ingersoll-Ross model (CIR++) for credit, and a single-factor log-normal model for commodity curves.
 We identify a single {\em domestic} currency; its LGM process,
 which is labelled $z_0$; and a set of $n$ foreign currencies with associated LGM processes that are labelled $z_i$, 
 $i=1,\dots,n$. 
@@ -6074,6 +6152,38 @@ and
   & & -\rho^{zI}_{i,k} \int_t^T (H_i(T)-H_i(s))\alpha_i(s)(H_{I,k}(T)-H_{I,k}(s))\alpha_{I,k}(s) ds \\
   & & +\rho^{xI}_{i,k} \int_t^T \sigma_i(s)(H_{I,k}(T)-H_{I,k}(s))\alpha_{I,k}(s) ds
 \end{eqnarray*}
+
+\subsubsection*{Commodity}
+
+Each commodity component models the commodity price curve as 
+\begin{eqnarray}
+\frac{dF(t,T)}{F(t,T)} &=& \sigma\,e^{-\kappa\,(T-t)}\, dW(t)  \label{gabillon1f}
+\end{eqnarray}
+which is a single-factor version of the Gabillon (1991) model that is e.g. described in \cite{Lichters}. It can also be seen as the Schwartz (1997) model formulated in terms of forward curve dynamics. The extension to the full Gabillon model with two factors and time-dependent multiplier
+\begin{eqnarray}
+\frac{dF(t,T)}{F(t,T)} &=& \alpha(t)\,
+\left( \sigma_S \,e^{-\kappa\,(T-t)}\, dW_S(t) + \sigma_L\,\left(1-e^{-\kappa\,(T-t)}\right)\,dW_L(t)\right) \label{gabillon2f}
+\end{eqnarray}
+for richer dynamics of the curve and accurate calibration to options will follow. 
+
+The commodity components' Wiener processes can be correlated. However, the integration of commodity components into the overall CAM assumes zero correlations between commodities and non-commodity drivers for the time being.
+
+To propagate the one-factor model, we can use an artificial (Ornstein-Uhlenbeck) spot price process
+\begin{align*}
+dX(t) &= -\kappa\,X(t)\,dt + \sigma(t)\,dW(t), \qquad X(0)=0\\
+X(t) &= X(s)\,e^{-\kappa(t-s)}+ \int_s^t \sigma\,e^{-\kappa(t-u)}\, dW(u)
+\end{align*}
+with 
+\begin{align*}
+F(t,T) &= F(0,T) \:\exp\left( X(t)\,e^{-\kappa\,(T-t)} - \frac{1}{2}\,(V(0,T)-V(t,T))  \right) \\
+V(t,T) &= e^{-2\kappa T}\int_t^T\sigma^2\:e^{2\kappa u}\,du.
+\end{align*}
+
+Alternatively, one can use the drift-free state variable $Y(t)=e^{\kappa t} X(t)$ with
+\begin{align*}
+dY(t) &= \sigma \: e^{\kappa \, t} \, dW(t).
+\end{align*}
+Both choices of state dynamics are possible in ORE. 
 
 \subsection{Analytical Moments of the Risk Factor Evolution Model}\label{sec:app_analytical_moments}
 
