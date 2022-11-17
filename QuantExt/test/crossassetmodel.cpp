@@ -1978,7 +1978,7 @@ std::vector<Real> comPrices { 100, 101, 102, 103, 105, 110, 115, 120, 130 };
 
 struct IrFxInfCrComModelTestData {
     
-    IrFxInfCrComModelTestData(bool infEurIsDK = true, bool infGbpIsDK = true, bool flatVols = false)
+    IrFxInfCrComModelTestData(bool infEurIsDK = true, bool infGbpIsDK = true, bool flatVols = false, bool driftFreeState = false)
         : referenceDate(30, July, 2015),
           dc(Actual365Fixed()),
           eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, dc)),
@@ -2054,8 +2054,9 @@ struct IrFxInfCrComModelTestData {
             EURCurrency(), n1Ts, 0.01, 0.01));
 
         // Add commodity parameterisations
-        comParametrizationA = boost::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "WTI", comTS, fxEurUsd, 0.1, 0.05);
-        comParametrizationB = boost::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "NG", comTS, fxEurUsd, 0.15, 0.05);
+        bool df = driftFreeState;
+        comParametrizationA = boost::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "WTI", comTS, fxEurUsd, 0.1, 0.05, df);
+        comParametrizationB = boost::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "NG", comTS, fxEurUsd, 0.15, 0.05, df);
         comModelA = boost::make_shared<CommoditySchwartzModel>(comParametrizationA);
         comModelB = boost::make_shared<CommoditySchwartzModel>(comParametrizationB);
         singleModels.push_back(comParametrizationA);
@@ -2254,17 +2255,18 @@ struct IrFxInfCrComModelTestData {
 vector<bool> infEurFlags{ true, false };
 vector<bool> infGbpFlags{ true, false };
 vector<bool> flatVolsFlags{ true, false };
+vector<bool> driftFreeState{ true, false };
 
 BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
-    bdata::make(infEurFlags) * bdata::make(infGbpFlags) * bdata::make(flatVolsFlags),
-    infEurIsDk, infGbpIsDk, flatVols) {
+    bdata::make(infEurFlags) * bdata::make(infGbpFlags) * bdata::make(flatVolsFlags) * bdata::make(driftFreeState),
+                     infEurIsDk, infGbpIsDk, flatVols, driftFreeState) {
 
     BOOST_TEST_MESSAGE("Testing martingale property in ir-fx-inf-cr-com model for Euler and exact discretizations...");
     BOOST_TEST_MESSAGE("EUR inflation model is: " << (infEurIsDk ? "DK" : "JY"));
     BOOST_TEST_MESSAGE("GBP inflation model is: " << (infGbpIsDk ? "DK" : "JY"));
     BOOST_TEST_MESSAGE("Using " << (flatVols ? "" : "non-") << "flat volatilities.");
 
-    IrFxInfCrComModelTestData d(infEurIsDk, infGbpIsDk, flatVols);
+    IrFxInfCrComModelTestData d(infEurIsDk, infGbpIsDk, flatVols, driftFreeState);
 
     BOOST_TEST_MESSAGE("get exact state process");
     boost::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
@@ -2514,15 +2516,15 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
 } // testIrFxInfCrMartingaleProperty
 
 BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
-    bdata::make(infEurFlags) * bdata::make(infGbpFlags) * bdata::make(flatVolsFlags),
-    infEurIsDk, infGbpIsDk, flatVols) {
+    bdata::make(infEurFlags) * bdata::make(infGbpFlags) * bdata::make(flatVolsFlags) * bdata::make(driftFreeState),
+                     infEurIsDk, infGbpIsDk, flatVols, driftFreeState) {
 
     BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler and exact discretization in ir-fx-inf-cr-com model...");
     BOOST_TEST_MESSAGE("EUR inflation model is: " << (infEurIsDk ? "DK" : "JY"));
     BOOST_TEST_MESSAGE("GBP inflation model is: " << (infGbpIsDk ? "DK" : "JY"));
     BOOST_TEST_MESSAGE("Using " << (flatVols ? "" : "non-") << "flat volatilities.");
 
-    IrFxInfCrComModelTestData d(infEurIsDk, infGbpIsDk, flatVols);
+    IrFxInfCrComModelTestData d(infEurIsDk, infGbpIsDk, flatVols, driftFreeState);
 
     Size n = d.modelExact->dimension();
 

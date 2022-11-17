@@ -310,8 +310,22 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
         }
     }
 
+    // COM drift
+    Size n_com = model_->components(CrossAssetModel::AssetType::COM);
+    for (Size k = 0; k < n_com; ++k) {
+        auto cm = boost::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(k));
+        QL_REQUIRE(cm, "CommoditySchwartzModel not set");
+        if (!cm->parametrization()->driftFreeState()) {
+            // Ornstein-Uhlenbeck drift
+            Real kap = cm->parametrization()->kappaParameter();
+            res[model_->pIdx(CrossAssetModel::AssetType::COM, k, 0)] -= kap * x[model_->pIdx(CrossAssetModel::AssetType::COM, k, 0)];
+        }
+        else {
+            // zero drift
+        }
+    }
+    
     /* no drift for infdk, crlgm1f components */
-    /* no drift in the one-factor non mean-reverting commodity case with state variable y(t) = int_0^t sigma exp(kappa*s) dW(s) */
     return res;
 }
 
@@ -670,8 +684,18 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl2(const StochasticPr
     /* commodity components are drift-free in the one-factor non mean-reverting case */
     Size com = model_->components(CrossAssetModel::AssetType::COM);
     for (Size i = 0; i < com; ++i) {
-        res[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)] =
-            x0[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)];
+        // res[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)] =
+        //     x0[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)];
+        auto cm = boost::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(i));
+        QL_REQUIRE(cm, "CommoditySchwartzModel not set");
+        Real com0 = x0[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)];
+        if (cm->parametrization()->driftFreeState()) {
+            res[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)] = com0;
+        }
+        else {
+            Real kap = cm->parametrization()->kappaParameter();
+            res[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)] = com0 * std::exp(-kap * dt);
+        }
     }
     
     return res;

@@ -2,12 +2,12 @@
 
   <Parameters>
     <Discretization>Exact</Discretization>
-    <Grid>80,1M</Grid>
+    <Grid>24,3M</Grid>
     <Calendar>EUR,USD</Calendar>
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>1000</Samples>
+    <Samples>10000</Samples>
   </Parameters>
 
   <CrossAssetModel>
@@ -81,12 +81,13 @@
         </Sigma>
         <Kappa>
           <Calibrate>false</Calibrate>
-          <InitialValue>0.0</InitialValue>
+          <InitialValue>0.1</InitialValue>
         </Kappa>
         <CalibrationOptions>
           <Expiries/>
           <Strikes/>
         </CalibrationOptions>
+        <DriftFreeState>false</DriftFreeState>
       </CommoditySchwartz>
     </CommodityModels>
 

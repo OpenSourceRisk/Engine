@@ -651,10 +651,22 @@ Real aux_fx_covariance(const CrossAssetModel* x, const Size j, const Time t0, co
 }
 
 Real com_com_covariance(const CrossAssetModel* x, const Size k, const Size l, const Time t0, const Time dt) {
-    // Size i = x->ccyIndex(x->combs(k)->currency()); // ccy underlying commodity k
-    // Size j = x->ccyIndex(x->combs(l)->currency()); // ccy underlying commodity l
-    // FIXME: Relax assumption that all commodity currencies = numeraire currency
+    // FIXME
     Real res = integral(x, P(rcc(k, l), coms(k), coms(l)), t0, t0 + dt);
+    auto cmk = boost::dynamic_pointer_cast<CommoditySchwartzModel>(x->comModel(k));
+    auto cml = boost::dynamic_pointer_cast<CommoditySchwartzModel>(x->comModel(l));
+    QL_REQUIRE(cmk->parametrization()->driftFreeState() == cml->parametrization()->driftFreeState(), "commodity states do not match");
+    if (!cmk->parametrization()->driftFreeState()) {
+        Real kk = cmk->parametrization()->kappaParameter();
+        Real kl = cml->parametrization()->kappaParameter();
+        Real sk = cmk->parametrization()->sigmaParameter();
+        Real sl = cml->parametrization()->sigmaParameter();
+        Real rho = x->correlation(CrossAssetModel::AssetType::COM, k, CrossAssetModel::AssetType::COM, l, 0, 0);
+        if (fabs((kk+kl) * dt) < QL_EPSILON)
+            res = rho * sk * sl * dt;
+        else
+            res = rho * sk * sl / (kk + kl) * (1.0 - std::exp(-(kk+kl) * dt));
+    }
     return res;
 }
 

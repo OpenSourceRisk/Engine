@@ -48,18 +48,19 @@ using namespace QuantLib;
 class CommoditySchwartzData {
 public:
     //! Default constructor
-    CommoditySchwartzData() {}
+    CommoditySchwartzData() : driftFreeState_(false) {}
 
     //! Detailed constructor
     CommoditySchwartzData(std::string name, std::string currency, CalibrationType calibrationType,
                           bool calibrateSigma, Real sigma,
                           bool calibrateKappa, Real kappa,
                           std::vector<std::string> optionExpiries = std::vector<std::string>(),
-                          std::vector<std::string> optionStrikes = std::vector<std::string>())
+                          std::vector<std::string> optionStrikes = std::vector<std::string>(),
+                          bool driftFreeState = false)
         : name_(name), ccy_(currency), calibrationType_(calibrationType),
           calibrateSigma_(calibrateSigma), sigmaType_(ParamType::Constant), sigmaValue_(sigma),
           calibrateKappa_(calibrateKappa),kappaType_(ParamType::Constant), kappaValue_(kappa),
-          optionExpiries_(optionExpiries), optionStrikes_(optionStrikes) {}
+          optionExpiries_(optionExpiries), optionStrikes_(optionStrikes), driftFreeState_(driftFreeState) {}
 
     //! \name Setters/Getters
     //@{
@@ -74,6 +75,7 @@ public:
     Real& kappaValue() { return kappaValue_; }
     std::vector<std::string>& optionExpiries() { return optionExpiries_; }
     std::vector<std::string>& optionStrikes() { return optionStrikes_; }
+    bool& driftFreeState() { return driftFreeState_; }
     //@}
 
     //! \name Serialisation
@@ -100,6 +102,7 @@ private:
     Real kappaValue_;
     std::vector<std::string> optionExpiries_;
     std::vector<std::string> optionStrikes_;
+    bool driftFreeState_;
 };
 } // namespace data
 } // namespace ore

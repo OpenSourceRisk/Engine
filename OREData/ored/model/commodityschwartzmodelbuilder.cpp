@@ -71,7 +71,8 @@ CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
         buildOptionBasket();
 
     parametrization_ = boost::make_shared<QuantExt::CommoditySchwartzParametrization>(ccy, name, curve_, fxSpot_,
-                                                                                      data->sigmaValue(), data->kappaValue());
+                                                                                      data->sigmaValue(), data->kappaValue(),
+                                                                                      data->driftFreeState());
 }
 
 Real CommoditySchwartzModelBuilder::error() const {
