@@ -28,7 +28,7 @@ bool CommoditySchwartzData::operator==(const CommoditySchwartzData& rhs) {
     if (name_ != rhs.name_ || ccy_ != rhs.ccy_ || calibrationType_ != rhs.calibrationType_ ||
         calibrateSigma_ != rhs.calibrateSigma_ || sigmaType_ != rhs.sigmaType_ || sigmaValue_ != rhs.sigmaValue_ ||
         calibrateKappa_ != rhs.calibrateKappa_ || kappaType_ != rhs.kappaType_ || kappaValue_ != rhs.kappaValue_ ||
-        optionExpiries_ != rhs.optionExpiries_ || optionStrikes_ != rhs.optionStrikes_) {
+        optionExpiries_ != rhs.optionExpiries_ || optionStrikes_ != rhs.optionStrikes_ || driftFreeState_ == rhs.driftFreeState_) {
         return false;
     }
     return true;
@@ -69,29 +69,33 @@ void CommoditySchwartzData::fromXML(XMLNode* node) {
         } else // default ATMF
             optionStrikes_.resize(optionExpiries_.size(), "ATMF");
     }
+
+    driftFreeState_ = XMLUtils::getChildValueAsBool(node, "DriftFreeState", false);
 }
 
 XMLNode* CommoditySchwartzData::toXML(XMLDocument& doc) {
 
-    XMLNode* crossCcyLGMNode = doc.allocNode("CommoditySchwartz");
-    XMLUtils::addAttribute(doc, crossCcyLGMNode, "name", name_);
+    XMLNode* node = doc.allocNode("CommoditySchwartz");
+    XMLUtils::addAttribute(doc, node, "name", name_);
 
-    XMLUtils::addChild(doc, crossCcyLGMNode, "Currency", ccy_);
-    XMLUtils::addGenericChild(doc, crossCcyLGMNode, "CalibrationType", calibrationType_);
+    XMLUtils::addChild(doc, node, "Currency", ccy_);
+    XMLUtils::addGenericChild(doc, node, "CalibrationType", calibrationType_);
 
-    XMLNode* sigmaNode = XMLUtils::addChild(doc, crossCcyLGMNode, "Sigma");
+    XMLNode* sigmaNode = XMLUtils::addChild(doc, node, "Sigma");
     XMLUtils::addChild(doc, sigmaNode, "Calibrate", calibrateSigma_);
     XMLUtils::addChild(doc, sigmaNode, "InitialValue", sigmaValue_);
 
-    XMLNode* kappaNode = XMLUtils::addChild(doc, crossCcyLGMNode, "Kappa");
+    XMLNode* kappaNode = XMLUtils::addChild(doc, node, "Kappa");
     XMLUtils::addChild(doc, kappaNode, "Calibrate", calibrateKappa_);
     XMLUtils::addChild(doc, kappaNode, "InitialValue", kappaValue_);
 
-    XMLNode* calibrationOptionsNode = XMLUtils::addChild(doc, crossCcyLGMNode, "CalibrationOptions");
+    XMLNode* calibrationOptionsNode = XMLUtils::addChild(doc, node, "CalibrationOptions");
     XMLUtils::addGenericChildAsList(doc, calibrationOptionsNode, "Expiries", optionExpiries_);
     XMLUtils::addGenericChildAsList(doc, calibrationOptionsNode, "Strikes", optionStrikes_);
 
-    return crossCcyLGMNode;
+    XMLUtils::addChild(doc, node, "DriftFreeState", driftFreeState_);
+
+    return node;
 }
 } // namespace data
 } // namespace ore
