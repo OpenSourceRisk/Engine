@@ -83,10 +83,6 @@
           <Calibrate>false</Calibrate>
           <InitialValue>0.0</InitialValue>
         </Kappa>
-        <CalibrationOptions>
-          <Expiries/>
-          <Strikes/>
-        </CalibrationOptions>
         <DriftFreeState>true</DriftFreeState>
       </CommoditySchwartz>
     </CommodityModels>
