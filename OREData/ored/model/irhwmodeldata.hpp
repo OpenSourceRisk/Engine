@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file model/hwdata.hpp
+/*! \file model/irhwmodeldata.hpp
     \brief Hull White model data
     \ingroup models
 */

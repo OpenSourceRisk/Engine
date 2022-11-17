@@ -37,6 +37,7 @@
 #include <ored/model/eqbsdata.hpp>
 #include <ored/model/fxbsdata.hpp>
 #include <ored/model/inflation/inflationmodeldata.hpp>
+#include <ored/model/commodityschwartzmodeldata.hpp>
 #include <ored/model/irmodeldata.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/xmlutils.hpp>
@@ -168,7 +169,7 @@ public:
         validate();
     }
 
-    //! Detailed constructor (all asset classes) - TODO: add inflation, credit, commodity
+    //! Detailed constructor (all asset classes)
     CrossAssetModelData( //! Vector of IR model specifications
         const std::vector<boost::shared_ptr<IrModelData>>& irConfigs,
         //! Vector of FX model specifications
@@ -181,6 +182,8 @@ public:
         const std::vector<boost::shared_ptr<CrLgmData>>& crLgmConfigs,
         //! Vector of CR CIR model specifications
         const std::vector<boost::shared_ptr<CrCirData>>& crCirConfigs,
+        //! Vector of COM Schwartz model specifications
+        const std::vector<boost::shared_ptr<CommoditySchwartzData>>& comConfigs,
         //! Correlation map
         const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& c,
         //! Bootstrap tolerance used in model calibration
@@ -190,8 +193,8 @@ public:
         //! Choice of discretization
         const CrossAssetModel::Discretization discretization = CrossAssetModel::Discretization::Exact)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs), infConfigs_(infConfigs),
-          crLgmConfigs_(crLgmConfigs), crCirConfigs_(crCirConfigs), bootstrapTolerance_(tolerance), measure_(measure),
-          discretization_(discretization) {
+          crLgmConfigs_(crLgmConfigs), crCirConfigs_(crCirConfigs), comConfigs_(comConfigs),
+          bootstrapTolerance_(tolerance), measure_(measure), discretization_(discretization) {
         correlations_ = boost::make_shared<InstantaneousCorrelations>(c);
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
@@ -214,15 +217,17 @@ public:
     const vector<string>& equities() const { return equities_; }
     const vector<string>& infIndices() const { return infindices_; }
     const vector<string>& creditNames() const { return creditNames_; }
+    const vector<string>& commodities() const { return commodities_; }
     const vector<boost::shared_ptr<IrModelData>>& irConfigs() const { return irConfigs_; }
     const vector<boost::shared_ptr<FxBsData>>& fxConfigs() const { return fxConfigs_; }
     const vector<boost::shared_ptr<EqBsData>>& eqConfigs() const { return eqConfigs_; }
     const vector<boost::shared_ptr<InflationModelData>>& infConfigs() const { return infConfigs_; }
+    const vector<boost::shared_ptr<CrLgmData>>& crLgmConfigs() const { return crLgmConfigs_; }
+    const vector<boost::shared_ptr<CrCirData>>& crCirConfigs() const { return crCirConfigs_; }
+    const vector<boost::shared_ptr<CommoditySchwartzData>>& comConfigs() const { return comConfigs_; }
     const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& correlations() const {
         return correlations_->correlations();
     }
-    const vector<boost::shared_ptr<CrLgmData>>& crLgmConfigs() const { return crLgmConfigs_; }
-    const vector<boost::shared_ptr<CrCirData>>& crCirConfigs() const { return crCirConfigs_; }
     Real bootstrapTolerance() const { return bootstrapTolerance_; }
     const std::string& measure() const { return measure_; }
     CrossAssetModel::Discretization discretization() const { return discretization_; }
@@ -235,12 +240,14 @@ public:
     vector<string>& equities() { return equities_; }
     vector<string>& infIndices() { return infindices_; }
     vector<string>& creditNames() { return creditNames_; }
+    vector<string>& commodities() { return commodities_; }
     vector<boost::shared_ptr<IrModelData>>& irConfigs() { return irConfigs_; }
     vector<boost::shared_ptr<FxBsData>>& fxConfigs() { return fxConfigs_; }
     vector<boost::shared_ptr<EqBsData>>& eqConfigs() { return eqConfigs_; }
     vector<boost::shared_ptr<InflationModelData>>& infConfigs() { return infConfigs_; }
     vector<boost::shared_ptr<CrLgmData>>& crLgmConfigs() { return crLgmConfigs_; }
     vector<boost::shared_ptr<CrCirData>>& crCirConfigs() { return crCirConfigs_; }
+    vector<boost::shared_ptr<CommoditySchwartzData>>& comConfigs() { return comConfigs_; }
     void setCorrelations(const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& corrs) {
         correlations_ = boost::make_shared<InstantaneousCorrelations>(corrs);
     }
@@ -268,11 +275,13 @@ public:
     void buildFxConfigs(std::map<std::string, boost::shared_ptr<FxBsData>>& fxMap);
     //! helper to convert EQ data, possibly including defaults, into an EQ config vector
     void buildEqConfigs(std::map<std::string, boost::shared_ptr<EqBsData>>& eqMap);
-    //! helper to convert INF data, possibly including defaults, into an EQ config vector
+    //! helper to convert INF data, possibly including defaults, into an INF config vector
     void buildInfConfigs(const std::map<std::string, boost::shared_ptr<InflationModelData>>& mp);
     //! helper to convert CR LGM data, possibly including defaults, into CR config vectors
     void buildCrConfigs(std::map<std::string, boost::shared_ptr<CrLgmData>>& crLgmMap,
                         std::map<std::string, boost::shared_ptr<CrCirData>>& crCirMap);
+    //! helper to convert COM data, possibly including defaulta, into a COM config vector
+    void buildComConfigs(std::map<std::string, boost::shared_ptr<CommoditySchwartzData>>& comMap);
 
 private:
     struct HandleComp {
@@ -286,12 +295,14 @@ private:
     vector<std::string> equities_;
     vector<std::string> infindices_;
     vector<std::string> creditNames_;
+    vector<std::string> commodities_;
     vector<boost::shared_ptr<IrModelData>> irConfigs_;
     vector<boost::shared_ptr<FxBsData>> fxConfigs_;
     vector<boost::shared_ptr<EqBsData>> eqConfigs_;
     vector<boost::shared_ptr<InflationModelData>> infConfigs_;
     vector<boost::shared_ptr<CrLgmData>> crLgmConfigs_;
     vector<boost::shared_ptr<CrCirData>> crCirConfigs_;
+    vector<boost::shared_ptr<CommoditySchwartzData>> comConfigs_;
     boost::shared_ptr<InstantaneousCorrelations> correlations_;
     Real bootstrapTolerance_;
     std::string measure_;

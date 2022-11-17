@@ -39,6 +39,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
       scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig), initMarket_(initMarket),
       configuration_(configuration) {
 
+    LOG("CrossAssetModelScenarioGenerator ctor called");
+    
     QL_REQUIRE(initMarket != NULL, "CrossAssetScenarioGenerator: initMarket is null");
     QL_REQUIRE(timeGrid_.size() == dates_.size() + 1, "date/time grid size mismatch");
 
@@ -49,6 +51,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     n_eq_ = model_->components(CrossAssetModel::AssetType::EQ);
     n_inf_ = model_->components(CrossAssetModel::AssetType::INF);
     n_cr_ = model_->components(CrossAssetModel::AssetType::CR);
+    n_com_ = model_->components(CrossAssetModel::AssetType::COM);
     n_indices_ = simMarketConfig_->indices().size();
     n_curves_ = simMarketConfig_->yieldCurveNames().size();
 
@@ -83,6 +86,19 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         }
     }
 
+    // Cache commodity curve keys
+    LOG("Cache commodity curve keys");
+    if (n_com_ > 0) {
+        commodityCurveKeys_.reserve(n_com_ * simMarketConfig_->commodityCurveTenors("").size());
+        for (Size j = 0; j < n_com_; j++) {
+            std::string name = simMarketConfig_->commodityNames()[j];
+            ten_com_.push_back(simMarketConfig_->commodityCurveTenors(name));
+            Size n_ten = ten_com_.back().size();
+            for (Size k = 0; k < n_ten; k++)
+                commodityCurveKeys_.emplace_back(RiskFactorKey::KeyType::CommodityCurve, name, k); // j * n_ten + k
+        }
+    }
+    
     // Cache FX rate keys
     fxKeys_.reserve(n_ccy_ - 1);
     for (Size k = 0; k < n_ccy_ - 1; k++) {
@@ -213,6 +229,17 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         yieldCurveCurrency_.push_back(ccy);
     }
 
+    LOG("Cache commodity curves");
+    for (Size j = 0; j < n_com_; ++j) {
+        LOG("COM curve " << j);
+        boost::shared_ptr<CommodityModel> cm = model_->comModel(j);
+        LOG("COM curve " << j << ", model set");
+        auto pts = boost::make_shared<QuantExt::ModelImpliedPriceTermStructure>(model_->comModel(j), dc, true);
+        LOG("COM curve " << j << ", pts set");
+        comCurves_.push_back(pts);
+        LOG("COM curve " << j << ", curve added");
+    }
+
     // Cache data regarding the zero inflation curves to avoid repeating in date loop below.
     // This vector needs to follow the order of the simMarketConfig_->zeroInflationIndices().
     // 1st element in tuple is the index of the inflation component in the CAM.
@@ -270,6 +297,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         }
     }
 
+    LOG("CrossAssetModelScenarioGenerator ctor done");
 }
 
 namespace {
@@ -502,7 +530,18 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             }
         }
 
-        // TODO: Further risk factor classes are added here
+        // Commodity curves
+        Array comState(1, 0.0); // FIXME: single-factor for now
+        for (Size j = 0; j < n_com_; j++) {
+            comState[0] = sample.value[model_->pIdx(CrossAssetModel::AssetType::COM, j)][i + 1];
+            comCurves_[j]->move(t, comState);
+            for (Size k = 0; k < ten_com_[j].size(); k++) {
+                Date d = dates_[i] + ten_com_[j][k];
+                Time T = dc.yearFraction(dates_[i], d);
+                Real price = std::max(comCurves_[j]->price(T), 0.00001);
+                scenarios[i]->add(commodityCurveKeys_[j * ten_com_[j].size() + k], price);
+            }
+        }
     }
     return scenarios;
 }

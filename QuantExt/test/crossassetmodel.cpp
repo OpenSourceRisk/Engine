@@ -25,6 +25,8 @@
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
+#include <qle/models/commodityschwartzmodel.hpp>
+#include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
 #include <qle/models/crossassetanalytics.hpp>
@@ -73,8 +75,10 @@
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
+#include <qle/processes/commodityschwartzstateprocess.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
+#include <qle/termstructures/pricecurve.hpp>
 
 #include <ql/currencies/america.hpp>
 #include <ql/currencies/europe.hpp>
@@ -1968,9 +1972,13 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCorrelationRecovery) {
 
 namespace {
 
-struct IrFxInfCrModelTestData {
+// arbitrary commodity price curve
+std::vector<Period> comTerms = { 1*Days, 1*Years, 2*Years, 3*Years, 5*Years, 10*Years, 15*Years, 20*Years, 30*Years };
+std::vector<Real> comPrices { 100, 101, 102, 103, 105, 110, 115, 120, 130 };
+
+struct IrFxInfCrComModelTestData {
     
-    IrFxInfCrModelTestData(bool infEurIsDK = true, bool infGbpIsDK = true, bool flatVols = false)
+    IrFxInfCrComModelTestData(bool infEurIsDK = true, bool infGbpIsDK = true, bool flatVols = false, bool driftFreeState = false)
         : referenceDate(30, July, 2015),
           dc(Actual365Fixed()),
           eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, dc)),
@@ -1978,8 +1986,9 @@ struct IrFxInfCrModelTestData {
           gbpYts(boost::make_shared<FlatForward>(referenceDate, 0.04, dc)),
           fxEurUsd(boost::make_shared<SimpleQuote>(0.90)),
           fxEurGbp(boost::make_shared<SimpleQuote>(1.35)),
-          n1Ts(boost::make_shared<FlatHazardRate>(referenceDate, 0.01, dc)) {
-
+          n1Ts(boost::make_shared<FlatHazardRate>(referenceDate, 0.01, dc)),
+          comTS(boost::make_shared<InterpolatedPriceCurve<Linear>>(comTerms, comPrices, dc, USDCurrency())) {
+        
         Settings::instance().evaluationDate() = referenceDate;
         
         // Store the individual models that will be fed to the CAM.
@@ -2044,14 +2053,26 @@ struct IrFxInfCrModelTestData {
         singleModels.push_back(boost::make_shared<CrLgm1fConstantParametrization>(
             EURCurrency(), n1Ts, 0.01, 0.01));
 
+        // Add commodity parameterisations
+        bool df = driftFreeState;
+        comParametrizationA = boost::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "WTI", comTS, fxEurUsd, 0.1, 0.05, df);
+        comParametrizationB = boost::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "NG", comTS, fxEurUsd, 0.15, 0.05, df);
+        comModelA = boost::make_shared<CommoditySchwartzModel>(comParametrizationA);
+        comModelB = boost::make_shared<CommoditySchwartzModel>(comParametrizationB);
+        singleModels.push_back(comParametrizationA);
+        singleModels.push_back(comParametrizationB);
+
         // Create the correlation matrix.
         Matrix c = createCorrelation(infEurIsDK, infGbpIsDK);
         BOOST_TEST_MESSAGE("correlation matrix is\n" << c);
 
+        BOOST_TEST_MESSAGE("creating CAM with exact discretization");
         modelExact = boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
                                                          IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
+        BOOST_TEST_MESSAGE("creating CAM with Euler discretization");
         modelEuler = boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
                                                          IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler);
+        BOOST_TEST_MESSAGE("test date done");
     }
 
     // Add an IR model with flat or time depending volatilities.
@@ -2129,52 +2150,60 @@ struct IrFxInfCrModelTestData {
         vector<vector<Real>> tmp;
         if (infEurIsDK && infGbpIsDK) {
             tmp = {
-                // EUR  USD GBP  FX1  FX2  INF_EUR INF_GBP CR
-                { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // EUR
-                { 0.6, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // USD
-                { 0.3, 0.1, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // GBP
-                { 0.2, 0.2, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0 }, // FX1
-                { 0.3, 0.1, 0.1, 0.3, 1.0, 0.0, 0.0, 0.0 }, // FX2
-                { 0.8, 0.2, 0.1, 0.4, 0.2, 1.0, 0.0, 0.0 }, // INF_EUR
-                { 0.6, 0.1, 0.2, 0.2, 0.5, 0.5, 1.0, 0.0 }, // INF_GBP
-                { 0.3, 0.2, 0.1, 0.1, 0.3, 0.4, 0.2, 1.0 }  // CR
+                // EUR  USD GBP  FX1  FX2  INF_EUR INF_GBP CR COM1 COM2
+                { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // EUR
+                { 0.6, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // USD
+                { 0.3, 0.1, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // GBP
+                { 0.2, 0.2, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // FX1
+                { 0.3, 0.1, 0.1, 0.3, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // FX2
+                { 0.8, 0.2, 0.1, 0.4, 0.2, 1.0, 0.0, 0.0, 0.0, 0.0 }, // INF_EUR
+                { 0.6, 0.1, 0.2, 0.2, 0.5, 0.5, 1.0, 0.0, 0.0, 0.0 }, // INF_GBP
+                { 0.3, 0.2, 0.1, 0.1, 0.3, 0.4, 0.2, 1.0, 0.0, 0.0 }, // CR
+                { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 }, // COM1
+                { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 1.0 }  // COM2
             };
         } else if (!infEurIsDK && infGbpIsDK) {
             tmp = {
-                {1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_EUR
-                {0.600, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_USD
-                {0.300, 0.100, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_GBP
-                {0.200, 0.200, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURUSD
-                {0.300, 0.100, 0.100, 0.300, 1.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURGBP
-                {0.400, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_EUR_RR
-                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000}, // INF_EUR_IDX
-                {0.000, 0.000, 0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // INF_GBP
-                {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.000, 0.200, 1.000}  // CR
+                {1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_EUR
+                {0.600, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_USD
+                {0.300, 0.100, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_GBP
+                {0.200, 0.200, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURUSD
+                {0.300, 0.100, 0.100, 0.300, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURGBP
+                {0.400, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // INF_EUR_RR
+                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000}, // INF_EUR_IDX
+                {0.000, 0.000, 0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_GBP
+                {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.000, 0.200, 1.000, 0.000, 0.000}, // CR
+                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // COM1
+                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.500, 1.000}  // COM2
             };
         } else if (infEurIsDK && !infGbpIsDK) {
             tmp = {
-                {1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_EUR
-                {0.600, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_USD
-                {0.300, 0.100, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_GBP
-                {0.200, 0.200, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURUSD
-                {0.300, 0.100, 0.100, 0.300, 1.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURGBP
-                {0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_EUR
-                {0.000, 0.000, 0.400, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000}, // INF_GBP_RR
-                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // INF_GBP_IDX
-                {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.200, 0.000, 1.000}  // CR
+                {1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_EUR
+                {0.600, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_USD
+                {0.300, 0.100, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_GBP
+                {0.200, 0.200, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURUSD
+                {0.300, 0.100, 0.100, 0.300, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURGBP
+                {0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // INF_EUR
+                {0.000, 0.000, 0.400, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000}, // INF_GBP_RR
+                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_GBP_IDX
+                {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.200, 0.000, 1.000, 0.000, 0.000}, // CR
+                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // COM1
+                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.500, 1.000}  // COM2
             };
         } else {
             tmp = {
-                {1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_EUR
-                {0.600, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_USD
-                {0.300, 0.100, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_GBP
-                {0.200, 0.200, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURUSD
-                {0.300, 0.100, 0.100, 0.300, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURGBP
-                {0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000}, // INF_EUR_RR
-                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_EUR_IDX
-                {0.000, 0.000, 0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000}, // INF_GBP_RR
-                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // INF_GBP_IDX
-                {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.000, 0.200, 0.000, 1.000}  // CR
+                {1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_EUR
+                {0.600, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_USD
+                {0.300, 0.100, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_GBP
+                {0.200, 0.200, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURUSD
+                {0.300, 0.100, 0.100, 0.300, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURGBP
+                {0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // INF_EUR_RR
+                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // INF_EUR_IDX
+                {0.000, 0.000, 0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000}, // INF_GBP_RR
+                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_GBP_IDX
+                {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.000, 0.200, 0.000, 1.000, 0.000, 0.000}, // CR
+                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // COM1
+                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.500, 1.000}  // COM2
             };
         }
 
@@ -2209,6 +2238,12 @@ struct IrFxInfCrModelTestData {
     // Credit
     Handle<DefaultProbabilityTermStructure> n1Ts;
     
+    // Commodities
+    Handle<QuantExt::PriceTermStructure> comTS;
+    boost::shared_ptr<CommoditySchwartzParametrization> comParametrizationA, comParametrizationB;
+    boost::shared_ptr<CommoditySchwartzModel> comModelA, comModelB;
+    boost::shared_ptr<CommoditySchwartzStateProcess> comProcessA, comProcessB;
+
     // Model
     boost::shared_ptr<CrossAssetModel> modelExact, modelEuler;
 
@@ -2220,19 +2255,22 @@ struct IrFxInfCrModelTestData {
 vector<bool> infEurFlags{ true, false };
 vector<bool> infGbpFlags{ true, false };
 vector<bool> flatVolsFlags{ true, false };
+vector<bool> driftFreeState{ true, false };
 
-BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
-    bdata::make(infEurFlags) * bdata::make(infGbpFlags) * bdata::make(flatVolsFlags),
-    infEurIsDk, infGbpIsDk, flatVols) {
+BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
+    bdata::make(infEurFlags) * bdata::make(infGbpFlags) * bdata::make(flatVolsFlags) * bdata::make(driftFreeState),
+                     infEurIsDk, infGbpIsDk, flatVols, driftFreeState) {
 
-    BOOST_TEST_MESSAGE("Testing martingale property in ir-fx-inf-cr model for Euler and exact discretizations...");
+    BOOST_TEST_MESSAGE("Testing martingale property in ir-fx-inf-cr-com model for Euler and exact discretizations...");
     BOOST_TEST_MESSAGE("EUR inflation model is: " << (infEurIsDk ? "DK" : "JY"));
     BOOST_TEST_MESSAGE("GBP inflation model is: " << (infGbpIsDk ? "DK" : "JY"));
     BOOST_TEST_MESSAGE("Using " << (flatVols ? "" : "non-") << "flat volatilities.");
 
-    IrFxInfCrModelTestData d(infEurIsDk, infGbpIsDk, flatVols);
+    IrFxInfCrComModelTestData d(infEurIsDk, infGbpIsDk, flatVols, driftFreeState);
 
+    BOOST_TEST_MESSAGE("get exact state process");
     boost::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
+    BOOST_TEST_MESSAGE("get Euler state process");
     boost::shared_ptr<StochasticProcess> process2 = d.modelEuler->stateProcess();
 
     Size n = 50000;                         // number of paths
@@ -2241,24 +2279,26 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
     Time T2 = 20.0;                         // zerobond maturity
     Size steps = static_cast<Size>(T * 40); // number of steps taken (euler)
 
+    BOOST_TEST_MESSAGE("build sequence generators");
     LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(process1->factors() * 1, seed);
     LowDiscrepancy::rsg_type sg2 = LowDiscrepancy::make_sequence_generator(process2->factors() * steps, seed);
 
+    BOOST_TEST_MESSAGE("build multi path generator");
     TimeGrid grid1(T, 1);
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
     TimeGrid grid2(T, steps);
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg2(process2, grid2, sg2, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > eurzb1, usdzb1, gbpzb1, infeur1, infgbp1,
-        n1eur1;
+        n1eur1, commodityA_1, commodityB_1;
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > eurzb2, usdzb2, gbpzb2, infeur2, infgbp2,
-        n1eur2;
+        n1eur2, commodityA_2, commodityB_2;
 
     for (Size j = 0; j < n; ++j) {
-        Sample<MultiPath> path1 = pg1.next();
         Sample<MultiPath> path2 = pg2.next();
-        Size l1 = path1.value[0].length() - 1;
         Size l2 = path2.value[0].length() - 1;
+        Sample<MultiPath> path1 = pg1.next();
+        Size l1 = path1.value[0].length() - 1;
         Real zeur1 = path1.value[0][l1];
         Real zusd1 = path1.value[1][l1];
         Real zgbp1 = path1.value[2][l1];
@@ -2270,6 +2310,8 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
         Real infgbpy1 = path1.value[8][l1];
         Real crzn11 = path1.value[9][l1];
         Real cryn11 = path1.value[10][l1];
+        Real coma1 = path1.value[11][l1];
+        Real comb1 = path1.value[12][l1];
         Real zeur2 = path2.value[0][l2];
         Real zusd2 = path2.value[1][l2];
         Real zgbp2 = path2.value[2][l2];
@@ -2281,7 +2323,8 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
         Real infgbpy2 = path2.value[8][l2];
         Real crzn12 = path2.value[9][l2];
         Real cryn12 = path2.value[10][l2];
-
+        Real coma2 = path2.value[11][l2];
+        Real comb2 = path2.value[12][l2];
         // EUR zerobond
         eurzb1(d.modelExact->discountBond(0, T, T2, zeur1) / d.modelExact->numeraire(0, T, zeur1));
         // USD zerobond
@@ -2338,6 +2381,11 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
         // EUR defaultable zerobond
         std::pair<Real, Real> sn12 = d.modelExact->crlgm1fS(0, 0, T, T2, crzn12, cryn12);
         n1eur2(sn12.first * sn12.second * d.modelExact->discountBond(0, T, T2, zeur2) / d.modelExact->numeraire(0, T, zeur2));
+        // commodity forward prices
+        commodityA_1(d.comModelA->forwardPrice(T, T2, Array(1, coma1)));
+        commodityB_1(d.comModelB->forwardPrice(T, T2, Array(1, comb1)));
+        commodityA_2(d.comModelA->forwardPrice(T, T2, Array(1, coma2)));
+        commodityB_2(d.comModelB->forwardPrice(T, T2, Array(1, comb2)));
     }
 
     BOOST_TEST_MESSAGE("EXACT:");
@@ -2441,18 +2489,42 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
                    "expected "
                    << ev << ", got " << mean(n1eur1) << ", tolerance " << tol1);
 
+    // commodity A forward prices
+    Real tol;
+    ev = d.comParametrizationA->priceCurve()->price(T2);
+    tol = error_of<tag::mean>(commodityA_1);
+    if (std::abs(mean(commodityA_1) - ev) > tol)
+        BOOST_TEST_ERROR("Martingale test failed for commodity A (exact discr.),"
+                         "expected " << ev << ", got " << mean(commodityA_1) << " +- " << tol);
+    tol = error_of<tag::mean>(commodityA_2);
+    if (std::abs(mean(commodityA_2) - ev) > tol)
+        BOOST_TEST_ERROR("Martingale test failed for commodity A (Euler discr.),"
+                         "expected " << ev << ", got " << mean(commodityA_2) << " +- " << tol);
+
+    // commodity B forward prices
+    ev = d.comParametrizationB->priceCurve()->price(T2); 
+    tol = error_of<tag::mean>(commodityB_1);
+    if (std::abs(mean(commodityB_1) - ev) > tol)
+        BOOST_TEST_ERROR("Martingale test failed for commodity B (exact discr.),"
+                         "expected " << ev << ", got " << mean(commodityB_1) << " +- " << tol);
+    tol = error_of<tag::mean>(commodityB_2);
+    if (std::abs(mean(commodityB_2) - ev) > tol)
+        BOOST_TEST_ERROR("Martingale test failed for commodity B (Euler discr.),"
+                         "expected " << ev << ", got " << mean(commodityB_2) << " +- " << tol);
+
+    
 } // testIrFxInfCrMartingaleProperty
 
-BOOST_DATA_TEST_CASE(testIrFxInfCrMoments,
-    bdata::make(infEurFlags) * bdata::make(infGbpFlags) * bdata::make(flatVolsFlags),
-    infEurIsDk, infGbpIsDk, flatVols) {
+BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
+    bdata::make(infEurFlags) * bdata::make(infGbpFlags) * bdata::make(flatVolsFlags) * bdata::make(driftFreeState),
+                     infEurIsDk, infGbpIsDk, flatVols, driftFreeState) {
 
-    BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler and exact discretization in ir-fx-inf-cr model...");
+    BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler and exact discretization in ir-fx-inf-cr-com model...");
     BOOST_TEST_MESSAGE("EUR inflation model is: " << (infEurIsDk ? "DK" : "JY"));
     BOOST_TEST_MESSAGE("GBP inflation model is: " << (infGbpIsDk ? "DK" : "JY"));
     BOOST_TEST_MESSAGE("Using " << (flatVols ? "" : "non-") << "flat volatilities.");
 
-    IrFxInfCrModelTestData d(infEurIsDk, infGbpIsDk, flatVols);
+    IrFxInfCrComModelTestData d(infEurIsDk, infGbpIsDk, flatVols, driftFreeState);
 
     Size n = d.modelExact->dimension();
 
@@ -2536,7 +2608,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMoments,
     }
     BOOST_TEST_MESSAGE("==================");
 
-    Real errTolLd[] = { 0.5E-4, 0.5E-4, 0.5E-4, 10.0E-4, 10.0E-4, 0.9E-4, 0.8E-4, 0.7E-4, 0.7E-4, 0.7E-4, 0.7E-4 };
+    Real errTolLd[] = { 0.5E-4, 0.5E-4, 0.5E-4, 10.0E-4, 10.0E-4, 0.9E-4, 0.8E-4, 0.7E-4, 0.7E-4, 0.7E-4, 0.7E-4, 0.7E-4, 0.7E-4 };
 
     for (Size i = 0; i < n; ++i) {
         // check expectation against analytical calculation (Euler)
@@ -2583,7 +2655,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMoments,
             }
         }
     }
-
+    
 } // testIrFxInfCrMoments
 
 namespace {

@@ -41,6 +41,7 @@
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgmimplieddefaulttermstructure.hpp>
 #include <qle/models/modelimpliedyieldtermstructure.hpp>
+#include <qle/models/modelimpliedpricetermstructure.hpp>
 
 namespace ore {
 namespace analytics {
@@ -85,15 +86,16 @@ private:
     const std::string configuration_;
     // generated data
     std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_, zeroInflationKeys_,
-        yoyInflationKeys_, defaultCurveKeys_;
+        yoyInflationKeys_, defaultCurveKeys_, commodityCurveKeys_;
     std::vector<RiskFactorKey> fxKeys_, eqKeys_, cpiKeys_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
-    std::vector<std::vector<Period>> ten_dsc_, ten_idx_, ten_yc_, ten_efc_, ten_zinf_, ten_yinf_, ten_dfc_;
+    std::vector<std::vector<Period>> ten_dsc_, ten_idx_, ten_yc_, ten_efc_, ten_zinf_, ten_yinf_, ten_dfc_, ten_com_;
     std::vector<bool> modelCcyRelevant_;
-    Size n_ccy_, n_eq_, n_inf_, n_cr_, n_indices_, n_curves_;
+    Size n_ccy_, n_eq_, n_inf_, n_cr_, n_indices_, n_curves_, n_com_;
 
     vector<boost::shared_ptr<QuantExt::ModelImpliedYieldTermStructure>> curves_, fwdCurves_, yieldCurves_;
+    vector<boost::shared_ptr<QuantExt::ModelImpliedPriceTermStructure>> comCurves_;
     vector<boost::shared_ptr<IborIndex>> indices_;
     vector<Currency> yieldCurveCurrency_;
     vector<string> zeroInflationIndex_, yoyInflationIndex_;

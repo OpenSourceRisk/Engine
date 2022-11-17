@@ -60,7 +60,7 @@ public:
     virtual ~Parametrization() {}
 
     /*! the currency associated to this parametrization */
-    virtual const Currency currency() const;
+    virtual const Currency& currency() const;
 
     /*! the times associated to parameter i */
     virtual const Array& parameterTimes(const Size) const;
@@ -121,7 +121,7 @@ inline Real Parametrization::direct(const Size, const Real x) const { return x; 
 
 inline Real Parametrization::inverse(const Size, const Real y) const { return y; }
 
-inline const Currency Parametrization::currency() const { return currency_; }
+inline const Currency& Parametrization::currency() const { return currency_; }
 
 inline const Array& Parametrization::parameterTimes(const Size) const { return emptyTimes_; }
 
