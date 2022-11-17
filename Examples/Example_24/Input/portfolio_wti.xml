@@ -28,10 +28,10 @@
     </Envelope>
     <CommodityForwardData>
       <Position>Short</Position>
-      <Maturity>2021-10-31</Maturity>
+      <Maturity>2021-12-31</Maturity>
       <Name>COMDTY_WTI_USD</Name>
       <Currency>USD</Currency>
-      <Strike>49.75</Strike>
+      <Strike>50.01</Strike>
       <Quantity>500000</Quantity>
     </CommodityForwardData>
   </Trade>

@@ -25,7 +25,7 @@
   </Markets>
   <Analytics>
     <Analytic type="npv">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="baseCurrency">USD</Parameter>
       <Parameter name="outputFileName">npv.csv</Parameter>
     </Analytic>

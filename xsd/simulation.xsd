@@ -108,6 +108,13 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element name="Commodities" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="Commodity" maxOccurs="unbounded" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element type="xs:float" name="BootstrapTolerance" maxOccurs="1" />
       <xs:element type="measureType" name="Measure" minOccurs="0" maxOccurs="1" />
       <xs:element type="discretizationType" name="Discretization" minOccurs="0"/>

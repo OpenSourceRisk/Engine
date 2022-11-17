@@ -2,7 +2,7 @@
 
   <Parameters>
     <Discretization>Exact</Discretization>
-    <Grid>24,3M</Grid>
+    <Grid>25,3M</Grid>
     <Calendar>EUR,USD</Calendar>
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
@@ -81,13 +81,13 @@
         </Sigma>
         <Kappa>
           <Calibrate>false</Calibrate>
-          <InitialValue>0.1</InitialValue>
+          <InitialValue>0.0</InitialValue>
         </Kappa>
         <CalibrationOptions>
           <Expiries/>
           <Strikes/>
         </CalibrationOptions>
-        <DriftFreeState>false</DriftFreeState>
+        <DriftFreeState>true</DriftFreeState>
       </CommoditySchwartz>
     </CommodityModels>
 
