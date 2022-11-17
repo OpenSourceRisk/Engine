@@ -170,8 +170,7 @@
       <xs:element name="CommodityModels" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element type="crossAssetLGM" name="CommoditySchwartz" maxOccurs="unbounded" minOccurs="0"/>
-            <!-- FIXME: poor name -->
+            <xs:element type="commoditySchwartz" name="CommoditySchwartz" maxOccurs="unbounded" minOccurs="0"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
