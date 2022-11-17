@@ -238,6 +238,16 @@ void XMLUtils::addChildAsCdata(XMLDocument& doc, XMLNode* n, const string& name,
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value, const string& attrName,
                         const string& attr) {
+    if (!attrName.empty() || !attr.empoty()) {
+        addChild(doc, n, name, value, {attrName}, {attr});
+    } else {
+        addChild(doc, n, name, value, {}, {});
+    }
+}
+
+void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value,
+                        const vector<string>& attrNames, const vector<string>& attrs) {
+    QL_REQUIRE(attrNames.size() == attrs.size(), "The size of attrNames should be the same as the size of attrs.");
     XMLNode* node;
     if (value.size() == 0) {
         node = addChild(doc, n, name);
@@ -246,8 +256,8 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
         QL_REQUIRE(n, "XML Node is NULL (adding " << name << ")");
         n->insert_node(0, node);
     }
-    if (attrName != "" || attr != "") {
-        XMLUtils::addAttribute(doc, node, attrName, attr);
+    for (Size i = 0; i < attrNames.size(); ++i) {
+        XMLUtils::addAttribute(doc, node, attrNames[i], attrs[i]);
     }
 }
 
