@@ -151,7 +151,10 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     }
     LOG("Total number of swaps = " << portfolio->size());
 
-    simMarket_->fixingManager()->initialise(portfolio, simMarket_);
+    if (dates.size() > 1) {
+        // only need to init the fixing manager if there is more than one sim date
+        simMarket_->fixingManager()->initialise(portfolio, simMarket_);
+    }
 
     cpu_timer timer;
     cpu_timer loopTimer;
