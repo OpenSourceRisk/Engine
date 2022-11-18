@@ -28,6 +28,7 @@
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
+#include <qle/indexes/genericindex.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -74,7 +75,7 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, co
         } else if (auto index = boost::dynamic_pointer_cast<CommodityIndex>(rawIndex)) {
             fixingMap_[index->clone(QuantLib::Date(),
                                     market->commodityPriceCurve(index->underlyingName(), configuration))]
-                .insert(dates.begin().dates.end());
+                .insert(dates.begin(), dates.end());
         } else if (auto index = boost::dynamic_pointer_cast<FxIndex>(rawIndex)) {
             fixingMap_[*market->fxIndex(index->oreName(), configuration)].insert(dates.begin(), dates.end());
         } else if (auto index = boost::dynamic_pointer_cast<GenericIndex>(rawIndex)) {
@@ -137,7 +138,7 @@ void FixingManager::applyFixings(Date start, Date end) {
                 inflationPeriod(fixEnd - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first +
                 1;
             currentFixingDate = fixEnd;
-        } else if (boost::dynamic_pointer_cast<YoYInflationIndex>(m.first)) {
+        } else if (auto yii = boost::dynamic_pointer_cast<YoYInflationIndex>(m.first)) {
             fixStart =
                 inflationPeriod(fixStart - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first;
             fixEnd =
