@@ -267,7 +267,10 @@
 #include <qle/models/zeroinflationmodeltermstructure.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
+#include <qle/pricingengines/analyticdigitalamericanengine.hpp>
 #include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
+#include <qle/pricingengines/analyticdoublebarrierbinaryengine.hpp>
+#include <qle/pricingengines/analyticeuropeanengine.hpp>
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
 #include <qle/pricingengines/analyticjycpicapfloorengine.hpp>
 #include <qle/pricingengines/analyticjyyoycapfloorengine.hpp>
