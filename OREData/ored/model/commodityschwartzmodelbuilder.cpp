@@ -20,7 +20,7 @@
 #include <ql/quotes/simplequote.hpp>
 
 #include <qle/models/commodityschwartzparametrization.hpp>
-//#include <qle/models/fxeqoptionhelper.hpp>
+#include <qle/models/futureoptionhelper.hpp>
 
 #include <ored/model/commodityschwartzmodelbuilder.hpp>
 #include <ored/utilities/dategrid.hpp>
@@ -177,14 +177,13 @@ void CommoditySchwartzModelBuilder::buildOptionBasket() const {
             optionActive_[j] = true;
             Real strikeValue = optionStrike(j);
             Handle<Quote> volQuote(boost::make_shared<SimpleQuote>(vol_->blackVol(expiryDate, strikeValue)));
-            // TODO
-            // boost::shared_ptr<QuantExt::FxEqOptionHelper> helper = boost::make_shared<QuantExt::FxEqOptionHelper>(
-            //     expiryDate, strikeValue, eqSpot_, volQuote, ytsRate_, ytsDiv_);
-            // optionBasket_.push_back(helper);
-            // helper->performCalculations();
-            // expiryTimes.push_back(ytsRate_->timeFromReference(helper->option()->exercise()->date(0)));
-            // DLOG("Added EquityOptionHelper " << data_->eqName() << " " << QuantLib::io::iso_date(expiryDate) << " "
-            //                                  << volQuote->value());
+            boost::shared_ptr<QuantExt::FutureOptionHelper> helper = boost::make_shared<QuantExt::FutureOptionHelper>(
+                expiryDate, strikeValue, curve_, volQuote);
+            optionBasket_.push_back(helper);
+            helper->performCalculations();
+            expiryTimes.push_back(curve_->timeFromReference(helper->option()->exercise()->date(0)));
+            DLOG("Added FutureOptionHelper " << data_->name() << " " << QuantLib::io::iso_date(expiryDate) << " "
+                                             << volQuote->value());
             if (refCalDate != referenceCalibrationDates.end())
                 lastRefCalDate = *refCalDate;
         } else {
