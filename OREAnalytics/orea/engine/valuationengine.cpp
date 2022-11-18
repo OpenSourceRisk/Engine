@@ -113,7 +113,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     auto& counterparties = outputCptyCube ? outputCptyCube->ids() : vector<string>();
     std::vector<bool> tradeHasError(trades.size(), false);
     LOG("Initialise state objects...");
-    Size numFRC = 0;
     // initialise state objects for each trade (required for path-dependent derivatives in particular)
     for (Size i = 0; i < trades.size(); i++) {
         QL_REQUIRE(!trades[i]->npvCurrency().empty(), "NPV currency not set for trade " << trades[i]->id());
@@ -151,7 +150,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         }
     }
     LOG("Total number of swaps = " << portfolio->size());
-    LOG("Total number of FRC = " << numFRC);
 
     simMarket_->fixingManager()->initialise(portfolio, simMarket_);
 
