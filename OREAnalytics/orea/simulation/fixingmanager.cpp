@@ -69,34 +69,32 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, co
         auto r = t->requiredFixings();
         r.unsetPayDates();
         for (auto const& [name, dates] : r.fixingDatesIndices(QuantLib::Date::maxDate())) {
-            auto rawIndex = parseIndex(name);
-            if (auto index = boost::dynamic_pointer_cast<EquityIndex>(rawIndex)) {
-                fixingMap_[*market->equityCurve(index->familyName(), configuration)].insert(dates.begin(), dates.end());
-            } else if (auto index = boost::dynamic_pointer_cast<BondIndex>(rawIndex)) {
-                WLOG("FixingManager does not handle BondIndex at the moment, this may lead to missing fixing errors "
-                     "during "
-                     "simulation.");
-            } else if (auto index = boost::dynamic_pointer_cast<CommodityIndex>(rawIndex)) {
-                fixingMap_[index->clone(QuantLib::Date(),
-                                        market->commodityPriceCurve(index->underlyingName(), configuration))]
-                    .insert(dates.begin(), dates.end());
-            } else if (auto index = boost::dynamic_pointer_cast<FxIndex>(rawIndex)) {
-                fixingMap_[*market->fxIndex(index->oreName(), configuration)].insert(dates.begin(), dates.end());
-            } else if (auto index = boost::dynamic_pointer_cast<GenericIndex>(rawIndex)) {
-                WLOG("FixingManager does not handle GenericIndex at the moment, this may lead to missing fixing errors "
-                     "during simulation.");
-            } else if (auto index = boost::dynamic_pointer_cast<ConstantMaturityBondIndex>(rawIndex)) {
-                WLOG("FixingManager does not handle ConstantMaturityBondIndex at the moment, this may lead to missing "
-                     "fixing errors during simulation.");
-            } else if (auto index = boost::dynamic_pointer_cast<IborIndex>(rawIndex)) {
-                fixingMap_[*market->iborIndex(name, configuration)].insert(dates.begin(), dates.end());
-            } else if (auto index = boost::dynamic_pointer_cast<SwapIndex>(rawIndex)) {
-                fixingMap_[*market->swapIndex(name, configuration)].insert(dates.begin(), dates.end());
-            } else if (auto index = boost::dynamic_pointer_cast<ZeroInflationIndex>(rawIndex)) {
-                fixingMap_[*market->zeroInflationIndex(name, configuration)].insert(dates.begin(), dates.end());
-            } else {
-                QL_FAIL("FixingManager does not handle the type of the index '"
-                        << name << "'. This is an internal error, contact dev.");
+            try {
+                auto rawIndex = parseIndex(name);
+                if (auto index = boost::dynamic_pointer_cast<EquityIndex>(rawIndex)) {
+                    fixingMap_[*market->equityCurve(index->familyName(), configuration)].insert(dates.begin(),
+                                                                                                dates.end());
+                } else if (auto index = boost::dynamic_pointer_cast<BondIndex>(rawIndex)) {
+                    QL_FAIL("BondIndex not handled");
+                } else if (auto index = boost::dynamic_pointer_cast<CommodityIndex>(rawIndex)) {
+                    fixingMap_[index->clone(QuantLib::Date(),
+                                            market->commodityPriceCurve(index->underlyingName(), configuration))]
+                        .insert(dates.begin(), dates.end());
+                } else if (auto index = boost::dynamic_pointer_cast<FxIndex>(rawIndex)) {
+                    fixingMap_[*market->fxIndex(index->oreName(), configuration)].insert(dates.begin(), dates.end());
+                } else if (auto index = boost::dynamic_pointer_cast<GenericIndex>(rawIndex)) {
+                    QL_FAIL("GenericIndex not handled");
+                } else if (auto index = boost::dynamic_pointer_cast<ConstantMaturityBondIndex>(rawIndex)) {
+                    QL_FAIL("ConstantMaturityBondIndex not handled");
+                } else if (auto index = boost::dynamic_pointer_cast<IborIndex>(rawIndex)) {
+                    fixingMap_[*market->iborIndex(name, configuration)].insert(dates.begin(), dates.end());
+                } else if (auto index = boost::dynamic_pointer_cast<SwapIndex>(rawIndex)) {
+                    fixingMap_[*market->swapIndex(name, configuration)].insert(dates.begin(), dates.end());
+                } else if (auto index = boost::dynamic_pointer_cast<ZeroInflationIndex>(rawIndex)) {
+                    fixingMap_[*market->zeroInflationIndex(name, configuration)].insert(dates.begin(), dates.end());
+                }
+            } catch (const std::exception& e) {
+                ALOG("FixingManager: error " << e.what() << " - no fixings are added for '" << name << "'");
             }
             TLOG("Added " << dates.size() << " fixing dates for '" << name << "'");
         }
