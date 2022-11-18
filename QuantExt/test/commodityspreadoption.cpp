@@ -73,12 +73,52 @@ BOOST_AUTO_TEST_CASE(testCrossAssetFutureSpread) {
 
     CommoditySpreadOption spreadOption(flow1, flow2, exercise, 1000., 2, Option::Call);
 
-    auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, vol1, vol2, 0.5);
+    auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, vol1, vol2, 0);
 
     spreadOption.setPricingEngine(engine);
 
     std::cout << spreadOption.NPV() << std::endl;
 }
+
+
+BOOST_AUTO_TEST_CASE(testCalendarSpread) {
+    Date today(5, Nov, 2022);
+    Settings::instance().evaluationDate() = today;
+
+    std::vector<Date> futureExpiryDates = {Date(5, Nov, 2022), Date(30, Nov, 2022), Date(31, Dec, 2022)};
+    std::vector<Real> brentQuotes = {100., 101.37928862723487, 102.2159767886142};
+
+    auto brentCurve = Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(
+        today, futureExpiryDates, brentQuotes, Actual365Fixed(), USDCurrency()));
+
+    auto discount = Handle<YieldTermStructure>(
+        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.03)), Actual365Fixed()));
+
+    auto vol1 = Handle<BlackVolTermStructure>(
+        boost::make_shared<BlackConstantVol>(today, NullCalendar(), 0.3, Actual365Fixed()));
+
+    auto index1 =
+        boost::make_shared<CommodityFuturesIndex>("BRENT_DEC_USD", Date(31, Dec, 2022), NullCalendar(), brentCurve);
+    
+    auto index2 =
+        boost::make_shared<CommodityFuturesIndex>("BRENT_NOV_USD", Date(30, Nov, 2022), NullCalendar(), brentCurve);
+
+    auto flow1 = boost::make_shared<CommodityIndexedCashFlow>(100, Date(31, Dec, 2022), Date(15, Nov, 2022), index1);
+
+    auto flow2 = boost::make_shared<CommodityIndexedCashFlow>(100, Date(30, Nov, 2022), Date(15, Nov, 2022), index2);
+
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(15, Nov, 2022));
+
+    CommoditySpreadOption spreadOption(flow1, flow2, exercise, 1000., 1, Option::Call);
+
+    auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, vol1, vol1, 0.99);
+
+    spreadOption.setPricingEngine(engine);
+
+    std::cout << spreadOption.NPV() << std::endl;
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

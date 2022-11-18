@@ -64,7 +64,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     // if obsDate is in the past freeze vol at 0
     double sigma1 = obsDate1 > today ? volLong_->blackVol(obsDate1, F1) : 0.0;
     double sigma2 = obsDate2 > today ? volShort_->blackVol(obsDate2, F2) : 0.0;
-    // Time adjustment if its a calendar spread
+    // Calendar spread adjustment if observation period is before the exercise date
     sigma1 = sigma1 * std::min(1.0, std::sqrt(obsTime1 / tte));
     sigma2 = sigma2 * std::min(1.0, std::sqrt(obsTime2 / tte));
 
