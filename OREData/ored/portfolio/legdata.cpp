@@ -79,15 +79,6 @@
 using namespace QuantLib;
 using namespace QuantExt;
 
-namespace{
-void setDefaultValueIfRequiredFor(int callee_line, std::vector<double>& notionals){
-    if(notionals.empty()){
-        notionals = std::vector<double>(1,0.0);
-        LOG("portfolio/legdata.cpp:L" << callee_line << ": notionals not provided, setting to default (0.0);")
-    }
-};
-
-}
 
 namespace ore {
 namespace data {
@@ -935,8 +926,7 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
         paymentCalendar = parseCalendar(data.paymentCalendar());
 
     vector<double> rates = buildScheduledVector(fixedLegData->rates(), fixedLegData->rateDates(), schedule);
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    setDefaultValueIfRequiredFor((int)__LINE__, notionals);
+    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
 
     PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
     applyAmortization(notionals, data, schedule, true, rates);
@@ -979,8 +969,7 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     vector<Date> dates = schedule.dates();
 
     vector<double> rates = buildScheduledVector(zcFixedLegData->rates(), zcFixedLegData->rateDates(), schedule);
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    setDefaultValueIfRequiredFor((int)__LINE__, notionals);
+    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
 
     Compounding comp = parseCompounding(zcFixedLegData->compounding());
     QL_REQUIRE(comp == QuantLib::Compounded || comp == QuantLib::Simple,
@@ -1177,7 +1166,6 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
         paymentCalendar = parseCalendar(data.paymentCalendar());
 
     vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
-    setDefaultValueIfRequiredFor((int)__LINE__, notionals);
     vector<double> spreads =
         buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
     vector<double> gearings =
@@ -1293,8 +1281,7 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
     else
         paymentCalendar = parseCalendar(data.paymentCalendar());
 
-    vector<Real> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    setDefaultValueIfRequiredFor((int)__LINE__, notionals);
+    vector<Real> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
     vector<Real> spreads = buildScheduledVector(floatData->spreads(), floatData->spreadDates(), schedule);
     vector<Real> gearings = buildScheduledVector(floatData->gearings(), floatData->gearingDates(), schedule);
 
@@ -1416,8 +1403,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     }
 
     vector<double> rates = buildScheduledVector(cpiLegData->rates(), cpiLegData->rateDates(), schedule);
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    setDefaultValueIfRequiredFor((int)__LINE__, notionals);
+    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
     bool couponCap = cpiLegData->caps().size() > 0;
     bool couponFloor = cpiLegData->floors().size() > 0;
     bool couponCapFloor = cpiLegData->caps().size() > 0 || cpiLegData->floors().size() > 0;
@@ -1565,8 +1551,7 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
         buildScheduledVectorNormalised(yoyLegData->gearings(), yoyLegData->gearingDates(), schedule, 1.0);
     vector<double> spreads =
         buildScheduledVectorNormalised(yoyLegData->spreads(), yoyLegData->spreadDates(), schedule, 0.0);
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    setDefaultValueIfRequiredFor((int)__LINE__, notionals);
+    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
 
     bool irregularYoY = yoyLegData->irregularYoY();
     bool couponCap = yoyLegData->caps().size() > 0;
@@ -1697,8 +1682,7 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
         ore::data::buildScheduledVectorNormalised(cmsData->spreads(), cmsData->spreadDates(), schedule, 0.0);
     vector<double> gearings =
         ore::data::buildScheduledVectorNormalised(cmsData->gearings(), cmsData->gearingDates(), schedule, 1.0);
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    setDefaultValueIfRequiredFor((int)__LINE__, notionals);
+    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
 
     Size fixingDays = cmsData->fixingDays() == Null<Size>() ? swapIndex->fixingDays() : cmsData->fixingDays();
 
@@ -1894,8 +1878,7 @@ Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swa
         ore::data::buildScheduledVectorNormalised(cmsData->spreads(), cmsData->spreadDates(), schedule, 0.0);
     vector<double> gearings =
         ore::data::buildScheduledVectorNormalised(cmsData->gearings(), cmsData->gearingDates(), schedule, 1.0);
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    setDefaultValueIfRequiredFor((int)__LINE__, notionals);
+    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
 
     double eps = 1e-4;
     vector<double> callStrikes =
@@ -1984,8 +1967,7 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
                                                                        cmsSpreadData->spreadDates(), schedule, 0.0);
     vector<double> gearings = ore::data::buildScheduledVectorNormalised(cmsSpreadData->gearings(),
                                                                         cmsSpreadData->gearingDates(), schedule, 1.0);
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    setDefaultValueIfRequiredFor((int)__LINE__, notionals);
+    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
 
     Size fixingDays =
         cmsSpreadData->fixingDays() == Null<Size>() ? swapSpreadIndex->fixingDays() : cmsSpreadData->fixingDays();
@@ -2073,8 +2055,7 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
                                                                        cmsSpreadData->spreadDates(), schedule, 0.0);
     vector<double> gearings = ore::data::buildScheduledVectorNormalised(cmsSpreadData->gearings(),
                                                                         cmsSpreadData->gearingDates(), schedule, 1.0);
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    setDefaultValueIfRequiredFor((int)__LINE__, notionals);
+    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
 
     double eps = 1e-4;
     vector<double> callStrikes = ore::data::buildScheduledVector(digitalCmsSpreadData->callStrikes(),
@@ -2197,8 +2178,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
 
     scheduleBuilder.makeSchedules(openEndDateReplacement);
 
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    setDefaultValueIfRequiredFor((int)__LINE__, notionals);
+    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
 
     Calendar paymentCalendar;
     if (data.paymentCalendar().empty())
