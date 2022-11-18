@@ -65,34 +65,40 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, co
                                const std::string& configuration) {
 
     // populate the map "Index -> set of required fixing dates", where the index on the LHS is linked to curves
-    for (auto const& [name, dates] : portfolio->fixings(QuantLib::Date::maxDate())) {
-        auto rawIndex = parseIndex(name);
-        if (auto index = boost::dynamic_pointer_cast<EquityIndex>(rawIndex)) {
-            fixingMap_[*market->equityCurve(index->familyName(), configuration)].insert(dates.begin(), dates.end());
-        } else if (auto index = boost::dynamic_pointer_cast<BondIndex>(rawIndex)) {
-            WLOG("FixingManager does not handle BondIndex at the moment, this may lead to missing fixing errors during "
-                 "simulation.");
-        } else if (auto index = boost::dynamic_pointer_cast<CommodityIndex>(rawIndex)) {
-            fixingMap_[index->clone(QuantLib::Date(),
-                                    market->commodityPriceCurve(index->underlyingName(), configuration))]
-                .insert(dates.begin(), dates.end());
-        } else if (auto index = boost::dynamic_pointer_cast<FxIndex>(rawIndex)) {
-            fixingMap_[*market->fxIndex(index->oreName(), configuration)].insert(dates.begin(), dates.end());
-        } else if (auto index = boost::dynamic_pointer_cast<GenericIndex>(rawIndex)) {
-            WLOG("FixingManager does not handle GenericIndex at the moment, this may lead to missing fixing errors "
-                 "during simulation.");
-        } else if (auto index = boost::dynamic_pointer_cast<ConstantMaturityBondIndex>(rawIndex)) {
-            WLOG("FixingManager does not handle ConstantMaturityBondIndex at the moment, this may lead to missing "
-                 "fixing errors during simulation.");
-        } else if (auto index = boost::dynamic_pointer_cast<IborIndex>(rawIndex)) {
-            fixingMap_[*market->iborIndex(name, configuration)].insert(dates.begin(), dates.end());
-        } else if (auto index = boost::dynamic_pointer_cast<SwapIndex>(rawIndex)) {
-            fixingMap_[*market->swapIndex(name, configuration)].insert(dates.begin(), dates.end());
-        } else if (auto index = boost::dynamic_pointer_cast<ZeroInflationIndex>(rawIndex)) {
-            fixingMap_[*market->zeroInflationIndex(name, configuration)].insert(dates.begin(), dates.end());
-        } else {
-            QL_FAIL("FixingManager does not handle the type of the index '"
-                    << name << "'. This is an internal error, contact dev.");
+    for (auto const& t : portfolio->trades()) {
+        auto r = t->requiredFixings();
+        r.unsetPayDates();
+        for (auto const& [name, dates] : r.fixingDatesIndices(QuantLib::Date::maxDate())) {
+            auto rawIndex = parseIndex(name);
+            if (auto index = boost::dynamic_pointer_cast<EquityIndex>(rawIndex)) {
+                fixingMap_[*market->equityCurve(index->familyName(), configuration)].insert(dates.begin(), dates.end());
+            } else if (auto index = boost::dynamic_pointer_cast<BondIndex>(rawIndex)) {
+                WLOG("FixingManager does not handle BondIndex at the moment, this may lead to missing fixing errors "
+                     "during "
+                     "simulation.");
+            } else if (auto index = boost::dynamic_pointer_cast<CommodityIndex>(rawIndex)) {
+                fixingMap_[index->clone(QuantLib::Date(),
+                                        market->commodityPriceCurve(index->underlyingName(), configuration))]
+                    .insert(dates.begin(), dates.end());
+            } else if (auto index = boost::dynamic_pointer_cast<FxIndex>(rawIndex)) {
+                fixingMap_[*market->fxIndex(index->oreName(), configuration)].insert(dates.begin(), dates.end());
+            } else if (auto index = boost::dynamic_pointer_cast<GenericIndex>(rawIndex)) {
+                WLOG("FixingManager does not handle GenericIndex at the moment, this may lead to missing fixing errors "
+                     "during simulation.");
+            } else if (auto index = boost::dynamic_pointer_cast<ConstantMaturityBondIndex>(rawIndex)) {
+                WLOG("FixingManager does not handle ConstantMaturityBondIndex at the moment, this may lead to missing "
+                     "fixing errors during simulation.");
+            } else if (auto index = boost::dynamic_pointer_cast<IborIndex>(rawIndex)) {
+                fixingMap_[*market->iborIndex(name, configuration)].insert(dates.begin(), dates.end());
+            } else if (auto index = boost::dynamic_pointer_cast<SwapIndex>(rawIndex)) {
+                fixingMap_[*market->swapIndex(name, configuration)].insert(dates.begin(), dates.end());
+            } else if (auto index = boost::dynamic_pointer_cast<ZeroInflationIndex>(rawIndex)) {
+                fixingMap_[*market->zeroInflationIndex(name, configuration)].insert(dates.begin(), dates.end());
+            } else {
+                QL_FAIL("FixingManager does not handle the type of the index '"
+                        << name << "'. This is an internal error, contact dev.");
+            }
+            TLOG("Added " << dates.size() << " fixing dates for '" << name << "'");
         }
     }
 
@@ -127,7 +133,6 @@ void FixingManager::reset() {
 void FixingManager::applyFixings(Date start, Date end) {
     // Loop over all indices
     for (auto const& m : fixingMap_) {
-        set<Date> fixingDates = m.second;
         Date fixStart = start;
         Date fixEnd = end;
         Date currentFixingDate;
@@ -154,7 +159,7 @@ void FixingManager::applyFixings(Date start, Date end) {
 
         // Add we have a coupon between start and asof.
         bool needFixings = false;
-        for (auto const& d : fixingDates) {
+        for (auto const& d : m.second) {
             if (d >= fixStart && d < fixEnd) {
                 needFixings = true;
                 break;
@@ -165,7 +170,7 @@ void FixingManager::applyFixings(Date start, Date end) {
             Rate currentFixing = m.first->fixing(currentFixingDate);
             // if we read the fixing from an inverted FxIndex we have to undo the inversion
             TimeSeries<Real> history;
-            for (auto const& d : fixingDates) {
+            for (auto const& d : m.second) {
                 if (d >= fixStart && d < fixEnd) {
                     // Fixing dates include the valuation grid dates which might not be valid fixing dates (BMA/SIFMA)
                     bool valid = m.first->isValidFixingDate(d);
