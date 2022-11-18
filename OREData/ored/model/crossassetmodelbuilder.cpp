@@ -249,8 +249,7 @@ void CrossAssetModelBuilder::buildModel() const {
             processInfo[CrossAssetModel::AssetType::IR].emplace_back(ir->ccy(), 1);
         }
         else if(auto ir = boost::dynamic_pointer_cast<HwModelData>(irConfig)) {
-            // TODO read from config
-            bool evaluateBankAccount = true;
+            bool evaluateBankAccount = true; // updated in cross asset model for non-base ccys
             bool setCalibrationInfo = false;
             HwModel::Discretization discr = HwModel::Discretization::Euler;
             auto builder = boost::make_shared<HwBuilder>(
