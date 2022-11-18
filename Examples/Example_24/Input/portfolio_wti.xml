@@ -1,0 +1,39 @@
+<Portfolio>
+
+  <!--
+  <Trade id="CommodityForward_WTI_2Y">
+    <TradeType>CommodityForward</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CommodityForwardData>
+      <Position>Long</Position>
+      <Maturity>2018-02-05</Maturity>
+      <Name>COMDTY_WTI_USD</Name>
+      <Currency>USD</Currency>
+      <Strike>46.0</Strike>
+      <Quantity>1000000</Quantity>
+    </CommodityForwardData>
+  </Trade>
+  -->
+  
+  <Trade id="CommodityForward">
+    <TradeType>CommodityForward</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CommodityForwardData>
+      <Position>Short</Position>
+      <Maturity>2021-12-31</Maturity>
+      <Name>COMDTY_WTI_USD</Name>
+      <Currency>USD</Currency>
+      <Strike>50.01</Strike>
+      <Quantity>500000</Quantity>
+    </CommodityForwardData>
+  </Trade>
+
+</Portfolio>

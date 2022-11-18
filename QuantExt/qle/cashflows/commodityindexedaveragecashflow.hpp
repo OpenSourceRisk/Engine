@@ -4,7 +4,9 @@
 */
 
 /*! \file qle/cashflows/commodityindexedaveragecashflow.hpp
-    \brief Cash flow dependent on the average commodity spot price or future's settlement price over a period
+    \brief Cash flow dependent on the average commodity spot price or future's settlement price over a period.
+    If settled in a foreign currency (domestic: currency on which the underlying curve is traded, foreing: settlement currency)
+    the FX is applied day by day. This approach cannot be appied to averaged underlying curves.
  */
 
 #ifndef quantext_commodity_indexed_average_cash_flow_hpp
@@ -16,6 +18,7 @@
 #include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
+#include <qle/indexes/fxindex.hpp>
 
 namespace QuantExt {
 
@@ -48,7 +51,8 @@ public:
                                     QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                                     QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(),
                                     bool unrealisedQuantity = false,
-                                    const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData = boost::none);
+                                    const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData = boost::none,
+                                    const ext::shared_ptr<FxIndex>& fxIndex = nullptr);
 
     //! Constructor that deduces payment date from \p endDate using payment conventions
     CommodityIndexedAverageCashFlow(
@@ -59,11 +63,14 @@ public:
         QuantLib::Real gearing = 1.0, PaymentTiming paymentTiming = PaymentTiming::InArrears,
         bool useFuturePrice = false, QuantLib::Natural deliveryDateRoll = 0, QuantLib::Natural futureMonthOffset = 0,
         const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr, bool includeEndDate = true,
-        bool excludeStartDate = true, const QuantLib::Date& paymentDateOverride = Date(), bool useBusinessDays = true,
-        CommodityQuantityFrequency quantityFrequency = CommodityQuantityFrequency::PerCalculationPeriod,
-        QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
-        QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
-        const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData = boost::none);
+        bool excludeStartDate = true, const QuantLib::Date& paymentDateOverride = Date(),
+        bool useBusinessDays = true, CommodityQuantityFrequency quantityFrequency =
+        CommodityQuantityFrequency::PerCalculationPeriod, QuantLib::Natural hoursPerDay =
+        QuantLib::Null<QuantLib::Natural>(), QuantLib::Natural dailyExpiryOffset =
+        QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
+        const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData = boost::none,
+        const ext::shared_ptr<FxIndex>& fxIndex = nullptr);
+
 
     //! \name Inspectors
     //@{
@@ -84,6 +91,7 @@ public:
     const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData() const {
         return offPeakPowerData_;
     }
+    ext::shared_ptr<FxIndex> fxIndex() const { return fxIndex_; }
 
     /*! Return the index used to get the price for each pricing date in the period. The map keys are the pricing dates.
         For a given key date, the map value holds the commodity index used to give the price on that date. If the
@@ -142,6 +150,7 @@ private:
     bool unrealisedQuantity_;
     QuantLib::Real periodQuantity_;
     boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>> offPeakPowerData_;
+    ext::shared_ptr<FxIndex> fxIndex_;
 
     // Populated only when offPeakPowerData_ is provided.
     std::map<QuantLib::Date, QuantLib::Real> weights_;
@@ -184,6 +193,7 @@ public:
     CommodityIndexedAverageLeg& withDailyExpiryOffset(QuantLib::Natural dailyExpiryOffset);
     CommodityIndexedAverageLeg& unrealisedQuantity(bool flag = false);
     CommodityIndexedAverageLeg& withOffPeakPowerData(const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData);
+    CommodityIndexedAverageLeg& withFxIndex(const ext::shared_ptr<FxIndex>& fxIndex);
 
     operator Leg() const;
 
@@ -212,6 +222,7 @@ private:
     QuantLib::Natural dailyExpiryOffset_;
     bool unrealisedQuantity_;
     boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>> offPeakPowerData_;
+    ext::shared_ptr<FxIndex> fxIndex_;
 };
 
 } // namespace QuantExt

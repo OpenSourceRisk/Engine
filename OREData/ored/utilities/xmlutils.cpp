@@ -261,6 +261,24 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
     }
 }
 
+void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value,
+                        const vector<string>& attrNames, const vector<string>& attrs) {
+    QL_REQUIRE(attrNames.size() == attrs.size(), "The size of attrNames should be the same as the size of attrs.");
+    XMLNode* node;
+    if (value.size() == 0) {
+        node = addChild(doc, n, name);
+    } else {
+        node = doc.allocNode(name, value);
+        QL_REQUIRE(n, "XML Node is NULL (adding " << name << ")");
+        n->insert_node(0, node);
+    }
+    if (attrNames.size() != 0) {
+        for (Size i = 0; i < attrNames.size(); ++i) {
+            XMLUtils::addAttribute(doc, node, attrNames[i], attrs[i]);
+        }
+    }
+}
+
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, Real value) {
     addChild(doc, n, name, convertToString(value));
 }

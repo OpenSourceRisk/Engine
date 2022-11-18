@@ -27,7 +27,7 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ql/experimental/barrieroption/analyticdoublebarrierbinaryengine.hpp>
+#include <qle/pricingengines/analyticdoublebarrierbinaryengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 
@@ -42,13 +42,13 @@ using namespace QuantLib;
     \ingroup portfolio
  */
 class FxDoubleTouchOptionEngineBuilder
-    : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
+    : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&, const bool> {
 public:
     FxDoubleTouchOptionEngineBuilder(const string& model, const string& engine)
         : CachingEngineBuilder(model, engine, {"FxDoubleTouchOption"}) {}
 
 protected:
-    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
+    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy, const bool flipResults) override {
         return forCcy.code() + domCcy.code();
     }
 
@@ -80,11 +80,12 @@ public:
         : FxDoubleTouchOptionEngineBuilder("GarmanKohlhagen", "AnalyticDoubleBarrierBinaryEngine") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
+                                                        const bool flipResults) override {
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(forCcy, domCcy);
 
         engine_ = "AnalyticDoubleBarrierBinaryEngine";
-        return boost::make_shared<QuantExt::AnalyticDoubleBarrierBinaryEngine>(gbsp);
+        return boost::make_shared<QuantExt::AnalyticDoubleBarrierBinaryEngine>(gbsp, flipResults);
     }
 };
 

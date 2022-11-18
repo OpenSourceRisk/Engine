@@ -126,13 +126,7 @@
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Acadia Inc.}
-%\date{7 October 2016}
-%\date{28 April 2017}
-%\date{7 December 2017}
-%\date{28 May 2019}
-%\date{19 June 2020}
-%\date{30 June 2021}
-\date{26 August 2022}
+\date{\today}
 \maketitle
 
 \newpage
@@ -152,6 +146,7 @@ Date & Author & Comment \\
 19 June 2020 & Quaternion & updates for release 5\\
 30 June 2021 & Acadia & updates for release 6\\
 16 September 2022 & Acadia & updates for release 7\\
+12 December & Acadia & updates for release 8\\
 \hline
 \end{supertabular}
 \end{center}
@@ -267,7 +262,7 @@ Equity Exotic Options (see below)  & Y & Y & Y & Y \\
 \hline
 Equity Future Options & Y & Y & Y & Y \\
 \hline
-Commodity Forwards & Y & Y & N & N\\
+Commodity Forwards & Y & Y & Y & Y\\
 \hline
 Commodity European and Asian Options & Y & Y & N & N \\
 \hline
@@ -962,6 +957,9 @@ Example & Description \\
 \hline
 36 & Choice of Measure \\
 \hline
+37 & Multifactor Hull-White scenario generation \\
+\hline
+38 & Cross Currency Exposure using Multifactor Hull-White Models \\
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -1924,17 +1922,25 @@ using a minimal portfolio of four trades, one FRA and three OIS. The essential r
 four {\tt exposure\_trade\_*.csv} files.
 
 %--------------------------------------------------------
-\subsection{Commodity Forward and Option}% Example 24
+\subsection{Commodity Forward and Option, Pricing, Sensitivity, Exposure}% Example 24
 \label{example:24}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_24} demonstrates pricing and sensitivity analysis for
+Calling
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+in folder {\tt Examples/Example\_24} will launch two ORE runs. The first one determined by {\tt ore.xml} demonstrates pricing and sensitivity analysis for
 \begin{itemize}
 \item Commodity Forwards
 \item European Commodity Options
 \end{itemize}
 using a minimal portfolio of four forwards and two options referencing WTI and Gold. 
 The essential results are in {\tt npv.csv} and {\tt sensitivity.csv}.
+
+The second run determined by {\tt ore\_wti.xml} demonstrates Commodity exposure simulation for a single Commodity Forward, with the usual results, exposure reports and graphs. 
 
 %--------------------------------------------------------
 \subsection{CMS Spread with (Digital) Cap/Floor}% Example 25
@@ -2094,7 +2100,6 @@ The relevant configuration changes that trigger this modelling are in the Parame
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
   <Parameters>
-    <Discretization> ... </Discretization>
     <Grid> ... </Grid>
     <Calendar> ... </Calendar>
     <Sequence> ... </Sequence>
@@ -2275,6 +2280,138 @@ However, peak exposures are dependent on the measure choice as confirmed graphic
 \caption{Evolution of expected exposures (EPE) and peak exposures (PFE at the 95\% quantile) in three measures, LGM, Bank Account, T-Forward with T=20, with 10k Monte Carlo samples.}
 \label{fig:36}
 \end{figure}
+
+%--------------------------------------------------------------------
+\subsection{Multifactor Hull-White Scenario Generation}% Example 37
+\label{example:37}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_37} illustrates the scenario generation under a Hull-White multifactor
+model. The model is driven by two independent Brownian motions and has four states. The diffusion matrix sigma is
+therefore 2 x 4. The reversion matrix is a 4 x 4 diagonal matrix and entered as an array. Both diffusion and reversion
+are constant in time. Their values are not calibrated to the option market, but hardcoded in simulation.xml.
+
+The values for the diffusion and reversion matrices were fitted to the first two principal components of a
+(hypothetical) analyis of absolute rate curve movements. These input principal components can be found in
+inputeigenvectors.csv in the input folder. The tenor is given in years, and the two components are given as column
+vectors, see table \ref{tab:ex37_1}.
+
+\begin{table}[hbt]
+\begin{center}
+\begin{tabular}{r|r|r}
+tenor & eigenvector 1  & eigenvector 2   \\
+\hline      
+1     & 0.353553390593 & -0.537955502871 \\
+2     & 0.353553390593 & -0.374924478795 \\
+3     & 0.353553390593 & -0.252916811525 \\
+5     & 0.353553390593 & -0.087587539893 \\
+10    & 0.353553390593 & 0.12267800393   \\
+15    & 0.353553390593 & 0.240659435416  \\
+20    & 0.353553390593 & 0.339148675322  \\
+30    & 0.353553390593 & 0.552478951238
+\end{tabular}
+\caption{Input principal components}
+\label{tab:ex37_1}
+\end{center}
+\end{table}
+
+The first eigenvector represent perfectly parallel movements. The second eigenvector represent a rotation around the 7y
+point of the curve. Furthermore we prescribe an annual volatility of 0.0070 for the first components and 0.0030 for the
+second one. The values can be compared to normal (bp) volatilities.
+
+We follow \cite{Andersen_Piterbarg_2010} chapter 12.1.5 ``Multi-Factor Statistical Gaussian Model'' to calibrate the
+diffusion and reversion matrices to the prescribed components and volatilities. We do not detail the procedure here and
+refer the interested reader to the given reference.
+
+The example generates a single monte carlo path with 5000 daily steps and outputs the generated scenarios in
+scenariodump.csv. The python script pca.py performs a principal component analysis on this output. The model implied
+eigenvalues are given in table \ref{tab:ex37_2}.
+
+\begin{table}[hbt]
+\begin{center}
+\begin{tabular}{r|r}
+number & value                  \\
+\hline      
+1      & 4.9144936649319346e-05 \\
+2      & 8.846877641067412e-06  \\
+3      & 5.82566039467854e-10   \\
+4      & 2.1298948225571415e-10 \\
+5      & 9.254913949332787e-11  \\
+6      & 1.0861256211767673e-11 \\
+7      & 8.478795662698618e-14  \\
+8      & 9.74468069377584e-13   \\
+\end{tabular}
+\caption{Input principal components}
+\label{tab:ex37_2}
+\end{center}
+\end{table}
+
+Only the first two values are relevant, the following are all close to zero. The square root of the first two
+eigenvalues is given in table \ref{tab:ex37_3}.
+
+\begin{table}[hbt]
+\begin{center}
+\begin{tabular}{r|r}
+number & sqrt(value)                \\
+\hline      
+1      & 0.007010344973631422       \\
+2      & 0.0029743701250966414      \\
+\end{tabular}
+\caption{Input principal components}
+\label{tab:ex37_3}
+\end{center}
+\end{table}
+
+matching the prescribed input values of 0.0070 and 0.0030 quite well. The correpsonding eigenvectors are given in etable
+\ref{tab:ex37_4}.
+
+\begin{table}[hbt]
+\begin{center}
+\begin{tabular}{r|r|r}
+tenor & eigenvector 1       & eigenvector 2       \\
+\hline      
+1     & 0.34688826736335926 & 0.5441204725042812  \\
+2     & 0.3489303472083185  & 0.380259707350115   \\
+3     & 0.350362134519783   & 0.2581408080614405  \\
+5     & 0.3523983915961889  & 0.09230899007104967 \\
+10    & 0.3550169593982022  & -0.11856777284904292\\
+15    & 0.35647835947136625 & -0.23676104168229614\\
+20    & 0.3577146190751303  & -0.3354486339442275 \\
+30    & 0.36042236352102563 & -0.549124709243042  \\
+\end{tabular}
+\caption{Input principal components}
+\label{tab:ex37_4}
+\end{center}
+\end{table}
+
+again matching the input principal components quite well. The second eigenvector is the negative of the input vector
+here (the principal compoennt analysis can not distinguish these of course).
+
+The example also produces a plot comparing the input eigenvectors and the model implied eigenvectors as shown in figure \ref{fig:ex37}.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.50]{mpl_eigenvectors_ex37.pdf}
+\end{center}
+\caption{Input and model implied eigenvectors for a Hull-White 4-factor model calibrated to 2 principal components of
+  rate curve movements (parallel + rotation). Notice that the model implied 2nd eigenvector is the negative of the input
+  vector.}
+\label{fig:ex37}
+\end{figure}
+
+%--------------------------------------------------------------------
+\subsection{Cross Currency Swap Exposure using Multifactor Hull-White Models}% Example 38
+\label{example:38}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_38} is similar to Example 8 (EPE, ENE for xccy swap), but uses a
+multifactor HW model for EUR and USD to generate scenarios. The parametrization of the HW models is taken from Example
+37.
+
+Each of the two factors of each HW model is correlated with each of the two factors of the other currency's HW model and
+with the FX factors. Remember that the factors represent principal components of interest rate movements and so the
+correlations can be interpreted as correlations of these principal components with each other and the fx rate processes.
+
 
 \clearpage
 %========================================================
@@ -3657,7 +3794,6 @@ Let us discuss this section using the following example
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Parameters>
-  <Discretization>Exact</Discretization>
   <Grid>80,3M</Grid>
   <Calendar>EUR,USD,GBP,CHF</Calendar>
   <DayCounter>ACT/ACT</DayCounter>
@@ -3676,10 +3812,6 @@ Let us discuss this section using the following example
 \end{listing}
 
 \begin{itemize}
-\item {\tt Discretization:} Chooses between time discretization schemes for the risk factor evolution. {\em Exact} means
-exploiting the analytical tractability of the model to avoid any time discretization error. {\em Euler} uses a naive time
-discretization scheme which has numerical error and requires small time steps for accurate results (useful for testing
-purposes)
 \item {\tt Grid:} Specifies the simulation time grid, here 80 quarterly steps.\footnote{For exposure calculation under DIM, the second parameter has to match the Margin Period of Risk, i.e. if {\tt MarginPeriodOfRisk} is set to for instance {\tt 2W} in a netting set definition in {\tt netting.xml}, then one has to set {\tt Grid} to for instance {\tt 80,2W}.}
 \item {\tt Calendar:} Calendar or combination of calendars used to adjust the dates of the grid. Date adjustment is
 required because the simulation must step over 'good' dates on which index fixings can be stored.
@@ -3711,6 +3843,8 @@ component's calibration. It is currently made of
 \item $n_c-1$ FX models for each exchange rate to the base currency, 
 \item $n_e$ equity models,
 \item $n_i$ inflation models, 
+\item $n_{cr}$ credit models, 
+\item $n_{com}$ commodity models, 
 \item a specification of the correlation structure between all components.
 \end{itemize}
 
@@ -3732,8 +3866,21 @@ exceptions, but add to the run time of ORE.
     <Currency>CHF</Currency>
     <Currency>JPY</Currency>
   </Currencies>
+  <Equities>
+	<!-- ... -->
+  </Equities>
+  <InflationIndices>
+	<!-- ... -->
+  </InflationIndices>
+  <CreditNames>
+	<!-- ... -->
+  </CreditNames>
+  <Commodities>
+	<!-- ... -->
+  </Commodities>
   <BootstrapTolerance>0.0001</BootstrapTolerance>
   <Measure>LGM</Measure><!-- Choices: LGM, BA -->
+  <Discretization>Exact</Discretization>
   <!-- ... -->
 </CrossAssetModel>
 \end{minted}
@@ -3744,7 +3891,12 @@ exceptions, but add to the run time of ORE.
 Bootstrap tolerance is a global parameter that applies to the calibration of all model components. If the calibration
 error of any component exceeds this tolerance, this will trigger an exception at runtime, early in the ORE process.
 
-The Measure tag allows switching between the LGM and the Bank Account (BA) measure for the risk-neutral market simulations using the Cross Asset Model. Note that within LGM one can shift the horizon (see ParameterTransformation below) to effectively switch to a T-Forward measure. 
+The Measure tag allows switching between the LGM and the Bank Account (BA) measure for the risk-neutral market simulations using the Cross Asset Model. Note that within LGM one can shift the horizon (see ParameterTransformation below) to effectively switch to a T-Forward measure.
+
+The Discretization tag chooses between time discretization schemes for the risk factor evolution. {\em Exact} means
+exploiting the analytical tractability of the model to avoid any time discretization error. {\em Euler} uses a naive
+time discretization scheme which has numerical error and requires small time steps for accurate results (useful for
+testing purposes or if more sophisticated component models are used.)
  
 \medskip
 
@@ -4127,6 +4279,62 @@ be a maturity period e.g.\ \lstinline!5Y!. The \lstinline!Strike! should be an a
 \label{lst:yoy_cf_calibration_inst}
 \end{listing}
 
+% credit models: todo
+
+% commodity models
+
+For commodity simulation we currently provide one model choice, as described in the methodology appendix. 
+Commodity model components are specified by commodity name, by a block as follows
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>	
+  <!-- ... -->
+  <CommodityModels>
+    <CommoditySchwartz name="default">
+      <Currency>EUR</Currency>
+      <CalibrationType>None</CalibrationType>
+      <Sigma>
+        <Calibrate>Y</Calibrate>
+        <InitialValue>0.1</InitialValue>
+      </Sigma>
+      <Kappa>
+        <Calibrate>Y</Calibrate>
+        <InitialValue>0.1</InitialValue>
+      </Kappa>
+      <CalibrationOptions/>
+    </CommoditySchwartz>
+    <CommoditySchwartz name="WTI">
+      <!-- ... -->
+    </CommoditySchwartz>
+    <CommoditySchwartz name="NG">
+      <!-- ... -->
+    </CommoditySchwartz>
+      <!-- ... -->
+  </CommodityModels>
+  <!-- ... -->
+<CrossAssetModel>	
+\end{minted}
+\caption{Simulation model commodity configuration}
+\label{lst:simulation_model_com_configuration}
+\end{listing}
+
+CommoditySchwartz sections are defined by commodity name, but we also support a default configuration as above for the IR and 
+FX model parameterisations.  Each component is parameterised in terms of two constant, non time-dependent parameters $\sigma$ and $\kappa$ so far (see appendix).
+Within each CommoditySchwartz section, the interpretation of elements is as follows:
+
+\begin{itemize}
+	\item {\tt Currency: } Currency of denomination
+	\item {\tt CalibrationType: } Choose between {\em Bootstrap}, {\em BestFit} and {\em None}.   
+	\item {\tt Sigma/Calibrate: } Flag to enable/disable calibration of this particular parameter
+	\item {\tt Sigma/InitialValue: } Initial value of the constant parameter
+	\item {\tt Kappa/Calibrate: } Flag to enable/disable calibration of this particular parameter
+	\item {\tt Kappa/InitialValue: } Initial value of the constant parameter
+	\item {\tt CalibrationOptions: } Choice of calibration instruments by expiry and strike, strikes can be empty 	(implying the default, ATMF options), or explicitly specified (in terms of commodity prices as absolute strike values). 
+\end{itemize}
+
+Note that calibration to Commodity options is not implemented yet, the simulation is based on the initial parameter values provided.
+
 \medskip
 Finally, the instantaneous correlation structure is specified as follows.
 
@@ -4154,7 +4362,7 @@ Finally, the instantaneous correlation structure is specified as follows.
 \label{lst:simulation_model_correlation_configuration}
 \end{listing}
 
-Any risk factor pair not specified explicitly here will be assumed to have zero correlation.
+Any risk factor pair not specified explicitly here will be assumed to have zero correlation. Note that the commodity components can have non-zero correlations among each other, but correlations to all other CAM components must remain set to zero for the time being.
 
 \subsubsection{Market}\label{sec:sim_market}
 
@@ -5737,7 +5945,7 @@ This node should hold a real number. It provides an upper bound for the search d
 
 
 %========================================================
-%\section{Trade Data}\label{sec:portfolio_data}
+\section{Trade Data}\label{sec:portfolio_data}
 %========================================================
 \input{tradedata/intro}
 \input{tradedata/envelope}
@@ -5761,6 +5969,7 @@ This node should hold a real number. It provides an upper bound for the search d
 \input{tradedata/fx_europeanbarrieroption}
 \input{tradedata/fx_kikobarrieroption}
 \input{tradedata/fx_touchoption}
+\input{tradedata/fxvarianceswap}
 \input{tradedata/equityoption}
 \input{tradedata/equityfuturesoption}
 \input{tradedata/equityforward}
@@ -5772,13 +5981,20 @@ This node should hold a real number. It provides an upper bound for the search d
 \input{tradedata/eq_doubletouchoption}
 \input{tradedata/eq_europeanbarrieroption}
 \input{tradedata/eq_touchoption}
+\input{tradedata/equityvarianceswap}
+\input{tradedata/equitycliquetoption}
 \input{tradedata/cpiswap}
 \input{tradedata/yyswap}
 \input{tradedata/bond}
 \input{tradedata/forwardbond}
 \input{tradedata/creditdefaultswap}
-\input{tradedata/commodityoption}
 \input{tradedata/commodityforward}
+\input{tradedata/commodityswap}
+\input{tradedata/commodityswaption}
+\input{tradedata/commodityoption}
+\input{tradedata/commodityapo}
+\input{tradedata/commodityoptionstrip}
+\input{tradedata/commodityvarianceswap}
 
 %\include{tradecomponents}
 \input{tradecomponents/tradecomponentsintro}
@@ -5801,6 +6017,9 @@ This node should hold a real number. It provides an upper bound for the search d
 \input{tradecomponents/cpileg}
 \input{tradecomponents/yyleg}
 \input{tradecomponents/zerocouponleg}
+\input{tradecomponents/commodityfixedleg}
+\input{tradecomponents/commodityfloatingleg}
+\input{tradecomponents/equitymarginleg}
 \input{tradecomponents/cdsreferenceinformation}
 \input{tradecomponents/underlying}
 \input{tradecomponents/strikedata}
@@ -5841,7 +6060,7 @@ ORE applies the cross asset model described in detail in \cite{Lichters} to evol
 evolution model in ORE supports IR and FX risk factors for any number of currencies, Equity and Inflation as well as Credit. Extensions to full simulation of Commodity is planned. \\
 
 The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates, lognormal FX and equity 
-processes, Dodgson-Kainth model for inflation, LGM or Extended Cox-Ingersoll-Ross model (CIR++) for credit.
+processes, Dodgson-Kainth model for inflation, LGM or Extended Cox-Ingersoll-Ross model (CIR++) for credit, and a single-factor log-normal model for commodity curves.
 We identify a single {\em domestic} currency; its LGM process,
 which is labelled $z_0$; and a set of $n$ foreign currencies with associated LGM processes that are labelled $z_i$, 
 $i=1,\dots,n$. 
@@ -5933,6 +6152,38 @@ and
   & & -\rho^{zI}_{i,k} \int_t^T (H_i(T)-H_i(s))\alpha_i(s)(H_{I,k}(T)-H_{I,k}(s))\alpha_{I,k}(s) ds \\
   & & +\rho^{xI}_{i,k} \int_t^T \sigma_i(s)(H_{I,k}(T)-H_{I,k}(s))\alpha_{I,k}(s) ds
 \end{eqnarray*}
+
+\subsubsection*{Commodity}
+
+Each commodity component models the commodity price curve as 
+\begin{eqnarray}
+\frac{dF(t,T)}{F(t,T)} &=& \sigma\,e^{-\kappa\,(T-t)}\, dW(t)  \label{gabillon1f}
+\end{eqnarray}
+which is a single-factor version of the Gabillon (1991) model that is e.g. described in \cite{Lichters}. It can also be seen as the Schwartz (1997) model formulated in terms of forward curve dynamics. The extension to the full Gabillon model with two factors and time-dependent multiplier
+\begin{eqnarray}
+\frac{dF(t,T)}{F(t,T)} &=& \alpha(t)\,
+\left( \sigma_S \,e^{-\kappa\,(T-t)}\, dW_S(t) + \sigma_L\,\left(1-e^{-\kappa\,(T-t)}\right)\,dW_L(t)\right) \label{gabillon2f}
+\end{eqnarray}
+for richer dynamics of the curve and accurate calibration to options will follow. 
+
+The commodity components' Wiener processes can be correlated. However, the integration of commodity components into the overall CAM assumes zero correlations between commodities and non-commodity drivers for the time being.
+
+To propagate the one-factor model, we can use an artificial (Ornstein-Uhlenbeck) spot price process
+\begin{align*}
+dX(t) &= -\kappa\,X(t)\,dt + \sigma(t)\,dW(t), \qquad X(0)=0\\
+X(t) &= X(s)\,e^{-\kappa(t-s)}+ \int_s^t \sigma\,e^{-\kappa(t-u)}\, dW(u)
+\end{align*}
+with 
+\begin{align*}
+F(t,T) &= F(0,T) \:\exp\left( X(t)\,e^{-\kappa\,(T-t)} - \frac{1}{2}\,(V(0,T)-V(t,T))  \right) \\
+V(t,T) &= e^{-2\kappa T}\int_t^T\sigma^2\:e^{2\kappa u}\,du.
+\end{align*}
+
+Alternatively, one can use the drift-free state variable $Y(t)=e^{\kappa t} X(t)$ with
+\begin{align*}
+dY(t) &= \sigma \: e^{\kappa \, t} \, dW(t).
+\end{align*}
+Both choices of state dynamics are possible in ORE. 
 
 \subsection{Analytical Moments of the Risk Factor Evolution Model}\label{sec:app_analytical_moments}
 
@@ -6916,6 +7167,8 @@ implementation of the inverse cumulative normal distribution to transform $U[0,1
 
   % \bibitem{OO} http://www.openoffice.org
 
+\bibitem{Andersen_Piterbarg_2010} Andersen, L., and Piterbarg, V. (2010): Interest Rate Modeling, Volume I-III
+  
 \bibitem{LichtersEtAl} Peter Caspers, Paul Giltinan, Paul; Lichters, Roland; Nowaczyk , Nikolai. {\em Forecasting Initial Margin Requirements – A Model Evaluation}, Journal of Risk Management in Financial Institutions, Vol. 10 (2017), No. 4, \url{https://ssrn.com/abstract=2911167}
 
 \bibitem{corrSalv} R. Rebonato and P. Jaeckel, The most general methodology to create a valid correlation matrix for

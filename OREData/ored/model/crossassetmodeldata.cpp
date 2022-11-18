@@ -19,6 +19,8 @@
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/model/inflation/infdkdata.hpp>
 #include <ored/model/inflation/infjydata.hpp>
+#include <ored/model/irhwmodeldata.hpp>
+#include <ored/model/irlgmdata.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -135,12 +137,25 @@ bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
         infindices_ != rhs.infindices_ || bootstrapTolerance_ != rhs.bootstrapTolerance_ ||
         irConfigs_.size() != rhs.irConfigs_.size() || fxConfigs_.size() != rhs.fxConfigs_.size() ||
         eqConfigs_.size() != rhs.eqConfigs_.size() || infConfigs_.size() != rhs.infConfigs_.size() ||
-        crLgmConfigs_.size() != rhs.crLgmConfigs_.size() || crCirConfigs_.size() != rhs.crCirConfigs_.size()) {
+        crLgmConfigs_.size() != rhs.crLgmConfigs_.size() || crCirConfigs_.size() != rhs.crCirConfigs_.size() ||
+        comConfigs_.size() != rhs.comConfigs_.size()) {
         return false;
     }
 
     for (Size i = 0; i < irConfigs_.size(); i++) {
-        if (*irConfigs_[i] != *(rhs.irConfigs_[i])) {
+        auto c1 = boost::dynamic_pointer_cast<LgmData>(irConfigs_[i]);
+        auto c2 = boost::dynamic_pointer_cast<LgmData>(irConfigs_[i]);
+        auto c3 = boost::dynamic_pointer_cast<HwModelData>(irConfigs_[i]);
+        auto c4 = boost::dynamic_pointer_cast<HwModelData>(irConfigs_[i]);
+        if (c1 != nullptr && c2 != nullptr) {
+            if (*c1 != *c2) {
+                return false;
+            }
+        } else if (c3 != nullptr && c4 != nullptr) {
+            if (*c3 != *c4) {
+                return false;
+            }
+        } else {
             return false;
         }
     }
@@ -172,6 +187,12 @@ bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
         }
     }
 
+    for (Size i = 0; i < comConfigs_.size(); i++) {
+        if (*comConfigs_[i] != *(rhs.comConfigs_[i])) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -186,23 +207,39 @@ void CrossAssetModelData::clear() {
     infConfigs_.clear();
     crLgmConfigs_.clear();
     crCirConfigs_.clear();
+    comConfigs_.clear();
     correlations_->clear();
 }
 
 void CrossAssetModelData::validate() {
     QL_REQUIRE(irConfigs_.size() > 0, "no IR data provided");
+    bool useHwModel = false;
+    // All IR configs need to be either HullWhite or LGM
+    if (auto hwModelData = boost::dynamic_pointer_cast<HwModelData>(irConfigs_.front())) {
+        useHwModel = true;
+    }
+    for (const auto& modelData : irConfigs_) {
+        if (useHwModel) {
+            QL_REQUIRE(boost::dynamic_pointer_cast<HwModelData>(modelData),
+                       "expect all ir models to be of hull white models");
+        } else {
+            QL_REQUIRE(boost::dynamic_pointer_cast<IrLgmData>(modelData), "expect all ir models to be lgm models"); 
+        }
+    }
+
     QL_REQUIRE(fxConfigs_.size() == irConfigs_.size() - 1, "inconsistent number of FX data provided");
     for (Size i = 0; i < fxConfigs_.size(); ++i)
         QL_REQUIRE(fxConfigs_[i]->foreignCcy() == irConfigs_[i + 1]->ccy(),
                    "currency mismatch between IR and FX config vectors");
 
-    if (measure_ == "BA") {
+    if (measure_ == "BA" && !useHwModel) {
         // ensure that the domestic LGM has shift = 0 and scaling = 1
         for (Size i = 0; i < irConfigs_.size(); ++i)
             if (irConfigs_[i]->ccy() == domesticCurrency_) {
-                QL_REQUIRE(close_enough(irConfigs_[i]->scaling(), 1.0),
+                auto irConfig = boost::dynamic_pointer_cast<IrLgmData>(irConfigs_[i]);
+                QL_REQUIRE(close_enough(irConfig->scaling(), 1.0),
                            "scaling for the domestic LGM must be 1 for BA measure simulations");
-                QL_REQUIRE(close_enough(irConfigs_[i]->shiftHorizon(), 0.0),
+                QL_REQUIRE(close_enough(irConfig->shiftHorizon(), 0.0),
                            "shift horizon for the domestic LGM must be 0 for BA measure simulations");
             }
     }
@@ -227,6 +264,26 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
         QL_REQUIRE(modelNode, "Simulation / CrossAssetModel not found, can not read cross asset model data");
     }
 
+    std::string discString = XMLUtils::getChildValue(modelNode, "Discretization", false);
+
+    // check deprecated way of providing Discretization under Simulation/Parameters
+    if (discString.empty()) {
+        if (XMLNode* node = XMLUtils::getChildNode(root, "Parameters")) {
+            discString = XMLUtils::getChildValue(node, "Discretization", false);
+            WLOG("Simulation/Parameters/Discretization is deprecated, use Simulation/CrossAssetModel/Discretization "
+                 "instead.");
+        }
+    }
+
+    // default discString to Exact if not found
+    if(discString.empty()) {
+        discString = "Exact";
+        WLOG("CrossAssetModelData: Discretization is not given. Expected this in Simulation/CrossAssetModel or in "
+             "Simulation/Parameters/Discretization (deprecated). Fall back to Exact.");
+    }
+
+    discretization_ = parseDiscretization(discString);
+
     domesticCurrency_ = XMLUtils::getChildValue(modelNode, "DomesticCcy", true); // mandatory
     LOG("CrossAssetModelData: domesticCcy " << domesticCurrency_);
 
@@ -250,6 +307,11 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
         LOG("CrossAssetModelData credit name " << cr);
     }
 
+    commodities_ = XMLUtils::getChildrenValues(modelNode, "Commodities", "Commodity");
+    for (auto com : commodities_) {
+        LOG("CrossAssetModelData commodity " << com);
+    }
+
     bootstrapTolerance_ = XMLUtils::getChildValueAsDouble(modelNode, "BootstrapTolerance", true);
     LOG("CrossAssetModelData: bootstrap tolerance = " << bootstrapTolerance_);
 
@@ -258,9 +320,15 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
 
     // Configure IR model components
 
-    std::map<std::string, boost::shared_ptr<IrLgmData>> irDataMap;
+    std::map<std::string, boost::shared_ptr<IrModelData>> irDataMap;
     XMLNode* irNode = XMLUtils::getChildNode(modelNode, "InterestRateModels");
     if (irNode) {
+        
+        bool hasLgmAndHwModels = XMLUtils::getChildNode(irNode, "LGM") && XMLUtils::getChildNode(irNode, "HWModel");
+
+        QL_REQUIRE(!hasLgmAndHwModels, "CrossAssetModelData: Found configuration for HullWhiteModel and LGM model, use "
+                                       "only one. Please check your simulation.xml");
+
         for (XMLNode* child = XMLUtils::getChildNode(irNode, "LGM"); child;
              child = XMLUtils::getNextSibling(child, "LGM")) {
 
@@ -277,6 +345,25 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
             LOG("CrossAssetModelData: IR config built for key " << config->qualifier());
 
         } // end of  for (XMLNode* child = XMLUtils::getChildNode(irNode, "LGM"); child;
+
+        
+        for (XMLNode* child = XMLUtils::getChildNode(irNode, "HWModel"); child;
+             child = XMLUtils::getNextSibling(child, "HWModel")) {
+
+            boost::shared_ptr<HwModelData> config(new HwModelData());
+            config->fromXML(child);
+
+            for (Size i = 0; i < config->optionExpiries().size(); i++) {
+                LOG("LGM calibration swaption " << config->optionExpiries()[i] << " x " << config->optionTerms()[i]
+                                                << " " << config->optionStrikes()[i]);
+            }
+
+            irDataMap[config->qualifier()] = config;
+
+            LOG("CrossAssetModelData: HullWhite IR config built for key " << config->qualifier());
+
+        } // end of  for (XMLNode* child = XMLUtils::getChildNode(irNode, "LGM"); child;
+
     }     // end of if (irNode)
     else {
         LOG("No IR model section found");
@@ -285,8 +372,7 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     buildIrConfigs(irDataMap);
 
     for (Size i = 0; i < irConfigs_.size(); i++)
-        LOG("CrossAssetModelData: IR config currency " << i << " = " << irConfigs_[i]->ccy() << " for qualifier "
-                                                       << irConfigs_[i]->qualifier());
+        LOG("CrossAssetModelData: IR config currency " << i << " = " << irConfigs_[i]->ccy());
 
     // Configure FX model components
 
@@ -434,6 +520,35 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     for (Size i = 0; i < crCirConfigs_.size(); i++)
         LOG("CrossAssetModelData: CR CIR config name " << i << " = " << crCirConfigs_[i]->name());
 
+    // Configure COM model components
+
+    std::map<std::string, boost::shared_ptr<CommoditySchwartzData>> comDataMap;
+    XMLNode* comNode = XMLUtils::getChildNode(modelNode, "CommodityModels");
+    if (comNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(comNode, "CommoditySchwartz"); child;
+             child = XMLUtils::getNextSibling(child, "CommoditySchwartz")) {
+
+            boost::shared_ptr<CommoditySchwartzData> config(new CommoditySchwartzData());
+            config->fromXML(child);
+
+            for (Size i = 0; i < config->optionExpiries().size(); i++) {
+                LOG("Cross-Asset Commodity calibration option " << config->optionExpiries()[i] << " "
+                    << config->optionStrikes()[i]);
+            }
+
+            comDataMap[config->name()] = config;
+
+            LOG("CrossAssetModelData: Commodity config built with key " << config->name());
+        }
+    } else {
+        LOG("No Commodity Models section found");
+    }
+
+    buildComConfigs(comDataMap);
+
+    for (Size i = 0; i < comConfigs_.size(); i++)
+        LOG("CrossAssetModelData: COM config name " << i << " = " << comConfigs_[i]->name());
+    
     // Configure correlation structure
     LOG("CrossAssetModelData: adding correlations.");
     correlations_ = boost::make_shared<InstantaneousCorrelations>();
@@ -444,7 +559,7 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     LOG("CrossAssetModelData loading from XML done");
 }
 
-void CrossAssetModelData::buildIrConfigs(std::map<std::string, boost::shared_ptr<IrLgmData>>& irDataMap) {
+void CrossAssetModelData::buildIrConfigs(std::map<std::string, boost::shared_ptr<IrModelData>>& irDataMap) {
     // Append IR configurations into the irConfigs vector in the order of the currencies
     // in the currencies vector.
     // If there is an IR configuration for any of the currencies missing, then we will
@@ -453,13 +568,13 @@ void CrossAssetModelData::buildIrConfigs(std::map<std::string, boost::shared_ptr
     irConfigs_.resize(currencies_.size());
     for (Size i = 0; i < currencies_.size(); i++) {
         string ccy = currencies_[i];
-	std::string ccyKey;
-	for(auto const& d: irDataMap) {
-	    if(d.second->ccy() == ccy) {
+        std::string ccyKey;
+        for (auto const& d : irDataMap) {
+            if (d.second->ccy() == ccy) {
                 QL_REQUIRE(ccyKey.empty(), "CrossAssetModelData: duplicate ir config for ccy " << ccy);
                 ccyKey = d.first;
             }
-	}
+        }
         if (!ccyKey.empty())
             irConfigs_[i] = irDataMap.at(ccyKey);
         else { // copy from default
@@ -468,13 +583,24 @@ void CrossAssetModelData::buildIrConfigs(std::map<std::string, boost::shared_ptr
                 ALOG("Both default IR and " << ccy << " IR configuration missing");
                 QL_FAIL("Both default IR and " << ccy << " IR configuration missing");
             }
-            boost::shared_ptr<IrLgmData> def = irDataMap["default"];
-            irConfigs_[i] = boost::make_shared<IrLgmData>(
-                ccy, // overwrite this and keep the others
-                def->calibrationType(), def->reversionType(), def->volatilityType(), def->calibrateH(),
-                def->hParamType(), def->hTimes(), def->hValues(), def->calibrateA(), def->aParamType(), def->aTimes(),
-                def->aValues(), def->shiftHorizon(), def->scaling(), def->optionExpiries(), def->optionTerms(),
-                def->optionStrikes());
+            if (auto def = boost::dynamic_pointer_cast<HwModelData>(irDataMap["default"])) {
+                irConfigs_[i] = boost::make_shared<HwModelData>(
+                    ccy, // overwrite this and keep the others
+                    def->calibrationType(), def->calibrateKappa(),
+                    def->kappaType(), def->kappaTimes(), def->kappaValues(), def->calibrateSigma(), def->sigmaType(),
+                    def->sigmaTimes(), def->sigmaValues(), def->optionExpiries(),
+                    def->optionTerms(), def->optionStrikes());
+                
+            } else if (auto def = boost::dynamic_pointer_cast<IrLgmData>(irDataMap["default"])) {
+                irConfigs_[i] = boost::make_shared<IrLgmData>(
+                    ccy, // overwrite this and keep the others
+                    def->calibrationType(), def->reversionType(), def->volatilityType(), def->calibrateH(),
+                    def->hParamType(), def->hTimes(), def->hValues(), def->calibrateA(), def->aParamType(),
+                    def->aTimes(), def->aValues(), def->shiftHorizon(), def->scaling(), def->optionExpiries(),
+                    def->optionTerms(), def->optionStrikes());
+            } else {
+                QL_FAIL("Unexpected model data type,expect either HwModelData or IrLgmData");
+            } 
         }
         LOG("CrossAssetModelData: IR config added for ccy " << ccy << " " << irConfigs_[i]->ccy());
     }
@@ -608,6 +734,33 @@ void CrossAssetModelData::buildCrConfigs(std::map<std::string, boost::shared_ptr
     }
 }
 
+void CrossAssetModelData::buildComConfigs(std::map<std::string, boost::shared_ptr<CommoditySchwartzData>>& comDataMap) {
+    // Append Commodity configurations into the comConfigs vector in the order of the commodity
+    // names in the commodities vector.
+    // If there is a COM configuration for any of the names missing,
+    // then we will look up the configuration with key "default" and use this instead.
+    // If this is not provided either we will throw an exception.
+    for (Size i = 0; i < commodities_.size(); i++) {
+        string name = commodities_[i];
+        if (comDataMap.find(name) != comDataMap.end())
+            comConfigs_.push_back(comDataMap[name]);
+        else { // copy from default
+            LOG("Commodity configuration missing for name " << name << ", using default");
+            if (comDataMap.find("default") == comDataMap.end()) {
+                ALOG("Both default COM and " << name << " COM configuration missing");
+                QL_FAIL("Both default COM and " << name << " COM configuration missing");
+            }
+            boost::shared_ptr<CommoditySchwartzData> def = comDataMap["default"];
+            boost::shared_ptr<CommoditySchwartzData> comData = boost::make_shared<CommoditySchwartzData>(
+                name, def->currency(), def->calibrationType(), def->calibrateSigma(), def->sigmaValue(),
+                def->calibrateKappa(), def->kappaValue(), def->optionExpiries(), def->optionStrikes());
+
+            comConfigs_.push_back(comData);
+        }
+        LOG("CrossAssetModelData: COM config added for name " << name);
+    }
+}
+    
 XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
 
     XMLNode* crossAssetModelNode = doc.allocNode("CrossAssetModel");
@@ -617,8 +770,11 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, crossAssetModelNode, "Equities", "Equity", equities_);
     XMLUtils::addChildren(doc, crossAssetModelNode, "InflationIndices", "InflationIndex", infindices_);
     XMLUtils::addChildren(doc, crossAssetModelNode, "CreditNames", "CreditName", creditNames_);
+    XMLUtils::addChildren(doc, crossAssetModelNode, "Commodities", "Commodity", commodities_);
     XMLUtils::addChild(doc, crossAssetModelNode, "BootstrapTolerance", bootstrapTolerance_);
     XMLUtils::addChild(doc, crossAssetModelNode, "Measure", measure_);
+    XMLUtils::addChild(doc, crossAssetModelNode, "Discretization",
+                       discretization_ == CrossAssetModel::Discretization::Exact ? "Exact" : "Euler");
 
     XMLNode* interestRateModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "InterestRateModels");
     for (Size irConfigs_Iterator = 0; irConfigs_Iterator < irConfigs_.size(); irConfigs_Iterator++) {
@@ -654,10 +810,30 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(crModelsNode, crossAssetCrCirNode);
     }
 
+    XMLNode* comModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "CommodityModels");
+    for (Size comConfigs_Iterator = 0; comConfigs_Iterator < comConfigs_.size(); comConfigs_Iterator++) {
+        XMLNode* crossAssetComNode = comConfigs_[comConfigs_Iterator]->toXML(doc);
+        XMLUtils::appendNode(comModelsNode, crossAssetComNode);
+    }
+
     XMLNode* instantaneousCorrelationsNode = correlations_->toXML(doc);
     XMLUtils::appendNode(crossAssetModelNode, instantaneousCorrelationsNode);
 
     return crossAssetModelNode;
 }
+
+QuantExt::CrossAssetModel::Discretization parseDiscretization(const string& s) {
+    static std::map<string, QuantExt::CrossAssetModel::Discretization> m = {
+        {"Exact", QuantExt::CrossAssetModel::Discretization::Exact},
+        {"Euler", QuantExt::CrossAssetModel::Discretization::Euler}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Cannot convert \"" << s << "\" to QuantExt::CrossAssetStateProcess::discretization");
+    }
+}
+
 } // namespace data
 } // namespace ore
