@@ -222,6 +222,7 @@ void CrossAssetModelBuilder::buildModel() const {
     std::vector<std::string> currencies, regions, crNames, eqNames, infIndices, comNames;
     std::vector<boost::shared_ptr<LgmBuilder>> lgmBuilder;
     std::vector<boost::shared_ptr<HwBuilder>> hwBuilder;
+    std::vector<boost::shared_ptr<CommoditySchwartzModelBuilder>> csBuilder;
 
     for (Size i = 0; i < config_->irConfigs().size(); i++) {
         auto irConfig = config_->irConfigs()[i];
@@ -396,6 +397,7 @@ void CrossAssetModelBuilder::buildModel() const {
                    "Currency (" << comCcy << ") for commodity " << comName << " not covered by CrossAssetModelData");
         boost::shared_ptr<CommoditySchwartzModelBuilder> builder = boost::make_shared<CommoditySchwartzModelBuilder>(
             market_, com, domesticCcy, configurationComCalibration_, referenceCalibrationGrid_);
+        csBuilder.push_back(builder);
         boost::shared_ptr<QuantExt::CommoditySchwartzParametrization> parametrization = builder->parametrization();
         comOptionBaskets_[i] = builder->optionBasket();
         comParametrizations.push_back(parametrization);
@@ -590,17 +592,17 @@ void CrossAssetModelBuilder::buildModel() const {
      * Calibrate COM components
      */
 
-    for (Size i = 0; i < comParametrizations.size(); i++) {
-        boost::shared_ptr<CommoditySchwartzData> com = config_->comConfigs()[i];
-        if (!com->calibrateSigma() && !com->calibrateKappa()) {
-            DLOG("COM Calibration " << i << " skipped");
-            continue;
-        }
+    for (Size i = 0; i < csBuilder.size(); i++) {
         DLOG("COM Calibration " << i);
-        // TODO
-        QL_FAIL("COM calibration not imlemented yet");
+        comOptionCalibrationErrors_[i] = csBuilder[i]->error();
+        // boost::shared_ptr<CommoditySchwartzData> com = config_->comConfigs()[i];
+        // if (!com->calibrateSigma() && !com->calibrateKappa()) {
+        //     DLOG("COM Calibration " << i << " skipped");
+        //     continue;
+        // }
     }
     
+
     /*************************
      * Relink LGM discount curves to curves used for INF calibration
      */
