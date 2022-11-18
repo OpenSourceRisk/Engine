@@ -15,10 +15,11 @@ CommodityAveragePriceOption::CommodityAveragePriceOption(const boost::shared_ptr
                                                          QuantLib::Settlement::Type delivery,
                                                          QuantLib::Settlement::Method settlementMethod,
                                                          const Real barrierLevel, Barrier::Type barrierType,
-                                                         Exercise::Type barrierStyle)
+                                                         Exercise::Type barrierStyle,
+                                                         const boost::shared_ptr<FxIndex>& fxIndex)
     : Option(ext::shared_ptr<Payoff>(), exercise), flow_(flow), quantity_(quantity), strikePrice_(strikePrice),
-      type_(type), settlementType_(delivery), settlementMethod_(settlementMethod), barrierLevel_(barrierLevel),
-      barrierType_(barrierType), barrierStyle_(barrierStyle) {
+      type_(type), settlementType_(delivery), settlementMethod_(settlementMethod), fxIndex_(fxIndex),
+      barrierLevel_(barrierLevel), barrierType_(barrierType), barrierStyle_(barrierStyle) {
     registerWith(flow_);
 }
 
@@ -39,7 +40,8 @@ Real CommodityAveragePriceOption::accrued(const Date& refDate) const {
                 break;
             }
             // Update accrued where pricing date is on or before today
-            tmp += kv.second->fixing(kv.first);
+            Real fxRate = (fxIndex_)?fxIndex_->fixing(kv.first):1.;
+            tmp += fxRate*kv.second->fixing(kv.first);
         }
         // We should have pricing dates in the period but check.
         auto n = flow_->indices().size();
@@ -72,12 +74,13 @@ void CommodityAveragePriceOption::setupArguments(PricingEngine::arguments* args)
     arguments->barrierStyle = barrierStyle_;
     arguments->exercise = exercise_;
     arguments->flow = flow_;
+    arguments->fxIndex = fxIndex_;
 }
 
 CommodityAveragePriceOption::arguments::arguments()
-    : quantity(0.0), strikePrice(0.0), effectiveStrike(0.0), type(Option::Call), settlementType(Settlement::Physical),
-      settlementMethod(Settlement::PhysicalOTC), barrierLevel(Null<Real>()), barrierType(Barrier::DownIn),
-      barrierStyle(Exercise::American) {}
+    : quantity(0.0), strikePrice(0.0), effectiveStrike(0.0), type(Option::Call), fxIndex(nullptr),
+      settlementType(Settlement::Physical), settlementMethod(Settlement::PhysicalOTC), barrierLevel(Null<Real>()),
+      barrierType(Barrier::DownIn), barrierStyle(Exercise::American) {}
 
 void CommodityAveragePriceOption::arguments::validate() const {
     QL_REQUIRE(flow, "underlying not set");

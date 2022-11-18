@@ -153,21 +153,35 @@ void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engi
     string tradeTypeBuilder = tradeType_;
 
     if(paymentDate>expiryDate){
-        QL_REQUIRE(!fxIndex_.empty(),
-                   "FX european barrier option trade with delay payment " << id() << ": the FXIndex node needs to be populated.");
-        auto fxIndex = buildFxIndex(fxIndex_, boughtCcy.code(), soldCcy.code(), engineFactory->market(),
-                               engineFactory->configuration(MarketContext::pricing));
+
         // Has the option been marked as exercised
         const boost::optional<OptionExerciseData>& oed = option_.exerciseData();
-        exercised = true;
-        exercisePrice = oed->price();
+        if(oed) {
+            QL_REQUIRE(oed->date() == expiryDate, "The supplied exercise date ("
+                                                   << io::iso_date(oed->date())
+                                                   << ") should equal the option's expiry date ("
+                                                   << io::iso_date(expiryDate) << ").");
+            exercised = true;
+            exercisePrice = oed->price();
+        }
+
+        boost::shared_ptr<FxIndex> fxIndex{nullptr};
+        if(option_.isAutomaticExercise()){
+            QL_REQUIRE(!fxIndex_.empty(),
+                       "FX european barrier option trade with delay payment "
+                       << id() << ": the FXIndex node needs to be populated.");
+            fxIndex = buildFxIndex(fxIndex_, boughtCcy.code(), soldCcy.code(), engineFactory->market(),
+                                        engineFactory->configuration(MarketContext::pricing));
+            requiredFixings_.addFixingDate(expiryDate, fxIndex_, paymentDate);
+        }
+
         vanillaK = boost::make_shared<CashSettledEuropeanOption>(
             type, strike, expiryDate, paymentDate, option_.isAutomaticExercise(), fxIndex, exercised, exercisePrice);
         vanillaB = boost::make_shared<CashSettledEuropeanOption>(
             type, level, expiryDate, paymentDate, option_.isAutomaticExercise(), fxIndex, exercised, exercisePrice);
 
         tradeTypeBuilder = tradeType_ + "EuropeanCS";
-        requiredFixings_.addFixingDate(expiryDate, fxIndex_, paymentDate);
+
     }else{
         // Payoff - European Option with strike K
         boost::shared_ptr<StrikedTypePayoff> payoffVanillaK(new PlainVanillaPayoff(type, strike));
@@ -190,6 +204,10 @@ void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engi
     }
     boost::shared_ptr<Instrument> rebateInstrument = boost::make_shared<VanillaOption>(rebatePayoff, exercise);
 
+    // This is for when/if a PayoffCurrency is added to the instrument,
+    // which would require flipping the underlying currency pair
+    const bool flipResults = false;
+
     // set pricing engines
     boost::shared_ptr<EngineBuilder> builder;
 
@@ -210,10 +228,10 @@ void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engi
     boost::shared_ptr<FxDigitalOptionEngineBuilder> fxDigitalOptBuilder =
         boost::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
 
-    digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy));
+    digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
     vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, std::max({expiryDate, paymentDate})));
     vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, std::max({expiryDate, paymentDate})));
-    rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy));
+    rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
 
 
     boost::shared_ptr<CompositeInstrument> qlInstrument = boost::make_shared<CompositeInstrument>();

@@ -96,7 +96,10 @@ bool CommodityAveragePriceOptionBaseEngine::isModelDependent() const {
             break;
         }
         // Update accrued where pricing date is on or before today
-        lastFixing = kv.second->fixing(kv.first);
+        Real fxRate{1.};
+        if(arguments_.fxIndex)
+            fxRate=arguments_.fxIndex->fixing(kv.first);
+        lastFixing = fxRate*kv.second->fixing(kv.first);
         if (arguments_.barrierStyle == Exercise::American)
             barrierTriggered = barrierTriggered || this->barrierTriggered(lastFixing, false);
     }
@@ -146,6 +149,8 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["payment_date"] = arguments_.flow->date();
     mp["accrued"] = arguments_.accrued;
     mp["discount"] = discount;
+    if(arguments_.fxIndex)
+        mp["FXIndex"] = arguments_.fxIndex->name();
 
     // If not model dependent, return early.
     if (!isModelDependent()) {
@@ -178,7 +183,12 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
             // so that the following adjustment is not necessary.
             //forwards.push_back(p.second->fixing(p.first));
             Date fixingDate = p.second->fixingCalendar().adjust(p.first, Preceding);
-            forwards.push_back(p.second->fixing(fixingDate));
+            /* Here the FX index is applied.
+             * This implementation completely neglects the fx index volatility.
+             * To include it the correlation between the commodity index and the fx index is required
+             */
+            Real fxRate = (arguments_.fxIndex) ? arguments_.fxIndex->fixing(fixingDate) : 1.0;
+            forwards.push_back(fxRate * p.second->fixing(fixingDate)); // apply the fx rate daily on the relevant future prices
             times.push_back(volStructure_->timeFromReference(p.first));
             if (arguments_.flow->useFuturePrice()) {
                 Date expiry = p.second->expiryDate();
@@ -296,9 +306,14 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot() const {
         expHalfFwdVar[i] = volStructure_->blackForwardVariance(t - dt[i], t, effectiveStrike);
         fwdStdDev[i] = sqrt(expHalfFwdVar[i]);
         expHalfFwdVar[i] = exp(-expHalfFwdVar[i] / 2.0);
-        fwdRatio[i] = arguments_.flow->index()->fixing(dates[i + 1]);
+        Real fxRate{1.};
+        if(arguments_.flow->fxIndex())
+            fxRate = arguments_.flow->fxIndex()->fixing(dates[i+1]);
+        fwdRatio[i] = fxRate * arguments_.flow->index()->fixing(dates[i + 1]);
         if (i > 0) {
-            fwdRatio[i] /= arguments_.flow->index()->fixing(dates[i]);
+            if(arguments_.flow->fxIndex())
+                fxRate = arguments_.flow->fxIndex()->fixing(dates[i]);
+            fwdRatio[i] /= (fxRate * arguments_.flow->index()->fixing(dates[i]));
         }
     }
     Array factors = expHalfFwdVar * fwdRatio;
@@ -483,7 +498,10 @@ void CommodityAveragePriceOptionMonteCarloEngine::setupFuture(vector<Real>& outV
             // If expiry has not been encountered yet
             if (expiryDates.insert(expiry).second) {
                 outVolatilities.push_back(volStructure_->blackVol(expiry, strike));
-                prices.push_back(p.second->fixing(today));
+                Real fxRate{1.};
+                if(arguments_.flow->fxIndex())
+                    fxRate=arguments_.flow->fxIndex()->fixing(today);
+                prices.push_back(fxRate*p.second->fixing(today));//check if today should not be p.first
             }
             futureIndex.push_back(expiryDates.size() - 1);
         }
