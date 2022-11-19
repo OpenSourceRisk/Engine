@@ -71,7 +71,9 @@ struct CommoditySchwartzModelTestData : public qle::test::TopLevelFixture {
         parametrization = boost::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "WTI", ts, fx, sigma, kappa, driftFreeState);
         QL_REQUIRE(parametrization != NULL, "CommoditySchwartzParametrization has null pointer");
 
-        model = boost::make_shared<CommoditySchwartzModel>(parametrization);
+        // TODO test Euler discretization
+        model =
+            boost::make_shared<CommoditySchwartzModel>(parametrization, CommoditySchwartzModel::Discretization::Exact);
     }
 
     SavedSettings backup;
