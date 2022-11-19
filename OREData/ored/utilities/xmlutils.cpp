@@ -239,7 +239,7 @@ void XMLUtils::addChildAsCdata(XMLDocument& doc, XMLNode* n, const string& name,
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value, const string& attrName,
                         const string& attr) {
     if (!attrName.empty() || !attr.empty()) {
-        addChild(doc, n, name, value, {attrName}, {attr});
+        addChild(doc, n, name, value, std::vector<string>{attrName}, std::vector<string>{attr});
     } else {
         addChild(doc, n, name, value, std::vector<string>{}, std::vector<string>{});
     }
