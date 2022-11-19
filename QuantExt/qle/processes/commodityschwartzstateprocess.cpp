@@ -43,10 +43,10 @@ Real CommoditySchwartzStateProcess::diffusion(Time t, Real) const { return p_->s
 Real CommoditySchwartzStateProcess::ExactDiscretization::drift(const StochasticProcess1D& p, Time t, Real x0,
                                                                Time dt) const {
     if (p_->driftFreeState())
-        return p.x0();
+        return 0.0;
     else {
         // Ornstein-Uhlenbeck expectation
-        return p.x0() * exp(-p_->kappaParameter() * dt);
+        return x0 * (exp(-p_->kappaParameter() * dt) - 1.0);
     }
 }
 
@@ -64,7 +64,7 @@ Real CommoditySchwartzStateProcess::ExactDiscretization::variance(const Stochast
 
 Real CommoditySchwartzStateProcess::ExactDiscretization::diffusion(const StochasticProcess1D& p, Time t0, Real x0,
                                                                    Time dt) const {
-    return std::sqrt(variance(p, t0, p.x0(), dt));
+    return std::sqrt(variance(p, t0, x0, dt));
 }
 
 } // namespace QuantExt

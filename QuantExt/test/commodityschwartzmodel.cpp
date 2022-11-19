@@ -83,7 +83,6 @@ struct CommoditySchwartzModelTestData : public qle::test::TopLevelFixture {
     Real kappa, sigma;
     boost::shared_ptr<CommoditySchwartzParametrization> parametrization;
     boost::shared_ptr<CommoditySchwartzModel> model;
-    boost::shared_ptr<CommoditySchwartzStateProcess> process;
 }; // CommoditySchwarzModelTestData
 
 } // namespace
