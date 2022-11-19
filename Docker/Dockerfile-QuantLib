@@ -1,4 +1,4 @@
-# syntax = docker/dockerfile:experimental
+# syntax = nexus3.acadiasoft.net:4443/docker/dockerfile:experimental
 ARG boost_version=latest
 FROM build_env_boost:${boost_version}
 
