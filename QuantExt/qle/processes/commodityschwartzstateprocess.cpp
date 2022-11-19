@@ -20,9 +20,12 @@
 
 namespace QuantExt {
 
-CommoditySchwartzStateProcess::CommoditySchwartzStateProcess(const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization,
-                                                                 const CommoditySchwartzModel::Discretization discretization)
-    : p_(parametrization) {}
+CommoditySchwartzStateProcess::CommoditySchwartzStateProcess(
+    const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization,
+    const CommoditySchwartzModel::Discretization discretization)
+    : StochasticProcess1D(discretization == Euler ? boost::make_shared<EulerDiscretization>()
+                                                  : boost::make_shared<ExactDiscretization>()),
+      p_(parametrization) {}
 
 Real CommoditySchwartzStateProcess::drift(Time t, Real x0) const {
     if (p_->driftFreeState())
@@ -35,7 +38,7 @@ Real CommoditySchwartzStateProcess::diffusion(Time t, Real) const {
     return p_->sigma(t);
 }
 
-Real CommoditySchwartzStateProcess::expectation(Time t, Real x0, Time dt) const {
+Real CommoditySchwartzStateProcess::ExactDiscretization::drift(Time t, Real x0, Time dt) const {
     if (p_->driftFreeState())
         return x0;
     else {
@@ -44,7 +47,7 @@ Real CommoditySchwartzStateProcess::expectation(Time t, Real x0, Time dt) const 
     }
 }
 
-Real CommoditySchwartzStateProcess::variance(Time t0, Real x0, Time dt) const {
+Real CommoditySchwartzStateProcess::ExactDiscretization::variance(Time t0, Real x0, Time dt) const {
     if (p_->driftFreeState())
         return p_->variance(t0 + dt) - p_->variance(t0);
     else {
@@ -55,7 +58,7 @@ Real CommoditySchwartzStateProcess::variance(Time t0, Real x0, Time dt) const {
     }
 }
 
-Real CommoditySchwartzStateProcess::stdDeviation(Time t0, Real x0, Time dt) const {
+Real CommoditySchwartzStateProcess::ExactDiscretization::diffusion(Time t0, Real x0, Time dt) const {
     return std::sqrt(variance(t0, x0, dt));
 }
 
