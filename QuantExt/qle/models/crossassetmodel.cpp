@@ -53,6 +53,13 @@ std::ostream& operator<<(std::ostream& out, const CrossAssetModel::AssetType& ty
 }
 
 namespace {
+
+/* derive marginal model discretizations from cam discretization
+   - "cam / Euler" should always map to "marginal model / Euler"
+   - "cam / Exact" should always map to "marginal model / Exact" which is only possible for a subset of models
+   - "cam / BestMarginalDiscretization" is to combine a global Euler scheme with the "best" marginal
+     scheme that is available, e.g. QuadraticExponentialMartingale for a Heston component */
+
 HwModel::Discretization getHwDiscretization(CrossAssetModel::Discretization discretization) {
     if (discretization == CrossAssetModel::Discretization::Euler)
         return HwModel::Discretization::Euler;
@@ -65,6 +72,13 @@ LinearGaussMarkovModel::Discretization getLgm1fDiscretization(CrossAssetModel::D
         return LinearGaussMarkovModel::Discretization::Euler;
     else
         return LinearGaussMarkovModel::Discretization::Exact;
+}
+
+CommoditySchwartzModel::Discretization getComSchwartzDiscretization(CrossAssetModel::Discretization discretization) {
+    if (discretization == CrossAssetModel::Discretization::Euler)
+        return CommoditySchwartzModel::Discretization::Euler;
+    else
+        return CommoditySchwartzModel::Discretization::Exact;
 }
 } // namespace
 
@@ -569,7 +583,9 @@ void CrossAssetModel::initializeParametrizations() {
     j = 0;
     while (i < p_.size() && getComponentType(i).first == CrossAssetModel::AssetType::COM) {
         boost::shared_ptr<CommoditySchwartzParametrization> csp = boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]);
-        boost::shared_ptr<CommoditySchwartzModel> csm = csp ? boost::make_shared<CommoditySchwartzModel>(csp) : nullptr;
+        boost::shared_ptr<CommoditySchwartzModel> csm =
+            csp ? boost::make_shared<CommoditySchwartzModel>(csp, getComSchwartzDiscretization(discretization_))
+                : nullptr;
         comModels_.push_back(csm);
         updateIndices(CrossAssetModel::AssetType::COM, i, cIdxTmp, wIdxTmp, pIdxTmp, aIdxTmp);
         cIdxTmp += getNumberOfBrownians(i);
