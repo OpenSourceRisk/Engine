@@ -495,11 +495,24 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
             std::copy(r.begin(), r.end(), std::next(res.begin(), model_->pIdx(CrossAssetModel::AssetType::FX, i, 0)));
         }
 
+        // evolve com processes
+
+        for(Size i=0;i<model_->components[CrossAssetModel::AssetType::COM]; ++i) {
+            auto p = model_->comModel(i)->stateProcess();
+            auto r = p->evolve(
+                t0,
+                getProjectedArray(c0, model_->pIdx(CrossAssetModel::AssetType::COM, i, 0), model_->comModel(i)->n()),
+                dt,
+                getProjectedArray(dz, model_->wIdx(CrossAssetModel::AssetType::COM, i, 0), model_->comModel(i)->m()));
+            std::copy(r.begin(), r.end(), std::next(res.begin(), model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)));
+        }
+
         // TODO other components ...
         QL_REQUIRE(model_->components(CrossAssetModel::AssetType::IR) +
-                           model_->components(CrossAssetModel::AssetType::FX) ==
+                           model_->components(CrossAssetModel::AssetType::FX) +
+                           model_->components(CrossAssetModel::AssetType::COM) ==
                        model_->parametrizations().size(),
-                   "CrossAssetStateProcess::evolve(): currently only IR and FX supported.");
+                   "CrossAssetStateProcess::evolve(): currently only IR, FX, COM supported.");
 
         return res;
     }
