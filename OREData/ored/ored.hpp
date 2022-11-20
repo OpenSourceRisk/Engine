@@ -80,6 +80,8 @@
 #include <ored/model/calibrationinstruments/yoycapfloor.hpp>
 #include <ored/model/calibrationinstruments/yoyswap.hpp>
 #include <ored/model/calibrationpointcache.hpp>
+#include <ored/model/commodityschwartzmodelbuilder.hpp>
+#include <ored/model/commodityschwartzmodeldata.hpp>
 #include <ored/model/crcirbuilder.hpp>
 #include <ored/model/crcirdata.hpp>
 #include <ored/model/crlgmbuilder.hpp>
@@ -174,6 +176,7 @@
 #include <ored/portfolio/commoditylegdata.hpp>
 #include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/commodityoptionstrip.hpp>
+#include <ored/portfolio/commodityspreadoption.hpp>
 #include <ored/portfolio/commodityswap.hpp>
 #include <ored/portfolio/commodityswaption.hpp>
 #include <ored/portfolio/compositeinstrumentwrapper.hpp>

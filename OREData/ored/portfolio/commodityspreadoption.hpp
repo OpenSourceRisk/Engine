@@ -18,12 +18,19 @@
 #ifndef ORE_COMMODITYSPREADOPTION_HPP
 #define ORE_COMMODITYSPREADOPTION_HPP
 
+#include <ored/portfolio/trade.hpp>
 
+namespace ore {
+namespace data {
+class CommoditySpreadOption : public ore::data::Trade {
 
-class CommoditySpreadOption {
+public:
+    CommoditySpreadOption() : ore::data::Trade("CommoditySpreadOption"){}
+
+    //! Implement the build method
+    void build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
 
 };
-
-
-
-#endif //ORE_COMMODITYSPREADOPTION_HPP
+}
+}
+#endif // ORE_COMMODITYSPREADOPTION_HPP

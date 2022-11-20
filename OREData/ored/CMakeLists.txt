@@ -122,6 +122,7 @@ portfolio/commoditylegbuilder.cpp
 portfolio/commoditylegdata.cpp
 portfolio/commodityoption.cpp
 portfolio/commodityoptionstrip.cpp
+portfolio/commodityspreadoption.cpp
 portfolio/commodityswap.cpp
 portfolio/commodityswaption.cpp
 portfolio/compositetrade.cpp
@@ -387,6 +388,7 @@ portfolio/commoditylegbuilder.hpp
 portfolio/commoditylegdata.hpp
 portfolio/commodityoption.hpp
 portfolio/commodityoptionstrip.hpp
+portfolio/commodityspreadoption.hpp
 portfolio/commodityswap.hpp
 portfolio/commodityswaption.hpp
 portfolio/compositeinstrumentwrapper.hpp
