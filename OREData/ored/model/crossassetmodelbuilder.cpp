@@ -595,14 +595,8 @@ void CrossAssetModelBuilder::buildModel() const {
     for (Size i = 0; i < csBuilder.size(); i++) {
         DLOG("COM Calibration " << i);
         comOptionCalibrationErrors_[i] = csBuilder[i]->error();
-        // boost::shared_ptr<CommoditySchwartzData> com = config_->comConfigs()[i];
-        // if (!com->calibrateSigma() && !com->calibrateKappa()) {
-        //     DLOG("COM Calibration " << i << " skipped");
-        //     continue;
-        // }
     }
     
-
     /*************************
      * Relink LGM discount curves to curves used for INF calibration
      */
