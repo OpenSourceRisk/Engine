@@ -53,7 +53,8 @@ public:
         calculate();
         return effStrike_;
     }
-
+    const Handle<QuantExt::PriceTermStructure>& priceCurve() const { return priceCurve_; }
+    
 private:
     Handle<QuantExt::PriceTermStructure> priceCurve_;
     const bool hasMaturity_;

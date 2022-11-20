@@ -38,7 +38,7 @@ namespace ore {
 namespace data {
 using namespace QuantLib;
 
-//! Builder for a Lognormal COM model component
+//! Builder for a COM model component
 /*!
   This class is a utility to turn a COM model component's description
   into a COM model parametrization which can be used to ultimately
@@ -67,6 +67,7 @@ public:
     //@{
     std::string name() { return data_->name(); }
     boost::shared_ptr<QuantExt::CommoditySchwartzParametrization> parametrization() const;
+    boost::shared_ptr<QuantExt::CommoditySchwartzModel> model() const;
     std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
     //@}
 
@@ -92,8 +93,9 @@ private:
     const QuantLib::Currency baseCcy_;
 
     // computed
-    Real error_;
+    mutable Real error_;
     mutable boost::shared_ptr<QuantExt::CommoditySchwartzParametrization> parametrization_;
+    mutable boost::shared_ptr<QuantExt::CommoditySchwartzModel> model_;
 
     // which options in data->optionExpiries() are actually in the basket?
     mutable std::vector<bool> optionActive_;
@@ -113,6 +115,12 @@ private:
 
     // market observer
     boost::shared_ptr<MarketObserver> marketObserver_;
+
+    // TODO: move to data
+    boost::shared_ptr<OptimizationMethod> optimizationMethod_;
+    EndCriteria endCriteria_;
+    BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
+    mutable std::vector<Real> calibrationErrors_;
 };
 } // namespace data
 } // namespace ore

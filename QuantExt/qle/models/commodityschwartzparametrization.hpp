@@ -69,6 +69,8 @@ public:
                                      const Handle<QuantExt::PriceTermStructure>& priceCurve,
                                      const Handle<Quote>& fxSpotToday, const Real sigma, const Real kappa,
                                      bool driftFreeState = false);
+
+    Size numberOfParameters() const override { return 2; }
     //! State variable variance on [0, t]
     Real variance(const Time t) const;
     //! State variable Y's diffusion at time t: sigma * exp(kappa * t)
