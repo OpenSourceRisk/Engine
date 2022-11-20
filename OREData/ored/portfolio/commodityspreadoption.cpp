@@ -16,3 +16,23 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 #include "commodityspreadoption.hpp"
+
+namespace ore::data{
+
+void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+}
+
+void CommoditySpreadOption::fromXML(XMLNode* node){
+//    Trade::fromXML(node);
+    XMLNode *cNode = XMLUtils::getChildNode(node, "CommoditySpreadOptionData");
+    QL_REQUIRE(cNode,"A commodity spread option trade requires CommoditySpreadOptionData.");
+    optionData_.fromXML(XMLUtils::getChildNode(cNode, "OptionData"));
+
+}
+
+XMLNode* CommoditySpreadOption::toXML(XMLDocument& doc){
+    if(!isAveraged_)
+        return nullptr;
+}
+
+}

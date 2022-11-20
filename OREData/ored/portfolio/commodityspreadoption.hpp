@@ -20,8 +20,7 @@
 
 #include <ored/portfolio/trade.hpp>
 
-namespace ore {
-namespace data {
+namespace ore::data {
 class CommoditySpreadOption : public ore::data::Trade {
 
 public:
@@ -30,7 +29,22 @@ public:
     //! Implement the build method
     void build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
 
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+
+private:
+    OptionData optionData_;
+    std::vector<string> underlyingName_;
+    std::vector<boost::shared_ptr<CommodityIndex>> underlying_;
+    std::vector<string> underlyingCcy_;
+    std::vector<boost::optional<Date>> futureExpiryDate_;
+    string settlementCcy_;
+    Date settlementDate_;
+    boost::optional<bool> isAveraged_;
+    boost::shared_ptr<FxIndex> fxIndex_;
 };
-}
 }
 #endif // ORE_COMMODITYSPREADOPTION_HPP
