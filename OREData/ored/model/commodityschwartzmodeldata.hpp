@@ -70,7 +70,7 @@ public:
     bool& calibrateSigma() { return calibrateSigma_; }
     ParamType& sigmaParamType() { return sigmaType_; }
     Real& sigmaValue() { return sigmaValue_; }
-    bool& calibrateKappa() { return calibrateSigma_; }
+    bool& calibrateKappa() { return calibrateKappa_; }
     ParamType& kappaParamType() { return sigmaType_; }
     Real& kappaValue() { return kappaValue_; }
     std::vector<std::string>& optionExpiries() { return optionExpiries_; }
