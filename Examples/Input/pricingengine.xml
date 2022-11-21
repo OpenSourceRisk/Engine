@@ -246,6 +246,20 @@
       <Parameter name="samples">1000</Parameter>
       <Parameter name="seed">42</Parameter>
     </EngineParameters>
+    <!--
+    <Engine>AnalyticalApproximation</Engine>
+    <EngineParameters>
+      <Parameter name="beta">0</Parameter>
+    </EngineParameters>
+    -->
+  </Product>
+  <Product type="CommoditySwaption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>AnalyticalApproximation</Engine>
+    <EngineParameters>
+      <Parameter name="beta">0</Parameter>
+    </EngineParameters>
   </Product>
   <Product type="CPICapFloor">
     <Model>CPICapFloorModel</Model>
