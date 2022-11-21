@@ -85,35 +85,5 @@ private:
     FixingCache fixingCache_;
 };
 
-//! Base class for cashflow handlers
-struct FixingManagerCashflowHandler {
-    virtual ~FixingManagerCashflowHandler() {}
-    virtual bool processCashflow(const boost::shared_ptr<QuantLib::CashFlow>& c,
-                                 FixingManager::FixingMap& fixingMap) = 0;
-};
-
-//! Standard cashflow handler for ORE cashflow types
-struct StandardFixingManagerCashflowHandler : public FixingManagerCashflowHandler {
-    virtual bool processCashflow(const boost::shared_ptr<QuantLib::CashFlow>& c,
-                                 FixingManager::FixingMap& fixingMap) override;
-};
-
-//! Cashflow handler factory
-class FixingManagerCashflowHandlerFactory
-    : public QuantLib::Singleton<FixingManagerCashflowHandlerFactory, std::integral_constant<bool, true>> {
-    std::set<boost::shared_ptr<FixingManagerCashflowHandler>> handlers_;
-    mutable boost::shared_mutex mutex_;
-public:
-    std::set<boost::shared_ptr<FixingManagerCashflowHandler>> handlers() const;
-    void addHandler(const boost::shared_ptr<FixingManagerCashflowHandler>& handler);
-};
-
-//! Cashflow handler register class
-template <typename T> struct FixingManagerCashflowHandlerRegister {
-    FixingManagerCashflowHandlerRegister<T>() {
-        FixingManagerCashflowHandlerFactory::instance().addHandler(boost::make_shared<T>());
-    }
-};
-
 } // namespace analytics
 } // namespace ore

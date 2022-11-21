@@ -1,4 +1,4 @@
-# syntax = docker/dockerfile:experimental
+# syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
 ARG quantlib_version=${QL_TAG}
 FROM env_quantlib:${quantlib_version}
 

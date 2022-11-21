@@ -154,9 +154,6 @@ public:
     /* ir model */
     const boost::shared_ptr<IrModel> irModel(const Size ccy) const;
 
-    /* com model */
-    const boost::shared_ptr<CommodityModel> comModel(const Size com) const;
-
     /*! numeraire */
     QuantLib::Real
     numeraire(const Size ccy, const QuantLib::Time t, const QuantLib::Array& x,
@@ -220,6 +217,9 @@ public:
 
     /*! EQBS components */
     const boost::shared_ptr<EqBsParametrization> eqbs(const Size ccy) const;
+
+    /* com model */
+    const boost::shared_ptr<CommodityModel> comModel(const Size com) const;
 
     /*! COMBS components */
     const boost::shared_ptr<CommoditySchwartzParametrization> combs(const Size ccy) const;
