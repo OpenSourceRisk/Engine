@@ -1424,7 +1424,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
             .withSubtractInflationNominalAllCoupons(cpiLegData->subtractInflationNominalCoupons());
 
     // the cpi leg uses the first schedule date as the start date, which only makes sense if there are at least
-    // two dates in the schedule, otherwise the only date in the schedule is the pay date of the cf and a a separate
+    // two dates in the schedule, otherwise the only date in the schedule is the pay date of the cf and a separate
     // start date is expected; if both the separate start date and a schedule with more than one date is given
     const string& start = cpiLegData->startDate();
     if (schedule.size() < 2) {
@@ -1549,7 +1549,7 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
         buildScheduledVectorNormalised(yoyLegData->gearings(), yoyLegData->gearingDates(), schedule, 1.0);
     vector<double> spreads =
         buildScheduledVectorNormalised(yoyLegData->spreads(), yoyLegData->spreadDates(), schedule, 0.0);
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
 
     bool irregularYoY = yoyLegData->irregularYoY();
     bool couponCap = yoyLegData->caps().size() > 0;
