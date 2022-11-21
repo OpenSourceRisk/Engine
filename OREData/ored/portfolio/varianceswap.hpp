@@ -61,8 +61,9 @@ protected:
             AssetClass assetClassUnderlying, string momentType, bool addPastDividends)
         : Trade("VarSwap", env), assetClassUnderlying_(assetClassUnderlying), underlying_(underlying),
           longShort_(longShort), currency_(currency), strike_(strike), notional_(notional), startDate_(startDate),
-          endDate_(endDate), momentType_(momentType), addPastDividends_(addPastDividends),
-          indexName_(assetClassUnderlying_ == AssetClass::FX ? "FX-" + name() : name()), oldXml_(false) {}
+          endDate_(endDate), momentType_(momentType), addPastDividends_(addPastDividends), oldXml_(false) {
+        initIndexName();
+    }
 
     AssetClass assetClassUnderlying_;
 
@@ -70,6 +71,7 @@ protected:
     boost::shared_ptr<ore::data::Underlying> underlying_;
 
 private:
+    void initIndexName();
     string longShort_;
     string currency_;
     double strike_;

@@ -124,6 +124,8 @@ void FxIndex::initialise() {
     tmp << familyName_ << " " << sourceCurrency_.code() << "/" << targetCurrency_.code();
     name_ = tmp.str();
 
+    oreName_ = "FX-" + familyName_ + "-" + sourceCurrency_.code() + "-" + targetCurrency_.code();
+
     registerWith(IndexManager::instance().notifier(name()));
     registerWith(fxSpot_);
     registerWith(sourceYts_);
