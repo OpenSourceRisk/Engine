@@ -116,10 +116,6 @@ private:
     // market observer
     boost::shared_ptr<MarketObserver> marketObserver_;
 
-    // TODO: move to data
-    boost::shared_ptr<OptimizationMethod> optimizationMethod_;
-    EndCriteria endCriteria_;
-    BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
     mutable std::vector<Real> calibrationErrors_;
 };
 } // namespace data
