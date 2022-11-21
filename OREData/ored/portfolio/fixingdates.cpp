@@ -160,14 +160,17 @@ void RequiredFixings::unsetPayDates() {
     std::set<InflationFixingEntry> newYoYInflationFixingDates;
     for (auto f : fixingDates_) {
         std::get<2>(f) = Date::maxDate();
+        std::get<3>(f) = true;
         newFixingDates.insert(f);
     }
     for (auto f : zeroInflationFixingDates_) {
         std::get<2>(std::get<0>(std::get<0>(f))) = Date::maxDate();
+        std::get<3>(std::get<0>(std::get<0>(f))) = true;
         newZeroInflationFixingDates.insert(f);
     }
     for (auto f : yoyInflationFixingDates_) {
         std::get<2>(std::get<0>(f)) = Date::maxDate();
+        std::get<3>(std::get<0>(f)) = true;
         newYoYInflationFixingDates.insert(f);
     }
     fixingDates_ = newFixingDates;

@@ -120,9 +120,7 @@ void VarSwap::fromXML(XMLNode* node) {
         addPastDividends_ = false;
     else
         addPastDividends_ = parseBool(addPastDividendsStr);
-
-    // Set the index name
-    indexName_ = assetClassUnderlying_ == AssetClass::FX ? "FX-" + name() : "EQ-" + name();
+    initIndexName();
 }
 
 XMLNode* VarSwap::toXML(ore::data::XMLDocument& doc) {
@@ -145,6 +143,18 @@ XMLNode* VarSwap::toXML(ore::data::XMLDocument& doc) {
     XMLUtils::addChild(doc, vNode, "MomentType", momentType_);
     XMLUtils::addChild(doc, vNode, "AddPastDividends", addPastDividends_);
     return node;
+}
+
+void VarSwap::initIndexName() {
+    if (assetClassUnderlying_ == AssetClass::FX)
+        indexName_ = "FX-" + name();
+    else if (assetClassUnderlying_ == AssetClass::EQ)
+        indexName_ = "EQ-" + name();
+    else if (assetClassUnderlying_ == AssetClass::COM)
+        indexName_ = "COM-" + name();
+    else {
+        QL_FAIL("asset class " << assetClassUnderlying_ << " not supported.");
+    }
 }
 
 std::map<AssetClass, std::set<std::string>>
