@@ -1875,7 +1875,7 @@ Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swa
         ore::data::buildScheduledVectorNormalised(cmsData->spreads(), cmsData->spreadDates(), schedule, 0.0);
     vector<double> gearings =
         ore::data::buildScheduledVectorNormalised(cmsData->gearings(), cmsData->gearingDates(), schedule, 1.0);
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
 
     double eps = 1e-4;
     vector<double> callStrikes =
