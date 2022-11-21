@@ -122,6 +122,7 @@ public:
     //! \name Inspectors
     //@{
     std::string familyName() const { return familyName_; }
+    std::string oreName() const { return oreName_; }
     Natural fixingDays() const { return fixingDays_; }
     Date fixingDate(const Date& valueDate) const;
     const Currency& sourceCurrency() const { return sourceCurrency_; }
@@ -150,7 +151,7 @@ public:
                                      const std::string& familyName = std::string());
 
 protected:
-    std::string familyName_;
+    std::string familyName_, oreName_;
     Natural fixingDays_;
     Currency sourceCurrency_, targetCurrency_;
     const Handle<YieldTermStructure> sourceYts_, targetYts_;

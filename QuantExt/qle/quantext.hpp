@@ -213,6 +213,9 @@
 #include <qle/models/cirppimplieddefaulttermstructure.hpp>
 #include <qle/models/cirppparametrization.hpp>
 #include <qle/models/cmscaphelper.hpp>
+#include <qle/models/commoditymodel.hpp>
+#include <qle/models/commodityschwartzmodel.hpp>
+#include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/crcirpp.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
@@ -253,6 +256,7 @@
 #include <qle/models/lgmvectorised.hpp>
 #include <qle/models/linearannuitymapping.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
+#include <qle/models/modelimpliedpricetermstructure.hpp>
 #include <qle/models/modelimpliedyieldtermstructure.hpp>
 #include <qle/models/normalsabr.hpp>
 #include <qle/models/normalsabrinterpolation.hpp>
@@ -267,7 +271,10 @@
 #include <qle/models/zeroinflationmodeltermstructure.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
+#include <qle/pricingengines/analyticdigitalamericanengine.hpp>
 #include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
+#include <qle/pricingengines/analyticdoublebarrierbinaryengine.hpp>
+#include <qle/pricingengines/analyticeuropeanengine.hpp>
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
 #include <qle/pricingengines/analyticjycpicapfloorengine.hpp>
 #include <qle/pricingengines/analyticjyyoycapfloorengine.hpp>
@@ -297,6 +304,7 @@
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 #include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
 #include <qle/pricingengines/volatilityfromvarianceswapengine.hpp>
+#include <qle/processes/commodityschwartzstateprocess.hpp>
 #include <qle/processes/crcirppstateprocess.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
 #include <qle/processes/irhwstateprocess.hpp>
