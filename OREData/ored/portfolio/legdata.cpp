@@ -2174,7 +2174,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
 
     scheduleBuilder.makeSchedules(openEndDateReplacement);
 
-    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
     Calendar paymentCalendar;
     if (data.paymentCalendar().empty())
