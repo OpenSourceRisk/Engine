@@ -15,12 +15,13 @@
 #include <ql/patterns/visitor.hpp>
 #include <ql/time/schedule.hpp>
 #include <qle/indexes/commodityindex.hpp>
+#include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 
 namespace QuantExt {
 
 //! Cash flow dependent on a single commodity spot price or futures settlement price on a given pricing date
-class CommodityIndexedCashFlow : public CashFlow, public Observer {
+class CommodityIndexedCashFlow : public CommodityCashFlow {
 
 public:
     enum class PaymentTiming { InAdvance, InArrears, RelativeToExpiry };
@@ -49,11 +50,9 @@ public:
 
     //! \name Inspectors
     //@{
-    QuantLib::Real quantity() const { return quantity_; }
+    
     const QuantLib::Date& pricingDate() const { return pricingDate_; }
     ext::shared_ptr<CommodityIndex> index() const { return index_; }
-    QuantLib::Real spread() const { return spread_; }
-    QuantLib::Real gearing() const { return gearing_; }
     bool useFuturePrice() const { return useFuturePrice_; }
     bool useFutureExpiryDate() const { return useFutureExpiryDate_; }
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
@@ -84,12 +83,9 @@ public:
     void setPeriodQuantity(QuantLib::Real periodQuantity);
 
 private:
-    QuantLib::Real quantity_;
     QuantLib::Date pricingDate_;
     QuantLib::Date paymentDate_;
     ext::shared_ptr<CommodityIndex> index_;
-    QuantLib::Real spread_;
-    QuantLib::Real gearing_;
     bool useFuturePrice_;
     bool useFutureExpiryDate_;
     QuantLib::Natural futureMonthOffset_;

@@ -58,6 +58,22 @@ std::set<QuantLib::Date> pricingDates(const QuantLib::Date& start, const QuantLi
 */
 bool isPricingDate(const QuantLib::Date& d, const QuantLib::Calendar& pricingCalendar, bool useBusinessDays = true);
 
+
+class CommodityCashFlow : public CashFlow, Observer {
+public:
+    CommodityCashFlow(Real quantity, Real spread, Real gearing)
+        : quantity_(quantity), spread_(spread), gearing_(gearing) {}
+
+    QuantLib::Real quantity() const { return quantity_; }
+    QuantLib::Real spread() const { return spread_; }
+    QuantLib::Real gearing() const { return gearing_; }
+
+protected:
+    QuantLib::Real quantity_;
+    QuantLib::Real spread_;
+    QuantLib::Real gearing_;
+};
+
 }
 
 #endif

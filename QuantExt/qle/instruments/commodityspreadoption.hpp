@@ -13,7 +13,8 @@
 #include <ql/option.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
-#include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/cashflows/commoditycashflow.hpp>
+#include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/indexes/fxindex.hpp>
 
 namespace QuantExt {
@@ -26,12 +27,15 @@ class CommoditySpreadOption : public Option {
 public:
     class arguments;
     class engine;
-    CommoditySpreadOption(const boost::shared_ptr<CommodityIndexedCashFlow>& longAssetCashflow,
-                          const boost::shared_ptr<CommodityIndexedCashFlow>& shortAssetCashflow,
+    CommoditySpreadOption(const boost::shared_ptr<CommodityCashFlow>& longAssetCashflow,
+                          const boost::shared_ptr<CommodityCashFlow>& shortAssetCashflow,
                           const ext::shared_ptr<Exercise>& exercise, const Real quantity, const Real strikePrice,
-                          Option::Type type, Settlement::Type delivery = Settlement::Physical,
-                          Settlement::Method settlementMethod = Settlement::PhysicalOTC,
-                          const boost::shared_ptr<FxIndex>& fxIndex = nullptr);
+                          Option::Type type, const QuantLib::Date& paymentDate = Date(),
+                          const boost::shared_ptr<FxIndex>& longAssetFxIndex = nullptr,
+                          const boost::shared_ptr<FxIndex>& shortAssetFxIndex = nullptr,
+                          Settlement::Type delivery = Settlement::Physical,
+                          Settlement::Method settlementMethod = Settlement::PhysicalOTC);
+          
 
     //! \name Instrument interface
     //@{
@@ -41,45 +45,48 @@ public:
 
     //! \name Inspectors
     //@{
-    Settlement::Type settlementType() const { return settlementType_; }
-    Settlement::Method settlementMethod() const { return settlementMethod_; }
-    const boost::shared_ptr<CommodityIndexedCashFlow>& underlyingLongFlow() const { return longFlow_; }
-    const boost::shared_ptr<CommodityIndexedCashFlow>& underlyingShortFlow() const { return shortFlow_; }
+    const boost::shared_ptr<CommodityCashFlow>& underlyingLongAssetFlow() const { return longAssetFlow_; }
+    const boost::shared_ptr<CommodityCashFlow>& underlyingShortAssetFlow() const { return shortAssetFlow_; }
 
-    const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
+    const boost::shared_ptr<FxIndex>& longAssetFxIndex() const { return longAssetFxIndex_; }
+    const boost::shared_ptr<FxIndex>& shortAssetFxIndex() const { return shortAssetFxIndex_; }
     Real effectiveStrike() const;
     //@}
 
 private:
     // arguments
-    boost::shared_ptr<CommodityIndexedCashFlow> longFlow_;
-    boost::shared_ptr<CommodityIndexedCashFlow> shortFlow_;
+    boost::shared_ptr<CommodityCashFlow> longAssetFlow_;
+    boost::shared_ptr<CommodityCashFlow> shortAssetFlow_;
     Real quantity_;
     Real strikePrice_;
     Option::Type type_;
+    Date paymentDate_;
+    boost::shared_ptr<FxIndex> longAssetFxIndex_;
+    boost::shared_ptr<FxIndex> shortAssetFxIndex_;
     QuantLib::Settlement::Type settlementType_;
     QuantLib::Settlement::Method settlementMethod_;
-    boost::shared_ptr<FxIndex> fxIndex_;
 };
 
-//! %Arguments for commodity APO calculation
+//! %Arguments for commodity spread option calculation
 class CommoditySpreadOption::arguments : public Option::arguments {
 public:
     arguments();
-    boost::shared_ptr<CommodityIndexedCashFlow> longFlow;
-    boost::shared_ptr<CommodityIndexedCashFlow> shortFlow;
+    boost::shared_ptr<CashFlow> longAssetFlow;
+    boost::shared_ptr<CashFlow> shortAssetFlow;
     Real quantity;
     Real strikePrice;
     Real accrued;
     Real effectiveStrike;
     Option::Type type;
-    boost::shared_ptr<FxIndex> fxIndex;
+    Date paymentDate;
+    boost::shared_ptr<FxIndex> longAssetFxIndex;
+    boost::shared_ptr<FxIndex> shortAssetFxIndex;
     Settlement::Type settlementType;
     Settlement::Method settlementMethod;
     void validate() const override;
 };
 
-//! base class for APO engines
+//! base class for commodity spread option engines
 class CommoditySpreadOption::engine
     : public GenericEngine<CommoditySpreadOption::arguments, CommoditySpreadOption::results> {};
 

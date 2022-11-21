@@ -25,14 +25,15 @@ class CommoditySpreadOptionBaseEngine : public CommoditySpreadOption::engine {
 public:
     // if you want speed-optimized observability, use the other constructor
     CommoditySpreadOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volLong,
-                                    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volShort, 
-                                    Real rho = 1.0);
+                                    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volTSLongAsset,
+                                    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volTSShortAsset, 
+                                    Real rho = 1.0,
+                                    Real beta = 0.0);
 
 protected:
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
-    QuantLib::Handle<QuantLib::BlackVolTermStructure> volLong_;
-    QuantLib::Handle<QuantLib::BlackVolTermStructure> volShort_; 
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> volTSLongAsset_;
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> volTSShortAsset_; 
     QuantLib::Real rho_;
 };
 
