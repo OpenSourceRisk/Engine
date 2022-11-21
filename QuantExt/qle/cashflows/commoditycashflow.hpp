@@ -13,6 +13,7 @@
 #include <ql/time/date.hpp>
 #include <ql/time/calendar.hpp>
 #include <set>
+#include <ql/cashflow.hpp>
 
 namespace QuantExt {
 
@@ -59,9 +60,9 @@ std::set<QuantLib::Date> pricingDates(const QuantLib::Date& start, const QuantLi
 bool isPricingDate(const QuantLib::Date& d, const QuantLib::Calendar& pricingCalendar, bool useBusinessDays = true);
 
 
-class CommodityCashFlow : public CashFlow, Observer {
+class CommodityCashFlow : public QuantLib::CashFlow, public QuantLib::Observer {
 public:
-    CommodityCashFlow(Real quantity, Real spread, Real gearing)
+    CommodityCashFlow(QuantLib::Real quantity, QuantLib::Real spread, QuantLib::Real gearing)
         : quantity_(quantity), spread_(spread), gearing_(gearing) {}
 
     QuantLib::Real quantity() const { return quantity_; }

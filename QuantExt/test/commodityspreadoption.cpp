@@ -28,6 +28,7 @@
 #include <qle/instruments/commodityspreadoption.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
 #include <qle/termstructures/pricecurve.hpp>
+#include <qle/cashflows/commodityindexedcashflow.hpp>
 
 using namespace std;
 using namespace boost::unit_test_framework;

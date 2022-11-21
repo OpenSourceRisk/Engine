@@ -24,7 +24,7 @@ namespace QuantExt {
 
 CommoditySpreadOptionBaseEngine::CommoditySpreadOptionBaseEngine(
     const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volLong,
-    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volShort, Real rho, Real beta = 0.0)
+    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volShort, Real rho, Real beta)
     : discountCurve_(discountCurve), volTSLongAsset_(volLong), volTSShortAsset_(volShort), rho_(rho) {
     QL_REQUIRE(rho >= -1.0 && rho <= 1.0, "-1.0 <= rho <= 1.0 required, found " << rho_);
     registerWith(discountCurve_);
