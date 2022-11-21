@@ -42,10 +42,7 @@ CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
                          const QuantLib::Currency& baseCcy, const std::string& configuration,
                          const std::string& referenceCalibrationGrid)
     : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid),
-      baseCcy_(baseCcy),
-      optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
-      endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)),
-      calibrationErrorType_(BlackCalibrationHelper::RelativePriceError) {
+      baseCcy_(baseCcy) {
 
     optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
     marketObserver_ = boost::make_shared<MarketObserver>();
@@ -132,7 +129,6 @@ void CommoditySchwartzModelBuilder::performCalculations() const {
 
         // check which parameters are kept fixed
         std::vector<bool> fix(model_->parametrization()->numberOfParameters(), true);
-        Constraint constraint;
         std::vector<Real> weights;
         Size freeParams = 0;
         if (data_->calibrateSigma()) {
@@ -155,7 +151,7 @@ void CommoditySchwartzModelBuilder::performCalculations() const {
             << " sigma=" << parametrization_->sigmaParameter()
             << " kappa=" << parametrization_->kappaParameter());
 
-        model_->calibrate(optionBasket_, *optimizationMethod_, endCriteria_, constraint, weights, fix);
+        model_->calibrate(optionBasket_, *data_->optimizationMethod(), data_->endCriteria(), data_->constraint(), weights, fix);
 
         LOG("CommoditySchwartzModel for name " << data_->name() << " after calibration:"
             << " sigma=" << parametrization_->sigmaParameter()
@@ -165,7 +161,7 @@ void CommoditySchwartzModelBuilder::performCalculations() const {
         LOG("CommoditySchwartzModel calibration rmse error " << error_ << " for name " << data_->name());
         try {
             auto d = getCalibrationDetails(optionBasket_, parametrization_);
-            LOG(d);
+            DLOG(d);
         } catch (const std::exception& e) {
             WLOG("An error occurred: " << e.what());
         }
@@ -244,7 +240,7 @@ void CommoditySchwartzModelBuilder::buildOptionBasket() const {
             Real strikeValue = optionStrike(j);
             Handle<Quote> volQuote(boost::make_shared<SimpleQuote>(vol_->blackVol(expiryDate, strikeValue)));
             boost::shared_ptr<QuantExt::FutureOptionHelper> helper = boost::make_shared<QuantExt::FutureOptionHelper>(
-                expiryDate, strikeValue, curve_, volQuote, calibrationErrorType_);
+                expiryDate, strikeValue, curve_, volQuote, data_->calibrationErrorType());
             optionBasket_.push_back(helper);
             helper->performCalculations();
             expiryTimes.push_back(curve_->timeFromReference(helper->option()->exercise()->date(0)));
