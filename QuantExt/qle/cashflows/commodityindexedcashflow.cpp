@@ -15,8 +15,8 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(Real quantity, const Date& pr
                                                    const ext::shared_ptr<CommodityIndex>& index, Real spread,
                                                    Real gearing, bool useFuturePrice, const Date& contractDate,
                                                    const ext::shared_ptr<FutureExpiryCalculator>& calc)
-    : quantity_(quantity), pricingDate_(pricingDate), paymentDate_(paymentDate), index_(index), spread_(spread),
-      gearing_(gearing), useFuturePrice_(useFuturePrice), futureMonthOffset_(0), periodQuantity_(quantity) {
+    : CommodityCashFlow(quantity, spread, gearing), pricingDate_(pricingDate), paymentDate_(paymentDate), index_(index),
+     useFuturePrice_(useFuturePrice), futureMonthOffset_(0), periodQuantity_(quantity) {
     QL_REQUIRE(paymentDate != Date(), "CommodityIndexedCashFlow: payment date is null");
     init(calc, contractDate);
 }
@@ -28,8 +28,8 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
     bool useFuturePrice, bool useFutureExpiryDate, Natural futureMonthOffset,
     const ext::shared_ptr<FutureExpiryCalculator>& calc, const QuantLib::Date& paymentDateOverride,
     const QuantLib::Date& pricingDateOverride)
-    : quantity_(quantity), pricingDate_(pricingDateOverride), paymentDate_(paymentDateOverride), index_(index),
-      spread_(spread), gearing_(gearing), useFuturePrice_(useFuturePrice), useFutureExpiryDate_(useFutureExpiryDate),
+    : CommodityCashFlow(quantity, spread, gearing), pricingDate_(pricingDateOverride), paymentDate_(paymentDateOverride), index_(index),
+      useFuturePrice_(useFuturePrice), useFutureExpiryDate_(useFutureExpiryDate),
       futureMonthOffset_(futureMonthOffset), periodQuantity_(quantity) {
 
     // Derive the pricing date if an explicit override has not been provided

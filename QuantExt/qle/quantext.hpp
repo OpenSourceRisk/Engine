@@ -158,6 +158,7 @@
 #include <qle/instruments/cliquetoption.hpp>
 #include <qle/instruments/commodityapo.hpp>
 #include <qle/instruments/commodityforward.hpp>
+#include <qle/instruments/commodityspreadoption.hpp>
 #include <qle/instruments/crossccybasismtmresetswap.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
 #include <qle/instruments/crossccyfixfloatmtmresetswap.hpp>
@@ -284,6 +285,7 @@
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
+#include <qle/pricingengines/commodityspreadoptionengine.hpp>
 #include <qle/pricingengines/commodityswaptionengine.hpp>
 #include <qle/pricingengines/cpibacheliercapfloorengine.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
