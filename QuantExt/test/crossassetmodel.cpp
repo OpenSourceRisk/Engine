@@ -1471,9 +1471,9 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCirppMartingaleProperty) {
     boost::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
     boost::shared_ptr<StochasticProcess> process2 = d_cirpp.modelEuler->stateProcess();
 
-    Size n = 50000;                         // number of paths
+    Size n = 10000;                         // number of paths
     Size seed = 18;                         // rng seed
-    Time T = 10.0;                          // maturity of payoff
+    Time T = 2.0;                          // maturity of payoff
     Time T2 = 20.0;                         // zerobond maturity
     Size steps = static_cast<Size>(T * 24); // number of steps taken (euler / Brigo-Alfonsi)
 
@@ -1693,7 +1693,7 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMoments) {
     boost::shared_ptr<StochasticProcess> p_exact = d.modelExact->stateProcess();
     boost::shared_ptr<StochasticProcess> p_euler = d.modelEuler->stateProcess();
 
-    Real T = 10;                            // horizon at which we compare the moments
+    Real T = 2.0;                           // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10); // number of simulation steps (Euler and exact)
     Size paths = 50000;                     // number of paths
 
