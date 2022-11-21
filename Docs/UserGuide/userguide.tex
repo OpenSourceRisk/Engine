@@ -262,9 +262,11 @@ Equity Exotic Options (see below)  & Y & Y & Y & Y \\
 \hline
 Equity Future Options & Y & Y & Y & Y \\
 \hline
-Commodity Forwards & Y & Y & Y & Y\\
+Commodity Forwards and Swaps & Y & Y & Y & Y\\
 \hline
-Commodity European and Asian Options & Y & Y & N & N \\
+Commodity European and Asian Options & Y & Y & Y & Y \\
+\hline
+Commodity Swaptions & Y & Y & Y & Y\\
 \hline
 CPI Swaps & Y & Y & N & Y \\
 \hline
@@ -1922,7 +1924,7 @@ using a minimal portfolio of four trades, one FRA and three OIS. The essential r
 four {\tt exposure\_trade\_*.csv} files.
 
 %--------------------------------------------------------
-\subsection{Commodity Forward and Option, Pricing, Sensitivity, Exposure}% Example 24
+\subsection{Commodity Derivatives, Pricing, Sensitivity, Exposure}% Example 24
 \label{example:24}
 %--------------------------------------------------------
 
@@ -1940,7 +1942,15 @@ in folder {\tt Examples/Example\_24} will launch two ORE runs. The first one det
 using a minimal portfolio of four forwards and two options referencing WTI and Gold. 
 The essential results are in {\tt npv.csv} and {\tt sensitivity.csv}.
 
-The second run determined by {\tt ore\_wti.xml} demonstrates Commodity exposure simulation for a single Commodity Forward, with the usual results, exposure reports and graphs. 
+The second run determined by {\tt ore\_wti.xml} demonstrates Commodity exposure simulation for a portfolio including a
+\begin{itemize}
+\item Commodity Forward
+\item Commodity Swap
+\item European Commodity Option
+\item Commodity Average Price Option
+\item Commodity Swaption
+\end{itemize}
+with the usual results, exposure reports and graphs. 
 
 %--------------------------------------------------------
 \subsection{CMS Spread with (Digital) Cap/Floor}% Example 25
@@ -4283,7 +4293,7 @@ be a maturity period e.g.\ \lstinline!5Y!. The \lstinline!Strike! should be an a
 
 % commodity models
 
-For commodity simulation we currently provide one model choice, as described in the methodology appendix. 
+For commodity simulation we currently provide one model, as described in the methodology appendix. 
 Commodity model components are specified by commodity name, by a block as follows
 
 \begin{listing}[H]
@@ -4302,7 +4312,10 @@ Commodity model components are specified by commodity name, by a block as follow
         <Calibrate>Y</Calibrate>
         <InitialValue>0.1</InitialValue>
       </Kappa>
-      <CalibrationOptions/>
+      <CalibrationOptions>
+           ...
+      </CalibrationOptions>
+      <DriftFreeState>false</DriftFreeState>
     </CommoditySchwartz>
     <CommoditySchwartz name="WTI">
       <!-- ... -->
@@ -4324,16 +4337,15 @@ FX model parameterisations.  Each component is parameterised in terms of two con
 Within each CommoditySchwartz section, the interpretation of elements is as follows:
 
 \begin{itemize}
-	\item {\tt Currency: } Currency of denomination
-	\item {\tt CalibrationType: } Choose between {\em Bootstrap}, {\em BestFit} and {\em None}.   
-	\item {\tt Sigma/Calibrate: } Flag to enable/disable calibration of this particular parameter
-	\item {\tt Sigma/InitialValue: } Initial value of the constant parameter
-	\item {\tt Kappa/Calibrate: } Flag to enable/disable calibration of this particular parameter
-	\item {\tt Kappa/InitialValue: } Initial value of the constant parameter
-	\item {\tt CalibrationOptions: } Choice of calibration instruments by expiry and strike, strikes can be empty 	(implying the default, ATMF options), or explicitly specified (in terms of commodity prices as absolute strike values). 
+\item {\tt Currency: } Currency of denomination
+\item {\tt CalibrationType:} Choose between {\em BestFit} and {\em None}.  The choice {\em None} will deactivate calibration as usual. {\em BestFit} will attempt to set the model parameter(s) such that the error in matching calibration instrument prices is minimised.  The option  {\em Bootstrap} is not available here because the model parameters are not time-dependent and the model's degrees of freedom in general do not suffice to perfectly match the calibration instrument prices.
+\item {\tt Sigma/Calibrate:} Flag to enable/disable calibration of this particular parameter
+\item {\tt Sigma/InitialValue:} Initial value of the constant parameter
+\item {\tt Kappa/Calibrate:} Flag to enable/disable calibration of this particular parameter
+\item {\tt Kappa/InitialValue:} Initial value of the constant parameter
+\item {\tt CalibrationOptions:} Choice of calibration instruments by expiry and strike, strikes can be empty 	(implying the default, ATMF options), or explicitly specified (in terms of commodity prices as absolute strike values). 
+\item {\tt DriftFreeState[Optional]:} Boolean to switch between the two implementations of the state variable, see appendix. By default this is set to {\tt false}.        
 \end{itemize}
-
-Note that calibration to Commodity options is not implemented yet, the simulation is based on the initial parameter values provided.
 
 \medskip
 Finally, the instantaneous correlation structure is specified as follows.
@@ -6178,6 +6190,11 @@ with
 F(t,T) &= F(0,T) \:\exp\left( X(t)\,e^{-\kappa\,(T-t)} - \frac{1}{2}\,(V(0,T)-V(t,T))  \right) \\
 V(t,T) &= e^{-2\kappa T}\int_t^T\sigma^2\:e^{2\kappa u}\,du.
 \end{align*}
+Note that 
+$$
+\V[\ln F(T,T)] = \V[X(T)] 
+$$
+is the variance that is used in the pricing of a Futures Option which in turn is used in the calibration of the Schwartz model.
 
 Alternatively, one can use the drift-free state variable $Y(t)=e^{\kappa t} X(t)$ with
 \begin{align*}
