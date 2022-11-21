@@ -69,7 +69,8 @@ void CommodityAveragePriceOption::build(const boost::shared_ptr<EngineFactory>& 
 
 
     QL_REQUIRE(gearing_ > 0.0, "Gearing (" << gearing_ << ") should be positive.");
-    QL_REQUIRE(spread_ < strike_, "Spread (" << spread_ << ") should be less than strike (" << strike_ << ").");
+    QL_REQUIRE(spread_ < strike_ || QuantLib::close_enough(spread_, strike_),
+               "Spread (" << spread_ << ") should be less than strike (" << strike_ << ").");
 
     // Allow exercise dates not to be specified for an APO. In this case, the exercise date is deduced below when
     // building the APO or a standard option.
