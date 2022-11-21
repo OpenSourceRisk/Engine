@@ -2275,7 +2275,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
 
     Size n = 50000;                         // number of paths
     Size seed = 18;                         // rng seed
-    Time T = 10.0;                          // maturity of payoff
+    Time T = 2.0;                          // maturity of payoff
     Time T2 = 20.0;                         // zerobond maturity
     Size steps = static_cast<Size>(T * 40); // number of steps taken (euler)
 
@@ -2531,7 +2531,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
     boost::shared_ptr<StochasticProcess> p_exact = d.modelExact->stateProcess();
     boost::shared_ptr<StochasticProcess> p_euler = d.modelExact->stateProcess();
 
-    Real T = 10;                            // horizon at which we compare the moments
+    Real T = 2.0;                            // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10); // number of simulation steps (Euler and exact)
     Size paths = 30000;                     // number of paths
 
@@ -2881,7 +2881,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
 
     Size n = 50000;                         // number of paths
     Size seed = 18;                         // rng seed
-    Time T = 10.0;                          // maturity of payoff
+    Time T = 2.0;                          // maturity of payoff
     Time T2 = 20.0;                         // zerobond maturity
     Size steps = static_cast<Size>(T * 24); // number of steps taken (euler)
 
@@ -3118,7 +3118,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMoments) {
     boost::shared_ptr<StochasticProcess> p_exact = d.modelExact->stateProcess();
     boost::shared_ptr<StochasticProcess> p_euler = d.modelExact->stateProcess();
 
-    Real T = 10;                            // horizon at which we compare the moments
+    Real T = 2.0;                           // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10); // number of simulation steps (Euler and exact)
     Size paths = 60000;                     // number of paths
 
