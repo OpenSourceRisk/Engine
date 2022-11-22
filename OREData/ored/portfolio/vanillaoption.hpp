@@ -71,7 +71,7 @@ protected:
     OptionData option_;
     string assetName_;
     string currency_;
-    string underlyingCurrency_ = "";
+    Currency underlyingCurrency_;
     double quantity_;
     TradeStrike strike_;
 
