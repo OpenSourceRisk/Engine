@@ -133,18 +133,4 @@ boost::shared_ptr<CommodityIndex> CommodityFuturesIndex::clone(const Date& expir
     return boost::make_shared<CommodityFuturesIndex>(underlyingName(), ed, fixingCalendar(), keepDays(), pts);
 }
 
-
-// overwriting the base fixing to handle QPR-11139 for the patch 1.0.61.8.1
-// This needs to be reviewed with the 1.0.62 release
-Real CommodityFuturesIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
-for (auto days=0; days<45; days++){
-    try{
-        return CommodityIndex::fixing(fixingDate-days, forecastTodaysFixing);
-    }catch (...){
-
-    }
-}
-QL_FAIL("Fixings not available for " << this->name() << " in date range " << fixingDate-44 << "to " << fixingDate);
-}
-
 } // namespace QuantExt

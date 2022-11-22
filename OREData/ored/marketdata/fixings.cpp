@@ -48,7 +48,7 @@ void applyFixings(const set<Fixing>& fixings) {
     boost::shared_ptr<Index> index;
     std::string lastIndexName;
     for (auto& f : fixings) {
-	if(f.name.empty()) {
+        if(f.name.empty()) {
             WLOG("Skipping fixing with empty name, value " << f.fixing << ", date " << f.date);
         }
         try {

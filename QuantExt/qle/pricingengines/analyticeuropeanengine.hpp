@@ -21,6 +21,8 @@
    results in the case of FX instruments where the trade builder may have inverted the underlying pair
 */
 
+#pragma once
+
 #include <ql/instruments/vanillaoption.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
