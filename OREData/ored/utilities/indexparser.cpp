@@ -386,7 +386,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()},
         {"CNY-REPOFIX", boost::make_shared<IborIndexParserWithPeriod<CNYRepoFix>>()},
         {"USD-SOFR", boost::make_shared<IborIndexParserWithPeriod<QuantExt::SofrTerm>>()},
-        {"GBP-SONIA", boost::make_shared<IborIndexParserWithPeriod<QuantExt::SoniaTerm>>()}};
+        {"GBP-SONIA", boost::make_shared<IborIndexParserWithPeriod<QuantExt::SoniaTerm>>()},
+        {"JPY-TONAR", boost::make_shared<IborIndexParserWithPeriod<QuantExt::TonarTerm>>()}};
 
     // Check (once) that we have a one-to-one mapping
     static bool checked = false;
@@ -895,7 +896,8 @@ string internalIndexName(const string& indexName) {
 
     // Static map of allowable alternative external names to our unique internal name
     static map<string, string> m = {{"DKK-TNR", "DKK-DKKOIS"}, {"EUR-EURIB", "EUR-EURIBOR"}, {"CAD-BA", "CAD-CDOR"},
-                                    {"EUR-ESTR", "EUR-ESTER"}, {"EUR-STR", "EUR-ESTER"}, {"JPY-TONA", "JPY-TONAR"}};
+                                    {"EUR-ESTR", "EUR-ESTER"}, {"EUR-STR", "EUR-ESTER"},     {"JPY-TONA", "JPY-TONAR"},
+                                    {"JPY-TORF", "JPY-TONAR"}};
 
     // Is start of indexName covered by the map? If so, update it.
     string tmpName = tokens[0] + "-" + tokens[1];
