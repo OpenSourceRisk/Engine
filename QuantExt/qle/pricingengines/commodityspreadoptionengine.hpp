@@ -35,6 +35,7 @@ protected:
     QuantLib::Handle<QuantLib::BlackVolTermStructure> volTSLongAsset_;
     QuantLib::Handle<QuantLib::BlackVolTermStructure> volTSShortAsset_; 
     QuantLib::Real rho_;
+    QuantLib::Real beta_;
 };
 
 /*! Commodity Spread Option Analytical Engine
@@ -46,6 +47,17 @@ class CommoditySpreadOptionAnalyticalEngine : public CommoditySpreadOptionBaseEn
 public:
     using CommoditySpreadOptionBaseEngine::CommoditySpreadOptionBaseEngine;
     void calculate() const override;
+
+private:
+    std::tuple<double, double, double> timeAndAtmAndSigmaFromCashFlow(const ext::shared_ptr<CommodityCashFlow>& flow,
+                                                                      const ext::shared_ptr<BlackVolTermStructure>& vol,
+                                                                      const ext::shared_ptr<FxIndex>& fxIndex) const;
+    
+    double kirkFormula(double F1, double sigma1, double t1, double w1, double F2, double sigma2, double t2, double w2,
+                       double K, double tte, double ttp) const;
+
+    double rho(const QuantLib::Date& e1, const QuantLib::Date& e2,
+               const ext::shared_ptr<BlackVolTermStructure>& vol) const;
 };
 
 } // namespace QuantExt

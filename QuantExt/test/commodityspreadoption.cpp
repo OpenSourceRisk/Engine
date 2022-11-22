@@ -21,14 +21,16 @@
 #include <ql/currencies/america.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/matrix.hpp>
+#include <ql/pricingengines/blackformula.hpp>
 #include <ql/settings.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
+#include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/instruments/commodityspreadoption.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
 #include <qle/termstructures/pricecurve.hpp>
-#include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/time/futureexpirycalculator.hpp>
 
 using namespace std;
 using namespace boost::unit_test_framework;
@@ -36,6 +38,27 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 namespace {
+class MockUpExpiryCalculator : public FutureExpiryCalculator {
+    // Inherited via FutureExpiryCalculator
+    virtual QuantLib::Date nextExpiry(bool includeExpiry, const QuantLib::Date& referenceDate, QuantLib::Natural offset,
+                                      bool forOption) override {
+        return Date::endOfMonth(referenceDate);
+    }
+    virtual QuantLib::Date priorExpiry(bool includeExpiry, const QuantLib::Date& referenceDate,
+                                       bool forOption) override {
+        return Date(1, referenceDate.month(), referenceDate.year()) - 1 * Days;
+    }
+    virtual QuantLib::Date expiryDate(const QuantLib::Date& contractDate, QuantLib::Natural monthOffset,
+                                      bool forOption) override {
+        return Date::endOfMonth(contractDate);
+    }
+    virtual QuantLib::Date contractDate(const QuantLib::Date& expiryDate) override { return expiryDate; }
+    virtual QuantLib::Date applyFutureMonthOffset(const QuantLib::Date& contractDate,
+                                                  Natural futureMonthOffset) override {
+        return QuantLib::Date();
+    }
+};
+
 
 double monteCarloPricing(double F1, double F2, double sigma1, double sigma2, double rho, double ttm, double df,
                          double strike) {
@@ -65,6 +88,21 @@ double monteCarloPricing(double F1, double F2, double sigma1, double sigma2, dou
 
     return payoff * df / (double)samples;
 }
+
+double monteCarloPricingSpotAveraging(const ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow1,
+    const ext::shared_ptr<PriceTermStructure> priceCurve1,
+    const ext::shared_ptr<BlackVolatilityTermStructure> vol1,
+    const ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow2,
+    const ext::shared_ptr<PriceTermStructure> priceCurve2,
+    const ext::shared_ptr<BlackVolatilityTermStructure> vol2,
+    Real rho, Real beta) {
+
+
+
+
+}
+
+
 } // namespace
 
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
@@ -199,11 +237,11 @@ BOOST_AUTO_TEST_CASE(testCalendarSpread2) {
     auto index2 =
         boost::make_shared<CommodityFuturesIndex>("BRENT_NOV_USD", Date(30, Nov, 2022), NullCalendar(), brentCurve);
 
-    auto flow1 = boost::make_shared<CommodityIndexedCashFlow>(100, Date(31, Dec, 2022), Date(5, Dec, 2022), index1);
+    auto flow1 = boost::make_shared<CommodityIndexedCashFlow>(100, Date(31, Dec, 2022), Date(31, Dec, 2022), index1);
 
-    auto flow2 = boost::make_shared<CommodityIndexedCashFlow>(100, Date(30, Nov, 2022), Date(5, Dec, 2022), index2);
+    auto flow2 = boost::make_shared<CommodityIndexedCashFlow>(100, Date(30, Nov, 2022), Date(31, Dec, 2022), index2);
 
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(5, Dec, 2022));
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(31, Dec, 2022));
 
     CommoditySpreadOption spreadOption(flow1, flow2, exercise, 1000., strike, Option::Call);
 
@@ -216,6 +254,119 @@ BOOST_AUTO_TEST_CASE(testCalendarSpread2) {
 
     std::cout << "MC price "
               << monteCarloPricing(105., 104., volBrent, volBrent * volScalingFactor, rho,
+                                   discount->timeFromReference(exercise->lastDate()),
+                                   discount->discount(exercise->lastDate()), strike) *
+                     1000
+              << std::endl;
+
+    std::cout << "Kirk approximation " << spreadOption.NPV() << std::endl;
+}
+
+BOOST_AUTO_TEST_CASE(testCalendarSpreadEdgeCase) {
+    Date today(1, Dec, 2022);
+    Settings::instance().evaluationDate() = today;
+
+    std::vector<Date> futureExpiryDates = {today, Date(31, Dec, 2022)};
+    std::vector<Real> brentQuotes = {104, 105};
+
+    double strike = 1;
+    double volBrent = 0.3;
+    double rho = 0.9;
+    double quantity = 1000;
+
+    auto brentCurve = Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(
+        today, futureExpiryDates, brentQuotes, Actual365Fixed(), USDCurrency()));
+
+    auto discount = Handle<YieldTermStructure>(
+        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.03)), Actual365Fixed()));
+
+    auto vol1 = Handle<BlackVolTermStructure>(
+        boost::make_shared<BlackConstantVol>(today, NullCalendar(), volBrent, Actual365Fixed()));
+
+    auto index1 =
+        boost::make_shared<CommodityFuturesIndex>("BRENT_DEC_USD", Date(31, Dec, 2022), NullCalendar(), brentCurve);
+
+    auto index2 =
+        boost::make_shared<CommodityFuturesIndex>("BRENT_NOV_USD", Date(30, Nov, 2022), NullCalendar(), brentCurve);
+
+    index2->addFixing(Date(30, Nov, 2022), 104);
+
+    auto flow1 = boost::make_shared<CommodityIndexedCashFlow>(100, Date(31, Dec, 2022), Date(5, Dec, 2022), index1);
+
+    auto flow2 = boost::make_shared<CommodityIndexedCashFlow>(100, Date(30, Nov, 2022), Date(5, Dec, 2022), index2);
+
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(5, Dec, 2022));
+
+    CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call);
+
+    auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, vol1, vol1, rho);
+
+    spreadOption.setPricingEngine(engine);
+
+    double blackPrice = blackFormula(QuantLib::Option::Call, 104 + strike, 105,
+                                     std::sqrt(vol1->blackVariance(exercise->lastDate(), 105)),
+                                     discount->discount(exercise->lastDate()));
+
+    std::cout << "Black Price" << blackPrice * quantity << std::endl;
+
+    std::cout << "MC price "
+              << monteCarloPricing(105., 104., volBrent, 0, rho, discount->timeFromReference(exercise->lastDate()),
+                                   discount->discount(exercise->lastDate()), strike) *
+                     quantity
+              << std::endl;
+
+    std::cout << "Kirk approximation " << spreadOption.NPV() << std::endl;
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(testAveragingSpreadOption) {
+    Date today(5, Nov, 2022);
+    Settings::instance().evaluationDate() = today;
+
+    std::vector<Date> futureExpiryDates = {Date(5, Nov, 2022), Date(30, Nov, 2022), Date(31, Dec, 2022)};
+    std::vector<Real> brentQuotes = {100., 104, 105};
+
+    double quantity = 1000;
+    double strike = 1;
+    double volBrent = 0.3;
+    double rho = 0.9;
+
+    auto brentCurve = Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(
+        today, futureExpiryDates, brentQuotes, Actual365Fixed(), USDCurrency()));
+
+    auto discount = Handle<YieldTermStructure>(
+        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.03)), Actual365Fixed()));
+
+    auto vol1 = Handle<BlackVolTermStructure>(
+        boost::make_shared<BlackConstantVol>(today, NullCalendar(), volBrent, Actual365Fixed()));
+
+    auto index =
+        boost::make_shared<CommoditySpotIndex>("BRENT_USD", NullCalendar(), brentCurve);
+
+    index->addFixing(Date(1, Nov, 2022), 100);
+    index->addFixing(Date(2, Nov, 2022), 100);
+    index->addFixing(Date(3, Nov, 2022), 100);
+    index->addFixing(Date(4, Nov, 2022), 100);
+    index->addFixing(Date(5, Nov, 2022), 100);
+
+    auto flow1 = boost::make_shared<CommodityIndexedAverageCashFlow>(quantity, Date(1, Nov, 2022), Date(30, Nov, 2022),
+                                                                     Date(30, Nov, 2022), index, NullCalendar());
+
+    auto flow2 = boost::make_shared<CommodityIndexedAverageCashFlow>(quantity, Date(1, Dec, 2022), Date(31, Dec, 2022),
+                                                                     Date(31, Dec, 2022), index, NullCalendar());
+
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(31, Dec, 2022));
+
+    CommoditySpreadOption spreadOption(flow1, flow2, exercise, 1000., strike, Option::Call);
+
+    auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, vol1, vol1, rho);
+
+    spreadOption.setPricingEngine(engine);
+
+    std::cout << "MC price "
+              << monteCarloPricing(105., 104., volBrent, volBrent, rho,
                                    discount->timeFromReference(exercise->lastDate()),
                                    discount->discount(exercise->lastDate()), strike) *
                      1000

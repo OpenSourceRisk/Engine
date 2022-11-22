@@ -86,7 +86,6 @@ private:
     QuantLib::Date pricingDate_;
     QuantLib::Date paymentDate_;
     ext::shared_ptr<CommodityIndex> index_;
-    bool useFuturePrice_;
     bool useFutureExpiryDate_;
     QuantLib::Natural futureMonthOffset_;
     QuantLib::Real periodQuantity_;

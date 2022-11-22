@@ -71,11 +71,10 @@ private:
 class CommoditySpreadOption::arguments : public Option::arguments {
 public:
     arguments();
-    boost::shared_ptr<CashFlow> longAssetFlow;
-    boost::shared_ptr<CashFlow> shortAssetFlow;
+    boost::shared_ptr<CommodityCashFlow> longAssetFlow;
+    boost::shared_ptr<CommodityCashFlow> shortAssetFlow;
     Real quantity;
     Real strikePrice;
-    Real accrued;
     Real effectiveStrike;
     Option::Type type;
     Date paymentDate;
