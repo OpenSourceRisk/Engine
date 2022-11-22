@@ -137,7 +137,9 @@ BOOST_AUTO_TEST_CASE(testDeltaGammaVar) {
 
     // TODO add more test cases (negative gammas, higher dimensions)
 
-    Size n = (Size)1E7;
+    // for better accuracy use 1E7 (1E6) paths below
+
+    Size n = (Size)1E5;
 
     test(1, true, false, 42, 42, n);
     test(1, true, true, 42, 42, n);
@@ -148,9 +150,8 @@ BOOST_AUTO_TEST_CASE(testDeltaGammaVar) {
     test(10, true, false, 42, 42, n);
     test(10, true, true, 42, 42, n);
 
-    // fewer paths here
-    test(100, true, false, 42, 42, (Size)1E6);
-    test(100, true, true, 42, 42, (Size)1E6);
+    test(100, true, false, 42, 42, n);
+    test(100, true, true, 42, 42, n);
 }
 
 BOOST_AUTO_TEST_CASE(testNegativeGamma) {

@@ -26,8 +26,17 @@ using std::string;
 namespace ore {
 namespace data {
 
+ConventionsBasedFutureExpiry::ConventionsBasedFutureExpiry(const std::string& commName, Size maxIterations)
+    : maxIterations_(maxIterations) {
+    auto p = boost::dynamic_pointer_cast<CommodityFutureConvention>(
+        InstrumentConventions::instance().conventions()->get(commName));
+    QL_REQUIRE(p, "ConventionsBasedFutureExpiry: could not cast to CommodityFutureConvention for '"
+                      << commName << "', this is an internal error. Contact support.");
+    convention_ = *p;
+}
+
 ConventionsBasedFutureExpiry::ConventionsBasedFutureExpiry(const CommodityFutureConvention& convention,
-                                                           Size maxIterations)
+                                                           QuantLib::Size maxIterations)
     : convention_(convention), maxIterations_(maxIterations) {}
 
 Date ConventionsBasedFutureExpiry::nextExpiry(bool includeExpiry, const Date& referenceDate, Natural offset,
@@ -91,6 +100,50 @@ Date ConventionsBasedFutureExpiry::expiryDate(const Date& contractDate, Natural 
     }
 }
 
+QuantLib::Date ConventionsBasedFutureExpiry::contractDate(const QuantLib::Date& expiryDate) {
+
+    if (convention_.contractFrequency() == Monthly) {
+
+        // do not attempt to invert the logic in expiry(), instead just search for a valid contract month
+        // in a reasonable range
+
+        for (Size m = 0; m < 120; ++m) {
+            try {
+                Date tmp = Date(15, expiryDate.month(), expiryDate.year()) + m * Months;
+                if (expiry(tmp.dayOfMonth(), tmp.month(), tmp.year(), 0, false) == expiryDate)
+                    return tmp;
+            } catch (...) {
+            }
+            try {
+                Date tmp = Date(15, expiryDate.month(), expiryDate.year()) - m * Months;
+                if (expiry(tmp.dayOfMonth(), tmp.month(), tmp.year(), 0, false) == expiryDate)
+                    return tmp;
+            } catch (...) {
+            }
+        }
+
+    } else {
+
+        // daily of weekly contract frequency => we can use contract date = expiry date
+
+        return expiryDate;
+    }
+
+    QL_FAIL("ConventionsBasedFutureExpiry::contractDate(" << expiryDate << "): could not imply contract date. This is an internal error. Contact support.");
+}
+
+QuantLib::Date ConventionsBasedFutureExpiry::applyFutureMonthOffset(const QuantLib::Date& contractDate,
+                                                                    Natural futureMonthOffset) {
+
+    Date tmp = contractDate;
+
+    if (convention_.contractFrequency() == Monthly) {
+        tmp = Date(15, contractDate.month(), contractDate.year()) + futureMonthOffset * Months;
+    }
+
+    return tmp;
+}
+
 Date ConventionsBasedFutureExpiry::expiry(Day dayOfMonth, Month contractMonth, Year contractYear, QuantLib::Natural monthOffset,
                                           bool forOption) const {
 
@@ -116,6 +169,12 @@ Date ConventionsBasedFutureExpiry::expiry(Day dayOfMonth, Month contractMonth, Y
             contractYear = newDate.year();
         }
 
+        if (convention_.contractFrequency() == Monthly && !convention_.validContractMonths().empty() &&
+            convention_.validContractMonths().size() < 12 &&
+            convention_.validContractMonths().count(contractMonth) == 0) {
+            // contractMonth is in the not in the list of valid contract months
+            return Date();
+        } 
         // Calculate the relevant date in the expiry month and year
         if (convention_.anchorType() == CommodityFutureConvention::AnchorType::DayOfMonth) {
             Date last = Date::endOfMonth(Date(1, contractMonth, contractYear));

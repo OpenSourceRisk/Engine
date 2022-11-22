@@ -1,14 +1,14 @@
 \subsubsection{Equity Swap}
 \label{ss:equity_swap}
 
-An Equity Swap uses its own trade type  \emph{EquitySwap}, and is set up using a {\tt EquitySwapData} node with one leg of type  \emph{Equity} and one more leg that can be either \emph{Fixed} or  \emph{Floating}. Listing \ref{lst:equityswap} shows an example. The
-\emph{Equity} leg contains an additional {\tt EquityLegData} block. See \ref{ss:equitylegdata} for details on the \emph{Equity} leg specification.
+An Equity Swap uses its own trade type  \emph{EquitySwap}, and is set up using a {\tt EquitySwapData} node with one leg of type  \emph{Equity} and one more leg - called Funding leg -  that can be either \emph{Fixed} or  \emph{Floating}. Listing \ref{lst:equityswap} shows an example. The
+Equity leg contains an additional {\tt EquityLegData} block. See \ref{ss:equitylegdata} for details on the Equity leg specification.
 
-The equity swap is priced using the {\em full discounting method} as opossed to the {\em accrual method} which is used
-for the {\em generic total return swap} trade type. The accrual method is common practice when daily unwind rights are
-present in the trade terms.
+Cross currency \emph{EquitySwaps} are supported, i.e. the Equity and the Funding legs do not need to have the same currency. However, if the Funding leg uses \lstinline!Indexings! with \lstinline!FromAssetLeg! 
+ set to \emph{true} to derive the notionals from the Equity leg, then the Funding leg must use the same currency as the Equity leg.
+ 
+Note that pricing for an \emph{EquitySwap} is based on discounted cashflows, whereas pricing for a \emph{TotalReturnSwap} (GenericTRS) on an equity underlying uses the accrual method. The accrual method is common practice when daily unwind rights are present in the trade terms.
 
-Note that pricing for an \emph{EquitySwap} is based on discounted cashflows, whereas pricing for a \emph{TotalReturnSwap} (GenericTRS) on an equity underlying uses the accrual method.
 
 Also note that, unlike other leg types, the {\tt DayCounter} field is optional for an \emph{Equity} leg, and defaults to \emph{ACT/365} if left blank or omitted. The daycount convention for the equity leg of an equity swap does not impact pricing, only the accrued amount (displayed in cashflows).
 
@@ -38,10 +38,8 @@ Also note that, unlike other leg types, the {\tt DayCounter} field is optional f
 \label{lst:equityswap}
 \end{listing}
 
-If the equity swap has a resetting notional, typically the funding leg's notional will be aligned with the equity leg's
-notional. To achieve this, indexings on the floating leg can be used, see \ref{ss:indexings}. In the context of equity
-swaps the indexings can be defined in a simplified way by adding a Indexings node with a subnode FromAssetLeg set to
-true to the funding leg's LegData node. The notionals node is not required either in the funding leg's LegData in this
+If the equity swap has a resetting notional, typically the Funding leg's notional will be aligned with the equity leg's
+notional. To achieve this, \lstinline!Indexings! on the floating leg can be used, see \ref{ss:indexings}. In the context of equity swaps the indexings can be defined in a simplified way by adding an \lstinline!Indexings! node with a subnode \lstinline!FromAssetLeg! set to \emph{true} to the Funding leg's \lstinline!LegData! node. The \lstinline!Notionals! node is not required  in the Funding leg's LegData in this
 case. An example is shown in listing \ref{lst:equityswap_reset}.
 
 \begin{listing}[H]

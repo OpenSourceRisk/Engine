@@ -35,7 +35,7 @@ Gaussian1dCrossAssetAdaptor::Gaussian1dCrossAssetAdaptor(Size ccy, const boost::
 
 void Gaussian1dCrossAssetAdaptor::initialize() {
     registerWith(x_);
-    stateProcess_ = x_->stateProcess();
+    stateProcess_ = boost::dynamic_pointer_cast<StochasticProcess1D>(x_->stateProcess());
 }
 
 } // namespace QuantExt

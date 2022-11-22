@@ -62,16 +62,16 @@ void FxBsData::fromXML(XMLNode* node) {
     LOG("CC-LGM Sigma initial values size = " << sigmaValues_.size());
 
     // Add FX Option calibration instruments
-    XMLNode* optionsNode = XMLUtils::getChildNode(node, "CalibrationOptions");
-
-    optionExpiries_ = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Expiries", true);
-    optionStrikes_ = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Strikes", false);
-
-    if (optionStrikes_.size() > 0) {
-        QL_REQUIRE(optionExpiries_.size() == optionStrikes_.size(),
-                   "size mismatch in FX option expiries/strike for foreign ccy " << foreignCcy_);
-    } else // default ATMF
-        optionStrikes_.resize(optionExpiries_.size(), "ATMF");
+    if (XMLNode* optionsNode = XMLUtils::getChildNode(node, "CalibrationOptions")) {
+        optionExpiries_ = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Expiries", false);
+        optionStrikes_ = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Strikes", false);
+        if (optionStrikes_.size() > 0) {
+            QL_REQUIRE(optionExpiries_.size() == optionStrikes_.size(),
+                       "size mismatch in FX option expiries/strike for foreign ccy " << foreignCcy_);
+        } else {
+            optionStrikes_.resize(optionExpiries_.size(), "ATMF");
+        }
+    }
 }
 
 XMLNode* FxBsData::toXML(XMLDocument& doc) {

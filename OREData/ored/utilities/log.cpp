@@ -163,13 +163,37 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
     // log pid if given
     if (pid_ > 0)
         ls_ << " [" << pid_ << "] ";
+
+    // update statistics
+    if(lastLineNo_ == lineNo && lastFileName_ == filename) {
+        ++sameSourceLocationSince_;
+    } else {
+        lastFileName_ = filename;
+        lastLineNo_ = lineNo;
+        sameSourceLocationSince_ = 0;
+        writeSuppressedMessagesHint_ = true;
+    }
+
 }
 
 void Log::log(unsigned m) {
     string msg = ls_.str();
     map<string, boost::shared_ptr<Logger>>::iterator it;
-    for (it = loggers_.begin(); it != loggers_.end(); ++it)
-        it->second->log(m, msg);
+    if (sameSourceLocationSince_ <= sameSourceLocationCutoff_) {
+        for (auto& l : loggers_) {
+            l.second->log(m, msg);
+        }
+    } else if (writeSuppressedMessagesHint_) {
+        std::string suffix;
+        if (msg.find(StructuredMessage::name) == string::npos) {
+            suffix = " ... suppressing more messages from same source code location (cutoff = " +
+                     std::to_string(sameSourceLocationCutoff_) + " lines)";
+        }
+        for (auto& l : loggers_) {
+            l.second->log(m, msg + suffix);
+        }
+        writeSuppressedMessagesHint_ = false;
+    }
 }
 
 // --------
@@ -194,7 +218,30 @@ LoggerStream::~LoggerStream() {
     }
 }
 
-string StructuredErrorMessage::jsonify(const string& s) const {
+string StructuredMessage::json() const {
+    string msg =
+        "{ \"category\":\"" + category_ + "\", \"group\":\"" + group_ + "\"," + " \"message\":\"" + jsonify(message_);
+
+    if (!subFields_.empty()) {
+        msg += "\", \"sub_fields\": [ ";
+        QuantLib::Size i = 0;
+        for (const auto& p : subFields_) {
+            // Only include subFields that are non-empty.
+            if (!p.second.empty()) {
+                if (i > 0)
+                    msg += ", ";
+                msg += "{ \"name\": \"" + p.first + "\", \"value\": \"" + jsonify(p.second) + "\" }";
+                i++;
+            }
+        }
+        msg += " ]";
+    }
+    msg += " }";
+
+    return msg;
+}
+
+string StructuredMessage::jsonify(const string& s) const {
     string str = s;
     boost::replace_all(str, "\\", "\\\\"); // do this before the below otherwise we get \\"
     boost::replace_all(str, "\"", "\\\"");

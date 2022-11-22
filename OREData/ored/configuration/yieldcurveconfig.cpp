@@ -697,9 +697,8 @@ void DiscountRatioYieldCurveSegment::accept(AcyclicVisitor& v) {
 
 FittedBondYieldCurveSegment::FittedBondYieldCurveSegment(const string& typeID, const vector<string>& quotes,
                                                          const map<string, string>& iborIndexCurves,
-                                                         const bool extrapolateFlat, const Size calibrationTrials)
-    : YieldCurveSegment(typeID, "", quotes), iborIndexCurves_(iborIndexCurves), extrapolateFlat_(extrapolateFlat),
-      calibrationTrials_(calibrationTrials) {}
+                                                         const bool extrapolateFlat)
+    : YieldCurveSegment(typeID, "", quotes), iborIndexCurves_(iborIndexCurves), extrapolateFlat_(extrapolateFlat) {}
 
 void FittedBondYieldCurveSegment::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "FittedBond");
@@ -733,7 +732,6 @@ XMLNode* FittedBondYieldCurveSegment::toXML(XMLDocument& doc) {
                                         iborIndexNames);
 
     XMLUtils::addChild(doc, node, "ExtrapolateFlat", extrapolateFlat_);
-    XMLUtils::addChild(doc, node, "CalibrationTrials", static_cast<int>(calibrationTrials_));
     return node;
 }
 

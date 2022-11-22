@@ -571,7 +571,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             Real lossLevel = lossLevels[lossLevelIdx];
             Size termIdx = keyIdx % terms.size();
             Period term = terms[termIdx];
-            Handle<BilinearBaseCorrelationTermStructure> ts = simMarket->baseCorrelation(name, marketConfiguration);
+            Handle<QuantExt::BaseCorrelationTermStructure> ts = simMarket->baseCorrelation(name, marketConfiguration);
             Real bc = ts->correlation(asof + term, lossLevel, true); // extrapolate
             shiftMult = bc;
         }

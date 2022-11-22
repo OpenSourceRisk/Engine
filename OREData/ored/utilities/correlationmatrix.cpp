@@ -25,8 +25,6 @@
 using namespace QuantLib;
 using namespace std;
 
-namespace CT = QuantExt::CrossAssetModelTypes;
-
 namespace {
 
 string invertFx(const string& ccyPair) {
@@ -38,6 +36,8 @@ string invertFx(const string& ccyPair) {
 
 namespace ore {
 namespace data {
+
+using QuantExt::CrossAssetModel;
 
 bool operator<(const CorrelationFactor& lhs, const CorrelationFactor& rhs) {
     return tie(lhs.type, lhs.name, lhs.index) < tie(rhs.type, rhs.name, rhs.index);
@@ -60,7 +60,7 @@ CorrelationFactor parseCorrelationFactor(const string& name) {
     Size pos = name.find(':');
     QL_REQUIRE(pos != string::npos, "Expected the factor to be of the form 'type:name'");
 
-    CT::AssetType factorType = parseCamAssetType(name.substr(0, pos));
+    CrossAssetModel::AssetType factorType = parseCamAssetType(name.substr(0, pos));
     string factorName = name.substr(pos + 1);
 
     return { factorType, factorName, 0 };
@@ -131,7 +131,7 @@ Matrix CorrelationMatrixBuilder::correlationMatrix(const vector<string>& ccys,
 Matrix CorrelationMatrixBuilder::correlationMatrix(const ProcessInfo& processInfo) {
 
     // Check that all IR processes are currency codes and that we have at least one currency
-    auto outerIt = processInfo.find(CT::IR);
+    auto outerIt = processInfo.find(CrossAssetModel::AssetType::IR);
     QL_REQUIRE(outerIt != processInfo.end() && !outerIt->second.empty(),
         "Need at least one currency to build correlation matrix.");
     
@@ -147,7 +147,7 @@ Matrix CorrelationMatrixBuilder::correlationMatrix(const ProcessInfo& processInf
             
             // Don't allow multiple factors for FX for now. Need to check later the FX inversion in the lookup below 
             // if we want to extend the builder to multiple factors for each FX process.
-            if (kv.first == CT::FX) {
+            if (kv.first == CrossAssetModel::AssetType::FX) {
                 QL_REQUIRE(p.second == 1, "CorrelationMatrixBuilder does not support multiple factors for FX. " <<
                     p.first << " is set up with " << p.second << " factors.");
             }
@@ -192,28 +192,28 @@ CorrelationMatrixBuilder::ProcessInfo CorrelationMatrixBuilder::createProcessInf
 
     // Add process information for each currency.
     for (const string& ccy : ccys) {
-        result[CT::IR].emplace_back(ccy, 1);
+        result[CrossAssetModel::AssetType::IR].emplace_back(ccy, 1);
     }
 
     // Add process information for each FX pair.
     for (Size i = 1; i < ccys.size(); ++i) {
         string ccyPair = ccys[i] + ccys[0];
-        result[CT::FX].emplace_back(ccyPair, 1);
+        result[CrossAssetModel::AssetType::FX].emplace_back(ccyPair, 1);
     }
 
     // Add process information for inflation indices.
     for (const string& inflationIndex : inflationIndices) {
-        result[CT::INF].emplace_back(inflationIndex, 1);
+        result[CrossAssetModel::AssetType::INF].emplace_back(inflationIndex, 1);
     }
 
     // Add process information for credit names.
     for (const string& creditName : creditNames) {
-        result[CT::CR].emplace_back(creditName, 1);
+        result[CrossAssetModel::AssetType::CR].emplace_back(creditName, 1);
     }
 
     // Add process information for equity names.
     for (const string& equityName : equityNames) {
-        result[CT::EQ].emplace_back(equityName, 1);
+        result[CrossAssetModel::AssetType::EQ].emplace_back(equityName, 1);
     }
 
     return result;
@@ -221,16 +221,15 @@ CorrelationMatrixBuilder::ProcessInfo CorrelationMatrixBuilder::createProcessInf
 
 void CorrelationMatrixBuilder::checkFactor(const CorrelationFactor& f) const {
     switch (f.type) {
-    case CT::IR:
-    case CT::AUX:
+    case CrossAssetModel::AssetType::IR:
         QL_REQUIRE(f.name.size() == 3, "Expected IR factor name to be 3 character currency code but got: " << f.name);
         break;
-    case CT::FX:
+    case CrossAssetModel::AssetType::FX:
         QL_REQUIRE(f.name.size() == 6, "Expected FX factor name to be 6 character currency pair but got: " << f.name);
         break;
-    case CT::INF:
-    case CT::CR:
-    case CT::EQ:
+    case CrossAssetModel::AssetType::INF:
+    case CrossAssetModel::AssetType::CR:
+    case CrossAssetModel::AssetType::EQ:
         QL_REQUIRE(!f.name.empty(), "Expected non-empty factor name for factor type " << f.type);
         break;
     default:
@@ -272,8 +271,8 @@ Handle<Quote> CorrelationMatrixBuilder::getCorrelation(const CorrelationFactor& 
     typedef DerivedQuote<negate<Real>> InvQuote;
 
     // If factor 1 is FX
-    if (f_1.type == CT::FX) {
-        CorrelationFactor if_1{ CT::FX, invertFx(f_1.name), f_1.index };
+    if (f_1.type == CrossAssetModel::AssetType::FX) {
+        CorrelationFactor if_1{ CrossAssetModel::AssetType::FX, invertFx(f_1.name), f_1.index };
         ck = createKey(if_1, f_2);
         auto it = corrs_.find(ck);
         if (it != corrs_.end())
@@ -281,8 +280,8 @@ Handle<Quote> CorrelationMatrixBuilder::getCorrelation(const CorrelationFactor& 
     }
 
     // If factor 2 is FX
-    if (f_2.type == CT::FX) {
-        CorrelationFactor if_2{ CT::FX, invertFx(f_2.name), f_2.index };
+    if (f_2.type == CrossAssetModel::AssetType::FX) {
+        CorrelationFactor if_2{ CrossAssetModel::AssetType::FX, invertFx(f_2.name), f_2.index };
         ck = createKey(f_1, if_2);
         auto it = corrs_.find(ck);
         if (it != corrs_.end())
@@ -290,9 +289,9 @@ Handle<Quote> CorrelationMatrixBuilder::getCorrelation(const CorrelationFactor& 
     }
 
     // If factor 1 and factor 2 are both FX
-    if (f_1.type == CT::FX && f_2.type == CT::FX) {
-        CorrelationFactor if_1{ CT::FX, invertFx(f_1.name), f_1.index };
-        CorrelationFactor if_2{ CT::FX, invertFx(f_2.name), f_2.index };
+    if (f_1.type == CrossAssetModel::AssetType::FX && f_2.type == CrossAssetModel::AssetType::FX) {
+        CorrelationFactor if_1{ CrossAssetModel::AssetType::FX, invertFx(f_1.name), f_1.index };
+        CorrelationFactor if_2{ CrossAssetModel::AssetType::FX, invertFx(f_2.name), f_2.index };
         ck = createKey(if_1, if_2);
         auto it = corrs_.find(ck);
         if (it != corrs_.end())

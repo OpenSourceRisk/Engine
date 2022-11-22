@@ -118,7 +118,7 @@ public:
         CORRELATION,
         COMMODITY_OPTION,
         CPR,
-	NONE
+        NONE
     };
 
     //! Supported market quote types
@@ -182,6 +182,7 @@ struct SharedPtrMarketDatumComparator {
 };
 
 std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type);
+std::ostream& operator<<(std::ostream& out, const MarketDatum::InstrumentType& type);
 
 //! Money market data class
 /*!

@@ -445,7 +445,7 @@ QuantLib::YoYInflationCapFloor::Type parseYoYInflationCapFloorType(const std::st
 /*! Convert text to QuantExt::CrossAssetModelTypes::AssetType
     \ingroup utilities
 */
-QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const std::string& s);
+QuantExt::CrossAssetModel::AssetType parseCamAssetType(const std::string& s);
 
 /*! Convert boost::any to pair<string,string>, including the valueType and the value
     \ingroup utilities
@@ -477,7 +477,7 @@ std::ostream& operator<<(std::ostream& os, SobolBrownianGenerator::Ordering t);
 std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t);
     
 //! Enum to string used in ScenarioGeneratorData's toXML
-std::ostream& operator<<(std::ostream& os, QuantExt::CrossAssetStateProcess::discretization type);
+std::ostream& operator<<(std::ostream& os, QuantExt::CrossAssetModel::Discretization type);
 
 //! Convert text to CommodityFutureConvention::AveragingData::CalculationPeriod
 CommodityFutureConvention::AveragingData::CalculationPeriod parseAveragingDataPeriod(const std::string& s);
@@ -518,5 +518,32 @@ std::ostream& operator<<(std::ostream& os, QuantExt::BondIndex::PriceQuoteMethod
 //! Helper function to get the two tokens in a correlation name Index2:Index1
 std::vector<std::string> getCorrelationTokens(const std::string& name);
 
+//! Convert FX pair to market standard dominance
+/*!
+ Convert FX pair to market standard dominance, e.g. "USD" & "GBP" -> "GBPUSD", "USD" & "JPY" -> "USDJPY"
+  \ingroup utilities
+*/
+string fxDominance(const string& s1, const string& s2);
+
+//! Convert FX index name to market standard dominance
+string normaliseFxIndex(const std::string& indexName);
+
+enum class MomentType { Variance, Volatility };
+
+//! Convert text to oreplus::data::MomentType
+/*!
+\ingroup utilities
+*/
+MomentType parseMomentType(const std::string& s);
+
+//! Enumeration CreditPortfolioSensitivityDecomposition
+enum class CreditPortfolioSensitivityDecomposition { Underlying, NotionalWeighted, LossWeighted, DeltaWeighted };
+
+//! Convert text to CreditPortfolioSensitivitiyDecomposition
+CreditPortfolioSensitivityDecomposition parseCreditPortfolioSensitivityDecomposition(const std::string& s);
+
+//! Output operator for CreditPortfolioSensitivityDecomposition
+std::ostream& operator<<(std::ostream& os, const CreditPortfolioSensitivityDecomposition d);
+    
 } // namespace data
 } // namespace ore

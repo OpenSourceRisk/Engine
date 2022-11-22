@@ -51,16 +51,16 @@ void AnalyticJyCpiCapFloorEngine::calculate() const {
 
     // Get the time to expiry. This determines if we use the JY model or look for an inflation index fixing.
     bool interpolate = arguments_.observationInterpolation == CPI::Linear ||
-        (arguments_.observationInterpolation == CPI::AsIndex && arguments_.infIndex->interpolated());
+        (arguments_.observationInterpolation == CPI::AsIndex && arguments_.index->interpolated());
     auto zts = model_->infjy(index_)->realRate()->termStructure();
-    Real t = inflationYearFraction(arguments_.infIndex->frequency(), interpolate,
+    Real t = inflationYearFraction(arguments_.index->frequency(), interpolate,
         zts->dayCounter(), zts->baseDate(), arguments_.fixDate);
 
     // If time to expiry is non-positive, we return the discounted value of the settled amount.
     // CPICapFloor should really have its own day counter for going from strike rate to k. We use t here.
     Real k = pow(1.0 + arguments_.strike, t);
     if (t <= 0.0) {
-        auto cpiAtExpiry = arguments_.infIndex->fixing(arguments_.fixDate);
+        auto cpiAtExpiry = arguments_.index->fixing(arguments_.fixDate);
         if (arguments_.type == Option::Call) {
             results_.value = max(cpiAtExpiry / arguments_.baseCPI - k, 0.0);
         } else {
@@ -87,7 +87,7 @@ void AnalyticJyCpiCapFloorEngine::calculate() const {
     v -= 2 * integral(x, P(ryy(index_, index_, 0, 1), LC(H_r_t, -1.0, Hy(index_)), ay(index_), sy(index_)), 0.0, t);
 
     // Calculate the forward CPI, F_I(0,T) in the book.
-    Real fwd = arguments_.infIndex->fixing(arguments_.fixDate);
+    Real fwd = arguments_.index->fixing(arguments_.fixDate);
 
     // Get adjusted nominal and strike, \tilde{N} and \tilde{K} from the book.
     Real adjNominal = arguments_.nominal / arguments_.baseCPI;

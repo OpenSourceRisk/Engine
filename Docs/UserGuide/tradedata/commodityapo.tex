@@ -1,0 +1,150 @@
+\subsubsection{Commodity Average Price Option}
+\label{ss:input_commodityapo}
+
+The structure of a trade node representing a commodity average price option (APO) is shown in listing \ref{lst:commodity_apo}. It consists of the generic \lstinline!Envelope! and the specific \lstinline[literate={\\\-}{}{0\discretionary{}{}{}}]!Commodity\-Average\-Price\-Option\-Data! node. A strip of these options may be booked using the commodity option strip trade outlined in section \ref{ss:commodityoptionstrip}. The meanings and allowable values of the elements in the \lstinline!CommodityAveragePriceOptionData! are as follows:
+
+\begin{itemize}
+
+\item \lstinline!OptionData!: This node is described in section \ref{ss:option_data}. The relevant fields in the \lstinline!OptionData! node for a  CommodityAveragePriceOption are:
+\begin{itemize}
+  \item \lstinline!LongShort!: The allowable values are \emph{Long} or \emph{Short}.
+  \item \lstinline!OptionType!: The allowable values are \emph{Call} or \emph{Put}, where \emph{Call} is an option for the party that is  \emph{Long} to buy the underlying commodity, and \emph{Put} is an option to sell the underlying commodity.
+  \item  \lstinline!Style!:  only \lstinline!European! exercise style is supported.
+  \item the \lstinline!ExerciseDates! node should contain exactly one \lstinline!ExerciseDate!, and  the single \lstinline!ExerciseDate! should be on or before the payment date. Also,  the single \lstinline!ExerciseDate! should be on or after the final date in the calculation period i.e. the \lstinline!EndDate! below.
+  \item \lstinline!Premiums! [Optional]: Option premium node with amounts paid by the option buyer to the option seller.
+Allowable values:  See section \ref{ss:premiums}
+\end{itemize}
+
+\item \lstinline!BarrierData! [optional]: If given this node specifies the barrier terms of the option:
+
+\begin{itemize}
+    \item \lstinline!Type!: One of \emph{UpAndIn}, \emph{DownAndIn}, \emph{UpAndOut}, \emph{DownAndOut}
+    \item \lstinline!Style!: One of \emph{European}, \emph{American}. A European barrier is observed on the last relevant pricing date of the APO while an American barrier is observed on all pricing dates of the APO.
+    \item \lstinline!LevelData!: The barrier level. Only single-barrier options are allowed, i.e. exactly one level must be given.
+\end{itemize}
+
+\item \lstinline!Name!: An identifier specifying the commodity being referenced. This is described in section \ref{ss:commodity_floating_leg_data}. 
+
+Allowable values:  See \lstinline!Name! for commodity trades in Table \ref{tab:commodity_data}.
+
+\item \lstinline!Currency!: The currency of the payoff which must be consistent with either currency of the market data set up for the commodity or the other currency specified in !lstinline!FXIndex! (see below).
+
+Allowable values: See \lstinline!Currency!  in Table \ref{tab:allow_stand_data}.
+
+\item \lstinline!Quantity!:  The number of units of the underlying commodity covered by the APO. The unit type is defined in the underlying contract specs for the commodity name in question. For avoidance of doubt, the Quantity is the number of units of the underlying commodity, not the number of contracts.
+
+The meaning of the Quantity is influenced by the \lstinline!CommodityQuantityFrequency! value as described in section \ref{ss:commodity_floating_leg_data}. If \lstinline!CommodityQuantityFrequency! is set to \lstinline!PerCalculationPeriod!, this quantity is used directly in the APO payoff. If \lstinline!CommodityQuantityFrequency! is set to \lstinline!PerCalendarDay!, this quantity is multiplied by the number of calendar days in the APO period to give the final quantity that is used in the APO payoff.
+
+Allowable values: Any positive real number.
+
+\item \lstinline!StrikeData!: A \lstinline!StrikeData! node is used as described in Section \ref{ss:strikedata} to represent the APO strike price and Currency of the Strike.The APO strike price. The strike uses the price quotation outlined in the underlying contract specs for the commodity name in question. Note that for CommodityAPOs only \lstinline!StrikePrice!  is supported within the \lstinline!StrikeData! node, and not \lstinline!StrikeYield!. 
+
+Allowable values: Only supports \lstinline!StrikePrice! as described in Section \ref{ss:strikedata}.
+
+\item \lstinline!PriceType!: The price type is \lstinline!Spot! if the APO is referencing a commodity spot price, and it is \lstinline!FutureSettlement! if the APO is referencing a commodity future contract settlement price.
+
+Allowable values: \lstinline!Spot! or \lstinline!FutureSettlement!.
+
+\item \lstinline!StartDate!: The start date of the APO's calculation period.
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item \lstinline!EndDate!: The end date of the APO's calculation period.
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item \lstinline!PaymentCalendar!: The business calendar used to determine the valid payment date.
+
+Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. 
+
+\item \lstinline!PaymentLag!: The payment date is this number of business days after a given base date. The base date is determined by the value of the \lstinline!CommodityPayRelativeTo! node below which is generally omitted for APOs and allowed to take its default value of \lstinline!CalculationPeriodEndDate!.
+
+Allowable values: Any valid period, i.e.\ a non-negative whole number, optionally followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months),
+  \emph{Y} (years). Defaults to \emph{0D} if left blank or omitted. If a whole number is given and no letter, it is assumed that it is a number of  \emph{D} (days).
+
+
+\item \lstinline!PaymentConvention!: The roll convention used to adjust the payment date.
+
+Allowable values: See Table \ref{tab:convention} Roll Convention. Defaults to \emph{Unadjusted} if left blank or omitted.
+
+\item \lstinline!PricingCalendar!: The business calendar used for determining the \textit{Pricing Dates} in the calculation period.
+
+Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. Defaults to \emph{NullCalendar} (no holidays) if left blank or omitted.
+
+\item \lstinline!PaymentDate! [Optional]: An explicit payment date for the APO if the combination of \lstinline!PaymentCalendar!, \lstinline!PaymentLag! and \lstinline!PaymentConvention! is not sufficient. If \lstinline!PaymentDate! is provided, it overrides the values provided in \lstinline!PaymentCalendar!, \lstinline!PaymentLag! and \lstinline!PaymentConvention!.
+
+\item \lstinline!Gearing! [Optional]: An optional gearing factor that the average price is multiplied by in the APO payoff. The default value is 1.0.
+
+\item \lstinline!Spread! [Optional]: An optional spread that is added to the average price in the APO payoff. The default value is 0.0.
+
+\item \lstinline!CommodityQuantityFrequency! [Optional]: This is as described in section \ref{ss:commodity_floating_leg_data}.
+
+\item \lstinline!CommodityPayRelativeTo! [Optional]: This is as described in section \ref{ss:commodity_floating_leg_data}.
+
+\item \lstinline!FutureMonthOffset! [Optional]: This is as described in section \ref{ss:commodity_floating_leg_data}.
+
+\item \lstinline!DeliveryRollDays! [Optional]: This is as described in section \ref{ss:commodity_floating_leg_data}.
+
+\item \lstinline!IncludePeriodEnd! [Optional]: This is as described in section \ref{ss:commodity_floating_leg_data}.
+
+\item \lstinline!FXIndex! [Optional]: This is an FX index used to apply currency conversion daily in the average. The currencies pair must include the currency used in the underlying commodity trade and the currency used for settlement.
+
+Allowable values:  See Table \ref{tab:fxindex_data} for supported fx indices.
+
+\end{itemize}
+
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="...">
+  <TradeType>CommodityAveragePriceOption</TradeType>
+  <Envelope>
+  ...
+  </Envelope>
+  <CommodityAveragePriceOptionData>
+    <OptionData>
+      <LongShort>Short</LongShort>
+      <OptionType>Call</OptionType>
+      <Style>European</Style>
+      <ExerciseDates>
+         <ExerciseDate>2020-01-31</ExerciseDate>
+      </ExerciseDates>
+    </OptionData>
+    <BarrierData>
+      <Type>UpAndIn</Type>
+      <Style>American</Style>
+      <LevelData>
+        <Level>
+          <Value>80</Value>
+        </Level>
+      </LevelData>
+    </BarrierData>
+    <Name>NYMEX:CL</Name>
+    <Currency>USD</Currency>
+    <Quantity>6000</Quantity>
+    <StrikeData>
+      <StrikePrice>
+	<Value>80</Value>
+	<Currency>USD</Currency>
+      </StrikePrice>
+    </StrikeData>
+    <PriceType>FutureSettlement</PriceType>
+    <StartDate>2022-01-01</StartDate>
+    <EndDate>2023-01-31</EndDate>
+    <PaymentCalendar>USD</PaymentCalendar>
+    <PaymentLag>5</PaymentLag>
+    <PaymentConvention>Following</PaymentConvention>
+    <PricingCalendar>USD</PricingCalendar>
+    <Gearing>1</Gearing>
+    <Spread>0.0</Spread>
+    <CommodityQuantityFrequency>PerCalculationPeriod</CommodityQuantityFrequency>
+    <CommodityPayRelativeTo>CalculationPeriodEndDate</CommodityPayRelativeTo>
+    <FutureMonthOffset>0</FutureMonthOffset>
+    <DeliveryRollDays>0</DeliveryRollDays>
+    <IncludePeriodEnd>true</IncludePeriodEnd>
+    <FXIndex>FX-ECB-EUR-USD</FXIndex>
+  </CommodityAveragePriceOptionData>
+</Trade>
+\end{minted}
+\caption{Commodity average price option}
+\label{lst:commodity_apo}
+\end{listing}

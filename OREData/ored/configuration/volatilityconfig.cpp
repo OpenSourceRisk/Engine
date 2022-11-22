@@ -55,12 +55,6 @@ void ProxyVolatilityConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ProxySurface");
     VolatilityConfig::fromXMLNode(node);
     proxyVolatilityCurve_ = XMLUtils::getChildValue(node, "ProxyVolatilityCurve", false);
-    if(proxyVolatilityCurve_.empty()) {
-        proxyVolatilityCurve_ = XMLUtils::getChildValue(node, "EquityVolatilityCurve", false);
-        QL_REQUIRE(!proxyVolatilityCurve_.empty(), "Expected node ProxyVolatilityCurve or (deprecated) nor "
-                                                   "EquityVolatilityCurve as child node of ProxySurface");
-        DLOG("EquityVolatilityCurve is deprecated, use ProxyVolatilityCurve instead.");
-    }
     fxVolatilityCurve_ = XMLUtils::getChildValue(node, "FXVolatilityCurve", false);
     correlationCurve_ = XMLUtils::getChildValue(node, "CorrelationCurve", false);
 }

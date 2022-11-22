@@ -96,7 +96,7 @@ void XvaRunner::bufferSimulationPaths() {
 
     LOG("XvaRunner::bufferSimulationPaths() called");
 
-    auto stateProcess = model_->stateProcess(scenarioGeneratorData_->discretization());
+    auto stateProcess = model_->stateProcess();
     auto pathGen = MultiPathGeneratorFactory().build(scenarioGeneratorData_->sequenceType(), stateProcess,
                                                      scenarioGeneratorData_->getGrid()->timeGrid(),
                                                      scenarioGeneratorData_->seed(), scenarioGeneratorData_->ordering(),

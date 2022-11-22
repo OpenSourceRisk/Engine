@@ -75,7 +75,7 @@ public:
                                const string& configuration = Market::defaultConfiguration) const override;
     Handle<QuantExt::CreditVolCurve> cdsVol(const string& name,
                                             const string& configuration = Market::defaultConfiguration) const override;
-    Handle<ore::data::BilinearBaseCorrelationTermStructure>
+    Handle<QuantExt::BaseCorrelationTermStructure>
     baseCorrelation(const string& name, const string& configuration = Market::defaultConfiguration) const override;
     Handle<OptionletVolatilityStructure>
     capFloorVol(const string& key, const string& configuration = Market::defaultConfiguration) const override;

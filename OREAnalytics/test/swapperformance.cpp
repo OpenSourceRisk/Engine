@@ -40,6 +40,7 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/lgmdata.hpp>
+#include <ored/model/irlgmdata.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
@@ -64,7 +65,7 @@ using namespace ore::analytics;
 
 using testsuite::TestMarket;
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsPerformanceTestSuite, ore::test::OreaTopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(SwapPerformaceTest, *boost::unit_test::disabled())
 
@@ -317,7 +318,7 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     vector<Time> hTimes = {};
     vector<Time> aTimes = {};
 
-    std::vector<boost::shared_ptr<IrLgmData>> irConfigs;
+    std::vector<boost::shared_ptr<IrModelData>> irConfigs;
 
     vector<Real> hValues = {0.02};
     vector<Real> aValues = {0.008};
@@ -373,8 +374,8 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
                                                      sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 
     map<CorrelationKey, Handle<Quote>> corr;
-    CorrelationFactor f_1{ CrossAssetModelTypes::IR, "EUR", 0 };
-    CorrelationFactor f_2{ CrossAssetModelTypes::IR, "USD", 0 };
+    CorrelationFactor f_1{ CrossAssetModel::AssetType::IR, "EUR", 0 };
+    CorrelationFactor f_2{ CrossAssetModel::AssetType::IR, "USD", 0 };
     corr[make_pair(f_1, f_2)] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.6));
 
     boost::shared_ptr<CrossAssetModelData> config(boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, corr));

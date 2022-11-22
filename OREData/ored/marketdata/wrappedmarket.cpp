@@ -93,7 +93,7 @@ Handle<QuantExt::CreditVolCurve> WrappedMarket::cdsVol(const string& name, const
     return market_->cdsVol(name, configuration);
 }
 
-Handle<BilinearBaseCorrelationTermStructure> WrappedMarket::baseCorrelation(const string& name,
+Handle<QuantExt::BaseCorrelationTermStructure> WrappedMarket::baseCorrelation(const string& name,
                                                                             const string& configuration) const {
     return market_->baseCorrelation(name, configuration);
 }

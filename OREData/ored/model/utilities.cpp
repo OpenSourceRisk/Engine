@@ -21,6 +21,7 @@
 
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
+#include <qle/models/futureoptionhelper.hpp>
 #include <qle/models/yoycapfloorhelper.hpp>
 #include <qle/models/yoyswaphelper.hpp>
 
@@ -122,8 +123,8 @@ map<Date, HelperValues> jyHelperValues(const vector<boost::shared_ptr<Calibratio
 } // namespace
 
 std::string getCalibrationDetails(LgmCalibrationInfo& info,
-                                  const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-                                  const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
+                                     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+                                     const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
         << "marketVol" << std::setw(14) << "(diff)" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
@@ -165,6 +166,16 @@ std::string getCalibrationDetails(LgmCalibrationInfo& info,
         << " irlgm1fHwSigma = " << modelHwSigma << "\n";
     return log.str();
 }
+std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const boost::shared_ptr<FxBsParametrization>& parametrization,
+                                  const boost::shared_ptr<Parametrization>& domesticIrModel) {
+    auto lgmParametrization = boost::dynamic_pointer_cast<IrLgm1fParametrization>(parametrization);
+    if (lgmParametrization) {
+        return getCalibrationDetails(basket, parametrization, lgmParametrization);
+    } else {
+        return std::string();
+    }
+}
 
 std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                                   const boost::shared_ptr<FxBsParametrization>& parametrization,
@@ -202,6 +213,17 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
 
 std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                                   const boost::shared_ptr<EqBsParametrization>& parametrization,
+                                  const boost::shared_ptr<Parametrization>& domesticIrModel) {
+    auto lgmParametrization = boost::dynamic_pointer_cast<IrLgm1fParametrization>(parametrization);
+    if (lgmParametrization) {
+        return getCalibrationDetails(basket, parametrization, lgmParametrization);
+    } else {
+        return std::string();
+    }
+}
+
+std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const boost::shared_ptr<EqBsParametrization>& parametrization,
                                   const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
@@ -229,6 +251,39 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
         modelSigma = parametrization->sigma(t + 1E-4);
     }
     log << "t >= " << t << ": eqbsSigma = " << modelSigma << "\n";
+    return log.str();
+}
+
+std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization) {
+    std::ostringstream log;
+    log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
+        << "marketVol" << std::setw(14) << "(diff)" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
+        << std::setw(14) << "(diff)" << std::setw(14) << "Sigma" << setw(14) << "Kappa\n";
+    Real t = 0.0;
+    Real modelSigma = parametrization->sigmaParameter();
+    Real modelKappa = parametrization->kappaParameter();
+    for (Size j = 0; j < basket.size(); j++) {
+        Real modelValue = basket[j]->modelValue();
+        Real marketValue = basket[j]->marketValue();
+        Real valueDiff = modelValue - marketValue;
+        Volatility modelVol = 0, marketVol = 0, volDiff = 0;
+        boost::shared_ptr<FutureOptionHelper> option = boost::dynamic_pointer_cast<FutureOptionHelper>(basket[j]);
+        if (option != nullptr && parametrization != nullptr) {
+            t = option->priceCurve()->timeFromReference(option->option()->exercise()->date(0));
+            //modelSigma = parametrization->sigma(t - 1E-4);
+        }
+        marketVol = basket[j]->volatility()->value();
+        modelVol = impliedVolatility(basket[j]);
+        volDiff = modelVol - marketVol;
+        log << std::setw(3) << j << std::setprecision(6) << std::setw(14) << t << std::setw(14) << modelVol
+            << std::setw(14) << marketVol << std::setw(14) << volDiff << std::setw(14) << modelValue << std::setw(14)
+            << marketValue << std::setw(14) << valueDiff << std::setw(14) << modelSigma << " " << modelKappa << "\n";
+    }
+    if (parametrization != nullptr) {
+        modelSigma = parametrization->sigma(t + 1E-4);
+    }
+    log << "t >= " << t << ": Sigma = " << modelSigma << ", Kappa = " << modelKappa << "\n";
     return log.str();
 }
 
@@ -422,6 +477,10 @@ Real yoyCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
         QL_FAIL("yoy cap floor strike type not supported, expected absolute strike or atm fwd strike, got '"
                 << strike->toString());
     }
+}
+
+Real atmForward(const Real s0, const Handle<YieldTermStructure>& r, const Handle<YieldTermStructure>& q, const Real t) {
+    return s0 * q->discount(t) / r->discount(t);
 }
 
 } // namespace data

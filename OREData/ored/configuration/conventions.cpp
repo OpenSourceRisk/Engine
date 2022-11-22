@@ -1140,11 +1140,11 @@ InflationSwapConvention::InflationSwapConvention(const string& id, const string&
 }
 
 void InflationSwapConvention::build() {
+    interpolated_ = parseBool(strInterpolated_);
     parseZeroInflationIndex(strIndex_, interpolated_, Handle<ZeroInflationTermStructure>());
     fixCalendar_ = parseCalendar(strFixCalendar_);
     fixConvention_ = parseBusinessDayConvention(strFixConvention_);
     dayCounter_ = parseDayCounter(strDayCounter_);
-    interpolated_ = parseBool(strInterpolated_);
     index_ = parseZeroInflationIndex(strIndex_, interpolated_, Handle<ZeroInflationTermStructure>());
     observationLag_ = parsePeriod(strObservationLag_);
     adjustInfObsDates_ = parseBool(strAdjustInfObsDates_);
@@ -1898,6 +1898,15 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
         }
     }
 
+    if (contractFrequency_ == Monthly) {
+        auto validContractMonthNode = XMLUtils::getChildNode(node, "ValidContractMonths");
+        if (validContractMonthNode) {
+            auto monthNodes = XMLUtils::getChildrenNodes(validContractMonthNode, "Month");
+            for (const auto& month : monthNodes) {
+                validContractMonths_.insert(parseMonth(XMLUtils::getNodeValue(month)));
+            }
+        }
+    }
     
     strOptionBdc_ = XMLUtils::getChildValue(node, "OptionBusinessDayConvention", false);
 
@@ -1932,6 +1941,8 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
     }
 
     indexName_ = XMLUtils::getChildValue(node, "IndexName", false);
+
+    savingsTime_ = XMLUtils::getChildValue(node, "SavingsTime", false, "US");
 
     build();
 }
@@ -2041,6 +2052,17 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
 
     if (!indexName_.empty())
         XMLUtils::addChild(doc, node, "IndexName", indexName_);
+
+    if (!savingsTime_.empty())
+        XMLUtils::addChild(doc, node, "SavingsTime", savingsTime_);
+
+    if (contractFrequency_ == Monthly && !validContractMonths_.empty() && validContractMonths_.size() < 12) {
+        XMLNode* validContractMonthNode = doc.allocNode("ValidContractMonths");
+        for (auto  month : validContractMonths_) {
+            XMLUtils::addChild(doc, validContractMonthNode, "Month", to_string(month));
+        }
+        XMLUtils::appendNode(node, validContractMonthNode);
+    }
 
     return node;
 }

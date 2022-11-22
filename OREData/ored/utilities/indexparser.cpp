@@ -215,8 +215,9 @@ boost::shared_ptr<FxIndex> parseFxIndex(const string& s, const Handle<Quote>& fx
     QL_REQUIRE(tokens[0] == "FX", "expected first token to be FX");
     Natural fixingDays = 0;
     Calendar fixingCalendar = NullCalendar();
+    BusinessDayConvention bdc;
     if (useConventions)
-        std::tie(fixingDays, fixingCalendar) = getFxIndexConventions(s);
+        std::tie(fixingDays, fixingCalendar, bdc) = getFxIndexConventions(s);
     auto index = boost::make_shared<FxIndex>(tokens[1], fixingDays, parseCurrency(tokens[2]), parseCurrency(tokens[3]),
                                              fixingCalendar, fxSpot, sourceYts, targetYts);
 

@@ -22,6 +22,8 @@
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
+#include <qle/pricingengines/cpibacheliercapfloorengine.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
 #include <ored/model/inflation/infdkbuilder.hpp>
@@ -30,6 +32,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/strike.hpp>
+
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -212,15 +215,20 @@ Real InfDkBuilder::optionStrikeValue(const Size j) const {
 bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
     bool hasUpdated = false;
 
-    boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine =
-        boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, infVol_);
+    boost::shared_ptr<QuantExt::CPICapFloorEngine> engine;
+
+    bool isLogNormalVol = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(infVol_.currentLink());
+    if (isLogNormalVol) {
+        engine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, infVol_);
+    } else {
+        engine = boost::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, infVol_);
+    }
 
     Calendar fixCalendar = inflationIndex_->fixingCalendar();
     BusinessDayConvention bdc = infVol_->businessDayConvention();
     Date baseDate = inflationIndex_->zeroInflationTermStructure()->baseDate();
     Real baseCPI = inflationIndex_->fixing(baseDate);
     Period lag = infVol_->observationLag();
-    Handle<ZeroInflationIndex> hIndex(inflationIndex_);
 
     // if cache doesn't exist resize vector
     if (infPriceCache_.size() != optionBasket_.size())
@@ -247,7 +255,7 @@ bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
 
         boost::shared_ptr<CPICapFloor> h =
             boost::make_shared<CPICapFloor>(capfloor, nominal, today, baseCPI, expiryDate, fixCalendar, bdc,
-                                            fixCalendar, bdc, strikeValue, hIndex, lag);
+                                            fixCalendar, bdc, strikeValue, inflationIndex_, lag);
         h->setPricingEngine(engine);
         Real price = h->NPV();
         if (!close_enough(infPriceCache_[optionCounter], price)) {
@@ -277,9 +285,15 @@ void InfDkBuilder::buildCapFloorBasket() const {
     if (!referenceCalibrationGrid_.empty())
         referenceCalibrationDates = DateGrid(referenceCalibrationGrid_).dates();
 
-    boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine =
-        boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, infVol_);
+    boost::shared_ptr<QuantExt::CPICapFloorEngine> engine;
 
+    bool isLogNormalVol = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(infVol_.currentLink());
+    if (isLogNormalVol) {
+        engine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, infVol_);
+    } else {
+        engine = boost::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, infVol_);
+    }
+       
     Calendar fixCalendar = inflationIndex_->fixingCalendar();
     Date baseDate = inflationIndex_->zeroInflationTermStructure()->baseDate();
     Real baseCPI = dontCalibrate_ ? 100. : inflationIndex_->fixing(baseDate);
@@ -306,7 +320,7 @@ void InfDkBuilder::buildCapFloorBasket() const {
             Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
             boost::shared_ptr<CPICapFloor> cf =
                 boost::make_shared<CPICapFloor>(capfloor, nominal, startDate, baseCPI, expiryDate, fixCalendar, bdc,
-                                                fixCalendar, bdc, strikeValue, hIndex, lag);
+                                                fixCalendar, bdc, strikeValue, inflationIndex_, lag);
             cf->setPricingEngine(engine);
             Real tte = inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
                                              inflationIndex_->zeroInflationTermStructure()->dayCounter(), baseDate,

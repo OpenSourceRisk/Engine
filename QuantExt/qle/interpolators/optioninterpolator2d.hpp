@@ -75,10 +75,12 @@ public:
     OptionInterpolator2d(const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dayCounter,
                          bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
                          const InterpolatorStrike& interpolatorStrike = InterpolatorStrike(),
-                         const InterpolatorExpiry& interpolatorExpiry = InterpolatorExpiry())
+                         const InterpolatorExpiry& interpolatorExpiry = InterpolatorExpiry(),
+                         const QuantLib::Date& baseDate = QuantLib::Date())
         : OptionInterpolatorBase(referenceDate), dayCounter_(dayCounter),
           lowerStrikeConstExtrap_(lowerStrikeConstExtrap), upperStrikeConstExtrap_(upperStrikeConstExtrap),
-          interpolatorStrike_(interpolatorStrike), interpolatorExpiry_(interpolatorExpiry), initialised_(false){};
+          interpolatorStrike_(interpolatorStrike), interpolatorExpiry_(interpolatorExpiry), initialised_(false),
+          baseDate_(baseDate == QuantLib::Date() ? referenceDate : baseDate){};
     
     //! OptionInterpolator2d Constructor with dates
     OptionInterpolator2d(const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dayCounter,
@@ -86,7 +88,8 @@ public:
                          const std::vector<QuantLib::Real>& values, bool lowerStrikeConstExtrap = true,
                          bool upperStrikeConstExtrap = true,
                          const InterpolatorStrike& interpolatorStrike = InterpolatorStrike(),
-                         const InterpolatorExpiry& interpolatorExpiry = InterpolatorExpiry());
+                         const InterpolatorExpiry& interpolatorExpiry = InterpolatorExpiry(),
+                         const QuantLib::Date& baseDate = QuantLib::Date());
 
     //! OptionInterpolator2d Constructor with Tenors
     OptionInterpolator2d(const QuantLib::Date& referenceDate, const QuantLib::Calendar& calendar,
@@ -95,7 +98,8 @@ public:
         const std::vector<QuantLib::Real>& values, bool lowerStrikeConstExtrap = true,
         bool upperStrikeConstExtrap = true,
         const InterpolatorStrike& interpolatorStrike = InterpolatorStrike(),
-        const InterpolatorExpiry& interpolatorExpiry = InterpolatorExpiry());
+        const InterpolatorExpiry& interpolatorExpiry = InterpolatorExpiry(),
+        const QuantLib::Date& baseDate = QuantLib::Date());
 
     /* delete copy and copy assignment operators because of the stored Interpolation objects, which would
        still point to the source object's data after the copy */
@@ -133,6 +137,8 @@ private:
     InterpolatorStrike interpolatorStrike_;
     InterpolatorExpiry interpolatorExpiry_;
     bool initialised_;
+    QuantLib::Date baseDate_;
+
 };
 
 // template definitions
@@ -141,10 +147,13 @@ OptionInterpolator2d<InterpolatorStrike, InterpolatorExpiry>::OptionInterpolator
     const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dayCounter,
     const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes,
     const std::vector<QuantLib::Real>& values, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap,
-    const InterpolatorStrike& interpolatorStrike, const InterpolatorExpiry& interpolatorExpiry)
+    const InterpolatorStrike& interpolatorStrike,
+    const InterpolatorExpiry& interpolatorExpiry, 
+    const QuantLib::Date& baseDate)
     : OptionInterpolatorBase(referenceDate), dayCounter_(dayCounter), lowerStrikeConstExtrap_(lowerStrikeConstExtrap),
       upperStrikeConstExtrap_(upperStrikeConstExtrap), interpolatorStrike_(interpolatorStrike),
-      interpolatorExpiry_(interpolatorExpiry), initialised_(false) {
+      interpolatorExpiry_(interpolatorExpiry), initialised_(false),
+      baseDate_(baseDate == QuantLib::Date() ? referenceDate : baseDate) {
 
     initialise(dates, strikes, values);
 };
@@ -154,11 +163,12 @@ OptionInterpolator2d<InterpolatorStrike, InterpolatorExpiry>::OptionInterpolator
     const QuantLib::Date& referenceDate, const QuantLib::Calendar& calendar,
     const QuantLib::BusinessDayConvention& bdc, const QuantLib::DayCounter& dayCounter,
     const std::vector<QuantLib::Period>& tenors, const std::vector<QuantLib::Real>& strikes,
-    const std::vector<QuantLib::Real>& values, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap,
-    const InterpolatorStrike& interpolatorStrike, const InterpolatorExpiry& interpolatorExpiry) 
+    const std::vector<QuantLib::Real>& values, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap, const InterpolatorStrike& interpolatorStrike,
+    const InterpolatorExpiry& interpolatorExpiry, const QuantLib::Date& baseDate) 
     : OptionInterpolatorBase(referenceDate), dayCounter_(dayCounter), lowerStrikeConstExtrap_(lowerStrikeConstExtrap),
     upperStrikeConstExtrap_(upperStrikeConstExtrap), interpolatorStrike_(interpolatorStrike),
-    interpolatorExpiry_(interpolatorExpiry), initialised_(false) {
+      interpolatorExpiry_(interpolatorExpiry), initialised_(false),
+      baseDate_(baseDate == QuantLib::Date() ? referenceDate : baseDate) {
 
     initialise(tenors, strikes, values, calendar, bdc);
 }
@@ -267,7 +277,10 @@ QuantLib::Real OptionInterpolator2d<IS, IE>::getValueForStrike(QuantLib::Real st
                                                                const std::vector<QuantLib::Real>& strks,
                                                                const std::vector<QuantLib::Real>& vars,
                                                                const QuantLib::Interpolation& intrp) const {
-
+    QL_REQUIRE(!strks.empty(), "OptionInterpolator2d: no strikes given");
+    QL_REQUIRE(strks.size() == vars.size(), "OptionInterpolator2d: strikes size ("
+                                                << strks.size() << ") does not match vars size (" << vars.size()
+                                                << ")");
     QuantLib::Real retVar;
     if (strike > strks.back() && upperStrikeConstExtrap_) {
         retVar = vars.back(); // force flat extrapolate far strike if requested
@@ -286,13 +299,19 @@ QuantLib::Real OptionInterpolator2d<IS, IE>::getValue(QuantLib::Time t, QuantLib
     using QuantLib::Size;
     using QuantLib::Time;
     using std::vector;
+    Time baseTime = dayCounter_.yearFraction(referenceDate_, baseDate_);
     QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
-    QL_REQUIRE(t >= 0, "Variance requested for date before reference date: " << referenceDate_);
-    Real varReturn;
-    if (t == 0.0) {
+    QL_REQUIRE(t >= baseTime, "Variance requested for date before base date: " << baseDate_);
+    if (QuantLib::close_enough(t,baseTime)) {
         // requested at reference date
-        varReturn = values_[0][0];
+        QL_REQUIRE(!values_.empty(), "OptionInterpolator2d: no expiries given");
+        QL_REQUIRE(!values_.front().empty(), "OptionInterpolator2d: no value for first expiry given");
+        return values_[0][0];
     } else {
+        QL_REQUIRE(!expiries_.empty(), "OptionInterpolator2d: no expiry given");
+        if (expiries_.size() == 1) {
+            return getValueForStrike(strike, strikes_[0], values_[0], interpolations_[0]);
+        }
         // ind1 and ind2 two expiries on either side of requested time.
         Size ind1, ind2;
         if (t <= times_.front()) {
@@ -319,15 +338,14 @@ QuantLib::Real OptionInterpolator2d<IS, IE>::getValue(QuantLib::Time t, QuantLib
         Interpolation interp = interpolatorExpiry_.interpolate(xAxis.begin(), xAxis.end(), tmpVars.begin());
         // linear extrapolation of expiries in case t > time_.back() above.
         interp.enableExtrapolation(true);
-        varReturn = interp(t);
+        return interp(t);
     }
-    return varReturn;
 }
 
 template <class IS, class IE>
 QuantLib::Real OptionInterpolator2d<IS, IE>::getValue(QuantLib::Date d, QuantLib::Real strike) const {
     QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
-    QL_REQUIRE(d >= referenceDate_, "Variance requested for date before reference date: " << referenceDate_);
+    QL_REQUIRE(d >= baseDate_, "Variance requested for date before reference date: " << baseDate_);
     QuantLib::Real valueReturn;
 
     std::vector<QuantLib::Date>::const_iterator it = find(expiries_.begin(), expiries_.end(), d);

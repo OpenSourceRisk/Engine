@@ -93,7 +93,8 @@ public:
     void removeMatured(const QuantLib::Date& asof);
 
     //! Call build on all trades in the portfolio, the context is included in error messages
-    void build(const boost::shared_ptr<EngineFactory>&, const std::string& context = "unspecified");
+    void build(const boost::shared_ptr<EngineFactory>&, const std::string& context = "unspecified",
+               const bool emitStructuredError = true);
 
     //! Calculates the maturity of the portfolio
     QuantLib::Date maturity() const;
@@ -148,7 +149,8 @@ private:
 
 std::pair<boost::shared_ptr<Trade>, bool> buildTrade(boost::shared_ptr<Trade>& trade,
                                                      const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                     const std::string& context, const bool buildFailedTrades);
+                                                     const std::string& context, const bool buildFailedTrades,
+                                                     const bool emitStructuredError);
 
 } // namespace data
 } // namespace ore

@@ -58,7 +58,7 @@ void InterpolatingCPICapFloorEngine::calculate() const {
     Real npv = 0.0;
 
     // RL change, adjusted strike, this is shared code between cpiblackcapfloorengine and this engine
-    Handle<ZeroInflationIndex> zii = arguments_.infIndex;
+    Handle<ZeroInflationIndex> zii(arguments_.index);
     Handle<ZeroInflationTermStructure> zits = zii->zeroInflationTermStructure();
     Date baseDate = zits->baseDate();
     Real baseCPI = arguments_.baseCPI;
@@ -103,7 +103,7 @@ void InterpolatingCPICapFloorEngine::calculate() const {
         }
 
     } else {
-        std::pair<Date, Date> dd = inflationPeriod(effectiveMaturity, arguments_.infIndex->frequency());
+        std::pair<Date, Date> dd = inflationPeriod(effectiveMaturity, arguments_.index->frequency());
         Real priceStart = 0.0;
 
         if (arguments_.type == Option::Call) {

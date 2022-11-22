@@ -101,7 +101,7 @@ public:
                                             const string& configuration = Market::defaultConfiguration) const override;
 
     //! Base correlation structures
-    Handle<BaseCorrelationTermStructure<BilinearInterpolation>>
+    Handle<QuantExt::BaseCorrelationTermStructure>
     baseCorrelation(const string& name, const string& configuration = Market::defaultConfiguration) const override;
 
     //! CapFloor volatilities
@@ -211,7 +211,7 @@ protected:
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> fxVols_;
     mutable map<pair<string, string>, Handle<QuantExt::CreditCurve>> defaultCurves_;
     mutable map<pair<string, string>, Handle<QuantExt::CreditVolCurve>> cdsVols_;
-    mutable map<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>> baseCorrelations_;
+    mutable map<pair<string, string>, Handle<QuantExt::BaseCorrelationTermStructure>> baseCorrelations_;
     mutable map<pair<string, string>, Handle<Quote>> recoveryRates_;
     mutable map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
     mutable map<pair<string, string>, Handle<YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;

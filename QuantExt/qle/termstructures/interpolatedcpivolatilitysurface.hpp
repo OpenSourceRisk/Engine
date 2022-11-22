@@ -49,7 +49,9 @@ public:
                                      const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
                                      const DayCounter& dc, const Period& observationLag,
                                      const Date& capFloorStartDate = Date(),
-                                     const Interpolator2D& interpolator2d = Interpolator2D());
+                                     const Interpolator2D& interpolator2d = Interpolator2D(),
+                                     const QuantLib::VolatilityType volType = QuantLib::ShiftedLognormal,
+                                     const double displacement = 0.0);
 
     //! \name LazyObject interface
     //@{
@@ -96,13 +98,12 @@ private:
 template <class Interpolator2D>
 InterpolatedCPIVolatilitySurface<Interpolator2D>::InterpolatedCPIVolatilitySurface(
     const std::vector<Period>& optionTenors, const std::vector<Real>& strikes,
-    const std::vector<std::vector<Handle<Quote> > > quotes,
-    const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
-    const Period& observationLag,
-    const Date& capFloorStartDate,
-    const Interpolator2D& interpolator2d)
+    const std::vector<std::vector<Handle<Quote>>> quotes, const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
+    const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
+    const Period& observationLag, const Date& capFloorStartDate, const Interpolator2D& interpolator2d,
+    const QuantLib::VolatilityType volType, const double displacement)
     : CPIVolatilitySurface(settlementDays, cal, bdc, dc, observationLag, index->frequency(), index->interpolated(),
-                           capFloorStartDate),
+                           capFloorStartDate, volType, displacement),
       optionTenors_(optionTenors), strikes_(strikes), quotes_(quotes), index_(index),
       interpolator2d_(interpolator2d) {
     for (Size i = 0; i < optionTenors_.size(); ++i) {

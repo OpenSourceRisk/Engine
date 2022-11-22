@@ -1,4 +1,4 @@
-# syntax = docker/dockerfile:experimental
+# syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
 ARG boost_version=latest
 FROM build_env_boost:${boost_version}
 
@@ -23,13 +23,15 @@ ENV CCACHE_DIR="/ccache"
 RUN cd /ore/QuantLib \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && mkdir -p build.ql && cd build.ql \
-  && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER" -DQL_ENABLE_SESSIONS=ON
+  && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER -mavx2" -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON
  
 WORKDIR /ore/QuantLib/build.ql
 RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
   && make install \
   && cd / \
+  && cp -r /ore/QuantLib/test-suite /usr/local/include \
   && rm -rf ore \
   && ldconfig
+  
 
 CMD bash

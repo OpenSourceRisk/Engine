@@ -24,7 +24,7 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
-#include <ql/experimental/credit/basecorrelationstructure.hpp>
+#include <qle/termstructures/credit/basecorrelationstructure.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
@@ -59,6 +59,7 @@
 #include <qle/instruments/makeoiscapfloor.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
 #include <qle/termstructures/blackvolconstantspread.hpp>
+#include <qle/termstructures/credit/spreadedbasecorrelationcurve.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamiccpivolatilitystructure.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
@@ -93,8 +94,6 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace ore::data;
 using namespace std;
-
-typedef QuantLib::BaseCorrelationTermStructure<QuantLib::BilinearInterpolation> BilinearBaseCorrelationTermStructure;
 
 namespace {
 
@@ -1029,7 +1028,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 for (Size j = 0; j < strikes.size(); ++j) {
                                     strike = isAtm ? strike : strikes[j];
                                     Real vol =
-                                        wrapper->volatility(optionDates[i], strike, wrapper->allowsExtrapolation());
+                                        wrapper->volatility(optionDates[i], strike, true);
                                     DLOG("Vol at [date, strike] pair [" << optionDates[i] << ", " << std::fixed
                                                                         << std::setprecision(4) << strike << "] is "
                                                                         << std::setprecision(12) << vol);
@@ -1222,35 +1221,36 @@ ScenarioSimMarket::ScenarioSimMarket(
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
                             if (useSpreadedTermStructures_) {
-			        string smileDynamicsType;
-				boost::shared_ptr<CDSVolatilityCurveConfig> config;
-				if (curveConfigs.hasCdsVolCurveConfig(name))
-			            config = curveConfigs.cdsVolCurveConfig(name);
-				if (config && config->smileDynamics() != "") {
-				    smileDynamicsType = config->smileDynamics();
-				    LOG("Using cds smile dynamics " << smileDynamicsType << " from vol curve config " << name);
-				}
-				else {
-				    smileDynamicsType = smileDynamics.cds();
-				    string text = !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
-				    LOG("Using cds smile dynamics " << smileDynamicsType << " from global config for name " << name << ", " << text);
-				}
-			        bool stickyMoney = smileDynamicsType == "StickyMoneyness" ? true : false;
+                                string smileDynamicsType;
+                                boost::shared_ptr<CDSVolatilityCurveConfig> config;
+                                if (curveConfigs.hasCdsVolCurveConfig(name))
+                                    config = curveConfigs.cdsVolCurveConfig(name);
+                                if (config && config->smileDynamics() != "") {
+                                    smileDynamicsType = config->smileDynamics();
+                                    LOG("Using cds smile dynamics " << smileDynamicsType << " from vol curve config "
+                                                                    << name);
+                                } else {
+                                    smileDynamicsType = smileDynamics.cds();
+                                    string text =
+                                        !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
+                                    LOG("Using cds smile dynamics " << smileDynamicsType
+                                                                    << " from global config for name " << name << ", "
+                                                                    << text);
+                                }
+                                bool stickyMoney = smileDynamicsType == "StickyMoneyness" ? true : false;
                                 std::vector<QuantLib::Period> simTerms;
                                 std::vector<Handle<CreditCurve>> simTermCurves;
-                                if (stickyMoney) {
-                                    if (curveConfigs.hasCdsVolCurveConfig(name)) {
-                                        // get the term curves from the curve config if possible
-                                        auto cc = curveConfigs.cdsVolCurveConfig(name);
-                                        simTerms = cc->terms();
-                                        for (auto const& c : cc->termCurves())
-                                            simTermCurves.push_back(defaultCurve(parseCurveSpec(c)->curveConfigID()));
-                                    } else {
-                                        // assume the default curve names follow the naming convention volName_5Y
-                                        simTerms = wrapper->terms();
-                                        for (auto const& t : simTerms) {
-                                            simTermCurves.push_back(defaultCurve(name + "_" + ore::data::to_string(t)));
-                                        }
+                                if (curveConfigs.hasCdsVolCurveConfig(name)) {
+                                    // get the term curves from the curve config if possible
+                                    auto cc = curveConfigs.cdsVolCurveConfig(name);
+                                    simTerms = cc->terms();
+                                    for (auto const& c : cc->termCurves())
+                                        simTermCurves.push_back(defaultCurve(parseCurveSpec(c)->curveConfigID()));
+                                } else {
+                                    // assume the default curve names follow the naming convention volName_5Y
+                                    simTerms = wrapper->terms();
+                                    for (auto const& t : simTerms) {
+                                        simTermCurves.push_back(defaultCurve(name + "_" + ore::data::to_string(t)));
                                     }
                                 }
                                 cvh = Handle<CreditVolCurve>(boost::make_shared<SpreadedCreditVolCurve>(
@@ -1832,28 +1832,36 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        Handle<BaseCorrelationTermStructure<BilinearInterpolation>> wrapper =
+                        Handle<QuantExt::BaseCorrelationTermStructure> wrapper =
                             initMarket->baseCorrelation(name, configuration);
                         if (!param.second.first)
                             baseCorrelations_.insert(
-                                pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
+                                pair<pair<string, string>, Handle<QuantExt::BaseCorrelationTermStructure>>(
                                     make_pair(Market::defaultConfiguration, name), wrapper));
                         else {
                             Size nd = parameters->baseCorrelationDetachmentPoints().size();
                             Size nt = parameters->baseCorrelationTerms().size();
                             vector<vector<Handle<Quote>>> quotes(nd, vector<Handle<Quote>>(nt));
                             vector<Period> terms(nt);
+                            vector<double> detachmentPoints(nd);
                             for (Size i = 0; i < nd; ++i) {
                                 Real lossLevel = parameters->baseCorrelationDetachmentPoints()[i];
+                                detachmentPoints[i] = lossLevel;
                                 for (Size j = 0; j < nt; ++j) {
                                     Period term = parameters->baseCorrelationTerms()[j];
                                     if (i == 0)
                                         terms[j] = term;
                                     Real bc = wrapper->correlation(asof_ + term, lossLevel, true); // extrapolate
-                                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(bc));
+                                    boost::shared_ptr<SimpleQuote> q =
+                                        boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : bc);
                                     simDataTmp.emplace(std::piecewise_construct,
                                                        std::forward_as_tuple(param.first, name, i * nt + j),
                                                        std::forward_as_tuple(q));
+                                    if (useSpreadedTermStructures_) {
+                                        absoluteSimDataTmp.emplace(std::piecewise_construct,
+                                                                   std::forward_as_tuple(param.first, name, i * nt + j),
+                                                                   std::forward_as_tuple(bc));
+                                    }
                                     quotes[i][j] = Handle<Quote>(q);
                                 }
                             }
@@ -1861,22 +1869,41 @@ ScenarioSimMarket::ScenarioSimMarket(
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
 
-                            // FIXME: Same change as in ored/market/basecorrelationcurve.cpp
-                            if (nt == 1) {
-                                terms.push_back(terms[0] + 1 * Days); // arbitrary, but larger than the first term
+                            //
+                            if (nt == 1) {                           
+                                terms.push_back(terms[0] + 1 * terms[0].units()); // arbitrary, but larger than the first term
                                 for (Size i = 0; i < nd; ++i)
                                     quotes[i].push_back(quotes[i][0]);
                             }
-                            DayCounter dc = wrapper->dayCounter();
-                            boost::shared_ptr<BilinearBaseCorrelationTermStructure> bcp =
-                                boost::make_shared<BilinearBaseCorrelationTermStructure>(
-                                    wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(),
-                                    terms, parameters->baseCorrelationDetachmentPoints(), quotes, dc);
 
-                            bcp->enableExtrapolation(wrapper->allowsExtrapolation());
-                            Handle<BilinearBaseCorrelationTermStructure> bch(bcp);
+                            if (nd == 1) {
+                                quotes.push_back(vector<Handle<Quote>>(terms.size()));
+                                for (Size j = 0; j < terms.size(); ++j)
+                                    quotes[1][j] = quotes[0][j];
+
+                                if (detachmentPoints[0] < 1.0 && !QuantLib::close_enough(detachmentPoints[0], 1.0)) {
+                                    detachmentPoints.push_back(1.0);
+                                } else {
+                                    detachmentPoints.insert(detachmentPoints.begin(), 0.01); // arbitrary, but larger than then 0 and less than 1.0
+                                }
+                            }
+                            
+                            boost::shared_ptr<QuantExt::BaseCorrelationTermStructure> bcp;
+                            if (useSpreadedTermStructures_) {
+                                bcp = boost::make_shared<QuantExt::SpreadedBaseCorrelationCurve>(
+                                    wrapper, terms, detachmentPoints, quotes);
+                                bcp->enableExtrapolation(wrapper->allowsExtrapolation());
+                            } else {
+                                DayCounter dc = wrapper->dayCounter();
+                                bcp = boost::make_shared<InterpolatedBaseCorrelationTermStructure<Bilinear>>(
+                                    wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(),
+                                    terms, detachmentPoints, quotes, dc);
+
+                                bcp->enableExtrapolation(wrapper->allowsExtrapolation());
+                            }
+                            Handle<QuantExt::BaseCorrelationTermStructure> bch(bcp);
                             baseCorrelations_.insert(
-                                pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
+                                pair<pair<string, string>, Handle<QuantExt::BaseCorrelationTermStructure>>(
                                     make_pair(Market::defaultConfiguration, name), bch));
                         }
                         DLOG("Base correlations built for " << name);

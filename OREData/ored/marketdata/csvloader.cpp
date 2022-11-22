@@ -120,8 +120,19 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                 // process market
                 // build market datum and add to map
                 try {
-                    data_[date].push_back(parseMarketDatum(date, key, value));
-                    TLOG("Added MarketDatum " << data_[date].back()->name());
+                    boost::shared_ptr<MarketDatum> md;
+                    try {
+                        md = parseMarketDatum(date, key, value);
+                    } catch (std::exception& e) {
+                        WLOG("Failed to parse MarketDatum " << key << ": " << e.what());
+                    }
+                    if (md != nullptr) {
+                        if (data_[date].insert(md).second) {
+                            TLOG("Added MarketDatum " << key);
+                        } else {
+                            WLOG("Skipped MarketDatum " << key << " - this is already present.");
+                        }
+                    }
                 } catch (std::exception& e) {
                     WLOG("Failed to parse MarketDatum " << key << ": " << e.what());
                 }
@@ -132,7 +143,7 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                         WLOG("Skipped Fixing " << key << "@" << QuantLib::io::iso_date(date)
                                                << " - this is already present.");
                     }
-		}
+                }
             } else if (dataType == DataType::Dividend) {
                 // process dividends
                 if (date <= today) {
@@ -140,7 +151,7 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                         WLOG("Skipped Dividend " << key << "@" << QuantLib::io::iso_date(date)
                                                  << " - this is already present.");
                     }
-		}
+                }
             } else {
                 QL_FAIL("unknown data type");
             }
@@ -154,7 +165,7 @@ vector<boost::shared_ptr<MarketDatum>> CSVLoader::loadQuotes(const QuantLib::Dat
     auto it = data_.find(d);
     if (it == data_.end())
         return {};
-    return it->second;
+    return std::vector<boost::shared_ptr<MarketDatum>>(it->second.begin(), it->second.end());
 }
 
 boost::shared_ptr<MarketDatum> CSVLoader::get(const string& name, const QuantLib::Date& d) const {
@@ -163,6 +174,33 @@ boost::shared_ptr<MarketDatum> CSVLoader::get(const string& name, const QuantLib
             return md;
     }
     QL_FAIL("No MarketDatum for name " << name << " and date " << d);
+}
+boost::shared_ptr<MarketDatum> makeDummyMarketDatum(const Date& d, const std::string& name) {
+    return boost::make_shared<MarketDatum>(0.0, d, name, MarketDatum::QuoteType::NONE,
+                                           MarketDatum::InstrumentType::NONE);
+}
+std::set<boost::shared_ptr<MarketDatum>> CSVLoader::get(const Wildcard& wildcard,
+                                                             const QuantLib::Date& asof) const {
+    auto it = data_.find(asof);
+    if (it == data_.end())
+        return {};
+    std::set<boost::shared_ptr<MarketDatum>> result;
+    std::set<boost::shared_ptr<MarketDatum>>::iterator it1, it2;
+    if (wildcard.wildcardPos() == std::string::npos || wildcard.wildcardPos() == 0) {
+        // no wildcard => we have to search all of the data
+        it1 = it->second.begin();
+        it2 = it->second.end();
+    } else {
+        // search the range matching the substring of the pattern until the wildcard
+        std::string prefix = wildcard.pattern().substr(0, wildcard.wildcardPos());
+        it1 = it->second.lower_bound(makeDummyMarketDatum(asof, prefix));
+        it2 = it->second.upper_bound(makeDummyMarketDatum(asof, prefix + "\xFF"));
+    }
+    for (auto it = it1; it != it2; ++it) {
+        if (wildcard.isPrefix() || wildcard.matches((*it)->name()))
+            result.insert(*it);
+    }
+    return result;
 }
 } // namespace data
 } // namespace ore

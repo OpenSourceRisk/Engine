@@ -31,30 +31,20 @@ namespace ore {
 namespace data {
 
 //! Utility classes for Structured warnings, contains the Trade ID and Type
-class StructuredTradeWarningMessage : public StructuredErrorMessage {
+class StructuredTradeWarningMessage : public StructuredMessage {
 public:
     StructuredTradeWarningMessage(const boost::shared_ptr<Trade>& trade, const std::string& warningType,
                                   const std::string& warningWhat)
-        : tradeId_(trade->id()), tradeType_(trade->tradeType()), warningType_(warningType), warningWhat_(warningWhat) {}
+        : StructuredMessage(
+              "Warning", "Trade", warningWhat,
+              std::map<std::string, std::string>(
+                  {{"warningType", warningType}, {"tradeId", trade->id()}, {"tradeType", trade->tradeType()}})) {}
 
     StructuredTradeWarningMessage(const std::string& tradeId, const std::string& tradeType,
-                                  const std::string& warningType, const std::string warningWhat)
-        : tradeId_(tradeId), tradeType_(tradeType), warningType_(warningType), warningWhat_(warningWhat) {}
-
-    const std::string& tradeId() const { return tradeId_; }
-    const std::string& tradeType() const { return tradeType_; }
-    const std::string& warningType() const { return warningType_; }
-    const std::string& warningWhat() const { return warningWhat_; }
-
-protected:
-    std::string json() const override {
-        return "{ \"errorType\":\"Trade Warning\", \"tradeId\":\"" + tradeId_ + "\"," + " \"tradeType\":\"" +
-               tradeType_ + "\"," + " \"warningType\":\"" + warningType_ + "\"," + " \"warningMessage\":\"" +
-               jsonify(warningWhat_) + "\"}";
-    }
-
-private:
-    std::string tradeId_, tradeType_, warningType_, warningWhat_;
+                                  const std::string& warningType, const std::string& warningWhat)
+        : StructuredMessage("Warning", "Trade", warningWhat,
+                            std::map<std::string, std::string>(
+                                {{"warningType", warningType}, {"tradeId", tradeId}, {"tradeType", tradeType}})) {}
 };
 
 } // namespace data

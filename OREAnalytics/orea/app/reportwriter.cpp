@@ -1,4 +1,3 @@
-
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
  Copyright (C) 2017 Aareal Bank AG
@@ -268,17 +267,19 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                     flowType = "InterestProjected";
                                 // for ON coupons the fixing value is the compounded / averaged rate, not the last
                                 // single ON fixing
-                                if (boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(ptrFloat) !=
-                                        nullptr ||
-                                    boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(ptrFloat) !=
-                                        nullptr) {
-                                    fixingValue = ptrFloat->rate();
+                                if (auto on = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(ptrFloat)) {
+                                    fixingValue = (on->rate() - on->spread()) / on->gearing();
+                                } else if (auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(
+                                               ptrFloat)) {
+                                    fixingValue = (on->rate() - on->effectiveSpread()) / on->gearing();
                                 } else if (auto c = boost::dynamic_pointer_cast<
                                                QuantExt::CappedFlooredAverageONIndexedCoupon>(ptrFloat)) {
-                                    fixingValue = c->underlying()->rate();
+                                    fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
+                                                  c->underlying()->gearing();
                                 } else if (auto c = boost::dynamic_pointer_cast<
                                                QuantExt::CappedFlooredOvernightIndexedCoupon>(ptrFloat)) {
-                                    fixingValue = c->underlying()->rate();
+                                    fixingValue = (c->underlying()->rate() - c->underlying()->effectiveSpread()) /
+                                                  c->underlying()->gearing();
                                 }
                             } else if (ptrInfl) {
                                 fixingDate = ptrInfl->fixingDate();
@@ -1483,6 +1484,22 @@ void ReportWriter::writeFixings(Report& report, const boost::shared_ptr<Loader>&
 
     report.end();
     LOG("Fixings report written");
+}
+
+void ReportWriter::writeDividends(Report& report, const boost::shared_ptr<Loader>& loader) {
+
+    LOG("Writing Dividends report");
+
+    report.addColumn("dividendDate", Date())
+        .addColumn("equityId", string())
+        .addColumn("dividendRate", double(), 10);
+
+    for (const auto& f : loader->loadDividends()) {
+        report.next().add(f.date).add(f.name).add(f.fixing);
+    }
+
+    report.end();
+    LOG("Dividends report written");
 }
 
 void ReportWriter::writePricingStats(ore::data::Report& report, const boost::shared_ptr<Portfolio>& portfolio) {

@@ -20,12 +20,14 @@
 #include <qle/calendars/largejointcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
+#include <qle/calendars/mauritius.hpp>
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/russia.hpp>
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
+#include <qle/calendars/unitedarabemirates.hpp>
 #include <qle/calendars/wmr.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
@@ -42,6 +44,8 @@
 #include <qle/cashflows/durationadjustedcmscoupontsrpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
+#include <qle/cashflows/equitymargincoupon.hpp>
+#include <qle/cashflows/equitymargincouponpricer.hpp>
 #include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 #include <qle/cashflows/floatingannuitynominal.hpp>
@@ -151,6 +155,7 @@
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
 #include <qle/instruments/cdsoption.hpp>
+#include <qle/instruments/cliquetoption.hpp>
 #include <qle/instruments/commodityapo.hpp>
 #include <qle/instruments/commodityforward.hpp>
 #include <qle/instruments/crossccybasismtmresetswap.hpp>
@@ -164,6 +169,7 @@
 #include <qle/instruments/fixedbmaswap.hpp>
 #include <qle/instruments/forwardbond.hpp>
 #include <qle/instruments/fxforward.hpp>
+#include <qle/instruments/genericswaption.hpp>
 #include <qle/instruments/impliedbondspread.hpp>
 #include <qle/instruments/makeaverageois.hpp>
 #include <qle/instruments/makecds.hpp>
@@ -178,6 +184,7 @@
 #include <qle/instruments/subperiodsswap.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
 #include <qle/instruments/vanillaforwardoption.hpp>
+#include <qle/instruments/varianceswap.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 #include <qle/math/constantinterpolation.hpp>
 #include <qle/math/covariancesalvage.hpp>
@@ -185,6 +192,7 @@
 #include <qle/math/differentialevolution_mt.hpp>
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/flatextrapolation.hpp>
+#include <qle/math/flatextrapolation2d.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/method_mt.hpp>
 #include <qle/math/nadarayawatson.hpp>
@@ -197,6 +205,7 @@
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/pathgeneratorfactory.hpp>
 #include <qle/models/annuitymapping.hpp>
+#include <qle/models/blackscholesmodelwrapper.hpp>
 #include <qle/models/carrmadanarbitragecheck.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
@@ -204,6 +213,9 @@
 #include <qle/models/cirppimplieddefaulttermstructure.hpp>
 #include <qle/models/cirppparametrization.hpp>
 #include <qle/models/cmscaphelper.hpp>
+#include <qle/models/commoditymodel.hpp>
+#include <qle/models/commodityschwartzmodel.hpp>
+#include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/crcirpp.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
@@ -223,6 +235,9 @@
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
 #include <qle/models/gaussian1dcrossassetadaptor.hpp>
+#include <qle/models/hwconstantparametrization.hpp>
+#include <qle/models/hwmodel.hpp>
+#include <qle/models/hwparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infjyparameterization.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
@@ -230,6 +245,7 @@
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
+#include <qle/models/irmodel.hpp>
 #include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgm.hpp>
@@ -240,6 +256,8 @@
 #include <qle/models/lgmvectorised.hpp>
 #include <qle/models/linearannuitymapping.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
+#include <qle/models/modelimpliedpricetermstructure.hpp>
+#include <qle/models/modelimpliedyieldtermstructure.hpp>
 #include <qle/models/normalsabr.hpp>
 #include <qle/models/normalsabrinterpolation.hpp>
 #include <qle/models/normalsabrsmilesection.hpp>
@@ -253,7 +271,10 @@
 #include <qle/models/zeroinflationmodeltermstructure.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
+#include <qle/pricingengines/analyticdigitalamericanengine.hpp>
 #include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
+#include <qle/pricingengines/analyticdoublebarrierbinaryengine.hpp>
+#include <qle/pricingengines/analyticeuropeanengine.hpp>
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
 #include <qle/pricingengines/analyticjycpicapfloorengine.hpp>
 #include <qle/pricingengines/analyticjyyoycapfloorengine.hpp>
@@ -263,6 +284,7 @@
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
+#include <qle/pricingengines/commodityswaptionengine.hpp>
 #include <qle/pricingengines/cpibacheliercapfloorengine.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 #include <qle/pricingengines/cpicapfloorengines.hpp>
@@ -280,8 +302,12 @@
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
+#include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
+#include <qle/pricingengines/volatilityfromvarianceswapengine.hpp>
+#include <qle/processes/commodityschwartzstateprocess.hpp>
 #include <qle/processes/crcirppstateprocess.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
+#include <qle/processes/irhwstateprocess.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
 #include <qle/quotes/compositevectorquote.hpp>
 #include <qle/quotes/exceptionquote.hpp>
@@ -315,6 +341,8 @@
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
+#include <qle/termstructures/credit/basecorrelationstructure.hpp>
+#include <qle/termstructures/credit/spreadedbasecorrelationcurve.hpp>
 #include <qle/termstructures/creditcurve.hpp>
 #include <qle/termstructures/creditvolcurve.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
@@ -343,6 +371,7 @@
 #include <qle/termstructures/iborfallbackcurve.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/inflation/constantcpivolatility.hpp>
+#include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
 #include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
 #include <qle/termstructures/inflation/inflationtraits.hpp>
 #include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>

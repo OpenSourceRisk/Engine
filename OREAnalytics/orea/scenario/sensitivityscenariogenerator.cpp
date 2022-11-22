@@ -426,7 +426,11 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->discountCurve(ccy)->dayCounter();
+            if(auto s = simMarket_.lock()) {
+                dc = s->discountCurve(ccy)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
         } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for discount curve " << ccy << ", using default A365");
         }
@@ -522,7 +526,11 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
 
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->iborIndex(indexName)->forwardingTermStructure()->dayCounter();
+            if(auto s = simMarket_.lock()) {
+                dc = s->iborIndex(indexName)->forwardingTermStructure()->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
         } catch (const std::exception&) {
             WLOG("Day counter lookup in simulation market failed for index " << indexName << ", using default A365");
         }
@@ -613,7 +621,11 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->yieldCurve(name)->dayCounter();
+            if(auto s = simMarket_.lock()) {
+                dc = s->yieldCurve(name)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
         } catch (const std::exception&) {
             WLOG("Day counter lookup in simulation market failed for yield curve " << name << ", using default A365");
         }
@@ -703,8 +715,12 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->equityDividendCurve(name)->dayCounter();
-        } catch(const std::exception&)  {
+            if(auto s = simMarket_.lock()) {
+                dc = s->equityDividendCurve(name)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
             WLOG("Day counter lookup in simulation market failed for dividend yield curve " << name << ", using default A365");
         }
 
@@ -813,7 +829,11 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
 
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->fxVol(ccyPair)->dayCounter();
+            if(auto s = simMarket_.lock()) {
+                dc = s->fxVol(ccyPair)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
         } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for fx vol surface " << ccyPair << ", using default A365");
         }
@@ -919,9 +939,14 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
         QL_REQUIRE(shiftTenors.size() > 0, "Equity vol shift tenors not specified");
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->equityVol(equity)->dayCounter();
-        } catch(const std::exception&)  {
-            WLOG("Day counter lookup in simulation market failed for equity vol surface " << equity << ", using default A365");
+            if (auto s = simMarket_.lock()) {
+                dc = s->equityVol(equity)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for equity vol surface " << equity
+                                                                                          << ", using default A365");
         }
         bool valid = true;
         for (Size j = 0; j < n_eqvol_exp; ++j) {
@@ -1011,7 +1036,11 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
         getVolTerms = [this](const string& k) { return simMarketData_->swapVolTerms(k); };
         getDayCounter = [this](const string& k) {
             try {
-                return to_string(simMarket_->swaptionVol(k)->dayCounter());
+                if (auto s = simMarket_.lock()) {
+                    return to_string(s->swaptionVol(k)->dayCounter());
+                } else {
+                    QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+                }
             } catch (const std::exception&) {
                 WLOG("Day counter lookup in simulation market failed for swaption vol '" << k
                                                                                          << "', using default A365");
@@ -1031,7 +1060,11 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
         getVolTerms = [this](const string& k) { return simMarketData_->yieldVolTerms(); };
         getDayCounter = [this](const string& k) {
             try {
-                return to_string(simMarket_->yieldVol(k)->dayCounter());
+                if (auto s = simMarket_.lock()) {
+                    return to_string(s->yieldVol(k)->dayCounter());
+                } else {
+                    QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+                }
             } catch (const std::exception&) {
                 WLOG("Day counter lookup in simulation market failed for swaption vol '" << k
                                                                                          << "', using default A365");
@@ -1238,8 +1271,12 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
 
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->capFloorVol(key)->dayCounter();
-        } catch(const std::exception&)  {
+            if (auto s = simMarket_.lock()) {
+                dc = s->capFloorVol(key)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
             WLOG("Day counter lookup in simulation market failed for cap/floor vol surface " << key << ", using default A365");
         }
 
@@ -1336,8 +1373,12 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->defaultCurve(name)->curve()->dayCounter();
-        } catch(const std::exception&)  {
+            if (auto s = simMarket_.lock()) {
+                dc = s->defaultCurve(name)->curve()->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
             WLOG("Day counter lookup in simulation market failed for default curve " << name << ", using default A365");
         }
         Calendar calendar = parseCalendar(simMarketData_->defaultCurveCalendar(name));
@@ -1435,9 +1476,14 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
 
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->cdsVol(name)->dayCounter();
-        } catch(const std::exception&)  {
-            WLOG("Day counter lookup in simulation market failed for cds vol surface " << name << ", using default A365");
+            if (auto s = simMarket_.lock()) {
+                dc = s->cdsVol(name)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for cds vol surface " << name
+                                                                                       << ", using default A365");
         }
 
         // cache original vol data
@@ -1517,9 +1563,14 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->zeroInflationIndex(indexName)->zeroInflationTermStructure()->dayCounter();
-        } catch(const std::exception&)  {
-            WLOG("Day counter lookup in simulation market failed for zero inflation index " << indexName << ", using default A365");
+            if (auto s = simMarket_.lock()) {
+                dc = s->zeroInflationIndex(indexName)->zeroInflationTermStructure()->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for zero inflation index " << indexName
+                                                                                            << ", using default A365");
         }
         bool valid = true;
         for (Size j = 0; j < n_ten; ++j) {
@@ -1609,8 +1660,12 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->yoyInflationIndex(indexName)->yoyInflationTermStructure()->dayCounter();
-        } catch(const std::exception&)  {
+            if (auto s = simMarket_.lock()) {
+                dc = s->yoyInflationIndex(indexName)->yoyInflationTermStructure()->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
             WLOG("Day counter lookup in simulation market failed for yoy inflation index " << indexName << ", using default A365");
         }
         bool valid = true;
@@ -1705,9 +1760,14 @@ void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool
 
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->yoyCapFloorVol(name)->dayCounter();
-        } catch(const std::exception&)  {
-            WLOG("Day counter lookup in simulation market failed for yoy cap/floor vol surface " << name << ", using default A365");
+            if (auto s = simMarket_.lock()) {
+                dc = s->yoyCapFloorVol(name)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for yoy cap/floor vol surface "
+                 << name << ", using default A365");
         }
 
         // cache original vol data
@@ -1805,9 +1865,14 @@ void SensitivityScenarioGenerator::generateZeroInflationCapFloorVolScenarios(boo
 
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->cpiInflationCapFloorVolatilitySurface(name)->dayCounter();
-        } catch(const std::exception&)  {
-            WLOG("Day counter lookup in simulation market failed for cpi cap/floor vol surface " << name << ", using default A365");
+            if (auto s = simMarket_.lock()) {
+                dc = s->cpiInflationCapFloorVolatilitySurface(name)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for cpi cap/floor vol surface "
+                 << name << ", using default A365");
         }
 
         // cache original vol data
@@ -1903,9 +1968,14 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
 
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->baseCorrelation(name)->dayCounter();
-        } catch(const std::exception&)  {
-            WLOG("Day counter lookup in simulation market failed for base correlation structure " << name << ", using default A365");
+            if (auto s = simMarket_.lock()) {
+                dc = s->baseCorrelation(name)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for base correlation structure "
+                 << name << ", using default A365");
         }
 
         // cache original base correlation data
@@ -1958,8 +2028,11 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
                         }
 
                         RiskFactorKey key(RFType::BaseCorrelation, name, idx);
-                        scenario->add(key, shiftedBcData[jj][kk]);
-
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedBcData[jj][kk] - bcData[jj][kk]);
+                        } else {
+                            scenario->add(key, shiftedBcData[jj][kk]);
+                        }
                         // Possibly store valid shift size
                         if (validShiftSize && up && j == jj && k == kk) {
                             shiftSizes_[key] = shiftedBcData[jj][kk] - bcData[jj][kk];
@@ -1999,11 +2072,15 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         vector<Period> simMarketTenors = simMarketData_->commodityCurveTenors(name);
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->commodityPriceCurve(name)->dayCounter();
-        } catch(const std::exception&)  {
-            WLOG("Day counter lookup in simulation market failed for commodity price curve " << name << ", using default A365");
+            if (auto s = simMarket_.lock()) {
+                dc = s->commodityPriceCurve(name)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for commodity price curve " << name
+                                                                                             << ", using default A365");
         }
-
 
         vector<Real> times(simMarketTenors.size());
         vector<Real> basePrices(times.size());
@@ -2103,9 +2180,14 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
         vector<Time> shiftTimes(sd.shiftExpiries.size());
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->commodityVolatility(name)->dayCounter();
-        } catch(const std::exception&)  {
-            WLOG("Day counter lookup in simulation market failed for commodity vol surface " << name << ", using default A365");
+            if (auto s = simMarket_.lock()) {
+                dc = s->commodityVolatility(name)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for commodity vol surface " << name
+                                                                                             << ", using default A365");
         }
 
         // Get the base scenario volatility values
@@ -2201,9 +2283,14 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
 
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->correlationCurve(pair.first, pair.second)->dayCounter();
-        } catch(const std::exception&)  {
-            WLOG("Day counter lookup in simulation market failed for correlation curve " << pair.first << " - " <<  pair.second << ", using default A365");
+            if (auto s = simMarket_.lock()) {
+                dc = s->correlationCurve(pair.first, pair.second)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for correlation curve "
+                 << pair.first << " - " << pair.second << ", using default A365");
         }
 
         // cache original vol data

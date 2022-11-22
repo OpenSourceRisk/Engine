@@ -76,7 +76,7 @@ public:
 
     //! Build a volatility surface from a collection of expiry and moneyness strike pairs.
     void buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
-                         const VolatilityMoneynessSurfaceConfig& vssc, const Loader& loader,
+                         const VolatilityMoneynessSurfaceConfig& vmsc, const Loader& loader,
                          const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex);
 
     //! Build a volatility surface from a collection of expiry and strike delta pairs 

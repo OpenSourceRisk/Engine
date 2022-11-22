@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016,2022 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -30,29 +30,38 @@
 
 namespace QuantExt {
 
-class CPIBlackCapFloorEngine : public QuantLib::CPICapFloor::engine {
+//! Basse Class for Black / Bachelier CPI cap floor pricing engines
+class CPICapFloorEngine : public QuantLib::CPICapFloor::engine {
+public:
+    CPICapFloorEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+                      const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface,
+                      const bool ttmFromLastAvailableFixing = false);
+
+    virtual void calculate() const override;
+
+    virtual ~CPICapFloorEngine() {}
+
+    void setVolatility(const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface);
+
+protected:
+    virtual double optionPriceImpl(QuantLib::Option::Type type, double forward, double strike, double stdDev, double discount) const = 0;
+    QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
+    QuantLib::Handle<QuantLib::CPIVolatilitySurface> volatilitySurface_;
+    bool ttmFromLastAvailableFixing_;
+};
+
+class CPIBlackCapFloorEngine : public CPICapFloorEngine {
 public:
     CPIBlackCapFloorEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                            const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface,
-                           const bool measureTimeToExpiryFromLastAvailableFixing = false);
+                           const bool ttmFromLastAvailableFixing = false)
+        : CPICapFloorEngine(discountCurve, surface, ttmFromLastAvailableFixing){};
 
-    virtual void calculate() const override;
-    virtual std::string name() const { return "CPIBlackCapFloorEngine"; }
-
-    virtual ~CPIBlackCapFloorEngine() {}
-
-    void setVolatility(const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface) {
-        if (!volatilitySurface_.empty())
-            unregisterWith(volatilitySurface_);
-        volatilitySurface_ = surface;
-        registerWith(volatilitySurface_);
-        update();
-    }
+    virtual ~CPIBlackCapFloorEngine() = default;
 
 protected:
-    QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
-    QuantLib::Handle<QuantLib::CPIVolatilitySurface> volatilitySurface_;
-    bool measureTimeFromLastAvailableFixing_;
+    virtual double optionPriceImpl(QuantLib::Option::Type type, double strike, double forward, double stdDev,
+                                   double discount) const override;
 };
 
 } // namespace QuantExt

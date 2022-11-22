@@ -59,6 +59,7 @@ public:
     const BarrierData& barrier() const { return barrier_; }
     double boughtAmount() const { return boughtAmount_; }
     double soldAmount() const { return soldAmount_; }
+    const std::string& fxIndex() const { return fxIndex_; }
     //@}
 
     //! \name Serialisation
@@ -72,6 +73,8 @@ private:
     BarrierData barrier_;
     double boughtAmount_;
     double soldAmount_;
+    //! If the option has automatic exercise (i.e. cash settled after maturity), need an FX index for settlement.
+    std::string fxIndex_;
 };
 } // namespace data
 } // namespace oreplus

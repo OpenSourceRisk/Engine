@@ -77,6 +77,12 @@
     <ClCompile Include="commodityforward.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="commodityapo.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityswaption.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
     <ClCompile Include="discountingcommodityforwardengine.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -183,6 +189,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="inflationvol.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="basecorrelationcurve.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

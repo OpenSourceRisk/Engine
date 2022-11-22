@@ -228,8 +228,44 @@
     <ClInclude Include="ored\portfolio\tradefactory.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\commodityapo.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\commoditylegbuilder.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\commoditylegdata.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\commodityoptionstrip.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\commodityswap.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\commodityswaption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\commodityswaption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\commodityswap.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\commodityapo.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\commodityapomodelbuilder.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp">
       <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\varianceswap.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\varianceswap.hpp">
+      <Filter>portfolio</Filter>
     </ClInclude>
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp">
       <Filter>portfolio\builders</Filter>
@@ -537,6 +573,12 @@
     <ClInclude Include="ored\portfolio\optionexercisedata.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\equityfxlegbuilder.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\equityfxlegdata.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
     <ClInclude Include="ored\model\modelparameter.hpp">
       <Filter>model</Filter>
     </ClInclude>
@@ -711,6 +753,12 @@
     <ClInclude Include="ored\portfolio\equitytouchoption.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClCompile Include="ored\portfolio\equityfxlegbuilder.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\equityfxlegdata.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
     <ClInclude Include="ored\portfolio\builders\fxbarrieroption.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
@@ -718,9 +766,6 @@
       <Filter>portfolio</Filter>
     </ClInclude>
     <ClInclude Include="ored\portfolio\fxdigitalbarrieroption.hpp">
-      <Filter>portfolio</Filter>
-    </ClInclude>
-    <ClInclude Include="ored\portfolio\builders\fxdigitaloption.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
     <ClInclude Include="ored\portfolio\fxdigitaloption.hpp">
@@ -770,6 +815,42 @@
     </ClInclude>
     <ClInclude Include="ored\utilities\inflationstartdate.hpp">
       <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\crosscurrencyswap.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\inflationswap.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\blackscholesmodelbuilderbase.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\blackscholesmodelbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\calibrationpointcache.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\cliquetoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\cliquetoption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\localvolmodelbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\irmodeldata.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\irhwmodeldata.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\hwbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\fxdigitaloption.hpp">
+      <Filter>portfolio\builders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -897,6 +978,33 @@
       <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\capfloor.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\cliquetoption.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\varianceswap.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\commodityapo.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\commoditylegbuilder.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\commoditylegdata.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\commodityoptionstrip.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\commodityswap.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\commodityswaption.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\commodityapomodelbuilder.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\failedtrade.cpp">
@@ -1334,9 +1442,6 @@
     <ClCompile Include="ored\portfolio\fxtouchoption.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
-    <ClCompile Include="ored\marketdata\loader.cpp">
-      <Filter>marketdata</Filter>
-    </ClCompile>
     <ClCompile Include="ored\portfolio\barrieroption.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
@@ -1344,5 +1449,35 @@
       <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="ored\marketdata\loader.cpp" />
+    <ClCompile Include="ored\portfolio\crosscurrencyswap.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\inflationswap.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\blackscholesmodelbuilder.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\blackscholesmodelbuilderbase.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\calibrationpointcache.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\loader.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\localvolmodelbuilder.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\irmodeldata.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\irhwmodeldata.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\hwbuilder.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

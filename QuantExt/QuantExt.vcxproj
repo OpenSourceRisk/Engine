@@ -505,12 +505,14 @@
     <ClInclude Include="qle\calendars\amendedcalendar.hpp" />
     <ClInclude Include="qle\calendars\luxembourg.hpp" />
     <ClInclude Include="qle\calendars\malaysia.hpp" />
+    <ClInclude Include="qle\calendars\mauritius.hpp" />
     <ClInclude Include="qle\calendars\netherlands.hpp" />
     <ClInclude Include="qle\calendars\peru.hpp" />
     <ClInclude Include="qle\calendars\philippines.hpp" />
     <ClInclude Include="qle\calendars\russia.hpp" />
     <ClInclude Include="qle\calendars\spain.hpp" />
     <ClInclude Include="qle\calendars\switzerland.hpp" />
+    <ClInclude Include="qle\calendars\unitedarabemirates.hpp" />
     <ClInclude Include="qle\calendars\wmr.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcoupon.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcouponpricer.hpp" />
@@ -526,6 +528,8 @@
     <ClInclude Include="qle\cashflows\durationadjustedcmscoupontsrpricer.hpp" />
     <ClInclude Include="qle\cashflows\equitycoupon.hpp" />
     <ClInclude Include="qle\cashflows\equitycouponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\equitymargincoupon.hpp" />
+    <ClInclude Include="qle\cashflows\equitymargincouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\fixedratefxlinkednotionalcoupon.hpp" />
     <ClInclude Include="qle\cashflows\floatingannuitycoupon.hpp" />
     <ClInclude Include="qle\cashflows\floatingannuitynominal.hpp" />
@@ -631,6 +635,7 @@
     <ClInclude Include="qle\instruments\averageois.hpp" />
     <ClInclude Include="qle\instruments\brlcdiswap.hpp" />
     <ClInclude Include="qle\instruments\cdsoption.hpp" />
+    <ClInclude Include="qle\instruments\cliquetoption.hpp" />
     <ClInclude Include="qle\instruments\commodityapo.hpp" />
     <ClInclude Include="qle\instruments\commodityforward.hpp" />
     <ClInclude Include="qle\instruments\crossccybasismtmresetswap.hpp" />
@@ -644,6 +649,7 @@
     <ClInclude Include="qle\instruments\fixedbmaswap.hpp" />
     <ClInclude Include="qle\instruments\forwardbond.hpp" />
     <ClInclude Include="qle\instruments\fxforward.hpp" />
+    <ClInclude Include="qle\instruments\genericswaption.hpp" />
     <ClInclude Include="qle\instruments\impliedbondspread.hpp" />
     <ClInclude Include="qle\instruments\makeaverageois.hpp" />
     <ClInclude Include="qle\instruments\makecds.hpp" />
@@ -660,12 +666,14 @@
     <ClInclude Include="qle\instruments\vanillaforwardoption.hpp" />
     <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp" />
     <ClInclude Include="qle\instruments\cashflowresults.hpp" />
+    <ClInclude Include="qle\instruments\varianceswap.hpp" />
     <ClInclude Include="qle\interpolators\optioninterpolator2d.hpp" />
     <ClInclude Include="qle\math\constantinterpolation.hpp" />
     <ClInclude Include="qle\math\covariancesalvage.hpp" />
     <ClInclude Include="qle\math\deltagammavar.hpp" />
     <ClInclude Include="qle\math\fillemptymatrix.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
+    <ClInclude Include="qle\math\flatextrapolation2d.hpp" />
     <ClInclude Include="qle\math\logquadraticinterpolation.hpp" />
     <ClInclude Include="qle\math\nadarayawatson.hpp" />
     <ClInclude Include="qle\math\quadraticinterpolation.hpp" />
@@ -679,6 +687,7 @@
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
     <ClInclude Include="qle\methods\pathgeneratorfactory.hpp" />
     <ClInclude Include="qle\models\annuitymapping.hpp" />
+    <ClInclude Include="qle\models\blackscholesmodelwrapper.hpp" />
     <ClInclude Include="qle\models\carrmadanarbitragecheck.hpp" />
     <ClInclude Include="qle\models\cdsoptionhelper.hpp" />
     <ClInclude Include="qle\models\cirppconstantfellerparametrization.hpp" />
@@ -705,6 +714,7 @@
     <ClInclude Include="qle\models\fxbspiecewiseconstantparametrization.hpp" />
     <ClInclude Include="qle\models\fxeqoptionhelper.hpp" />
     <ClInclude Include="qle\models\gaussian1dcrossassetadaptor.hpp" />
+    <ClInclude Include="qle\models\hwmodel.hpp" />
     <ClInclude Include="qle\models\infdkparametrization.hpp" />
     <ClInclude Include="qle\models\infjyparameterization.hpp" />
     <ClInclude Include="qle\models\irlgm1fconstantparametrization.hpp" />
@@ -722,6 +732,7 @@
     <ClInclude Include="qle\models\lgmvectorised.hpp" />
     <ClInclude Include="qle\models\linearannuitymapping.hpp" />
     <ClInclude Include="qle\models\linkablecalibratedmodel.hpp" />
+    <ClInclude Include="qle\models\modelimpliedyieldtermstructure.hpp" />
     <ClInclude Include="qle\models\normalsabr.hpp" />
     <ClInclude Include="qle\models\normalsabrinterpolation.hpp" />
     <ClInclude Include="qle\models\normalsabrsmilesection.hpp" />
@@ -734,8 +745,11 @@
     <ClInclude Include="qle\models\yoyswaphelper.hpp" />
     <ClInclude Include="qle\models\zeroinflationmodeltermstructure.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp" />
+    <ClInclude Include="qle\pricingengines\analyticdoublebarrierbinaryengine.hpp" />
+    <ClInclude Include="qle\pricingengines\analyticeuropeanengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticeuropeanforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcclgmfxoptionengine.hpp" />
+    <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticdkcpicapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticjycpicapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticjyyoycapfloorengine.hpp" />
@@ -745,6 +759,7 @@
     <ClInclude Include="qle\pricingengines\baroneadesiwhaleyengine.hpp" />
     <ClInclude Include="qle\pricingengines\blackcdsoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\commodityapoengine.hpp" />
+    <ClInclude Include="qle\pricingengines\commodityswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpibacheliercapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpiblackcapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpicapfloorengines.hpp" />
@@ -762,6 +777,8 @@
     <ClInclude Include="qle\pricingengines\numericlgmmultilegoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp" />
+    <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp" />
+    <ClInclude Include="qle\pricingengines\volatilityfromvarianceswapengine.hpp" />
     <ClInclude Include="qle\processes\crcirppstateprocess.hpp" />
     <ClInclude Include="qle\processes\crossassetstateprocess.hpp" />
     <ClInclude Include="qle\processes\irlgm1fstateprocess.hpp" />
@@ -790,6 +807,8 @@
     <ClInclude Include="qle\termstructures\capfloortermvolsurfacesparse.hpp" />
     <ClInclude Include="qle\termstructures\creditcurve.hpp" />
     <ClInclude Include="qle\termstructures\creditvolcurve.hpp" />
+    <ClInclude Include="qle\termstructures\credit\basecorrelationstructure.hpp" />
+    <ClInclude Include="qle\termstructures\credit\spreadedbasecorrelationcurve.hpp" />
     <ClInclude Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfaceproxy.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
@@ -918,12 +937,14 @@
     <ClCompile Include="qle\calendars\amendedcalendar.cpp" />
     <ClCompile Include="qle\calendars\luxembourg.cpp" />
     <ClCompile Include="qle\calendars\malaysia.cpp" />
+    <ClCompile Include="qle\calendars\mauritius.cpp" />
     <ClCompile Include="qle\calendars\netherlands.cpp" />
     <ClCompile Include="qle\calendars\peru.cpp" />
     <ClCompile Include="qle\calendars\philippines.cpp" />
     <ClCompile Include="qle\calendars\russia.cpp" />
     <ClCompile Include="qle\calendars\spain.cpp" />
     <ClCompile Include="qle\calendars\switzerland.cpp" />
+    <ClCompile Include="qle\calendars\unitedarabemirates.cpp" />
     <ClCompile Include="qle\calendars\wmr.cpp" />
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp" />
     <ClCompile Include="qle\cashflows\averageonindexedcouponpricer.cpp" />
@@ -939,6 +960,8 @@
     <ClCompile Include="qle\cashflows\durationadjustedcmscoupontsrpricer.cpp" />
     <ClCompile Include="qle\cashflows\equitycoupon.cpp" />
     <ClCompile Include="qle\cashflows\equitycouponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\equitymargincoupon.cpp" />
+    <ClCompile Include="qle\cashflows\equitymargincouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\fixedratefxlinkednotionalcoupon.cpp" />
     <ClCompile Include="qle\cashflows\floatingannuitycoupon.cpp" />
     <ClCompile Include="qle\cashflows\floatingannuitynominal.cpp" />
@@ -985,6 +1008,7 @@
     <ClCompile Include="qle\instruments\averageois.cpp" />
     <ClCompile Include="qle\instruments\brlcdiswap.cpp" />
     <ClCompile Include="qle\instruments\cdsoption.cpp" />
+    <ClCompile Include="qle\instruments\cliquetoption.cpp" />
     <ClCompile Include="qle\instruments\commodityapo.cpp" />
     <ClCompile Include="qle\instruments\commodityforward.cpp" />
     <ClCompile Include="qle\instruments\crossccybasismtmresetswap.cpp" />
@@ -998,6 +1022,7 @@
     <ClCompile Include="qle\instruments\fixedbmaswap.cpp" />
     <ClCompile Include="qle\instruments\forwardbond.cpp" />
     <ClCompile Include="qle\instruments\fxforward.cpp" />
+    <ClCompile Include="qle\instruments\genericswaption.cpp" />
     <ClCompile Include="qle\instruments\impliedbondspread.cpp" />
     <ClCompile Include="qle\instruments\makeaverageois.cpp" />
     <ClCompile Include="qle\instruments\makecds.cpp" />
@@ -1012,6 +1037,7 @@
     <ClCompile Include="qle\instruments\tenorbasisswap.cpp" />
     <ClCompile Include="qle\instruments\cashsettledeuropeanoption.cpp" />
     <ClCompile Include="qle\instruments\cashflowresults.cpp" />
+    <ClCompile Include="qle\instruments\varianceswap.cpp" />
     <ClCompile Include="qle\math\deltagammavar.cpp" />
     <ClCompile Include="qle\math\fillemptymatrix.cpp" />
     <ClCompile Include="qle\math\randomvariable.cpp" />
@@ -1040,6 +1066,7 @@
     <ClCompile Include="qle\models\fxbspiecewiseconstantparametrization.cpp" />
     <ClCompile Include="qle\models\fxeqoptionhelper.cpp" />
     <ClCompile Include="qle\models\gaussian1dcrossassetadaptor.cpp" />
+    <ClCompile Include="qle\models\hwmodel.cpp" />
     <ClCompile Include="qle\models\infjyparameterization.cpp" />
     <ClCompile Include="qle\models\jyimpliedyoyinflationtermstructure.cpp" />
     <ClCompile Include="qle\models\jyimpliedzeroinflationtermstructure.cpp" />
@@ -1051,6 +1078,7 @@
     <ClCompile Include="qle\models\lgmvectorised.cpp" />
     <ClCompile Include="qle\models\linearannuitymapping.cpp" />
     <ClCompile Include="qle\models\linkablecalibratedmodel.cpp" />
+    <ClCompile Include="qle\models\modelimpliedyieldtermstructure.cpp" />
     <ClCompile Include="qle\models\normalsabr.cpp" />
     <ClCompile Include="qle\models\normalsabrsmilesection.cpp" />
     <ClCompile Include="qle\models\parametrization.cpp" />
@@ -1061,8 +1089,11 @@
     <ClCompile Include="qle\models\zeroinflationmodeltermstructure.cpp" />
     <ClCompile Include="qle\models\projectedcrossassetmodel.cpp" />
     <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp" />
+    <ClCompile Include="qle\pricingengines\analyticdoublebarrierbinaryengine.cpp" />
+    <ClCompile Include="qle\pricingengines\analyticeuropeanengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticeuropeanforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticcclgmfxoptionengine.cpp" />
+    <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticdkcpicapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticjycpicapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticjyyoycapfloorengine.cpp" />
@@ -1072,6 +1103,7 @@
     <ClCompile Include="qle\pricingengines\baroneadesiwhaleyengine.cpp" />
     <ClCompile Include="qle\pricingengines\blackcdsoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\commodityapoengine.cpp" />
+    <ClCompile Include="qle\pricingengines\commodityswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpibacheliercapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpiblackcapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpicapfloorengines.cpp" />
@@ -1089,6 +1121,8 @@
     <ClCompile Include="qle\pricingengines\numericlgmmultilegoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\oiccbasisswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\paymentdiscountingengine.cpp" />
+    <ClCompile Include="qle\pricingengines\varianceswapgeneralreplicationengine.cpp" />
+    <ClCompile Include="qle\pricingengines\volatilityfromvarianceswapengine.cpp" />
     <ClCompile Include="qle\processes\crcirppstateprocess.cpp" />
     <ClCompile Include="qle\processes\crossassetstateprocess.cpp" />
     <ClCompile Include="qle\processes\irlgm1fstateprocess.cpp" />
@@ -1109,6 +1143,8 @@
     <ClCompile Include="qle\termstructures\blackvolsurfacedelta.cpp" />
     <ClCompile Include="qle\termstructures\creditcurve.cpp" />
     <ClCompile Include="qle\termstructures\creditvolcurve.cpp" />
+    <ClCompile Include="qle\termstructures\credit\basecorrelationstructure.cpp" />
+    <ClCompile Include="qle\termstructures\credit\spreadedbasecorrelationcurve.cpp" />
     <ClCompile Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfaceproxy.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />

@@ -22,14 +22,14 @@ namespace QuantExt {
 
 boost::shared_ptr<CrossAssetModel>
 getProjectedCrossAssetModel(const boost::shared_ptr<CrossAssetModel>& model,
-                            const std::vector<std::pair<CrossAssetModelTypes::AssetType, Size> >& selectedComponents,
+                            const std::vector<std::pair<CrossAssetModel::AssetType, Size>>& selectedComponents,
                             std::vector<Size>& projectedStateProcessIndices) {
 
     projectedStateProcessIndices.clear();
 
     // vectors holding the selected parametrizations and associated indices in the correlation matrix
 
-    std::vector<boost::shared_ptr<Parametrization> > parametrizations;
+    std::vector<boost::shared_ptr<Parametrization>> parametrizations;
     std::vector<Size> correlationIndices;
 
     // loop over selected components and fill
@@ -66,51 +66,56 @@ std::vector<Size> getStateProcessProjection(const boost::shared_ptr<CrossAssetMo
 
     std::vector<Size> stateProcessProjection(projectedModel->stateProcess()->size(), Null<Size>());
 
-    for (Size i = 0; i < model->components(IR); ++i) {
-        for (Size j = 0; j < projectedModel->components(IR); ++j) {
+    for (Size i = 0; i < model->components(CrossAssetModel::AssetType::IR); ++i) {
+        for (Size j = 0; j < projectedModel->components(CrossAssetModel::AssetType::IR); ++j) {
             if (projectedModel->ir(j)->currency() == model->ir(i)->currency()) {
-                for (Size k = 0; k < projectedModel->stateVariables(IR, j); ++k) {
-                    stateProcessProjection[projectedModel->pIdx(IR, j, k)] = model->pIdx(IR, i, k);
+                for (Size k = 0; k < projectedModel->stateVariables(CrossAssetModel::AssetType::IR, j); ++k) {
+                    stateProcessProjection[projectedModel->pIdx(CrossAssetModel::AssetType::IR, j, k)] =
+                        model->pIdx(CrossAssetModel::AssetType::IR, i, k);
                 }
             }
         }
     }
 
-    for (Size i = 0; i < model->components(FX); ++i) {
-        for (Size j = 0; j < projectedModel->components(FX); ++j) {
+    for (Size i = 0; i < model->components(CrossAssetModel::AssetType::FX); ++i) {
+        for (Size j = 0; j < projectedModel->components(CrossAssetModel::AssetType::FX); ++j) {
             if (projectedModel->fx(j)->currency() == model->fx(i)->currency()) {
-                for (Size k = 0; k < projectedModel->stateVariables(FX, j); ++k) {
-                    stateProcessProjection[projectedModel->pIdx(FX, j, k)] = model->pIdx(FX, i, k);
+                for (Size k = 0; k < projectedModel->stateVariables(CrossAssetModel::AssetType::FX, j); ++k) {
+                    stateProcessProjection[projectedModel->pIdx(CrossAssetModel::AssetType::FX, j, k)] =
+                        model->pIdx(CrossAssetModel::AssetType::FX, i, k);
                 }
             }
         }
     }
 
-    for (Size i = 0; i < model->components(INF); ++i) {
-        for (Size j = 0; j < projectedModel->components(INF); ++j) {
+    for (Size i = 0; i < model->components(CrossAssetModel::AssetType::INF); ++i) {
+        for (Size j = 0; j < projectedModel->components(CrossAssetModel::AssetType::INF); ++j) {
             if (projectedModel->inf(j)->name() == model->inf(i)->name()) {
-                for (Size k = 0; k < projectedModel->stateVariables(INF, j); ++k) {
-                    stateProcessProjection[projectedModel->pIdx(INF, j, k)] = model->pIdx(INF, i, k);
+                for (Size k = 0; k < projectedModel->stateVariables(CrossAssetModel::AssetType::INF, j); ++k) {
+                    stateProcessProjection[projectedModel->pIdx(CrossAssetModel::AssetType::INF, j, k)] =
+                        model->pIdx(CrossAssetModel::AssetType::INF, i, k);
                 }
             }
         }
     }
 
-    for (Size i = 0; i < model->components(CR); ++i) {
-        for (Size j = 0; j < projectedModel->components(CR); ++j) {
+    for (Size i = 0; i < model->components(CrossAssetModel::AssetType::CR); ++i) {
+        for (Size j = 0; j < projectedModel->components(CrossAssetModel::AssetType::CR); ++j) {
             if (projectedModel->cr(j)->name() == model->cr(i)->name()) {
-                for (Size k = 0; k < projectedModel->stateVariables(CR, j); ++k) {
-                    stateProcessProjection[projectedModel->pIdx(CR, j, k)] = model->pIdx(CR, i, k);
+                for (Size k = 0; k < projectedModel->stateVariables(CrossAssetModel::AssetType::CR, j); ++k) {
+                    stateProcessProjection[projectedModel->pIdx(CrossAssetModel::AssetType::CR, j, k)] =
+                        model->pIdx(CrossAssetModel::AssetType::CR, i, k);
                 }
             }
         }
     }
 
-    for (Size i = 0; i < model->components(EQ); ++i) {
-        for (Size j = 0; j < projectedModel->components(EQ); ++j) {
+    for (Size i = 0; i < model->components(CrossAssetModel::AssetType::EQ); ++i) {
+        for (Size j = 0; j < projectedModel->components(CrossAssetModel::AssetType::EQ); ++j) {
             if (projectedModel->eq(j)->name() == model->eq(i)->name()) {
-                for (Size k = 0; k < projectedModel->stateVariables(EQ, j); ++k) {
-                    stateProcessProjection[projectedModel->pIdx(EQ, j, k)] = model->pIdx(EQ, i, k);
+                for (Size k = 0; k < projectedModel->stateVariables(CrossAssetModel::AssetType::EQ, j); ++k) {
+                    stateProcessProjection[projectedModel->pIdx(CrossAssetModel::AssetType::EQ, j, k)] =
+                        model->pIdx(CrossAssetModel::AssetType::EQ, i, k);
                 }
             }
         }

@@ -15,12 +15,14 @@ calendars/israel.cpp
 calendars/largejointcalendar.cpp
 calendars/luxembourg.cpp
 calendars/malaysia.cpp
+calendars/mauritius.cpp
 calendars/netherlands.cpp
 calendars/peru.cpp
 calendars/philippines.cpp
 calendars/russia.cpp
 calendars/spain.cpp
 calendars/switzerland.cpp
+calendars/unitedarabemirates.cpp
 calendars/wmr.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
@@ -37,6 +39,8 @@ cashflows/durationadjustedcmscoupon.cpp
 cashflows/durationadjustedcmscoupontsrpricer.cpp
 cashflows/equitycoupon.cpp
 cashflows/equitycouponpricer.cpp
+cashflows/equitymargincoupon.cpp
+cashflows/equitymargincouponpricer.cpp
 cashflows/fixedratefxlinkednotionalcoupon.cpp
 cashflows/floatingannuitycoupon.cpp
 cashflows/floatingannuitynominal.cpp
@@ -84,6 +88,7 @@ instruments/brlcdiswap.cpp
 instruments/cashflowresults.cpp
 instruments/cashsettledeuropeanoption.cpp
 instruments/cdsoption.cpp
+instruments/cliquetoption.cpp
 instruments/commodityapo.cpp
 instruments/commodityforward.cpp
 instruments/crossccybasismtmresetswap.cpp
@@ -97,6 +102,7 @@ instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/forwardbond.cpp
 instruments/fxforward.cpp
+instruments/genericswaption.cpp
 instruments/impliedbondspread.cpp
 instruments/makeaverageois.cpp
 instruments/makecds.cpp
@@ -109,6 +115,7 @@ instruments/payment.cpp
 instruments/rebatedexercise.cpp
 instruments/subperiodsswap.cpp
 instruments/tenorbasisswap.cpp
+instruments/varianceswap.cpp
 math/deltagammavar.cpp
 math/differentialevolution_mt.cpp
 math/fillemptymatrix.cpp
@@ -120,6 +127,8 @@ models/carrmadanarbitragecheck.cpp
 models/cdsoptionhelper.cpp
 models/cirppimplieddefaulttermstructure.cpp
 models/cmscaphelper.cpp
+models/commodityschwartzparametrization.cpp
+models/commodityschwartzmodel.cpp
 models/cpicapfloorhelper.cpp
 models/crcirpp.cpp
 models/crossassetanalytics.cpp
@@ -132,11 +141,13 @@ models/eqbsconstantparametrization.cpp
 models/eqbsparametrization.cpp
 models/eqbspiecewiseconstantparametrization.cpp
 models/exactbachelierimpliedvolatility.cpp
+models/futureoptionhelper.cpp
 models/fxbsconstantparametrization.cpp
 models/fxbsparametrization.cpp
 models/fxbspiecewiseconstantparametrization.cpp
 models/fxeqoptionhelper.cpp
 models/gaussian1dcrossassetadaptor.cpp
+models/hwmodel.cpp
 models/infjyparameterization.cpp
 models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
@@ -148,6 +159,8 @@ models/lgmimpliedyieldtermstructure.cpp
 models/lgmvectorised.cpp
 models/linearannuitymapping.cpp
 models/linkablecalibratedmodel.cpp
+models/modelimpliedpricetermstructure.cpp
+models/modelimpliedyieldtermstructure.cpp
 models/normalsabr.cpp
 models/normalsabrsmilesection.cpp
 models/parametrization.cpp
@@ -159,7 +172,10 @@ models/yoyswaphelper.cpp
 models/zeroinflationmodeltermstructure.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
 pricingengines/analyticcclgmfxoptionengine.cpp
+pricingengines/analyticdigitalamericanengine.cpp
 pricingengines/analyticdkcpicapfloorengine.cpp
+pricingengines/analyticdoublebarrierbinaryengine.cpp
+pricingengines/analyticeuropeanengine.cpp
 pricingengines/analyticeuropeanforwardengine.cpp
 pricingengines/analyticjycpicapfloorengine.cpp
 pricingengines/analyticjyyoycapfloorengine.cpp
@@ -169,6 +185,8 @@ pricingengines/analyticxassetlgmeqoptionengine.cpp
 pricingengines/baroneadesiwhaleyengine.cpp
 pricingengines/blackcdsoptionengine.cpp
 pricingengines/commodityapoengine.cpp
+pricingengines/commodityswaptionengine.cpp
+pricingengines/commodityschwartzfutureoptionengine.cpp
 pricingengines/cpibacheliercapfloorengine.cpp
 pricingengines/cpiblackcapfloorengine.cpp
 pricingengines/cpicapfloorengines.cpp
@@ -186,6 +204,9 @@ pricingengines/lgmconvolutionsolver.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
+pricingengines/varianceswapgeneralreplicationengine.cpp
+pricingengines/volatilityfromvarianceswapengine.cpp
+processes/commodityschwartzstateprocess.cpp
 processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
@@ -210,6 +231,8 @@ termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
 termstructures/capfloortermvolsurface.cpp
 termstructures/correlationtermstructure.cpp
+termstructures/credit/basecorrelationstructure.cpp
+termstructures/credit/spreadedbasecorrelationcurve.cpp
 termstructures/creditcurve.cpp
 termstructures/creditvolcurve.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
@@ -292,12 +315,14 @@ calendars/israel.hpp
 calendars/largejointcalendar.hpp
 calendars/luxembourg.hpp
 calendars/malaysia.hpp
+calendars/mauritius.hpp
 calendars/netherlands.hpp
 calendars/peru.hpp
 calendars/philippines.hpp
 calendars/russia.hpp
 calendars/spain.hpp
 calendars/switzerland.hpp
+calendars/unitedarabemirates.hpp
 calendars/wmr.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
@@ -314,6 +339,8 @@ cashflows/durationadjustedcmscoupon.hpp
 cashflows/durationadjustedcmscoupontsrpricer.hpp
 cashflows/equitycoupon.hpp
 cashflows/equitycouponpricer.hpp
+cashflows/equitymargincoupon.hpp
+cashflows/equitymargincouponpricer.hpp
 cashflows/fixedratefxlinkednotionalcoupon.hpp
 cashflows/floatingannuitycoupon.hpp
 cashflows/floatingannuitynominal.hpp
@@ -423,6 +450,7 @@ instruments/brlcdiswap.hpp
 instruments/cashflowresults.hpp
 instruments/cashsettledeuropeanoption.hpp
 instruments/cdsoption.hpp
+instruments/cliquetoption.hpp
 instruments/commodityapo.hpp
 instruments/commodityforward.hpp
 instruments/crossccybasismtmresetswap.hpp
@@ -436,6 +464,7 @@ instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
 instruments/forwardbond.hpp
 instruments/fxforward.hpp
+instruments/genericswaption.hpp
 instruments/impliedbondspread.hpp
 instruments/makeaverageois.hpp
 instruments/makecds.hpp
@@ -450,6 +479,7 @@ instruments/rebatedexercise.hpp
 instruments/subperiodsswap.hpp
 instruments/tenorbasisswap.hpp
 instruments/vanillaforwardoption.hpp
+instruments/varianceswap.hpp
 interpolators/optioninterpolator2d.hpp
 math/constantinterpolation.hpp
 math/covariancesalvage.hpp
@@ -457,6 +487,7 @@ math/deltagammavar.hpp
 math/differentialevolution_mt.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
+math/flatextrapolation2d.hpp
 math/logquadraticinterpolation.hpp
 math/method_mt.hpp
 math/nadarayawatson.hpp
@@ -469,6 +500,7 @@ math/trace.hpp
 methods/multipathgeneratorbase.hpp
 methods/pathgeneratorfactory.hpp
 models/annuitymapping.hpp
+models/blackscholesmodelwrapper.hpp
 models/carrmadanarbitragecheck.hpp
 models/cdsoptionhelper.hpp
 models/cirppconstantfellerparametrization.hpp
@@ -476,6 +508,9 @@ models/cirppconstantparametrization.hpp
 models/cirppimplieddefaulttermstructure.hpp
 models/cirppparametrization.hpp
 models/cmscaphelper.hpp
+models/commoditymodel.hpp
+models/commodityschwartzmodel.hpp
+models/commodityschwartzparametrization.hpp
 models/cpicapfloorhelper.hpp
 models/crcirpp.hpp
 models/crlgm1fparametrization.hpp
@@ -490,11 +525,15 @@ models/eqbsconstantparametrization.hpp
 models/eqbsparametrization.hpp
 models/eqbspiecewiseconstantparametrization.hpp
 models/exactbachelierimpliedvolatility.hpp
+models/futureoptionhelper.hpp
 models/fxbsconstantparametrization.hpp
 models/fxbsparametrization.hpp
 models/fxbspiecewiseconstantparametrization.hpp
 models/fxeqoptionhelper.hpp
 models/gaussian1dcrossassetadaptor.hpp
+models/hwconstantparametrization.hpp
+models/hwmodel.hpp
+models/hwparametrization.hpp
 models/infdkparametrization.hpp
 models/infjyparameterization.hpp
 models/irlgm1fconstantparametrization.hpp
@@ -502,6 +541,7 @@ models/irlgm1fparametrization.hpp
 models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp
 models/irlgm1fpiecewiseconstantparametrization.hpp
 models/irlgm1fpiecewiselinearparametrization.hpp
+models/irmodel.hpp
 models/jyimpliedyoyinflationtermstructure.hpp
 models/jyimpliedzeroinflationtermstructure.hpp
 models/lgm.hpp
@@ -512,6 +552,8 @@ models/lgmimpliedyieldtermstructure.hpp
 models/lgmvectorised.hpp
 models/linearannuitymapping.hpp
 models/linkablecalibratedmodel.hpp
+models/modelimpliedpricetermstructure.hpp
+models/modelimpliedyieldtermstructure.hpp
 models/normalsabr.hpp
 models/normalsabrinterpolation.hpp
 models/normalsabrsmilesection.hpp
@@ -525,7 +567,10 @@ models/yoyswaphelper.hpp
 models/zeroinflationmodeltermstructure.hpp
 pricingengines/analyticcashsettledeuropeanengine.hpp
 pricingengines/analyticcclgmfxoptionengine.hpp
+pricingengines/analyticdigitalamericanengine.hpp
+pricingengines/analyticdoublebarrierbinaryengine.hpp
 pricingengines/analyticdkcpicapfloorengine.hpp
+pricingengines/analyticeuropeanengine.hpp
 pricingengines/analyticeuropeanforwardengine.hpp
 pricingengines/analyticjycpicapfloorengine.hpp
 pricingengines/analyticjyyoycapfloorengine.hpp
@@ -535,6 +580,8 @@ pricingengines/analyticxassetlgmeqoptionengine.hpp
 pricingengines/baroneadesiwhaleyengine.hpp
 pricingengines/blackcdsoptionengine.hpp
 pricingengines/commodityapoengine.hpp
+pricingengines/commodityswaptionengine.hpp
+pricingengines/commodityschwartzfutureoptionengine.hpp
 pricingengines/cpibacheliercapfloorengine.hpp
 pricingengines/cpiblackcapfloorengine.hpp
 pricingengines/cpicapfloorengines.hpp
@@ -552,8 +599,12 @@ pricingengines/lgmconvolutionsolver.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
+pricingengines/varianceswapgeneralreplicationengine.hpp
+pricingengines/volatilityfromvarianceswapengine.hpp
+processes/commodityschwartzstateprocess.hpp
 processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
+processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
 quotes/compositevectorquote.hpp
 quotes/exceptionquote.hpp
@@ -587,6 +638,8 @@ termstructures/capfloortermvolsurfacesparse.hpp
 termstructures/commodityaveragebasispricecurve.hpp
 termstructures/commoditybasispricecurve.hpp
 termstructures/correlationtermstructure.hpp
+termstructures/credit/basecorrelationstructure.hpp
+termstructures/credit/spreadedbasecorrelationcurve.hpp
 termstructures/creditcurve.hpp
 termstructures/creditvolcurve.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
@@ -615,9 +668,10 @@ termstructures/hazardspreadeddefaulttermstructure.hpp
 termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
 termstructures/inflation/constantcpivolatility.hpp
+termstructures/inflation/cpipricevolatilitysurface.hpp
 termstructures/inflation/cpivolatilitystructure.hpp
-termstructures/inflation/piecewisezeroinflationcurve.hpp
 termstructures/inflation/inflationtraits.hpp
+termstructures/inflation/piecewisezeroinflationcurve.hpp
 termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolatedcpivolatilitysurface.hpp
 termstructures/interpolateddiscountcurve.hpp

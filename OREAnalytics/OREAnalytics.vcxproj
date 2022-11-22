@@ -122,8 +122,6 @@
     <ClCompile Include="orea\app\parameters.cpp" />
     <ClCompile Include="orea\app\reportwriter.cpp" />
     <ClCompile Include="orea\app\sensitivityrunner.cpp" />
-    <ClCompile Include="orea\app\structuredanalyticserror.cpp" />
-    <ClCompile Include="orea\app\structuredanalyticswarning.cpp" />
     <ClCompile Include="orea\app\xvarunner.cpp" />
     <ClCompile Include="orea\cube\cubeinterpretation.cpp" />
     <ClCompile Include="orea\cube\cubewriter.cpp" />
@@ -323,7 +321,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>.;..\OREData;..\OREAnalytics;..\QuantExtPlus;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\OREData;..\QuantExt;..\QuantLib;..\ThirdPartyLibs\rapidxml-1.13;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;_LIB;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>

@@ -922,6 +922,8 @@ public:
     boost::shared_ptr<LegAdditionalData>& concreteLegData() { return concreteLegData_; }
     std::vector<Indexing>& indexing() { return indexing_; }
     bool& indexingFromAssetLeg() { return indexingFromAssetLeg_; }
+    string& paymentConvention() { return paymentConvention_; }
+    std::vector<std::string>& paymentDates() { return paymentDates_; }
     //@}
 
     virtual boost::shared_ptr<LegAdditionalData> initialiseConcreteLegData(const string&);
@@ -1005,10 +1007,10 @@ Real originalNotional(const Leg& leg);
 
 //@}
 
-//! Build a full vector of values from the given node.
-//  For use with Notionals, Rates, Spreads, Gearing, Caps and Floor rates.
-//  In all cases we can expand the vector to take the given schedule into account
-//  If checkAllValuesAppearInResult is true, we require that all input values are appearing in the result (in order)
+// Build a full vector of values from the given node.
+// For use with Notionals, Rates, Spreads, Gearing, Caps and Floor rates.
+// In all cases we can expand the vector to take the given schedule into account
+// If checkAllValuesAppearInResult is true, we require that all input values are appearing in the result (in order)
 template <typename T>
 vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
                                const bool checkAllValuesAppearInResult = false);

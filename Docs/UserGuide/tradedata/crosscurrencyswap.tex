@@ -1,0 +1,120 @@
+\subsubsection{Cross Currency Swap}
+\label{ss:cross_currency_swap}
+
+A Cross Currency Swap can be represented with either trade type \emph{Swap} or \emph{CrossCurrencySwap}. In the case of \emph{Swap}, it is set up using a {\tt SwapData} container. For \emph{CrossCurrencySwap}, we use {\tt CrossCurrencySwapData} with the same {\tt LegData} sub-nodes within the container, and it is explicitly required for this trade type to have exactly two legs, each of type \emph{Fixed} or \emph{Floating}, i.e. \emph{Fixed}-\emph{Fixed}, \emph{Floating}-\emph{Floating}, \emph{Fixed}-\emph{Floating}, or \emph{Floating}-\emph{Fixed} combinations are allowed. 
+
+A Cross Currency Swap can be rebalancing, meaning the notional amount on one leg resets to the equivalent of a fixed amount in another currency (called ForeignCurrency, and is typically the currency of the other leg) at each period. This is represented using an \lstinline!FXReset! node on the resetting/rebalancing leg, within the \lstinline!Notionals! node. Note that the Notional in leg currency must be set even on the rebalancing leg, but this is only used as starting notional.
+
+The optional \lstinline!FXReset! node includes the following elements:
+
+\begin{itemize}
+
+\item ForeignCurrency: The foreign currency the notional of the leg resets to.  
+
+Allowable values:  See Table \ref{tab:currency} Currency.
+
+\item ForeignAmount: The notional amount in the foreign currency that the notional of the leg resets to.  
+
+Allowable values:  Any positive real number.
+
+\item FXIndex: A reference to an FX Index source for the FX reset fixing. 
+
+Allowable values:  A string of the form FX-SOURCE-CCY1-CCY2. Note that the FX- part of the string stays constant for all currency pairs.
+
+See Table \ref{tab:fxindex_data} for further details, including supported FX-pairs for each fixing source.
+
+\end{itemize}
+
+Listing \ref{lst:crosscurrencyswapnonreset} shows an example of a non-rebalancing \emph{CrossCurrencySwapData} node. Note that for non-rebalancing Cross Currency Swaps the structure is the same as for the \emph{Swap} trade type with the only difference being the top node name as described, i.e.\ \emph{SwapData}. Rebalancing Cross Currency Swaps, see example in listing \ref{lst:crosscurrencyswapreset}, also include the \lstinline!FXReset! node, but otherwise also use the same structure as the \emph{Swap} trade type.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <CrossCurrencySwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+           <Notional>30000000</Notional>
+           <Exchanges>
+              <NotionalInitialExchange>true</NotionalInitialExchange>
+              <NotionalFinalExchange>true</NotionalFinalExchange>
+            </Exchanges>
+        </Notionals>
+        <DayCounter>ACT/365</DayCounter>
+        ...
+        <FloatingLegData>
+        ...
+        </FloatingLegData>
+      </LegData>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+           <Notional>29000000</Notional>
+           <Exchanges>
+              <NotionalInitialExchange>true</NotionalInitialExchange>
+              <NotionalFinalExchange>true</NotionalFinalExchange>
+            </Exchanges>
+        </Notionals>        
+        <DayCounter>ACT/365</DayCounter>
+        ...
+        <FixedLegData>
+        ...
+        </FixedLegData>
+      </LegData>
+    </CrossCurrencySwapData>
+\end{minted}
+\caption{Non-Rebalancing Cross Currency Swap Data}
+\label{lst:crosscurrencyswapnonreset}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <CrossCurrencySwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+           <Notional>30000000</Notional>
+           <Exchanges>
+              <NotionalInitialExchange>true</NotionalInitialExchange>
+              <NotionalFinalExchange>true</NotionalFinalExchange>
+            </Exchanges>
+        </Notionals>
+        <DayCounter>ACT/365</DayCounter>
+        ...
+        <FloatingLegData>
+        ...
+        </FloatingLegData>
+      </LegData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>false</Payer>
+        <Currency>JPY</Currency>
+        <Notionals>
+           <Notional>4381340000</Notional> (in JPY)
+           <FXReset>
+              <ForeignCurrency>USD</ForeignCurrency>
+              <ForeignAmount>30000000</ForeignAmount> (in USD)
+              <FXIndex>FX-TR20H-USD-JPY</FXIndex>
+           </FXReset>
+           <Exchanges>
+              <NotionalInitialExchange>true</NotionalInitialExchange>
+              <NotionalFinalExchange>true</NotionalFinalExchange>
+            </Exchanges>
+        </Notionals> 
+        <DayCounter>ACT/365</DayCounter>
+        ...
+        <FloatingLegData>
+        ...
+        </FloatingLegData>
+      </LegData>
+    </CrossCurrencySwapData>
+\end{minted}
+\caption{Rebalancing Cross Currency Swap Data}
+\label{lst:crosscurrencyswapreset}
+\end{listing}
+

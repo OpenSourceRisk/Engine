@@ -22,7 +22,8 @@ enum class CommodityQuantityFrequency {
     PerCalculationPeriod,
     PerCalendarDay,
     PerPricingDay,
-    PerHour
+    PerHour,
+    PerHourAndCalendarDay
 };
 
 /*! \brief Get the set of valid pricing dates in a period.

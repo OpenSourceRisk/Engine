@@ -19,6 +19,7 @@
 #include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
 #include <qle/calendars/russia.hpp>
+#include <qle/calendars/unitedarabemirates.hpp>
 #include <ql/settings.hpp>
 
 using namespace std;
@@ -59,6 +60,59 @@ BOOST_AUTO_TEST_CASE(testRussiaModified) {
         BOOST_CHECK_EQUAL(russiaSettlement.isBusinessDay(d), russiaModifiedSettlement.isBusinessDay(d));
         BOOST_CHECK_EQUAL(russiaExchange.isBusinessDay(d), russiaModifiedExchange.isBusinessDay(d));
     }
+}
+
+BOOST_AUTO_TEST_CASE(updatedArabEmirates){
+    BOOST_TEST_MESSAGE("Testing updated UAE calendar");
+    Calendar UAE = UnitedArabEmirates();
+    std::vector<QuantLib::Date> testDates{
+        Date(4,Feb,2021),
+        Date(5,Feb,2021),
+        Date(6,Feb,2021),
+        Date(7,Feb,2021),
+        Date(8,Feb,2021),
+        Date(9,Feb,2021),
+        Date(10,Feb,2021),
+        Date(30,Dec,2021),
+        Date(31,Dec,2021),
+        Date(1,Jan,2022), // this is always holiday, but being Sat it serves the goal of the test
+        Date(2,Jan,2022),
+        Date(3,Jan,2022),
+        Date(4,Jan,2022),
+        Date(5,Jan,2022),
+        Date(4,Feb,2022),
+        Date(5,Feb,2022),
+        Date(6,Feb,2022),
+        Date(7,Feb,2022),
+        Date(8,Feb,2022),
+        Date(9,Feb,2022),
+        Date(10,Feb,2022),
+    };
+
+    for (auto d:testDates){
+        if(d.year()<2022)
+            switch (d.weekday()) {
+            case QuantLib::Friday:
+            case QuantLib::Saturday:
+                BOOST_TEST(!UAE.isBusinessDay(d));
+                break ;
+            default:
+                BOOST_TEST(UAE.isBusinessDay(d));
+                break ;
+            }
+        else{
+            switch (d.weekday()) {
+            case QuantLib::Saturday:
+            case QuantLib::Sunday:
+                BOOST_TEST(!UAE.isBusinessDay(d));
+                break ;
+            default:
+                BOOST_TEST(UAE.isBusinessDay(d));
+                break ;
+            }
+        }
+    }
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

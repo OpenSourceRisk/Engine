@@ -1,3 +1,18 @@
+Changes for the 8th ORE release (1.8.8.0):
+============================================
+
+ORE 1.8.8.0 includes the following notable changes, details can be
+found in the commits between September 2022 and December 2022.
+
+INSTRUMENTS
+
+- add Equity Cliquet Option
+- add Equity/FX/Commodity Variance Swap
+- add Commodity Swap
+- add Commodity Swaption
+- add Commodity Average Price Option
+- add Commodity Option Strip
+
 Changes for the 7th ORE release (1.8.7.0):
 ============================================
 

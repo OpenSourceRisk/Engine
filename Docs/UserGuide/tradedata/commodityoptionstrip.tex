@@ -1,0 +1,79 @@
+\subsubsection{Commodity Option Strip}
+\label{ss:commodityoptionstrip}
+
+The structure of a trade node representing a commodity option strip is shown in listing \ref{lst:commodity_option_strip}. This node can be used to represent a strip of commodity average price options as described in section \ref{ss:input_commodityapo} or a strip of European commodity options as described in section \ref{ss:input_commodity_option}. It consists of the generic \lstinline!Envelope! and the specific \lstinline!CommodityOptionStripData! node.
+
+The \lstinline!CommodityOptionStripData! node has a \lstinline!LegData! node with \lstinline!LegType! set to \lstinline!CommodityFloating!. This \lstinline!LegData! node is described in detail in sections \ref{ss:commodityfloatingleg} and \ref{ss:commodity_floating_leg_data}. Note that the  \lstinline!Payer! field in \lstinline!CommodityFloatingLegData!, while mandatory, has no impact on flows. The node \lstinline!IsAveraged! in \lstinline!CommodityFloatingLegData! determines whether a strip of European commodity options or a strip of APOs are created:
+
+\begin{itemize}
+
+\item
+If \lstinline!IsAveraged! is \lstinline!false!, a strip of European commodity options is created. There is a European put and or European call option created for each calculation period. The exercise date of the option in the calculation period is given by the \textit{Pricing Date} in the calculation period using the rules outlined in section \ref{ss:commodity_floating_leg_data}. The quantity is given by the quantity in the calculation period using the rules outlined in section \ref{ss:commodity_floating_leg_data}. If cash settled, the cash settlement date is given by the payment date for the calculation period using the rules outlined in section \ref{ss:commodity_floating_leg_data}.
+
+\item
+If \lstinline!IsAveraged! is \lstinline!true!, a strip of commodity average price options is created. There is a put and or call option created for each calculation period. The exercise date of the option in the calculation period is given by the calculation period end date. The quantity is given by the quantity in the calculation period using the rules outlined in section \ref{ss:commodity_floating_leg_data}.
+
+\end{itemize}
+
+Each calculation period may contain a put and a call that may be either bought or sold. The type of option, whether they are bought or sold and the strike price is determined by the \lstinline!Calls! and \lstinline!Puts! nodes. We describe here the settings for the \lstinline!Calls! node with the understanding that analogous descriptions apply to the \lstinline!Puts! node. If the \lstinline!Calls! node is omitted, it is assumed that there are no call options in the strip. 
+
+The \lstinline!LongShorts! node may contain one \lstinline!LongShort! node or the same number of \lstinline!LongShort! nodes as calculation periods. Each \lstinline!LongShort! node has the allowable values \lstinline!Long! or \lstinline!Short!. If \lstinline!LongShort! is \lstinline!Long!, then the call option is bought and if \lstinline!LongShort! is \lstinline!Short! then the call option is sold. If a single \lstinline!LongShort! node is provided, it is applied to all options in the strip. If the same number of \lstinline!LongShort! nodes as calculation periods are provided, a \lstinline!LongShort! node is applied to the option in the corresponding period. The optional \lstinline!BarrierData! node specifies the barrier terms of the options. See section \ref{ss:input_commodityapo} for details on this. Call and put options can have different barrier terms, but all call (resp. put) options share the same terms. In listing \ref{lst:commodity_option_strip} only the call options have a barrier feature.
+
+Similar to the \lstinline!LongShorts! node, the \lstinline!Strikes! node may contain one \lstinline!Strike! node or the same number of \lstinline!Strike! nodes as calculation periods. If only one is provided, this strike applies to all options in the strip. If the same number of \lstinline!Strike! nodes as calculation periods are provided, a \lstinline!Strike! node is applied to the option in the corresponding period. In this way, we support varying strikes across options in the strip. At least one of \lstinline!Calls! or \lstinline!Puts! needs to be provided for a valid option strip to be created.
+
+The \lstinline!Premiums! node allows for the addition of premiums. If the \lstinline!PremiumAmount! is negative, it is paid and if it is positive, it is received. See \ref{ss:premiums}.
+
+The optional \lstinline!Style! node can be set to \lstinline!European! or \lstinline!American! to change the exercise style for the strip of options. If not set, \lstinline!European! is assumed. If the strip is a strip of APOs, \lstinline!European! is assumed and a warning is issued if \lstinline!Style! is not \lstinline!European!.
+
+The optional \lstinline!Settlement! node can be set to \lstinline!Cash! or \lstinline!Physical! to change the settlement method for the strip of options. If not set, \lstinline!Cash! is assumed. If the strip is a strip of APOs, \lstinline!Cash! is assumed and a warning is issued if \lstinline!Settlement! is not \lstinline!Cash!.
+
+The optional \lstinline!IsDigital! node allows the creation of a strip of \lstinline!CommodityDigitalOption!s (see \ref{ss:input_commodity_digital_option}). If set to \lstinline!true! the node \lstinline!PayoffPerUnit! needs to be set.
+
+Node \lstinline!PayoffPerUnit! [Optional] specifies the payoff per commodity unit, expressed in leg currency, in case a digital option is exercised. If the trade is a strip of digital options, this node must be set. It accepts real numbers as input.
+
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="...">
+  <TradeType>CommodityOptionStrip</TradeType>
+  <Envelope>
+    ...
+  </Envelope>
+  <CommodityOptionStripData>
+    <LegData>
+      <LegType>CommodityFloating</LegType>
+      ...
+    </LegData>
+    <Calls>
+      <LongShorts>
+        <LongShort>Short</LongShort>
+      </LongShorts>
+      <Strikes>
+        <Strike>5.3</Strike>
+      </Strikes>
+      <BarrierData>
+        <Type>UpAndIn</Type>
+        <Style>American</Style>
+        <LevelData>
+          <Level>
+            <Value>70.0</Value>
+          </Level>
+        </LevelData>
+      </BarrierData>
+    </Calls>
+    <Puts>
+      <LongShorts>
+        <LongShort>Long</LongShort>
+      </LongShorts>
+      <Strikes>
+        <Strike>8.17</Strike>
+      </Strikes>
+    </Puts>
+    <Premiums> ... </Premiums>
+    <Style>European</Style>
+    <Settlement>Cash</Settlement>
+  </CommodityOptionStripData>
+</Trade>
+\end{minted}
+\caption{Commodity option strip}
+\label{lst:commodity_option_strip}
+\end{listing}

@@ -19,10 +19,16 @@
 
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/cliquetoption.hpp>
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/commoditydigitaloption.hpp>
 #include <ored/portfolio/compositetrade.hpp>
+#include <ored/portfolio/commodityapo.hpp>
+#include <ored/portfolio/commoditylegbuilder.hpp>
+#include <ored/portfolio/commodityoptionstrip.hpp>
+#include <ored/portfolio/commodityswap.hpp>
+#include <ored/portfolio/commodityswaption.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapoption.hpp>
 #include <ored/portfolio/equityforward.hpp>
@@ -51,7 +57,10 @@
 #include <ored/portfolio/fxswap.hpp>
 #include <ored/portfolio/fxtouchoption.hpp>
 #include <ored/portfolio/swap.hpp>
+#include <ored/portfolio/crosscurrencyswap.hpp>
+#include <ored/portfolio/inflationswap.hpp>
 #include <ored/portfolio/swaption.hpp>
+#include <ored/portfolio/varianceswap.hpp>
 #include <ored/portfolio/failedtrade.hpp>
 #include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/log.hpp>
@@ -63,6 +72,8 @@ namespace data {
 
 TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders) {
     addBuilder("Swap", boost::make_shared<TradeBuilder<Swap>>());
+    addBuilder("CrossCurrencySwap", boost::make_shared<TradeBuilder<CrossCurrencySwap>>());
+    addBuilder("InflationSwap", boost::make_shared<TradeBuilder<InflationSwap>>());
     addBuilder("Swaption", boost::make_shared<TradeBuilder<Swaption>>());
     addBuilder("FxAverageForward", boost::make_shared<TradeBuilder<FxAverageForward>>());
     addBuilder("FxForward", boost::make_shared<TradeBuilder<FxForward>>());
@@ -78,17 +89,20 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
     addBuilder("FxDoubleTouchOption", boost::make_shared<TradeBuilder<FxDoubleTouchOption>>());
     addBuilder("FxEuropeanBarrierOption", boost::make_shared<TradeBuilder<FxEuropeanBarrierOption>>());
     addBuilder("FxDigitalOption", boost::make_shared<TradeBuilder<FxDigitalOption>>());
+    addBuilder("FxVarianceSwap", boost::make_shared<TradeBuilder<FxVarSwap>>());
     addBuilder("CapFloor", boost::make_shared<TradeBuilder<CapFloor>>());
     addBuilder("EquityOption", boost::make_shared<TradeBuilder<EquityOption>>());
     addBuilder("EquityBarrierOption", boost::make_shared<TradeBuilder<EquityBarrierOption>>());
     addBuilder("EquityDoubleBarrierOption", boost::make_shared<TradeBuilder<EquityDoubleBarrierOption>>());
     addBuilder("EquityAsianOption", boost::make_shared<TradeBuilder<EquityAsianOption>>());
+    addBuilder("EquityCliquetOption", boost::make_shared<TradeBuilder<EquityCliquetOption>>());
     addBuilder("EquityEuropeanBarrierOption", boost::make_shared<TradeBuilder<EquityEuropeanBarrierOption>>());
     addBuilder("EquityDigitalOption", boost::make_shared<TradeBuilder<EquityDigitalOption>>());
     addBuilder("EquityDoubleTouchOption", boost::make_shared<TradeBuilder<EquityDoubleTouchOption>>());
     addBuilder("EquityTouchOption", boost::make_shared<TradeBuilder<EquityTouchOption>>());
     addBuilder("EquityForward", boost::make_shared<TradeBuilder<EquityForward>>());
     addBuilder("EquitySwap", boost::make_shared<TradeBuilder<EquitySwap>>());
+    addBuilder("EquityVarianceSwap", boost::make_shared<TradeBuilder<EqVarSwap>>());
     addBuilder("Bond", boost::make_shared<TradeBuilder<Bond>>());
     addBuilder("ForwardBond", boost::make_shared<TradeBuilder<ForwardBond>>());
     addBuilder("CreditDefaultSwap", boost::make_shared<TradeBuilder<CreditDefaultSwap>>());
@@ -97,6 +111,12 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
     addBuilder("CommodityOption", boost::make_shared<TradeBuilder<CommodityOption>>());
     addBuilder("CommodityDigitalOption", boost::make_shared<TradeBuilder<CommodityDigitalOption>>());
     addBuilder("CommodityAsianOption", boost::make_shared<TradeBuilder<CommodityAsianOption>>());
+    addBuilder("CommoditySwap", boost::make_shared<TradeBuilder<CommoditySwap>>());
+    addBuilder("CommoditySwaption", boost::make_shared<TradeBuilder<CommoditySwaption>>());
+    addBuilder("CommodityAveragePriceOption", boost::make_shared<TradeBuilder<CommodityAveragePriceOption>>());
+    addBuilder("CommodityOptionStrip", boost::make_shared<TradeBuilder<CommodityOptionStrip>>());
+    addBuilder("CommodityVarianceSwap", boost::make_shared<TradeBuilder<ComVarSwap>>());
+
     addBuilder("EquityFutureOption", boost::make_shared<TradeBuilder<EquityFutureOption>>());
     addBuilder("Failed", boost::make_shared<TradeBuilder<FailedTrade>>());
     if (extraBuilders.size() > 0)

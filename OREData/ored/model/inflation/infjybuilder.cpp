@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2020 Quaternion Risk Management Ltd
+ Copyright (C) 2020, 2022 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -34,6 +34,7 @@
 #include <qle/models/yoyswaphelper.hpp>
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
+#include <qle/pricingengines/cpibacheliercapfloorengine.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
@@ -277,8 +278,14 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
 
     // Create the engine
     auto zts = zeroInflationIndex_->zeroInflationTermStructure();
-    auto engine = boost::make_shared<CPIBlackCapFloorEngine>(rateCurve_, cpiVolatility_);
-
+    
+    boost::shared_ptr<QuantExt::CPICapFloorEngine> engine;
+    bool isLogNormalVol = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(cpiVolatility_.currentLink());
+    if (isLogNormalVol) {
+        engine = boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, cpiVolatility_);
+    } else {
+        engine = boost::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, cpiVolatility_);
+    }
     // CPI cap floor calibration instrument details. Assumed to equal those from the index and market structures.
     // Some of these should possibly come from conventions.
     // Also some variables used in the loop below.
@@ -287,6 +294,7 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
     auto baseCpi = zeroInflationIndex_->fixing(baseDate);
     auto bdc = cpiVolatility_->businessDayConvention();
     auto obsLag = cpiVolatility_->observationLag();
+    
     Handle<ZeroInflationIndex> inflationIndex(zeroInflationIndex_);
     Date today = Settings::instance().evaluationDate();
     Real nominal = 1.0;
@@ -324,14 +332,14 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
         Real strikeValue =
             cpiCapFloorStrikeValue(cpiCapFloor->strike(), *zeroInflationIndex_->zeroInflationTermStructure(), maturity);
         Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
-        auto inst = boost::make_shared<CPICapFloor>(capfloor, nominal, today, baseCpi, maturity, calendar,
-                bdc, calendar, bdc, strikeValue, inflationIndex, obsLag);
+        auto inst = boost::make_shared<CPICapFloor>(capfloor, nominal, today, baseCpi, maturity, calendar, bdc,
+                                                    calendar, bdc, strikeValue, zeroInflationIndex_, obsLag);
         inst->setPricingEngine(engine);
 
         // Build the helper using the NPV as the premium.
         auto premium = inst->NPV();
-        auto helper = boost::make_shared<CpiCapFloorHelper>(capfloor, baseCpi, maturity, calendar, bdc,
-            calendar, bdc, strikeValue, inflationIndex, obsLag, premium);
+        auto helper = boost::make_shared<CpiCapFloorHelper>(capfloor, baseCpi, maturity, calendar, bdc, calendar, bdc,
+                                                            strikeValue, inflationIndex, obsLag, premium);
 
 
         // Add the helper's time to expiry.
