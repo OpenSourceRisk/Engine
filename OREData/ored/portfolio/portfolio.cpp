@@ -158,8 +158,12 @@ void Portfolio::removeMatured(const Date& asof) {
     for (auto it = tradeLookup_.begin(); it != tradeLookup_.end(); /* manual */) {
         if ((*it).second->maturity() < asof) {
             ALOG(StructuredTradeErrorMessage((*it).second, "Trade is Matured", ""));
-	        tradeLookup_.erase((*it).second->id());
+            tradeLookup_.erase((*it).second->id());
+            ++it;
+            /*
+            tradeLookup_.erase((*it).second->id());
             it = tradeLookup_.erase(it);
+            */
         } else {
             ++it;
         }
