@@ -111,6 +111,8 @@
     <ClInclude Include="ored\model\calibrationinstruments\yoycapfloor.hpp" />
     <ClInclude Include="ored\model\calibrationinstruments\yoyswap.hpp" />
     <ClInclude Include="ored\model\calibrationpointcache.hpp" />
+    <ClInclude Include="ored\model\commodityschwartzmodelbuilder.hpp" />
+    <ClInclude Include="ored\model\commodityschwartzmodeldata.hpp" />
     <ClInclude Include="ored\model\crcirbuilder.hpp" />
     <ClInclude Include="ored\model\crcirdata.hpp" />
     <ClInclude Include="ored\model\crlgmbuilder.hpp" />
@@ -380,6 +382,8 @@
     <ClCompile Include="ored\model\calibrationinstruments\yoycapfloor.cpp" />
     <ClCompile Include="ored\model\calibrationinstruments\yoyswap.cpp" />
     <ClCompile Include="ored\model\calibrationpointcache.cpp" />
+    <ClCompile Include="ored\model\commodityschwartzmodelbuilder.cpp" />
+    <ClCompile Include="ored\model\commodityschwartzmodeldata.cpp" />
     <ClCompile Include="ored\model\crcirbuilder.cpp" />
     <ClCompile Include="ored\model\crcirdata.cpp" />
     <ClCompile Include="ored\model\crlgmbuilder.cpp" />
