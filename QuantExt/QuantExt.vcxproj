@@ -695,6 +695,8 @@
     <ClInclude Include="qle\models\cirppimplieddefaulttermstructure.hpp" />
     <ClInclude Include="qle\models\cirppparametrization.hpp" />
     <ClInclude Include="qle\models\cmscaphelper.hpp" />
+    <ClInclude Include="qle\models\commodityschwartzmodel.hpp" />
+    <ClInclude Include="qle\models\commodityschwartzparametrization.hpp" />
     <ClInclude Include="qle\models\cpicapfloorhelper.hpp" />
     <ClInclude Include="qle\models\crcirpp.hpp" />
     <ClInclude Include="qle\models\crlgm1fparametrization.hpp" />
@@ -709,6 +711,7 @@
     <ClInclude Include="qle\models\eqbsparametrization.hpp" />
     <ClInclude Include="qle\models\eqbspiecewiseconstantparametrization.hpp" />
     <ClInclude Include="qle\models\exactbachelierimpliedvolatility.hpp" />
+    <ClInclude Include="qle\models\futureoptionhelper.hpp" />
     <ClInclude Include="qle\models\fxbsconstantparametrization.hpp" />
     <ClInclude Include="qle\models\fxbsparametrization.hpp" />
     <ClInclude Include="qle\models\fxbspiecewiseconstantparametrization.hpp" />
@@ -732,6 +735,7 @@
     <ClInclude Include="qle\models\lgmvectorised.hpp" />
     <ClInclude Include="qle\models\linearannuitymapping.hpp" />
     <ClInclude Include="qle\models\linkablecalibratedmodel.hpp" />
+    <ClInclude Include="qle\models\modelimpliedpricetermstructure.hpp" />
     <ClInclude Include="qle\models\modelimpliedyieldtermstructure.hpp" />
     <ClInclude Include="qle\models\normalsabr.hpp" />
     <ClInclude Include="qle\models\normalsabrinterpolation.hpp" />
@@ -749,6 +753,10 @@
     <ClInclude Include="qle\pricingengines\analyticeuropeanengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticeuropeanforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcclgmfxoptionengine.hpp" />
+    <ClCompile Include="qle\models\commodityschwartzmodel.cpp" />
+    <ClCompile Include="qle\models\commodityschwartzparametrization.cpp" />
+    <ClCompile Include="qle\models\futureoptionhelper.cpp" />
+    <ClCompile Include="qle\models\modelimpliedpricetermstructure.cpp" />
     <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticdkcpicapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticjycpicapfloorengine.hpp" />
@@ -759,6 +767,7 @@
     <ClInclude Include="qle\pricingengines\baroneadesiwhaleyengine.hpp" />
     <ClInclude Include="qle\pricingengines\blackcdsoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\commodityapoengine.hpp" />
+    <ClInclude Include="qle\pricingengines\commodityschwartzfutureoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\commodityswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpibacheliercapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpiblackcapfloorengine.hpp" />
@@ -779,6 +788,7 @@
     <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp" />
     <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp" />
     <ClInclude Include="qle\pricingengines\volatilityfromvarianceswapengine.hpp" />
+    <ClInclude Include="qle\processes\commodityschwartzstateprocess.hpp" />
     <ClInclude Include="qle\processes\crcirppstateprocess.hpp" />
     <ClInclude Include="qle\processes\crossassetstateprocess.hpp" />
     <ClInclude Include="qle\processes\irlgm1fstateprocess.hpp" />
@@ -1103,6 +1113,7 @@
     <ClCompile Include="qle\pricingengines\baroneadesiwhaleyengine.cpp" />
     <ClCompile Include="qle\pricingengines\blackcdsoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\commodityapoengine.cpp" />
+    <ClCompile Include="qle\pricingengines\commodityschwartzfutureoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\commodityswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpibacheliercapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpiblackcapfloorengine.cpp" />
@@ -1123,6 +1134,7 @@
     <ClCompile Include="qle\pricingengines\paymentdiscountingengine.cpp" />
     <ClCompile Include="qle\pricingengines\varianceswapgeneralreplicationengine.cpp" />
     <ClCompile Include="qle\pricingengines\volatilityfromvarianceswapengine.cpp" />
+    <ClCompile Include="qle\processes\commodityschwartzstateprocess.cpp" />
     <ClCompile Include="qle\processes\crcirppstateprocess.cpp" />
     <ClCompile Include="qle\processes\crossassetstateprocess.cpp" />
     <ClCompile Include="qle\processes\irlgm1fstateprocess.cpp" />
