@@ -47,7 +47,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
     // check the equity currency
     underlyingCurrency_ =
-        market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing))->currency().code();
+        market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing))->currency();
     QL_REQUIRE(!underlyingCurrency_.empty(), "No equity currency in equityCurve for equity " << assetName_ << ".");
         
     // Set the strike currency - if we have a minor currency, convert the strike
@@ -55,7 +55,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         strike_.setCurrency(strikeCurrency_);
     else if (strike_.currency().empty()) {
         // If payoff currency and underlying currency are equivalent (and payoff currency could be a minor currency)
-        if (ccy == parseCurrency(underlyingCurrency_)) {
+        if (ccy == underlyingCurrency_) {
             TLOG("Setting strike currency to payoff currency " << ccy << " for trade " << id() << ".");
             strike_.setCurrency(ccy.code());
         } else {
@@ -67,7 +67,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
     // Quanto payoff condition, i.e. currency_ != underlyingCurrency_, will be checked in VanillaOptionTrade::build()
     // Build the trade using the shared functionality in the base class.
-    if (strike_.currency() != underlyingCurrency_) {
+    if (strike_.currency() != underlyingCurrency_.code()) {
    
         // We have a composite EQ Trade
 
@@ -75,7 +75,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         QL_REQUIRE(ccy == strikeCcy, "Equity composite option requires pay ccy ("
                                          << ccy.code() << ") to match strike ccy (" << strikeCcy.code()
                                          << "), quanto composite options are not supported (underlying currency is "
-                                         << underlyingCurrency_ << ")");
+                                         << underlyingCurrency_.code() << ")");
 
         Option::Type type = parseOptionType(option_.callPut());
         boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_.value()));
@@ -133,7 +133,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         // TODO cast and set pricing engine
 
         auto compositeBuilder = boost::dynamic_pointer_cast<EquityEuropeanCompositeEngineBuilder>(builder);
-        vanilla->setPricingEngine(compositeBuilder->engine(assetName_, parseCurrency(underlyingCurrency_), 
+        vanilla->setPricingEngine(compositeBuilder->engine(assetName_, underlyingCurrency_, 
             parseCurrency(strike_.currency()), expiryDate_));
 
         string configuration = Market::defaultConfiguration;

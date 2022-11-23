@@ -58,7 +58,7 @@ protected:
             market_->equityForecastCurve(assetName, configuration(ore::data::MarketContext::pricing)),
             market_->equityVol(assetName, configuration(ore::data::MarketContext::pricing)));
 
-        return boost::make_shared<AnalyticEuropeanEngine>(gbsp);
+        return boost::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp);
     }
 };
 

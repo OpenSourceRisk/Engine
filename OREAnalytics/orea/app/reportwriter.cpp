@@ -1252,6 +1252,22 @@ void addInflationCurveCalibrationInfo(ore::data::Report& report, const std::stri
     }
 }
 
+void addCommodityCurveCalibrationInfo(ore::data::Report& report, const std::string& id,
+                                      boost::shared_ptr<CommodityCurveCalibrationInfo> const& info) {
+    if(info == nullptr)
+        return ;
+    addRowMktCalReport(report, "commodityCurve", id, "calendar", "", "", "", info->calendar);
+    addRowMktCalReport(report, "commodityCurve", id, "dayCounter", "", "", "", info->dayCounter);
+    addRowMktCalReport(report, "commodityCurve", id, "currenct", "", "", "", info->currency);
+    addRowMktCalReport(report, "commodityCurve", id, "interpolationMethod", "", "", "", info->interpolationMethod);
+
+    for (Size i = 0; i < info->pillarDates.size(); ++i){
+        auto date = to_string(info->pillarDates.at(i));
+        addRowMktCalReport(report, "commodityCurve", id, "time", date, "", "", info->times.at(i));
+        addRowMktCalReport(report, "commodityCurve", id, "price", date, "", "", info->futurePrices.at(i));
+    }
+}
+
 void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& type, const std::string& id,
                                boost::shared_ptr<FxEqVolCalibrationInfo> info) {
     if (info == nullptr)
@@ -1402,6 +1418,12 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
 
     for (auto const& r : calibrationInfo->inflationCurveCalibrationInfo) {
         addInflationCurveCalibrationInfo(report, r.first, r.second);
+    }
+
+    // commodity curve results
+
+    for (auto const& r :calibrationInfo->commodityCurveCalibrationInfo) {
+        addCommodityCurveCalibrationInfo(report, r.first, r.second);
     }
 
     // fx vol results
