@@ -25,12 +25,21 @@ CommoditySpreadOption::CommoditySpreadOption(const boost::shared_ptr<CommodityCa
       settlementMethod_(settlementMethod) {
     registerWith(longAssetFlow_);
     registerWith(shortAssetFlow_);
-    QL_REQUIRE(boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(longAssetFlow_) ||
+    QL_REQUIRE(ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(longAssetFlow_) ||
                    boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(longAssetFlow_),
                "Expect commodity floating cashflows");
-    QL_REQUIRE(boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(shortAssetFlow_) ||
+    QL_REQUIRE(ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(shortAssetFlow_) ||
                    boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(shortAssetFlow_),
                "Expect commodity floating cashflows");
+    if (auto avgFlow = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(longAssetFlow_)) {
+        QL_REQUIRE(exercise_->lastDate() >= avgFlow->indices().rbegin()->first,
+                   "exercise Date hast to be after last observation date");
+    }
+    if (auto avgFlow = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(shortAssetFlow_)) {
+        QL_REQUIRE(exercise_->lastDate() >= avgFlow->indices().rbegin()->first,
+                   "exercise Date hast to be after last observation date");
+    }
+
     if (longAssetFxIndex_)
         registerWith(longAssetFxIndex_);
     if (shortAssetFxIndex_)
