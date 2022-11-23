@@ -3,6 +3,7 @@
  All rights reserved.
 */
 
+#include <iostream>
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/processes/ornsteinuhlenbeckprocess.hpp>
@@ -53,47 +54,59 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
 
     Time tte = discountCurve_->timeFromReference(exerciseDate);
 
-    auto [obsTime1, F1, sigma1] =
+    auto [obsTime1, F1, accrued1, sigma1] =
         timeAndAtmAndSigmaFromCashFlow(arguments_.longAssetFlow, *volTSLongAsset_, arguments_.longAssetFxIndex);
-    
-    auto [obsTime2, F2, sigma2] =
+
+    auto [obsTime2, F2, accrued2, sigma2] =
         timeAndAtmAndSigmaFromCashFlow(arguments_.shortAssetFlow, *volTSShortAsset_, arguments_.shortAssetFxIndex);
-    
+
     double sigma = 0;
     double stdDev = 0;
     double Y = 0;
     double Z = 0;
     double w1 = arguments_.longAssetFlow->gearing();
     double w2 = arguments_.shortAssetFlow->gearing();
+    double effectiveStrike = arguments_.effectiveStrike - w1 * accrued1 + w2 * accrued2;
 
     if (exerciseDate <= today) {
+        // if observation time is before expiry, continue the process with zero vol and zero drift from pricing date to
+        // expiry
         double omega = arguments_.type == Option::Call ? 1 : -1;
-        
-        results_.value = df * arguments_.quantity * omega * std::max(w1 * F1 - w2 * F2 - arguments_.effectiveStrike, 0.0);
-     
+
+        results_.value =
+            df * arguments_.quantity * omega * std::max(w1 * F1 - w2 * F2 - arguments_.effectiveStrike, 0.0);
+
+    } else if (effectiveStrike < 0 && !close_enough(effectiveStrike, 0.0)) {
+        // Effective strike can be become negative if accrueds large enough
+        if (arguments_.type == Option::Call) {
+            results_.value = df * arguments_.quantity * std::max(w1 * F1 - w2 * F2 - effectiveStrike, 0.0);
+        } else {
+            results_.value = 0.0;
+        }
+
     } else {
-        // if observation time is before expiry, continue the process with zero vol and zero drift from pricing date to expiry
         sigma1 = sigma1 * std::min(1.0, std::sqrt(obsTime1 / tte));
         sigma2 = sigma2 * std::min(1.0, std::sqrt(obsTime2 / tte));
 
         // KirkFormula
-        Y = (F2 * w2 + arguments_.effectiveStrike);
-        Z = w1*F1 / Y;
+        Y = (F2 * w2 + arguments_.effectiveStrike - w1 * accrued1 + w2 * accrued2);
+        Z = w1 * F1 / Y;
         double sigmaTilde = sigma2 * F2 * w2 / Y;
 
         sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaTilde, 2.0) - 2 * sigma1 * sigmaTilde * rho_);
 
         stdDev = sigma * sqrt(tte);
-        
-        results_.value = arguments_.quantity * Y *
-                         blackFormula(arguments_.type, 1, Z, stdDev, df);
+
+        results_.value = arguments_.quantity * Y * blackFormula(arguments_.type, 1, Z, stdDev, df);
     }
 
     // Calendar spread adjustment if observation period is before the exercise date
     mp["F1"] = F1;
+    mp["accrued1"] = accrued1;
     mp["sigma1"] = sigma1;
     mp["obsTime1"] = obsTime1;
     mp["F2"] = F2;
+    mp["accrued2"] = accrued2;
     mp["sigma2"] = sigma2;
     mp["obsTime2"] = obsTime2;
     mp["tte"] = tte;
@@ -104,7 +117,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     mp["npv"] = results_.value;
 }
 
-std::tuple<double, double, double>
+std::tuple<double, double, double, double>
 CommoditySpreadOptionAnalyticalEngine::timeAndAtmAndSigmaFromCashFlow(const ext::shared_ptr<CommodityCashFlow>& flow,
                                                                       const ext::shared_ptr<BlackVolTermStructure>& vol,
                                                                       const ext::shared_ptr<FxIndex>& fxIndex) const {
@@ -116,7 +129,7 @@ CommoditySpreadOptionAnalyticalEngine::timeAndAtmAndSigmaFromCashFlow(const ext:
         }
         auto atm = cf->index()->fixing(cf->pricingDate()) * fxSpot;
         auto sigma = tn > 0 && !QuantLib::close_enough(tn, 0.0) ? vol->blackVol(tn, atm, true) : 0.0;
-        return std::make_tuple(tn, atm, sigma);
+        return std::make_tuple(tn, atm, 0, sigma);
     } else if (auto avgCf = ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(flow)) {
         // accrued part
         double tn = 0.0;
@@ -176,7 +189,6 @@ CommoditySpreadOptionAnalyticalEngine::timeAndAtmAndSigmaFromCashFlow(const ext:
                 }
             }
         }
-
         EA2 /= std::pow(static_cast<double>(n), 2.0);
 
         // Calculate value
@@ -187,13 +199,13 @@ CommoditySpreadOptionAnalyticalEngine::timeAndAtmAndSigmaFromCashFlow(const ext:
             tn = 0;
             sigma = 0;
         }
-        return std::make_tuple(tn, accrueds + EA, sigma);
+        return std::make_tuple(tn, EA, accrueds, sigma);
     } else {
         QL_FAIL("SpreadOptionEngine supports only CommodityIndexedCashFlow or CommodityIndexedAverageCashFlow");
     }
 }
 Real CommoditySpreadOptionAnalyticalEngine::rho(const Date& ed_1, const Date& ed_2,
-                                                const ext::shared_ptr<BlackVolTermStructure>& vol ) const {
+                                                const ext::shared_ptr<BlackVolTermStructure>& vol) const {
     if (beta_ == 0.0 || ed_1 == ed_2) {
         return 1.0;
     } else {

@@ -49,7 +49,8 @@ public:
     void calculate() const override;
 
 private:
-    std::tuple<double, double, double> timeAndAtmAndSigmaFromCashFlow(const ext::shared_ptr<CommodityCashFlow>& flow,
+    std::tuple<double, double, double, double>
+    timeAndAtmAndSigmaFromCashFlow(const ext::shared_ptr<CommodityCashFlow>& flow,
                                                                       const ext::shared_ptr<BlackVolTermStructure>& vol,
                                                                       const ext::shared_ptr<FxIndex>& fxIndex) const;
     

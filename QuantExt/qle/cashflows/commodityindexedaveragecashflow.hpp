@@ -78,7 +78,6 @@ public:
     const QuantLib::Date& startDate() const { return startDate_; }
     const QuantLib::Date& endDate() const { return endDate_; }
     ext::shared_ptr<CommodityIndex> index() const { return index_; }
-    bool useFuturePrice() const { return useFuturePrice_; }
     QuantLib::Natural deliveryDateRoll() const { return deliveryDateRoll_; }
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
     bool useBusinessDays() const { return useBusinessDays_; }
@@ -132,7 +131,6 @@ private:
     QuantLib::Date paymentDate_;
     ext::shared_ptr<CommodityIndex> index_;
     QuantLib::Calendar pricingCalendar_;
-    bool useFuturePrice_;
     QuantLib::Natural deliveryDateRoll_;
     QuantLib::Natural futureMonthOffset_;
     bool includeEndDate_;
