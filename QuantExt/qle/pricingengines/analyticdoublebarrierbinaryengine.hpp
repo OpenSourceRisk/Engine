@@ -34,7 +34,7 @@ namespace QuantExt {
     class AnalyticDoubleBarrierBinaryEngine : public QuantLib::AnalyticDoubleBarrierBinaryEngine {
       public:
         explicit AnalyticDoubleBarrierBinaryEngine(ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp,
-                                                     const bool flipResults)
+                                                   const bool flipResults = false)
               : QuantLib::AnalyticDoubleBarrierBinaryEngine(gbsp), flipResults_(flipResults) {}
         void calculate() const override;
 
