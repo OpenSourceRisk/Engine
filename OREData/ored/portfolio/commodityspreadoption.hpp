@@ -19,6 +19,10 @@
 #define ORE_COMMODITYSPREADOPTION_HPP
 
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/commoditylegdata.hpp>
+
+using namespace QuantExt;
+using namespace QuantLib;
 
 namespace ore::data {
 class CommoditySpreadOption : public ore::data::Trade {
@@ -36,15 +40,23 @@ public:
     //@}
 
 private:
-    OptionData optionData_;
-    std::vector<string> underlyingName_;
-    std::vector<boost::shared_ptr<CommodityIndex>> underlying_;
-    std::vector<string> underlyingCcy_;
-    std::vector<boost::optional<Date>> futureExpiryDate_;
-    string settlementCcy_;
-    Date settlementDate_;
-    boost::optional<bool> isAveraged_;
-    boost::shared_ptr<FxIndex> fxIndex_;
+
+    std::vector<ore::data::LegData> legData_;
+    std::vector<boost::shared_ptr<CommodityFloatingLegData>> commLegData_;
+    std::string exerciseDate_;
+    boost::shared_ptr<CommodityCashFlow> longAssetCashFlow_;
+    boost::shared_ptr<CommodityCashFlow> shortAssetCashFlow_;
+    std::vector<std::string> fxIndex_;
+    Real quantity_;
+    Spread spreadStrike_;
+    std::string callPut_;
+    std::string settlementDate_;
+    std::string settlementCcy_;
+
+    boost::shared_ptr<ore::data::LegData> createLegData() const { return boost::make_shared<ore::data::LegData>(); }
+
 };
+//
+
 }
 #endif // ORE_COMMODITYSPREADOPTION_HPP

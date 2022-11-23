@@ -118,6 +118,7 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
     addBuilder("CommodityAveragePriceOption", boost::make_shared<TradeBuilder<CommodityAveragePriceOption>>());
     addBuilder("CommodityOptionStrip", boost::make_shared<TradeBuilder<CommodityOptionStrip>>());
     addBuilder("CommodityVarianceSwap", boost::make_shared<TradeBuilder<ComVarSwap>>());
+    addBuilder("CommoditySpreadOption", boost::make_shared<TradeBuilder<CommoditySpreadOption>>());
 
     addBuilder("EquityFutureOption", boost::make_shared<TradeBuilder<EquityFutureOption>>());
     addBuilder("Failed", boost::make_shared<TradeBuilder<FailedTrade>>());

@@ -56,7 +56,7 @@ double monteCarloPricing(double F1, double F2, double sigma1, double sigma2, dou
     double payoff = 0;
     LowDiscrepancy::rsg_type rsg = LowDiscrepancy::make_sequence_generator(2, seed);
     Array drift = -0.5 * sigma * sigma * ttm;
-    for (int i = 0; i < samples; i++) {
+    for (size_t i = 0; i < samples; i++) {
         auto sample = rsg.nextSequence().value;
         std::copy(sample.begin(), sample.end(), Z.begin());
         Array Ft = F + drift + L * Z * std::sqrt(ttm);

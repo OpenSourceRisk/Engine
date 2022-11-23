@@ -54,7 +54,7 @@ void CommoditySpreadOption::setupArguments(PricingEngine::arguments* args) const
     QL_REQUIRE(arguments != 0, "wrong argument type");
     QL_REQUIRE(longAssetFlow_->gearing() > 0.0, "The gearing on an APO must be positive");
 
-    Date today = Settings::instance().evaluationDate();
+//    Date today = Settings::instance().evaluationDate();
 
     arguments->quantity = quantity_;
     arguments->strikePrice = strikePrice_;
