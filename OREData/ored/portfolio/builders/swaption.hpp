@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016-2022 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -26,8 +26,9 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
-
 #include <qle/models/lgm.hpp>
+#include <qle/models/crossassetmodel.hpp>
+#include <qle/pricingengines/mclgmswaptionengine.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -110,5 +111,55 @@ protected:
         const std::vector<Real>& strikes) override;
 };
 
+//! Implementation of LGMBermudanSwaptionEngineBuilder using MC pricer
+/*! \ingroup portfolio
+ */
+class LgmMcBermudanSwaptionEngineBuilder : public LGMBermudanSwaptionEngineBuilder {
+public:
+    LgmMcBermudanSwaptionEngineBuilder() : LGMBermudanSwaptionEngineBuilder("MC") {}
+
+protected:
+    virtual boost::shared_ptr<PricingEngine> engineImpl(
+        //! a unique (trade) id, for caching
+        const string& id,
+        //! the currency
+        const string& key,
+        //! Excercise dates
+        const std::vector<Date>& dates,
+        //! maturity of the underlying
+        const Date& maturity,
+        //! Fixed rate (null means ATM)
+        const std::vector<Real>& strikes) override;
+};
+
+// Implementation of BermudanSwaptionEngineBuilder for external cam, with additional simulation dates (AMC)
+class LgmAmcBermudanSwaptionEngineBuilder : public BermudanSwaptionEngineBuilder {
+public:
+    LgmAmcBermudanSwaptionEngineBuilder(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                        const std::vector<Date>& simulationDates)
+        : BermudanSwaptionEngineBuilder("LGM", "AMC"), cam_(cam), simulationDates_(simulationDates) {}
+
+protected:
+    // the pricing engine depends on the ccy only
+    virtual string keyImpl(const string& id, const string& ccy, const std::vector<Date>& dates, const Date& maturity,
+                           const std::vector<Real>& strikes) override {
+        return ccy;
+    }
+    virtual boost::shared_ptr<PricingEngine> engineImpl(
+        //! a unique (trade) id, for caching
+        const string& id,
+        //! the currency
+        const string& key,
+        //! Excercise dates
+        const std::vector<Date>& dates,
+        //! maturity of the underlying
+        const Date& maturity,
+        //! Fixed rate (null means ATM)
+        const std::vector<Real>& strikes) override;
+
+    const boost::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const std::vector<Date> simulationDates_;
+};
+    
 } // namespace data
 } // namespace ore

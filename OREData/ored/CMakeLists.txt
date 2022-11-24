@@ -110,7 +110,11 @@ portfolio/builders/cms.cpp
 portfolio/builders/cmsspread.cpp
 portfolio/builders/commodityapomodelbuilder.cpp
 portfolio/builders/cpicapfloor.cpp
+portfolio/builders/currencyswap.cpp
 portfolio/builders/durationadjustedcms.cpp
+portfolio/builders/fxoption.cpp
+portfolio/builders/multilegoption.cpp
+portfolio/builders/swap.cpp
 portfolio/builders/swaption.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
@@ -167,6 +171,7 @@ portfolio/inflationswap.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
 portfolio/legdatafactory.cpp
+portfolio/multilegoption.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetdetails.cpp
 portfolio/nettingsetmanager.cpp
@@ -350,6 +355,7 @@ portfolio/builders/commodityswaption.hpp
 portfolio/builders/cpicapfloor.hpp
 portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/creditdefaultswapoption.hpp
+portfolio/builders/currencyswap.hpp
 portfolio/builders/durationadjustedcms.hpp
 portfolio/builders/equityasianoption.hpp
 portfolio/builders/equitybarrieroption.hpp
@@ -371,6 +377,7 @@ portfolio/builders/fxdoubletouchoption.hpp
 portfolio/builders/fxforward.hpp
 portfolio/builders/fxoption.hpp
 portfolio/builders/fxtouchoption.hpp
+portfolio/builders/multilegoption.hpp
 portfolio/builders/quantoequityoption.hpp
 portfolio/builders/quantovanillaoption.hpp
 portfolio/builders/swap.hpp
@@ -436,6 +443,7 @@ portfolio/instrumentwrapper.hpp
 portfolio/legbuilders.hpp
 portfolio/legdata.hpp
 portfolio/legdatafactory.hpp
+portfolio/multilegoption.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetdetails.hpp
 portfolio/nettingsetmanager.hpp
