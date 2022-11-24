@@ -29,7 +29,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
     // If underlying currency is empty, then set to payment currency by default.
     // If non-empty, then check if the currencies are different for a Quanto payoff
-    Currency underlyingCurrency = underlyingCurrency_.empty() ? ccy : parseCurrencyWithMinors(underlyingCurrency_);
+    Currency underlyingCurrency = underlyingCurrency_.empty() ? ccy : underlyingCurrency_;
     bool sameCcy = underlyingCurrency == ccy;
     
     if (strike_.currency().empty())

@@ -32,7 +32,27 @@ namespace QuantExt {
 using namespace QuantLib;
 
 //! Parametrization
-/*! \ingroup models
+/*! Base class for classes representing model parameters. There is a disctinction between "actual" and "raw"
+    parameters. The "actual" parameter value is the true value of the parameter, e.g. 0.20 to represent a black scholes
+    volatility of 20%. The "raw" parameter is derived from the actual parameter by applying a transformation
+
+    actual value = direct( raw value )
+    raw value    = inverse( actual value )
+
+    The idea behind that is that the optimization during a model calibration can be performed as an unconstrained
+    optimization which usually works more stable and is faster than a constrained optimization. For example, to ensure
+    a positive black volatility one can use the transformation
+
+    direct ( x ) = x * x
+
+    To ensure a valid correlation one can use the transformation
+
+    direct ( x ) = (atan( x ) + pi / 2) / pi
+
+    and so forth. To implement you own transformation you can overwrite the direct() and inverse() methods. The default
+    implementation of these methods represents the trivial transformation (identity, i.e. direct( x ) = x ).
+
+    \ingroup models
  */
 class Parametrization {
 public:
@@ -40,7 +60,7 @@ public:
     virtual ~Parametrization() {}
 
     /*! the currency associated to this parametrization */
-    virtual const Currency currency() const;
+    virtual const Currency& currency() const;
 
     /*! the times associated to parameter i */
     virtual const Array& parameterTimes(const Size) const;
@@ -48,15 +68,10 @@ public:
     /*! the number of parameters in this parametrization */
     virtual Size numberOfParameters() const { return 0; }
 
-    /*! these are the actual (real) parameter values in contrast
-        to the raw values which are stored in Parameter::params_
-        and on which the optimization is done; there might be
-        a transformation between real and raw values in
-        order to implement a constraint (this is generally
-        preferable to using a hard constraint) */
+    /*! the actual parameter values */
     virtual Array parameterValues(const Size) const;
 
-    /*! the parameter storing the raw values */
+    /*! the parameter storing the raw parameter values */
     virtual const boost::shared_ptr<Parameter> parameter(const Size) const;
 
     /*! this method should be called when input parameters
@@ -67,7 +82,7 @@ public:
     /*! return a name (inflation index, equity name, credit name, etc.) */
     const std::string& name() const { return name_; }
 
-    /*! transformations between raw and real parameters */
+    /*! transformations between raw and actual parameters */
     virtual Real direct(const Size, const Real x) const;
     virtual Real inverse(const Size, const Real y) const;
 
@@ -106,7 +121,7 @@ inline Real Parametrization::direct(const Size, const Real x) const { return x; 
 
 inline Real Parametrization::inverse(const Size, const Real y) const { return y; }
 
-inline const Currency Parametrization::currency() const { return currency_; }
+inline const Currency& Parametrization::currency() const { return currency_; }
 
 inline const Array& Parametrization::parameterTimes(const Size) const { return emptyTimes_; }
 

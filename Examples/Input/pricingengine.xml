@@ -225,11 +225,41 @@
     <Engine>DiscountingCommodityForwardEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="CommoditySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>CommoditySwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
   <Product type="CommodityOption">
     <Model>BlackScholes</Model>
     <ModelParameters/>
     <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters/>
+  </Product>
+  <Product type="CommodityAveragePriceOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>MonteCarlo</Engine>
+    <EngineParameters>
+      <Parameter name="beta">0</Parameter> 
+      <Parameter name="samples">1000</Parameter>
+      <Parameter name="seed">42</Parameter>
+    </EngineParameters>
+    <!--
+    <Engine>AnalyticalApproximation</Engine>
+    <EngineParameters>
+      <Parameter name="beta">0</Parameter>
+    </EngineParameters>
+    -->
+  </Product>
+  <Product type="CommoditySwaption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>AnalyticalApproximation</Engine>
+    <EngineParameters>
+      <Parameter name="beta">0</Parameter>
+    </EngineParameters>
   </Product>
   <Product type="CPICapFloor">
     <Model>CPICapFloorModel</Model>

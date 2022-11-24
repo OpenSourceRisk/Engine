@@ -80,6 +80,8 @@
 #include <ored/model/calibrationinstruments/yoycapfloor.hpp>
 #include <ored/model/calibrationinstruments/yoyswap.hpp>
 #include <ored/model/calibrationpointcache.hpp>
+#include <ored/model/commodityschwartzmodelbuilder.hpp>
+#include <ored/model/commodityschwartzmodeldata.hpp>
 #include <ored/model/crcirbuilder.hpp>
 #include <ored/model/crcirdata.hpp>
 #include <ored/model/crlgmbuilder.hpp>
@@ -90,12 +92,15 @@
 #include <ored/model/eqbsdata.hpp>
 #include <ored/model/fxbsbuilder.hpp>
 #include <ored/model/fxbsdata.hpp>
+#include <ored/model/hwbuilder.hpp>
 #include <ored/model/inflation/infdkbuilder.hpp>
 #include <ored/model/inflation/infdkdata.hpp>
 #include <ored/model/inflation/infjybuilder.hpp>
 #include <ored/model/inflation/infjydata.hpp>
 #include <ored/model/inflation/inflationmodeldata.hpp>
+#include <ored/model/irhwmodeldata.hpp>
 #include <ored/model/irlgmdata.hpp>
+#include <ored/model/irmodeldata.hpp>
 #include <ored/model/lgmbuilder.hpp>
 #include <ored/model/lgmdata.hpp>
 #include <ored/model/localvolmodelbuilder.hpp>

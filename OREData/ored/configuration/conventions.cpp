@@ -1140,11 +1140,11 @@ InflationSwapConvention::InflationSwapConvention(const string& id, const string&
 }
 
 void InflationSwapConvention::build() {
+    interpolated_ = parseBool(strInterpolated_);
     parseZeroInflationIndex(strIndex_, interpolated_, Handle<ZeroInflationTermStructure>());
     fixCalendar_ = parseCalendar(strFixCalendar_);
     fixConvention_ = parseBusinessDayConvention(strFixConvention_);
     dayCounter_ = parseDayCounter(strDayCounter_);
-    interpolated_ = parseBool(strInterpolated_);
     index_ = parseZeroInflationIndex(strIndex_, interpolated_, Handle<ZeroInflationTermStructure>());
     observationLag_ = parsePeriod(strObservationLag_);
     adjustInfObsDates_ = parseBool(strAdjustInfObsDates_);

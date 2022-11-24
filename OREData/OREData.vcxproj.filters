@@ -768,9 +768,6 @@
     <ClInclude Include="ored\portfolio\fxdigitalbarrieroption.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\builders\fxdigitaloption.hpp">
-      <Filter>portfolio</Filter>
-    </ClInclude>
     <ClInclude Include="ored\portfolio\fxdigitaloption.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
@@ -841,6 +838,24 @@
       <Filter>portfolio</Filter>
     </ClInclude>
     <ClInclude Include="ored\model\localvolmodelbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\irmodeldata.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\irhwmodeldata.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\hwbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\fxdigitaloption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\commodityschwartzmodelbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\commodityschwartzmodeldata.hpp">
       <Filter>model</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1459,6 +1474,21 @@
       <Filter>marketdata</Filter>
     </ClCompile>
     <ClCompile Include="ored\model\localvolmodelbuilder.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\irmodeldata.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\irhwmodeldata.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\hwbuilder.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\commodityschwartzmodelbuilder.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\commodityschwartzmodeldata.cpp">
       <Filter>model</Filter>
     </ClCompile>
   </ItemGroup>

@@ -63,9 +63,6 @@ public:
         : LgmData(qualifier, calibrationType, revType, volType, calibrateH, hType, hTimes, hValues, calibrateA, aType,
                   aTimes, aValues, shiftHorizon, scaling, optionExpiries, optionTerms, optionStrikes) {}
 
-    // ccy associated to qualifier, which might be an ibor / ois index name or a currency
-    std::string ccy() const;
-
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
