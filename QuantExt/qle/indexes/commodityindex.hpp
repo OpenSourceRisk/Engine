@@ -61,7 +61,7 @@ public:
     //@{
     std::string name() const override { return name_; }
     Calendar fixingCalendar() const override { return fixingCalendar_; }
-    bool isValidFixingDate(const Date& fixingDate) const override { return fixingCalendar().isBusinessDay(fixingDate); }
+    bool isValidFixingDate(const Date& fixingDate) const override { return fixingCalendar_.isBusinessDay(fixingDate); }
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
     //@}
     //! \name Observer interface
@@ -139,9 +139,6 @@ public:
     //! Implement the base clone.
     boost::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
         const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
-
-    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
-
 };
 
 } // namespace QuantExt

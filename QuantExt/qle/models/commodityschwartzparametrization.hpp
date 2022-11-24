@@ -46,6 +46,8 @@ namespace QuantExt {
         F(t,T) = F(0,T) * exp( X(t) * exp(-kappa*(T-t) - 1/2 * (V(0,T) - V(t,T))
     with
         V(t,T) = sigma^2 * (1 - exp(-2*kappa*(T-t))) / (2*kappa)
+    and
+        Var[ln F(T,T)] = VaR[X(T)] 
 
     Instead of state variable X we can use 
         Y(t) = exp(kappa * t) * X(t) 
@@ -53,7 +55,7 @@ namespace QuantExt {
         dY(t) = sigma * exp(kappa * t) * dW
         Y(t) = int_0^t sigma * exp(kappa * s) * dW(s)
         Var[Y(t)] = sigma^2 * (exp(2*kappa*t) - 1) / (2*kappa)
-        Var[Y(t)-Y(s)|s] = \int_s^t sigma * exp(kappa * u) * dW(u) = Var[Y(t)] - Var[Y(s)]
+        Var[Y(t)-Y(s)|s] = int_s^t sigma * exp(kappa * u) * dW(u) = Var[Y(t)] - Var[Y(s)]
     The stochastic future price curve in terms of Y(t) is 
         F(t,T) = F(0,t) * exp( Y(t) * exp(-kappa*T) - 1/2 * (V(0,T) - V(t,T))
 
@@ -67,6 +69,8 @@ public:
                                      const Handle<QuantExt::PriceTermStructure>& priceCurve,
                                      const Handle<Quote>& fxSpotToday, const Real sigma, const Real kappa,
                                      bool driftFreeState = false);
+
+    Size numberOfParameters() const override { return 2; }
     //! State variable variance on [0, t]
     Real variance(const Time t) const;
     //! State variable Y's diffusion at time t: sigma * exp(kappa * t)
@@ -75,7 +79,7 @@ public:
     Real sigmaParameter() const;
     //! Inspector for the current value of model parameter kappa (direct)
     Real kappaParameter() const;
-    //! Inspector for current value of the model parameter4 vector (inverse values)
+    //! Inspector for current value of the model parameter vector (inverse values)
     const boost::shared_ptr<Parameter> parameter(const Size) const override;
     //! Inspector for today's price curve
     Handle<QuantExt::PriceTermStructure> priceCurve() { return priceCurve_; }

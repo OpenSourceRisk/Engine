@@ -28,11 +28,10 @@
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 #include <qle/termstructures/inflation/constantcpivolatility.hpp>
 #include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
+#include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 #include <qle/utilities/inflation.hpp>
 
 namespace QuantExt {
-
-enum PriceQuotePreference { Cap, Floor, CapFloor };
 
 struct CPIPriceVolatilitySurfaceDefaultValues {
     static constexpr QuantLib::Real upperVolBound = 1.0;

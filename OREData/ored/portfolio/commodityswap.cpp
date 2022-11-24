@@ -107,7 +107,7 @@ void CommoditySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory)
             quantities.reserve(leg.size());
             for (const auto& cf : leg) {
                 // If more options arise here, may think of visitor to get the commodity notional.
-		auto ucf = unpackIndexWrappedCashFlow(cf);
+                auto ucf = unpackIndexWrappedCashFlow(cf);
                 if (auto cicf = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(ucf)) {
                     quantities.push_back(cicf->periodQuantity());
                 } else if (auto ciacf = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(ucf)) {
@@ -168,8 +168,8 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                 boost::shared_ptr<CommodityIndexedCashFlow> indexedFlow =
                     boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(unpackIndexWrappedCashFlow(flow));
                 if (indexedFlow) {
-		    additionalData_["index[" + label + "]"] = indexedFlow->index()->name();
-		    additionalData_["indexExpiry[" + label + "]"] = indexedFlow->index()->expiryDate();
+                    additionalData_["index[" + label + "]"] = indexedFlow->index()->name();
+                    additionalData_["indexExpiry[" + label + "]"] = indexedFlow->index()->expiryDate();
                     additionalData_["quantity[" + label + "]"] = indexedFlow->quantity();
                     additionalData_["periodQuantity[" + label + "]"] = indexedFlow->periodQuantity();
                     additionalData_["gearing[" + label + "]"] = indexedFlow->gearing();
@@ -183,20 +183,20 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                     additionalData_["quantity[" + label + "]"] = indexedAvgFlow->quantity();
                     additionalData_["periodQuantity[" + label + "]"] = indexedAvgFlow->periodQuantity();
                     additionalData_["gearing[" + label + "]"] = indexedAvgFlow->gearing();
-		    std::vector<Real> priceVec;
-		    std::vector<std::string> indexVec;
-		    std::vector<Date> indexExpiryVec, pricingDateVec;
+                    std::vector<Real> priceVec;
+                    std::vector<std::string> indexVec;
+                    std::vector<Date> indexExpiryVec, pricingDateVec;
                     double averagePrice = 0;
                     for (const auto& kv : indexedAvgFlow->indices()) {
-			indexVec.push_back(kv.second->name());
-			indexExpiryVec.push_back(kv.second->expiryDate());
-			pricingDateVec.push_back(kv.first);
-			priceVec.push_back(kv.second->fixing(kv.first));
-			averagePrice += priceVec.back();
+                        indexVec.push_back(kv.second->name());
+                        indexExpiryVec.push_back(kv.second->expiryDate());
+                        pricingDateVec.push_back(kv.first);
+                        priceVec.push_back(kv.second->fixing(kv.first));
+                        averagePrice += priceVec.back();
                     }
                     averagePrice /= indexedAvgFlow->indices().size();
-		    additionalData_["index[" + label + "]"] = indexVec;
-		    additionalData_["indexExpiry[" + label + "]"] = indexExpiryVec;
+                    additionalData_["index[" + label + "]"] = indexVec;
+                    additionalData_["indexExpiry[" + label + "]"] = indexExpiryVec;
                     additionalData_["price[" + label + "]"] = priceVec;
                     additionalData_["averagePrice[" + label + "]"] = averagePrice;
                     additionalData_["pricingDate[" + label + "]"] = pricingDateVec;
@@ -227,7 +227,6 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
     }
     return additionalData_;
 }
-
     
 QuantLib::Real CommoditySwap::notional() const {
     Date asof = Settings::instance().evaluationDate();
@@ -275,7 +274,6 @@ CommoditySwap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& 
 }
 
 void CommoditySwap::fromXML(XMLNode* node) {
-
     DLOG("CommoditySwap::fromXML called");
     Trade::fromXML(node);
     legData_.clear();
@@ -301,7 +299,6 @@ XMLNode* CommoditySwap::toXML(XMLDocument& doc) {
 }
 
 void CommoditySwap::check() const {
-
     QL_REQUIRE(legData_.size() >= 2, "Expected at least two commodity legs but found " << legData_.size());
     auto ccy = legData_[0].currency();
     for (const auto& legDatum : legData_) {

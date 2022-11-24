@@ -7,7 +7,7 @@
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>10000</Samples>
+    <Samples>1000</Samples>
   </Parameters>
 
   <CrossAssetModel>
@@ -74,15 +74,19 @@
     <CommodityModels>
       <CommoditySchwartz name="COMDTY_WTI_USD">
         <Currency>USD</Currency>
-        <CalibrationType>None</CalibrationType>
+        <CalibrationType>BestFit</CalibrationType>
         <Sigma>
-          <Calibrate>false</Calibrate>
+          <Calibrate>true</Calibrate>
           <InitialValue>0.1</InitialValue>
         </Sigma>
         <Kappa>
           <Calibrate>false</Calibrate>
           <InitialValue>0.0</InitialValue>
         </Kappa>
+        <CalibrationOptions>
+          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+          <Strikes/>
+        </CalibrationOptions>
         <DriftFreeState>true</DriftFreeState>
       </CommoditySchwartz>
     </CommodityModels>
@@ -169,7 +173,8 @@
 
     <CommodityVolatilities>
       <Simulate>false</Simulate>
-      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <!--<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>-->
+      <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
       <Names>
         <Name id="COMDTY_WTI_USD">
           <Expiries>1Y,5Y,10Y</Expiries>

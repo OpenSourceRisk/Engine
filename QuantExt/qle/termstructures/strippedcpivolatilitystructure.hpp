@@ -32,6 +32,7 @@
 #include <qle/utilities/inflation.hpp>
 
 namespace QuantExt {
+using namespace QuantLib;
 
 enum PriceQuotePreference { Cap, Floor, CapFloor };
 

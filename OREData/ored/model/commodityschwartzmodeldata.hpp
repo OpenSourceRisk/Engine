@@ -27,6 +27,7 @@
 
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/types.hpp>
+#include <ql/math/optimization/levenbergmarquardt.hpp>
 
 #include <qle/models/crossassetmodel.hpp>
 
@@ -48,7 +49,13 @@ using namespace QuantLib;
 class CommoditySchwartzData {
 public:
     //! Default constructor
-    CommoditySchwartzData() : driftFreeState_(false) {}
+    CommoditySchwartzData(bool driftFreeState = false,
+                          boost::shared_ptr<OptimizationMethod> optimizationMethod = boost::make_shared<LevenbergMarquardt>(1E-8, 1E-8, 1E-8),
+                          EndCriteria endCriteria = EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8),
+                          Constraint constraint = Constraint(),
+                          BlackCalibrationHelper::CalibrationErrorType calibrationErrorType = BlackCalibrationHelper::RelativePriceError)
+        : driftFreeState_(driftFreeState), optimizationMethod_(optimizationMethod), endCriteria_(endCriteria),
+          constraint_(constraint), calibrationErrorType_(calibrationErrorType) {}
 
     //! Detailed constructor
     CommoditySchwartzData(std::string name, std::string currency, CalibrationType calibrationType,
@@ -56,11 +63,17 @@ public:
                           bool calibrateKappa, Real kappa,
                           std::vector<std::string> optionExpiries = std::vector<std::string>(),
                           std::vector<std::string> optionStrikes = std::vector<std::string>(),
+                          boost::shared_ptr<OptimizationMethod> optimizationMethod = boost::make_shared<LevenbergMarquardt>(1E-8, 1E-8, 1E-8),
+                          EndCriteria endCriteria = EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8),
+                          Constraint constraint = Constraint(),
+                          BlackCalibrationHelper::CalibrationErrorType calibrationErrorType = BlackCalibrationHelper::RelativePriceError,
                           bool driftFreeState = false)
         : name_(name), ccy_(currency), calibrationType_(calibrationType),
           calibrateSigma_(calibrateSigma), sigmaType_(ParamType::Constant), sigmaValue_(sigma),
           calibrateKappa_(calibrateKappa),kappaType_(ParamType::Constant), kappaValue_(kappa),
-          optionExpiries_(optionExpiries), optionStrikes_(optionStrikes), driftFreeState_(driftFreeState) {}
+          optionExpiries_(optionExpiries), optionStrikes_(optionStrikes),
+          driftFreeState_(driftFreeState), optimizationMethod_(optimizationMethod),
+          endCriteria_(endCriteria), constraint_(constraint), calibrationErrorType_(calibrationErrorType) {}
 
     //! \name Setters/Getters
     //@{
@@ -70,12 +83,16 @@ public:
     bool& calibrateSigma() { return calibrateSigma_; }
     ParamType& sigmaParamType() { return sigmaType_; }
     Real& sigmaValue() { return sigmaValue_; }
-    bool& calibrateKappa() { return calibrateSigma_; }
+    bool& calibrateKappa() { return calibrateKappa_; }
     ParamType& kappaParamType() { return sigmaType_; }
     Real& kappaValue() { return kappaValue_; }
     std::vector<std::string>& optionExpiries() { return optionExpiries_; }
     std::vector<std::string>& optionStrikes() { return optionStrikes_; }
     bool& driftFreeState() { return driftFreeState_; }
+    boost::shared_ptr<OptimizationMethod>& optimizationMethod() { return optimizationMethod_; }
+    EndCriteria& endCriteria() { return endCriteria_; }
+    Constraint& constraint() { return constraint_; }
+    BlackCalibrationHelper::CalibrationErrorType calibrationErrorType() { return calibrationErrorType_; }
     //@}
 
     //! \name Serialisation
@@ -103,6 +120,10 @@ private:
     std::vector<std::string> optionExpiries_;
     std::vector<std::string> optionStrikes_;
     bool driftFreeState_;
+    boost::shared_ptr<OptimizationMethod> optimizationMethod_;
+    EndCriteria endCriteria_;
+    Constraint constraint_;
+    BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
 };
 } // namespace data
 } // namespace ore

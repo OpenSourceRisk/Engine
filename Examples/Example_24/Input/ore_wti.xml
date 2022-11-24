@@ -25,13 +25,13 @@
   </Markets>
   <Analytics>
     <Analytic type="npv">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="baseCurrency">USD</Parameter>
-      <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="outputFileName">npv_wti.csv</Parameter>
     </Analytic>
     <Analytic type="cashflow">
-      <Parameter name="active">N</Parameter>
-      <Parameter name="outputFileName">flows.csv</Parameter>
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">flows_wti.csv</Parameter>
     </Analytic>
     <Analytic type="curves">
       <Parameter name="active">N</Parameter>
