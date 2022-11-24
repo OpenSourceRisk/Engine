@@ -62,17 +62,18 @@ bool isPricingDate(const QuantLib::Date& d, const QuantLib::Calendar& pricingCal
 
 class CommodityCashFlow : public QuantLib::CashFlow, public QuantLib::Observer {
 public:
-    CommodityCashFlow(QuantLib::Real quantity, QuantLib::Real spread, QuantLib::Real gearing)
-        : quantity_(quantity), spread_(spread), gearing_(gearing) {}
-
+    CommodityCashFlow(QuantLib::Real quantity, QuantLib::Real spread, QuantLib::Real gearing, bool useFuturePrice)
+        : quantity_(quantity), spread_(spread), gearing_(gearing), useFuturePrice_(useFuturePrice) {}
     QuantLib::Real quantity() const { return quantity_; }
     QuantLib::Real spread() const { return spread_; }
     QuantLib::Real gearing() const { return gearing_; }
+    bool useFuturePrice() const { return useFuturePrice_; }
 
 protected:
     QuantLib::Real quantity_;
     QuantLib::Real spread_;
     QuantLib::Real gearing_;
+    bool useFuturePrice_;
 };
 
 }

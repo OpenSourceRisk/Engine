@@ -19,33 +19,37 @@
 
 namespace QuantExt {
 
-/*! Commodity spread option base class
- */
-class CommoditySpreadOptionBaseEngine : public CommoditySpreadOption::engine {
+class CommoditySpreadOptionAnalyticalEngine : public CommoditySpreadOption::engine {
 public:
-    // if you want speed-optimized observability, use the other constructor
-    CommoditySpreadOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+    CommoditySpreadOptionAnalyticalEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                     const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volTSLongAsset,
-                                    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volTSShortAsset, 
-                                    Real rho = 1.0,
-                                    Real beta = 0.0);
+                                    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volTSShortAsset,
+                                    Real rho = 1.0, Real beta = 0.0);
+    void calculate() const override;
+
+private:
+
+    struct PricingParameter {
+        Time tn;
+        Real atm;
+        Real sigma;
+        Real accruals;
+    };
+
+    PricingParameter
+     derivePricingParameterFromFlow(const ext::shared_ptr<CommodityCashFlow>& flow,
+                                    const ext::shared_ptr<BlackVolTermStructure>& vol,
+                                    const ext::shared_ptr<FxIndex>& fxIndex) const;
+
+    double rho(const QuantLib::Date& e1, const QuantLib::Date& e2,
+              const ext::shared_ptr<BlackVolTermStructure>& vol) const;
 
 protected:
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
     QuantLib::Handle<QuantLib::BlackVolTermStructure> volTSLongAsset_;
-    QuantLib::Handle<QuantLib::BlackVolTermStructure> volTSShortAsset_; 
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> volTSShortAsset_;
     QuantLib::Real rho_;
-};
-
-/*! Commodity Spread Option Analytical Engine
-    Analytical pricing based on the Kirk approximation.
-    Reference: Iain Clark, Commodity Option Pricing, Wiley, section 2.9
-    See also the documentation in the ORE+ product catalogue.
-*/
-class CommoditySpreadOptionAnalyticalEngine : public CommoditySpreadOptionBaseEngine {
-public:
-    using CommoditySpreadOptionBaseEngine::CommoditySpreadOptionBaseEngine;
-    void calculate() const override;
+    QuantLib::Real beta_;
 };
 
 } // namespace QuantExt

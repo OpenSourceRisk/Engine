@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2019, 2022 Quaternion Risk Management Ltd
  All rights reserved.
 */
 
@@ -21,9 +21,100 @@ using std::vector;
 
 namespace QuantExt {
 
+namespace CommodityAveragePriceOptionMomementMatching {
+
+QuantLib::Real MomentMatchingResults::firstMoment() { return forward; }
+QuantLib::Real MomentMatchingResults::secondMoment() { return sigma * sigma * tn; }
+QuantLib::Real MomentMatchingResults::stdDev() { return std::sqrt(secondMoment()); }
+QuantLib::Time MomentMatchingResults::timeToExpriy() { return tn; }
+
+MomentMatchingResults TurnbullWakemanMomentMatching(
+    const ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
+    const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol,
+    const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
+    QuantLib::Real strike) {
+    Date today = Settings::instance().evaluationDate();
+    MomentMatchingResults res;
+
+    res.tn = 0.0;
+    res.accruals = 0.0;
+    double EA = 0;
+    std::vector<Date> futureExpiries;
+    std::map<Date, Real> futureVols;
+    std::vector<double> spotVariances;
+    size_t n = flow->indices().size();
+
+    for (const auto& [pricingDate, index] : flow->indices()) {
+        Date fixingDate = index->fixingCalendar().adjust(pricingDate, Preceding);
+        Real fxRate = (flow->fxIndex()) ? flow->fxIndex()->fixing(fixingDate) : 1.0;
+        if (pricingDate <= today) {
+            res.accruals += index->fixing(fixingDate) * fxRate;
+        } else {
+            res.forwards.push_back(index->fixing(fixingDate) * fxRate);
+            res.times.push_back(vol->timeFromReference(pricingDate));
+            // use ATM vol if no strike is given
+            double K = strike == Null<Real>() ? res.forwards.back() : strike;
+            if (flow->useFuturePrice()) {
+                Date expiry = index->expiryDate();
+                futureExpiries.push_back(expiry);
+                if (futureVols.count(expiry) == 0) {
+                    futureVols[expiry] = vol->blackVol(expiry, K);
+                }
+            } else {
+                spotVariances.push_back(
+                    vol->blackVariance(res.times.back(), K));
+                res.spotVols.push_back(std::sqrt(spotVariances.back() / res.times.back()));
+            }
+            EA += res.forwards.back();
+        }
+    }
+    res.accruals /= static_cast<double>(n);
+    EA /= static_cast<double>(n);
+
+    res.forward = EA;
+
+    double EA2 = 0.0;
+
+    if (flow->useFuturePrice()) {
+        // References future prices
+        for (Size i = 0; i < res.forwards.size(); ++i) {
+            Date e_i = futureExpiries[i];
+            Volatility v_i = futureVols.at(e_i);
+            res.futureVols.push_back(v_i);
+            EA2 += res.forwards[i] * res.forwards[i] * exp(v_i * v_i * res.times[i]);
+            for (Size j = 0; j < i; ++j) {
+                Date e_j = futureExpiries[j];
+                Volatility v_j = futureVols.at(e_j);
+                EA2 += 2 * res.forwards[i] * res.forwards[j] * exp(rho(e_i, e_j) * v_i * v_j * res.times[j]);
+            }
+        }
+    } else {
+        // References spot prices
+        for (Size i = 0; i < res.forwards.size(); ++i) {
+            EA2 += res.forwards[i] * res.forwards[i] * exp(spotVariances[i]);
+            for (Size j = 0; j < i; ++j) {
+                EA2 += 2 * res.forwards[i] * res.forwards[j] * exp(spotVariances[j]);
+            }
+        }
+    }
+    EA2 /= std::pow(static_cast<double>(n), 2.0);
+    res.EA2 = EA2;
+    // Calculate value
+    if (!res.times.empty()) {
+        res.tn = res.times.back();
+        res.sigma = std::sqrt(std::log(EA2 / (EA * EA)) / res.tn);
+    } else {
+        res.tn = 0;
+        res.sigma = 0;
+    }
+
+    return res;
+}
+} // namespace CommodityAveragePriceOptionMomementMatching
+
 CommodityAveragePriceOptionBaseEngine::CommodityAveragePriceOptionBaseEngine(
     const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,
-    Real beta)
+    QuantLib::Real beta)
     : discountCurve_(discountCurve), volStructure_(model->processes().front()->blackVolatility()), beta_(beta) {
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
     registerWith(model);
@@ -31,7 +122,7 @@ CommodityAveragePriceOptionBaseEngine::CommodityAveragePriceOptionBaseEngine(
 
 CommodityAveragePriceOptionBaseEngine::CommodityAveragePriceOptionBaseEngine(
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol, Real beta)
+    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol, QuantLib::Real beta)
     : discountCurve_(discountCurve), volStructure_(vol), beta_(beta) {
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
     registerWith(discountCurve_);
@@ -165,94 +256,33 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     QL_REQUIRE(effectiveStrike > 0.0, "calculateSpot: expected effectiveStrike to be positive");
 
     // Valuation date
-    Date today = Settings::instance().evaluationDate();
-
-    // Expected value of the non-accrued portion of the average commodity prices
-    // In general, m will equal n below if there is no accrued. If accrued, m > n.
-    Real EA = 0.0;
-    vector<Real> forwards;
-    vector<Time> times;
-    vector<Date> futureExpiries;
-    map<Date, Real> futureVols;
-    vector<Real> spotVars;
-    vector<Real> futureVolsVec, spotVolsVec; // additional results only
-    // auto m = arguments_.flow->indices().size();
-    for (const auto& p : arguments_.flow->indices()) {
-        if (p.first > today) {
-            // FIXME: build the pricing dates with the correct calendar in the first place, i.e. avoid holidays
-            // so that the following adjustment is not necessary.
-            //forwards.push_back(p.second->fixing(p.first));
-            Date fixingDate = p.second->fixingCalendar().adjust(p.first, Preceding);
-            /* Here the FX index is applied.
-             * This implementation completely neglects the fx index volatility.
-             * To include it the correlation between the commodity index and the fx index is required
-             */
-            Real fxRate = (arguments_.fxIndex) ? arguments_.fxIndex->fixing(fixingDate) : 1.0;
-            forwards.push_back(fxRate * p.second->fixing(fixingDate)); // apply the fx rate daily on the relevant future prices
-            times.push_back(volStructure_->timeFromReference(p.first));
-            if (arguments_.flow->useFuturePrice()) {
-                Date expiry = p.second->expiryDate();
-                futureExpiries.push_back(expiry);
-                if (futureVols.count(expiry) == 0) {
-                    futureVols[expiry] = volStructure_->blackVol(expiry, effectiveStrike);
-                }
-            } else {
-                spotVars.push_back(volStructure_->blackVariance(times.back(), effectiveStrike));
-                spotVolsVec.push_back(std::sqrt(spotVars.back() / times.back()));
-            }
-            EA += forwards.back();
-        }
-    }
-    Size m = forwards.size();
-    EA /= m;
-
-    // Expected value of A^2. Different calculation depending on whether APO references future prices or spot price.
-    Real EA2 = 0.0;
-    Size n = forwards.size();
+    
+    auto matchedMoments = CommodityAveragePriceOptionMomementMatching::TurnbullWakemanMomentMatching(
+        arguments_.flow, *volStructure_,
+        std::bind(&CommodityAveragePriceOptionAnalyticalEngine::rho, this, std::placeholders::_1, std
+                  ::placeholders::_2), effectiveStrike);
+     
     if (arguments_.flow->useFuturePrice()) {
-        // References future prices
-        for (Size i = 0; i < n; ++i) {
-            Date e_i = futureExpiries[i];
-            Volatility v_i = futureVols.at(e_i);
-            EA2 += forwards[i] * forwards[i] * exp(v_i * v_i * times[i]);
-            futureVolsVec.push_back(v_i);
-            for (Size j = 0; j < i; ++j) {
-                Date e_j = futureExpiries[j];
-                Volatility v_j = futureVols.at(e_j);
-                EA2 += 2 * forwards[i] * forwards[j] * exp(rho(e_i, e_j) * v_i * v_j * times[j]);
-            }
-        }
-        mp["futureVols"] = futureVolsVec;
+        mp["futureVols"] = matchedMoments.futureVols;
     } else {
-        // References spot prices
-        for (Size i = 0; i < n; ++i) {
-            EA2 += forwards[i] * forwards[i] * exp(spotVars[i]);
-            for (Size j = 0; j < i; ++j) {
-                EA2 += 2 * forwards[i] * forwards[j] * exp(spotVars[j]);
-            }
-        }
-        mp["spotVols"] = spotVolsVec;
+        mp["spotVols"] = matchedMoments.spotVols;
     }
-    EA2 /= m * m;
-
-    // Calculate value
-    Real tn = times.back();
-    Real sigma = sqrt(log(EA2 / (EA * EA)) / tn);
 
     // Populate results
     results_.value = arguments_.quantity * arguments_.flow->gearing() *
-                     blackFormula(arguments_.type, effectiveStrike, EA, sigma * sqrt(tn), discount);
+                         blackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(),
+                                      matchedMoments.stdDev(), discount);
 
     // Add more additional results
     // Could be part of a strip so we add the value also.
     mp["effective_strike"] = effectiveStrike;
-    mp["forward"] = EA;
-    mp["exp_A_2"] = EA2;
-    mp["tte"] = tn;
-    mp["sigma"] = sigma;
+    mp["forward"] = matchedMoments.forward;
+    mp["exp_A_2"] = matchedMoments.EA2;
+    mp["tte"] = matchedMoments.timeToExpriy();
+    mp["sigma"] = matchedMoments.sigma;
     mp["npv"] = results_.value;
-    mp["times"] = times;
-    mp["forwards"] = forwards;
+    mp["times"] = matchedMoments.times;
+    mp["forwards"] = matchedMoments.forwards;
     mp["beta"] = beta_;
 }
 
