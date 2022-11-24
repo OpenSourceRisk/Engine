@@ -924,6 +924,7 @@ public:
     bool& indexingFromAssetLeg() { return indexingFromAssetLeg_; }
     string& paymentConvention() { return paymentConvention_; }
     std::vector<std::string>& paymentDates() { return paymentDates_; }
+    string& lastPeriodDayCounter() { return lastPeriodDayCounter_; }
     //@}
 
     virtual boost::shared_ptr<LegAdditionalData> initialiseConcreteLegData(const string&);

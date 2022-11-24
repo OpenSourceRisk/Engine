@@ -36,7 +36,7 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     const boost::shared_ptr<Market> market = engineFactory->market();
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CreditDefaultSwap");
 
-    const auto& legData = swap_.leg();
+    auto legData = swap_.leg(); // copy
     const auto& notionals = swap_.leg().notionals();
 
     QL_REQUIRE(legData.legType() == "Fixed", "CreditDefaultSwap requires Fixed leg");
@@ -64,7 +64,12 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
         lastPeriodDayCounter = parseDayCounter(strLpdc);
     } else {
         Actual360 standardDayCounter;
-        lastPeriodDayCounter = dc == standardDayCounter ? Actual360(true) : dc;
+        if (dc == standardDayCounter) {
+            lastPeriodDayCounter = dc == standardDayCounter ? Actual360(true) : dc;
+            legData.lastPeriodDayCounter() = "A360 (Incl Last)";
+        } else {
+            lastPeriodDayCounter = dc;
+        }
     }
 
     // Build the coupon leg
