@@ -325,9 +325,19 @@ BondBuilder::Result VanillaBondBuilder::build(const boost::shared_ptr<EngineFact
 
     Result res;
     res.bond = qlBond;
+
     if (data.isInflationLinked()) {
-        res.inflationFactor = QuantExt::inflationLinkedBondQuoteFactor(qlBond);
         res.isInflationLinked = true;
+        // It could be that the required CPI fixings aren't loaded yet, check if calibration is turned off
+        auto calibrationSettings = engineFactory->engineData()->globalParameters().find("Calibrate");
+        bool dontCalibrate = calibrationSettings != engineFactory->engineData()->globalParameters().end() &&
+                             ore::data::parseBool(calibrationSettings->second) == false;
+        try {
+            res.inflationFactor = dontCalibrate ? 1.0 : QuantExt::inflationLinkedBondQuoteFactor(qlBond);
+        } catch (const std::exception& e) {
+            ALOG("Failed to compute the inflation price factor for the bond "
+                 << securityId << ", fallback to use factor 1, got " << e.what());
+        }
     }
     res.hasCreditRisk = data.hasCreditRisk() && !data.creditCurveId().empty();
     res.currency = data.currency();
