@@ -39,6 +39,17 @@ using namespace QuantExt;
 
 namespace {
 
+void printResults(Real rho, Real strike, Real npvMC, Real npvKrik, const CommoditySpreadOption& spreadOption) {
+    std::cout << "Test Average Seasoned Spot Price Spread Option " << std::endl;
+    std::cout << "Rho = " << rho << " / Strike " << strike << std::endl;
+    std::cout << "MC Price " << npvMC << std::endl;
+    std::cout << "Kirk approx Price " << npvKrik << std::endl;
+    std::cout << "Forward1 " << spreadOption.result<double>("F1") << std::endl;
+    std::cout << "Forward2 " << spreadOption.result<double>("F2") << std::endl;
+    std::cout << "Accruals1 " << spreadOption.result<double>("accruals1") << std::endl;
+    std::cout << "Accruals1 " << spreadOption.result<double>("accruals2") << std::endl;
+}
+
 class MockUpExpiryCalculator : public FutureExpiryCalculator {
 public:
     // Inherited via FutureExpiryCalculator
@@ -95,7 +106,8 @@ double monteCarloPricingSpotAveraging(const ext::shared_ptr<CommodityIndexedAver
                                       const ext::shared_ptr<BlackVolTermStructure> vol1,
                                       const ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow2,
                                       const ext::shared_ptr<PriceTermStructure> priceCurve2,
-                                      const ext::shared_ptr<BlackVolTermStructure> vol2, Real rho, Real strike, Real df) {
+                                      const ext::shared_ptr<BlackVolTermStructure> vol2, Real rho, Real strike,
+                                      Real df) {
 
     QL_REQUIRE(flow1->startDate() == flow2->startDate() && flow1->endDate() == flow2->endDate(),
                "Support only Averaging Flows with same observation Period");
@@ -104,12 +116,12 @@ double monteCarloPricingSpotAveraging(const ext::shared_ptr<CommodityIndexedAver
 
     vector<double> timeGrid;
     timeGrid.push_back(0.0);
-    
+
     double accrued1 = 0;
     double accrued2 = 0;
     size_t nObs = 0; // future obs
     size_t n = flow1->indices().size();
-    
+
     for (const auto& [pricingDate, index] : flow1->indices()) {
 
         Date fixingDate = index->fixingCalendar().adjust(pricingDate, Preceding);
@@ -129,7 +141,7 @@ double monteCarloPricingSpotAveraging(const ext::shared_ptr<CommodityIndexedAver
     }
 
     Array drifts;
-    
+
     constexpr size_t samples = 100000;
     Matrix L(2, 2, 0);
     L[0][0] = 1;
@@ -183,6 +195,8 @@ double monteCarloPricingSpotAveraging(const ext::shared_ptr<CommodityIndexedAver
 
         payoff += std::max(avg1 - avg2 - strike, 0.0);
     }
+    //std::cout << "F1 (MC) " << forward1 / static_cast<double>(samples) << std::endl;
+    //std::cout << "F2 (MC) " << forward2 / static_cast<double>(samples) << std::endl;
     payoff /= static_cast<double>(samples);
     return df * payoff;
 }
@@ -192,10 +206,21 @@ double monteCarloPricingFutureAveraging(const ext::shared_ptr<CommodityIndexedAv
                                         const ext::shared_ptr<BlackVolTermStructure> vol1,
                                         const ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow2,
                                         const ext::shared_ptr<PriceTermStructure> priceCurve2,
-                                        const ext::shared_ptr<BlackVolTermStructure> vol2, Real rho, Real strike, Real df) {
+                                        const ext::shared_ptr<BlackVolTermStructure> vol2, Real rho, Real strike,
+                                        Real df) {
 
     QL_REQUIRE(flow1->startDate() == flow2->startDate() && flow1->endDate() == flow2->endDate(),
                "Support only Averaging Flows with same observation Period");
+
+    Date futureExpiryDate = flow1->indices().begin()->second->expiryDate();
+    for (const auto& [p, ind] : flow1->indices()) {
+        QL_REQUIRE(ind->expiryDate() == futureExpiryDate, "MC pricer doesn't support future rolls in averaging");
+    }
+
+    futureExpiryDate = flow2->indices().begin()->second->expiryDate();
+    for (const auto& [p, ind] : flow2->indices()) {
+        QL_REQUIRE(ind->expiryDate() == futureExpiryDate, "MC pricer doesn't support future rolls in averaging");
+    }
 
     vector<double> timeGrid;
     timeGrid.push_back(0.0);
@@ -257,6 +282,8 @@ double monteCarloPricingFutureAveraging(const ext::shared_ptr<CommodityIndexedAv
 
         payoff += std::max(avg1 - avg2 - strike, 0.0);
     }
+    // std::cout << "F1 (MC) " << forward1 / static_cast<double>(samples) << std::endl;
+    // std::cout << "F2 (MC) " << forward2 / static_cast<double>(samples) << std::endl;
     payoff /= static_cast<double>(samples);
     return df * payoff;
 }
@@ -326,6 +353,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetFutureSpread) {
         BOOST_CHECK_CLOSE(npvKrik, npvMC, 1.);
     }
 }
+
 BOOST_AUTO_TEST_CASE(testCalendarSpread) {
     Date today(5, Nov, 2022);
     Settings::instance().evaluationDate() = today;
@@ -340,6 +368,7 @@ BOOST_AUTO_TEST_CASE(testCalendarSpread) {
     double futureDec = 105.;
     Date futureDecExpiry(31, Dec, 2022);
     Date exerciseDate(15, Nov, 2022);
+    Date paymentDate(17, Nov, 2022);
 
     std::vector<Date> futureExpiryDates = {today, futureNovExpiry, futureDecExpiry};
     std::vector<Real> brentQuotes = {spot, futureNov, futureDec};
@@ -365,17 +394,16 @@ BOOST_AUTO_TEST_CASE(testCalendarSpread) {
 
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
 
-    CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call, exerciseDate);
+    CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call, paymentDate);
 
     auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, vol1, vol1, rho);
 
     spreadOption.setPricingEngine(engine);
 
     double kirkNpv = spreadOption.NPV();
-    double mcNpv = monteCarloPricing(futureDec, futureNov, volBrent, volBrent, rho,
-                                     discount->timeFromReference(exercise->lastDate()),
-                                     discount->discount(exercise->lastDate()), strike) *
-                   quantity;
+    double mcNpv = quantity * monteCarloPricing(futureDec, futureNov, volBrent, volBrent, rho,
+                                                discount->timeFromReference(exercise->lastDate()),
+                                                discount->discount(paymentDate), strike);
 
     BOOST_CHECK_CLOSE(kirkNpv, mcNpv, 1);
 }
@@ -394,7 +422,7 @@ BOOST_AUTO_TEST_CASE(testCalendarSpread2) {
     double futureDec = 105.;
     Date futureDecExpiry(31, Dec, 2022);
     Date exerciseDate(31, Dec, 2022);
-
+    Date paymentDate = exerciseDate;
     std::vector<Date> futureExpiryDates = {today, futureNovExpiry, futureDecExpiry};
     std::vector<Real> brentQuotes = {spot, futureNov, futureDec};
 
@@ -419,7 +447,7 @@ BOOST_AUTO_TEST_CASE(testCalendarSpread2) {
 
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
 
-    CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call, exerciseDate);
+    CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call, paymentDate);
 
     auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, vol1, vol1, rho);
 
@@ -430,11 +458,9 @@ BOOST_AUTO_TEST_CASE(testCalendarSpread2) {
         std::sqrt(discount->timeFromReference(futureNovExpiry) / discount->timeFromReference(exercise->lastDate())),
         1.0);
 
-    double mcNpv = monteCarloPricing(futureDec, futureNov, volBrent, volBrent * volScalingFactor, rho,
-                                     discount->timeFromReference(exercise->lastDate()),
-                                     discount->discount(exercise->lastDate()), strike) *
-                   quantity;
-
+    double mcNpv = quantity * monteCarloPricing(futureDec, futureNov, volBrent, volBrent * volScalingFactor, rho,
+                                                discount->timeFromReference(paymentDate),
+                                                discount->discount(exercise->lastDate()), strike);
     BOOST_CHECK_CLOSE(kirkNpv, mcNpv, 1);
 }
 
@@ -491,7 +517,7 @@ BOOST_AUTO_TEST_CASE(testCalendarSpreadEdgeCase) {
                                            std::sqrt(vol1->blackVariance(futureDecExpiry, strike + futureNov)),
                                            discount->discount(exercise->lastDate()));
 
-    BOOST_CHECK_CLOSE(kirkNpv, bsNpv, 1);
+    BOOST_CHECK_CLOSE(kirkNpv, bsNpv, 1e-8);
 }
 
 BOOST_AUTO_TEST_CASE(testSpotAveragingSpreadOption) {
@@ -551,14 +577,15 @@ BOOST_AUTO_TEST_CASE(testSpotAveragingSpreadOption) {
         spreadOption.setPricingEngine(engine);
         double npvMC = quantity * monteCarloPricingSpotAveraging(flow1, *brentCurve, *brentVol, flow2, *wtiCurve,
                                                                  *wtiVol, rho, strike, df);
-        double npvKrik = spreadOption.NPV();
-        BOOST_CHECK_CLOSE(npvKrik, npvMC, 1.);
+        double npvKirk = spreadOption.NPV();
+        BOOST_CHECK_CLOSE(npvKirk, npvMC, 1);
+
+        // printResults(rho, strike, npvMC, npvKirk, spreadOption);
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(testSeasonedSpotAveragingSpreadOption) {
-    Date today(5, Nov, 2022);
+    Date today(10, Nov, 2022);
     Settings::instance().evaluationDate() = today;
 
     double strike = 1;
@@ -566,10 +593,10 @@ BOOST_AUTO_TEST_CASE(testSeasonedSpotAveragingSpreadOption) {
     double volWTIQuote = 0.35;
     double quantity = 1000.;
     double WTIspot = 100.;
-    double WTINov = 104.;
+    double WTINov = 103.;
     double WTIDec = 105.;
     double brentSpot = 100;
-    double brentNov = 103;
+    double brentNov = 104;
     double brentDec = 106;
 
     Date novExpiry(30, Nov, 2022);
@@ -580,11 +607,16 @@ BOOST_AUTO_TEST_CASE(testSeasonedSpotAveragingSpreadOption) {
     std::vector<Real> brentQuotes = {brentSpot, brentNov, brentDec};
     std::vector<Real> wtiQuotes = {WTIspot, WTINov, WTIDec};
 
-    vector<Date> fixingDates{Date(1, Nov, 2022), Date(2, Nov, 2022), Date(3, Nov, 2022), Date(4, Nov, 2022),
-                             Date(5, Nov, 2022)};
+    vector<Date> fixingDates;
 
-    vector<Real> fixingValuesBrent{100., 100., 100., 100., 100.};
-    vector<Real> fixingValuesWTI{100., 100., 100., 100., 100.};
+    vector<Real> fixingValuesBrent;
+    vector<Real> fixingValuesWTI;
+
+    for (int i = 1; i <= 10; ++i) {
+        fixingDates.push_back(Date(i, Nov, 2022));
+        fixingValuesBrent.push_back(100 + i / 10.);
+        fixingValuesWTI.push_back(100 - i / 10.);
+    }
 
     auto brentCurve = Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(
         today, futureExpiryDates, brentQuotes, Actual365Fixed(), USDCurrency()));
@@ -614,21 +646,34 @@ BOOST_AUTO_TEST_CASE(testSeasonedSpotAveragingSpreadOption) {
 
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
 
-    CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call);
-
     Real df = discount->discount(exercise->lastDate());
 
-
     for (const auto& rho : {-0.9, -0.75, -0.5, -0.25, 0., 0.25, 0.5, 0.75, 0.9}) {
+        CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call);
         auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, brentVol, wtiVol, rho);
         spreadOption.setPricingEngine(engine);
         double npvMC = quantity * monteCarloPricingSpotAveraging(flow1, *brentCurve, *brentVol, flow2, *wtiCurve,
                                                                  *wtiVol, rho, strike, df);
-        double npvKrik = spreadOption.NPV();
-        BOOST_CHECK_CLOSE(npvKrik, npvMC, 1.);
+        double npvKirk = spreadOption.NPV();
+        BOOST_CHECK_CLOSE(npvKirk, npvMC, 1);
+
+        // printResults(rho, strike, npvMC, npvKirk, spreadOption);
+    }
+
+    for (const auto& rho : {0.85}) {
+        for (const auto& strike : {0.5, 1., 1.5, 2.0, 2.5}) {
+            CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call);
+            auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, brentVol, wtiVol, rho);
+            spreadOption.setPricingEngine(engine);
+            double npvMC = quantity * monteCarloPricingSpotAveraging(flow1, *brentCurve, *brentVol, flow2, *wtiCurve,
+                                                                     *wtiVol, rho, strike, df);
+            double npvKirk = spreadOption.NPV();
+            BOOST_CHECK_CLOSE(npvKirk, npvMC, 1);
+
+            // printResults(rho, strike, npvMC, npvKirk, spreadOption);
+        }
     }
 }
-
 
 BOOST_AUTO_TEST_CASE(testFutureAveragingSpreadOption) {
     Date today(31, Oct, 2022);
@@ -693,10 +738,80 @@ BOOST_AUTO_TEST_CASE(testFutureAveragingSpreadOption) {
         spreadOption.setPricingEngine(engine);
         double npvMC = quantity * monteCarloPricingFutureAveraging(flow1, *brentCurve, *brentVol, flow2, *wtiCurve,
                                                                    *wtiVol, rho, strike, df);
-        double npvKrik = spreadOption.NPV();
-        BOOST_CHECK_CLOSE(npvKrik, npvMC, 1.);
+        double npvKirk = spreadOption.NPV();
+        BOOST_CHECK_CLOSE(npvKirk, npvMC, 1);
+
+        // printResults(rho, strike, npvMC, npvKirk, spreadOption);
     }
 }
+
+BOOST_AUTO_TEST_CASE(testExpiredCrossAssetFutureSpread) {
+    Date today(2, Jan, 2023);
+    Settings::instance().evaluationDate() = today;
+
+    double strike = 1;
+    double volBrentQuote = 0.3;
+    double volWTIQuote = 0.35;
+    double quantity = 1000.;
+    double WTIspot = 105.5;
+    double WTIDec = 105.;
+    double WTIJan = 106.;
+    double brentSpot = 107.25;
+    double brentDec = 107;
+    double brentJan = 109;
+
+    Date novExpiry(30, Nov, 2022);
+    Date decExpiry(31, Dec, 2022);
+    Date janExpory(31, Jan, 2023);
+    Date exerciseDate(31, Dec, 2022);
+    Date paymentDate(5, Jan, 2023);
+
+    std::vector<Date> futureExpiryDates = {today, janExpory};
+    std::vector<Real> brentQuotes = {brentSpot, brentJan,};
+    std::vector<Real> wtiQuotes = {WTIspot, WTIJan};
+
+    auto brentCurve = Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(
+        today, futureExpiryDates, brentQuotes, Actual365Fixed(), USDCurrency()));
+    auto wtiCurve = Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(
+        today, futureExpiryDates, wtiQuotes, Actual365Fixed(), USDCurrency()));
+
+    auto discount = Handle<YieldTermStructure>(
+        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.03)), Actual365Fixed()));
+
+    auto brentVol = Handle<BlackVolTermStructure>(
+        boost::make_shared<BlackConstantVol>(today, NullCalendar(), volBrentQuote, Actual365Fixed()));
+    auto wtiVol = Handle<BlackVolTermStructure>(
+        boost::make_shared<BlackConstantVol>(today, NullCalendar(), volWTIQuote, Actual365Fixed()));
+
+    auto index1 = boost::make_shared<CommodityFuturesIndex>("BRENT_USD", decExpiry, NullCalendar(), brentCurve);
+
+    auto index2 = boost::make_shared<CommodityFuturesIndex>("WTI_USD", decExpiry, NullCalendar(), wtiCurve);
+
+    index1->addFixing(decExpiry, brentDec);
+
+    index2->addFixing(decExpiry, WTIDec);
+
+    auto flow1 = boost::make_shared<CommodityIndexedCashFlow>(100, decExpiry, decExpiry, index1);
+
+    auto flow2 = boost::make_shared<CommodityIndexedCashFlow>(100, decExpiry, decExpiry, index2);
+
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
+
+    CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call, paymentDate);
+
+    double df = discount->discount(paymentDate);
+
+    double expectedNPV = std::max(brentDec - WTIDec - strike, 0.0) * df * quantity;
+
+    auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, brentVol, wtiVol, 0.9);
+    
+    spreadOption.setPricingEngine(engine);
+    
+    double npvKirk = spreadOption.NPV();
+
+    BOOST_CHECK_CLOSE(npvKirk, expectedNPV, 1e-8);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
