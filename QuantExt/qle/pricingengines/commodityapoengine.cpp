@@ -530,7 +530,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::setupFuture(vector<Real>& outV
                 outVolatilities.push_back(volStructure_->blackVol(expiry, strike));
                 Real fxRate{1.};
                 if(arguments_.flow->fxIndex())
-                    fxRate=arguments_.flow->fxIndex()->fixing(today);
+                    fxRate = arguments_.flow->fxIndex()->fixing(expiry);
                 prices.push_back(fxRate*p.second->fixing(today));//check if today should not be p.first
             }
             futureIndex.push_back(expiryDates.size() - 1);
