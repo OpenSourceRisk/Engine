@@ -1,18 +1,75 @@
 #pragma once
 
+#include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
+#include <qle/indexes/commodityindex.hpp>
 
 namespace ore::data{
-//! Engine builder for Commodity Spread Options
+//! Base Engine builder for Commodity Spread Options
 /*! Pricing engines are cached by currency
 -
 \ingroup builders
 */
 
-class CommoditySpreadOptionEngineBuilder : public CachingPricingEngineBuilder<std::string, const Currency&>{
+class CommoditySpreadOptionBaseEngineBuilder : public CachingPricingEngineBuilder<std::string, const Currency&, boost::shared_ptr<QuantExt::CommodityIndex> const&,
+                                                                                  boost::shared_ptr<QuantExt::CommodityIndex> const&, std::string const&> {
 public:
+    CommoditySpreadOptionBaseEngineBuilder(const std::string& model, const std::string& engine,
+                                           const std::set<std::string>& tradeTypes)
+        : CachingEngineBuilder(model, engine, tradeTypes) {}
+protected:
+    std::string keyImpl(const Currency&, boost::shared_ptr<QuantExt::CommodityIndex> const&, boost::shared_ptr<QuantExt::CommodityIndex> const&, std::string const& id) override {
+        return id;
+    }
 
+};
+
+
+//! Analytical Engine builder for Commodity Spread Options
+/*! Pricing engines are cached by currency
+-
+\ingroup builders
+
+*/class CommoditySpreadOptionEngineBuilder : public CommoditySpreadOptionBaseEngineBuilder{
+public:
+    CommoditySpreadOptionEngineBuilder()
+        : CommoditySpreadOptionBaseEngineBuilder("BlackScholes", "CommoditySpreadOptionEngine", {"CommoditySpreadOption"}){}
+protected:
+
+    boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy, boost::shared_ptr<QuantExt::CommodityIndex> const& longIndex, boost::shared_ptr<QuantExt::CommodityIndex> const& shortIndex, string const& id) override{
+        Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+        Handle<QuantLib::BlackVolTermStructure> volLong =
+            market_->commodityVolatility(longIndex->underlyingName(), configuration(MarketContext::pricing));
+        Handle<QuantLib::BlackVolTermStructure> volShort =
+            market_->commodityVolatility(shortIndex->underlyingName(), configuration(MarketContext::pricing));
+        Real beta = 0;
+        Real tmprho = 1;
+        auto param = engineParameters_.find("beta");
+        if (param != engineParameters_.end())
+            beta = parseReal(param->second);
+        else {
+            ALOG("Missing engine parameter 'beta' for " << model() << " " << EngineBuilder::engine()
+                                                        << ", using default value " << beta);
+        }
+        if(longIndex->underlyingName() == shortIndex->underlyingName()){ // calendar spread option
+            Date t2 = (longIndex->expiryDate()>shortIndex->expiryDate())?longIndex->expiryDate():shortIndex->expiryDate();
+            Date t1 = (longIndex->expiryDate()<shortIndex->expiryDate())?longIndex->expiryDate():shortIndex->expiryDate();
+            tmprho = rho(beta, t2, t1, volLong.currentLink());
+        }
+        return boost::make_shared<QuantExt::CommoditySpreadOptionAnalyticalEngine>(yts, volLong, volShort, tmprho, beta);
+    }
+private:
+    [[nodiscard]] Real rho(const Real beta, const Date& ed_1, const Date& ed_2,
+          const ext::shared_ptr<BlackVolTermStructure>& vol) const {
+        if (beta == 0.0 || ed_1 == ed_2) {
+            return 1.0;
+        } else {
+            Time t_1 = vol->timeFromReference(ed_1);
+            Time t_2 = vol->timeFromReference(ed_2);
+            return exp(-beta * fabs(t_2 - t_1));
+        }
+    }
 };
 }

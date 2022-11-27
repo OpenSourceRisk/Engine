@@ -39,6 +39,18 @@ public:
     XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
+    //! \name Inspectors
+    //@{
+    std::string const& exerciseDate() const { return exerciseDate_; }
+    std::vector<boost::shared_ptr<CommodityFloatingLegData>> const& commodityLegData() const { return commLegData_; }
+    std::vector<std::string> const& fxIndex() const {return fxIndex_; }
+    Real quantity() const { return quantity_; }
+    Real strike() const { return spreadStrike_; }
+    std::string const& callPut() const { return callPut_; }
+    std::string const& settlementDate() const { return settlementDate_; }
+    std::string const& settlementCcy() const { return settlementCcy_; }
+    //@}
+
 private:
 
     std::vector<ore::data::LegData> legData_;
@@ -56,7 +68,5 @@ private:
     boost::shared_ptr<ore::data::LegData> createLegData() const { return boost::make_shared<ore::data::LegData>(); }
 
 };
-//
-
 }
 #endif // ORE_COMMODITYSPREADOPTION_HPP
