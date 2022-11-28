@@ -47,18 +47,23 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
         // build legs
         auto conLegData = legData_[i].concreteLegData();
         commLegData_[i] = boost::dynamic_pointer_cast<CommodityFloatingLegData>(conLegData);
-        isAveraged[i] = commLegData_[i]->isAveraged();
         QL_REQUIRE(commLegData_[i], "CommoditySpreadOption leg data should be of type CommodityFloating");
+        isAveraged[i] = commLegData_[i]->isAveraged();
         auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
         auto cflb = boost::dynamic_pointer_cast<CommodityFloatingLegBuilder>(legBuilder);
         QL_REQUIRE(cflb, "Expected a CommodityFloatingLegBuilder for leg type " << legData_[i].legType());
         Leg leg = cflb->buildLeg(legData_[i], engineFactory, requiredFixings_, "");
         QL_REQUIRE(leg.size() == 1, "CommoditySpreadOption is currently implemented for exactly one pair of contracts.");
-        auto index =  boost::dynamic_pointer_cast<QuantExt::CommodityIndexedCashFlow>(leg[0])->index();
+        boost::shared_ptr<CommodityIndex> index{nullptr};
+
+        if(isAveraged[i]) {
+            index = boost::dynamic_pointer_cast<QuantExt::CommodityIndexedAverageCashFlow>(leg[0])->index();
+        } else {
+            index = boost::dynamic_pointer_cast<QuantExt::CommodityIndexedCashFlow>(leg[0])->index();
+        }
         (i == (int)CommoditySpreadOptionPosition::Long)?longIndex=index:shortIndex=index;
 
-        auto underlyingCcy =
-            boost::dynamic_pointer_cast<QuantExt::CommodityIndexedCashFlow>(leg[0])->index()->priceCurve()->currency();
+        auto underlyingCcy = index->priceCurve()->currency();
         auto tmpFx = commLegData_[i]->fxIndex();
         if(tmpFx.empty()) {
             std::string pos = i == 0 ? "Long" : "Short";
@@ -79,8 +84,8 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
     if(settlementDate!=Date())
         QL_REQUIRE(settlementDate>=exercise->lastDate(), "CommoditySpreadOption: Trade cannot be settled before exercise");
 
-//    maturity_ = (settlementDate == Date())?exercise->lastDate() : settlementDate;
-    maturity_ = exercise->lastDate();
+    maturity_ = (settlementDate == Date())?exercise->lastDate() : settlementDate;
+//
 
     // build the instrument
     auto spreadOption = boost::make_shared<QuantExt::CommoditySpreadOption>(

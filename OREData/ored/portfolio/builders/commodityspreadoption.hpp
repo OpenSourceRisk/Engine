@@ -5,6 +5,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
 #include <qle/indexes/commodityindex.hpp>
+#include <qle/termstructures/flatcorrelation.hpp>
 
 namespace ore::data{
 //! Base Engine builder for Commodity Spread Options
@@ -45,7 +46,7 @@ protected:
         Handle<QuantLib::BlackVolTermStructure> volShort =
             market_->commodityVolatility(shortIndex->underlyingName(), configuration(MarketContext::pricing));
         Real beta = 0;
-        Real tmprho = 1;
+        boost::shared_ptr<Handle<CorrelationTermStructure>> rho = {nullptr};
         auto param = engineParameters_.find("beta");
         if (param != engineParameters_.end())
             beta = parseReal(param->second);
@@ -54,22 +55,13 @@ protected:
                                                         << ", using default value " << beta);
         }
         if(longIndex->underlyingName() == shortIndex->underlyingName()){ // calendar spread option
-            Date t2 = (longIndex->expiryDate()>shortIndex->expiryDate())?longIndex->expiryDate():shortIndex->expiryDate();
-            Date t1 = (longIndex->expiryDate()<shortIndex->expiryDate())?longIndex->expiryDate():shortIndex->expiryDate();
-            tmprho = rho(beta, t2, t1, volLong.currentLink());
+            auto rho1 = Handle<CorrelationTermStructure>(FlatCorrelation(0,QuantLib::NullCalendar(), 1.0, QuantLib::Actual365Fixed()));
+        }else {
+            rho = boost::make_shared<Handle<CorrelationTermStructure>>(market_->correlationCurve("COMM-"+longIndex->underlyingName(), "COMM-"+shortIndex->underlyingName(),
+                                                  configuration(MarketContext::pricing)));
+
         }
-        return boost::make_shared<QuantExt::CommoditySpreadOptionAnalyticalEngine>(yts, volLong, volShort, tmprho, beta);
-    }
-private:
-    [[nodiscard]] Real rho(const Real beta, const Date& ed_1, const Date& ed_2,
-          const ext::shared_ptr<BlackVolTermStructure>& vol) const {
-        if (beta == 0.0 || ed_1 == ed_2) {
-            return 1.0;
-        } else {
-            Time t_1 = vol->timeFromReference(ed_1);
-            Time t_2 = vol->timeFromReference(ed_2);
-            return exp(-beta * fabs(t_2 - t_1));
-        }
+        return boost::make_shared<QuantExt::CommoditySpreadOptionAnalyticalEngine>(yts, volLong, volShort, rho, beta);
     }
 };
 }
