@@ -915,6 +915,8 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
     QL_REQUIRE(fixedLegData, "Wrong LegType, expected Fixed, got " << data.legType());
 
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
+    QL_REQUIRE(schedule.size() > 1, "FixedLeg:Schedule must have at least 2 dates.");
+
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
@@ -933,7 +935,10 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
                   .withCouponRates(rates, dc)
                   .withPaymentAdjustment(bdc)
                   .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
-                  .withPaymentCalendar(paymentCalendar);
+                  .withPaymentCalendar(paymentCalendar)
+                  .withLastPeriodDayCounter(data.lastPeriodDayCounter().empty()
+                                                ? DayCounter()
+                                                : parseDayCounter(data.lastPeriodDayCounter()));
     return leg;
 
 }
