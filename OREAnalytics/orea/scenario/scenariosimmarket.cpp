@@ -860,6 +860,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                     try {
                         LOG("building " << name << " cap/floor volatility curve...");
                         Handle<OptionletVolatilityStructure> wrapper = initMarket->capFloorVol(name, configuration);
+                        std::string iborIndexName = initMarket->capFloorVolIndexBase(name, configuration);
 
                         LOG("Initial market cap/floor volatility type = " << wrapper->volatilityType());
 
@@ -1081,6 +1082,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         capFloorCurves_.emplace(std::piecewise_construct,
                                                 std::forward_as_tuple(Market::defaultConfiguration, name),
                                                 std::forward_as_tuple(hCapletVol));
+                        capFloorIndexBase_.emplace(std::piecewise_construct,
+                                                   std::forward_as_tuple(Market::defaultConfiguration, name),
+                                                   std::forward_as_tuple(iborIndexName));
 
                         LOG("Simulation market cap/floor volatility type = " << hCapletVol->volatilityType());
                     } catch (const std::exception& e) {
