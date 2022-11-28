@@ -120,6 +120,8 @@ public:
     void accept(QuantLib::AcyclicVisitor& v) override;
     //@}
 
+    QuantLib::Date lastPricingDate() const override { return indices_.rbegin()->first; }
+
     //! \name Observer interface
     //@{
     void update() override;
@@ -129,7 +131,6 @@ private:
     QuantLib::Date startDate_;
     QuantLib::Date endDate_;
     QuantLib::Date paymentDate_;
-    ext::shared_ptr<CommodityIndex> index_;
     QuantLib::Calendar pricingCalendar_;
     QuantLib::Natural deliveryDateRoll_;
     QuantLib::Natural futureMonthOffset_;

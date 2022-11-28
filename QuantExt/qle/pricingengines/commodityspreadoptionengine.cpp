@@ -10,8 +10,8 @@
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
-#include <qle/pricingengines/commodityspreadoptionengine.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
+#include <qle/pricingengines/commodityspreadoptionengine.hpp>
 
 using std::adjacent_difference;
 using std::exp;
@@ -26,9 +26,9 @@ namespace QuantExt {
 
 CommoditySpreadOptionAnalyticalEngine::CommoditySpreadOptionAnalyticalEngine(
     const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volLong,
-    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volShort, Real rho, Real beta)
+    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volShort,
+    const QuantLib::Handle<QuantExt::CorrelationTermStructure>& rho, Real beta)
     : discountCurve_(discountCurve), volTSLongAsset_(volLong), volTSShortAsset_(volShort), rho_(rho), beta_(beta) {
-    QL_REQUIRE(rho >= -1.0 && rho <= 1.0, "-1.0 <= rho <= 1.0 required, found " << rho_);
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
     registerWith(discountCurve_);
     registerWith(volTSLongAsset_);
@@ -81,7 +81,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
 
     if (exerciseDate <= today && paymentDate >= today) {
         results_.value = 0;
-    } else if (exerciseDate <= today && paymentDate < today){
+    } else if (exerciseDate <= today && paymentDate < today) {
         // if observation time is before expiry, continue the process with zero vol and zero drift from pricing date to
         // expiry
         double omega = arguments_.type == Option::Call ? 1 : -1;
@@ -106,7 +106,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
         Z = w1 * F1 / Y;
         double sigmaTilde = sigma2 * F2 * w2 / Y;
 
-        sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaTilde, 2.0) - 2 * sigma1 * sigmaTilde * rho_);
+        sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaTilde, 2.0) - 2 * sigma1 * sigmaTilde * rho());
 
         stdDev = sigma * sqrt(tte);
 
@@ -142,13 +142,13 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         if (fxIndex) {
             fxSpot = fxIndex->fixing(cf->pricingDate());
         }
-        res.atm= cf->index()->fixing(cf->pricingDate()) * fxSpot;
+        res.atm = cf->index()->fixing(cf->pricingDate()) * fxSpot;
         res.sigma = res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0) ? vol->blackVol(res.tn, res.atm, true) : 0.0;
-    } else if (auto avgCf = ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(flow)) {        
-        auto parameter = CommodityAveragePriceOptionMomementMatching::TurnbullWakemanMomentMatching(
+    } else if (auto avgCf = ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(flow)) {
+        auto parameter = CommodityAveragePriceOptionMomementMatching::matchFirstTwoMomentsTurnbullWakeman(
             avgCf, vol,
-            std::bind(&CommoditySpreadOptionAnalyticalEngine::rho, this, std::placeholders::_1, std::placeholders::_2,
-                      vol));
+            std::bind(&CommoditySpreadOptionAnalyticalEngine::intraAssetCorrelation, this, std::placeholders::_1,
+                      std::placeholders::_2, vol));
         res.tn = parameter.tn;
         res.atm = parameter.forward;
         res.accruals = parameter.accruals;
@@ -158,14 +158,24 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
     }
     return res;
 }
-Real CommoditySpreadOptionAnalyticalEngine::rho(const Date& ed_1, const Date& ed_2,
-                                                const ext::shared_ptr<BlackVolTermStructure>& vol) const {
+
+Real CommoditySpreadOptionAnalyticalEngine::intraAssetCorrelation(
+    const Date& ed_1, const Date& ed_2, const ext::shared_ptr<BlackVolTermStructure>& vol) const {
     if (beta_ == 0.0 || ed_1 == ed_2) {
         return 1.0;
     } else {
         Time t_1 = vol->timeFromReference(ed_1);
         Time t_2 = vol->timeFromReference(ed_2);
         return exp(-beta_ * fabs(t_2 - t_1));
+    }
+}
+
+Real CommoditySpreadOptionAnalyticalEngine::rho() const {
+    if (arguments_.longAssetFlow->index()->underlyingName() != arguments_.shortAssetFlow->index()->underlyingName()) {
+        return rho_->correlation(arguments_.exercise->lastDate());
+    } else {
+        return intraAssetCorrelation(arguments_.shortAssetLastPricingDate, arguments_.longAssetLastPricingDate,
+                                      *volTSLongAsset_);
     }
 }
 

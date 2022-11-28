@@ -53,6 +53,8 @@ public:
     Real effectiveStrike() const;
     //@}
 
+    bool isCalendarSpread() const;
+
 private:
     // arguments
     boost::shared_ptr<CommodityCashFlow> longAssetFlow_;
@@ -80,6 +82,9 @@ public:
     Date paymentDate;
     boost::shared_ptr<FxIndex> longAssetFxIndex;
     boost::shared_ptr<FxIndex> shortAssetFxIndex;
+    bool isCalendarSpread;
+    Date longAssetLastPricingDate;
+    Date shortAssetLastPricingDate;
     Settlement::Type settlementType;
     Settlement::Method settlementMethod;
     void validate() const override;
