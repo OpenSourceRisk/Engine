@@ -56,9 +56,9 @@ public:
                                 const string& configuration = Market::defaultConfiguration) const override;
     Handle<SwaptionVolatilityStructure>
     swaptionVol(const string& key, const string& configuration = Market::defaultConfiguration) const override;
-    const string shortSwapIndexBase(const string& ccy,
+    string shortSwapIndexBase(const string& ccy,
                                     const string& configuration = Market::defaultConfiguration) const override;
-    const string swapIndexBase(const string& ccy,
+    string swapIndexBase(const string& ccy,
                                const string& configuration = Market::defaultConfiguration) const override;
     Handle<SwaptionVolatilityStructure>
     yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const override;
@@ -79,6 +79,8 @@ public:
     baseCorrelation(const string& name, const string& configuration = Market::defaultConfiguration) const override;
     Handle<OptionletVolatilityStructure>
     capFloorVol(const string& key, const string& configuration = Market::defaultConfiguration) const override;
+    string
+    capFloorVolIndexBase(const string& key, const string& configuration = Market::defaultConfiguration) const override;
     Handle<QuantExt::YoYOptionletVolatilitySurface>
     yoyCapFloorVol(const string& indexName, const string& configuration = Market::defaultConfiguration) const override;
     Handle<ZeroInflationIndex>
