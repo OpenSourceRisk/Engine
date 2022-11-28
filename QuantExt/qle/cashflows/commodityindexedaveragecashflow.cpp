@@ -33,8 +33,8 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     bool useBusinessDays, CommodityQuantityFrequency quantityFrequency, Natural hoursPerDay, Natural dailyExpiryOffset,
     bool unrealisedQuantity, const boost::optional<pair<Calendar, Real>>& offPeakPowerData,
     const ext::shared_ptr<FxIndex>& fxIndex)
-    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice), startDate_(startDate), endDate_(endDate),
-      paymentDate_(paymentDate), index_(index), pricingCalendar_(pricingCalendar), deliveryDateRoll_(deliveryDateRoll),
+    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index), startDate_(startDate), endDate_(endDate),
+      paymentDate_(paymentDate), pricingCalendar_(pricingCalendar), deliveryDateRoll_(deliveryDateRoll),
       futureMonthOffset_(futureMonthOffset), includeEndDate_(includeEndDate), excludeStartDate_(excludeStartDate),
       useBusinessDays_(useBusinessDays), quantityFrequency_(quantityFrequency), hoursPerDay_(hoursPerDay),
       dailyExpiryOffset_(dailyExpiryOffset), unrealisedQuantity_(unrealisedQuantity),
@@ -51,8 +51,8 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     const QuantLib::Date& paymentDateOverride, bool useBusinessDays, CommodityQuantityFrequency quantityFrequency,
     Natural hoursPerDay, Natural dailyExpiryOffset, bool unrealisedQuantity,
     const boost::optional<pair<Calendar, Real>>& offPeakPowerData, const ext::shared_ptr<FxIndex>& fxIndex)
-    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice), startDate_(startDate), endDate_(endDate),
-      paymentDate_(paymentDateOverride), index_(index), pricingCalendar_(pricingCalendar),
+    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index), startDate_(startDate), endDate_(endDate),
+      paymentDate_(paymentDateOverride), pricingCalendar_(pricingCalendar),
       deliveryDateRoll_(deliveryDateRoll), futureMonthOffset_(futureMonthOffset), includeEndDate_(includeEndDate),
       excludeStartDate_(excludeStartDate), useBusinessDays_(useBusinessDays), quantityFrequency_(quantityFrequency),
       hoursPerDay_(hoursPerDay), dailyExpiryOffset_(dailyExpiryOffset), unrealisedQuantity_(unrealisedQuantity),

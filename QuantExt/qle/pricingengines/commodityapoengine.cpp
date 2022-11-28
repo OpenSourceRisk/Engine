@@ -28,7 +28,7 @@ QuantLib::Real MomentMatchingResults::secondMoment() { return sigma * sigma * tn
 QuantLib::Real MomentMatchingResults::stdDev() { return std::sqrt(secondMoment()); }
 QuantLib::Time MomentMatchingResults::timeToExpriy() { return tn; }
 
-MomentMatchingResults TurnbullWakemanMomentMatching(
+MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     const ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
     const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol,
     const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
@@ -257,7 +257,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
 
     // Valuation date
     
-    auto matchedMoments = CommodityAveragePriceOptionMomementMatching::TurnbullWakemanMomentMatching(
+    auto matchedMoments = CommodityAveragePriceOptionMomementMatching::matchFirstTwoMomentsTurnbullWakeman(
         arguments_.flow, *volStructure_,
         std::bind(&CommodityAveragePriceOptionAnalyticalEngine::rho, this, std::placeholders::_1, std
                   ::placeholders::_2), effectiveStrike);

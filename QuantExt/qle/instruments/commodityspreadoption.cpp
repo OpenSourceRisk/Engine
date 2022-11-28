@@ -77,6 +77,8 @@ void CommoditySpreadOption::setupArguments(PricingEngine::arguments* args) const
     arguments->longAssetFxIndex = longAssetFxIndex();
     arguments->shortAssetFxIndex = shortAssetFxIndex();
     arguments->paymentDate = paymentDate_;
+    arguments->longAssetLastPricingDate = longAssetFlow_->lastPricingDate();
+    arguments->shortAssetLastPricingDate == shortAssetFlow_->lastPricingDate();
 }
 
 CommoditySpreadOption::arguments::arguments()
@@ -90,5 +92,7 @@ void CommoditySpreadOption::arguments::validate() const {
     QL_REQUIRE(exercise, "exercise not set");
     QuantLib::Settlement::checkTypeAndMethodConsistency(settlementType, settlementMethod);
 }
+
+
 
 } // namespace QuantExt

@@ -52,11 +52,11 @@ public:
     //@{
     
     const QuantLib::Date& pricingDate() const { return pricingDate_; }
-    ext::shared_ptr<CommodityIndex> index() const { return index_; }
     bool useFuturePrice() const { return useFuturePrice_; }
     bool useFutureExpiryDate() const { return useFutureExpiryDate_; }
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
     QuantLib::Real periodQuantity() const { return periodQuantity_; }
+    QuantLib::Date lastPricingDate() const override { return pricingDate(); }
     //@}
 
     //! \name Event interface
@@ -85,7 +85,6 @@ public:
 private:
     QuantLib::Date pricingDate_;
     QuantLib::Date paymentDate_;
-    ext::shared_ptr<CommodityIndex> index_;
     bool useFutureExpiryDate_;
     QuantLib::Natural futureMonthOffset_;
     QuantLib::Real periodQuantity_;

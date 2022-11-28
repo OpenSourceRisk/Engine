@@ -31,6 +31,7 @@
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
+#include <qle/termstructures/flatcorrelation.hpp>
 
 using namespace std;
 using namespace boost::unit_test_framework;
@@ -332,7 +333,8 @@ BOOST_AUTO_TEST_CASE(testCrossAssetFutureSpread) {
     CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call);
 
     for (const auto& rho : {-0.95, -0.5, -0.25, 0., 0.5, 0.75, 0.9, 0.95}) {
-        auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, brentVol, wtiVol, rho);
+        Handle<CorrelationTermStructure> corr = Handle<CorrelationTermStructure>(ext::make_shared<FlatCorrelation>(0, NullCalendar(), rho, Actual365Fixed())); 
+        auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, brentVol, wtiVol, corr);
         spreadOption.setPricingEngine(engine);
         double npvMC = monteCarloPricing(brentDec, WTIDec, volBrentQuote, volWTIQuote, rho,
                                          discount->timeFromReference(exercise->lastDate()),
@@ -385,7 +387,10 @@ BOOST_AUTO_TEST_CASE(testCalendarSpread) {
 
     CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call, paymentDate);
 
-    auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, vol1, vol1, rho);
+    Handle<CorrelationTermStructure> corr =
+        Handle<CorrelationTermStructure>(ext::make_shared<FlatCorrelation>(0, NullCalendar(), rho, Actual365Fixed())); 
+
+    auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, vol1, vol1, corr);
 
     spreadOption.setPricingEngine(engine);
 
@@ -438,7 +443,10 @@ BOOST_AUTO_TEST_CASE(testCalendarSpread2) {
 
     CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call, paymentDate);
 
-    auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, vol1, vol1, rho);
+    Handle<CorrelationTermStructure> corr =
+        Handle<CorrelationTermStructure>(ext::make_shared<FlatCorrelation>(0, NullCalendar(), rho, Actual365Fixed())); 
+
+    auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, vol1, vol1, corr);
 
     spreadOption.setPricingEngine(engine);
     double kirkNpv = spreadOption.NPV();
@@ -497,7 +505,10 @@ BOOST_AUTO_TEST_CASE(testCalendarSpreadEdgeCase) {
 
     CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call, exerciseDate);
 
-    auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, vol1, vol1, rho);
+    Handle<CorrelationTermStructure> corr =
+        Handle<CorrelationTermStructure>(ext::make_shared<FlatCorrelation>(0, NullCalendar(), rho, Actual365Fixed())); 
+
+    auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, vol1, vol1, corr);
 
     spreadOption.setPricingEngine(engine);
     double kirkNpv = spreadOption.NPV();
@@ -562,7 +573,10 @@ BOOST_AUTO_TEST_CASE(testSpotAveragingSpreadOption) {
     Real df = discount->discount(exercise->lastDate());
 
     for (const auto& rho : {-0.9, -0.75, -0.5, -0.25, 0., 0.25, 0.5, 0.75, 0.9}) {
-        auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, brentVol, wtiVol, rho);
+
+        Handle<CorrelationTermStructure> corr = Handle<CorrelationTermStructure>(
+            ext::make_shared<FlatCorrelation>(0, NullCalendar(), rho, Actual365Fixed())); 
+        auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, brentVol, wtiVol, corr);
         spreadOption.setPricingEngine(engine);
         double npvMC = quantity * monteCarloPricingSpotAveraging(flow1, *brentCurve, *brentVol, flow2, *wtiCurve,
                                                                  *wtiVol, rho, strike, df);
@@ -639,7 +653,10 @@ BOOST_AUTO_TEST_CASE(testSeasonedSpotAveragingSpreadOption) {
 
     for (const auto& rho : {-0.9, -0.75, -0.5, -0.25, 0., 0.25, 0.5, 0.75, 0.9}) {
         CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call);
-        auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, brentVol, wtiVol, rho);
+
+        Handle<CorrelationTermStructure> corr = Handle<CorrelationTermStructure>(
+            ext::make_shared<FlatCorrelation>(0, NullCalendar(), rho, Actual365Fixed())); 
+        auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, brentVol, wtiVol, corr);
         spreadOption.setPricingEngine(engine);
         double npvMC = quantity * monteCarloPricingSpotAveraging(flow1, *brentCurve, *brentVol, flow2, *wtiCurve,
                                                                  *wtiVol, rho, strike, df);
@@ -652,7 +669,10 @@ BOOST_AUTO_TEST_CASE(testSeasonedSpotAveragingSpreadOption) {
     for (const auto& rho : {0.85}) {
         for (const auto& strike : {0.5, 1., 1.5, 2.0, 2.5}) {
             CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call);
-            auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, brentVol, wtiVol, rho);
+
+            Handle<CorrelationTermStructure> corr = Handle<CorrelationTermStructure>(
+                ext::make_shared<FlatCorrelation>(0, NullCalendar(), rho, Actual365Fixed())); 
+            auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, brentVol, wtiVol, corr);
             spreadOption.setPricingEngine(engine);
             double npvMC = quantity * monteCarloPricingSpotAveraging(flow1, *brentCurve, *brentVol, flow2, *wtiCurve,
                                                                      *wtiVol, rho, strike, df);
@@ -723,7 +743,10 @@ BOOST_AUTO_TEST_CASE(testFutureAveragingSpreadOption) {
     Real df = discount->discount(exercise->lastDate());
 
     for (const auto& rho : {-0.9, -0.75, -0.5, -0.25, 0., 0.25, 0.5, 0.75, 0.9}) {
-        auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, brentVol, wtiVol, rho);
+
+        Handle<CorrelationTermStructure> corr = Handle<CorrelationTermStructure>(
+            ext::make_shared<FlatCorrelation>(0, NullCalendar(), rho, Actual365Fixed())); 
+        auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, brentVol, wtiVol, corr);
         spreadOption.setPricingEngine(engine);
         double npvMC = quantity * monteCarloPricingFutureAveraging(flow1, *brentCurve, *brentVol, flow2, *wtiCurve,
                                                                    *wtiVol, rho, strike, df);
@@ -732,73 +755,6 @@ BOOST_AUTO_TEST_CASE(testFutureAveragingSpreadOption) {
 
         // printResults(rho, strike, npvMC, npvKirk, spreadOption);
     }
-}
-
-BOOST_AUTO_TEST_CASE(testExpiredCrossAssetFutureSpread) {
-    Date today(2, Jan, 2023);
-    Settings::instance().evaluationDate() = today;
-
-    double strike = 1;
-    double volBrentQuote = 0.3;
-    double volWTIQuote = 0.35;
-    double quantity = 1000.;
-    double WTIspot = 105.5;
-    double WTIDec = 105.;
-    double WTIJan = 106.;
-    double brentSpot = 107.25;
-    double brentDec = 107;
-    double brentJan = 109;
-
-    Date novExpiry(30, Nov, 2022);
-    Date decExpiry(31, Dec, 2022);
-    Date janExpory(31, Jan, 2023);
-    Date exerciseDate(31, Dec, 2022);
-    Date paymentDate(5, Jan, 2023);
-
-    std::vector<Date> futureExpiryDates = {today, janExpory};
-    std::vector<Real> brentQuotes = {brentSpot, brentJan,};
-    std::vector<Real> wtiQuotes = {WTIspot, WTIJan};
-
-    auto brentCurve = Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(
-        today, futureExpiryDates, brentQuotes, Actual365Fixed(), USDCurrency()));
-    auto wtiCurve = Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(
-        today, futureExpiryDates, wtiQuotes, Actual365Fixed(), USDCurrency()));
-
-    auto discount = Handle<YieldTermStructure>(
-        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.03)), Actual365Fixed()));
-
-    auto brentVol = Handle<BlackVolTermStructure>(
-        boost::make_shared<BlackConstantVol>(today, NullCalendar(), volBrentQuote, Actual365Fixed()));
-    auto wtiVol = Handle<BlackVolTermStructure>(
-        boost::make_shared<BlackConstantVol>(today, NullCalendar(), volWTIQuote, Actual365Fixed()));
-
-    auto index1 = boost::make_shared<CommodityFuturesIndex>("BRENT_USD", decExpiry, NullCalendar(), brentCurve);
-
-    auto index2 = boost::make_shared<CommodityFuturesIndex>("WTI_USD", decExpiry, NullCalendar(), wtiCurve);
-
-    index1->addFixing(decExpiry, brentDec);
-
-    index2->addFixing(decExpiry, WTIDec);
-
-    auto flow1 = boost::make_shared<CommodityIndexedCashFlow>(100, decExpiry, decExpiry, index1);
-
-    auto flow2 = boost::make_shared<CommodityIndexedCashFlow>(100, decExpiry, decExpiry, index2);
-
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
-
-    CommoditySpreadOption spreadOption(flow1, flow2, exercise, quantity, strike, Option::Call, paymentDate);
-
-    double df = discount->discount(paymentDate);
-
-    double expectedNPV = std::max(brentDec - WTIDec - strike, 0.0) * df * quantity;
-
-    auto engine = boost::make_shared<CommoditySpreadOptionAnalyticalEngine>(discount, brentVol, wtiVol, 0.9);
-    
-    spreadOption.setPricingEngine(engine);
-    
-    double npvKirk = spreadOption.NPV();
-
-    BOOST_CHECK_CLOSE(npvKirk, expectedNPV, 1e-8);
 }
 
 
