@@ -72,6 +72,7 @@ public:
 
     ext::shared_ptr<CommodityIndex> index() { return index_; };
     virtual QuantLib::Date lastPricingDate() const = 0;
+    virtual QuantLib::Date paymentDate() const = 0;
 
 protected:
     QuantLib::Real quantity_;
