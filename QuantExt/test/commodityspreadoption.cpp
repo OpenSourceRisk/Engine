@@ -40,17 +40,6 @@ using namespace QuantExt;
 
 namespace {
 
-void printResults(Real rho, Real strike, Real npvMC, Real npvKrik, const CommoditySpreadOption& spreadOption) {
-    std::cout << "Test Average Seasoned Spot Price Spread Option " << std::endl;
-    std::cout << "Rho = " << rho << " / Strike " << strike << std::endl;
-    std::cout << "MC Price " << npvMC << std::endl;
-    std::cout << "Kirk approx Price " << npvKrik << std::endl;
-    std::cout << "Forward1 " << spreadOption.result<double>("F1") << std::endl;
-    std::cout << "Forward2 " << spreadOption.result<double>("F2") << std::endl;
-    std::cout << "Accruals1 " << spreadOption.result<double>("accruals1") << std::endl;
-    std::cout << "Accruals1 " << spreadOption.result<double>("accruals2") << std::endl;
-}
-
 class MockUpExpiryCalculator : public FutureExpiryCalculator {
 public:
     // Inherited via FutureExpiryCalculator
@@ -92,7 +81,7 @@ double monteCarloPricing(double F1, double F2, double sigma1, double sigma2, dou
     double payoff = 0;
     LowDiscrepancy::rsg_type rsg = LowDiscrepancy::make_sequence_generator(2, seed);
     Array drift = -0.5 * sigma * sigma * ttm;
-    for (int i = 0; i < samples; i++) {
+    for (size_t i = 0; i < samples; i++) {
         auto sample = rsg.nextSequence().value;
         std::copy(sample.begin(), sample.end(), Z.begin());
         Array Ft = F + drift + L * Z * std::sqrt(ttm);
@@ -158,7 +147,7 @@ double monteCarloPricingSpotAveraging(const ext::shared_ptr<CommodityIndexedAver
 
     Matrix Z(2, nObs, 0.0);
 
-    for (int t = 0; t < nObs; ++t) {
+    for (size_t t = 0; t < nObs; ++t) {
         drift[0][t] =
             std::log(priceCurve1->price(timeGrid[t + 1]) / priceCurve1->price(timeGrid[t])) -
             0.5 * vol1->blackForwardVariance(timeGrid[t], timeGrid[t + 1], priceCurve1->price(timeGrid[t + 1]));
@@ -172,16 +161,14 @@ double monteCarloPricingSpotAveraging(const ext::shared_ptr<CommodityIndexedAver
     }
 
     double payoff = 0;
-    double forward1 = 0;
-    double forward2 = 0;
     LowDiscrepancy::rsg_type rsg = LowDiscrepancy::make_sequence_generator(2 * nObs, 42);
-    for (int i = 0; i < samples; i++) {
+    for (size_t i = 0; i < samples; i++) {
         double avg1 = 0;
         double avg2 = 0;
         auto sample = rsg.nextSequence().value;
         std::copy(sample.begin(), sample.end(), Z.begin());
         auto Zt = L * Z;
-        for (int t = 0; t < nObs; ++t) {
+        for (size_t t = 0; t < nObs; ++t) {
             St[0][t + 1] = St[0][t] + drift[0][t] + diffusion[0][t] * Zt[0][t];
             St[1][t + 1] = St[1][t] + drift[1][t] + diffusion[1][t] * Zt[1][t];
             avg1 += std::exp(St[0][t + 1]);
@@ -191,13 +178,9 @@ double monteCarloPricingSpotAveraging(const ext::shared_ptr<CommodityIndexedAver
         avg2 += accrued2;
         avg1 /= static_cast<double>(n);
         avg2 /= static_cast<double>(n);
-        forward1 += avg1;
-        forward2 += avg2;
 
         payoff += std::max(avg1 - avg2 - strike, 0.0);
     }
-    //std::cout << "F1 (MC) " << forward1 / static_cast<double>(samples) << std::endl;
-    //std::cout << "F2 (MC) " << forward2 / static_cast<double>(samples) << std::endl;
     payoff /= static_cast<double>(samples);
     return df * payoff;
 }
@@ -249,7 +232,7 @@ double monteCarloPricingFutureAveraging(const ext::shared_ptr<CommodityIndexedAv
 
     Matrix Z(2, nObs, 0.0);
 
-    for (int t = 0; t < nObs; ++t) {
+    for (size_t t = 0; t < nObs; ++t) {
         drift[0][t] =
             -0.5 * vol1->blackForwardVariance(timeGrid[t], timeGrid[t + 1], priceCurve1->price(timeGrid[t + 1]));
         drift[1][t] =
@@ -261,16 +244,15 @@ double monteCarloPricingFutureAveraging(const ext::shared_ptr<CommodityIndexedAv
     }
 
     double payoff = 0;
-    double forward1 = 0;
-    double forward2 = 0;
+
     LowDiscrepancy::rsg_type rsg = LowDiscrepancy::make_sequence_generator(2 * nObs, 42);
-    for (int i = 0; i < samples; i++) {
+    for (size_t i = 0; i < samples; i++) {
         double avg1 = 0;
         double avg2 = 0;
         auto sample = rsg.nextSequence().value;
         std::copy(sample.begin(), sample.end(), Z.begin());
         auto Zt = L * Z;
-        for (int t = 0; t < nObs; ++t) {
+        for (size_t t = 0; t < nObs; ++t) {
             St[0][t + 1] = St[0][t] + drift[0][t] + diffusion[0][t] * Zt[0][t];
             St[1][t + 1] = St[1][t] + drift[1][t] + diffusion[1][t] * Zt[1][t];
             avg1 += std::exp(St[0][t + 1]);
@@ -278,13 +260,9 @@ double monteCarloPricingFutureAveraging(const ext::shared_ptr<CommodityIndexedAv
         }
         avg1 /= static_cast<double>(nObs);
         avg2 /= static_cast<double>(nObs);
-        forward1 += avg1;
-        forward2 += avg2;
 
         payoff += std::max(avg1 - avg2 - strike, 0.0);
     }
-    // std::cout << "F1 (MC) " << forward1 / static_cast<double>(samples) << std::endl;
-    // std::cout << "F2 (MC) " << forward2 / static_cast<double>(samples) << std::endl;
     payoff /= static_cast<double>(samples);
     return df * payoff;
 }
@@ -593,8 +571,6 @@ BOOST_AUTO_TEST_CASE(testSpotAveragingSpreadOption) {
                                                                  *wtiVol, rho, strike, df);
         double npvKirk = spreadOption.NPV();
         BOOST_CHECK_CLOSE(npvKirk, npvMC, 1);
-
-        // printResults(rho, strike, npvMC, npvKirk, spreadOption);
     }
 }
 
@@ -674,7 +650,6 @@ BOOST_AUTO_TEST_CASE(testSeasonedSpotAveragingSpreadOption) {
         double npvKirk = spreadOption.NPV();
         BOOST_CHECK_CLOSE(npvKirk, npvMC, 1);
 
-        // printResults(rho, strike, npvMC, npvKirk, spreadOption);
     }
 
     for (const auto& rho : {0.85}) {
@@ -689,8 +664,6 @@ BOOST_AUTO_TEST_CASE(testSeasonedSpotAveragingSpreadOption) {
                                                                      *wtiVol, rho, strike, df);
             double npvKirk = spreadOption.NPV();
             BOOST_CHECK_CLOSE(npvKirk, npvMC, 1);
-
-            // printResults(rho, strike, npvMC, npvKirk, spreadOption);
         }
     }
 }
@@ -719,8 +692,6 @@ BOOST_AUTO_TEST_CASE(testFutureAveragingSpreadOption) {
     std::vector<Real> wtiQuotes = {WTIspot, WTINov, WTIDec};
 
     auto feCalc = ext::make_shared<MockUpExpiryCalculator>();
-
-    Date nextExp = feCalc->nextExpiry(true, today + 1, 0, false);
 
     auto brentCurve = Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(
         today, futureExpiryDates, brentQuotes, Actual365Fixed(), USDCurrency()));
@@ -763,8 +734,6 @@ BOOST_AUTO_TEST_CASE(testFutureAveragingSpreadOption) {
                                                                    *wtiVol, rho, strike, df);
         double npvKirk = spreadOption.NPV();
         BOOST_CHECK_CLOSE(npvKirk, npvMC, 1);
-
-        // printResults(rho, strike, npvMC, npvKirk, spreadOption);
     }
 }
 
