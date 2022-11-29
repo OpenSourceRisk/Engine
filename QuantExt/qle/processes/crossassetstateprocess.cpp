@@ -24,6 +24,8 @@
 
 #include <boost/make_shared.hpp>
 
+#include <iostream>
+
 namespace QuantExt {
 
 using namespace CrossAssetAnalytics;
@@ -119,7 +121,7 @@ Array CrossAssetStateProcess::initialValues() const {
                 std::log(model_->infjy(i)->index()->fxSpotToday()->value());
         }
     }
-    /* infdk, crlgm1f processes have initial value 0 */
+    /* infdk, crlgm1f and commodity processes have initial value 0 */
     return res;
 }
 
@@ -308,6 +310,21 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
         }
     }
 
+    // COM drift
+    Size n_com = model_->components(CrossAssetModel::AssetType::COM);
+    for (Size k = 0; k < n_com; ++k) {
+        auto cm = boost::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(k));
+        QL_REQUIRE(cm, "CommoditySchwartzModel not set");
+        if (!cm->parametrization()->driftFreeState()) {
+            // Ornstein-Uhlenbeck drift
+            Real kap = cm->parametrization()->kappaParameter();
+            res[model_->pIdx(CrossAssetModel::AssetType::COM, k, 0)] -=
+                kap * x[model_->pIdx(CrossAssetModel::AssetType::COM, k, 0)];
+        } else {
+            // zero drift
+        }
+    }
+
     /* no drift for infdk, crlgm1f components */
     return res;
 }
@@ -334,6 +351,7 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const 
     Size d = model_->components(CrossAssetModel::AssetType::INF);
     Size c = model_->components(CrossAssetModel::AssetType::CR);
     Size e = model_->components(CrossAssetModel::AssetType::EQ);
+    Size com = model_->components(CrossAssetModel::AssetType::COM);
     // ir-ir
     for (Size i = 0; i < n; ++i) {
         Real alphai = model_->irlgm1f(i)->alpha(t);
@@ -380,6 +398,11 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const 
     for (Size i = 0; i < e; ++i) {
         Real sigmai = model_->eqbs(i)->sigma(t);
         setValue2(res, sigmai, model_, CrossAssetModel::AssetType::EQ, i, CrossAssetModel::AssetType::EQ, i, 0, 0);
+    }
+    // com-com
+    for (Size i = 0; i < com; ++i) {
+        Real sigmai = model_->combs(i)->sigma(t);
+        setValue2(res, sigmai, model_, CrossAssetModel::AssetType::COM, i, CrossAssetModel::AssetType::COM, i, 0, 0);
     }
 
     if (model_->measure() == IrModel::Measure::BA) {
@@ -472,11 +495,24 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
             std::copy(r.begin(), r.end(), std::next(res.begin(), model_->pIdx(CrossAssetModel::AssetType::FX, i, 0)));
         }
 
+        // evolve com processes
+
+        for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::COM); ++i) {
+            auto p = model_->comModel(i)->stateProcess();
+            auto r = p->evolve(
+                t0,
+                getProjectedArray(x0, model_->pIdx(CrossAssetModel::AssetType::COM, i, 0), model_->comModel(i)->n()),
+                dt,
+                getProjectedArray(dz, model_->wIdx(CrossAssetModel::AssetType::COM, i, 0), model_->comModel(i)->m()));
+            std::copy(r.begin(), r.end(), std::next(res.begin(), model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)));
+        }
+
         // TODO other components ...
         QL_REQUIRE(model_->components(CrossAssetModel::AssetType::IR) +
-                           model_->components(CrossAssetModel::AssetType::FX) ==
+                           model_->components(CrossAssetModel::AssetType::FX) +
+                           model_->components(CrossAssetModel::AssetType::COM) ==
                        model_->parametrizations().size(),
-                   "CrossAssetStateProcess::evolve(): currently only IR and FX supported.");
+                   "CrossAssetStateProcess::evolve(): currently only IR, FX, COM supported.");
 
         return res;
     }
@@ -595,6 +631,8 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticPr
         }
     }
 
+    /* no COM driftImpl1 contribution for one-factor non mean-reverting commodity case */
+
     return res;
 }
 
@@ -655,6 +693,23 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl2(const StochasticPr
         res[model_->pIdx(CrossAssetModel::AssetType::CR, i, 1)] =
             x0[model_->pIdx(CrossAssetModel::AssetType::CR, i, 1)];
     }
+
+    /* commodity components are drift-free in the one-factor non mean-reverting case */
+    Size com = model_->components(CrossAssetModel::AssetType::COM);
+    for (Size i = 0; i < com; ++i) {
+        // res[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)] =
+        //     x0[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)];
+        auto cm = boost::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(i));
+        QL_REQUIRE(cm, "CommoditySchwartzModel not set");
+        Real com0 = x0[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)];
+        if (cm->parametrization()->driftFreeState()) {
+            res[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)] = com0;
+        } else {
+            Real kap = cm->parametrization()->kappaParameter();
+            res[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)] = com0 * std::exp(-kap * dt);
+        }
+    }
+
     return res;
 }
 
@@ -666,6 +721,7 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
     Size d = model_->components(CrossAssetModel::AssetType::INF);
     Size c = model_->components(CrossAssetModel::AssetType::CR);
     Size e = model_->components(CrossAssetModel::AssetType::EQ);
+    Size com = model_->components(CrossAssetModel::AssetType::COM);
 
     if (model_->measure() == IrModel::Measure::BA) {
         // aux-aux
@@ -780,6 +836,7 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
                      CrossAssetModel::AssetType::CR, j, 1, 1);
         }
     }
+
     // ir,fx,inf,cr,eq - eq
     for (Size j = 0; j < e; ++j) {
         for (Size i = 0; i <= j; ++i) {
@@ -815,6 +872,48 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
                      CrossAssetModel::AssetType::EQ, j, 1, 0);
         }
     }
+
+    // ir,fx,inf,cr,eq, com - com
+    for (Size j = 0; j < com; ++j) {
+        for (Size i = 0; i <= j; ++i) {
+            // com-com
+            setValue(res, com_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::COM, i,
+                     CrossAssetModel::AssetType::COM, j, 0, 0);
+        }
+        for (Size i = 0; i < n; ++i) {
+            // ir-com
+            setValue(res, ir_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
+                     CrossAssetModel::AssetType::COM, j, 0, 0);
+        }
+        for (Size i = 0; i < (n - 1); ++i) {
+            // fx-com
+            setValue(res, fx_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
+                     CrossAssetModel::AssetType::COM, j, 0, 0);
+        }
+        for (Size i = 0; i < d; ++i) {
+            // inf-com
+            setValue(res, infz_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
+                     CrossAssetModel::AssetType::COM, j, 0, 0);
+            setValue(res, infy_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
+                     CrossAssetModel::AssetType::COM, j, 1, 0);
+        }
+        for (Size i = 0; i < c; ++i) {
+            // Skip CR components that are not LGM
+            if (model_->modelType(CrossAssetModel::AssetType::CR, i) != CrossAssetModel::ModelType::LGM1F)
+                continue;
+            // cr-com
+            setValue(res, crz_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
+                     CrossAssetModel::AssetType::COM, j, 0, 0);
+            setValue(res, cry_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
+                     CrossAssetModel::AssetType::COM, j, 1, 0);
+        }
+        for (Size i = 0; i < e; ++i) {
+            // eq-com
+            setValue(res, eq_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::EQ, i,
+                     CrossAssetModel::AssetType::COM, j, 0, 0);
+        }
+    }
+
     return res;
 }
 

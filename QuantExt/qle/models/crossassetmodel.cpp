@@ -45,12 +45,21 @@ std::ostream& operator<<(std::ostream& out, const CrossAssetModel::AssetType& ty
         return out << "CR";
     case CrossAssetModel::AssetType::EQ:
         return out << "EQ";
+    case CrossAssetModel::AssetType::COM:
+        return out << "COM";
     default:
         QL_FAIL("Did not recognise cross asset model type " << static_cast<int>(type) << ".");
     }
 }
 
 namespace {
+
+/* derive marginal model discretizations from cam discretization
+   - "cam / Euler" should always map to "marginal model / Euler"
+   - "cam / Exact" should always map to "marginal model / Exact" which is only possible for a subset of models
+   - "cam / BestMarginalDiscretization" is to combine a global Euler scheme with the "best" marginal
+     scheme that is available, e.g. QuadraticExponentialMartingale for a Heston component */
+
 HwModel::Discretization getHwDiscretization(CrossAssetModel::Discretization discretization) {
     if (discretization == CrossAssetModel::Discretization::Euler)
         return HwModel::Discretization::Euler;
@@ -63,6 +72,13 @@ LinearGaussMarkovModel::Discretization getLgm1fDiscretization(CrossAssetModel::D
         return LinearGaussMarkovModel::Discretization::Euler;
     else
         return LinearGaussMarkovModel::Discretization::Exact;
+}
+
+CommoditySchwartzModel::Discretization getComSchwartzDiscretization(CrossAssetModel::Discretization discretization) {
+    if (discretization == CrossAssetModel::Discretization::Euler)
+        return CommoditySchwartzModel::Discretization::Euler;
+    else
+        return CommoditySchwartzModel::Discretization::Exact;
 }
 } // namespace
 
@@ -106,6 +122,15 @@ Size CrossAssetModel::eqIndex(const std::string& name) const {
         ++i;
     QL_REQUIRE(i < components(CrossAssetModel::AssetType::EQ),
                "equity name " << name << " not present in cross asset model");
+    return i;
+}
+
+Size CrossAssetModel::comIndex(const std::string& name) const {
+    Size i = 0;
+    while (i < components(CrossAssetModel::AssetType::COM) && com(i)->name() != name)
+        ++i;
+    QL_REQUIRE(i < components(CrossAssetModel::AssetType::COM),
+               "commodity name " << name << " not present in cross asset model");
     return i;
 }
 
@@ -282,6 +307,8 @@ CrossAssetModel::getComponentType(const Size i) const {
         return std::make_pair(CrossAssetModel::AssetType::CR, CrossAssetModel::ModelType::CIRPP);
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return std::make_pair(CrossAssetModel::AssetType::EQ, CrossAssetModel::ModelType::BS);
+    if (boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]))
+        return std::make_pair(CrossAssetModel::AssetType::COM, CrossAssetModel::ModelType::BS);
     QL_FAIL("parametrization " << i << " has unknown type");
 }
 
@@ -306,6 +333,8 @@ Size CrossAssetModel::getNumberOfBrownians(const Size i) const {
         return 1;
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return 1;
+    if (boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]))
+        return 1;
     QL_FAIL("parametrization " << i << " has unknown type");
 }
 
@@ -327,6 +356,8 @@ Size CrossAssetModel::getNumberOfAuxBrownians(const Size i) const {
     if (boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]))
         return 0;
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
+        return 0;
+    if (boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]))
         return 0;
     QL_FAIL("parametrization " << i << " has unknown type");
 }
@@ -351,6 +382,8 @@ Size CrossAssetModel::getNumberOfStateVariables(const Size i) const {
     if (boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]))
         return 2;
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
+        return 1;
+    if (boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]))
         return 1;
     QL_FAIL("parametrization " << i << " has unknown type");
 }
@@ -545,6 +578,37 @@ void CrossAssetModel::initializeParametrizations() {
         }
     }
 
+    // COM parametrizations
+
+    j = 0;
+    while (i < p_.size() && getComponentType(i).first == CrossAssetModel::AssetType::COM) {
+        boost::shared_ptr<CommoditySchwartzParametrization> csp = boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]);
+        boost::shared_ptr<CommoditySchwartzModel> csm =
+            csp ? boost::make_shared<CommoditySchwartzModel>(csp, getComSchwartzDiscretization(discretization_))
+                : nullptr;
+        comModels_.push_back(csm);
+        updateIndices(CrossAssetModel::AssetType::COM, i, cIdxTmp, wIdxTmp, pIdxTmp, aIdxTmp);
+        cIdxTmp += getNumberOfBrownians(i);
+        wIdxTmp += getNumberOfBrownians(i) + getNumberOfAuxBrownians(i);
+        pIdxTmp += getNumberOfStateVariables(i);
+        aIdxTmp += getNumberOfParameters(i);
+        ++j;
+        ++i;
+    }
+    components_[(Size)CrossAssetModel::AssetType::COM] = j;
+
+    // check the equity currencies to ensure they are covered by CrossAssetModel
+    for (Size i = 0; i < components(CrossAssetModel::AssetType::COM); ++i) {
+        Currency comCcy = com(i)->currency();
+        try {
+            Size comCcyIdx = ccyIndex(comCcy);
+            QL_REQUIRE(comCcyIdx < components_[(Size)CrossAssetModel::AssetType::IR],
+                       "Invalid currency for commodity " << combs(i)->name());
+        } catch (...) {
+            QL_FAIL("Invalid currency (" << comCcy.code() << ") for commodity " << combs(i)->name());
+        }
+    }
+
     // Summary statistics
 
     totalDimension_ = pIdxTmp;
@@ -615,15 +679,16 @@ void CrossAssetModel::checkModelConsistency() const {
     QL_REQUIRE(components(CrossAssetModel::AssetType::IR) > 0, "at least one IR component must be given");
     QL_REQUIRE(components(CrossAssetModel::AssetType::IR) + components(CrossAssetModel::AssetType::FX) +
                        components(CrossAssetModel::AssetType::INF) + components(CrossAssetModel::AssetType::CR) +
-                       components(CrossAssetModel::AssetType::EQ) ==
+                       components(CrossAssetModel::AssetType::EQ) + components(CrossAssetModel::AssetType::COM) ==
                    p_.size(),
                "the parametrizations must be given in the following order: ir, "
-               "fx, inf, cr, eq, found "
+               "fx, inf, cr, eq, com, found "
                    << components(CrossAssetModel::AssetType::IR) << " ir, "
                    << components(CrossAssetModel::AssetType::FX) << " bs, "
                    << components(CrossAssetModel::AssetType::INF) << " inf, "
                    << components(CrossAssetModel::AssetType::CR) << " cr, "
                    << components(CrossAssetModel::AssetType::EQ) << " eq, "
+                   << components(CrossAssetModel::AssetType::COM) << " com, "
                    << "but there are " << p_.size() << " parametrizations given in total");
 }
 
@@ -973,6 +1038,7 @@ std::vector<bool> CrossAssetModel::MoveParameter(const AssetType t, const Size p
     appendToFixedParameterVector(CrossAssetModel::AssetType::INF, t, param, index, i, res);
     appendToFixedParameterVector(CrossAssetModel::AssetType::CR, t, param, index, i, res);
     appendToFixedParameterVector(CrossAssetModel::AssetType::EQ, t, param, index, i, res);
+    appendToFixedParameterVector(CrossAssetModel::AssetType::COM, t, param, index, i, res);
     return res;
 }
 

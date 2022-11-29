@@ -125,6 +125,8 @@ public:
     static void addChildAsCdata(XMLDocument& doc, XMLNode* n, const string& name, const string& value);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value, const string& attrName,
                          const string& attr);
+    static void addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value,
+                         const vector<string>& attrNames, const vector<string>& attrs);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, const char* value);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, Real value);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, int value);

@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016-2022 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -32,6 +32,9 @@
 #include <qle/models/hwmodel.hpp>
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infjyparameterization.hpp>
+#include <qle/models/commoditymodel.hpp>
+#include <qle/models/commodityschwartzmodel.hpp>
+#include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/models/fxbsmodel.hpp>
 
@@ -53,11 +56,11 @@ using namespace QuantLib;
  */
 class CrossAssetModel : public LinkableCalibratedModel {
 public:
-    enum class AssetType : Size { IR = 0, FX = 1, INF = 2, CR = 3, EQ = 4 };
-    enum class ModelType { LGM1F, HW, BS, DK, CIRPP, JY };
+    enum class AssetType : Size { IR = 0, FX = 1, INF = 2, CR = 3, EQ = 4, COM = 5 };
+    enum class ModelType { LGM1F, HW, BS, DK, CIRPP, JY, GAB };
     enum class Discretization { Euler, Exact };
 
-    static constexpr Size numberOfAssetTypes = 5;
+    static constexpr Size numberOfAssetTypes = 6;
 
     /*! Parametrizations must be given in the following order
         - IR  (first parametrization defines the domestic currency)
@@ -65,6 +68,7 @@ public:
         - INF (optionally, ccy must be a subset of the IR ccys)
         - CR  (optionally, ccy must be a subset of the IR ccys)
         - EQ  (for all names equity currency defined in Parametrization)
+        - COM (for all names commodity currency defined in Parametrization)
         If the correlation matrix is not given, it is initialized
         as the unit matrix (and can be customized after
         construction of the model).
@@ -129,6 +133,9 @@ public:
     /*! return index for credit (0 = first credit name) */
     Size crName(const std::string& name) const;
 
+    /*! return index for commodity (0 = first equity) */
+    Size comIndex(const std::string& comName) const;
+
     /*! observer and linked calibrated model interface */
     void update() override;
     void generateArguments() override;
@@ -142,6 +149,7 @@ public:
     const boost::shared_ptr<Parametrization> inf(const Size i) const;
     const boost::shared_ptr<Parametrization> cr(const Size i) const;
     const boost::shared_ptr<Parametrization> eq(const Size i) const;
+    const boost::shared_ptr<Parametrization> com(const Size i) const;
 
     /* ir model */
     const boost::shared_ptr<IrModel> irModel(const Size ccy) const;
@@ -209,6 +217,12 @@ public:
 
     /*! EQBS components */
     const boost::shared_ptr<EqBsParametrization> eqbs(const Size ccy) const;
+
+    /* com model */
+    const boost::shared_ptr<CommodityModel> comModel(const Size com) const;
+
+    /*! COMBS components */
+    const boost::shared_ptr<CommoditySchwartzParametrization> combs(const Size ccy) const;
 
     /* ... add more components here ...*/
 
@@ -310,7 +324,7 @@ public:
                                           const Constraint& constraint = Constraint(),
                                           const std::vector<Real>& weights = std::vector<Real>());
 
-    /*! calibrate eq/fx volatilities globally to a set of fx options */
+    /*! calibrate eq/fx/com volatilities globally to a set of eq/fx/com options */
     void calibrateBsVolatilitiesGlobal(const AssetType& assetType, const Size aIdx,
                                        const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                        OptimizationMethod& method, const EndCriteria& endCriteria,
@@ -467,6 +481,7 @@ protected:
     std::vector<boost::shared_ptr<IrModel>> irModels_; // HwModel or LGM1F
     std::vector<boost::shared_ptr<FxModel>> fxModels_; // FxBsModel
     std::vector<boost::shared_ptr<CrCirpp>> crcirppModel_;
+    std::vector<boost::shared_ptr<CommodityModel>> comModels_; 
     Matrix rho_;
     SalvagingAlgorithm::Type salvaging_;
     IrModel::Measure measure_;
@@ -520,12 +535,20 @@ inline const boost::shared_ptr<Parametrization> CrossAssetModel::eq(const Size i
     return boost::static_pointer_cast<Parametrization>(p_[idx(CrossAssetModel::AssetType::EQ, i)]);
 }
 
+inline const boost::shared_ptr<Parametrization> CrossAssetModel::com(const Size i) const {
+    return boost::static_pointer_cast<Parametrization>(p_[idx(CrossAssetModel::AssetType::COM, i)]);
+}
+
 inline const boost::shared_ptr<IrModel> CrossAssetModel::irModel(const Size ccy) const {
     return irModels_[ccy];
 }
 
 inline const boost::shared_ptr<FxModel> CrossAssetModel::fxModel(const Size ccy) const {
     return fxModels_[ccy];
+}
+
+inline const boost::shared_ptr<CommodityModel> CrossAssetModel::comModel(const Size com) const {
+    return comModels_[com];
 }
 
 inline const boost::shared_ptr<HwModel> CrossAssetModel::hw(const Size ccy) const {
@@ -585,6 +608,13 @@ inline const boost::shared_ptr<EqBsParametrization> CrossAssetModel::eqbs(const 
     boost::shared_ptr<EqBsParametrization> tmp =
         boost::dynamic_pointer_cast<EqBsParametrization>(p_[idx(CrossAssetModel::AssetType::EQ, name)]);
     QL_REQUIRE(tmp, "model at " << name << " is not EQ-BS");
+    return tmp;
+}
+
+inline const boost::shared_ptr<CommoditySchwartzParametrization> CrossAssetModel::combs(const Size name) const {
+    boost::shared_ptr<CommoditySchwartzParametrization> tmp =
+        boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[idx(CrossAssetModel::AssetType::COM, name)]);
+    QL_REQUIRE(tmp, "model at " << name << " is not COM-BS");
     return tmp;
 }
 

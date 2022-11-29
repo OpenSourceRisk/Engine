@@ -137,7 +137,8 @@ bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
         infindices_ != rhs.infindices_ || bootstrapTolerance_ != rhs.bootstrapTolerance_ ||
         irConfigs_.size() != rhs.irConfigs_.size() || fxConfigs_.size() != rhs.fxConfigs_.size() ||
         eqConfigs_.size() != rhs.eqConfigs_.size() || infConfigs_.size() != rhs.infConfigs_.size() ||
-        crLgmConfigs_.size() != rhs.crLgmConfigs_.size() || crCirConfigs_.size() != rhs.crCirConfigs_.size()) {
+        crLgmConfigs_.size() != rhs.crLgmConfigs_.size() || crCirConfigs_.size() != rhs.crCirConfigs_.size() ||
+        comConfigs_.size() != rhs.comConfigs_.size()) {
         return false;
     }
 
@@ -186,6 +187,12 @@ bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
         }
     }
 
+    for (Size i = 0; i < comConfigs_.size(); i++) {
+        if (*comConfigs_[i] != *(rhs.comConfigs_[i])) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -200,6 +207,7 @@ void CrossAssetModelData::clear() {
     infConfigs_.clear();
     crLgmConfigs_.clear();
     crCirConfigs_.clear();
+    comConfigs_.clear();
     correlations_->clear();
 }
 
@@ -297,6 +305,11 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     creditNames_ = XMLUtils::getChildrenValues(modelNode, "CreditNames", "CreditName");
     for (auto cr : creditNames_) {
         LOG("CrossAssetModelData credit name " << cr);
+    }
+
+    commodities_ = XMLUtils::getChildrenValues(modelNode, "Commodities", "Commodity");
+    for (auto com : commodities_) {
+        LOG("CrossAssetModelData commodity " << com);
     }
 
     bootstrapTolerance_ = XMLUtils::getChildValueAsDouble(modelNode, "BootstrapTolerance", true);
@@ -507,6 +520,35 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     for (Size i = 0; i < crCirConfigs_.size(); i++)
         LOG("CrossAssetModelData: CR CIR config name " << i << " = " << crCirConfigs_[i]->name());
 
+    // Configure COM model components
+
+    std::map<std::string, boost::shared_ptr<CommoditySchwartzData>> comDataMap;
+    XMLNode* comNode = XMLUtils::getChildNode(modelNode, "CommodityModels");
+    if (comNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(comNode, "CommoditySchwartz"); child;
+             child = XMLUtils::getNextSibling(child, "CommoditySchwartz")) {
+
+            boost::shared_ptr<CommoditySchwartzData> config(new CommoditySchwartzData());
+            config->fromXML(child);
+
+            for (Size i = 0; i < config->optionExpiries().size(); i++) {
+                LOG("Cross-Asset Commodity calibration option " << config->optionExpiries()[i] << " "
+                    << config->optionStrikes()[i]);
+            }
+
+            comDataMap[config->name()] = config;
+
+            LOG("CrossAssetModelData: Commodity config built with key " << config->name());
+        }
+    } else {
+        LOG("No Commodity Models section found");
+    }
+
+    buildComConfigs(comDataMap);
+
+    for (Size i = 0; i < comConfigs_.size(); i++)
+        LOG("CrossAssetModelData: COM config name " << i << " = " << comConfigs_[i]->name());
+    
     // Configure correlation structure
     LOG("CrossAssetModelData: adding correlations.");
     correlations_ = boost::make_shared<InstantaneousCorrelations>();
@@ -692,6 +734,33 @@ void CrossAssetModelData::buildCrConfigs(std::map<std::string, boost::shared_ptr
     }
 }
 
+void CrossAssetModelData::buildComConfigs(std::map<std::string, boost::shared_ptr<CommoditySchwartzData>>& comDataMap) {
+    // Append Commodity configurations into the comConfigs vector in the order of the commodity
+    // names in the commodities vector.
+    // If there is a COM configuration for any of the names missing,
+    // then we will look up the configuration with key "default" and use this instead.
+    // If this is not provided either we will throw an exception.
+    for (Size i = 0; i < commodities_.size(); i++) {
+        string name = commodities_[i];
+        if (comDataMap.find(name) != comDataMap.end())
+            comConfigs_.push_back(comDataMap[name]);
+        else { // copy from default
+            LOG("Commodity configuration missing for name " << name << ", using default");
+            if (comDataMap.find("default") == comDataMap.end()) {
+                ALOG("Both default COM and " << name << " COM configuration missing");
+                QL_FAIL("Both default COM and " << name << " COM configuration missing");
+            }
+            boost::shared_ptr<CommoditySchwartzData> def = comDataMap["default"];
+            boost::shared_ptr<CommoditySchwartzData> comData = boost::make_shared<CommoditySchwartzData>(
+                name, def->currency(), def->calibrationType(), def->calibrateSigma(), def->sigmaValue(),
+                def->calibrateKappa(), def->kappaValue(), def->optionExpiries(), def->optionStrikes());
+
+            comConfigs_.push_back(comData);
+        }
+        LOG("CrossAssetModelData: COM config added for name " << name);
+    }
+}
+    
 XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
 
     XMLNode* crossAssetModelNode = doc.allocNode("CrossAssetModel");
@@ -701,6 +770,7 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, crossAssetModelNode, "Equities", "Equity", equities_);
     XMLUtils::addChildren(doc, crossAssetModelNode, "InflationIndices", "InflationIndex", infindices_);
     XMLUtils::addChildren(doc, crossAssetModelNode, "CreditNames", "CreditName", creditNames_);
+    XMLUtils::addChildren(doc, crossAssetModelNode, "Commodities", "Commodity", commodities_);
     XMLUtils::addChild(doc, crossAssetModelNode, "BootstrapTolerance", bootstrapTolerance_);
     XMLUtils::addChild(doc, crossAssetModelNode, "Measure", measure_);
     XMLUtils::addChild(doc, crossAssetModelNode, "Discretization",
@@ -738,6 +808,12 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
     for (Size crCirConfigs_Iterator = 0; crCirConfigs_Iterator < crCirConfigs_.size(); crCirConfigs_Iterator++) {
         XMLNode* crossAssetCrCirNode = crCirConfigs_[crCirConfigs_Iterator]->toXML(doc);
         XMLUtils::appendNode(crModelsNode, crossAssetCrCirNode);
+    }
+
+    XMLNode* comModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "CommodityModels");
+    for (Size comConfigs_Iterator = 0; comConfigs_Iterator < comConfigs_.size(); comConfigs_Iterator++) {
+        XMLNode* crossAssetComNode = comConfigs_[comConfigs_Iterator]->toXML(doc);
+        XMLUtils::appendNode(comModelsNode, crossAssetComNode);
     }
 
     XMLNode* instantaneousCorrelationsNode = correlations_->toXML(doc);

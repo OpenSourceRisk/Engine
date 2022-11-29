@@ -30,6 +30,7 @@
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infjyparameterization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
+#include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/lgmcalibrationinfo.hpp>
 
 #include <ql/models/calibrationhelper.hpp>
@@ -80,6 +81,10 @@ std::string getCalibrationDetails(
     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
     const boost::shared_ptr<InfDkParametrization>& parametrization = boost::shared_ptr<InfDkParametrization>(),
     bool indexIsInterpolated = true);
+
+std::string getCalibrationDetails(
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+    const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization = boost::shared_ptr<CommoditySchwartzParametrization>());
 
 std::string getCalibrationDetails(const std::vector<boost::shared_ptr<CalibrationHelper>>& realRateBasket,
                                   const std::vector<boost::shared_ptr<CalibrationHelper>>& indexBasket,

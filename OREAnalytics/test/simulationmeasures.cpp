@@ -156,6 +156,8 @@ struct TestData {
         std::vector<boost::shared_ptr<CrLgmData>> crLgmConfigs;
         std::vector<boost::shared_ptr<CrCirData>> crCirConfigs;
 
+        std::vector<boost::shared_ptr<CommoditySchwartzData>> comConfigs;
+
         CorrelationMatrixBuilder cmb;
         cmb.addCorrelation("IR:EUR", "IR:USD", Handle<Quote>(boost::make_shared<SimpleQuote>(0.6)));
         cmb.addCorrelation("IR:EUR", "IR:GBP", Handle<Quote>(boost::make_shared<SimpleQuote>(0.3)));
@@ -171,10 +173,12 @@ struct TestData {
         Real tolerance = 1e-4;
         boost::shared_ptr<CrossAssetModelData> config1(
             boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs,
-                                                    crCirConfigs, cmb.correlations(), tolerance, measure, CrossAssetModel::Discretization::Exact));
+                                                    crCirConfigs, comConfigs, cmb.correlations(), tolerance, measure,
+                                                    CrossAssetModel::Discretization::Exact));
         boost::shared_ptr<CrossAssetModelData> config2(
             boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs,
-                                                    crCirConfigs, cmb.correlations(), tolerance, measure, CrossAssetModel::Discretization::Euler));
+                                                    crCirConfigs, comConfigs, cmb.correlations(), tolerance, measure,
+                                                    CrossAssetModel::Discretization::Euler));
 
         CrossAssetModelBuilder modelBuilder1(market, config1);
         ccLgmExact = *modelBuilder1.model();

@@ -152,6 +152,7 @@ struct TestData {
 	// Credit configs
 	std::vector<boost::shared_ptr<CrLgmData>> crLgmConfigs;
         std::vector<boost::shared_ptr<CrCirData>> crCirConfigs;
+        std::vector<boost::shared_ptr<CommoditySchwartzData>> comConfigs;        
 
         vector<boost::shared_ptr<CalibrationInstrument>> instruments = { 
             boost::make_shared<CpiCapFloor>(CapFloor::Cap, 5 * Years, boost::make_shared<AbsoluteStrike>(0.0))
@@ -188,7 +189,7 @@ struct TestData {
         cmb.addCorrelation("INF:EUHICPXT", "IR:EUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.1)));
 
         boost::shared_ptr<CrossAssetModelData> config(boost::make_shared<CrossAssetModelData>(
-	      irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs, cmb.correlations()));
+              irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs, comConfigs, cmb.correlations()));
 
         CrossAssetModelBuilder modelBuilder(market, config);
         ccLgm = *modelBuilder.model();

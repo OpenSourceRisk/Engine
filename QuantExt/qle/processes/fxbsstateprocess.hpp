@@ -86,4 +86,3 @@ Matrix IrHwStateProcess::diffusion(Time t, const Array& s) const {
 
 } // namespace QuantExt
 
-#endif

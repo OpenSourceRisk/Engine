@@ -177,7 +177,7 @@ struct BondBuilder {
         boost::shared_ptr<QuantLib::Bond> bond;
         boost::shared_ptr<ore::data::ModelBuilder> modelBuilder; // might be nullptr
 
-        double inflationFactor = 1.0;
+        
         bool isInflationLinked = false;
         bool hasCreditRisk = true;
         std::string currency;
@@ -186,6 +186,8 @@ struct BondBuilder {
         std::string creditGroup;
         QuantExt::BondIndex::PriceQuoteMethod priceQuoteMethod = QuantExt::BondIndex::PriceQuoteMethod::PercentageOfPar;
         double priceQuoteBaseValue = 1.0;
+
+        double inflationFactor() const;
     };
     virtual ~BondBuilder() {}
     virtual Result build(const boost::shared_ptr<EngineFactory>& engineFactory,

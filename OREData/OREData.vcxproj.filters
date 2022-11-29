@@ -852,6 +852,12 @@
     <ClInclude Include="ored\portfolio\builders\fxdigitaloption.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\model\commodityschwartzmodelbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\commodityschwartzmodeldata.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -1477,6 +1483,12 @@
       <Filter>model</Filter>
     </ClCompile>
     <ClCompile Include="ored\model\hwbuilder.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\commodityschwartzmodelbuilder.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\commodityschwartzmodeldata.cpp">
       <Filter>model</Filter>
     </ClCompile>
   </ItemGroup>

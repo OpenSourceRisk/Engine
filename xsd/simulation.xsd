@@ -108,6 +108,13 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element name="Commodities" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="Commodity" maxOccurs="unbounded" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element type="xs:float" name="BootstrapTolerance" maxOccurs="1" />
       <xs:element type="measureType" name="Measure" minOccurs="0" maxOccurs="1" />
       <xs:element type="discretizationType" name="Discretization" minOccurs="0"/>
@@ -157,6 +164,13 @@
               <xs:element type="crlgm" name="LGM"/>
               <xs:element type="cir" name="CIR"/>
             </xs:choice>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="CommodityModels" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="commoditySchwartz" name="CommoditySchwartz" maxOccurs="unbounded" minOccurs="0"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -592,6 +606,39 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
+    </xs:all>
+    <xs:attribute type="xs:string" name="name" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="commoditySchwartz">
+    <xs:all>
+      <xs:element type="currencyCode" name="Currency" />
+      <xs:element type="xs:string" name="CalibrationType"/>
+      <xs:element name="Sigma">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="bool" name="Calibrate"/>
+            <xs:element type="xs:string" name="InitialValue"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Kappa">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="bool" name="Calibrate"/>
+            <xs:element type="xs:string" name="InitialValue"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="CalibrationOptions" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="Expiries"/>
+            <xs:element type="xs:string" name="Strikes"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="xs:boolean" name="DriftFreeState" minOccurs="0"/>
     </xs:all>
     <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>

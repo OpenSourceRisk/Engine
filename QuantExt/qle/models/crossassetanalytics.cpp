@@ -29,12 +29,12 @@ namespace CrossAssetAnalytics {
 Real ir_expectation_1(const CrossAssetModel* x, const Size i, const Time t0, const Real dt) {
     Real res = 0.0;
     if (i == 0) {
-        if (x->measure() == Measure::BA)
+        if (x->measure() == IrModel::Measure::BA)
             res -= integral(x, P(Hz(i), az(i), az(i)), t0, t0 + dt);
     } else {
         res -= integral(x, P(Hz(i), az(i), az(i)), t0, t0 + dt);
         res -= integral(x, P(az(i), sx(i - 1), rzx(i, i - 1)), t0, t0 + dt);
-        if (x->measure() != Measure::BA)
+        if (x->measure() != IrModel::Measure::BA)
             res += integral(x, P(Hz(0), az(0), az(i), rzz(0, i)), t0, t0 + dt);
     }
     return res;
@@ -44,7 +44,8 @@ Real ir_expectation_2(const CrossAssetModel*, const Size, const Real zi_0) { ret
 
 pair<Real, Real> inf_jy_expectation_1(const CrossAssetModel* x, Size i, Time t0, Real dt) {
 
-    QL_REQUIRE(x->modelType(INF, i) == JY, "inf_jy_expectation_1: should only be used for JY CAM inflation component.");
+    QL_REQUIRE(x->modelType(CrossAssetModel::AssetType::INF, i) == CrossAssetModel::ModelType::JY,
+               "inf_jy_expectation_1: should only be used for JY CAM inflation component.");
 
     auto res = make_pair(0.0, 0.0);
 
@@ -104,7 +105,8 @@ pair<Real, Real> inf_jy_expectation_1(const CrossAssetModel* x, Size i, Time t0,
 pair<Real, Real> inf_jy_expectation_2(const CrossAssetModel* x, Size i, Time t0, const pair<Real, Real>& state_0,
                                       Real zi_i_0, Real dt) {
 
-    QL_REQUIRE(x->modelType(INF, i) == JY, "inf_jy_expectation_2: should only be used for JY CAM inflation component.");
+    QL_REQUIRE(x->modelType(CrossAssetModel::AssetType::INF, i) == CrossAssetModel::ModelType::JY,
+               "inf_jy_expectation_2: should only be used for JY CAM inflation component.");
 
     // i_i - index of i-th inflation component's currency.
     Size i_i = x->ccyIndex(x->infjy(i)->currency());
@@ -119,7 +121,7 @@ pair<Real, Real> inf_jy_expectation_2(const CrossAssetModel* x, Size i, Time t0,
 }
 
 Real fx_expectation_1(const CrossAssetModel* x, const Size i, const Time t0, const Real dt) {
-    bool bam = (x->measure() == Measure::BA);
+    bool bam = (x->measure() == IrModel::Measure::BA);
     Real H0_a = Hz(0).eval(x, t0);
     Real Hi_a = Hz(i + 1).eval(x, t0);
     Real H0_b = Hz(0).eval(x, t0 + dt);
@@ -261,7 +263,7 @@ Real infz_infy_covariance(const CrossAssetModel* x, const Size i, const Size j, 
     Real res = 0.0;
 
     // Assumption that INF is either JY or DK. j-th inflation model's y component depends on model type.
-    if (x->modelType(INF, j) == DK) {
+    if (x->modelType(CrossAssetModel::AssetType::INF, j) == CrossAssetModel::ModelType::DK) {
         res = integral(x, P(ryy(i, j), ay(i), Hy(j), ay(j)), t0, t0 + dt);
     } else {
         // i_j - index of j-th inflation component's currency.
@@ -284,11 +286,11 @@ Real infy_infy_covariance(const CrossAssetModel* x, const Size i, const Size j, 
     Real res = 0.0;
 
     // Assumption that INF is either JY or DK. Four possibilities.
-    auto mti = x->modelType(INF, i);
-    auto mtj = x->modelType(INF, j);
-    if (mti == DK && mtj == DK) {
+    auto mti = x->modelType(CrossAssetModel::AssetType::INF, i);
+    auto mtj = x->modelType(CrossAssetModel::AssetType::INF, j);
+    if (mti == CrossAssetModel::ModelType::DK && mtj == CrossAssetModel::ModelType::DK) {
         res = integral(x, P(ryy(i, j), Hy(i), ay(i), Hy(j), ay(j)), t0, t0 + dt);
-    } else if (mti == JY && mtj == DK) {
+    } else if (mti == CrossAssetModel::ModelType::JY && mtj == CrossAssetModel::ModelType::DK) {
 
         // i_i - index of i-th inflation component's currency.
         Size i_i = x->ccyIndex(x->infjy(i)->currency());
@@ -302,7 +304,7 @@ Real infy_infy_covariance(const CrossAssetModel* x, const Size i, const Size j, 
         res -= integral(x, P(ryy(i, j, 0, 0), Hy(j), ay(j), ay(i), LC(Hi, -1.0, Hy(i))), t0, t0 + dt);
         res += integral(x, P(ryy(i, j, 1, 0), Hy(j), ay(j), sy(i)), t0, t0 + dt);
 
-    } else if (mti == DK && mtj == JY) {
+    } else if (mti == CrossAssetModel::ModelType::DK && mtj == CrossAssetModel::ModelType::JY) {
 
         // i_j - index of j-th inflation component's currency.
         Size i_j = x->ccyIndex(x->infjy(j)->currency());
@@ -351,7 +353,7 @@ Real ir_infz_covariance(const CrossAssetModel* x, const Size i, const Size j, co
 
 Real ir_infy_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
     // Assumption that INF is either JY or DK.
-    if (x->modelType(INF, j) == DK) {
+    if (x->modelType(CrossAssetModel::AssetType::INF, j) == CrossAssetModel::ModelType::DK) {
         return integral(x, P(rzy(i, j), az(i), Hy(j), ay(j)), t0, t0 + dt);
     } else {
         // i_j - index of j-th inflation component's currency.
@@ -386,7 +388,7 @@ Real fx_infy_covariance(const CrossAssetModel* x, const Size i, const Size j, co
     Real H0 = Hz(0).eval(x, t0 + dt);
     Real Hi = Hz(i + 1).eval(x, t0 + dt);
 
-    if (x->modelType(INF, j) == DK) {
+    if (x->modelType(CrossAssetModel::AssetType::INF, j) == CrossAssetModel::ModelType::DK) {
         res = -integral(x, P(rzy(0, j), Hz(0), az(0), Hy(j), ay(j)), t0, t0 + dt) +
               H0 * integral(x, P(rzy(0, j), az(0), Hy(j), ay(j)), t0, t0 + dt) +
               integral(x, P(rzy(i + 1, j), Hz(i + 1), az(i + 1), Hy(j), ay(j)), t0, t0 + dt) -
@@ -477,7 +479,7 @@ Real infz_cry_covariance(const CrossAssetModel* x, const Size i, const Size j, c
 Real infy_crz_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
 
     Real res = 0.0;
-    if (x->modelType(INF, i) == DK) {
+    if (x->modelType(CrossAssetModel::AssetType::INF, i) == CrossAssetModel::ModelType::DK) {
         res = integral(x, P(ryl(i, j), Hy(i), ay(i), al(j)), t0, t0 + dt);
     } else {
 
@@ -499,7 +501,7 @@ Real infy_crz_covariance(const CrossAssetModel* x, const Size i, const Size j, c
 Real infy_cry_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
 
     Real res = 0.0;
-    if (x->modelType(INF, i) == DK) {
+    if (x->modelType(CrossAssetModel::AssetType::INF, i) == CrossAssetModel::ModelType::DK) {
         res = integral(x, P(ryl(i, j), Hy(i), ay(i), Hl(j), al(j)), t0, t0 + dt);
     } else {
 
@@ -570,7 +572,7 @@ Real infy_eq_covariance(const CrossAssetModel* x, const Size i, const Size j, co
     Real Hk = Hz(k).eval(x, t0 + dt);
 
     Real res = 0.0;
-    if (x->modelType(INF, i) == DK) {
+    if (x->modelType(CrossAssetModel::AssetType::INF, i) == CrossAssetModel::ModelType::DK) {
         res = Hk * integral(x, P(rzy(k, i), az(k), Hy(i), ay(i)), t0, t0 + dt) -
               integral(x, P(rzy(k, i), Hz(k), az(k), Hy(i), ay(i)), t0, t0 + dt) +
               integral(x, P(rys(i, j), Hy(i), ay(i), ss(j)), t0, t0 + dt);
@@ -648,5 +650,75 @@ Real aux_fx_covariance(const CrossAssetModel* x, const Size j, const Time t0, co
     return res;
 }
 
+Real com_com_covariance(const CrossAssetModel* x, const Size k, const Size l, const Time t0, const Time dt) {
+    Real res = integral(x, P(rcc(k, l), coms(k), coms(l)), t0, t0 + dt);
+    // FIXME: cover the Ornsrein-Uhlenbeck case in the integral framework
+    auto cmk = boost::dynamic_pointer_cast<CommoditySchwartzModel>(x->comModel(k));
+    auto cml = boost::dynamic_pointer_cast<CommoditySchwartzModel>(x->comModel(l));
+    QL_REQUIRE(cmk && cml, "CommoditySchwartzModel expected in com-com covariance calculation");
+    QL_REQUIRE(cmk->parametrization()->driftFreeState() == cml->parametrization()->driftFreeState(), "commodity state types do not match");
+    if (!cmk->parametrization()->driftFreeState()) {
+        Real kk = cmk->parametrization()->kappaParameter();
+        Real kl = cml->parametrization()->kappaParameter();
+        Real sk = cmk->parametrization()->sigmaParameter();
+        Real sl = cml->parametrization()->sigmaParameter();
+        Real rho = x->correlation(CrossAssetModel::AssetType::COM, k, CrossAssetModel::AssetType::COM, l, 0, 0);
+        if (fabs((kk+kl) * dt) < QL_EPSILON)
+            res = rho * sk * sl * dt;
+        else
+            res = rho * sk * sl / (kk + kl) * (1.0 - std::exp(-(kk+kl) * dt));
+    }
+    return res;
+}
+
+Real ir_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
+    Real corr = model->correlation(CrossAssetModel::AssetType::IR, i, CrossAssetModel::AssetType::COM, j, 0, 0);
+    //FIXME
+    QL_REQUIRE(close_enough(corr, 0.0), "non-zero IR-COM correlation not implemented yet"); 
+    return 0.0;
+}
+
+Real fx_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
+    Real corr = model->correlation(CrossAssetModel::AssetType::FX, i, CrossAssetModel::AssetType::COM, j, 0, 0);
+    //FIXME
+    QL_REQUIRE(close_enough(corr, 0.0), "non-zero FX-COM correlation not implemented yet"); 
+    return 0.0;
+}
+
+Real infz_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
+    Real corr = model->correlation(CrossAssetModel::AssetType::INF, i, CrossAssetModel::AssetType::COM, j, 0, 0);
+    //FIXME
+    QL_REQUIRE(close_enough(corr, 0.0), "non-zero INF-COM correlation not implemented yet"); 
+    return 0.0;
+}
+
+Real infy_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
+    Real corr = model->correlation(CrossAssetModel::AssetType::INF, i, CrossAssetModel::AssetType::COM, j, 0, 0);
+    //FIXME
+    QL_REQUIRE(close_enough(corr, 0.0), "non-zero INF-COM correlation not implemented yet"); 
+    return 0.0;
+}
+
+Real cry_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
+    Real corr = model->correlation(CrossAssetModel::AssetType::CR, i, CrossAssetModel::AssetType::COM, j, 0, 0);
+    //FIXME
+    QL_REQUIRE(close_enough(corr, 0.0), "non-zero CR-COM correlation not implemented yet"); 
+    return 0.0;
+}
+
+Real crz_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
+    Real corr = model->correlation(CrossAssetModel::AssetType::CR, i, CrossAssetModel::AssetType::COM, j, 0, 0);
+    //FIXME
+    QL_REQUIRE(close_enough(corr, 0.0), "non-zero CR-COM correlation not implemented yet"); 
+    return 0.0;
+}
+    
+Real eq_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
+    Real corr = model->correlation(CrossAssetModel::AssetType::EQ, i, CrossAssetModel::AssetType::COM, j, 0, 0);
+    //FIXME
+    QL_REQUIRE(close_enough(corr, 0.0), "non-zero EQ-COM correlation not implemented yet"); 
+    return 0.0;
+}
+    
 } // namespace CrossAssetAnalytics
 } // namespace QuantExt

@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/model/commodityschwartzmodelbuilder.hpp>
 #include <ored/model/crcirbuilder.hpp>
 #include <ored/model/crlgmbuilder.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
@@ -84,7 +85,8 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
-      configurationCrCalibration_(configurationCrCalibration), configurationFinalModel_(configurationFinalModel),
+      configurationCrCalibration_(configurationCrCalibration), configurationComCalibration_(Market::defaultConfiguration),
+      configurationFinalModel_(configurationFinalModel),
       dayCounter_(dayCounter), dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
       referenceCalibrationGrid_(referenceCalibrationGrid), salvaging_(salvaging),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
@@ -119,6 +121,10 @@ const std::vector<Real>& CrossAssetModelBuilder::eqOptionCalibrationErrors() {
 const std::vector<Real>& CrossAssetModelBuilder::inflationCalibrationErrors() {
     calculate();
     return inflationCalibrationErrors_;
+}
+const std::vector<Real>& CrossAssetModelBuilder::comOptionCalibrationErrors() {
+    calculate();
+    return comOptionCalibrationErrors_;
 }
 
 void CrossAssetModelBuilder::unregisterWithSubBuilders() {
@@ -162,7 +168,8 @@ void CrossAssetModelBuilder::buildModel() const {
     DLOG("configurations: LgmCalibration "
          << configurationLgmCalibration_ << ", FxCalibration " << configurationFxCalibration_ << ", EqCalibration "
          << configurationEqCalibration_ << ", InfCalibration " << configurationInfCalibration_ << ", CrCalibration"
-         << configurationCrCalibration_ << ", FinalModel " << configurationFinalModel_);
+         << configurationCrCalibration_ << ", ComCalibration"  << configurationComCalibration_
+         << ", FinalModel " << configurationFinalModel_);
     if (dontCalibrate_) {
         DLOG("Calibration of the model is disabled.");
     }
@@ -183,6 +190,9 @@ void CrossAssetModelBuilder::buildModel() const {
     eqOptionExpiries_.resize(config_->eqConfigs().size());
     eqOptionCalibrationErrors_.resize(config_->eqConfigs().size());
     inflationCalibrationErrors_.resize(config_->infConfigs().size());
+    comOptionBaskets_.resize(config_->comConfigs().size());
+    comOptionExpiries_.resize(config_->comConfigs().size());
+    comOptionCalibrationErrors_.resize(config_->comConfigs().size());
 
     subBuilders_.clear();
 
@@ -209,9 +219,10 @@ void CrossAssetModelBuilder::buildModel() const {
      */
     std::vector<boost::shared_ptr<QuantExt::Parametrization>> irParametrizations;
     std::vector<RelinkableHandle<YieldTermStructure>> irDiscountCurves;
-    std::vector<std::string> currencies, regions, crNames, eqNames, infIndices;
+    std::vector<std::string> currencies, regions, crNames, eqNames, infIndices, comNames;
     std::vector<boost::shared_ptr<LgmBuilder>> lgmBuilder;
     std::vector<boost::shared_ptr<HwBuilder>> hwBuilder;
+    std::vector<boost::shared_ptr<CommoditySchwartzModelBuilder>> csBuilder;
 
     for (Size i = 0; i < config_->irConfigs().size(); i++) {
         auto irConfig = config_->irConfigs()[i];
@@ -239,8 +250,7 @@ void CrossAssetModelBuilder::buildModel() const {
             processInfo[CrossAssetModel::AssetType::IR].emplace_back(ir->ccy(), 1);
         }
         else if(auto ir = boost::dynamic_pointer_cast<HwModelData>(irConfig)) {
-            // TODO read from config
-            bool evaluateBankAccount = true;
+            bool evaluateBankAccount = true; // updated in cross asset model for non-base ccys
             bool setCalibrationInfo = false;
             HwModel::Discretization discr = HwModel::Discretization::Euler;
             auto builder = boost::make_shared<HwBuilder>(
@@ -374,6 +384,28 @@ void CrossAssetModelBuilder::buildModel() const {
         processInfo[CrossAssetModel::AssetType::CR].emplace_back(crName, 1);
     }
 
+    /*******************************************************
+     * Build the COM parametrizations and calibration baskets
+     */
+    std::vector<boost::shared_ptr<QuantExt::CommoditySchwartzParametrization>> comParametrizations;
+    for (Size i = 0; i < config_->comConfigs().size(); i++) {
+        DLOG("COM Parametrization " << i);
+        boost::shared_ptr<CommoditySchwartzData> com = config_->comConfigs()[i];
+        string comName = com->name();
+        QuantLib::Currency comCcy = ore::data::parseCurrency(com->currency());
+        QL_REQUIRE(std::find(currencies.begin(), currencies.end(), comCcy.code()) != currencies.end(),
+                   "Currency (" << comCcy << ") for commodity " << comName << " not covered by CrossAssetModelData");
+        boost::shared_ptr<CommoditySchwartzModelBuilder> builder = boost::make_shared<CommoditySchwartzModelBuilder>(
+            market_, com, domesticCcy, configurationComCalibration_, referenceCalibrationGrid_);
+        csBuilder.push_back(builder);
+        boost::shared_ptr<QuantExt::CommoditySchwartzParametrization> parametrization = builder->parametrization();
+        comOptionBaskets_[i] = builder->optionBasket();
+        comParametrizations.push_back(parametrization);
+        comNames.push_back(comName);
+        subBuilders_[CrossAssetModel::AssetType::COM][i] = builder;
+        processInfo[CrossAssetModel::AssetType::COM].emplace_back(comName, 1);
+    }
+
     std::vector<boost::shared_ptr<QuantExt::Parametrization>> parametrizations;
     for (Size i = 0; i < irParametrizations.size(); i++)
         parametrizations.push_back(irParametrizations[i]);
@@ -386,6 +418,8 @@ void CrossAssetModelBuilder::buildModel() const {
         parametrizations.push_back(crLgmParametrizations[i]);
     for (Size i = 0; i < crCirParametrizations.size(); i++)
         parametrizations.push_back(crCirParametrizations[i]);
+    for (Size i = 0; i < comParametrizations.size(); i++)
+        parametrizations.push_back(comParametrizations[i]);
 
     QL_REQUIRE(fxParametrizations.size() == irParametrizations.size() - 1, "mismatch in IR/FX parametrization sizes");
 
@@ -554,6 +588,15 @@ void CrossAssetModelBuilder::buildModel() const {
         }
     }
 
+    /*************************
+     * Calibrate COM components
+     */
+
+    for (Size i = 0; i < csBuilder.size(); i++) {
+        DLOG("COM Calibration " << i);
+        comOptionCalibrationErrors_[i] = csBuilder[i]->error();
+    }
+    
     /*************************
      * Relink LGM discount curves to curves used for INF calibration
      */
