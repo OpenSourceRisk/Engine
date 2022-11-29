@@ -148,8 +148,8 @@ Leg YYLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFa
     } else {
         auto index = *engineFactory->market()->zeroInflationIndex(inflationIndexName, configuration);
         result = makeYoYLeg(data, index, engineFactory, openEndDateReplacement);
-        applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
-        addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, ));
+        applyIndexing(result, data, engineFactory, requiredFixings, openEndDateReplacement);
+        addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings));
     }
     return result;
 }
@@ -230,7 +230,7 @@ Leg DigitalCMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::share
                                 boost::make_shared<QuantLib::SwapSpreadIndex>(
                                     "CMSSpread_" + index1->familyName() + "_" + index2->familyName(), index1, index2),
                                 engineFactory, openEndDateReplacement);
-    applyIndexing(result, data, engineFactory, qlToOREIndexNames, openEndDateReplacement);
+    applyIndexing(result, data, engineFactory, requiredFixings, openEndDateReplacement);
     addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings));
     return result;
 }
@@ -286,11 +286,7 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
     }
 
     Leg result = makeEquityLeg(data, eqCurve, fxIndex, openEndDateReplacement);
-    addToRequiredFixings(
-        result, boost::make_shared<FixingDateGetter>(
-                    requiredFixings,
-                    std::map<string, string>{{eqCurve->name(), "EQ-" + eqName},
-                                             {fxIndex != nullptr ? fxIndex->name() : "na", eqData->fxIndex()}}));
+    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings));
     return result;
 }
 
