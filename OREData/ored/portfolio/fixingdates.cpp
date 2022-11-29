@@ -18,6 +18,7 @@
 
 #include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/portfolio/fixingdates.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
