@@ -56,7 +56,6 @@ public:
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
     QuantLib::Real periodQuantity() const { return periodQuantity_; }
     
-    
     //@}
     //! \name CommodityCashFlow interface
     //@{
