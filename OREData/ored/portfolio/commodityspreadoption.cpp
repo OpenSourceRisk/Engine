@@ -39,10 +39,14 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
     std::vector<bool> isAveraged{false, false};
     // Build the commodity legs
     for (int i = CommoditySpreadOptionPosition::Begin; i!=CommoditySpreadOptionPosition::End; i++) { // The order is important, the first leg is always the long position, the second is the short
-        if(i == (int)CommoditySpreadOptionPosition::Long)
+        if(i == (int)CommoditySpreadOptionPosition::Long) {
             QL_REQUIRE(legData_[i].isPayer(), "CommoditySpreadOption: first leg is not relevant for long position.");
-        if(i == (int)CommoditySpreadOptionPosition::Short)
+            legPayers_.push_back(true);
+        }
+        if(i == (int)CommoditySpreadOptionPosition::Short) {
             QL_REQUIRE(!legData_[i].isPayer(), "CommoditySpreadOption: second leg is not relevant for short position.");
+            legPayers_.push_back(false);
+        }
 
         // build legs
         auto conLegData = legData_[i].concreteLegData();
@@ -76,6 +80,7 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
                            engineFactory->configuration(MarketContext::pricing));
         }
         legs_.push_back(leg);
+        legCurrencies_.push_back(npvCurrency_);
     }
 
 

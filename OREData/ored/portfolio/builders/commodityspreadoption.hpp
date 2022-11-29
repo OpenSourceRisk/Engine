@@ -46,7 +46,7 @@ protected:
         Handle<QuantLib::BlackVolTermStructure> volShort =
             market_->commodityVolatility(shortIndex->underlyingName(), configuration(MarketContext::pricing));
         Real beta = 0;
-        boost::shared_ptr<Handle<CorrelationTermStructure>> rho = {nullptr};
+        Handle<CorrelationTermStructure> rho{nullptr};
         auto param = engineParameters_.find("beta");
         if (param != engineParameters_.end())
             beta = parseReal(param->second);
@@ -55,10 +55,10 @@ protected:
                                                         << ", using default value " << beta);
         }
         if(longIndex->underlyingName() == shortIndex->underlyingName()){ // calendar spread option
-            auto rho1 = Handle<CorrelationTermStructure>(FlatCorrelation(0,QuantLib::NullCalendar(), 1.0, QuantLib::Actual365Fixed()));
+            rho = Handle<CorrelationTermStructure>(boost::make_shared<FlatCorrelation>(0,QuantLib::NullCalendar(), 1.0, QuantLib::Actual365Fixed()));
         }else {
-            rho = boost::make_shared<Handle<CorrelationTermStructure>>(market_->correlationCurve("COMM-"+longIndex->underlyingName(), "COMM-"+shortIndex->underlyingName(),
-                                                  configuration(MarketContext::pricing)));
+            rho = market_->correlationCurve("COMM-"+longIndex->underlyingName(), "COMM-"+shortIndex->underlyingName(),
+                                                  configuration(MarketContext::pricing));
 
         }
         return boost::make_shared<QuantExt::CommoditySpreadOptionAnalyticalEngine>(yts, volLong, volShort, rho, beta);
