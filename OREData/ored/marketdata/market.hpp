@@ -167,6 +167,8 @@ public:
     //@{
     virtual Handle<OptionletVolatilityStructure>
     capFloorVol(const string& key, const string& configuration = Market::defaultConfiguration) const = 0;
+    // get - ibor index name (might be empty = unspecified) and
+    //     - rate computation period for OIS indices (might be 0*Days = unspecified)
     virtual std::pair<std::string, QuantLib::Period>
     capFloorVolIndexBase(const string& key, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}

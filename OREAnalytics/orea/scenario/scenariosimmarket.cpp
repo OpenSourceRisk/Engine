@@ -862,7 +862,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<OptionletVolatilityStructure> wrapper = initMarket->capFloorVol(name, configuration);
                         auto [iborIndexName, rateComputationPeriod] =
                             initMarket->capFloorVolIndexBase(name, configuration);
-                        boost::shared_ptr<IborIndex> iborIndex = parseIborIndex(iborIndexName);
+                        boost::shared_ptr<IborIndex> iborIndex =
+                            iborIndexName.empty() ? nullptr : parseIborIndex(iborIndexName);
 
                         LOG("Initial market cap/floor volatility type = " << wrapper->volatilityType());
 
@@ -884,7 +885,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (curveConfigs.hasCapFloorVolCurveConfig(name)) {
                                 config = curveConfigs.capFloorVolCurveConfig(name);
                             } else {
-                                if (curveConfigs.hasCapFloorVolCurveConfig(iborIndex->currency().code())) {
+                                if (iborIndex && curveConfigs.hasCapFloorVolCurveConfig(iborIndex->currency().code())) {
                                     config = curveConfigs.capFloorVolCurveConfig(iborIndex->currency().code());
                                 }
                             }
@@ -896,8 +897,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
 
 			    // derive info from the ibor index
-                            iborCalendar = iborIndex->fixingCalendar();
-                            isOis = boost::dynamic_pointer_cast<OvernightIndex>(iborIndex) != nullptr;
+                            if (iborIndex) {
+                                iborCalendar = iborIndex->fixingCalendar();
+                                isOis = boost::dynamic_pointer_cast<OvernightIndex>(iborIndex) != nullptr;
+                            }
 
                             vector<Period> optionTenors = parameters->capFloorVolExpiries(name);
                             vector<Date> optionDates(optionTenors.size());
