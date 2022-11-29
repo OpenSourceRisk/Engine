@@ -398,12 +398,10 @@ Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_
         commodityFixedLeg.push_back(boost::make_shared<SimpleCashFlow>(cp->amount(), pmtDate));
     }
 
-    std::map<std::string, std::string> qlToOREIndexNames;
-    applyIndexing(commodityFixedLeg, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
-    addToRequiredFixings(commodityFixedLeg, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
+    applyIndexing(commodityFixedLeg, data, engineFactory, requiredFixings, openEndDateReplacement);
+    addToRequiredFixings(commodityFixedLeg, boost::make_shared<FixingDateGetter>(requiredFixings));
 
-    addToRequiredFixings(commodityFixedLeg, boost::make_shared<ore::data::FixingDateGetter>(
-                                                requiredFixings, qlToOREIndexNames));
+    addToRequiredFixings(commodityFixedLeg, boost::make_shared<ore::data::FixingDateGetter>(requiredFixings));
 
     return commodityFixedLeg;
 }
@@ -669,28 +667,28 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
         }
     }
 
-    std::map<std::string, std::string> qlToOREIndexNames;
-    if (fxIndex){ // fx daily indexing needed
-        qlToOREIndexNames[index->name()] = commName;
-        qlToOREIndexNames[fxIndex->name()] = floatingLegData->fxIndex();
+    if (fxIndex) {
+        // fx daily indexing needed
         for (auto cf : leg) {
             auto cacf = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf);
             QL_REQUIRE(cacf, "Commodity Indexed averaged cashflow is required to compute daily converted average.");
             for (auto kv : cacf->indices()) {
-                if(!fxIndex->fixingCalendar().isBusinessDay(kv.first)){ // If fx index is not available for the commodity pricing day,
-                                                           // this ensures to require the previous valid one which will be used in pricing from fxIndex()->fixing(...)
+                if (!fxIndex->fixingCalendar().isBusinessDay(
+                        kv.first)) {
+                    /* If fx index is not available for the commodity pricing day, this ensures to require the previous
+                     * valid one which will be used in pricing from fxIndex()->fixing(...) */
                     Date adjustedFixingDate = fxIndex->fixingCalendar().adjust(kv.first, Preceding);
                     requiredFixings.addFixingDate(adjustedFixingDate, floatingLegData->fxIndex());
-
                 } else
                     requiredFixings.addFixingDate(kv.first, floatingLegData->fxIndex());
             }
         }
-    } else // standard indexing approach
-        applyIndexing(leg, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
+    } else {
+        // standard indexing approach
+        applyIndexing(leg, data, engineFactory, requiredFixings, openEndDateReplacement);
+    }
 
-    addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
-
+    addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(requiredFixings));
     return leg;
 }
 } // namespace data
