@@ -39,37 +39,26 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 namespace {
-//
-//void printResults(Real rho, Real strike, Real npvMC, Real npvKrik, const CommoditySpreadOption& spreadOption) {
-//    std::cout << "Test Average Seasoned Spot Price Spread Option " << std::endl;
-//    std::cout << "Rho = " << rho << " / Strike " << strike << std::endl;
-//    std::cout << "MC Price " << npvMC << std::endl;
-//    std::cout << "Kirk approx Price " << npvKrik << std::endl;
-//    std::cout << "Forward1 " << spreadOption.result<double>("F1") << std::endl;
-//    std::cout << "Forward2 " << spreadOption.result<double>("F2") << std::endl;
-//    std::cout << "Accruals1 " << spreadOption.result<double>("accruals1") << std::endl;
-//    std::cout << "Accruals1 " << spreadOption.result<double>("accruals2") << std::endl;
-//}
 
 class MockUpExpiryCalculator : public FutureExpiryCalculator {
 public:
     // Inherited via FutureExpiryCalculator
-    QuantLib::Date nextExpiry(bool includeExpiry, const QuantLib::Date& referenceDate, QuantLib::Natural offset,
+    virtual QuantLib::Date nextExpiry(bool includeExpiry, const QuantLib::Date& referenceDate, QuantLib::Natural offset,
                                       bool forOption) override {
         return Date::endOfMonth(referenceDate);
     }
-    QuantLib::Date priorExpiry(bool includeExpiry, const QuantLib::Date& referenceDate,
+    virtual QuantLib::Date priorExpiry(bool includeExpiry, const QuantLib::Date& referenceDate,
                                        bool forOption) override {
         return Date(1, referenceDate.month(), referenceDate.year()) - 1 * Days;
     }
-    QuantLib::Date expiryDate(const QuantLib::Date& contractDate, QuantLib::Natural monthOffset,
+    virtual QuantLib::Date expiryDate(const QuantLib::Date& contractDate, QuantLib::Natural monthOffset,
                                       bool forOption) override {
         return Date::endOfMonth(contractDate);
     }
-    QuantLib::Date contractDate(const QuantLib::Date& expiryDate) override { return expiryDate; }
-    QuantLib::Date applyFutureMonthOffset(const QuantLib::Date& contractDate,
+    virtual QuantLib::Date contractDate(const QuantLib::Date& expiryDate) override { return expiryDate; }
+    virtual QuantLib::Date applyFutureMonthOffset(const QuantLib::Date& contractDate,
                                                   Natural futureMonthOffset) override {
-        return {};
+        return QuantLib::Date();
     }
 };
 
@@ -192,7 +181,6 @@ double monteCarloPricingSpotAveraging(const ext::shared_ptr<CommodityIndexedAver
 
         payoff += std::max(avg1 - avg2 - strike, 0.0);
     }
-
     payoff /= static_cast<double>(samples);
     return df * payoff;
 }
@@ -256,6 +244,7 @@ double monteCarloPricingFutureAveraging(const ext::shared_ptr<CommodityIndexedAv
     }
 
     double payoff = 0;
+
     LowDiscrepancy::rsg_type rsg = LowDiscrepancy::make_sequence_generator(2 * nObs, 42);
     for (size_t i = 0; i < samples; i++) {
         double avg1 = 0;
@@ -582,8 +571,6 @@ BOOST_AUTO_TEST_CASE(testSpotAveragingSpreadOption) {
                                                                  *wtiVol, rho, strike, df);
         double npvKirk = spreadOption.NPV();
         BOOST_CHECK_CLOSE(npvKirk, npvMC, 1);
-
-        // printResults(rho, strike, npvMC, npvKirk, spreadOption);
     }
 }
 
@@ -663,7 +650,6 @@ BOOST_AUTO_TEST_CASE(testSeasonedSpotAveragingSpreadOption) {
         double npvKirk = spreadOption.NPV();
         BOOST_CHECK_CLOSE(npvKirk, npvMC, 1);
 
-        // printResults(rho, strike, npvMC, npvKirk, spreadOption);
     }
 
     for (const auto& rho : {0.85}) {
@@ -678,8 +664,6 @@ BOOST_AUTO_TEST_CASE(testSeasonedSpotAveragingSpreadOption) {
                                                                      *wtiVol, rho, strike, df);
             double npvKirk = spreadOption.NPV();
             BOOST_CHECK_CLOSE(npvKirk, npvMC, 1);
-
-            // printResults(rho, strike, npvMC, npvKirk, spreadOption);
         }
     }
 }
@@ -708,8 +692,6 @@ BOOST_AUTO_TEST_CASE(testFutureAveragingSpreadOption) {
     std::vector<Real> wtiQuotes = {WTIspot, WTINov, WTIDec};
 
     auto feCalc = ext::make_shared<MockUpExpiryCalculator>();
-
-//    Date nextExp = feCalc->nextExpiry(true, today + 1, 0, false);
 
     auto brentCurve = Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(
         today, futureExpiryDates, brentQuotes, Actual365Fixed(), USDCurrency()));
@@ -752,8 +734,6 @@ BOOST_AUTO_TEST_CASE(testFutureAveragingSpreadOption) {
                                                                    *wtiVol, rho, strike, df);
         double npvKirk = spreadOption.NPV();
         BOOST_CHECK_CLOSE(npvKirk, npvMC, 1);
-
-        // printResults(rho, strike, npvMC, npvKirk, spreadOption);
     }
 }
 

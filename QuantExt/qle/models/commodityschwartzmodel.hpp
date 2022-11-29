@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <qle/models/hwparametrization.hpp>
+#include <qle/models/irmodel.hpp>
 #include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/commoditymodel.hpp>
 
@@ -71,11 +73,10 @@ public:
                                 const QuantLib::Handle<QuantExt::PriceTermStructure>& priceCurve
                                 = QuantLib::Handle<QuantExt::PriceTermStructure>()) const override;
 
-    // Schwartz model specific methods
-
+    //! Schwartz model specific methods
     const boost::shared_ptr<CommoditySchwartzParametrization> parametrization() const { return parametrization_; }
 
-    /*! observer and linked calibrated model interface */
+    //! observer and linked calibrated model interface
     void update() override;
     void generateArguments() override;
 

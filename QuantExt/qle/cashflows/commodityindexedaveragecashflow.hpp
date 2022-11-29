@@ -120,7 +120,18 @@ public:
     void accept(QuantLib::AcyclicVisitor& v) override;
     //@}
 
-    QuantLib::Date lastPricingDate() const override { return indices_.rbegin()->first; }
+        //@}
+    //! \name CommodityCashFlow interface
+    //@{
+    QuantLib::Date lastPricingDate() const override {
+        if (indices_.empty()) {
+            return Date();
+        } else {
+            return indices_.rbegin()->first;
+        }
+    }
+    //@}
+    
 
     //! \name Observer interface
     //@{

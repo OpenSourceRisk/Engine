@@ -1309,6 +1309,24 @@
     <ClInclude Include="qle\pricingengines\analyticeuropeanengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\commodityschwartzparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\futureoptionhelper.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\commodityschwartzmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\modelimpliedpricetermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\processes\commodityschwartzstateprocess.hpp">
+      <Filter>processes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\commodityschwartzfutureoptionengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -2250,6 +2268,24 @@
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\analyticeuropeanengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\commodityschwartzparametrization.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\futureoptionhelper.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\commodityschwartzmodel.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\modelimpliedpricetermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\processes\commodityschwartzstateprocess.cpp">
+      <Filter>processes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\commodityschwartzfutureoptionengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>

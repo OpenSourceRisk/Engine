@@ -80,6 +80,9 @@ public:
     virtual boost::shared_ptr<MarketDatum> get(const std::pair<std::string, bool>& name, const QuantLib::Date& d) const;
 
     virtual std::set<Fixing> loadFixings() const = 0;
+
+    //! Default implementation for getFixing
+    virtual Fixing getFixing(const string& name, const QuantLib::Date& d) const;
     //@}
 
     //! Optional load dividends method

@@ -52,13 +52,16 @@ public:
     //@{
     
     const QuantLib::Date& pricingDate() const { return pricingDate_; }
-    bool useFuturePrice() const { return useFuturePrice_; }
     bool useFutureExpiryDate() const { return useFutureExpiryDate_; }
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
     QuantLib::Real periodQuantity() const { return periodQuantity_; }
+    
+    //@}
+    //! \name CommodityCashFlow interface
+    //@{
     QuantLib::Date lastPricingDate() const override { return pricingDate(); }
     //@}
-
+    
     //! \name Event interface
     //@{
     QuantLib::Date date() const override { return paymentDate_; }

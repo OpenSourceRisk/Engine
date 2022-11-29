@@ -142,6 +142,7 @@ models/eqbsconstantparametrization.cpp
 models/eqbsparametrization.cpp
 models/eqbspiecewiseconstantparametrization.cpp
 models/exactbachelierimpliedvolatility.cpp
+models/futureoptionhelper.cpp
 models/fxbsconstantparametrization.cpp
 models/fxbsparametrization.cpp
 models/fxbspiecewiseconstantparametrization.cpp
@@ -187,6 +188,7 @@ pricingengines/blackcdsoptionengine.cpp
 pricingengines/commodityapoengine.cpp
 pricingengines/commodityspreadoptionengine.cpp
 pricingengines/commodityswaptionengine.cpp
+pricingengines/commodityschwartzfutureoptionengine.cpp
 pricingengines/cpibacheliercapfloorengine.cpp
 pricingengines/cpiblackcapfloorengine.cpp
 pricingengines/cpicapfloorengines.cpp
@@ -526,6 +528,7 @@ models/eqbsconstantparametrization.hpp
 models/eqbsparametrization.hpp
 models/eqbspiecewiseconstantparametrization.hpp
 models/exactbachelierimpliedvolatility.hpp
+models/futureoptionhelper.hpp
 models/fxbsconstantparametrization.hpp
 models/fxbsparametrization.hpp
 models/fxbspiecewiseconstantparametrization.hpp
@@ -582,6 +585,7 @@ pricingengines/blackcdsoptionengine.hpp
 pricingengines/commodityapoengine.hpp
 pricingengines/commodityspreadoptionengine.hpp
 pricingengines/commodityswaptionengine.hpp
+pricingengines/commodityschwartzfutureoptionengine.hpp
 pricingengines/cpibacheliercapfloorengine.hpp
 pricingengines/cpiblackcapfloorengine.hpp
 pricingengines/cpicapfloorengines.hpp

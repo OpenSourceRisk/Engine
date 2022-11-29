@@ -231,6 +231,7 @@
 #include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/eqbspiecewiseconstantparametrization.hpp>
 #include <qle/models/exactbachelierimpliedvolatility.hpp>
+#include <qle/models/futureoptionhelper.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
@@ -285,6 +286,7 @@
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
+#include <qle/pricingengines/commodityschwartzfutureoptionengine.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
 #include <qle/pricingengines/commodityswaptionengine.hpp>
 #include <qle/pricingengines/cpibacheliercapfloorengine.hpp>

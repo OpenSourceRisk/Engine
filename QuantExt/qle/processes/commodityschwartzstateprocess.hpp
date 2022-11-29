@@ -25,8 +25,8 @@
 #define quantext_com_schwartz_stateprocess_hpp
 
 #include <ql/stochasticprocess.hpp>
-#include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/commodityschwartzmodel.hpp>
+#include <qle/models/commodityschwartzparametrization.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -40,21 +40,25 @@ public:
                                   const CommoditySchwartzModel::Discretization discretization);
     //! \name StochasticProcess interface
     //@{
-    Real x0() const override;
+    Real x0() const override { return 0.0; }
     Real drift(Time t, Real x) const override;
     Real diffusion(Time t, Real x) const override;
-    Real expectation(Time t0, Real x0, Time dt) const override;
-    Real stdDeviation(Time t0, Real x0, Time dt) const override;
-    Real variance(Time t0, Real x0, Time dt) const override;
     //@}
+
+    class ExactDiscretization : public StochasticProcess1D::discretization {
+    public:
+        ExactDiscretization(const boost::shared_ptr<CommoditySchwartzParametrization>& p) : p_(p) {}
+        Real drift(const StochasticProcess1D& p, Time t0, Real x0, Time dt) const override;
+        Real diffusion(const StochasticProcess1D& p, Time t0, Real x0, Time dt) const override;
+        Real variance(const StochasticProcess1D& p, Time t0, Real x0, Time dt) const override;
+
+    private:
+        const boost::shared_ptr<CommoditySchwartzParametrization> p_;
+    };
+
 private:
     const boost::shared_ptr<CommoditySchwartzParametrization> p_;
 };
-
-// inline
-
-inline Real CommoditySchwartzStateProcess::x0() const { return 0.0; }
-
 
 } // namespace QuantExt
 
