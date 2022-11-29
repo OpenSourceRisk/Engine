@@ -41,6 +41,7 @@
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/yieldvolcurve.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <qle/indexes/equityindex.hpp>
@@ -651,6 +652,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 itr->second->equityIndex()->equityDividendCurve();
             equitySpots_[make_pair(configuration, node.name)] = itr->second->equityIndex()->equitySpot();
             equityCurves_[make_pair(configuration, node.name)] = Handle<EquityIndex>(itr->second->equityIndex());
+            IndexNameTranslator::instance().add(itr->second->equityIndex()->name(),
+                                                "EQ-" + itr->second->equityIndex()->name());
             break;
         }
 

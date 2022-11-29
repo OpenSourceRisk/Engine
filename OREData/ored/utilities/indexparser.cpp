@@ -541,24 +541,23 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
                                                                       "dummy_swap_conv_" + tokens[0], "");
     }
 
+    boost::shared_ptr<SwapIndex> index;
     if (irSwapConvention) {
         Calendar fixingCalendar = swapIndexConvention->fixingCalendar().empty()
                                       ? irSwapConvention->fixedCalendar()
                                       : parseCalendar(swapIndexConvention->fixingCalendar());
-        return boost::make_shared<SwapIndex>(familyName, p, irSwapConvention->index()->fixingDays(), ccy,
-                                             fixingCalendar, Period(irSwapConvention->fixedFrequency()),
-                                             irSwapConvention->fixedConvention(), irSwapConvention->fixedDayCounter(),
-                                             irSwapConvention->index()->clone(f), d);
+        index = boost::make_shared<SwapIndex>(familyName, p, irSwapConvention->index()->fixingDays(), ccy,
+                                              fixingCalendar, Period(irSwapConvention->fixedFrequency()),
+                                              irSwapConvention->fixedConvention(), irSwapConvention->fixedDayCounter(),
+                                              irSwapConvention->index()->clone(f), d);
     } else if (oisCompConvention) {
         Calendar fixingCalendar = swapIndexConvention->fixingCalendar().empty()
                                       ? oisCompConvention->index()->fixingCalendar()
                                       : parseCalendar(swapIndexConvention->fixingCalendar());
-        auto index = boost::make_shared<OvernightIndexedSwapIndex>(
+        index = boost::make_shared<OvernightIndexedSwapIndex>(
             familyName, p, oisCompConvention->spotLag(), ccy,
             boost::dynamic_pointer_cast<OvernightIndex>(oisCompConvention->index()->clone(f)), true,
             RateAveraging::Compound, Period(oisCompConvention->fixedFrequency()), d);
-        IndexNameTranslator::instance().add(index->name(), s);
-        return index;
     } else if (oisAvgConvention) {
         Calendar fixingCalendar = swapIndexConvention->fixingCalendar().empty()
                                       ? oisAvgConvention->index()->fixingCalendar()
@@ -569,8 +568,11 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
             RateAveraging::Simple, Period(oisAvgConvention->fixedFrequency()), d);
         IndexNameTranslator::instance().add(index->name(), s);
         return index;
+    } else {
+        QL_FAIL("internal error: expected irSwapConvention, oisConvention, averageOisConvention to be not null");
     }
-    QL_FAIL("internal error: expected irSwapConvention, oisConvention, averageOisConvention to be not null");
+    IndexNameTranslator::instance().add(index->name(), s);
+    return index;
 }
 
 // Zero Inflation Index Parser
