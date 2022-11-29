@@ -79,7 +79,7 @@ public:
     baseCorrelation(const string& name, const string& configuration = Market::defaultConfiguration) const override;
     Handle<OptionletVolatilityStructure>
     capFloorVol(const string& key, const string& configuration = Market::defaultConfiguration) const override;
-    string
+    std::pair<string, QuantLib::Period>
     capFloorVolIndexBase(const string& key, const string& configuration = Market::defaultConfiguration) const override;
     Handle<QuantExt::YoYOptionletVolatilitySurface>
     yoyCapFloorVol(const string& indexName, const string& configuration = Market::defaultConfiguration) const override;

@@ -299,7 +299,8 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
     QL_FAIL("did not find capfloor curve for key '" << key << "'");
 }
 
-string MarketImpl::capFloorVolIndexBase(const string& key, const string& configuration) const {
+std::pair<string, QuantLib::Period> MarketImpl::capFloorVolIndexBase(const string& key,
+                                                                     const string& configuration) const {
     require(MarketObject::CapFloorVol, key, configuration);
     auto it = capFloorIndexBase_.find(make_pair(configuration, key));
     if (it != capFloorIndexBase_.end())

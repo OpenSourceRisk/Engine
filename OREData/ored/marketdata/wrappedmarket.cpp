@@ -102,7 +102,8 @@ Handle<OptionletVolatilityStructure> WrappedMarket::capFloorVol(const string& ke
     return market_->capFloorVol(key, configuration);
 }
 
-string WrappedMarket::capFloorVolIndexBase(const string& key, const string& configuration) const {
+std::pair<string, QuantLib::Period> WrappedMarket::capFloorVolIndexBase(const string& key,
+                                                                        const string& configuration) const {
     return market_->capFloorVolIndexBase(key, configuration);
 }
 

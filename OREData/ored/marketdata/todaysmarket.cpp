@@ -452,6 +452,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 // Firstly, need to retrieve ibor index and discount curve
                 // Ibor index
                 std::string iborIndexName = cfg->index();
+                QuantLib::Period rateComputationPeriod = cfg->rateComputationPeriod();
                 Handle<IborIndex> iborIndex = MarketImpl::iborIndex(iborIndexName, configuration);
                 Handle<YieldTermStructure> discountCurve;
                 // Discount curve
@@ -471,6 +472,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                     if (!cfg->proxyTargetIndex().empty()) {
                         targetIndex = *MarketImpl::iborIndex(cfg->proxyTargetIndex(), configuration);
                         iborIndexName = cfg->proxyTargetIndex();
+                        rateComputationPeriod = cfg->proxyTargetRateComputationPeriod();
                     }
                 }
 
@@ -480,7 +482,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                     targetIndex, requiredCapFloorVolCurves_, buildCalibrationInfo_);
                 calibrationInfo_->irVolCalibrationInfo[cfVolSpec->name()] = capFloorVolCurve->calibrationInfo();
                 itr = requiredCapFloorVolCurves_
-                          .insert(make_pair(cfVolSpec->name(), std::make_pair(capFloorVolCurve, iborIndexName)))
+                          .insert(make_pair(
+                              cfVolSpec->name(),
+                              std::make_pair(capFloorVolCurve, std::make_pair(iborIndexName, rateComputationPeriod))))
                           .first;
             }
 
