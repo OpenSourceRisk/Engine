@@ -167,8 +167,8 @@ public:
     //@{
     virtual Handle<OptionletVolatilityStructure>
     capFloorVol(const string& key, const string& configuration = Market::defaultConfiguration) const = 0;
-    virtual std::string capFloorVolIndexBase(const string& key,
-                                             const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual std::pair<std::string, QuantLib::Period>
+    capFloorVolIndexBase(const string& key, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Stripped YoY Inflation Cap/Floor volatilities i.e. caplet/floorlet volatilities
