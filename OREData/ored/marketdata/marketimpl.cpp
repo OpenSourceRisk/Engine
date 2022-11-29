@@ -315,7 +315,7 @@ std::pair<string, QuantLib::Period> MarketImpl::capFloorVolIndexBase(const strin
     // if key is an index name and we have a cap floor surface for its ccy, we return that
     boost::shared_ptr<IborIndex> index;
     if (!tryParseIborIndex(key, index)) {
-        QL_FAIL("did not find capfloor curve for key '" << key << "'");
+        return std::make_pair(string(),0*Days);
     }
     auto ccy = index->currency().code();
     require(MarketObject::CapFloorVol, ccy, configuration);
@@ -330,7 +330,7 @@ std::pair<string, QuantLib::Period> MarketImpl::capFloorVolIndexBase(const strin
         if (it4 != capFloorIndexBase_.end())
             return it4->second;
     }
-    QL_FAIL("did not find capfloor curve for key '" << key << "'");
+    return std::make_pair(string(), 0 * Days);
 }
 
 Handle<YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key, const string& configuration) const {
