@@ -674,15 +674,15 @@ public:
 private:
     boost::shared_ptr<CMSSpreadLegData> underlying_;
 
-    Position::Type callPosition_;
-    bool isCallATMIncluded_;
+    Position::Type callPosition_ = Position::Long;
+    bool isCallATMIncluded_ = false;
     vector<double> callStrikes_;
     vector<string> callStrikeDates_;
     vector<double> callPayoffs_;
     vector<string> callPayoffDates_;
 
-    Position::Type putPosition_;
-    bool isPutATMIncluded_;
+    Position::Type putPosition_ = Position::Long;
+    bool isPutATMIncluded_ = false;
     vector<double> putStrikes_;
     vector<string> putStrikeDates_;
     vector<double> putPayoffs_;
