@@ -27,6 +27,7 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <qle/pricingengines/analyticdigitalamericanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 
@@ -41,7 +42,8 @@ using namespace QuantLib;
     \ingroup portfolio
  */
 class FxTouchOptionEngineBuilder
-    : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&, const string&, const bool> {
+    : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&, const string&,
+                                                    const Date&, const bool> {
 public:
     FxTouchOptionEngineBuilder()
         : CachingEngineBuilder("GarmanKohlhagen", "AnalyticDigitalAmericanEngine", {"FxTouchOption"}) {}
@@ -49,12 +51,14 @@ public:
         : CachingEngineBuilder(model, engine, {"FxTouchOption"}) {}
 
 protected:
-    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy, const string& type, const bool flipResults) override {
-        return forCcy.code() + domCcy.code() + type;
+    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy, const string& type, const Date& payDate,
+                           const bool flipResults) override {
+        return forCcy.code() + domCcy.code() + type + ore::data::to_string(payDate);
     }
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
-                                                        const string& type, const bool flipResults) override {
+                                                        const string& type, const Date& payDate,
+                                                        const bool flipResults) override {
         string pair = forCcy.code() + domCcy.code();
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
             market_->fxRate(pair, configuration(ore::data::MarketContext::pricing)),
@@ -64,9 +68,9 @@ protected:
             market_->fxVol(pair, configuration(ore::data::MarketContext::pricing)));
 
         if (type == "One-Touch") {
-            return boost::make_shared<QuantExt::AnalyticDigitalAmericanEngine>(gbsp, flipResults);
+            return boost::make_shared<QuantExt::AnalyticDigitalAmericanEngine>(gbsp, payDate, flipResults);
         } else if (type == "No-Touch") {
-            return boost::make_shared<QuantExt::AnalyticDigitalAmericanKOEngine>(gbsp, flipResults);
+            return boost::make_shared<QuantExt::AnalyticDigitalAmericanKOEngine>(gbsp, payDate, flipResults);
         } else {
             QL_FAIL("Unknown FX touch option type: " << type);
         }

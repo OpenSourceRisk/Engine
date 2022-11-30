@@ -63,11 +63,7 @@ public:
     const std::map<std::string, boost::any>& additionalResults() const override;
 
 protected:
-    // bool exercise() const override;
-    void reset() override;
     QuantLib::Real NPV() const override;
-    mutable bool triggered_ = false; // was the trade triggered before t0?
-    mutable bool triggerChecked_ = false;
     Handle<Quote> spot_;
     Barrier::Type barrierType_;
     Real rebate_;
@@ -93,13 +89,13 @@ public:
                                    std::vector<boost::shared_ptr<QuantLib::Instrument>>(),
                                const std::vector<Real>& additionalMultipliers = std::vector<Real>())
         : BarrierOptionWrapper(inst, isLongOption, exerciseDate, isPhysicalDelivery, undInst, barrierType, spot, rebate,
-            ccy, startDate, index, calendar, multiplier, undMultiplier, additionalInstruments, additionalMultipliers),
+                               ccy, startDate, index, calendar, multiplier, undMultiplier, additionalInstruments, additionalMultipliers),
           barrier_(barrier) {}
 
     bool checkBarrier(Real spot, Barrier::Type type, Real barrier) const;
+    bool exercise() const override;
 
 protected:
-    bool exercise() const override;
     Real barrier_;
 };
 
@@ -129,9 +125,9 @@ public:
     }
         
     bool checkBarrier(Real spot, Real barrierLow, Real barrierHigh) const;
+    bool exercise() const override;
 
 protected:
-    bool exercise() const override;
     Real barrierLow_;
     Real barrierHigh_;
 };

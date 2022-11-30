@@ -33,6 +33,23 @@ void AnalyticDigitalAmericanEngine::calculate() const {
 
     QuantLib::AnalyticDigitalAmericanEngine::calculate();
 
+    ext::shared_ptr<AmericanExercise> ex = ext::dynamic_pointer_cast<AmericanExercise>(arguments_.exercise);
+    // If a payDate was provided (and is greater than the expiryDate)
+    if (payDate_ > ex->lastDate()) {
+        Rate payDateDiscount = process_->riskFreeRate()->discount(payDate_);
+        Rate expiryDateDiscount = process_->riskFreeRate()->discount(ex->lastDate());
+        Rate factor = payDateDiscount / expiryDateDiscount;
+        results_.value *= factor;
+
+        auto discTouchProbIt = results_.additionalResults.find("discountedTouchProbability");
+        if (discTouchProbIt != results_.additionalResults.end()) {
+            if (knock_in())
+                discTouchProbIt->second = boost::any_cast<Real>(discTouchProbIt->second) * factor;
+            else
+                discTouchProbIt->second = 1.0 - (factor * (1.0 - boost::any_cast<Real>(discTouchProbIt->second)));
+        }
+    }
+
     if (flipResults_) {
         // Invert spot, forward, strike
         auto resToInvert = vector<string>({"spot", "forward", "strike"});

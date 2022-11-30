@@ -34,11 +34,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void BarrierOptionWrapper::reset() {
-    exercised_ = false;
-    exerciseDate_ = Date();
-}
-
 Real BarrierOptionWrapper::NPV() const {
     Real addNPV = additionalInstrumentsNPV();
     
@@ -52,14 +47,6 @@ Real BarrierOptionWrapper::NPV() const {
     }
 
     if (exercised_) {
-        // if exercised, return underlying npv for physical settlement and also for
-        // cash settlement if we are still on the exercise date (since the cash
-        // settlement takes place strictly after the exercise date usually)
-        // FIXME: we assume that the settlement date lies strictly after the exercise
-        // date, but before or on the next simulation date. Check this explicitly
-        // by introducing the cash settlement date into the option wrapper (note
-        // that we will probably need an effective cash settlement date then to
-        // maintain the relative position to the effective exercise date).
         Real npv;
         if (barrierType_ == Barrier::DownOut || barrierType_ == Barrier::UpOut)
             npv = (today == exerciseDate_) ? (isLong_ ? 1.0 : -1.0) * rebate_ * undMultiplier_ : 0.0;
@@ -107,7 +94,6 @@ bool SingleBarrierOptionWrapper::exercise() const {
     // check historical fixings - only check if the instrument is not calculated
     // really only needs to be checked if evaluation date changed
     if (!instrument_->isCalculated()) {
-        triggered_ = false;
         if (startDate_ != Date() && startDate_ < today) {
             QL_REQUIRE(index_, "no index provided");
             QL_REQUIRE(calendar_ != Calendar(), "no calendar provided");
@@ -117,7 +103,7 @@ bool SingleBarrierOptionWrapper::exercise() const {
 
             if (eqfxIndex) {
                 Date d = calendar_.adjust(startDate_);
-                while (d < today && !triggered_) {
+                while (d < today && !trigger) {
                     Real fixing = eqfxIndex->pastFixing(d);                    
                     if (fixing == 0.0 || fixing == Null<Real>()) {
                         ALOG("Got invalid fixing for index " << index_->name() << " on " << d
@@ -127,7 +113,9 @@ bool SingleBarrierOptionWrapper::exercise() const {
                         // consistent with previous implemention, however maybe we should use fixing
                         // and be strict on needed fixings being present
                         auto fxInd = boost::dynamic_pointer_cast<QuantExt::FxIndex>(eqfxIndex);
-                        triggered_ = checkBarrier(fixing, barrierType_, barrier_);
+                        trigger = checkBarrier(fixing, barrierType_, barrier_);
+                        if (trigger)
+                            exerciseDate_ = d;
                     }
                     d = calendar_.advance(d, 1, Days);
                 }
@@ -135,11 +123,11 @@ bool SingleBarrierOptionWrapper::exercise() const {
         }
     }
 
-    trigger = triggered_;
     // check todays spot, if triggered today set the exerciseDate, may have to pay a rebate
     if (!trigger) {
         trigger = checkBarrier(spot_->value(), barrierType_, barrier_);
-        exerciseDate_ = today;
+        if (trigger)
+            exerciseDate_ = today;
     }
 
     exercised_ = trigger;
@@ -157,7 +145,6 @@ bool DoubleBarrierOptionWrapper::exercise() const {
     // check historical fixings - only check if the instrument is not calculated
     // really only needs to be checked if evaluation date changed
     if (!instrument_->isCalculated()) {
-        triggered_ = false;
         if (startDate_ != Date() && startDate_ < today) {
             QL_REQUIRE(index_, "no index provided");
             QL_REQUIRE(calendar_ != Calendar(), "no calendar provided");
@@ -168,13 +155,13 @@ bool DoubleBarrierOptionWrapper::exercise() const {
 
             if (eqfxIndex) {
                 Date d = calendar_.adjust(startDate_);
-                while (d < today && !triggered_) {
+                while (d < today && !trigger) {
                     Real fixing = eqfxIndex->pastFixing(d);
                     if (fixing == 0.0 || fixing == Null<Real>()) {
                         ALOG("Got invalid fixing for index " << index_->name() << " on " << d
                                                              << "Skipping this date, assuming no trigger");
                     } else {
-                        triggered_ = checkBarrier(fixing, barrierLow_, barrierHigh_);
+                        trigger = checkBarrier(fixing, barrierLow_, barrierHigh_);
                     }
                     d = calendar_.advance(d, 1, Days);
                 }
@@ -182,7 +169,6 @@ bool DoubleBarrierOptionWrapper::exercise() const {
         }
     }
 
-    trigger = triggered_;
     // check todays spot, if triggered today set the exerciseDate, may have to pay a rebate
     if (!trigger) {
         trigger = checkBarrier(spot_->value(), barrierLow_, barrierHigh_);
