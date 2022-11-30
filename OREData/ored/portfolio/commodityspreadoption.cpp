@@ -81,13 +81,26 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
             std::string pos = i == 0 ? "Long" : "Short";
             QL_REQUIRE(underlyingCcy.code() == settlementCcy_,
                        "CommoditySpreadOption: No FXIndex provided for the " << pos << "position");
-        }else{
-            auto domestic = (i == (int)CommoditySpreadOptionPosition::Long)?underlyingCcy.code():settlementCcy_;
-            auto foreign = (i == (int)CommoditySpreadOptionPosition::Short)?underlyingCcy.code():settlementCcy_;
+        }else {
+            auto domestic = npvCurrency_;
+            auto foreign = underlyingCcy.code();
             FxIndex[i] = buildFxIndex(tmpFx, domestic, foreign, engineFactory->market(),
-                           engineFactory->configuration(MarketContext::pricing));
-            // update required fixings
-
+                                      engineFactory->configuration(MarketContext::pricing));
+            // update required fixings. This is handled automatically in the leg builder in the averaging case
+            if(!isAveraged[i]) {
+                for (auto cf : leg) {
+                    auto fixingDate = cf->date();
+                    if (!FxIndex[i]->fixingCalendar().isBusinessDay(
+                            fixingDate)) { // If fx index is not available for the cashflow pricing day,
+                        // this ensures to require the previous valid one which will be used in pricing
+                        // from fxIndex()->fixing(...)
+                        Date adjustedFixingDate = FxIndex[i]->fixingCalendar().adjust(fixingDate, Preceding);
+                        requiredFixings_.addFixingDate(adjustedFixingDate, tmpFx);
+                    } else {
+                        requiredFixings_.addFixingDate(fixingDate, tmpFx);
+                    }
+                }
+            }
         }
         legs_.push_back(leg);
         legCurrencies_.push_back(npvCurrency_); // all legs and cf are priced with the same ccy
