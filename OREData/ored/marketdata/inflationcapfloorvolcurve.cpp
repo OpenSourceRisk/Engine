@@ -125,35 +125,46 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
 
     // We take the first capfloor shift quote that we find in the file matching the
     // currency and index tenor
-    for (auto& md : loader.loadQuotes(asof)) {
-        if (md->asofDate() == asof && (md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR ||
-                                       md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR)) {
 
-            boost::shared_ptr<InflationCapFloorQuote> q = boost::dynamic_pointer_cast<InflationCapFloorQuote>(md);
+    std::ostringstream ss1;
+    ss1 << MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR << "/*";
+    Wildcard w1(ss1.str());
+    auto data1 = loader.get(w1, asof);
 
-            if (config->type() == InflationCapFloorVolatilityCurveConfig::Type::ZC) {
-                q = boost::dynamic_pointer_cast<ZcInflationCapFloorQuote>(md);
-            } else {
-                q = boost::dynamic_pointer_cast<YyInflationCapFloorQuote>(md);
-            }
+    std::ostringstream ss2;
+    ss2 << MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR << "/*";
+    Wildcard w2(ss2.str());
+    auto data2 = loader.get(w2, asof);
 
-            if (q != NULL && q->index() == quoteIndex && q->quoteType() == volatilityType) {
+    data1.merge(data2);
 
-                quotesRead++;
+    for (const auto& md : data1) {
+        QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
-                Real strike = parseReal(q->strike());
-                Size i = std::find(tenors.begin(), tenors.end(), q->term()) - tenors.begin();
-                Size j = std::find_if(strikes.begin(), strikes.end(),
-                                      [&strike](const double& s) { return close_enough(s, strike); }) -
-                         strikes.begin();
+        boost::shared_ptr<InflationCapFloorQuote> q;
 
-                if (i < tenors.size() && j < strikes.size()) {
-                    vols[i][j] = q->quote()->value();
+        if (config->type() == InflationCapFloorVolatilityCurveConfig::Type::ZC) {
+            q = boost::dynamic_pointer_cast<ZcInflationCapFloorQuote>(md);
+        } else {
+            q = boost::dynamic_pointer_cast<YyInflationCapFloorQuote>(md);
+        }
 
-                    if (!found[i][j]) {
-                        found[i][j] = true;
-                        --remainingQuotes;
-                    }
+        if (q && q->index() == quoteIndex && q->quoteType() == volatilityType) {
+
+            quotesRead++;
+
+            Real strike = parseReal(q->strike());
+            Size i = std::find(tenors.begin(), tenors.end(), q->term()) - tenors.begin();
+            Size j = std::find_if(strikes.begin(), strikes.end(),
+                                  [&strike](const double& s) { return close_enough(s, strike); }) -
+                     strikes.begin();
+
+            if (i < tenors.size() && j < strikes.size()) {
+                vols[i][j] = q->quote()->value();
+
+                if (!found[i][j]) {
+                    found[i][j] = true;
+                    --remainingQuotes;
                 }
             }
         }
@@ -252,17 +263,17 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
         DLOG("Building zero inflation index");
         boost::shared_ptr<ZeroInflationIndex> index;
         auto it2 = inflationCurves.find(config->indexCurve());
-        if (it2 != inflationCurves.end()) {
+        if (it2 == inflationCurves.end()) {
+            QL_FAIL("The zero inflation curve, " << config->indexCurve()
+                                                 << ", required in building the inflation cap floor vol surface "
+                                                 << spec.name() << ", was not found");
+        } else {
             boost::shared_ptr<ZeroInflationTermStructure> ts =
                 boost::dynamic_pointer_cast<ZeroInflationTermStructure>(it2->second->inflationTermStructure());
             QL_REQUIRE(ts,
                        "inflation term structure " << config->indexCurve() << " was expected to be zero, but is not");
             index = parseZeroInflationIndex(config->index(), it2->second->interpolatedIndex(),
                                             Handle<ZeroInflationTermStructure>(ts));
-        } else {
-            QL_FAIL("The zero inflation curve, " << config->indexCurve()
-                                                 << ", required in building the inflation cap floor vol surface "
-                                                 << spec.name() << ", was not found");
         }
         
         DLOG("Building surface");
@@ -294,7 +305,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
     DLOG("Build InflationCapFloorVolCurve " << spec.name() << " from prices");
 
     QL_REQUIRE((config->type() == InflationCapFloorVolatilityCurveConfig::Type::ZC) ||
-                   (config->type() == InflationCapFloorVolatilityCurveConfig::Type::YY),
+               (config->type() == InflationCapFloorVolatilityCurveConfig::Type::YY),
                "Inflation cap floor pricevolatility surfaces must be of type 'ZC' or 'YY'");
 
     // Volatility type
@@ -311,7 +322,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         quoteVolatilityType = ShiftedLognormal;
         break;
     default:
-        QL_FAIL("unexpected volatility type");
+        QL_FAIL("unexpected volatility type: '" << config->volatilityType() << "'");
     }
 
     // Required by QuantLib price surface constructors but apparently not used
@@ -324,43 +335,52 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
 
     // Quotes index can differ from the index for which we are building the surface.
     string quoteIndex = config->quoteIndex().empty() ? config->index() : config->quoteIndex();
-        
 
     // We loop over all market data, looking for quotes that match the configuration
-    for (auto& md : loader.loadQuotes(asof)) {
 
-        if (md->asofDate() == asof && (md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR ||
-                                       md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR)) {
+    std::ostringstream ss1;
+    ss1 << MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR << "/*";
+    Wildcard w1(ss1.str());
+    auto data1 = loader.get(w1, asof);
 
-            boost::shared_ptr<InflationCapFloorQuote> q;
+    std::ostringstream ss2;
+    ss2 << MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR << "/*";
+    Wildcard w2(ss2.str());
+    auto data2 = loader.get(w2, asof);
 
-            if (config->type() == InflationCapFloorVolatilityCurveConfig::Type::ZC) {
-                q = boost::dynamic_pointer_cast<ZcInflationCapFloorQuote>(md);
-            } else {
-                q = boost::dynamic_pointer_cast<YyInflationCapFloorQuote>(md);
-            }
+    data1.merge(data2);
 
-            if (q != NULL && q->index() == quoteIndex && md->quoteType() == MarketDatum::QuoteType::PRICE) {
-                auto it1 = std::find(terms.begin(), terms.end(), q->term());
-                Real strike = parseReal(q->strike());
-                Size strikeIdx = Null<Size>();
-                if (q->isCap()) {
-                    for (Size i = 0; i < capStrikes.size(); ++i) {
-                        if (close_enough(capStrikes[i], strike))
-                            strikeIdx = i;
-                    }
-                } else {
-                    for (Size i = 0; i < floorStrikes.size(); ++i) {
-                        if (close_enough(floorStrikes[i], strike))
-                            strikeIdx = i;
-                    }
+    for (const auto& md : data1) {
+        QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
+
+        boost::shared_ptr<InflationCapFloorQuote> q;
+
+        if (config->type() == InflationCapFloorVolatilityCurveConfig::Type::ZC) {
+            q = boost::dynamic_pointer_cast<ZcInflationCapFloorQuote>(md);
+        } else {
+            q = boost::dynamic_pointer_cast<YyInflationCapFloorQuote>(md);
+        }
+
+        if (q && q->index() == quoteIndex && md->quoteType() == MarketDatum::QuoteType::PRICE) {
+            auto it1 = std::find(terms.begin(), terms.end(), q->term());
+            Real strike = parseReal(q->strike());
+            Size strikeIdx = Null<Size>();
+            if (q->isCap()) {
+                for (Size i = 0; i < capStrikes.size(); ++i) {
+                    if (close_enough(capStrikes[i], strike))
+                        strikeIdx = i;
                 }
-                if (it1 != terms.end() && strikeIdx != Null<Size>()) {
-                    if (q->isCap()) {
-                        cPrice[strikeIdx][it1 - terms.begin()] = q->quote()->value();
-                    } else {
-                        fPrice[strikeIdx][it1 - terms.begin()] = q->quote()->value();
-                    }
+            } else {
+                for (Size i = 0; i < floorStrikes.size(); ++i) {
+                    if (close_enough(floorStrikes[i], strike))
+                        strikeIdx = i;
+                }
+            }
+            if (it1 != terms.end() && strikeIdx != Null<Size>()) {
+                if (q->isCap()) {
+                    cPrice[strikeIdx][it1 - terms.begin()] = q->quote()->value();
+                } else {
+                    fPrice[strikeIdx][it1 - terms.begin()] = q->quote()->value();
                 }
             }
         }
@@ -380,17 +400,17 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         // ZC Curve
         boost::shared_ptr<ZeroInflationIndex> index;
         auto it2 = inflationCurves.find(config->indexCurve());
-        if (it2 != inflationCurves.end()) {
+        if (it2 == inflationCurves.end()) {
+            QL_FAIL("The zero inflation curve, " << config->indexCurve()
+                                                 << ", required in building the inflation cap floor price surface "
+                                                 << spec.name() << ", was not found");
+        } else {
             boost::shared_ptr<ZeroInflationTermStructure> ts =
                 boost::dynamic_pointer_cast<ZeroInflationTermStructure>(it2->second->inflationTermStructure());
             QL_REQUIRE(ts,
                        "inflation term structure " << config->indexCurve() << " was expected to be zero, but is not");
             index = parseZeroInflationIndex(config->index(), it2->second->interpolatedIndex(),
                                             Handle<ZeroInflationTermStructure>(ts));
-        } else {
-            QL_FAIL("The zero inflation curve, " << config->indexCurve()
-                                                 << ", required in building the inflation cap floor price surface "
-                                                 << spec.name() << ", was not found");
         }
         boost::shared_ptr<QuantExt::CPICapFloorEngine> engine;
 
@@ -519,7 +539,11 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
 
         boost::shared_ptr<YoYInflationIndex> index;
         auto it2 = inflationCurves.find(config->indexCurve());
-        if (it2 != inflationCurves.end()) {
+        if (it2 == inflationCurves.end()) {
+            QL_FAIL("The inflation curve, " << config->indexCurve()
+                                            << ", required in building the inflation cap floor price surface "
+                                            << spec.name() << ", was not found");
+        } else {
             boost::shared_ptr<InflationTermStructure> ts = it2->second->inflationTermStructure();
             // Check if the Index curve is a YoY curve - if not it must be a zero curve
             boost::shared_ptr<YoYInflationTermStructure> yyTs =
@@ -540,10 +564,6 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                     parseZeroInflationIndex(config->index(), true, Handle<ZeroInflationTermStructure>(zeroTs)),
                     true, Handle<YoYInflationTermStructure>());
             }
-        } else {
-            QL_FAIL("The inflation curve, " << config->indexCurve()
-                                            << ", required in building the inflation cap floor price surface "
-                                            << spec.name() << ", was not found");
         }
         // Required by the QL pricesurface but not used
         Rate startRate = 0.0;

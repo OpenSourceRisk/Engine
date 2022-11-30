@@ -122,7 +122,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         for (const auto& md : loader.get(w, asof)) {
             QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
             boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
-            QL_REQUIRE(q, "internal error: could not cast to FXOptionQuote");
+            QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to FXOptionQuote");
             QL_REQUIRE(q->unitCcy() == spec.unitCcy(),
                 "FXOptionQuote unit ccy '" << q->unitCcy() << "' <> FXVolatilityCurveSpec unit ccy '" << spec.unitCcy() << "'");
             QL_REQUIRE(q->ccy() == spec.ccy(),
@@ -236,7 +236,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
         boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
-        QL_REQUIRE(q, "internal error: could not cast to FXOptionQuote");
+        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to FXOptionQuote");
         QL_REQUIRE(q->unitCcy() == spec.unitCcy(),
             "FXOptionQuote unit ccy '" << q->unitCcy() << "' <> FXVolatilityCurveSpec unit ccy '" << spec.unitCcy() << "'");
         QL_REQUIRE(q->ccy() == spec.ccy(),
@@ -406,7 +406,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     for (const auto& md : loader.get(w, asof)) {
 
         boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
-        QL_REQUIRE(q, "internal error: could not cast to FXOptionQuote");
+        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to FXOptionQuote");
         QL_REQUIRE(q->unitCcy() == spec.unitCcy(),
             "FXOptionQuote unit ccy '" << q->unitCcy() << "' <> FXVolatilityCurveSpec unit ccy '" << spec.unitCcy() << "'");
         QL_REQUIRE(q->ccy() == spec.ccy(),
@@ -677,7 +677,9 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
         // remove expiries that would lead to duplicate expiry dates (keep the later expiry in this case)
 
-        if (!expiriesWildcard_) {
+        if (expiriesWildcard_) {
+            DLOG("expiry wildcard is used: " << expiriesWildcard_->pattern());
+        } else {
             std::vector<std::tuple<std::string, Period, Date>> tmp;
             for (auto const& e : config->expiries()) {
                 auto p = parsePeriod(e);
@@ -715,15 +717,11 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             for (auto const& e : expiriesNoDuplicates_) {
                 DLOG(e);
             }
-        } else {
-            DLOG("expiry wildcard is used: " << (*expiriesWildcard_).pattern());
         }
 
         QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated || expiriesWildcard_ ||
                        !expiriesNoDuplicates_.empty(),
                    "no expiries after removing duplicate expiry dates");
-
-        //
 
         std::vector<std::string> tokens;
         boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
@@ -742,7 +740,10 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         string calTmp = sourceCcy_ + "," + targetCcy_;
         spotCalendar_ = parseCalendar(calTmp);
 
-        if (config->conventionsID() != "") {
+        if (config->conventionsID() == "") {
+            WLOG("no fx option conventions given in fxvol curve config for " << spec.curveConfigID()
+                                                                             << ", assuming defaults");
+        } else {
             auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conventions->get(config->conventionsID()));
             QL_REQUIRE(fxOptConv,
                        "unable to cast convention '" << config->conventionsID() << "' into FxOptionConvention");
@@ -764,9 +765,6 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 spotDays_ = fxConv->spotDays();
                 spotCalendar_ = fxConv->advanceCalendar();
             }
-        } else {
-            WLOG("no fx option conventions given in fxvol curve config for " << spec.curveConfigID()
-                                                                             << ", assuming defaults");
         }
 
         auto spotSpec = boost::dynamic_pointer_cast<FXSpotSpec>(parseCurveSpec(config->fxSpotID()));
