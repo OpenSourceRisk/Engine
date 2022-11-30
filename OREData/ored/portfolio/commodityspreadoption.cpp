@@ -157,6 +157,7 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
     auto qlInstrument = additionalInstruments.back();
     additionalInstruments.pop_back(); // remove last instrument, it is already set as main one
     // set the trade instrument
+    // as the first argument is always the long position and the second is always the short, multiplier is set to 1
     instrument_ = boost::make_shared<VanillaInstrument>(qlInstrument, 1.0, additionalInstruments, std::vector<Real>(legs_[0].size()-1,1.0));
 }
 
@@ -189,11 +190,11 @@ XMLNode* CommoditySpreadOption::toXML(XMLDocument& doc){
     for (size_t i = 0; i < legData_.size(); ++i) {
         XMLUtils::appendNode(csoNode, legData_[i].toXML(doc));
     }
+    XMLUtils::addChild(doc, csoNode, "SpreadStrike", spreadStrike_);
     XMLUtils::addChild(doc, csoNode, "OptionType", callPut_);
+    XMLUtils::addChild(doc, csoNode, "Currency", settlementCcy_);
     if(!settlementDate_.empty())
         XMLUtils::addChild(doc, csoNode, "SettlementDate", settlementDate_);
-    XMLUtils::addChild(doc, csoNode, "Currency", settlementCcy_);
-
     return node;
 }
 

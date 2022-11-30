@@ -127,7 +127,7 @@ Other than the two legs, the following nodes complete the \lstinline!CommoditySp
 \begin{itemize}
     \item \lstinline!ExerciseDate!: the exercise date. Allowable values: See Date in Table \ref{tab:allow_stand_data}.
     \item \lstinline!SpreadStrike!: The strike value for the spread. Allowable values: Any real number.
-    \item \lstinline!OptionType!: The allowable values are \emph{Call} or \emph{Put}.
+    \item \lstinline!OptionType! [Optional]: The allowable values are \emph{Call} or \emph{Put}. If not provided, default value is \emph{Call}.
     \item \lstinline!SettlementDate! [Optional]: A date in which the trade is settled.
 Allowable values: This should be a valid date as outlined in Table \ref{tab:allow_stand_data}. If not provided, it is assumed that the trade is settled on the \lstinline!ExerciseDate!.
     \item \lstinline!Currency!: The settlement currency for the trade. \\
