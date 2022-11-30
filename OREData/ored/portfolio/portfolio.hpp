@@ -98,7 +98,7 @@ public:
 
     //! Return trade list
     std::vector<boost::shared_ptr<Trade>> trades() const;
-    
+
     //! Build a vector of tradeIds
     std::vector<std::string> ids() const;
 
@@ -139,7 +139,7 @@ private:
     // get representation as XMLDocument
     void doc(XMLDocument& doc) const;
     bool buildFailedTrades_;
-    //std::vector<boost::shared_ptr<Trade>> trades_;
+    // std::vector<boost::shared_ptr<Trade>> trades_;
     std::map<std::string, boost::shared_ptr<Trade>> tradeLookup_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
 };

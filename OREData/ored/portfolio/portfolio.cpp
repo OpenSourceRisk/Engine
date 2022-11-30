@@ -36,14 +36,13 @@ namespace data {
 using namespace data;
 
 void Portfolio::clear() {
-    //trades_.clear();
     tradeLookup_.clear();
     underlyingIndicesCache_.clear();
 }
 
 void Portfolio::reset() {
     LOG("Reset portfolio of size " << tradeLookup_.size());
-    for (auto [id,t] : tradeLookup_)
+    for (auto [id, t] : tradeLookup_)
         t->reset();
 }
 
@@ -122,7 +121,7 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
 void Portfolio::doc(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Portfolio");
     doc.appendNode(node);
-    for (auto& [id,t] : tradeLookup_)
+    for (auto& [id, t] : tradeLookup_)
         XMLUtils::appendNode(node, t->toXML(doc));
 }
 
@@ -141,29 +140,17 @@ string Portfolio::saveToXMLString() const {
 }
 
 bool Portfolio::remove(const std::string& tradeID) {
-    tradeLookup_.erase(tradeID);
     underlyingIndicesCache_.clear();
-    /*
-    for (auto it = trade_.begin(); it != trade_.end(); ++it) {
-        if ((*it)->id() == tradeID) {
-            trades_.erase(it);
-            return true;
-        }
-    }
-    */
-    return false;
+    return tradeLookup_.erase(tradeID) > 0;
 }
 
 void Portfolio::removeMatured(const Date& asof) {
     for (auto it = tradeLookup_.begin(); it != tradeLookup_.end(); /* manual */) {
         if ((*it).second->maturity() < asof) {
             ALOG(StructuredTradeErrorMessage((*it).second, "Trade is Matured", ""));
-            tradeLookup_.erase((*it).second->id());
+            auto currentIt = it;
             ++it;
-            /*
-            tradeLookup_.erase((*it).second->id());
-            it = tradeLookup_.erase(it);
-            */
+            tradeLookup_.erase((*currentIt).first);
         } else {
             ++it;
         }
@@ -177,9 +164,10 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory, con
     Size initialSize = tradeLookup_.size();
     Size failedTrades = 0;
     while (trade != tradeLookup_.end()) {
-        auto [ft, success] = buildTrade((*trade).second, engineFactory, context, buildFailedTrades(), emitStructuredError);
-        if(success) {
-	    ++trade;
+        auto [ft, success] =
+            buildTrade((*trade).second, engineFactory, context, buildFailedTrades(), emitStructuredError);
+        if (success) {
+            ++trade;
         } else if (ft) {
             (*trade).second = ft;
             ++failedTrades;
@@ -211,10 +199,10 @@ vector<string> Portfolio::ids() const {
 }
 
 vector<boost::shared_ptr<Trade>> Portfolio::trades() const {
-        std::vector<boost::shared_ptr<Trade>> trades;
-        for (auto& [id, t] : tradeLookup_)
+    std::vector<boost::shared_ptr<Trade>> trades;
+    for (auto& [id, t] : tradeLookup_)
         trades.push_back(t);
-        return trades;
+    return trades;
 }
 
 map<string, string> Portfolio::nettingSetMap() const {
@@ -241,16 +229,12 @@ map<string, set<string>> Portfolio::counterpartyNettingSets() const {
 }
 
 void Portfolio::add(const boost::shared_ptr<Trade>& trade) {
-    QL_REQUIRE(!has(trade->id()),
-               "Attempted to add a trade to the portfolio with an id, which already exists.");
+    QL_REQUIRE(!has(trade->id()), "Attempted to add a trade to the portfolio with an id, which already exists.");
     underlyingIndicesCache_.clear();
-    //trades_.push_back(trade);
     tradeLookup_[trade->id()] = trade;
 }
 
-bool Portfolio::has(const string& id) {
-    return tradeLookup_.find(id) != tradeLookup_.end();
-}
+bool Portfolio::has(const string& id) { return tradeLookup_.find(id) != tradeLookup_.end(); }
 
 boost::shared_ptr<Trade> Portfolio::get(const string& id) const {
     auto it = tradeLookup_.find(id);
@@ -308,7 +292,8 @@ Portfolio::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& refe
                 result[kv.first].insert(kv.second.begin(), kv.second.end());
             }
         } catch (const std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(t.second->id(), t.second->tradeType(), "Error retrieving underlying indices", e.what()));
+            ALOG(StructuredTradeErrorMessage(t.second->id(), t.second->tradeType(),
+                                             "Error retrieving underlying indices", e.what()));
         }
     }
     underlyingIndicesCache_ = result;
@@ -338,7 +323,7 @@ std::pair<boost::shared_ptr<Trade>, bool> buildTrade(boost::shared_ptr<Trade>& t
         TLOGGERSTREAM(trade->requiredFixings());
         return std::make_pair(nullptr, true);
     } catch (std::exception& e) {
-        if(emitStructuredError) {
+        if (emitStructuredError) {
             ALOG(StructuredTradeErrorMessage(trade, "Error building trade for context '" + context + "'", e.what()));
         } else {
             ALOG("Error building trade '" << trade->id() << "' for context '" + context + "': " + e.what());
@@ -351,7 +336,7 @@ std::pair<boost::shared_ptr<Trade>, bool> buildTrade(boost::shared_ptr<Trade>& t
             failed->build(engineFactory);
             failed->resetPricingStats(trade->getNumberOfPricings(), trade->getCumulativePricingTime());
             LOG("Built failed trade with id " << failed->id());
-	    return std::make_pair(failed, false);
+            return std::make_pair(failed, false);
         } else {
             return std::make_pair(nullptr, false);
         }
