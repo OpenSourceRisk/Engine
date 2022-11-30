@@ -134,9 +134,9 @@ void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& marke
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
     boost::shared_ptr<ScenarioGenerator> sg =
         getProjectedScenarioGenerator(currencyFilter, market, projectedSsmData, sf, continueOnErr);
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(
-        market, projectedSsmData, Market::defaultConfiguration, *curveConfigs_, *todaysMarketParams_,
-        true, false, true, false, iborFallbackConfig_);
+    simMarket_ = boost::make_shared<ScenarioSimMarket>(market, projectedSsmData, Market::defaultConfiguration,
+                                                       *curveConfigs_, *todaysMarketParams_, true, false, true, false,
+                                                       iborFallbackConfig_, false);
     simMarket_->scenarioGenerator() = sg;
 
     for (auto b : extraEngineBuilders_)
