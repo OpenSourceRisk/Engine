@@ -62,7 +62,6 @@ public:
     MarketDataLoader();
     MarketDataLoader(vector<string> data);
     vector<boost::shared_ptr<MarketDatum>> loadQuotes(const Date&) const override;
-    boost::shared_ptr<MarketDatum> get(const string& name, const Date&) const override;
     set<Fixing> loadFixings() const override { return fixings_; }
     set<Fixing> loadDividends() const override { return dividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
@@ -79,14 +78,6 @@ vector<boost::shared_ptr<MarketDatum>> MarketDataLoader::loadQuotes(const Date& 
     auto it = data_.find(d);
     QL_REQUIRE(it != data_.end(), "Loader has no data for date " << d);
     return it->second;
-}
-
-boost::shared_ptr<MarketDatum> MarketDataLoader::get(const string& name, const Date& d) const {
-    for (auto& md : loadQuotes(d)) {
-        if (md->name() == name)
-            return md;
-    }
-    QL_FAIL("No MarketDatum for name " << name << " and date " << d);
 }
 
 MarketDataLoader::MarketDataLoader() {

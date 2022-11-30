@@ -168,13 +168,6 @@ vector<boost::shared_ptr<MarketDatum>> CSVLoader::loadQuotes(const QuantLib::Dat
     return std::vector<boost::shared_ptr<MarketDatum>>(it->second.begin(), it->second.end());
 }
 
-boost::shared_ptr<MarketDatum> CSVLoader::get(const string& name, const QuantLib::Date& d) const {
-    for (const auto& md : loadQuotes(d)) {
-        if (md->name() == name)
-            return md;
-    }
-    QL_FAIL("No MarketDatum for name " << name << " and date " << d);
-}
 boost::shared_ptr<MarketDatum> makeDummyMarketDatum(const Date& d, const std::string& name) {
     return boost::make_shared<MarketDatum>(0.0, d, name, MarketDatum::QuoteType::NONE,
                                            MarketDatum::InstrumentType::NONE);

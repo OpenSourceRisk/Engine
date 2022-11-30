@@ -89,11 +89,22 @@ set<QuoteData> getRegexQuotes(const Wildcard& wc, const string& configId, Defaul
 
     // Loop over the available market data and pick out quotes that match the expression
     set<QuoteData> result;
-    for (const auto& md : loader.loadQuotes(asof)) {
 
-        // Go to next quote if the market data point's date does not equal our asof
-        if (md->asofDate() != asof)
-            continue;
+    std::ostringstream ss1;
+    ss1 << MDIT::CDS << "/*";
+    Wildcard w1(ss1.str());
+    auto data1 = loader.get(w1, asof);
+
+    std::ostringstream ss2;
+    ss2 << MDIT::HAZARD_RATE << "/*";
+    Wildcard w2(ss2.str());
+    auto data2 = loader.get(w2, asof);
+
+    data1.merge(data2);
+
+    for (const auto& md : data1) {
+
+        QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
         auto mdit = md->instrumentType();
         auto mdqt = md->quoteType();
@@ -103,6 +114,7 @@ set<QuoteData> getRegexQuotes(const Wildcard& wc, const string& configId, Defaul
             (mdqt == MDQT::CREDIT_SPREAD || mdqt == MDQT::CONV_CREDIT_SPREAD)) {
 
             auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
+            QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CdsQuote");
             if (wc.matches(q->name())) {
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->seniority(), q->ccy(),
                          q->docClause(), q->runningSpread());
@@ -111,6 +123,7 @@ set<QuoteData> getRegexQuotes(const Wildcard& wc, const string& configId, Defaul
         } else if (type == DCCT::Price && (mdit == MDIT::CDS && mdqt == MDQT::PRICE)) {
 
             auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
+            QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CdsQuote");
             if (wc.matches(q->name())) {
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->seniority(), q->ccy(),
                          q->docClause(), q->runningSpread());
@@ -119,6 +132,7 @@ set<QuoteData> getRegexQuotes(const Wildcard& wc, const string& configId, Defaul
         } else if (type == DCCT::HazardRate && (mdit == MDIT::HAZARD_RATE && mdqt == MDQT::RATE)) {
 
             auto q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
+            QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to HazardRateQuote");
             if (wc.matches(q->name())) {
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->seniority(), q->ccy(),
                          q->docClause());
@@ -227,11 +241,11 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         try {
             recoveryRate_ = Null<Real>();
             if (!config.second.recoveryRateQuote().empty()) {
-		// handle case where the recovery rate is hardcoded in the curve config
+                // handle case where the recovery rate is hardcoded in the curve config
                 if (!tryParseReal(config.second.recoveryRateQuote(), recoveryRate_)) {
                     Wildcard wc(config.second.recoveryRateQuote());
                     if (wc.hasWildcard()) {
-                        for (auto const& q : loader.loadQuotes(asof)) {
+                        for (auto const& q : loader.get(wc, asof)) {
                             if (wc.matches(q->name())) {
                                 QL_REQUIRE(recoveryRate_ == Null<Real>(),
                                            "There is more than one recovery rate matching the pattern '" << wc.pattern()

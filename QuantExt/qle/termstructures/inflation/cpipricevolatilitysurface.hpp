@@ -241,7 +241,7 @@ void CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::performCal
             if (priceToMatch != QuantLib::Null<QuantLib::Real>()) {
                 try {
                     vol = implyVol(strike, maturityDate, priceToMatch, useFloor);
-                } catch (const std::exception& e) {
+                } catch (const std::exception&) {
                     // implied failed, we try to interpolate the failed values
                     vol = QuantLib::Null<QuantLib::Real>();
                     failedPrices_[strikeIdx][tenorIdx] = true;

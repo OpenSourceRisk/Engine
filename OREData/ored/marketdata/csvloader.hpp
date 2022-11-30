@@ -79,7 +79,7 @@ public:
     std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
 
     //! Get a particular quote by its unique name
-    boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date&) const override;
+    using Loader::get;
 
     //! get quotes matching a wildcard
     std::set<boost::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const override;

@@ -71,11 +71,25 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         std::vector<Period> terms(strQuotes.size());
         std::vector<bool> isZc(strQuotes.size(), true);
 
-        for (auto& md : loader.loadQuotes(asof)) {
+        std::ostringstream ss1;
+        ss1 << MarketDatum::InstrumentType::ZC_INFLATIONSWAP << "/*";
+        Wildcard w1(ss1.str());
+        auto data1 = loader.get(w1, asof);
 
-            if (md->asofDate() == asof && (md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP ||
-                                           (md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONSWAP &&
-                                            config->type() == InflationCurveConfig::Type::YY))) {
+        std::ostringstream ss2;
+        ss2 << MarketDatum::InstrumentType::YY_INFLATIONSWAP << "/*";
+        Wildcard w2(ss2.str());
+        auto data2 = loader.get(w2, asof);
+
+        data1.merge(data2);
+
+        for (const auto& md : data1) {
+
+            QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
+
+            if ((md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP ||
+                (md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONSWAP &&
+                 config->type() == InflationCurveConfig::Type::YY))) {
 
                 boost::shared_ptr<ZcInflationSwapQuote> q = boost::dynamic_pointer_cast<ZcInflationSwapQuote>(md);
                 if (q) {
@@ -111,12 +125,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         // construct seasonality
         boost::shared_ptr<Seasonality> seasonality;
         if (config->seasonalityBaseDate() != Null<Date>()) {
-            if (!config->overrideSeasonalityFactors().empty()) {
-                // override market data by explicit list
-                seasonality = boost::make_shared<MultiplicativePriceSeasonality>(config->seasonalityBaseDate(),
-                                                                                 config->seasonalityFrequency(),
-                                                                                 config->overrideSeasonalityFactors());
-            } else {
+            if (config->overrideSeasonalityFactors().empty()) {
                 std::vector<string> strFactorIDs = config->seasonalityFactors();
                 std::vector<double> factors(strFactorIDs.size());
                 for (Size i = 0; i < strFactorIDs.size(); i++) {
@@ -132,8 +141,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                        << " factors.");
                         boost::shared_ptr<SeasonalityQuote> sq =
                             boost::dynamic_pointer_cast<SeasonalityQuote>(marketQuote);
-			QL_REQUIRE(sq, "Could not cast to SeasonalityQuote, internal error.");
-			QL_REQUIRE(sq->type() == "MULT",
+                            QL_REQUIRE(sq, "Could not cast to SeasonalityQuote, internal error.");
+                            QL_REQUIRE(sq->type() == "MULT",
                                    "Market quote (" << sq->name() << ") not of multiplicative type.");
                         Size seasBaseDateMonth = ((Size)config->seasonalityBaseDate().month());
                         int findex = sq->applyMonth() - seasBaseDateMonth;
@@ -149,6 +158,11 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 QL_REQUIRE(!factors.empty(), "no seasonality factors found");
                 seasonality = boost::make_shared<MultiplicativePriceSeasonality>(
                     config->seasonalityBaseDate(), config->seasonalityFrequency(), factors);
+            } else {
+                // override market data by explicit list
+                seasonality = boost::make_shared<MultiplicativePriceSeasonality>(config->seasonalityBaseDate(),
+                                                                                 config->seasonalityFrequency(),
+                                                                                 config->overrideSeasonalityFactors());
             }
         }
 
@@ -205,7 +219,6 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     index->clone(Handle<ZeroInflationTermStructure>(
                         boost::dynamic_pointer_cast<ZeroInflationTermStructure>(curve_))),
                     interpolatedIndex_);
-            } else {
             }
         }
         if (config->type() == InflationCurveConfig::Type::YY) {
