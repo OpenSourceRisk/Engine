@@ -17,8 +17,6 @@
 */
 
 #include <ql/exercise.hpp>
-#include <ql/pricingengines/americanpayoffatexpiry.hpp>
-#include <ql/pricingengines/americanpayoffathit.hpp>
 #include <qle/pricingengines/analyticdigitalamericanengine.hpp>
 #include <utility>
 
@@ -33,11 +31,10 @@ void AnalyticDigitalAmericanEngine::calculate() const {
 
     QuantLib::AnalyticDigitalAmericanEngine::calculate();
 
-    ext::shared_ptr<AmericanExercise> ex = ext::dynamic_pointer_cast<AmericanExercise>(arguments_.exercise);
     // If a payDate was provided (and is greater than the expiryDate)
-    if (payDate_ > ex->lastDate()) {
+    if (payDate_ > arguments_.exercise->lastDate()) {
         Rate payDateDiscount = process_->riskFreeRate()->discount(payDate_);
-        Rate expiryDateDiscount = process_->riskFreeRate()->discount(ex->lastDate());
+        Rate expiryDateDiscount = process_->riskFreeRate()->discount(arguments_.exercise->lastDate());
         Rate factor = payDateDiscount / expiryDateDiscount;
         results_.value *= factor;
 
