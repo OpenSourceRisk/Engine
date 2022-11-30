@@ -50,9 +50,12 @@ void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
 	    requiredFixings_.addFixingDate(date, fxIndex_, payDate);
     }
 
+
     // Set up Legs
+    inverted_ = parseFxIndex(fxIndex_)->targetCurrency() != payCcy;
     legs_ = {{boost::make_shared<SimpleCashFlow>(settlementNotional_, payDate)},
-             {boost::make_shared<QuantExt::AverageFXLinkedCashFlow>(payDate, observationSchedule.dates(), referenceNotional_, fxIndex)}}; 
+             {boost::make_shared<QuantExt::AverageFXLinkedCashFlow>(payDate, observationSchedule.dates(),
+                                                                    referenceNotional_, fxIndex, inverted_)}};
     legCurrencies_ = {settlementCurrency_, settlementCurrency_};
     legPayers_ = {fixedPayer_, !fixedPayer_};
 
@@ -69,11 +72,25 @@ void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     notionalCurrency_ = settlementCurrency_;
     maturity_ = payDate;
 
+    LOG("FxAverageForward::build() done");
+}
+
+const std::map<std::string, boost::any>& FxAverageForward::additionalData() const {
+    additionalData_.clear();
     additionalData_["settlementNotional"] = settlementNotional_;
     additionalData_["settlementCurrency"] = settlementCurrency_;
     additionalData_["referenceCurrency"] = referenceCurrency_;
     additionalData_["referenceNotional"] = referenceNotional_;
-    LOG("FxAverageForward::build() done");
+    if (legs_.size() == 2 && !legs_[1].empty()) {
+        auto avg = boost::dynamic_pointer_cast<QuantExt::AverageFXLinkedCashFlow>(legs_[1].front());
+        if (avg) {
+            for (auto [date, value] : avg->fixings())
+                additionalData_["fixing_" + ore::data::to_string(date)] = value;
+        }
+        additionalData_["average rate"] = inverted_ ? 1.0 / avg->fxRate() : avg->fxRate();
+        additionalData_["effective rate"] = avg->fxRate();
+    }
+    return additionalData_;
 }
 
 void FxAverageForward::fromXML(XMLNode* node) {
