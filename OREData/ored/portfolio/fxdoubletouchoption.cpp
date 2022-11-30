@@ -84,13 +84,13 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
         DLOG("Payoff at hit not yet supported for FxDoubleTouchOptions, setting to payoff at expiry");
     }
 
-    Natural payLag = 0;
-    BusinessDayConvention payConvention = Unadjusted;
-    Calendar payCalendar = NullCalendar();
     Date payDate = expiryDate;
     const boost::optional<OptionPaymentData>& opd = option_.paymentData();
     if (opd) {
         if (opd->rulesBased()) {
+            Natural payLag = 0;
+            BusinessDayConvention payConvention = Unadjusted;
+            Calendar payCalendar = NullCalendar();
             payLag = opd->lag();
             payConvention = opd->convention();
             payCalendar = opd->calendar();
