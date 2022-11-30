@@ -916,8 +916,6 @@
   <xs:complexType name="commoditySpreadOptionData">
     <xs:sequence>
       <xs:element type="legData" name="LegData" minOccurs="2" maxOccurs="unbounded"/>
-      <xs:element type="date" name="ExerciseDate" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:double" name="Quantity" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:double" name="SpreadStrike" minOccurs="1" maxOccurs="1"/>
       <xs:element type="optionType" name="OptionType" minOccurs="1" maxOccurs="1"/>
       <xs:element type="currencyCode" name="Currency" minOccurs="1" maxOccurs="1"/>

@@ -28,15 +28,22 @@ enum CommoditySpreadOptionPosition{Begin = 0, Long = 0, Short = 1, End = 2};
 void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
 
     reset();
-
     npvCurrency_ = settlementCcy_;
     DLOG("CommoditySpreadOption::build() called for trade " << id());
     // build the relevant fxIndexes;
     std::vector<boost::shared_ptr<QuantExt::FxIndex>> FxIndex{nullptr, nullptr};
     commLegData_.resize(2);
-
+    Currency ccy = parseCurrency(settlementCcy_);
+    auto optionType = parseOptionType(callPut_);
     boost::shared_ptr<CommodityIndex> longIndex{nullptr}, shortIndex{nullptr};
     std::vector<bool> isAveraged{false, false};
+
+    // init engine factory builder
+    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    auto engineBuilder = boost::dynamic_pointer_cast<CommoditySpreadOptionEngineBuilder>(builder);
+    // get config
+    auto config = builder->configuration(MarketContext::pricing);
+
     // Build the commodity legs
     for (int i = CommoditySpreadOptionPosition::Begin; i!=CommoditySpreadOptionPosition::End; i++) { // The order is important, the first leg is always the long position, the second is the short
         if(i == (int)CommoditySpreadOptionPosition::Long) {
@@ -56,10 +63,10 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
         auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
         auto cflb = boost::dynamic_pointer_cast<CommodityFloatingLegBuilder>(legBuilder);
         QL_REQUIRE(cflb, "Expected a CommodityFloatingLegBuilder for leg type " << legData_[i].legType());
-        Leg leg = cflb->buildLeg(legData_[i], engineFactory, requiredFixings_, "");
-        QL_REQUIRE(leg.size() == 1, "CommoditySpreadOption is currently implemented for exactly one pair of contracts.");
-        boost::shared_ptr<CommodityIndex> index{nullptr};
+        Leg leg = cflb->buildLeg(legData_[i], engineFactory, requiredFixings_, config);
 
+        // setup the cf indexes
+        boost::shared_ptr<CommodityIndex> index{nullptr};
         if(isAveraged[i]) {
             index = boost::dynamic_pointer_cast<QuantExt::CommodityIndexedAverageCashFlow>(leg[0])->index();
         } else {
@@ -67,6 +74,7 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
         }
         (i == (int)CommoditySpreadOptionPosition::Long)?longIndex=index:shortIndex=index;
 
+        // check ccy consistency
         auto underlyingCcy = index->priceCurve()->currency();
         auto tmpFx = commLegData_[i]->fxIndex();
         if(tmpFx.empty()) {
@@ -78,39 +86,65 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
             auto foreign = (i == (int)CommoditySpreadOptionPosition::Short)?underlyingCcy.code():settlementCcy_;
             FxIndex[i] = buildFxIndex(tmpFx, domestic, foreign, engineFactory->market(),
                            engineFactory->configuration(MarketContext::pricing));
+            // update required fixings
+
         }
         legs_.push_back(leg);
-        legCurrencies_.push_back(npvCurrency_);
+        legCurrencies_.push_back(npvCurrency_); // all legs and cf are priced with the same ccy
     }
 
+    vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    //check cfs and build the instruments
+    QL_REQUIRE(legs_[0].size() == legs_[1].size(), "CommoditySpreadOption: the two legs must contain the same number of cashflows.");
+    for (size_t i =0; i<legs_[0].size();++i){ // I already checked the size is the same for both
 
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(parseDate(exerciseDate_));
-    Date settlementDate = settlementDate_.empty()?Date(): parseDate(settlementDate_);
-    if(settlementDate!=Date())
-        QL_REQUIRE(settlementDate>=exercise->lastDate(), "CommoditySpreadOption: Trade cannot be settled before exercise");
+        Real lq = (isAveraged[CommoditySpreadOptionPosition::Long])?
+                boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(legs_[CommoditySpreadOptionPosition::Long][i])->quantity():
+                boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(legs_[CommoditySpreadOptionPosition::Long][i])->quantity();
+        auto end_date_l = (isAveraged[CommoditySpreadOptionPosition::Long])?
+                                boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(legs_[CommoditySpreadOptionPosition::Long][i])->date():
+                                boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(legs_[CommoditySpreadOptionPosition::Long][i])->date();
+        Real sq = (isAveraged[CommoditySpreadOptionPosition::Short])?
+                boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(legs_[CommoditySpreadOptionPosition::Short][i])->quantity():
+                boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(legs_[CommoditySpreadOptionPosition::Short][i])->quantity();
 
-    maturity_ = (settlementDate == Date())?exercise->lastDate() : settlementDate;
-//
+        auto end_date_s = (isAveraged[CommoditySpreadOptionPosition::Short])?
+                                 boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(legs_[CommoditySpreadOptionPosition::Short][i])->date():
+                                 boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(legs_[CommoditySpreadOptionPosition::Short][i])->date();
+        QL_REQUIRE(abs(lq- sq) < 1.e-6, "CommoditySpreadOption: all cashflows must refer to the same quantity");
+        QL_REQUIRE(end_date_l==end_date_s, "CommoditySpreadOption: the computation period for the two cashflows must be the same");
+        quantity_ = lq;
 
-    // build the instrument
-    auto spreadOption = boost::make_shared<QuantExt::CommoditySpreadOption>(
-        boost::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[CommoditySpreadOptionPosition::Long][0]),
-        boost::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[CommoditySpreadOptionPosition::Short][0]),
-        exercise, quantity_, spreadStrike_, parseOptionType(callPut_),
-        settlementDate, FxIndex[CommoditySpreadOptionPosition::Long], FxIndex[CommoditySpreadOptionPosition::Short]);
+        // set exercise date to the calculation period end
+        boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(end_date_l);
+        Date settlementDate{Date()};
+        if(i==legs_[0].size()-1){ // if the last flow must be settled with delay, set it here
+            settlementDate = settlementDate_.empty()?Date(): parseDate(settlementDate_);
+        }
+        if(settlementDate!=Date())
+            QL_REQUIRE(settlementDate>=exercise->lastDate(), "CommoditySpreadOption: Trade cannot be settled before exercise");
 
+        //maturity gets overwritten every time, and it is ok. If the last option is settled with delay, maturity is set to the settlement date.
+        maturity_ = (settlementDate == Date())?exercise->lastDate() : settlementDate;
 
-    // build the engine
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
-    Currency ccy = parseCurrency(settlementCcy_);
-    auto engineBuilder = boost::dynamic_pointer_cast<CommoditySpreadOptionEngineBuilder>(builder);
-    boost::shared_ptr<PricingEngine> engine = engineBuilder->engine(ccy, longIndex, shortIndex, id());
-    //set pricing engine
-    spreadOption->setPricingEngine(engine);
-    // set the instrument
-    instrument_ = boost::make_shared<VanillaInstrument>(spreadOption);
-//    auto ex_date = parseDate(exerciseDate_);
-//    auto set_date = parseDate(settlementDate_);
+        // build the instrument for the i-th cfs
+        auto spreadOption = boost::make_shared<QuantExt::CommoditySpreadOption>(
+            boost::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[CommoditySpreadOptionPosition::Long][i]),
+            boost::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[CommoditySpreadOptionPosition::Short][i]),
+            exercise, quantity_, spreadStrike_, optionType,
+            settlementDate, FxIndex[CommoditySpreadOptionPosition::Long], FxIndex[CommoditySpreadOptionPosition::Short]);
+
+        // build and assign the engine
+        boost::shared_ptr<PricingEngine> engine = engineBuilder->engine(ccy, longIndex, shortIndex, id());
+        spreadOption->setPricingEngine(engine);
+        additionalInstruments.emplace_back(spreadOption);
+    }
+
+    // grep the last computation period instrument as main
+    auto qlInstrument = additionalInstruments.back();
+    additionalInstruments.pop_back(); // remove last instrument, it is already set as main one
+    // set the trade instrument
+    instrument_ = boost::make_shared<VanillaInstrument>(qlInstrument, 1.0, additionalInstruments, std::vector<Real>(legs_[0].size()-1,1.0));
 }
 
 void CommoditySpreadOption::fromXML(XMLNode* node){
@@ -128,8 +162,6 @@ void CommoditySpreadOption::fromXML(XMLNode* node){
     }
     QL_REQUIRE(legData_[CommoditySpreadOptionPosition::Long].isPayer() !=
                legData_[CommoditySpreadOptionPosition::Short].isPayer(), "CommoditySpreadOption: both a long and a short Assets are required.");
-    exerciseDate_ = XMLUtils::getChildValue(csoNode, "ExerciseDate", true);
-    quantity_ = XMLUtils::getChildValueAsDouble(csoNode, "Quantity", false,1.);
     spreadStrike_ = XMLUtils::getChildValueAsDouble(csoNode, "SpreadStrike", true);
     callPut_ = XMLUtils::getChildValue(csoNode, "OptionType", false, "Call");
     settlementDate_ = XMLUtils::getChildValue(csoNode, "SettlementDate",false,"");
@@ -144,7 +176,11 @@ XMLNode* CommoditySpreadOption::toXML(XMLDocument& doc){
     for (size_t i = 0; i < legData_.size(); ++i) {
         XMLUtils::appendNode(csoNode, legData_[i].toXML(doc));
     }
-//    XMLUtils::appendNode(node, )
+    XMLUtils::addChild(doc, csoNode, "OptionType", callPut_);
+    if(!settlementDate_.empty())
+        XMLUtils::addChild(doc, csoNode, "SettlementDate", settlementDate_);
+    XMLUtils::addChild(doc, csoNode, "Currency", settlementCcy_);
+
     return node;
 }
 

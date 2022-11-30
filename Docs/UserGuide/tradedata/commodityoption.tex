@@ -1,4 +1,4 @@
-
+\usepackage{listings}
 \subsubsection{Commodity Option}
 \label{ss:input_commodity_option}
 
@@ -112,25 +112,20 @@ The \lstinline!CommoditySpreadOptionData! node is the trade data container for t
 The structure of a \lstinline!CommoditySpreadOptionData! node for a commodity option is shown in Listing \ref{lst:com_s_option_data}.
 
 The \lstinline!CommoditySpreadOptionData! include exactly two \lstinline!LegData! nodes of type \emph{CommodityFloating}.
-Details on these are described in \ref{ss:commodityfloatingleg}. The resulting Legs must produce a single cashflow (i.e. a single \emph{calculation period}).
+Details on these are described in \ref{ss:commodityfloatingleg}.
+The resulting Legs must produce the same amount of cashflows (i.e.~the number of \emph{calculation period}s must be the same for the long and short positions).
+If the number of cashflows per leg is 1, this trade represents a vanilla commodity spread option.
+If is greater than 1, it represents a multi-period commodity spread option.
 The first one represents the long position on the relevant asset, and the \lstinline!isPayer! must be set to \emph{true}.
 The second one represents the short position on the relevant asset, and the \lstinline!isPayer! must be set to \emph{false}.
 
-Within the two \lstinline!LegData!, the \lstinline!Quantity! node has a special meaning with respect to contract units: it represents the amount of relevant underlying contract quantity units required to sum up to
-\lstinline!CommoditySpreadOptionData! \lstinline!Quantity!, and it is used to support underlying contracts quoted in different units (e.g. financial oil and natural gas).
-Let $U_{l}$ be the units for the long position commodity underlying contract, and $U_{s}$ the units for the short position one.
-Also, let $Q_{l}$ and $Q_s$ the quantities, expressed in $U_l$ and $U_s$ respectively that equate the number $Q_{\text{trade}}$ of units $U_{\text{trade}}$ covered by this transaction.\\
-It must hold:
-$$
-\frac{Q_l \cdot U_l}{Q_{\text{trade}} \cdot U_{\text{trade}}} = \frac{Q_s \cdot U_s}{Q_{\text{trade}} \cdot U_{\text{trade}}} = 1.
-$$
+Within the two \lstinline!LegData!, the \lstinline!Quantity! node has must be equal.
+If the underlying contracts are quoted using different units (e.g. barrels vs liters), the \lstinline!Gearing! node must be used to account for this difference.
 
 
 Other than the two legs, the following nodes complete the \lstinline!CommoditySpreadOptionData! container:
 \begin{itemize}
     \item \lstinline!ExerciseDate!: the exercise date. Allowable values: See Date in Table \ref{tab:allow_stand_data}.
-    \item \lstinline!Quantity!: the number of units of the underlying commodity covered by the transaction.
-Allowable values: Any positive real number.
     \item \lstinline!SpreadStrike!: The strike value for the spread. Allowable values: Any real number.
     \item \lstinline!OptionType!: The allowable values are \emph{Call} or \emph{Put}.
     \item \lstinline!SettlementDate! [Optional]: A date in which the trade is settled.
