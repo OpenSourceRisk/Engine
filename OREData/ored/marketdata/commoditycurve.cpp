@@ -225,13 +225,13 @@ void CommodityCurve::populateData(map<Date, Handle<Quote>>& data, const Date& as
 
     // Commodity spot quote if provided by the configuration
     Date spotDate = cal.advance(asof, spotTenor);
-    if (!config->commoditySpotQuoteId().empty()) {
+    if (config->commoditySpotQuoteId().empty()) {
+        QL_REQUIRE(outright, "If the commodity forward quotes are not outright,"
+                                 << " a commodity spot quote needs to be configured");
+    } else {
         auto spot = loader.get(config->commoditySpotQuoteId(), asof)->quote();
         commoditySpot_ = spot->value();
         data[spotDate] = spot;
-    } else {
-        QL_REQUIRE(outright, "If the commodity forward quotes are not outright,"
-                                 << " a commodity spot quote needs to be configured");
     }
 
     // Add the forward quotes to the curve data
@@ -518,7 +518,7 @@ void CommodityCurve::buildPiecewiseCurve(const Date& asof, const CommodityCurveC
 }
 
 vector<boost::shared_ptr<CommodityForwardQuote>>
-CommodityCurve::getQuotes(const Date& asof, const string& configId, const vector<string>& quotes,
+CommodityCurve::getQuotes(const Date& asof, const string& /*configId*/, const vector<string>& quotes,
     const Loader& loader, bool filter) {
 
     LOG("CommodityCurve: start getting configured commodity quotes.");
@@ -528,44 +528,49 @@ CommodityCurve::getQuotes(const Date& asof, const string& configId, const vector
     auto wildcard = getUniqueWildcard(quotes);
     regexQuotes_ = wildcard != boost::none;
 
+    std::set<boost::shared_ptr<MarketDatum>> data;
+    if (wildcard) {
+        data = loader.get(*wildcard, asof);
+    } else {
+        std::ostringstream ss;
+        ss << MarketDatum::InstrumentType::COMMODITY_FWD << "/" << MarketDatum::QuoteType::PRICE << "/*";
+        Wildcard w(ss.str());
+        data = loader.get(w, asof);
+    }
+
     // Add the relevant forward quotes to the result vector
     vector<boost::shared_ptr<CommodityForwardQuote>> result;
-    for (auto& md : loader.loadQuotes(asof)) {
+    for (const auto& md : data) {
+        QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
         // Only looking for quotes on asof date, with quote type PRICE and instrument type commodity forward
-        if (md->asofDate() == asof && md->quoteType() == MarketDatum::QuoteType::PRICE &&
-            md->instrumentType() == MarketDatum::InstrumentType::COMMODITY_FWD) {
 
-            boost::shared_ptr<CommodityForwardQuote> q = boost::dynamic_pointer_cast<CommodityForwardQuote>(md);
+        boost::shared_ptr<CommodityForwardQuote> q = boost::dynamic_pointer_cast<CommodityForwardQuote>(md);
+        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CommodityForwardQuote");
 
-            // Check if the quote is requested by the config and if it isn't continue to the next quote
-            if (!wildcard) {
-                vector<string>::const_iterator it =
-                    find(quotes.begin(), quotes.end(), q->name());
-                if (it == quotes.end())
-                    continue;
-            } else {
-                if (!(*wildcard).matches(q->name()))
-                    continue;
-            }
-
-            // If filter is true, remove tenor based quotes and quotes with expiry before asof.
-            if (filter) {
-                if (q->tenorBased()) {
-                    TLOG("Skipping tenor based quote, " << q->name() << ".");
-                    continue;
-                }
-                if (q->expiryDate() < asof) {
-                    TLOG("Skipping quote because its expiry date, " << io::iso_date(q->expiryDate())
-                        << ", is before the market date " << io::iso_date(asof));
-                    continue;
-                }
-            }
-
-            // If we make it here, the quote is relevant.
-            result.push_back(q);
-            TLOG("Added quote " << q->name() << ".");
+        if (!wildcard) {
+            vector<string>::const_iterator it =
+                find(quotes.begin(), quotes.end(), q->name());
+            if (it == quotes.end())
+                continue;
         }
+
+        // If filter is true, remove tenor based quotes and quotes with expiry before asof.
+        if (filter) {
+            if (q->tenorBased()) {
+                TLOG("Skipping tenor based quote, " << q->name() << ".");
+                continue;
+            }
+            if (q->expiryDate() < asof) {
+                TLOG("Skipping quote because its expiry date, " << io::iso_date(q->expiryDate())
+                    << ", is before the market date " << io::iso_date(asof));
+                continue;
+            }
+        }
+
+        // If we make it here, the quote is relevant.
+        result.push_back(q);
+        TLOG("Added quote " << q->name() << ".");
     }
 
     LOG("CommodityCurve: finished getting configured commodity quotes.");

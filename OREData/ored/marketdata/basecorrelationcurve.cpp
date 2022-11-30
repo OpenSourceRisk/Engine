@@ -113,16 +113,15 @@ BaseCorrelationCurve::BaseCorrelationCurve(
         };
         map<pair<Period, Real>, Handle<Quote>, decltype(mpCmp)> data(mpCmp);
 
-        for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
+        std::ostringstream ss;
+        ss << MarketDatum::InstrumentType::CDS_INDEX << "/" << MarketDatum::QuoteType::BASE_CORRELATION << "/*";
+        Wildcard w(ss.str());
+        for (const auto& md : loader.get(w, asof)) {
 
-            // Go to next quote if the market data point's date does not equal to asof.
-            if (md->asofDate() != asof)
-                continue;
+            QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
-            // Go to next quote if not a base correlation quote.
             auto q = boost::dynamic_pointer_cast<BaseCorrelationQuote>(md);
-            if (!q)
-                continue;
+            QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to BaseCorrelationQuote");
 
             // Go to next quote if index name in the quote does not match the cds vol configuration name.
             if (config.quoteName() != q->cdsIndexName())
