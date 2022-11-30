@@ -40,7 +40,7 @@ using QuantExt::PriceTermStructure;
 
 namespace testsuite {
 
-TestMarket::TestMarket(Date asof) {
+TestMarket::TestMarket(Date asof) : MarketImpl(false) {
 
     TestConfigurationObjects::setConventions();
     

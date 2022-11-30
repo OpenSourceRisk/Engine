@@ -29,7 +29,8 @@ namespace ore {
 namespace data {
 
 FittedBondCurveHelperMarket::FittedBondCurveHelperMarket(
-    const std::map<std::string, Handle<YieldTermStructure>>& iborIndexCurves) {
+    const std::map<std::string, Handle<YieldTermStructure>>& iborIndexCurves, const bool handlePseudoCurrencies)
+    : MarketImpl(handlePseudoCurrencies) {
 
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
 

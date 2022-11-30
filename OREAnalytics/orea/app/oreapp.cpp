@@ -117,6 +117,12 @@ int OREApp::run() {
         engineFactory_ = buildEngineFactory(market_, "setup", true);
         out_ << "OK" << endl;
 
+        /************************
+         * Set global pseudo currency market parameters
+         * TODO cleaner integration with analytics
+         */
+        GlobalPseudoCurrencyMarketParameters::instance().set(getEngineData("setup")->globalParameters());
+
         /******************************
          * Load and Build the Portfolio
          */

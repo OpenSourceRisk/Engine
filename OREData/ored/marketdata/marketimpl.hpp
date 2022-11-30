@@ -50,10 +50,9 @@ using std::tuple;
 
   \ingroup marketdata
  */
-class MarketImpl : virtual public Market {
+class MarketImpl : public Market {
 public:
-    //! Default constructor
-    MarketImpl() : Market() {}
+    explicit MarketImpl(const bool handlePseudoCurrencies) : Market(handlePseudoCurrencies) {}
 
     //! \name Market interface
     //@{
@@ -63,7 +62,7 @@ public:
     //! Yield Curves
     Handle<YieldTermStructure> yieldCurve(const YieldCurveType& type, const string& ccy,
                                           const string& configuration = Market::defaultConfiguration) const override;
-    Handle<YieldTermStructure> discountCurve(const string& ccy,
+    Handle<YieldTermStructure> discountCurveImpl(const string& ccy,
                                              const string& configuration = Market::defaultConfiguration) const override;
     Handle<YieldTermStructure> yieldCurve(const string& name,
                                           const string& configuration = Market::defaultConfiguration) const override;
@@ -84,12 +83,14 @@ public:
     yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const override;
 
     //! FX
-    QuantLib::Handle<QuantExt::FxIndex> fxIndex(const string& fxIndex, 
-        const string& configuration = Market::defaultConfiguration) const override;
-    Handle<Quote> fxRate(const string& ccypair, const string& configuration = Market::defaultConfiguration) const override;
-    Handle<Quote> fxSpot(const string& ccypair, const string& configuration = Market::defaultConfiguration) const override;
-    Handle<BlackVolTermStructure> fxVol(const string& ccypair,
-                                        const string& configuration = Market::defaultConfiguration) const override;
+    QuantLib::Handle<QuantExt::FxIndex>
+    fxIndexImpl(const string& fxIndex, const string& configuration = Market::defaultConfiguration) const override;
+    Handle<Quote> fxRateImpl(const string& ccypair,
+                             const string& configuration = Market::defaultConfiguration) const override;
+    Handle<Quote> fxSpotImpl(const string& ccypair,
+                             const string& configuration = Market::defaultConfiguration) const override;
+    Handle<BlackVolTermStructure> fxVolImpl(const string& ccypair,
+                                            const string& configuration = Market::defaultConfiguration) const override;
 
     //! Default Curves and Recovery Rates
     Handle<QuantExt::CreditCurve> defaultCurve(const string&,

@@ -48,6 +48,8 @@
 #include <qle/termstructures/creditvolcurve.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 
+#include <boost/thread/shared_mutex.hpp>
+
 namespace ore {
 namespace data {
 using namespace QuantLib;
@@ -84,6 +86,72 @@ enum class MarketObject {
     YieldVol = 21
 };
 
+//! Struct to store parameters for commodities to be treatred as pseudo currencies
+struct PseudoCurrencyMarketParameters {
+    bool treatAsFX;                  // flag to pass through to Pure FX
+    string baseCurrency;             // pseudo currency base currency, typically USD
+    std::map<string, string> curves; // map from pseudo currency to commodity curve, e.g. "XAU" -> "PM:XAUUSD", "BTC" -> "CRYPTO:BTCUSD"
+    string fxIndexTag;               // tag for FX correlations
+    Real defaultCorrelation;         // default correlation or Null<Real> if none is set
+};
+
+std::ostream& operator<<(std::ostream&, const struct PseudoCurrencyMarketParameters&);
+
+//! Function to build parameters from PricingEngine GlobalParametrs.
+/*! If no PricingEngine Global Parameters (PEGP) are provided the default params are returned which have treatAsFX =
+ * true. If PEGP are present, we look for the following fields
+ *
+ *  name="PseudoCurrency.TreatAsFX" value = true or false
+ *  name="PseudoCurrency.BaseCurrency" value = currency code
+ *  name="PseudoCurrency.FXIndexTag" value = Tag name for FX indices, e.g. GENERIC means we request correlation for
+ * "FX-GENERIC-USD-EUR" name="PseudeoCurrency.Curves.XXX" value = curve name, here XXX should be a 3 letter Precious metal or Crypto currency
+ * code name="PseudoCurrency.DefaultCorrelation" value = correlation. This is optional, if present we use this when the
+ * market has no correlation
+ *
+ *  A typical configuration is
+ *  \<pre\>
+ *    \<GlobalParameters\>
+ *      \<Parameter name="PseudoCurrency.TreatAsFX"\>false\</Parameter\>
+ *      \<Parameter name="PseudoCurrency.BaseCurrency"\>USD\</Parameter\>
+ *      \<Parameter name="PseudoCurrency.FXIndexTag"\>GENERIC\</Parameter\>
+ *      \<Parameter name="PseudoCurrency.Curve.XAU"\>PM:XAUUSD\</Parameter\>
+ *      \<Parameter name="PseudoCurrency.Curve.XBT"\>CRYPTO:XBTUSD\</Parameter\>
+ *    \</GlobalParameters\>
+ *  \</pre\>
+ */
+struct PseudoCurrencyMarketParameters buildPseudoCurrencyMarketParameters(
+    const std::map<string, string>& pricingEngineGlobalParameters = std::map<string, string>());
+
+//! Singleton to store Global parameters, this should be initialised at some point with PEGP
+class GlobalPseudoCurrencyMarketParameters
+    : public Singleton<GlobalPseudoCurrencyMarketParameters, std::integral_constant<bool, true>> {
+    friend class Singleton<GlobalPseudoCurrencyMarketParameters, std::integral_constant<bool, true>>;
+
+public:
+    const PseudoCurrencyMarketParameters& get() const {
+        boost::shared_lock<boost::shared_mutex> lock(mutex_);
+        return params_;
+    }
+
+    void set(const PseudoCurrencyMarketParameters& params) {
+        boost::unique_lock<boost::shared_mutex> lock(mutex_);
+        params_ = params;
+    }
+    void set(const std::map<string, string>& pegp) {
+        boost::unique_lock<boost::shared_mutex> lock(mutex_);
+        params_ = buildPseudoCurrencyMarketParameters(pegp);
+    }
+
+private:
+    GlobalPseudoCurrencyMarketParameters() {
+        // default behaviour is from above
+        params_ = buildPseudoCurrencyMarketParameters();
+    };
+
+    PseudoCurrencyMarketParameters params_;
+    mutable boost::shared_mutex mutex_;
+};
+    
 //! Market
 /*!
   Base class for central repositories containing all term structure objects
@@ -93,6 +161,9 @@ enum class MarketObject {
 */
 class Market {
 public:
+    //! Constructor
+    explicit Market(const bool handlePseudoCurrencies) : handlePseudoCurrencies_(handlePseudoCurrencies) {}
+
     //! Destructor
     virtual ~Market() {}
 
@@ -103,8 +174,11 @@ public:
     //@{
     virtual Handle<YieldTermStructure> yieldCurve(const YieldCurveType& type, const string& name,
                                                   const string& configuration = Market::defaultConfiguration) const = 0;
+    Handle<YieldTermStructure> discountCurve(const string& ccy,
+                                             const string& configuration = Market::defaultConfiguration) const;
     virtual Handle<YieldTermStructure>
-    discountCurve(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
+    discountCurveImpl(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
+
     virtual Handle<YieldTermStructure> yieldCurve(const string& name,
                                                   const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<IborIndex> iborIndex(const string& indexName,
@@ -131,16 +205,22 @@ public:
 
     //! \name Foreign Exchange
     //@{
-    virtual QuantLib::Handle<QuantExt::FxIndex> fxIndex(const string& fxIndex, const string& configuration = Market::defaultConfiguration) 
-        const = 0;
+    QuantLib::Handle<QuantExt::FxIndex> fxIndex(const string& fxIndex,
+                                                const string& configuration = Market::defaultConfiguration) const;
+    virtual QuantLib::Handle<QuantExt::FxIndex>
+    fxIndexImpl(const string& fxIndex, const string& configuration = Market::defaultConfiguration) const = 0;
     // Fx Rate is the fx rate as of today
-    virtual Handle<Quote> fxRate(const string& ccypair,
-                                 const string& configuration = Market::defaultConfiguration) const = 0;
+    Handle<Quote> fxRate(const string& ccypair, const string& configuration = Market::defaultConfiguration) const;
+    virtual Handle<Quote> fxRateImpl(const string& ccypair,
+                                     const string& configuration = Market::defaultConfiguration) const = 0;
     // Fx Spot is the spot rate quoted in the market
-    virtual Handle<Quote> fxSpot(const string& ccypair,
-                                 const string& configuration = Market::defaultConfiguration) const = 0;
-    virtual Handle<BlackVolTermStructure> fxVol(const string& ccypair,
-                                                const string& configuration = Market::defaultConfiguration) const = 0;
+    Handle<Quote> fxSpot(const string& ccypair, const string& configuration = Market::defaultConfiguration) const;
+    virtual Handle<Quote> fxSpotImpl(const string& ccypair,
+                                     const string& configuration = Market::defaultConfiguration) const = 0;
+    Handle<BlackVolTermStructure> fxVol(const string& ccypair,
+                                        const string& configuration = Market::defaultConfiguration) const;
+    virtual Handle<BlackVolTermStructure>
+    fxVolImpl(const string& ccypair, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Default Curves and Recovery Rates
@@ -247,6 +327,29 @@ public:
     virtual Handle<Quote> cpr(const string& securityID,
                               const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
+
+    // public utility
+    string commodityCurveLookup(const string& pm) const;
+
+    bool handlePseudoCurrencies() const { return handlePseudoCurrencies_; }
+
+protected:
+    bool handlePseudoCurrencies_ = false;
+
+private:
+    // caches for the market data objects
+    mutable std::map<string, Handle<Quote>> spotCache_;
+    mutable std::map<string, Handle<BlackVolTermStructure>> volCache_;
+    mutable std::map<string, Handle<YieldTermStructure>> discountCurveCache_;
+
+    mutable std::map<string, Handle<Quote>> fxRateCache_;
+    mutable std::map<std::pair<string, string>, QuantLib::Handle<QuantExt::FxIndex>> fxIndicesCache_;
+
+    // private utilities
+    Handle<Quote> getFxBaseQuote(const string& ccy, const string& config) const;
+    Handle<Quote> getFxSpotBaseQuote(const string& ccy, const string& config) const;
+    Handle<BlackVolTermStructure> getVolatility(const string& ccy, const string& config) const;
+    string getCorrelationIndexName(const string& ccy) const;
 };
 } // namespace data
 } // namespace ore
