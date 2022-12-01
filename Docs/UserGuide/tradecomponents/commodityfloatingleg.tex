@@ -230,9 +230,14 @@ Allowable values: \emph{true}, \emph{false}. Defaults to \emph{false} if omitted
 \lstinline!Tag! [Optional]: This node takes any string and can be used to link the floating leg with a fixed leg that has not explicitly provided its own quantities. This can be useful in situations where the quantities on the floating leg are specified with a \lstinline!CommodityQuantityFrequency! that is not simply \lstinline!PerCalculationPeriod!. The fixed leg does not have the \lstinline!CommodityQuantityFrequency! field. In these cases, the fixed leg can omit its \lstinline!Quantities! node and take the quantities from the floating leg. This \lstinline!Tag! node allows the fixed leg to link to a specific floating leg if there is more than one floating leg on the trade i.e.\ the fixed leg must just have the same \lstinline!Tag!. The link is also used to set the payment dates of the fixed leg if CommodityPayRelativeTo is set to FutureExpiryDate.
 
 \item
-\lstinline!DailyExpiryOffset! [Optional]: This node allows any non-negative integer value. It only has effect if \lstinline!IsAveraged!  is set to \emph{true}, and the underlying commodity \lstinline!Name! is not being averaged and has a daily contract frequency.  I.e. for an averaging leg on an underlying that is not averaging. 
+\lstinline!DailyExpiryOffset! [Optional]: This node allows any non-negative integer value. It only has effect the
+underlying commodity \lstinline!Name! is not being averaged and has a daily contract frequency.
 
-If this node is omitted, it defaults to zero. This node indicates which future contract is being referenced on each \textit{Pricing Date} in the averaging period by acting as a business day offset, using the commodity \lstinline!Name!'s expiry calendar, from the \textit{Pricing Date}. It is useful in the base metals market where the future contract being averaged on each \textit{Pricing Date} is the cash contract on that \textit{Pricing Date} i.e.\ the contract with expiry date two business days after the \textit{Pricing Date}. In this case, the \lstinline!DailyExpiryOffset! would be set to \lstinline!2!.
+If this node is omitted, it defaults to zero. This node indicates which future contract is being referenced on each
+\textit{Pricing Date} by acting as a business day offset, using the commodity \lstinline!Name!'s expiry calendar, from
+the \textit{Pricing Date}. It is useful e.g. in the base metals market where a future contract on each \textit{Pricing
+  Date} is the cash contract on that \textit{Pricing Date} i.e.\ the contract with expiry date two business days after
+the \textit{Pricing Date}. In this case, the \lstinline!DailyExpiryOffset! would be set to \lstinline!2!.
 
 \item \lstinline!FXIndex! [Optional]: If \lstinline!IsAveraged! is \emph{true} this node allows the fx conversion to be applied daily in the computation of averaged cash flows. It cannot be used with the \lstinline!Indexing! node.
 
