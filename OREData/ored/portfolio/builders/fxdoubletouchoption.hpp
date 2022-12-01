@@ -49,7 +49,7 @@ public:
 
 protected:
     virtual string keyImpl(const Currency& forCcy, const Currency& domCcy, const bool flipResults) override {
-        return forCcy.code() + domCcy.code();
+        return forCcy.code() + domCcy.code() + (flipResults ? "_1" : "_0");
     }
 
     boost::shared_ptr<GeneralizedBlackScholesProcess>
