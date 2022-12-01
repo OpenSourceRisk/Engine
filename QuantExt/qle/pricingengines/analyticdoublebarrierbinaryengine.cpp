@@ -28,6 +28,14 @@ void AnalyticDoubleBarrierBinaryEngine::calculate() const {
 
     QuantLib::AnalyticDoubleBarrierBinaryEngine::calculate();
 
+    // If a payDate was provided (and is greater than the expiryDate)
+    if (payDate_ > arguments_.exercise->lastDate()) {
+        Rate payDateDiscount = process_->riskFreeRate()->discount(payDate_);
+        Rate expiryDateDiscount = process_->riskFreeRate()->discount(arguments_.exercise->lastDate());
+        Rate factor = payDateDiscount / expiryDateDiscount;
+        results_.value *= factor;
+    }
+
     if (flipResults_) {
         // Invert spot, costOfCarry
         auto it = results_.additionalResults.find("spot");
