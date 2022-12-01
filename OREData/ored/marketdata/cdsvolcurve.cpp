@@ -90,22 +90,16 @@ void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveConf
 
     LOG("CDSVolCurve: start building constant volatility structure");
 
-    // Loop over all market datums and find the single quote
-    // Return error if there are duplicates (this is why we do not use loader.get() method)
-    Handle<Quote> quote;
-    for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
-        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::INDEX_CDS_OPTION) {
-
-            boost::shared_ptr<IndexCDSOptionQuote> q = boost::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
-
-            if (q->name() == cvc.quote()) {
-                TLOG("Found the constant volatility quote " << q->name());
-                QL_REQUIRE(quote.empty(), "Duplicate quote found for quote with id " << cvc.quote());
-                quote = q->quote();
-            }
-        }
-    }
-    QL_REQUIRE(!quote.empty(), "Quote not found for id " << cvc.quote());
+    const boost::shared_ptr<MarketDatum>& md = loader.get(cvc.quote(), asof);
+    QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
+    QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::INDEX_CDS_OPTION,
+        "MarketDatum instrument type '" << md->instrumentType() << "' <> 'MarketDatum::InstrumentType::INDEX_CDS_OPTION'");
+    boost::shared_ptr<IndexCDSOptionQuote> q = boost::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
+    QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
+    QL_REQUIRE(q->name() == cvc.quote(),
+        "IndexCDSOptionQuote name '" << q->name() << "' <> ConstantVolatilityConfig quote '" << cvc.quote() << "'");
+    TLOG("Found the constant volatility quote " << q->name());
+    Handle<Quote> quote = q->quote();
 
     DLOG("Creating CreditVolCurve structure");
 
@@ -137,44 +131,41 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
     // Different approaches depending on whether we are using a regex or searching for a list of explicit quotes.
     if (wildcard) {
 
-        DLOG("Have single quote with pattern " << (*wildcard).pattern());
+        DLOG("Have single quote with pattern " << wildcard->pattern());
 
         // Loop over quotes and process CDS option quotes matching pattern on asof
-        for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
+        for (const auto& md : loader.get(*wildcard, asof)) {
 
-            // Go to next quote if the market data point's date does not equal our asof
-            if (md->asofDate() != asof)
-                continue;
+            QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
             auto q = boost::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
-            if (q && (*wildcard).matches(q->name())) {
+            QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
 
-                TLOG("The quote " << q->name() << " matched the pattern");
+            TLOG("The quote " << q->name() << " matched the pattern");
 
-                /* - We load quotes with empty term only if there is at most one term specified in the curve config.
-                   - We load quotes with a term, if they match a term specified in the curve config or if no term is
-                     specified in the curve config.
-                   - Quotes with an empty term get the unique term of the curve config assigned, if the curve config
-                     has no terms specified, 5 * Years. */
-                QuantLib::Period quoteTerm;
-                if (q->indexTerm().empty()) {
-                    if (vc.terms().size() > 1)
-                        continue;
-                    quoteTerm = vc.terms().empty() ? 5 * Years : vc.terms().front();
-                } else {
-                    quoteTerm = parsePeriod(q->indexTerm());
-                    if (std::find(vc.terms().begin(), vc.terms().end(), quoteTerm) == vc.terms().end() &&
-                        !vc.terms().empty())
-                        continue;
-                }
+            /* - We load quotes with empty term only if there is at most one term specified in the curve config.
+               - We load quotes with a term, if they match a term specified in the curve config or if no term is
+                 specified in the curve config.
+               - Quotes with an empty term get the unique term of the curve config assigned, if the curve config
+                 has no terms specified, 5 * Years. */
+            QuantLib::Period quoteTerm;
+            if (q->indexTerm().empty()) {
+                if (vc.terms().size() > 1)
+                    continue;
+                quoteTerm = vc.terms().empty() ? 5 * Years : vc.terms().front();
+            } else {
+                quoteTerm = parsePeriod(q->indexTerm());
+                if (std::find(vc.terms().begin(), vc.terms().end(), quoteTerm) == vc.terms().end() &&
+                    !vc.terms().empty())
+                    continue;
+            }
 
-                Date expiryDate = getExpiry(asof, q->expiry());
-                if (expiryDate > asof) {
-                    quotes[std::make_tuple(expiryDate, quoteTerm,
-                                           strikeType_ == CreditVolCurve::Type::Price ? 1.0 : 0.0)] = q->quote();
-                    TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
-                                        << setprecision(9) << q->quote()->value() << ")");
-                }
+            Date expiryDate = getExpiry(asof, q->expiry());
+            if (expiryDate > asof) {
+                quotes[std::make_tuple(expiryDate, quoteTerm,
+                                       strikeType_ == CreditVolCurve::Type::Price ? 1.0 : 0.0)] = q->quote();
+                TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
+                                    << setprecision(9) << q->quote()->value() << ")");
             }
         }
 
@@ -186,35 +177,35 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
         DLOG("Have " << vcc.quotes().size() << " explicit quotes");
 
         // Loop over quotes and process CDS option quotes that are explicitly specified in the config
-        for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
+        std::ostringstream ss;
+        ss << MarketDatum::InstrumentType::INDEX_CDS_OPTION << "/*";
+        Wildcard w(ss.str());
+        for (const auto& md : loader.get(w, asof)) {
 
-            // Go to next quote if the market data point's date does not equal our asof
-            if (md->asofDate() != asof)
-                continue;
+            QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
-            if (auto q = boost::dynamic_pointer_cast<IndexCDSOptionQuote>(md)) {
+            auto q = boost::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
+            QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
 
-                // Find quote name in configured quotes.
-                auto it = find(vcc.quotes().begin(), vcc.quotes().end(), q->name());
+            // Find quote name in configured quotes.
+            auto it = find(vcc.quotes().begin(), vcc.quotes().end(), q->name());
+            if (it != vcc.quotes().end()) {
+                TLOG("Found the configured quote " << q->name());
 
-                if (it != vcc.quotes().end()) {
-                    TLOG("Found the configured quote " << q->name());
-
-                    Date expiryDate = getExpiry(asof, q->expiry());
-                    QL_REQUIRE(expiryDate > asof, "CDS volatility quote '" << q->name() << "' has expiry in the past ("
-                                                                           << io::iso_date(expiryDate) << ")");
-                    // we load all quotes, just populate the term of empty quotes
-                    QuantLib::Period quoteTerm;
-                    if (q->indexTerm().empty()) {
-                        quoteTerm = vc.terms().size() == 1 ? vc.terms().front() : 5 * Years;
-                    } else {
-                        quoteTerm = parsePeriod(q->indexTerm());
-                    }
-                    quotes[std::make_tuple(expiryDate, quoteTerm,
-                                           strikeType_ == CreditVolCurve::Type::Price ? 1.0 : 0.0)] = q->quote();
-                    TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
-                                        << setprecision(9) << q->quote()->value() << ")");
+                Date expiryDate = getExpiry(asof, q->expiry());
+                QL_REQUIRE(expiryDate > asof, "CDS volatility quote '" << q->name() << "' has expiry in the past ("
+                                                                       << io::iso_date(expiryDate) << ")");
+                // we load all quotes, just populate the term of empty quotes
+                QuantLib::Period quoteTerm;
+                if (q->indexTerm().empty()) {
+                    quoteTerm = vc.terms().size() == 1 ? vc.terms().front() : 5 * Years;
+                } else {
+                    quoteTerm = parsePeriod(q->indexTerm());
                 }
+                quotes[std::make_tuple(expiryDate, quoteTerm,
+                                       strikeType_ == CreditVolCurve::Type::Price ? 1.0 : 0.0)] = q->quote();
+                TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
+                                    << setprecision(9) << q->quote()->value() << ")");
             }
         }
 
@@ -295,16 +286,16 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
     Size quotesAdded = 0;
 
     // Loop over quotes and process any CDS option quote that matches a wildcard
-    for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
+    std::ostringstream ss;
+    ss << MarketDatum::InstrumentType::INDEX_CDS_OPTION << "/RATE_LNVOL/*";
+    Wildcard w(ss.str());
+    for (const auto& md : loader.get(w, asof)) {
 
-        // Go to next quote if the market data point's date does not equal our asof.
-        if (md->asofDate() != asof)
-            continue;
+        QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
         // Go to next quote if not a CDS option quote.
         auto q = boost::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
-        if (!q)
-            continue;
+        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
 
         // Go to next quote if index name in the quote does not match the cds vol configuration name.
         if (vc.curveID() != q->indexName() && vc.quoteName() != q->indexName())
@@ -403,16 +394,16 @@ void CDSVolCurve::buildVolatilityExplicit(
     Size quotesAdded = 0;
 
     // Loop over quotes and process CDS option quotes that have been requested
-    for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
+    std::ostringstream ss;
+    ss << MarketDatum::InstrumentType::INDEX_CDS_OPTION << "/*";
+    Wildcard w(ss.str());
+    for (const auto& md : loader.get(w, asof)) {
 
-        // Go to next quote if the market data point's date does not equal our asof.
-        if (md->asofDate() != asof)
-            continue;
+        QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
         // Go to next quote if not a CDS option quote.
         auto q = boost::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
-        if (!q)
-            continue;
+        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
 
         // This surface is for absolute strikes only.
         auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
