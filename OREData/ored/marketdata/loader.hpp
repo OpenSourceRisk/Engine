@@ -54,7 +54,7 @@ public:
     virtual std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const = 0;
 
     //! get quote by its unique name, throws if not existent
-    virtual boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date&) const = 0;
+    virtual boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date& d) const;
 
     //! get quotes matching a set of names, this should be overridden in derived classes for performance
     virtual std::set<boost::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,

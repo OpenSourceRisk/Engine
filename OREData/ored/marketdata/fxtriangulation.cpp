@@ -48,7 +48,7 @@ std::pair<std::string, std::string> splitPair(const std::string& pair) {
 Handle<YieldTermStructure> getMarketDiscountCurve(const Market* market, const std::string& ccy) {
     try {
         return market->discountCurve(ccy);
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
         WLOG("FXTriangulation: could not get market discount curve '"
              << ccy << "' - this can cause errors when compounding between today and spot is required");
         return Handle<YieldTermStructure>();

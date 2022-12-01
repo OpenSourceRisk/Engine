@@ -58,7 +58,6 @@ class MockLoader : public Loader {
 public:
     MockLoader();
     vector<boost::shared_ptr<MarketDatum>> loadQuotes(const Date&) const override { return data_; }
-    boost::shared_ptr<MarketDatum> get(const string& name, const Date&) const override { return dummyDatum_; }
     set<Fixing> loadFixings() const override { return dummyFixings_; }
     set<Fixing> loadDividends() const override { return dummyDividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
