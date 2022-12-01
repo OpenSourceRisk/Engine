@@ -182,7 +182,7 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     QL_REQUIRE(builder, "No FxBarrierOption builder found");
     boost::shared_ptr<FxBarrierOptionEngineBuilder> fxBarrierOptBuilder =
         boost::dynamic_pointer_cast<FxBarrierOptionEngineBuilder>(builder);
-    barrier->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
+    barrier->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate, expiryDate));
     Settlement::Type settleType = parseSettlementType(option_.settlement());
 
     boost::shared_ptr<InstrumentWrapper> koInstrument =
@@ -221,7 +221,7 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
             boost::shared_ptr<Instrument> barrier2 =
                 boost::make_shared<QuantLib::BarrierOption>(knockOutType, knockInLevel, 0, payoff, exercise);
-            barrier2->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
+            barrier2->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate, expiryDate));
             boost::shared_ptr<InstrumentWrapper> koInstrument2 =
                 boost::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
                     barrier2, positionType == Position::Long ? false : true, expiryDate,
@@ -244,7 +244,7 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
             boost::shared_ptr<Instrument> doubleBarrier = boost::make_shared<DoubleBarrierOption>(
                 DoubleBarrier::Type::KnockOut, std::min(knockInLevel, knockOutLevel),
                 std::max(knockInLevel, knockOutLevel), 0, payoff, exercise);
-            doubleBarrier->setPricingEngine(fxDoubleBarrierOptBuilder->engine(boughtCcy, soldCcy));
+            doubleBarrier->setPricingEngine(fxDoubleBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
 
             boost::shared_ptr<InstrumentWrapper> dkoInstrument =
                 boost::shared_ptr<InstrumentWrapper>(new DoubleBarrierOptionWrapper(
