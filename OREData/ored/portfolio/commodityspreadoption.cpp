@@ -114,17 +114,16 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
         Real lq = (isAveraged[CommoditySpreadOptionPosition::Long])?
                 boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(legs_[CommoditySpreadOptionPosition::Long][i])->quantity():
                 boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(legs_[CommoditySpreadOptionPosition::Long][i])->quantity();
-        auto end_date_l = (isAveraged[CommoditySpreadOptionPosition::Long])?
-                                boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(legs_[CommoditySpreadOptionPosition::Long][i])->date():
-                                boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(legs_[CommoditySpreadOptionPosition::Long][i])->date();
+        
+        auto end_date_l = legs_[CommoditySpreadOptionPosition::Long][i])->date();
+
         Real sq = (isAveraged[CommoditySpreadOptionPosition::Short])?
                 boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(legs_[CommoditySpreadOptionPosition::Short][i])->quantity():
                 boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(legs_[CommoditySpreadOptionPosition::Short][i])->quantity();
 
-        auto end_date_s = (isAveraged[CommoditySpreadOptionPosition::Short])?
-                                 boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(legs_[CommoditySpreadOptionPosition::Short][i])->date():
-                                 boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(legs_[CommoditySpreadOptionPosition::Short][i])->date();
-        QL_REQUIRE(abs(lq- sq) < 1.e-6, "CommoditySpreadOption: all cashflows must refer to the same quantity");
+        auto end_date_s = legs_[CommoditySpreadOptionPosition::Short][i])->date();
+       
+        QL_REQUIRE(QuantLib::close_enough(lq - sq, 0.0), "CommoditySpreadOption: all cashflows must refer to the same quantity");
         QL_REQUIRE(end_date_l==end_date_s, "CommoditySpreadOption: the computation period for the two cashflows must be the same");
         quantity_ = lq;
 
