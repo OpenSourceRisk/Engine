@@ -66,17 +66,17 @@ protected:
 
 //! Engine Builder for European cash-settled FX Digital Options
 class FxDigitalCSOptionEngineBuilder
-    : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&, const Date&> {
+    : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
 public:
     FxDigitalCSOptionEngineBuilder()
         : CachingEngineBuilder("GarmanKohlhagen", "AnalyticCashSettledEuropeanEngine", {"FxDigitalOptionEuropeanCS"}) {}
 
 protected:
-    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy, const Date& expiryDate) override {
-        return forCcy.code() + domCcy.code() + to_string(expiryDate);
+    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
+        return forCcy.code() + domCcy.code();
     }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy, const Date& expiryDate) override {
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
         string pair = forCcy.code() + domCcy.code();
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(

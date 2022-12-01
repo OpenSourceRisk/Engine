@@ -225,8 +225,8 @@ void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engi
         digitalBuilder = engineFactory->builder("FxDigitalOptionEuropeanCS");
         QL_REQUIRE(digitalBuilder, "No builder found for FxDigitalOptionEuropeanCS");
         auto fxDigitalOptBuilder = boost::dynamic_pointer_cast<FxDigitalCSOptionEngineBuilder>(digitalBuilder);
-        digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
-        rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
+        digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy));
+        rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy));
     } else {
         builder = engineFactory->builder("FxOption");
         QL_REQUIRE(builder, "No builder found for FxOption");
