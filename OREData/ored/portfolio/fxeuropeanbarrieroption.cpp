@@ -146,9 +146,20 @@ void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engi
     boost::shared_ptr<Instrument> digital;
     boost::shared_ptr<Instrument> vanillaK;
     boost::shared_ptr<Instrument> vanillaB;
+    boost::shared_ptr<Instrument> rebateInstrument;
 
     bool exercised = false;
     Real exercisePrice = Null<Real>();
+    Barrier::Type barrierType = parseBarrierType(barrier_.type());
+
+    Option::Type rebateType;
+    if (barrierType == Barrier::Type::UpIn || barrierType == Barrier::Type::DownOut) {
+        // Payoff - Up&Out / Down&In Digital Option with barrier B payoff rebate
+        rebateType = Option::Put;
+    } else {
+        // Payoff - Up&In / Down&Out Digital Option with barrier B payoff rebate
+        rebateType = Option::Call;
+    }
 
     if (paymentDate > expiryDate) {
 
@@ -176,56 +187,60 @@ void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engi
             type, strike, expiryDate, paymentDate, option_.isAutomaticExercise(), fxIndex, exercised, exercisePrice);
         vanillaB = boost::make_shared<CashSettledEuropeanOption>(
             type, level, expiryDate, paymentDate, option_.isAutomaticExercise(), fxIndex, exercised, exercisePrice);
-
+        digital = boost::make_shared<CashSettledEuropeanOption>(type, level, fabs(level - strike), expiryDate,
+                                                                paymentDate, option_.isAutomaticExercise(), fxIndex,
+                                                                exercised, exercisePrice);
+        rebateInstrument = boost::make_shared<CashSettledEuropeanOption>(rebateType, level, rebate, expiryDate,
+                                                                paymentDate, option_.isAutomaticExercise(), fxIndex,
+                                                                exercised, exercisePrice);
     } else {
         // Payoff - European Option with strike K
         boost::shared_ptr<StrikedTypePayoff> payoffVanillaK(new PlainVanillaPayoff(type, strike));
         // Payoff - European Option with strike B
         boost::shared_ptr<StrikedTypePayoff> payoffVanillaB(new PlainVanillaPayoff(type, level));
+        // Payoff - Digital Option with barrier B payoff abs(B - K)
+        boost::shared_ptr<StrikedTypePayoff> payoffDigital(new CashOrNothingPayoff(type, level, fabs(level - strike)));
+        boost::shared_ptr<StrikedTypePayoff> rebatePayoff(new CashOrNothingPayoff(rebateType, level, rebate));
+
         vanillaK = boost::make_shared<VanillaOption>(payoffVanillaK, exercise);
         vanillaB = boost::make_shared<VanillaOption>(payoffVanillaB, exercise);
+        digital = boost::make_shared<VanillaOption>(payoffDigital, exercise);
+        rebateInstrument = boost::make_shared<VanillaOption>(rebatePayoff, exercise);
     }
-    Barrier::Type barrierType = parseBarrierType(barrier_.type());
-    // Payoff - Digital Option with barrier B payoff abs(B - K)
-    boost::shared_ptr<StrikedTypePayoff> payoffDigital(new CashOrNothingPayoff(type, level, fabs(level - strike)));
-    digital = boost::make_shared<VanillaOption>(payoffDigital, exercise);
-    boost::shared_ptr<StrikedTypePayoff> rebatePayoff;
-    if (barrierType == Barrier::Type::UpIn || barrierType == Barrier::Type::DownOut) {
-        // Payoff - Up&Out / Down&In Digital Option with barrier B payoff rebate
-        rebatePayoff = boost::make_shared<CashOrNothingPayoff>(Option::Put, level, rebate);
-    } else if (barrierType == Barrier::Type::UpOut || barrierType == Barrier::Type::DownIn) {
-        // Payoff - Up&In / Down&Out Digital Option with barrier B payoff rebate
-        rebatePayoff = boost::make_shared<CashOrNothingPayoff>(Option::Call, level, rebate);
-    }
-    boost::shared_ptr<Instrument> rebateInstrument = boost::make_shared<VanillaOption>(rebatePayoff, exercise);
-
+    
     // This is for when/if a PayoffCurrency is added to the instrument,
     // which would require flipping the underlying currency pair
     const bool flipResults = false;
 
     // set pricing engines
     boost::shared_ptr<EngineBuilder> builder;
+    boost::shared_ptr<EngineBuilder> digitalBuilder;
     boost::shared_ptr<VanillaOptionEngineBuilder> fxOptBuilder;
 
     if (paymentDate > expiryDate) {
         builder = engineFactory->builder("FxOptionEuropeanCS");
         QL_REQUIRE(builder, "No builder found for FxOptionEuropeanCS");
         fxOptBuilder = boost::dynamic_pointer_cast<FxEuropeanCSOptionEngineBuilder>(builder);
+
+        digitalBuilder = engineFactory->builder("FxDigitalOptionEuropeanCS");
+        QL_REQUIRE(digitalBuilder, "No builder found for FxDigitalOptionEuropeanCS");
+        auto fxDigitalOptBuilder = boost::dynamic_pointer_cast<FxDigitalCSOptionEngineBuilder>(digitalBuilder);
+        digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
+        rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
     } else {
         builder = engineFactory->builder("FxOption");
         QL_REQUIRE(builder, "No builder found for FxOption");
         fxOptBuilder = boost::dynamic_pointer_cast<FxEuropeanOptionEngineBuilder>(builder);
+        
+        digitalBuilder = engineFactory->builder("FxDigitalOption");
+        QL_REQUIRE(digitalBuilder, "No builder found for FxDigitalOption");
+        auto fxDigitalOptBuilder = boost::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(digitalBuilder);
+        digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
+        rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
     }
 
-    builder = engineFactory->builder("FxDigitalOption");
-    QL_REQUIRE(builder, "No builder found for FxDigitalOption");
-    boost::shared_ptr<FxDigitalOptionEngineBuilder> fxDigitalOptBuilder =
-        boost::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
-
-    digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
-    vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, std::max({expiryDate, paymentDate})));
-    vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, std::max({expiryDate, paymentDate})));
-    rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
+    vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
+    vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
 
     boost::shared_ptr<CompositeInstrument> qlInstrument = boost::make_shared<CompositeInstrument>();
     qlInstrument->add(rebateInstrument);
