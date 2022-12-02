@@ -28,6 +28,7 @@
 #include <orea/aggregation/collateralaccount.hpp>
 #include <orea/aggregation/collatexposurehelper.hpp>
 #include <orea/aggregation/postprocess.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
@@ -264,5 +265,6 @@ protected:
 private:
     virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }
 };
+
 } // namespace analytics
 } // namespace ore

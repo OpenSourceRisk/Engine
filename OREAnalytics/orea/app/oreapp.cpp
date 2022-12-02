@@ -64,9 +64,56 @@ namespace ore {
 namespace analytics {
 
 OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
-    : tab_(40), progressBarWidth_(72 - std::min<Size>(tab_, 67)), params_(params),
+    : tab_(50), progressBarWidth_(72 - std::min<Size>(tab_, 67)), params_(params),
       asof_(parseDate(params_->get("setup", "asofDate"))), out_(out), cubeDepth_(0) {
+    
+    setupLog();
 
+    LOG("ORE starting");
+
+    // Read all inputs from params and files referenced in params
+    out_ << setw(tab_) << left << "Loading inputs " << flush;
+    auto inputs = boost::make_shared<OREAppInputParameters>(params_);
+    out_ << "OK" << std::endl;
+
+    // Set global evaluation date
+    Settings::instance().evaluationDate() = inputs->asof();
+
+    // Initialize the global conventions 
+    InstrumentConventions::instance().setConventions(inputs->conventions());
+
+    // Create a market data loader that reads market data, fixings, dividends from csv files
+    auto loader = boost::make_shared<MarketDataCsvLoader>(inputs, inputs->csvLoader());
+
+    // Create the analytics manager
+    auto analyticsManager = boost::make_shared<AnalyticsManager>(inputs, loader, out);
+    //out_ << setw(tab_) << left << "Available analytics... " << to_string(analyticsManager->validAnalytics()) << std::endl;
+    LOG("Available analytics: " << to_string(analyticsManager->validAnalytics()));
+    out_ << setw(tab_) << left << "Requested analytics " << to_string(inputs->runTypes()) << std::endl;
+    LOG("Requested analytics: " << to_string(inputs->runTypes()));
+
+    // Run the requested analytics
+    analyticsManager->runAnalytics(inputs->runTypes());
+
+    // Write reports to files in the results path
+    Analytic::analytic_reports reports = analyticsManager->reports();
+    for (auto a : reports) {
+        for (auto b : a.second) {
+            if (a.second.size() == 1) {
+                boost::shared_ptr<InMemoryReport> r = b.second;
+                std::string fileName = inputs->resultsPath().string() + "/" + boost::algorithm::to_lower_copy(a.first) + ".csv";
+                LOG("Write single report for analytic " << a.first << " with label='" << b.first << "'");
+                r->toFile(fileName);
+            } else {
+                WLOG("Skipping multiple reports for analytic " << a.first);
+            }
+        }
+    }
+    
+    LOG("ORE done");
+
+    exit(0);
+    
     // Set global evaluation date
     Settings::instance().evaluationDate() = asof_;
 
@@ -111,7 +158,7 @@ int OREApp::run() {
         buildMarket();
 
         /************************
-         *Build Pricing Engine Factory
+         * Build Pricing Engine Factory
          */
         out_ << setw(tab_) << left << "Engine factory... " << flush;
         engineFactory_ = buildEngineFactory(market_, "setup", true);
@@ -290,6 +337,7 @@ int OREApp::run() {
     out_ << "ORE done." << endl;
 
     LOG("ORE done.");
+
     return 0;
 }
 

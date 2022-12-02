@@ -12,7 +12,13 @@ aggregation/nettedexposurecalculator.cpp
 aggregation/postprocess.cpp
 aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
+app/analytic.cpp
+app/analyticsmanager.cpp
+app/inputparameters.cpp
+app/marketdatacsvloader.cpp
+app/marketdataloader.cpp
 app/oreapp.cpp
+app/marketcalibrationreport.cpp
 app/parameters.cpp
 app/reportwriter.cpp
 app/sensitivityrunner.cpp
@@ -70,8 +76,13 @@ aggregation/nettedexposurecalculator.hpp
 aggregation/postprocess.hpp
 aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
+app/analytic.hpp
+app/analyticsmanager.hpp
+app/marketdatacsvloader.hpp
+app/marketdataloader.hpp
 app/oreapp.hpp
 app/parameters.hpp
+app/marketcalibrationreport.hpp
 app/reportwriter.hpp
 app/sensitivityrunner.hpp
 app/structuredanalyticserror.hpp
