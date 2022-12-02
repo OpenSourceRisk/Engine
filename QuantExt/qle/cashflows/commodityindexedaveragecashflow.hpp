@@ -30,7 +30,7 @@ namespace QuantExt {
     commodity future is determined relative to each pricing date so the settlement prices for multiple commodity
     contracts may be involved in the averaging.
 */
-class CommodityIndexedAverageCashFlow : public CashFlow, public Observer {
+class CommodityIndexedAverageCashFlow : public CommodityCashFlow {
 
 public:
     enum class PaymentTiming { InAdvance, InArrears };
@@ -74,13 +74,10 @@ public:
 
     //! \name Inspectors
     //@{
-    QuantLib::Real quantity() const { return quantity_; }
+    
     const QuantLib::Date& startDate() const { return startDate_; }
     const QuantLib::Date& endDate() const { return endDate_; }
     ext::shared_ptr<CommodityIndex> index() const { return index_; }
-    QuantLib::Real spread() const { return spread_; }
-    QuantLib::Real gearing() const { return gearing_; }
-    bool useFuturePrice() const { return useFuturePrice_; }
     QuantLib::Natural deliveryDateRoll() const { return deliveryDateRoll_; }
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
     bool useBusinessDays() const { return useBusinessDays_; }
@@ -123,21 +120,29 @@ public:
     void accept(QuantLib::AcyclicVisitor& v) override;
     //@}
 
+        //@}
+    //! \name CommodityCashFlow interface
+    //@{
+    QuantLib::Date lastPricingDate() const override {
+        if (indices_.empty()) {
+            return Date();
+        } else {
+            return indices_.rbegin()->first;
+        }
+    }
+    //@}
+    
+
     //! \name Observer interface
     //@{
     void update() override;
     //@}
 
 private:
-    QuantLib::Real quantity_;
     QuantLib::Date startDate_;
     QuantLib::Date endDate_;
     QuantLib::Date paymentDate_;
-    ext::shared_ptr<CommodityIndex> index_;
     QuantLib::Calendar pricingCalendar_;
-    QuantLib::Real spread_;
-    QuantLib::Real gearing_;
-    bool useFuturePrice_;
     QuantLib::Natural deliveryDateRoll_;
     QuantLib::Natural futureMonthOffset_;
     bool includeEndDate_;
