@@ -49,8 +49,9 @@ public:
         : CachingEngineBuilder(model, engine, {"FxDoubleTouchOption"}) {}
 
 protected:
-    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy, const Date& payDate, const bool flipResults) override {
-        return forCcy.code() + domCcy.code() + ore::data::to_string(payDate);
+    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy, const Date& payDate,
+                           const bool flipResults) override {
+        return forCcy.code() + domCcy.code() + ore::data::to_string(payDate) + (flipResults ? "_1" : "_0");
     }
 
     boost::shared_ptr<GeneralizedBlackScholesProcess>

@@ -42,7 +42,8 @@
  class TestMarket : public MarketImpl {
  public:
      TestMarket(const Real spot, const Date& expiry, const Rate domRate, const Rate forRate,
-                const Volatility flatVolatility) {
+                const Volatility flatVolatility)
+         : MarketImpl(false) {
          // Reference date and common day counter
          asof_ = Date(01, Feb, 2021);
          DayCounter dayCounter = Actual360();

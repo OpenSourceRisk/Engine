@@ -47,12 +47,12 @@ public:
 
 protected:
     virtual string keyImpl(const Currency& forCcy, const Currency& domCcy, const bool flipResults) override {
-        return forCcy.code() + domCcy.code();
+        return forCcy.code() + domCcy.code() + (flipResults ? "_1" : "_0");
     }
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
                                                         const bool flipResults) override {
-        string pair = keyImpl(forCcy, domCcy, flipResults);
+        string pair = forCcy.code() + domCcy.code();
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
             market_->fxRate(pair, configuration(ore::data::MarketContext::pricing)),

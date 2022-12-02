@@ -101,7 +101,9 @@ public:
         //! the ibor fallback config
         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
         //! build calibration info?
-        const bool buildCalibrationInfo = true);
+        const bool buildCalibrationInfo = true,
+        //! support pseudo currencies
+        const bool handlePseudoCurrencies = true);
 
     boost::shared_ptr<TodaysMarketCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
 

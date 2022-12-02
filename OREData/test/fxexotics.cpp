@@ -75,7 +75,7 @@ struct FxOptionData {
 
 class TestMarket : public MarketImpl {
 public:
-    TestMarket(Real spot, Real q, Real r, Real vol, bool withFixings = false) {
+    TestMarket(Real spot, Real q, Real r, Real vol, bool withFixings = false) : MarketImpl(false) {
         asof_ = Date(3, Feb, 2016);
 
         Settings::instance().evaluationDate() = asof_;
