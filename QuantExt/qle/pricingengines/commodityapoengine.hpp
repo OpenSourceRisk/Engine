@@ -20,6 +20,37 @@
 
 namespace QuantExt {
 
+namespace CommodityAveragePriceOptionMomementMatching {
+
+// Return the the atm forward - accruals and the the volatility of
+struct MomentMatchingResults {
+    Time tn;
+    Real forward;
+    Real accruals;
+    Real sigma;
+    std::vector<QuantLib::Real> times;
+    std::vector<Real> forwards;
+    std::vector<Real> futureVols;
+    std::vector<Real> spotVols;
+    Real EA2;
+
+    Real firstMoment();
+    Real secondMoment();
+    Real stdDev();
+    Time timeToExpriy();
+};
+
+// Matches the first two moments of a lognormal distribution
+// For options with accruals the strike of the options need to be adjusted by the accruals
+// See Iain Clark - Commodity Option Pricing A Practitioner’s Guide - Section 2.74
+MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
+    const ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
+    const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol,
+    const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
+    QuantLib::Real strike = QuantLib::Null<QuantLib::Real>());
+}
+
+
 /*! Commodity APO Engine base class
     Correlation is parametrized as \f$\rho(s, t) = \exp(-\beta * \abs(s - t))\f$
     where \f$s\f$ and \f$t\f$ are times to futures expiry.
@@ -28,12 +59,12 @@ class CommodityAveragePriceOptionBaseEngine : public CommodityAveragePriceOption
 public:
     CommodityAveragePriceOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                           const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,
-                                          Real beta = 0.0);
+                                          QuantLib::Real beta = 0.0);
 
     // if you want speed-optimized observability, use the other constructor
     CommodityAveragePriceOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                           const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
-                                          Real beta = 0.0);
+                                          QuantLib::Real beta = 0.0);
 
 protected:
     //! Return the correlation between two future expiry dates \p ed_1 and \p ed_2

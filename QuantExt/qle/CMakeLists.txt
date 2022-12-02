@@ -91,6 +91,7 @@ instruments/cdsoption.cpp
 instruments/cliquetoption.cpp
 instruments/commodityapo.cpp
 instruments/commodityforward.cpp
+instruments/commodityspreadoption.cpp
 instruments/crossccybasismtmresetswap.cpp
 instruments/crossccybasisswap.cpp
 instruments/crossccyfixfloatmtmresetswap.cpp
@@ -192,6 +193,7 @@ pricingengines/analyticxassetlgmeqoptionengine.cpp
 pricingengines/baroneadesiwhaleyengine.cpp
 pricingengines/blackcdsoptionengine.cpp
 pricingengines/commodityapoengine.cpp
+pricingengines/commodityspreadoptionengine.cpp
 pricingengines/commodityschwartzfutureoptionengine.cpp
 pricingengines/commodityswaptionengine.cpp
 pricingengines/cpibacheliercapfloorengine.cpp
@@ -466,6 +468,7 @@ instruments/cdsoption.hpp
 instruments/cliquetoption.hpp
 instruments/commodityapo.hpp
 instruments/commodityforward.hpp
+instruments/commodityspreadoption.hpp
 instruments/crossccybasismtmresetswap.hpp
 instruments/crossccybasisswap.hpp
 instruments/crossccyfixfloatmtmresetswap.hpp
@@ -605,6 +608,7 @@ pricingengines/analyticxassetlgmeqoptionengine.hpp
 pricingengines/baroneadesiwhaleyengine.hpp
 pricingengines/blackcdsoptionengine.hpp
 pricingengines/commodityapoengine.hpp
+pricingengines/commodityspreadoptionengine.hpp
 pricingengines/commodityschwartzfutureoptionengine.hpp
 pricingengines/commodityswaptionengine.hpp
 pricingengines/cpibacheliercapfloorengine.hpp
