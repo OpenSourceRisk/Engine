@@ -538,20 +538,21 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
     // Build the leg. Different ctor depending on whether cashflow is averaging or not.
     Leg leg;
 
-    bool isCashFlowAveraged = (floatingLegData->isAveraged()||
-                               (( floatingLegData->dailyExpiryOffset()!= Null<Natural>() ) && (floatingLegData->dailyExpiryOffset() > 0)) ) &&
-                              !allAveraging_ && floatingLegData->lastNDays() == Null<Natural>();
-    if ( isCashFlowAveraged ) {
-        // If daily expiry offset is given, check that referenced future contract has a daily frequency.
-        auto dailyExpOffset = floatingLegData->dailyExpiryOffset();
-        if (dailyExpOffset != Null<Natural>() && dailyExpOffset > 0) {
-            QL_REQUIRE(commFutureConv, "A positive DailyExpiryOffset has been provided but no commodity" <<
-                " future convention given for " << commName);
-            QL_REQUIRE(commFutureConv->contractFrequency() == Daily, "A positive DailyExpiryOffset has been" <<
-                " provided but the commodity contract frequency is not Daily (" <<
-                commFutureConv->contractFrequency() << ")");
-        }
+    bool isCashFlowAveraged =
+        floatingLegData->isAveraged() && !allAveraging_ && floatingLegData->lastNDays() == Null<Natural>();
 
+    // If daily expiry offset is given, check that referenced future contract has a daily frequency.
+    auto dailyExpOffset = floatingLegData->dailyExpiryOffset();
+    if (dailyExpOffset != Null<Natural>() && dailyExpOffset > 0) {
+        QL_REQUIRE(commFutureConv, "A positive DailyExpiryOffset has been provided but no commodity"
+                                       << " future convention given for " << commName);
+        QL_REQUIRE(commFutureConv->contractFrequency() == Daily,
+                   "A positive DailyExpiryOffset has been"
+                       << " provided but the commodity contract frequency is not Daily ("
+                       << commFutureConv->contractFrequency() << ")");
+    }
+
+    if (isCashFlowAveraged) {
         CommodityIndexedAverageCashFlow::PaymentTiming paymentTiming =
             CommodityIndexedAverageCashFlow::PaymentTiming::InArrears;
         if (floatingLegData->commodityPayRelativeTo() == CommodityPayRelativeTo::CalculationPeriodStartDate) {
@@ -623,14 +624,13 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
                   .paymentTiming(paymentTiming)
                   .inArrears(floatingLegData->isInArrears())
                   .useFuturePrice(priceType == CommodityPriceType::FutureSettlement)
-                  .useFutureExpiryDate(floatingLegData->pricingDateRule() ==
-                      CommodityPricingDateRule::FutureExpiryDate)
+                  .useFutureExpiryDate(floatingLegData->pricingDateRule() == CommodityPricingDateRule::FutureExpiryDate)
                   .withFutureMonthOffset(floatingLegData->futureMonthOffset())
                   .withFutureExpiryCalculator(feCalc)
-                  .payAtMaturity(floatingLegData->commodityPayRelativeTo() ==
-                      CommodityPayRelativeTo::TerminationDate)
+                  .payAtMaturity(floatingLegData->commodityPayRelativeTo() == CommodityPayRelativeTo::TerminationDate)
                   .withPricingDates(pricingDates)
-                  .withPaymentDates(paymentDates);
+                  .withPaymentDates(paymentDates)
+                  .withDailyExpiryOffset(dailyExpOffset);
 
         // Possibly update the leg's quantities.
         updateQuantities(leg, allAveraging_, floatingLegData->commodityQuantityFrequency(), schedule,

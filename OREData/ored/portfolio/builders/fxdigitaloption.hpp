@@ -26,7 +26,9 @@
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <qle/pricingengines/analyticeuropeanengine.hpp>
+#include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 namespace ore {
 namespace data {
@@ -59,6 +61,32 @@ protected:
             market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)),
             market_->fxVol(pair, configuration(ore::data::MarketContext::pricing)));
         return boost::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp, flipResults);
+    }
+};
+
+//! Engine Builder for European cash-settled FX Digital Options
+class FxDigitalCSOptionEngineBuilder
+    : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
+public:
+    FxDigitalCSOptionEngineBuilder()
+        : CachingEngineBuilder("GarmanKohlhagen", "AnalyticCashSettledEuropeanEngine", {"FxDigitalOptionEuropeanCS"}) {}
+
+protected:
+    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
+        return forCcy.code() + domCcy.code();
+    }
+
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
+        string pair = forCcy.code() + domCcy.code();
+
+        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
+            market_->fxRate(pair, configuration(ore::data::MarketContext::pricing)),
+            market_->discountCurve(forCcy.code(),
+                                   configuration(ore::data::MarketContext::pricing)), // dividend yield ~ foreign yield
+            market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)),
+            market_->fxVol(pair, configuration(ore::data::MarketContext::pricing)));
+
+        return boost::make_shared<QuantExt::AnalyticCashSettledEuropeanEngine>(gbsp);
     }
 };
 

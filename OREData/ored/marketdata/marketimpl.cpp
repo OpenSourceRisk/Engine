@@ -181,11 +181,11 @@ pair<string, string> MarketImpl::swapIndexBases(const string& key, const string&
     QL_FAIL("did not find swaption index bases for key '" << key << "'");
 }
 
-const string MarketImpl::shortSwapIndexBase(const string& key, const string& configuration) const {
+string MarketImpl::shortSwapIndexBase(const string& key, const string& configuration) const {
     return swapIndexBases(key, configuration).first;
 }
 
-const string MarketImpl::swapIndexBase(const string& key, const string& configuration) const {
+string MarketImpl::swapIndexBase(const string& key, const string& configuration) const {
     return swapIndexBases(key, configuration).second;
 }
 
@@ -297,6 +297,40 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
             return it4->second;
     }
     QL_FAIL("did not find capfloor curve for key '" << key << "'");
+}
+
+std::pair<string, QuantLib::Period> MarketImpl::capFloorVolIndexBase(const string& key,
+                                                                     const string& configuration) const {
+    require(MarketObject::CapFloorVol, key, configuration);
+    auto it = capFloorIndexBase_.find(make_pair(configuration, key));
+    if (it != capFloorIndexBase_.end())
+        return it->second;
+    // first try the default config with the same key
+    if (configuration != Market::defaultConfiguration) {
+        require(MarketObject::CapFloorVol, key, Market::defaultConfiguration);
+        auto it2 = capFloorIndexBase_.find(make_pair(Market::defaultConfiguration, key));
+        if (it2 != capFloorIndexBase_.end())
+            return it2->second;
+    }
+    // if key is an index name and we have a cap floor surface for its ccy, we return that
+    boost::shared_ptr<IborIndex> index;
+    if (!tryParseIborIndex(key, index)) {
+        return std::make_pair(string(),0*Days);
+    }
+    auto ccy = index->currency().code();
+    require(MarketObject::CapFloorVol, ccy, configuration);
+    auto it3 = capFloorIndexBase_.find(make_pair(configuration, ccy));
+    if (it3 != capFloorIndexBase_.end()) {
+        return it3->second;
+    }
+    // check if we have a curve for the ccy in the default config
+    if (configuration != Market::defaultConfiguration) {
+        require(MarketObject::CapFloorVol, ccy, configuration);
+        auto it4 = capFloorIndexBase_.find(make_pair(Market::defaultConfiguration, ccy));
+        if (it4 != capFloorIndexBase_.end())
+            return it4->second;
+    }
+    return std::make_pair(string(), 0 * Days);
 }
 
 Handle<YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key, const string& configuration) const {

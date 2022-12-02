@@ -14,9 +14,11 @@ namespace QuantExt {
 CommodityIndexedCashFlow::CommodityIndexedCashFlow(Real quantity, const Date& pricingDate, const Date& paymentDate,
                                                    const ext::shared_ptr<CommodityIndex>& index, Real spread,
                                                    Real gearing, bool useFuturePrice, const Date& contractDate,
-                                                   const ext::shared_ptr<FutureExpiryCalculator>& calc)
+                                                   const ext::shared_ptr<FutureExpiryCalculator>& calc,
+                                                   QuantLib::Natural dailyExpiryOffset)
     : quantity_(quantity), pricingDate_(pricingDate), paymentDate_(paymentDate), index_(index), spread_(spread),
-      gearing_(gearing), useFuturePrice_(useFuturePrice), futureMonthOffset_(0), periodQuantity_(quantity) {
+      gearing_(gearing), useFuturePrice_(useFuturePrice), futureMonthOffset_(0), periodQuantity_(quantity),
+      dailyExpiryOffset_(dailyExpiryOffset) {
     QL_REQUIRE(paymentDate != Date(), "CommodityIndexedCashFlow: payment date is null");
     init(calc, contractDate);
 }
@@ -27,10 +29,10 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
     const Calendar& pricingLagCalendar, Real spread, Real gearing, PaymentTiming paymentTiming, bool isInArrears,
     bool useFuturePrice, bool useFutureExpiryDate, Natural futureMonthOffset,
     const ext::shared_ptr<FutureExpiryCalculator>& calc, const QuantLib::Date& paymentDateOverride,
-    const QuantLib::Date& pricingDateOverride)
+    const QuantLib::Date& pricingDateOverride, QuantLib::Natural dailyExpiryOffset)
     : quantity_(quantity), pricingDate_(pricingDateOverride), paymentDate_(paymentDateOverride), index_(index),
       spread_(spread), gearing_(gearing), useFuturePrice_(useFuturePrice), useFutureExpiryDate_(useFutureExpiryDate),
-      futureMonthOffset_(futureMonthOffset), periodQuantity_(quantity) {
+      futureMonthOffset_(futureMonthOffset), periodQuantity_(quantity), dailyExpiryOffset_(dailyExpiryOffset) {
 
     // Derive the pricing date if an explicit override has not been provided
     if (pricingDate_ == Date()) {
@@ -42,7 +44,11 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
             // We need to use the expiry date of the future contract
             QL_REQUIRE(calc, "CommodityIndexedCashFlow needs a valid future "
                                  << "expiry calculator when using first future");
-            pricingDate_ = calc->expiryDate(pricingDate_, futureMonthOffset_);
+            Date expiry = calc->expiryDate(pricingDate_, futureMonthOffset_);
+            if (dailyExpiryOffset_ != Null<Natural>()) {
+                expiry = index_->fixingCalendar().advance(expiry, dailyExpiryOffset_ * Days);
+            }
+            pricingDate_ = expiry;
         }
     }
 
@@ -82,6 +88,9 @@ void CommodityIndexedCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator
         QL_REQUIRE(calc, "CommodityIndexedCashFlow needs a valid future expiry calculator when using "
                              << "the future settlement price as reference price");
         expiry = calc->expiryDate(contractDate, futureMonthOffset_);
+        if (dailyExpiryOffset_ != Null<Natural>()) {
+            expiry = index_->fixingCalendar().advance(expiry, dailyExpiryOffset_ * Days);
+        }
         index_ = index_->clone(expiry);
     }
 
@@ -112,7 +121,7 @@ CommodityIndexedLeg::CommodityIndexedLeg(const Schedule& schedule, const ext::sh
     : schedule_(schedule), index_(index), paymentLag_(0), paymentCalendar_(NullCalendar()),
       paymentConvention_(Unadjusted), pricingLag_(0), pricingLagCalendar_(NullCalendar()),
       paymentTiming_(CommodityIndexedCashFlow::PaymentTiming::InArrears), inArrears_(true), useFuturePrice_(false),
-      useFutureExpiryDate_(true), futureMonthOffset_(0), payAtMaturity_(false) {}
+      useFutureExpiryDate_(true), futureMonthOffset_(0), payAtMaturity_(false), dailyExpiryOffset_(Null<Natural>()) {}
 
 CommodityIndexedLeg& CommodityIndexedLeg::withQuantities(Real quantity) {
     quantities_ = vector<Real>(1, quantity);
@@ -215,6 +224,11 @@ CommodityIndexedLeg& CommodityIndexedLeg::withPaymentDates(const vector<Date>& p
     return *this;
 }
 
+CommodityIndexedLeg& CommodityIndexedLeg::withDailyExpiryOffset(Natural dailyExpiryOffset) {
+    dailyExpiryOffset_ = dailyExpiryOffset;
+    return *this;
+}
+
 CommodityIndexedLeg::operator Leg() const {
 
     // Number of commodity indexed cashflows
@@ -266,7 +280,7 @@ CommodityIndexedLeg::operator Leg() const {
         leg.push_back(ext::make_shared<CommodityIndexedCashFlow>(
             quantity, start, end, index_, paymentLag_, paymentCalendar_, paymentConvention_, pricingLag_,
             pricingLagCalendar_, spread, gearing, paymentTiming_, inArrears_, useFuturePrice_, useFutureExpiryDate_,
-            futureMonthOffset_, calc_, paymentDate, pricingDate));
+            futureMonthOffset_, calc_, paymentDate, pricingDate, dailyExpiryOffset_));
     }
 
     return leg;

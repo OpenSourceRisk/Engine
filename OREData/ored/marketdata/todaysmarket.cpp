@@ -451,7 +451,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
 
                 // Firstly, need to retrieve ibor index and discount curve
                 // Ibor index
-                Handle<IborIndex> iborIndex = MarketImpl::iborIndex(cfg->index(), configuration);
+                std::string iborIndexName = cfg->index();
+                QuantLib::Period rateComputationPeriod = cfg->rateComputationPeriod();
+                Handle<IborIndex> iborIndex = MarketImpl::iborIndex(iborIndexName, configuration);
                 Handle<YieldTermStructure> discountCurve;
                 // Discount curve
                 if (!cfg->discountCurve().empty()) {
@@ -467,8 +469,11 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 if (!cfg->proxySourceCurveId().empty()) {
                     if (!cfg->proxySourceIndex().empty())
                         sourceIndex = *MarketImpl::iborIndex(cfg->proxySourceIndex(), configuration);
-                    if (!cfg->proxyTargetIndex().empty())
+                    if (!cfg->proxyTargetIndex().empty()) {
                         targetIndex = *MarketImpl::iborIndex(cfg->proxyTargetIndex(), configuration);
+                        iborIndexName = cfg->proxyTargetIndex();
+                        rateComputationPeriod = cfg->proxyTargetRateComputationPeriod();
+                    }
                 }
 
                 // Now create cap/floor vol curve
@@ -476,13 +481,18 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                     asof_, *cfVolSpec, *loader_, *curveConfigs_, iborIndex.currentLink(), discountCurve, sourceIndex,
                     targetIndex, requiredCapFloorVolCurves_, buildCalibrationInfo_);
                 calibrationInfo_->irVolCalibrationInfo[cfVolSpec->name()] = capFloorVolCurve->calibrationInfo();
-                itr = requiredCapFloorVolCurves_.insert(make_pair(cfVolSpec->name(), capFloorVolCurve)).first;
+                itr = requiredCapFloorVolCurves_
+                          .insert(make_pair(
+                              cfVolSpec->name(),
+                              std::make_pair(capFloorVolCurve, std::make_pair(iborIndexName, rateComputationPeriod))))
+                          .first;
             }
 
             DLOG("Adding CapFloorVol (" << node.name << ") with spec " << *cfVolSpec << " to configuration "
                                         << configuration);
             capFloorCurves_[make_pair(configuration, node.name)] =
-                Handle<OptionletVolatilityStructure>(itr->second->capletVolStructure());
+                Handle<OptionletVolatilityStructure>(itr->second.first->capletVolStructure());
+            capFloorIndexBase_[make_pair(configuration, node.name)] = itr->second.second;
             break;
         }
 
