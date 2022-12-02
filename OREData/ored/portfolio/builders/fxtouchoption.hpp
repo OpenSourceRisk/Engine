@@ -53,7 +53,7 @@ public:
 protected:
     virtual string keyImpl(const Currency& forCcy, const Currency& domCcy, const string& type, const Date& payDate,
                            const bool flipResults) override {
-        return forCcy.code() + domCcy.code() + type + ore::data::to_string(payDate);
+        return forCcy.code() + domCcy.code() + type + ore::data::to_string(payDate) + (flipResults ? "_1" : "_0");
     }
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
