@@ -20,6 +20,7 @@ app/xvarunner.cpp
 cube/cubeinterpretation.cpp
 cube/cubewriter.cpp
 cube/sensitivitycube.cpp
+engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
 engine/cptycalculator.cpp
 engine/filteredsensitivitystream.cpp
@@ -84,6 +85,7 @@ cube/npvcube.hpp
 cube/npvsensicube.hpp
 cube/sensicube.hpp
 cube/sensitivitycube.hpp
+engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cptycalculator.hpp
 engine/filteredsensitivitystream.hpp

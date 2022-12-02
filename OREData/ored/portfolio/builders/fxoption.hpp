@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016-2022 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <qle/models/crossassetmodel.hpp>
 #include <ored/portfolio/builders/vanillaoption.hpp>
 
 namespace ore {
@@ -69,5 +70,25 @@ public:
         : AmericanOptionBAWEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX) {}
 };
 
+//! FX option engine builder for external cam, with additional simulation dates (AMC)
+class CamAmcFxOptionEngineBuilder : public VanillaOptionEngineBuilder {
+public:
+    // for external cam, with additional simulation dates (AMC)
+    CamAmcFxOptionEngineBuilder(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                const std::vector<Date>& simulationDates)
+        : VanillaOptionEngineBuilder("CrossAssetModel", "AMC", {"FxOption"}, AssetClass::FX, Date()), cam_(cam),
+          simulationDates_(simulationDates) {}
+
+protected:
+    // the pricing engine depends on the ccys only, so the base class key implementation will just do fine
+    boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                const AssetClass& assetClassUnderlying,
+                                                const Date& expiryDate) override;
+
+private:
+    const boost::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const std::vector<Date> simulationDates_;
+};
+    
 } // namespace data
 } // namespace ore

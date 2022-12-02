@@ -15,6 +15,7 @@ capfloortermvolcurve.cpp
 cashflow.cpp
 commodityforward.cpp
 commodityschwartzmodel.cpp
+commodityspreadoption.cpp
 correlationtermstructure.cpp
 cpicapfloor.cpp
 crcirpp.cpp
@@ -45,6 +46,8 @@ inflationcurve.cpp
 inflationvol.cpp
 interpolatedyoycapfloortermpricesurface.cpp
 logquote.cpp
+mclgmswaptionengine.cpp
+multilegoption.cpp
 normalfreeboundarysabr.cpp
 optionletstripper.cpp
 payment.cpp
