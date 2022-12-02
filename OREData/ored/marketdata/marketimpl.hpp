@@ -50,10 +50,9 @@ using std::tuple;
 
   \ingroup marketdata
  */
-class MarketImpl : virtual public Market {
+class MarketImpl : public Market {
 public:
-    //! Default constructor
-    MarketImpl() : Market() {}
+    explicit MarketImpl(const bool handlePseudoCurrencies) : Market(handlePseudoCurrencies) {}
 
     //! \name Market interface
     //@{
@@ -63,7 +62,7 @@ public:
     //! Yield Curves
     Handle<YieldTermStructure> yieldCurve(const YieldCurveType& type, const string& ccy,
                                           const string& configuration = Market::defaultConfiguration) const override;
-    Handle<YieldTermStructure> discountCurve(const string& ccy,
+    Handle<YieldTermStructure> discountCurveImpl(const string& ccy,
                                              const string& configuration = Market::defaultConfiguration) const override;
     Handle<YieldTermStructure> yieldCurve(const string& name,
                                           const string& configuration = Market::defaultConfiguration) const override;
@@ -75,21 +74,23 @@ public:
     //! Swaptions
     Handle<QuantLib::SwaptionVolatilityStructure>
     swaptionVol(const string& key, const string& configuration = Market::defaultConfiguration) const override;
-    const string shortSwapIndexBase(const string& key,
+    string shortSwapIndexBase(const string& key,
                                     const string& configuration = Market::defaultConfiguration) const override;
-    const string swapIndexBase(const string& key, const string& configuration = Market::defaultConfiguration) const override;
+    string swapIndexBase(const string& key, const string& configuration = Market::defaultConfiguration) const override;
 
     //! Yield volatility
     Handle<QuantLib::SwaptionVolatilityStructure>
     yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const override;
 
     //! FX
-    QuantLib::Handle<QuantExt::FxIndex> fxIndex(const string& fxIndex, 
-        const string& configuration = Market::defaultConfiguration) const override;
-    Handle<Quote> fxRate(const string& ccypair, const string& configuration = Market::defaultConfiguration) const override;
-    Handle<Quote> fxSpot(const string& ccypair, const string& configuration = Market::defaultConfiguration) const override;
-    Handle<BlackVolTermStructure> fxVol(const string& ccypair,
-                                        const string& configuration = Market::defaultConfiguration) const override;
+    QuantLib::Handle<QuantExt::FxIndex>
+    fxIndexImpl(const string& fxIndex, const string& configuration = Market::defaultConfiguration) const override;
+    Handle<Quote> fxRateImpl(const string& ccypair,
+                             const string& configuration = Market::defaultConfiguration) const override;
+    Handle<Quote> fxSpotImpl(const string& ccypair,
+                             const string& configuration = Market::defaultConfiguration) const override;
+    Handle<BlackVolTermStructure> fxVolImpl(const string& ccypair,
+                                            const string& configuration = Market::defaultConfiguration) const override;
 
     //! Default Curves and Recovery Rates
     Handle<QuantExt::CreditCurve> defaultCurve(const string&,
@@ -107,6 +108,8 @@ public:
     //! CapFloor volatilities
     Handle<OptionletVolatilityStructure> capFloorVol(const string& key,
                                                      const string& configuration = Market::defaultConfiguration) const override;
+    std::pair<string, QuantLib::Period>
+    capFloorVolIndexBase(const string& key, const string& configuration = Market::defaultConfiguration) const override;
 
     //! YoY Inflation CapFloor volatilities
     Handle<QuantExt::YoYOptionletVolatilitySurface>
@@ -214,6 +217,7 @@ protected:
     mutable map<pair<string, string>, Handle<QuantExt::BaseCorrelationTermStructure>> baseCorrelations_;
     mutable map<pair<string, string>, Handle<Quote>> recoveryRates_;
     mutable map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
+    mutable map<pair<string, string>, std::pair<string, QuantLib::Period>> capFloorIndexBase_;
     mutable map<pair<string, string>, Handle<YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;
     mutable map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
     mutable map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;

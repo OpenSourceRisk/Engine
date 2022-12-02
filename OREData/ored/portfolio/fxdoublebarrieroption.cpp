@@ -45,23 +45,32 @@ void FxDoubleBarrierOption::checkBarriers() {
 
 boost::shared_ptr<QuantLib::PricingEngine>
 FxDoubleBarrierOption::vanillaPricigingEngine(const boost::shared_ptr<EngineFactory>& ef,
-                                              const QuantLib::Date& expiryDate) {
+                                              const QuantLib::Date& expiryDate, const QuantLib::Date& paymentDate) {
 
-    boost::shared_ptr<EngineBuilder> builder = ef->builder("FxOption");
-    QL_REQUIRE(builder, "No builder found for FxOption");
+    if (paymentDate > expiryDate) {
+        boost::shared_ptr<EngineBuilder> builder = ef->builder("FxOptionEuropeanCS");
+        QL_REQUIRE(builder, "No builder found for FxOptionEuropeanCS");
 
-    boost::shared_ptr<FxEuropeanOptionEngineBuilder> fxOptBuilder =
-        boost::dynamic_pointer_cast<FxEuropeanOptionEngineBuilder>(builder);
-    QL_REQUIRE(fxOptBuilder, "No fxOptBuilder found");
+        boost::shared_ptr<FxEuropeanCSOptionEngineBuilder> fxOptBuilder =
+            boost::dynamic_pointer_cast<FxEuropeanCSOptionEngineBuilder>(builder);
+        QL_REQUIRE(fxOptBuilder, "No FxEuropeanOptionEngineBuilder found");
 
-    auto engine = fxOptBuilder->engine(parseCurrency(boughtCurrency_), 
-        parseCurrency(soldCurrency_), expiryDate);
-    return engine;
+        return fxOptBuilder->engine(parseCurrency(boughtCurrency_), parseCurrency(soldCurrency_), paymentDate);
+    } else {
+        boost::shared_ptr<EngineBuilder> builder = ef->builder("FxOption");
+        QL_REQUIRE(builder, "No builder found for FxOption");
+
+        boost::shared_ptr<FxEuropeanOptionEngineBuilder> fxOptBuilder =
+            boost::dynamic_pointer_cast<FxEuropeanOptionEngineBuilder>(builder);
+        QL_REQUIRE(fxOptBuilder, "No FxEuropeanOptionEngineBuilder found");
+
+        return fxOptBuilder->engine(parseCurrency(boughtCurrency_), parseCurrency(soldCurrency_), expiryDate);
+    }
 }
 
 boost::shared_ptr<QuantLib::PricingEngine>
 FxDoubleBarrierOption::barrierPricigingEngine(const boost::shared_ptr<EngineFactory>& ef,
-                                              const QuantLib::Date& expiryDate) {
+                                              const QuantLib::Date& expiryDate, const QuantLib::Date& paymentDate) {
 
     boost::shared_ptr<EngineBuilder> builder = ef->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
@@ -70,8 +79,7 @@ FxDoubleBarrierOption::barrierPricigingEngine(const boost::shared_ptr<EngineFact
         boost::dynamic_pointer_cast<FxDoubleBarrierOptionEngineBuilder>(builder);
     QL_REQUIRE(fxBarrierOptBuilder, "No fxBarrierOptBuilder found");
     
-    auto engine = fxBarrierOptBuilder->engine(parseCurrency(boughtCurrency_),
-        parseCurrency(soldCurrency_));
+    auto engine = fxBarrierOptBuilder->engine(parseCurrency(boughtCurrency_), parseCurrency(soldCurrency_), paymentDate);
     return engine;
 }
 

@@ -26,9 +26,9 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ql/experimental/barrieroption/analyticdoublebarrierengine.hpp>
 #include <ql/pricingengines/barrier/fdblackscholesbarrierengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
+#include <qle/pricingengines/analyticdoublebarrierengine.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
 
@@ -43,14 +43,14 @@ using namespace QuantLib;
     \ingroup portfolio
  */
 class FxDoubleBarrierOptionEngineBuilder
-    : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
+    : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&, const Date&> {
 
 protected:
     FxDoubleBarrierOptionEngineBuilder(const string& model, const string& engine)
         : CachingEngineBuilder(model, engine, {"FxDoubleBarrierOption"}) {}
 
-    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
-        return forCcy.code() + domCcy.code();
+    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy, const Date& paymentDate) override {
+        return forCcy.code() + domCcy.code() + ore::data::to_string(paymentDate);
     }
 
     boost::shared_ptr<GeneralizedBlackScholesProcess>
@@ -81,9 +81,9 @@ public:
         : FxDoubleBarrierOptionEngineBuilder("GarmanKohlhagen", "AnalyticDoubleBarrierEngine") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy, const Date& paymentDate) override {
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(forCcy, domCcy);
-        return boost::make_shared<AnalyticDoubleBarrierEngine>(gbsp);
+        return boost::make_shared<QuantExt::AnalyticDoubleBarrierEngine>(gbsp, paymentDate);
     }
 };
 

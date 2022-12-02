@@ -62,6 +62,10 @@ class IndexedCoupon;
 class IndexWrappedCashFlow;
 class NonStandardYoYInflationCoupon;
 class CmbCoupon;
+class CommodityIndex;
+class CommodityIndexedAverageCashFlow;
+class CommodityIndexedCashFlow;
+class EquityMarginCoupon;
 } // namespace QuantExt
 
 namespace ore {
@@ -180,12 +184,14 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantExt::IndexedCoupon>,
                          public QuantLib::Visitor<QuantExt::IndexWrappedCashFlow>,
                          public QuantLib::Visitor<QuantExt::NonStandardYoYInflationCoupon>,
-                         public QuantLib::Visitor<QuantExt::CmbCoupon> {
+                         public QuantLib::Visitor<QuantExt::CmbCoupon>,
+                         public QuantLib::Visitor<QuantExt::EquityMarginCoupon>,
+                         public QuantLib::Visitor<QuantExt::CommodityIndexedCashFlow>,
+                         public QuantLib::Visitor<QuantExt::CommodityIndexedAverageCashFlow> {
 
 public:
     //! Constructor
-    FixingDateGetter(RequiredFixings& requiredFixings, const std::map<std::string, std::string>& qlToOREIndexNames)
-        : requiredFixings_(requiredFixings), qlToOREIndexNames_(qlToOREIndexNames) {}
+    FixingDateGetter(RequiredFixings& requiredFixings) : requiredFixings_(requiredFixings) {}
 
     //! \name Visitor interface
     //@{
@@ -218,12 +224,14 @@ public:
     void visit(QuantExt::IndexedCoupon& c) override;
     void visit(QuantExt::IndexWrappedCashFlow& c) override;
     void visit(QuantExt::CmbCoupon& c) override;
+    void visit(QuantExt::EquityMarginCoupon& c) override;
+    void visit(QuantExt::CommodityIndexedCashFlow& c) override;
+    void visit(QuantExt::CommodityIndexedAverageCashFlow& c) override;
     //@}
 
 protected:
     std::string oreIndexName(const std::string& qlIndexName) const;
     RequiredFixings& requiredFixings_;
-    std::map<std::string, std::string> qlToOREIndexNames_;
 };
 
 /*! Populates a RequiredFixings instance based on a given QuantLib::Leg */

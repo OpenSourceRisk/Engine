@@ -32,6 +32,10 @@
 #include <ored/portfolio/builders/commodityasianoption.hpp>
 #include <ored/portfolio/builders/commodityforward.hpp>
 #include <ored/portfolio/builders/commodityoption.hpp>
+#include <ored/portfolio/builders/commodityapo.hpp>
+#include <ored/portfolio/builders/commodityapomodelbuilder.hpp>
+#include <ored/portfolio/builders/commodityswap.hpp>
+#include <ored/portfolio/builders/commodityswaption.hpp>
 #include <ored/portfolio/builders/cpicapfloor.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/builders/creditdefaultswapoption.hpp>
@@ -60,9 +64,12 @@
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
+#include <ored/portfolio/builders/varianceswap.hpp>
 #include <ored/portfolio/durationadjustedcmslegbuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/legbuilders.hpp>
+#include <ored/portfolio/commoditylegbuilder.hpp>
+#include <ored/portfolio/equityfxlegbuilder.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <boost/algorithm/string/join.hpp>
@@ -196,6 +203,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<FxTouchOptionEngineBuilder>());
     registerBuilder(boost::make_shared<FxDoubleTouchOptionAnalyticEngineBuilder>());
     registerBuilder(boost::make_shared<FxDigitalOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<FxDigitalCSOptionEngineBuilder>());
     registerBuilder(boost::make_shared<FxDigitalBarrierOptionEngineBuilder>());
 
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
@@ -231,6 +239,8 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityDigitalOptionEngineBuilder>());
     registerBuilder(boost::make_shared<EquityDoubleTouchOptionAnalyticEngineBuilder>());
     registerBuilder(boost::make_shared<EquityTouchOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<VarSwapEngineBuilder>());
+    
 
     registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
     registerBuilder(boost::make_shared<DiscountingForwardBondEngineBuilder>());
@@ -255,6 +265,11 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionADGAPEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionADGASEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionTWEngineBuilder>());
+    registerBuilder(boost::make_shared<CommoditySwapEngineBuilder>());
+    registerBuilder(boost::make_shared<CommoditySwaptionAnalyticalEngineBuilder>());
+    registerBuilder(boost::make_shared<CommoditySwaptionMonteCarloEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityApoAnalyticalEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityApoMonteCarloEngineBuilder>());
     registerBuilder(boost::make_shared<QuantoEquityEuropeanOptionEngineBuilder>());
 
     registerLegBuilder(boost::make_shared<DurationAdjustedCmsLegBuilder>());
@@ -270,6 +285,9 @@ void EngineFactory::addDefaultBuilders() {
     registerLegBuilder(boost::make_shared<CMSSpreadLegBuilder>());
     registerLegBuilder(boost::make_shared<DigitalCMSSpreadLegBuilder>());
     registerLegBuilder(boost::make_shared<EquityLegBuilder>());
+    registerLegBuilder(boost::make_shared<CommodityFixedLegBuilder>());
+    registerLegBuilder(boost::make_shared<CommodityFloatingLegBuilder>());
+    registerLegBuilder(boost::make_shared<EquityMarginLegBuilder>());
 }
 
 void EngineFactory::addExtraBuilders(const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,

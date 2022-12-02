@@ -232,9 +232,11 @@
 #include <qle/models/exactbachelierimpliedvolatility.hpp>
 #include <qle/models/futureoptionhelper.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
+#include <qle/models/fxbsmodel.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
+#include <qle/models/fxmodel.hpp>
 #include <qle/models/gaussian1dcrossassetadaptor.hpp>
 #include <qle/models/hwconstantparametrization.hpp>
 #include <qle/models/hwmodel.hpp>
@@ -270,11 +272,13 @@
 #include <qle/models/yoyinflationmodeltermstructure.hpp>
 #include <qle/models/yoyswaphelper.hpp>
 #include <qle/models/zeroinflationmodeltermstructure.hpp>
+#include <qle/pricingengines/analyticbarrierengine.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/pricingengines/analyticdigitalamericanengine.hpp>
 #include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
 #include <qle/pricingengines/analyticdoublebarrierbinaryengine.hpp>
+#include <qle/pricingengines/analyticdoublebarrierengine.hpp>
 #include <qle/pricingengines/analyticeuropeanengine.hpp>
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
 #include <qle/pricingengines/analyticjycpicapfloorengine.hpp>
@@ -309,6 +313,7 @@
 #include <qle/processes/commodityschwartzstateprocess.hpp>
 #include <qle/processes/crcirppstateprocess.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
+#include <qle/processes/fxbsstateprocess.hpp>
 #include <qle/processes/irhwstateprocess.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
 #include <qle/quotes/compositevectorquote.hpp>
