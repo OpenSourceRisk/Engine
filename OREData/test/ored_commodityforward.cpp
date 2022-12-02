@@ -45,7 +45,7 @@ Real testTolerance = 1e-10;
 
 class TestMarket : public MarketImpl {
 public:
-    TestMarket() {
+    TestMarket() : MarketImpl(false) {
         // Reference date and common day counter
         asof_ = Date(19, Feb, 2018);
         Actual365Fixed dayCounter;

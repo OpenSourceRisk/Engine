@@ -203,6 +203,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<FxTouchOptionEngineBuilder>());
     registerBuilder(boost::make_shared<FxDoubleTouchOptionAnalyticEngineBuilder>());
     registerBuilder(boost::make_shared<FxDigitalOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<FxDigitalCSOptionEngineBuilder>());
     registerBuilder(boost::make_shared<FxDigitalBarrierOptionEngineBuilder>());
 
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());

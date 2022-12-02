@@ -46,7 +46,7 @@ namespace {
 
 class TestMarket : public MarketImpl {
 public:
-    TestMarket() {
+    TestMarket() : MarketImpl(false) {
         asof_ = Date(3, Feb, 2016);
         // build discount
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BANK_EUR_LEND")] =
@@ -73,7 +73,7 @@ public:
         hEUR->addFixing(Date(30, Jan, 2020), -0.00191);
     }
 
-    TestMarket(Real defaultFlatRate) {
+    TestMarket(Real defaultFlatRate) : MarketImpl(false) {
         asof_ = Date(3, Feb, 2016);
         // build discount
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BANK_EUR_LEND")] =

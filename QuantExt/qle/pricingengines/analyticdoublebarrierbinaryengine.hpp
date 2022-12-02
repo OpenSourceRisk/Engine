@@ -33,13 +33,17 @@ namespace QuantExt {
     //! Analytic pricing engine for double barrier binary options
     class AnalyticDoubleBarrierBinaryEngine : public QuantLib::AnalyticDoubleBarrierBinaryEngine {
       public:
-        explicit AnalyticDoubleBarrierBinaryEngine(ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp,
+        explicit AnalyticDoubleBarrierBinaryEngine(ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp, const Date& payDate,
                                                    const bool flipResults = false)
-              : QuantLib::AnalyticDoubleBarrierBinaryEngine(gbsp), flipResults_(flipResults) {}
+              : QuantLib::AnalyticDoubleBarrierBinaryEngine(gbsp), process_(std::move(gbsp)), payDate_(payDate),
+                flipResults_(flipResults) {
+              registerWith(process_);
+          }
         void calculate() const override;
 
       private:
         ext::shared_ptr<GeneralizedBlackScholesProcess> process_;
+        Date payDate_;
         bool flipResults_;
     };
 

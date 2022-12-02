@@ -45,7 +45,8 @@ namespace {
 
 class TestMarket : public MarketImpl {
 public:
-    TestMarket(map<string, Handle<Quote>> fxRates = {{"EURUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(1.2))}}) {
+    TestMarket(map<string, Handle<Quote>> fxRates = {{"EURUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(1.2))}})
+        : MarketImpl(false) {
         asof_ = Date(3, Feb, 2016);
 
         // build discount

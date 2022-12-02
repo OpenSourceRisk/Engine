@@ -77,44 +77,46 @@ quoted as amount of EUR per unit JPY, which is not commonly seen on market and i
 
 \item  \lstinline!Settlement! The allowable values are \emph{Cash} or \emph{Physical}.
 
+\item A \lstinline!PaymentData! [Optional] node can be added which defines the settlement of the option payoff.
+
 \item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given.
 
-\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
+\item \lstinline!Premiums! [Optional]: Option premium amounts paid by the option buyer to the option seller.
 
 Allowable values:  See section \ref{ss:premiums}
 
 \end{itemize}
 
 
-\item BarrierData: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
+\item \lstinline!BarrierData!: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
 Levels specified in BarrierData should be quoted as the amount in SoldCurrnecy per unit BoughtCurrency, with both currencies as defined in FxDoubleBarrierOptionData node.
 Changing the option from Call to Put or vice versa does not require switching the barrier levels. Two levels in ascending order should be defined in \lstinline!Levels!. \lstinline!Type! should be \emph{KnockOut} or \emph{KnockIn}.
 
-\item StartDate[Optional]: The start date for checking if a barrier has been breached prior to today's date.  If omitted or left blank no check is made and it is assumed no barrier has been breached in the past. Has no impact if set to today's date or a date in the future.
+\item \lstinline!StartDate! [Optional]: The start date for checking if a barrier has been breached prior to today's date.  If omitted or left blank no check is made and it is assumed no barrier has been breached in the past. Has no impact if set to today's date or a date in the future.
 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
-\item Calendar[Optional]: The calendar associated with the FX Index. Required if StartDate is set to a date prior to today's date, otherwise optional.
+\item \lstinline!Calendar! [Optional]: The calendar associated with the FX Index. Required if StartDate is set to a date prior to today's date, otherwise optional.
 
 Allowable values: See Table \ref{tab:calendar} Calendar.
 
-\item FXIndex[Optional]: A reference to an FX Index source to check if the barrier has been breached. Required if StartDate is set to a date prior to today's date, otherwise optional and can be omitted but not left blank.
+\item \lstinline!FXIndex! [Optional]: A reference to an FX Index source to check if the barrier has been breached. Required if StartDate is set to a date prior to today's date, otherwise optional and can be omitted but not left blank.
 
 Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}. 
 
-\item BoughtCurrency: The bought currency of the FX barrier option. See OptionData above for more details.
+\item \lstinline!BoughtCurrency!: The bought currency of the FX barrier option. See OptionData above for more details.
 
 Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
 
-\item BoughtAmount: The amount in the BoughtCurrency.  
+\item \lstinline!BoughtAmount!: The amount in the BoughtCurrency.  
 
 Allowable values:  Any positive real number.
 
-\item SoldCurrency: The sold currency of the FX barrier option. See OptionData above for more details.
+\item \lstinline!SoldCurrency!: The sold currency of the FX barrier option. See OptionData above for more details.
 
 Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
 
-\item SoldAmount: The amount in the SoldCurrency.  
+\item \lstinline!SoldAmount!: The amount in the SoldCurrency.  
 
 Allowable values:  Any positive real number.
 

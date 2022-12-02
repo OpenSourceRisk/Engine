@@ -224,17 +224,15 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
             if (wildcard) {
                 QL_REQUIRE(config->dimension() == CorrelationCurveConfig::Dimension::ATM, 
                     "CorrelationCurve: Wildcards only supported for curve dimension ATM");
-                LOG("Have single quote with pattern " << (*wildcard).pattern());
+                LOG("Have single quote with pattern " << wildcard->pattern());
 
                 // Loop over quotes and process commodity option quotes matching pattern on asof
-                for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
+                for (const auto& md : loader.get(*wildcard, asof)) {
 
-                    // Go to next quote if the market data point's date does not equal our asof
-                    if (md->asofDate() != asof)
-                        continue;
+                    QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
                     auto q = boost::dynamic_pointer_cast<CorrelationQuote>(md);
-                    if (q && (*wildcard).matches(q->name()) && q->quoteType() == config->quoteType()) {
+                    if (q && q->quoteType() == config->quoteType()) {
 
                         TLOG("The quote " << q->name() << " matched the pattern");
 
@@ -249,7 +247,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
                 }
 
                 if (quotePairs.size() == 0) {
-		    Real corr = config->index1() == config->index2() ? 1.0 : 0.0;
+                    Real corr = config->index1() == config->index2() ? 1.0 : 0.0;
                     WLOG("CorrelationCurve: No quotes found for correlation curve: "
                          << config->curveID() << ", continuing with correlation " << corr << ".");
                     corr_ = boost::shared_ptr<QuantExt::CorrelationTermStructure>(

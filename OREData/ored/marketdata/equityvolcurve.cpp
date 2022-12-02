@@ -150,7 +150,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
     QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION,
         "MarketDatum instrument type '" << md->instrumentType() << "' <> 'MarketDatum::InstrumentType::EQUITY_OPTION'");
     boost::shared_ptr<EquityOptionQuote> q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
-    QL_REQUIRE(q, "Error downcasting MarketDatum '" << md->name() << "' to EquityOptionQuote");
+    QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
     QL_REQUIRE(q->name() == cvc.quote(),
         "EquityOptionQuote name '" << q->name() << "' <> ConstantVolatilityConfig quote '" << cvc.quote() << "'");
     TLOG("Found the constant volatility quote " << q->name());
@@ -190,13 +190,10 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
         // Loop over quotes and process equity option quotes matching pattern on asof
         for (const auto& md : loader.get(*wildcard, asof)) {
 
-            // Go to next quote if the market data point's date does not equal our asof
-            if (md->asofDate() != asof)
-                continue;
+            QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
             auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
-            if (!q)
-                continue;
+            QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
             QL_REQUIRE(q->quoteType() == vcc.quoteType(),
                 "EquityOptionQuote type '" << q->quoteType() << "' <> VolatilityCurveConfig quote type '" << vcc.quoteType() << "'");
 
@@ -231,35 +228,34 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
            << vc.ccy() << "/*";
         Wildcard w(ss.str());
         for (const auto& md : loader.get(w, asof)) {
-            // Go to next quote if the market data point's date does not equal our asof
-            if (md->asofDate() != asof)
-                continue;
 
-            if (auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md)) {
+            QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
-                // Find quote name in configured quotes.
-                auto it = find(vcc.quotes().begin(), vcc.quotes().end(), q->name());
+            auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
+            QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
 
-                if (it != vcc.quotes().end()) {
-                    TLOG("Found the configured quote " << q->name());
+            // Find quote name in configured quotes.
+            auto it = find(vcc.quotes().begin(), vcc.quotes().end(), q->name());
 
-                    Date expiryDate = getDateFromDateOrPeriod(q->expiry(), asof, calendar_);
-                    if (expiryDate <= asof) {
-                        LOG("Warning Stale Marketdata: Equity volatility quote '"
-                            << q->name() << "' has expired in the past (" << io::iso_date(expiryDate) << ") and is ignored");
-                        ++excludedAlreadyExpired;
-                        continue;
-                    }
-                    QL_REQUIRE(curveData.count(expiryDate) == 0, "Duplicate quote for the date "
-                                                                     << io::iso_date(expiryDate)
-                                                                     << " provided by equity volatility config "
-                                                                     << vc.curveID());
-                    // convert quote from minor to major currency if needed
-                    curveData[expiryDate] = convertMinorToMajorCurrency(q->ccy(), q->quote()->value());
+            if (it != vcc.quotes().end()) {
+                TLOG("Found the configured quote " << q->name());
 
-                    TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
-                                        << setprecision(9) << q->quote()->value() << ")");
+                Date expiryDate = getDateFromDateOrPeriod(q->expiry(), asof, calendar_);
+                if (expiryDate <= asof) {
+                    LOG("Warning Stale Marketdata: Equity volatility quote '"
+                        << q->name() << "' has expired in the past (" << io::iso_date(expiryDate) << ") and is ignored");
+                    ++excludedAlreadyExpired;
+                    continue;
                 }
+                QL_REQUIRE(curveData.count(expiryDate) == 0, "Duplicate quote for the date "
+                                                                 << io::iso_date(expiryDate)
+                                                                 << " provided by equity volatility config "
+                                                                 << vc.curveID());
+                // convert quote from minor to major currency if needed
+                curveData[expiryDate] = convertMinorToMajorCurrency(q->ccy(), q->quote()->value());
+
+                TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
+                                    << setprecision(9) << q->quote()->value() << ")");
             }
         }
         QL_REQUIRE(curveData.size() > 0, "No 'live' quotes found");
@@ -362,7 +358,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     for (const auto& md : loader.get(w, asof)) {
         QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
         boost::shared_ptr<EquityOptionQuote> q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
-        QL_REQUIRE(q, "Error downcasting MarketDatum '" << md->name() << "' to EquityOptionQuote");
+        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
         // todo - for now we will ignore ATM, ATMF quotes both for explicit strikes and in case of strike wild
         // card. ----
         auto absoluteStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
@@ -617,8 +613,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
         auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
-        if (!q)
-            continue;
+        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
         QL_REQUIRE(q->eqName() == vc.curveID(),
             "EquityOptionQuote eqName '" << q->eqName() << "' <> EquityVolatilityCurveConfig curveID '" << vc.curveID() << "'");
         QL_REQUIRE(q->ccy() == vc.ccy(),
@@ -846,8 +841,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
         QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
         auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
-        if (!q)
-            continue;
+        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
         QL_REQUIRE(q->eqName() == vc.curveID(),
             "EquityOptionQuote eqName '" << q->eqName() << "' <> EquityVolatilityCurveConfig curveID '" << vc.curveID() << "'");
         QL_REQUIRE(q->ccy() == vc.ccy(),

@@ -132,8 +132,8 @@ models/carrmadanarbitragecheck.cpp
 models/cdsoptionhelper.cpp
 models/cirppimplieddefaulttermstructure.cpp
 models/cmscaphelper.cpp
-models/commodityschwartzparametrization.cpp
 models/commodityschwartzmodel.cpp
+models/commodityschwartzparametrization.cpp
 models/cpicapfloorhelper.cpp
 models/crcirpp.cpp
 models/crossassetanalytics.cpp
@@ -175,6 +175,8 @@ models/yoycapfloorhelper.cpp
 models/yoyinflationmodeltermstructure.cpp
 models/yoyswaphelper.cpp
 models/zeroinflationmodeltermstructure.cpp
+pricingengines/analyticbarrierengine.cpp
+pricingengines/analyticdoublebarrierengine.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
 pricingengines/analyticcclgmfxoptionengine.cpp
 pricingengines/analyticdigitalamericanengine.cpp
@@ -190,8 +192,8 @@ pricingengines/analyticxassetlgmeqoptionengine.cpp
 pricingengines/baroneadesiwhaleyengine.cpp
 pricingengines/blackcdsoptionengine.cpp
 pricingengines/commodityapoengine.cpp
-pricingengines/commodityswaptionengine.cpp
 pricingengines/commodityschwartzfutureoptionengine.cpp
+pricingengines/commodityswaptionengine.cpp
 pricingengines/cpibacheliercapfloorengine.cpp
 pricingengines/cpiblackcapfloorengine.cpp
 pricingengines/cpicapfloorengines.cpp
@@ -545,9 +547,11 @@ models/eqbspiecewiseconstantparametrization.hpp
 models/exactbachelierimpliedvolatility.hpp
 models/futureoptionhelper.hpp
 models/fxbsconstantparametrization.hpp
+models/fxbsmodel.hpp
 models/fxbsparametrization.hpp
 models/fxbspiecewiseconstantparametrization.hpp
 models/fxeqoptionhelper.hpp
+models/fxmodel.hpp
 models/gaussian1dcrossassetadaptor.hpp
 models/hwconstantparametrization.hpp
 models/hwmodel.hpp
@@ -584,11 +588,13 @@ models/yoyinflationmodeltermstructure.hpp
 models/yoyswaphelper.hpp
 models/zeroinflationmodeltermstructure.hpp
 pricingengines/amccalculator.hpp
+pricingengines/analyticbarrierengine.hpp
+pricingengines/analyticdoublebarrierengine.hpp
 pricingengines/analyticcashsettledeuropeanengine.hpp
 pricingengines/analyticcclgmfxoptionengine.hpp
 pricingengines/analyticdigitalamericanengine.hpp
-pricingengines/analyticdoublebarrierbinaryengine.hpp
 pricingengines/analyticdkcpicapfloorengine.hpp
+pricingengines/analyticdoublebarrierbinaryengine.hpp
 pricingengines/analyticeuropeanengine.hpp
 pricingengines/analyticeuropeanforwardengine.hpp
 pricingengines/analyticjycpicapfloorengine.hpp
@@ -599,8 +605,8 @@ pricingengines/analyticxassetlgmeqoptionengine.hpp
 pricingengines/baroneadesiwhaleyengine.hpp
 pricingengines/blackcdsoptionengine.hpp
 pricingengines/commodityapoengine.hpp
-pricingengines/commodityswaptionengine.hpp
 pricingengines/commodityschwartzfutureoptionengine.hpp
+pricingengines/commodityswaptionengine.hpp
 pricingengines/cpibacheliercapfloorengine.hpp
 pricingengines/cpiblackcapfloorengine.hpp
 pricingengines/cpicapfloorengines.hpp
@@ -629,6 +635,7 @@ pricingengines/volatilityfromvarianceswapengine.hpp
 processes/commodityschwartzstateprocess.hpp
 processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
+processes/fxbsstateprocess.hpp
 processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
 quotes/compositevectorquote.hpp
