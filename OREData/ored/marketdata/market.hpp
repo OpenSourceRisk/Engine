@@ -117,9 +117,9 @@ public:
     //@{
     virtual Handle<SwaptionVolatilityStructure>
     swaptionVol(const string& key, const string& configuration = Market::defaultConfiguration) const = 0;
-    virtual const string shortSwapIndexBase(const string& key,
+    virtual string shortSwapIndexBase(const string& key,
                                             const string& configuration = Market::defaultConfiguration) const = 0;
-    virtual const string swapIndexBase(const string& key,
+    virtual string swapIndexBase(const string& key,
                                        const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
@@ -167,6 +167,10 @@ public:
     //@{
     virtual Handle<OptionletVolatilityStructure>
     capFloorVol(const string& key, const string& configuration = Market::defaultConfiguration) const = 0;
+    // get - ibor index name (might be empty = unspecified) and
+    //     - rate computation period for OIS indices (might be 0*Days = unspecified)
+    virtual std::pair<std::string, QuantLib::Period>
+    capFloorVolIndexBase(const string& key, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Stripped YoY Inflation Cap/Floor volatilities i.e. caplet/floorlet volatilities

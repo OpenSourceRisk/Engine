@@ -60,11 +60,7 @@ Leg EquityMarginLegBuilder::buildLeg(const LegData& data, const boost::shared_pt
     }
 
     Leg result = makeEquityMarginLeg(data, eqCurve, fxIndex, openEndDateReplacement);
-    addToRequiredFixings(
-        result, boost::make_shared<ore::data::FixingDateGetter>(
-                    requiredFixings,
-                    std::map<string, string>{{eqCurve->name(), "EQ-" + eqName},
-                                             {fxIndex != nullptr ? fxIndex->name() : "na", eqData->fxIndex()}}));
+    addToRequiredFixings(result, boost::make_shared<ore::data::FixingDateGetter>(requiredFixings));
     return result;
 }
 

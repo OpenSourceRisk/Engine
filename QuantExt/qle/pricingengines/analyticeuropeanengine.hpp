@@ -40,7 +40,7 @@ public:
 
     AnalyticEuropeanEngine(ext::shared_ptr<GeneralizedBlackScholesProcess> process,
                            Handle<YieldTermStructure> discountCurve, const bool flipResults = false)
-        : QuantLib::AnalyticEuropeanEngine(process), flipResults_(flipResults) {}
+        : QuantLib::AnalyticEuropeanEngine(process, discountCurve), flipResults_(flipResults) {}
     void calculate() const override;
 
 private:

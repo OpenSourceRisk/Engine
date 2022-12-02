@@ -147,7 +147,8 @@ private:
     mutable map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
     mutable map<string, boost::shared_ptr<FXVolCurve>> requiredFxVolCurves_;
     mutable map<string, boost::shared_ptr<GenericYieldVolCurve>> requiredGenericYieldVolCurves_;
-    mutable map<string, boost::shared_ptr<CapFloorVolCurve>> requiredCapFloorVolCurves_;
+    mutable map<string, std::pair<boost::shared_ptr<CapFloorVolCurve>, std::pair<std::string, QuantLib::Period>>>
+        requiredCapFloorVolCurves_;
     mutable map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
     mutable map<string, boost::shared_ptr<CDSVolCurve>> requiredCDSVolCurves_;
     mutable map<string, boost::shared_ptr<BaseCorrelationCurve>> requiredBaseCorrelationCurves_;

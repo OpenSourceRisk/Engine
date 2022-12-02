@@ -75,9 +75,9 @@ public:
     //! Swaptions
     Handle<QuantLib::SwaptionVolatilityStructure>
     swaptionVol(const string& key, const string& configuration = Market::defaultConfiguration) const override;
-    const string shortSwapIndexBase(const string& key,
+    string shortSwapIndexBase(const string& key,
                                     const string& configuration = Market::defaultConfiguration) const override;
-    const string swapIndexBase(const string& key, const string& configuration = Market::defaultConfiguration) const override;
+    string swapIndexBase(const string& key, const string& configuration = Market::defaultConfiguration) const override;
 
     //! Yield volatility
     Handle<QuantLib::SwaptionVolatilityStructure>
@@ -107,6 +107,8 @@ public:
     //! CapFloor volatilities
     Handle<OptionletVolatilityStructure> capFloorVol(const string& key,
                                                      const string& configuration = Market::defaultConfiguration) const override;
+    std::pair<string, QuantLib::Period>
+    capFloorVolIndexBase(const string& key, const string& configuration = Market::defaultConfiguration) const override;
 
     //! YoY Inflation CapFloor volatilities
     Handle<QuantExt::YoYOptionletVolatilitySurface>
@@ -214,6 +216,7 @@ protected:
     mutable map<pair<string, string>, Handle<QuantExt::BaseCorrelationTermStructure>> baseCorrelations_;
     mutable map<pair<string, string>, Handle<Quote>> recoveryRates_;
     mutable map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
+    mutable map<pair<string, string>, std::pair<string, QuantLib::Period>> capFloorIndexBase_;
     mutable map<pair<string, string>, Handle<YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;
     mutable map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
     mutable map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;

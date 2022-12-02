@@ -191,8 +191,7 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
 
 public:
     //! Constructor
-    FixingDateGetter(RequiredFixings& requiredFixings, const std::map<std::string, std::string>& qlToOREIndexNames)
-        : requiredFixings_(requiredFixings), qlToOREIndexNames_(qlToOREIndexNames) {}
+    FixingDateGetter(RequiredFixings& requiredFixings) : requiredFixings_(requiredFixings) {}
 
     //! \name Visitor interface
     //@{
@@ -233,7 +232,6 @@ public:
 protected:
     std::string oreIndexName(const std::string& qlIndexName) const;
     RequiredFixings& requiredFixings_;
-    std::map<std::string, std::string> qlToOREIndexNames_;
 };
 
 /*! Populates a RequiredFixings instance based on a given QuantLib::Leg */

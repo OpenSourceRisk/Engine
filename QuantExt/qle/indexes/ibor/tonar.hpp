@@ -47,6 +47,18 @@ public:
     Tonar(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : OvernightIndex("TONAR", 0, JPYCurrency(), Japan(), Actual365Fixed(), h) {}
 };
+
+/*! TONAR term index
+    https://moneyworld.jp/page/torf.html
+    https://www.torf.co.jp/en/2021/04/26/torfrate26april/
+    https://corporate.quick.co.jp/en/torf/ */
+class TonarTerm : public TermRateIndex {
+public:
+    TonarTerm(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : TermRateIndex("TONAR-TERM", tenor, 2, JPYCurrency(), Japan(), ModifiedFollowing, false, Actual365Fixed(), h,
+                        boost::make_shared<Tonar>(h)) {}
+};
+
 } // namespace QuantExt
 
 #endif

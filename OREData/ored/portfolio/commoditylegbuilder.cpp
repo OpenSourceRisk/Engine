@@ -398,12 +398,10 @@ Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_
         commodityFixedLeg.push_back(boost::make_shared<SimpleCashFlow>(cp->amount(), pmtDate));
     }
 
-    std::map<std::string, std::string> qlToOREIndexNames;
-    applyIndexing(commodityFixedLeg, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
-    addToRequiredFixings(commodityFixedLeg, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
+    applyIndexing(commodityFixedLeg, data, engineFactory, requiredFixings, openEndDateReplacement);
+    addToRequiredFixings(commodityFixedLeg, boost::make_shared<FixingDateGetter>(requiredFixings));
 
-    addToRequiredFixings(commodityFixedLeg, boost::make_shared<ore::data::FixingDateGetter>(
-                                                requiredFixings, qlToOREIndexNames));
+    addToRequiredFixings(commodityFixedLeg, boost::make_shared<ore::data::FixingDateGetter>(requiredFixings));
 
     return commodityFixedLeg;
 }
@@ -538,20 +536,21 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
     // Build the leg. Different ctor depending on whether cashflow is averaging or not.
     Leg leg;
 
-    bool isCashFlowAveraged = (floatingLegData->isAveraged()||
-                               (( floatingLegData->dailyExpiryOffset()!= Null<Natural>() ) && (floatingLegData->dailyExpiryOffset() > 0)) ) &&
-                              !allAveraging_ && floatingLegData->lastNDays() == Null<Natural>();
-    if ( isCashFlowAveraged ) {
-        // If daily expiry offset is given, check that referenced future contract has a daily frequency.
-        auto dailyExpOffset = floatingLegData->dailyExpiryOffset();
-        if (dailyExpOffset != Null<Natural>() && dailyExpOffset > 0) {
-            QL_REQUIRE(commFutureConv, "A positive DailyExpiryOffset has been provided but no commodity" <<
-                " future convention given for " << commName);
-            QL_REQUIRE(commFutureConv->contractFrequency() == Daily, "A positive DailyExpiryOffset has been" <<
-                " provided but the commodity contract frequency is not Daily (" <<
-                commFutureConv->contractFrequency() << ")");
-        }
+    bool isCashFlowAveraged =
+        floatingLegData->isAveraged() && !allAveraging_ && floatingLegData->lastNDays() == Null<Natural>();
 
+    // If daily expiry offset is given, check that referenced future contract has a daily frequency.
+    auto dailyExpOffset = floatingLegData->dailyExpiryOffset();
+    if (dailyExpOffset != Null<Natural>() && dailyExpOffset > 0) {
+        QL_REQUIRE(commFutureConv, "A positive DailyExpiryOffset has been provided but no commodity"
+                                       << " future convention given for " << commName);
+        QL_REQUIRE(commFutureConv->contractFrequency() == Daily,
+                   "A positive DailyExpiryOffset has been"
+                       << " provided but the commodity contract frequency is not Daily ("
+                       << commFutureConv->contractFrequency() << ")");
+    }
+
+    if (isCashFlowAveraged) {
         CommodityIndexedAverageCashFlow::PaymentTiming paymentTiming =
             CommodityIndexedAverageCashFlow::PaymentTiming::InArrears;
         if (floatingLegData->commodityPayRelativeTo() == CommodityPayRelativeTo::CalculationPeriodStartDate) {
@@ -623,14 +622,13 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
                   .paymentTiming(paymentTiming)
                   .inArrears(floatingLegData->isInArrears())
                   .useFuturePrice(priceType == CommodityPriceType::FutureSettlement)
-                  .useFutureExpiryDate(floatingLegData->pricingDateRule() ==
-                      CommodityPricingDateRule::FutureExpiryDate)
+                  .useFutureExpiryDate(floatingLegData->pricingDateRule() == CommodityPricingDateRule::FutureExpiryDate)
                   .withFutureMonthOffset(floatingLegData->futureMonthOffset())
                   .withFutureExpiryCalculator(feCalc)
-                  .payAtMaturity(floatingLegData->commodityPayRelativeTo() ==
-                      CommodityPayRelativeTo::TerminationDate)
+                  .payAtMaturity(floatingLegData->commodityPayRelativeTo() == CommodityPayRelativeTo::TerminationDate)
                   .withPricingDates(pricingDates)
-                  .withPaymentDates(paymentDates);
+                  .withPaymentDates(paymentDates)
+                  .withDailyExpiryOffset(dailyExpOffset);
 
         // Possibly update the leg's quantities.
         updateQuantities(leg, allAveraging_, floatingLegData->commodityQuantityFrequency(), schedule,
@@ -669,28 +667,28 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
         }
     }
 
-    std::map<std::string, std::string> qlToOREIndexNames;
-    if (fxIndex){ // fx daily indexing needed
-        qlToOREIndexNames[index->name()] = commName;
-        qlToOREIndexNames[fxIndex->name()] = floatingLegData->fxIndex();
+    if (fxIndex) {
+        // fx daily indexing needed
         for (auto cf : leg) {
             auto cacf = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf);
             QL_REQUIRE(cacf, "Commodity Indexed averaged cashflow is required to compute daily converted average.");
             for (auto kv : cacf->indices()) {
-                if(!fxIndex->fixingCalendar().isBusinessDay(kv.first)){ // If fx index is not available for the commodity pricing day,
-                                                           // this ensures to require the previous valid one which will be used in pricing from fxIndex()->fixing(...)
+                if (!fxIndex->fixingCalendar().isBusinessDay(
+                        kv.first)) {
+                    /* If fx index is not available for the commodity pricing day, this ensures to require the previous
+                     * valid one which will be used in pricing from fxIndex()->fixing(...) */
                     Date adjustedFixingDate = fxIndex->fixingCalendar().adjust(kv.first, Preceding);
                     requiredFixings.addFixingDate(adjustedFixingDate, floatingLegData->fxIndex());
-
                 } else
                     requiredFixings.addFixingDate(kv.first, floatingLegData->fxIndex());
             }
         }
-    } else // standard indexing approach
-        applyIndexing(leg, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
+    } else {
+        // standard indexing approach
+        applyIndexing(leg, data, engineFactory, requiredFixings, openEndDateReplacement);
+    }
 
-    addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
-
+    addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(requiredFixings));
     return leg;
 }
 } // namespace data

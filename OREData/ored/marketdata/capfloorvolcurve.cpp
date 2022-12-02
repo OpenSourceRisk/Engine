@@ -68,7 +68,9 @@ CapFloorVolCurve::CapFloorVolCurve(
     const CurveConfigurations& curveConfigs, boost::shared_ptr<IborIndex> iborIndex,
     Handle<YieldTermStructure> discountCurve, const boost::shared_ptr<IborIndex> sourceIndex,
     const boost::shared_ptr<IborIndex> targetIndex,
-    const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves,
+    const std::map<std::string,
+                   std::pair<boost::shared_ptr<ore::data::CapFloorVolCurve>, std::pair<std::string, QuantLib::Period>>>&
+        requiredCapFloorVolCurves,
     const bool buildCalibrationInfo)
     : spec_(spec) {
 
@@ -118,7 +120,9 @@ CapFloorVolCurve::CapFloorVolCurve(
 void CapFloorVolCurve::buildProxyCurve(
     const CapFloorVolatilityCurveConfig& config, const boost::shared_ptr<IborIndex>& sourceIndex,
     const boost::shared_ptr<IborIndex>& targetIndex,
-    const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves) {
+    const std::map<std::string,
+                   std::pair<boost::shared_ptr<ore::data::CapFloorVolCurve>, std::pair<std::string, QuantLib::Period>>>&
+        requiredCapFloorVolCurves) {
 
     auto sourceVol = requiredCapFloorVolCurves.find(config.proxySourceCurveId());
     QL_REQUIRE(sourceVol != requiredCapFloorVolCurves.end(),
@@ -126,7 +130,7 @@ void CapFloorVolCurve::buildProxyCurve(
                                                                                       << "' not found.");
 
     capletVol_ = boost::make_shared<ProxyOptionletVolatility>(
-        Handle<OptionletVolatilityStructure>(sourceVol->second->capletVolStructure()), sourceIndex, targetIndex,
+        Handle<OptionletVolatilityStructure>(sourceVol->second.first->capletVolStructure()), sourceIndex, targetIndex,
         config.proxySourceRateComputationPeriod(), config.proxyTargetRateComputationPeriod());
 }
 

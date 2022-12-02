@@ -121,6 +121,6 @@ The meanings and allowable values of the various elements in the \lstinline!FXAv
 \item ReferenceCurrency: The currency of the reference notional above.  \\ Allowable values: See Table \ref{tab:currency}  \lstinline!Currency!.
 \item SettlementNotional: The fixed amount to be paid or received depending on the fixed payer flag above \\ Allowable values:  Any positive real number.
 \item SettlementCurrency: The currency of the settlement notional above. \\ Allowable values: See Table \ref{tab:currency}  \lstinline!Currency!.
-\item FXIndex: The FX reference index for determining the FX fixing for averaging.  \\
-Allowable values: The format of the \lstinline!FXIndex! is ``FX-FixingSource-CCY1-CCY2'' as described in Table \ref{tab:fxindex_data}.
+\item FXIndex: The FX reference index for determining the FX fixing for averaging. \\
+Allowable values: The format of the \lstinline!FXIndex! is ``FX-FixingSource-CCY1-CCY2'' as described in Table \ref{tab:fxindex_data}. Notice that since the payoff is based on an arithmetic average, the order of the currencies in the FX index matters: The averaging will be done on fx rates quoted as CCY1-CCY2 (foreign-domestic). 
 \end{itemize}
