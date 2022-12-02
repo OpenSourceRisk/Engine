@@ -68,7 +68,9 @@ CapFloorVolCurve::CapFloorVolCurve(
     const CurveConfigurations& curveConfigs, boost::shared_ptr<IborIndex> iborIndex,
     Handle<YieldTermStructure> discountCurve, const boost::shared_ptr<IborIndex> sourceIndex,
     const boost::shared_ptr<IborIndex> targetIndex,
-    const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves,
+    const std::map<std::string,
+                   std::pair<boost::shared_ptr<ore::data::CapFloorVolCurve>, std::pair<std::string, QuantLib::Period>>>&
+        requiredCapFloorVolCurves,
     const bool buildCalibrationInfo)
     : spec_(spec) {
 
@@ -118,7 +120,9 @@ CapFloorVolCurve::CapFloorVolCurve(
 void CapFloorVolCurve::buildProxyCurve(
     const CapFloorVolatilityCurveConfig& config, const boost::shared_ptr<IborIndex>& sourceIndex,
     const boost::shared_ptr<IborIndex>& targetIndex,
-    const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves) {
+    const std::map<std::string,
+                   std::pair<boost::shared_ptr<ore::data::CapFloorVolCurve>, std::pair<std::string, QuantLib::Period>>>&
+        requiredCapFloorVolCurves) {
 
     auto sourceVol = requiredCapFloorVolCurves.find(config.proxySourceCurveId());
     QL_REQUIRE(sourceVol != requiredCapFloorVolCurves.end(),
@@ -126,7 +130,7 @@ void CapFloorVolCurve::buildProxyCurve(
                                                                                       << "' not found.");
 
     capletVol_ = boost::make_shared<ProxyOptionletVolatility>(
-        Handle<OptionletVolatilityStructure>(sourceVol->second->capletVolStructure()), sourceIndex, targetIndex,
+        Handle<OptionletVolatilityStructure>(sourceVol->second.first->capletVolStructure()), sourceIndex, targetIndex,
         config.proxySourceRateComputationPeriod(), config.proxyTargetRateComputationPeriod());
 }
 
@@ -614,38 +618,40 @@ CapFloorVolCurve::capSurface(const Date& asof, CapFloorVolatilityCurveConfig& co
     string currency = config.currency();
     vector<Period> configTenors = parseVectorOfValues<Period>(config.tenors(), &parsePeriod);
 
-    for (auto& md : loader.loadQuotes(asof)) {
-        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::CAPFLOOR && 
-            md->quoteType() == config.quoteType()) {
+    std::ostringstream ss;
+    ss << MarketDatum::InstrumentType::CAPFLOOR << "/" << config.quoteType() << "/" << currency << "/*";
+    Wildcard w(ss.str());
+    for (const auto& md : loader.get(w, asof)) {
+        QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
+        boost::shared_ptr<CapFloorQuote> cfq = boost::dynamic_pointer_cast<CapFloorQuote>(md);
+        QL_REQUIRE(cfq, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CapFloorQuote");
+        QL_REQUIRE(cfq->ccy() == currency, "CapFloorQuote ccy '" << cfq->ccy() << "' <> config ccy '" << currency << "'");
+        if (cfq->underlying() == tenor && !cfq->atm()) {
+            auto j = std::find(configTenors.begin(), configTenors.end(), cfq->term());
+            tenorRelevant = j != configTenors.end();
 
-            boost::shared_ptr<CapFloorQuote> cfq = boost::dynamic_pointer_cast<CapFloorQuote>(md);
-            if (cfq->ccy() == currency && cfq->underlying() == tenor && !cfq->atm()) {
-                auto j = std::find(configTenors.begin(), configTenors.end(), cfq->term());
-                tenorRelevant = j != configTenors.end();
+            Real strike = cfq->strike();
+            auto i = std::find_if(config.strikes().begin(), config.strikes().end(),
+                [&strike](const std::string& x) {
+                return close_enough(parseReal(x), strike);
+            });
+            strikeRelevant = i != config.strikes().end();
 
-                Real strike = cfq->strike();
-                auto i = std::find_if(config.strikes().begin(), config.strikes().end(),
-                    [&strike](const std::string& x) {
-                    return close_enough(parseReal(x), strike);
-                });
-                strikeRelevant = i != config.strikes().end();
+            quoteRelevant = strikeRelevant && tenorRelevant;
 
-                quoteRelevant = strikeRelevant && tenorRelevant;
-
-                if (quoteRelevant) {
-                    // if we have optional quotes we just make vectors of all quotes and let the sparse surface
-                    // handle them
-                    quoteCounter++;
-                    if (optionalQuotes) {
-                        qtStrikes.push_back(cfq->strike());
-                        qtTenors.push_back(cfq->term());
-                        qtData.push_back(cfq->quote()->value());
-                    }
-                    auto key = make_pair(cfq->term(), cfq->strike());
-                    auto r = volQuotes.insert(make_pair(key, cfq->quote()->value()));
-                    QL_REQUIRE(r.second, "Duplicate cap floor quote in config " << config.curveID() << ", with underlying tenor " << tenor <<
-                        " and currency " << currency << ", for tenor " << key.first << " and strike " << key.second);
+            if (quoteRelevant) {
+                // if we have optional quotes we just make vectors of all quotes and let the sparse surface
+                // handle them
+                quoteCounter++;
+                if (optionalQuotes) {
+                    qtStrikes.push_back(cfq->strike());
+                    qtTenors.push_back(cfq->term());
+                    qtData.push_back(cfq->quote()->value());
                 }
+                auto key = make_pair(cfq->term(), cfq->strike());
+                auto r = volQuotes.insert(make_pair(key, cfq->quote()->value()));
+                QL_REQUIRE(r.second, "Duplicate cap floor quote in config " << config.curveID() << ", with underlying tenor " << tenor <<
+                    " and currency " << currency << ", for tenor " << key.first << " and strike " << key.second);
             }
         }
     }
@@ -710,19 +716,20 @@ CapFloorVolCurve::atmCurve(const Date& asof, CapFloorVolatilityCurveConfig& conf
     Period tenor = parsePeriod(config.indexTenor()); // 1D, 1M, 3M, 6M, 12M
     string currency = config.currency();
     // Load the relevant quotes
-    for (auto& md : loader.loadQuotes(asof)) {
-
-        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::CAPFLOOR &&
-            md->quoteType() == config.quoteType()) {
-
-            boost::shared_ptr<CapFloorQuote> cfq = boost::dynamic_pointer_cast<CapFloorQuote>(md);
-            if (cfq->ccy() == currency && cfq->underlying() == tenor && cfq->atm()) {
-                auto j = std::find(config.atmTenors().begin(), config.atmTenors().end(), to_string(cfq->term()));
-                if (j != config.atmTenors().end()) {
-                    auto r = volQuotes.insert(make_pair(cfq->term(), cfq->quote()));
-                    QL_REQUIRE(r.second, "Duplicate ATM cap floor quote in config " << config.curveID() << " for tenor "
-                        << cfq->term());
-                }
+    std::ostringstream ss;
+    ss << MarketDatum::InstrumentType::CAPFLOOR << "/" << config.quoteType() << "/" << currency << "/*";
+    Wildcard w(ss.str());
+    for (const auto& md : loader.get(w, asof)) {
+        QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
+        boost::shared_ptr<CapFloorQuote> cfq = boost::dynamic_pointer_cast<CapFloorQuote>(md);
+        QL_REQUIRE(cfq, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CapFloorQuote");
+        QL_REQUIRE(cfq->ccy() == currency, "CapFloorQuote ccy '" << cfq->ccy() << "' <> config ccy '" << currency << "'");
+        if (cfq->underlying() == tenor && cfq->atm()) {
+            auto j = std::find(config.atmTenors().begin(), config.atmTenors().end(), to_string(cfq->term()));
+            if (j != config.atmTenors().end()) {
+                auto r = volQuotes.insert(make_pair(cfq->term(), cfq->quote()));
+                QL_REQUIRE(r.second, "Duplicate ATM cap floor quote in config " << config.curveID() << " for tenor "
+                    << cfq->term());
             }
         }
     }

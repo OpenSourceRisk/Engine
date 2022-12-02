@@ -96,10 +96,8 @@ Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const boost::sh
         result = StrippedCappedFlooredCouponLeg(result);
     }
 
-    std::map<std::string, std::string> qlToOREIndexNames;
-    qlToOREIndexNames[index->name()] = indexName;
-    applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
-    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
+    applyIndexing(result, data, engineFactory, requiredFixings);
+    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings));
     return result;
 }
 } // namespace data

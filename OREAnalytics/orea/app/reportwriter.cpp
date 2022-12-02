@@ -281,6 +281,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                     fixingValue = (c->underlying()->rate() - c->underlying()->effectiveSpread()) /
                                                   c->underlying()->gearing();
                                 }
+                                // similar treatment of sub period coupons
+                                if (auto sp = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(ptrFloat)) {
+                                    fixingValue = (sp->rate() - sp->spread()) / sp->gearing();
+                                }
                             } else if (ptrInfl) {
                                 fixingDate = ptrInfl->fixingDate();
                                 fixingValue = ptrInfl->indexFixing();

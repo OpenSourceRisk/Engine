@@ -69,8 +69,8 @@ model/calibrationinstruments/cpicapfloor.cpp
 model/calibrationinstruments/yoycapfloor.cpp
 model/calibrationinstruments/yoyswap.cpp
 model/calibrationpointcache.cpp
-model/commodityschwartzmodeldata.cpp
 model/commodityschwartzmodelbuilder.cpp
+model/commodityschwartzmodeldata.cpp
 model/crcirbuilder.cpp
 model/crcirdata.cpp
 model/crlgmbuilder.cpp
@@ -126,6 +126,7 @@ portfolio/commoditylegbuilder.cpp
 portfolio/commoditylegdata.cpp
 portfolio/commodityoption.cpp
 portfolio/commodityoptionstrip.cpp
+portfolio/commodityspreadoption.cpp
 portfolio/commodityswap.cpp
 portfolio/commodityswaption.cpp
 portfolio/compositetrade.cpp
@@ -296,8 +297,8 @@ model/calibrationinstruments/cpicapfloor.hpp
 model/calibrationinstruments/yoycapfloor.hpp
 model/calibrationinstruments/yoyswap.hpp
 model/calibrationpointcache.hpp
-model/commodityschwartzmodeldata.hpp
 model/commodityschwartzmodelbuilder.hpp
+model/commodityschwartzmodeldata.hpp
 model/crcirbuilder.hpp
 model/crcirdata.hpp
 model/crlgmbuilder.hpp
@@ -394,6 +395,7 @@ portfolio/commoditylegbuilder.hpp
 portfolio/commoditylegdata.hpp
 portfolio/commodityoption.hpp
 portfolio/commodityoptionstrip.hpp
+portfolio/commodityspreadoption.hpp
 portfolio/commodityswap.hpp
 portfolio/commodityswaption.hpp
 portfolio/compositeinstrumentwrapper.hpp
