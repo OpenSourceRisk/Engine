@@ -859,6 +859,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                     try {
                         LOG("building " << name << " cap/floor volatility curve...");
                         Handle<OptionletVolatilityStructure> wrapper = initMarket->capFloorVol(name, configuration);
+                        auto [iborIndexName, rateComputationPeriod] =
+                            initMarket->capFloorVolIndexBase(name, configuration);
+                        boost::shared_ptr<IborIndex> iborIndex =
+                            iborIndexName.empty() ? nullptr : parseIborIndex(iborIndexName);
 
                         LOG("Initial market cap/floor volatility type = " << wrapper->volatilityType());
 
@@ -870,43 +874,32 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                             // Try to get the ibor index that the cap floor structure relates to
                             // We use this to convert Period to Date below to sample from `wrapper`
-                            boost::shared_ptr<IborIndex> iborIndex;
                             Natural settleDays = 0;
                             bool isOis = false;
-                            Period rateComputationPeriod = 3 * Months;
                             Calendar iborCalendar;
                             Size onSettlementDays = 0;
-
-                            // the name could be an index name, in this case we use that index
-			    tryParseIborIndex(name, iborIndex);
 
                             // get the curve config for the index, or if not available for its ccy
                             boost::shared_ptr<CapFloorVolatilityCurveConfig> config;
                             if (curveConfigs.hasCapFloorVolCurveConfig(name)) {
                                 config = curveConfigs.capFloorVolCurveConfig(name);
                             } else {
-                                boost::shared_ptr<IborIndex> ind;
-                                if (tryParseIborIndex(name, ind) &&
-                                    curveConfigs.hasCapFloorVolCurveConfig(ind->currency().code())) {
-                                    config = curveConfigs.capFloorVolCurveConfig(ind->currency().code());
+                                if (iborIndex && curveConfigs.hasCapFloorVolCurveConfig(iborIndex->currency().code())) {
+                                    config = curveConfigs.capFloorVolCurveConfig(iborIndex->currency().code());
                                 }
                             }
 
 			    // get info from the config if we have one
                             if (config) {
                                 settleDays = config->settleDays();
-				if(iborIndex == nullptr) {
-				    tryParseIborIndex(config->index(), iborIndex);
-				}
-				rateComputationPeriod = config->rateComputationPeriod();
 				onSettlementDays = config->onCapSettlementDays();
                             }
 
-			    // derive info from the ibor index if we have one
-			    if(iborIndex) {
+			    // derive info from the ibor index
+                            if (iborIndex) {
                                 iborCalendar = iborIndex->fixingCalendar();
                                 isOis = boost::dynamic_pointer_cast<OvernightIndex>(iborIndex) != nullptr;
-			    }
+                            }
 
                             vector<Period> optionTenors = parameters->capFloorVolExpiries(name);
                             vector<Date> optionDates(optionTenors.size());
@@ -1080,6 +1073,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         capFloorCurves_.emplace(std::piecewise_construct,
                                                 std::forward_as_tuple(Market::defaultConfiguration, name),
                                                 std::forward_as_tuple(hCapletVol));
+                        capFloorIndexBase_.emplace(
+                            std::piecewise_construct, std::forward_as_tuple(Market::defaultConfiguration, name),
+                            std::forward_as_tuple(std::make_pair(iborIndexName, rateComputationPeriod)));
 
                         LOG("Simulation market cap/floor volatility type = " << hCapletVol->volatilityType());
                     } catch (const std::exception& e) {

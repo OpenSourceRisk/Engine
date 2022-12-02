@@ -674,15 +674,15 @@ public:
 private:
     boost::shared_ptr<CMSSpreadLegData> underlying_;
 
-    Position::Type callPosition_;
-    bool isCallATMIncluded_;
+    Position::Type callPosition_ = Position::Long;
+    bool isCallATMIncluded_ = false;
     vector<double> callStrikes_;
     vector<string> callStrikeDates_;
     vector<double> callPayoffs_;
     vector<string> callPayoffDates_;
 
-    Position::Type putPosition_;
-    bool isPutATMIncluded_;
+    Position::Type putPosition_ = Position::Long;
+    bool isPutATMIncluded_ = false;
     vector<double> putStrikes_;
     vector<string> putStrikeDates_;
     vector<double> putPayoffs_;
@@ -1056,8 +1056,7 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 
 // apply indexing (if given in LegData) to existing leg
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                   std::map<std::string, std::string>& qlToOREIndexNames, RequiredFixings& requiredFixings,
-                   const QuantLib::Date& openEndDateReplacement = Null<Date>());
+                   RequiredFixings& requiredFixings, const QuantLib::Date& openEndDateReplacement = Null<Date>());
 
 // template implementations
 

@@ -53,11 +53,11 @@ Handle<SwaptionVolatilityStructure> WrappedMarket::swaptionVol(const string& key
     return market_->swaptionVol(key, configuration);
 }
 
-const string WrappedMarket::shortSwapIndexBase(const string& ccy, const string& configuration) const {
+string WrappedMarket::shortSwapIndexBase(const string& ccy, const string& configuration) const {
     return market_->shortSwapIndexBase(ccy, configuration);
 }
 
-const string WrappedMarket::swapIndexBase(const string& ccy, const string& configuration) const {
+string WrappedMarket::swapIndexBase(const string& ccy, const string& configuration) const {
     return market_->swapIndexBase(ccy, configuration);
 }
 
@@ -101,6 +101,11 @@ Handle<QuantExt::BaseCorrelationTermStructure> WrappedMarket::baseCorrelation(co
 
 Handle<OptionletVolatilityStructure> WrappedMarket::capFloorVol(const string& key, const string& configuration) const {
     return market_->capFloorVol(key, configuration);
+}
+
+std::pair<string, QuantLib::Period> WrappedMarket::capFloorVolIndexBase(const string& key,
+                                                                        const string& configuration) const {
+    return market_->capFloorVolIndexBase(key, configuration);
 }
 
 Handle<QuantExt::YoYOptionletVolatilitySurface> WrappedMarket::yoyCapFloorVol(const string& indexName,
