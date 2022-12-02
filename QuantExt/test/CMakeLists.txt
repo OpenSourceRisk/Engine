@@ -46,6 +46,8 @@ inflationcurve.cpp
 inflationvol.cpp
 interpolatedyoycapfloortermpricesurface.cpp
 logquote.cpp
+mclgmswaptionengine.cpp
+multilegoption.cpp
 normalfreeboundarysabr.cpp
 optionletstripper.cpp
 payment.cpp
