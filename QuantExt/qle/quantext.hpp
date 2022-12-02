@@ -232,9 +232,11 @@
 #include <qle/models/exactbachelierimpliedvolatility.hpp>
 #include <qle/models/futureoptionhelper.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
+#include <qle/models/fxbsmodel.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
+#include <qle/models/fxmodel.hpp>
 #include <qle/models/gaussian1dcrossassetadaptor.hpp>
 #include <qle/models/hwconstantparametrization.hpp>
 #include <qle/models/hwmodel.hpp>
@@ -311,6 +313,7 @@
 #include <qle/processes/commodityschwartzstateprocess.hpp>
 #include <qle/processes/crcirppstateprocess.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
+#include <qle/processes/fxbsstateprocess.hpp>
 #include <qle/processes/irhwstateprocess.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
 #include <qle/quotes/compositevectorquote.hpp>

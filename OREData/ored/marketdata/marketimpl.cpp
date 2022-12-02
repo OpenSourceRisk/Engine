@@ -93,7 +93,7 @@ Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, co
     return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, type, configuration, "yield curve / ibor index");
 }
 
-Handle<YieldTermStructure> MarketImpl::discountCurve(const string& key, const string& configuration) const {
+Handle<YieldTermStructure> MarketImpl::discountCurveImpl(const string& key, const string& configuration) const {
     require(MarketObject::DiscountCurve, key, configuration);
     return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::Discount, configuration,
                                               "discount curve");
@@ -196,26 +196,26 @@ Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(const string&
                                                                  "yield volatility curve");
 }
 
-Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const string& configuration) const {
+Handle<QuantExt::FxIndex> MarketImpl::fxIndexImpl(const string& fxIndex, const string& configuration) const {
     QL_REQUIRE(fx_ != nullptr,
                "MarketImpl::fxIndex(" << fxIndex << "): fx_ is null. This is an internal error. Contact dev.");
     return fx_->getIndex(fxIndex, this);
 }
 
-Handle<Quote> MarketImpl::fxRate(const string& ccypair, const string& configuration) const {
+Handle<Quote> MarketImpl::fxRateImpl(const string& ccypair, const string& configuration) const {
     // if rate requested for a currency against itself, return 1.0
     if (ccypair.substr(0,3) == ccypair.substr(3))
         return Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
     return fxIndex(ccypair, configuration)->fxQuote();
 }
 
-Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configuration) const {
+Handle<Quote> MarketImpl::fxSpotImpl(const string& ccypair, const string& configuration) const {
     if (ccypair.substr(0, 3) == ccypair.substr(3))
         return Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
     return fxIndex(ccypair, configuration)->fxQuote(true);
 }
 
-Handle<BlackVolTermStructure> MarketImpl::fxVol(const string& ccypair, const string& configuration) const {
+Handle<BlackVolTermStructure> MarketImpl::fxVolImpl(const string& ccypair, const string& configuration) const {
     require(MarketObject::FXVol, ccypair, configuration);
     auto it = fxVols_.find(make_pair(configuration, ccypair));
     if (it != fxVols_.end())

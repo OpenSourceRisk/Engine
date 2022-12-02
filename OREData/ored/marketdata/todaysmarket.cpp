@@ -75,11 +75,11 @@ TodaysMarket::TodaysMarket(const Date& asof, const boost::shared_ptr<TodaysMarke
                            const bool loadFixings, const bool lazyBuild,
                            const boost::shared_ptr<ReferenceDataManager>& referenceData,
                            const bool preserveQuoteLinkage, const IborFallbackConfig& iborFallbackConfig,
-                           const bool buildCalibrationInfo)
-    : MarketImpl(), params_(params), loader_(loader), curveConfigs_(curveConfigs), continueOnError_(continueOnError),
-      loadFixings_(loadFixings), lazyBuild_(lazyBuild), preserveQuoteLinkage_(preserveQuoteLinkage),
-      referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
-      buildCalibrationInfo_(buildCalibrationInfo) {
+                           const bool buildCalibrationInfo, const bool handlePseudoCurrencies)
+    : MarketImpl(handlePseudoCurrencies), params_(params), loader_(loader), curveConfigs_(curveConfigs),
+      continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(lazyBuild),
+      preserveQuoteLinkage_(preserveQuoteLinkage), referenceData_(referenceData),
+      iborFallbackConfig_(iborFallbackConfig), buildCalibrationInfo_(buildCalibrationInfo) {
     QL_REQUIRE(params_, "TodaysMarket: TodaysMarketParameters are null");
     QL_REQUIRE(loader_, "TodaysMarket: Loader is null");
     QL_REQUIRE(curveConfigs_, "TodaysMarket: CurveConfigurations are null");

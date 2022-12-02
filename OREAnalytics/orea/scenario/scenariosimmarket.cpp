@@ -283,23 +283,22 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
 
 ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
-                                     const std::string& configuration,
-                                     const CurveConfigurations& curveConfigs,
+                                     const std::string& configuration, const CurveConfigurations& curveConfigs,
                                      const TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
                                      const bool useSpreadedTermStructures, const bool cacheSimData,
-                                     const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig)
+                                     const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig,
+                                     const bool handlePseudoCurrencies)
     : ScenarioSimMarket(initMarket, parameters, boost::make_shared<FixingManager>(initMarket->asofDate()),
                         configuration, curveConfigs, todaysMarketParams, continueOnError, useSpreadedTermStructures,
-                        cacheSimData, allowPartialScenarios, iborFallbackConfig) {}
+                        cacheSimData, allowPartialScenarios, iborFallbackConfig, handlePseudoCurrencies) {}
 
 ScenarioSimMarket::ScenarioSimMarket(
     const boost::shared_ptr<Market>& initMarket, const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
-    const boost::shared_ptr<FixingManager>& fixingManager,
-    const std::string& configuration, const ore::data::CurveConfigurations& curveConfigs,
-    const ore::data::TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
-    const bool useSpreadedTermStructures, const bool cacheSimData, const bool allowPartialScenarios,
-    const IborFallbackConfig& iborFallbackConfig)
-    : SimMarket(), parameters_(parameters), fixingManager_(fixingManager),
+    const boost::shared_ptr<FixingManager>& fixingManager, const std::string& configuration,
+    const ore::data::CurveConfigurations& curveConfigs, const ore::data::TodaysMarketParameters& todaysMarketParams,
+    const bool continueOnError, const bool useSpreadedTermStructures, const bool cacheSimData,
+    const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrencies)
+    : SimMarket(handlePseudoCurrencies), parameters_(parameters), fixingManager_(fixingManager),
       filter_(boost::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures),
       cacheSimData_(cacheSimData), allowPartialScenarios_(allowPartialScenarios),
       iborFallbackConfig_(iborFallbackConfig) {
