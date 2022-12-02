@@ -67,6 +67,8 @@
      virtual XMLNode* toXML(XMLDocument& doc) override;
      //@}
 
+     const std::map<std::string,boost::any>& additionalData() const override;
+
  private:
      ScheduleData observationDates_;
      string paymentDate_;
@@ -77,6 +79,7 @@
      double settlementNotional_;
      //! Needed for past fixings
      std::string fxIndex_;
+     bool inverted_ = false; // set during build()
  };
 
  } // namespace data

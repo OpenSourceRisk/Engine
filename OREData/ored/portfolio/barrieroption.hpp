@@ -42,8 +42,8 @@ public:
     //! Constructor
     BarrierOption() {}
 
-    BarrierOption(ore::data::OptionData option, BarrierData barrier, 
-        QuantLib::Date startDate = QuantLib::Date(), const std::string& calendar = std::string())
+    BarrierOption(ore::data::OptionData option, BarrierData barrier, QuantLib::Date startDate = QuantLib::Date(),
+                  const std::string& calendar = std::string())
         : option_(option), barrier_(barrier), startDate_(startDate), calendarStr_(calendar) {
         calendar_ = parseCalendar(calendarStr_);
     }
@@ -63,9 +63,11 @@ public:
     virtual QuantLib::Real tradeMultiplier() = 0;
     virtual Currency tradeCurrency() = 0;
     virtual boost::shared_ptr<QuantLib::PricingEngine>
-        vanillaPricigingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate) = 0;
+    vanillaPricigingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+                           const QuantLib::Date& paymentDate) = 0;
     virtual boost::shared_ptr<QuantLib::PricingEngine>
-        barrierPricigingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate) = 0;
+    barrierPricigingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+                           const QuantLib::Date& paymentDate) = 0;
     virtual const QuantLib::Handle<QuantLib::Quote>& spotQuote() = 0;
 
     virtual void additionalFromXml(ore::data::XMLNode* node) = 0;

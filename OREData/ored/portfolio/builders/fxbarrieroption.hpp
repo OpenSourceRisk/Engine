@@ -26,9 +26,9 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ql/pricingengines/barrier/analyticbarrierengine.hpp>
 #include <ql/pricingengines/barrier/fdblackscholesbarrierengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
+#include <qle/pricingengines/analyticbarrierengine.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 
 namespace ore {
@@ -42,14 +42,17 @@ using namespace QuantLib;
     \ingroup portfolio
  */
 class FxBarrierOptionEngineBuilder
-    : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&, const Date&> {
+    : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&, const Date&,
+                                                    const Date&> {
 
 protected:
     FxBarrierOptionEngineBuilder(const string& model, const string& engine)
         : CachingEngineBuilder(model, engine, {"FxBarrierOption"}) {}
 
-    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy, const Date& expiryDate) override {
-        return forCcy.code() + "/" + domCcy.code() + "/" + ore::data::to_string(expiryDate);
+    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy, const Date& expiryDate,
+                           const Date& paymentDate) override {
+        return forCcy.code() + "/" + domCcy.code() + "/" + ore::data::to_string(expiryDate) + "/" +
+               ore::data::to_string(paymentDate);
     }
 
     boost::shared_ptr<GeneralizedBlackScholesProcess>
@@ -75,9 +78,9 @@ public:
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
-                                                        const Date& expiryDate) override {
+                                                        const Date& expiryDate, const Date& paymentDate) override {
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(forCcy, domCcy);
-        return boost::make_shared<AnalyticBarrierEngine>(gbsp);
+        return boost::make_shared<QuantExt::AnalyticBarrierEngine>(gbsp, paymentDate);
     }
 };
 
@@ -87,7 +90,7 @@ public:
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
-                                                        const Date& expiryDate) override {
+                                                        const Date& expiryDate, const Date& paymentDate) override {
         // We follow the way FdBlackScholesBarrierEngine determines maturity for time grid generation
         Handle<YieldTermStructure> riskFreeRate =
             market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing));

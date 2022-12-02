@@ -17,6 +17,7 @@
 */
 
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/log.hpp>
 
 #include <ql/errors.hpp>
 
@@ -40,6 +41,7 @@ std::string IndexNameTranslator::qlName(const std::string& oreName) const {
 void IndexNameTranslator::add(const std::string& qlName, const std::string& oreName) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     data_.insert(boost::bimap<std::string, std::string>::value_type(qlName, oreName));
+    TLOG("IndexNameTranslator: adding '" << qlName << "' <-> '" << oreName << "'");
 }
 
 void IndexNameTranslator::clear() {

@@ -2415,8 +2415,7 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 }
 
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                   std::map<std::string, std::string>& qlToOREIndexNames, RequiredFixings& requiredFixings,
-                   const QuantLib::Date& openEndDateReplacement) {
+                   RequiredFixings& requiredFixings, const QuantLib::Date& openEndDateReplacement) {
     for (auto const& indexing : data.indexing()) {
         if (indexing.hasData()) {
             DLOG("apply indexing (index='" << indexing.index() << "') to leg of type " << data.legType());
@@ -2474,9 +2473,6 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             if (!indexing.fixingConvention().empty())
                 indLeg.withFixingConvention(parseBusinessDayConvention(indexing.fixingConvention()));
             leg = indLeg;
-
-            // add to the qlToOREIndexNames map
-            qlToOREIndexNames[index->name()] = indexing.index();
         }
     }
 }
