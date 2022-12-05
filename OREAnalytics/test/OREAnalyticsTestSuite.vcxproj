@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="aggregationscenariodata.cpp" />
+    <ClCompile Include="amcbermudanswaption.cpp" />
     <ClCompile Include="cube.cpp" />
     <ClCompile Include="observationmode.cpp" />
     <ClCompile Include="scenariogenerator.cpp" />

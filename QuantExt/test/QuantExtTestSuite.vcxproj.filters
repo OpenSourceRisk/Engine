@@ -77,12 +77,6 @@
     <ClCompile Include="commodityforward.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="commodityapo.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="commodityswaption.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="discountingcommodityforwardengine.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -192,6 +186,18 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="basecorrelationcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityschwartzmodel.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityspreadoption.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="mclgmswaptionengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="multilegoption.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
