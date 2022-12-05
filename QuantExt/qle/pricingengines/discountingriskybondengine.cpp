@@ -111,9 +111,8 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
     // we set the default probability and recovery rate to zero in this instance (issuer credit worthiness already
     // captured within security spread)
     boost::shared_ptr<DefaultProbabilityTermStructure> creditCurvePtr =
-        defaultCurve_.empty()
-            ? boost::make_shared<QuantLib::FlatHazardRate>(results_.valuationDate, 0.0, discountCurve_->dayCounter())
-            : defaultCurve_.currentLink();
+        defaultCurve_.empty() ? boost::make_shared<QuantLib::FlatHazardRate>(npvDate, 0.0, discountCurve_->dayCounter())
+                              : defaultCurve_.currentLink();
     Rate recoveryVal = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
 
     // compounding factors for npv date
