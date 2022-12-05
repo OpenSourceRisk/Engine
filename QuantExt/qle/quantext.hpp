@@ -203,8 +203,15 @@
 #include <qle/math/randomvariable_io.hpp>
 #include <qle/math/stabilisedglls.hpp>
 #include <qle/math/trace.hpp>
+#include <qle/methods/brownianbridgepathinterpolator.hpp>
+#include <qle/methods/interpolatedvariatemultipathgenerator.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/methods/pathgeneratorfactory.hpp>
+#include <qle/methods/projectedbufferedmultipathgenerator.hpp>
+#include <qle/methods/projectedbufferedmultipathgeneratorfactory.hpp>
+#include <qle/methods/projectedvariatemultipathgenerator.hpp>
+#include <qle/methods/projectedvariatepathgeneratorfactory.hpp>
 #include <qle/models/annuitymapping.hpp>
 #include <qle/models/blackscholesmodelwrapper.hpp>
 #include <qle/models/carrmadanarbitragecheck.hpp>
@@ -273,6 +280,7 @@
 #include <qle/models/yoyinflationmodeltermstructure.hpp>
 #include <qle/models/yoyswaphelper.hpp>
 #include <qle/models/zeroinflationmodeltermstructure.hpp>
+#include <qle/pricingengines/amccalculator.hpp>
 #include <qle/pricingengines/analyticbarrierengine.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
@@ -307,6 +315,12 @@
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/pricingengines/lgmconvolutionsolver.hpp>
+#include <qle/pricingengines/mccamcurrencyswapengine.hpp>
+#include <qle/pricingengines/mccamfxoptionengine.hpp>
+#include <qle/pricingengines/mclgmswapengine.hpp>
+#include <qle/pricingengines/mclgmswaptionengine.hpp>
+#include <qle/pricingengines/mcmultilegbaseengine.hpp>
+#include <qle/pricingengines/mcmultilegoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
