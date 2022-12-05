@@ -28,8 +28,6 @@
 
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 
-using namespace ore::data;
-
 namespace ore {
 namespace data {
 
