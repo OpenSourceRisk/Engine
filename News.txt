@@ -21,11 +21,12 @@ INSTRUMENTS
 MARKETS
 
 - performance optimizations for curve builders
-- extend the market interfaces to handle previous metals as "pseudo currencies" ???
+- extend the market interface to optionally handle precious metals and crypto currencies
+  as commodities instead of FX
 
 TERM STRUCTURES
 
-- ???
+- no notable changes
 
 ANALYTICS
 
@@ -58,7 +59,7 @@ LANGUAGE BINDUNGS
 OTHER
 
 - changes to build with QuantLib 1.28
-- extend the CMake setup for Windows / Visual Studio users.
+- extend the CMake setup for Windows / Visual Studio users
   We will stop maintaining the *.vcxproj and *.vcxproj.filters from now onwards
   and rely on CMakeLists for both *nix and Windows.
   Please work with Visual Studio and CMake as described in 4.2.3
