@@ -10,7 +10,7 @@ INSTRUMENTS
   * add Commodity Swap
   * add Commodity Swaption
   * add Commodity Average Price Option
-  * add Commodity Option and Digital Option Strip
+  * add Commodity Option Strips and Digital Option Strip
   see user guide and in particular Example 24
 - add Equity Cliquet Option, missed in the 7th release, thanks to Acadia
 - add Equity/FX/Commodity Variance Swap, missed in the 7th release, thanks to Acadia
@@ -47,7 +47,7 @@ TESTS
 DOCUMENTATION
 
 - the user guide is maintained continuously incorporating user feedback, in particular
-  from Acadia service clients; it has grown from 404 to 438 pages, mainly due to the
+  from Acadia service clients; it has grown from 404 to 440 pages, mainly due to the
   migration of Commodity and Equity/FX instruments into ORE
 
 LANGUAGE BINDUNGS
