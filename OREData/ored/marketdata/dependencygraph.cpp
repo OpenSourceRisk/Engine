@@ -397,6 +397,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                                                  "', is the rfr index configured in todays market parameters?";
             }
         }
+
         // 8 FX curve depends on discount
 
         if (g[*v].obj == MarketObject::FXSpot) {
@@ -412,7 +413,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                         g.add_edge(*v, *w);
                         if (g[*w].name == ccy1)
                             foundDiscount1 = true;
-                        else 
+                        if (g[*w].name == ccy2)
                             foundDiscount2 = true;
                         TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
                                                       << g[*w]);
