@@ -49,6 +49,7 @@
 #include <qle/termstructures/pricetermstructure.hpp>
 
 #include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/locks.hpp>
 
 namespace ore {
 namespace data {
