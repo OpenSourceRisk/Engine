@@ -47,29 +47,8 @@ public:
     virtual ~InputParameters() {}
 
     /*****************************************
-     * Incomplete setters - do we need these ?
+     * Setters - do we need them ?
      *****************************************/
-    void setResultsPath(boost::filesystem::path resultsPath) { resultsPath_ = resultsPath; }
-    void setRefDataManager(const boost::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager) {
-        refDataManager_ = refDataManager;
-    }
-    void setTodaysMarketParams(const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams) {
-        todaysMarketParams_ = todaysMarketParams;
-    }
-    // void setSimMarketParams(const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams) {
-    //     simMarketParams_ = simMarketParams;
-    // }
-    // void setSensitivityScenarioData(
-    //     const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityScenarioData) {
-    //     sensitivityScenarioData_ = sensitivityScenarioData;
-    // }
-    void addCurveConfig(const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfig) {
-        curveConfigs_.push_back(curveConfig);
-    }
-
-    void setFilterNettingSets(bool filter) { filterNettingSets_ = filter; };
-
-    void setPortfolio(const boost::shared_ptr<ore::data::Portfolio>& portfolio) { portfolio_ = portfolio; };
 
     /***************************
      * Getters for npv analytics
@@ -77,23 +56,23 @@ public:
     const QuantLib::Date& asof() { return asof_; }
     const boost::filesystem::path& resultsPath() const { return resultsPath_; }
     const std::string& baseCurrency() { return baseCurrency_; }
-    const std::string& discountIndex() { return discountIndex_; }
-    QuantLib::Size jobId() { return jobId_; }
     bool entireMarket() { return entireMarket_; }
     bool allFixings() { return allFixings_; }
     bool eomInflationFixings() { return eomInflationFixings_; }
     bool useMarketDataFixings() { return useMarketDataFixings_; }
-    bool validateIdentifiers() { return validateIdentifiers_; }
-    bool filterNettingSets() const { return filterNettingSets_; };
-    const std::string& marketDataFilter() { return marketDataFilter_; };    
     bool iborFallbackOverride() { return iborFallbackOverride_; }
     bool outputTodaysMarketCalibration() const { return outputTodaysMarketCalibration_; };
     QuantLib::Size nThreads() const { return nThreads_; }
     bool outputAdditionalResults() const { return outputAdditionalResults_; };
-    bool writeOptionalReports() const { return writeOptionalReports_; }
     const std::string& reportNaString() { return reportNaString_; }
     char csvQuoteChar() const { return csvQuoteChar_; }
     bool dryRun() const { return dryRun_; }
+    bool continueOnError() { return continueOnError_; }
+    bool lazyMarketBuilding() { return lazyMarketBuilding_; }
+    bool buildFailedTrades() { return buildFailedTrades_; }
+    const std::string& observationModel() { return observationModel_; }
+    bool implyTodaysFixings() { return implyTodaysFixings_; }
+    const std::map<std::string, std::string>&  marketConfig() { return marketConfig_; }
     const boost::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() { return refDataManager_; }
     const boost::shared_ptr<ore::data::Conventions>& conventions() { return conventions_; }
     const boost::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig() const { return iborFallbackConfig_; }
@@ -118,6 +97,7 @@ public:
      * Additional getters for exposure simulation 
      ********************************************/
     const std::string& exposureBaseCurrency() { return exposureBaseCurrency_; }
+    const std::string& exposureObservationModel() { return exposureObservationModel_; }
     const std::string& nettingSetId() { return nettingSetId_; }
     const std::string& scenarioGenType() { return scenarioGenType_; }
     bool storeFlows() { return storeFlows_; }
@@ -187,33 +167,42 @@ public:
     const QuantLib::Date& cashflowHorizon() const { return cashflowHorizon_; };
     const QuantLib::Date& portfolioFilterDate() const { return portfolioFilterDate_; }
 
-
+    /*************************************************************
+     * Additional getters for VaR 
+     *************************************************************/
+    // ...
+    
     virtual void loadParameters() = 0;
     virtual void writeOutParameters() = 0;
 
 protected:
 
-    // all analytics
     QuantLib::Date asof_;
     boost::filesystem::path resultsPath_;
     std::string baseCurrency_;
-    std::string discountIndex_;
-    QuantLib::Size jobId_ = 0;
+
+    // The following block of member variables (up to dryRun_) is not explicitly initialized
+    // in OREAppInputParameters so far. 
     bool entireMarket_ = false;
     bool allFixings_ = false;
     bool eomInflationFixings_ = false;
-    bool useMarketDataFixings_ = true;
-    bool validateIdentifiers_ = true;
-    bool filterNettingSets_ = false;
-    std::string marketDataFilter_;
+    bool useMarketDataFixings_ = false;
     bool iborFallbackOverride_ = false;
     bool outputTodaysMarketCalibration_ = false;
     QuantLib::Size nThreads_ = 1;
-    bool outputAdditionalResults_ = true;
-    bool writeOptionalReports_ = true;
+    bool outputAdditionalResults_ = false;
     std::string reportNaString_;
     char csvQuoteChar_ = '\0';
     bool dryRun_ = false;
+
+    bool continueOnError_ = false;
+    bool lazyMarketBuilding_ = false;
+    bool buildFailedTrades_ = false;
+    std::string observationModel_ = "None";
+    bool implyTodaysFixings_ = false;
+
+    std::map<std::string, std::string> marketConfig_;
+    
     boost::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
     boost::shared_ptr<ore::data::Conventions> conventions_;
     boost::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
@@ -232,8 +221,12 @@ protected:
     boost::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     // boost::shared_ptr<ore::data::TodaysMarketParameters> sensiTodaysMarketParams_;
 
+    // var
+    // ...
+
     // exposure simulation
     std::string exposureBaseCurrency_ = "";
+    std::string exposureObservationModel_ = "Disable";
     std::string nettingSetId_ = "";
     std::string scenarioGenType_ = "";
     bool storeFlows_ = false;
@@ -245,14 +238,14 @@ protected:
     boost::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
 
     // xva
-    std::string xvaBaseCurrency_ = "";
+    std::string xvaBaseCurrency_ = "EUR";
     bool flipViewXVA_ = false;
     bool fullInitialCollateralisation_ = false;
     bool exposureProfiles_ = true;
     bool exposureProfilesByTrade_ = true;
     Real pfeQuantile_ = 0.95;
     std::string collateralCalculationType_ = "Symmetric";
-    std::string exposureAllocationMethod_ = "";
+    std::string exposureAllocationMethod_ = "None";
     Real marginalAllocationLimit_ = 1.0;
     bool exerciseNextBreak_ = false;
     bool cvaAnalytic_ = true;
@@ -314,6 +307,15 @@ private:
     boost::shared_ptr<Parameters> params_;
     boost::shared_ptr<CSVLoader> csvLoader_;
     std::vector<std::string> runTypes_;
+
+    std::string npvOutputFileName_;
+    std::string cashflowOutputFileName_;
+    std::string curvesOutputFileName_;
+    std::string scenarioDumpFileName_;
+    std::string cubeFileName_;
+    std::string aggregationScenarioDataFileName_;
+    std::string rawCubeFileName_;
+    std::string netCubeFileName_;
 };
 
 } // namespace analytics

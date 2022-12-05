@@ -32,6 +32,7 @@ namespace ore {
 namespace analytics {
 using namespace ore::data;
 using std::map;
+using std::set;
 using std::string;
 
 //! Provides the input data and references to input files used in OREApp
@@ -48,12 +49,17 @@ public:
 
     bool hasGroup(const string& groupName) const;
     bool has(const string& groupName, const string& paramName) const;
-    string get(const string& groupName, const string& paramName) const;
+    string get(const string& groupName, const string& paramName, bool fail=true) const;
+
+    const set<string>& groups();
+    const map<string,string>& data(const string& group);
 
     void log();
 
 private:
     map<string, map<string, string>> data_;
+    set<string> groups_;
+    
 };
 } // namespace analytics
 } // namespace ore

@@ -38,50 +38,29 @@ vector<string> getFilenames(const string& fileString, const string& path) {
 
 void OREAppInputParameters::loadParameters() {
 
-    LOG("OREAppInputParameters starting");
+    LOG("OREAppInputParameters::loadParameters starting");
 
     QL_REQUIRE(params_->hasGroup("setup"), "parameter group 'setup' missing");
 
     std::string inputPath = params_->get("setup", "inputPath");
     std::string outputPath = params_->get("setup", "outputPath");
 
-    // FIXME
-    bool continueOnError_ = false;
-    if (params_->has("setup", "continueOnError"))
-        continueOnError_ = parseBool(params_->get("setup", "continueOnError"));
-
-    // FIXME
-    bool lazyMarketBuilding_ = true;
-    if (params_->has("setup", "lazyMarketBuilding"))
-        lazyMarketBuilding_ = parseBool(params_->get("setup", "lazyMarketBuilding"));
-
-    // FIXME
-    bool buildFailedTrades_ = false;
-    if (params_->has("setup", "buildFailedTrades"))
-        buildFailedTrades_ = parseBool(params_->get("setup", "buildFailedTrades"));
-
-    if (params_->has("setup", "observationModel")) {
-        string om = params_->get("setup", "observationModel");
-        ObservationMode::instance().setMode(om);
-        LOG("Observation Mode is " << om);
-    }
-
-    // TODO ?
     // Load calendar adjustments
-    if (params_->has("setup", "calendarAdjustment") && params_->get("setup", "calendarAdjustment") != "") {
+    std::string tmp =  params_->get("setup", "calendarAdjustment", false);
+    if (tmp != "") {
         CalendarAdjustmentConfig calendarAdjustments;
-        string calendarAdjustmentFile = inputPath + "/" + params_->get("setup", "calendarAdjustment");
+        string calendarAdjustmentFile = inputPath + "/" + tmp;
         LOG("Loading calendar adjustments from file: " << calendarAdjustmentFile);
         calendarAdjustments.fromFile(calendarAdjustmentFile);
     } else {
         WLOG("Calendar adjustments not found, using defaults");
     }
 
-    // TODO ?
     // Load currency configs
-    if (params_->has("setup", "currencyConfiguration") && params_->get("setup", "currencyConfiguration") != "") {
+    tmp = params_->get("setup", "currencyConfiguration", false);
+    if (tmp != "") {
         CurrencyConfig currencyConfig;
-        string currencyConfigFile = inputPath + "/" + params_->get("setup", "currencyConfiguration");
+        string currencyConfigFile = inputPath + "/" + tmp;
         LOG("Loading currency configurations from file: " << currencyConfigFile);
         currencyConfig.fromFile(currencyConfigFile);
     } else {
@@ -92,31 +71,68 @@ void OREAppInputParameters::loadParameters() {
 
     resultsPath_ = outputPath;
 
-    // FIXME: allow different base currencies by analytic in OREApp
     baseCurrency_ = params_->get("npv", "baseCurrency");
 
-    // FIXME
-    discountIndex_ = "";
+    tmp = params_->get("setup", "useMarketDataFixings", false);
+    if (tmp != "")
+        useMarketDataFixings_ = parseBool(tmp);
 
-    // FIXME
-    entireMarket_ = false;
-    allFixings_ = false;
-    eomInflationFixings_ = false; 
-    useMarketDataFixings_ = false;
-    validateIdentifiers_ = false;
-    filterNettingSets_ = false;
-    marketDataFilter_ = "";
+    tmp = params_->get("setup", "dryRun", false);
+    if (tmp != "")
+        dryRun_ = parseBool(tmp);
 
-    // Load reference data
-    if (params_->has("setup", "referenceDataFile") && params_->get("setup", "referenceDataFile") != "") {
-        string refDataFile = inputPath + "/" + params_->get("setup", "referenceDataFile");
+    tmp = params_->get("setup", "reportNaString", false);
+    if (tmp != "")
+        reportNaString_ = tmp;
+
+    tmp = params_->get("setup", "eomInflationFixings", false);
+    if (tmp != "")
+        eomInflationFixings_ = parseBool(tmp);
+
+    tmp = params_->get("setup", "nThreads", false);
+    if (tmp != "")
+        nThreads_ = parseInteger(tmp);
+
+    tmp = params_->get("setup", "entireMarket", false);
+    if (tmp != "")
+        entireMarket_ = parseBool(tmp);
+
+    tmp = params_->get("setup", "iborFallbackOverride", false);
+    if (tmp != "")
+        iborFallbackOverride_ = parseBool(tmp);
+
+    tmp = params_->get("setup", "continueOnError", false);
+    if (tmp != "")
+        continueOnError_ = parseBool(tmp);
+
+    tmp = params_->get("setup", "lazyMarketBuilding", false);
+    if (tmp != "")
+        lazyMarketBuilding_ = parseBool(tmp);
+
+    tmp = params_->get("setup", "buildFailedTrades", false);
+    if (tmp != "")
+        buildFailedTrades_ = parseBool(tmp);
+
+    tmp = params_->get("setup", "observationModel", false);
+    if (tmp != "") {
+        observationModel_ = tmp;
+        ObservationMode::instance().setMode(observationModel_);
+        LOG("Observation Mode is " << observationModel_);
+    }
+
+    tmp = params_->get("setup", "implyTodaysFixings", false);
+    if (tmp != "")
+        implyTodaysFixings_ = ore::data::parseBool(tmp);
+
+    tmp = params_->get("setup", "referenceDataFile", false);
+    if (tmp != "") {
+        string refDataFile = inputPath + "/" + tmp;
         LOG("Loading reference data from file: " << refDataFile);
         refDataManager_ = boost::make_shared<BasicReferenceDataManager>(refDataFile);
     } else {
         WLOG("Reference data not found");
     }
 
-    // Load conventions
     conventions_ = boost::make_shared<Conventions>();
     if (params_->has("setup", "conventionsFile") && params_->get("setup", "conventionsFile") != "") {
         string conventionsFile = inputPath + "/" + params_->get("setup", "conventionsFile");
@@ -126,7 +142,6 @@ void OREAppInputParameters::loadParameters() {
         ALOG("Conventions not found");
     }
 
-    // Load IBOR fallbacks
     iborFallbackConfig_ = boost::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
     if (params_->has("setup", "iborFallbackConfig") && params_->get("setup", "iborFallbackConfig") != "") {
         std::string tmp = inputPath + "/" + params_->get("setup", "iborFallbackConfig");
@@ -136,9 +151,38 @@ void OREAppInputParameters::loadParameters() {
         WLOG("Using default Ibor fallback config");
     }
 
-    iborFallbackOverride_ = false;
+    auto curveConfig = boost::make_shared<ore::data::CurveConfigurations>();
+    if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
+        //out_ << setw(tab_) << left << "Curve configuration... " << flush;
+        string curveConfigFile = inputPath + "/" + params_->get("setup", "curveConfigFile");
+        LOG("Load curve configurations from file: ");
+        curveConfig->fromFile(curveConfigFile);
+        curveConfigs_.push_back(curveConfig);
+        //out_ << "OK" << endl;
+    } else {
+        ALOG("no curve configs loaded");
+    }
+    
+    pricingEngine_ = boost::make_shared<EngineData>();
+    tmp = params_->get("setup", "pricingEnginesFile", false);
+    if (tmp != "") {
+        string pricingEnginesFile = inputPath + "/" + tmp;
+        LOG("Load pricing engine data from file: " << pricingEnginesFile);
+        pricingEngine_->fromFile(pricingEnginesFile);
+    } else {
+        ALOG("Pricing engine data not found");
+    }
+    
+    todaysMarketParams_ = boost::make_shared<TodaysMarketParameters>();
+    tmp = params_->get("setup", "marketConfigFile", false);
+    if (tmp != "") {
+        string marketConfigFile = inputPath + "/" + tmp;
+        LOG("Loading today's market parameters from file" << marketConfigFile);
+        todaysMarketParams_->fromFile(marketConfigFile);
+    } else {
+        ALOG("Today's market parameters not found");
+    }
 
-    // Load portfolio
     bool buildFailedTrades = false;
     if (params_->has("setup", "buildFailedTrades"))
         buildFailedTrades = parseBool(params_->get("setup", "buildFailedTrades"));
@@ -155,61 +199,39 @@ void OREAppInputParameters::loadParameters() {
         ALOG("Portfolio data not found");
     }
 
-    // Load curve configs
-    auto curveConfig = boost::make_shared<ore::data::CurveConfigurations>();
-    if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
-        //out_ << setw(tab_) << left << "Curve configuration... " << flush;
-        string curveConfigFile = inputPath + "/" + params_->get("setup", "curveConfigFile");
-        LOG("Load curve configurations from file: ");
-        curveConfig->fromFile(curveConfigFile);
-        curveConfigs_.push_back(curveConfig);
-        //out_ << "OK" << endl;
-    } else {
-        ALOG("no curve configs loaded");
-    }
+    if (params_->hasGroup("Markets"))
+        marketConfig_ = params_->data("Markets");
     
-    // Load pricing engine configs
-    pricingEngine_ = boost::make_shared<EngineData>();
-    if (params_->has("setup", "pricingEnginesFile") && params_->get("setup", "pricingEnginesFile") != "") {
-        string pricingEnginesFile = inputPath + "/" + params_->get("setup", "pricingEnginesFile");
-        LOG("Load pricing engine data from file: " << pricingEnginesFile);
-        pricingEngine_->fromFile(pricingEnginesFile);
-    } else {
-        ALOG("Pricing engine data not found");
-    }
-    
-    xbsParConversion_ = false;
-    useSensiSpreadedTermStructures_ = true;
+    /*************
+     * NPV
+     *************/
 
-    // Load today's market parameters
-    todaysMarketParams_ = boost::make_shared<TodaysMarketParameters>();
-    if (params_->has("setup", "marketConfigFile") && params_->get("setup", "marketConfigFile") != "") {
-        string marketConfigFile = inputPath + "/" + params_->get("setup", "marketConfigFile");
-        LOG("Loading today's market parameters from file" << marketConfigFile);
-        todaysMarketParams_->fromFile(marketConfigFile);
-    } else {
-        ALOG("Today's market parameters not found");
-    }
-    QL_REQUIRE(todaysMarketParams_, "Today's market parameters not set");
-    
-    // Load netting and CSA details
-    nettingSetManager_ = boost::make_shared<NettingSetManager>();
-    if (params_->hasGroup("xva") &&
-        params_->has("xva", "csaFile") &&
-        params_->get("xva", "csaFile") != "") {
-        string csaFile = inputPath + "/" + params_->get("xva", "csaFile");
-        LOG("Loading netting and csa data from file" << csaFile);
-        nettingSetManager_->fromFile(csaFile);
-    } else {
-        // FIXME: log level depending on chosen analytics
-        WLOG("Netting/CSA data not found");
-    }
+    tmp = params_->get("npv", "additionalResults", false);
+    if (tmp != "")
+        outputAdditionalResults_ = parseBool(tmp);
 
+    /*************
+     * Curves
+     *************/
+
+    tmp = params_->get("curves", "outputTodaysMarketCalibration", false);
+    if (tmp != "")
+        outputTodaysMarketCalibration_ = parseBool(tmp);
+    
+    /*************
+     * Sensitivity
+     *************/
+
+    // FIXME: To be loaded from params or removed from the base class
+    // xbsParConversion_ = false;
+    // analyticFxSensis_ = true;
+    // outputJacobi_ = false;
+    // useSensiSpreadedTermStructures_ = true;
+    
     sensiSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
-    if (params_->hasGroup("sensitivity") &&
-        params_->has("sensitivity", "marketConfigFile") &&
-        params_->get("sensitivity", "marketConfigFile") != "") {
-        string marketConfigFile = inputPath + "/" + params_->get("sensitivity", "marketConfigFile");
+    tmp = params_->get("sensitivity", "marketConfigFile", false);
+    if (tmp != "") {
+        string marketConfigFile = inputPath + "/" + tmp;
         LOG("Loading scenario sim market parameters from file" << marketConfigFile);
         sensiSimMarketParams_->fromFile(marketConfigFile);
     } else {
@@ -217,35 +239,29 @@ void OREAppInputParameters::loadParameters() {
     }
     
     sensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
-    if (params_->hasGroup("sensitivity") &&
-        params_->has("sensitivity", "sensitivityConfigFile") &&
-        params_->get("sensitivity", "sensitivityConfigFile") != "") {
-        string sensitivityConfigFile = inputPath + "/" + params_->get("sensitivity", "sensitivityConfigFile");
+    tmp = params_->get("sensitivity", "sensitivityConfigFile", false);
+    if (tmp != "") {
+        string sensitivityConfigFile = inputPath + "/" + tmp;
         LOG("Load sensitivity scenario data from file" << sensitivityConfigFile);
         sensiScenarioData_->fromFile(sensitivityConfigFile);
     } else {
         WLOG("Sensitivity scenario data not found");
     }
 
-    sensiThreshold_ = 0;
-    if (params_->hasGroup("sensitivity") &&
-        params_->has("sensitivity", "outputSensitivityThreshold"))
-        sensiThreshold_ = parseReal(params_->get("sensitivity", "outputSensitivityThreshold"));
+    tmp = params_->get("sensitivity", "outputSensitivityThreshold", false); 
+    if (tmp != "")
+        sensiThreshold_ = parseReal(tmp);
         
-    bool implyTodaysFixings = false;
-    if (params_->has("setup", "implyTodaysFixings")) {
-        implyTodaysFixings = ore::data::parseBool(params_->get("setup", "implyTodaysFixings"));
-    } else {
-        WLOG("implyTodaysFixings not found, using default false");
-    }
+    /************
+     * Simulation
+     ************/
     
     exposureSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
     crossAssetModelData_ = boost::make_shared<CrossAssetModelData>();
     scenarioGeneratorData_ = boost::make_shared<ScenarioGeneratorData>();
-    if (params_->hasGroup("simulation") &&
-        params_->has("simulation", "simulationConfigFile") &&
-        params_->get("simulation", "simulationConfigFile") != "") {
-        string simulationConfigFile = inputPath + "/" + params_->get("simulation", "simulationConfigFile");
+    tmp = params_->get("simulation", "simulationConfigFile", false) ;
+    if (tmp != "") {
+        string simulationConfigFile = inputPath + "/" + tmp;
         LOG("Loading simulation config from file" << simulationConfigFile);
         exposureSimMarketParams_->fromFile(simulationConfigFile);
         crossAssetModelData_->fromFile(simulationConfigFile);
@@ -259,10 +275,9 @@ void OREAppInputParameters::loadParameters() {
     }
 
     simulationPricingEngine_ = boost::make_shared<EngineData>();
-    if (params_->hasGroup("simulation") &&
-        params_->has("simulation", "pricingEnginesFile") &&
-        params_->get("simulation", "pricingEnginesFile") != "") {
-        string pricingEnginesFile = inputPath + "/" + params_->get("simulation", "pricingEnginesFile");
+    tmp = params_->get("simulation", "pricingEnginesFile", false);
+    if (tmp != "") {
+        string pricingEnginesFile = inputPath + "/" + tmp;
         LOG("Load simulation pricing engine data from file: " << pricingEnginesFile);
         simulationPricingEngine_->fromFile(pricingEnginesFile);
     } else {
@@ -270,87 +285,291 @@ void OREAppInputParameters::loadParameters() {
         simulationPricingEngine_ = pricingEngine_;
     }
 
-    storeSurvivalProbabilities_ = false;
-    if (params_->hasGroup("simulation") &&
-        params_->has("simulation", "storeSurvivalProbabilities") &&
-        params_->get("simulation", "storeSurvivalProbabilities") == "Y") {
-        storeSurvivalProbabilities_ = true;
+    nettingSetManager_ = boost::make_shared<NettingSetManager>();
+    tmp = params_->get("xva", "csaFile", false);
+    if (tmp != "") {
+        string csaFile = inputPath + "/" + tmp;
+        LOG("Loading netting and csa data from file" << csaFile);
+        nettingSetManager_->fromFile(csaFile);
+    } else {
+        // FIXME: log level depending on chosen analytics
+        WLOG("Netting/CSA data not found");
     }
 
     exposureBaseCurrency_ = baseCurrency_;
-    if (params_->hasGroup("simulation") &&
-        params_->has("simulation", "baseCurrency") &&
-        params_->get("simulation", "baseCurrency") != "")
-        exposureBaseCurrency_ = params_->get("simulation", "baseCurrency");
+    tmp = params_->get("simulation", "baseCurrency", false);
+    if (tmp != "")
+        exposureBaseCurrency_ = tmp;
 
-    flipViewXVA_ = false;
-    if (params_->hasGroup("xva") &&
-        params_->has("xva", "flipViewXVA") &&
-        params_->get("xva", "flipViewXVA") != "")
-        flipViewXVA_ = parseBool(params_->get("xva", "flipViewXVA"));
+    tmp = params_->get("simulation", "observationModel", false);
+    if (tmp != "")
+        exposureObservationModel_ = tmp;
+    else
+        exposureObservationModel_ = observationModel_;
+        
+    tmp = params_->get("simulation", "storeFlows", false);
+    if (tmp == "Y")
+        storeFlows_ = true;
 
-    dvaName_ = "";
-    if (params_->hasGroup("xva") &&
-        params_->has("xva", "dvaName") &&
-        params_->get("xva", "dvaName") != "")
-        dvaName_ = params_->get("xva", "dvaName");
+    tmp = params_->get("simulation", "storeSurvivalProbabilities", false);
+    if (tmp == "Y")
+        storeSurvivalProbabilities_ = true;
 
+    tmp = params_->get("simulation", "nettingSetId", false);
+    if (tmp != "")
+        nettingSetId_ = tmp;
+
+
+    /**********************
+     * XVA
+     **********************/
+    
+    tmp = params_->get("xva", "baseCurrency", false);
+    if (tmp != "")
+        xvaBaseCurrency_ = tmp;
+    else
+        xvaBaseCurrency_ = exposureBaseCurrency_;
+        
+    tmp = params_->get("xva", "flipViewXVA", false);
+    if (tmp != "")
+        flipViewXVA_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "fullInitialCollateralisation", false);
+    if (tmp != "")
+        fullInitialCollateralisation_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "exposureProfilesByTrade", false);
+    if (tmp != "")
+        exposureProfilesByTrade_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "exposureProfiles", false);
+    if (tmp != "")
+        exposureProfiles_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "quantile", false);
+    if (tmp != "")
+        pfeQuantile_ = parseReal(tmp);
+
+    tmp = params_->get("xva", "collateralCalculationType", false);
+    if (tmp != "")
+        collateralCalculationType_ = tmp;
+
+    tmp = params_->get("xva", "exposureAllocationMethod", false);
+    if (tmp != "")
+        exposureAllocationMethod_ = tmp;
+
+    tmp = params_->get("xva", "marginalAllocationLimit", false);
+    if (tmp != "")
+        marginalAllocationLimit_ = parseReal(tmp);
+
+    tmp = params_->get("xva", "exerciseNextBreak", false);
+    if (tmp != "")
+        exerciseNextBreak_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "cva", false);
+    if (tmp != "")
+        cvaAnalytic_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "dva", false);
+    if (tmp != "")
+        dvaAnalytic_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "fva", false);
+    if (tmp != "")
+        fvaAnalytic_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "colva", false);
+    if (tmp != "")
+        colvaAnalytic_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "collateralFloor", false);
+    if (tmp != "")
+        collateralFloorAnalytic_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "dim", false);
+    if (tmp != "")
+        dimAnalytic_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "mva", false);
+    if (tmp != "")
+        mvaAnalytic_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "kva", false);
+    if (tmp != "")
+        kvaAnalytic_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "dynamicCredit", false);
+    if (tmp != "")
+        dynamicCredit_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "cvaSensi", false);
+    if (tmp != "")
+        cvaSensi_ = parseBool(tmp);
+
+    tmp = params_->get("xva", "cvaSensiGrid", false);
+    if (tmp != "")
+        cvaSensiGrid_ = parseListOfValues<Period>(tmp, &parsePeriod);
+
+    tmp = params_->get("xva", "cvaSensiShiftSize", false);
+    if (tmp != "")
+        cvaSensiShiftSize_ = parseReal(tmp);
+
+    tmp = params_->get("xva", "dvaName", false);
+    if (tmp != "")
+        dvaName_ = tmp;
+
+    tmp = params_->get("xva", "rawCubeOutputFile", false);
+    if (tmp != "")
+        rawCubeOutputFile_ = tmp;
+
+    tmp = params_->get("xva", "netCubeOutputFile", false);
+    if (tmp != "")
+        netCubeOutputFile_ = tmp;
+
+    // FVA
+
+    tmp = params_->get("xva", "fvaBorrowingCurve", false);
+    if (tmp != "")
+        fvaBorrowingCurve_ = tmp;
+
+    tmp = params_->get("xva", "fvaLendingCurve", false);
+    if (tmp != "")
+        fvaLendingCurve_ = tmp;
+
+    tmp = params_->get("xva", "flipViewBorrowingCurvePostfix", false);
+    if (tmp != "")
+        flipViewBorrowingCurvePostfix_ = tmp;
+
+    tmp = params_->get("xva", "flipViewLendingCurvePostfix", false);
+    if (tmp != "")
+        flipViewLendingCurvePostfix_ = tmp;
+
+    // DIM
+
+    tmp = params_->get("xva", "dimQuantile", false);
+    if (tmp != "")
+        dimQuantile_ = parseReal(tmp);
+
+    tmp = params_->get("xva", "dimHorizonCalendarDays", false);
+    if (tmp != "")
+        dimHorizonCalendarDays_ = parseInteger(tmp);
+
+    tmp = params_->get("xva", "dimRegressionOrder", false);
+    if (tmp != "")
+        dimRegressionOrder_ = parseInteger(tmp);
+
+    tmp = params_->get("xva", "dimRegressors", false);
+    if (tmp != "")
+        dimRegressors_ = parseListOfValues(tmp);
+
+    tmp = params_->get("xva", "dimLocalRegressionEvaluations", false);
+    if (tmp != "")
+        dimLocalRegressionEvaluations_ = parseInteger(tmp);
+
+    tmp = params_->get("xva", "dimLocalRegressionBandwidth", false);
+    if (tmp != "")
+        dimLocalRegressionBandwidth_ = parseReal(tmp);
+
+    // KVA
+
+    tmp = params_->get("xva", "kvaCapitalDiscountRate", false);
+    if (tmp != "")
+        kvaCapitalDiscountRate_ = parseReal(tmp);
+
+    tmp = params_->get("xva", "kvaAlpha", false);
+    if (tmp != "")
+        kvaAlpha_ = parseReal(tmp);
+
+    tmp = params_->get("xva", "kvaRegAdjustment", false);
+    if (tmp != "")
+        kvaRegAdjustment_ = parseReal(tmp);
+
+    tmp = params_->get("xva", "kvaCapitalHurdle", false);
+    if (tmp != "")
+        kvaCapitalHurdle_ = parseReal(tmp);
+
+    tmp = params_->get("xva", "kvaOurPdFloor", false);
+    if (tmp != "")
+        kvaOurPdFloor_ = parseReal(tmp);
+
+    tmp = params_->get("xva", "kvaTheirPdFloor", false);
+    if (tmp != "")
+        kvaTheirPdFloor_ = parseReal(tmp);
+
+    tmp = params_->get("xva", "kvaOurCvaRiskWeight", false);
+    if (tmp != "")
+        kvaOurCvaRiskWeight_ = parseReal(tmp);
+
+    tmp = params_->get("xva", "kvaTheirCvaRiskWeight", false);
+    if (tmp != "")
+        kvaTheirCvaRiskWeight_ = parseReal(tmp);
+
+    // cashflow npv and dynamic backtesting
+
+    tmp = params_->get("cashflow", "cashFlowHorizon", false);
+    if (tmp != "")
+        cashflowHorizon_ = parseDate(tmp);
+
+    tmp = params_->get("cashflow", "portfolioFilterDate", false);
+    if (tmp != "")
+        portfolioFilterDate_ = parseDate(tmp);
+    
     /**********************
      * Build the CSV Loader
      */
     vector<string> marketFiles = {};
-    if (params_->has("setup", "marketDataFile") && params_->get("setup", "marketDataFile") != "") {
-        //out_ << setw(tab_) << left << "Market data loader... " << flush;
-        string marketFileString = params_->get("setup", "marketDataFile");
-        marketFiles = getFilenames(marketFileString, inputPath);
+    tmp = params_->get("setup", "marketDataFile", false);
+    if (tmp != "") {
+        marketFiles = getFilenames(tmp, inputPath);
     } else {
         ALOG("market data file not found");
     }
 
     vector<string> fixingFiles = {};
-    if (params_->has("setup", "fixingDataFile") && params_->get("setup", "fixingDataFile") != "") {
-        string fixingFileString = params_->get("setup", "fixingDataFile");
-        fixingFiles = getFilenames(fixingFileString, inputPath);
+    tmp = params_->get("setup", "fixingDataFile", false);
+    if (tmp != "") {
+        fixingFiles = getFilenames(tmp, inputPath);
     } else {
         ALOG("fixing data file not found");
     }
     
     vector<string> dividendFiles = {};
-    if (params_->has("setup", "dividendDataFile")) {
-        string dividendFileString = params_->get("setup", "dividendDataFile");
-        dividendFiles = getFilenames(dividendFileString, inputPath);
+    tmp = params_->get("setup", "dividendDataFile", false);
+    if (tmp != "") {
+        dividendFiles = getFilenames(tmp, inputPath);
     } else {
         WLOG("dividend data file not found");
     }
 
-    csvLoader_ = boost::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings);
+    csvLoader_ = boost::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings_);
 
     /*****************************
      * Collect requested run types
      */
     runTypes_.clear();
     
-    if (params_->hasGroup("npv") && params_->get("npv", "active") == "Y")
+    if (params_->get("npv", "active", false) == "Y")
         runTypes_.push_back("NPV");
     
-    if (params_->hasGroup("cashflow") && params_->get("cashflow", "active") == "Y")
-        runTypes_.push_back("CASHFLOW");
-
-    if (params_->hasGroup("simulation") && params_->get("simulation", "active") == "Y")
-        runTypes_.push_back("EXPOSURE");
-
-    if (params_->hasGroup("xva") && params_->get("xva", "active") == "Y")
-        runTypes_.push_back("XVA");
-
-    if (params_->hasGroup("sensitivity") && params_->get("sensitivity", "active") == "Y")
-        runTypes_.push_back("SENSITIVITY");
-
-    if (params_->hasGroup("parametricVar") && params_->get("parametricVar", "active") == "Y")
-        runTypes_.push_back("VAR");
-
     if (outputAdditionalResults_)
         runTypes_.push_back("ADDITIONAL_RESULTS");
 
+    if (params_->get("cashflow", "active", false) == "Y")
+        runTypes_.push_back("CASHFLOW");
+
+    if (params_->get("sensitivity", "active", false) == "Y")
+        runTypes_.push_back("SENSITIVITY");
+
+    if (params_->get("parametricVar", "active", false) == "Y")
+        runTypes_.push_back("VAR");
+
+    if (params_->get("simulation", "active", false) == "Y")
+        runTypes_.push_back("EXPOSURE");
+
+    if (params_->get("xva", "active", false) == "Y")
+        runTypes_.push_back("XVA");
+
+ 
     LOG("OREAppInputParameters complete");
 }
 

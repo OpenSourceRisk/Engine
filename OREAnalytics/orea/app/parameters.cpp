@@ -33,15 +33,22 @@ namespace analytics {
 bool Parameters::hasGroup(const string& groupName) const { return (data_.find(groupName) != data_.end()); }
 
 bool Parameters::has(const string& groupName, const string& paramName) const {
-    QL_REQUIRE(hasGroup(groupName), "param group '" << groupName << "' not found");
+    if (!hasGroup(groupName))
+        return false;
     auto it = data_.find(groupName);
     return (it->second.find(paramName) != it->second.end());
 }
 
-string Parameters::get(const string& groupName, const string& paramName) const {
-    QL_REQUIRE(has(groupName, paramName), "parameter " << paramName << " not found in param group " << groupName);
-    auto it = data_.find(groupName);
-    return it->second.find(paramName)->second;
+string Parameters::get(const string& groupName, const string& paramName, bool fail) const {
+    if (has(groupName, paramName)) {
+        auto it = data_.find(groupName);
+        return it->second.find(paramName)->second;
+    }
+    else if (fail) {
+        QL_FAIL("parameter " << paramName << " not found in param group " << groupName);
+    }
+    else
+        return "";
 }
 
 void Parameters::fromFile(const string& fileName) {
@@ -92,12 +99,24 @@ void Parameters::fromXML(XMLNode* node) {
             data_[groupName] = analyticsMap;
         }
     }
+
+    for (auto datum : data_)
+        groups_.insert(datum.first);
 }
 
 XMLNode* Parameters::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("ORE");
     QL_FAIL("Parameters::toXML not implemented yet");
     return node;
+}
+
+const set<string>& Parameters::groups() {
+    return groups_;
+}
+    
+const map<string,string>& Parameters::data(const string& group) {
+    QL_REQUIRE(hasGroup(group), "parameter group " << group << " not found");
+    return data_[group];
 }
 
 void Parameters::log() {
