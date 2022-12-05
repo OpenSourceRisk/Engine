@@ -21,10 +21,9 @@
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/commoditylegdata.hpp>
 
-using namespace QuantExt;
-using namespace QuantLib;
-
 namespace ore::data {
+using namespace QuantExt;
+
 class CommoditySpreadOption : public ore::data::Trade {
 
 public:
@@ -44,8 +43,8 @@ public:
     std::string const& exerciseDate() const { return exerciseDate_; }
     std::vector<boost::shared_ptr<CommodityFloatingLegData>> const& commodityLegData() const { return commLegData_; }
     std::vector<std::string> const& fxIndex() const {return fxIndex_; }
-    Real quantity() const { return quantity_; }
-    Real strike() const { return spreadStrike_; }
+    QuantLib::Real quantity() const { return quantity_; }
+    QuantLib::Real strike() const { return spreadStrike_; }
     std::string const& callPut() const { return callPut_; }
     std::string const& settlementDate() const { return settlementDate_; }
     std::string const& settlementCcy() const { return settlementCcy_; }
@@ -59,8 +58,8 @@ private:
     boost::shared_ptr<CommodityCashFlow> longAssetCashFlow_;
     boost::shared_ptr<CommodityCashFlow> shortAssetCashFlow_;
     std::vector<std::string> fxIndex_;
-    Real quantity_;
-    Spread spreadStrike_;
+    QuantLib::Real quantity_;
+    QuantLib::Spread spreadStrike_;
     std::string callPut_;
     std::string settlementDate_;
     std::string settlementCcy_;
