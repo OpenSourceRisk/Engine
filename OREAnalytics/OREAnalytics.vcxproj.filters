@@ -222,6 +222,9 @@
     <ClInclude Include="orea\engine\bufferedsensitivitystream.hpp">
       <Filter>engine</Filter>
     </ClInclude>
+    <ClInclude Include="orea\engine\amcvaluationengine.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -384,6 +387,9 @@
       <Filter>scenario</Filter>
     </ClCompile>
     <ClCompile Include="orea\engine\bufferedsensitivitystream.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\amcvaluationengine.cpp">
       <Filter>engine</Filter>
     </ClCompile>
   </ItemGroup>
