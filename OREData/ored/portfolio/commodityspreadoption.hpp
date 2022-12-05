@@ -55,8 +55,8 @@ private:
     std::vector<ore::data::LegData> legData_;
     std::vector<boost::shared_ptr<CommodityFloatingLegData>> commLegData_;
     std::string exerciseDate_;
-    boost::shared_ptr<CommodityCashFlow> longAssetCashFlow_;
-    boost::shared_ptr<CommodityCashFlow> shortAssetCashFlow_;
+    boost::shared_ptr<QuantExt::CommodityCashFlow> longAssetCashFlow_;
+    boost::shared_ptr<QuantExt::CommodityCashFlow> shortAssetCashFlow_;
     std::vector<std::string> fxIndex_;
     QuantLib::Real quantity_;
     QuantLib::Spread spreadStrike_;
