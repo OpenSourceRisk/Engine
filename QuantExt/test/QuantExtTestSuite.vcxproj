@@ -648,6 +648,8 @@
     <ClCompile Include="capfloortermvolcurve.cpp" />
     <ClCompile Include="cashflow.cpp" />
     <ClCompile Include="commodityforward.cpp" />
+    <ClCompile Include="commodityschwartzmodel.cpp" />
+    <ClCompile Include="commodityspreadoption.cpp" />
     <ClCompile Include="correlationtermstructure.cpp" />
     <ClCompile Include="cpicapfloor.cpp" />
     <ClCompile Include="crcirpp.cpp" />
@@ -679,6 +681,8 @@
     <ClCompile Include="inflationvol.cpp" />
     <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp" />
     <ClCompile Include="logquote.cpp" />
+    <ClCompile Include="mclgmswaptionengine.cpp" />
+    <ClCompile Include="multilegoption.cpp" />
     <ClCompile Include="normalfreeboundarysabr.cpp" />
     <ClCompile Include="optionletstripper.cpp" />
     <ClCompile Include="payment.cpp" />

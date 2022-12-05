@@ -91,6 +91,7 @@ instruments/cdsoption.cpp
 instruments/cliquetoption.cpp
 instruments/commodityapo.cpp
 instruments/commodityforward.cpp
+instruments/commodityspreadoption.cpp
 instruments/crossccybasismtmresetswap.cpp
 instruments/crossccybasisswap.cpp
 instruments/crossccyfixfloatmtmresetswap.cpp
@@ -121,7 +122,12 @@ math/differentialevolution_mt.cpp
 math/fillemptymatrix.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
+methods/brownianbridgepathinterpolator.cpp
+methods/interpolatedvariatemultipathgenerator.cpp
 methods/multipathgeneratorbase.cpp
+methods/multipathvariategenerator.cpp
+methods/projectedbufferedmultipathgenerator.cpp
+methods/projectedvariatemultipathgenerator.cpp
 models/annuitymapping.cpp
 models/carrmadanarbitragecheck.cpp
 models/cdsoptionhelper.cpp
@@ -187,6 +193,7 @@ pricingengines/analyticxassetlgmeqoptionengine.cpp
 pricingengines/baroneadesiwhaleyengine.cpp
 pricingengines/blackcdsoptionengine.cpp
 pricingengines/commodityapoengine.cpp
+pricingengines/commodityspreadoptionengine.cpp
 pricingengines/commodityschwartzfutureoptionengine.cpp
 pricingengines/commodityswaptionengine.cpp
 pricingengines/cpibacheliercapfloorengine.cpp
@@ -203,6 +210,12 @@ pricingengines/discountingriskybondengine.cpp
 pricingengines/discountingswapenginemulticurve.cpp
 pricingengines/inflationcapfloorengines.cpp
 pricingengines/lgmconvolutionsolver.cpp
+pricingengines/mccamcurrencyswapengine.cpp
+pricingengines/mccamfxoptionengine.cpp
+pricingengines/mclgmswapengine.cpp
+pricingengines/mclgmswaptionengine.cpp
+pricingengines/mcmultilegbaseengine.cpp
+pricingengines/mcmultilegoptionengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
@@ -455,6 +468,7 @@ instruments/cdsoption.hpp
 instruments/cliquetoption.hpp
 instruments/commodityapo.hpp
 instruments/commodityforward.hpp
+instruments/commodityspreadoption.hpp
 instruments/crossccybasismtmresetswap.hpp
 instruments/crossccybasisswap.hpp
 instruments/crossccyfixfloatmtmresetswap.hpp
@@ -499,8 +513,15 @@ math/randomvariable.hpp
 math/randomvariable_io.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
+methods/brownianbridgepathinterpolator.hpp
+methods/interpolatedvariatemultipathgenerator.hpp
 methods/multipathgeneratorbase.hpp
+methods/multipathvariategenerator.hpp
 methods/pathgeneratorfactory.hpp
+methods/projectedbufferedmultipathgenerator.hpp
+methods/projectedbufferedmultipathgeneratorfactory.hpp
+methods/projectedvariatemultipathgenerator.hpp
+methods/projectedvariatepathgeneratorfactory.hpp
 models/annuitymapping.hpp
 models/blackscholesmodelwrapper.hpp
 models/carrmadanarbitragecheck.hpp
@@ -569,6 +590,7 @@ models/yoycapfloorhelper.hpp
 models/yoyinflationmodeltermstructure.hpp
 models/yoyswaphelper.hpp
 models/zeroinflationmodeltermstructure.hpp
+pricingengines/amccalculator.hpp
 pricingengines/analyticbarrierengine.hpp
 pricingengines/analyticdoublebarrierengine.hpp
 pricingengines/analyticcashsettledeuropeanengine.hpp
@@ -586,6 +608,7 @@ pricingengines/analyticxassetlgmeqoptionengine.hpp
 pricingengines/baroneadesiwhaleyengine.hpp
 pricingengines/blackcdsoptionengine.hpp
 pricingengines/commodityapoengine.hpp
+pricingengines/commodityspreadoptionengine.hpp
 pricingengines/commodityschwartzfutureoptionengine.hpp
 pricingengines/commodityswaptionengine.hpp
 pricingengines/cpibacheliercapfloorengine.hpp
@@ -602,6 +625,12 @@ pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingswapenginemulticurve.hpp
 pricingengines/inflationcapfloorengines.hpp
 pricingengines/lgmconvolutionsolver.hpp
+pricingengines/mccamcurrencyswapengine.hpp
+pricingengines/mccamfxoptionengine.hpp
+pricingengines/mclgmswapengine.hpp
+pricingengines/mclgmswaptionengine.hpp
+pricingengines/mcmultilegbaseengine.hpp
+pricingengines/mcmultilegoptionengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
@@ -610,7 +639,6 @@ pricingengines/volatilityfromvarianceswapengine.hpp
 processes/commodityschwartzstateprocess.hpp
 processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
-processes/fxbsstateprocess.hpp
 processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
 quotes/compositevectorquote.hpp

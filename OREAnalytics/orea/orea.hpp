@@ -31,6 +31,7 @@
 #include <orea/cube/npvsensicube.hpp>
 #include <orea/cube/sensicube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
+#include <orea/engine/amcvaluationengine.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>

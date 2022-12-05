@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
 set(OREAnalytics-Test_SRC aggregationscenariodata.cpp
+amcbermudanswaption.cpp
 cube.cpp
 observationmode.cpp
 scenariogenerator.cpp

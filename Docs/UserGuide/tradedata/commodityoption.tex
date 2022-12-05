@@ -1,4 +1,3 @@
-
 \subsubsection{Commodity Option}
 \label{ss:input_commodity_option}
 
@@ -101,3 +100,61 @@ and \emph{Put}, respectively, the digital call/put is constructed as
 \mbox{Digital Put} = \frac{\mbox{Payoff}}{\Delta}  \times \left( \mbox{Put}(K+ \Delta/2) - \mbox{Put}(K- \Delta/2)  \right)
 \end{align*}
 so that the long digital option has positive value in both cases. The strike spread $\Delta$ used here is set to 1\% of strike $K$.
+
+\subsubsection{Commodity Spread Option}
+\label{ss:input_commodity_spread_option}
+
+A commodity Spread Option is represented with trade type  \emph{CommoditySpreadOption} and a corresponding
+\lstinline!CommoditySpreadOptionData! node.
+
+The \lstinline!CommoditySpreadOptionData! node is the trade data container for the \emph{CommoditySpreadOption} trade type.
+The structure of a \lstinline!CommoditySpreadOptionData! node for a commodity option is shown in Listing \ref{lst:com_s_option_data}.
+
+The \lstinline!CommoditySpreadOptionData! include exactly two \lstinline!LegData! nodes of type \emph{CommodityFloating}.
+Details on these are described in \ref{ss:commodityfloatingleg}.
+The resulting Legs must produce the same amount of cashflows (i.e.~the number of \emph{calculation period}s must be the same for the long and short positions).
+If the number of cashflows per leg is 1, this trade represents a vanilla commodity spread option.
+If is greater than 1, it represents a multi-period commodity spread option.
+The first one represents the long position on the relevant asset, and the \lstinline!isPayer! must be set to \emph{true}.
+The second one represents the short position on the relevant asset, and the \lstinline!isPayer! must be set to \emph{false}.
+
+Within the two \lstinline!LegData!, the \lstinline!Quantity! node has must be equal.
+If the underlying contracts are quoted using different units (e.g. barrels vs liters), the \lstinline!Gearing! node must be used to account for this difference.
+
+
+Other than the two legs, the following nodes complete the \lstinline!CommoditySpreadOptionData! container:
+\begin{itemize}
+    \item \lstinline!ExerciseDate!: the exercise date. Allowable values: See Date in Table \ref{tab:allow_stand_data}.
+    \item \lstinline!SpreadStrike!: The strike value for the spread. Allowable values: Any real number.
+    \item \lstinline!OptionType! [Optional]: The allowable values are \emph{Call} or \emph{Put}. If not provided, default value is \emph{Call}.
+    \item \lstinline!SettlementDate! [Optional]: A date in which the trade is settled.
+Allowable values: This should be a valid date as outlined in Table \ref{tab:allow_stand_data}. If not provided, it is assumed that the trade is settled on the \lstinline!ExerciseDate!.
+    \item \lstinline!Currency!: The settlement currency for the trade. \\
+    Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+\end{itemize}
+
+\begin{listing}[H]
+%\hrule\medskip
+    \begin{minted}[fontsize=\footnotesize]{xml}
+<CommoditySpreadOptionData>
+  <LegData>
+   <LegType>CommodityFloating</LegType>
+   <IsPayer>true<IsPayer>
+   ...
+  </LegData>
+  <LegData>
+   <LegType>CommodityFloating</LegType>
+   <IsPayer>false<IsPayer>
+   ...
+  </LegData>
+  <ExerciseDate>2022-12-25</ExerciseDate>
+  <Quantity>1000</Quantity>
+  <SpreadStrike>2.3</SpreadStrike>
+  <OptionType>Call</OptionType>
+  <SettlmentDate>2022-12-31</SettlementDate>
+  <Currency>USD</Currency>
+</CommoditySpreadOptionData>
+    \end{minted}
+    \caption{Commodity Option data}
+    \label{lst:com_s_option_data}
+\end{listing}

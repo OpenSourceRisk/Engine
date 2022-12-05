@@ -34,6 +34,7 @@
 #include <ored/portfolio/builders/commodityoption.hpp>
 #include <ored/portfolio/builders/commodityapo.hpp>
 #include <ored/portfolio/builders/commodityapomodelbuilder.hpp>
+#include <ored/portfolio/builders/commodityspreadoption.hpp>
 #include <ored/portfolio/builders/commodityswap.hpp>
 #include <ored/portfolio/builders/commodityswaption.hpp>
 #include <ored/portfolio/builders/cpicapfloor.hpp>
@@ -271,6 +272,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<CommodityApoAnalyticalEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityApoMonteCarloEngineBuilder>());
     registerBuilder(boost::make_shared<QuantoEquityEuropeanOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<CommoditySpreadOptionEngineBuilder>());
 
     registerLegBuilder(boost::make_shared<DurationAdjustedCmsLegBuilder>());
     registerLegBuilder(boost::make_shared<FixedLegBuilder>());
