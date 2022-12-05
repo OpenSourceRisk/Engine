@@ -303,6 +303,15 @@ public:
     const boost::shared_ptr<CSVLoader>& csvLoader() { return csvLoader_; }
     const std::vector<std::string>& runTypes() { return runTypes_; }
 
+    const std::string& npvOutputFileName() { return npvOutputFileName_; }
+    const std::string& cashflowOutputFileName() { return cashflowOutputFileName_; }
+    const std::string& curvesOutputFileName() { return curvesOutputFileName_; }
+    const std::string& scenarioDumpFileName() { return scenarioDumpFileName_; }
+    const std::string& cubeFileName() { return cubeFileName_; }
+    const std::string& aggregationScenarioDataFileName() { return aggregationScenarioDataFileName_; }
+    const std::string& rawCubeFileName() { return rawCubeFileName_; }
+    const std::string& netCubeFileName() { return netCubeFileName_; }
+
 private:
     boost::shared_ptr<Parameters> params_;
     boost::shared_ptr<CSVLoader> csvLoader_;

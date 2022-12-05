@@ -569,6 +569,18 @@ void OREAppInputParameters::loadParameters() {
     if (params_->get("xva", "active", false) == "Y")
         runTypes_.push_back("XVA");
 
+    /***************************
+     * Collect output file names
+     */
+
+    npvOutputFileName_ = params_->get("npv", "outputFileName", false);
+    cashflowOutputFileName_ = params_->get("cashflow", "outputFileName", false);
+    curvesOutputFileName_ = params_->get("curves", "outputFileName", false);
+    scenarioDumpFileName_ = params_->get("simulation", "scenariodump", false);
+    cubeFileName_ = params_->get("simulation", "cubeFile", false);
+    aggregationScenarioDataFileName_ = params_->get("simulation", "aggregationScenarioDataFileName", false);
+    rawCubeFileName_ = params_->get("xva", "rawCubeFile", false);
+    netCubeFileName_ = params_->get("xva", "netCubeFile", false);
  
     LOG("OREAppInputParameters complete");
 }
