@@ -329,7 +329,6 @@
 #include <qle/processes/commodityschwartzstateprocess.hpp>
 #include <qle/processes/crcirppstateprocess.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
-#include <qle/processes/fxbsstateprocess.hpp>
 #include <qle/processes/irhwstateprocess.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
 #include <qle/quotes/compositevectorquote.hpp>
