@@ -26,8 +26,6 @@
 
 #include <ored/portfolio/builders/swap.hpp>
 
-using namespace ore::data;
-
 namespace ore {
 namespace data {
 

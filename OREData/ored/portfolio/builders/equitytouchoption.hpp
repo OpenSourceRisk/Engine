@@ -63,10 +63,10 @@ protected:
 
         if (type == "One-Touch") {
             engine_ = "AnalyticDigitalAmericanEngine";
-            return boost::make_shared<QuantExt::AnalyticDigitalAmericanEngine>(gbsp);
+            return boost::make_shared<QuantLib::AnalyticDigitalAmericanEngine>(gbsp);
         } else if (type == "No-Touch") {
             engine_ = "AnalyticDigitalAmericanKOEngine";
-            return boost::make_shared<QuantExt::AnalyticDigitalAmericanKOEngine>(gbsp);
+            return boost::make_shared<QuantLib::AnalyticDigitalAmericanKOEngine>(gbsp);
         } else {
             QL_FAIL("Unknwon EQ touch option type: " << type);
         }
