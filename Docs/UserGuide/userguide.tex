@@ -126,7 +126,7 @@
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Acadia Inc.}
-\date{\today}
+\date{6 December 2022}
 \maketitle
 
 \newpage
@@ -146,7 +146,7 @@ Date & Author & Comment \\
 19 June 2020 & Quaternion & updates for release 5\\
 30 June 2021 & Acadia & updates for release 6\\
 16 September 2022 & Acadia & updates for release 7\\
-12 December & Acadia & updates for release 8\\
+6 December 2022 & Acadia & updates for release 8\\
 \hline
 \end{supertabular}
 \end{center}
@@ -266,6 +266,8 @@ Commodity Forwards and Swaps & Y & Y & Y & Y\\
 \hline
 Commodity European and Asian Options & Y & Y & Y & Y \\
 \hline
+Commodity Digital Options & Y & Y & Y & Y \\
+\hline
 Commodity Swaptions & Y & Y & Y & Y\\
 \hline
 CPI Swaps & Y & Y & N & Y \\
@@ -290,7 +292,7 @@ Future releases will further extend the product range and analytics coverage ind
 \medskip The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em
   Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX/INF/EQ risk factor evolution is based on
 a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates
-and lognormal processes for FX rates and EQ prices, Dodgson-Kainth models for inflation. The model components are calibrated to cross currency discounting and forward curves, Swaptions, FX Options, EQ Options and CPI caps/floors.
+and lognormal processes for FX rates and EQ prices, Dodgson-Kainth (or Jarrow-Yildirim) models for inflation. The model components are calibrated to cross currency discounting and forward curves, Swaptions, FX Options, EQ Options and CPI caps/floors. With the 8th release, Commodity simulation has been added, as well as the foundation for a multi-factor Hull-White based IR/FX/COM simulation model. 
 
 \subsubsection*{Further Resources}
 \begin{itemize}
@@ -315,81 +317,62 @@ parametrisation and the structure of trade and market data input.
 \section{Release Notes}\label{sec:releasenotes}
 %========================================================
 
-This section summarises the notable changes between release 6 (June 2021) and 7 (September 2022).
+This section summarises the notable changes between release 7 (September 2022) and 8 (December 2022).
 
 \bigskip
 INSTRUMENTS 
 \begin{itemize}
-\item add FX Asian option support, thanks to Fredrik Gerdin Börjesson
-\item add Equity/Commodity Asian option support
-\item add Equity/FX Barrier, Double Barrier and European Barrier options
-\item add Equity/FX Digital options
-\item add Equity/FX Touch and Double Touch options
-\item add FX KI/KO Barrier and Digital Barrier options
-\item add support for FX Average Forwards
-\item add support for legs referencing a constant maturity bond index in analogy to CMS
-\item add support for Commodity Digital Option
-\item expose the Turnbull-Wakeman moment-matching engine for arithmetic average price options,
-  thanks to Fredrik Gerdin Börjesson
-\item additional pricing engine results for Caps/Floors, thanks to Fredrik Gerdin Börjesson
-\item additional results for Commodity Swaps
-\item introduce user-defined minimum time value for the AmericanOptionFDEngineBuilder,
-  thanks to Fredrik Gerdin Börjesson
-\item revised the inflation derivative setup, adopt changes in QuantLib 1.27
-\item improve CPI swap and cap pricing by using the last known fixing date as a base date
-in the zero inflation curve resp. volatility term structure
-\item support Cap/Floor with CMS Spread leg
+\item roll out Commodity derivatives, thanks to Acadia Inc., as announced in September 22:
+  \begin{itemize}
+    \item add Commodity Swap
+    \item add Commodity Swaption
+    \item add Commodity Average Price Option
+    \item add Commodity Option Strips and Digital Option Strip
+  \end{itemize}
+  see user guide and in particular Example 24
+\item add Equity Cliquet Option, missed in the 7th release, thanks to Acadia
+\item add Equity/FX/Commodity Variance Swap, missed in the 7th release, thanks to Acadia
+\item introduce separate trade types for Cross Currency and Inflation Swap
+\item merge QuantExt and QuantLib CDS and midpoint engine in ORE's QuantLib fork;
+  QuantLib pull request to follow
 \end{itemize}
 
 \bigskip
 MARKETS
 
 \begin{itemize}
-\item add support for SOFR and SONIA term rates
-\item add support for DKK-CITA and SEK-STINA indices, thanks to Fredrik Gerdin Börjesson
-\item add crypto currency (BTC, ETH) parsers to support crypto currency Forwards as FX Forwards
-\item add support for minor currencies (GBp, etc.) across all Equity derivatives
-\item make minor currency unit codes configurable
-\item add support for FX Forward outright quotes in curve building
-\item refactor parseCalendar() and parseCurrency() using Singletons to be able to reset state
-\item introduce instrument conventions Singleton, fix Commodity forward fixing errors 
-\item revised the FX index implementation, fix lazy market building errors related to FX indices
+\item performance optimizations for curve builders
+\item extend the market interface to optionally handle precious metals and crypto currencies as commodities instead of FX
 \end{itemize}
 
 \bigskip
 TERM STRUCTURES
 
 \begin{itemize}
-\item add support for RFR (SOFR, SONIA, ...) Cap/Floor volatility surfaces
-\item add support for RFR Swaption volatility surfaces
-\item introduce a moneyness adjustment when proxying the Swaption surface with a different tenor
-\item support Cap/Floor volatility surfaces by index name
-\item add CubicSpline interpolation for delta volatility surfaces, thanks to Fredrik Gerdin Börjesson
-\item add Hermite interpolation to Commodity curves, thanks to Fredrik Gerdin Börjesson
-\item enable extrapolation of sparse Cap/Floor volatility data, thanks to Fredrik Gerdin Börjesson
-\item fixes to the Equity forward curve builder
-\item fixes to the Equity proxy volatility surface, thanks to Fredrik Gerdin Börjesson
-\item speed up OIS curve bootstrap
-\item add IBOR fallback support for EONIA
+\item (no notable changes)
 \end{itemize}
 
 \bigskip
 ANALYTICS
 
 \begin{itemize}
-\item introduce pricing timing/stats report
-\item revise the LGM grid engine speeding up Bermudan Swaption pricing significantly
-\item speed up CMS coupon pricing
-\item extend CMS coupon pricers to cover OIS underlyings
-\item changes to the central “valuation engine” in ORE Analytics to enhance performance for large portfolios
+\item add American Monte Carlo simulation components to support fast Bermudan Swaption
+  exposure simulation and more, thanks to Acadia;\\
+  the integration into the ORE command line app will follow with the next release (March 23)
+  as it requires some refactoring.
+\item add Commodity simulation to the cross asset model and market simulation, integraded
+  with the LGM-based Cross Asset Model, thanks to Acadia
+\item  add a multi-factor Hull-White / FX / Commodity simulation model, thanks to Acadia; 
+  calibration to be added
 \end{itemize}
 
 \bigskip
 TESTS
 
 \begin{itemize}
-\item QuantExt: 214 test functions (vs 203 in the previous release)
-\item OREData: 192 test functions (vs. 160 in the previous release)
+\item QuantExt: 242 test functions (vs 214 in the previous release)
+\item OREData: 199 test functions (vs. 192 in the previous release)
+\item OREAnalytics: 66 test functions (vs. 65 in the previous release)
 \end{itemize}
 with associated increases in the number of data driven test cases 
 
@@ -397,27 +380,28 @@ with associated increases in the number of data driven test cases
 DOCUMENTATION
 
 \begin{itemize}
-\item added ORE Design documentation, thanks to Roland Kapl
-\item the user guide is maintained continuously incorporating user feedback, in particular from Acadia service clients; it has grown from 326 to 404 pages
-\item various User Guide improvement, thanks to Fredrik Gerdin Börjesson
-\item various corrections to doxygen docs (referenced file names), thanks to Fredrik Gerdin Börjesson
+\item the user guide is maintained continuously incorporating user feedback, in particular
+  from Acadia service clients; it has grown from 404 to 440 pages, mainly due to the
+  migration of Commodity and Equity/FX instruments into ORE
 \end{itemize}
 
 \bigskip
 LANGUAGE BINDUNGS
 
 \begin{itemize}
-\item Maintenance to ensure ORE SWIG wrappers build with the current ORE release, QuantLib-1.27.1 and QuantLib-SWIG-1.27
-\item Various extensions of the SWIG wrappers, thanks to Farah Khashman
-\item Various changes to resurrect Python examples and test cases, thanks to Farah Khashman
+\item maintenance to ensure ORE SWIG wrappers build with the current ORE release,
+  QuantLib-1.28 and QuantLib-SWIG-1.28
 \end{itemize}
 
 \bigskip
 OTHER
 
 \begin{itemize}
-\item changes to build with QuantLib 1.27.1
-\item allow for C++17 in CMake build
+\item changes to build with QuantLib 1.28
+\item extend the CMake setup for Windows / Visual Studio users; \\
+  We will stop maintaining the *.vcxproj and *.vcxproj.filters from the now on
+  and rely on CMakeLists for both *nix and Windows. \\
+  See section 4.2.3 on how to "Generate Visual Studio Projects with CMake"
 \end{itemize}
 
 %========================================================
@@ -674,6 +658,47 @@ C++ support under the Programming Languages features (disabled by default).
 \item Open the {\tt oreEverything\_*.sln} and build the entire solution (again, make sure to select the correct platform in the configuration manager first).
 \end{enumerate}
 
+\subsubsection*{Generate Visual Studio Projects with CMake}
+
+ORE 1.8.9 and later will be shipped without the Visual Studio project and solution files. The Visual Studio projects can be auto-generated from the CMake project files.
+
+\begin{enumerate}
+
+\item Download and install Visual Studio Community Edition (Version 2013 or later). 
+During the installation, make sure you install the Visual
+C++ support under the Programming Languages features (disabled by default).
+
+\item Download and install CMake for Windows (https://cmake.org/download/). Visual Studio Community Edition 2019 or later supports CMake and you can install the feature 'C++ CMake Tools for Windows' instead of installing CMake as standalone program.
+
+\item Set environment variables: \\
+	\begin{itemize}
+  	\item  {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0} 
+  	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} 
+	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0} 
+     \end{itemize}
+
+\item Generate MSVC project files from CMake files:
+\begin{itemize}
+\item Open a Visual Studio Tools Command Prompt
+\begin{itemize}
+\item 32-bit: VS2022/x86 Native Tools Command Prompt for VS 2022
+\item 64-bit: VS2022/x64 Native Tools   Command Prompt for VS 2022
+\end{itemize}
+\item Navigate to the ORE root directory
+\item Run CMake command:
+\begin{itemize}
+\item 32-bit: \\
+{\tt cmake -G "Visual Studio 17 2022" -A x64 -DBOOST\_INCLUDEDIR=\%BOOST\% -DBOOST\_LIBRARYDIR=\%BOOST\_LIB64\% -DMSVC\_LINK\_DYNAMIC\_RUNTIME=true -B build}
+\item 64-bit: \\
+{\tt cmake -G "Visual Studio 17 2022" -A x32 -DBOOST\_INCLUDEDIR=\%BOOST\% -DBOOST\_LIBRARYDIR=\%BOOST\_LIB32\% -DMSVC\_LINK\_DYNAMIC\_RUNTIME=true -B build}
+\end{itemize}
+Replace the generator "Visual Studio 17 2022" with the actual installed version.
+The solution and project files will be generated in the {\tt $\langle$ORE\_ROOT$\rangle${\bs}build} subdirectory.
+\end{itemize}
+
+\item Open the {\tt build{\bs}ORE.sln} and build the entire solution (again, make sure to select the correct platform in the configuration manager first).
+\end{enumerate}
+
 \subsubsection*{Unix}
 
 With the 5th release we have discontinued automake support so that ORE can only be built with CMake on Unix systems, as follows.
@@ -730,7 +755,14 @@ automatically.
 One advantage of the CMake build system is that it covers both Unix and Windows builds. 
 The same set of {\tt CMakeLists.txt} files as above allows building ORE on Windows. The following instructions use the {\tt Ninja} build system ({\url{ninja-build.org}) that covers the role of {\tt make} on Unix systems and calls the Visual Studio C++ compiler and linker. 
 
+
 \begin{enumerate}
+\item Set environment variables: \\
+	\begin{itemize}
+  	\item  {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0} 
+  	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} 
+	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0} 
+     \end{itemize}
 \item Open a command prompt, change to directory C:{\textbackslash}Program Files (x86){\textbackslash}Microsoft Visual Studio 14.0{\textbackslash}VC and run\\
 \medskip
 {\tt vcvarsall.bat x64} \\
@@ -739,9 +771,10 @@ to initialize the compiler-related environment.
 \item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
 \item Configure CMake e.g. by invoking \\
 \medskip
-{\tt cmake -D BOOST\_LIBRARYDIR=/path/to/boost/root/lib64-msvc-14.0 } \textbackslash\\
+{\tt cmake -D BOOST\_INCLUDEDIR=\%BOOST\% } \textbackslash\\
+{\tt \hspace{2cm} -D BOOST\_LIBRARYDIR=\%BOOST\_LIB64\% }\textbackslash\\
 {\tt \hspace{2cm} -D CMAKE\_BUILD\_TYPE=Release }\textbackslash\\
-{\tt \hspace{2cm} -D MSVC\_RUNTIME=static} \textbackslash\\
+{\tt \hspace{2cm} -D MSVC\_LINK\_DYNAMIC\_RUNTIME=true} \textbackslash\\
 {\tt \hspace{2cm} -G Ninja ..} \\
 \medskip
 where the -G option allows choosing the desired build system generator.
