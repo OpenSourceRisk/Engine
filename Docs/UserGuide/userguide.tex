@@ -755,7 +755,14 @@ automatically.
 One advantage of the CMake build system is that it covers both Unix and Windows builds. 
 The same set of {\tt CMakeLists.txt} files as above allows building ORE on Windows. The following instructions use the {\tt Ninja} build system ({\url{ninja-build.org}) that covers the role of {\tt make} on Unix systems and calls the Visual Studio C++ compiler and linker. 
 
+
 \begin{enumerate}
+\item Set environment variables: \\
+	\begin{itemize}
+  	\item  {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0} 
+  	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} 
+	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0} 
+     \end{itemize}
 \item Open a command prompt, change to directory C:{\textbackslash}Program Files (x86){\textbackslash}Microsoft Visual Studio 14.0{\textbackslash}VC and run\\
 \medskip
 {\tt vcvarsall.bat x64} \\
@@ -764,9 +771,10 @@ to initialize the compiler-related environment.
 \item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
 \item Configure CMake e.g. by invoking \\
 \medskip
-{\tt cmake -D BOOST\_LIBRARYDIR=/path/to/boost/root/lib64-msvc-14.0 } \textbackslash\\
+{\tt cmake -D BOOST\_INCLUDEDIR=\%BOOST\% } \textbackslash\\
+{\tt \hspace{2cm} -D BOOST\_LIBRARYDIR=\%BOOST\_LIB64\% }\textbackslash\\
 {\tt \hspace{2cm} -D CMAKE\_BUILD\_TYPE=Release }\textbackslash\\
-{\tt \hspace{2cm} -D MSVC\_RUNTIME=static} \textbackslash\\
+{\tt \hspace{2cm} -D MSVC\_LINK\_DYNAMIC\_RUNTIME=true} \textbackslash\\
 {\tt \hspace{2cm} -G Ninja ..} \\
 \medskip
 where the -G option allows choosing the desired build system generator.
