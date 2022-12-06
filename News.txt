@@ -60,9 +60,9 @@ OTHER
 
 - changes to build with QuantLib 1.28
 - extend the CMake setup for Windows / Visual Studio users
-  We will stop maintaining the *.vcxproj and *.vcxproj.filters from now onwards
-  and rely on CMakeLists for both *nix and Windows.
-  Please work with Visual Studio and CMake as described in 4.2.3
+  We will stop maintaining the *.vcxproj and *.vcxproj.filters from now on
+  and rely on CMakeLists for both *nix and Windows. See section 4.2.3 of
+  the user guide on how to "Generate Visual Studio Projects with CMake"
 
 
 Changes for the 7th ORE release (1.8.7.0):
