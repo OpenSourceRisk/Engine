@@ -658,47 +658,6 @@ C++ support under the Programming Languages features (disabled by default).
 \item Open the {\tt oreEverything\_*.sln} and build the entire solution (again, make sure to select the correct platform in the configuration manager first).
 \end{enumerate}
 
-\subsubsection*{Generate Visual Studio Projects with CMake}
-
-ORE 1.8.9 and later will be shipped without the Visual Studio project and solution files. The Visual Studio projects can be auto-generated from the CMake project files.
-
-\begin{enumerate}
-
-\item Download and install Visual Studio Community Edition (Version 2013 or later). 
-During the installation, make sure you install the Visual
-C++ support under the Programming Languages features (disabled by default).
-
-\item Download and install CMake for Windows (https://cmake.org/download/). Visual Studio Community Edition 2019 or later supports CMake and you can install the feature 'C++ CMake Tools for Windows' instead of installing CMake as standalone program.
-
-\item Set environment variables: \\
-	\begin{itemize}
-  	\item  {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0} 
-  	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} 
-	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0} 
-     \end{itemize}
-
-\item Generate MSVC project files from CMake files:
-\begin{itemize}
-\item Open a Visual Studio Tools Command Prompt
-\begin{itemize}
-\item 32-bit: VS2022/x86 Native Tools Command Prompt for VS 2022
-\item 64-bit: VS2022/x64 Native Tools   Command Prompt for VS 2022
-\end{itemize}
-\item Navigate to the ORE root directory
-\item Run CMake command:
-\begin{itemize}
-\item 32-bit: \\
-{\tt cmake -G "Visual Studio 17 2022" -A x64 -DBOOST\_INCLUDEDIR=\%BOOST\% -DBOOST\_LIBRARYDIR=\%BOOST\_LIB64\% -DMSVC\_LINK\_DYNAMIC\_RUNTIME=true -B build}
-\item 64-bit: \\
-{\tt cmake -G "Visual Studio 17 2022" -A x32 -DBOOST\_INCLUDEDIR=\%BOOST\% -DBOOST\_LIBRARYDIR=\%BOOST\_LIB32\% -DMSVC\_LINK\_DYNAMIC\_RUNTIME=true -B build}
-\end{itemize}
-Replace the generator "Visual Studio 17 2022" with the actual installed version.
-The solution and project files will be generated in the {\tt $\langle$ORE\_ROOT$\rangle${\bs}build} subdirectory.
-\end{itemize}
-
-\item Open the {\tt build{\bs}ORE.sln} and build the entire solution (again, make sure to select the correct platform in the configuration manager first).
-\end{enumerate}
-
 \subsubsection*{Unix}
 
 With the 5th release we have discontinued automake support so that ORE can only be built with CMake on Unix systems, as follows.
@@ -755,14 +714,7 @@ automatically.
 One advantage of the CMake build system is that it covers both Unix and Windows builds. 
 The same set of {\tt CMakeLists.txt} files as above allows building ORE on Windows. The following instructions use the {\tt Ninja} build system ({\url{ninja-build.org}) that covers the role of {\tt make} on Unix systems and calls the Visual Studio C++ compiler and linker. 
 
-
 \begin{enumerate}
-\item Set environment variables: \\
-	\begin{itemize}
-  	\item  {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0} 
-  	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} 
-	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0} 
-     \end{itemize}
 \item Open a command prompt, change to directory C:{\textbackslash}Program Files (x86){\textbackslash}Microsoft Visual Studio 14.0{\textbackslash}VC and run\\
 \medskip
 {\tt vcvarsall.bat x64} \\
@@ -771,10 +723,9 @@ to initialize the compiler-related environment.
 \item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
 \item Configure CMake e.g. by invoking \\
 \medskip
-{\tt cmake -D BOOST\_INCLUDEDIR=\%BOOST\% } \textbackslash\\
-{\tt \hspace{2cm} -D BOOST\_LIBRARYDIR=\%BOOST\_LIB64\% }\textbackslash\\
+{\tt cmake -D BOOST\_LIBRARYDIR=/path/to/boost/root/lib64-msvc-14.0 } \textbackslash\\
 {\tt \hspace{2cm} -D CMAKE\_BUILD\_TYPE=Release }\textbackslash\\
-{\tt \hspace{2cm} -D MSVC\_LINK\_DYNAMIC\_RUNTIME=true} \textbackslash\\
+{\tt \hspace{2cm} -D MSVC\_RUNTIME=static} \textbackslash\\
 {\tt \hspace{2cm} -G Ninja ..} \\
 \medskip
 where the -G option allows choosing the desired build system generator.
