@@ -27,6 +27,7 @@
 #include <ored/portfolio/commodityapo.hpp>
 #include <ored/portfolio/commoditylegbuilder.hpp>
 #include <ored/portfolio/commodityoptionstrip.hpp>
+#include <ored/portfolio/commodityspreadoption.hpp>
 #include <ored/portfolio/commodityswap.hpp>
 #include <ored/portfolio/commodityswaption.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
@@ -109,6 +110,7 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
     addBuilder("CreditDefaultSwapOption", boost::make_shared<TradeBuilder<CreditDefaultSwapOption>>());
     addBuilder("CommodityForward", boost::make_shared<TradeBuilder<CommodityForward>>());
     addBuilder("CommodityOption", boost::make_shared<TradeBuilder<CommodityOption>>());
+//    addBuilder("CommoditySpreadOption", boost::make_shared<TradeBuilder<CommoditySpreadOption>>());
     addBuilder("CommodityDigitalOption", boost::make_shared<TradeBuilder<CommodityDigitalOption>>());
     addBuilder("CommodityAsianOption", boost::make_shared<TradeBuilder<CommodityAsianOption>>());
     addBuilder("CommoditySwap", boost::make_shared<TradeBuilder<CommoditySwap>>());
@@ -116,6 +118,7 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
     addBuilder("CommodityAveragePriceOption", boost::make_shared<TradeBuilder<CommodityAveragePriceOption>>());
     addBuilder("CommodityOptionStrip", boost::make_shared<TradeBuilder<CommodityOptionStrip>>());
     addBuilder("CommodityVarianceSwap", boost::make_shared<TradeBuilder<ComVarSwap>>());
+    addBuilder("CommoditySpreadOption", boost::make_shared<TradeBuilder<CommoditySpreadOption>>());
 
     addBuilder("EquityFutureOption", boost::make_shared<TradeBuilder<EquityFutureOption>>());
     addBuilder("Failed", boost::make_shared<TradeBuilder<FailedTrade>>());

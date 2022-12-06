@@ -40,7 +40,7 @@ namespace {
 
 class TestMarket : public MarketImpl {
 public:
-    TestMarket() {
+    TestMarket() : MarketImpl(false) {
         asof_ = Date(3, Feb, 2015);
 
         boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();

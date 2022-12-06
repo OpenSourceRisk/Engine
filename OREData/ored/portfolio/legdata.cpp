@@ -915,6 +915,8 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
     QL_REQUIRE(fixedLegData, "Wrong LegType, expected Fixed, got " << data.legType());
 
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
+    QL_REQUIRE(schedule.size() > 1, "FixedLeg:Schedule must have at least 2 dates.");
+
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
@@ -933,7 +935,10 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
                   .withCouponRates(rates, dc)
                   .withPaymentAdjustment(bdc)
                   .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
-                  .withPaymentCalendar(paymentCalendar);
+                  .withPaymentCalendar(paymentCalendar)
+                  .withLastPeriodDayCounter(data.lastPeriodDayCounter().empty()
+                                                ? DayCounter()
+                                                : parseDayCounter(data.lastPeriodDayCounter()));
     return leg;
 
 }
@@ -1158,6 +1163,13 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
     Calendar paymentCalendar;
 
+    // try to set the rate computation period based on the schedule tenor
+    Period rateComputationPeriod = 0 * Days;
+    if (!tmp.rules().empty() && !tmp.rules().front().tenor().empty())
+        rateComputationPeriod = parsePeriod(tmp.rules().front().tenor());
+    else if (!tmp.dates().empty() && !tmp.dates().front().tenor().empty())
+        rateComputationPeriod = parsePeriod(tmp.dates().front().tenor());
+
     if (data.paymentCalendar().empty())
         paymentCalendar = index->fixingCalendar();
     else
@@ -1183,7 +1195,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                 engineFactory->builder("CapFlooredAverageONIndexedCouponLeg"));
             QL_REQUIRE(builder, "No builder found for CapFlooredAverageONIndexedCouponLeg");
             cfCouponPricer = boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponPricer>(
-                builder->engine(IndexNameTranslator::instance().oreName(index->name())));
+                builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod));
             QL_REQUIRE(cfCouponPricer, "internal error, could not cast to CapFlooredAverageONIndexedCouponPricer");
         }
 
@@ -1252,7 +1264,8 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
             auto builder = boost::dynamic_pointer_cast<CapFlooredOvernightIndexedCouponLegEngineBuilder>(
                 engineFactory->builder("CapFlooredOvernightIndexedCouponLeg"));
             QL_REQUIRE(builder, "No builder found for CapFlooredOvernightIndexedCouponLeg");
-            auto pricer = builder->engine(IndexNameTranslator::instance().oreName(index->name()));
+            auto pricer =
+                builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod);
             QuantExt::setCouponPricer(leg, pricer);
         }
 
@@ -2402,8 +2415,7 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 }
 
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                   std::map<std::string, std::string>& qlToOREIndexNames, RequiredFixings& requiredFixings,
-                   const QuantLib::Date& openEndDateReplacement) {
+                   RequiredFixings& requiredFixings, const QuantLib::Date& openEndDateReplacement) {
     for (auto const& indexing : data.indexing()) {
         if (indexing.hasData()) {
             DLOG("apply indexing (index='" << indexing.index() << "') to leg of type " << data.legType());
@@ -2461,9 +2473,6 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             if (!indexing.fixingConvention().empty())
                 indLeg.withFixingConvention(parseBusinessDayConvention(indexing.fixingConvention()));
             leg = indLeg;
-
-            // add to the qlToOREIndexNames map
-            qlToOREIndexNames[index->name()] = indexing.index();
         }
     }
 }

@@ -36,14 +36,18 @@ using namespace QuantLib;
 
 class AnalyticDigitalAmericanEngine : public QuantLib::AnalyticDigitalAmericanEngine {
 public:
-    AnalyticDigitalAmericanEngine(const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
-                                  const bool flipResults = false)
-        : QuantLib::AnalyticDigitalAmericanEngine(process), flipResults_(flipResults){};
+    AnalyticDigitalAmericanEngine(ext::shared_ptr<GeneralizedBlackScholesProcess> process,
+                                  const QuantLib::Date& payDate, const bool flipResults = false)
+        : QuantLib::AnalyticDigitalAmericanEngine(process), process_(std::move(process)), payDate_(payDate),
+          flipResults_(flipResults) {
+        registerWith(process_);
+    }
     void calculate() const override;
     virtual bool knock_in() const override { return true; }
 
 private:
-    boost::shared_ptr<GeneralizedBlackScholesProcess> process_;
+    ext::shared_ptr<GeneralizedBlackScholesProcess> process_;
+    QuantLib::Date payDate_;
     bool flipResults_;
 };
 
@@ -51,9 +55,9 @@ private:
 
 class AnalyticDigitalAmericanKOEngine : public AnalyticDigitalAmericanEngine {
 public:
-    AnalyticDigitalAmericanKOEngine(const boost::shared_ptr<GeneralizedBlackScholesProcess>& engine,
-                                    const bool flipResults = false)
-        : AnalyticDigitalAmericanEngine(engine, flipResults) {}
+    AnalyticDigitalAmericanKOEngine(const ext::shared_ptr<GeneralizedBlackScholesProcess>& engine,
+                                    const QuantLib::Date& payDate, const bool flipResults = false)
+        : AnalyticDigitalAmericanEngine(engine, payDate, flipResults) {}
     bool knock_in() const override { return false; }
 };
 

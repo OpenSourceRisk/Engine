@@ -46,7 +46,7 @@ namespace {
 
 class TestMarket : public MarketImpl {
 public:
-    TestMarket() {
+    TestMarket() : MarketImpl(false) {
         // valuation date
         asof_ = Date(28, August, 2018);
 

@@ -132,7 +132,6 @@ boost::shared_ptr<CashFlow> unpackIndexedCouponOrCashFlow(const boost::shared_pt
 
 // remove all index wrappers around a coupon
 boost::shared_ptr<Coupon> unpackIndexedCoupon(const boost::shared_ptr<Coupon>& c);
-boost::shared_ptr<CashFlow> unpackIndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c);
 
 // remove all index wrappers around a cashflow
 boost::shared_ptr<CashFlow> unpackIndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c);

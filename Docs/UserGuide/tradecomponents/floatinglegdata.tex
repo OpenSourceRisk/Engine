@@ -189,6 +189,8 @@ in Listing \ref{lst:float_zero_coupon_leg_dates}. \begin{listing}[H]
   For overnight coupons this is the number of business days by which the value dates are shifted into the past to get
   the fixing observation dates. In the context of RFRs the FixingDays parameter is sometimes also called
   ``obervation lag''.
+  
+  The calendar used for the fixing gap, is the calendar associated with the floating index, as defined in the conventions for the index.
 
   Allowable values: A non-negative whole number.  Defaults to the index's fixing days if blank or omitted. See defaults per index in Table \ref{tab:fixingdaysdefaults}.
 

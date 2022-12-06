@@ -118,7 +118,7 @@ private:
 
     //! Get the configured quotes. If filter is \c true, remove tenor based quotes and quotes with expiry before asof.
     std::vector<boost::shared_ptr<CommodityForwardQuote>>
-    getQuotes(const QuantLib::Date& asof, const std::string& configId, const std::vector<std::string>& quotes,
+    getQuotes(const QuantLib::Date& asof, const std::string& /*configId*/, const std::vector<std::string>& quotes,
         const Loader& loader, bool filter = false);
 
     //! Method for populating the price curve

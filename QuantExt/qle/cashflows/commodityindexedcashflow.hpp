@@ -15,12 +15,13 @@
 #include <ql/patterns/visitor.hpp>
 #include <ql/time/schedule.hpp>
 #include <qle/indexes/commodityindex.hpp>
+#include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 
 namespace QuantExt {
 
 //! Cash flow dependent on a single commodity spot price or futures settlement price on a given pricing date
-class CommodityIndexedCashFlow : public CashFlow, public Observer {
+class CommodityIndexedCashFlow : public CommodityCashFlow {
 
 public:
     enum class PaymentTiming { InAdvance, InArrears, RelativeToExpiry };
@@ -30,7 +31,8 @@ public:
                              const QuantLib::Date& paymentDate, const ext::shared_ptr<CommodityIndex>& index,
                              QuantLib::Real spread = 0.0, QuantLib::Real gearing = 1.0, bool useFuturePrice = false,
                              const Date& contractDate = Date(),
-                             const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr);
+                             const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
+                             QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>());
 
     /*! Constructor taking a period \p startDate, \p endDate and some conventions. The pricing date and payment date
         are derived from the start date and end date using the conventions.
@@ -45,21 +47,24 @@ public:
                              QuantLib::Natural futureMonthOffset = 0,
                              const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
                              const QuantLib::Date& paymentDateOverride = Date(),
-                             const QuantLib::Date& pricingDateOverride = Date());
+                             const QuantLib::Date& pricingDateOverride = Date(),
+                             QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>());
 
     //! \name Inspectors
     //@{
-    QuantLib::Real quantity() const { return quantity_; }
+    
     const QuantLib::Date& pricingDate() const { return pricingDate_; }
-    ext::shared_ptr<CommodityIndex> index() const { return index_; }
-    QuantLib::Real spread() const { return spread_; }
-    QuantLib::Real gearing() const { return gearing_; }
-    bool useFuturePrice() const { return useFuturePrice_; }
     bool useFutureExpiryDate() const { return useFutureExpiryDate_; }
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
     QuantLib::Real periodQuantity() const { return periodQuantity_; }
-    //@}
+    QuantLib::Natural dailyExpiryOffset() const { return dailyExpiryOffset_; }
 
+    //@}
+    //! \name CommodityCashFlow interface
+    //@{
+    QuantLib::Date lastPricingDate() const override { return pricingDate(); }
+    //@}
+    
     //! \name Event interface
     //@{
     QuantLib::Date date() const override { return paymentDate_; }
@@ -84,16 +89,12 @@ public:
     void setPeriodQuantity(QuantLib::Real periodQuantity);
 
 private:
-    QuantLib::Real quantity_;
     QuantLib::Date pricingDate_;
     QuantLib::Date paymentDate_;
-    ext::shared_ptr<CommodityIndex> index_;
-    QuantLib::Real spread_;
-    QuantLib::Real gearing_;
-    bool useFuturePrice_;
     bool useFutureExpiryDate_;
     QuantLib::Natural futureMonthOffset_;
     QuantLib::Real periodQuantity_;
+    QuantLib::Natural dailyExpiryOffset_;
 
     //! Shared initialisation
     void init(const ext::shared_ptr<FutureExpiryCalculator>& calc,
@@ -130,6 +131,7 @@ public:
     CommodityIndexedLeg& payAtMaturity(bool flag = false);
     CommodityIndexedLeg& withPricingDates(const std::vector<QuantLib::Date>& pricingDates);
     CommodityIndexedLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
+    CommodityIndexedLeg& withDailyExpiryOffset(QuantLib::Natural dailyExpiryOffset);
 
     operator Leg() const;
 
@@ -153,6 +155,7 @@ private:
     bool payAtMaturity_;
     std::vector<QuantLib::Date> pricingDates_;
     std::vector<QuantLib::Date> paymentDates_;
+    QuantLib::Natural dailyExpiryOffset_;
 };
 
 } // namespace QuantExt

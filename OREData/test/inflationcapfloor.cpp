@@ -44,7 +44,7 @@ using namespace ore::data;
 // FX Swap test
 class TestMarket : public MarketImpl {
 public:
-    TestMarket(Date asof) {
+    TestMarket(Date asof) : MarketImpl(false) {
         // valuation date
 
         dc = ActualActual(ActualActual::ISDA);

@@ -62,6 +62,7 @@
     <ClInclude Include="orea\cube\npvsensicube.hpp" />
     <ClInclude Include="orea\cube\sensicube.hpp" />
     <ClInclude Include="orea\cube\sensitivitycube.hpp" />
+    <ClInclude Include="orea\engine\amcvaluationengine.hpp" />
     <ClInclude Include="orea\engine\bufferedsensitivitystream.hpp" />
     <ClInclude Include="orea\engine\cptycalculator.hpp" />
     <ClInclude Include="orea\engine\filteredsensitivitystream.hpp" />
@@ -126,6 +127,7 @@
     <ClCompile Include="orea\cube\cubeinterpretation.cpp" />
     <ClCompile Include="orea\cube\cubewriter.cpp" />
     <ClCompile Include="orea\cube\sensitivitycube.cpp" />
+    <ClCompile Include="orea\engine\amcvaluationengine.cpp" />
     <ClCompile Include="orea\engine\bufferedsensitivitystream.cpp" />
     <ClCompile Include="orea\engine\cptycalculator.cpp" />
     <ClCompile Include="orea\engine\filteredsensitivitystream.cpp" />

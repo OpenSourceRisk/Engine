@@ -51,7 +51,8 @@ public:
         const CurveConfigurations& curveConfigs, boost::shared_ptr<QuantLib::IborIndex> iborIndex,
         QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, const boost::shared_ptr<IborIndex> sourceIndex,
         const boost::shared_ptr<IborIndex> targetIndex,
-        const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves,
+        const std::map<std::string, std::pair<boost::shared_ptr<ore::data::CapFloorVolCurve>,
+                                              std::pair<std::string, QuantLib::Period>>>& requiredCapFloorVolCurves,
         const bool buildCalibrationInfo);
 
     //! \name Inspectors
@@ -91,7 +92,8 @@ private:
     void buildProxyCurve(
         const CapFloorVolatilityCurveConfig& config, const boost::shared_ptr<IborIndex>& sourceIndex,
         const boost::shared_ptr<IborIndex>& targetIndex,
-        const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves);
+        const std::map<std::string, std::pair<boost::shared_ptr<ore::data::CapFloorVolCurve>,
+                                              std::pair<std::string, QuantLib::Period>>>& requiredCapFloorVolCurves);
 
     //! Get a shift quote value from the configured quotes
     Real shiftQuote(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader) const;

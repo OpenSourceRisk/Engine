@@ -39,7 +39,7 @@ namespace {
 
 class TestMarket : public MarketImpl {
 public:
-    TestMarket() {
+    TestMarket() : MarketImpl(false) {
         asof_ = Date(3, Feb, 2016);
 
         // build discount
@@ -59,7 +59,7 @@ public:
         // build fx vols
         fxVols_[make_pair(Market::defaultConfiguration, "EURUSD")] = flatRateFxv(0.10);
     }
-    TestMarket(Real spot, Real q, Real r, Real vol, bool withFixings = false) {
+    TestMarket(Real spot, Real q, Real r, Real vol, bool withFixings = false) : MarketImpl(false) {
         asof_ = Date(3, Feb, 2016);
 
         // build discount

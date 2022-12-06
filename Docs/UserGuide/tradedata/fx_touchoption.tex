@@ -54,42 +54,46 @@ The relevant fields in the \lstinline!OptionData! node for an FxTouchOption are:
 \item  \lstinline!PayOffAtExpiry! [Optional] \emph{true} for payoff at expiry and \emph{false} for payoff at hit.
 For UpAndOut and DownAndOut barrier, only payoff at expiry ( \emph{true}) is supported. Defaults to  \emph{true} if left blank or omitted. This field is ignored in pricing, and the option payoff will be calculated at expiry. This field only has an impact on the description of the trade economics. The \emph{GenericBarrierOption} can also be used to `replicate' the \emph{FXTouchOption} with payoff at hit if required.
 
-\item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given.
+\item An \lstinline!ExerciseDates! node where exactly one \lstinline!ExerciseDate! date element must be given.
 
-\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
+\item A \lstinline!PaymentData! [Optional] node can be added which defines the settlement of the option payoff. If the option is payoff at hit,
+(i.e.\ \lstinline!PayoffAtExpiry! is \emph{false}), the option payment data must be rules-based, and the \lstinline!RelativeTo! sub-node of (\lstinline!Rules!) must be
+set to \emph{Exercise}.
+
+\item \lstinline!Premiums! [Optional]: Option premium amounts paid by the option buyer to the option seller.
 
 Allowable values:  See section \ref{ss:premiums}
 
 \end{itemize}
 
-\item BarrierData: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
+\item \lstinline!BarrierData!: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
 Level specified in BarrierData should be quoted as the amount in DomesticCurrency (sold currency) per unit ForeignCurrency (bought currency). Note that the level stays quoted as DomesticCurrency per unit ForeignCurrency, regardless of barrier type.
 
-\item ForeignCurrency: The foreign (bought) currency of the FX touch option.  
+\item \lstinline!ForeignCurrency!: The foreign (bought) currency of the FX touch option.  
 
 Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
 
-\item DomesticCurrency: The domestic (sold) currency of the FX touch option.
+\item \lstinline!DomesticCurrency!: The domestic (sold) currency of the FX touch option.
 
 Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
 
-\item PayoffCurrency: The payoff currency of the FX touch option is the currency of the payoff amount. 
+\item \lstinline!PayoffCurrency!: The payoff currency of the FX touch option is the currency of the payoff amount. 
 
 Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
 
-\item PayoffAmount: The fixed payoff amount expressed in payoff currency. It is cash-or-nothing payoff that depends on the option being in or out of the money, and whether the barrier has been touched.
+\item \lstinline!PayoffAmount!: The fixed payoff amount expressed in payoff currency. It is cash-or-nothing payoff that depends on the option being in or out of the money, and whether the barrier has been touched.
 
 Allowable values:  Any positive real number.
 
-\item StartDate[Optional]: The start date for checking if a barrier has been breached prior to today's date.  If omitted or left blank no check is made and it is assumed no barrier has been breached in the past. Has no impact if set to today's date or a date in the future.
+\item \lstinline!StartDate! [Optional]: The start date for checking if a barrier has been breached prior to today's date.  If omitted or left blank no check is made and it is assumed no barrier has been breached in the past. Has no impact if set to today's date or a date in the future.
 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
-\item FXIndex[Optional]: A reference to an FX Index source to check if the barrier has been breached. Required if StartDate is set to a date prior to today's date, otherwise optional, and can be omitted but not left blank.
+\item \lstinline!FXIndex! [Optional]: A reference to an FX Index source to check if the barrier has been breached. Required if StartDate is set to a date prior to today's date, otherwise optional, and can be omitted but not left blank.
 
 Allowable values: The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}.  
 
-\item Calendar[Optional]: The calendar associated with the FX Index. Required if StartDate is set to a date prior to today's date, otherwise optional.
+\item \lstinline!Calendar! [Optional]: The calendar associated with the FX Index. Required if StartDate is set to a date prior to today's date, otherwise optional.
 
 Allowable values: See Table \ref{tab:calendar} Calendar.
 \end{itemize}

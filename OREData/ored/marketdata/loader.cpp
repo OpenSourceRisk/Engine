@@ -21,6 +21,14 @@
 namespace ore {
 namespace data {
 
+boost::shared_ptr<MarketDatum> Loader::get(const std::string& name, const QuantLib::Date& d) const {
+    for (const auto& md : loadQuotes(d)) {
+        if (md->name() == name)
+            return md;
+    }
+    QL_FAIL("No MarketDatum for name " << name << " and date " << d);
+}
+
 std::set<boost::shared_ptr<MarketDatum>> Loader::get(const std::set<std::string>& names,
                                                      const QuantLib::Date& asof) const {
     std::set<boost::shared_ptr<MarketDatum>> result;

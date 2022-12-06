@@ -1125,12 +1125,14 @@ void YieldCurve::buildFittedBondCurve() {
                 Date thisMaturity = qlInstr->maturityDate();
                 lastMaturity = std::max(lastMaturity, thisMaturity);
                 firstMaturity = std::min(firstMaturity, thisMaturity);
-                Real marketYield = qlInstr->yield(rescaledBondQuote->value() * res.inflationFactor, ActualActual(ActualActual::ISDA),
+                Real inflationFactor = res.inflationFactor();
+                Real marketYield = qlInstr->yield(rescaledBondQuote->value() * inflationFactor,
+                                                  ActualActual(ActualActual::ISDA),
                                                   Continuous, NoFrequency);
                 DLOG("added bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
-                                   << ", clean price = " << rescaledBondQuote->value() * res.inflationFactor
+                                   << ", clean price = " << rescaledBondQuote->value() * inflationFactor
                                    << ", yield (cont,act/act) = " << marketYield);
-                marketPrices.push_back(bondQuote->quote()->value() * res.inflationFactor);
+                marketPrices.push_back(bondQuote->quote()->value() * inflationFactor);
                 securityIDs.push_back(securityID);
                 marketYields.push_back(marketYield);
                 securityMaturityDates.push_back(thisMaturity);
