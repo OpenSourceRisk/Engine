@@ -64,7 +64,7 @@ public:
     void reset();
 
     //! Portfolio size
-    QuantLib::Size size() const { return tradeLookup_.size(); }
+    QuantLib::Size size() const { return trades_.size(); }
 
     //! Load using a default or user supplied TradeFactory, existing trades are kept
     void load(const std::string& fileName,
@@ -139,8 +139,7 @@ private:
     // get representation as XMLDocument
     void doc(XMLDocument& doc) const;
     bool buildFailedTrades_;
-    // std::vector<boost::shared_ptr<Trade>> trades_;
-    std::map<std::string, boost::shared_ptr<Trade>> tradeLookup_;
+    std::map<std::string, boost::shared_ptr<Trade>> trades_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
 };
 
