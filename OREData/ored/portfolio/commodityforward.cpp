@@ -76,14 +76,13 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     // adjust the maturity date if not a valid fixing date for the index
     maturity_ = index->fixingCalendar().adjust(maturity_, Preceding);
 
-    Date expiryDate;
     if ((isFuturePrice_ && *isFuturePrice_) || isFutureAccordingToConventions) {
 
         // Get the commodity index from the market.
         index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
 
         // May have been given an explicit future expiry date or an offset and calendar or neither.
-        expiryDate = maturity_;
+        Date expiryDate = maturity_;
         if (futureExpiryDate_ != Date()) {
             expiryDate = futureExpiryDate_;
         } else if (futureExpiryOffset_ != Period()) {
