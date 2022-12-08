@@ -76,13 +76,14 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     // adjust the maturity date if not a valid fixing date for the index
     maturity_ = index->fixingCalendar().adjust(maturity_, Preceding);
 
+    Date expiryDate;
     if ((isFuturePrice_ && *isFuturePrice_) || isFutureAccordingToConventions) {
 
         // Get the commodity index from the market.
         index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
 
         // May have been given an explicit future expiry date or an offset and calendar or neither.
-        Date expiryDate = maturity_;
+        expiryDate = maturity_;
         if (futureExpiryDate_ != Date()) {
             expiryDate = futureExpiryDate_;
         } else if (futureExpiryOffset_ != Period()) {
@@ -116,7 +117,7 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     }
 
     // add required commodity fixing
-    requiredFixings_.addFixingDate(maturity_, index->name(), paymentDate);
+    requiredFixings_.addFixingDate(maturity_, index->name(), paymentDate == Date() ? expiryDate : paymentDate);
 
     // Create the commodity forward instrument
     Currency currency = parseCurrency(currency_);
