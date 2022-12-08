@@ -165,7 +165,7 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
                                      const map<string, boost::shared_ptr<CommodityVolCurve>>& commodityVolCurves,
                                      const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves,
                                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
-                                     const Market* fxIndices) {
+                                     const Market* fxIndices, const bool buildCalibrationInfo) {
 
     try {
         LOG("CommodityVolCurve: start building commodity volatility structure with ID " << spec.curveConfigID());
@@ -1710,6 +1710,11 @@ vector<Real> CommodityVolCurve::checkMoneyness(const vector<string>& strMoneynes
              moneynessLevels | transformed([](Real d) { return ore::data::to_string(d); }), ","));
 
     return moneynessLevels;
+}
+void CommodityVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigurations& curveConfigs,
+                                             const CommodityVolatilityConfig& config,
+                                             const Handle<QuantExt::CommodityIndex>& commIndex) {
+    calibrationInfo_ = nullptr;
 }
 
 } // namespace data
