@@ -185,7 +185,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory, con
 
 Date Portfolio::maturity() const {
     QL_REQUIRE(trades_.size() > 0, "Cannot get maturity of an empty portfolio");
-    Date mat = trades_.begin()->second->maturity();
+    Date mat = Date::minDate();
     for (const auto& t : trades_)
         mat = std::max(mat, t.second->maturity());
     return mat;
@@ -253,13 +253,11 @@ std::set<std::string> Portfolio::portfolioIds() const {
 
 bool Portfolio::hasNettingSetDetails() const {
     bool hasNettingSetDetails = false;
-    auto tradesVec = trades();
-    for (auto it = tradesVec.begin(); it != tradesVec.end(); it++) {
-        if (!(*it)->envelope().nettingSetDetails().emptyOptionalFields()) {
+    for (const auto& t : trades_)
+        if (!t.second->envelope().nettingSetDetails().emptyOptionalFields()) {
             hasNettingSetDetails = true;
             break;
         }
-    }
     return hasNettingSetDetails;
 }
 
