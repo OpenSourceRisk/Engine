@@ -201,6 +201,7 @@ public:
 private:
     ReportConfig reportConfigEqVols_;
     ReportConfig reportConfigFxVols_;
+    ReportConfig reportConfigCommVols_;
     ReportConfig reportConfigIrCapFloorVols_;
     ReportConfig reportConfigIrSwaptionVols_;
 
