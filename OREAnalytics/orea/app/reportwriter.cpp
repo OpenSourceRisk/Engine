@@ -1440,6 +1440,11 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
         addFxEqVolCalibrationInfo(report, "eqVol", r.first, r.second);
     }
 
+    // comm vol results
+    for (auto const& r : calibrationInfo->commVolCalibrationInfo) {
+        addFxEqVolCalibrationInfo(report, "commVol", r.first, r.second);
+    }
+
     // ir vol results
     for (auto const& r : calibrationInfo->irVolCalibrationInfo) {
         addIrVolCalibrationInfo(report, "irVol", r.first, r.second);
