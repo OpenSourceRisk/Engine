@@ -2783,7 +2783,81 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
     }
 
     // update market asof date
+    // asof_ = scenario->asof();
 }
+
+/*
+void ScenarioSimMarket::update(const Date& d) {
+    // DLOG("ScenarioSimMarket::update called with Date " << QuantLib::io::iso_date(d));
+
+    // pre update observable settings
+    ObservationMode::Mode om = ObservationMode::instance().mode();
+    if (om == ObservationMode::Mode::Disable)
+        ObservableSettings::instance().disableUpdates(false);
+    else if (om == ObservationMode::Mode::Defer)
+        ObservableSettings::instance().disableUpdates(true);
+
+    // update date
+    if (d != Settings::instance().evaluationDate())
+        Settings::instance().evaluationDate() = d;
+    else if (om == ObservationMode::Mode::Unregister) {
+        // Due to some of the notification chains having been unregistered,
+        // it is possible that some lazy objects might be missed in the case
+        // that the evaluation date has not been updated. Therefore, we
+        // manually kick off an observer notification from this level.
+        // We have unit regression tests in OREAnalyticsTestSuite to ensure
+        // the various ObservationMode settings return the anticipated results.
+        boost::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
+        obs->notifyObservers();
+    }
+
+    // update scenario and market quotes
+    QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
+    boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
+    QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
+    numeraire_ = scenario->getNumeraire();
+    applyScenario(scenario);
+
+    // post market update observable settings and refresh - key to update these before fixings are set
+    if (om == ObservationMode::Mode::Disable) {
+        refresh();
+        ObservableSettings::instance().enableUpdates();
+    } else if (om == ObservationMode::Mode::Defer) {
+        ObservableSettings::instance().enableUpdates();
+    }
+
+    // Apply fixings as historical fixings. Must do this before we populate ASD
+    fixingManager_->update(d);
+
+    if (asd_) {
+        // add additional scenario data to the given container, if required
+        for (auto i : parameters_->additionalScenarioDataIndices()) {
+            boost::shared_ptr<QuantLib::Index> index;
+            try {
+                index = *iborIndex(i);
+            } catch (...) {
+            }
+            try {
+                index = *swapIndex(i);
+            } catch (...) {
+            }
+            QL_REQUIRE(index != nullptr, "ScenarioSimMarket::update() index " << i << " not found in sim market");
+            asd_->set(index->fixing(d), AggregationScenarioDataType::IndexFixing, i);
+        }
+
+        for (auto c : parameters_->additionalScenarioDataCcys()) {
+            if (c != parameters_->baseCcy())
+                asd_->set(fxSpot(c + parameters_->baseCcy())->value(), AggregationScenarioDataType::FXSpot, c);
+        }
+
+        asd_->set(numeraire_, AggregationScenarioDataType::Numeraire);
+
+        asd_->next();
+    }
+
+    // DLOG("ScenarioSimMarket::update done");
+}
+*/
 
 void ScenarioSimMarket::preUpdate() {
     ObservationMode::Mode om = ObservationMode::instance().mode();
