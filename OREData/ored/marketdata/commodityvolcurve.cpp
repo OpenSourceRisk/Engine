@@ -263,7 +263,7 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
                 } else {
                     QL_FAIL("CommodityVolCurve: VolatilityConfig must be QuoteBased or a Proxy");
                 }
-            if (false)
+            if (buildCalibrationInfo)
                     this->buildVolCalibrationInfo(asof, vc, curveConfigs, config);
             } catch (std::exception& e) {
                 DLOG("CommodityVolCurve: equity vol curve building failed :" << e.what());
@@ -1731,17 +1731,25 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
     try{
 
         ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigEqVols(), config.reportConfig());
+        bool reportOnDeltaGrid = *rc.reportOnDeltaGrid();
+        bool reportOnMoneynessGrid = *rc.reportOnMoneynessGrid();
+        std::vector<Real> moneyness = *rc.moneyness();
+        std::vector<std::string> deltas = *rc.deltas();
+        std::vector<Period> expiries = *rc.expiries();
+
 
         auto info = boost::make_shared<FxEqVolCalibrationInfo>();
-        info->dayCounter = to_string(dayCounter_);
-        info->calendar = to_string(calendar_).empty() ? "na" : calendar_.name();
+
         DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
         DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Fwd;
 
-        if (auto vdsc = (boost::shared_ptr<VolatilityDeltaSurfaceConfig>&)vc) {
+        if (auto vdsc = boost::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
             atmType = parseAtmType(vdsc->atmType());
             deltaType = parseDeltaType(vdsc->deltaType());
         }
+
+        info->dayCounter = to_string(dayCounter_);
+        info->calendar = to_string(calendar_).empty() ? "na" : calendar_.name();
         info->atmType = ore::data::to_string(atmType);
         info->deltaType = ore::data::to_string(deltaType);
         info->longTermAtmType = ore::data::to_string(atmType);
@@ -1750,13 +1758,7 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
         info->riskReversalInFavorOf = "na";
         info->butterflyStyle = "na";
 
-        bool reportOnDeltaGrid = *rc.reportOnDeltaGrid();
-        bool reportOnMoneynessGrid = *rc.reportOnMoneynessGrid();
-        std::vector<Real> moneyness = *rc.moneyness();
-        std::vector<std::string> deltas = *rc.deltas();
-        std::vector<Period> expiries = *rc.expiries();
         std::vector<Real> times, forwards;
-
         for (auto const& p : expiries) {
             auto d = volatility_->optionDateFromTenor(p);
             info->expiryDates.push_back(d);
