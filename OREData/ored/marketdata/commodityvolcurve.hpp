@@ -63,8 +63,8 @@ public:
     const boost::shared_ptr<QuantLib::BlackVolTermStructure>& volatility() { return volatility_; }
 
     //! Build the calibration info
-    void buildCalibrationInfo(const QuantLib::Date& asof, const CurveConfigurations& curveConfigs,
-                              const CommodityVolatilityConfig& config, const Handle<QuantExt::CommodityIndex>& commIndex);
+    void buildVolCalibrationInfo(const Date& asof, boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                                    const CurveConfigurations& curveConfigs, const CommodityVolatilityConfig& config);
     const boost::shared_ptr<FxEqVolCalibrationInfo>& calibrationInfo() const { return calibrationInfo_; }
     //@}
 
@@ -76,6 +76,7 @@ private:
     QuantLib::Calendar calendar_;
     QuantLib::DayCounter dayCounter_;
     boost::shared_ptr<FxEqVolCalibrationInfo> calibrationInfo_;
+    QuantLib::Date maxExpiry_;
 
     // Populated for delta, moneyness and possibly absolute strike surfaces and left empty for others
     QuantLib::Handle<QuantExt::PriceTermStructure> pts_;
