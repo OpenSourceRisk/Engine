@@ -1730,7 +1730,7 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
     DLOG("CommodityVolCurve: building volatility calibration info");
     try{
 
-        ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigEqVols(), config.reportConfig());
+        ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigCommVols(), config.reportConfig());
         bool reportOnDeltaGrid = *rc.reportOnDeltaGrid();
         bool reportOnMoneynessGrid = *rc.reportOnMoneynessGrid();
         std::vector<Real> moneyness = *rc.moneyness();
