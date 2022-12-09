@@ -263,7 +263,7 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
                 } else {
                     QL_FAIL("CommodityVolCurve: VolatilityConfig must be QuoteBased or a Proxy");
                 }
-            if (buildCalibrationInfo)
+            if (false)
                     this->buildVolCalibrationInfo(asof, vc, curveConfigs, config);
             } catch (std::exception& e) {
                 DLOG("CommodityVolCurve: equity vol curve building failed :" << e.what());
