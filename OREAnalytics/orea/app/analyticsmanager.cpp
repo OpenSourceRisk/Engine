@@ -159,6 +159,24 @@ Analytic::analytic_reports const AnalyticsManager::reports() {
     return reports;
 }
 
+Analytic::analytic_npvcubes const AnalyticsManager::npvCubes() {
+    Analytic::analytic_npvcubes results;
+    for (auto a : analytics_) {
+        auto rs = a.second->npvCubes();
+        results.insert(rs.begin(), rs.end());
+    }
+    return results;
+}
+
+Analytic::analytic_mktcubes const AnalyticsManager::mktCubes() {
+    Analytic::analytic_mktcubes results;
+    for (auto a : analytics_) {
+        auto rs = a.second->mktCubes();
+        results.insert(rs.begin(), rs.end());
+    }
+    return results;
+}
+
 // boost::shared_ptr<AnalyticsManager> parseAnalytics(const std::string& s,
 //     const boost::shared_ptr<InputParameters>& inputs,
 //     const boost::shared_ptr<MarketDataLoader>& marketDataLoader) {

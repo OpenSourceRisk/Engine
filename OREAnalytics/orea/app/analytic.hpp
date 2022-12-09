@@ -37,11 +37,11 @@
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
 
+#include <boost/any.hpp>
 #include <iostream>
 
 // #include <orepsensi/orea/scenario/sensitivityscenariodataplus.hpp>
 // #include <orepsensi/orea/engine/parsensitivityanalysis.hpp>
-// #include <orepsensi/orea/engine/sensitivityanalysispm.hpp>
 // #include <orepsensi/orea/engine/sensitivityanalysis.hpp>
 
 namespace ore {
@@ -52,6 +52,12 @@ public:
 
     typedef std::map<std::string, std::map<std::string, boost::shared_ptr<ore::data::InMemoryReport>>>
         analytic_reports;
+
+    typedef std::map<std::string, std::map<std::string, boost::shared_ptr<NPVCube>>>
+        analytic_npvcubes;
+
+    typedef std::map<std::string, std::map<std::string, boost::shared_ptr<AggregationScenarioData>>>
+        analytic_mktcubes;
 
     struct Configurations {
         boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams;
@@ -108,6 +114,8 @@ public:
 
     //! Result reports
     const analytic_reports& reports() const { return reports_; };
+    const analytic_npvcubes& npvCubes() const { return npvCubes_; };
+    const analytic_mktcubes& mktCubes() const { return mktCubes_; };
     const bool getWriteIntermediateReports() const { return writeIntermediateReports_; }
     void setWriteIntermediateReports(const bool flag) { writeIntermediateReports_ = flag; }
 
@@ -126,6 +134,8 @@ protected:
     boost::shared_ptr<ore::data::Portfolio> portfolio_;
 
     analytic_reports reports_;
+    analytic_npvcubes npvCubes_;
+    analytic_mktcubes mktCubes_;
 
     //! Booleans to determine if these configs are needed
     bool simulationConfig_ = false;

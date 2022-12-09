@@ -98,18 +98,39 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
     // Write reports to files in the results path
     Analytic::analytic_reports reports = analyticsManager->reports();
     for (auto a : reports) {
+        // string analytic =  boost::algorithm::to_lower_copy(a.first);
         for (auto b : a.second) {
-            if (a.second.size() == 1) {
-                boost::shared_ptr<InMemoryReport> r = b.second;
-                std::string fileName = inputs->resultsPath().string() + "/" + boost::algorithm::to_lower_copy(a.first) + ".csv";
-                LOG("Write single report for analytic " << a.first << " with label='" << b.first << "'");
-                r->toFile(fileName);
-            } else {
-                WLOG("Skipping multiple reports for analytic " << a.first);
-            }
+            // string reportName = b.first == ""
+            //     ? boost::algorithm::to_lower_copy(a.first)
+            //     : a.first + "_" + b.first;
+            string reportName = b.first;
+            std::string fileName = inputs->resultsPath().string() + "/" + reportName + ".csv";
+            boost::shared_ptr<InMemoryReport> rpt = b.second;
+            LOG("Write report " << reportName << " for analytic " << a.first);
+            rpt->toFile(fileName);
         }
     }
     
+    // Write npv cubes
+    for (auto a : analyticsManager->npvCubes()) {
+        for (auto b : a.second) {
+            // string reportName = a.first + "_" + b.first;
+            string reportName = b.first;
+            std::string fileName = inputs->resultsPath().string() + "/" + reportName + ".dat";
+            b.second->save(fileName);
+        }
+    }
+
+    // Write mkt cubes
+    for (auto a : analyticsManager->mktCubes()) {
+        for (auto b : a.second) {
+            // string reportName = a.first + "_" + b.first;
+            string reportName = b.first;
+            std::string fileName = inputs->resultsPath().string() + "/" + reportName + ".dat";
+            b.second->save(fileName);
+        }
+    }
+
     LOG("ORE done");
 
     exit(0);

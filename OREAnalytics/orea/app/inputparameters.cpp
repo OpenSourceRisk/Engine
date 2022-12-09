@@ -69,6 +69,9 @@ void OREAppInputParameters::loadParameters() {
 
     asof_ = parseDate(params_->get("setup", "asofDate"));
 
+    // Set it immediately, otherwise the scenario generator grid will be based on today's date
+    Settings::instance().evaluationDate() = asof_;
+
     resultsPath_ = outputPath;
 
     baseCurrency_ = params_->get("npv", "baseCurrency");
@@ -319,6 +322,15 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         nettingSetId_ = tmp;
 
+    tmp = params_->get("simulation", "cubeFile", false);
+    if (tmp != "") {
+        writeCube_ = true;
+    }
+
+    tmp = params_->get("simulation", "scenariodump", false);
+    if (tmp != "") {
+        writeScenarios_ = true;
+    }
 
     /**********************
      * XVA
@@ -330,6 +342,63 @@ void OREAppInputParameters::loadParameters() {
     else
         xvaBaseCurrency_ = exposureBaseCurrency_;
         
+    tmp = params_->get("xva", "cubeFile", false);
+    if (tmp != "") {
+        loadCube_ = true;
+        string cubeFile = resultsPath_ + "/" + tmp;
+        tmp = params_->get("xva", "hyperCube", false);
+        if (tmp != "")
+            hyperCube_ = parseBool(tmp);        
+        if (hyperCube)
+            cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
+        else
+            cube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
+        LOG("Load cube from file " << cubeFile);
+        cube_->load(cubeFile);
+        LOG("Cube loading done: ids=" << cube_->numIds() << " dates=" << cube_->numDates()
+            << " samples=" << cube_->samples() << " depth=" << cube_->depth());
+    }
+
+    tmp = params_->get("xva", "nettingSetCubeFile", false);
+    if (tmp != "") {
+        string cubeFile = resultsPath_ + "/" + tmp;
+        tmp = params_->get("xva", "nettingSetHyperCube", false);
+        if (tmp != "")
+            nettingSetHyperCube_ = parseBool(tmp);        
+        if (nettingSetHyperCube)
+            nettingSetCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
+        else
+            nettingSetCube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
+        LOG("Load nettingset cube from file " << cubeFile);
+        nettingSetCube_->load(cubeFile);
+        LOG("NettingSetCube loading done: ids=" << nettingSetCube_->numIds() << " dates=" << nettingSetCube_->numDates()
+            << " samples=" << nettingSetCube_->samples() << " depth=" << nettingSetCube_->depth());
+    }
+
+    tmp = params_->get("xva", "cptyCubeFile", false);
+    if (tmp != "") {
+        string cubeFile = resultsPath_ + "/" + tmp;
+        tmp = params_->get("xva", "cptyHyperCube", false);
+        if (tmp != "")
+            cptyHyperCube_ = parseBool(tmp);        
+        if (cptyHyperCube)
+            cptyCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
+        else
+            cptyCube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
+        LOG("Load cpty cube from file " << cubeFile);
+        cptyCube_->load(cubeFile);
+        LOG("CptyCube loading done: ids=" << cptyCube_->numIds() << " dates=" << cptyCube_->numDates()
+            << " samples=" << cptyCube_->samples() << " depth=" << cptyCube_->depth());
+    }
+
+    tmp = params_->get("xva", "scenarioFile", false);
+    if (tmp != "") {
+        string cubeFile = resultPath_ + "/" + tmp;
+        mktCube_ = boost::make_shared<InMemoryAggregationScenarioData>();
+        mktCube_->load(cubeFile);
+        LOG("MktCube loading done");
+    }
+    
     tmp = params_->get("xva", "flipViewXVA", false);
     if (tmp != "")
         flipViewXVA_ = parseBool(tmp);
@@ -419,12 +488,16 @@ void OREAppInputParameters::loadParameters() {
         dvaName_ = tmp;
 
     tmp = params_->get("xva", "rawCubeOutputFile", false);
-    if (tmp != "")
+    if (tmp != "") {
         rawCubeOutputFile_ = tmp;
+        rawCubeOutput_= true;
+    }
 
     tmp = params_->get("xva", "netCubeOutputFile", false);
-    if (tmp != "")
+    if (tmp != "") {
         netCubeOutputFile_ = tmp;
+        netCubeOutput_ = true;
+    }
 
     // FVA
 

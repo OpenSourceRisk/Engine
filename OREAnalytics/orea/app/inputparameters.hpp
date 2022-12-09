@@ -102,6 +102,8 @@ public:
     const std::string& scenarioGenType() { return scenarioGenType_; }
     bool storeFlows() { return storeFlows_; }
     bool storeSurvivalProbabilities() { return storeSurvivalProbabilities_; }
+    bool writeCube() { return writeCube_; }
+    bool writeScenarios() { return writeScenarios_; }
     const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& exposureSimMarketParams() { return exposureSimMarketParams_; }
     const boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData() { return scenarioGeneratorData_; }
     const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData() { return crossAssetModelData_; }
@@ -115,6 +117,11 @@ public:
      ****************************/
 
     const std::string& xvaBaseCurrency() { return xvaBaseCurrency_; }
+    bool loadCube() { return loadCube_; }
+    boost::shared_ptr<NPVCube> cube() { return cube_; }
+    boost::shared_ptr<NPVCube> nettingSetcube() { return nettingSetCube_; }
+    boost::shared_ptr<NPVCube> cptyCube() { return cptyCube_; }
+    boost::shared_ptr<AggregationScenarioData> mktCube() { mktCube_; }
     bool flipViewXVA() { return flipViewXVA_; }
     bool fullInitialCollateralisation() { return fullInitialCollateralisation_; }
     bool exposureProfiles() { return exposureProfiles_; }
@@ -137,6 +144,8 @@ public:
     const std::vector<Period>& cvaSensiGrid() { return cvaSensiGrid_; }
     Real cvaSensiShiftSize() { return cvaSensiShiftSize_; }
     const std::string& dvaName() { return dvaName_; }
+    bool rawCubeOutput() { return rawCubeOutput_; }
+    bool netCubeOutput() { return netCubeOutput_; }
     const std::string& rawCubeOutputFile() { return rawCubeOutputFile_; }
     const std::string& netCubeOutputFile() { return netCubeOutputFile_; }
     // funding value adjustment details
@@ -231,6 +240,8 @@ protected:
     std::string scenarioGenType_ = "";
     bool storeFlows_ = false;
     bool storeSurvivalProbabilities_ = false;
+    bool writeCube_ = false;
+    bool writeScenarios_ = false;
     boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> exposureSimMarketParams_;
     boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
     boost::shared_ptr<CrossAssetModelData> crossAssetModelData_;
@@ -239,6 +250,12 @@ protected:
 
     // xva
     std::string xvaBaseCurrency_ = "EUR";
+    bool loadCube_ = false;
+    bool hyperCube_ = false;
+    bool hyperNettingSetCube_ = false;
+    bool hyperCptyCube_ = false;
+    boost::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_;
+    boost::shared_ptr<AggregationScenarioData> mktCube_;
     bool flipViewXVA_ = false;
     bool fullInitialCollateralisation_ = false;
     bool exposureProfiles_ = true;
@@ -261,6 +278,8 @@ protected:
     std::vector<Period> cvaSensiGrid_;
     Real cvaSensiShiftSize_ = 0.0001;
     std::string dvaName_ = "";
+    bool rawCubeOutput_ = false;
+    bool netCubeOutput_ = false;
     std::string rawCubeOutputFile_ = "";
     std::string netCubeOutputFile_ = "";
     // funding value adjustment details
@@ -308,7 +327,7 @@ public:
     const std::string& curvesOutputFileName() { return curvesOutputFileName_; }
     const std::string& scenarioDumpFileName() { return scenarioDumpFileName_; }
     const std::string& cubeFileName() { return cubeFileName_; }
-    const std::string& aggregationScenarioDataFileName() { return aggregationScenarioDataFileName_; }
+    const std::string& mktCubeFileName() { return mktCubeFileName_; }
     const std::string& rawCubeFileName() { return rawCubeFileName_; }
     const std::string& netCubeFileName() { return netCubeFileName_; }
 
@@ -322,7 +341,7 @@ private:
     std::string curvesOutputFileName_;
     std::string scenarioDumpFileName_;
     std::string cubeFileName_;
-    std::string aggregationScenarioDataFileName_;
+    std::string mktCubeFileName_;
     std::string rawCubeFileName_;
     std::string netCubeFileName_;
 };

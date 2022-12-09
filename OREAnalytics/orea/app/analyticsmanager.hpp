@@ -52,6 +52,8 @@ public:
     void addAnalytic(const std::string& label, const boost::shared_ptr<Analytic>& analytic);
 
     Analytic::analytic_reports const reports();
+    Analytic::analytic_npvcubes const npvCubes();
+    Analytic::analytic_mktcubes const mktCubes();
 
 private:
     std::map<std::string, boost::shared_ptr<Analytic>> analytics_;
