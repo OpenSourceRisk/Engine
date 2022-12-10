@@ -1,0 +1,35 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="IborFallbackConfig">
+    <xs:complexType>
+      <xs:all>
+        <xs:element type="iborFallbackGlobalSettings" name="GlobalSettings" minOccurs="0"/>
+        <xs:element type="iborFallbackFallbacks" name="Fallbacks" minOccurs="0"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="iborFallbackGlobalSettings">
+    <xs:all>
+      <xs:element type="bool" name="EnableIborFallbacks"/>
+      <xs:element type="bool" name="UseRfrCurveInTodaysMarket"/>
+      <xs:element type="bool" name="UseRfrCurveInSimulationMarket"/>
+    </xs:all>
+  </xs:complexType>  
+  
+  <xs:complexType name="iborFallbackFallbacks">
+    <xs:sequence>
+      <xs:element type="iborFallbackFallback" name="Fallback" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="iborFallbackFallback">
+    <xs:all>
+      <xs:element type="indexNameType" name="IborIndex"/>
+      <xs:element type="indexNameType" name="RfrIndex"/>
+      <xs:element type="xs:float" name="Spread"/>
+      <xs:element type="date" name="SwitchDate"/>
+    </xs:all>
+  </xs:complexType>
+
+</xs:schema>

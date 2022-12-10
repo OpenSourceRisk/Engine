@@ -1,0 +1,26 @@
+<CurveConfiguration>
+  <YieldCurves>
+    <YieldCurve>
+      <CurveId>USD-SOFR</CurveId>
+      <CurveDescription />
+      <Currency>USD</Currency>
+      <DiscountCurve>USD-SOFR</DiscountCurve>
+      <Segments>
+        <Simple>
+          <Type>Future</Type>
+          <Quotes>
+            <Quote>OI_FUTURE/PRICE/USD/2020-06/CME/3M</Quote>
+            <Quote>OI_FUTURE/PRICE/USD/2020-09/CME/3M</Quote>
+            <Quote>OI_FUTURE/PRICE/USD/2020-12/CME/3M</Quote>
+          </Quotes>
+          <Conventions>USD-SOFR-3M-FUTURES</Conventions>
+          <ProjectionCurve>USD-SOFR</ProjectionCurve>
+        </Simple>
+      </Segments>
+      <InterpolationVariable>Discount</InterpolationVariable>
+      <InterpolationMethod>LogLinear</InterpolationMethod>
+      <YieldCurveDayCounter>A365</YieldCurveDayCounter>
+      <Tolerance>0.000000000001</Tolerance>
+    </YieldCurve>
+  </YieldCurves>
+</CurveConfiguration>

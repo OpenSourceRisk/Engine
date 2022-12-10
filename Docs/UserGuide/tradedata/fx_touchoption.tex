@@ -1,0 +1,102 @@
+\subsubsection{FX Touch Option}
+
+The \lstinline!FxTouchOptionData!  node is the trade data container for the \emph{FxTouchOption} trade type.   The
+\lstinline!FxTouchOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
+specific to the FX Touch Option. 
+
+An FX Touch Option pays a given cash amount (PayoffAmount) at expiry or at hit if the underlying fx rate has hit a barrier (UpAndIn, DownAndIn - called One Touch) resp. has not hit a barrier (UpAndOut, DownAndOut - called No Touch) using continuous monitoring between start and expiry date. No rebates are supported. 
+
+The structure of an example \lstinline!FxTouchOptionData! node for an FX Touch Option is shown in Listing
+\ref{lst:fxtouchoption_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <FxTouchOptionData>
+            <OptionData>
+                <LongShort>Long</LongShort>
+                <PayOffAtExpiry>true</PayOffAtExpiry>
+                <ExerciseDates>
+                 <ExerciseDate>2021-12-14</ExerciseDate>
+                </ExerciseDates>
+                ...                 
+            </OptionData>
+            <BarrierData>
+             <Type>DownAndOut</Type>
+             <Levels>
+              <Level>0.009</Level>
+             </Levels>
+            </BarrierData>
+            <ForeignCurrency>JPY</ForeignCurrency>
+            <DomesticCurrency>USD</DomesticCurrency>
+            <PayoffCurrency>USD</PayoffCurrency>
+            <PayoffAmount>100000</PayoffAmount>            
+            <StartDate>2019-01-25</StartDate>
+            <FXIndex>FX-TR20H-USD-JPY</FXIndex>            
+            <Calendar>NYB,TKB</Calendar>
+        </FxTouchOptionData>
+\end{minted}
+\caption{FX Touch Option data}
+\label{lst:fxtouchoption_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!FxTouchOptionData!  node follow below.
+
+\begin{itemize}
+
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. The \lstinline!OptionType! sub-node
+is not required and is inferred from the \lstinline!BarrierData! type (i.e.\ \emph{Call} for an Up barrier, and \emph{Put} for a Down barrier).
+The relevant fields in the \lstinline!OptionData! node for an FxTouchOption are:
+
+\begin{itemize}
+\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}.
+
+\item  \lstinline!PayOffAtExpiry! [Optional] \emph{true} for payoff at expiry and \emph{false} for payoff at hit.
+For UpAndOut and DownAndOut barrier, only payoff at expiry ( \emph{true}) is supported. Defaults to  \emph{true} if left blank or omitted. This field is ignored in pricing, and the option payoff will be calculated at expiry. This field only has an impact on the description of the trade economics. The \emph{GenericBarrierOption} can also be used to `replicate' the \emph{FXTouchOption} with payoff at hit if required.
+
+\item An \lstinline!ExerciseDates! node where exactly one \lstinline!ExerciseDate! date element must be given.
+
+\item A \lstinline!PaymentData! [Optional] node can be added which defines the settlement of the option payoff. If the option is payoff at hit,
+(i.e.\ \lstinline!PayoffAtExpiry! is \emph{false}), the option payment data must be rules-based, and the \lstinline!RelativeTo! sub-node of (\lstinline!Rules!) must be
+set to \emph{Exercise}.
+
+\item \lstinline!Premiums! [Optional]: Option premium amounts paid by the option buyer to the option seller.
+
+Allowable values:  See section \ref{ss:premiums}
+
+\end{itemize}
+
+\item \lstinline!BarrierData!: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
+Level specified in BarrierData should be quoted as the amount in DomesticCurrency (sold currency) per unit ForeignCurrency (bought currency). Note that the level stays quoted as DomesticCurrency per unit ForeignCurrency, regardless of barrier type.
+
+\item \lstinline!ForeignCurrency!: The foreign (bought) currency of the FX touch option.  
+
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item \lstinline!DomesticCurrency!: The domestic (sold) currency of the FX touch option.
+
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item \lstinline!PayoffCurrency!: The payoff currency of the FX touch option is the currency of the payoff amount. 
+
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item \lstinline!PayoffAmount!: The fixed payoff amount expressed in payoff currency. It is cash-or-nothing payoff that depends on the option being in or out of the money, and whether the barrier has been touched.
+
+Allowable values:  Any positive real number.
+
+\item \lstinline!StartDate! [Optional]: The start date for checking if a barrier has been breached prior to today's date.  If omitted or left blank no check is made and it is assumed no barrier has been breached in the past. Has no impact if set to today's date or a date in the future.
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item \lstinline!FXIndex! [Optional]: A reference to an FX Index source to check if the barrier has been breached. Required if StartDate is set to a date prior to today's date, otherwise optional, and can be omitted but not left blank.
+
+Allowable values: The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}.  
+
+\item \lstinline!Calendar! [Optional]: The calendar associated with the FX Index. Required if StartDate is set to a date prior to today's date, otherwise optional.
+
+Allowable values: See Table \ref{tab:calendar} Calendar.
+\end{itemize}
+
+Note that FX Touch Options also cover Precious Metals, i.e. with
+currencies XAU, XAG, XPT, XPD, and Cryptocurrencies,  see supported Cryptocurrencies in Table \ref{tab:currency}.

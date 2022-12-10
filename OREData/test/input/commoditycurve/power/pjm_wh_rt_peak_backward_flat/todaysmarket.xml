@@ -1,0 +1,7 @@
+<TodaysMarket>
+  <DiscountingCurves/>
+  <IndexForwardingCurves/>
+  <CommodityCurves id="default">
+    <CommodityCurve name="ICE:PDQ">Commodity/USD/ICE:PDQ</CommodityCurve>
+  </CommodityCurves>
+</TodaysMarket>

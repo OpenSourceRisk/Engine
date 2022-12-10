@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  qrm_latex:
+    image: qrm/latex:ubuntu
+    build:
+      context: .
+      dockerfile: Dockerfile-Latex
+

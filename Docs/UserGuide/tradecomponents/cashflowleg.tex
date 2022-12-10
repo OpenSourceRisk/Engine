@@ -1,0 +1,36 @@
+\subsubsection{Cashflow Leg Data}
+\label{ss:cashflowlegdata}
+
+A Cashflow leg is used to represent one or more custom cashflows, with specified dates and amounts.
+Listing \ref{lst:cashflowlegdata} shows an example for a leg of type Cashflow. 
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <Payer>false</Payer>
+        <LegType>Cashflow</LegType>
+        <Currency>EUR</Currency>
+        <PaymentConvention>ModifiedFollowing</PaymentConvention>
+        <CashflowData>
+          <Cashflow>
+            <Amount date="2024-12-15">105000</Amount>
+          </Cashflow>
+        </CashflowData>
+      </LegData>
+\end{minted}
+\caption{Cashflow leg data}
+\label{lst:cashflowlegdata}
+\end{listing}
+
+The CashflowData block contains the following elements:
+
+\begin{itemize}
+\item Cashflow: This node contains child elements of type \lstinline!Amount!, each representing a cashflow. Each child element should include the date of the cashflow using the form: 
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Amount date="YYYY-MM-DD">[amount]</Amount>
+\end{minted}
+
+Allowable values:  Each child element can take any real number. 
+
+\end{itemize}

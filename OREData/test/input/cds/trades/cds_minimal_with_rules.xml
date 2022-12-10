@@ -1,0 +1,39 @@
+<Portfolio>
+  <Trade id="cds_minimal_with_rules">
+    <TradeType>CreditDefaultSwap</TradeType>
+    <Envelope>
+      <CounterParty>CP</CounterParty>
+      <NettingSetId>NS</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CreditDefaultSwapData>
+      <IssuerId>CPTY_A</IssuerId>
+      <CreditCurveId>CreditCurve_A</CreditCurveId>
+      <ProtectionStart>2016-02-03</ProtectionStart>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>true</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>2000000.00</Notional>
+        </Notionals>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.01</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-03</StartDate>
+            <EndDate>2017-03-20</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>WeekendsOnly</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>CDS2015</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </CreditDefaultSwapData>
+  </Trade>
+</Portfolio>

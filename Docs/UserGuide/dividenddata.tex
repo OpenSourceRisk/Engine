@@ -1,0 +1,67 @@
+%========================================================
+\section{Dividends History}\label{sec:dividends}
+%========================================================
+Historical dividend payments data in the {\tt dividends.txt} file is given in three columns; Equity Name, Ex-Dividend Date and
+Dividend Amount in the Currency of the Equity Curve. Columns are separated by semicolons ";" or blanks.
+Dividends are used in some trades with path dependent features.
+
+\begin{itemize}
+
+\item Ex-Dividend Date: The day the stock starts trading without the value of the dividend payment
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item Equity Name: The name of the dividend paying equity.
+
+  Allowable values are the names of the Equity Curves defined in {\tt curveconfig.xml}.
+
+\item Dividend Amount: The amount of the dividend payment
+  date. 
+
+  Allowable values: Any real number (not expressed as a percentage).
+\end{itemize}
+
+An excerpt of a fixings file is shown in Listing \ref{lst:dividends_file}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+20130411 DAI:GR 2.2
+20140410 DAI:GR 2.25
+20150402 DAI:GR 2.45
+20160407 DAI:GR 3.25
+20170330 DAI:GR 3.25
+20180406 DAI:GR 3.65
+20190523 DAI:GR 3.25
+20120815 HSBA:LN 5.5538
+20121024 HSBA:LN 5.604
+20130320 HSBA:LN 11.585
+20130522 HSBA:LN 6.58
+20130821 HSBA:LN 6.2033
+20131023 HSBA:LN 6.102
+20140312 HSBA:LN 11.2919
+20140521 HSBA:LN 5.8768
+20140820 HSBA:LN 6.1622
+20141023 HSBA:LN 6.3633
+20150305 HSBA:LN 13.4
+20150521 HSBA:LN 6.3709
+20150813 HSBA:LN 6.4436
+20151022 HSBA:LN 6.6015
+20160303 HSBA:LN 14.7908
+20160519 HSBA:LN 7.5421
+20160811 HSBA:LN 7.6633
+20161020 HSBA:LN 8.0417
+20170223 HSBA:LN 16.6757
+20170518 HSBA:LN 7.8636
+20170803 HSBA:LN 7.577
+20171012 HSBA:LN 7.6405
+20180222 HSBA:LN 14.762
+20180517 HSBA:LN 7.5502
+20180816 HSBA:LN 7.632
+20181011 HSBA:LN 7.78
+20190221 HSBA:LN 15.9271
+20190516 HSBA:LN 7.8368
+\end{minted}
+\caption{Excerpt of a dividends file}
+\label{lst:dividends_file}  
+\end{listing}

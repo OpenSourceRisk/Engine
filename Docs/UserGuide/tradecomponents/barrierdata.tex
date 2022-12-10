@@ -1,0 +1,113 @@
+\subsubsection{Barrier Data}
+\label{ss:barrier_data} 
+
+This trade component node is used within the trade data containers listed in table \ref{tab:barrierstyles}. Note that not
+every trade type allows for all barrier styles, the allowable combinations are listed in in table \ref{tab:barrierstyles}.
+
+\begin{table}
+  \centering
+  \begin{tabular}{l | l}
+    Trade Data Container & Supported Barrier Styles \\ \hline
+    FxBarrierOptionData & \emph{American} \\
+    FxDigitalBarrierOptionData & \emph{American} \\
+    FxEuropeanBarrierOptionData & \emph{European} \\
+    FxTouchOptionData & \emph{American} \\
+    FxDoubleTouchOptionData & \emph{American} \\
+    FxDoubleBarrierOptionData & \emph{American} \\
+    FxKIKOBarrierOptionData & \emph{American}
+\end{tabular}
+  \caption{Supported barrier styles per trade data container}
+  \label{tab:barrierstyles}
+\end{table}
+
+The barrier data element is specified as in listing \ref{lst:barrier_data}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+            <BarrierData>
+                <Type>UpAndIn</Type>
+                <Style>American</Style>
+                <Levels>
+                    <Level>1.2</Level>
+                </Levels>
+                <Rebate>100000</Rebate>
+                <RebateCurrency>USD</RebateCurrency>
+                <RebatePayTime>atExpiry</RebatePayTime>
+            </BarrierData>
+\end{minted}
+\caption{Barrier data}
+\label{lst:barrier_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!BarrierData! node follow below.
+
+\begin{itemize}
+\item Type: Specifies barrier type.
+The allowable values are given in Table \ref{tab:barriertype}. 
+
+\begin{table}[H]
+\centering
+  \begin{tabular} {|l|p{12cm}|}
+    \hline
+ \bfseries{Type} & \bfseries{Description} \\
+    \hline
+ \emph{UpAndOut} & The underlying price starts below the barrier level and has to move up for the option to be knocked out.\\ \hline
+ \emph{DownAndOut} & The underlying price starts above the barrier level and has to move down for the option to become knocked out. \\ \hline
+ \emph{UpAndIn} & The underlying price starts below the barrier level and has to move up for the option to become activated. \\ \hline
+ \emph{DownAndIn} & The underlying price starts above the barrier level and has to move down for the option to become activated.\\ \hline
+ \emph{KnockOut} & For double level only. The underlying price starts between the barrier levels and has to move up
+ or down for the option to be knocked out. \\ \hline
+ \emph{KnockIn} & For double level only. The underlying price starts between the barrier levels and has to move up
+ or down for the option to become activated. \\ \hline
+ % TODO move to two barriers for double barrier options
+ % KnockOut & Deprecated. For double level only. The underlying price starts between the barrier levels and has to move up
+ % or down for the option to be knocked out. The recommended representation is via two barriers UpAndOut, DownAndOut. \\ \hline
+ % KnockIn & Deprecated. For double level only. The underlying price starts between the barrier levels and has to move up
+ % or down for the option to become activated. The recommended representation is via two barriers UpAndIn, DownAndIn. \\ \hline
+ \emph{CumulatedProfitCap} & For TaRFs only. The instrument terminates once the generated profit reaches the CumulatedProfitCap. \\ \hline
+ \emph{FixingCap} & For TaRFs only. The instrument terminates once the number of observations where a profit is generated reaches the FixingCap.\\ \hline
+ \emph{FixingFloor} & For Accumulators only. The first $n$ fixings are guaranteed regardless of whether the trade has been knocked out already.\\ \hline
+  \end{tabular}
+  \caption{Allowable Type Values.}
+  \label{tab:barriertype}
+\end{table}
+
+\item Style[Optional]: Specifies the monitoring style of the barrier. Optional, if not given, defaults to the supported barrier
+  style (see table \ref{tab:barrierstyles} and if both \emph{American} and \emph{European} barriers are supported, defaults to
+  \emph{American}. \\
+
+Allowable values: \emph{American, European}.
+
+\item Level: The barrier level, defined as the amount in sold (domestic) currency per unit bought (foreign) currency. Double barrier instruments can have two \lstinline!Level! elements, and these must be in ascending order. \\
+
+Allowable values:  Any positive real number.
+
+\item Rebate[Optional]: The barrier rebate is a fixed amount, expressed in domestic / sold currency paid out to the
+  option holder if a barrier option expires inactive, i.e. it is not knocked in/out.   Note that \lstinline!Rebate! is
+  supported for
+
+\begin{itemize}
+  \item FxBarrierOptionData
+  \item FxDigitalBarrierOptionData
+  \item FxDoubleBarrierOptionData
+  \item FxEuropeanBarrierOptionData
+\end{itemize}
+
+ only. If defined for several ``in'' barriers, the amounts must be identical across all barrier definitions (because the
+ rebate amount is paid if none of the ``in'' barrier is touched and can therefore not depend on the particular
+ barrier). Also, the RebatePayTime must be \emph{atExpiry} for ``in'' barriers obviously. \\
+
+Allowable values:  Any positive real number. Defaults to zero if omitted. Cannot be left blank.
+
+\item RebateCurrency [Optional]: The currency in which the rebate amount is paid. Defaults to the natural pay currency
+  of the trade.
+
+  Allowable Values: See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item RebatePayTime [Optional]: For ``in'' barriers only atExpiry is allowed. For ``out'' barriers, both atExpiry and
+  atHit is possible. If not given, defaults to ``atExpiry''. 
+
+  Allowable Values: \emph{atExpiry}, \emph{atHit}
+
+\end{itemize}
+

@@ -1,0 +1,122 @@
+\subsubsection{Credit Default Swap / Quanto Credit Default Swap}
+
+A credit default swap, trade type \lstinline!CreditDefaultSwap!, is set up using a \lstinline!CreditDefaultSwapData! block as shown in listing \ref{lst:cdsdata} or \ref{lst:cdsdata_with_ref_info}. The \lstinline!CreditDefaultSwapData! block must include either a \lstinline!CreditCurveId! element or a \lstinline!ReferenceInformation! node. 
+
+The {\tt LegData} sub-node must be a fixed leg, and  represents the recurring premium payments. The direction of the fixed leg payments define if the CDS is for bought (\lstinline!Payer!: \emph{true}) or sold (\lstinline!Payer!: \emph{false}) protection.
+
+The elements have the following meaning:
+
+\begin{itemize}
+\item IssuerId [Optional]: An identifier for the reference entity of the CDS. For informational purposes and not used for pricing.
+\item CreditCurveId: The identifier of the reference entity defining the default curve used for pricing. For the allowable values, see \lstinline!CreditCurveId! for credit trades - single name in Table \ref{tab:equity_credit_data}. A \lstinline!ReferenceInformation! node may be used in place of this \lstinline!CreditCurveId! node.
+\item ReferenceInformation: This node may be used as an alternative to the \lstinline!CreditCurveId! node to specify the reference entity, tier, currency and documentation clause for the CDS. This in turn defines the credit curve used for pricing. The \lstinline!ReferenceInformation! node is described in further detail in Section \ref{ss:cds_reference_information}.
+\item SettlesAccrual [Optional]: Whether or not the accrued coupon is due in the event of a default. This defaults to \lstinline!true! if not provided.
+
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+
+\item ProtectionPaymentTime [Optional]: Controls the payment time of protection and premium accrual payments in case of
+  a default event. Defaults to \lstinline!atDefault!. 
+  
+Allowable values: \lstinline!atDefault!, \lstinline!atPeriodEnd!, \lstinline!atMaturity!. Overrides the \lstinline!PaysAtDefaultTime! node
+  
+\item PaysAtDefaultTime [Deprecated]: \emph{true} is equivalent to ProtectionPaymentTime = atDefault,
+  \emph{false} to ProtectionPaymentTime = atPeriodEnd. Overridden by the \lstinline!ProtectionPaymentTime! node if set
+  
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  
+\item ProtectionStart [Optional]: The first date where a credit event will trigger the contract. This defaults to the first date in the schedule if it is not provided. Must be set to a date before or on the first date in the schedule if the \lstinline!LegData! has a rule that is not one of \lstinline!CDS! or \lstinline!CDS2015!. In general, for standard CDS traded after the CDS Big Bang in 2009, the protection start date is equal to the trade date. Therefore, typically the \lstinline!ProtectionStart! should be set to the trade date of the CDS.
+\item UpfrontDate [Optional]: Settlement date for the UpfrontFee if an UpfrontFee is provided. If an UpfrontFee is provided and it is non-zero, \lstinline!UpfrontDate! is required. The \lstinline!UpfrontDate!, if provided, must be on or after the ProtectionStart date. Typically, it is 3 business days after the CDS contract trade date.
+\item UpfrontFee [Optional]: The upfront payment, expressed as a percentage in decimal form, to be multiplied by notional amount.  If an UpfrontDate is provided, an UpfrontFee must also be provided. The UpfrontFee can be omitted but cannot be left blank.
+The UpfrontFee can be negative. The UpfrontFee is treated as an amount payable by the protection buyer to the protection seller. A negative value for the UpfrontFee indicates that the UpfrontFee is being paid by the protection seller to the protection buyer.
+
+Allowable values: Any real number, expressed in decimal form as a percentage of the notional.  E.g. an UpfrontFee of \emph{0.045} and a notional of 10M, would imply an upfront fee amount of 450K.
+
+\item FixedRecoveryRate [Optional]: This node holds the fixed recovery rate if the CDS is a fixed recovery CDS. For a standard CDS, this field should be omitted.
+\item TradeDate [Optional]: The CDS trade date. If omitted, the trade date is deduced from the protection start date. If the schedule provided in the \lstinline!LegData! has a rule that is either \lstinline!CDS! or \lstinline!CDS2015!, the trade date is set equal to the protection start date. This is the standard for CDS traded after the CDS Big Bang in 2009. Otherwise, the trade date is set equal to the protection start date minus 1 day as it was standard before the CDS Big Bang to have protection starting on the day after the trade date.
+\item CashSettlementDays [Optional]: The number of business days between the trade date and the cash settlement date. For standard CDS, this is 3 business days. If omitted, this defaults to 3.
+\item RebatesAccrual [Optional]: The protection seller pays the accrued scheduled current coupon at the start of the contract. The rebate date is not provided but computed to be two days after protection start. This defaults to \lstinline!true! if not provided.
+
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+\end{itemize}
+
+The \lstinline!LegData! block then defines the CDS premium leg structure. This premium leg must be be of type \lstinline!Fixed! as described in Section \ref{ss:fixedleg_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <CreditDefaultSwapData>
+      <IssuerId>CPTY_A</IssuerId>
+      <CreditCurveId>RED:008CA0|SNRFOR|USD|MR14</CreditCurveId>
+      <SettlesAccrual>Y</SettlesAccrual>
+      <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
+      <ProtectionStart>20160206</ProtectionStart>
+      <UpfrontDate>20160208</UpfrontDate>
+      <UpfrontFee>0.0</UpfrontFee>
+      <LegData>
+            <LegType>Fixed</LegType>
+            <Payer>false</Payer>
+            ...
+      </LegData>
+    </CreditDefaultSwapData>
+\end{minted}
+\caption{CreditDefaultSwap Data}
+\label{lst:cdsdata}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CreditDefaultSwapData>
+  <ReferenceInformation>
+    <ReferenceEntityId>RED:008CA0</ReferenceEntityId>
+    <Tier>SNRFOR</Tier>
+    <Currency>USD</Currency>
+    <DocClause>MR14</DocClause>
+  </ReferenceInformation>
+  <LegData>
+    ...
+  </LegData>
+</CreditDefaultSwapData>
+\end{minted}
+\caption{\lstinline!CreditDefaultSwapData! with \lstinline!ReferenceInformation!}
+\label{lst:cdsdata_with_ref_info}
+\end{listing}
+
+A quanto credit default swap is a credit default swap with different denomination and settlement currencies. Listing
+\ref{lst:quanto_cds} shows an Example: The trade has a notional of 50 million BRL and pays a $6\%$ premium. The premuim
+amounts are converted using the FX-TR20H-USD-BRL fixing two days before they are settled in USD. The hypothetical
+protection amounts computed for pricing purposes are converted to USD in a similar fashion.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <LegData>
+      <LegType>Fixed</LegType>
+      <Payer>true</Payer>
+      <!-- This is the settlement currency -->
+      <Currency>USD</Currency>
+      <!-- This is the BRL notional -->
+      <Notionals>
+        <Notional>50000000</Notional>
+      </Notionals>
+      <!-- The FX index used to convert BRL amounts to the settlement ccy USD -->
+      <Indexings>
+        <Indexing>
+          <Index>FX-TR20H-USD-BRL</Index>
+          <FixingDays>2</FixingDays>
+          <FixingCalendar>USD,BRL</FixingCalendar>
+          <IsInArrears>true</IsInArrears>
+        </Indexing>
+      </Indexings>
+      ...
+      <FixedLegData>
+        <Rates>
+          <Rate>0.06</Rate>
+        </Rates>
+      </FixedLegData>
+     ...
+    </LegData>
+\end{minted}
+\caption{Quanto CDS CreditDefaultSwap Data}
+\label{lst:quanto_cds}
+\end{listing}

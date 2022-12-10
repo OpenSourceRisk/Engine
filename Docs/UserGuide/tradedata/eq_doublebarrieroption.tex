@@ -1,0 +1,122 @@
+\subsubsection{Equity Double Barrier Option}
+
+The \lstinline!EquityDoubleBarrierOptionData!  node is the trade data container for the \emph{EquityDoubleBarrierOption} trade type.  
+
+An Equity Double Barrier Option is a path-dependent option whose existence depends upon
+an Equity spot rate reaching one of the two pre-set barrier levels. Exercise is European, and barriers are American (continuously monitored).
+
+Equity Double Barrier options can be knock-in or knock-out:
+\begin{itemize}
+\item A knock-in option is a barrier option that only comes into existence/becomes active
+when the Equity spot rate reaches the one of the barrier level at any point in the
+option's life. Once a barrier is knocked-in, the option will not cease to exist until
+the option expires and effectively it becomes a Vanilla Equity Option.
+\item A knock-out option starts its life active, but ceases to exist/becomes inactive, if
+the one of the barriers is reached during the life of the option.
+\end{itemize}
+
+The barrier levels of an Equity Double Barrier Option should be quoted in the currency of 
+the underlying Equity spot price. The \lstinline!EquityDoubleBarrierOptionData!  node includes
+one \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade
+component sub-node plus elements specific to the Equity Double Barrier Option.
+The structure of an example \lstinline!EquityDoubleBarrierOptionData! node for a Equity Double
+Barrier Option is shown in Listing
+\ref{lst:EquityDoubleBarrieroption_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <EquityDoubleBarrierOptionData>
+        <OptionData>
+            <LongShort>Long</LongShort>
+            <OptionType>Call</OptionType>
+            <Style>European</Style>
+            <Settlement>Cash</Settlement>
+            <ExerciseDates>
+                <ExerciseDate>2021-01-29</ExerciseDate>
+            </ExerciseDates>
+        </OptionData>
+        <BarrierData>
+            <Type>KnockOut</Type>
+            <Levels>
+                <Level>3000.00</Level>
+                <Level>3500.00</Level>
+            </Levels>
+        </BarrierData>
+        <Name>RIC:.SPX</Name>
+        <Currency>USD</Currency>
+		<StrikeData>
+			<StrikePrice>
+				<Value>3200.00</Value>
+				<Currency>USD</Currency>
+			</StrikePrice>
+		</StrikeData>
+        <Quantity>1000</Quantity>
+        <StartDate>2019-12-27</StartDate>
+        <Calendar>US-NYSE</Calendar>
+        <EQIndex>EQ-RIC:.SPX</EQIndex>
+    </EquityDoubleBarrierOptionData>
+\end{minted}
+\caption{Equity Double Barrier Option data}
+\label{lst:EquityDoubleBarrieroption_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the
+\lstinline!EquityDoubleBarrierOptionData! node follow below.
+
+\begin{itemize}
+
+
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. 
+The relevant fields in the \lstinline!OptionData! node for an EquityDoubleBarrierOption are:
+
+\begin{itemize}
+\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}.
+
+\item \lstinline!OptionType! The allowable values are \emph{Call} or \emph{Put}.
+
+\item  \lstinline!Style! The Equity Double Barrier Option type allows for \emph{European}
+option exercise style only.
+
+\item  \lstinline!Settlement! The allowable values are \emph{Cash} or \emph{Physical}.
+
+\item An \lstinline!ExerciseDates! node where exactly one \lstinline!ExerciseDate! date
+element must be given.
+
+\item Optional \lstinline!PremiumAmount!,  \lstinline!PremiumCurrency!, and
+\lstinline!PremiumPayDate! fields to specify the Equity Double Barrier Option premium. 
+
+\end{itemize}
+
+\item BarrierData: This is a trade component sub-node outlined in section
+\ref{ss:barrier_data}. Two levels in ascending order should be defined in \lstinline!Levels!.
+\lstinline!Type! should be \emph{KnockOut} or \emph{KnockIn}.
+
+Allowable values: See Table \ref{tab:calendar} Calendar.
+
+\item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}.
+
+\item Currency: The currency of the equity option.
+
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.   
+    
+\item StrikeData: A node containing the strike in \lstinline!Value! and the currency in which both the underlying and the strike are quoted in \lstinline!Currency!.
+Allowable values: Only supports \lstinline!StrikePrice! as described in Section \ref{ss:strikedata}.
+    
+\item Quantity: The number of units of the underlying covered by the transaction.
+    
+Allowable values:  Any positive real number.
+
+\item StartDate [Optional]: The start date for checking if a barrier has been breached prior to
+today's date.  If omitted or left blank no check is made and it is assumed no barrier has been
+breached in the past. Has no impact if set to today's date or a date in the future.
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item Calendar [Optional]: The calendar associated with the Equity Index. Required if StartDate is set to a date prior to today's date, otherwise optional.
+
+\item EQIndex [Optional]: A reference to an Equity Index source to check if the barrier has been breached. Required if StartDate is set to a date prior to today's date, otherwise optional and can be omitted but not left blank.
+
+Allowable values:  The format of the Equity Index is``EQ-RIC:Code''.
+
+\end{itemize}

@@ -1,0 +1,37 @@
+\subsubsection{CDS Reference Information}
+\label{ss:cds_reference_information} 
+
+This trade component can be used to define the reference entity, tier, currency and documentation clause in credit derivative trades. For example, it can be used in the \lstinline!CreditDefaultSwapData! section in a CDS trade and in the \lstinline!BasketData! section in credit derivatives involving more than one underlying reference entity. The value for each of these fields is generally agreed and specified in the credit derivative contract and they determine the credit curve that is used in pricing the trade.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<ReferenceInformation>
+  <ReferenceEntityId>...</ReferenceEntityId>
+  <Tier>...</Tier>
+  <Currency>...</Currency>
+  <DocClause>...</DocClause>
+</ReferenceInformation>
+\end{minted}
+\caption{CDS reference information node}
+\label{lst:cds_reference_information}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!ReferenceInformation! node are as follows:
+
+\begin{itemize}
+
+\item \lstinline!ReferenceEntityId!:
+This is typically a six digit Markit RED code specifying the underlying reference entity with the prefix \lstinline!RED:! e.g. \lstinline!RED:008CA0!.
+
+\item \lstinline!Tier!:
+The debt tier that is applicable for the specified reference entity in the credit derivative. Table \ref{tab:tier_data} provides the allowable values.
+
+\item \lstinline!Currency!:
+The currency that is applicable for the specified reference entity in the credit derivative. Table \ref{tab:currency} provides the allowable values.
+
+\item \lstinline!DocClause!:
+The documentation clause that is applicable for the specified reference entity in the credit derivative. This defines what constitutes a credit event for the contract as well as any limitations on the deliverable debt in the event of a credit event. Table \ref{tab:docclause_data} provides the allowable values.
+
+\end{itemize}
+

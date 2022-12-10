@@ -1,0 +1,15 @@
+<Conventions>
+  <Deposit>
+    <Id>MXN-DEPOSIT</Id>
+    <IndexBased>true</IndexBased>
+    <Index>MXN-TIIE</Index>
+  </Deposit>
+  <Swap>
+    <Id>MXN-TIIE-28D-SWAP</Id>
+    <FixedCalendar>MXN</FixedCalendar>
+    <FixedFrequency>Lunarmonth</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
+    <Index>MXN-TIIE-28D</Index>
+  </Swap>
+</Conventions>

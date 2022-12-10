@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CalendarAdjustments>
+    <!-- we check that new calendars can't be declared using a joint calendar as a base-->
+    <Calendar name= "US_TARGET">
+        <BaseCalendar>JoinHolidays(US,TARGET)</BaseCalendar>
+        <AdditionalHolidays>
+            <Date>2019-06-20</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+</CalendarAdjustments>

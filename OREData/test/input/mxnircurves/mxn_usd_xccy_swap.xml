@@ -1,0 +1,89 @@
+<Portfolio>
+  <Trade id="mxn_usd_xccy_swap">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CP</CounterParty>
+      <NettingSetId>NS</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100000000</Notional>
+          <Exchanges>
+            <NotionalInitialExchange>true</NotionalInitialExchange>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
+          </Exchanges>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>USD-LIBOR-1M</Index>
+          <Spreads>
+            <Spread>0.0038</Spread>
+          </Spreads>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <!-- 2 MXN,USD business days after 2019-04-17 -->
+            <StartDate>2019-04-23</StartDate>
+            <!-- 10Y i.e. 10 x 13 28D coupons = 3640D -->
+            <EndDate>2029-04-10</EndDate>
+            <Tenor>28D</Tenor>
+            <Calendar>MXN,USD</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Backward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>false</Payer>
+        <Currency>MXN</Currency>
+        <Notionals>
+          <!-- 18.8273 x USD 100 million -->
+          <Notional>1882730000</Notional>
+          <Exchanges>
+            <NotionalInitialExchange>true</NotionalInitialExchange>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
+          </Exchanges>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>MXN-TIIE-28D</Index>
+          <Spreads>
+            <Spread>0.000000</Spread>
+          </Spreads>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>1</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <!-- 2 MXN,USD business days after 2019-04-17 -->
+            <StartDate>2019-04-23</StartDate>
+            <!-- 10Y i.e. 10 x 13 28D coupons = 3640D -->
+            <EndDate>2029-04-10</EndDate>
+            <Tenor>28D</Tenor>
+            <Calendar>MXN,USD</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Backward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+</Portfolio>

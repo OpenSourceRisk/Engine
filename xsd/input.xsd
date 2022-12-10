@@ -1,0 +1,39 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:include schemaLocation="ore_types.xsd"/>
+  <xs:include schemaLocation="instruments.xsd"/>
+  <xs:include schemaLocation="simulation.xsd"/>
+  <xs:include schemaLocation="curveconfig.xsd"/>
+  <xs:include schemaLocation="conventions.xsd"/>
+  <xs:include schemaLocation="nettingsetdefinitions.xsd"/>
+  <xs:include schemaLocation="pricingengines.xsd"/>
+  <xs:include schemaLocation="todaysmarket.xsd"/>
+  <xs:include schemaLocation="sensitivity.xsd"/>
+  <xs:include schemaLocation="stress.xsd"/>
+  <xs:include schemaLocation="ore.xsd"/>
+  <xs:include schemaLocation="calendaradjustment.xsd"/>
+  <xs:include schemaLocation="currencyconfig.xsd"/>
+  <xs:include schemaLocation="iborfallbackconfig.xsd"/>
+
+  <xs:element type="portfolio" name="Portfolio"/>
+
+  <xs:element type="trade" name="Trade"/>
+
+  <xs:complexType name="portfolio">
+    <xs:sequence>
+      <xs:element type="trade" name="Trade" maxOccurs="unbounded" minOccurs="0">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="trade">
+    <xs:sequence>
+      <xs:element type="oreTradeType" name="TradeType"/>
+      <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+      <xs:element type="tradeActions" name="TradeActions" minOccurs="0"/>
+      <xs:group ref="oreTradeData" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id" use="required"/>
+  </xs:complexType>
+
+</xs:schema>

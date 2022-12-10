@@ -1,0 +1,108 @@
+\subsubsection{FX Digital Barrier Option}
+
+The \lstinline!FxDigitalBarrierOptionData!  node is the trade data container for the \emph{FxDigitalBarrierOption} trade type.   The
+\lstinline!FxDigitalBarrierOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
+specific to the FX Digital Barrier Option. 
+
+An FX Digital Barrier Option pays a given cash amount in domestic currency at expiry, if the underlying fx rate has hit (or not hit) a continuously monitored barrier (as for the FxTouchOption) and the fx rate at the expiry date is above (call) or below (put) a given strike.
+
+The structure of an example \lstinline!FxDigitalBarrierOptionData! node for a FX Digital Barrier Option is shown in Listing
+\ref{lst:fxdigitalbarrieroption_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <FxDigitalBarrierOptionData>
+            <OptionData>
+                <LongShort>Long</LongShort>
+                <OptionType>Call</OptionType>
+                <Style>European</Style>
+                <Settlement>Cash</Settlement>                
+                <ExerciseDates>
+                 <ExerciseDate>2021-12-14</ExerciseDate>
+                </ExerciseDates> 
+                ...
+            </OptionData>
+            <BarrierData>
+                <Type>DownAndIn</Type>
+                <Levels>
+                    <Level>1.18</Level>
+                </Levels>
+            </BarrierData>
+            <StartDate>2019-01-25</StartDate>
+            <Calendar>TARGET</Calendar>
+            <FXIndex>FX-ECB-EUR-USD</FXIndex>
+            <Strike>1.1</Strike>
+            <PayoffAmount>100000</PayoffAmount>
+            <PayoffCurrency>USD</PayoffCurrency>            
+            <ForeignCurrency>EUR</ForeignCurrency>
+            <DomesticCurrency>USD</DomesticCurrency>
+        </FxDigitalBarrierOptionData>
+\end{minted}
+\caption{FX Digital Barrier Option data}
+\label{lst:fxdigitalbarrieroption_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!FxDigitalBarrierOptionData!  node follow below.
+
+\begin{itemize}
+
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. 
+The relevant fields in the \lstinline!OptionData! node for an FxDigitalBarrierOption are:
+
+\begin{itemize}
+\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}.
+
+\item \lstinline!OptionType! The allowable values are \emph{Call} or \emph{Put}. Given knock-in or no knock-out,  \emph{Call} means that the digital payout will occur if the fx rate at the expiry date is above the given strike, and \emph{Put} means that the digital payout will occur if the fx rate at the expiry date is below the given strike.
+
+\item  \lstinline!Style! The FX Digital Barrier Option type allows for \emph{European} option exercise style only.
+
+\item  \lstinline!Settlement! The allowable values are \emph{Cash} or \emph{Physical}.
+
+\item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given.
+
+\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
+
+Allowable values:  See section \ref{ss:premiums}
+
+\end{itemize}
+
+\item BarrierData: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
+Level specified in BarrierData should be quoted as the amount in DomesticCurrency per one unit of ForeignCurrency, with both currencies as defined in FxDigitalBarrierOptionData node.
+
+\item StartDate[Optional]: The start date for checking if a barrier has been breached prior to today's date.  If omitted or left blank no check is made and it is assumed no barrier has been breached in the past. Has no impact if set to today's date or a date in the future. If`StartDate' is provided then the fixings for dates between this date and the asof date are checked to see if the option was triggered. If no fixing is available then we skip that date. This is to allow for backwards compatibility.
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item Calendar[Optional]: The calendar associated with the FX Index. Required if StartDate is set to a date prior to today's date, otherwise optional.
+
+Allowable values: See Table \ref{tab:calendar} Calendar.
+
+\item FXIndex[Optional]: A reference to an FX Index source to check if the barrier has been breached. Required if StartDate is set to a date prior to today's date, otherwise optional, and can be omitted but not left blank.
+
+Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}.  
+
+\item Strike: The FX strike price, expressed as the amount in DomesticCurrency per one unit of ForeignCurrency. 
+
+Allowable values:  Any positive real number.
+
+\item PayoffAmount: The fixed payoff amount expressed in domestic currency. It is cash-or-nothing payoff that depends on the option being in or out of the money, and whether the barrier has been breached.
+
+Allowable values:  Any positive real number.
+
+\item PayoffCurrency[Optional]: The payoff currency of the FX digital option is the currency of the payoff amount. Must be either the Domestic or Foreign currency for this trade, If omitted this defaults to DomesticCurrency as defined in FxDigitalBarrierOptionData node.
+
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item ForeignCurrency: The foreign currency of the FX digital barrier option is equivalent to the bought currency.  
+
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item DomesticCurrency: The domestic currency of the FX digital barrier option is equivalent to the sold currency. 
+
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
+
+\end{itemize}
+
+Note that FX Digital Barrier Options also cover Precious Metals, i.e. with
+currencies XAU, XAG, XPT, XPD, and Cryptocurrencies,  see supported Cryptocurrencies in Table \ref{tab:currency}.

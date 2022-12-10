@@ -1,0 +1,229 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="testsuite.cpp" />
+    <ClCompile Include="currency.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="discountcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="index.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="logquote.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="analyticlgmswaptionengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossassetmodel.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossassetmodel2.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossassetmodelparametrizations.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="dynamicblackvoltermstructure.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="dynamicswaptionvolmatrix.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="staticallycorrectedyieldtermstructure.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="blackvariancecurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="cashflow.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="swaptionvolatilityconverter.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="optionletstripper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="deposit.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="ratehelpers.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="stabilisedglls.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="survivalprobabilitycurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="swaptionvolconstantspread.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="fxvolsmile.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="payment.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="deltagammavar.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="pricecurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityforward.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="discountingcommodityforwardengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="pricetermstructureadapter.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="bonds.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="qle_calendars.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="discountratiomodifiedcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossccyfixfloatswap.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossccyfixfloatswaphelper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossccybasismtmresetswaphelper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossccybasismtmresetswap.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="cpicapfloor.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="correlationtermstructure.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="fillemptymatrix.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="strippedoptionletadapter.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="piecewiseoptionletcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="blackvariancesurfacesparse.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="blackvariancesurfacestddevs.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="piecewiseoptionletstripper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="capfloortermvolcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="piecewiseatmoptionletcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="equityforwardcurvestripper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="strippedoptionletadapter2.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="blackvolsurfacedelta.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="forwardbond.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="blackvolsurfaceproxy.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="analyticcashsettledeuropeanengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="quadraticinterpolation.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crcirpp.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="durationadjustedcmscoupon.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="exactbachelierimpliedvolatility.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="normalfreeboundarysabr.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="dategeneration.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="randomvariable.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="calendars.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="inflationcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="inflationvol.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="basecorrelationcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityschwartzmodel.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityspreadoption.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="mclgmswaptionengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="multilegoption.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="source">
+      <UniqueIdentifier>{8bf6c172-3cec-4354-a7ae-d1634454ff15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers">
+      <UniqueIdentifier>{f43de631-e8f3-49f7-be00-bbe4d2cc9863}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="swaptionmarketdata.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="yieldcurvemarketdata.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="capfloormarketdata.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="toplevelfixture.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
