@@ -19,6 +19,9 @@
 /*! \file ored/marketdata/loader.hpp
     \brief Market Datum Loader Interface
     \ingroup marketdata
+    \invariant Concrete instantiations of this virtual base class guarantee
+    that all of the MarketDatum objects that they store are unique, e.g. by
+    discarding any duplicates during initialization.
 */
 
 #pragma once
@@ -50,8 +53,8 @@ public:
     //! get all quotes, TODO change the return value to std::set
     virtual std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const = 0;
 
-    //! get quote by its unique name, throws if not existent or not unique
-    virtual boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date&) const = 0;
+    //! get quote by its unique name, throws if not existent
+    virtual boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date& d) const;
 
     //! get quotes matching a set of names, this should be overridden in derived classes for performance
     virtual std::set<boost::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
@@ -77,6 +80,9 @@ public:
     virtual boost::shared_ptr<MarketDatum> get(const std::pair<std::string, bool>& name, const QuantLib::Date& d) const;
 
     virtual std::set<Fixing> loadFixings() const = 0;
+
+    //! Default implementation for getFixing
+    virtual Fixing getFixing(const string& name, const QuantLib::Date& d) const;
     //@}
 
     //! Optional load dividends method

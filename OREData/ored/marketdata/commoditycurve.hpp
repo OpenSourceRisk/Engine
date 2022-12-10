@@ -30,6 +30,7 @@
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
+#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
@@ -51,7 +52,8 @@ public:
                    const CurveConfigurations& curveConfigs,
                    const FXTriangulation& fxSpots = FXTriangulation(),
                    const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves = {},
-                   const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves = {});
+                   const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves = {},
+                   bool const buildCalibrationInfo = false);
     //@}
 
     //! \name Inspectors
@@ -59,12 +61,14 @@ public:
     const CommodityCurveSpec& spec() const { return spec_; }
     boost::shared_ptr<QuantExt::PriceTermStructure> commodityPriceCurve() const { return commodityPriceCurve_; }
     boost::shared_ptr<QuantExt::CommodityIndex> commodityIndex() const { return commodityIndex_; }
+    boost::shared_ptr<CommodityCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     //@}
 
 private:
     CommodityCurveSpec spec_;
     boost::shared_ptr<QuantExt::PriceTermStructure> commodityPriceCurve_;
     boost::shared_ptr<QuantExt::CommodityIndex> commodityIndex_;
+    boost::shared_ptr<CommodityCurveCalibrationInfo> calibrationInfo_;
 
     //! Store the commodity spot value with \c Null<Real>() indicating that none has been provided.
     QuantLib::Real commoditySpot_;
@@ -114,7 +118,7 @@ private:
 
     //! Get the configured quotes. If filter is \c true, remove tenor based quotes and quotes with expiry before asof.
     std::vector<boost::shared_ptr<CommodityForwardQuote>>
-    getQuotes(const QuantLib::Date& asof, const std::string& configId, const std::vector<std::string>& quotes,
+    getQuotes(const QuantLib::Date& asof, const std::string& /*configId*/, const std::vector<std::string>& quotes,
         const Loader& loader, bool filter = false);
 
     //! Method for populating the price curve

@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016-2022 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -29,12 +29,18 @@
 #include <qle/models/crlgm1fparametrization.hpp>
 #include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
+#include <qle/models/hwmodel.hpp>
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infjyparameterization.hpp>
+#include <qle/models/commoditymodel.hpp>
+#include <qle/models/commodityschwartzmodel.hpp>
+#include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/lgm.hpp>
+#include <qle/models/fxbsmodel.hpp>
 
 #include <qle/processes/crossassetstateprocess.hpp>
 
+#include <ql/errors.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/integrals/integral.hpp>
 #include <ql/math/matrix.hpp>
@@ -45,61 +51,53 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-namespace CrossAssetModelTypes {
-//! Cross Asset Type
-//! \ingroup crossassetmodel
-enum AssetType { IR, FX, INF, CR, EQ, AUX };
-static constexpr Size crossAssetModelAssetTypes = 6;
-
-std::ostream& operator<<(std::ostream& out, const AssetType& type);
-
-/*! the model types supported by the CrossAssetModel or derived classes;
-  a model type may applicable to several asset types (like BS for FX, EQ) */
-enum ModelType { LGM1F, BS, DK, CIRPP, JY };
-
-} // namespace CrossAssetModelTypes
-
-//! Choice of measure
-struct Measure {
-    enum Type { LGM, BA };
-};
-
-using namespace CrossAssetModelTypes;
-
 //! Cross Asset Model
 /*! \ingroup crossassetmodel
  */
 class CrossAssetModel : public LinkableCalibratedModel {
 public:
+    enum class AssetType : Size { IR = 0, FX = 1, INF = 2, CR = 3, EQ = 4, COM = 5 };
+    enum class ModelType { LGM1F, HW, BS, DK, CIRPP, JY, GAB };
+    enum class Discretization { Euler, Exact };
+
+    static constexpr Size numberOfAssetTypes = 6;
+
     /*! Parametrizations must be given in the following order
         - IR  (first parametrization defines the domestic currency)
         - FX  (for all pairs domestic-ccy defined by the IR models)
         - INF (optionally, ccy must be a subset of the IR ccys)
         - CR  (optionally, ccy must be a subset of the IR ccys)
         - EQ  (for all names equity currency defined in Parametrization)
+        - COM (for all names commodity currency defined in Parametrization)
         If the correlation matrix is not given, it is initialized
         as the unit matrix (and can be customized after
         construction of the model).
+
+        All IR components must be of type HW _or_ LGM1F, i.e. you can't mix the two types.
     */
     CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization>>& parametrizations,
-                    const Matrix& correlation = Matrix(), SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
-                    Measure::Type measure = Measure::LGM);
+                    const Matrix& correlation = Matrix(), const SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
+                    const IrModel::Measure measure = IrModel::Measure::LGM,
+                    const Discretization discretization = Discretization::Exact);
 
     /*! IR-FX model based constructor */
-    CrossAssetModel(const std::vector<boost::shared_ptr<LinearGaussMarkovModel>>& currencyModels,
+    CrossAssetModel(const std::vector<boost::shared_ptr<IrModel>>& currencyModels,
                     const std::vector<boost::shared_ptr<FxBsParametrization>>& fxParametrizations,
-                    const Matrix& correlation = Matrix(), SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
-                    Measure::Type measure = Measure::LGM);
+                    const Matrix& correlation = Matrix(), const SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
+                    const IrModel::Measure measure = IrModel::Measure::LGM,
+                    const Discretization discretization = Discretization::Exact);
 
     /*! returns the state process with a given discretization */
-    const boost::shared_ptr<StochasticProcess>
-    stateProcess(CrossAssetStateProcess::discretization disc = CrossAssetStateProcess::exact) const;
+    const boost::shared_ptr<StochasticProcess> stateProcess() const;
 
     /*! total dimension of model (sum of number of state variables) */
     Size dimension() const;
 
-    /*! total number of Brownian motions (this is less or equal to dimension) */
+    /*! total number of Brownian motions (excluding aux brownians) */
     Size brownians() const;
+
+    /*! total number of aux Brownian motions */
+    Size auxBrownians() const;
 
     /*! total number of parameters that can be calibrated */
     Size totalNumberOfParameters() const;
@@ -107,8 +105,11 @@ public:
     /*! number of components for an asset class */
     Size components(const AssetType t) const;
 
-    /*! number of brownian motions for a component */
+    /*! number of brownian motions for a component excluding aux Brownians */
     Size brownians(const AssetType t, const Size i) const;
+
+    /*! number of aux brownian motions for a component */
+    Size auxBrownians(const AssetType t, const Size i) const;
 
     /*! number of state variables for a component */
     Size stateVariables(const AssetType t, const Size i) const;
@@ -117,7 +118,7 @@ public:
     ModelType modelType(const AssetType t, const Size i) const;
 
     /*! Choice of probability measure */
-    Measure::Type measure() const { return measure_; }
+    IrModel::Measure measure() const { return measure_; }
 
     /*! return index for currency (0 = domestic, 1 = first
       foreign currency and so on) */
@@ -132,6 +133,9 @@ public:
     /*! return index for credit (0 = first credit name) */
     Size crName(const std::string& name) const;
 
+    /*! return index for commodity (0 = first equity) */
+    Size comIndex(const std::string& comName) const;
+
     /*! observer and linked calibrated model interface */
     void update() override;
     void generateArguments() override;
@@ -145,31 +149,55 @@ public:
     const boost::shared_ptr<Parametrization> inf(const Size i) const;
     const boost::shared_ptr<Parametrization> cr(const Size i) const;
     const boost::shared_ptr<Parametrization> eq(const Size i) const;
+    const boost::shared_ptr<Parametrization> com(const Size i) const;
+
+    /* ir model */
+    const boost::shared_ptr<IrModel> irModel(const Size ccy) const;
+
+    /*! numeraire */
+    QuantLib::Real
+    numeraire(const Size ccy, const QuantLib::Time t, const QuantLib::Array& x,
+              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+              const QuantLib::Array& aux = Array()) const;
+
+    /*! discount bond */
+    QuantLib::Real discountBond(
+        const Size ccy, const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const;
+
+    /*! HW components, ccy=0 refers to the domestic currency */
+    const boost::shared_ptr<HwModel> hw(const Size ccy) const;
+    const boost::shared_ptr<IrHwParametrization> irhw(const Size ccy) const;
 
     /*! LGM1F components, ccy=0 refers to the domestic currency */
     const boost::shared_ptr<LinearGaussMarkovModel> lgm(const Size ccy) const;
-
     const boost::shared_ptr<IrLgm1fParametrization> irlgm1f(const Size ccy) const;
 
-    /*! LGM measure numeraire */
+    /*! DEPRECATED LGM measure numeraire */
     Real numeraire(const Size ccy, const Time t, const Real x,
                    Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
-    /*! Bank account measure numeraire B(t) as a function of drifted LGM state variable x and drift-free auxiliary state
-     * variable y */
+    /*! DEPRECATED LGM - Bank account measure numeraire B(t) as a function of drifted LGM state variable x and
+     * drift-free auxiliary state variable y */
     Real bankAccountNumeraire(const Size ccy, const Time t, const Real x, const Real y,
                               Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
+    /*! DEPRECATED LGM specific discountBond */
     Real discountBond(const Size ccy, const Time t, const Time T, const Real x,
                       Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
+    /*! DEPRECATED LGM specific discountBond */
     Real reducedDiscountBond(const Size ccy, const Time t, const Time T, const Real x,
                              Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
+    /*! DEPRECATED LGM specific discountBond */
     Real discountBondOption(const Size ccy, Option::Type type, const Real K, const Time t, const Time S, const Time T,
                             Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
-    /*! FXBS components, ccy=0 refers to the first foreign currency,
+    /* fx model */
+    const boost::shared_ptr<FxModel> fxModel(const Size ccy) const;
+
+    /*! FXBS components, ccy=0 referes to the first foreign currency,
         so it corresponds to ccy+1 if you want to get the corresponding
         irmgl1f component */
     const boost::shared_ptr<FxBsParametrization> fxbs(const Size ccy) const;
@@ -190,6 +218,12 @@ public:
     /*! EQBS components */
     const boost::shared_ptr<EqBsParametrization> eqbs(const Size ccy) const;
 
+    /* com model */
+    const boost::shared_ptr<CommodityModel> comModel(const Size com) const;
+
+    /*! COMBS components */
+    const boost::shared_ptr<CommoditySchwartzParametrization> combs(const Size ccy) const;
+
     /* ... add more components here ...*/
 
     /*! correlation linking the different marginal models, note that
@@ -206,6 +240,11 @@ public:
     /*! index of component in the correlation matrix, by offset */
     Size cIdx(const AssetType t, const Size i, const Size offset = 0) const;
 
+    /*! index of component in the Brownian vector (including aux brownians), by offset
+        this is checked to be equal to cIdx for Euler discretization and pIdx for exact discretization
+        as an internal assertion */
+    Size wIdx(const AssetType t, const Size i, const Size offset = 0) const;
+
     /*! index of component in the stochastic process array, by offset */
     Size pIdx(const AssetType t, const Size i, const Size offset = 0) const;
 
@@ -215,6 +254,9 @@ public:
     /*! set correlation */
     void correlation(const AssetType s, const Size i, const AssetType t, const Size j, const Real value,
                      const Size iOffset = 0, const Size jOffset = 0);
+
+    /*! get discretization */
+    Discretization discretization() const { return discretization_; }
 
     /*! get salvaging algorithm */
     SalvagingAlgorithm::Type salvagingAlgorithm() const { return salvaging_; }
@@ -282,7 +324,7 @@ public:
                                           const Constraint& constraint = Constraint(),
                                           const std::vector<Real>& weights = std::vector<Real>());
 
-    /*! calibrate eq/fx volatilities globally to a set of fx options */
+    /*! calibrate eq/fx/com volatilities globally to a set of eq/fx/com options */
     void calibrateBsVolatilitiesGlobal(const AssetType& assetType, const Size aIdx,
                                        const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                        OptimizationMethod& method, const EndCriteria& endCriteria,
@@ -366,7 +408,7 @@ public:
 protected:
     /* ctor to be used in extensions, initialize is not called */
     CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization>>& parametrizations, const Matrix& correlation,
-                    SalvagingAlgorithm::Type salvaging, Measure::Type measure, const bool)
+                    SalvagingAlgorithm::Type salvaging, IrModel::Measure measure, const bool)
         : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation), salvaging_(salvaging), measure_(measure) {
     }
 
@@ -380,13 +422,15 @@ protected:
     virtual std::pair<AssetType, ModelType> getComponentType(const Size i) const;
     /*! number of parameters for given parametrization */
     virtual Size getNumberOfParameters(const Size i) const;
-    /*! number of brownians for given parametrization */
+    /*! number of brownians (excluding aux brownians) for given parametrization */
     virtual Size getNumberOfBrownians(const Size i) const;
+    /*! number of aux brownians for given parametrization */
+    virtual Size getNumberOfAuxBrownians(const Size i) const;
     /*! number of state variables for given parametrization */
     virtual Size getNumberOfStateVariables(const Size i) const;
     /*! helper function to init component indices */
-    void updateIndices(const AssetType& t, const Size i, const Size cIdx, const Size pIdx, const Size aIdx);
-
+    void updateIndices(const AssetType& t, const Size i, const Size cIdx, const Size wIdx, const Size pIdx,
+                       const Size aIdx);
     /* init methods */
     virtual void initialize();
     virtual void initializeParametrizations();
@@ -426,56 +470,33 @@ protected:
     // components per asset type
     std::vector<Size> components_;
     // indices per asset type and component number within asset type
-    std::vector<std::vector<Size>> idx_, cIdx_, pIdx_, aIdx_, brownians_, stateVariables_, numArguments_;
+    std::vector<std::vector<Size>> idx_, cIdx_, wIdx_, pIdx_, aIdx_, brownians_, auxBrownians_, stateVariables_,
+        numArguments_;
     // counter
-    Size totalDimension_, totalNumberOfBrownians_, totalNumberOfParameters_;
+    Size totalDimension_, totalNumberOfBrownians_, totalNumberOfAuxBrownians_, totalNumberOfParameters_;
     // model type per asset type and component number within asset type
     std::vector<std::vector<ModelType>> modelType_;
     // parametrizations, models
     std::vector<boost::shared_ptr<Parametrization>> p_;
-    std::vector<boost::shared_ptr<LinearGaussMarkovModel>> lgm_;
+    std::vector<boost::shared_ptr<IrModel>> irModels_; // HwModel or LGM1F
+    std::vector<boost::shared_ptr<FxModel>> fxModels_; // FxBsModel
     std::vector<boost::shared_ptr<CrCirpp>> crcirppModel_;
+    std::vector<boost::shared_ptr<CommodityModel>> comModels_; 
     Matrix rho_;
     SalvagingAlgorithm::Type salvaging_;
-    Measure::Type measure_;
+    IrModel::Measure measure_;
+    Discretization discretization_;
     mutable boost::shared_ptr<Integrator> integrator_;
-    boost::shared_ptr<CrossAssetStateProcess> stateProcessExact_, stateProcessEuler_;
+    boost::shared_ptr<CrossAssetStateProcess> stateProcess_;
 
     /* calibration constraints */
 
     void appendToFixedParameterVector(const AssetType t, const AssetType v, const Size param, const Size index,
-                                      const Size i, std::vector<bool>& res) {
-        for (Size j = 0; j < components(t); ++j) {
-            for (Size k = 0; k < arguments(t, j); ++k) {
-                std::vector<bool> tmp1(p_[idx(t, j)]->parameter(k)->size(), true);
-                if ((param == Null<Size>() || k == param) && t == v && index == j) {
-                    for (Size ii = 0; ii < tmp1.size(); ++ii) {
-                        if (i == Null<Size>() || i == ii) {
-                            tmp1[ii] = false;
-                        }
-                    }
-                }
-                res.insert(res.end(), tmp1.begin(), tmp1.end());
-            }
-        }
-    }
+                                      const Size i, std::vector<bool>& res);
 
     // move parameter param (e.g. vol, reversion, or all if null) of asset type component t / index at step i (or at all
     // steps if i is null)
-    std::vector<bool> MoveParameter(const AssetType t, const Size param, const Size index, const Size i) {
-        QL_REQUIRE(param == Null<Size>() || param < arguments(t, index),
-                   "parameter for " << t << " at " << index << " (" << param << ") out of bounds 0..."
-                                    << arguments(t, index) - 1);
-        std::vector<bool> res(0);
-        appendToFixedParameterVector(IR, t, param, index, i, res);
-        appendToFixedParameterVector(FX, t, param, index, i, res);
-        appendToFixedParameterVector(INF, t, param, index, i, res);
-        appendToFixedParameterVector(CR, t, param, index, i, res);
-        appendToFixedParameterVector(EQ, t, param, index, i, res);
-        if (measure_ == Measure::BA)
-            appendToFixedParameterVector(AUX, t, param, index, i, res);
-        return res;
-    }
+    std::vector<bool> MoveParameter(const AssetType t, const Size param, const Size index, const Size i);
 };
 
 //! Utility function to return a handle to the inflation term structure given the inflation index.
@@ -484,31 +505,64 @@ inflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib
 
 // inline
 
-inline const boost::shared_ptr<StochasticProcess>
-CrossAssetModel::stateProcess(CrossAssetStateProcess::discretization disc) const {
-    return disc == CrossAssetStateProcess::exact ? stateProcessExact_ : stateProcessEuler_;
-}
+inline const boost::shared_ptr<StochasticProcess> CrossAssetModel::stateProcess() const { return stateProcess_; }
 
 inline Size CrossAssetModel::dimension() const { return totalDimension_; }
 
 inline Size CrossAssetModel::brownians() const { return totalNumberOfBrownians_; }
 
+inline Size CrossAssetModel::auxBrownians() const { return totalNumberOfAuxBrownians_; }
+
 inline Size CrossAssetModel::totalNumberOfParameters() const { return totalNumberOfParameters_; }
 
-inline const boost::shared_ptr<Parametrization> CrossAssetModel::ir(const Size ccy) const { return p_[idx(IR, ccy)]; }
+inline const boost::shared_ptr<Parametrization> CrossAssetModel::ir(const Size ccy) const {
+    return p_[idx(CrossAssetModel::AssetType::IR, ccy)];
+}
 
-inline const boost::shared_ptr<Parametrization> CrossAssetModel::fx(const Size ccy) const { return p_[idx(FX, ccy)]; }
+inline const boost::shared_ptr<Parametrization> CrossAssetModel::fx(const Size ccy) const {
+    return p_[idx(CrossAssetModel::AssetType::FX, ccy)];
+}
 
-inline const boost::shared_ptr<Parametrization> CrossAssetModel::inf(const Size i) const { return p_[idx(INF, i)]; }
+inline const boost::shared_ptr<Parametrization> CrossAssetModel::inf(const Size i) const {
+    return p_[idx(CrossAssetModel::AssetType::INF, i)];
+}
 
-inline const boost::shared_ptr<Parametrization> CrossAssetModel::cr(const Size i) const { return p_[idx(CR, i)]; }
+inline const boost::shared_ptr<Parametrization> CrossAssetModel::cr(const Size i) const {
+    return p_[idx(CrossAssetModel::AssetType::CR, i)];
+}
 
 inline const boost::shared_ptr<Parametrization> CrossAssetModel::eq(const Size i) const {
-    return boost::static_pointer_cast<Parametrization>(p_[idx(EQ, i)]);
+    return boost::static_pointer_cast<Parametrization>(p_[idx(CrossAssetModel::AssetType::EQ, i)]);
+}
+
+inline const boost::shared_ptr<Parametrization> CrossAssetModel::com(const Size i) const {
+    return boost::static_pointer_cast<Parametrization>(p_[idx(CrossAssetModel::AssetType::COM, i)]);
+}
+
+inline const boost::shared_ptr<IrModel> CrossAssetModel::irModel(const Size ccy) const {
+    return irModels_[ccy];
+}
+
+inline const boost::shared_ptr<FxModel> CrossAssetModel::fxModel(const Size ccy) const {
+    return fxModels_[ccy];
+}
+
+inline const boost::shared_ptr<CommodityModel> CrossAssetModel::comModel(const Size com) const {
+    return comModels_[com];
+}
+
+inline const boost::shared_ptr<HwModel> CrossAssetModel::hw(const Size ccy) const {
+    auto tmp = boost::dynamic_pointer_cast<HwModel>(irModels_[idx(CrossAssetModel::AssetType::IR, ccy)]);
+    QL_REQUIRE(tmp, "model at " << ccy << " is not IR-HW");
+    return tmp;
+}
+
+inline const boost::shared_ptr<IrHwParametrization> CrossAssetModel::irhw(const Size ccy) const {
+    return hw(ccy)->parametrization();
 }
 
 inline const boost::shared_ptr<LinearGaussMarkovModel> CrossAssetModel::lgm(const Size ccy) const {
-    boost::shared_ptr<LinearGaussMarkovModel> tmp = lgm_[idx(IR, ccy)];
+    auto tmp = boost::dynamic_pointer_cast<LinearGaussMarkovModel>(irModels_[idx(CrossAssetModel::AssetType::IR, ccy)]);
     QL_REQUIRE(tmp, "model at " << ccy << " is not IR-LGM1F");
     return tmp;
 }
@@ -518,19 +572,21 @@ inline const boost::shared_ptr<IrLgm1fParametrization> CrossAssetModel::irlgm1f(
 }
 
 inline const boost::shared_ptr<InfDkParametrization> CrossAssetModel::infdk(const Size i) const {
-    boost::shared_ptr<InfDkParametrization> tmp = boost::dynamic_pointer_cast<InfDkParametrization>(p_[idx(INF, i)]);
+    boost::shared_ptr<InfDkParametrization> tmp =
+        boost::dynamic_pointer_cast<InfDkParametrization>(p_[idx(CrossAssetModel::AssetType::INF, i)]);
     QL_REQUIRE(tmp, "model at " << i << " is not INF-DK");
     return tmp;
 }
 
 inline const boost::shared_ptr<InfJyParameterization> CrossAssetModel::infjy(const Size i) const {
-    auto tmp = boost::dynamic_pointer_cast<InfJyParameterization>(p_[idx(INF, i)]);
+    auto tmp = boost::dynamic_pointer_cast<InfJyParameterization>(p_[idx(CrossAssetModel::AssetType::INF, i)]);
     QL_REQUIRE(tmp, "model at " << i << " is not INF-JY");
     return tmp;
 }
 
 inline const boost::shared_ptr<CrLgm1fParametrization> CrossAssetModel::crlgm1f(const Size i) const {
-    boost::shared_ptr<CrLgm1fParametrization> tmp = boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[idx(CR, i)]);
+    boost::shared_ptr<CrLgm1fParametrization> tmp =
+        boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[idx(CrossAssetModel::AssetType::CR, i)]);
     QL_REQUIRE(tmp, "model at " << i << " is not CR-LGM");
     return tmp;
 }
@@ -542,15 +598,30 @@ inline const boost::shared_ptr<CrCirpp> CrossAssetModel::crcirppModel(const Size
 }
 
 inline const boost::shared_ptr<CrCirppParametrization> CrossAssetModel::crcirpp(const Size i) const {
-    boost::shared_ptr<CrCirppParametrization> tmp = boost::dynamic_pointer_cast<CrCirppParametrization>(p_[idx(CR, i)]);
+    boost::shared_ptr<CrCirppParametrization> tmp =
+        boost::dynamic_pointer_cast<CrCirppParametrization>(p_[idx(CrossAssetModel::AssetType::CR, i)]);
     QL_REQUIRE(tmp, "model at " << i << " is not CR-CIRPP");
     return tmp;
 }
 
 inline const boost::shared_ptr<EqBsParametrization> CrossAssetModel::eqbs(const Size name) const {
-    boost::shared_ptr<EqBsParametrization> tmp = boost::dynamic_pointer_cast<EqBsParametrization>(p_[idx(EQ, name)]);
+    boost::shared_ptr<EqBsParametrization> tmp =
+        boost::dynamic_pointer_cast<EqBsParametrization>(p_[idx(CrossAssetModel::AssetType::EQ, name)]);
     QL_REQUIRE(tmp, "model at " << name << " is not EQ-BS");
     return tmp;
+}
+
+inline const boost::shared_ptr<CommoditySchwartzParametrization> CrossAssetModel::combs(const Size name) const {
+    boost::shared_ptr<CommoditySchwartzParametrization> tmp =
+        boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[idx(CrossAssetModel::AssetType::COM, name)]);
+    QL_REQUIRE(tmp, "model at " << name << " is not COM-BS");
+    return tmp;
+}
+
+inline QuantLib::Real CrossAssetModel::numeraire(const Size ccy, const QuantLib::Time t, const QuantLib::Array& x,
+                                                 const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+                                                 const QuantLib::Array& aux) const {
+    return irModel(ccy)->numeraire(t, x, discountCurve, aux);
 }
 
 inline Real CrossAssetModel::numeraire(const Size ccy, const Time t, const Real x,
@@ -580,7 +651,8 @@ inline Real CrossAssetModel::discountBondOption(const Size ccy, Option::Type typ
 }
 
 inline const boost::shared_ptr<FxBsParametrization> CrossAssetModel::fxbs(const Size ccy) const {
-    boost::shared_ptr<FxBsParametrization> tmp = boost::dynamic_pointer_cast<FxBsParametrization>(p_[idx(FX, ccy)]);
+    boost::shared_ptr<FxBsParametrization> tmp =
+        boost::dynamic_pointer_cast<FxBsParametrization>(p_[idx(CrossAssetModel::AssetType::FX, ccy)]);
     QL_REQUIRE(tmp, "model at " << ccy << " is not FX-BS");
     return tmp;
 }
@@ -590,23 +662,25 @@ inline const Matrix& CrossAssetModel::correlation() const { return rho_; }
 inline const boost::shared_ptr<Integrator> CrossAssetModel::integrator() const { return integrator_; }
 
 inline Handle<DefaultProbabilityTermStructure> CrossAssetModel::crTs(const Size i) const {
-    if (modelType(CR, i) == LGM1F)
+    if (modelType(CrossAssetModel::AssetType::CR, i) == CrossAssetModel::ModelType::LGM1F)
         return crlgm1f(i)->termStructure();
-    if (modelType(CR, i) == CIRPP)
+    if (modelType(CrossAssetModel::AssetType::CR, i) == CrossAssetModel::ModelType::CIRPP)
         return crcirpp(i)->termStructure();
     QL_FAIL("model at " << i << " is not CR-*");
 }
 
 inline std::pair<Real, Real> CrossAssetModel::crS(const Size i, const Size ccy, const Time t, const Time T,
                                                   const Real z, const Real y) const {
-    if (modelType(CR, i) == LGM1F)
+    if (modelType(CrossAssetModel::AssetType::CR, i) == CrossAssetModel::ModelType::LGM1F)
         return crlgm1fS(i, ccy, t, T, z, y);
-    if (modelType(CR, i) == CIRPP) {
+    if (modelType(CrossAssetModel::AssetType::CR, i) == CrossAssetModel::ModelType::CIRPP) {
         QL_REQUIRE(ccy == 0, "CrossAssetModelPlus::crS() only implemented for ccy=0, got " << ccy);
         return crcirppS(i, t, T, z, y);
     }
     QL_FAIL("model at " << i << " is not CR-*");
 }
+
+std::ostream& operator<<(std::ostream& out, const CrossAssetModel::AssetType& type);
 
 } // namespace QuantExt
 

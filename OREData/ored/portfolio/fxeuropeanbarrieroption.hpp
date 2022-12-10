@@ -48,7 +48,7 @@ public:
                             string calendar = "", string fxIndex = "")
         : ore::data::Trade("FxEuropeanBarrierOption", env),
           FxSingleAssetDerivative("FxEuropeanBarrierOption", env, boughtCurrency, soldCurrency), option_(option),
-          barrier_(barrier), boughtAmount_(boughtAmount), soldAmount_(soldAmount) {}
+          barrier_(barrier), boughtAmount_(boughtAmount), soldAmount_(soldAmount), fxIndex_(fxIndex) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;

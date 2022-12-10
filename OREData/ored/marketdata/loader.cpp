@@ -21,6 +21,14 @@
 namespace ore {
 namespace data {
 
+boost::shared_ptr<MarketDatum> Loader::get(const std::string& name, const QuantLib::Date& d) const {
+    for (const auto& md : loadQuotes(d)) {
+        if (md->name() == name)
+            return md;
+    }
+    QL_FAIL("No MarketDatum for name " << name << " and date " << d);
+}
+
 std::set<boost::shared_ptr<MarketDatum>> Loader::get(const std::set<std::string>& names,
                                                      const QuantLib::Date& asof) const {
     std::set<boost::shared_ptr<MarketDatum>> result;
@@ -71,6 +79,17 @@ boost::shared_ptr<MarketDatum> Loader::get(const std::pair<std::string, bool>& n
                                                              << QuantLib::io::iso_date(d));
         }
     }
+}
+
+
+Fixing Loader::getFixing(const string& name, const QuantLib::Date& d) const {
+    Fixing fixing;
+    for (auto const& f : loadFixings()) {
+        if (f.name == name && f.date == d) {
+            fixing = f;
+        }
+    }
+    return fixing;
 }
 
 std::set<Fixing> Loader::loadDividends() const { return {}; }

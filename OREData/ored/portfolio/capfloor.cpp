@@ -448,13 +448,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // add required fixings
     if (!qlIndexName.empty() && !underlyingIndex.empty()) {
-        std::map<string, string> indexNameMapper = {{qlIndexName, underlyingIndex}};
-        if (engineFactory->iborFallbackConfig().isIndexReplaced(underlyingIndex)) {
-            string rfrIndexName = engineFactory->iborFallbackConfig().fallbackData(underlyingIndex).rfrIndex;
-            // we don't support convention based rfr fallback indices, with ore ticket 1758 this might change
-            indexNameMapper[parseIborIndex(rfrIndexName)->name()] = rfrIndexName;
-        }
-        auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_, indexNameMapper);
+        auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_);
         for (auto const& l : legs_)
             addToRequiredFixings(l, fdg);
     }

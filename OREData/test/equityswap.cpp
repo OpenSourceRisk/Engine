@@ -44,7 +44,7 @@ namespace {
 
 class TestMarket : public MarketImpl {
 public:
-    TestMarket() {
+    TestMarket() : MarketImpl(false) {
         // valuation date
         asof_ = Date(18, July, 2016);
 
@@ -65,6 +65,7 @@ public:
         hSP5 = Handle<EquityIndex>(boost::shared_ptr<EquityIndex>(
             new EquityIndex("SP5", UnitedStates(UnitedStates::Settlement), parseCurrency("USD"), spotSP5, forecastSP5, dividendSP5)));
         equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = hSP5;
+        IndexNameTranslator::instance().add(hSP5->name(), "EQ-" + hSP5->name());
 
         // add fixings
         hUSD->addFixing(Date(14, July, 2016), 0.035);

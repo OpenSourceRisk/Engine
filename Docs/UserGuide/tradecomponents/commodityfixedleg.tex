@@ -1,0 +1,66 @@
+\subsubsection{Commodity Fixed Leg}
+\label{ss:commodityfixedleg}
+
+A commodity fixed leg is specified in a \lstinline!LegData! node with \lstinline!LegType! set to \lstinline!CommodityFixed!. It is used to define a sequence of cashflows that are linked to a fixed price in a commodity derivative contract. Each cashflow has an associated \textit{Calculation Period}. The outline of a commodity fixed leg is given in listing \ref{lst:commodityfixedleg}. It has the usual \lstinline!LegData! elements described in section \ref{ss:leg_data} and a \lstinline!CommodityFixedLegData! node that is described in section \ref{ss:commodity_fixed_leg_data} below. The section \ref{ss:commodity_schedules} describes some aspects of the \lstinline!ScheduleData! node in the context of commodity derivatives.
+
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<LegData>
+  <LegType>CommodityFixed</LegType>
+  <Payer>...</Payer>
+  <Currency>...</Currency>
+  <PaymentConvention>...</PaymentConvention>
+  <PaymentLag>...</PaymentLag>
+  <PaymentCalendar>...</PaymentCalendar>
+  <ScheduleData>
+    ...
+  </ScheduleData>
+  <PaymentDates>
+    <PaymentDate>...</PaymentDate>
+  </PaymentDates>
+  <CommodityFixedLegData>
+    ...
+  </CommodityFixedLegData>
+</LegData>
+\end{minted}
+\caption{Commodity fixed leg outline.}
+\label{lst:commodityfixedleg}
+\end{listing}
+
+\subsubsection{Commodity Fixed Leg Data}
+\label{ss:commodity_fixed_leg_data}
+The \lstinline!CommodityFixedLegData! node outline is shown in listing \ref{lst:commodity_fixed_leg_data}. The meaning and allowable values for each node are as follows:
+
+\begin{itemize}
+
+\item
+\lstinline!Quantities! [Optional]: this node is used to specify a constant quantity or a quantity that varies over the calculation periods. The usage of this node is analagous to the usage of the \lstinline!Notionals! node as outlined in section \ref{ss:leg_data}. For convenience, this node can be omitted if the quantities are identical to those on a commodity floating leg, outlined in Section \ref{ss:commodityfloatingleg}, on the same trade. In this case, the quantities from the floating leg are used. If there is only a single commodity floating leg, as is the case in a standard swap, the quantities are taken from that leg. If there are multiple commodity floating legs on the trade, a specific commodity floating leg can be picked using the \lstinline!Tag! node specified below. In other words, a \lstinline!Tag! can be specified on the fixed leg and the same \lstinline!Tag! specified on the floating leg from which the quantities should be taken.
+
+\item
+\lstinline!Prices!: this node is used to specify a constant price or a price that varies over the calculation periods. The usage of this node is analagous to the usage of the \lstinline!Notionals! node as outlined in section \ref{ss:leg_data}.
+
+\item
+\lstinline!CommodityPayRelativeTo! [Optional]: the allowable values for this node are \\
+\lstinline!CalculationPeriodStartDate!, \lstinline!CalculationPeriodEndDate!, \lstinline!TerminationDate!, \lstinline!FutureExpiryDate!. They specify whether payment is relative to the calculation period start date, calculation period end date, leg maturity date or the future expiry date (of the corresponding cashflow on the floating leg with the same Tag as the fixed leg) respectively. The default is \lstinline!CalculationPeriodEndDate!. The payment date is then further adjusted by the payment conventions outlined in section \ref{ss:leg_data} i.e. \lstinline!PaymentConvention! and \lstinline!PaymentLag!. If explicit payment dates are given via the \lstinline!PaymentDates! node described in section \ref{ss:leg_data}, then those explicit payment dates are used instead and adjusted by the \lstinline!PaymentCalendar! and \lstinline!PaymentConvention!.
+
+\item
+\lstinline!Tag! [Optional]: The use of this node is explained in the \lstinline!Quantities! resp. \lstinline!CommodityPayRelativeTo! piece above.
+
+\end{itemize}
+
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityFixedLegData>
+  <Quantities>
+    <Quantity>...</Quantity>
+  </Quantities>
+  <Prices>
+    <Price>...</Price>
+  </Prices>
+  <CommodityPayRelativeTo>...</CommodityPayRelativeTo>
+  <Tag>...</Tag>
+</CommodityFixedLegData>
+\end{minted}
+\caption{Commodity fixed leg data outline.}
+\label{lst:commodity_fixed_leg_data}
+\end{listing}

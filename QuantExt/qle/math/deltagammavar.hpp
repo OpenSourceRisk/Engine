@@ -26,6 +26,7 @@
 
 #include <qle/math/covariancesalvage.hpp>
 
+#include <ql/math/comparison.hpp>
 #include <ql/math/array.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/matrixutilities/choleskydecomposition.hpp>
@@ -98,7 +99,7 @@ std::vector<Real> deltaGammaVarMc(const Matrix& omega, const Array& delta, const
     detail::check(omega, delta, gamma);
 
     Real num = std::max(detail::absMax(delta), detail::absMax(gamma));
-    if (close_enough(num, 0.0)) {
+    if (QuantLib::close_enough(num, 0.0)) {
         std::vector<Real> res(p.size(), 0.0);
         return res;
     }

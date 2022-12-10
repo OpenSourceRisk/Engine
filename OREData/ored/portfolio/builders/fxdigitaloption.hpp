@@ -26,11 +26,12 @@
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
+#include <ored/utilities/to_string.hpp>
+#include <qle/pricingengines/analyticeuropeanengine.hpp>
+#include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 namespace ore {
 namespace data {
-using namespace QuantLib;
 using std::string;
 
 //! Engine Builder for European FX Digital Options
@@ -39,18 +40,19 @@ using std::string;
     \ingroup portfolio
  */
 class FxDigitalOptionEngineBuilder
-    : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
+    : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&, const bool> {
 public:
     FxDigitalOptionEngineBuilder()
         : CachingEngineBuilder("GarmanKohlhagen", "AnalyticEuropeanEngine", {"FxDigitalOption"}) {}
 
 protected:
-    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
-        return forCcy.code() + domCcy.code();
+    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy, const bool flipResults) override {
+        return forCcy.code() + domCcy.code() + (flipResults ? "_1" : "_0");
     }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
-        string pair = keyImpl(forCcy, domCcy);
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
+                                                        const bool flipResults) override {
+        string pair = forCcy.code() + domCcy.code();
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
             market_->fxRate(pair, configuration(ore::data::MarketContext::pricing)),
@@ -58,7 +60,33 @@ protected:
                                    configuration(ore::data::MarketContext::pricing)), // dividend yield ~ foreign yield
             market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)),
             market_->fxVol(pair, configuration(ore::data::MarketContext::pricing)));
-        return boost::make_shared<AnalyticEuropeanEngine>(gbsp);
+        return boost::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp, flipResults);
+    }
+};
+
+//! Engine Builder for European cash-settled FX Digital Options
+class FxDigitalCSOptionEngineBuilder
+    : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
+public:
+    FxDigitalCSOptionEngineBuilder()
+        : CachingEngineBuilder("GarmanKohlhagen", "AnalyticCashSettledEuropeanEngine", {"FxDigitalOptionEuropeanCS"}) {}
+
+protected:
+    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
+        return forCcy.code() + domCcy.code();
+    }
+
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
+        string pair = forCcy.code() + domCcy.code();
+
+        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
+            market_->fxRate(pair, configuration(ore::data::MarketContext::pricing)),
+            market_->discountCurve(forCcy.code(),
+                                   configuration(ore::data::MarketContext::pricing)), // dividend yield ~ foreign yield
+            market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)),
+            market_->fxVol(pair, configuration(ore::data::MarketContext::pricing)));
+
+        return boost::make_shared<QuantExt::AnalyticCashSettledEuropeanEngine>(gbsp);
     }
 };
 

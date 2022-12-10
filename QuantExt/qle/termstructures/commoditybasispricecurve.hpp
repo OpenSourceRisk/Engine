@@ -313,9 +313,9 @@ template <class Interpolator>
 boost::shared_ptr<CommodityIndexedCashFlow>
 CommodityBasisPriceCurve<Interpolator>::makeCashflow(const QuantLib::Date& start, const QuantLib::Date& end) const {
 
-    return boost::make_shared<CommodityIndexedCashFlow>(1.0, start, end, index_, 0, QuantLib::NullCalendar(),
-                                                        QuantLib::Unadjusted, 0, QuantLib::NullCalendar(), 0.0, 1.0,
-                                                        false, true, true, true, 0, baseFec_);
+    return boost::make_shared<CommodityIndexedCashFlow>(
+        1.0, start, end, index_, 0, QuantLib::NullCalendar(), QuantLib::Unadjusted, 0, QuantLib::NullCalendar(), 0.0,
+        1.0, CommodityIndexedCashFlow::PaymentTiming::InArrears, true, true, true, 0, baseFec_);
 }
 
 } // namespace QuantExt

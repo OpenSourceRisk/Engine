@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2020 Quaternion Risk Management Ltd
+ Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,24 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/app/structuredanalyticserror.hpp>
+#include <qle/pricingengines/mclgmswapengine.hpp>
 
-using std::string;
+#include <ql/exercise.hpp>
 
-namespace ore {
-namespace analytics {
+namespace QuantExt {
 
-StructuredAnalyticsErrorMessage::StructuredAnalyticsErrorMessage(const string& type, const string& what)
-    : type_(type), what_(what) {}
+void McLgmSwapEngine::calculate() const {
+    leg_ = arguments_.legs;
+    currency_ = std::vector<Currency>(leg_.size(), model_->irlgm1f(0)->currency());
+    payer_ = arguments_.payer;
+    exercise_ = nullptr;
+    McMultiLegBaseEngine::calculate();
+    results_.value = resultValue_;
+    results_.additionalResults["amcCalculator"] = amcCalculator();
+} // McLgmSwaptionEngine::calculate
 
-const string& StructuredAnalyticsErrorMessage::type() const { return type_; }
-
-const string& StructuredAnalyticsErrorMessage::what() const { return what_; }
-
-string StructuredAnalyticsErrorMessage::json() const {
-    return "{ \"errorType\":\"Analytics\", \"exceptionType\":\"" + type_ + "\"," + " \"exceptionMessage\":\"" +
-           jsonify(what_) + "\"}";
-}
-
-} // namespace analytics
-} // namespace ore
+} // namespace QuantExt

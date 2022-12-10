@@ -188,6 +188,18 @@
     <ClCompile Include="basecorrelationcurve.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="commodityschwartzmodel.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityspreadoption.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="mclgmswaptionengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="multilegoption.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

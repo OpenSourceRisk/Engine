@@ -21,7 +21,8 @@
 namespace ore {
 namespace data {
 
-WrappedMarket::WrappedMarket(const boost::shared_ptr<Market>& m) : market_(m) {}
+WrappedMarket::WrappedMarket(const boost::shared_ptr<Market>& m, const bool handlePseudoCurrencies)
+    : Market(handlePseudoCurrencies), market_(m) {}
 
 boost::shared_ptr<Market> WrappedMarket::underlyingMarket() const { return market_; }
 
@@ -32,7 +33,7 @@ Handle<YieldTermStructure> WrappedMarket::yieldCurve(const YieldCurveType& type,
     return market_->yieldCurve(type, name, configuration);
 }
 
-Handle<YieldTermStructure> WrappedMarket::discountCurve(const string& ccy, const string& configuration) const {
+Handle<YieldTermStructure> WrappedMarket::discountCurveImpl(const string& ccy, const string& configuration) const {
     return market_->discountCurve(ccy, configuration);
 }
 
@@ -52,11 +53,11 @@ Handle<SwaptionVolatilityStructure> WrappedMarket::swaptionVol(const string& key
     return market_->swaptionVol(key, configuration);
 }
 
-const string WrappedMarket::shortSwapIndexBase(const string& ccy, const string& configuration) const {
+string WrappedMarket::shortSwapIndexBase(const string& ccy, const string& configuration) const {
     return market_->shortSwapIndexBase(ccy, configuration);
 }
 
-const string WrappedMarket::swapIndexBase(const string& ccy, const string& configuration) const {
+string WrappedMarket::swapIndexBase(const string& ccy, const string& configuration) const {
     return market_->swapIndexBase(ccy, configuration);
 }
 
@@ -65,19 +66,19 @@ Handle<SwaptionVolatilityStructure> WrappedMarket::yieldVol(const string& securi
     return market_->yieldVol(securityID, configuration);
 }
 
-Handle<QuantExt::FxIndex> WrappedMarket::fxIndex(const string& fxIndex, const string& configuration) const {
+Handle<QuantExt::FxIndex> WrappedMarket::fxIndexImpl(const string& fxIndex, const string& configuration) const {
     return market_->fxIndex(fxIndex, configuration);
 }
 
-Handle<Quote> WrappedMarket::fxSpot(const string& ccypair, const string& configuration) const {
+Handle<Quote> WrappedMarket::fxSpotImpl(const string& ccypair, const string& configuration) const {
     return market_->fxSpot(ccypair, configuration);
 }
 
-Handle<Quote> WrappedMarket::fxRate(const string& ccypair, const string& configuration) const {
+Handle<Quote> WrappedMarket::fxRateImpl(const string& ccypair, const string& configuration) const {
     return market_->fxRate(ccypair, configuration);
 }
 
-Handle<BlackVolTermStructure> WrappedMarket::fxVol(const string& ccypair, const string& configuration) const {
+Handle<BlackVolTermStructure> WrappedMarket::fxVolImpl(const string& ccypair, const string& configuration) const {
     return market_->fxVol(ccypair, configuration);
 }
 
@@ -100,6 +101,11 @@ Handle<QuantExt::BaseCorrelationTermStructure> WrappedMarket::baseCorrelation(co
 
 Handle<OptionletVolatilityStructure> WrappedMarket::capFloorVol(const string& key, const string& configuration) const {
     return market_->capFloorVol(key, configuration);
+}
+
+std::pair<string, QuantLib::Period> WrappedMarket::capFloorVolIndexBase(const string& key,
+                                                                        const string& configuration) const {
+    return market_->capFloorVolIndexBase(key, configuration);
 }
 
 Handle<QuantExt::YoYOptionletVolatilitySurface> WrappedMarket::yoyCapFloorVol(const string& indexName,

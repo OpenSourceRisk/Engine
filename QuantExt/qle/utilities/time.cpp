@@ -99,4 +99,24 @@ QuantLib::Period tenorFromLength(const QuantLib::Real length) {
     return std::lround(length * 365.25) * Days;
 }
 
+QuantLib::Integer daylightSavingCorrection(const std::string& location, const QuantLib::Date& start,
+                                           const QuantLib::Date& end) {
+    Integer result = 0;
+    if (location == "Null") {
+        result = 0;
+    } else if (location == "US") {
+        for (Integer y = start.year(); y <= end.year(); ++y) {
+            Date d1 = Date::nthWeekday(2, Sunday, March, y);
+            Date d2 = Date::nthWeekday(1, Sunday, November, y);
+            if (start <= d1 && end > d1)
+                --result;
+            if (start <= d2 && end > d2)
+                ++result;
+        }
+    } else {
+        QL_FAIL("daylightSavings(" << location << ") not supported. Contact dev to add support for this location.");
+    }
+    return result;
+}
+
 } // namespace QuantExt

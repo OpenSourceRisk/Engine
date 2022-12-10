@@ -27,6 +27,7 @@
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/model/irlgmdata.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
@@ -112,7 +113,7 @@ struct TestData {
         vector<Time> hTimes = {};
         vector<Time> aTimes = {};
 
-        std::vector<boost::shared_ptr<IrLgmData>> irConfigs;
+        std::vector<boost::shared_ptr<IrModelData>> irConfigs;
 
         vector<Real> hValues = {0.02};
         vector<Real> aValues = {0.08};
@@ -155,6 +156,8 @@ struct TestData {
         std::vector<boost::shared_ptr<CrLgmData>> crLgmConfigs;
         std::vector<boost::shared_ptr<CrCirData>> crCirConfigs;
 
+        std::vector<boost::shared_ptr<CommoditySchwartzData>> comConfigs;
+
         CorrelationMatrixBuilder cmb;
         cmb.addCorrelation("IR:EUR", "IR:USD", Handle<Quote>(boost::make_shared<SimpleQuote>(0.6)));
         cmb.addCorrelation("IR:EUR", "IR:GBP", Handle<Quote>(boost::make_shared<SimpleQuote>(0.3)));
@@ -168,20 +171,28 @@ struct TestData {
         cmb.addCorrelation("IR:GBP", "FX:GBPEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.1)));
 
         Real tolerance = 1e-4;
-        boost::shared_ptr<CrossAssetModelData> config(
+        boost::shared_ptr<CrossAssetModelData> config1(
             boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs,
-                                                    crCirConfigs, cmb.correlations(), tolerance, measure));
+                                                    crCirConfigs, comConfigs, cmb.correlations(), tolerance, measure,
+                                                    CrossAssetModel::Discretization::Exact));
+        boost::shared_ptr<CrossAssetModelData> config2(
+            boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs,
+                                                    crCirConfigs, comConfigs, cmb.correlations(), tolerance, measure,
+                                                    CrossAssetModel::Discretization::Euler));
 
-        CrossAssetModelBuilder modelBuilder(market, config);
-        ccLgm = *modelBuilder.model();
+        CrossAssetModelBuilder modelBuilder1(market, config1);
+        ccLgmExact = *modelBuilder1.model();
 
-        lgm = boost::make_shared<QuantExt::LGM>(ccLgm->irlgm1f(0));
+        CrossAssetModelBuilder modelBuilder2(market, config2);
+        ccLgmEuler = *modelBuilder2.model();
+
+        lgm = boost::make_shared<QuantExt::LGM>(ccLgmExact->irlgm1f(0));
     }
 
     SavedSettings backup;
     Date referenceDate;
     boost::shared_ptr<CrossAssetModelData> config;
-    boost::shared_ptr<QuantExt::CrossAssetModel> ccLgm;
+    boost::shared_ptr<QuantExt::CrossAssetModel> ccLgmExact, ccLgmEuler;
     boost::shared_ptr<QuantExt::LGM> lgm;
     boost::shared_ptr<ore::data::Market> market;
 };
@@ -199,34 +210,24 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
 
     TestData d(measureName, shiftHorizon);
 
-    CrossAssetStateProcess::discretization discretization;
-    if (discName == "exact")
-        discretization = CrossAssetStateProcess::exact;
-    else if (discName == "euler")
-        discretization = CrossAssetStateProcess::euler;
-    else {
-        QL_FAIL("discretization " << discName << " not recognized");
-    }
-
     // Simulation date grid
     Date today = d.referenceDate;
     std::vector<Period> tenorGrid;
     if (discName == "exact")
         tenorGrid = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     else {
-        for (Size i = 1; i <= 120; ++i)
-            tenorGrid.push_back(i * Months);
+        for (Size i = 1; i <= 60; ++i)
+            tenorGrid.push_back(i * 2 * Months);
     }
     boost::shared_ptr<DateGrid> grid = boost::make_shared<DateGrid>(tenorGrid);
 
     // Model
-    boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
+    boost::shared_ptr<QuantExt::CrossAssetModel> model = discName == "exact" ? d.ccLgmExact : d.ccLgmEuler;
 
     // Simulation market parameters, we just need the yield curve structure here
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
     simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
-                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
-                                              30 * Years, 40 * Years, 50 * Years});
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years});
     simMarketConfig->setSimulateFXVols(false);
     simMarketConfig->setSimulateEquityVols(false);
 
@@ -239,7 +240,6 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
 
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
-    sgd->discretization() = discretization;
     sgd->sequenceType() = Sobol;
     sgd->seed() = 42;
     sgd->setGrid(grid);
@@ -253,14 +253,14 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
     simMarket->scenarioGenerator() = sg;
 
     // Basic Martingale tests
-    Size samples = 10000;
+    Size samples = 5000;
     Real eur = 0.0, usd = 0.0, gbp = 0.0, eur2 = 0.0, usd2 = 0.0, gbp2 = 0.0;
     Real eur3 = 0.0, usd3 = 0.0, gbp3 = 0.0;
     int horizon = 10;
 
     Date d1 = grid->dates().back();
     Date d2 = d1 + horizon * Years;
-    Real relTolerance = 0.003;
+    Real relTolerance = 0.005;
     Real eurExpected = d.market->discountCurve("EUR")->discount(d2);
     Real eurExpected2 = d.market->discountCurve("EUR")->discount(d1);
     Real gbpExpected = d.market->fxRate("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(d2);

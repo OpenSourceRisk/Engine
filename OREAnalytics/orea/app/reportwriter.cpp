@@ -1,4 +1,3 @@
-
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
  Copyright (C) 2017 Aareal Bank AG
@@ -281,6 +280,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                                QuantExt::CappedFlooredOvernightIndexedCoupon>(ptrFloat)) {
                                     fixingValue = (c->underlying()->rate() - c->underlying()->effectiveSpread()) /
                                                   c->underlying()->gearing();
+                                }
+                                // similar treatment of sub period coupons
+                                if (auto sp = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(ptrFloat)) {
+                                    fixingValue = (sp->rate() - sp->spread()) / sp->gearing();
                                 }
                             } else if (ptrInfl) {
                                 fixingDate = ptrInfl->fixingDate();
@@ -1253,6 +1256,22 @@ void addInflationCurveCalibrationInfo(ore::data::Report& report, const std::stri
     }
 }
 
+void addCommodityCurveCalibrationInfo(ore::data::Report& report, const std::string& id,
+                                      boost::shared_ptr<CommodityCurveCalibrationInfo> const& info) {
+    if(info == nullptr)
+        return ;
+    addRowMktCalReport(report, "commodityCurve", id, "calendar", "", "", "", info->calendar);
+    addRowMktCalReport(report, "commodityCurve", id, "dayCounter", "", "", "", info->dayCounter);
+    addRowMktCalReport(report, "commodityCurve", id, "currenct", "", "", "", info->currency);
+    addRowMktCalReport(report, "commodityCurve", id, "interpolationMethod", "", "", "", info->interpolationMethod);
+
+    for (Size i = 0; i < info->pillarDates.size(); ++i){
+        auto date = to_string(info->pillarDates.at(i));
+        addRowMktCalReport(report, "commodityCurve", id, "time", date, "", "", info->times.at(i));
+        addRowMktCalReport(report, "commodityCurve", id, "price", date, "", "", info->futurePrices.at(i));
+    }
+}
+
 void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& type, const std::string& id,
                                boost::shared_ptr<FxEqVolCalibrationInfo> info) {
     if (info == nullptr)
@@ -1405,6 +1424,12 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
         addInflationCurveCalibrationInfo(report, r.first, r.second);
     }
 
+    // commodity curve results
+
+    for (auto const& r :calibrationInfo->commodityCurveCalibrationInfo) {
+        addCommodityCurveCalibrationInfo(report, r.first, r.second);
+    }
+
     // fx vol results
     for (auto const& r : calibrationInfo->fxVolCalibrationInfo) {
         addFxEqVolCalibrationInfo(report, "fxVol", r.first, r.second);
@@ -1485,6 +1510,22 @@ void ReportWriter::writeFixings(Report& report, const boost::shared_ptr<Loader>&
 
     report.end();
     LOG("Fixings report written");
+}
+
+void ReportWriter::writeDividends(Report& report, const boost::shared_ptr<Loader>& loader) {
+
+    LOG("Writing Dividends report");
+
+    report.addColumn("dividendDate", Date())
+        .addColumn("equityId", string())
+        .addColumn("dividendRate", double(), 10);
+
+    for (const auto& f : loader->loadDividends()) {
+        report.next().add(f.date).add(f.name).add(f.fixing);
+    }
+
+    report.end();
+    LOG("Dividends report written");
 }
 
 void ReportWriter::writePricingStats(ore::data::Report& report, const boost::shared_ptr<Portfolio>& portfolio) {

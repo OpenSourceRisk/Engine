@@ -79,7 +79,7 @@ protected:
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy, const Date& expiryDate) override {
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy);
-        return boost::make_shared<AnalyticBarrierEngine>(gbsp);
+        return boost::make_shared<QuantLib::AnalyticBarrierEngine>(gbsp);
     }
 
 };

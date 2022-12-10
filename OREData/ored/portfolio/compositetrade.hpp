@@ -51,7 +51,7 @@ public:
     };
 
     //! Constructor requires a trade factory so that subtrades can be built
-    CompositeTrade(const boost::shared_ptr<TradeFactory>& tf, const Envelope& env = Envelope(),
+    CompositeTrade(const boost::weak_ptr<TradeFactory>& tf, const Envelope& env = Envelope(),
                    const TradeActions& ta = TradeActions())
         : Trade("CompositeTrade", env, ta), tradeFactory_(tf) {
         reset();
@@ -61,7 +61,7 @@ public:
     CompositeTrade(const string currency, const vector<boost::shared_ptr<Trade>>& trades,
                    const string notionalCalculation = "", const Real notionalOverride = 0.0,
                    const Envelope& env = Envelope(), const TradeActions& ta = TradeActions(),
-                   const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>())
+                   const boost::weak_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>())
         : Trade("CompositeTrade", env, ta), tradeFactory_(tf), currency_(currency), notionalOverride_(notionalOverride),
           notionalCalculation_(notionalCalculation), trades_(trades) {}
 
@@ -71,7 +71,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<TradeFactory>& tradeFactory() const { return tradeFactory_; }
+    const boost::weak_ptr<TradeFactory>& tradeFactory() const { return tradeFactory_; }
     const string& currency() const { return currency_; }
     const string& notionalCalculation() const { return notionalCalculation_; }
     const vector<boost::shared_ptr<Trade>>& trades() const { return trades_; }
@@ -100,7 +100,7 @@ public:
     //@}
 
 private:
-    const boost::shared_ptr<TradeFactory>& tradeFactory_;
+    const boost::weak_ptr<TradeFactory>& tradeFactory_;
     string currency_;
     Real notionalOverride_;
     string notionalCalculation_;

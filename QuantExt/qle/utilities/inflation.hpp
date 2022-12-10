@@ -28,6 +28,7 @@
 #include <ql/instruments/bond.hpp>
 #include <ql/time/period.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
+#include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
 
 namespace QuantExt {
 
@@ -96,6 +97,11 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
                                   const QuantLib::Period& swapObsLag, const QuantLib::Rate zeroCouponRate, 
                                   const QuantLib::Period& curveObsLag, const QuantLib::DayCounter& curveDayCounter,
                                   const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const bool interpolated);
+
+
+//! checks if the vols are normal or lognormal 
+//! if the volsurface is not derived from QuantExt::CPIVolatilitySurface we default to lognormal vols
+bool isCPIVolSurfaceLogNormal(const boost::shared_ptr<QuantLib::CPIVolatilitySurface>& surface);
 
 
 }

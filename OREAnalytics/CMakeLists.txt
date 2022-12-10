@@ -13,7 +13,10 @@ get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
 
 
-find_package (Boost REQUIRED COMPONENTS unit_test_framework regex date_time serialization filesystem timer OPTIONAL_COMPONENTS chrono)
+find_package (Boost REQUIRED COMPONENTS unit_test_framework regex date_time thread serialization system filesystem timer OPTIONAL_COMPONENTS chrono)
+if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER AND UNIX AND NOT APPLE)
+    find_library(RT_LIBRARY rt REQUIRED)
+endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${QUANTLIB_SOURCE_DIR})

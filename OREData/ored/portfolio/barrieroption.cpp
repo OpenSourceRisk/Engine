@@ -23,6 +23,7 @@
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
@@ -30,12 +31,14 @@
 #include <ql/exercise.hpp>
 #include <ql/instruments/barrieroption.hpp>
 #include <ql/instruments/barriertype.hpp>
+#include <qle/instruments/cashsettledeuropeanoption.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <ql/experimental/barrieroption/doublebarrieroption.hpp>
 
 using namespace QuantLib;
+using namespace QuantExt;
 
 namespace ore {
 namespace data {
@@ -51,6 +54,20 @@ void BarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
         
     // get the expiry date
     Date expiryDate = parseDate(option_.exerciseDates().front());
+    Date payDate = expiryDate;
+    const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+    if (opd) {
+        if (opd->rulesBased()) {
+            Calendar payCalendar = opd->calendar();
+            payDate = payCalendar.advance(expiryDate, opd->lag(), Days, opd->convention());
+        } else {
+            if (opd->dates().size() > 1)
+                WLOG(ore::data::StructuredTradeWarningMessage(
+                    id(), tradeType(), "Trade build", "Found more than 1 payment date. The first one will be used."));
+            payDate = opd->dates().front();
+        }
+    }
+    QL_REQUIRE(payDate >= expiryDate, "Settlement date cannot be earlier than expiry date");
 
     Real rebate = barrier_.rebate() / tradeMultiplier();
     QL_REQUIRE(rebate >= 0, "rebate must be non-negative");
@@ -69,9 +86,38 @@ void BarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     Settlement::Type settleType = parseSettlementType(option_.settlement());
     Position::Type positionType = parsePositionType(option_.longShort());
 
-    boost::shared_ptr<Instrument> vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
+    boost::shared_ptr<Instrument> vanilla;
     boost::shared_ptr<Instrument> barrier;
     boost::shared_ptr<InstrumentWrapper> instWrapper;
+
+    bool exercised = false;
+    Real exercisePrice = Null<Real>();
+
+    if (payDate > expiryDate) {
+        // Has the option been marked as exercised
+        const boost::optional<OptionExerciseData>& oed = option_.exerciseData();
+        if (oed) {
+            QL_REQUIRE(oed->date() == expiryDate, "The supplied exercise date ("
+                                                      << io::iso_date(oed->date())
+                                                      << ") should equal the option's expiry date ("
+                                                      << io::iso_date(expiryDate) << ").");
+            exercised = true;
+            exercisePrice = oed->price();
+        }
+
+        boost::shared_ptr<Index> index;
+        if (option_.isAutomaticExercise()) {
+            index = getIndex();
+            QL_REQUIRE(index, "Barrier option trade with delayed payment "
+                                  << id() << ": the FXIndex node needs to be populated.");
+            requiredFixings_.addFixingDate(expiryDate, index->name(), payDate);
+        }
+        vanilla = boost::make_shared<CashSettledEuropeanOption>(payoff->optionType(), payoff->strike(), expiryDate,
+                                                                payDate, option_.isAutomaticExercise(), index,
+                                                                exercised, exercisePrice);
+    } else {
+        vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
+    }
     
     boost::variant<Barrier::Type, DoubleBarrier::Type> barrierType;
     if (barrier_.levels().size() < 2) {
@@ -84,8 +130,8 @@ void BarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
             barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, payoff, exercise);
     }
 
-    boost::shared_ptr<QuantLib::PricingEngine> barrierEngine = barrierPricigingEngine(engineFactory, expiryDate);
-    boost::shared_ptr<QuantLib::PricingEngine> vanillaEngine = vanillaPricigingEngine(engineFactory, expiryDate);
+    boost::shared_ptr<QuantLib::PricingEngine> barrierEngine = barrierPricigingEngine(engineFactory, expiryDate, payDate);
+    boost::shared_ptr<QuantLib::PricingEngine> vanillaEngine = vanillaPricigingEngine(engineFactory, expiryDate, payDate);
    
     // set pricing engines
     barrier->setPricingEngine(barrierEngine);
@@ -111,7 +157,7 @@ void BarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     Calendar fixingCal = index ? index->fixingCalendar() : calendar_;
     if (startDate_ != Null<Date>() && !indexFixingName().empty()) {
         for (Date d = fixingCal.adjust(startDate_); d <= expiryDate; d = fixingCal.advance(d, 1 * Days)) {
-            requiredFixings_.addFixingDate(d, indexFixingName(), expiryDate);
+            requiredFixings_.addFixingDate(d, indexFixingName(), payDate);
         }
     }
 
@@ -122,7 +168,7 @@ void BarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
                     tradeCurrency(), engineFactory, engineFactory->configuration(MarketContext::pricing));
     
     // set the maturity
-    maturity_ = std::max(lastPremiumDate, expiryDate);
+    maturity_ = std::max(lastPremiumDate, payDate);
 }
 
 

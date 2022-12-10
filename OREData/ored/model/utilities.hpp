@@ -30,6 +30,7 @@
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infjyparameterization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
+#include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/lgmcalibrationinfo.hpp>
 
 #include <ql/models/calibrationhelper.hpp>
@@ -59,7 +60,17 @@ std::string getCalibrationDetails(
 std::string getCalibrationDetails(
     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
     const boost::shared_ptr<FxBsParametrization>& parametrization = boost::shared_ptr<FxBsParametrization>(),
+    const boost::shared_ptr<Parametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
+
+std::string getCalibrationDetails(
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+    const boost::shared_ptr<FxBsParametrization>& parametrization = boost::shared_ptr<FxBsParametrization>(),
     const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
+
+std::string getCalibrationDetails(
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+    const boost::shared_ptr<EqBsParametrization>& parametrization = boost::shared_ptr<EqBsParametrization>(),
+    const boost::shared_ptr<Parametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
 
 std::string getCalibrationDetails(
     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
@@ -70,6 +81,10 @@ std::string getCalibrationDetails(
     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
     const boost::shared_ptr<InfDkParametrization>& parametrization = boost::shared_ptr<InfDkParametrization>(),
     bool indexIsInterpolated = true);
+
+std::string getCalibrationDetails(
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+    const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization = boost::shared_ptr<CommoditySchwartzParametrization>());
 
 std::string getCalibrationDetails(const std::vector<boost::shared_ptr<CalibrationHelper>>& realRateBasket,
                                   const std::vector<boost::shared_ptr<CalibrationHelper>>& indexBasket,
@@ -92,6 +107,9 @@ Real cpiCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
 Real yoyCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
                             const boost::shared_ptr<YoYInflationTermStructure>& curve,
                             const QuantLib::Date& optionMaturityDate);
+
+//! helper function that computes the atm forward
+Real atmForward(const Real s0, const Handle<YieldTermStructure>& r, const Handle<YieldTermStructure>& q, const Real t);
 
 } // namespace data
 } // namespace ore

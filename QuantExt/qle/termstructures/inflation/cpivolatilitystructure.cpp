@@ -25,9 +25,10 @@ namespace QuantExt {
 CPIVolatilitySurface::CPIVolatilitySurface(QuantLib::Natural settlementDays, const QuantLib::Calendar& cal,
                                            QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
                                            const QuantLib::Period& observationLag, QuantLib::Frequency frequency,
-                                           bool indexIsInterpolated, const QuantLib::Date& startDate)
+                                           bool indexIsInterpolated, const QuantLib::Date& startDate,
+                                           QuantLib::VolatilityType volType, double displacement)
     : QuantLib::CPIVolatilitySurface(settlementDays, cal, bdc, dc, observationLag, frequency, indexIsInterpolated),
-      capFloorStartDate_(startDate) {}
+      volType_(volType), displacement_(displacement), capFloorStartDate_(startDate) {}
 
 QuantLib::Date CPIVolatilitySurface::capFloorStartDate() const {
     if (capFloorStartDate_ == QuantLib::Date()) {
@@ -55,6 +56,18 @@ QuantLib::Date CPIVolatilitySurface::baseDate() const {
 
 double CPIVolatilitySurface::fixingTime(const QuantLib::Date& maturityDate) const {
     return timeFromReference(ZeroInflation::fixingDate(maturityDate, observationLag(), frequency(), indexIsInterpolated()));
+}
+
+QuantLib::Volatility CPIVolatilitySurface::volatility(const QuantLib::Period& optionTenor, QuantLib::Rate strike,
+                                                      const QuantLib::Period& obsLag, bool extrapolate) const {
+    QuantLib::Date maturityDate = optionMaturityFromTenor(optionTenor);
+    return QuantLib::CPIVolatilitySurface::volatility(maturityDate, strike, obsLag, extrapolate);
+}
+
+QuantLib::Volatility CPIVolatilitySurface::totalVariance(const QuantLib::Period& optionTenor, QuantLib::Rate strike,
+                                                         const QuantLib::Period& obsLag, bool extrapolate) const {
+    QuantLib::Date maturityDate = optionMaturityFromTenor(optionTenor);
+    return QuantLib::CPIVolatilitySurface::totalVariance(maturityDate, strike, obsLag, extrapolate);
 }
 
 } // namespace QuantExt

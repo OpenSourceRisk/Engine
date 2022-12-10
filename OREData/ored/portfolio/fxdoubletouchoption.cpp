@@ -20,6 +20,7 @@
 #include <ored/portfolio/barrieroptionwrapper.hpp>
 #include <ored/portfolio/fxdoubletouchoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
@@ -83,17 +84,33 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
         DLOG("Payoff at hit not yet supported for FxDoubleTouchOptions, setting to payoff at expiry");
     }
 
+    Date payDate = expiryDate;
+    const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+    if (opd) {
+        if (opd->rulesBased()) {
+            payDate = opd->calendar().advance(expiryDate, opd->lag(), Days, opd->convention());
+        } else {
+            if (opd->dates().size() > 1)
+                WLOG(ore::data::StructuredTradeWarningMessage(
+                    id(), tradeType(), "Trade build", "Found more than 1 payment date. The first one will be used."));
+            payDate = opd->dates().front();
+        }
+    }
+    QL_REQUIRE(payDate >= expiryDate, "Settlement date cannot be earlier than expiry date");
+
     Real levelLow = barrier_.levels()[0].value();
     Real levelHigh = barrier_.levels()[1].value();
     QL_REQUIRE(levelLow < levelHigh, "barrier levels are not in ascending order");
 
     // Handle PayoffCurrency, we might have to flip the trade here
+    bool flipResults = false;
     if (payoffCurrency_ == foreignCurrency_) {
         // Invert the trade, switch dom and for and flip Put/Call
         levelLow = 1.0 / levelLow;
         levelHigh = 1.0 / levelHigh;
         std::swap(levelLow, levelHigh);
         std::swap(fgnCcy, domCcy);
+        flipResults = true;
     } else if (payoffCurrency_ != domesticCurrency_) {
         QL_FAIL("Invalid Payoff currency (" << payoffCurrency_ << ") for FxDoubleTouchOption " << foreignCurrency_
                                             << domesticCurrency_);
@@ -107,7 +124,7 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     boost::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(Option::Call, (levelLow + levelHigh) / 2, 1.0));
     Leg leg;
 
-    leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(1.0, expiryDate)));
+    leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(1.0, payDate)));
 
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate);
 
@@ -125,7 +142,7 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
     boost::shared_ptr<FxDoubleTouchOptionEngineBuilder> fxDoubleTouchOptBuilder =
         boost::dynamic_pointer_cast<FxDoubleTouchOptionEngineBuilder>(builder);
-    doubleTouch->setPricingEngine(fxDoubleTouchOptBuilder->engine(fgnCcy, domCcy));
+    doubleTouch->setPricingEngine(fxDoubleTouchOptBuilder->engine(fgnCcy, domCcy, payDate, flipResults));
 
     // if a knock-in option is triggered it becomes a simple forward cashflow
     // which we price as a swap
@@ -150,12 +167,12 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     npvCurrency_ = payoffCurrency_;
     notional_ = payoffAmount_;
     notionalCurrency_ = payoffCurrency_;
-    maturity_ = std::max(lastPremiumDate, expiryDate);
+    maturity_ = std::max(lastPremiumDate, payDate);
 
     Calendar fixingCal = fxIndex ? fxIndex->fixingCalendar() : cal;
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = fixingCal.advance(d, 1 * Days))
-            requiredFixings_.addFixingDate(d, fxIndex_, expiryDate);
+            requiredFixings_.addFixingDate(d, fxIndex_, payDate);
     }
 
     additionalData_["payoffAmount"] = payoffAmount_;

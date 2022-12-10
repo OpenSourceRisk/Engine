@@ -118,7 +118,7 @@ public:
 class ScenarioSimMarket : public analytics::SimMarket {
 public:
     //! Constructor
-    ScenarioSimMarket() {}
+    explicit ScenarioSimMarket(const bool handlePseudoCurrencies) : SimMarket(handlePseudoCurrencies) {}
 
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
@@ -127,7 +127,8 @@ public:
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                       const bool continueOnError = false, const bool useSpreadedTermStructures = false,
                       const bool cacheSimData = false, const bool allowPartialScenarios = false,
-                      const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
+                      const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                      const bool handlePseudoCurrencies = true);
 
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
@@ -137,7 +138,8 @@ public:
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                       const bool continueOnError = false, const bool useSpreadedTermStructures = false,
                       const bool cacheSimData = false, const bool allowPartialScenarios = false,
-                      const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
+                      const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                      const bool handlePseudoCurrencies = true);
 
     //! Set scenario generator
     virtual boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }

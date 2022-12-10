@@ -120,6 +120,18 @@
     <ClInclude Include="qle\instruments\tenorbasisswap.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\genericswaption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\varianceswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\volatilityfromvarianceswapengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
     <ClInclude Include="qle\pricingengines\crossccyswapengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
@@ -212,6 +224,9 @@
     </ClInclude>
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp">
       <Filter>methods</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\commodityswaptionengine.hpp">
+      <Filter>pricingengines</Filter>
     </ClInclude>
     <ClInclude Include="qle\pricingengines\analyticcclgmfxoptionengine.hpp">
       <Filter>pricingengines</Filter>
@@ -574,6 +589,12 @@
       <Filter>cashflows</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\equitycouponpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\equitymargincoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\equitymargincouponpricer.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\brlcdi.hpp">
@@ -1092,10 +1113,19 @@
     <ClInclude Include="qle\termstructures\averageoffpeakpowerhelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\blackscholesmodelwrapper.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
     <ClInclude Include="qle\models\carrmadanarbitragecheck.hpp">
       <Filter>models</Filter>
     </ClInclude>
     <ClInclude Include="qle\models\exactbachelierimpliedvolatility.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\hwmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\modelimpliedyieldtermstructure.hpp">
       <Filter>models</Filter>
     </ClInclude>
     <ClInclude Include="qle\models\normalsabr.hpp">
@@ -1262,6 +1292,117 @@
       <Filter>termstructures\inflation</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\inflation\piecewisezeroinflationcurve.hpp">
+      <Filter>termstructures\inflation</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\unitedarabemirates.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\cliquetoption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\mauritius.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticdoublebarrierbinaryengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticeuropeanengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\commodityschwartzparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\futureoptionhelper.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\commodityschwartzmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\modelimpliedpricetermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\processes\commodityschwartzstateprocess.hpp">
+      <Filter>processes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\commodityschwartzfutureoptionengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\commodityspreadoptionengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\commodityspreadoption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\methods\brownianbridgepathinterpolator.hpp">
+      <Filter>methods</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\methods\interpolatedvariatemultipathgenerator.hpp">
+      <Filter>methods</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\methods\multipathvariategenerator.hpp">
+      <Filter>methods</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\methods\projectedbufferedmultipathgenerator.hpp">
+      <Filter>methods</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\methods\projectedbufferedmultipathgeneratorfactory.hpp">
+      <Filter>methods</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\methods\projectedvariatemultipathgenerator.hpp">
+      <Filter>methods</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\methods\projectedvariatepathgeneratorfactory.hpp">
+      <Filter>methods</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\commoditymodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\fxbsmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\fxmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\hwparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\irmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\amccalculator.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticbarrierengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticdoublebarrierengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\mccamcurrencyswapengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\mccamfxoptionengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\mclgmswapengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\mclgmswaptionengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\mcmultilegbaseengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\mcmultilegoptionengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\processes\fxbsstateprocess.hpp">
+      <Filter>processes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\processes\irhwstateprocess.hpp">
+      <Filter>processes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\inflation\cpipricevolatilitysurface.hpp">
       <Filter>termstructures\inflation</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1532,6 +1673,15 @@
     <ClCompile Include="qle\pricingengines\depositengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
+    <ClCompile Include="qle\instruments\varianceswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\volatilityfromvarianceswapengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\varianceswapgeneralreplicationengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
     <ClCompile Include="qle\termstructures\strippedoptionletadapter2.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
@@ -1582,6 +1732,9 @@
     </ClCompile>
     <ClCompile Include="qle\models\lgmimplieddefaulttermstructure.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\analyticdkcpicapfloorengine.cpp">
       <Filter>pricingengines</Filter>
@@ -1688,6 +1841,12 @@
     <ClCompile Include="qle\cashflows\equitycouponpricer.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
+    <ClCompile Include="qle\cashflows\equitymargincoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\equitymargincouponpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
     <ClCompile Include="qle\termstructures\discountratiomodifiedcurve.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
@@ -1791,6 +1950,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\discountingforwardbondengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\commodityswaptionengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.cpp">
@@ -2087,10 +2249,16 @@
     <ClCompile Include="qle\cashflows\nonstandardinflationcouponpricer.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
+    <ClCompile Include="qle\models\hwmodel.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
     <ClCompile Include="qle\models\lgmconvolutionsolver2.cpp">
       <Filter>models</Filter>
     </ClCompile>
     <ClCompile Include="qle\models\lgmvectorised.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\modelimpliedyieldtermstructure.cpp">
       <Filter>models</Filter>
     </ClCompile>
     <ClCompile Include="qle\math\randomvariable.cpp">
@@ -2158,6 +2326,90 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\multiccycompositeinstrument.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\unitedarabemirates.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\genericswaption.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\cliquetoption.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\mauritius.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticdoublebarrierbinaryengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticeuropeanengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\commodityschwartzparametrization.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\futureoptionhelper.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\commodityschwartzmodel.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\modelimpliedpricetermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\processes\commodityschwartzstateprocess.cpp">
+      <Filter>processes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\commodityschwartzfutureoptionengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\commodityspreadoptionengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\commodityspreadoption.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\methods\brownianbridgepathinterpolator.cpp">
+      <Filter>methods</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\methods\interpolatedvariatemultipathgenerator.cpp">
+      <Filter>methods</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\methods\multipathvariategenerator.cpp">
+      <Filter>methods</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\methods\projectedbufferedmultipathgenerator.cpp">
+      <Filter>methods</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\methods\projectedvariatemultipathgenerator.cpp">
+      <Filter>methods</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticbarrierengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticdoublebarrierengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\mccamcurrencyswapengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\mccamfxoptionengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\mclgmswapengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\mclgmswaptionengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\mcmultilegbaseengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\mcmultilegoptionengine.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

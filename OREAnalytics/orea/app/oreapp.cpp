@@ -117,6 +117,12 @@ int OREApp::run() {
         engineFactory_ = buildEngineFactory(market_, "setup", true);
         out_ << "OK" << endl;
 
+        /************************
+         * Set global pseudo currency market parameters
+         * TODO cleaner integration with analytics
+         */
+        GlobalPseudoCurrencyMarketParameters::instance().set(getEngineData("setup")->globalParameters());
+
         /******************************
          * Load and Build the Portfolio
          */
@@ -864,9 +870,9 @@ void OREApp::writeBaseScenario() {
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     simMarketData->fromFile(marketConfigFile);
 
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, marketConfiguration,
-                                                           *curveConfigs_, *marketParameters_, continueOnError_, false,
-                                                           false, false, iborFallbackConfig_);
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, marketConfiguration, *curveConfigs_,
+                                                           *marketParameters_, continueOnError_, false, false, false,
+                                                           iborFallbackConfig_, false);
     boost::shared_ptr<Scenario> scenario = simMarket->baseScenario();
     QL_REQUIRE(scenario->asof() == today, "dates do not match");
 
@@ -979,9 +985,8 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
         LOG("Build Simulation Market");
 
         simMarket_ = boost::make_shared<ScenarioSimMarket>(
-            market_, simMarketData, boost::make_shared<FixingManager>(asof_),
-            params_->get("markets", "simulation"), *curveConfigs_, *marketParameters_, continueOnError_, false, true,
-            false, iborFallbackConfig_);
+            market_, simMarketData, boost::make_shared<FixingManager>(asof_), params_->get("markets", "simulation"),
+            *curveConfigs_, *marketParameters_, continueOnError_, false, true, false, iborFallbackConfig_, false);
         string groupName = "simulation";
         boost::shared_ptr<EngineFactory> simFactory = buildEngineFactory(simMarket_, groupName);
 

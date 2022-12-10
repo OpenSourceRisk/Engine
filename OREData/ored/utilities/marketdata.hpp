@@ -84,7 +84,7 @@ QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared
 /*! Pretty print an internal curve name occuring (once or several times) in a string (e.g. in a risk factor name). */
 std::string prettyPrintInternalCurveName(std::string name);
 
-/*! Build an Fx Index given a market */
+/*! Build an Fx Index given a market. Note: sold==domestic, bought==foreign */
 boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
                                                   const boost::shared_ptr<Market>& market, const string& configuration,
                                                   bool useXbsCurves = false);
@@ -93,7 +93,7 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
 Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& market, const string& ccyCode,
                                           const string& configuration);
 
-std::pair<Natural, Calendar> getFxIndexConventions(const string& index);
+std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const string& index);
 
 } // namespace data
 } // namespace ore

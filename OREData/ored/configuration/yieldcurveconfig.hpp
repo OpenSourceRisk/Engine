@@ -519,8 +519,7 @@ public:
     FittedBondYieldCurveSegment() {}
     //! Detailed constructor
     FittedBondYieldCurveSegment(const string& typeID, const vector<string>& quotes,
-                                const map<string, string>& iborIndexCurves, const bool extrapolateFlat,
-                                const Size calibrationTrials);
+                                const map<string, string>& iborIndexCurves, const bool extrapolateFlat);
 
     //! \name Serialisation
     //@{
@@ -532,7 +531,6 @@ public:
     //@{
     const map<string, string>& iborIndexCurves() const { return iborIndexCurves_; }
     const bool extrapolateFlat() const { return extrapolateFlat_; }
-    const Size calibrationTrials() const { return calibrationTrials_; }
     //@}
 
     //! \name Visitability
@@ -543,7 +541,6 @@ public:
 private:
     map<string, string> iborIndexCurves_;
     bool extrapolateFlat_;
-    Size calibrationTrials_;
 };
 
 //! Ibor Fallback yield curve segment

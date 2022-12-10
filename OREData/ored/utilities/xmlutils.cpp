@@ -213,7 +213,7 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value) {
-    if (value.size() == 0) {
+    if (value.empty()) {
         addChild(doc, n, name);
     } else {
         XMLNode* node = doc.allocNode(name, value);
@@ -223,7 +223,7 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
 }
 
 void XMLUtils::addChildAsCdata(XMLDocument& doc, XMLNode* n, const string& name, const string& value) {
-    if (value.size() == 0) {
+    if (value.empty()) {
         addChild(doc, n, name);
     } else {
         QL_REQUIRE(n, "XML Node is NULL (adding " << name << ")");
@@ -238,16 +238,26 @@ void XMLUtils::addChildAsCdata(XMLDocument& doc, XMLNode* n, const string& name,
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value, const string& attrName,
                         const string& attr) {
+    if (!attrName.empty() || !attr.empty()) {
+        addChild(doc, n, name, value, std::vector<string>{attrName}, std::vector<string>{attr});
+    } else {
+        addChild(doc, n, name, value, std::vector<string>{}, std::vector<string>{});
+    }
+}
+
+void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value,
+                        const vector<string>& attrNames, const vector<string>& attrs) {
+    QL_REQUIRE(attrNames.size() == attrs.size(), "The size of attrNames should be the same as the size of attrs.");
     XMLNode* node;
-    if (value.size() == 0) {
+    if (value.empty()) {
         node = addChild(doc, n, name);
     } else {
         node = doc.allocNode(name, value);
         QL_REQUIRE(n, "XML Node is NULL (adding " << name << ")");
         n->insert_node(0, node);
     }
-    if (attrName != "" || attr != "") {
-        XMLUtils::addAttribute(doc, node, attrName, attr);
+    for (Size i = 0; i < attrNames.size(); ++i) {
+        XMLUtils::addAttribute(doc, node, attrNames[i], attrs[i]);
     }
 }
 
@@ -391,7 +401,7 @@ map<string, string> XMLUtils::getChildrenAttributesAndValues(XMLNode* parent, co
         res.insert(pair<string, string>(first, second));
     }
     if (mandatory) {
-        QL_REQUIRE(res.size() > 0, "Error: No XML Node " << names << " found.");
+        QL_REQUIRE(!res.empty(), "Error: No XML Node " << names << " found.");
     }
     return res;
 }
@@ -408,7 +418,7 @@ XMLNode* XMLUtils::locateNode(XMLNode* n, const string& name) {
     if (n->name() == name)
         return n;
     else {
-        const char* p = name.size() == 0 ? nullptr : name.c_str();
+        const char* p = name.empty() ? nullptr : name.c_str();
         XMLNode* node = n->first_node(p);
         QL_REQUIRE(node, "XML node with name " << name << " not found");
         return node;
@@ -441,7 +451,7 @@ string XMLUtils::getAttribute(XMLNode* node, const string& attrName) {
 vector<XMLNode*> XMLUtils::getChildrenNodes(XMLNode* node, const string& name) {
     QL_REQUIRE(node, "XMLUtils::getChildredNodes(" << name << ") node is NULL");
     vector<XMLNode*> res;
-    const char* p = name.size() == 0 ? nullptr : name.c_str();
+    const char* p = name.empty() ? nullptr : name.c_str();
     for (xml_node<>* c = node->first_node(p); c; c = c->next_sibling(p))
         res.push_back(c);
     return res;

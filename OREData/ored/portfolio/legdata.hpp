@@ -674,15 +674,15 @@ public:
 private:
     boost::shared_ptr<CMSSpreadLegData> underlying_;
 
-    Position::Type callPosition_;
-    bool isCallATMIncluded_;
+    Position::Type callPosition_ = Position::Long;
+    bool isCallATMIncluded_ = false;
     vector<double> callStrikes_;
     vector<string> callStrikeDates_;
     vector<double> callPayoffs_;
     vector<string> callPayoffDates_;
 
-    Position::Type putPosition_;
-    bool isPutATMIncluded_;
+    Position::Type putPosition_ = Position::Long;
+    bool isPutATMIncluded_ = false;
     vector<double> putStrikes_;
     vector<string> putStrikeDates_;
     vector<double> putPayoffs_;
@@ -922,6 +922,9 @@ public:
     boost::shared_ptr<LegAdditionalData>& concreteLegData() { return concreteLegData_; }
     std::vector<Indexing>& indexing() { return indexing_; }
     bool& indexingFromAssetLeg() { return indexingFromAssetLeg_; }
+    string& paymentConvention() { return paymentConvention_; }
+    std::vector<std::string>& paymentDates() { return paymentDates_; }
+    string& lastPeriodDayCounter() { return lastPeriodDayCounter_; }
     //@}
 
     virtual boost::shared_ptr<LegAdditionalData> initialiseConcreteLegData(const string&);
@@ -1005,10 +1008,10 @@ Real originalNotional(const Leg& leg);
 
 //@}
 
-//! Build a full vector of values from the given node.
-//  For use with Notionals, Rates, Spreads, Gearing, Caps and Floor rates.
-//  In all cases we can expand the vector to take the given schedule into account
-//  If checkAllValuesAppearInResult is true, we require that all input values are appearing in the result (in order)
+// Build a full vector of values from the given node.
+// For use with Notionals, Rates, Spreads, Gearing, Caps and Floor rates.
+// In all cases we can expand the vector to take the given schedule into account
+// If checkAllValuesAppearInResult is true, we require that all input values are appearing in the result (in order)
 template <typename T>
 vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
                                const bool checkAllValuesAppearInResult = false);
@@ -1053,8 +1056,7 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 
 // apply indexing (if given in LegData) to existing leg
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                   std::map<std::string, std::string>& qlToOREIndexNames, RequiredFixings& requiredFixings,
-                   const QuantLib::Date& openEndDateReplacement = Null<Date>());
+                   RequiredFixings& requiredFixings, const QuantLib::Date& openEndDateReplacement = Null<Date>());
 
 // template implementations
 

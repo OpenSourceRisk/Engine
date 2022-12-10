@@ -34,12 +34,12 @@ namespace data {
 class BarrierData : public ore::data::XMLSerializable {
 public:
     //! Default constructor
-    BarrierData() : rebate_(0.0) {}
+    BarrierData() : initialized_(false), rebate_(0.0) {}
     //! Constructor
-    BarrierData(std::string barrierType,
-                std::vector<double> levels, double rebate, std::vector<ore::data::TradeBarrier> tradeBarriers,
-                std::string style = "")
-        : type_(barrierType), levels_(levels), rebate_(rebate), tradeBarriers_(tradeBarriers), style_(style) {}
+    BarrierData(std::string barrierType, std::vector<double> levels, double rebate,
+                std::vector<ore::data::TradeBarrier> tradeBarriers, std::string style = "")
+        : initialized_(true), type_(barrierType), levels_(levels), rebate_(rebate), tradeBarriers_(tradeBarriers),
+          style_(style) {}
 
     //! \name Inspectors
     //@{
@@ -49,6 +49,7 @@ public:
     const std::string& rebatePayTime() const { return rebatePayTime_; }
     std::vector<ore::data::TradeBarrier> levels() const { return tradeBarriers_; }
     const std::string& style() const { return style_; }
+    bool initialized() const { return initialized_; }
     //@}
 
     //! \name Serialisation
@@ -58,6 +59,7 @@ public:
     //@}
 
 private:
+    bool initialized_;
     std::string type_;
     std::vector<double> levels_;
     double rebate_;

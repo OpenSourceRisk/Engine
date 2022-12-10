@@ -284,6 +284,22 @@ Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
     return result;
 }
 
+double BondBuilder::Result::inflationFactor() const {
+    if (!isInflationLinked) {
+        return 1.0;
+    } else {
+        QL_REQUIRE(bond, "need to set the bond before calling inflationFactor()");
+        double factor = 1.0;
+        try {
+            factor = QuantExt::inflationLinkedBondQuoteFactor(bond);
+        } catch (const std::exception& e) {
+            ALOG("Failed to compute the inflation price factor for the bond "
+                 << securityId << ", fallback to use factor 1, got " << e.what());
+        }
+        return factor;
+    }
+}
+
 BondBuilder::Result BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                                        const boost::shared_ptr<ReferenceDataManager>& referenceData,
                                        const std::string& securityId) const {
@@ -325,9 +341,9 @@ BondBuilder::Result VanillaBondBuilder::build(const boost::shared_ptr<EngineFact
 
     Result res;
     res.bond = qlBond;
+
     if (data.isInflationLinked()) {
-        res.inflationFactor = QuantExt::inflationLinkedBondQuoteFactor(qlBond);
-        res.isInflationLinked = true;
+        res.isInflationLinked = true;       
     }
     res.hasCreditRisk = data.hasCreditRisk() && !data.creditCurveId().empty();
     res.currency = data.currency();

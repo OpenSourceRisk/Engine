@@ -55,7 +55,7 @@ namespace {
 
 class TestMarket : public MarketImpl {
 public:
-    TestMarket(Real hazardRate, Real recoveryRate, Real liborRate) {
+    TestMarket(Real hazardRate, Real recoveryRate, Real liborRate) : MarketImpl(false) {
         asof_ = Date(3, Feb, 2016);
         // build discount
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] =

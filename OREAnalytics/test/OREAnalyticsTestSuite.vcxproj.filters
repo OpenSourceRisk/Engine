@@ -66,5 +66,8 @@
     <ClCompile Include="sensitivityaggregator.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="amcbermudanswaption.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

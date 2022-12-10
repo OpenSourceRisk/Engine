@@ -51,11 +51,11 @@ The \lstinline!Rules! sub-node is shown in Listing \ref{lst:settlement_data_node
   \begin{itemize}
 	\item PaymentLag [Optional]: The lag between the value date and the payment date. \\
 	Allowable values: Any valid period, i.e.\ a non-negative whole number, optionally followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months),
-  \emph{Y} (years). Defaults to \emph{0D} if left blank or omitted. If a whole number is given and no letter, it is assumed that it is a number of  \emph{D} (days).
+  \emph{Y} (years). For cash settlement and if a FXIndex is specified defaults to the fx convention (field ``SpotDays'') if blank or omitted, otherwise to 0. If a whole number is given and no letter, it is assumed that it is a number of  \emph{D} (days).
 	\item PaymentCalendar [Optional]: The calendar to be used when applying the payment lag. \\
-	Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. Defaults to \emph{NullCalendar} (no holidays) if left blank or omitted.
+	Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. For cash settlement and if a FXIndex is specified defaults to the fx convention (field ``AdvanceCalendar'') if left blank or omitted, otherwise to NullCalendar (no holidays).
 	\item PaymentConvention [Optional]: The roll convention to be used when applying the payment lag. \\
-	Allowable values: See Table \ref{tab:convention} Roll Convention. Defaults to \emph{Unadjusted} if left blank or omitted.
+	Allowable values: See Table \ref{tab:convention} Roll Convention. For cash settlement and if a FXIndex is specified defaults to the fx convention ((field ``Convention'') if left blank or omitted, otherwise to Unadjusted.
   \end{itemize}
 \end{itemize}
 
@@ -121,6 +121,6 @@ The meanings and allowable values of the various elements in the \lstinline!FXAv
 \item ReferenceCurrency: The currency of the reference notional above.  \\ Allowable values: See Table \ref{tab:currency}  \lstinline!Currency!.
 \item SettlementNotional: The fixed amount to be paid or received depending on the fixed payer flag above \\ Allowable values:  Any positive real number.
 \item SettlementCurrency: The currency of the settlement notional above. \\ Allowable values: See Table \ref{tab:currency}  \lstinline!Currency!.
-\item FXIndex: The FX reference index for determining the FX fixing for averaging.  \\
-Allowable values: The format of the \lstinline!FXIndex! is ``FX-FixingSource-CCY1-CCY2'' as described in Table \ref{tab:fxindex_data}.
+\item FXIndex: The FX reference index for determining the FX fixing for averaging. \\
+Allowable values: The format of the \lstinline!FXIndex! is ``FX-FixingSource-CCY1-CCY2'' as described in Table \ref{tab:fxindex_data}. Notice that since the payoff is based on an arithmetic average, the order of the currencies in the FX index matters: The averaging will be done on fx rates quoted as CCY1-CCY2 (foreign-domestic). 
 \end{itemize}

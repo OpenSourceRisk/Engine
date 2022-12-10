@@ -74,6 +74,13 @@ public:
     */
     virtual QuantLib::Date expiryDate(const QuantLib::Date& contractDate, QuantLib::Natural monthOffset = 0,
         bool forOption = false) = 0;
+
+    /*! Given a futures (not option) expiry date, return a corresponding contract date */
+    virtual QuantLib::Date contractDate(const QuantLib::Date& expiryDate) = 0;
+
+    /*! apply a month offset to a given contract date and return the new contract date
+        if the contract frequency is daily or weekly, the input contract date is not modified */
+    virtual QuantLib::Date applyFutureMonthOffset(const QuantLib::Date& contractDate, Natural futureMonthOffset) = 0;
 };
 
 } // namespace QuantExt

@@ -1,0 +1,107 @@
+\subsubsection{Commodity Swaption}
+\label{ss:input_commodityswaption}
+
+The structure of a trade node representing a commodity swaption is shown in listing \ref{lst:commodity_swaption}. It consists of the generic \lstinline!Envelope! and the specific \lstinline!CommoditySwaptionData! node.
+
+The \lstinline!CommoditySwaptionData! node contains an \lstinline!OptionData! node described in \ref{ss:option_data}. The relevant fields in the \lstinline!OptionData! node for a CommoditySwaption are:
+
+\begin{itemize}
+\item \lstinline!LongShort!: The allowable values are \emph{Long} or \emph{Short}. Note that the payer and receiver legs in the underlying swap are always from the perspective of the party that is \emph{Long}. E.g. for a \emph{Short} CommoditySwaption with a fixed leg where the Payer flag is set to \emph{false}, it means that the counterparty receives the fixed flows.  
+
+
+\item \lstinline!OptionType![Optional]: This flag is optional for CommoditySwaptions, and even if set, has no impact. The direction of flows is determined entirely by the Payer flags on the underlying legs (and the \lstinline!LongShort! flag above).
+
+\item  \lstinline!Style!: The exercise style of the CommoditySwaption. Only exercise style \emph{European} is supported.
+
+\item \lstinline!NoticePeriod![Optional]: The notice period defining the date (relative to the exercise date) on which the exercise
+  decision has to be taken. If not given the notice period defaults to \emph{0D}, i.e. the notice date is identical to the
+  exercise date. Allowable values: A number followed by \emph{D, W, M, or Y}
+
+\item \lstinline!NoticeCalendar![Optional]: The calendar used to compute the notice date from the exercise date. If not given
+  defaults to the \emph{NullCalendar} (no holidays, weekends are no holidays either). Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!.
+
+\item \lstinline!NoticeConvention![Optional]: The roll convention used to compute the notice date from the exercise date. Defaults to
+  \emph{Unadjusted} if not given. Allowable values: See Table \ref{tab:convention} Roll Convention.
+
+\item  \lstinline!Settlement!: Delivery Type. The allowable values are \emph{Cash} or \emph{Physical}.
+
+%\item \lstinline!SettlementMethod![Optional]: Specifies the method to calculate the settlement amount.  Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice}, \emph{ParYieldCurve}. Defaults to \emph{ParYieldCurve} if Settlement is \emph{Cash} and defaults to \emph{PhysicalOTC} if Settlement is \emph{Physical}.
+
+%\emph{PhysicalOTC} = OTC traded swaptions with physical settlement\\
+%\emph{PhysicalCleared} = Cleared swaptions with physical settlement\\
+%\emph{CollateralizedCashPrice} = Cash settled swaptions with settlement price calculation using zero coupon curve discounting \\
+%\emph{ParYieldCurve}  = Cash settled swaptions with settlement price calculation using par yield discounting \footnote{https://www.isda.org/book/2006-isda-definitions/} \footnote{https://www.isda.org/a/TlAEE/Supplement-No-58-to-ISDA-2006-Definitions.pdf} \\
+
+\item \lstinline!ExerciseFees![Optional]: This node contains child elements of type \lstinline!ExerciseFee!. Similar to a list of notionals
+  (see \ref{ss:leg_data}) the fees can be given either
+
+  \begin{itemize}
+  \item as a list where each entry corresponds to an exercise date and the last entry is used for all remaining exercise
+    dates if there are more exercise dates than exercise fee entries, or
+  \item using the \verb+startDate+ attribute to specify a change in a fee from a certain day on (w.r.t. the exercise
+    date schedule)
+  \end{itemize}
+
+  Fees can either be given as an absolute amount or relative to the current notional of the period immediately following
+  the exercise date using the \verb+type+ attribute together with specifiers \verb+Absolute+ resp. \verb+Percentage+. If
+  not given, the type defaults to \verb+Absolute+. \verb+Percentage+ fees are expressed in decimal form, e.g. 0.05 is a fee of 5\% of notional.
+
+  If a fee is given as a positive number the option holder has to pay a corresponding amount if they exercise the
+  option. If the fee is negative on the other hand, the option holder receives an amount on the option exercise.
+
+\item \lstinline!ExerciseFeeSettlementPeriod![Optional]: The settlement lag for exercise fee payments. Defaults to 0D if not
+  given. This lag is relative to the exercise date (as opposed to the notice date). Allowable values: A number followed by \emph{D, W, M, or Y}
+
+\item \lstinline!ExerciseFeeSettlementCalendar![Optional]: The calendar used to compute the exercise fee settlement date from the
+  exercise date. If not given defaults to the \emph{NullCalendar} (no holidays, weekends are no holidays either). Allowable values: See Table \ref{tab:calendar} Calendar.
+
+\item \lstinline!ExerciseFeeSettlementConvention![Optional]: The roll convention used to compute the exercise fee settlement date from
+  the exercise date. Defaults to \emph{Unadjusted} if not given. Allowable values: See Table \ref{tab:convention} Roll Convention.
+
+\item An \lstinline!ExerciseDates! node where exactly one \lstinline!ExerciseDate! date element must be given for \emph{European} style CommoditySwaptions. Allowable values: The \lstinline!ExerciseDate! must be on or before the StartDate of the underlying legs, and be on or after the valuation date. For the format, see Date in Table \ref{tab:allow_stand_data}. \\
+
+\item \lstinline!Premiums! [Optional]: Option premium node with amounts paid by the option buyer to the option seller.
+
+Allowable values:  See section \ref{ss:premiums}
+
+\end{itemize}
+
+%\begin{itemize}
+%  \item the option \lstinline!Style! should be \lstinline!European!
+%  \item the \lstinline!ExerciseDates! node should contain exactly one \lstinline!ExerciseDate!
+%  \item the single \lstinline!ExerciseDate! should be on or before the swap start date
+%  \item the single \lstinline!ExerciseDate! should be on or after the valuation date
+%\end{itemize}
+
+The \lstinline!CommoditySwaptionData! node should contain exactly two \lstinline!LegData! nodes. One \lstinline!LegData! node should be of type \lstinline!CommodityFixed! described in section \ref{ss:commodityfixedleg} and one should be of type \lstinline!CommodityFloating! described in section \ref{ss:commodityfloatingleg}. Note that on the \lstinline!CommodityFloating! leg, the Spread must be omitted or set to \emph{0}, and the Gearing must be omitted or set to \emph{1}.
+
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="...">
+  <TradeType>CommoditySwaption</TradeType>
+  <Envelope>
+    ...
+  </Envelope>
+  <CommoditySwaptionData>
+    <OptionData>
+      <LongShort>Long</LongShort>
+      <Style>European</Style>
+      <Settlement>Cash</Settlement>
+      <ExerciseDates>
+        <ExerciseDate>2023-01-05</ExerciseDate>
+      </ExerciseDates>
+    </OptionData>
+    <LegData>
+      <LegType>CommodityFixed</LegType>
+      ...
+    </LegData>
+    <LegData>
+      <LegType>CommodityFloating</LegType>
+      ...
+    </LegData>
+  </CommoditySwaptionData>
+</Trade>
+\end{minted}
+\caption{Commodity swaption}
+\label{lst:commodity_swaption}
+\end{listing}

@@ -142,7 +142,12 @@ void CompositeTrade::fromXML(XMLNode* node) {
         id = this->id() + "_" + std::to_string(i);
         DLOG("Parsing composite trade " << this->id() << " node " << i << " with id: " << id);
 
-        boost::shared_ptr<Trade> trade = tradeFactory_->build(tradeType);
+        boost::shared_ptr<Trade> trade;
+        if (auto s = tradeFactory_.lock()) {
+            trade = s->build(tradeType);
+        } else {
+            QL_FAIL("Internal error: could not lock trade factory. Contact dev.");
+        }
 
         if (trade) {
             try {

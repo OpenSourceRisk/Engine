@@ -356,8 +356,8 @@ void LgmBuilder::performCalculations() const {
                 WLOG("An error occurred: " << e.what());
             }
             TLOGGERSTREAM("Parameter details (with parameter time grid)");
-            TLOGGERSTREAM(getCalibrationDetails(parametrization_))
-	    TLOGGERSTREAM("rmse = " << error_);
+            TLOGGERSTREAM(getCalibrationDetails(calibrationInfo, swaptionBasket_, parametrization_))
+            TLOGGERSTREAM("rmse = " << error_);
             calibrationInfo.valid = true;
         }
     } else {

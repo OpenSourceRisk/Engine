@@ -38,12 +38,14 @@
 #include <qle/calendars/largejointcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
+#include <qle/calendars/mauritius.hpp>
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/russia.hpp>
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
+#include <qle/calendars/unitedarabemirates.hpp>
 #include <qle/calendars/wmr.hpp>
 
 #include <boost/algorithm/string.hpp>
@@ -324,10 +326,14 @@ void CalendarParser::reset() {
         {"ZAX", SouthAfrica()},
 
         // fallback to IslamicWeekendsOnly for these ccys and use amendmends
-        {"AED", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
-        {"AE", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
-        {"ARE", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
+        {"AED", AmendedCalendar(UnitedArabEmirates(), "AED")},
+        {"AE", AmendedCalendar(UnitedArabEmirates(), "AED")},
+        {"ARE", AmendedCalendar(UnitedArabEmirates(), "AED")},
 
+        // fallback to amended Mauritius calendar.
+        {"MU", AmendedCalendar(Mauritius(), "MUR")},
+        {"MUR", AmendedCalendar(Mauritius(), "MUR")},
+        {"MUS", AmendedCalendar(Mauritius(), "MUR")},
         // fallback to WeekendsOnly for these emerging ccys
         {"BHD", AmendedCalendar(WeekendsOnly(), "BHD")},
         {"CLF", AmendedCalendar(WeekendsOnly(), "CLF")},
@@ -353,7 +359,6 @@ void CalendarParser::reset() {
         {"JOD", AmendedCalendar(WeekendsOnly(), "JOD")},
         {"KES", AmendedCalendar(WeekendsOnly(), "KES")},
         {"LKR", AmendedCalendar(WeekendsOnly(), "LKR")},
-        {"MUR", AmendedCalendar(WeekendsOnly(), "MUR")},
         {"RSD", AmendedCalendar(WeekendsOnly(), "RSD")},
         {"UGX", AmendedCalendar(WeekendsOnly(), "UGX")},
         {"XOF", AmendedCalendar(WeekendsOnly(), "XOF")},

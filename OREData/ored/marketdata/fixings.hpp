@@ -43,15 +43,16 @@ namespace data {
 */
 struct Fixing {
     //! Fixing date
-    QuantLib::Date date;
+    QuantLib::Date date = QuantLib::Date();
     //! Index name
-    std::string name;
+    std::string name = string();
     //! Fixing amount
-    QuantLib::Real fixing;
+    QuantLib::Real fixing = QuantLib::Null<QuantLib::Real>();
 
     //! Constructor
     Fixing() {}
     Fixing(const QuantLib::Date& d, const std::string& s, const QuantLib::Real f) : date(d), name(s), fixing(f) {}
+    bool empty() { return name.empty() && date == QuantLib::Date() && fixing == QuantLib::Null<QuantLib::Real>(); }
 
 private:
     //! Serialization

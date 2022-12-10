@@ -61,7 +61,6 @@ public:
     void update() override;
 
 protected:
-    Rate hazardRateImpl(Time) const;
     Probability survivalProbabilityImpl(Time) const override;
 
     const boost::shared_ptr<CrCirpp> model_;

@@ -23,15 +23,19 @@
 
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
-// Boost
-#include <boost/timer/timer.hpp>
-using namespace boost;
+#include <oret/config.hpp>
 
 // Boost.Test
-#define BOOST_TEST_MODULE QuantExtTestSuite
-#include <boost/test/unit_test.hpp>
+#define BOOST_TEST_MODULE "QuantExtTestSuite"
+#ifdef ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
+#include <test-suite/paralleltestrunner.hpp>
+#else
+#include <boost/test/included/unit_test.hpp>
+#endif
+
+// Boost
+using namespace boost;
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
@@ -48,38 +52,3 @@ using boost::unit_test::framework::master_test_suite;
 #include <boost/config/auto_link.hpp>
 #endif
 
-class QleGlobalFixture {
-public:
-    QleGlobalFixture() {}
-
-    ~QleGlobalFixture() { stopTimer(); }
-
-    // Method called in destructor to log time taken
-    void stopTimer() {
-        t.stop();
-        double seconds = t.elapsed().wall * 1e-9;
-        int hours = int(seconds / 3600);
-        seconds -= hours * 3600;
-        int minutes = int(seconds / 60);
-        seconds -= minutes * 60;
-        cout << endl << "QuantExt tests completed in ";
-        if (hours > 0)
-            cout << hours << " h ";
-        if (hours > 0 || minutes > 0)
-            cout << minutes << " m ";
-        cout << fixed << setprecision(0) << seconds << " s" << endl;
-    }
-
-private:
-    // Timing the test run
-    boost::timer::cpu_timer t;
-};
-
-// Breaking change in 1.65.0
-// https://www.boost.org/doc/libs/1_65_0/libs/test/doc/html/boost_test/change_log.html
-// Deprecating BOOST_GLOBAL_FIXTURE in favor of BOOST_TEST_GLOBAL_FIXTURE
-#if BOOST_VERSION < 106500
-BOOST_GLOBAL_FIXTURE(QleGlobalFixture);
-#else
-BOOST_TEST_GLOBAL_FIXTURE(QleGlobalFixture);
-#endif

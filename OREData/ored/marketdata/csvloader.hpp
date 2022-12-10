@@ -79,7 +79,10 @@ public:
     std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
 
     //! Get a particular quote by its unique name
-    boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date&) const override;
+    using Loader::get;
+
+    //! get quotes matching a wildcard
+    std::set<boost::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const override;
 
     //! Load fixings
     std::set<Fixing> loadFixings() const override { return fixings_; }
@@ -92,7 +95,7 @@ private:
     void loadFile(const string&, DataType);
 
     bool implyTodaysFixings_;
-    std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
+    std::map<QuantLib::Date, std::set<boost::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>> data_;
     std::set<Fixing> fixings_;
     std::set<Fixing> dividends_;
 };

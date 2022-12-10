@@ -1654,4 +1654,18 @@
     <AtmType>AtmDeltaNeutral</AtmType> 
     <DeltaType>PaFwd</DeltaType> 
   </FxOption> 
+  <!--
+  <CommodityFuture>
+    <Id>COMDTY_WTI_USD</Id>
+    <AnchorDay>
+      <DayOfMonth>25</DayOfMonth>
+    </AnchorDay>
+    <ContractFrequency>Monthly</ContractFrequency>
+    <Calendar>US-NYSE</Calendar>
+    <ExpiryMonthLag>1</ExpiryMonthLag>
+    <OffsetDays>3</OffsetDays>
+    <BusinessDayConvention>Preceding</BusinessDayConvention>
+    <IsAveraging>false</IsAveraging>
+  </CommodityFuture>
+  -->
 </Conventions>

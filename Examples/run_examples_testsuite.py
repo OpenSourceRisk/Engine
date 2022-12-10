@@ -4,6 +4,7 @@ import sys
 import logging
 import unittest
 from pathlib import Path
+import nose
 
 # Pull in some shared utilities
 script_dir = Path(__file__).parents[0]
@@ -93,10 +94,11 @@ def add_utest(name):
 def regress_all_utests():
     i = 1
     for name in get_list_of_examples():
-        test_method = add_utest(name)
-        test_method.__name__ = 'test{}_{}'.format(str(i).zfill(2), name)
-        setattr(TestExamples, test_method.__name__, test_method)
-        i += 1
+        testable_name = 'test_{0}'.format(name)
+        testable = add_utest(name)
+        testable.__name__ = testable_name
+        class_name = 'Test_{0}'.format(name)
+        globals()[class_name] = type(class_name, (TestExamples,), {testable_name: testable})
 
 
 # First point in the code that is hit so set up logging here.
@@ -106,4 +108,4 @@ setup_logging()
 regress_all_utests()
 
 if __name__ == '__main__':
-    unittest.main()
+    nose.runmodule(name='__main__')

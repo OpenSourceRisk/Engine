@@ -22,6 +22,7 @@
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/fxtouchoption.hpp>
+#include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -75,6 +76,27 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     Currency domCcy = parseCurrency(domesticCurrency_);
     Real level = barrier_.levels()[0].value();
     Date expiryDate = parseDate(option_.exerciseDates().front());
+    
+    Natural payLag = 0;
+    BusinessDayConvention payConvention = Unadjusted;
+    Calendar payCalendar = NullCalendar();
+    Date payDate = expiryDate;
+    const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+    if (opd) {
+        if (opd->rulesBased()) {
+            payLag = opd->lag();
+            payConvention = opd->convention();
+            payCalendar = opd->calendar();
+            payDate = payCalendar.advance(expiryDate, opd->lag(), Days, opd->convention());
+        } else {
+            if (opd->dates().size() > 1)
+                WLOG(ore::data::StructuredTradeWarningMessage(
+                    id(), tradeType(), "Trade build", "Found more than 1 payment date. The first one will be used."));
+            payDate = opd->dates().front();
+        }
+    }
+    QL_REQUIRE(payDate >= expiryDate, "Settlement date cannot be earlier than expiry date");
+
     Barrier::Type barrierType = parseBarrierType(barrier_.type());
     Option::Type type;
     if (barrierType == Barrier::DownIn || barrierType == Barrier::DownOut)
@@ -90,8 +112,13 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     QL_REQUIRE(rebate == 0, "Rebates not supported for FxTouchOptions");
     QL_REQUIRE(payoffAtExpiry == true || barrierType == Barrier::Type::DownIn || barrierType == Barrier::Type::UpIn,
                "Payoff at hit not supported for FxNoTouchOptions");
+    if ((barrierType == Barrier::Type::DownIn || barrierType == Barrier::Type::UpIn) && payoffAtExpiry == false)
+        QL_REQUIRE(
+            !opd || (opd->rulesBased() && opd->relativeTo() == OptionPaymentData::RelativeTo::Exercise),
+            "Option payment data must be rules-based and relative to Exercise for FxOneTouchOption with payoff at hit");
 
     // Handle PayoffCurrency, we might have to flip the trade here
+    bool flipResults = false;
     if (payoffCurrency_ == foreignCurrency_) {
         // Invert the trade, switch dom and for and flip Put/Call
         level = 1.0 / level;
@@ -111,6 +138,7 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
             barrierType = Barrier::DownOut;
             break;
         }
+        flipResults = true;
     } else if (payoffCurrency_ != domesticCurrency_) {
         QL_FAIL("Invalid Payoff currency (" << payoffCurrency_ << ") for FxTouchOption " << foreignCurrency_
                                             << domesticCurrency_);
@@ -120,73 +148,94 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     // from this point on it's important not to use domesticCurrency_, foreignCurrency_, barrier_.level(), etc
     // rather the local variables (fgnCcy, domCcy, level, etc) should be used as they may have been flipped.
 
-    // create payoff and exercise, as well as leg of underlying instrument
-    boost::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, level, 1.0));
-    Leg leg;
-
-    leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(1.0, expiryDate)));
-    // Hard code payoff at expiry to true - we ignore in pricing; QPR-10669 
-    bool payoffFlag = true;
-
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<AmericanExercise>(expiryDate, payoffFlag);
-
-    boost::shared_ptr<Instrument> barrier = boost::make_shared<VanillaOption>(payoff, exercise);
-    boost::shared_ptr<Instrument> underlying = boost::make_shared<Swap>(Leg(), leg);
-
-
     boost::shared_ptr<QuantExt::FxIndex> fxIndex;
     if (!fxIndex_.empty())
         fxIndex = buildFxIndex(fxIndex_, domCcy.code(), fgnCcy.code(), engineFactory->market(),
                                engineFactory->configuration(MarketContext::pricing));
-
-
-    // check if the barrier has been triggered already
     Calendar cal = ore::data::parseCalendar(calendar_);
 
-    // set pricing engines
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
-    QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<FxTouchOptionEngineBuilder> fxTouchOptBuilder =
-        boost::dynamic_pointer_cast<FxTouchOptionEngineBuilder>(builder);
-    barrier->setPricingEngine(fxTouchOptBuilder->engine(fgnCcy, domCcy, type_));
-    if (type_ == "One-Touch") {
-        // if a one-touch option is triggered it becomes a simple forward cashflow
-        // which we price as a swap
-        builder = engineFactory->builder("Swap");
-        QL_REQUIRE(builder, "No builder found for Swap");
-        boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
-            boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-        underlying->setPricingEngine(swapBuilder->engine(domCcy));
-    }
+    auto buildBarrierOptionWrapperInstr = [this, type, level, engineFactory, domCcy, fgnCcy, flipResults, positionType,
+                                           market, barrierType, rebate, fxIndex, cal,
+                                           start](const Date& expiryDate, const Date& payDate) {
+        boost::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, level, 1.0));
+        Leg leg;
 
-    bool isLong = (positionType == Position::Long) ? true : false;
+        leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(1.0, payDate)));
+        // Hard code payoff at expiry to true - we ignore in pricing; QPR-10669
+        bool payoffFlag = true;
 
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
-    std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, payoffAmount_,
-                                       option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_),
-                                       engineFactory, builder->configuration(MarketContext::pricing));
+        boost::shared_ptr<Exercise> exercise = boost::make_shared<AmericanExercise>(expiryDate, payoffFlag);
 
-    Handle<Quote> spot = market->fxRate(fgnCcy.code() + domCcy.code());
-    instrument_ = boost::make_shared<SingleBarrierOptionWrapper>(
-        barrier, isLong, expiryDate, false, underlying, barrierType, spot, level, rebate, domCcy, start, fxIndex, cal,
-        payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
-    npvCurrency_ = payoffCurrency_;
-    notional_ = payoffAmount_;
-    notionalCurrency_ = payoffCurrency_;
-    maturity_ = std::max(lastPremiumDate, expiryDate);
+        boost::shared_ptr<Instrument> barrier = boost::make_shared<VanillaOption>(payoff, exercise);
+        boost::shared_ptr<Instrument> underlying = boost::make_shared<Swap>(Leg(), leg);
 
-    
+        // set pricing engines
+        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+        QL_REQUIRE(builder, "No builder found for " << tradeType_);
+        boost::shared_ptr<FxTouchOptionEngineBuilder> fxTouchOptBuilder =
+            boost::dynamic_pointer_cast<FxTouchOptionEngineBuilder>(builder);
+        barrier->setPricingEngine(fxTouchOptBuilder->engine(fgnCcy, domCcy, type_, payDate, flipResults));
+        if (type_ == "One-Touch") {
+            // if a one-touch option is triggered it becomes a simple forward cashflow
+            // which we price as a swap
+            builder = engineFactory->builder("Swap");
+            QL_REQUIRE(builder, "No builder found for Swap");
+            boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+                boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+            underlying->setPricingEngine(swapBuilder->engine(domCcy));
+        }
+
+        bool isLong = (positionType == Position::Long) ? true : false;
+
+        std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+        std::vector<Real> additionalMultipliers;
+        Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, payoffAmount_,
+                                           option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_),
+                                           engineFactory, builder->configuration(MarketContext::pricing));
+
+        Handle<Quote> spot = market->fxRate(fgnCcy.code() + domCcy.code());
+
+        auto barrierOptionWrapper = boost::make_shared<SingleBarrierOptionWrapper>(
+            barrier, isLong, expiryDate, false, underlying, barrierType, spot, level, rebate, domCcy, start, fxIndex,
+            cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
+        
+        maturity_ = std::max(lastPremiumDate, payDate);
+
+        return barrierOptionWrapper;
+    };
+
+    auto barrierOptionWrapper = buildBarrierOptionWrapperInstr(expiryDate, payDate);
+
+    // We make sure to add required fixings before checking for modifying the instrument's expiry date, to make sure the
+    // portfolio-analyzer gets all the fixings needed for the instrument at the first evaluation.
     Calendar fixingCal = fxIndex ? fxIndex->fixingCalendar() : cal;
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = fixingCal.advance(d, 1 * Days))
-            requiredFixings_.addFixingDate(d, fxIndex_, expiryDate);
+            requiredFixings_.addFixingDate(d, fxIndex_, payDate);
     }
+    
+    // Check if the barrier has been triggered already. If payoff-at-hit, and barrier was touched in the past, then
+    // create instrument again, with expiry date and pay date corresponding to that past barrier exercise date
+    if (barrierOptionWrapper->exercise()) {
+        QL_REQUIRE(barrierOptionWrapper->exerciseDate() != Date(), "Option is exercised but exercise date was not defined");
+        expiryDate = barrierOptionWrapper->exerciseDate();
+        additionalData_["exerciseDate"] = expiryDate;
+
+        if (!payoffAtExpiry && type_ == "One-Touch") {
+            payDate = payCalendar.advance(expiryDate, payLag, Days, payConvention);
+            barrierOptionWrapper = buildBarrierOptionWrapperInstr(expiryDate, payDate);
+            additionalData_["settlementDate"] = payDate;
+        }
+    }
+
+    instrument_ = barrierOptionWrapper;
+    npvCurrency_ = payoffCurrency_;
+    notional_ = payoffAmount_;
+    notionalCurrency_ = payoffCurrency_;
+    // maturity_ is set in buildBarrierOptionWrapperInstr()
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
-    additionalData_["effectiveDomesticCurrency"] = domCcy.code();
-    additionalData_["effectiveForeignCurrency"] = fgnCcy.code();
 }
 
 bool FxTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {

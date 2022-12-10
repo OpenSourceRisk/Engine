@@ -20,7 +20,8 @@
 #include <ored/utilities/log.hpp>
 
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
-
+#include <qle/pricingengines/cpibacheliercapfloorengine.hpp>
+#include <qle/utilities/inflation.hpp>
 #include <boost/make_shared.hpp>
 
 namespace ore {
@@ -37,7 +38,15 @@ boost::shared_ptr<PricingEngine> CpiCapFloorEngineBuilder::engineImpl(const stri
     //            "engineFactory error: cpi cap/floor vol surface for index " << indexName << " not found");
     bool useLastFixingDate =
         parseBool(engineParameter("useLastFixingDate", std::vector<std::string>(), false, "false"));
-    return boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, ovs, useLastFixingDate);
+
+    bool isLogNormal = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(ovs.currentLink());
+
+    if (isLogNormal) {
+        return boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, ovs, useLastFixingDate);
+    } else {
+        return boost::make_shared<QuantExt::CPIBachelierCapFloorEngine>(discountCurve, ovs, useLastFixingDate);
+    }
+    
 }
 } // namespace data
 } // namespace ore

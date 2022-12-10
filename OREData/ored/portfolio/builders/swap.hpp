@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016-2022 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -31,6 +31,8 @@
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
+#include <qle/pricingengines/mclgmswaptionengine.hpp>
+#include <qle/models/crossassetmodel.hpp>
 
 namespace ore {
 namespace data {
@@ -124,6 +126,28 @@ protected:
 
         return boost::make_shared<QuantExt::DiscountingCurrencySwapEngine>(discountCurves, fxQuotes, ccys, base);
     }
+};
+
+//! Implementation of SwapEngineBuilderBase using MC pricer for external cam / AMC
+/*! \ingroup portfolio
+ */
+class CamAmcSwapEngineBuilder : public SwapEngineBuilderBase {
+public:
+    CamAmcSwapEngineBuilder(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                            const std::vector<Date>& simulationDates)
+        : SwapEngineBuilderBase("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates) {}
+
+protected:
+    // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy) override;
+
+private:
+    boost::shared_ptr<PricingEngine> buildMcEngine(const boost::shared_ptr<QuantExt::LGM>& lgm,
+                                                   const Handle<YieldTermStructure>& discountCurve,
+                                                   const std::vector<Date>& simulationDates,
+                                                   const std::vector<Size>& externalModelIndices);
+    const boost::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const std::vector<Date> simulationDates_;
 };
 
 } // namespace data

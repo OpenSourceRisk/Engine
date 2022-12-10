@@ -2,6 +2,7 @@
 
 set(QuantExt-Test_SRC analyticcashsettledeuropeanengine.cpp
 analyticlgmswaptionengine.cpp
+basecorrelationcurve.cpp
 bfrrvolsurface.cpp
 blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
@@ -13,6 +14,8 @@ calendars.cpp
 capfloortermvolcurve.cpp
 cashflow.cpp
 commodityforward.cpp
+commodityschwartzmodel.cpp
+commodityspreadoption.cpp
 correlationtermstructure.cpp
 cpicapfloor.cpp
 crcirpp.cpp
@@ -39,10 +42,12 @@ fillemptymatrix.cpp
 forwardbond.cpp
 fxvolsmile.cpp
 index.cpp
-interpolatedyoycapfloortermpricesurface.cpp
 inflationcurve.cpp
 inflationvol.cpp
+interpolatedyoycapfloortermpricesurface.cpp
 logquote.cpp
+mclgmswaptionengine.cpp
+multilegoption.cpp
 normalfreeboundarysabr.cpp
 optionletstripper.cpp
 payment.cpp
@@ -67,7 +72,7 @@ testsuite.cpp)
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
 target_link_libraries(quantext-test-suite ${QL_LIB_NAME})
 target_link_libraries(quantext-test-suite ${QLE_LIB_NAME})
-target_link_libraries(quantext-test-suite ${Boost_LIBRARIES})
+target_link_libraries(quantext-test-suite ${Boost_LIBRARIES} ${RT_LIBRARY})
 
 add_test(NAME quantext-test-suite COMMAND quantext-test-suite WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 

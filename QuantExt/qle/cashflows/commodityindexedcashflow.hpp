@@ -15,20 +15,24 @@
 #include <ql/patterns/visitor.hpp>
 #include <ql/time/schedule.hpp>
 #include <qle/indexes/commodityindex.hpp>
+#include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 
 namespace QuantExt {
 
 //! Cash flow dependent on a single commodity spot price or futures settlement price on a given pricing date
-class CommodityIndexedCashFlow : public CashFlow, public Observer {
+class CommodityIndexedCashFlow : public CommodityCashFlow {
 
 public:
+    enum class PaymentTiming { InAdvance, InArrears, RelativeToExpiry };
+
     //! Constructor taking an explicit \p pricingDate and \p paymentDate
     CommodityIndexedCashFlow(QuantLib::Real quantity, const QuantLib::Date& pricingDate,
                              const QuantLib::Date& paymentDate, const ext::shared_ptr<CommodityIndex>& index,
                              QuantLib::Real spread = 0.0, QuantLib::Real gearing = 1.0, bool useFuturePrice = false,
                              const Date& contractDate = Date(),
-                             const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr);
+                             const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
+                             QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>());
 
     /*! Constructor taking a period \p startDate, \p endDate and some conventions. The pricing date and payment date
         are derived from the start date and end date using the conventions.
@@ -38,26 +42,29 @@ public:
                              const QuantLib::Calendar& paymentCalendar,
                              QuantLib::BusinessDayConvention paymentConvention, QuantLib::Natural pricingLag,
                              const QuantLib::Calendar& pricingLagCalendar, QuantLib::Real spread = 0.0,
-                             QuantLib::Real gearing = 1.0, bool payInAdvance = false, bool isInArrears = true,
-                             bool useFuturePrice = false, bool useFutureExpiryDate = true,
+                             QuantLib::Real gearing = 1.0, PaymentTiming paymentTiming = PaymentTiming::InArrears,
+                             bool isInArrears = true, bool useFuturePrice = false, bool useFutureExpiryDate = true,
                              QuantLib::Natural futureMonthOffset = 0,
                              const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
                              const QuantLib::Date& paymentDateOverride = Date(),
-                             const QuantLib::Date& pricingDateOverride = Date());
+                             const QuantLib::Date& pricingDateOverride = Date(),
+                             QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>());
 
     //! \name Inspectors
     //@{
-    QuantLib::Real quantity() const { return quantity_; }
+    
     const QuantLib::Date& pricingDate() const { return pricingDate_; }
-    ext::shared_ptr<CommodityIndex> index() const { return index_; }
-    QuantLib::Real spread() const { return spread_; }
-    QuantLib::Real gearing() const { return gearing_; }
-    bool useFuturePrice() const { return useFuturePrice_; }
     bool useFutureExpiryDate() const { return useFutureExpiryDate_; }
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
     QuantLib::Real periodQuantity() const { return periodQuantity_; }
-    //@}
+    QuantLib::Natural dailyExpiryOffset() const { return dailyExpiryOffset_; }
 
+    //@}
+    //! \name CommodityCashFlow interface
+    //@{
+    QuantLib::Date lastPricingDate() const override { return pricingDate(); }
+    //@}
+    
     //! \name Event interface
     //@{
     QuantLib::Date date() const override { return paymentDate_; }
@@ -82,20 +89,21 @@ public:
     void setPeriodQuantity(QuantLib::Real periodQuantity);
 
 private:
-    QuantLib::Real quantity_;
     QuantLib::Date pricingDate_;
     QuantLib::Date paymentDate_;
-    ext::shared_ptr<CommodityIndex> index_;
-    QuantLib::Real spread_;
-    QuantLib::Real gearing_;
-    bool useFuturePrice_;
     bool useFutureExpiryDate_;
     QuantLib::Natural futureMonthOffset_;
     QuantLib::Real periodQuantity_;
+    QuantLib::Natural dailyExpiryOffset_;
 
     //! Shared initialisation
     void init(const ext::shared_ptr<FutureExpiryCalculator>& calc,
-        const QuantLib::Date& contractDate = QuantLib::Date());
+              const QuantLib::Date& contractDate = QuantLib::Date(),
+              const PaymentTiming paymentTiming = PaymentTiming::InArrears,
+              const QuantLib::Date& startDate = QuantLib::Date(), const QuantLib::Date& endDate = QuantLib::Date(),
+              const QuantLib::Natural paymentLag = 0,
+              const QuantLib::BusinessDayConvention paymentConvention = QuantLib::Unadjusted,
+              const QuantLib::Calendar& paymentCalendar = QuantLib::NullCalendar());
 };
 
 //! Helper class building a sequence of commodity indexed cashflows
@@ -114,7 +122,7 @@ public:
     CommodityIndexedLeg& withSpreads(const std::vector<QuantLib::Real>& spreads);
     CommodityIndexedLeg& withGearings(QuantLib::Real gearing);
     CommodityIndexedLeg& withGearings(const std::vector<QuantLib::Real>& gearings);
-    CommodityIndexedLeg& payInAdvance(bool flag = false);
+    CommodityIndexedLeg& paymentTiming(CommodityIndexedCashFlow::PaymentTiming paymentTiming);
     CommodityIndexedLeg& inArrears(bool flag = true);
     CommodityIndexedLeg& useFuturePrice(bool flag = false);
     CommodityIndexedLeg& useFutureExpiryDate(bool flag = true);
@@ -123,6 +131,7 @@ public:
     CommodityIndexedLeg& payAtMaturity(bool flag = false);
     CommodityIndexedLeg& withPricingDates(const std::vector<QuantLib::Date>& pricingDates);
     CommodityIndexedLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
+    CommodityIndexedLeg& withDailyExpiryOffset(QuantLib::Natural dailyExpiryOffset);
 
     operator Leg() const;
 
@@ -137,7 +146,7 @@ private:
     QuantLib::Calendar pricingLagCalendar_;
     std::vector<QuantLib::Real> spreads_;
     std::vector<QuantLib::Real> gearings_;
-    bool payInAdvance_;
+    CommodityIndexedCashFlow::PaymentTiming paymentTiming_;
     bool inArrears_;
     bool useFuturePrice_;
     bool useFutureExpiryDate_;
@@ -146,6 +155,7 @@ private:
     bool payAtMaturity_;
     std::vector<QuantLib::Date> pricingDates_;
     std::vector<QuantLib::Date> paymentDates_;
+    QuantLib::Natural dailyExpiryOffset_;
 };
 
 } // namespace QuantExt

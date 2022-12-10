@@ -12,13 +12,14 @@
 
   <xs:complexType name="parameters">
     <xs:all>
-      <xs:element type="discretizationType" name="Discretization"/>
       <xs:element type="xs:string" name="Grid"/>
       <xs:element type="xs:string" name="Calendar"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
       <!-- can be multiple so we don't use calendar type -->
       <xs:element type="sequenceType" name="Sequence"/>
       <xs:element type="xs:string" name="Scenario"/>
+      <!-- deprecated, this moved to crossAssetModel below -->
+      <xs:element type="discretizationType" name="Discretization" minOccurs="0"/>
       <!-- FIXME: remove this -->
       <xs:element type="xs:integer" name="Seed"/>
       <xs:element type="xs:positiveInteger" name="Samples"/>
@@ -39,6 +40,7 @@
   <xs:simpleType name="discretizationType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Exact"/>
+      <xs:enumeration value="Euler"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -106,14 +108,27 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element type="xs:float" name="BootstrapTolerance" maxOccurs="1" />
-      <xs:element type="measureType" name="Measure" minOccurs="0" maxOccurs="1" />
-      <xs:element name="InterestRateModels" maxOccurs="1" >
+      <xs:element name="Commodities" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element type="lgm" name="LGM" maxOccurs="unbounded" minOccurs="1"/>
-            <!-- FIXME: poor name -->
+            <xs:element type="xs:string" name="Commodity" maxOccurs="unbounded" minOccurs="0"/>
           </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="xs:float" name="BootstrapTolerance" maxOccurs="1" />
+      <xs:element type="measureType" name="Measure" minOccurs="0" maxOccurs="1" />
+      <xs:element type="discretizationType" name="Discretization" minOccurs="0"/>
+      <xs:element name="InterestRateModels" maxOccurs="1" >
+        <xs:complexType>
+          <xs:choice>
+            <xs:sequence>
+              <xs:element type="lgm" name="LGM" maxOccurs="unbounded" minOccurs="1"/>
+            </xs:sequence>
+            <xs:sequence>
+              <xs:element type="hw" name="HWModel" maxOccurs="unbounded" minOccurs="1"/>
+            </xs:sequence>
+          </xs:choice>
+            <!-- FIXME: poor name -->
         </xs:complexType>
       </xs:element>
       <xs:element name="ForeignExchangeModels" maxOccurs="1" minOccurs="0">
@@ -149,6 +164,13 @@
               <xs:element type="crlgm" name="LGM"/>
               <xs:element type="cir" name="CIR"/>
             </xs:choice>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="CommodityModels" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="commoditySchwartz" name="CommoditySchwartz" maxOccurs="unbounded" minOccurs="0"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -282,6 +304,57 @@
     <!-- FIXME: currency not ccy -->
     <xs:attribute type="xs:string" name="index" />
     <!-- FIXME: currency not ccy -->
+  </xs:complexType>
+    
+  <xs:complexType name="hw">
+  <xs:all>
+    <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0"/>
+    <xs:element type="calibrationTypeType" name="CalibrationType"/>
+    <xs:element name="Volatility">
+      <xs:complexType>
+        <xs:all>
+          <xs:element type="bool" name="Calibrate"/>
+          <xs:element type="paramTypeType" name="ParamType"/>
+          <xs:element type="xs:string" name="TimeGrid"/>
+          <!-- FIXME: comma delimited list -->
+          <xs:element name="InitialValue">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="Sigma" maxOccurs="unbounded" minOccurs="1">
+                  <xs:complexType>
+                    <xs:sequence>
+                      <xs:element type="xs:string" name="Row" maxOccurs="unbounded" minOccurs="1"/>
+                    </xs:sequence>
+                  </xs:complexType>
+                </xs:element>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <!-- FIXME: comma delimited list -->
+        </xs:all>
+      </xs:complexType>
+    </xs:element>
+    <xs:element name="Reversion">
+      <xs:complexType>
+        <xs:all>
+          <xs:element type="bool" name="Calibrate"/>
+          <xs:element type="paramTypeType" name="ParamType"/>
+          <xs:element type="xs:string" name="TimeGrid"/>
+          <xs:element name="InitialValue" maxOccurs="1" minOccurs="1">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element type="xs:string" name="Kappa" maxOccurs="unbounded" minOccurs="1"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:all>
+      </xs:complexType>
+    </xs:element>
+  </xs:all>
+  <xs:attribute type="currencyCodeWithDefault" name="ccy"/>
+  <!-- FIXME: currency not ccy -->
+  <xs:attribute type="xs:string" name="index"/>
+  <!-- FIXME: currency not ccy -->
   </xs:complexType>
   
   <xs:complexType name="volatilityParameter">
@@ -491,12 +564,12 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
-      <xs:element name="CalibrationOptions">
+      <xs:element name="CalibrationOptions" minOccurs="0">
         <xs:complexType>
           <xs:all>
-            <xs:element type="xs:string" name="Expiries"/>
+            <xs:element type="xs:string" name="Expiries" minOccurs="0"/>
             <!-- FIXME: comma delimited lists -->
-            <xs:element type="xs:string" name="Strikes"/>
+            <xs:element type="xs:string" name="Strikes"  minOccurs="0"/>
             <!-- FIXME: comma delimited lists -->
           </xs:all>
         </xs:complexType>
@@ -523,7 +596,7 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
-      <xs:element name="CalibrationOptions">
+      <xs:element name="CalibrationOptions" minOccurs="0">
         <xs:complexType>
           <xs:all>
             <xs:element type="xs:string" name="Expiries"/>
@@ -533,6 +606,39 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
+    </xs:all>
+    <xs:attribute type="xs:string" name="name" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="commoditySchwartz">
+    <xs:all>
+      <xs:element type="currencyCode" name="Currency" />
+      <xs:element type="xs:string" name="CalibrationType"/>
+      <xs:element name="Sigma">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="bool" name="Calibrate"/>
+            <xs:element type="xs:string" name="InitialValue"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Kappa">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="bool" name="Calibrate"/>
+            <xs:element type="xs:string" name="InitialValue"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="CalibrationOptions" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="Expiries"/>
+            <xs:element type="xs:string" name="Strikes"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="xs:boolean" name="DriftFreeState" minOccurs="0"/>
     </xs:all>
     <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
@@ -855,8 +961,8 @@
         <xs:complexType>
           <xs:sequence>
             <xs:element type="bool" name="Simulate"  maxOccurs="1" minOccurs="0"/>
-            <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
-            <xs:element name="CurrencyPairs">
+            <xs:element type="timeDecayType" name="ReactionToTimeDecay" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="CurrencyPairs" maxOccurs="1" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
                   <xs:element type="currencyPair" name="CurrencyPair" maxOccurs="unbounded" minOccurs="0"/>

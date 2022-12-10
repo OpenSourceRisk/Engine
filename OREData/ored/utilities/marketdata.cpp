@@ -143,7 +143,7 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
                         xccyYieldCurve(market, domestic, configuration));
 }
 
-std::pair<Natural, Calendar> getFxIndexConventions(const string& index) {
+std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const string& index) {
     // can take an fx index or ccy pair e.g. EURUSD
     string ccy1, ccy2;
     string fixingSource;
@@ -154,14 +154,14 @@ std::pair<Natural, Calendar> getFxIndexConventions(const string& index) {
         fixingSource = ind->familyName();
     } else {
         QL_REQUIRE(index.size() == 6, "getFxIndexConventions: index must be an FXIndex of form FX-ECB-EUR-USD, "
-                                          << "or a currency pair e.g. EURUSD.");
+                                          << "or a currency pair e.g. EURUSD, got '" + index + "'");
         ccy1 = index.substr(0, 3);
         ccy2 = index.substr(3);
         fixingSource = "GENERIC";
     }
 
     if (ccy1 == ccy2)
-        return std::make_pair(0, NullCalendar());
+        return std::make_tuple(0, NullCalendar(), Unadjusted);
 
     const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<Convention> con;
@@ -186,7 +186,7 @@ std::pair<Natural, Calendar> getFxIndexConventions(const string& index) {
     if (auto fxCon = boost::dynamic_pointer_cast<FXConvention>(con)) {
         TLOG("getFxIndexConvention(" << index << "): " << fxCon->spotDays() << " / " << fxCon->advanceCalendar().name()
                                      << " from convention.");
-        return std::make_pair(fxCon->spotDays(), fxCon->advanceCalendar());
+        return std::make_tuple(fxCon->spotDays(), fxCon->advanceCalendar(), fxCon->convention());
     }
 
     // default calendar for pseudo currencies is USD
@@ -199,14 +199,14 @@ std::pair<Natural, Calendar> getFxIndexConventions(const string& index) {
 	Calendar cal = parseCalendar(ccy1 + "," + ccy2);
         TLOG("getFxIndexConvention(" << index << "): 2 (default) / " << cal.name()
                                      << " (from ccys), no convention found.");
-        return std::make_pair(2, cal);
+        return std::make_tuple(2, cal, Following);
     } catch (const std::exception& e) {
         ALOG("could not get fx index convention for '" << index << "': " << e.what() << ", continue with 'USD'");
     }
     TLOG("getFxIndexConvention(" << index
                                  << "): 2 (default) / USD (default), no convention found, could not parse calendar '"
                                  << (ccy1 + "," + ccy2) << "'");
-    return std::make_pair(2, parseCalendar("USD"));
+    return std::make_tuple(2, parseCalendar("USD"), Following);
 }
 
 std::pair<std::string, QuantLib::Period> splitCurveIdWithTenor(const std::string& creditCurveId) {

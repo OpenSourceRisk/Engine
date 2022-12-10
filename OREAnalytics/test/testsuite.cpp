@@ -18,18 +18,21 @@
 
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
-// Boost
-#include <boost/timer/timer.hpp>
-using namespace boost;
-using boost::timer::cpu_timer;
+#include <oret/config.hpp>
 
 // Boost.Test
-#define BOOST_TEST_MODULE OREAnalyticsTestSuite
+#define BOOST_TEST_MODULE "OREAnalyticsTestSuite"
+#ifdef ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
+#include <test-suite/paralleltestrunner.hpp>
+#else
+#include <boost/test/included/unit_test.hpp>
+#endif
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/test_tools.hpp>
-#include <boost/test/unit_test.hpp>
+
+// Boost
+using namespace boost;
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
@@ -60,28 +63,6 @@ public:
         // Set up test logging
         setupTestLogging(argc, argv);
     }
-
-    ~OreaGlobalFixture() { stopTimer(); }
-
-    // Method called in destructor to log time taken
-    void stopTimer() {
-        t.stop();
-        double seconds = t.elapsed().wall * 1e-9;
-        int hours = int(seconds / 3600);
-        seconds -= hours * 3600;
-        int minutes = int(seconds / 60);
-        seconds -= minutes * 60;
-        cout << endl << "OREAnalytics tests completed in ";
-        if (hours > 0)
-            cout << hours << " h ";
-        if (hours > 0 || minutes > 0)
-            cout << minutes << " m ";
-        cout << fixed << setprecision(0) << seconds << " s" << endl;
-    }
-
-private:
-    // Timing the test run
-    cpu_timer t;
 };
 
 // Breaking change in 1.65.0

@@ -115,23 +115,29 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         std::vector<boost::shared_ptr<MarketDatum>> data;
         std::vector<std::string> expiriesStr;
         // get list of possible expiries
-        for (auto& md : loader.loadQuotes(asof)) {
-            if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::FX_OPTION) {
-                boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
-                Strike s = parseStrike(q->strike());
-                if (q->unitCcy() == spec.unitCcy() && q->ccy() == spec.ccy() &&
-                    (s.type == Strike::Type::DeltaCall || s.type == Strike::Type::DeltaPut ||
-                     s.type == Strike::Type::ATM)) {
-                    vector<string> tokens;
-                    boost::split(tokens, md->name(), boost::is_any_of("/"));
-                    QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
-                    if ((*expiriesWildcard_).matches(tokens[4])) {
-                        data.push_back(md);
-                        auto it = std::find(expiries_.begin(), expiries_.end(), q->expiry());
-                        if (it == expiries_.end()) {
-                            expiries_.push_back(q->expiry());
-                            expiriesStr.push_back(tokens[4]);
-                        }
+        std::ostringstream ss;
+        ss << MarketDatum::InstrumentType::FX_OPTION << "/RATE_LNVOL/" << spec.unitCcy()<< "/"
+            << spec.ccy()<< "/*";
+        Wildcard w(ss.str());
+        for (const auto& md : loader.get(w, asof)) {
+            QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
+            boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+            QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to FXOptionQuote");
+            QL_REQUIRE(q->unitCcy() == spec.unitCcy(),
+                "FXOptionQuote unit ccy '" << q->unitCcy() << "' <> FXVolatilityCurveSpec unit ccy '" << spec.unitCcy() << "'");
+            QL_REQUIRE(q->ccy() == spec.ccy(),
+                "FXOptionQuote ccy '" << q->ccy() << "' <> FXVolatilityCurveSpec ccy '" << spec.ccy() << "'");
+            Strike s = parseStrike(q->strike());
+            if (s.type == Strike::Type::DeltaCall || s.type == Strike::Type::DeltaPut || s.type == Strike::Type::ATM) {
+                vector<string> tokens;
+                boost::split(tokens, md->name(), boost::is_any_of("/"));
+                QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
+                if (expiriesWildcard_->matches(tokens[4])) {
+                    data.push_back(md);
+                    auto it = std::find(expiries_.begin(), expiries_.end(), q->expiry());
+                    if (it == expiries_.end()) {
+                        expiries_.push_back(q->expiry());
+                        expiriesStr.push_back(tokens[4]);
                     }
                 }
             }
@@ -224,20 +230,25 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     std::set<Period> expiriesTmp;
 
     std::vector<boost::shared_ptr<FXOptionQuote>> data;
-    for (auto const& md : loader.loadQuotes(asof)) {
-        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::FX_OPTION) {
-            boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
-            QL_REQUIRE(q, "internal error: could not cast to FXOptionQuote");
-            Strike s = parseStrike(q->strike());
-            if (q->unitCcy() == spec.unitCcy() && q->ccy() == spec.ccy() &&
-                (s.type == Strike::Type::BF || s.type == Strike::Type::RR || s.type == Strike::Type::ATM)) {
-                vector<string> tokens;
-                boost::split(tokens, md->name(), boost::is_any_of("/"));
-                QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
-                if (expiriesWildcard_ && (*expiriesWildcard_).matches(tokens[4]))
-                    expiriesTmp.insert(q->expiry());
-                data.push_back(q);
-            }
+    std::ostringstream ss;
+    ss << MarketDatum::InstrumentType::FX_OPTION << "/RATE_LNVOL/" << spec.unitCcy()<< "/"
+        << spec.ccy()<< "/*";
+    Wildcard w(ss.str());
+    for (const auto& md : loader.get(w, asof)) {
+        boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to FXOptionQuote");
+        QL_REQUIRE(q->unitCcy() == spec.unitCcy(),
+            "FXOptionQuote unit ccy '" << q->unitCcy() << "' <> FXVolatilityCurveSpec unit ccy '" << spec.unitCcy() << "'");
+        QL_REQUIRE(q->ccy() == spec.ccy(),
+            "FXOptionQuote ccy '" << q->ccy() << "' <> FXVolatilityCurveSpec ccy '" << spec.ccy() << "'");
+        Strike s = parseStrike(q->strike());
+        if (s.type == Strike::Type::BF || s.type == Strike::Type::RR || s.type == Strike::Type::ATM) {
+            vector<string> tokens;
+            boost::split(tokens, md->name(), boost::is_any_of("/"));
+            QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
+            if (expiriesWildcard_ && expiriesWildcard_->matches(tokens[4]))
+                expiriesTmp.insert(q->expiry());
+            data.push_back(q);
         }
     }
 
@@ -387,46 +398,51 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     }
 
     // Load the relevant quotes
-    for (auto& md : loader.loadQuotes(asof)) {
-        // skip irrelevant data
-        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::FX_OPTION) {
+    std::vector<boost::shared_ptr<FXOptionQuote>> data;
+    std::ostringstream ss;
+    ss << MarketDatum::InstrumentType::FX_OPTION << "/RATE_LNVOL/" << spec.unitCcy()<< "/"
+        << spec.ccy()<< "/*";
+    Wildcard w(ss.str());
+    for (const auto& md : loader.get(w, asof)) {
 
-            boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+        boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to FXOptionQuote");
+        QL_REQUIRE(q->unitCcy() == spec.unitCcy(),
+            "FXOptionQuote unit ccy '" << q->unitCcy() << "' <> FXVolatilityCurveSpec unit ccy '" << spec.unitCcy() << "'");
+        QL_REQUIRE(q->ccy() == spec.ccy(),
+            "FXOptionQuote ccy '" << q->ccy() << "' <> FXVolatilityCurveSpec ccy '" << spec.ccy() << "'");
 
-            if (q->unitCcy() == spec.unitCcy() && q->ccy() == spec.ccy()) {
 
-                Size idx = 999999;
-                if (q->strike() == "ATM")
-                    idx = 0;
-                else if (!isATM && q->strike() == deltaRr)
-                    idx = 1;
-                else if (!isATM && q->strike() == deltaBf)
-                    idx = 2;
+        Size idx = 999999;
+        if (q->strike() == "ATM")
+            idx = 0;
+        else if (!isATM && q->strike() == deltaRr)
+            idx = 1;
+        else if (!isATM && q->strike() == deltaBf)
+            idx = 2;
 
-                // silently skip unknown strike strings
-                if ((isATM && idx == 0) || (!isATM && idx <= 2)) {
-                    if (expiriesWildcard_) {
-                        vector<string> tokens;
-                        boost::split(tokens, md->name(), boost::is_any_of("/"));
-                        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
-                        if ((*expiriesWildcard_).matches(tokens[4])) {
-                            quotes[idx].push_back(q);
-                        }
-                    } else {
-                        auto it = std::find(expiries[idx].begin(), expiries[idx].end(), q->expiry());
-                        if (it != expiries[idx].end()) {
-                            // we have a hit
-                            quotes[idx].push_back(q);
-                            // remove it from the list
-                            expiries[idx].erase(it);
-                        }
-
-                        // check if we are done
-                        // for ATM we just check expiries[0], otherwise we check all 3
-                        if (expiries[0].empty() && (isATM || (expiries[1].empty() && expiries[2].empty())))
-                            break;
-                    }
+        // silently skip unknown strike strings
+        if ((isATM && idx == 0) || (!isATM && idx <= 2)) {
+            if (expiriesWildcard_) {
+                vector<string> tokens;
+                boost::split(tokens, md->name(), boost::is_any_of("/"));
+                QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
+                if (expiriesWildcard_->matches(tokens[4])) {
+                    quotes[idx].push_back(q);
                 }
+            } else {
+                auto it = std::find(expiries[idx].begin(), expiries[idx].end(), q->expiry());
+                if (it != expiries[idx].end()) {
+                    // we have a hit
+                    quotes[idx].push_back(q);
+                    // remove it from the list
+                    expiries[idx].erase(it);
+                }
+
+                // check if we are done
+                // for ATM we just check expiries[0], otherwise we check all 3
+                if (expiries[0].empty() && (isATM || (expiries[1].empty() && expiries[2].empty())))
+                    break;
             }
         }
     }
@@ -661,7 +677,9 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
         // remove expiries that would lead to duplicate expiry dates (keep the later expiry in this case)
 
-        if (!expiriesWildcard_) {
+        if (expiriesWildcard_) {
+            DLOG("expiry wildcard is used: " << expiriesWildcard_->pattern());
+        } else {
             std::vector<std::tuple<std::string, Period, Date>> tmp;
             for (auto const& e : config->expiries()) {
                 auto p = parsePeriod(e);
@@ -699,15 +717,11 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             for (auto const& e : expiriesNoDuplicates_) {
                 DLOG(e);
             }
-        } else {
-            DLOG("expiry wildcard is used: " << (*expiriesWildcard_).pattern());
         }
 
         QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated || expiriesWildcard_ ||
                        !expiriesNoDuplicates_.empty(),
                    "no expiries after removing duplicate expiry dates");
-
-        //
 
         std::vector<std::string> tokens;
         boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
@@ -726,7 +740,10 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         string calTmp = sourceCcy_ + "," + targetCcy_;
         spotCalendar_ = parseCalendar(calTmp);
 
-        if (config->conventionsID() != "") {
+        if (config->conventionsID() == "") {
+            WLOG("no fx option conventions given in fxvol curve config for " << spec.curveConfigID()
+                                                                             << ", assuming defaults");
+        } else {
             auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conventions->get(config->conventionsID()));
             QL_REQUIRE(fxOptConv,
                        "unable to cast convention '" << config->conventionsID() << "' into FxOptionConvention");
@@ -748,9 +765,6 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 spotDays_ = fxConv->spotDays();
                 spotCalendar_ = fxConv->advanceCalendar();
             }
-        } else {
-            WLOG("no fx option conventions given in fxvol curve config for " << spec.curveConfigID()
-                                                                             << ", assuming defaults");
         }
 
         auto spotSpec = boost::dynamic_pointer_cast<FXSpotSpec>(parseCurveSpec(config->fxSpotID()));

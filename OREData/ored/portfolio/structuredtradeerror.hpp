@@ -31,31 +31,20 @@ namespace ore {
 namespace data {
 
 //! Utility class for Structured Trade errors, contains the Trade ID and Type
-class StructuredTradeErrorMessage : public StructuredErrorMessage {
+class StructuredTradeErrorMessage : public StructuredMessage {
 public:
     StructuredTradeErrorMessage(const boost::shared_ptr<Trade>& trade, const std::string& exceptionType,
-                                const std::string& exceptionWhat = "")
-        : tradeId_(trade->id()), tradeType_(trade->tradeType()), exceptionType_(exceptionType),
-          exceptionWhat_(exceptionWhat) {}
+                                const std::string& exceptionWhat)
+        : StructuredMessage(
+              "Error", "Trade", exceptionWhat,
+              std::map<std::string, std::string>(
+                  {{"exceptionType", exceptionType}, {"tradeId", trade->id()}, {"tradeType", trade->tradeType()}})) {}
 
     StructuredTradeErrorMessage(const std::string& tradeId, const std::string& tradeType,
-                                const std::string& exceptionType, const std::string exceptionWhat = "")
-        : tradeId_(tradeId), tradeType_(tradeType), exceptionType_(exceptionType), exceptionWhat_(exceptionWhat) {}
-
-    const std::string& tradeId() const { return tradeId_; }
-    const std::string& tradeType() const { return tradeType_; }
-    const std::string& exceptionType() const { return exceptionType_; }
-    const std::string& exceptionWhat() const { return exceptionWhat_; }
-
-protected:
-    std::string json() const override {
-        return "{ \"errorType\":\"Trade\", \"tradeId\":\"" + tradeId_ + "\"," + " \"tradeType\":\"" + tradeType_ +
-               "\"," + " \"exceptionType\":\"" + exceptionType_ + "\"," + " \"exceptionMessage\":\"" +
-               jsonify(exceptionWhat_) + "\"}";
-    }
-
-private:
-    std::string tradeId_, tradeType_, exceptionType_, exceptionWhat_;
+                                const std::string& exceptionType, const std::string& exceptionWhat = "")
+        : StructuredMessage("Error", "Trade", exceptionWhat,
+                            std::map<std::string, std::string>(
+                                {{"exceptionType", exceptionType}, {"tradeId", tradeId}, {"tradeType", tradeType}})) {}
 };
 
 } // namespace data
