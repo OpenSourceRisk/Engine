@@ -200,7 +200,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 baseRate = config->baseRate();
             } else if (index) {
                 baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(
-                    config->useLastAvailableFixingAsBaseDate(), swapStart, terms[0], conv->dayCounter(),
+                    config->useLastAvailableFixingAsBaseDate(), swapStart, asof, terms[0], conv->dayCounter(),
                     conv->observationLag(), quotes[0]->value(), curveObsLag, config->dayCounter(), index,
                     interpolatedIndex_);
             }
