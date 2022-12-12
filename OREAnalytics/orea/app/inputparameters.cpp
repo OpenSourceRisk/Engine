@@ -218,6 +218,14 @@ void OREAppInputParameters::loadParameters() {
      * Curves
      *************/
 
+    tmp = params_->get("curves", "active", false);
+    if (tmp != "") 
+        outputCurves_ = parseBool(tmp);
+        
+    tmp = params_->get("curves", "grid", false);
+    if (tmp != "") 
+        curvesGrid_ = tmp;
+
     tmp = params_->get("curves", "outputTodaysMarketCalibration", false);
     if (tmp != "")
         outputTodaysMarketCalibration_ = parseBool(tmp);

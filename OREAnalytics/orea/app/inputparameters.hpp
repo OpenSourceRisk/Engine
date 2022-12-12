@@ -63,6 +63,8 @@ public:
     bool useMarketDataFixings() { return useMarketDataFixings_; }
     bool iborFallbackOverride() { return iborFallbackOverride_; }
     bool outputTodaysMarketCalibration() const { return outputTodaysMarketCalibration_; };
+    bool outputCurves() const { return outputCurves_; };
+    const std::string& curvesGrid() const { return curvesGrid_; }
     QuantLib::Size nThreads() const { return nThreads_; }
     bool outputAdditionalResults() const { return outputAdditionalResults_; };
     const std::string& reportNaString() { return reportNaString_; }
@@ -195,7 +197,7 @@ protected:
     // The following block of member variables (up to dryRun_) is not explicitly initialized
     // in OREAppInputParameters so far. 
     bool entireMarket_ = false;
-    bool allFixings_ = false;
+    bool allFixings_ = true; // FIXME
     bool eomInflationFixings_ = false;
     bool useMarketDataFixings_ = false;
     bool iborFallbackOverride_ = false;
@@ -206,6 +208,8 @@ protected:
     char csvQuoteChar_ = '\0';
     bool dryRun_ = false;
 
+    bool outputCurves_ = false;
+    std::string curvesGrid_ = "240,1M";
     bool continueOnError_ = false;
     bool lazyMarketBuilding_ = false;
     bool buildFailedTrades_ = false;

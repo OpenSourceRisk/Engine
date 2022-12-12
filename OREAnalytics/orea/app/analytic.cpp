@@ -195,6 +195,19 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                 reports_[analytic]["marketcalibration"] = mktReport;
                 out_ << "OK" << endl;
             }
+            if (inputs_->outputCurves()) {
+                out_ << setw(tab_) << left << "Pricing: Curves Report " << flush;
+                LOG("Write curves report");
+                boost::shared_ptr<InMemoryReport> curvesReport = boost::make_shared<InMemoryReport>();
+                DateGrid grid(inputs_->curvesGrid());
+                auto it = inputs_->marketConfig().find("curves");
+                std::string config = it != inputs_->marketConfig().end() ? it->second : Market::defaultConfiguration;
+                ore::analytics::ReportWriter(inputs_->reportNaString())
+                    .writeCurves(*curvesReport, config, grid, *inputs_->todaysMarketParams(),
+                                 market_, inputs_->continueOnError());
+                reports_[analytic]["curves"] = curvesReport;
+                out_ << "OK" << endl;
+            }
         }
         else if (analytic == "CASHFLOW") {
             out_ << setw(tab_) << left << "Pricing: Cashflow Report " << flush;
