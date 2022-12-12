@@ -2260,6 +2260,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         vector<Period> simulationTenors = parameters->commodityCurveTenors(name);
                         DayCounter commodityCurveDayCounter = initialCommodityCurve->dayCounter();
                         if (simulationTenors.empty()) {
+                            DLOG("simulation tenors are empty, use "
+                                 << initialCommodityCurve->pillarDates().size()
+                                 << " pillar dates from T0 curve to build ssm curve.");
                             simulationTenors.reserve(initialCommodityCurve->pillarDates().size());
                             for (const Date& d : initialCommodityCurve->pillarDates()) {
                                 QL_REQUIRE(d >= asof_, "Commodity curve pillar date (" << io::iso_date(d)
@@ -2271,6 +2274,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                             // It isn't great to be updating parameters here. However, actual tenors are requested
                             // downstream from parameters and they need to be populated.
                             parameters->setCommodityCurveTenors(name, simulationTenors);
+                        } else {
+                            DLOG("using " << simulationTenors.size() << " simulation tenors.");
                         }
 
                         // Get prices at specified simulation times from time 0 market curve and place in quotes
