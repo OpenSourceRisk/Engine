@@ -172,10 +172,10 @@ void FixingManager::applyFixings(Date start, Date end) {
         if (needFixings) {
             Rate currentFixing;
             if (auto comm = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(m.first);
-                comm->expiryDate() < currentFixingDate) {
+                comm != nullptr && comm->expiryDate() < currentFixingDate) {
                 currentFixing = comm->priceCurve()->price(currentFixingDate);
             } else {
-                [[likely]] currentFixing = m.first->fixing(currentFixingDate);
+                currentFixing = m.first->fixing(currentFixingDate);
             }
             // if we read the fixing from an inverted FxIndex we have to undo the inversion
             TimeSeries<Real> history;
