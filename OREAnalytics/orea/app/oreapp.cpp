@@ -63,13 +63,10 @@ vector<string> getFilenames(const string& fileString, const string& path) {
 namespace ore {
 namespace analytics {
 
-OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
-    : tab_(50), progressBarWidth_(72 - std::min<Size>(tab_, 67)), params_(params),
-      asof_(parseDate(params_->get("setup", "asofDate"))), out_(out), cubeDepth_(0) {
-    
+void OREApp::analytics(ostream& out) {
     setupLog();
 
-    LOG("ORE starting");
+    LOG("ORE analytics starting");
 
     // Read all inputs from params and files referenced in params
     out_ << setw(tab_) << left << "Loading inputs " << flush;
@@ -93,47 +90,56 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
     LOG("Requested analytics: " << to_string(inputs->runTypes()));
 
     // Run the requested analytics
+    // FIXME: How is the market calibration report supposed to work, no concrete implementation in orea yet
+    // auto marketCalibrationReport = boost::make_shared<MarketCalibrationReport>();
+    // analyticsManager->runAnalytics(inputs->runTypes(), marketCalibrationReport);
     analyticsManager->runAnalytics(inputs->runTypes());
 
     // Write reports to files in the results path
     Analytic::analytic_reports reports = analyticsManager->reports();
     for (auto a : reports) {
-        // string analytic =  boost::algorithm::to_lower_copy(a.first);
         for (auto b : a.second) {
-            // string reportName = b.first == ""
-            //     ? boost::algorithm::to_lower_copy(a.first)
-            //     : a.first + "_" + b.first;
-            string reportName = b.first;
-            std::string fileName = inputs->resultsPath().string() + "/" + reportName + ".csv";
+            string reportName = b.first;            
+            std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "csv");
             boost::shared_ptr<InMemoryReport> rpt = b.second;
             LOG("Write report " << reportName << " for analytic " << a.first);
             rpt->toFile(fileName);
         }
     }
     
-    // Write npv cubes
+    // Write npv cube(s)
     for (auto a : analyticsManager->npvCubes()) {
         for (auto b : a.second) {
-            // string reportName = a.first + "_" + b.first;
+            LOG("write npv cube " << b.first);
             string reportName = b.first;
-            std::string fileName = inputs->resultsPath().string() + "/" + reportName + ".dat";
+            std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "dat");
+            LOG("write npv cube " << reportName << " to file " << fileName);
             b.second->save(fileName);
         }
     }
 
-    // Write mkt cubes
+    // Write market cube(s)
     for (auto a : analyticsManager->mktCubes()) {
         for (auto b : a.second) {
-            // string reportName = a.first + "_" + b.first;
             string reportName = b.first;
-            std::string fileName = inputs->resultsPath().string() + "/" + reportName + ".dat";
+            std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "dat");
+            LOG("write market cube " << reportName << " to file " << fileName);
             b.second->save(fileName);
         }
     }
 
     LOG("ORE done");
 
-    exit(0);
+    exit(0);    
+}
+    
+OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
+    : tab_(50), progressBarWidth_(72 - std::min<Size>(tab_, 67)), params_(params),
+      asof_(parseDate(params_->get("setup", "asofDate"))), out_(out), cubeDepth_(0) {
+
+    string tmp = params_->get("setup", "useAnalytics", false);
+    if (tmp != "" && parseBool(tmp))
+        analytics(out);
     
     // Set global evaluation date
     Settings::instance().evaluationDate() = asof_;

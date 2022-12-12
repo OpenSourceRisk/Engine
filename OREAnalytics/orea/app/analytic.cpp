@@ -70,26 +70,22 @@ boost::shared_ptr<ore::data::EngineFactory> PricingAnalytic::engineFactory() {
                                              *inputs_->iborFallbackConfig());
 }
 
-void Analytic::buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, const boost::shared_ptr<CurveConfigurations>& curveConfig, 
+void Analytic::buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+                           const boost::shared_ptr<CurveConfigurations>& curveConfig, 
                            const bool marketRequired) {
-    LOG("Analytic::buildMarket called");
-    
+    LOG("Analytic::buildMarket called");    
     // first build the market if we have a todaysMarketParams
     if (configurations_.todaysMarketParams) {
-
         try {
             // Note: we usually update the loader with implied data, but we simply use the provided loader here
             loader_ = loader;
-            
             // Check that the loader has quotes
             QL_REQUIRE(loader_->hasQuotes(inputs_->asof()),
                        "There are no quotes available for date " << inputs_->asof());
-
             // Build the market
             market_ = boost::make_shared<TodaysMarket>(inputs_->asof(), configurations_.todaysMarketParams, loader_,
                                                        curveConfig, true, true, false, inputs_->refDataManager(), false,
                                                        *inputs_->iborFallbackConfig());
-
             // Note: we usually wrap the market into a PC market, but skip this step here
         } catch (const std::exception& e) {
             if (marketRequired)
@@ -179,13 +175,26 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                 .writeNpv(*report, inputs_->baseCurrency(), market_, "", portfolio_);
             reports_[analytic]["npv"] = report;
             out_ << "OK" << endl;
-        }
-        else if (analytic == "ADDITIONAL_RESULTS") {
-            out_ << setw(tab_) << left << "Pricing: Additional Results " << flush;
-            ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeAdditionalResultsReport(*report, portfolio_, market_, inputs_->baseCurrency());
-            reports_[analytic]["additional_results"] = report;
-            out_ << "OK" << endl;
+            if (inputs_->outputAdditionalResults()) {
+                out_ << setw(tab_) << left << "Pricing: Additional Results " << flush;
+                boost::shared_ptr<InMemoryReport> addReport = boost::make_shared<InMemoryReport>();;
+                ore::analytics::ReportWriter(inputs_->reportNaString())
+                    .writeAdditionalResultsReport(*addReport, portfolio_, market_, inputs_->baseCurrency());
+                reports_[analytic]["additional_results"] = addReport;
+                out_ << "OK" << endl;
+            }
+            // FIXME: Leave this here as additional output within the NPV analytic?
+            if (inputs_->outputTodaysMarketCalibration()) {
+                out_ << setw(tab_) << left << "Pricing: Market Calibration " << flush;
+                LOG("Write todays market calibration report");
+                auto t = boost::dynamic_pointer_cast<TodaysMarket>(market_);
+                QL_REQUIRE(t != nullptr, "expected todays market instance");
+                boost::shared_ptr<InMemoryReport> mktReport = boost::make_shared<InMemoryReport>();
+                ore::analytics::ReportWriter(inputs_->reportNaString())
+                    .writeTodaysMarketCalibrationReport(*mktReport, t->calibrationInfo());
+                reports_[analytic]["marketcalibration"] = mktReport;
+                out_ << "OK" << endl;
+            }
         }
         else if (analytic == "CASHFLOW") {
             out_ << setw(tab_) << left << "Pricing: Cashflow Report " << flush;
@@ -258,24 +267,9 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             LOG("Sensi Analysis - Completed");
             out_ << "OK" << endl;
         }
-        else if (analytic == "MARKETDATA") {
-            QL_FAIL("MARKETDATA not implemented yet");
-        }
         else {
-            QL_FAIL("PricingAnalytic::runAnalytic: Invalid PricingAnalytic type " << analytic);
+            QL_FAIL("PricingAnalytic type " << analytic << " invalid");
         }
-    }
-
-    if (inputs_->outputTodaysMarketCalibration()) {
-        out_ << setw(tab_) << left << "TodaysMarket Calibration " << flush;
-        LOG("Write todays market calibration report");
-        path reportPath = inputs_->resultsPath() / "todaysmarketcalibration.csv";
-        auto report = boost::make_shared<CSVFileReport>(reportPath.string(), ',', false, inputs_->csvQuoteChar(),
-                                                        inputs_->reportNaString());
-        QL_FAIL("TODO: outputTodaysMarketCalibration");
-        // FIXME: use Analytic::marketCalibration instead of this ?
-        // Static::todaysMarketCalibrationReport(market_, report);
-        out_ << "OK" << endl;
     }
 }
 
@@ -290,9 +284,9 @@ void VarAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
     QL_FAIL("VarAnalytic::runAnalytic not implemented yet");
 }
 
-/********************************************************************
- * XVA Analytic: EXPOSURE, CVA, DVA, FVA, KVA, COLVA, COLLATERALFLOOR
- ********************************************************************/
+/******************************************************************************
+ * XVA Analytic: EXPOSURE, CVA, DVA, FVA, KVA, COLVA, COLLATERALFLOOR, DIM, MVA
+ ******************************************************************************/
 
 void XvaAnalytic::setUpConfigurations() {
     configurations_.todaysMarketParams = inputs_->todaysMarketParams();
@@ -585,13 +579,28 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
     simMarket_->aggregationScenarioData() = scenarioData_;
 
 
-    /******************************************
-     * This is where the valuation work is done
-     ******************************************/
+    /********************************************************************
+     * This is where the valuation work is done, unless we load the cubes
+     ********************************************************************/
 
-    buildCube();
-
-    LOG("NPV cube generation completed");
+    if (inputs_->simulation()) {
+        buildCube();
+        LOG("NPV cube generation completed");
+    }
+    else {
+        LOG("Skip cube generation, load input cubes for XVA");
+        out_ << setw(tab_) << left << "XVA: Load Cubes " << flush;
+        QL_REQUIRE(inputs_->cube(), "input cube not povided");
+        cube_= inputs_->cube();
+        QL_REQUIRE(inputs_->mktCube(), "input market cube not provided"); 
+        scenarioData_ = inputs_->mktCube();
+        if (inputs_->nettingSetCube())
+            nettingSetCube_= inputs_->nettingSetCube();
+        if (inputs_->cptyCube())
+            cptyCube_ = inputs_->cptyCube();
+        out_ << "OK" << std::endl;
+    }
+    
     MEM_LOG;
 
     // Write pricing stats report

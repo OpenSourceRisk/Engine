@@ -83,7 +83,7 @@ protected:
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy);
 
         engine_ = "AnalyticDoubleBarrierBinaryEngine";
-        return boost::make_shared<QuantExt::AnalyticDoubleBarrierBinaryEngine>(gbsp);
+        return boost::make_shared<QuantLib::AnalyticDoubleBarrierBinaryEngine>(gbsp);
     }
 };
 

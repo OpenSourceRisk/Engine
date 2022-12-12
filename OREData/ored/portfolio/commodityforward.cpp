@@ -72,6 +72,10 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     auto index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
     maturity_ = parseDate(maturityDate_);
     bool isFutureAccordingToConventions = InstrumentConventions::instance().conventions()->has(commodityName_, Convention::Type::CommodityFuture);
+
+    // adjust the maturity date if not a valid fixing date for the index
+    maturity_ = index->fixingCalendar().adjust(maturity_, Preceding);
+
     if ((isFuturePrice_ && *isFuturePrice_) || isFutureAccordingToConventions) {
 
         // Get the commodity index from the market.
@@ -110,6 +114,9 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
             paymentDate = Date();
         }
     }
+
+    // add required commodity fixing
+    requiredFixings_.addFixingDate(maturity_, index->name(), paymentDate);
 
     // Create the commodity forward instrument
     Currency currency = parseCurrency(currency_);

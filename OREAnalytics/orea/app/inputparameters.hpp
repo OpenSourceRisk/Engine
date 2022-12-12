@@ -23,6 +23,7 @@
 #pragma once
 
 #include <orea/app/parameters.hpp>
+#include <orea/cube/npvcube.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
@@ -96,6 +97,7 @@ public:
     /********************************************
      * Additional getters for exposure simulation 
      ********************************************/
+    bool simulation() { return simulation_; }
     const std::string& exposureBaseCurrency() { return exposureBaseCurrency_; }
     const std::string& exposureObservationModel() { return exposureObservationModel_; }
     const std::string& nettingSetId() { return nettingSetId_; }
@@ -119,9 +121,9 @@ public:
     const std::string& xvaBaseCurrency() { return xvaBaseCurrency_; }
     bool loadCube() { return loadCube_; }
     boost::shared_ptr<NPVCube> cube() { return cube_; }
-    boost::shared_ptr<NPVCube> nettingSetcube() { return nettingSetCube_; }
+    boost::shared_ptr<NPVCube> nettingSetCube() { return nettingSetCube_; }
     boost::shared_ptr<NPVCube> cptyCube() { return cptyCube_; }
-    boost::shared_ptr<AggregationScenarioData> mktCube() { mktCube_; }
+    boost::shared_ptr<AggregationScenarioData> mktCube() { return mktCube_; }
     bool flipViewXVA() { return flipViewXVA_; }
     bool fullInitialCollateralisation() { return fullInitialCollateralisation_; }
     bool exposureProfiles() { return exposureProfiles_; }
@@ -234,6 +236,7 @@ protected:
     // ...
 
     // exposure simulation
+    bool simulation_ = false;
     std::string exposureBaseCurrency_ = "";
     std::string exposureObservationModel_ = "Disable";
     std::string nettingSetId_ = "";
@@ -321,21 +324,15 @@ public:
 
     const boost::shared_ptr<CSVLoader>& csvLoader() { return csvLoader_; }
     const std::vector<std::string>& runTypes() { return runTypes_; }
-
-    const std::string& npvOutputFileName() { return npvOutputFileName_; }
-    const std::string& cashflowOutputFileName() { return cashflowOutputFileName_; }
-    const std::string& curvesOutputFileName() { return curvesOutputFileName_; }
-    const std::string& scenarioDumpFileName() { return scenarioDumpFileName_; }
-    const std::string& cubeFileName() { return cubeFileName_; }
-    const std::string& mktCubeFileName() { return mktCubeFileName_; }
-    const std::string& rawCubeFileName() { return rawCubeFileName_; }
-    const std::string& netCubeFileName() { return netCubeFileName_; }
-
+    std::string outputFileName(const std::string& internalName, const std::string& suffix);
+    
 private:
     boost::shared_ptr<Parameters> params_;
     boost::shared_ptr<CSVLoader> csvLoader_;
     std::vector<std::string> runTypes_;
 
+    std::map<std::string, std::string> fileNameMap_;
+    
     std::string npvOutputFileName_;
     std::string cashflowOutputFileName_;
     std::string curvesOutputFileName_;

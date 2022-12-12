@@ -167,7 +167,7 @@ public:
     PricingAnalytic(const boost::shared_ptr<InputParameters>& inputs, 
                     std::ostream& out = std::cout,
                     bool applySimmExemptions = false)
-        : Analytic("PRICING", {"NPV", "ADDITIONAL_RESULTS", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "MARKETDATA"}, inputs, out) {
+        : Analytic("PRICING", {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"}, inputs, out) {
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -213,7 +213,7 @@ private:
     boost::shared_ptr<CrossAssetModel> model_;
     boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     boost::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_;
-    boost::shared_ptr<InMemoryAggregationScenarioData> scenarioData_;
+    boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
     boost::shared_ptr<PostProcess> postProcess_;

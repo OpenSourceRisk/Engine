@@ -103,14 +103,14 @@ void MarketCalibrationReport::populateReport(const boost::shared_ptr<ore::data::
     if (calibrationFilters_.mdFilterFxVols) {
         // fx vol surfaces
         for (auto const& c : calibrationInfo->fxVolCalibrationInfo) {
-            addFxEqVol(calibrationInfo->asof, c.second, getCurveName(c.first), label);
+            addFxVol(calibrationInfo->asof, c.second, getCurveName(c.first), label);
         }
     }
 
     if (calibrationFilters_.mdFilterEqVols) {
         // eq vol surfaces
         for (auto const& c : calibrationInfo->eqVolCalibrationInfo) {
-            addFxEqVol(calibrationInfo->asof, c.second, getCurveName(c.first), label);
+            addEqVol(calibrationInfo->asof, c.second, getCurveName(c.first), label);
         }
     }
 

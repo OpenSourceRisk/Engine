@@ -88,6 +88,7 @@ void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
         tmps.insert(end(tmps), begin(atmps), end(atmps));
     }
 
+    // FIXME
     // QuantExt::Date mporDate = QuantExt::Date();
     // if (laggedMarket_)
     //     mporDate = inputs_->mporCalendar().advance(inputs_->asof(), inputs_->mporDays(), QuantExt::Days);
@@ -108,7 +109,6 @@ void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
             marketDataLoader_->populateLoader(tmps);
         }
         
-        // write out market data files
         boost::shared_ptr<InMemoryReport> mdReport = boost::make_shared<InMemoryReport>();
         boost::shared_ptr<InMemoryReport> fixingReport = boost::make_shared<InMemoryReport>();
         boost::shared_ptr<InMemoryReport> dividendReport = boost::make_shared<InMemoryReport>();
@@ -121,18 +121,9 @@ void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
         ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeDividends(*dividendReport, marketDataLoader_->loader());
 
-        /*
-        mdReport->toFile(path(inputs_->resultsPath() / "marketdata.csv").string(), ',', true, inputs_->csvQuoteChar(),
-                         inputs_->reportNaString());
-        fixingReport->toFile(path(inputs_->resultsPath() / "fixings.csv").string(), ',', true, inputs_->csvQuoteChar(),
-                             inputs_->reportNaString());
-        dividendReport->toFile(path(inputs_->resultsPath() / "dividends.csv").string(), ',', true, inputs_->csvQuoteChar(),
-                             inputs_->reportNaString());
-        */
-        
-        marketDataReports_["MARKETDATA"][""] = mdReport;
-        marketDataReports_["FIXINGS"][""] = fixingReport;
-        marketDataReports_["DIVIDENDS"][""] = dividendReport;
+        marketDataReports_["MARKETDATA"]["marketdata"] = mdReport;
+        marketDataReports_["FIXINGS"]["fixings"] = fixingReport;
+        marketDataReports_["DIVIDENDS"]["dividends"] = dividendReport;
     }
 
     // run requested run types across all analytics
@@ -146,6 +137,7 @@ void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
                 a.second->marketCalibration(marketCalibrationReport);
         }
     }
+
     if (marketCalibrationReport)
         marketCalibrationReport->outputCalibrationReport();
 }

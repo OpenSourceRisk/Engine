@@ -80,7 +80,9 @@ public:
                                    std::string const& name, std::string const& label) = 0;
 
     // Add fx/eq vol curve data to array
-    virtual void addFxEqVol(const QuantLib::Date& refdate, boost::shared_ptr<ore::data::FxEqVolCalibrationInfo> vol,
+    virtual void addFxVol(const QuantLib::Date& refdate, boost::shared_ptr<ore::data::FxEqVolCalibrationInfo> vol,
+                            const std::string& name, const std::string& label) = 0;
+    virtual void addEqVol(const QuantLib::Date& refdate, boost::shared_ptr<ore::data::FxEqVolCalibrationInfo> vol,
                             const std::string& name, const std::string& label) = 0;
 
     // Add ir vol curve data to array

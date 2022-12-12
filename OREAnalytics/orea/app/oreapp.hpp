@@ -79,6 +79,8 @@ public:
                                     const std::string& pricingEngineXML, const bool generateAdditionalResults = false);
 
 protected:
+    //! Use ORE functioanlity in analytics/analyticsmanager
+    void analytics(std::ostream& out);
     //! read setup from params_
     virtual void readSetup();
     //! set up logging

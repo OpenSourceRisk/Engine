@@ -6,12 +6,64 @@ found in the commits between September 2022 and December 2022.
 
 INSTRUMENTS
 
-- add Equity Cliquet Option
-- add Equity/FX/Commodity Variance Swap
-- add Commodity Swap
-- add Commodity Swaption
-- add Commodity Average Price Option
-- add Commodity Option Strip
+- roll out Commodity derivatives, thanks to Acadia Inc., as announced in September 22:
+  * add Commodity Swap
+  * add Commodity Swaption
+  * add Commodity Average Price Option
+  * add Commodity Option Strips and Digital Option Strip
+  see user guide and in particular Example 24
+- add Equity Cliquet Option, missed in the 7th release, thanks to Acadia
+- add Equity/FX/Commodity Variance Swap, missed in the 7th release, thanks to Acadia
+- introduce separate trade types for Cross Currency and Inflation Swap
+- merge QuantExt and QuantLib CDS and midpoint engine in ORE's QuantLib fork,
+  QuantLib pull request to follow
+
+MARKETS
+
+- performance optimizations for curve builders
+- extend the market interface to optionally handle precious metals and crypto currencies
+  as commodities instead of FX
+
+TERM STRUCTURES
+
+- no notable changes
+
+ANALYTICS
+
+- add American Monte Carlo simulation components to support fast Bermudan Swaption
+  exposure simulation and more, thanks to Acadia;
+  the integration into the ORE command line app will follow with the next release (March 23)
+  as it requires some refactoring.
+- add Commodity simulation to the cross asset model and market simulation, integraded
+  with the LGM-based Cross Asset Model, thanks to Acadia
+- add a multi-factor Hull-White / FX / Commodity simulation model, thanks to Acadia;
+  calibration to be added  
+
+TESTS
+
+- QuantExt: 242 test functions (vs 214 in the previous release)
+- OREData: 199 test functions (vs. 192 in the previous release)
+- OREAnalytics: 66 test functions (vs. 65 in the previous release)
+
+DOCUMENTATION
+
+- the user guide is maintained continuously incorporating user feedback, in particular
+  from Acadia service clients; it has grown from 404 to 440 pages, mainly due to the
+  migration of Commodity and Equity/FX instruments into ORE
+
+LANGUAGE BINDUNGS
+
+- maintenance to ensure ORE SWIG wrappers build with the current ORE release,
+  QuantLib-1.28 and QuantLib-SWIG-1.28
+
+OTHER
+
+- changes to build with QuantLib 1.28
+- extend the CMake setup for Windows / Visual Studio users
+  We will stop maintaining the *.vcxproj and *.vcxproj.filters from now on
+  and rely on CMakeLists for both *nix and Windows. See section 4.2.3 of
+  the user guide on how to "Generate Visual Studio Projects with CMake"
+
 
 Changes for the 7th ORE release (1.8.7.0):
 ============================================

@@ -17,6 +17,7 @@
 */
 
 #include <orea/app/inputparameters.hpp>
+#include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <ored/ored.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
@@ -259,6 +260,10 @@ void OREAppInputParameters::loadParameters() {
      * Simulation
      ************/
     
+    tmp = params_->get("simulation", "active", false);
+    if (tmp == "Y")
+        simulation_ = true;
+
     exposureSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
     crossAssetModelData_ = boost::make_shared<CrossAssetModelData>();
     scenarioGeneratorData_ = boost::make_shared<ScenarioGeneratorData>();
@@ -342,14 +347,17 @@ void OREAppInputParameters::loadParameters() {
     else
         xvaBaseCurrency_ = exposureBaseCurrency_;
         
-    tmp = params_->get("xva", "cubeFile", false);
-    if (tmp != "") {
+    tmp = params_->get("simulation", "active", false);
+    if (tmp != "Y")
         loadCube_ = true;
-        string cubeFile = resultsPath_ + "/" + tmp;
+
+    tmp = params_->get("xva", "cubeFile", false);
+    if (loadCube_ && tmp != "") {
+        string cubeFile = resultsPath_.string() + "/" + tmp;
         tmp = params_->get("xva", "hyperCube", false);
         if (tmp != "")
             hyperCube_ = parseBool(tmp);        
-        if (hyperCube)
+        if (hyperCube_)
             cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
         else
             cube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
@@ -360,12 +368,12 @@ void OREAppInputParameters::loadParameters() {
     }
 
     tmp = params_->get("xva", "nettingSetCubeFile", false);
-    if (tmp != "") {
-        string cubeFile = resultsPath_ + "/" + tmp;
+    if (loadCube_ && tmp != "") {
+        string cubeFile = resultsPath_.string() + "/" + tmp;
         tmp = params_->get("xva", "nettingSetHyperCube", false);
         if (tmp != "")
-            nettingSetHyperCube_ = parseBool(tmp);        
-        if (nettingSetHyperCube)
+            hyperNettingSetCube_ = parseBool(tmp);        
+        if (hyperNettingSetCube_)
             nettingSetCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
         else
             nettingSetCube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
@@ -376,12 +384,12 @@ void OREAppInputParameters::loadParameters() {
     }
 
     tmp = params_->get("xva", "cptyCubeFile", false);
-    if (tmp != "") {
-        string cubeFile = resultsPath_ + "/" + tmp;
+    if (loadCube_ && tmp != "") {
+        string cubeFile = resultsPath_.string() + "/" + tmp;
         tmp = params_->get("xva", "cptyHyperCube", false);
         if (tmp != "")
-            cptyHyperCube_ = parseBool(tmp);        
-        if (cptyHyperCube)
+            hyperCptyCube_ = parseBool(tmp);        
+        if (hyperCptyCube_)
             cptyCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
         else
             cptyCube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
@@ -392,8 +400,8 @@ void OREAppInputParameters::loadParameters() {
     }
 
     tmp = params_->get("xva", "scenarioFile", false);
-    if (tmp != "") {
-        string cubeFile = resultPath_ + "/" + tmp;
+    if (loadCube_ && tmp != "") {
+        string cubeFile = resultsPath_.string() + "/" + tmp;
         mktCube_ = boost::make_shared<InMemoryAggregationScenarioData>();
         mktCube_->load(cubeFile);
         LOG("MktCube loading done");
@@ -624,9 +632,6 @@ void OREAppInputParameters::loadParameters() {
     if (params_->get("npv", "active", false) == "Y")
         runTypes_.push_back("NPV");
     
-    if (outputAdditionalResults_)
-        runTypes_.push_back("ADDITIONAL_RESULTS");
-
     if (params_->get("cashflow", "active", false) == "Y")
         runTypes_.push_back("CASHFLOW");
 
@@ -636,12 +641,28 @@ void OREAppInputParameters::loadParameters() {
     if (params_->get("parametricVar", "active", false) == "Y")
         runTypes_.push_back("VAR");
 
-    if (params_->get("simulation", "active", false) == "Y")
+    if (simulation_)
         runTypes_.push_back("EXPOSURE");
 
-    if (params_->get("xva", "active", false) == "Y")
-        runTypes_.push_back("XVA");
-
+    if (params_->get("xva", "active", false) == "Y") {
+        if (cvaAnalytic_)
+            runTypes_.push_back("CVA");
+        if (dvaAnalytic_)
+            runTypes_.push_back("DVA");
+        if (fvaAnalytic_)
+            runTypes_.push_back("FVA");
+        if (colvaAnalytic_)
+            runTypes_.push_back("COLVA");
+        if (collateralFloorAnalytic_)
+            runTypes_.push_back("COLLATERALFLOOR");
+        if (dimAnalytic_)
+            runTypes_.push_back("DIM");
+        if (mvaAnalytic_)
+            runTypes_.push_back("MVA");
+        if (kvaAnalytic_)
+            runTypes_.push_back("KVA");
+    }
+    
     /***************************
      * Collect output file names
      */
@@ -651,11 +672,28 @@ void OREAppInputParameters::loadParameters() {
     curvesOutputFileName_ = params_->get("curves", "outputFileName", false);
     scenarioDumpFileName_ = params_->get("simulation", "scenariodump", false);
     cubeFileName_ = params_->get("simulation", "cubeFile", false);
-    aggregationScenarioDataFileName_ = params_->get("simulation", "aggregationScenarioDataFileName", false);
-    rawCubeFileName_ = params_->get("xva", "rawCubeFile", false);
-    netCubeFileName_ = params_->get("xva", "netCubeFile", false);
- 
+    mktCubeFileName_ = params_->get("simulation", "aggregationScenarioDataFileName", false);
+    rawCubeFileName_ = params_->get("xva", "rawCubeOutputFile", false);
+    netCubeFileName_ = params_->get("xva", "netCubeOutputFile", false);
+
+    // map internal key to output file name
+    fileNameMap_["npv"] = npvOutputFileName_;
+    fileNameMap_["cashflow"] = cashflowOutputFileName_;
+    fileNameMap_["curves"] = curvesOutputFileName_;
+    fileNameMap_["cube"] = cubeFileName_;
+    fileNameMap_["scenariodata"] = mktCubeFileName_;
+    fileNameMap_["rawcube"] = rawCubeFileName_;
+    fileNameMap_["netcube"] = netCubeFileName_;
+    
     LOG("OREAppInputParameters complete");
+}
+
+std::string OREAppInputParameters::outputFileName(const std::string& internalName, const std::string& suffix) {
+    auto it = fileNameMap_.find(internalName);
+    if (it == fileNameMap_.end() || it->second == "")
+        return internalName + "." + suffix;
+    else        
+        return it->second; // contains suffix
 }
 
 void OREAppInputParameters::writeOutParameters() {
