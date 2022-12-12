@@ -107,7 +107,7 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const boost::sh
                 index, isInterpolated ? CPI::Linear : CPI::Flat, Handle<YieldTermStructure>(cd.discountTS), start);
         helpers.push_back(instrument);
     }
-    Rate baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(useLastKnownFixing, start, cd.zeroCouponPillars[0],
+    Rate baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(useLastKnownFixing, start, today, cd.zeroCouponPillars[0],
                                                                 cd.dayCounter, cd.obsLag, cd.zeroCouponQuotes[0],
                                                                 cd.obsLag, cd.dayCounter, index, isInterpolated);
     boost::shared_ptr<ZeroInflationCurve> curve = boost::make_shared<QuantExt::PiecewiseZeroInflationCurve<Linear>>(

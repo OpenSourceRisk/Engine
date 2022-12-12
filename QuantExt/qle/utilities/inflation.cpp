@@ -153,13 +153,19 @@ QuantLib::Date fixingDate(const QuantLib::Date& d, const QuantLib::Period obsLag
 }
 
 QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const QuantLib::Date& swapStart,
+                                  const QuantLib::Date& asof,
                                   const QuantLib::Period& swapTenor, const QuantLib::DayCounter& swapZCLegDayCounter,
                                   const QuantLib::Period& swapObsLag, const QuantLib::Rate zeroCouponRate,
                                   const QuantLib::Period& curveObsLag, const QuantLib::DayCounter& curveDayCounter,
                                   const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const bool interpolated) {
     
+    Date swapBaseDate = ZeroInflation::fixingDate(swapStart, swapObsLag, index->frequency(), interpolated);
+
+    Date curveBaseDate =
+        ZeroInflation::curveBaseDate(baseDateLastKnownFixing, asof, curveObsLag, index->frequency(), index);
+
     // If the baseDate in Curve is today - obsLag then the quoted zeroRate should be used
-    if (!baseDateLastKnownFixing && swapObsLag == curveObsLag)
+    if (!baseDateLastKnownFixing && swapBaseDate == curveBaseDate)
         return zeroCouponRate;
     
     QL_REQUIRE(index, "can not compute base cpi of the zero coupon swap");
@@ -171,9 +177,8 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
         QL_FAIL("Can not estimate the curve base date, got " << e.what());
     }
 
-    Date swapBaseDate = swapStart - swapObsLag;
     Date swapMaturity = swapStart + swapTenor;
-    Date swapObservationDate = swapMaturity - swapObsLag;
+    Date swapObservationDate = ZeroInflation::fixingDate(swapMaturity, swapObsLag, index->frequency(), interpolated);
 
     // TODO check historical fixings available
     Rate instrumentBaseCPI = cpiFixing(index, swapStart, swapObsLag, interpolated);
@@ -182,14 +187,10 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
 
     auto fwdCPI = instrumentBaseCPI * std::pow(1 + zeroCouponRate, timeFromSwapBase);
 
-    Date curveBaseDt = curveBaseDate(baseDateLastKnownFixing, QuantLib::Settings::instance().evaluationDate(), curveObsLag,
-                                     index->frequency(), index);
-    
-    double curveBaseFixing = index->fixing(curveBaseDt);
+    double curveBaseFixing = index->fixing(curveBaseDate);
 
     if (!interpolated) {
-        Time timeFromCurveBase =
-            inflationYearFraction(index->frequency(), interpolated, curveDayCounter, curveBaseDt,
+        Time timeFromCurveBase = inflationYearFraction(index->frequency(), interpolated, curveDayCounter, curveBaseDate,
                                                        swapObservationDate);
 
         return std::pow(fwdCPI / curveBaseFixing, 1.0 / timeFromCurveBase) - 1.0;
@@ -199,15 +200,16 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
         auto paymentPeriod = inflationPeriod(swapMaturity, index->frequency());
         // Fixing times from curve base date
         Time timeToFixing1 =
-            inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDt, fixingPeriod.first);
-        Time timeToFixing2 = inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDt,
+            inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDate, fixingPeriod.first);
+        Time timeToFixing2 = inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDate,
                                         fixingPeriod.second + 1 * Days);
 
         // Time interpolation
-        Time timeToPayment = inflationYearFraction(index->frequency(), true, curveDayCounter, curveBaseDt, swapMaturity);
+        Time timeToPayment =
+            inflationYearFraction(index->frequency(), true, curveDayCounter, curveBaseDate, swapMaturity);
         Time timeToStartPaymentPeriod =
-            inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDt, paymentPeriod.first);
-        Time timeToEndPaymenetPeriod = inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDt,
+            inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDate, paymentPeriod.first);
+        Time timeToEndPaymenetPeriod = inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDate,
                                         paymentPeriod.second + 1 * Days);
         Time interpolationFactor =
             (timeToPayment - timeToStartPaymentPeriod) / (timeToEndPaymenetPeriod - timeToStartPaymentPeriod);
