@@ -77,7 +77,12 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, co
                 } else if (auto index = boost::dynamic_pointer_cast<BondIndex>(rawIndex)) {
                     QL_FAIL("BondIndex not handled");
                 } else if (auto index = boost::dynamic_pointer_cast<CommodityIndex>(rawIndex)) {
-                    fixingMap_[index->clone(QuantLib::Date(),
+                    // for comm indices with non-daily expiries the expiry date's day of month is 1 always
+                    Date safeExpiryDate = index->expiryDate();
+                    if (safeExpiryDate != Date() && !index->keepDays()) {
+                        safeExpiryDate = Date::endOfMonth(safeExpiryDate);
+                    }
+                    fixingMap_[index->clone(safeExpiryDate,
                                             market->commodityPriceCurve(index->underlyingName(), configuration))]
                         .insert(dates.begin(), dates.end());
                 } else if (auto index = boost::dynamic_pointer_cast<FxIndex>(rawIndex)) {
@@ -165,7 +170,13 @@ void FixingManager::applyFixings(Date start, Date end) {
         }
 
         if (needFixings) {
-            Rate currentFixing = m.first->fixing(currentFixingDate);
+            Rate currentFixing;
+            if (auto comm = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(m.first);
+                comm != nullptr && comm->expiryDate() < currentFixingDate) {
+                currentFixing = comm->priceCurve()->price(currentFixingDate);
+            } else {
+                currentFixing = m.first->fixing(currentFixingDate);
+            }
             // if we read the fixing from an inverted FxIndex we have to undo the inversion
             TimeSeries<Real> history;
             for (auto const& d : m.second) {
