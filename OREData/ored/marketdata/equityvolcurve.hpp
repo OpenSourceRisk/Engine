@@ -98,7 +98,7 @@ public:
                               const EquityVolatilityCurveConfig& config, const Handle<QuantExt::EquityIndex>& eqIndex);
 
     const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() const { return vol_; }
-    const boost::shared_ptr<FxEqVolCalibrationInfo>& calibrationInfo() const { return calibrationInfo_; }
+    const boost::shared_ptr<FxEqCommVolCalibrationInfo>& calibrationInfo() const { return calibrationInfo_; }
     //@}
 
 
@@ -110,7 +110,7 @@ private:
     QuantLib::DayCounter dayCounter_;
     QuantLib::Date maxExpiry_;
     boost::shared_ptr<VolatilityConfig> volatilityConfig_;
-    boost::shared_ptr<FxEqVolCalibrationInfo> calibrationInfo_;
+    boost::shared_ptr<FxEqCommVolCalibrationInfo> calibrationInfo_;
 };
 } // namespace data
 } // namespace ore

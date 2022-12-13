@@ -65,7 +65,7 @@ public:
     //! Build the calibration info
     void buildVolCalibrationInfo(const Date& asof, boost::shared_ptr<VolatilityConfig>& volatilityConfig,
                                     const CurveConfigurations& curveConfigs, const CommodityVolatilityConfig& config);
-    const boost::shared_ptr<FxEqVolCalibrationInfo>& calibrationInfo() const { return calibrationInfo_; }
+    const boost::shared_ptr<FxEqCommVolCalibrationInfo>& calibrationInfo() const { return calibrationInfo_; }
     //@}
 
 private:
@@ -75,7 +75,7 @@ private:
     boost::shared_ptr<CommodityFutureConvention> convention_;
     QuantLib::Calendar calendar_;
     QuantLib::DayCounter dayCounter_;
-    boost::shared_ptr<FxEqVolCalibrationInfo> calibrationInfo_;
+    boost::shared_ptr<FxEqCommVolCalibrationInfo> calibrationInfo_;
     QuantLib::Date maxExpiry_;
 
     // Populated for delta, moneyness and possibly absolute strike surfaces and left empty for others

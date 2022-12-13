@@ -1738,7 +1738,7 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
         std::vector<Period> expiries = *rc.expiries();
 
 
-        auto info = boost::make_shared<FxEqVolCalibrationInfo>();
+        auto info = boost::make_shared<FxEqCommVolCalibrationInfo>();
 
         DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
         DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Fwd;
