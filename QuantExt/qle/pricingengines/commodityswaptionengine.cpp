@@ -633,9 +633,9 @@ void CommoditySwaptionMonteCarloEngine::futureFloatLegFactors(Size idxFloat, Rea
                 QL_REQUIRE(it != expiries.end(), "futureFloatLegFactors: expected to find expiry in expiries vector");
                 auto idx = distance(expiries.begin(), it);
                 Real fxRate{1.};
-                if(ccf->fxIndex())
-                    fxRate=ccf->fxIndex()->fixing(expiry);
-                floatLegFactors[i][idx] += fxRate*p.second->fixing(expiry) / numObs;
+                if (ccf->fxIndex())
+                    fxRate = ccf->fxIndex()->fixing(expiry);
+                floatLegFactors[i][idx] += fxRate * p.second->fixing(expiry) / numObs;
             }
             discounts[i] = discountCurve_->discount(ccf->date());
             amounts[i] = ccf->periodQuantity();
