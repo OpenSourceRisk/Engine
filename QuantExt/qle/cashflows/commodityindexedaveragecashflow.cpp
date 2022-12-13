@@ -176,6 +176,9 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
         registerWith(kv.second);
     }
 
+    if (fxIndex_)
+        registerWith(fxIndex_);
+
     // If offPeakPowerData_ is provided, populate weights_
     if (offPeakPowerData_) {
         Calendar peakCalendar = offPeakPowerData_->first;
