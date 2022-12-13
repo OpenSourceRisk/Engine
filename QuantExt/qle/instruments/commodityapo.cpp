@@ -20,7 +20,10 @@ CommodityAveragePriceOption::CommodityAveragePriceOption(const boost::shared_ptr
     : Option(ext::shared_ptr<Payoff>(), exercise), flow_(flow), quantity_(quantity), strikePrice_(strikePrice),
       type_(type), settlementType_(delivery), settlementMethod_(settlementMethod), fxIndex_(fxIndex),
       barrierLevel_(barrierLevel), barrierType_(barrierType), barrierStyle_(barrierStyle) {
+    flow_->alwaysForwardNotifications();
     registerWith(flow_);
+    if (fxIndex_)
+        registerWith(fxIndex_);
 }
 
 bool CommodityAveragePriceOption::isExpired() const { return detail::simple_event(flow_->date()).hasOccurred(); }
