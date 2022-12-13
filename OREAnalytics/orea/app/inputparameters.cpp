@@ -551,6 +551,14 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         dimRegressors_ = parseListOfValues(tmp);
 
+    tmp = params_->get("xva", "dimOutputGridPoints", false);
+    if (tmp != "")
+        dimOutputGridPoints_ = parseListOfValues<Size>(tmp, parseInteger);
+
+    tmp = params_->get("xva", "dimOutputNettingSet", false);
+    if (tmp != "")
+        dimOutputNettingSet_ = tmp;
+    
     tmp = params_->get("xva", "dimLocalRegressionEvaluations", false);
     if (tmp != "")
         dimLocalRegressionEvaluations_ = parseInteger(tmp);
@@ -683,15 +691,26 @@ void OREAppInputParameters::loadParameters() {
     mktCubeFileName_ = params_->get("simulation", "aggregationScenarioDataFileName", false);
     rawCubeFileName_ = params_->get("xva", "rawCubeOutputFile", false);
     netCubeFileName_ = params_->get("xva", "netCubeOutputFile", false);
+    dimEvolutionFileName_ = params_->get("xva", "dimEvolutionFile", false);    
+    tmp = params_->get("xva", "dimRegressionFiles", false);
+    if (tmp != "")
+        dimRegressionFileNames_ = parseListOfValues(tmp);
 
-    // map internal key to output file name
+    // map internal report name to output file name
     fileNameMap_["npv"] = npvOutputFileName_;
     fileNameMap_["cashflow"] = cashflowOutputFileName_;
     fileNameMap_["curves"] = curvesOutputFileName_;
     fileNameMap_["cube"] = cubeFileName_;
     fileNameMap_["scenariodata"] = mktCubeFileName_;
+    fileNameMap_["scenario"] = scenarioDumpFileName_;
     fileNameMap_["rawcube"] = rawCubeFileName_;
     fileNameMap_["netcube"] = netCubeFileName_;
+    fileNameMap_["dim_evolution"] = dimEvolutionFileName_;
+    QL_REQUIRE(dimOutputGridPoints_.size() == dimRegressionFileNames_.size(),
+               "dim regression output grid points size (" << dimOutputGridPoints_.size() << ") "
+               << "and file names size (" << dimRegressionFileNames_.size() << ") do not match");
+    for (Size i = 0; i < dimRegressionFileNames_.size(); ++i)
+        fileNameMap_["dim_regression_" + to_string(i)] = dimRegressionFileNames_[i];
     
     LOG("OREAppInputParameters complete");
 }

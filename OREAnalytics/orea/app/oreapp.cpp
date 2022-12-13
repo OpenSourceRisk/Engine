@@ -137,8 +137,12 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
     : tab_(50), progressBarWidth_(72 - std::min<Size>(tab_, 67)), params_(params),
       asof_(parseDate(params_->get("setup", "asofDate"))), out_(out), cubeDepth_(0) {
 
+    bool useAnalytics = true;
+    // We can actively switch this off and enable the old behavious
     string tmp = params_->get("setup", "useAnalytics", false);
-    if (tmp != "" && parseBool(tmp))
+    if (tmp != "")
+        useAnalytics = parseBool(tmp);
+    if (useAnalytics)
         analytics(out);
     
     // Set global evaluation date

@@ -81,8 +81,8 @@
       <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
       <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
       <Parameter name="dimScaling">1.0</Parameter>
-      <Parameter name="dimEvolutionFile">dim_evolution_3.txt</Parameter>
-      <Parameter name="dimRegressionFiles">dim_regression_3.txt</Parameter>
+      <Parameter name="dimEvolutionFile">dim_evolution_3.csv</Parameter>
+      <Parameter name="dimRegressionFiles">dim_regression_3.csv</Parameter>
       <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>
       <Parameter name="dimOutputGridPoints">100</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>

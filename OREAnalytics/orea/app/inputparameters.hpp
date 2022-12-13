@@ -162,6 +162,8 @@ public:
     Size dimHorizonCalendarDays() { return dimHorizonCalendarDays_; }
     Size dimRegressionOrder() { return dimRegressionOrder_; }
     const std::vector<std::string>& dimRegressors() { return dimRegressors_; }
+    const std::vector<Size>& dimOutputGridPoints() { return dimOutputGridPoints_; }
+    const std::string& dimOutputNettingSet() { return dimOutputNettingSet_; }
     Size dimLocalRegressionEvaluations() { return dimLocalRegressionEvaluations_; }
     Real dimLocalRegressionBandwidth() { return dimLocalRegressionBandwidth_; }
     // capital value adjustment details
@@ -299,6 +301,8 @@ protected:
     Size dimHorizonCalendarDays_ = 14;
     Size dimRegressionOrder_ = 0;
     vector<string> dimRegressors_;
+    vector<Size> dimOutputGridPoints_;
+    string dimOutputNettingSet_;
     Size dimLocalRegressionEvaluations_ = 0;
     Real dimLocalRegressionBandwidth_ = 0.25;
     // capital value adjustment details
@@ -345,6 +349,8 @@ private:
     std::string mktCubeFileName_;
     std::string rawCubeFileName_;
     std::string netCubeFileName_;
+    std::string dimEvolutionFileName_;
+    std::vector<std::string> dimRegressionFileNames_;
 };
 
 } // namespace analytics

@@ -18,7 +18,6 @@
 
 #include <orea/app/marketdatacsvloader.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
-// #include <orepbase/ored/portfolio/referencedata.hpp>
 
 using namespace ore::data;
 using QuantExt::OptionPriceSurface;
@@ -76,8 +75,6 @@ void MarketDataCsvLoader::retrieveFixings(const boost::shared_ptr<ore::data::InM
     
     if (inputs_->allFixings()) {
         for (const auto& f : csvLoader_->loadFixings()) {
-            // Why fixing date set to asof ?
-            //loader->addFixing(inputs_->asof(), f.name, f.fixing);
             loader->addFixing(f.date, f.name, f.fixing);
             //DLOG("add fixing for " << f.name << " fixing date " << io::iso_date(f.date));
         }

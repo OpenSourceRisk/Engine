@@ -63,7 +63,7 @@ oreex.print_headline("Run ORE to postprocess the NPV cube, with collateral (thre
 oreex.run("Input/ore_threshold_dim.xml")
 oreex.save_output_to_subdir(
     "collateral_threshold_dim",
-    ["log.txt", "xva.csv", "dim_regression.txt", "dim_evolution.txt"]
+    ["log.txt", "xva.csv", "dim_regression.csv", "dim_evolution.csv"]
     + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
     + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "colva*")))
 )
