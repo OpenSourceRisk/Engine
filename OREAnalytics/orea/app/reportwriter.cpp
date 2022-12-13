@@ -1273,7 +1273,7 @@ void addCommodityCurveCalibrationInfo(ore::data::Report& report, const std::stri
 }
 
 void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& type, const std::string& id,
-                               boost::shared_ptr<FxEqVolCalibrationInfo> info) {
+                               boost::shared_ptr<FxEqCommVolCalibrationInfo> info) {
     if (info == nullptr)
         return;
 
