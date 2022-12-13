@@ -67,7 +67,7 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     init(calc);
 }
 
-Real CommodityIndexedAverageCashFlow::amount() const {
+void CommodityIndexedAverageCashFlow::performCalculations() const {
 
     // Calculate the average price
     Real averagePrice = 0.0;
@@ -88,7 +88,12 @@ Real CommodityIndexedAverageCashFlow::amount() const {
 
     // Amount is just average price times quantity
     // In case of Foreign currency settlement, the spread must be expressed in Foreign currency units
-    return periodQuantity_ * (gearing_ * averagePrice + spread_);
+    amount_ = periodQuantity_ * (gearing_ * averagePrice + spread_);
+}
+
+Real CommodityIndexedAverageCashFlow::amount() const {
+    calculate();
+    return amount_;
 }
 
 void CommodityIndexedAverageCashFlow::accept(AcyclicVisitor& v) {
@@ -96,10 +101,6 @@ void CommodityIndexedAverageCashFlow::accept(AcyclicVisitor& v) {
         v1->visit(*this);
     else
         CashFlow::accept(v);
-}
-
-void CommodityIndexedAverageCashFlow::update() {
-    notifyObservers();
 }
 
 void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator>& calc) {
