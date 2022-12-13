@@ -489,6 +489,10 @@ void CurveConfigurations::fromXML(XMLNode* node) {
             if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
                 reportConfigFxVols_.fromXML(tmp3);
         }
+        if (auto tmp2 = XMLUtils::getChildNode(tmp, "CommodityVolatilities")) {
+            if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
+                reportConfigCommVols_.fromXML(tmp3);
+        }
         if (auto tmp2 = XMLUtils::getChildNode(tmp, "IRCapFloorVolatilities")) {
             if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
                 reportConfigIrCapFloorVols_.fromXML(tmp3);

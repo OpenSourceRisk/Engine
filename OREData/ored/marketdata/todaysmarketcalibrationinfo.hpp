@@ -182,6 +182,8 @@ struct TodaysMarketCalibrationInfo {
     std::map<std::string, boost::shared_ptr<FxEqVolCalibrationInfo>> eqVolCalibrationInfo;
     // ir vols (swaption, capfloor)
     std::map<std::string, boost::shared_ptr<IrVolCalibrationInfo>> irVolCalibrationInfo;
+    // comm vols
+    std::map<std::string, boost::shared_ptr<FxEqVolCalibrationInfo>> commVolCalibrationInfo;
 };
 
 } // namespace data
