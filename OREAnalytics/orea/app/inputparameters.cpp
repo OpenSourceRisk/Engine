@@ -19,6 +19,8 @@
 #include <orea/app/inputparameters.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/sensitivityfilestream.hpp>
+#include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/ored.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
@@ -239,68 +241,265 @@ void OREAppInputParameters::loadParameters() {
     // analyticFxSensis_ = true;
     // outputJacobi_ = false;
     // useSensiSpreadedTermStructures_ = true;
-    
-    sensiSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
-    tmp = params_->get("sensitivity", "marketConfigFile", false);
-    if (tmp != "") {
-        string marketConfigFile = inputPath + "/" + tmp;
-        LOG("Loading scenario sim market parameters from file" << marketConfigFile);
-        sensiSimMarketParams_->fromFile(marketConfigFile);
-    } else {
-        WLOG("ScenarioSimMarket parameters not loaded");
+
+    tmp = params_->get("sensitivity", "active", false);
+    if (tmp != "")
+        sensi_ = parseBool(tmp);
+
+    if (sensi_) {
+        sensiSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+        tmp = params_->get("sensitivity", "marketConfigFile", false);
+        if (tmp != "") {
+            string marketConfigFile = inputPath + "/" + tmp;
+            LOG("Loading sensitivity scenario sim market parameters from file" << marketConfigFile);
+            sensiSimMarketParams_->fromFile(marketConfigFile);
+        } else {
+            WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
+        }
+        
+        sensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+        tmp = params_->get("sensitivity", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string sensitivityConfigFile = inputPath + "/" + tmp;
+            LOG("Load sensitivity scenario data from file" << sensitivityConfigFile);
+            sensiScenarioData_->fromFile(sensitivityConfigFile);
+        } else {
+            WLOG("Sensitivity scenario data not loaded");
+        }
+
+        sensiPricingEngine_ = boost::make_shared<EngineData>();
+        tmp = params_->get("sensitivity", "pricingEnginesFile", false);
+        if (tmp != "") {
+            string pricingEnginesFile = inputPath + "/" + tmp;
+            LOG("Load pricing engine data from file: " << pricingEnginesFile);
+            sensiPricingEngine_->fromFile(pricingEnginesFile);
+        } else {
+            WLOG("Pricing engine data not found for sensitivity analysis, using global");
+            sensiPricingEngine_ = pricingEngine_;
+        }
+        
+        tmp = params_->get("sensitivity", "outputSensitivityThreshold", false); 
+        if (tmp != "")
+            sensiThreshold_ = parseReal(tmp);
     }
     
-    sensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
-    tmp = params_->get("sensitivity", "sensitivityConfigFile", false);
-    if (tmp != "") {
-        string sensitivityConfigFile = inputPath + "/" + tmp;
-        LOG("Load sensitivity scenario data from file" << sensitivityConfigFile);
-        sensiScenarioData_->fromFile(sensitivityConfigFile);
-    } else {
-        WLOG("Sensitivity scenario data not found");
+    /****************
+     * Stress Testing
+     ****************/
+
+    tmp = params_->get("stress", "active", false);
+    if (tmp != "")
+        stress_ = parseBool(tmp);
+
+    stressPricingEngine_ = pricingEngine_;
+
+    if (stress_) {
+        stressSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+        tmp = params_->get("stress", "marketConfigFile", false);
+        if (tmp != "") {
+            string marketConfigFile = inputPath + "/" + tmp;
+            LOG("Loading stress test scenario sim market parameters from file" << marketConfigFile);
+            stressSimMarketParams_->fromFile(marketConfigFile);
+        } else {
+            WLOG("ScenarioSimMarket parameters for stress testing not loaded");
+        }
+        
+        stressScenarioData_ = boost::make_shared<StressTestScenarioData>();
+        tmp = params_->get("stress", "stressConfigFile", false);
+        if (tmp != "") {
+            string configFile = inputPath + "/" + tmp;
+            LOG("Load stress test scenario data from file" << configFile);
+            stressScenarioData_->fromFile(configFile);
+        } else {
+            WLOG("Stress scenario data not loaded");
+        }
+        
+        stressPricingEngine_ = boost::make_shared<EngineData>();
+        tmp = params_->get("stress", "pricingEnginesFile", false);
+        if (tmp != "") {
+            string pricingEnginesFile = inputPath + "/" + tmp;
+            LOG("Load pricing engine data from file: " << pricingEnginesFile);
+            stressPricingEngine_->fromFile(pricingEnginesFile);
+        } else {
+            WLOG("Pricing engine data not found for stress testing, using global");
+        }
+        
+        tmp = params_->get("stress", "outputThreshold", false); 
+        if (tmp != "")
+            stressThreshold_ = parseReal(tmp);
+    }
+    
+    /****************
+     * VaR
+     ****************/
+
+    tmp = params_->get("parametricVar", "active", false);
+    if (tmp != "")
+        var_ = parseBool(tmp);
+
+    if (var_) {
+        tmp = params_->get("parametricVar", "salvageCovarianceMatrix", false);
+        if (tmp != "")
+            salvageCovariance_ = parseBool(tmp);
+        
+        tmp = params_->get("parametricVar", "quantiles", false);
+        if (tmp != "")
+            varQuantiles_ = parseListOfValues<Real>(tmp, &parseReal);
+        
+        tmp = params_->get("parametricVar", "breakdown", false);
+        if (tmp != "")
+            varBreakDown_ = parseBool(tmp);
+        
+        tmp = params_->get("parametricVar", "portfolioFilter", false);
+        if (tmp != "")
+            portfolioFilter_ = tmp;
+        
+        tmp = params_->get("parametricVar", "method", false);
+        if (tmp != "")
+            varMethod_ = tmp;
+        
+        tmp = params_->get("parametricVar", "mcSamples", false);
+        if (tmp != "")
+            mcVarSamples_ = parseInteger(tmp);
+        
+        tmp = params_->get("parametricVar", "mcSeed", false);
+        if (tmp != "")
+            mcVarSeed_ = parseInteger(tmp);
+        
+        tmp = params_->get("parametricVar", "covarianceInputFile", false);
+        QL_REQUIRE(tmp != "", "covarianceInputFile not provided");
+        std::string covFile = inputPath + "/" + tmp;
+        LOG("Load Covariance Data from file " << covFile);
+        ore::data::CSVFileReader reader(covFile, false);
+        std::vector<std::string> dummy;
+        while (reader.next()) {
+            covarianceData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
+                                           *parseRiskFactorKey(reader.get(1), dummy))] =
+                ore::data::parseReal(reader.get(2));
+        }
+        LOG("Read " << covarianceData_.size() << " valid covariance data lines from file " << covFile);
+        
+        tmp = params_->get("parametricVar", "sensitivityInputFile", false);
+        QL_REQUIRE(tmp != "", "sensitivityInputFile not provided");
+        std::string sensiFile = inputPath + "/" + tmp;
+        LOG("Get sensitivity data from file " << sensiFile);
+        sensitivityStream_ = boost::make_shared<SensitivityFileStream>(sensiFile);
     }
 
-    tmp = params_->get("sensitivity", "outputSensitivityThreshold", false); 
-    if (tmp != "")
-        sensiThreshold_ = parseReal(tmp);
-        
     /************
      * Simulation
      ************/
     
     tmp = params_->get("simulation", "active", false);
-    if (tmp == "Y")
-        simulation_ = true;
+    if (tmp != "")
+        simulation_ = parseBool(tmp);
 
-    exposureSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
-    crossAssetModelData_ = boost::make_shared<CrossAssetModelData>();
-    scenarioGeneratorData_ = boost::make_shared<ScenarioGeneratorData>();
-    tmp = params_->get("simulation", "simulationConfigFile", false) ;
-    if (tmp != "") {
-        string simulationConfigFile = inputPath + "/" + tmp;
-        LOG("Loading simulation config from file" << simulationConfigFile);
-        exposureSimMarketParams_->fromFile(simulationConfigFile);
-        crossAssetModelData_->fromFile(simulationConfigFile);
-        scenarioGeneratorData_->fromFile(simulationConfigFile);
-        auto grid = scenarioGeneratorData_->getGrid();
-        LOG("grid size=" << grid->size() << ", dates=" << grid->dates().size()
-            << ", valuationDates=" << grid->valuationDates().size()
-            << ", closeOutDates=" << grid->closeOutDates().size());
-    } else {
-        WLOG("Simulation market, model and scenario generator data not loaded");
+    // check this here because we need to know 10 lines below
+    tmp = params_->get("xva", "active", false);
+    if (tmp != "")
+        xva_ = parseBool(tmp);
+    
+    simulationPricingEngine_ = pricingEngine_;
+    exposureObservationModel_ = observationModel_;
+    exposureBaseCurrency_ = baseCurrency_;
+
+    if (simulation_ || xva_) {
+        exposureSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+        crossAssetModelData_ = boost::make_shared<CrossAssetModelData>();
+        // A bit confusing: The scenario generator data are needed for XVA post-processing
+        // even if we do not simulate: the simulation grid
+        scenarioGeneratorData_ = boost::make_shared<ScenarioGeneratorData>();
+        tmp = params_->get("simulation", "simulationConfigFile", false) ;
+        if (tmp != "") {
+            string simulationConfigFile = inputPath + "/" + tmp;
+            LOG("Loading simulation config from file" << simulationConfigFile);
+            exposureSimMarketParams_->fromFile(simulationConfigFile);
+            crossAssetModelData_->fromFile(simulationConfigFile);
+            scenarioGeneratorData_->fromFile(simulationConfigFile);
+            auto grid = scenarioGeneratorData_->getGrid();
+            LOG("grid size=" << grid->size() << ", dates=" << grid->dates().size()
+                << ", valuationDates=" << grid->valuationDates().size()
+                << ", closeOutDates=" << grid->closeOutDates().size());
+        } else {
+            ALOG("Simulation market, model and scenario generator data not loaded");
+        }
+        
+        simulationPricingEngine_ = boost::make_shared<EngineData>();
+        tmp = params_->get("simulation", "pricingEnginesFile", false);
+        if (tmp != "") {
+            string pricingEnginesFile = inputPath + "/" + tmp;
+            LOG("Load simulation pricing engine data from file: " << pricingEnginesFile);
+            simulationPricingEngine_->fromFile(pricingEnginesFile);
+        } else {
+            WLOG("Simulation pricing engine data not found, using standard pricing engines");
+            simulationPricingEngine_ = pricingEngine_;
+        }
+
+        exposureBaseCurrency_ = baseCurrency_;
+        tmp = params_->get("simulation", "baseCurrency", false);
+        if (tmp != "")
+            exposureBaseCurrency_ = tmp;
+        
+        tmp = params_->get("simulation", "observationModel", false);
+        if (tmp != "")
+            exposureObservationModel_ = tmp;
+        else
+            exposureObservationModel_ = observationModel_;
+        
+        tmp = params_->get("simulation", "storeFlows", false);
+        if (tmp == "Y")
+            storeFlows_ = true;
+        
+        tmp = params_->get("simulation", "storeSurvivalProbabilities", false);
+        if (tmp == "Y")
+            storeSurvivalProbabilities_ = true;
+        
+        tmp = params_->get("simulation", "nettingSetId", false);
+        if (tmp != "")
+            nettingSetId_ = tmp;
+        
+        tmp = params_->get("simulation", "cubeFile", false);
+        if (tmp != "") {
+            writeCube_ = true;
+        }
+        
+        tmp = params_->get("simulation", "scenariodump", false);
+        if (tmp != "") {
+            writeScenarios_ = true;
+        }
     }
 
-    simulationPricingEngine_ = boost::make_shared<EngineData>();
-    tmp = params_->get("simulation", "pricingEnginesFile", false);
-    if (tmp != "") {
-        string pricingEnginesFile = inputPath + "/" + tmp;
-        LOG("Load simulation pricing engine data from file: " << pricingEnginesFile);
-        simulationPricingEngine_->fromFile(pricingEnginesFile);
-    } else {
-        WLOG("Simulation pricing engine data not found, using standard pricing engines");
-        simulationPricingEngine_ = pricingEngine_;
-    }
+    /**********************
+     * XVA
+     **********************/
 
+    tmp = params_->get("xva", "baseCurrency", false);
+    if (tmp != "")
+        xvaBaseCurrency_ = tmp;
+    else
+        xvaBaseCurrency_ = exposureBaseCurrency_;
+        
+    if (xva_ && !simulation_) {
+        loadCube_ = true;
+        tmp = params_->get("xva", "cubeFile", false);
+        if (tmp != "") {
+            string cubeFile = resultsPath_.string() + "/" + tmp;
+            tmp = params_->get("xva", "hyperCube", false);
+            if (tmp != "")
+                hyperCube_ = parseBool(tmp);        
+            if (hyperCube_)
+                cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
+            else
+                cube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
+            LOG("Load cube from file " << cubeFile);
+            cube_->load(cubeFile);
+            LOG("Cube loading done: ids=" << cube_->numIds() << " dates=" << cube_->numDates()
+                << " samples=" << cube_->samples() << " depth=" << cube_->depth());
+        } else {
+            ALOG("cube file name not provided");
+        }
+    }
+    
     nettingSetManager_ = boost::make_shared<NettingSetManager>();
     tmp = params_->get("xva", "csaFile", false);
     if (tmp != "") {
@@ -308,73 +507,15 @@ void OREAppInputParameters::loadParameters() {
         LOG("Loading netting and csa data from file" << csaFile);
         nettingSetManager_->fromFile(csaFile);
     } else {
-        // FIXME: log level depending on chosen analytics
-        WLOG("Netting/CSA data not found");
+        if (xva_) {
+            ALOG("Netting/CSA data not found");
+            QL_FAIL("Netting set manager is required for XVA");
+        }
+        else {
+            WLOG("Netting/CSA data not found");
+        }
     }
-
-    exposureBaseCurrency_ = baseCurrency_;
-    tmp = params_->get("simulation", "baseCurrency", false);
-    if (tmp != "")
-        exposureBaseCurrency_ = tmp;
-
-    tmp = params_->get("simulation", "observationModel", false);
-    if (tmp != "")
-        exposureObservationModel_ = tmp;
-    else
-        exposureObservationModel_ = observationModel_;
-        
-    tmp = params_->get("simulation", "storeFlows", false);
-    if (tmp == "Y")
-        storeFlows_ = true;
-
-    tmp = params_->get("simulation", "storeSurvivalProbabilities", false);
-    if (tmp == "Y")
-        storeSurvivalProbabilities_ = true;
-
-    tmp = params_->get("simulation", "nettingSetId", false);
-    if (tmp != "")
-        nettingSetId_ = tmp;
-
-    tmp = params_->get("simulation", "cubeFile", false);
-    if (tmp != "") {
-        writeCube_ = true;
-    }
-
-    tmp = params_->get("simulation", "scenariodump", false);
-    if (tmp != "") {
-        writeScenarios_ = true;
-    }
-
-    /**********************
-     * XVA
-     **********************/
     
-    tmp = params_->get("xva", "baseCurrency", false);
-    if (tmp != "")
-        xvaBaseCurrency_ = tmp;
-    else
-        xvaBaseCurrency_ = exposureBaseCurrency_;
-        
-    tmp = params_->get("simulation", "active", false);
-    if (tmp != "Y")
-        loadCube_ = true;
-
-    tmp = params_->get("xva", "cubeFile", false);
-    if (loadCube_ && tmp != "") {
-        string cubeFile = resultsPath_.string() + "/" + tmp;
-        tmp = params_->get("xva", "hyperCube", false);
-        if (tmp != "")
-            hyperCube_ = parseBool(tmp);        
-        if (hyperCube_)
-            cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
-        else
-            cube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
-        LOG("Load cube from file " << cubeFile);
-        cube_->load(cubeFile);
-        LOG("Cube loading done: ids=" << cube_->numIds() << " dates=" << cube_->numDates()
-            << " samples=" << cube_->samples() << " depth=" << cube_->depth());
-    }
-
     tmp = params_->get("xva", "nettingSetCubeFile", false);
     if (loadCube_ && tmp != "") {
         string cubeFile = resultsPath_.string() + "/" + tmp;
@@ -435,11 +576,11 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         pfeQuantile_ = parseReal(tmp);
 
-    tmp = params_->get("xva", "collateralCalculationType", false);
+    tmp = params_->get("xva", "calculationType", false);
     if (tmp != "")
         collateralCalculationType_ = tmp;
 
-    tmp = params_->get("xva", "exposureAllocationMethod", false);
+    tmp = params_->get("xva", "allocationMethod", false);
     if (tmp != "")
         exposureAllocationMethod_ = tmp;
 
@@ -660,6 +801,21 @@ void OREAppInputParameters::loadParameters() {
     if (simulation_)
         runTypes_.push_back("EXPOSURE");
 
+    if (stress_)
+        runTypes_.push_back("STRESS");
+
+    if (var_) {
+        if (varMethod_ == "Delta")
+            runTypes_.push_back("DELTA");
+        else if (varMethod_ == "DeltaGammaNormal")
+            runTypes_.push_back("DELTA-GAMMA-NORMAL-VAR");
+        else if (varMethod_ == "MonteCarlo")
+            runTypes_.push_back("MONTE-CARLO-VAR");
+        else {
+            QL_FAIL("VaR method " << varMethod_ << " not covered");
+        }
+    }
+
     if (params_->get("xva", "active", false) == "Y") {
         if (cvaAnalytic_)
             runTypes_.push_back("CVA");
@@ -679,6 +835,7 @@ void OREAppInputParameters::loadParameters() {
             runTypes_.push_back("KVA");
     }
     
+
     /***************************
      * Collect output file names
      */
@@ -695,7 +852,10 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("xva", "dimRegressionFiles", false);
     if (tmp != "")
         dimRegressionFileNames_ = parseListOfValues(tmp);
-
+    sensitivityFileName_ = params_->get("sensitivity", "sensitivityOutputFile", false);    
+    stressTestFileName_ = params_->get("stress", "scenarioOutputFile", false);    
+    varFileName_ = params_->get("var", "outputFile", false);
+    
     // map internal report name to output file name
     fileNameMap_["npv"] = npvOutputFileName_;
     fileNameMap_["cashflow"] = cashflowOutputFileName_;
@@ -706,6 +866,10 @@ void OREAppInputParameters::loadParameters() {
     fileNameMap_["rawcube"] = rawCubeFileName_;
     fileNameMap_["netcube"] = netCubeFileName_;
     fileNameMap_["dim_evolution"] = dimEvolutionFileName_;
+    fileNameMap_["sensitivity"] = sensitivityFileName_;
+    fileNameMap_["stress"] = stressTestFileName_;
+    fileNameMap_["var"] = varFileName_;
+    
     QL_REQUIRE(dimOutputGridPoints_.size() == dimRegressionFileNames_.size(),
                "dim regression output grid points size (" << dimOutputGridPoints_.size() << ") "
                << "and file names size (" << dimRegressionFileNames_.size() << ") do not match");

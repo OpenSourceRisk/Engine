@@ -64,73 +64,80 @@ namespace ore {
 namespace analytics {
 
 void OREApp::analytics(ostream& out) {
-    setupLog();
 
-    LOG("ORE analytics starting");
+    try {
+        setupLog();
 
-    // Read all inputs from params and files referenced in params
-    out_ << setw(tab_) << left << "Loading inputs " << flush;
-    auto inputs = boost::make_shared<OREAppInputParameters>(params_);
-    out_ << "OK" << std::endl;
+        LOG("ORE analytics starting");
 
-    // Set global evaluation date
-    Settings::instance().evaluationDate() = inputs->asof();
+        // Read all inputs from params and files referenced in params
+        out_ << setw(tab_) << left << "Loading inputs " << flush;
+        auto inputs = boost::make_shared<OREAppInputParameters>(params_);
+        out_ << "OK" << std::endl;
+        
+        // Set global evaluation date, though already set in the OREAppInputParameters c'tor
+        Settings::instance().evaluationDate() = inputs->asof();
 
-    // Initialize the global conventions 
-    InstrumentConventions::instance().setConventions(inputs->conventions());
+        // Initialize the global conventions 
+        InstrumentConventions::instance().setConventions(inputs->conventions());
 
-    // Create a market data loader that reads market data, fixings, dividends from csv files
-    auto loader = boost::make_shared<MarketDataCsvLoader>(inputs, inputs->csvLoader());
+        // Create a market data loader that reads market data, fixings, dividends from csv files
+        auto loader = boost::make_shared<MarketDataCsvLoader>(inputs, inputs->csvLoader());
 
-    // Create the analytics manager
-    auto analyticsManager = boost::make_shared<AnalyticsManager>(inputs, loader, out);
-    //out_ << setw(tab_) << left << "Available analytics... " << to_string(analyticsManager->validAnalytics()) << std::endl;
-    LOG("Available analytics: " << to_string(analyticsManager->validAnalytics()));
-    out_ << setw(tab_) << left << "Requested analytics " << to_string(inputs->runTypes()) << std::endl;
-    LOG("Requested analytics: " << to_string(inputs->runTypes()));
+        // Create the analytics manager
+        auto analyticsManager = boost::make_shared<AnalyticsManager>(inputs, loader, out);
+        LOG("Available analytics: " << to_string(analyticsManager->validAnalytics()));
+        out_ << setw(tab_) << left << "Requested analytics " << to_string(inputs->runTypes()) << std::endl;
+        LOG("Requested analytics: " << to_string(inputs->runTypes()));
 
-    // Run the requested analytics
-    // FIXME: How is the market calibration report supposed to work, no concrete implementation in orea yet
-    // auto marketCalibrationReport = boost::make_shared<MarketCalibrationReport>();
-    // analyticsManager->runAnalytics(inputs->runTypes(), marketCalibrationReport);
-    analyticsManager->runAnalytics(inputs->runTypes());
+        // Run the requested analytics
+        // FIXME: How is the market calibration report supposed to work, no concrete implementation in orea yet
+        // auto marketCalibrationReport = boost::make_shared<MarketCalibrationReport>();
+        // analyticsManager->runAnalytics(inputs->runTypes(), marketCalibrationReport);
+        analyticsManager->runAnalytics(inputs->runTypes());
 
-    // Write reports to files in the results path
-    Analytic::analytic_reports reports = analyticsManager->reports();
-    for (auto a : reports) {
-        for (auto b : a.second) {
-            string reportName = b.first;            
-            std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "csv");
-            boost::shared_ptr<InMemoryReport> rpt = b.second;
-            LOG("Write report " << reportName << " for analytic " << a.first);
-            rpt->toFile(fileName);
+        // Write reports to files in the results path
+        Analytic::analytic_reports reports = analyticsManager->reports();
+        for (auto a : reports) {
+            for (auto b : a.second) {
+                string reportName = b.first;            
+                std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "csv");
+                boost::shared_ptr<InMemoryReport> rpt = b.second;
+                LOG("Write report " << reportName << " for analytic " << a.first);
+                rpt->toFile(fileName);
+            }
         }
+        
+        // Write npv cube(s)
+        for (auto a : analyticsManager->npvCubes()) {
+            for (auto b : a.second) {
+                LOG("write npv cube " << b.first);
+                string reportName = b.first;
+                std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "dat");
+                LOG("write npv cube " << reportName << " to file " << fileName);
+                b.second->save(fileName);
+            }
+        }
+        
+        // Write market cube(s)
+        for (auto a : analyticsManager->mktCubes()) {
+            for (auto b : a.second) {
+                string reportName = b.first;
+                std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "dat");
+                LOG("write market cube " << reportName << " to file " << fileName);
+                b.second->save(fileName);
+            }
+        }        
     }
-    
-    // Write npv cube(s)
-    for (auto a : analyticsManager->npvCubes()) {
-        for (auto b : a.second) {
-            LOG("write npv cube " << b.first);
-            string reportName = b.first;
-            std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "dat");
-            LOG("write npv cube " << reportName << " to file " << fileName);
-            b.second->save(fileName);
-        }
-    }
-
-    // Write market cube(s)
-    for (auto a : analyticsManager->mktCubes()) {
-        for (auto b : a.second) {
-            string reportName = b.first;
-            std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "dat");
-            LOG("write market cube " << reportName << " to file " << fileName);
-            b.second->save(fileName);
-        }
+    catch (std::exception& e) {
+        ALOG("Error: " << e.what());
+        out_ << "Error: " << e.what() << endl;
+        exit(1);
     }
 
     LOG("ORE done");
 
-    exit(0);    
+    exit(0);
 }
     
 OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
@@ -138,7 +145,7 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
       asof_(parseDate(params_->get("setup", "asofDate"))), out_(out), cubeDepth_(0) {
 
     bool useAnalytics = true;
-    // We can actively switch this off and enable the old behavious
+    // We can actively switch this off and enable the old behaviour
     string tmp = params_->get("setup", "useAnalytics", false);
     if (tmp != "")
         useAnalytics = parseBool(tmp);
@@ -172,8 +179,8 @@ int OREApp::run() {
     cpu_timer timer;
 
     try {
-        out_ << "ORE starting" << std::endl;
-        LOG("ORE starting");
+        out_ << "*** DEPRECATED *** ORE starting" << std::endl;
+        LOG("ORE starting: DEPRECATED ORE App");
         // readSetup();
 
         /*********
@@ -186,7 +193,10 @@ int OREApp::run() {
         /*********
          * Build Markets
          */
+        cpu_timer mtimer;
         buildMarket();
+        mtimer.stop();
+        LOG("Market Build Time " << setprecision(2) << mtimer.format(default_places, "%w") << " sec");
 
         /************************
          * Build Pricing Engine Factory
@@ -1329,6 +1339,7 @@ void OREApp::runPostProcessor() {
     // FIXME: Needs the "simulation" section in ore.xml with consistent simulation.xml
     if (!cubeInterpreter_) {
         boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
+        LOG("withCloseOutLag=" << (sgd->withCloseOutLag() ? "Y" : "N"));
         if (sgd->withCloseOutLag())
             cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->getGrid(), analytics["flipViewXVA"]);
         else
@@ -1519,6 +1530,8 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
 
     LOG("Today's market built");
     MEM_LOG;
+
+
 }
 
 boost::shared_ptr<MarketImpl> OREApp::getMarket() const {

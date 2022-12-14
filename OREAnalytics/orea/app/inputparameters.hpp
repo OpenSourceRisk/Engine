@@ -26,8 +26,10 @@
 #include <orea/cube/npvcube.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
+#include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
+#include <orea/engine/sensitivitystream.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
@@ -87,6 +89,8 @@ public:
     /****************************************
      * Additional getters for sensi analytics
      ****************************************/
+    
+    bool sensi() { return sensi_; }
     bool xbsParConversion() { return xbsParConversion_; }
     bool analyticFxSensis() { return analyticFxSensis_; }
     bool outputJacobi() const { return outputJacobi_; };
@@ -94,11 +98,38 @@ public:
     QuantLib::Real sensiThreshold() const { return sensiThreshold_; }
     const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& sensiSimMarketParams() { return sensiSimMarketParams_; }
     const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData() { return sensiScenarioData_; }
+    const boost::shared_ptr<ore::data::EngineData>& sensiPricingEngine() { return sensiPricingEngine_; }
     // const boost::shared_ptr<ore::data::TodaysMarketParameters>& sensiTodaysMarketParams() { return sensiTodaysMarketParams_; }
 
+    /****************************************
+     * Additional getters for stress testing
+     ****************************************/
+
+    bool stress() { return stress_; }
+    QuantLib::Real stressThreshold() { return stressThreshold_; }
+    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& stressSimMarketParams() { return stressSimMarketParams_; }
+    const boost::shared_ptr<ore::analytics::StressTestScenarioData>& stressScenarioData() { return stressScenarioData_; }
+    const boost::shared_ptr<ore::data::EngineData>& stressPricingEngine() { return stressPricingEngine_; }
+
+    /****************************************
+     * Additional getters for VaR
+     ****************************************/
+
+    bool var() { return var_; }
+    bool salvageCovariance() { return salvageCovariance_; }
+    const std::vector<Real>& varQuantiles() { return varQuantiles_; }
+    bool varBreakDown() { return varBreakDown_; }
+    const std::string& portfolioFilter() { return portfolioFilter_; }
+    const std::string& varMethod() { return varMethod_; }
+    Size mcVarSamples() { return mcVarSamples_; }
+    long mcVarSeed() { return mcVarSeed_; }
+    const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& covarianceData() { return covarianceData_; }
+    const boost::shared_ptr<SensitivityStream>& sensitivityStream() { return sensitivityStream_; }
+    
     /********************************************
      * Additional getters for exposure simulation 
      ********************************************/
+    
     bool simulation() { return simulation_; }
     const std::string& exposureBaseCurrency() { return exposureBaseCurrency_; }
     const std::string& exposureObservationModel() { return exposureObservationModel_; }
@@ -120,6 +151,7 @@ public:
      * Additional getters for xva
      ****************************/
 
+    bool xva() { return xva_; }
     const std::string& xvaBaseCurrency() { return xvaBaseCurrency_; }
     bool loadCube() { return loadCube_; }
     boost::shared_ptr<NPVCube> cube() { return cube_; }
@@ -179,13 +211,9 @@ public:
     /*************************************************************
      * Additional getters for cashflow npv and dynamic backtesting
      *************************************************************/
+    
     const QuantLib::Date& cashflowHorizon() const { return cashflowHorizon_; };
     const QuantLib::Date& portfolioFilterDate() const { return portfolioFilterDate_; }
-
-    /*************************************************************
-     * Additional getters for VaR 
-     *************************************************************/
-    // ...
     
     virtual void loadParameters() = 0;
     virtual void writeOutParameters() = 0;
@@ -198,7 +226,7 @@ protected:
 
     // The following block of member variables (up to dryRun_) is not explicitly initialized
     // in OREAppInputParameters so far. 
-    bool entireMarket_ = false;
+    bool entireMarket_ = true; // FIXME: ORE Example 17 part 2 breaks if set to false
     bool allFixings_ = true; // FIXME
     bool eomInflationFixings_ = false;
     bool useMarketDataFixings_ = false;
@@ -212,8 +240,8 @@ protected:
 
     bool outputCurves_ = false;
     std::string curvesGrid_ = "240,1M";
-    bool continueOnError_ = false;
-    bool lazyMarketBuilding_ = false;
+    bool continueOnError_ = true;
+    bool lazyMarketBuilding_ = true;
     bool buildFailedTrades_ = false;
     std::string observationModel_ = "None";
     bool implyTodaysFixings_ = false;
@@ -229,6 +257,7 @@ protected:
     boost::shared_ptr<ore::data::Portfolio> portfolio_;
 
     // sensi
+    bool sensi_ = false;
     bool xbsParConversion_ = false;
     bool analyticFxSensis_ = true;
     bool outputJacobi_ = false;
@@ -236,11 +265,28 @@ protected:
     QuantLib::Real sensiThreshold_ = 0.0;
     boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensiSimMarketParams_;
     boost::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
+    boost::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
     // boost::shared_ptr<ore::data::TodaysMarketParameters> sensiTodaysMarketParams_;
 
-    // var
-    // ...
+    // stress
+    bool stress_ = false;
+    QuantLib::Real stressThreshold_ = 0.0;
+    boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> stressSimMarketParams_;
+    boost::shared_ptr<ore::analytics::StressTestScenarioData> stressScenarioData_;
+    boost::shared_ptr<ore::data::EngineData> stressPricingEngine_;
 
+    // var
+    bool var_ = false;
+    bool salvageCovariance_ = false;
+    std::vector<Real> varQuantiles_;
+    bool varBreakDown_ = false;
+    std::string portfolioFilter_;
+    std::string varMethod_;
+    Size mcVarSamples_ = 0;
+    long mcVarSeed_ = 0;
+    std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarianceData_;
+    boost::shared_ptr<SensitivityStream> sensitivityStream_;
+    
     // exposure simulation
     bool simulation_ = false;
     std::string exposureBaseCurrency_ = "";
@@ -258,6 +304,7 @@ protected:
     boost::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
 
     // xva
+    bool xva_ = false;
     std::string xvaBaseCurrency_ = "EUR";
     bool loadCube_ = false;
     bool hyperCube_ = false;
@@ -332,6 +379,8 @@ public:
 
     const boost::shared_ptr<CSVLoader>& csvLoader() { return csvLoader_; }
     const std::vector<std::string>& runTypes() { return runTypes_; }
+
+    //! map internal report name to the configured external file name
     std::string outputFileName(const std::string& internalName, const std::string& suffix);
     
 private:
@@ -351,6 +400,9 @@ private:
     std::string netCubeFileName_;
     std::string dimEvolutionFileName_;
     std::vector<std::string> dimRegressionFileNames_;
+    std::string sensitivityFileName_;
+    std::string stressTestFileName_;
+    std::string varFileName_;
 };
 
 } // namespace analytics

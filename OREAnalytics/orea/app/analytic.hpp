@@ -167,7 +167,7 @@ public:
     PricingAnalytic(const boost::shared_ptr<InputParameters>& inputs, 
                     std::ostream& out = std::cout,
                     bool applySimmExemptions = false)
-        : Analytic("PRICING", {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"}, inputs, out) {
+        : Analytic("PRICING", {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"}, inputs, out) {
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -180,8 +180,9 @@ protected:
 
 class VarAnalytic : public Analytic {
 public:
+    // FIXME: Add DELTA-GAMMA-VAR (Saddlepoint method)
     VarAnalytic(const boost::shared_ptr<InputParameters>& inputs, std::ostream& out = std::cout)
-        : Analytic("VAR", {"DELTA-VAR", "DELTA-GAMMA-VAR", "DELTA-GAMMA-NORMAL-VAR", "MONTE-CARLO-VAR"}, inputs, out) {
+        : Analytic("VAR", {"DELTA-VAR", "DELTA-GAMMA-NORMAL-VAR", "MONTE-CARLO-VAR"}, inputs, out) {
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,

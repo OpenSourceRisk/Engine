@@ -23,7 +23,7 @@ oreex.plot("exposure_trade_Swap_50y.csv", 2, 3, 'b', "Swap EPE (no horizon shift
 oreex.plot("exposure_trade_Swap_50y.csv", 2, 4, 'r', "Swap ENE (no horizon shift)")
 oreex.plot("exposure_trade_Swap_50y_2.csv", 2, 3, 'g', "Swap EPE (shifted horizon)")
 oreex.plot("exposure_trade_Swap_50y_2.csv", 2, 4, 'y', "Swap ENE (shifted horizon)")
-oreex.plot("swaption_npv.csv", 3, 4, 'g', "NPV Swaptions", marker='s')
+#oreex.plot_npv("swaption_npv.csv", 6, 'g', "NPV Swaptions", marker='s')
 
 oreex.decorate_plot(title="Example 12 - Simulated exposures with and without horizon shift")
 oreex.save_plot_to_file()
