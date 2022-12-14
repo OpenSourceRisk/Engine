@@ -66,6 +66,7 @@ public:
     //@{
     const ReportConfig& reportConfigEqVols() const { return reportConfigEqVols_; }
     const ReportConfig& reportConfigFxVols() const { return reportConfigFxVols_; }
+    const ReportConfig& reportConfigCommVols() const { return reportConfigCommVols_; }
     const ReportConfig& reportConfigIrCapFloorVols() const { return reportConfigIrCapFloorVols_; }
     const ReportConfig& reportConfigIrSwaptionVols() const { return reportConfigIrSwaptionVols_; }
 
@@ -201,6 +202,7 @@ public:
 private:
     ReportConfig reportConfigEqVols_;
     ReportConfig reportConfigFxVols_;
+    ReportConfig reportConfigCommVols_;
     ReportConfig reportConfigIrCapFloorVols_;
     ReportConfig reportConfigIrSwaptionVols_;
 

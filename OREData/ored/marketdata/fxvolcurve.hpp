@@ -62,7 +62,7 @@ public:
     //@{
     const FXVolatilityCurveSpec& spec() const { return spec_; }
     const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() { return vol_; }
-    boost::shared_ptr<FxEqVolCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
+    boost::shared_ptr<FxEqCommVolCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     //@}
 private:
     FXVolatilityCurveSpec spec_;
@@ -83,7 +83,7 @@ private:
     QuantLib::Option::Type riskReversalInFavorOf_;
     bool butterflyIsBrokerStyle_;
 
-    boost::shared_ptr<FxEqVolCalibrationInfo> calibrationInfo_;
+    boost::shared_ptr<FxEqCommVolCalibrationInfo> calibrationInfo_;
 
     void init(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
               const FXTriangulation& fxSpots, const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,

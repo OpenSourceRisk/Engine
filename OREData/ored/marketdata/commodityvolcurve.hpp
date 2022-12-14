@@ -54,13 +54,18 @@ public:
                       const std::map<std::string, boost::shared_ptr<CommodityVolCurve>>& commodityVolCurves = {},
                       const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves = {},
                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves = {},
-                      const Market* fxIndices = nullptr);
+                      const Market* fxIndices = nullptr, const bool buildCalibrationInfo = true);
     //@}
 
     //! \name Inspectors
     //@{
     const CommodityVolatilityCurveSpec& spec() const { return spec_; }
     const boost::shared_ptr<QuantLib::BlackVolTermStructure>& volatility() { return volatility_; }
+
+    //! Build the calibration info
+    void buildVolCalibrationInfo(const Date& asof, boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                                    const CurveConfigurations& curveConfigs, const CommodityVolatilityConfig& config);
+    const boost::shared_ptr<FxEqCommVolCalibrationInfo>& calibrationInfo() const { return calibrationInfo_; }
     //@}
 
 private:
@@ -70,6 +75,8 @@ private:
     boost::shared_ptr<CommodityFutureConvention> convention_;
     QuantLib::Calendar calendar_;
     QuantLib::DayCounter dayCounter_;
+    boost::shared_ptr<FxEqCommVolCalibrationInfo> calibrationInfo_;
+    QuantLib::Date maxExpiry_;
 
     // Populated for delta, moneyness and possibly absolute strike surfaces and left empty for others
     QuantLib::Handle<QuantExt::PriceTermStructure> pts_;

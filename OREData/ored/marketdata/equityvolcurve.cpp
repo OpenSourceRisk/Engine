@@ -1090,7 +1090,7 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
         std::vector<std::string> deltas = *rc.deltas();
         std::vector<Period> expiries = *rc.expiries();
 
-        calibrationInfo_ = boost::make_shared<FxEqVolCalibrationInfo>();
+        calibrationInfo_ = boost::make_shared<FxEqCommVolCalibrationInfo>();
 
         DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
         DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Fwd;
