@@ -173,7 +173,6 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory, con
             ++failedTrades;
             ++trade;
         } else {
-            trades_.erase((*trade).second->id());
             trade = trades_.erase(trade);
         }
     }
