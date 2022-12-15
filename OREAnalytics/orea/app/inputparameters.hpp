@@ -77,7 +77,8 @@ public:
     bool buildFailedTrades() { return buildFailedTrades_; }
     const std::string& observationModel() { return observationModel_; }
     bool implyTodaysFixings() { return implyTodaysFixings_; }
-    const std::map<std::string, std::string>&  marketConfig() { return marketConfig_; }
+    const std::map<std::string, std::string>&  marketConfigs() { return marketConfigs_; }
+    const std::string& marketConfig(const std::string& context);
     const boost::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() { return refDataManager_; }
     const boost::shared_ptr<ore::data::Conventions>& conventions() { return conventions_; }
     const boost::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig() const { return iborFallbackConfig_; }
@@ -246,7 +247,7 @@ protected:
     std::string observationModel_ = "None";
     bool implyTodaysFixings_ = false;
 
-    std::map<std::string, std::string> marketConfig_;
+    std::map<std::string, std::string> marketConfigs_;
     
     boost::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
     boost::shared_ptr<ore::data::Conventions> conventions_;
@@ -367,6 +368,10 @@ protected:
     QuantLib::Date portfolioFilterDate_;
 };
 
+inline const std::string& InputParameters::marketConfig(const std::string& context) {
+    auto it = marketConfigs_.find(context);
+    return (it != marketConfigs_.end() ? it->second : Market::defaultConfiguration);
+}
 
 class OREAppInputParameters : public InputParameters {
 public:

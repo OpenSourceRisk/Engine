@@ -206,7 +206,7 @@ void OREAppInputParameters::loadParameters() {
     }
 
     if (params_->hasGroup("Markets"))
-        marketConfig_ = params_->data("Markets");
+        marketConfigs_ = params_->data("Markets");
     
     /*************
      * NPV

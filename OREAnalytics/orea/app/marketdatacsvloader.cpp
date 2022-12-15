@@ -35,6 +35,10 @@ void MarketDataCsvLoader::loadCorporateActionData(boost::shared_ptr<ore::data::I
     }
 }
 
+void MarketDataCsvLoader::addExpiredContracts(ore::data::InMemoryLoader& loader, const std::set<std::string>& quotes, 
+                                              const QuantLib::Date& npvLaggedDate) {
+}
+
 void MarketDataCsvLoader::retrieveMarketData(
         const boost::shared_ptr<ore::data::InMemoryLoader>& loader, const std::set<std::string>& quotes,
         const QuantLib::Date& relabelDate) {        

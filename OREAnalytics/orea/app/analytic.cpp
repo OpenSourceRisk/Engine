@@ -57,25 +57,37 @@ std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::toda
     return tmps;
 }
 
+
 boost::shared_ptr<EngineFactory> Analytic::engineFactory() {
     // Note: Calling the constructor here with empty extry builders
     // Override this function in case you have got extra ones
-    std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders; // = getExtraEngineBuilders()
-    std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders; // = getExtraLegBuilders()
-    return boost::make_shared<EngineFactory>(inputs_->pricingEngine(), market_, map<MarketContext, string>(),
-                                             extraEngineBuilders, extraLegBuilders, inputs_->refDataManager(),
-                                             *inputs_->iborFallbackConfig());
+    boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->pricingEngine());
+    std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders; 
+    std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders; 
+    edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
+    edCopy->globalParameters()["RunType"] = "NPV";
+    map<MarketContext, string> configurations;
+    configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");    
+    configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
+    configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
+    //configurations[MarketContext::simulation] = inputs_->marketConfig("simulation");
+    return boost::make_shared<EngineFactory>(edCopy, market_, configurations, extraEngineBuilders, extraLegBuilders,
+                                             inputs_->refDataManager(), *inputs_->iborFallbackConfig());
 }
 
 boost::shared_ptr<ore::data::EngineFactory> PricingAnalytic::engineFactory() {
     boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->pricingEngine());
-    edCopy->globalParameters()["GenerateAdditionalResults"] = "true";
+    edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
     edCopy->globalParameters()["RunType"] = "NPV";
-    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraBuilders;// = getExtraEngineBuilders();
-    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;// = getExtraLegBuilders();
-    return boost::make_shared<EngineFactory>(edCopy, market_, map<MarketContext, string>(), extraBuilders,
-                                             extraLegBuilders, inputs_->refDataManager(),
-                                             *inputs_->iborFallbackConfig());
+    map<MarketContext, string> configurations;
+    configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");    
+    configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
+    configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
+    //configurations[MarketContext::simulation] = inputs_->marketConfig("simulation");
+    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraBuilders;
+    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
+    return boost::make_shared<EngineFactory>(edCopy, market_, configurations, extraBuilders, extraLegBuilders,
+                                             inputs_->refDataManager(), *inputs_->iborFallbackConfig());
 }
 
 void Analytic::buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -212,8 +224,7 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                 LOG("Write curves report");
                 boost::shared_ptr<InMemoryReport> curvesReport = boost::make_shared<InMemoryReport>();
                 DateGrid grid(inputs_->curvesGrid());
-                auto it = inputs_->marketConfig().find("curves");
-                std::string config = it != inputs_->marketConfig().end() ? it->second : Market::defaultConfiguration;
+                std::string config = inputs_->marketConfig("curves");
                 ore::analytics::ReportWriter(inputs_->reportNaString())
                     .writeCurves(*curvesReport, config, grid, *inputs_->todaysMarketParams(),
                                  market_, inputs_->continueOnError());
@@ -241,10 +252,7 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             out_ << setw(tab_) << left << "Risk: Stress Test Report" << flush;
             LOG("Stress Test Analysis called");
             Settings::instance().evaluationDate() = inputs_->asof();
-            std::string configuration = Market::defaultConfiguration;
-            auto it = inputs_->marketConfig().find("pricing");
-            if (it != inputs_->marketConfig().end())
-                configuration = it->second;
+            std::string configuration = inputs_->marketConfig("pricing");
             std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;// = getExtraEngineBuilders();
             std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;// = getExtraLegBuilders();
 	    boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
@@ -261,10 +269,7 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             LOG("Sensi Analysis - Initalise");
             bool recalibrateModels = true;
             bool ccyConv = false;
-            std::string configuration = Market::defaultConfiguration;
-            auto it = inputs_->marketConfig().find("pricing");
-            if (it != inputs_->marketConfig().end())
-                configuration = it->second;
+            std::string configuration = inputs_->marketConfig("pricing");
             std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraBuilders;// = getExtraEngineBuilders();
             std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;// = getExtraLegBuilders();
 	    boost::shared_ptr<ore::analytics::SensitivityAnalysis> sensiAnalysis;
@@ -379,17 +384,25 @@ void XvaAnalytic::setUpConfigurations() {
 }
 
 boost::shared_ptr<EngineFactory> XvaAnalytic::engineFactory() {
+    boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->simulationPricingEngine());
+    edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
+    edCopy->globalParameters()["RunType"] = "Exposure";
+    map<MarketContext, string> configurations;
+    configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");    
+    configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
+    configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
+    //configurations[MarketContext::simulation] = inputs_->marketConfig("simulation");
     std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders; 
     std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders;
     if (inputs_->simulation()) {
         // link to the sim market here
         QL_REQUIRE(simMarket_, "Simulaton market not set");
-        return boost::make_shared<EngineFactory>(inputs_->simulationPricingEngine(), simMarket_, map<MarketContext, string>(),
+        return boost::make_shared<EngineFactory>(edCopy, simMarket_, configurations,
                                                  extraEngineBuilders, extraLegBuilders, inputs_->refDataManager(),
                                                  *inputs_->iborFallbackConfig());
     } else {
         // we just link to today's market if simulation is not required
-        return boost::make_shared<EngineFactory>(inputs_->simulationPricingEngine(), market_, map<MarketContext, string>(),
+        return boost::make_shared<EngineFactory>(edCopy, market_, configurations,
                                                  extraEngineBuilders, extraLegBuilders, inputs_->refDataManager(),
                                                  *inputs_->iborFallbackConfig());        
     }
@@ -397,10 +410,7 @@ boost::shared_ptr<EngineFactory> XvaAnalytic::engineFactory() {
 
 void XvaAnalytic::buildScenarioSimMarket() {
     
-    std::string configuration = Market::defaultConfiguration;
-    auto it = inputs_->marketConfig().find("simulation");
-    if (it != inputs_->marketConfig().end())
-        configuration = it->second; 
+    std::string configuration = inputs_->marketConfig("simulation");
     simMarket_ = boost::make_shared<ScenarioSimMarket>(
             market_,
             inputs_->exposureSimMarketParams(),
@@ -419,10 +429,7 @@ void XvaAnalytic::buildScenarioGenerator(const bool continueOnCalibrationError) 
         buildCrossAssetModel(continueOnCalibrationError);
     ScenarioGeneratorBuilder sgb(inputs_->scenarioGeneratorData());
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
-    string config = Market::defaultConfiguration;
-    auto it = inputs_->marketConfig().find("simulation");
-    if (it != inputs_->marketConfig().end())
-        config = it->second; 
+    string config = inputs_->marketConfig("simulation");
     scenarioGenerator_ = sgb.build(model_, sf, inputs_->exposureSimMarketParams(), inputs_->asof(), market_, config); 
     QL_REQUIRE(scenarioGenerator_, "failed to build the scenario generator"); 
     grid_ = inputs_->scenarioGeneratorData()->getGrid();
@@ -443,18 +450,15 @@ void XvaAnalytic::buildScenarioGenerator(const bool continueOnCalibrationError) 
 void XvaAnalytic::buildCrossAssetModel(const bool continueOnCalibrationError) {
     LOG("XVA: Build Simulation Model (continueOnCalibrationError = "
         << std::boolalpha << continueOnCalibrationError << ")");
-
-    std::map<std::string,std::string> m = inputs_->marketConfig();
-    string lgmCalibMkt = m.find("lgmcalibration") != m.end() ? m["lgmcalibration"] : Market::defaultConfiguration;
-    string fxCalibMkt = m.find("fxcalibration") != m.end() ? m["fxcalibration"] : Market::defaultConfiguration;
-    string eqCalibMkt = m.find("eqcalibration") != m.end() ? m["eqcalibration"] : Market::defaultConfiguration;
-    string infCalibMkt = m.find("infcalibration") != m.end() ? m["infcalibration"] : Market::defaultConfiguration;
-    string crCalibMkt = m.find("crcalibration") != m.end() ? m["crcalibration"] : Market::defaultConfiguration;
-    string simulationMkt = m.find("simulation") != m.end() ? m["simulation"] : Market::defaultConfiguration;
     DayCounter dc = ActualActual(ActualActual::ISDA);
     CrossAssetModelBuilder modelBuilder(market_, inputs_->crossAssetModelData(),
-        lgmCalibMkt, fxCalibMkt, eqCalibMkt, infCalibMkt, crCalibMkt, simulationMkt,
-        dc, false, continueOnCalibrationError);
+                                        inputs_->marketConfig("lgmCalibration"),
+                                        inputs_->marketConfig("fxCalibration"),
+                                        inputs_->marketConfig("eqCalibration"),
+                                        inputs_->marketConfig("infCalibration"),
+                                        inputs_->marketConfig("crCalibration"),
+                                        inputs_->marketConfig("simulation"),
+                                        dc, false, continueOnCalibrationError);
     model_ = *modelBuilder.model();
 }
 
@@ -498,8 +502,7 @@ void XvaAnalytic::buildCube() {
 
     vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators;
     if (inputs_->storeSurvivalProbabilities()) {
-        std::map<std::string,std::string> m = inputs_->marketConfig();
-        string configuration = m.find("simulation") != m.end() ? m["simulation"] : Market::defaultConfiguration;
+        string configuration = inputs_->marketConfig("simulation");
         cptyCalculators.push_back(boost::make_shared<SurvivalProbabilityCalculator>(configuration));
     }
 
@@ -568,8 +571,7 @@ void XvaAnalytic::runPostProcessor() {
     Real kvaOurCvaRiskWeight = inputs_->kvaOurCvaRiskWeight();
     Real kvaTheirCvaRiskWeight = inputs_->kvaTheirCvaRiskWeight();
 
-    std::map<std::string,std::string> m = inputs_->marketConfig();
-    string marketConfiguration = m.find("simulation") != m.end() ? m["simulation"] : Market::defaultConfiguration;
+    string marketConfiguration = inputs_->marketConfig("simulation");
 
     bool fullInitialCollateralisation = inputs_->fullInitialCollateralisation();
 

@@ -49,6 +49,10 @@ public:
 
     MarketDataFixings retrieveMarketDataFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                                                 const MarketDataFixings& mdFixings) override;  
+
+    void addExpiredContracts(ore::data::InMemoryLoader& loader, const std::set<std::string>& quotes, 
+                             const QuantLib::Date& npvLaggedDate) override;
+
 private:
     boost::shared_ptr<CSVLoader> csvLoader_;
 };

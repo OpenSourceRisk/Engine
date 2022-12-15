@@ -78,6 +78,9 @@ void OREApp::analytics(ostream& out) {
         // Set global evaluation date, though already set in the OREAppInputParameters c'tor
         Settings::instance().evaluationDate() = inputs->asof();
 
+        // FIXME
+        GlobalPseudoCurrencyMarketParameters::instance().set(inputs->pricingEngine()->globalParameters());
+
         // Initialize the global conventions 
         InstrumentConventions::instance().setConventions(inputs->conventions());
 
@@ -179,7 +182,13 @@ int OREApp::run() {
     cpu_timer timer;
 
     try {
-        out_ << "*** DEPRECATED *** ORE starting" << std::endl;
+        out_ << endl 
+             << "=====================================" << endl
+             << "=== DEPRECATED useAnalytics=false ===" << endl
+             << "=====================================" << endl
+             << endl
+             << "ORE starting" << std::endl;
+
         LOG("ORE starting: DEPRECATED ORE App");
         // readSetup();
 
