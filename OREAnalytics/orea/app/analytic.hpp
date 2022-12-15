@@ -175,7 +175,7 @@ public:
     void setUpConfigurations() override;
 
 protected:
-    virtual boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;
+    boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;
 };
 
 class VarAnalytic : public Analytic {
@@ -201,7 +201,7 @@ public:
     void setUpConfigurations() override;
     
 private:
-    virtual boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;
+    boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;
     void buildScenarioSimMarket();
     void buildCrossAssetModel(bool continueOnError);
     void buildScenarioGenerator(bool continueOnError);

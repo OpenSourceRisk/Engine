@@ -58,6 +58,10 @@ const map<string, string>& Parameters::data(const string& groupName) const {
     QL_REQUIRE(it != data_.end(), "param group '" << groupName << "' not found");
     return it->second;
 }
+    
+const map<string, string>& Parameters::markets() const {
+    return data("markets");
+}
 
 void Parameters::fromFile(const string& fileName) {
     LOG("load ORE configuration from " << fileName);

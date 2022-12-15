@@ -205,8 +205,11 @@ void OREAppInputParameters::loadParameters() {
         ALOG("Portfolio data not found");
     }
 
-    if (params_->hasGroup("Markets"))
-        marketConfigs_ = params_->data("Markets");
+    if (params_->hasGroup("markets")) {
+        marketConfigs_ = params_->markets();
+        for (auto m: marketConfigs_)
+        LOG("MarketContext::" << m.first << " = " << m.second);
+    }
     
     /*************
      * NPV

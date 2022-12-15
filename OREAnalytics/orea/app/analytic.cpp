@@ -59,6 +59,7 @@ std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::toda
 
 
 boost::shared_ptr<EngineFactory> Analytic::engineFactory() {
+    LOG("Analytic::engineFactory() called");
     // Note: Calling the constructor here with empty extry builders
     // Override this function in case you have got extra ones
     boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->pricingEngine());
@@ -70,12 +71,14 @@ boost::shared_ptr<EngineFactory> Analytic::engineFactory() {
     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");    
     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
     configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
+    LOG("MarketContext::pricing = " << inputs_->marketConfig("pricing"));
     //configurations[MarketContext::simulation] = inputs_->marketConfig("simulation");
     return boost::make_shared<EngineFactory>(edCopy, market_, configurations, extraEngineBuilders, extraLegBuilders,
                                              inputs_->refDataManager(), *inputs_->iborFallbackConfig());
 }
 
 boost::shared_ptr<ore::data::EngineFactory> PricingAnalytic::engineFactory() {
+    LOG("PricingAnalytic::engineFactory() called");
     boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->pricingEngine());
     edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
     edCopy->globalParameters()["RunType"] = "NPV";
@@ -83,6 +86,7 @@ boost::shared_ptr<ore::data::EngineFactory> PricingAnalytic::engineFactory() {
     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");    
     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
     configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
+    LOG("MarketContext::pricing = " << inputs_->marketConfig("pricing"));
     //configurations[MarketContext::simulation] = inputs_->marketConfig("simulation");
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraBuilders;
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
@@ -167,6 +171,9 @@ void PricingAnalytic::setUpConfigurations() {
 void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                                   const std::vector<std::string>& runTypes) {
 
+    Settings::instance().evaluationDate() = inputs_->asof();
+    ObservationMode::instance().setMode(inputs_->observationModel());
+
     QL_REQUIRE(inputs_->portfolio(), "PricingAnalytic::run: No portfolio loaded.");
 
     out_ << setw(tab_) << left << "Pricing: Build Market " << flush;
@@ -184,8 +191,6 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
         }
     }
     
-    ObservationMode::instance().setMode(inputs_->observationModel());
-
     for (const auto& analytic : types_) {
         boost::shared_ptr<InMemoryReport> report = boost::make_shared<InMemoryReport>();
         InMemoryReport tmpReport;
@@ -384,6 +389,7 @@ void XvaAnalytic::setUpConfigurations() {
 }
 
 boost::shared_ptr<EngineFactory> XvaAnalytic::engineFactory() {
+    LOG("XvaAnalytic::engineFactory() called");
     boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->simulationPricingEngine());
     edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
     edCopy->globalParameters()["RunType"] = "Exposure";

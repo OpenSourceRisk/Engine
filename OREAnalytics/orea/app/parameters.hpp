@@ -50,6 +50,7 @@ public:
     bool has(const string& groupName, const string& paramName) const;
     string get(const string& groupName, const string& paramName, bool fail = true) const;
     const map<string, string>& data(const string& groupName) const;
+    const map<string, string>& markets() const;
     
     void log();
 

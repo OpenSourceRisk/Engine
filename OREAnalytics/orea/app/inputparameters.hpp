@@ -49,10 +49,6 @@ public:
     InputParameters() {}
     virtual ~InputParameters() {}
 
-    /*****************************************
-     * Setters - do we need them ?
-     *****************************************/
-
     /***************************
      * Getters for npv analytics
      ***************************/
@@ -145,8 +141,8 @@ public:
     const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData() { return crossAssetModelData_; }
     const boost::shared_ptr<ore::data::EngineData>& simulationPricingEngine() { return simulationPricingEngine_; }
     const boost::shared_ptr<ore::data::NettingSetManager>& nettingSetManager() { return nettingSetManager_; }
-    // const boost::shared_ptr<oreplus::data::CounterpartyManager>& counterpartyManager() { return counterpartyManager_; }
-    // const boost::shared_ptr<oreplus::data::CollateralBalances>& collateralBalances() { return collateralBalances_; }
+    // const boost::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() { return counterpartyManager_; }
+    // const boost::shared_ptr<ore::data::CollateralBalances>& collateralBalances() { return collateralBalances_; }
 
     /****************************
      * Additional getters for xva
@@ -225,28 +221,28 @@ protected:
     boost::filesystem::path resultsPath_;
     std::string baseCurrency_;
 
-    // The following block of member variables (up to dryRun_) is not explicitly initialized
+    // The following block of member variables (down to dryRun_) is not explicitly initialized yet
     // in OREAppInputParameters so far. 
     bool entireMarket_ = true; // FIXME: ORE Example 17 part 2 breaks if set to false
     bool allFixings_ = true; // FIXME
     bool eomInflationFixings_ = false;
     bool useMarketDataFixings_ = false;
     bool iborFallbackOverride_ = false;
-    bool outputTodaysMarketCalibration_ = false;
     QuantLib::Size nThreads_ = 1;
-    bool outputAdditionalResults_ = false;
     std::string reportNaString_;
     char csvQuoteChar_ = '\0';
     bool dryRun_ = false;
 
+    bool outputAdditionalResults_ = false;
     bool outputCurves_ = false;
+    bool outputTodaysMarketCalibration_ = false;
     std::string curvesGrid_ = "240,1M";
     bool continueOnError_ = true;
     bool lazyMarketBuilding_ = true;
     bool buildFailedTrades_ = false;
     std::string observationModel_ = "None";
     bool implyTodaysFixings_ = false;
-
+    
     std::map<std::string, std::string> marketConfigs_;
     
     boost::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
