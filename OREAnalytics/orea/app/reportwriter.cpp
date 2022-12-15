@@ -153,7 +153,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         .addColumn("FloorVolatility", double(), 6)
         .addColumn("CapVolatility", double(), 6);
 
-    const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
+    vector<boost::shared_ptr<Trade>> trades = portfolio->trades();
 
     for (Size k = 0; k < trades.size(); k++) {
 

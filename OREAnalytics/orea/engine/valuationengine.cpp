@@ -109,7 +109,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
 
     // Loop is Samples, Dates, Trades
     const auto& dates = dg_->dates();
-    const auto& trades = portfolio->trades();
+    const auto trades = portfolio->trades();
     auto& counterparties = outputCptyCube ? outputCptyCube->ids() : vector<string>();
     std::vector<bool> tradeHasError(trades.size(), false);
     LOG("Initialise state objects...");
