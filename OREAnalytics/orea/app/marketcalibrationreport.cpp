@@ -114,6 +114,13 @@ void MarketCalibrationReport::populateReport(const boost::shared_ptr<ore::data::
         }
     }
 
+    if (calibrationFilters_.mdFilterCommVols){
+        // commodity vols
+        for (auto const& c: calibrationInfo->commVolCalibrationInfo){
+            addCommVol(calibrationInfo->asof, c.second, getCurveName(c.first), label);
+        }
+    }
+
     if (calibrationFilters_.mdFilterIrVols) {
         // ir vol surfaces
         for (auto const& c : calibrationInfo->irVolCalibrationInfo) {

@@ -799,6 +799,7 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
             auto index = boost::make_shared<OffPeakPowerIndex>(indexName, expiry, offPeakIndex, peakIndex,
                 oppIdxData.offPeakHours(), oppIdxData.peakCalendar(), ts);
             IndexNameTranslator::instance().add(index->name(), hasPrefix ? name : "COMM-" + name);
+            DLOG("parseCommodityIndex(" << name << ") -> " << index->name() << " with expiry " << index->expiryDate());
             return index;
         }
     }
@@ -825,7 +826,8 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
     } else {
         index = boost::make_shared<CommoditySpotIndex>(commName, cal, ts);
     }
-    IndexNameTranslator::instance().add(index->name(), hasPrefix ? name : "COMM-" + name);
+    IndexNameTranslator::instance().add(index->name(), index->name());
+    DLOG("parseCommodityIndex(" << name << ") -> " << index->name() << " with expiry " << index->expiryDate());
     return index;
 }
 

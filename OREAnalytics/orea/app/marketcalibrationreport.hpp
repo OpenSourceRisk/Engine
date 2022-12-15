@@ -47,6 +47,7 @@ public:
                 mdFilterFxVols = std::find(tokens.begin(), tokens.end(), "FXVOLS") != tokens.end();
                 mdFilterEqVols = std::find(tokens.begin(), tokens.end(), "EQVOLS") != tokens.end();
                 mdFilterIrVols = std::find(tokens.begin(), tokens.end(), "IRVOLS") != tokens.end();
+                mdFilterCommVols = std::find(tokens.begin(), tokens.end(), "COMMVOLS") != tokens.end();
             }
         }
 
@@ -58,6 +59,7 @@ public:
         bool mdFilterFxVols = true;
         bool mdFilterEqVols = true;
         bool mdFilterIrVols = true;
+        bool mdFilterCommVols = true;
     };
 
     MarketCalibrationReport(const std::string& calibrationFilter);
@@ -79,10 +81,12 @@ public:
                                    boost::shared_ptr<ore::data::CommodityCurveCalibrationInfo> yts,
                                    std::string const& name, std::string const& label) = 0;
 
-    // Add fx/eq vol curve data to array
-    virtual void addFxVol(const QuantLib::Date& refdate, boost::shared_ptr<ore::data::FxEqVolCalibrationInfo> vol,
+    // Add fx/eq/comm vol curve data to array
+    virtual void addFxVol(const QuantLib::Date& refdate, boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
                             const std::string& name, const std::string& label) = 0;
-    virtual void addEqVol(const QuantLib::Date& refdate, boost::shared_ptr<ore::data::FxEqVolCalibrationInfo> vol,
+    virtual void addEqVol(const QuantLib::Date& refdate, boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
+                            const std::string& name, const std::string& label) = 0;
+    virtual void addCommVol(const QuantLib::Date& refdate, boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
                             const std::string& name, const std::string& label) = 0;
 
     // Add ir vol curve data to array
