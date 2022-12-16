@@ -97,8 +97,9 @@ void NettedExposureCalculator::build() {
     map<string, Real> nettingSetValueToday;
     map<string, Date> nettingSetMaturity;
     map<string, Size> nettingSetSize;
-    for (Size i = 0; i < portfolio_->trades().size(); ++i) {
-        const auto& trade = portfolio_->trades()[i];
+    auto trades = portfolio_->trades();
+    for (Size i = 0; i < trades.size(); ++i) {
+        const auto& trade = trades[i];
         string tradeId = trade->id();
         string nettingSetId = trade->envelope().nettingSetId();
 	string cp = trade->envelope().counterparty();

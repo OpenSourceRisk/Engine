@@ -199,10 +199,11 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
     std::vector<std::string> tradeLabel;
     std::vector<Real> effectiveMultiplier;
     std::vector<Size> currencyIndex;
+    auto trades = portfolio->trades();
     timer.start();
     for (Size i = 0; i < portfolio->size(); ++i) {
         boost::shared_ptr<AmcCalculator> amcCalc;
-        const boost::shared_ptr<Trade>& t = portfolio->trades()[i];
+        const boost::shared_ptr<Trade>& t = trades[i];
         try {
             amcCalc = t->instrument()->qlInstrument(true)->result<boost::shared_ptr<AmcCalculator>>("amcCalculator");
             LOG("AMCCalculator extracted for \"" << t->id() << "\"");

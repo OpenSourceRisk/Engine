@@ -150,7 +150,7 @@ void Portfolio::removeMatured(const Date& asof) {
             ALOG(StructuredTradeErrorMessage((*it).second, "Trade is Matured", ""));
             auto currentIt = it;
             ++it;
-            trades_.erase((*currentIt).first);
+            trades_.erase(currentIt);
         } else {
             ++it;
         }
