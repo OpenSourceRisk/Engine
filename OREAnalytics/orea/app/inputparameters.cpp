@@ -524,7 +524,7 @@ void OREAppInputParameters::loadParameters() {
     }
     
     nettingSetManager_ = boost::make_shared<NettingSetManager>();
-    if (xva_) {
+    if (xva_ || simulation_) {
         tmp = params_->get("xva", "csaFile", false);
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
         string csaFile = inputPath + "/" + tmp;
