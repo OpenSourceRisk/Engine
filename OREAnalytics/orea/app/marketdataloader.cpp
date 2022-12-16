@@ -1,10 +1,24 @@
 /*
  Copyright (C) 2022 Quaternion Risk Management Ltd
  All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 #include <orea/app/marketdataloader.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
+// FIXME post credit migration
 // #include <orepbase/ored/portfolio/referencedata.hpp>
 // #include <orepcredit/ored/portfolio/indexcreditdefaultswap.hpp>
 // #include <orepcredit/ored/portfolio/indexcreditdefaultswapoption.hpp>
@@ -19,6 +33,7 @@ void additional_quotes(set<string>& quotes, const boost::shared_ptr<Portfolio>& 
                        const boost::shared_ptr<CurveConfigurations>& configs) {
     for (auto t : portfolio->trades()) {
         string cdsIndex = "";
+        // FIXME post credit migration
         /*
         if (t->tradeType() == "IndexCreditDefaultSwap") {
             boost::shared_ptr<oreplus::data::IndexCreditDefaultSwap> icds =
@@ -139,31 +154,33 @@ namespace analytics {
 
 void MarketDataLoader::populateLoader(
     const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
-    bool doSimmBacktest, bool doNPVLagged, const QuantLib::Date& npvLaggedDate, bool includeMporExpired) {
+    bool doBacktest, bool doNPVLagged, const QuantLib::Date& npvLaggedDate, bool includeMporExpired) {
 
     // create a loader if doesn't already exist
     if (!loader_)
         loader_ = boost::make_shared<InMemoryLoader>();
     else
         loader_->reset(); // can only populate once to avoid duplicates
-
+    
     // check input data
     QL_REQUIRE(!inputs_->curveConfigs().empty(), "Need at least one curve configuration to populate loader.");
     QL_REQUIRE(todaysMarketParameters.size() > 0, "No todaysMarketParams provided to populate market data loader.");
     
     // for equitites check if we have corporate action data
     map<string, string> equities;
-    for (const auto& tmp : todaysMarketParameters)
+    for (const auto& tmp : todaysMarketParameters) {
         if (tmp->hasMarketObject(MarketObject::EquityCurve)) {
             auto eqMap = tmp->mapping(MarketObject::EquityCurve, Market::defaultConfiguration);
-        for (auto eq : eqMap) {
-            // if (inputs_->refDataManager() && inputs_->refDataManager()->hasData("Equity", eq.first)) {
-            //     auto refData = boost::dynamic_pointer_cast<EquityReferenceDatum>(
-            //         inputs_->refDataManager()->getData("Equity", eq.first));
-            //     auto erData = refData->equityData();
-            //     equities[eq.first] = erData.equityId;
-            // } else
+            for (auto eq : eqMap) {
+                // FIXME post credit migration
+                // if (inputs_->refDataManager() && inputs_->refDataManager()->hasData("Equity", eq.first)) {
+                //     auto refData = boost::dynamic_pointer_cast<EquityReferenceDatum>(
+                //         inputs_->refDataManager()->getData("Equity", eq.first));
+                //     auto erData = refData->equityData();
+                //     equities[eq.first] = erData.equityId;
+                // } else
                 equities[eq.first] = eq.first;
+            }
         }
     }
     if (equities.size() > 0)
@@ -264,7 +281,7 @@ void MarketDataLoader::populateLoader(
     }
     LOG("CurveConfigs require " << quotes_.size() << " quotes");
     
-    if (doSimmBacktest) { // set up only for backtest
+    if (doBacktest) { // set up only for backtest
         // if it's a SIMM backtest, we need additional quotes
         for (const auto& curveConfig : inputs_->curveConfigs()) {
             additional_quotes(quotes_, inputs_->portfolio(), curveConfig);
@@ -277,7 +294,6 @@ void MarketDataLoader::populateLoader(
     if (doNPVLagged && includeMporExpired)
             addExpiredContracts(*loader_, quotes_, npvLaggedDate);
     LOG("Got market data");
-
 }
 
 void MarketDataLoader::implyMarketDataFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
