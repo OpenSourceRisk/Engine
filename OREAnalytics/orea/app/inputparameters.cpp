@@ -215,10 +215,26 @@ void OREAppInputParameters::loadParameters() {
      * NPV
      *************/
 
+    tmp = params_->get("npv", "active", false);
+    if (tmp != "")
+        npv_ = parseBool(tmp);
+
     tmp = params_->get("npv", "additionalResults", false);
     if (tmp != "")
         outputAdditionalResults_ = parseBool(tmp);
 
+    /*************
+     * Cashflows
+     *************/
+
+    tmp = params_->get("cashflow", "active", false);
+    if (tmp != "")
+        cashflow_ = parseBool(tmp);
+
+    tmp = params_->get("cashflow", "includePastCashflows", false);
+    if (tmp != "")
+        includePastCashflows_ = parseBool(tmp);
+    
     /*************
      * Curves
      *************/
@@ -230,6 +246,10 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("curves", "grid", false);
     if (tmp != "") 
         curvesGrid_ = tmp;
+
+    tmp = params_->get("curves", "configuration", false);
+    if (tmp != "") 
+        curvesMarketConfig_ = tmp;
 
     tmp = params_->get("curves", "outputTodaysMarketCalibration", false);
     if (tmp != "")
@@ -504,19 +524,12 @@ void OREAppInputParameters::loadParameters() {
     }
     
     nettingSetManager_ = boost::make_shared<NettingSetManager>();
-    tmp = params_->get("xva", "csaFile", false);
-    if (tmp != "") {
-        string csaFile = inputPath + "/" + tmp;
+    if (xva_) {
+        tmp = params_->get("xva", "csaFile", false);
+        QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
+        string csaFile = resultsPath_.string() + "/" + tmp;
         LOG("Loading netting and csa data from file" << csaFile);
         nettingSetManager_->fromFile(csaFile);
-    } else {
-        if (xva_) {
-            ALOG("Netting/CSA data not found");
-            QL_FAIL("Netting set manager is required for XVA");
-        }
-        else {
-            WLOG("Netting/CSA data not found");
-        }
     }
     
     tmp = params_->get("xva", "nettingSetCubeFile", false);
@@ -789,17 +802,14 @@ void OREAppInputParameters::loadParameters() {
      */
     runTypes_.clear();
     
-    if (params_->get("npv", "active", false) == "Y")
+    if (npv_)
         runTypes_.push_back("NPV");
     
-    if (params_->get("cashflow", "active", false) == "Y")
+    if (cashflow_)
         runTypes_.push_back("CASHFLOW");
 
-    if (params_->get("sensitivity", "active", false) == "Y")
+    if (sensi_)
         runTypes_.push_back("SENSITIVITY");
-
-    if (params_->get("parametricVar", "active", false) == "Y")
-        runTypes_.push_back("VAR");
 
     if (simulation_)
         runTypes_.push_back("EXPOSURE");
@@ -819,7 +829,7 @@ void OREAppInputParameters::loadParameters() {
         }
     }
 
-    if (params_->get("xva", "active", false) == "Y") {
+    if (xva_) {
         if (cvaAnalytic_)
             runTypes_.push_back("CVA");
         if (dvaAnalytic_)
@@ -856,6 +866,7 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         dimRegressionFileNames_ = parseListOfValues(tmp);
     sensitivityFileName_ = params_->get("sensitivity", "sensitivityOutputFile", false);    
+    sensitivityScenarioFileName_ = params_->get("sensitivity", "scenarioOutputFile", false);    
     stressTestFileName_ = params_->get("stress", "scenarioOutputFile", false);    
     varFileName_ = params_->get("var", "outputFile", false);
     
@@ -870,6 +881,7 @@ void OREAppInputParameters::loadParameters() {
     fileNameMap_["netcube"] = netCubeFileName_;
     fileNameMap_["dim_evolution"] = dimEvolutionFileName_;
     fileNameMap_["sensitivity"] = sensitivityFileName_;
+    fileNameMap_["sensitivity_scenario"] = sensitivityScenarioFileName_;
     fileNameMap_["stress"] = stressTestFileName_;
     fileNameMap_["var"] = varFileName_;
     

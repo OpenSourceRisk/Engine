@@ -138,7 +138,7 @@ void OREApp::analytics(ostream& out) {
         exit(1);
     }
 
-    LOG("ORE done");
+    LOG("ORE analytics done");
 
     exit(0);
 }

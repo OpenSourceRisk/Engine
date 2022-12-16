@@ -134,7 +134,7 @@ void Analytic::marketCalibration(const boost::shared_ptr<MarketCalibrationReport
 
 void Analytic::buildPortfolio() {
     // create a new empty portfolio
-    portfolio_ = boost::make_shared<Portfolio>();
+    portfolio_ = boost::make_shared<Portfolio>(inputs_->buildFailedTrades());
 
     inputs_->portfolio()->reset();
     // populate with trades
@@ -229,7 +229,7 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                 LOG("Write curves report");
                 boost::shared_ptr<InMemoryReport> curvesReport = boost::make_shared<InMemoryReport>();
                 DateGrid grid(inputs_->curvesGrid());
-                std::string config = inputs_->marketConfig("curves");
+                std::string config = inputs_->curvesMarketConfig();
                 ore::analytics::ReportWriter(inputs_->reportNaString())
                     .writeCurves(*curvesReport, config, grid, *inputs_->todaysMarketParams(),
                                  market_, inputs_->continueOnError());
@@ -239,17 +239,19 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
         }
         else if (analytic == "CASHFLOW") {
             out_ << setw(tab_) << left << "Pricing: Cashflow Report " << flush;
+            string marketConfig = inputs_->marketConfig("pricing");
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeCashflow(*report, portfolio_, market_, "");
+                .writeCashflow(*report, portfolio_, market_, marketConfig, inputs_->includePastCashflows());
             reports_[analytic]["cashflow"] = report;
             out_ << "OK" << endl;
         }
         else if (analytic == "CASHFLOWNPV") {
             out_ << setw(tab_) << left << "Pricing: Cashflow NPV report " << flush;
+            string marketConfig = inputs_->marketConfig("pricing");
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeCashflow(tmpReport, portfolio_, market_, "");
+                .writeCashflow(tmpReport, portfolio_, market_, marketConfig, inputs_->includePastCashflows());
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeCashflowNpv(*report, tmpReport, market_, "", inputs_->baseCurrency(), inputs_->cashflowHorizon());
+                .writeCashflowNpv(*report, tmpReport, market_, marketConfig, inputs_->baseCurrency(), inputs_->cashflowHorizon());
             reports_[analytic]["cashflownpv"] = report;
             out_ << "OK" << endl;
         }
@@ -257,11 +259,11 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             out_ << setw(tab_) << left << "Risk: Stress Test Report" << flush;
             LOG("Stress Test Analysis called");
             Settings::instance().evaluationDate() = inputs_->asof();
-            std::string configuration = inputs_->marketConfig("pricing");
-            std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;// = getExtraEngineBuilders();
-            std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;// = getExtraLegBuilders();
+            std::string marketConfig = inputs_->marketConfig("pricing");
+            std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
+            std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
 	    boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
-                 portfolio_, market_, configuration, inputs_->pricingEngine(), configurations_.simMarketParams,
+                 portfolio_, market_, marketConfig, inputs_->pricingEngine(), configurations_.simMarketParams,
                  inputs_->stressScenarioData(), *inputs_->curveConfigs().at(0),
                  *configurations_.todaysMarketParams, nullptr, extraEngineBuilders, extraLegBuilders,
                  inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError());
@@ -312,15 +314,23 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             // }
                         
             LOG("Sensi Analysis - Generate");
+
             boost::shared_ptr<NPVSensiCube> npvCube;
             sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities"));
             sensiAnalysis->generateSensitivities(npvCube);
 
-            LOG("Sensi Analysis - Write Report");
-            auto ss = boost::make_shared<SensitivityCubeStream>(sensiAnalysis->sensiCube(), inputs_->baseCurrency());
+            LOG("Sensi Analysis - Write Reports");
+
+            auto baseCurrency = sensiAnalysis->simMarketData()->baseCcy();
+            auto ss = boost::make_shared<SensitivityCubeStream>(sensiAnalysis->sensiCube(), baseCurrency);
             ore::analytics::ReportWriter(inputs_->reportNaString())
                 .writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
             reports_[analytic]["sensitivity"] = report;
+
+            boost::shared_ptr<InMemoryReport> scenarioReport = boost::make_shared<InMemoryReport>();
+            ore::analytics::ReportWriter(inputs_->reportNaString())
+                .writeScenarioReport(*scenarioReport, sensiAnalysis->sensiCube(), inputs_->sensiThreshold());
+            reports_[analytic]["sensitivity_scenario"] = scenarioReport;
 
             LOG("Sensi Analysis - Completed");
             out_ << "OK" << endl;
@@ -458,11 +468,11 @@ void XvaAnalytic::buildCrossAssetModel(const bool continueOnCalibrationError) {
         << std::boolalpha << continueOnCalibrationError << ")");
     DayCounter dc = ActualActual(ActualActual::ISDA);
     CrossAssetModelBuilder modelBuilder(market_, inputs_->crossAssetModelData(),
-                                        inputs_->marketConfig("lgmCalibration"),
-                                        inputs_->marketConfig("fxCalibration"),
-                                        inputs_->marketConfig("eqCalibration"),
-                                        inputs_->marketConfig("infCalibration"),
-                                        inputs_->marketConfig("crCalibration"),
+                                        inputs_->marketConfig("lgmcalibration"),
+                                        inputs_->marketConfig("fxcalibration"),
+                                        inputs_->marketConfig("eqcalibration"),
+                                        inputs_->marketConfig("infcalibration"),
+                                        inputs_->marketConfig("crcalibration"),
                                         inputs_->marketConfig("simulation"),
                                         dc, false, continueOnCalibrationError);
     model_ = *modelBuilder.model();

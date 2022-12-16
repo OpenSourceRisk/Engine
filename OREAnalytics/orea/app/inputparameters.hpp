@@ -60,11 +60,18 @@ public:
     bool eomInflationFixings() { return eomInflationFixings_; }
     bool useMarketDataFixings() { return useMarketDataFixings_; }
     bool iborFallbackOverride() { return iborFallbackOverride_; }
-    bool outputTodaysMarketCalibration() const { return outputTodaysMarketCalibration_; };
-    bool outputCurves() const { return outputCurves_; };
-    const std::string& curvesGrid() const { return curvesGrid_; }
-    QuantLib::Size nThreads() const { return nThreads_; }
+
+    bool npv() const { return npv_; };
     bool outputAdditionalResults() const { return outputAdditionalResults_; };
+    bool cashflow() { return cashflow_; }
+    bool includePastCashflows() { return includePastCashflows_; }
+
+    bool outputCurves() const { return outputCurves_; };
+    bool outputTodaysMarketCalibration() const { return outputTodaysMarketCalibration_; };
+    const std::string& curvesMarketConfig() { return curvesMarketConfig_; }
+    const std::string& curvesGrid() const { return curvesGrid_; }
+
+    QuantLib::Size nThreads() const { return nThreads_; }
     const std::string& reportNaString() { return reportNaString_; }
     char csvQuoteChar() const { return csvQuoteChar_; }
     bool dryRun() const { return dryRun_; }
@@ -220,6 +227,11 @@ protected:
     QuantLib::Date asof_;
     boost::filesystem::path resultsPath_;
     std::string baseCurrency_;
+    bool continueOnError_ = true;
+    bool lazyMarketBuilding_ = true;
+    bool buildFailedTrades_ = false;
+    std::string observationModel_ = "None";
+    bool implyTodaysFixings_ = false;
 
     // The following block of member variables (down to dryRun_) is not explicitly initialized yet
     // in OREAppInputParameters so far. 
@@ -233,15 +245,20 @@ protected:
     char csvQuoteChar_ = '\0';
     bool dryRun_ = false;
 
+    // npv
+    bool npv_ = false;
     bool outputAdditionalResults_ = false;
+
+    // cashflow
+    bool cashflow_ = false;
+    bool includePastCashflows_ = false;
+
+    // curves
     bool outputCurves_ = false;
     bool outputTodaysMarketCalibration_ = false;
+    std::string curvesMarketConfig_ = "";
     std::string curvesGrid_ = "240,1M";
-    bool continueOnError_ = true;
-    bool lazyMarketBuilding_ = true;
-    bool buildFailedTrades_ = false;
-    std::string observationModel_ = "None";
-    bool implyTodaysFixings_ = false;
+
     
     std::map<std::string, std::string> marketConfigs_;
     
@@ -402,6 +419,7 @@ private:
     std::string dimEvolutionFileName_;
     std::vector<std::string> dimRegressionFileNames_;
     std::string sensitivityFileName_;
+    std::string sensitivityScenarioFileName_;
     std::string stressTestFileName_;
     std::string varFileName_;
 };
