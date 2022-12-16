@@ -50,31 +50,12 @@ public:
     virtual ~InputParameters() {}
 
     /***************************
-     * Getters for npv analytics
+     * Getters for general setup
      ***************************/
+
     const QuantLib::Date& asof() { return asof_; }
     const boost::filesystem::path& resultsPath() const { return resultsPath_; }
     const std::string& baseCurrency() { return baseCurrency_; }
-    bool entireMarket() { return entireMarket_; }
-    bool allFixings() { return allFixings_; }
-    bool eomInflationFixings() { return eomInflationFixings_; }
-    bool useMarketDataFixings() { return useMarketDataFixings_; }
-    bool iborFallbackOverride() { return iborFallbackOverride_; }
-
-    bool npv() const { return npv_; };
-    bool outputAdditionalResults() const { return outputAdditionalResults_; };
-    bool cashflow() { return cashflow_; }
-    bool includePastCashflows() { return includePastCashflows_; }
-
-    bool outputCurves() const { return outputCurves_; };
-    bool outputTodaysMarketCalibration() const { return outputTodaysMarketCalibration_; };
-    const std::string& curvesMarketConfig() { return curvesMarketConfig_; }
-    const std::string& curvesGrid() const { return curvesGrid_; }
-
-    QuantLib::Size nThreads() const { return nThreads_; }
-    const std::string& reportNaString() { return reportNaString_; }
-    char csvQuoteChar() const { return csvQuoteChar_; }
-    bool dryRun() const { return dryRun_; }
     bool continueOnError() { return continueOnError_; }
     bool lazyMarketBuilding() { return lazyMarketBuilding_; }
     bool buildFailedTrades() { return buildFailedTrades_; }
@@ -90,9 +71,42 @@ public:
     const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams() { return todaysMarketParams_; }
     const boost::shared_ptr<ore::data::Portfolio>& portfolio() { return portfolio_; }
 
-    /****************************************
-     * Additional getters for sensi analytics
-     ****************************************/
+    QuantLib::Size nThreads() const { return nThreads_; }
+    bool entireMarket() { return entireMarket_; }
+    bool allFixings() { return allFixings_; }
+    bool eomInflationFixings() { return eomInflationFixings_; }
+    bool useMarketDataFixings() { return useMarketDataFixings_; }
+    bool iborFallbackOverride() { return iborFallbackOverride_; }
+    const std::string& reportNaString() { return reportNaString_; }
+    char csvQuoteChar() const { return csvQuoteChar_; }
+    bool dryRun() const { return dryRun_; }
+
+    /***************************
+     * Getters for npv analytics
+     ***************************/
+
+    bool npv() const { return npv_; };
+    bool outputAdditionalResults() const { return outputAdditionalResults_; };
+
+    /***********************
+     * Getters for cashflows
+     ***********************/
+
+    bool cashflow() { return cashflow_; }
+    bool includePastCashflows() { return includePastCashflows_; }
+
+    /****************************
+     * Getters for curves/markets
+     ****************************/
+
+    bool outputCurves() const { return outputCurves_; };
+    bool outputTodaysMarketCalibration() const { return outputTodaysMarketCalibration_; };
+    const std::string& curvesMarketConfig() { return curvesMarketConfig_; }
+    const std::string& curvesGrid() const { return curvesGrid_; }
+
+    /*****************************
+     * Getters for sensi analytics
+     *****************************/
     
     bool sensi() { return sensi_; }
     bool xbsParConversion() { return xbsParConversion_; }
@@ -105,9 +119,9 @@ public:
     const boost::shared_ptr<ore::data::EngineData>& sensiPricingEngine() { return sensiPricingEngine_; }
     // const boost::shared_ptr<ore::data::TodaysMarketParameters>& sensiTodaysMarketParams() { return sensiTodaysMarketParams_; }
 
-    /****************************************
-     * Additional getters for stress testing
-     ****************************************/
+    /****************************
+     * Getters for stress testing
+     ****************************/
 
     bool stress() { return stress_; }
     QuantLib::Real stressThreshold() { return stressThreshold_; }
@@ -115,9 +129,9 @@ public:
     const boost::shared_ptr<ore::analytics::StressTestScenarioData>& stressScenarioData() { return stressScenarioData_; }
     const boost::shared_ptr<ore::data::EngineData>& stressPricingEngine() { return stressPricingEngine_; }
 
-    /****************************************
-     * Additional getters for VaR
-     ****************************************/
+    /*****************
+     * Getters for VaR
+     *****************/
 
     bool var() { return var_; }
     bool salvageCovariance() { return salvageCovariance_; }
@@ -130,9 +144,9 @@ public:
     const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& covarianceData() { return covarianceData_; }
     const boost::shared_ptr<SensitivityStream>& sensitivityStream() { return sensitivityStream_; }
     
-    /********************************************
-     * Additional getters for exposure simulation 
-     ********************************************/
+    /*********************************
+     * Getters for exposure simulation 
+     *********************************/
     
     bool simulation() { return simulation_; }
     const std::string& exposureBaseCurrency() { return exposureBaseCurrency_; }
@@ -151,9 +165,9 @@ public:
     // const boost::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() { return counterpartyManager_; }
     // const boost::shared_ptr<ore::data::CollateralBalances>& collateralBalances() { return collateralBalances_; }
 
-    /****************************
-     * Additional getters for xva
-     ****************************/
+    /*****************
+     * Getters for xva
+     *****************/
 
     bool xva() { return xva_; }
     const std::string& xvaBaseCurrency() { return xvaBaseCurrency_; }
@@ -212,9 +226,9 @@ public:
     Real kvaOurCvaRiskWeight() { return kvaOurCvaRiskWeight_; }
     Real kvaTheirCvaRiskWeight() { return kvaTheirCvaRiskWeight_; }
     
-    /*************************************************************
-     * Additional getters for cashflow npv and dynamic backtesting
-     *************************************************************/
+    /**************************************************
+     * Getters for cashflow npv and dynamic backtesting
+     **************************************************/
     
     const QuantLib::Date& cashflowHorizon() const { return cashflowHorizon_; };
     const QuantLib::Date& portfolioFilterDate() const { return portfolioFilterDate_; }
@@ -224,6 +238,7 @@ public:
 
 protected:
 
+    // setup
     QuantLib::Date asof_;
     boost::filesystem::path resultsPath_;
     std::string baseCurrency_;
@@ -232,15 +247,24 @@ protected:
     bool buildFailedTrades_ = false;
     std::string observationModel_ = "None";
     bool implyTodaysFixings_ = false;
+    std::map<std::string, std::string> marketConfigs_;
+    boost::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
+    boost::shared_ptr<ore::data::Conventions> conventions_;
+    boost::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
+    std::vector<boost::shared_ptr<ore::data::CurveConfigurations>> curveConfigs_;
+    boost::shared_ptr<ore::data::EngineData> pricingEngine_;
+    boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
+    boost::shared_ptr<ore::data::Portfolio> portfolio_;
 
-    // The following block of member variables (down to dryRun_) is not explicitly initialized yet
+    // FIXME: The following (down to dryRun_) is not explicitly initialized
     // in OREAppInputParameters so far. 
+   
+    QuantLib::Size nThreads_ = 1;
     bool entireMarket_ = true; // FIXME: ORE Example 17 part 2 breaks if set to false
     bool allFixings_ = true; // FIXME
     bool eomInflationFixings_ = false;
     bool useMarketDataFixings_ = false;
     bool iborFallbackOverride_ = false;
-    QuantLib::Size nThreads_ = 1;
     std::string reportNaString_;
     char csvQuoteChar_ = '\0';
     bool dryRun_ = false;
@@ -255,21 +279,10 @@ protected:
 
     // curves
     bool outputCurves_ = false;
-    bool outputTodaysMarketCalibration_ = false;
     std::string curvesMarketConfig_ = "";
     std::string curvesGrid_ = "240,1M";
-
-    
-    std::map<std::string, std::string> marketConfigs_;
-    
-    boost::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
-    boost::shared_ptr<ore::data::Conventions> conventions_;
-    boost::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
-    std::vector<boost::shared_ptr<ore::data::CurveConfigurations>> curveConfigs_;
-    boost::shared_ptr<ore::data::EngineData> pricingEngine_;
-    boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
-    boost::shared_ptr<ore::data::Portfolio> portfolio_;
-
+    bool outputTodaysMarketCalibration_ = false;
+        
     // sensi
     bool sensi_ = false;
     bool xbsParConversion_ = false;

@@ -527,7 +527,7 @@ void OREAppInputParameters::loadParameters() {
     if (xva_) {
         tmp = params_->get("xva", "csaFile", false);
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
-        string csaFile = resultsPath_.string() + "/" + tmp;
+        string csaFile = inputPath + "/" + tmp;
         LOG("Loading netting and csa data from file" << csaFile);
         nettingSetManager_->fromFile(csaFile);
     }
