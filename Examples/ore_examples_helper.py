@@ -17,7 +17,8 @@ from math import log
 
 def get_list_of_examples():
     return sorted([e for e in os.listdir(os.getcwd())
-                   if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
+#                   if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
+                   if e == 'Example_15'], key=lambda e: int(e.split('_')[1]))
 
 
 def print_on_console(line):
