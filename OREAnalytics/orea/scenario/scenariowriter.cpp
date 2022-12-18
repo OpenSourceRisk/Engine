@@ -56,6 +56,8 @@ void ScenarioWriter::close() {
         fclose(fp_);
         fp_ = nullptr;
     }
+    if (report_)
+        report_->end();
 }
 
 boost::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
