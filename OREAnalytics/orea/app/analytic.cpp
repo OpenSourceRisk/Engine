@@ -263,7 +263,7 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
             std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
 	    boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
-                 portfolio_, market_, marketConfig, inputs_->pricingEngine(), configurations_.simMarketParams,
+                 portfolio_, market_, marketConfig, inputs_->pricingEngine(), inputs_->stressSimMarketParams(),
                  inputs_->stressScenarioData(), *inputs_->curveConfigs().at(0),
                  *configurations_.todaysMarketParams, nullptr, extraEngineBuilders, extraLegBuilders,
                  inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError());
