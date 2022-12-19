@@ -1178,6 +1178,7 @@
     <ClCompile Include="qle\processes\commodityschwartzstateprocess.cpp" />
     <ClCompile Include="qle\processes\crcirppstateprocess.cpp" />
     <ClCompile Include="qle\processes\crossassetstateprocess.cpp" />
+    <ClCompile Include="qle\processes\irhwstateprocess.cpp" />
     <ClCompile Include="qle\processes\irlgm1fstateprocess.cpp" />
     <ClCompile Include="qle\quotes\logquote.cpp" />
     <ClCompile Include="qle\termstructures\aposurface.cpp" />
