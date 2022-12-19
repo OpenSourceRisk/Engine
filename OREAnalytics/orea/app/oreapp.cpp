@@ -66,7 +66,7 @@ namespace analytics {
 void OREApp::analytics(ostream& out) {
 
     try {
-        setupLog();
+        //setupLog();
 
         LOG("ORE analytics starting");
 
@@ -147,14 +147,6 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
     : tab_(50), progressBarWidth_(72 - std::min<Size>(tab_, 67)), params_(params),
       asof_(parseDate(params_->get("setup", "asofDate"))), out_(out), cubeDepth_(0) {
 
-    bool useAnalytics = true;
-    // We can actively switch this off and enable the old behaviour
-    string tmp = params_->get("setup", "useAnalytics", false);
-    if (tmp != "")
-        useAnalytics = parseBool(tmp);
-    if (useAnalytics)
-        analytics(out);
-    
     // Set global evaluation date
     Settings::instance().evaluationDate() = asof_;
 
@@ -177,11 +169,17 @@ OREApp::~OREApp() {
     closeLog();
 }
 
-int OREApp::run() {
+int OREApp::run(bool useAnalytics) {
 
     cpu_timer timer;
-
+    
     try {
+
+        if (useAnalytics) {
+            analytics(out_);
+            return 0;
+        }
+
         out_ << endl 
              << "=====================================" << endl
              << "=== DEPRECATED useAnalytics=false ===" << endl

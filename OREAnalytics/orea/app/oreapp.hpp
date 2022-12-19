@@ -60,7 +60,7 @@ public:
     //! Destructor
     virtual ~OREApp();
     //! generates XVA reports for a given portfolio and market
-    virtual int run();
+    virtual int run(bool useAnalytics = false);
 
     //! Load curve configurations from xml file, build t0 market using market data provided.
     //! If any of the passed vectors are empty fall back on OREApp::buildMarket() and use market/fixing data files
