@@ -69,4 +69,4 @@ boost::shared_ptr<AnalyticsManager> parseAnalytics(const std::string& s,
     const boost::shared_ptr<MarketDataLoader>& marketDataLoader);
 
 } // analytics
-} // oreplus
+} // ore

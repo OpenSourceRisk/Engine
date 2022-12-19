@@ -112,4 +112,4 @@ protected:
 
 
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore
