@@ -2411,5 +2411,8 @@
     <ClCompile Include="qle\pricingengines\mcmultilegoptionengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
+    <ClCompile Include="qle\processes\irhwstateprocess.cpp">
+      <Filter>processes</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -69,34 +69,6 @@ private:
     bool evaluateBankAccount_;
 };
 
-// inline
-
-Array IrHwStateProcess::initialValues() const { return Array(size(), 0.0); }
-
-Array IrHwStateProcess::drift(Time t, const Array& s) const {
-    Array ones(parametrization_->n(), 1.0);
-    Array x(s.begin(), std::next(s.begin(), parametrization_->n()));
-    Array drift_x = parametrization_->y(t) * ones - parametrization_->kappa(t) * x;
-    if (!(evaluateBankAccount_ && measure_ == IrModel::Measure::BA))
-        return drift_x;
-    Array drift_int_x = x;
-    Array result(2 * parametrization_->n());
-    std::copy(drift_x.begin(), drift_x.end(), result.begin());
-    std::copy(drift_int_x.begin(), drift_int_x.end(), std::next(result.begin(), parametrization_->n()));
-    return result;
-}
-
-Matrix IrHwStateProcess::diffusion(Time t, const Array& s) const {
-    Matrix res(size(), factors(), 0.0);
-    for (Size i = 0; i < parametrization_->n(); ++i) {
-        for (Size j = 0; j < res.columns(); ++j) {
-            res(i, j) = parametrization_->sigma_x(t)(j, i);
-        }
-    }
-    // the rest of the diffusion rows (if present for the aux state) is zero
-    return res;
-}
-
 } // namespace QuantExt
 
 #endif
