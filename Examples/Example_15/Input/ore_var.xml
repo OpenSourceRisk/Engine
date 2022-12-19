@@ -4,7 +4,7 @@
     <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
-    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logFile">log_var.txt</Parameter>
     <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
@@ -25,16 +25,16 @@
   </Markets>
   <Analytics>
     <Analytic type="npv">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="outputFileName">npv.csv</Parameter>
     </Analytic>
     <Analytic type="cashflow">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="outputFileName">flows.csv</Parameter>
     </Analytic>
     <Analytic type="curves">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="configuration">default</Parameter>
       <Parameter name="grid">240,1M</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
@@ -76,7 +76,7 @@
       <Parameter name="method"/>
     </Analytic>
     <Analytic type="sensitivity">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="marketConfigFile">simulation.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
@@ -86,7 +86,7 @@
       <Parameter name="recalibrateModels">Y</Parameter>
     </Analytic>
     <Analytic type="stress">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="marketConfigFile">simulation.xml</Parameter>
       <Parameter name="stressConfigFile">stresstest.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
@@ -94,7 +94,7 @@
       <Parameter name="outputThreshold">0.000001</Parameter>
     </Analytic>
     <Analytic type="parametricVar">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="sensitivityInputFile">../Output/sensitivity.csv</Parameter>
       <Parameter name="covarianceInputFile">covariance.csv</Parameter>
       <Parameter name="salvageCovarianceMatrix">N</Parameter>
