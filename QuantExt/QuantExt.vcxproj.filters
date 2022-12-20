@@ -1405,6 +1405,9 @@
     <ClInclude Include="qle\termstructures\inflation\cpipricevolatilitysurface.hpp">
       <Filter>termstructures\inflation</Filter>
     </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticdigitalamericanengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -2340,9 +2343,6 @@
       <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\analyticdoublebarrierbinaryengine.cpp">
-      <Filter>pricingengines</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.hpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\analyticeuropeanengine.cpp">
