@@ -422,6 +422,14 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         xva_ = parseBool(tmp);
     
+    tmp = params_->get("simulation", "amc", false);
+    if (tmp != "")
+        amc_ = parseBool(tmp);
+
+    tmp = params_->get("simulation", "amcExcludeTradeTypes", false);
+    if (tmp != "")
+        amcExcludeTradeTypes_ = parseListOfValues(tmp);
+
     simulationPricingEngine_ = pricingEngine_;
     exposureObservationModel_ = observationModel_;
     exposureBaseCurrency_ = baseCurrency_;
@@ -456,6 +464,17 @@ void OREAppInputParameters::loadParameters() {
         } else {
             WLOG("Simulation pricing engine data not found, using standard pricing engines");
             simulationPricingEngine_ = pricingEngine_;
+        }
+
+        amcPricingEngine_ = boost::make_shared<EngineData>();
+        tmp = params_->get("simulation", "amcPricingEnginesFile", false);
+        if (tmp != "") {
+            string pricingEnginesFile = inputPath + "/" + tmp;
+            LOG("Load amc pricing engine data from file: " << pricingEnginesFile);
+            amcPricingEngine_->fromFile(pricingEnginesFile);
+        } else {
+            WLOG("AMC pricing engine data not found, using standard pricing engines");
+            amcPricingEngine_ = pricingEngine_;
         }
 
         exposureBaseCurrency_ = baseCurrency_;

@@ -149,6 +149,8 @@ public:
      *********************************/
     
     bool simulation() { return simulation_; }
+    bool amc() { return amc_; }
+    const std::vector<std::string>& amcExcludeTradeTypes() { return amcExcludeTradeTypes_; }
     const std::string& exposureBaseCurrency() { return exposureBaseCurrency_; }
     const std::string& exposureObservationModel() { return exposureObservationModel_; }
     const std::string& nettingSetId() { return nettingSetId_; }
@@ -161,6 +163,7 @@ public:
     const boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData() { return scenarioGeneratorData_; }
     const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData() { return crossAssetModelData_; }
     const boost::shared_ptr<ore::data::EngineData>& simulationPricingEngine() { return simulationPricingEngine_; }
+    const boost::shared_ptr<ore::data::EngineData>& amcPricingEngine() { return amcPricingEngine_; }
     const boost::shared_ptr<ore::data::NettingSetManager>& nettingSetManager() { return nettingSetManager_; }
     // const boost::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() { return counterpartyManager_; }
     // const boost::shared_ptr<ore::data::CollateralBalances>& collateralBalances() { return collateralBalances_; }
@@ -316,6 +319,8 @@ protected:
     
     // exposure simulation
     bool simulation_ = false;
+    bool amc_ = false;
+    std::vector<std::string> amcExcludeTradeTypes_;
     std::string exposureBaseCurrency_ = "";
     std::string exposureObservationModel_ = "Disable";
     std::string nettingSetId_ = "";
@@ -328,6 +333,7 @@ protected:
     boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
     boost::shared_ptr<CrossAssetModelData> crossAssetModelData_;
     boost::shared_ptr<ore::data::EngineData> simulationPricingEngine_;
+    boost::shared_ptr<ore::data::EngineData> amcPricingEngine_;
     boost::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
 
     // xva
