@@ -153,8 +153,8 @@ protected:
     virtual boost::shared_ptr<ore::data::EngineFactory> engineFactory();
 
     //! optional output formatting
-    Size tab_;
-    Size progressBarWidth_;
+    Size tab_ = 50;
+    Size progressBarWidth_ = 32;
 };
     
 /*! Pricing-type analytics
