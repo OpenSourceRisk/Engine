@@ -806,7 +806,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             std::vector<std::string> deltas = *rc.deltas();
             std::vector<Period> expiries = *rc.expiries();
 
-            calibrationInfo_ = boost::make_shared<FxEqVolCalibrationInfo>();
+            calibrationInfo_ = boost::make_shared<FxEqCommVolCalibrationInfo>();
 
             calibrationInfo_->dayCounter = config->dayCounter().empty() ? "na" : config->dayCounter().name();
             calibrationInfo_->calendar = config->calendar().empty() ? "na" : config->calendar().name();
