@@ -66,6 +66,8 @@ public:
     //@{
     QuantLib::Date baseDate() const override;
     QuantLib::Date maxDate() const override;
+    void setSeasonality(const boost::shared_ptr<QuantLib::Seasonality>& seasonality =
+                            boost::shared_ptr<QuantLib::Seasonality>()) override;
     //@
     //! \name Inspectors
     //@{
@@ -148,6 +150,17 @@ template <class I, template <class> class B, class T>
 QuantLib::Date PiecewiseZeroInflationCurve<I, B, T>::initialDate() const {
     return ZeroInflation::curveBaseDate(useLastAvailableFixingAsBaseDate_, base_curve::referenceDate(),
                                         base_curve::observationLag(), base_curve::frequency(), index_);
+}
+
+template <class I, template <class> class B, class T>
+void PiecewiseZeroInflationCurve<I, B, T>::setSeasonality(const boost::shared_ptr<QuantLib::Seasonality>& seasonality) {
+    // always reset, whether with null or new pointer
+    seasonality_ = seasonality;
+    if (seasonality_ != nullptr) {
+        QL_REQUIRE(seasonality_->isConsistent(*this), "Seasonality inconsistent with "
+                                                      "inflation term structure");
+    }
+    update();
 }
 
 } // namespace QuantExt
