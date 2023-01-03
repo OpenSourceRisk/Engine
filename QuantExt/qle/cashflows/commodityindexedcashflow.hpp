@@ -93,8 +93,6 @@ private:
     QuantLib::Real periodQuantity_;
     QuantLib::Natural dailyExpiryOffset_;
 
-    mutable QuantLib::Real amount_;
-
     //! Shared initialisation
     void init(const ext::shared_ptr<FutureExpiryCalculator>& calc,
               const QuantLib::Date& contractDate = QuantLib::Date(),
