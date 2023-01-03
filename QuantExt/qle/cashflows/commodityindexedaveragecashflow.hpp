@@ -146,8 +146,6 @@ private:
     boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>> offPeakPowerData_;
     ext::shared_ptr<FxIndex> fxIndex_;
 
-    mutable QuantLib::Real amount_;
-
     // Populated only when offPeakPowerData_ is provided.
     std::map<QuantLib::Date, QuantLib::Real> weights_;
 
