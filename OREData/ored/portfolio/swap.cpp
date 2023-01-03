@@ -181,7 +181,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 const std::map<std::string,boost::any>& Swap::additionalData() const {
     Size numLegs = legData_.size();
     // use the build time as of date to determine current notionals
-    Date asof = Settings::instance().evaluationDate();
     boost::shared_ptr<QuantLib::Swap> swap = boost::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
     boost::shared_ptr<QuantExt::CurrencySwap> cswap = boost::dynamic_pointer_cast<QuantExt::CurrencySwap>(instrument_->qlInstrument());
     std::map<std::string, Real> legNpv; // by currency
@@ -213,78 +212,7 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
             else 
                 ALOG("cross currency swap underlying instrument not set, skip leg npv reporting");
         }
-        for (Size j = 0; j < legs_[i].size(); ++j) {
-            boost::shared_ptr<CashFlow> flow = legs_[i][j];
-            // pick flow with earliest future payment date on this leg
-            if (flow->date() > asof) {
-                Real flowAmount = 0.0;
-                try { flowAmount = flow->amount(); }
-                catch(std::exception& e) {
-                    ALOG("flow amount could not be determined for trade " << id() << ", set to zero: " << e.what());
-                }
-                additionalData_["amount[" + legID + "]"] = flowAmount;
-                additionalData_["paymentDate[" + legID + "]"] = to_string(flow->date());
-                boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
-                string couponId = to_string(j);
-                if (coupon) {
-                    Real currentNotional = 0;
-                    try { currentNotional = coupon->nominal(); }
-                    catch(std::exception& e) {
-                        ALOG("current notional could not be determined for trade " << id() << ", set to zero: " << e.what());
-                    }
-                    additionalData_["currentNotional[" + legID + "]"] = currentNotional;
-
-                    Real rate = 0;
-                    try { rate = coupon->rate(); }
-                    catch(std::exception& e) {
-                        ALOG("coupon rate could not be determined for trade " << id() << ", set to zero: " << e.what());
-                    }
-                    additionalData_["rate[" + legID + "][" + couponId + "]"] = rate;
-
-                    boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
-                    if (frc) {
-                        additionalData_["index[" + legID + "]"] = frc->index()->name();
-                        additionalData_["spread[" + legID + "]"] = frc->spread();                        
-                    }
-
-                    boost::shared_ptr<EquityCoupon> eqc = boost::dynamic_pointer_cast<EquityCoupon>(flow);
-                    if (eqc) {
-                        EquityCouponPricer::AdditionalResultCache arc = eqc->pricer()->additionalResultCache();
-                        additionalData_["initialPrice[" + legID + "][" + couponId + "]"] = arc.initialPrice;
-                        additionalData_["endEquityFixing[" + legID + "][" + couponId + "]"] = arc.endFixing;
-                        if (arc.startFixing != Null<Real>())
-                            additionalData_["startEquityFixing[" + legID + "][" + couponId + "]"] = arc.startFixing;
-                        if (arc.startFixingTotal != Null<Real>())
-                            additionalData_["startEquityFixingTotal[" + legID + "][" + couponId + "]"] =
-                                arc.startFixingTotal;
-                        if (arc.endFixingTotal != Null<Real>())
-                            additionalData_["endEquityFixingTotal[" + legID + "][" + couponId + "]"] =
-                                arc.endFixingTotal;
-                        if (arc.startFxFixing != Null<Real>())
-                            additionalData_["startFxFixing[" + legID + "][" + couponId + "]"] = arc.startFxFixing;
-                        if (arc.endFxFixing != Null<Real>())
-                            additionalData_["endFxFixing[" + legID + "][" + couponId + "]"] = arc.endFxFixing;
-                        if (arc.pastDividends != Null<Real>())
-                            additionalData_["pastDividends[" + legID + "][" + couponId + "]"] = arc.pastDividends;
-                        if (arc.forecastDividends != Null<Real>())
-                            additionalData_["forecastDividends[" + legID + "][" + couponId + "]"] =
-                                arc.forecastDividends;
-                    }
-                }
-                break;
-            }
-        }
-        if (legs_[i].size() > 0) {
-            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[i][0]);
-            if (coupon) {
-                Real originalNotional = 0.0;
-                try { originalNotional = coupon->nominal(); }
-                catch(std::exception& e) {
-                    ALOG("original nominal could not be determined for trade " << id() << ", set to zero: " << e.what());
-                }
-                additionalData_["originalNotional[" + legID + "]"] = originalNotional;
-            }
-        }
+        setLegBasedAdditionalData(i);
     }
     return additionalData_;
 }
