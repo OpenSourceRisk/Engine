@@ -764,6 +764,7 @@
     <ClInclude Include="qle\pricingengines\amccalculator.hpp" />
     <ClInclude Include="qle\pricingengines\analyticbarrierengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp" />
+    <ClInclude Include="qle\pricingengines\analyticdigitalamericanengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticdoublebarrierbinaryengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticdoublebarrierengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticeuropeanengine.hpp" />
@@ -780,7 +781,6 @@
     <ClCompile Include="qle\models\futureoptionhelper.cpp" />
     <ClCompile Include="qle\models\modelimpliedpricetermstructure.cpp" />
     <ClCompile Include="qle\pricingengines\analyticbarrierengine.cpp" />
-    <ClCompile Include="qle\pricingengines\analyticdigitalamericanengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticdkcpicapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticjycpicapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticjyyoycapfloorengine.hpp" />
@@ -1178,6 +1178,7 @@
     <ClCompile Include="qle\processes\commodityschwartzstateprocess.cpp" />
     <ClCompile Include="qle\processes\crcirppstateprocess.cpp" />
     <ClCompile Include="qle\processes\crossassetstateprocess.cpp" />
+    <ClCompile Include="qle\processes\irhwstateprocess.cpp" />
     <ClCompile Include="qle\processes\irlgm1fstateprocess.cpp" />
     <ClCompile Include="qle\quotes\logquote.cpp" />
     <ClCompile Include="qle\termstructures\aposurface.cpp" />

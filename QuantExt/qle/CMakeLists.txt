@@ -224,6 +224,7 @@ pricingengines/volatilityfromvarianceswapengine.cpp
 processes/commodityschwartzstateprocess.cpp
 processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
+processes/irhwstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
