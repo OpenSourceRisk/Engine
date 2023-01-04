@@ -52,7 +52,6 @@ CdsTier parseCdsTier(const string& s) {
     }
     QL_FAIL("Could not parse \"" << s << "\" to CdsTier");
 }
-}
 
 ostream& operator<<(ostream& out, const CdsTier& cdsTier) {
     switch (cdsTier) {
