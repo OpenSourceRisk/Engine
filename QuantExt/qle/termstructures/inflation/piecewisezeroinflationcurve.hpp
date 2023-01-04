@@ -155,7 +155,7 @@ QuantLib::Date PiecewiseZeroInflationCurve<I, B, T>::initialDate() const {
 template <class I, template <class> class B, class T>
 void PiecewiseZeroInflationCurve<I, B, T>::setSeasonality(const boost::shared_ptr<QuantLib::Seasonality>& seasonality) {
     // always reset, whether with null or new pointer
-    seasonality_ = seasonality;
+    base_curve::seasonality_ = seasonality;
     if (seasonality_ != nullptr) {
         QL_REQUIRE(seasonality_->isConsistent(*this), "Seasonality inconsistent with "
                                                       "inflation term structure");
