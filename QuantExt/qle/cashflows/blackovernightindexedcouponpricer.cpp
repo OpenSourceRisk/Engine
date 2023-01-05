@@ -67,7 +67,7 @@ Real BlackOvernightIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
             std::max(fixingDates.front(), capletVolatility()->referenceDate() + 1), effStrike);
         Real T = std::max(fixingStartTime, 0.0);
         if (!close_enough(fixingEndTime, T))
-            T += std::pow(fixingEndTime - T, 3.0) / std::pow(fixingEndTime - T, 2.0) / 3.0;
+            T += std::pow(fixingEndTime - T, 3.0) / std::pow(fixingEndTime - fixingStartTime, 2.0) / 3.0;
         Real stdDev = sigma * std::sqrt(T);
         Real shift = capletVolatility()->displacement();
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
