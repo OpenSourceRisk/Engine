@@ -1164,7 +1164,7 @@
       <xs:enumeration value="KnockIn"/>
       <xs:enumeration value="KnockOut"/>
       <xs:enumeration value="CumulatedProfitCap"/>
-      <xs:enumeration value="CumulatedProfitCap"/>
+      <xs:enumeration value="CumulatedProfitCapPoints"/>
       <xs:enumeration value="FixingCap"/>
       <xs:enumeration value="FixingFloor"/>
     </xs:restriction>
