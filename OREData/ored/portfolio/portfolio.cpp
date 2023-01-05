@@ -155,7 +155,7 @@ bool Portfolio::remove(const std::string& tradeID) {
 
 void Portfolio::removeMatured(const Date& asof) {
     for (auto it = trades_.begin(); it != trades_.end(); /* manual */) {
-        if ((*it)->maturity() < asof) {
+        if ((*it)->maturity() <= asof) {
             ALOG(StructuredTradeErrorMessage(*it, "Trade is Matured", ""));
 	    tradeLookup_.erase((*it)->id());
             it = trades_.erase(it);
