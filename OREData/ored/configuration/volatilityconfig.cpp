@@ -550,7 +550,12 @@ void VolatilityConfigBuilder::loadVolatiltyConfigs(XMLNode* node) {
 
     // sort the volatility configs by priority
     if (volatilityConfig_.size() > 1)
-        std::sort(volatilityConfig_.begin(), volatilityConfig_.end());
+        std::sort(volatilityConfig_.begin(), volatilityConfig_.end(),
+                  [](const boost::shared_ptr<VolatilityConfig>& a, const boost::shared_ptr<VolatilityConfig>& b) {
+                      QL_REQUIRE(a && b,
+                                 "VolatilityConfigBuilder fails to sort the configs, can not compare a nullptr");
+                      return *a < *b;
+                  });
 }
 
 void VolatilityConfigBuilder::fromXML(XMLNode* node) {
