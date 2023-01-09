@@ -157,8 +157,14 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
                                   const QuantLib::Period& swapTenor, const QuantLib::DayCounter& swapZCLegDayCounter,
                                   const QuantLib::Period& swapObsLag, const QuantLib::Rate zeroCouponRate,
                                   const QuantLib::Period& curveObsLag, const QuantLib::DayCounter& curveDayCounter,
-                                  const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const bool interpolated) {
+                                  const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const bool interpolated,
+                                  const boost::shared_ptr<QuantLib::Seasonality>& seasonality) {
+    boost::shared_ptr<QuantLib::MultiplicativePriceSeasonality> multiplicativeSeasonality =
+        seasonality ? boost::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(seasonality) : nullptr;  
     
+    QL_REQUIRE(seasonality ==  nullptr || multiplicativeSeasonality,
+               "Only multiplicative seasonality supported at the moment");
+
     Date swapBaseDate = ZeroInflation::fixingDate(swapStart, swapObsLag, index->frequency(), interpolated);
 
     Date curveBaseDate =
@@ -192,8 +198,16 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
     if (!interpolated) {
         Time timeFromCurveBase = inflationYearFraction(index->frequency(), interpolated, curveDayCounter, curveBaseDate,
                                                        swapObservationDate);
-
-        return std::pow(fwdCPI / curveBaseFixing, 1.0 / timeFromCurveBase) - 1.0;
+        double rateWithSeasonality = std::pow(fwdCPI / curveBaseFixing, 1.0 / timeFromCurveBase) - 1.0;
+        
+        if (multiplicativeSeasonality) {
+            double factorAt = multiplicativeSeasonality->seasonalityFactor(swapObservationDate);
+            double factorBase = multiplicativeSeasonality->seasonalityFactor(curveBaseDate);
+            double seasonalityFactor = std::pow(factorAt / factorBase, 1.0 / timeFromCurveBase);
+            return (rateWithSeasonality + 1) / seasonalityFactor - 1;
+        } else {
+            return rateWithSeasonality;
+        }
     } else {
         // Compute the interpolated  fixing of the ZCIIS at maturity
         auto fixingPeriod = inflationPeriod(swapObservationDate, index->frequency());
@@ -217,10 +231,24 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
         // Root search for a constant rate that the interpolation of both cpi matches the forward cpi
         Real target = fwdCPI / curveBaseFixing;
 
+        Real seasonalityFactor1 = 1.0;
+        Real seasonalityFactor2 = 1.0;
+
+        if (multiplicativeSeasonality) {
+            double factorAt1 = multiplicativeSeasonality->seasonalityFactor(fixingPeriod.first);
+            double factorAt2 = multiplicativeSeasonality->seasonalityFactor(fixingPeriod.second + 1 * Days);
+            double factorBase = multiplicativeSeasonality->seasonalityFactor(curveBaseDate);
+            seasonalityFactor1 = factorAt1 / factorBase;
+            seasonalityFactor2 = factorAt2 / factorBase;
+        }
+
+
         std::function<double(double)> objectiveFunction = [&timeToFixing1, &timeToFixing2, &interpolationFactor,
-                                                           &target](Rate r) {
-            return target - (std::pow(1 + r, timeToFixing1) +
-                             (std::pow(1 + r, timeToFixing2) - std::pow(1 + r, timeToFixing1)) * interpolationFactor);
+                                                           &target, &seasonalityFactor1, &seasonalityFactor2](Rate r) {
+            return target - (std::pow(1 + r, timeToFixing1) * seasonalityFactor1  +
+                             (std::pow(1 + r, timeToFixing2) * seasonalityFactor2 -
+                              std::pow(1 + r, timeToFixing1) * seasonalityFactor1) *
+                                 interpolationFactor);
         };
 
         Rate guess = std::pow(fwdCPI / curveBaseFixing, 1.0 / timeToFixing2) - 1.0;

@@ -97,7 +97,8 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
                                   const QuantLib::Period& swapTenor, const QuantLib::DayCounter& swapZCLegDayCounter,
                                   const QuantLib::Period& swapObsLag, const QuantLib::Rate zeroCouponRate, 
                                   const QuantLib::Period& curveObsLag, const QuantLib::DayCounter& curveDayCounter,
-                                  const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const bool interpolated);
+                                  const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const bool interpolated,
+                                  const boost::shared_ptr<QuantLib::Seasonality>& seasonality = nullptr);
 
 
 //! checks if the vols are normal or lognormal 
