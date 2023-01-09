@@ -1273,7 +1273,7 @@ void addCommodityCurveCalibrationInfo(ore::data::Report& report, const std::stri
 }
 
 void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& type, const std::string& id,
-                               boost::shared_ptr<FxEqVolCalibrationInfo> info) {
+                               boost::shared_ptr<FxEqCommVolCalibrationInfo> info) {
     if (info == nullptr)
         return;
 
@@ -1438,6 +1438,11 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
     // eq vol results
     for (auto const& r : calibrationInfo->eqVolCalibrationInfo) {
         addFxEqVolCalibrationInfo(report, "eqVol", r.first, r.second);
+    }
+
+    // comm vol results
+    for (auto const& r : calibrationInfo->commVolCalibrationInfo) {
+        addFxEqVolCalibrationInfo(report, "commVol", r.first, r.second);
     }
 
     // ir vol results

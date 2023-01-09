@@ -209,6 +209,9 @@ protected:
     RequiredFixings requiredFixings_;
     mutable std::map<std::string,boost::any> additionalData_;
 
+    // sets additional data based on given leg no
+    void setLegBasedAdditionalData(const Size legNo) const;
+
 private:
     string id_;
     Envelope envelope_;

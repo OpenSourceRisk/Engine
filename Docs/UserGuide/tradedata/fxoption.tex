@@ -57,9 +57,10 @@ holder of the Put counterpart has the right to buy USD using EUR, or equivalentl
 
 \item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given. For \emph{American} style FxOptions the ExerciseDate represents the Expiry date, i.e. they can be exercised up until this date. \\
 
-\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
+\item A \lstinline!PaymentData! [Optional] node can be added which defines the settlement date of the option payoff.
 
-Allowable values:  See section \ref{ss:premiums}
+\item \lstinline!Premiums! [Optional]: Option premium amounts paid by the option buyer to the option seller. See section \ref{ss:premiums}
+
 
 \end{itemize}
 

@@ -130,6 +130,18 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
         additionalData_["startDate"] = to_string(schedule.dates().front());
 }
 
+const std::map<std::string, boost::any>& CreditDefaultSwap::additionalData() const {
+    additionalData_["legNPV[1]"] = instrument_->qlInstrument()->result<Real>("protectionLegNPV");
+    additionalData_["legNPV[2]"] = instrument_->qlInstrument()->result<Real>("premiumLegNPVDirty") +
+                                   instrument_->qlInstrument()->result<Real>("upfrontPremiumNPV") +
+                                   instrument_->qlInstrument()->result<Real>("accrualRebateNPV");
+    additionalData_["isPayer[1]"] = !swap_.leg().isPayer();
+    additionalData_["isPayer[2]"] = swap_.leg().isPayer();
+    additionalData_["legType[1]"] = swap_.leg().legType();
+    setLegBasedAdditionalData(0);
+    return additionalData_;
+}
+
 QuantLib::Real CreditDefaultSwap::notional() const {
     Date asof = Settings::instance().evaluationDate();
     // get the current notional from CDS premium leg
