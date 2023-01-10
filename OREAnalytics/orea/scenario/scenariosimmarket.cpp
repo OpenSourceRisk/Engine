@@ -2927,6 +2927,10 @@ void ScenarioSimMarket::updateAsd(const Date& d) {
             } catch (...) {
             }
             QL_REQUIRE(index != nullptr, "ScenarioSimMarket::update() index " << i << " not found in sim market");
+            if (auto fb = boost::dynamic_pointer_cast<FallbackIborIndex>(index)) {
+                // proxy fallback ibor index by its rfr index's fixing
+                index = fb->rfrIndex();
+            }
             asd_->set(index->fixing(index->fixingCalendar().adjust(d)), AggregationScenarioDataType::IndexFixing, i);
         }
 
