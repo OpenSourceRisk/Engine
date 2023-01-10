@@ -7,12 +7,12 @@
     <EngineParameters>
       <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
       <Parameter name="Training.Seed">42</Parameter>
-      <Parameter name="Training.Samples">10000</Parameter>
+      <Parameter name="Training.Samples">50000</Parameter>
       <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
       <Parameter name="Pricing.Seed">17</Parameter>
       <Parameter name="Pricing.Samples">0</Parameter>
       <Parameter name="Training.BasisFunction">Monomial</Parameter>
-      <Parameter name="Training.BasisFunctionOrder">2</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">6</Parameter>
       <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
       <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
       <Parameter name="MinObsDate">true</Parameter>
@@ -50,7 +50,7 @@
       <Parameter name="Pricing.Seed">17</Parameter>
       <Parameter name="Pricing.Samples">0</Parameter>
       <Parameter name="Training.BasisFunction">Monomial</Parameter>
-      <Parameter name="Training.BasisFunctionOrder">4</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">2</Parameter>
       <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
       <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
       <Parameter name="MinObsDate">true</Parameter>
@@ -64,7 +64,7 @@
     <EngineParameters>
       <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
       <Parameter name="Training.Seed">42</Parameter>
-      <Parameter name="Training.Samples">10000</Parameter>
+      <Parameter name="Training.Samples">50000</Parameter>
       <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
       <Parameter name="Pricing.Seed">17</Parameter>
       <Parameter name="Pricing.Samples">0</Parameter>

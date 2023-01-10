@@ -2461,16 +2461,16 @@ correlations can be interpreted as correlations of these principal components wi
 \label{example:39}
 %--------------------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_39} demonstrates how to use American (or Least Squares) Monte Carlo to generate exposures in ORE.
-For a sketch of the methodology and comments on implementation details see appendix \ref{sec:app_amc}.
+The example in folder {\tt Examples/Example\_39} demonstrates how to use American Monte Carlo simulation (AMC) to generate exposures in ORE.
+For a sketch of the methodology and comments on its implementation in ORE see appendix \ref{sec:app_amc}.
 
-The portfolio processed here with 
+Calling 
 
 \medskip
 \centerline {\tt python run.py} 
 
 \medskip
-contains the following example trades:
+performs two ORE runs, a 'classical' exposure simulation and an American Monte Carlo simulation, both on a quarterly simulation grid and for the same portfolio consisting of four trades:
 
 \begin{itemize}
 \item Bermudan swaption
@@ -2479,18 +2479,21 @@ contains the following example trades:
 \item FX Option
 \end{itemize}
 
-We compare these AMC exposure profiles with those produced by the 'classic' valuation engine. If not
-stated otherwise the number of training paths and simulation paths is 10k in all cases and the simulation grid has a 3M
-spacing covering 88 points (22 years).
+We use a 'flat' market here (yield curve and Swaption volatility surface). The number of simulation paths is 2k in the classic simulations. If not stated otherwise below, the number of training paths and simulation paths is 10k in the AMC simulations. 
 
-Figure \ref{epe_swaption} shows the EPE for a Bermudan Swaption 10y into 10y in (base ccy) EUR with physical settlement
-calculated with the AMC and classic valuation engines (this example is taken from the unit tests). The classic run uses
-the LGM grid engine for valuation. We observe a good consistency between the two runs, the error tolerance for this test
-is set to $20$ basis points absolute NPV difference per unit notional.
+In the following we compare the AMC exposure profiles to those produced by the 'classic' valuation engine for each trade and the netting set. 
 
+Figure \ref{epe_swaption} shows the EPE and ENE for a Bermudan Swaption 10y into 10y in (base ccy) EUR with physical settlement. The classic run uses
+the LGM grid engine for valuation. We observe close agreement between the two runs. To achieve the observed agreement, it is essential to set the LGM model's mean reversion speed to zero in both
+\begin{itemize}
+\item the Bermudan Swaption LGM pricing model (see Input/pricingengine.xml), and
+\item the Cross Asset Model's IR model components (see Input/simulation.xml and Input/simulation\_amc.xml) 
+\end{itemize}
+and to use a high order 6 of the regression polynomials (see Input/pricingengine\_amc.xml).
+ 
 \begin{figure}
   \includegraphics[width=0.8\textwidth]{mpl_amc_bermudanswaption.pdf}
-  \caption{EPE of a EUR Bermudan Swaption computed with the classic and AMC valuation engines}
+  \caption{EPE of a EUR Bermudan Swaption computed with the classic and AMC valuation engines, using 50k training paths for the AMC simulation.}
   \label{epe_swaption}
 \end{figure}
 
@@ -2567,7 +2570,7 @@ The pricing engine configuration is similar for all AMC enabled products, e.g. f
   <EngineParameters>
     <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
     <Parameter name="Training.Seed">42</Parameter>
-    <Parameter name="Training.Samples">10000</Parameter>
+    <Parameter name="Training.Samples">50000</Parameter>
     <Parameter name="Training.BasisFunction">Monomial</Parameter>
     <Parameter name="Training.BasisFunctionOrder">6</Parameter>
     <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>

@@ -52,7 +52,7 @@
           <ParamType>Constant</ParamType>
           <!-- Constant, Piecewise -->
           <TimeGrid/>
-          <InitialValue>0.0050</InitialValue>
+          <InitialValue>0.0</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
           <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
@@ -78,7 +78,7 @@
           <ReversionType>HullWhite</ReversionType>
           <ParamType>Constant</ParamType>
           <TimeGrid/>
-          <InitialValue>0.0050</InitialValue>
+          <InitialValue>0.0</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
           <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
@@ -104,7 +104,7 @@
           <ReversionType>HullWhite</ReversionType>
           <ParamType>Constant</ParamType>
           <TimeGrid/>
-          <InitialValue>0.0050</InitialValue>
+          <InitialValue>0.0</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
           <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>

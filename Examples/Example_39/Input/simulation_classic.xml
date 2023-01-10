@@ -11,7 +11,7 @@
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>1000</Samples>
+    <Samples>2000</Samples>
     <CloseOutLag>2W</CloseOutLag>
     <MporMode>StickyDate</MporMode>
     <DayCounter>A365F</DayCounter>
@@ -19,7 +19,7 @@
   <!--
 	This section determines the simulation model composition
 	and the calibration of all components.
-    -->
+  -->
   <CrossAssetModel>
     <DomesticCcy>EUR</DomesticCcy>
     <Currencies>
@@ -52,7 +52,7 @@
           <ParamType>Constant</ParamType>
           <!-- Constant, Piecewise -->
           <TimeGrid/>
-          <InitialValue>0.0050</InitialValue>
+          <InitialValue>0.0</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
           <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
@@ -78,7 +78,7 @@
           <ReversionType>HullWhite</ReversionType>
           <ParamType>Constant</ParamType>
           <TimeGrid/>
-          <InitialValue>0.0050</InitialValue>
+          <InitialValue>0.0</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
           <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
@@ -104,7 +104,7 @@
           <ReversionType>HullWhite</ReversionType>
           <ParamType>Constant</ParamType>
           <TimeGrid/>
-          <InitialValue>0.0050</InitialValue>
+          <InitialValue>0.0</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
           <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
