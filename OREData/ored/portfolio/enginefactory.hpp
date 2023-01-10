@@ -268,8 +268,8 @@ public:
     LegBuilder(const string& legType) : legType_(legType) {}
     virtual ~LegBuilder() {}
     virtual Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>&, RequiredFixings& requiredFixings,
-                         const string& configuration,
-                         const QuantLib::Date& openEndDateReplacement = Null<Date>()) const = 0;
+                         const string& configuration, const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                         const bool useXbsCurves = false) const = 0;
     const string& legType() const { return legType_; }
 
 private:
