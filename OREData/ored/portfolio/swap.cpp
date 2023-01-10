@@ -79,11 +79,13 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     for (Size i = 0; i < numLegs; ++i) {
         legPayers_[i] = legData_[i].isPayer();
         auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
-        legs_[i] = legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration);
+        legs_[i] =
+            legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration, Null<Date>(), true);
         DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
         
         // add notional leg, if applicable
         auto leg = buildNotionalLeg(legData_[i], legs_[i], requiredFixings_, engineFactory->market(), configuration);
+        applyIndexing(leg, legData_[i], engineFactory, requiredFixings_, Null<Date>(), true);
         if (!leg.empty()) {
             legs_.push_back(leg);
             legPayers_.push_back(legPayers_[i]);
