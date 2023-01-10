@@ -50,8 +50,8 @@ public:
         : hasData_(true), quantity_(quantity), index_(index), indexFixingCalendar_(indexFixingCalendar),
           indexIsDirty_(indexIsDirty), indexIsRelative_(indexIsRelative),
           indexIsConditionalOnSurvival_(indexIsConditionalOnSurvival), initialFixing_(initialFixing),
-          valuationSchedule_(valuationSchedule), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar),
-          fixingConvention_(fixingConvention), inArrearsFixing_(inArrearsFixing) {}
+          initialNotionalFixing_(initialNotionalFixing), valuationSchedule_(valuationSchedule), fixingDays_(fixingDays),
+          fixingCalendar_(fixingCalendar), fixingConvention_(fixingConvention), inArrearsFixing_(inArrearsFixing) {}
 
     //! \name Inspectors
     //@{
