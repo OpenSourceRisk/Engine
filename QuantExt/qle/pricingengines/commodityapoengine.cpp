@@ -99,6 +99,10 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     }
     EA2 /= std::pow(static_cast<double>(n), 2.0);
     res.EA2 = EA2;
+
+    QL_REQUIRE(!std::isinf(EA2),
+               "moment matching fails (EA2 = inf) - this is possibly due to too high input volatilities.");
+
     // Calculate value
     if (!res.times.empty()) {
         res.tn = res.times.back();

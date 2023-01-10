@@ -100,6 +100,9 @@ void AverageOffPeakPowerHelper::init(const boost::shared_ptr<CommodityIndex>& in
 
 Real AverageOffPeakPowerHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_, "AverageFuturePriceHelper term structure not set.");
+    businessOffPeak_->update();
+    holidayOffPeak_->update();
+    holidayPeak_->update();
     return (peakDays_ * businessOffPeak_->amount() + nonPeakDays_ * (holidayOffPeak_->amount()
         + holidayPeak_->amount())) / (peakDays_ + nonPeakDays_);
 }
@@ -118,4 +121,13 @@ void AverageOffPeakPowerHelper::accept(AcyclicVisitor& v) {
         PriceHelper::accept(v);
 }
 
+void AverageOffPeakPowerHelper::deepUpdate() {
+    if (businessOffPeak_)
+        businessOffPeak_->update();
+    if (holidayOffPeak_)
+        holidayOffPeak_->update();
+    if (holidayPeak_)
+        holidayPeak_->update();
 }
+
+} // namespace QuantExt

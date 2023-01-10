@@ -259,7 +259,7 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
 
         Array guess(deltas.size());
         for (Size i = 0; i < deltas.size(); ++i) {
-            guess[i] = std::log(std::max(0.0001, bfQuotes[i] + atmVol - 0.5 * rrQuotes[i]));
+            guess[i] = std::log(std::max(0.0001, bfQuotes[i] + atmVol - 0.5 * std::abs(rrQuotes[i])));
         }
 
         /* define the target function to match up the butterfly market values and smile values */

@@ -87,6 +87,7 @@ void AverageFuturePriceHelper::init(const boost::shared_ptr<CommodityIndex>& ind
 
 Real AverageFuturePriceHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_, "AverageFuturePriceHelper term structure not set.");
+    averageCashflow_->update();
     return averageCashflow_->amount();
 }
 
@@ -108,4 +109,10 @@ boost::shared_ptr<CommodityIndexedAverageCashFlow> AverageFuturePriceHelper::ave
     return averageCashflow_;
 }
 
+void AverageFuturePriceHelper::deepUpdate() {
+    if (averageCashflow_)
+        averageCashflow_->update();
+    update();
 }
+
+} // namespace QuantExt
