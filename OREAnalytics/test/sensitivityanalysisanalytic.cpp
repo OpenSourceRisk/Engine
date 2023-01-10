@@ -953,11 +953,11 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
     sa->generateSensitivities();
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
-    for (auto p : portfolio->trades()) {
+    for (auto [pid,p] : portfolio->trades()) {
         for (const auto& f : sa->sensiCube()->factors()) {
             auto des = sa->sensiCube()->factorDescription(f);
-            deltaMap[make_pair(p->id(), des)] = sa->sensiCube()->delta(p->id(), f);
-            gammaMap[make_pair(p->id(), des)] = sa->sensiCube()->gamma(p->id(), f);
+            deltaMap[make_pair(pid, des)] = sa->sensiCube()->delta(pid, f);
+            gammaMap[make_pair(pid, des)] = sa->sensiCube()->gamma(pid, f);
         }
     }
     std::vector<ore::analytics::SensitivityScenarioGenerator::ScenarioDescription> scenDesc =

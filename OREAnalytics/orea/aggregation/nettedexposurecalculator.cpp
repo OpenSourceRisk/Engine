@@ -97,17 +97,17 @@ void NettedExposureCalculator::build() {
     map<string, Real> nettingSetValueToday;
     map<string, Date> nettingSetMaturity;
     map<string, Size> nettingSetSize;
-    auto trades = portfolio_->trades();
-    for (Size i = 0; i < trades.size(); ++i) {
-        const auto& trade = trades[i];
-        string tradeId = trade->id();
+    for (auto& tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt) {
+        size_t i = std::distance(portfolio_->trades().begin(), tradeIt);
+        auto trade = tradeIt->second;
+        string tradeId = tradeIt->first;
         string nettingSetId = trade->envelope().nettingSetId();
-	string cp = trade->envelope().counterparty();
-	if (counterpartyMap_.find(nettingSetId) == counterpartyMap_.end())
-	    counterpartyMap_[nettingSetId] = trade->envelope().counterparty();
-	else {
-	    QL_REQUIRE(counterpartyMap_[nettingSetId] == cp, "counterparty name is not unique within the netting set");
-	}
+        string cp = trade->envelope().counterparty();
+        if (counterpartyMap_.find(nettingSetId) == counterpartyMap_.end())
+            counterpartyMap_[nettingSetId] = trade->envelope().counterparty();
+        else {
+            QL_REQUIRE(counterpartyMap_[nettingSetId] == cp, "counterparty name is not unique within the netting set");
+        }
         Real npv;
         if (flipViewXVA_) {
             npv = -cube_->getT0(i);
@@ -278,11 +278,14 @@ void NettedExposureCalculator::build() {
                 }
 
                 if (marginalAllocation_) {
-                    for (Size i = 0; i < portfolio_->trades().size(); ++i) {
-                        string nid = portfolio_->trades()[i]->envelope().nettingSetId();
+                    for (auto& tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end();
+                         ++tradeIt) {
+                        size_t i = std::distance(portfolio_->trades().begin(), tradeIt);
+                        auto trade = tradeIt->second;
+                        string nid = trade->envelope().nettingSetId();
                         if (nid != nettingSetId)
                             continue;
-                        string tid = portfolio_->trades()[i]->id();
+                        
                         Real allocation = 0.0;
                         if (balance == 0.0)
                             allocation = cubeInterpretation_->getDefaultNpv(cube_, i, j, k);

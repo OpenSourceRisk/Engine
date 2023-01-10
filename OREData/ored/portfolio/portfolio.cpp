@@ -197,12 +197,7 @@ vector<string> Portfolio::ids() const {
     return ids;
 }
 
-vector<boost::shared_ptr<Trade>> Portfolio::trades() const {
-    std::vector<boost::shared_ptr<Trade>> trades;
-    for (auto& [id, t] : trades_)
-        trades.push_back(t);
-    return trades;
-}
+const std::map<std::string, boost::shared_ptr<Trade>>& Portfolio::trades() const { return trades_; }
 
 map<string, string> Portfolio::nettingSetMap() const {
     map<string, string> nettingSetMap;
@@ -222,8 +217,9 @@ std::vector<std::string> Portfolio::counterparties() const {
 
 map<string, set<string>> Portfolio::counterpartyNettingSets() const {
     map<string, set<string>> cpNettingSets;
-    for (const auto& t : trades_)
-        cpNettingSets[t.second->envelope().counterparty()].insert(t.second->envelope().nettingSetId());
+    for (const auto& [tradeId, trade] : trades()) {
+        cpNettingSets[trade->envelope().counterparty()].insert(trade->envelope().nettingSetId());
+    }
     return cpNettingSets;
 }
 
@@ -245,8 +241,9 @@ boost::shared_ptr<Trade> Portfolio::get(const string& id) const {
 
 std::set<std::string> Portfolio::portfolioIds() const {
     std::set<std::string> portfolioIds;
-    for (auto const& t : trades_)
-        portfolioIds.insert(t.second->portfolioIds().begin(), t.second->portfolioIds().end());
+    for (const auto& [tradeId, trade] : trades()) {
+        portfolioIds.insert(trade->portfolioIds().begin(), trade->portfolioIds().end());
+    }
     return portfolioIds;
 }
 

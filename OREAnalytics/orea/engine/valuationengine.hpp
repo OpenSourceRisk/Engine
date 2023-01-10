@@ -90,7 +90,7 @@ public:
 
 private:
     void recalibrateModels();
-    void runCalculators(bool isCloseOutDate, const std::vector<boost::shared_ptr<Trade>>& trades,
+    void runCalculators(bool isCloseOutDate, const std::map<std::string, boost::shared_ptr<Trade>>& trades,
                         std::vector<bool>& tradeHasError,
                         const std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
                         boost::shared_ptr<analytics::NPVCube>& outputCube,
@@ -100,7 +100,7 @@ private:
                         const std::vector<boost::shared_ptr<CounterpartyCalculator>>& calculators,
                         boost::shared_ptr<analytics::NPVCube>& cptyCube, const Date& d,
                         const Size cubeDateIndex, const Size sample);
-    void tradeExercisable(bool enable, const std::vector<boost::shared_ptr<Trade>>& trades);
+    void tradeExercisable(bool enable, const std::map<std::string, boost::shared_ptr<Trade>>& trades);
     QuantLib::Date today_;
     boost::shared_ptr<DateGrid> dg_;
     boost::shared_ptr<analytics::SimMarket> simMarket_;

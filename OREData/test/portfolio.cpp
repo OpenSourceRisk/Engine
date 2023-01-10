@@ -91,15 +91,15 @@ BOOST_AUTO_TEST_CASE(testTrades) {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
     boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
-    std::vector<boost::shared_ptr<Trade>> trade_list;
+    std::map<std::string, boost::shared_ptr<Trade>> trade_list;
     trade1->id() = "1";
     trade2->id() = "2";
     BOOST_CHECK(portfolio->trades() == trade_list);
     portfolio->add(trade1);
-    trade_list.push_back(trade1);
+    trade_list["1"]  = trade1;
     BOOST_CHECK(portfolio->trades() == trade_list);
     portfolio->add(trade2);
-    trade_list.push_back(trade2);
+    trade_list["2"] = trade1;
     BOOST_CHECK(portfolio->trades() == trade_list);
 }
 

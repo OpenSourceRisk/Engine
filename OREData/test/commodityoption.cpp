@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(testCommodityOptionFromXml) {
     portfolio.loadFromXMLString(tradeXml);
 
     // Extract CommodityOption trade from portfolio
-    boost::shared_ptr<Trade> trade = portfolio.trades()[0];
+    boost::shared_ptr<Trade> trade = portfolio.trades().begin()->second;
     boost::shared_ptr<CommodityOption> option = boost::dynamic_pointer_cast<ore::data::CommodityOption>(trade);
 
     // Check fields after checking that the cast was successful
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(testCommodityOptionFromXml) {
     replace_all(tradeXml, ">Long<", ">Short<");
     portfolio.clear();
     portfolio.loadFromXMLString(tradeXml);
-    trade = portfolio.trades()[0];
+    trade = portfolio.trades().begin()->second;
     BOOST_CHECK_NO_THROW(trade->build(td.engineFactory));
     BOOST_CHECK_CLOSE(trade->instrument()->NPV(), -cachedCallPrice, testTolerance);
 
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(testCommodityOptionFromXml) {
     replace_all(tradeXml, ">Call<", ">Put<");
     portfolio.clear();
     portfolio.loadFromXMLString(tradeXml);
-    trade = portfolio.trades()[0];
+    trade = portfolio.trades().begin()->second;
     BOOST_CHECK_NO_THROW(trade->build(td.engineFactory));
     BOOST_CHECK_CLOSE(trade->instrument()->NPV(), -cachedPutPrice, testTolerance);
 
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(testCommodityOptionFromXml) {
     replace_all(tradeXml, ">Short<", ">Long<");
     portfolio.clear();
     portfolio.loadFromXMLString(tradeXml);
-    trade = portfolio.trades()[0];
+    trade = portfolio.trades().begin()->second;
     BOOST_CHECK_NO_THROW(trade->build(td.engineFactory));
     BOOST_CHECK_CLOSE(trade->instrument()->NPV(), cachedPutPrice, testTolerance);
 }

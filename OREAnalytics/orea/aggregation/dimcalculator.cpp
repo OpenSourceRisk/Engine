@@ -72,9 +72,11 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
 
     // initialise aggregate NPV and Flow by date and scenario
     set<string> nettingSets;
-    for (Size i = 0; i < portfolio_->size(); ++i) {
-        string tradeId = portfolio_->trades()[i]->id();
-        string nettingSetId = portfolio_->trades()[i]->envelope().nettingSetId();
+    for (auto& tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt) {
+        size_t i = std::distance(portfolio_->trades().begin(), tradeIt);
+        auto trade = tradeIt->second;
+        string tradeId = tradeIt->first;
+        string nettingSetId = trade->envelope().nettingSetId();
         if (nettingSets.find(nettingSetId) == nettingSets.end()) {
             nettingSets.insert(nettingSetId);
             nettingSetNPV_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));

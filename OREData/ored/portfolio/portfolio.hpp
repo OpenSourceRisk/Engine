@@ -96,8 +96,8 @@ public:
     //! Calculates the maturity of the portfolio
     QuantLib::Date maturity() const;
 
-    //! Return trade list
-    std::vector<boost::shared_ptr<Trade>> trades() const;
+    //! Return the map tradeId -> trade
+    const std::map<std::string, boost::shared_ptr<Trade>>& trades() const;
 
     //! Build a vector of tradeIds
     std::vector<std::string> ids() const;

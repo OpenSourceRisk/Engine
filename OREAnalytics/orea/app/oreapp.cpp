@@ -811,8 +811,8 @@ void OREApp::runParametricVar() {
 
     LOG("Build trade to portfolio id mapping");
     map<string, set<string>> tradePortfolio;
-    for (auto const& t : portfolio_->trades()) {
-        tradePortfolio[t->id()].insert(t->portfolioIds().begin(), t->portfolioIds().end());
+    for (auto const& [tradeId, trade] : portfolio_->trades()) {
+        tradePortfolio[tradeId].insert(trade->portfolioIds().begin(), trade->portfolioIds().end());
     }
 
     LOG("Load covariance matrix data");

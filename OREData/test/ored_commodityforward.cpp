@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(testCommodityForwardFromXml) {
     portfolio.loadFromXMLString(tradeXml);
 
     // Extract CommodityForward trade from portfolio
-    boost::shared_ptr<Trade> trade = portfolio.trades()[0];
+    boost::shared_ptr<Trade> trade = portfolio.trades().begin()->second;
     boost::shared_ptr<ore::data::CommodityForward> commodityForward =
         boost::dynamic_pointer_cast<ore::data::CommodityForward>(trade);
 

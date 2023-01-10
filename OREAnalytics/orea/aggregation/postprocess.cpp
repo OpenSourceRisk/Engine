@@ -92,11 +92,14 @@ PostProcess::PostProcess(
     QL_REQUIRE(portfolio->size() == cube_->ids().size(),
                "PostProcess::PostProcess(): portfolio size ("
                    << portfolio->size() << ") does not match cube trade size (" << cube_->ids().size() << ")");
-    for (Size i = 0; i < portfolio->size(); ++i) {
-        QL_REQUIRE(portfolio->trades()[i]->id() == cube_->ids()[i], "PostProcess::PostProcess(): portfolio trade #"
-                                                                        << i << " (id=" << portfolio->trades()[i]->id()
-                                                                        << ") does not match cube trade id ("
-                                                                        << cube_->ids()[i]);
+    
+    size_t currentTradeIdx = 0;
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
+        QL_REQUIRE(tradeId == cube_->ids()[currentTradeIdx], "PostProcess::PostProcess(): portfolio trade #"
+                                                                 << currentTradeIdx << " (id=" << tradeId
+                                                                 << ") does not match cube trade id ("
+                                                                 << cube_->ids()[currentTradeIdx]);
+        currentTradeIdx++;
     }
 
     if (analytics_["dynamicCredit"]) {
