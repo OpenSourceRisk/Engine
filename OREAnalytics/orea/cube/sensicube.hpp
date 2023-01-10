@@ -32,6 +32,7 @@
 
 #include <boost/make_shared.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/set.hpp>
 #include <boost/math/special_functions/relative_difference.hpp>
 
 #include <fstream>
@@ -45,7 +46,7 @@ namespace analytics {
 //! SensiCube stores only npvs not equal to the base npvs
 template <typename T> class SensiCube : public NPVSensiCube {
 public:
-    SensiCube(const std::vector<std::string>& ids, const QuantLib::Date& asof, QuantLib::Size samples, const T& t = T())
+    SensiCube(const std::set<std::string>& ids, const QuantLib::Date& asof, QuantLib::Size samples, const T& t = T())
         : ids_(ids), asof_(asof), dates_(1, asof), samples_(samples), t0Data_(ids.size(), t),
           tradeNPVs_(ids.size(), map<Size, T>()) {}
 
@@ -70,7 +71,7 @@ public:
     QuantLib::Size samples() const override { return samples_; }
 
     //! Get the vector of ids for this cube
-    const std::vector<std::string>& ids() const override { return ids_; }
+    const std::set<std::string>& ids() const override { return ids_; }
 
     //! Get the vector of dates for this cube
     const std::vector<QuantLib::Date>& dates() const override { return dates_; }
@@ -126,7 +127,7 @@ private:
         ar& tradeNPVs_;
     }
 
-    std::vector<std::string> ids_;
+    std::set<std::string> ids_;
     QuantLib::Date asof_;
     std::vector<QuantLib::Date> dates_;
     QuantLib::Size samples_;

@@ -1356,13 +1356,12 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
         Real fxForBase;
     };
     map<string, AnalyticInfo> qlInfoMap;
-    for (Size i = 0; i < portfolio->size(); ++i) {
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
         AnalyticInfo info;
-        boost::shared_ptr<Trade> trn = portfolio->trades()[i];
-        boost::shared_ptr<ore::data::FxOption> fxoTrn = boost::dynamic_pointer_cast<ore::data::FxOption>(trn);
+        boost::shared_ptr<ore::data::FxOption> fxoTrn = boost::dynamic_pointer_cast<ore::data::FxOption>(trade);
         BOOST_CHECK(fxoTrn);
-        info.id = trn->id();
-        info.npvCcy = trn->npvCurrency();
+        info.id = tradeId;
+        info.npvCcy = trade->npvCurrency();
         info.forCcy = fxoTrn->boughtCurrency();
         info.domCcy = fxoTrn->soldCurrency();
         BOOST_CHECK_EQUAL(info.npvCcy, info.domCcy);
@@ -1372,9 +1371,9 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
         info.trnFx = initMarket->fxRate(trnPair)->value();
         string forPair = info.forCcy + simMarketData->baseCcy();
         info.fxForBase = initMarket->fxRate(forPair)->value();
-        info.baseNpv = trn->instrument()->NPV() * info.fx;
+        info.baseNpv = trade->instrument()->NPV() * info.fx;
         boost::shared_ptr<QuantLib::VanillaOption> qlOpt =
-            boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trn->instrument()->qlInstrument());
+            boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trade->instrument()->qlInstrument());
         BOOST_CHECK(qlOpt);
         Position::Type positionType = parsePositionType(fxoTrn->option().longShort());
         Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
@@ -1979,19 +1978,18 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     Real rel_tol = 0.005;
     Real threshold = 1.e-6;
     Size count = 0;
-    for (Size i = 0; i < portfolio->size(); i++) {
-        string id = portfolio->trades()[i]->id();
+    for (const auto& [tradeId, _] : portfolio->trades()) {
         for (auto const& s : scenDesc) {
             if (s.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
                 string factor1 = s.factor1();
                 string factor2 = s.factor2();
                 ostringstream os;
-                os << id << "_" << factor1 << "_" << factor2;
+                os << tradeId << "_" << factor1 << "_" << factor2;
                 string keyStr = os.str();
-                tuple<string, string, string> key = make_tuple(id, factor1, factor2);
-                Real crossgamma = sa->sensiCube()->crossGamma(id, make_pair(s.key1(), s.key2()));
+                tuple<string, string, string> key = make_tuple(tradeId, factor1, factor2);
+                Real crossgamma = sa->sensiCube()->crossGamma(tradeId, make_pair(s.key1(), s.key2()));
                 if (fabs(crossgamma) >= threshold) {
-                    ids.push_back(make_tuple(id, factor1, factor2));
+                    ids.push_back(make_tuple(tradeId, factor1, factor2));
                     // BOOST_TEST_MESSAGE("{ \"" << id << std::setprecision(9) << "\", \"" << factor1 << "\", \"" <<
                     // factor2 <<
                     // "\", " << crossgamma << " },");

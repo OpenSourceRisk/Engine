@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/range/adaptor/indexed.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 
 #include <ored/utilities/log.hpp>
@@ -86,8 +87,9 @@ void SensitivityCube::initialise() {
                "Expected the first scenario in the sensitivity cube to be of type 'Base'");
 
     // Populate the trade ID lookup map
-    for (Size i = 0; i < cube_->numIds(); i++) {
-        tradeIdx_[cube_->ids()[i]] = i;
+
+    for (const auto& enumaratedId : cube_->ids() | boost::adaptors::indexed(0)) {
+        tradeIdx_[enumaratedId.value()] = enumaratedId.index();
     }
 
     // Populate the scenario lookup map

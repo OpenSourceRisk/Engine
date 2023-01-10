@@ -105,7 +105,7 @@ protected:
         return nullptr;
     };
 
-    virtual boost::shared_ptr<NPVCube> getNpvCube(const Date& asof, const std::vector<std::string>& ids,
+    virtual boost::shared_ptr<NPVCube> getNpvCube(const Date& asof, const std::set<std::string>& ids,
                                                   const std::vector<Date>& dates, const Size samples,
                                                   const Size depth) const;
 

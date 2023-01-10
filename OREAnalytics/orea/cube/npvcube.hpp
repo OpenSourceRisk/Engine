@@ -28,6 +28,7 @@
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 #include <vector>
+#include <set>
 
 namespace ore {
 namespace analytics {
@@ -60,7 +61,7 @@ public:
     virtual Size depth() const = 0;
 
     //! Get the vector of ids for this cube
-    virtual const std::vector<std::string>& ids() const = 0;
+    virtual const std::set<std::string>& ids() const = 0;
     //! Get the vector of dates for this cube
     virtual const std::vector<QuantLib::Date>& dates() const = 0; // TODO: Should this be the full date grid?
 
@@ -96,7 +97,7 @@ public:
 
 protected:
     virtual Size index(const std::string& id) const {
-        auto it = std::find(ids().begin(), ids().end(), id);
+        auto it = ids().find(id);
         QL_REQUIRE(it != ids().end(), "NPVCube can't find an index for id " << id);
         return std::distance(ids().begin(), it);
     };

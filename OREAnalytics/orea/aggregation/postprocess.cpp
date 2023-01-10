@@ -39,6 +39,7 @@
 #include <qle/math/nadarayawatson.hpp>
 #include <qle/math/stabilisedglls.hpp>
 
+#include <boost/range/adaptors.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/error_of_mean.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
@@ -93,13 +94,15 @@ PostProcess::PostProcess(
                "PostProcess::PostProcess(): portfolio size ("
                    << portfolio->size() << ") does not match cube trade size (" << cube_->ids().size() << ")");
     
-    size_t currentTradeIdx = 0;
-    for (const auto& [tradeId, trade] : portfolio->trades()) {
-        QL_REQUIRE(tradeId == cube_->ids()[currentTradeIdx], "PostProcess::PostProcess(): portfolio trade #"
-                                                                 << currentTradeIdx << " (id=" << tradeId
-                                                                 << ") does not match cube trade id ("
-                                                                 << cube_->ids()[currentTradeIdx]);
-        currentTradeIdx++;
+    auto portfolioIt = portfolio->trades().begin();
+    auto cubeIdIt = cube_->ids().begin();
+    for (size_t i = 0; i < portfolio->size(); i++) {
+        const std::string& portfolioTradeId = portfolioIt->first;
+        const std::string& cubeTradeId = *cubeIdIt;
+
+        QL_REQUIRE(portfolioTradeId == cubeTradeId, "PostProcess::PostProcess(): portfolio trade #"
+                                                        << i << " (id=" << portfolioTradeId
+                                                        << ") does not match cube trade id (" << cubeTradeId);
     }
 
     if (analytics_["dynamicCredit"]) {
@@ -109,17 +112,19 @@ PostProcess::PostProcess(
                    "PostProcess::PostProcess(): portfolio counterparty size ("
                    << portfolio->counterparties().size() << ") does not match cpty cube trade size ("
                    << cptyCube_->ids().size() << ")");
-        for (Size i = 0; i < portfolio->counterparties().size(); ++i) {
-            QL_REQUIRE(portfolio->counterparties()[i] == cptyCube_->ids()[i],
+        
+        for (const auto& element : cptyCube_->ids() | boost::adaptors::indexed(0)) {
+            size_t i = element.index();
+            auto& cubeTradeId = element.value();
+            QL_REQUIRE(portfolio->counterparties()[i] == cubeTradeId,
                        "PostProcess::PostProcess(): portfolio counterparty #"
                        << i << " (id=" << portfolio->counterparties()[i]
                        << ") does not match cube name id ("
-                       << cptyCube_->ids()[i]);
+                           << cubeTradeId);
         }
-        QL_REQUIRE(dvaName == cptyCube_->ids().back(),
-                       "PostProcess::PostProcess(): dvaName (" << dvaName
-                       << ") does not match cube name id ("
-                       << cptyCube_->ids().back());
+        QL_REQUIRE(dvaName == *cptyCube_->ids().rbegin(), "PostProcess::PostProcess(): dvaName ("
+                                                              << dvaName << ") does not match cube name id ("
+                                                              << *cptyCube_->ids().rbegin());
     }
 
     ExposureAllocator::AllocationMethod allocationMethod = parseAllocationMethod(allocMethod);

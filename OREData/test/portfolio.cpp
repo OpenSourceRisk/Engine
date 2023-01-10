@@ -109,13 +109,13 @@ BOOST_AUTO_TEST_CASE(testIds) {
     boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
     trade1->id() = "1";
     trade2->id() = "2";
-    std::vector<std::string> trade_ids;
+    std::set<std::string> trade_ids;
     BOOST_CHECK(portfolio->ids() == trade_ids);
     portfolio->add(trade1);
-    trade_ids.push_back("1");
+    trade_ids.insert("1");
     BOOST_CHECK(portfolio->ids() == trade_ids);
     portfolio->add(trade2);
-    trade_ids.push_back("2");
+    trade_ids.insert("2");
     BOOST_CHECK(portfolio->ids() == trade_ids);
 }
 

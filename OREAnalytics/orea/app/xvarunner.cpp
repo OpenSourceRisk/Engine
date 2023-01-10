@@ -285,7 +285,7 @@ std::vector<std::string> XvaRunner::getNettingSetIds(const boost::shared_ptr<Por
     return std::vector<std::string>(nettingSetIds.begin(), nettingSetIds.end());
 }
 
-boost::shared_ptr<NPVCube> XvaRunner::getNpvCube(const Date& asof, const std::vector<std::string>& ids,
+boost::shared_ptr<NPVCube> XvaRunner::getNpvCube(const Date& asof, const std::set<std::string>& ids,
                                                  const std::vector<Date>& dates, const Size samples,
                                                  const Size depth) const {
     if (depth == 1) {

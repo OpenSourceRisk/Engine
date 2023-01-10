@@ -421,16 +421,11 @@ void RegressionDynamicInitialMarginCalculator::exportDimRegression(
         LOG("Export DIM by sample for netting set " << nettingSet << " and time step " << timeStep);
 
         Size dates = dimCube_->dates().size();
-        const std::vector<std::string>& ids = dimCube_->ids();
+        const std::set<std::string>& ids = dimCube_->ids();
 
-        int index = -1;
-        for (Size i = 0; i < ids.size(); ++i) {
-            if (ids[i] == nettingSet) {
-                index = i;
-                break;
-            }
-        }
-        QL_REQUIRE(index >= 0, "netting set " << nettingSet << " not found in DIM cube");
+        auto it = ids.find(nettingSet);
+                
+        QL_REQUIRE(it != ids.end(), "netting set " << nettingSet << " not found in DIM cube");
 
         QL_REQUIRE(timeStep < dates - 1, "selected time step " << timeStep << " out of range [0, " << dates - 1 << "]");
 

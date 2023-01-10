@@ -190,10 +190,10 @@ Date Portfolio::maturity() const {
     return mat;
 }
 
-vector<string> Portfolio::ids() const {
-    vector<string> ids;
-    for (const auto& t : trades_)
-        ids.push_back(t.second->id());
+set<string> Portfolio::ids() const {
+    set<string> ids;
+    for (const auto& [tradeId, _] : trades_)
+        ids.insert(tradeId);
     return ids;
 }
 

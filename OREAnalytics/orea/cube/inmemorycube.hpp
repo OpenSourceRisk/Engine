@@ -30,6 +30,7 @@
 
 #include <boost/make_shared.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/set.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <ored/utilities/serializationdate.hpp>
 
@@ -51,7 +52,7 @@ using std::vector;
 template <typename T> class InMemoryCubeBase : public NPVCube {
 public:
     //! default ctor
-    InMemoryCubeBase(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples,
+    InMemoryCubeBase(const Date& asof, const std::set<std::string>& ids, const vector<Date>& dates, Size samples,
                      const T& t = T())
         : asof_(asof), ids_(ids), dates_(dates), samples_(samples), t0Data_(ids.size(), t),
           data_(ids.size(), vector<vector<T>>(dates.size(), vector<T>(samples, t))) {
@@ -91,7 +92,7 @@ public:
     virtual Size samples() const override { return samples_; }
 
     //! Get the vector of ids for this cube
-    const std::vector<std::string>& ids() const override { return ids_; }
+    const std::set<std::string>& ids() const override { return ids_; }
     //! Get the vector of dates for this cube
     const std::vector<QuantLib::Date>& dates() const override { return dates_; }
 
@@ -119,7 +120,7 @@ private:
 
 private:
     QuantLib::Date asof_;
-    vector<std::string> ids_;
+    std::set<std::string> ids_;
     vector<QuantLib::Date> dates_;
     Size samples_;
 
@@ -135,7 +136,7 @@ protected:
 template <typename T> class InMemoryCube1 : public InMemoryCubeBase<T> {
 public:
     //! ctor
-    InMemoryCube1(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples,
+    InMemoryCube1(const Date& asof, const std::set<std::string>& ids, const vector<Date>& dates, Size samples,
                   const T& t = T())
         : InMemoryCubeBase<T>(asof, ids, dates, samples, t) {}
 
@@ -176,7 +177,7 @@ public:
 template <typename T> class InMemoryCubeN : public InMemoryCubeBase<vector<T>> {
 public:
     //! ctor
-    InMemoryCubeN(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples, Size depth,
+    InMemoryCubeN(const Date& asof, const std::set<std::string>& ids, const vector<Date>& dates, Size samples, Size depth,
                   const T& t = T())
         : InMemoryCubeBase<vector<T>>(asof, ids, dates, samples, vector<T>(depth, t)) {}
 

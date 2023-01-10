@@ -68,7 +68,7 @@ public:
     //@{
     const boost::shared_ptr<NPVSensiCube>& npvCube() const { return cube_; }
     const std::vector<ShiftScenarioDescription>& scenarioDescriptions() const { return scenarioDescriptions_; }
-    const std::vector<string>& tradeIds() const { return cube_->ids(); }
+    const std::set<string>& tradeIds() const { return cube_->ids(); }
     //@}
 
     //! Check if the cube has scenario NPVs for trade with ID \p tradeId

@@ -1019,12 +1019,11 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
     // check cross gammas
     BOOST_TEST_MESSAGE("Checking cross-gammas...");
     Size foundCrossGammas = 0, zeroCrossGammas = 0;
-    for (Size i = 0; i < portfolio->size(); i++) {
-        string id = portfolio->trades()[i]->id();
+    for (const auto& [tradeId, _] : portfolio->trades()) {
         for (auto const& s : scenDesc) {
             if (s.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
-                string key = id + " " + s.factor1() + " " + s.factor2();
-                Real crossGamma = sa->sensiCube()->crossGamma(id, make_pair(s.key1(), s.key2()));
+                string key = tradeId + " " + s.factor1() + " " + s.factor2();
+                Real crossGamma = sa->sensiCube()->crossGamma(tradeId, make_pair(s.key1(), s.key2()));
                 Real scaledResult = crossGamma / (shiftSize * shiftSize);
                 // BOOST_TEST_MESSAGE(key << " " << scaledResult); // debug
                 if (analyticalResultsCrossGamma.count(key) > 0) {
