@@ -42,6 +42,9 @@ void Indexing::fromXML(XMLNode* node) {
     initialFixing_ = Null<Real>();
     if (auto n = XMLUtils::getChildNode(node, "InitialFixing"))
         initialFixing_ = parseReal(XMLUtils::getNodeValue(n));
+    initialNotionalFixing_ = Null<Real>();
+    if (auto n = XMLUtils::getChildNode(node, "InitialNotionalFixing"))
+        initialNotionalFixing_ = parseReal(XMLUtils::getNodeValue(n));
     if (auto tmp = XMLUtils::getChildNode(node, "ValuationSchedule"))
         valuationSchedule_.fromXML(tmp);
     fixingDays_ = 0;
@@ -65,6 +68,8 @@ XMLNode* Indexing::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "ConditionalOnSurvival", indexIsConditionalOnSurvival_);
     if (initialFixing_ != Null<Real>())
         XMLUtils::addChild(doc, node, "InitialFixing", initialFixing_);
+    if (initialNotionalFixing_ != Null<Real>())
+        XMLUtils::addChild(doc, node, "InitialNotionalFixing", initialNotionalFixing_);
     if (valuationSchedule_.hasData()) {
         XMLNode* schedNode = valuationSchedule_.toXML(doc);
         XMLUtils::setNodeName(doc, schedNode, "ValuationSchedule");
