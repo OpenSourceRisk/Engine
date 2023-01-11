@@ -74,6 +74,7 @@ if(MSVC)
     add_compile_options(/we5233) # unused lambda 
     add_compile_options(/we4508) # 'function' : function should return a value; 'void' return type assumed
     add_compile_options(/wd4834)
+    add_compile_options(/we26815) # dangling references/pointer
     # add_compiler_flag("/we4389" signed_compare_mscv)
     
     add_link_options(/LARGEADDRESSAWARE)

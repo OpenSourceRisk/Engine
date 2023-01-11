@@ -28,6 +28,7 @@
 #include <orea/aggregation/collateralaccount.hpp>
 #include <orea/aggregation/collatexposurehelper.hpp>
 #include <orea/aggregation/postprocess.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
@@ -59,7 +60,7 @@ public:
     //! Destructor
     virtual ~OREApp();
     //! generates XVA reports for a given portfolio and market
-    virtual int run();
+    virtual int run(bool useAnalytics = false);
 
     //! Load curve configurations from xml file, build t0 market using market data provided.
     //! If any of the passed vectors are empty fall back on OREApp::buildMarket() and use market/fixing data files
@@ -78,6 +79,8 @@ public:
                                     const std::string& pricingEngineXML, const bool generateAdditionalResults = false);
 
 protected:
+    //! Use ORE functioanlity in analytics/analyticsmanager
+    void analytics(std::ostream& out);
     //! read setup from params_
     virtual void readSetup();
     //! set up logging
@@ -264,5 +267,6 @@ protected:
 private:
     virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }
 };
+
 } // namespace analytics
 } // namespace ore

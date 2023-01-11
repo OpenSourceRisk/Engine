@@ -38,10 +38,29 @@ bool Parameters::has(const string& groupName, const string& paramName) const {
     return (it->second.find(paramName) != it->second.end());
 }
 
-string Parameters::get(const string& groupName, const string& paramName) const {
-    QL_REQUIRE(has(groupName, paramName), "parameter " << paramName << " not found in param group " << groupName);
+string Parameters::get(const string& groupName, const string& paramName, bool fail) const {
+    if (fail) {    
+        QL_REQUIRE(has(groupName, paramName), "parameter " << paramName << " not found in param group " << groupName);
+        auto it = data_.find(groupName);
+        return it->second.find(paramName)->second;
+    } else {
+        if (!hasGroup(groupName) || !has(groupName,paramName))
+            return "";
+        else {
+            auto it = data_.find(groupName);
+            return it->second.find(paramName)->second;
+        }
+    }
+}
+
+const map<string, string>& Parameters::data(const string& groupName) const {
     auto it = data_.find(groupName);
-    return it->second.find(paramName)->second;
+    QL_REQUIRE(it != data_.end(), "param group '" << groupName << "' not found");
+    return it->second;
+}
+    
+const map<string, string>& Parameters::markets() const {
+    return data("markets");
 }
 
 void Parameters::fromFile(const string& fileName) {

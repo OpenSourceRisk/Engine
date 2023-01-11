@@ -117,6 +117,9 @@ public:
 
     virtual void writePricingStats(ore::data::Report& report, const boost::shared_ptr<Portfolio>& portfolio);
 
+    virtual void writeCube(ore::data::Report& report, const boost::shared_ptr<NPVCube>& cube,
+                           const std::map<std::string, std::string>& nettingSetMap = std::map<std::string, std::string>());
+
     const std::string& nullString() const { return nullString_; }
 
 protected:

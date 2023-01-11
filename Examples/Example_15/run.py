@@ -10,4 +10,8 @@ oreex.print_headline("Run ORE for Sensitivity, Stress and Parametric VaR Analysi
 oreex.run("Input/ore.xml")
 oreex.get_times("Output/log.txt")
 
+oreex.print_headline("Run ORE for Parametric VaR Analysis")
+oreex.run("Input/ore_var.xml")
+oreex.get_times("Output/log_var.txt")
+
 

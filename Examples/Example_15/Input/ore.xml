@@ -94,7 +94,7 @@
       <Parameter name="outputThreshold">0.000001</Parameter>
     </Analytic>
     <Analytic type="parametricVar">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="sensitivityInputFile">../Output/sensitivity.csv</Parameter>
       <Parameter name="covarianceInputFile">covariance.csv</Parameter>
       <Parameter name="salvageCovarianceMatrix">N</Parameter>
