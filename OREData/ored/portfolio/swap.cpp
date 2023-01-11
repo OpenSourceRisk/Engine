@@ -72,6 +72,12 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         isResetting_ = isResetting_ || (!legData_[i].isNotResetXCCY());
     }
 
+    static std::set<std::string> eligibleForXbs = {"Fixed", "Floating"};
+    bool useXbsCurves = true;
+    for(Size i=0;i<numLegs;++i) {
+        useXbsCurves = useXbsCurves && (eligibleForXbs.find(legData_[i].legType()) != eligibleForXbs.end());
+    }
+
     boost::shared_ptr<EngineBuilder> builder =
         isXCCY_ ? engineFactory->builder("CrossCurrencySwap") : engineFactory->builder("Swap");
     auto configuration = builder->configuration(MarketContext::pricing);
@@ -79,11 +85,13 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     for (Size i = 0; i < numLegs; ++i) {
         legPayers_[i] = legData_[i].isPayer();
         auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
-        legs_[i] = legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration);
+        legs_[i] =
+            legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration, Null<Date>(), useXbsCurves);
         DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
         
         // add notional leg, if applicable
         auto leg = buildNotionalLeg(legData_[i], legs_[i], requiredFixings_, engineFactory->market(), configuration);
+        applyIndexing(leg, legData_[i], engineFactory, requiredFixings_, Null<Date>(), useXbsCurves);
         if (!leg.empty()) {
             legs_.push_back(leg);
             legPayers_.push_back(legPayers_[i]);

@@ -37,7 +37,8 @@ public:
     QuantLib::Leg buildLeg(const ore::data::LegData& data,
                            const boost::shared_ptr<ore::data::EngineFactory>& engineFactory,
                            ore::data::RequiredFixings& requiredFixings, const std::string& configuration,
-                           const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                           const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                           const bool useXbsCurves = false) const override;
 };
 
 } // namespace data

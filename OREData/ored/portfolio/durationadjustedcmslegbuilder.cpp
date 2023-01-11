@@ -36,7 +36,8 @@ namespace data {
 
 Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                                             RequiredFixings& requiredFixings, const string& configuration,
-                                            const QuantLib::Date& openEndDateReplacement) const {
+                                            const QuantLib::Date& openEndDateReplacement,
+                                            const bool useXbsCurves) const {
 
     auto cmsData = boost::dynamic_pointer_cast<DurationAdjustedCmsLegData>(data.concreteLegData());
     QL_REQUIRE(cmsData, "Wrong LegType, expected CMS");
@@ -96,7 +97,7 @@ Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const boost::sh
         result = StrippedCappedFlooredCouponLeg(result);
     }
 
-    applyIndexing(result, data, engineFactory, requiredFixings);
+    applyIndexing(result, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings));
     return result;
 }
