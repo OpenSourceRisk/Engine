@@ -277,15 +277,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         if (tradeHasError[i]) {
             ALOG("setting all results in output cube to zero for trade '"
                  << trades[i]->id() << "' since there was at least one error during simulation");
-            for (Size index = 0; index < outputCube->depth(); ++index) {
-                outputCube->setT0(1.0, i, index); //set interim value, such that it interacts with scenario set below (set method compare t0 and scenario values, zeroes are dangerous)
-                for (Size dateIndex = 0; dateIndex < outputCube->numDates(); ++dateIndex) {
-                    for (Size sample = 0; sample < outputCube->samples(); ++sample) {
-                        outputCube->set(0.0, i, dateIndex, sample, index);
-                    }
-                }
-                outputCube->setT0(0.0, i, index); //set the value finally to zero
-            }
+            outputCube->remove(i);
         }
     }
 }
