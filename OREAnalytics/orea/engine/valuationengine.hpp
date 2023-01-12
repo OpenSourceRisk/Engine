@@ -96,7 +96,7 @@ private:
                         boost::shared_ptr<analytics::NPVCube>& outputCube,
                         boost::shared_ptr<analytics::NPVCube>& outputCubeSensis, const Date& d,
                         const Size cubeDateIndex, const Size sample, const std::string& label = "");
-    void runCalculators(bool isCloseOutDate, const std::set<string>& counterparties,
+    void runCalculators(bool isCloseOutDate, const std::map<string, Size>& counterparties,
                         const std::vector<boost::shared_ptr<CounterpartyCalculator>>& calculators,
                         boost::shared_ptr<analytics::NPVCube>& cptyCube, const Date& d,
                         const Size cubeDateIndex, const Size sample);

@@ -60,9 +60,9 @@ NettedExposureCalculator::NettedExposureCalculator(
       tradeExposureCube_(tradeExposureCube), allocatedEpeIndex_(allocatedEpeIndex),
       allocatedEneIndex_(allocatedEneIndex), flipViewXVA_(flipViewXVA) {
 
-    vector<string> nettingSetIds;
+    set<string> nettingSetIds;
     for (auto nettingSet : nettingSetDefaultValue) {
-        nettingSetIds.push_back(nettingSet.first);
+        nettingSetIds.insert(nettingSet.first);
         if (flipViewXVA_) {
             if (nettingSetManager_->get(nettingSet.first)->activeCsaFlag()) {
                 nettingSetManager_->get(nettingSet.first)->csaDetails()->invertCSA();
@@ -459,9 +459,10 @@ vector<Real> NettedExposureCalculator::getMeanExposure(const string& tid, Exposu
 }
 
 const string& NettedExposureCalculator::counterparty(const string nettingSetId) {
-    QL_REQUIRE(counterpartyMap_.find(nettingSetId) != counterpartyMap_.end(),
+    auto it = counterpartyMap_.find(nettingSetId);
+    QL_REQUIRE(it != counterpartyMap_.end(),
 	       "counterparty not found for netting set id " << nettingSetId);
-    return counterpartyMap_[nettingSetId];
+    return it->second;
 }
 
 } // namespace analytics

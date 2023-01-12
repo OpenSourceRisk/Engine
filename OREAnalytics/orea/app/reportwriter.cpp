@@ -21,6 +21,7 @@
 #include <orea/app/reportwriter.hpp>
 
 // FIXME: including all is slow and bad
+#include <boost/range/adaptor/indexed.hpp>
 #include <boost/lexical_cast.hpp>
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
@@ -41,6 +42,7 @@
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <stdio.h>
+
 
 using ore::data::to_string;
 using QuantLib::Date;
@@ -794,7 +796,7 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
         .addColumn("BaselEE", double(), 2)
         .addColumn("BaselEEE", double(), 2);
 
-    for (auto n : postProcess->nettingSetIds()) {
+    for (const auto& [n,_] : postProcess->nettingSetIds()) {
         addNettingSetExposure(report, postProcess, n);
     }
     report.end();
@@ -848,7 +850,7 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
         .addColumn("BaselEPE", double(), precision)
         .addColumn("BaselEEPE", double(), precision);
 
-    for (auto n : postProcess->nettingSetIds()) {
+    for (const auto& [n,_] : postProcess->nettingSetIds()) {
         report.next()
             .add("")
             .add(n)
@@ -986,13 +988,12 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
     report.addColumn("Difference", double(), 2);
 
     auto scenarioDescriptions = sensitivityCube->scenarioDescriptions();
-    auto tradeIds = sensitivityCube->tradeIds();
+    auto tradeIds = sensitivityCube->tradeIdx();
     auto npvCube = sensitivityCube->npvCube();
 
-    for (Size i = 0; i < tradeIds.size(); i++) {
-        Real baseNpv = npvCube->getT0(i);
-        auto tradeId = tradeIds[i];
+    for (const auto& [tradeId, i] : tradeIds) {
 
+        Real baseNpv = npvCube->getT0(i);
         for (Size j = 0; j < scenarioDescriptions.size(); j++) {
             auto scenarioDescription = scenarioDescriptions[j];
 

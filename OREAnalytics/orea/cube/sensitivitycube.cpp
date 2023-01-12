@@ -86,12 +86,6 @@ void SensitivityCube::initialise() {
     QL_REQUIRE(scenarioDescriptions_[0].type() == ShiftScenarioDescription::Type::Base,
                "Expected the first scenario in the sensitivity cube to be of type 'Base'");
 
-    // Populate the trade ID lookup map
-
-    for (const auto& enumaratedId : cube_->ids() | boost::adaptors::indexed(0)) {
-        tradeIdx_[enumaratedId.value()] = enumaratedId.index();
-    }
-
     // Populate the scenario lookup map
     crossPair factorPair;
     std::map<crossPair, Size> crossFactors;

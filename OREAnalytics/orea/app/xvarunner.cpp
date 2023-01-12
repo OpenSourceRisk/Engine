@@ -277,12 +277,12 @@ boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(
     return dimCalculator;
 }
 
-std::vector<std::string> XvaRunner::getNettingSetIds(const boost::shared_ptr<Portfolio>& portfolio) const {
+std::set<std::string> XvaRunner::getNettingSetIds(const boost::shared_ptr<Portfolio>& portfolio) const {
     // collect netting set ids from portfolio
     std::set<std::string> nettingSetIds;
     for (auto const& [tradeId,trade] : portfolio == nullptr ? portfolio_->trades() : portfolio->trades())
         nettingSetIds.insert(trade->envelope().nettingSetId());
-    return std::vector<std::string>(nettingSetIds.begin(), nettingSetIds.end());
+    return nettingSetIds;
 }
 
 boost::shared_ptr<NPVCube> XvaRunner::getNpvCube(const Date& asof, const std::set<std::string>& ids,

@@ -110,7 +110,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     // Loop is Samples, Dates, Trades
     const auto& dates = dg_->dates();
     const auto& trades = portfolio->trades();
-    auto& counterparties = outputCptyCube ? outputCptyCube->ids() : set<string>();
+    auto& counterparties = outputCptyCube ? outputCptyCube->idAndIndex() : std::map<string, Size>();
     std::vector<bool> tradeHasError(portfolio->size(), false);
     LOG("Initialise state objects...");
     // initialise state objects for each trade (required for path-dependent derivatives in particular)
@@ -323,17 +323,16 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::map<std::st
     }
 }
 
-void ValuationEngine::runCalculators(bool isCloseOutDate, const std::set<std::string>& counterparties,
+void ValuationEngine::runCalculators(bool isCloseOutDate, const std::map<std::string, Size>& counterparties,
                                      const std::vector<boost::shared_ptr<CounterpartyCalculator>>& calculators,
                                      boost::shared_ptr<analytics::NPVCube>& cptyCube, const Date& d,
                                      const Size cubeDateIndex, const Size sample) {
     // loop over counterparties
     auto it = counterparties.begin();
-    for (Size j = 0; j < counterparties.size(); ++j) {
-        auto& counterparty = *it;
-        for (auto& calc : calculators)
-            calc->calculate(counterparty, j, simMarket_, cptyCube, d, cubeDateIndex, sample, isCloseOutDate);
-        it++;
+    for (const auto& [counterparty, idx] : counterparties) {
+        for (auto& calc : calculators) {
+            calc->calculate(counterparty, idx, simMarket_, cptyCube, d, cubeDateIndex, sample, isCloseOutDate);
+        }
     }
 }
 

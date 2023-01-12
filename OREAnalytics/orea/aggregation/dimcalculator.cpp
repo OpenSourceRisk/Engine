@@ -72,8 +72,8 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
 
     // initialise aggregate NPV and Flow by date and scenario
     set<string> nettingSets;
-    for (auto& tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt) {
-        size_t i = std::distance(portfolio_->trades().begin(), tradeIt);
+    size_t i = 0;
+    for (auto& tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++i) {
         auto trade = tradeIt->second;
         string tradeId = tradeIt->first;
         string nettingSetId = trade->envelope().nettingSetId();
@@ -99,8 +99,8 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
         }
     }
 
-    for (auto n : nettingSets)
-        nettingSetIds_.push_back(n);
+    
+    nettingSetIds_ = std::move(nettingSets);
 
     dimCube_ = boost::make_shared<SinglePrecisionInMemoryCube>(cube_->asof(), nettingSetIds_, cube_->dates(),
                                                                cube_->samples());
@@ -141,7 +141,7 @@ void DynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEv
         .addColumn("NettingSet", string())
         .addColumn("Time", Real(), 6);
 
-    for (auto nettingSet : dimCube_->ids()) {
+    for (auto [nettingSet, _] : dimCube_->idAndIndex()) {
 
         LOG("Export DIM evolution for netting set " << nettingSet);
         for (Size i = 0; i < stopDatesLoop; ++i) {

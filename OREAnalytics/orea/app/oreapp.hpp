@@ -108,7 +108,7 @@ protected:
     //! get an instance of an aggregationScenarioData class
     virtual void initAggregationScenarioData();
     //! get an instance of a cube class
-    virtual void initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids, const Size cubeDepth);
+    virtual void initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, const Size cubeDepth);
     //! set depth of NPV cube in cubeDepth_
     virtual void setCubeDepth(const boost::shared_ptr<ScenarioGeneratorData>& sgd);
     //! build an NPV cube

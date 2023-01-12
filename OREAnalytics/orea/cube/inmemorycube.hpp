@@ -30,9 +30,10 @@
 
 #include <boost/make_shared.hpp>
 #include <boost/serialization/vector.hpp>
-#include <boost/serialization/set.hpp>
+#include <boost/serialization/map.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <ored/utilities/serializationdate.hpp>
+#include <set>
 
 namespace ore {
 namespace analytics {
@@ -54,11 +55,16 @@ public:
     //! default ctor
     InMemoryCubeBase(const Date& asof, const std::set<std::string>& ids, const vector<Date>& dates, Size samples,
                      const T& t = T())
-        : asof_(asof), ids_(ids), dates_(dates), samples_(samples), t0Data_(ids.size(), t),
+        : asof_(asof), dates_(dates), samples_(samples), t0Data_(ids.size(), t),
           data_(ids.size(), vector<vector<T>>(dates.size(), vector<T>(samples, t))) {
         QL_REQUIRE(ids.size() > 0, "InMemoryCube::InMemoryCube no ids specified");
         QL_REQUIRE(dates.size() > 0, "InMemoryCube::InMemoryCube no dates specified");
         QL_REQUIRE(samples > 0, "InMemoryCube::InMemoryCube samples must be > 0");
+        size_t pos = 0;
+        for (const auto& id : ids) {
+            idIdx_[id] = pos++;
+        }
+        
     }
     //! construct from file
     InMemoryCubeBase(const std::string& fileName) {
@@ -87,12 +93,12 @@ public:
     }
 
     //! Return the length of each dimension
-    Size numIds() const override { return ids_.size(); }
+    Size numIds() const override { return idIdx_.size(); }
     Size numDates() const override { return dates_.size(); }
     virtual Size samples() const override { return samples_; }
 
-    //! Get the vector of ids for this cube
-    const std::set<std::string>& ids() const override { return ids_; }
+    //! Return a map of all ids and their position in the cube
+    const std::map<std::string, Size>& idAndIndex() const override { return idIdx_; }
     //! Get the vector of dates for this cube
     const std::vector<QuantLib::Date>& dates() const override { return dates_; }
 
@@ -111,7 +117,7 @@ private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int) {
         ar& asof_;
-        ar& ids_;
+        ar& idIdx_;
         ar& dates_;
         ar& samples_;
         ar& t0Data_;
@@ -120,7 +126,7 @@ private:
 
 private:
     QuantLib::Date asof_;
-    std::set<std::string> ids_;
+    std::map<std::string, Size> idIdx_;
     vector<QuantLib::Date> dates_;
     Size samples_;
 

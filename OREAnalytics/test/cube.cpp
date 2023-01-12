@@ -109,11 +109,11 @@ template <class T> void testCubeFileIO(NPVCube& cube, const std::string& cubeNam
 }
 
 void testCubeGetSetbyDateID(NPVCube& cube, Real tolerance) {
-    vector<string> ids = cube.ids();
+    std::map<string, Size> ids = cube.idAndIndex();
     vector<Date> dates = cube.dates();
     // set value for each cube entry
     Real i = 1.0;
-    for (auto id : ids) {
+    for (auto [id, pos] : ids) {
         for (auto dt : dates) {
             cube.set(i, id, dt, 0);
             i++;
@@ -121,7 +121,7 @@ void testCubeGetSetbyDateID(NPVCube& cube, Real tolerance) {
     }
     // check the cube returns as expected
     Real j = 1.0;
-    for (auto id : ids) {
+    for (const auto& [id, pos]: ids) {
         for (auto dt : dates) {
             Real actual = cube.get(id, dt, 0);
             BOOST_CHECK_CLOSE(j, actual, tolerance);
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_SUITE(CubeTest)
 
 BOOST_AUTO_TEST_CASE(testSinglePrecisionInMemoryCube) {
     // trades, dates, samples
-    vector<string> ids(100, string("id")); // the overlap doesn't matter
+    std::set<string> ids {string("id")}; // the overlap doesn't matter
     vector<Date> dates(100, Date());
     Size samples = 1000;
     SinglePrecisionInMemoryCube c(Date(), ids, dates, samples);
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(testSinglePrecisionInMemoryCube) {
 }
 
 BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCube) {
-    vector<string> ids(100, string("id")); // the overlap doesn't matter
+    std::set<string> ids{string("id")}; // the overlap doesn't matter
     vector<Date> dates(100, Date());
     Size samples = 1000;
     DoublePrecisionInMemoryCube c(Date(), ids, dates, samples);
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCube) {
 }
 
 BOOST_AUTO_TEST_CASE(testSinglePrecisionInMemoryCubeN) {
-    vector<string> ids(100, string("id"));
+    std::set<string> ids{string("id")}; // the overlap doesn't matter
     vector<Date> dates(50, Date());
     Size samples = 200;
     Size depth = 6;
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(testSinglePrecisionInMemoryCubeN) {
 }
 
 BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeN) {
-    vector<string> ids(100, string("id"));
+    std::set<string> ids{string("id")}; // the overlap doesn't matter
     vector<Date> dates(50, Date());
     Size samples = 200;
     Size depth = 6;
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeN) {
 }
 
 BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileIO) {
-    vector<string> ids(100, string("id")); // the overlap doesn't matter
+    std::set<string> ids{string("id")}; // the overlap doesn't matter
     Date d(1, QuantLib::Jan, 2016);        // need a real date here
     vector<Date> dates(100, d);
     Size samples = 1000;
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileIO) {
 }
 
 BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileNIO) {
-    vector<string> ids(100, string("id")); // the overlap doesn't matter
+    std::set<string> ids{string("id")}; // the overlap doesn't matter
     Date d(1, QuantLib::Jan, 2016);        // need a real date here
     vector<Date> dates(50, d);
     Size samples = 200;
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileNIO) {
 }
 
 BOOST_AUTO_TEST_CASE(testInMemoryCubeGetSetbyDateID) {
-    vector<string> ids = {"id1", "id2", "id3"}; // the overlap doesn't matter
+    std::set<string> ids = {"id1", "id2", "id3"}; // the overlap doesn't matter
     Date today = Date::todaysDate();
     vector<Date> dates = {today + QuantLib::Period(1, QuantLib::Days), today + QuantLib::Period(2, QuantLib::Days),
                           today + QuantLib::Period(3, QuantLib::Days)};

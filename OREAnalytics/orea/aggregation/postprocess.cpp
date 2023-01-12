@@ -90,16 +90,15 @@ PostProcess::PostProcess(
     QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
     // check portfolio and cube have the same trade ids, in the same order
-    QL_REQUIRE(portfolio->size() == cube_->ids().size(),
+    QL_REQUIRE(portfolio->size() == cube_->idAndIndex().size(),
                "PostProcess::PostProcess(): portfolio size ("
-                   << portfolio->size() << ") does not match cube trade size (" << cube_->ids().size() << ")");
+                   << portfolio->size() << ") does not match cube trade size (" << cube_->idAndIndex().size() << ")");
     
     auto portfolioIt = portfolio->trades().begin();
-    auto cubeIdIt = cube_->ids().begin();
+    auto cubeIdIt = cube_->idAndIndex().begin();
     for (size_t i = 0; i < portfolio->size(); i++) {
         const std::string& portfolioTradeId = portfolioIt->first;
-        const std::string& cubeTradeId = *cubeIdIt;
-
+        const std::string& cubeTradeId = cubeIdIt->first;
         QL_REQUIRE(portfolioTradeId == cubeTradeId, "PostProcess::PostProcess(): portfolio trade #"
                                                         << i << " (id=" << portfolioTradeId
                                                         << ") does not match cube trade id (" << cubeTradeId);
@@ -108,23 +107,22 @@ PostProcess::PostProcess(
     if (analytics_["dynamicCredit"]) {
         QL_REQUIRE(cptyCube_, "cptyCube cannot be null when dynamicCredit is ON");
         // check portfolio and cptyCube have the same counterparties, in the same order
-        QL_REQUIRE(portfolio->counterparties().size() + 1 == cptyCube_->ids().size(),
+        QL_REQUIRE(portfolio->counterparties().size() + 1 == cptyCube_->idAndIndex().size(),
                    "PostProcess::PostProcess(): portfolio counterparty size ("
                    << portfolio->counterparties().size() << ") does not match cpty cube trade size ("
-                   << cptyCube_->ids().size() << ")");
+                       << cptyCube_->idAndIndex().size() << ")");
         
-        for (const auto& element : cptyCube_->ids() | boost::adaptors::indexed(0)) {
-            size_t i = element.index();
-            auto& cubeTradeId = element.value();
+        for (const auto& [cubeTradeId, i] : cptyCube_->idAndIndex()) {
             QL_REQUIRE(portfolio->counterparties()[i] == cubeTradeId,
                        "PostProcess::PostProcess(): portfolio counterparty #"
                        << i << " (id=" << portfolio->counterparties()[i]
                        << ") does not match cube name id ("
                            << cubeTradeId);
         }
-        QL_REQUIRE(dvaName == *cptyCube_->ids().rbegin(), "PostProcess::PostProcess(): dvaName ("
-                                                              << dvaName << ") does not match cube name id ("
-                                                              << *cptyCube_->ids().rbegin());
+        QL_REQUIRE(dvaName == cptyCube_->idAndIndex().rbegin()->first,
+                   "PostProcess::PostProcess(): dvaName ("
+                                                                    << dvaName << ") does not match cube name id ("
+                                                                    << cptyCube_->idAndIndex().rbegin()->first);
     }
 
     ExposureAllocator::AllocationMethod allocationMethod = parseAllocationMethod(allocMethod);
@@ -287,13 +285,13 @@ PostProcess::PostProcess(
     /********************************************************
      * Cache average EPE and ENE
      */
-    for (auto tradeId : tradeIds()) {
+    for (const auto& [tradeId,_]: tradeIds()) {
         tradeEPE_[tradeId] = exposureCalculator_->epe(tradeId);
         tradeENE_[tradeId] = exposureCalculator_->ene(tradeId);
         allocatedTradeEPE_[tradeId] = exposureCalculator_->allocatedEpe(tradeId);
         allocatedTradeENE_[tradeId] = exposureCalculator_->allocatedEne(tradeId);
     }
-    for (auto nettingSetId : nettingSetIds()) {
+    for (const auto [nettingSetId, pos] : nettingSetIds()) {
         netEPE_[nettingSetId] = nettedExposureCalculator_->epe(nettingSetId);
         netENE_[nettingSetId] = nettedExposureCalculator_->ene(nettingSetId);
     }
@@ -312,7 +310,7 @@ PostProcess::PostProcess(
 void PostProcess::updateNettingSetKVA() {
 
     // Loop over all netting sets
-    for (auto nettingSetId : nettingSetIds()) {
+    for (const auto& [nettingSetId,pos] : nettingSetIds()) {
         // Init results
         ourNettingSetKVACCR_[nettingSetId] = 0.0;
         theirNettingSetKVACCR_[nettingSetId] = 0.0;
@@ -332,7 +330,7 @@ void PostProcess::updateNettingSetKVA() {
     DayCounter dc = ActualActual(ActualActual::ISDA);
 
     // Loop over all netting sets
-    for (auto nettingSetId : nettingSetIds()) {
+    for (const auto& [nettingSetId, pos] : nettingSetIds()) {
         string cid;
         if (analytics_["flipViewXVA"]) {
             cid = dvaName_;
