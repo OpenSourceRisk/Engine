@@ -5,7 +5,6 @@ ORE 1.8.9.0 includes the following notable changes, details can be
 found in the commits between December 2022 and March 2023.
 
 INSTRUMENTS
-
 - roll out of Credit derivatives, thanks to Acadia Inc., as announced in September 22:
   * Bond Option
   * Bond Repo
@@ -14,7 +13,28 @@ INSTRUMENTS
   * Index Credit Default Swap
   * Index Credit Default Swap Option
   * Credit Index Tranches
-  including related models and pricing engines
+  Including related models and pricing engines
+
+MARKETS & TERM STRUCTURES
+-
+
+ANALYTICS
+- integrate American Monte Carlo simulation, add related Example 39
+- add par sensitivity analysis, see example ???
+- add more parametric VaR types (delta-gamma normal, delta-gamma Saddlepoint), see example ???
+- add multi-threaded valuation engine for sensitivity analysis, see example ???
+
+TEST
+-
+
+DOCUMENTATION
+-
+
+LANGUAGE BINDINGS
+-
+
+OTHER
+-
 
 
 Changes for the 8th ORE release (1.8.8.0):

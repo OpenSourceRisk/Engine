@@ -102,7 +102,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(const Date& asof, const string& inpu
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(data, tm,
         configurations, extraEngineBuilders, extraLegBuilders, rdm);
 
-    auto tradeFactory = boost::make_shared<TradeFactory>();
+    auto tradeFactory = boost::make_shared<TradeFactory>(rdm);
     map<string, boost::shared_ptr<AbstractTradeBuilder>> tradeBuilders{
         {"IndexCreditDefaultSwap", boost::make_shared<IndexCdsTradeBuilder>(rdm)},
         {"IndexCreditDefaultSwapOption", boost::make_shared<IndexCdsOptionTradeBuilder>(rdm)}
