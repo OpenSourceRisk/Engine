@@ -28,7 +28,8 @@ TEST
 -
 
 DOCUMENTATION
--
+- the user guide has grown from 440 to 475 pages, mainly due to the
+  migration of Credit derivative instruments into ORE
 
 LANGUAGE BINDINGS
 -

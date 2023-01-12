@@ -1,0 +1,173 @@
+\subsubsection{Bond Total Return Swap}
+\label{ss:TRS}
+
+A vanilla Bond Total Return Swap (Trade type: \emph{BondTRS}) is set up using a {\tt BondTRSData} block as shown in listing \ref{lst:bondtrsdata}. The block is comprised of three sub-blocks, which
+are {\tt BondData}, {\tt TotalReturnData} and {\tt FundingData}.
+
+\begin{itemize}
+\item The {\tt BondData} block specifies the underlying bond, usually by specifiying the security id and the quantity /
+  bond notional and relying on reference data:
+
+  \begin{itemize}
+  \item SecurityId: The underlying security identifier\\
+      Allowable values: Typically the ISIN of the underlying bond, with the ISIN: prefix.
+  \item BondNotional: The quantity or number of bonds that is relevant for the TRS, with the convention that 1 bond always corresponds to a face value of 1 unit of bond currency.\\
+      Allowable values: Any positive real number.
+  \item CreditRisk [Optional] Boolean flag indicating whether to show Credit Risk on the Bond product. If set to \emph{true}, the product class will be set to \emph{Credit} instead of \emph{RatesFX}, and there will be credit sensitivities. Note that if the underlying bond reference is set up without a CreditCurveId - typically for some highly rated government bonds -  the CreditRisk flag will have no impact on the product class and no credit sensitivities will be shown even if CreditRisk is set to \emph{true}. \\
+      Allowable Values: \emph{true} or \emph{false} Defaults to \emph{true} if left blank or omitted.          
+  \end{itemize}
+
+  Alternatively, the BondData block can be specified fully explicit, as outlined in \ref{ss:bond}
+
+\item The {\tt TotalReturnData} block specifies
+  \begin{itemize}
+  \item Payer: Indicates whether the total return leg is paid.\\
+    Allowable values: \emph{true} or \emph{false}
+
+  \item InitialPrice [Optional]: Should be filled if the bond price on the first date of the total return schedule is
+    contractually given, in which case the price must correspond to the price type of the total return leg, i.e. if the
+    price type is \emph{Dirty} then the InitialPrice must also be a dirty price (as it is usually given in the term
+    sheet in this case). The price must given in percent, e.g. $101.20$.\footnote{as opposed to the bond price in the
+    fixing history, where it must be given as $1.0120$ and is always a clean quotation} If not given, the bond price for
+    the first date of the total return schedule is read from the price history.  Notice that if a bond is quoted in
+    Currency per Unit the initial price should be given in this format too: If e.g. one unit is $50.0$ USD an initial
+    price of $51.0$ would correspond a dirty amount of $51.0$ USD for one unit of the bond.\\
+
+    Allowable values: Any positive real number.
+
+  \item PriceType: The price type on which these payments are based\\
+    Allowable values: \emph{Dirty} or \emph{Clean}
+
+  \item ObservationLag [Optional]: The lag between the valuation date and the reference schedule period start date.
+  
+    Allowable values: Any valid period, i.e. a non-negative whole number, followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months), \emph{Y} (years). Defaults to \emph{0D} if left blank or omitted.
+    
+  \item ObservationConvention [Optional]: The roll convention to be used when applying the observation lag.
+  
+    Allowable values: A valid roll convention (\emph{F, MF, P, MP, U, NEAREST}), see Table \ref{tab:convention} Roll Convention. Defaults to \emph{U} if left blank or omitted.
+    
+  \item ObservationCalendar [Optional]: The calendar to be used when applying the observation lag.
+  
+      Allowable values: Any valid calendar, see Table \ref{tab:calendar} Calendar. Defaults to the \emph{NullCalendar} (no holidays) if left blank or omitted.
+      
+  \item PaymentLag [Optional]: The lag between the reference schedule period end date and the payment date.
+  
+    Allowable values: Any valid period, i.e.\ a non-negative whole number, optionally followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months),
+  \emph{Y} (years). Defaults to \emph{0D} if left blank or omitted. If a whole number is given and no letter, it is assumed that it is a number of  \emph{D} (days).
+    
+  \item PaymentConvention [Optional]: The business day convention to be used when applying the payment lag.
+  
+    Allowable values: A valid roll convention (\emph{F, MF, P, MP, U, NEAREST}), see Table \ref{tab:convention} Roll Convention. Defaults to \emph{U} if left blank or omitted.
+    
+  \item PaymentCalendar [Optional]: The calendar to be used when applying the payment lag.
+  
+    Allowable values: Any valid calendar, see Table \ref{tab:calendar} Calendar. Defaults to the \emph{NullCalendar} (no holidays) if left blank or omitted.
+
+  \item PaymentDates [Optional]: This node allows for the specification of a list of explicit payment dates, using \lstinline!PaymentDate! elements.
+    The list must contain exactly $n-1$ dates where $n$ is the number of dates in the reference schedule given in the ScheduleData node.
+    See Listing \ref{lst:paymentdatesbondtrs} for an example with an assumed ScheduleData with 4 dates.
+
+  \begin{listing}[H]
+    %\hrule\medskip
+    \begin{minted}[fontsize=\footnotesize]{xml}
+                    <PaymentDates>
+                          <PaymentDate>2020-01-15</PaymentDate>
+                          <PaymentDate>2021-01-15</PaymentDate>
+                          <PaymentDate>2022-01-17</PaymentDate>
+                    </PaymentDates>
+    \end{minted}
+    \caption{Payment dates}
+    \label{lst:paymentdatesbondtrs}
+  \end{listing}
+
+
+  \item FXTerms [Mandatory when underlying bond and BondTRS currencies differ]: Required if the bond currency is different from the return currency, which is always
+    assumed to be equal to the funding leg currency. This kind of trade is also known as a ``composite trs''. The
+    subnode for the FXTerms node is:
+    \begin{itemize}
+      \item FXIndex: The fx index to use for the conversion, this must contain the bond currency and the funding leg
+        currency (in the order defined in table \ref{tab:fxindex_data}, i.e. it does not matter which one is the bond currency and which is the funding currency)
+        
+        Allowable values: See Table \ref{tab:fxindex_data}
+     % \item FXIndexFixingDays [Optional]: The fixing days of the fx index
+       
+     %   Allowable values: Non-negative whole numbers. Defaults to \emph{0} if left blank or omitted.
+   %   \item FXIndexCalendar [Optional]: The fixing calendar for the fx index
+        
+    %    Allowable values: Any valid calendar, see Table \ref{tab:calendar} Calendar. Defaults to the \emph{NullCalendar} (no holidays) if left blank or omitted.
+    \end{itemize}
+
+  \item ScheduleData: The reference schedule for the return leg, where the valuation dates are derived from this schedule
+    using the ObservationLag, ObservationConvention and ObservationCalendar fields. The payment dates are derived from
+    this schedule using the PaymentLag, PaymentConvention and PaymentCalendar fields. The payment dates can also be
+    given as an explicit list in the PaymentDates node.
+    Allowable values: A \lstinline!ScheduleData! block as defined in section \ref{ss:schedule_data}
+    
+  \item PayBondCashFlowsImmediately [Optional]: If true, bond cashflows like coupon or amortisation payments
+    are paid when they occur. If false, these cashflows are paid together with the next return payment.
+    If omitted, the default value is false.
+
+    Allowable values: \emph{true} (immediate payment of bond cashflows) or \emph{false} (bond cashflows are paid on the next
+                      return payment date)
+  \end{itemize}
+
+\item The {\tt FundingData} block specifies the funding leg, which can be of any leg type. The {\tt FundingData}
+  contains exactly one {\tt Leg}. The currency of this leg also defines the currency in which the return is paid.
+  Usually the funding leg's notional will be aligned with the return leg's notional. To achieve this, indexings on the
+  floating leg can be used, see \ref{ss:indexings}. In the context of bond total return swaps, the indexings can be
+  defined in a simplified way by adding an Indexings node with a subnode FromAssetLeg set to true to the funding leg's
+  LegData node. The notionals node is not required either in the funding leg's LegData in this case. An example for this
+  setup is shown in \ref{lst:bondtrsdata}.
+
+\end{itemize}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BondTRSData>
+  <BondData>
+    <SecurityId>ISIN:NZIIBDT005C5</SecurityId>
+    <BondNotional>100000</BondNotional>
+  </BondData>
+  <TotalReturnData>
+    <Payer>false</Payer>
+    <InitialPrice>102.0</InitialPrice>
+    <PriceType>Clean</PriceType>
+    <ObservationLag>0D</ObservationLag>
+    <ObservationConvention>P</ObservationConvention>
+    <ObservationCalendar>USD</ObservationCalendar>
+    <PaymentLag>2D</PaymentLag>
+    <PaymentConvention>F</PaymentConvention>
+    <PaymentCalendar>TARGET</PaymentCalendar>
+    <!-- <PaymentDates> -->
+    <!--   <PaymentDate> ... </PaymentDate> -->
+    <!--   <PaymentDate> ... </PaymentDate> -->
+    <!-- </PaymentDates> -->
+    <FXTerms>
+      <FXIndex>FX-TR20H-NZD-USD</FXIndex>
+    </FXTerms>
+    <ScheduleData>
+    ...
+    </ScheduleData>
+    <PayBondCashFlowsImmediately>false</PayBondCashFlowsImmediately>
+  </TotalReturnData>
+  <FundingData>
+    <LegData>
+      <Payer>true</Payer>
+      <LegType>Floating</LegType>
+      <Currency>USD</Currency>
+      ...
+      <!-- Notionals node is not required, set to 1 internally -->
+      ...
+      <Indexings>
+      <!-- derive the indexing information (bond price, FX) from the total return leg -->
+      <FromAssetLeg>true</FromAssetLeg>
+      </Indexings>
+      ...
+    </LegData>
+  </FundingData>
+</BondTRSData>
+\end{minted}
+\caption{Bond Total Return Swap Data with indexed funding leg}
+\label{lst:bondtrsdata}
+\end{listing}
