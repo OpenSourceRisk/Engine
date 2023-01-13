@@ -378,9 +378,10 @@ public:
     OisConvention() {}
     //! Detailed constructor
     OisConvention(const string& id, const string& spotLag, const string& index, const string& fixedDayCounter,
-                  const string& paymentLag = "", const string& eom = "", const string& fixedFrequency = "",
-                  const string& fixedConvention = "", const string& fixedPaymentConvention = "",
-                  const string& rule = "", const std::string& paymentCalendar = "");
+                  const string& fixedCalendar, const string& paymentLag = "", const string& eom = "",
+                  const string& fixedFrequency = "", const string& fixedConvention = "",
+                  const string& fixedPaymentConvention = "", const string& rule = "",
+                  const std::string& paymentCalendar = "");
     //@}
 
     //! \name Inspectors

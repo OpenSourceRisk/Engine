@@ -261,17 +261,17 @@ OisConvention::OisConvention(const string& id, const string& spotLag, const stri
                              const string& eom, const string& fixedFrequency, const string& fixedConvention,
                              const string& fixedPaymentConvention, const string& rule, const string& paymentCal)
     : Convention(id, Type::OIS), strSpotLag_(spotLag), strIndex_(index), strFixedDayCounter_(fixedDayCounter),
-      strFixedCalendar_(strFixedCalendar), strPaymentLag_(paymentLag), strEom_(eom), strFixedFrequency_(fixedFrequency),
+      strFixedCalendar_(fixedCalendar), strPaymentLag_(paymentLag), strEom_(eom), strFixedFrequency_(fixedFrequency),
       strFixedConvention_(fixedConvention), strFixedPaymentConvention_(fixedPaymentConvention), strRule_(rule),
       strPaymentCal_(paymentCal) {
     build();
 }
 
 void OisConvention::build() {
-    parseIborIndex(strIndex_);
+    auto tmpIndex = parseIborIndex(strIndex_);
     spotLag_ = lexical_cast<Natural>(strSpotLag_);
     fixedDayCounter_ = parseDayCounter(strFixedDayCounter_);
-    fixedCalendar_ = parseCalendar(strFixedCalendar_);
+    fixedCalendar_ = strFixedCalendar_.empty() ? tmpIndex->fixingCalendar() : parseCalendar(strFixedCalendar_);
     paymentLag_ = strPaymentLag_.empty() ? 0 : lexical_cast<Natural>(strPaymentLag_);
     eom_ = strEom_.empty() ? false : parseBool(strEom_);
     fixedFrequency_ = strFixedFrequency_.empty() ? Annual : parseFrequency(strFixedFrequency_);
