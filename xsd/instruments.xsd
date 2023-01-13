@@ -62,6 +62,16 @@
       <xs:element type="indexCreditDefaultSwapData" name="IndexCreditDefaultSwapData"/>
       <xs:element type="indexCreditDefaultSwapOptionData" name="IndexCreditDefaultSwapOptionData"/>
       <xs:element type="multiLegOptionData" name="MultiLegOptionData"/>
+
+      <xs:element type="ascotData" name="AscotData"/>
+      <xs:element type="convertibleBondData" name="ConvertibleBondData"/>
+      <xs:element type="tlockData" name="TreasuryLockData"/>
+      <xs:element type="rpaData" name="RiskParticipationAgreementData"/>
+      <xs:element type="cbodata" name="CBOData"/>
+      <xs:element type="bondBasketData" name="BondBasketData"/>
+      <xs:element type="equityPositionData" name="EquityPositionData"/>
+      <xs:element type="equityOptionPositionData" name="EquityOptionPositionData"/>
+
     </xs:choice>
   </xs:group>
 
@@ -1843,6 +1853,567 @@
       <xs:element type="bondData" name="BondData" maxOccurs="1" minOccurs="1"/>
       <xs:element type="totalReturnData" name="TotalReturnData" maxOccurs="1" minOccurs="1"/>
       <xs:element type="fundingData" name="FundingData" maxOccurs="1" minOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="convertibleBondData">
+    <xs:all>
+      <xs:element type="bondData" name="BondData"/>
+      <xs:element type="cbCallData" name="CallData" minOccurs="0"/>
+      <xs:element type="cbCallData" name="PutData" minOccurs="0"/>
+      <xs:element type="cbConversionData" name="ConversionData" minOccurs="0"/>
+      <xs:element type="cbDividendProtectionData" name="DividendProtectionData" minOccurs="0"/>
+      <xs:element type="bool" name="Detachable" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="ascotData">
+    <xs:all>
+      <xs:element type="convertibleBondData" name="ConvertibleBondData"/>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="fundingData" name="ReferenceSwapData" maxOccurs="1" minOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="equityPositionData">
+    <xs:sequence>
+      <xs:element type="xs:float" name="Quantity"/>
+      <xs:element type="underlying" name="Underlying" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="equityOptionUnderlyingData">
+    <xs:sequence>
+      <xs:element type="underlying" name="Underlying"/>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="xs:float" name="Strike"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="equityOptionPositionData">
+    <xs:sequence>
+      <xs:element type="xs:float" name="Quantity"/>
+      <xs:element type="equityOptionUnderlyingData" name="Underlying" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="bondBasketData">
+    <xs:sequence>
+      <xs:element type="xs:float" name="Quantity" minOccurs="0"/>
+      <xs:element type="xs:string" name="Identifier" minOccurs="0"/>
+      <xs:element type="underlying" name="Underlying" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tranches">
+    <xs:sequence>
+      <xs:element type="tranche" name="Tranche" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="scheduleData" name="ScheduleData"  maxOccurs="1" minOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tranche">
+    <xs:all>
+      <xs:element type="xs:string" name="Description" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="SecurityId" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="xs:integer" name="Seniority" maxOccurs="1" minOccurs="1"/>
+      <xs:element name="Notionals" maxOccurs="1" minOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Notional" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:float">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="rpaData">
+    <xs:all>
+      <xs:element type="xs:float" name="ParticipationRate"/>
+      <xs:element type="date" name="ProtectionStart"/>
+      <xs:element type="date" name="ProtectionEnd"/>
+      <xs:element type="xs:string" name="CreditCurveId"/>
+      <xs:element type="xs:string" name="IssuerId" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="SettlesAccrual" minOccurs="0"/>
+      <xs:element type="xs:float" name="FixedRecoveryRate" minOccurs="0"/>
+      <xs:element name="ProtectionFee">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="legData" name="LegData" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Underlying">
+        <xs:complexType>
+	      <xs:choice>
+            <xs:sequence>
+              <xs:element type="optionData" name="OptionData" minOccurs="0"/>
+	      <xs:element type="xs:boolean" name="NakedOption" minOccurs="0"/>
+              <xs:element type="legData" name="LegData" maxOccurs="unbounded"/>
+            </xs:sequence>
+	        <xs:element type="tlockData" name="TreasuryLockData"/>
+	      </xs:choice>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="cbodata">
+    <xs:all>
+      <xs:element type="cboInvestment" name="CBOInvestment" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="cboStructure" name="CBOStructure" maxOccurs="1" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="cboInvestment">
+    <xs:all>
+      <xs:element type="xs:string" name="TrancheName" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="xs:float" name="Notional" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="xs:string" name="StructureId" maxOccurs="1" minOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="cboStructure">
+    <xs:all>
+      <xs:element type="xs:string" name="DayCounter"/>
+      <xs:element type="xs:string" name="PaymentConvention"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:string" name="ReinvestmentEndDate" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:float" name="SeniorFee"/>
+      <xs:element type="xs:string" name="FeeDayCounter"/>
+      <xs:element type="xs:float" name="SubordinatedFee"/>
+      <xs:element type="xs:float" name="EquityKicker"/>
+      <xs:element type="cboBondBasketData" name="BondBasketData" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="cbotranches" name="CBOTranches" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="scheduleData" name="ScheduleData"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="cboBondBasketData">
+    <xs:sequence>
+      <xs:element name="Trade" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="oreTradeType" name="TradeType"/>
+            <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+            <xs:element type="bondData" name="BondData" maxOccurs="1" minOccurs="0"/>
+          </xs:all>
+          <xs:attribute type="xs:string" name="id"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="cbotranches">
+    <xs:sequence>
+      <xs:element type="cbotranche" name="Tranche" maxOccurs="unbounded">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="cbotranche">
+    <xs:all>
+      <xs:element type="xs:string" name="Name"/>
+      <xs:element type="xs:float" name="ICRatio"/>
+      <xs:element type="xs:float" name="OCRatio"/>
+      <xs:element type="xs:float" name="Notional"/>
+      <xs:element ref="legDataType" maxOccurs="1" minOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="cbCallData">
+    <xs:all>
+      <xs:element type="scheduleData" name="ScheduleData"/>
+      <xs:element name="Styles">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Style" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Prices">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Price" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:float">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="PriceTypes">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="PriceType" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="IncludeAccruals">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="IncludeAccrual"  maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="bool">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Soft" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Soft" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="bool">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="TriggerRatios" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="TriggerRatio" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:float">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="NOfMTriggers" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="NOfMTrigger" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="MakeWhole" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element name="ConversionRatioIncrease">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="xs:float" name="Cap" minOccurs="0"/>
+                  <xs:element type="xs:string" name="StockPrices"/>
+                  <xs:element name="CrIncreases">
+                    <xs:complexType>
+                      <xs:sequence>
+                        <xs:element name="CrIncrease" maxOccurs="unbounded">
+                          <xs:complexType>
+                            <xs:simpleContent>
+                              <xs:extension base="xs:string">
+                                <xs:attribute name="startDate" type="xs:string" />
+                              </xs:extension>
+                            </xs:simpleContent>
+                          </xs:complexType>
+                        </xs:element>
+                      </xs:sequence>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="cbContingentConversionData">
+    <xs:all>
+      <xs:element name="Observations" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Observation" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Barriers" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Barrier" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:float">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="cbPepsData">
+    <xs:all>
+      <xs:element type="xs:float" name="UpperBarrier"/>
+      <xs:element type="xs:float" name="LowerBarrier"/>
+      <xs:element type="xs:float" name="UpperConversionRatio"/>
+      <xs:element type="xs:float" name="LowerConversionRatio"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="cbMandatoryConversionData">
+    <xs:all>
+    <xs:element type="date" name="Date"/>
+    <xs:element type="xs:string" name="Type"/>
+    <xs:element type="cbPepsData" name="PepsData"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="cbConversionResetData">
+    <xs:all>
+      <xs:element type="scheduleData" name="ScheduleData"/>
+      <xs:element name="References">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Reference" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Thresholds">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Threshold" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:float">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Gearings">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Gearing" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:float">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Floors" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Floor" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:float">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="GlobalFloors" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="GloobalFloor" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:float">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="cbExchangeableData">
+    <xs:all>
+      <xs:element type="bool" name="IsExchangeable"/>
+      <xs:element type="xs:string" name="EquityCreditCurve" minOccurs="0"/>
+      <xs:element type="bool" name="Secured" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="cbConversionData">
+    <xs:all>
+      <xs:element type="scheduleData" name="ScheduleData" minOccurs="0"/>
+      <xs:element name="Styles" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Style" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="ConversionRatios" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="ConversionRatio" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:float">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="cbContingentConversionData" name="ContingentConversion" minOccurs="0"/>
+      <xs:element type="cbMandatoryConversionData" name="MandatoryConversion" minOccurs="0"/>
+      <xs:element type="cbConversionResetData" name="ConversionResets" minOccurs="0"/>
+      <xs:element type="underlying" name="Underlying"/>
+      <xs:element type="xs:string" name="FXIndex" minOccurs="0"/>
+      <xs:element type="calendar" name="FXIndexCalendar" minOccurs="0"/>
+      <xs:element type="xs:integer" name="FXIndexFixingDays" minOccurs="0"/>
+      <xs:element type="cbExchangeableData" name="Exchangeable" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="cbDividendProtectionData">
+    <xs:all>
+      <xs:element type="scheduleData" name="ScheduleData"/>
+      <xs:element name="AdjustmentStyles">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="AdjustmentStyle" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="DividendTypes">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="DividendType" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Thresholds">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Threshold" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:float">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="tlockData">
+    <xs:all>
+      <xs:element type="bool" name="Payer"/>
+      <xs:element type="bondData" name="BondData"/>
+      <xs:element type="xs:float" name="ReferenceRate"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
+      <xs:element type="date" name="TerminationDate"/>
+      <xs:element type="xs:integer" name="PaymentGap" minOccurs="0"/>
+      <xs:element type="calendar" name="PaymentCalendar"/>
     </xs:all>
   </xs:complexType>
 
