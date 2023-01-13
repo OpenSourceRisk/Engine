@@ -250,6 +250,7 @@ node is shown in Listing \ref{lst:ois_conventions}.
   <SpotLag> </SpotLag>
   <Index> </Index>
   <FixedDayCounter> </FixedDayCounter>
+  <FixedCalendar> </FixedCalendar>
   <PaymentLag> </PaymentLag>
   <EOM> </EOM>
   <FixedFrequency> </FixedFrequency>
@@ -268,6 +269,8 @@ The meanings of the various elements in this node are as follows:
 \item SpotLag: The number of business days until the start of the OIS.
 \item Index: The name of the overnight index. For example, this could be EUR-EONIA, USD-FedFunds etc.
 \item FixedDayCounter: The day count basis on the fixed leg of the OIS.
+\item FixedCalendar [Optional]: The business day calendar on the fixed leg. Optional to retain backwards compatibility
+  with older versions, if not given defaults to index fixing calendar.
 \item PaymentLag [Optional]: The payment lag, as a number of business days, on both legs. If not provided, this defaults
 to 0.
 \item EOM [Optional]: \emph{True} if the end of month roll convention is to be used when generating the OIS schedule and

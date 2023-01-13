@@ -37,8 +37,8 @@ class OISRateHelper : public RelativeDateRateHelper {
 public:
     OISRateHelper(Natural settlementDays, const Period& swapTenor, const Handle<Quote>& fixedRate,
                   const boost::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
-                  Natural paymentLag = 0, bool endOfMonth = false, Frequency paymentFrequency = Annual,
-                  BusinessDayConvention fixedConvention = Following,
+                  const Calendar& fixedCalendar, Natural paymentLag = 0, bool endOfMonth = false,
+                  Frequency paymentFrequency = Annual, BusinessDayConvention fixedConvention = Following,
                   BusinessDayConvention paymentAdjustment = Following,
                   DateGeneration::Rule rule = DateGeneration::Backward,
                   const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
@@ -63,6 +63,7 @@ protected:
     Period swapTenor_;
     boost::shared_ptr<OvernightIndex> overnightIndex_;
     DayCounter fixedDayCounter_;
+    Calendar fixedCalendar_;
     Natural paymentLag_;
     bool endOfMonth_;
     Frequency paymentFrequency_;
@@ -84,7 +85,7 @@ class DatedOISRateHelper : public RateHelper {
 public:
     DatedOISRateHelper(const Date& startDate, const Date& endDate, const Handle<Quote>& fixedRate,
                        const boost::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
-                       Natural paymentLag = 0, Frequency paymentFrequency = Annual,
+                       const Calendar& fixedCalendar, Natural paymentLag = 0, Frequency paymentFrequency = Annual,
                        BusinessDayConvention fixedConvention = Following,
                        BusinessDayConvention paymentAdjustment = Following,
                        DateGeneration::Rule rule = DateGeneration::Backward,
@@ -102,6 +103,7 @@ public:
 protected:
     boost::shared_ptr<OvernightIndex> overnightIndex_;
     DayCounter fixedDayCounter_;
+    Calendar fixedCalendar_;
     Natural paymentLag_;
     Frequency paymentFrequency_;
     BusinessDayConvention fixedConvention_;
