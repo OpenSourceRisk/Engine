@@ -977,6 +977,19 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << data.legType());
 
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
+
+    // Get explicit payment dates which in most cases should be empty
+    vector<Date> paymentDates;
+    if (!data.paymentDates().empty()) {
+        BusinessDayConvention paymentDatesConvention =
+            data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
+        Calendar paymentDatesCalendar =
+            data.paymentCalendar().empty() ? NullCalendar() : parseCalendar(data.paymentCalendar());
+        paymentDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
+        for (Size i = 0; i < paymentDates.size(); i++)
+            paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
+    }
+
     Calendar paymentCalendar;
     if (data.paymentCalendar().empty())
         paymentCalendar = schedule.calendar();
@@ -1079,7 +1092,8 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                           .withFixingDays(fixingDays)
                           .inArrears(isInArrears)
                           .withGearings(gearings)
-                          .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag));
+                          .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                          .withPaymentDates(paymentDates);
 
     // If no caps or floors or in arrears fixing, return the leg
     if (!hasCapsFloors && !isInArrears)
@@ -1137,7 +1151,18 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
-    Calendar paymentCalendar;
+
+    // Get explicit payment dates which in most cases should be empty
+    vector<Date> paymentDates;
+    if (!data.paymentDates().empty()) {
+        BusinessDayConvention paymentDatesConvention =
+            data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
+        Calendar paymentDatesCalendar =
+            data.paymentCalendar().empty() ? NullCalendar() : parseCalendar(data.paymentCalendar());
+        paymentDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
+        for (Size i = 0; i < paymentDates.size(); i++)
+            paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
+    }
 
     // try to set the rate computation period based on the schedule tenor
     Period rateComputationPeriod = 0 * Days;
@@ -1146,6 +1171,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     else if (!tmp.dates().empty() && !tmp.dates().front().tenor().empty())
         rateComputationPeriod = parsePeriod(tmp.dates().front().tenor());
 
+    Calendar paymentCalendar;
     if (data.paymentCalendar().empty())
         paymentCalendar = index->fixingCalendar();
     else
@@ -1201,7 +1227,8 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                 .withLocalCapFloor(floatData->localCapFloor())
                 .withAverageONIndexedCouponPricer(couponPricer)
                 .withCapFlooredAverageONIndexedCouponPricer(cfCouponPricer)
-                .withTelescopicValueDates(floatData->telescopicValueDates());
+                .withTelescopicValueDates(floatData->telescopicValueDates())
+                .withPaymentDates(paymentDates);
         return leg;
 
     } else {
@@ -1228,7 +1255,9 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                                                                        schedule, Null<Real>()))
                       .withNakedOption(floatData->nakedOption())
                       .withLocalCapFloor(floatData->localCapFloor())
-                      .withTelescopicValueDates(floatData->telescopicValueDates());
+                      .withTelescopicValueDates(floatData->telescopicValueDates())
+                      .withPaymentDates(paymentDates);
+        }
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(index);
