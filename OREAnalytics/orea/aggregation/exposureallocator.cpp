@@ -74,8 +74,8 @@ RelativeFairValueNetExposureAllocator::RelativeFairValueNetExposureAllocator(
                         allocatedTradeEpeIndex, allocatedTradeEneIndex,
                         tradeEpeIndex, tradeEneIndex,
                         nettingSetEpeIndex, nettingSetEneIndex) {
-    for (auto& tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt) {
-        size_t i = std::distance(portfolio_->trades().begin(), tradeIt);
+    size_t i = 0;
+    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++i) {
         auto trade = tradeIt->second;
         string tradeId = tradeIt->first;
         string nettingSetId = trade->envelope().nettingSetId();
@@ -120,8 +120,8 @@ RelativeFairValueGrossExposureAllocator::RelativeFairValueGrossExposureAllocator
                         allocatedTradeEpeIndex, allocatedTradeEneIndex,
                         tradeEpeIndex, tradeEneIndex,
                         nettingSetEpeIndex, nettingSetEneIndex) {
-    for (auto& tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt) {
-        size_t i = std::distance(portfolio_->trades().begin(), tradeIt);
+    size_t i = 0;
+    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++i) {
         auto trade = tradeIt->second;
         string tradeId = tradeIt->first;
         string nettingSetId = trade->envelope().nettingSetId();
