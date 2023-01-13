@@ -96,7 +96,7 @@ PostProcess::PostProcess(
     
     auto portfolioIt = portfolio->trades().begin();
     auto cubeIdIt = cube_->idAndIndex().begin();
-    for (size_t i = 0; i < portfolio->size(); i++) {
+    for (size_t i = 0; i < portfolio->size(); i++, portfolioIt++, cubeIdIt++) {
         const std::string& portfolioTradeId = portfolioIt->first;
         const std::string& cubeTradeId = cubeIdIt->first;
         QL_REQUIRE(portfolioTradeId == cubeTradeId, "PostProcess::PostProcess(): portfolio trade #"
@@ -107,22 +107,22 @@ PostProcess::PostProcess(
     if (analytics_["dynamicCredit"]) {
         QL_REQUIRE(cptyCube_, "cptyCube cannot be null when dynamicCredit is ON");
         // check portfolio and cptyCube have the same counterparties, in the same order
-        QL_REQUIRE(portfolio->counterparties().size() + 1 == cptyCube_->idAndIndex().size(),
+        auto cptyIds = portfolio->counterparties();
+        cptyIds.insert(dvaName_);
+        QL_REQUIRE(cptyIds.size() == cptyCube_->idAndIndex().size(),
                    "PostProcess::PostProcess(): portfolio counterparty size ("
-                   << portfolio->counterparties().size() << ") does not match cpty cube trade size ("
+                       << cptyIds.size() << ") does not match cpty cube trade size ("
                        << cptyCube_->idAndIndex().size() << ")");
-        
-        for (const auto& [cubeTradeId, i] : cptyCube_->idAndIndex()) {
-            QL_REQUIRE(portfolio->counterparties()[i] == cubeTradeId,
-                       "PostProcess::PostProcess(): portfolio counterparty #"
-                       << i << " (id=" << portfolio->counterparties()[i]
-                       << ") does not match cube name id ("
-                           << cubeTradeId);
+
+        auto cptyIt = cptyIds.begin();
+        cubeIdIt = cptyCube_->idAndIndex().begin();
+        for (size_t i = 0; i < cptyIds.size(); ++i, ++cptyIt, ++cubeIdIt) {
+            const std::string& counterpartyId = *cptyIt;
+            const std::string& cubeTradeId = cubeIdIt->first;
+            QL_REQUIRE(counterpartyId == cubeTradeId, "PostProcess::PostProcess(): portfolio counterparty #"
+                                                          << i << " (id=" << counterpartyId
+                                                          << ") does not match cube name id (" << cubeTradeId);
         }
-        QL_REQUIRE(dvaName == cptyCube_->idAndIndex().rbegin()->first,
-                   "PostProcess::PostProcess(): dvaName ("
-                                                                    << dvaName << ") does not match cube name id ("
-                                                                    << cptyCube_->idAndIndex().rbegin()->first);
     }
 
     ExposureAllocator::AllocationMethod allocationMethod = parseAllocationMethod(allocMethod);

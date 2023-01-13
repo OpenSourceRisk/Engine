@@ -303,7 +303,7 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::map<std::st
         calc->initScenario();
     // loop over trades
     size_t j = 0;
-    for (auto& [tradeId, trade]:trades) {
+    for (const auto& [tradeId, trade]:trades) {
         if (tradeHasError[j])
             continue;
         // We can avoid checking mode here and always call updateQlInstruments()

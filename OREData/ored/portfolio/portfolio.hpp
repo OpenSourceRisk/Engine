@@ -105,8 +105,8 @@ public:
     //! Build a map from trade Ids to NettingSet
     std::map<std::string, std::string> nettingSetMap() const;
 
-    //! Build a vector of unique counterparties
-    std::vector<std::string> counterparties() const;
+    //! Build a set of all counterparties in the portfolio
+    std::set<std::string> counterparties() const;
 
     //! Build a map from counterparty to NettingSet
     std::map<std::string, std::set<std::string>> counterpartyNettingSets() const;

@@ -1021,12 +1021,7 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     if (params_->has("simulation", "storeSurvivalProbabilities") &&
         params_->get("simulation", "storeSurvivalProbabilities") == "Y") {
         storeSp_ = true;
-        std::set<std::string> counterparties;
-        for (const auto& cp : portfolio->counterparties()) {
-            if (counterparties.count(cp) == 0) {
-                counterparties.insert(cp);
-            }
-        }
+        std::set<std::string> counterparties = portfolio->counterparties();
         counterparties.insert(params_->get("xva", "dvaName"));
         initCube(cptyCube_, counterparties, 1);
     } else {
