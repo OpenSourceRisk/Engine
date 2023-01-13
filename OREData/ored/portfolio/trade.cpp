@@ -136,11 +136,11 @@ void Trade::reset() {
     
 const std::map<std::string, boost::any>& Trade::additionalData() const { return additionalData_; }
 
-void Trade::setLegBasedAdditionalData(const Size i) const {
+void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
     if (legs_.size() < i + 1)
         return;
     Date asof = Settings::instance().evaluationDate();
-    string legID = std::to_string(i + 1);
+    string legID = std::to_string(resultLegId == Null<Size>() ? i + 1 : resultLegId);
     for (Size j = 0; j < legs_[i].size(); ++j) {
         boost::shared_ptr<CashFlow> flow = legs_[i][j];
         // pick flow with earliest future payment date on this leg
