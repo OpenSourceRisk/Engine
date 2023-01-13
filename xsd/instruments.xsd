@@ -1644,6 +1644,24 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="nameData">
+    <xs:all>
+      <xs:element type="xs:string" name="IssuerId"/>
+      <xs:element type="xs:string" name="Qualifier" maxOccurs="1" minOccurs="0"/>
+      <xs:element ref="creditCurveIdType"/>
+      <xs:element type="xs:float" name="Notional" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:float" name="Weight" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="currencyCode" name="Currency" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="non-negative-decimal" name="PriorNotional" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="non-negative-decimal" name="PriorWeight" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="recoveryRate" name="RecoveryRate" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="date" name="AuctionDate" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="date" name="AuctionSettlementDate" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="date" name="DefaultDate" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="date" name="EventDeterminationDate" minOccurs="0" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+
   <xs:complexType name="basketData">
     <xs:sequence>
       <xs:element type="nameData" name="Name" maxOccurs="unbounded" minOccurs="0"/>
@@ -1723,6 +1741,20 @@
       <xs:enumeration value="Spread"/>
       <xs:enumeration value="Price"/>
     </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="emptyFloat">
+    <xs:union>
+      <xs:simpleType>
+        <xs:restriction base='xs:string'>
+          <xs:length value="0"/>
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType>
+        <xs:restriction base='xs:float'>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
   </xs:simpleType>
 
   <xs:complexType name="cdoData">
