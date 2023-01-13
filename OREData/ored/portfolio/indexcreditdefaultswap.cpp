@@ -214,16 +214,19 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
 }
 
 const std::map<std::string, boost::any>& IndexCreditDefaultSwap::additionalData() const {
+    setLegBasedAdditionalData(0, 2);
     additionalData_["legNPV[1]"] = instrument_->qlInstrument()->result<Real>("protectionLegNPV");
     additionalData_["legNPV[2]"] = instrument_->qlInstrument()->result<Real>("premiumLegNPVDirty") +
                                    instrument_->qlInstrument()->result<Real>("upfrontPremiumNPV") +
                                    instrument_->qlInstrument()->result<Real>("accrualRebateNPV");
     additionalData_["isPayer[1]"] = !swap_.leg().isPayer();
     additionalData_["isPayer[2]"] = swap_.leg().isPayer();
-    additionalData_["legType[1]"] = swap_.leg().legType();
-    setLegBasedAdditionalData(0);
+    additionalData_["legType[2]"] = swap_.leg().legType();
+    additionalData_["currentNotional[1]"] = additionalData_["currentNotional[2]"];
+    additionalData_["originalNotional[1]"] = additionalData_["originalNotional[2]"];
     return additionalData_;
 }
+
 
 QuantLib::Real IndexCreditDefaultSwap::notional() const {
     Date asof = Settings::instance().evaluationDate();
