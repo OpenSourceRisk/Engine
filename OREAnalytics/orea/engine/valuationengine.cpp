@@ -115,7 +115,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     LOG("Initialise state objects...");
     // initialise state objects for each trade (required for path-dependent derivatives in particular)
     size_t i = 0;
-    for (const auto [tradeId, trade] : trades) {
+    for (const auto& [tradeId, trade] : trades) {
         QL_REQUIRE(!trade->npvCurrency().empty(), "NPV currency not set for trade " << trade->id());
 
         DLOG("Initialise wrapper for trade " << trade->id());
@@ -328,7 +328,6 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::map<std::st
                                      boost::shared_ptr<analytics::NPVCube>& cptyCube, const Date& d,
                                      const Size cubeDateIndex, const Size sample) {
     // loop over counterparties
-    auto it = counterparties.begin();
     for (const auto& [counterparty, idx] : counterparties) {
         for (auto& calc : calculators) {
             calc->calculate(counterparty, idx, simMarket_, cptyCube, d, cubeDateIndex, sample, isCloseOutDate);
@@ -337,7 +336,7 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::map<std::st
 }
 
 void ValuationEngine::tradeExercisable(bool enable, const std::map<std::string, boost::shared_ptr<Trade>>& trades) {
-    for (auto& [tradeId, trade] : trades) {
+    for (const auto& [tradeId, trade] : trades) {
         auto t = boost::dynamic_pointer_cast<OptionWrapper>(trade->instrument());
         if (t != nullptr) {
             if (enable)

@@ -291,7 +291,7 @@ PostProcess::PostProcess(
         allocatedTradeEPE_[tradeId] = exposureCalculator_->allocatedEpe(tradeId);
         allocatedTradeENE_[tradeId] = exposureCalculator_->allocatedEne(tradeId);
     }
-    for (const auto [nettingSetId, pos] : nettingSetIds()) {
+    for (const auto& [nettingSetId, pos] : nettingSetIds()) {
         netEPE_[nettingSetId] = nettedExposureCalculator_->epe(nettingSetId);
         netENE_[nettingSetId] = nettedExposureCalculator_->ene(nettingSetId);
     }

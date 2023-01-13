@@ -62,7 +62,7 @@ void CubeWriter::write(const boost::shared_ptr<NPVCube>& cube, const std::map<st
         else
             nettingSetIds[idx] = "";
 
-        fprintf(fp, fmt, id, nettingSetIds[idx], static_cast<Size>(0), asofString.c_str(),
+        fprintf(fp, fmt, id.c_str(), nettingSetIds[idx], static_cast<Size>(0), asofString.c_str(),
                 static_cast<Size>(0), static_cast<Size>(0), cube->getT0(idx));        
     }
     // Cube

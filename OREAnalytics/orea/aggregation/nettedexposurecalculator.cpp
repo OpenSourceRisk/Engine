@@ -97,9 +97,9 @@ void NettedExposureCalculator::build() {
     map<string, Real> nettingSetValueToday;
     map<string, Date> nettingSetMaturity;
     map<string, Size> nettingSetSize;
-    for (auto& tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt) {
-        size_t i = std::distance(portfolio_->trades().begin(), tradeIt);
-        auto trade = tradeIt->second;
+    Size cubeIndex = 0;
+    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++cubeIndex) {
+        const auto& trade = tradeIt->second;
         string tradeId = tradeIt->first;
         string nettingSetId = trade->envelope().nettingSetId();
         string cp = trade->envelope().counterparty();
@@ -110,9 +110,9 @@ void NettedExposureCalculator::build() {
         }
         Real npv;
         if (flipViewXVA_) {
-            npv = -cube_->getT0(i);
+            npv = -cube_->getT0(cubeIndex);
         } else {
-            npv = cube_->getT0(i);
+            npv = cube_->getT0(cubeIndex);
         }
 
         if (nettingSetValueToday.find(nettingSetId) == nettingSetValueToday.end()) {
@@ -278,10 +278,10 @@ void NettedExposureCalculator::build() {
                 }
 
                 if (marginalAllocation_) {
-                    for (auto& tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end();
-                         ++tradeIt) {
-                        size_t i = std::distance(portfolio_->trades().begin(), tradeIt);
-                        auto trade = tradeIt->second;
+                    Size i = 0;
+                    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end();
+                         ++tradeIt, ++i) {
+                        const auto& trade = tradeIt->second;
                         string nid = trade->envelope().nettingSetId();
                         if (nid != nettingSetId)
                             continue;

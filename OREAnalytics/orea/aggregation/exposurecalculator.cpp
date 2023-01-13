@@ -70,9 +70,8 @@ ExposureCalculator::ExposureCalculator(
 
 void ExposureCalculator::build() {
     LOG("Compute trade exposure profiles, " << (flipViewXVA_ ? "inverted (flipViewXVA = Y)" : "regular (flipViewXVA = N)"));
-    
-    for (auto& tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt) {
-        size_t i = std::distance(portfolio_->trades().begin(), tradeIt);
+    size_t i = 0;
+    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++i) {
         auto trade = tradeIt->second;
         string tradeId = tradeIt->first;
         string nettingSetId = trade->envelope().nettingSetId();

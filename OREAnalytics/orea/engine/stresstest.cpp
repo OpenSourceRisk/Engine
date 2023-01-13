@@ -113,8 +113,8 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     shiftedNPV_.clear();
     delta_.clear();
     labels_.clear();
-    for (auto& tradeIt = portfolio->trades().begin(); tradeIt != portfolio->trades().end(); ++tradeIt) {
-        size_t i = std::distance(portfolio->trades().begin(), tradeIt);
+    size_t i = 0;
+    for (auto tradeIt = portfolio->trades().begin(); tradeIt != portfolio->trades().end(); ++tradeIt, ++i) {
         string tradeId = tradeIt->first;
         Real npv0 = cube->getT0(i, 0);
         trades_.insert(tradeId);
