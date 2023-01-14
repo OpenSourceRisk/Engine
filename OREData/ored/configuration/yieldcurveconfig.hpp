@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2023 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -73,7 +74,8 @@ public:
         FittedBond,
         WeightedAverage,
         YieldPlusDefault,
-        IborFallback
+        IborFallback,
+        BondYieldShifted
     };
     //! Default destructor
     virtual ~YieldCurveSegment() {}
@@ -583,6 +585,52 @@ private:
     string rfrCurve_;
     boost::optional<string> rfrIndex_;
     boost::optional<Real> spread_;
+};
+
+//! Bond yield shifted yield curve segment
+/*!
+  An average spread between curve and bond's yield is used to shift an existing yield curve.
+
+  \ingroup configuration
+*/
+class BondYieldShiftedYieldCurveSegment : public YieldCurveSegment {
+public:
+    //! \name Constructors/Destructors
+    //@{
+    //! Default constructor
+    BondYieldShiftedYieldCurveSegment() {}
+    //! Detailed constructor
+    BondYieldShiftedYieldCurveSegment(const string& typeID, const string& referenceCurveID, const vector<string>& quotes,
+                                      const map<string, string>& iborIndexCurves, const bool extrapolateFlat);
+
+    //! Default destructor
+    virtual ~BondYieldShiftedYieldCurveSegment() {}
+    //@}
+    
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const string& referenceCurveID() const { return referenceCurveID_; }
+    const map<string, string>& iborIndexCurves() const { return iborIndexCurves_; }
+    const bool extrapolateFlat() const { return extrapolateFlat_; }
+    //@}
+
+    //! \name Visitability
+    //@{
+    virtual void accept(AcyclicVisitor&) override;
+    //@}
+
+private:
+    string referenceCurveID_;
+    map<string, string> iborIndexCurves_;
+    bool extrapolateFlat_;
+    boost::optional<Real> spread_;
+    boost::optional<Real> bondYield_;
 };
 
 //! Yield Curve configuration

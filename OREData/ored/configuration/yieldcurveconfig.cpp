@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2023 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -75,6 +76,8 @@ YieldCurveSegment::Type parseYieldCurveSegment(const string& s) {
         return YieldCurveSegment::Type::WeightedAverage;
     else if (iequals(s, "Ibor Fallback"))
         return YieldCurveSegment::Type::IborFallback;
+    else if (iequals(s, "Bond Yield Shifted"))
+        return YieldCurveSegment::Type::BondYieldShifted;
     QL_FAIL("Yield curve segment type " << s << " not recognized");
 }
 
@@ -89,6 +92,7 @@ class SegmentIDGetter : public AcyclicVisitor,
                         public Visitor<FittedBondYieldCurveSegment>,
                         public Visitor<WeightedAverageYieldCurveSegment>,
                         public Visitor<YieldPlusDefaultYieldCurveSegment>,
+                        public Visitor<BondYieldShiftedYieldCurveSegment>,
                         public Visitor<IborFallbackCurveSegment> {
 
 public:
@@ -105,6 +109,7 @@ public:
     void visit(FittedBondYieldCurveSegment& s) override;
     void visit(WeightedAverageYieldCurveSegment& s) override;
     void visit(YieldPlusDefaultYieldCurveSegment& s) override;
+    void visit(BondYieldShiftedYieldCurveSegment& s) override;
     void visit(IborFallbackCurveSegment& s) override;
 
 private:
@@ -178,6 +183,13 @@ void SegmentIDGetter::visit(DiscountRatioYieldCurveSegment& s) {
 void SegmentIDGetter::visit(FittedBondYieldCurveSegment& s) {
     for (auto const& c : s.iborIndexCurves())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(c.second);
+}
+
+void SegmentIDGetter::visit(BondYieldShiftedYieldCurveSegment& s) {
+    for (auto const& c : s.iborIndexCurves())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(c.second);
+    string refCurveID = s.referenceCurveID();
+    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(refCurveID);
 }
 
 void SegmentIDGetter::visit(WeightedAverageYieldCurveSegment& s) {
@@ -264,6 +276,8 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
                 segment.reset(new DiscountRatioYieldCurveSegment());
             } else if (childName == "FittedBond") {
                 segment.reset(new FittedBondYieldCurveSegment());
+            } else if (childName == "BondYieldShifted") {
+                segment.reset(new BondYieldShiftedYieldCurveSegment());
             } else if (childName == "WeightedAverage") {
                 segment.reset(new WeightedAverageYieldCurveSegment());
             } else if (childName == "YieldPlusDefault") {
@@ -397,7 +411,9 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
         {"YieldPlusDefault", {"Yield Plus Default"}},
         {"WeightedAverage", {"Weighted Average"}},
         {"DiscountRatio", {"Discount Ratio"}},
-        {"IborFallback", {"Ibor Fallback"}}};
+        {"IborFallback", {"Ibor Fallback"}},
+        {"BondYieldShifted", {"Bond Yield Shifted"}}
+        };
 
     std::list<std::string> validTypes = validSegmentTypes.at(name);
     QL_REQUIRE(std::find(validTypes.begin(), validTypes.end(), typeID_) != validTypes.end(),
@@ -847,6 +863,47 @@ void IborFallbackCurveSegment::accept(AcyclicVisitor& v) {
     else
         YieldCurveSegment::accept(v);
 }
+
+BondYieldShiftedYieldCurveSegment::BondYieldShiftedYieldCurveSegment(const string& typeID, const string& referenceCurveID, const vector<string>& quotes,
+                                                                     const map<string, string>& iborIndexCurves, const bool extrapolateFlat)
+    : YieldCurveSegment(typeID, "", quotes), referenceCurveID_(referenceCurveID), iborIndexCurves_(iborIndexCurves),
+      extrapolateFlat_(extrapolateFlat) {}
+
+void BondYieldShiftedYieldCurveSegment::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "BondYieldShifted");
+    YieldCurveSegment::fromXML(node);
+
+    referenceCurveID_ = XMLUtils::getChildValue(node, "ReferenceCurve", true);
+
+    vector<string> iborIndexNames;
+    vector<string> iborIndexCurves = XMLUtils::getChildrenValuesWithAttributes(
+        node, "IborIndexCurves", "IborIndexCurve", "iborIndex", iborIndexNames, false);
+    for (Size i = 0; i < iborIndexNames.size(); ++i) {
+        iborIndexCurves_[iborIndexNames[i]] = iborIndexCurves[i];
+    }
+
+	if (auto n = XMLUtils::getChildNode(node, "ExtrapolateFlat")) {
+        extrapolateFlat_ = parseBool(XMLUtils::getNodeValue(n));
+    } else {
+        extrapolateFlat_ = false;
+    }
+}
+
+XMLNode* BondYieldShiftedYieldCurveSegment::toXML(XMLDocument& doc) {
+    XMLNode* node = YieldCurveSegment::toXML(doc);
+    XMLUtils::setNodeName(doc, node, "BondYieldShifted");
+    XMLUtils::addChild(doc, node, "ReferenceCurve", referenceCurveID_);
+    return node;
+}
+
+void BondYieldShiftedYieldCurveSegment::accept(AcyclicVisitor& v) {
+    Visitor<BondYieldShiftedYieldCurveSegment>* v1 = dynamic_cast<Visitor<BondYieldShiftedYieldCurveSegment>*>(&v);
+    if (v1 != 0)
+        v1->visit(*this);
+    else
+        YieldCurveSegment::accept(v);
+}
+
 
 } // namespace data
 } // namespace ore

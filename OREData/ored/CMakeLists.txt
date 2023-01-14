@@ -24,6 +24,7 @@ configuration/smiledynamicsconfig.cpp
 configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
 marketdata/basecorrelationcurve.cpp
+marketdata/bondyieldshiftedcurvehelpermarket.cpp
 marketdata/capfloorvolcurve.cpp
 marketdata/cdsvolcurve.cpp
 marketdata/clonedloader.cpp
@@ -250,6 +251,7 @@ configuration/volatilityconfig.hpp
 configuration/yieldcurveconfig.hpp
 configuration/yieldvolcurveconfig.hpp
 marketdata/basecorrelationcurve.hpp
+marketdata/bondyieldshiftedcurvehelpermarket.hpp
 marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
 marketdata/clonedloader.hpp

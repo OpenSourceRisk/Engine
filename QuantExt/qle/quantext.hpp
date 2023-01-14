@@ -355,6 +355,7 @@
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/blackvolsurfaceproxy.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
+#include <qle/termstructures/bondyieldshiftedcurvetermstructure.hpp>
 #include <qle/termstructures/brlcdiratehelper.hpp>
 #include <qle/termstructures/capfloorhelper.hpp>
 #include <qle/termstructures/capfloortermvolcurve.hpp>

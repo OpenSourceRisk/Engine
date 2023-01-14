@@ -33,6 +33,7 @@
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/configuration/yieldvolcurveconfig.hpp>
 #include <ored/marketdata/basecorrelationcurve.hpp>
+#include <ored/marketdata/bondyieldshiftedcurvehelpermarket.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/marketdata/cdsvolcurve.hpp>
 #include <ored/marketdata/clonedloader.hpp>
