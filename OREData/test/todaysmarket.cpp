@@ -492,14 +492,15 @@ boost::shared_ptr<Conventions> conventions() {
     boost::shared_ptr<Convention> depositConv(new DepositConvention("EUR-EONIA-CONVENTIONS", "EUR-EONIA"));
     conventions->add(depositConv);
 
-    boost::shared_ptr<Convention> oisConv(new OisConvention("EUR-OIS-CONVENTIONS", "2", "EUR-EONIA", "A360", "1",
-                                                            "false", "Annual", "Following", "Following", "Backward"));
+    boost::shared_ptr<Convention> oisConv(new OisConvention("EUR-OIS-CONVENTIONS", "2", "EUR-EONIA", "A360", "TARGET",
+                                                            "1", "false", "Annual", "Following", "Following",
+                                                            "Backward"));
     conventions->add(oisConv);
 
     // USD Fed Funds curve conventions
     conventions->add(boost::make_shared<DepositConvention>("USD-FED-FUNDS-CONVENTIONS", "USD-FedFunds"));
-    conventions->add(boost::make_shared<OisConvention>("USD-OIS-CONVENTIONS", "2", "USD-FedFunds", "A360", "2", "false",
-                                                       "Annual", "Following", "Following", "Backward"));
+    conventions->add(boost::make_shared<OisConvention>("USD-OIS-CONVENTIONS", "2", "USD-FedFunds", "A360", "US", "2",
+                                                       "false", "Annual", "Following", "Following", "Backward"));
 
     // USD 3M curve conventions
     conventions->add(boost::make_shared<DepositConvention>("USD-LIBOR-CONVENTIONS", "USD-LIBOR"));
