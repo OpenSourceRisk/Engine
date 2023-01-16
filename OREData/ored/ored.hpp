@@ -114,10 +114,16 @@
 #include <ored/portfolio/barrierdata.hpp>
 #include <ored/portfolio/barrieroption.hpp>
 #include <ored/portfolio/barrieroptionwrapper.hpp>
+#include <ored/portfolio/basketdata.hpp>
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/bondrepo.hpp>
+#include <ored/portfolio/bondtotalreturnswap.hpp>
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/asianoption.hpp>
 #include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/builders/bondoption.hpp>
+#include <ored/portfolio/builders/bondrepo.hpp>
+#include <ored/portfolio/builders/bondtotalreturnswap.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
@@ -126,6 +132,7 @@
 #include <ored/portfolio/builders/capfloorednonstandardyoyleg.hpp>
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
+#include <ored/portfolio/builders/cdo.hpp>
 #include <ored/portfolio/builders/cliquetoption.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
@@ -139,6 +146,7 @@
 #include <ored/portfolio/builders/cpicapfloor.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/builders/creditdefaultswapoption.hpp>
+#include <ored/portfolio/builders/creditlinkedswap.hpp>
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/portfolio/builders/durationadjustedcms.hpp>
 #include <ored/portfolio/builders/equityasianoption.hpp>
@@ -161,6 +169,8 @@
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/fxtouchoption.hpp>
+#include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
+#include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
 #include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/quantovanillaoption.hpp>
@@ -170,6 +180,7 @@
 #include <ored/portfolio/builders/varianceswap.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/cliquetoption.hpp>
 #include <ored/portfolio/commodityapo.hpp>
 #include <ored/portfolio/commoditydigitaloption.hpp>
@@ -183,9 +194,12 @@
 #include <ored/portfolio/commodityswaption.hpp>
 #include <ored/portfolio/compositeinstrumentwrapper.hpp>
 #include <ored/portfolio/compositetrade.hpp>
+#include <ored/portfolio/convertiblebonddata.hpp>
+#include <ored/portfolio/convertiblebondreferencedata.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/portfolio/creditdefaultswapoption.hpp>
+#include <ored/portfolio/creditlinkedswap.hpp>
 #include <ored/portfolio/crosscurrencyswap.hpp>
 #include <ored/portfolio/durationadjustedcmslegbuilder.hpp>
 #include <ored/portfolio/durationadjustedcmslegdata.hpp>
@@ -222,6 +236,9 @@
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/fxswap.hpp>
 #include <ored/portfolio/fxtouchoption.hpp>
+#include <ored/portfolio/indexcreditdefaultswap.hpp>
+#include <ored/portfolio/indexcreditdefaultswapdata.hpp>
+#include <ored/portfolio/indexcreditdefaultswapoption.hpp>
 #include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/inflationswap.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
@@ -253,6 +270,7 @@
 #include <ored/portfolio/tradefactory.hpp>
 #include <ored/portfolio/trademonetary.hpp>
 #include <ored/portfolio/tradestrike.hpp>
+#include <ored/portfolio/tranche.hpp>
 #include <ored/portfolio/types.hpp>
 #include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
