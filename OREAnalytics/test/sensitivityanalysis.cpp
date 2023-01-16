@@ -733,7 +733,6 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     size_t currentTradeIdx = 0;
     for (const auto& [tradeId, trade] : portfolio->trades()) {
         Real npv0 = cube->getT0(currentTradeIdx, 0);
-       
         for (Size j = 1; j < scenarioGenerator->samples(); ++j) { // skip j = 0, this is the base scenario
             Real npv = cube->get(currentTradeIdx, 0, j, 0);
             Real sensi = npv - npv0;
@@ -756,8 +755,9 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                         << p.first << ", " << p.second << "): " << sensi << " vs " << sensiMap[p]);
 		coveredSensis.insert(p);
             }
-            currentTradeIdx++;
+            
         }
+        currentTradeIdx++;
     }
     currentTradeIdx = 0;
     BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero sensitivities ("

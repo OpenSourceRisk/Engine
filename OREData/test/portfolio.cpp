@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(testTrades) {
     trade_list["1"]  = trade1;
     BOOST_CHECK(portfolio->trades() == trade_list);
     portfolio->add(trade2);
-    trade_list["2"] = trade1;
+    trade_list["2"] = trade2;
     BOOST_CHECK(portfolio->trades() == trade_list);
 }
 

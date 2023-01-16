@@ -258,7 +258,7 @@ BOOST_DATA_TEST_CASE_F(TopLevelFixture, testCreditDefaultSwapBuilding, bdata::ma
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(ed, market);
     BOOST_CHECK_NO_THROW(p.build(engineFactory));
     Real npv;
-    BOOST_CHECK_NO_THROW(npv = p.trades().at(0)->instrument()->NPV());
+    BOOST_CHECK_NO_THROW(npv = p.trades().begin()->second->instrument()->NPV());
     BOOST_TEST_MESSAGE("CDS NPV is: " << npv);
 }
 
