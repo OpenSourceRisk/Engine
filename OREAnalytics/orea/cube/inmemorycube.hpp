@@ -98,7 +98,7 @@ public:
     virtual Size samples() const override { return samples_; }
 
     //! Return a map of all ids and their position in the cube
-    const std::map<std::string, Size>& idAndIndex() const override { return idIdx_; }
+    const std::map<std::string, Size>& idsAndIndexes() const override { return idIdx_; }
     //! Get the vector of dates for this cube
     const std::vector<QuantLib::Date>& dates() const override { return dates_; }
 

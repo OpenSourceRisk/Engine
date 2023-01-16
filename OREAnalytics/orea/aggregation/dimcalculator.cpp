@@ -141,7 +141,7 @@ void DynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEv
         .addColumn("NettingSet", string())
         .addColumn("Time", Real(), 6);
 
-    for (auto [nettingSet, _] : dimCube_->idAndIndex()) {
+    for (auto [nettingSet, _] : dimCube_->idsAndIndexes()) {
 
         LOG("Export DIM evolution for netting set " << nettingSet);
         for (Size i = 0; i < stopDatesLoop; ++i) {

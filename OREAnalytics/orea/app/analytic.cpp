@@ -944,7 +944,7 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
             // If the cube has to be written, create a physical one from the wrapper
             if (inputs_->writeCube()) {
                 boost::shared_ptr<NPVCube> tmpCube;
-                initCube(tmpCube, cube_->idsOnly(), cubeDepth_);
+                initCube(tmpCube, cube_->ids(), cubeDepth_);
                 for (Size i = 0; i < tmpCube->numIds(); ++i) 
                     for (Size d = 0; d < tmpCube->depth(); ++d)
                         tmpCube->setT0(cube_->getT0(i), i, d);

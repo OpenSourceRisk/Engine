@@ -164,11 +164,11 @@ public:
     
     //! Return list of Trade IDs in the portfolio
     const std::map<string, Size> tradeIds() {
-        return cube()->idAndIndex();
+        return cube()->idsAndIndexes();
     }
     //! Return list of netting set IDs in the portfolio
     const std::map<string, Size> nettingSetIds() {
-        return netCube()->idAndIndex();
+        return netCube()->idsAndIndexes();
     }
     //! Return the map of counterparty Ids
     const map<string, string>& counterpartyId() { return nettedExposureCalculator_->counterpartyMap(); }

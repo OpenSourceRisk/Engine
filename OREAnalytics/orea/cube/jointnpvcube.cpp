@@ -64,7 +64,7 @@ JointNPVCube::JointNPVCube(const std::vector<boost::shared_ptr<NPVCube>>& cubes,
         // otherwise the ids in the source cubes define the order in the result cube
         Size pos = 0;
         for (Size i = 0; i < cubes_.size(); ++i) {
-            for (auto const& [id, idxInCube] : cubes_[i]->idAndIndex()) {
+            for (auto const& [id, idxInCube] : cubes_[i]->idsAndIndexes()) {
                 const auto& [it, success] = idIdx_.insert({id, pos});
                 QL_REQUIRE(!requireUniqueIds || success,
                            "JointNPVSensiCube: input cubes have duplicate id '" << id << "', this is not allowed");
@@ -76,8 +76,8 @@ JointNPVCube::JointNPVCube(const std::vector<boost::shared_ptr<NPVCube>>& cubes,
     cubeAndId_.resize(idIdx_.size());
     for (const auto& [id, jointPos] : idIdx_) {
         for (auto const& c : cubes_) {
-            auto searchIt = c->idAndIndex().find(id);
-            if (searchIt != c->idAndIndex().end()) {
+            auto searchIt = c->idsAndIndexes().find(id);
+            if (searchIt != c->idsAndIndexes().end()) {
                 cubeAndId_[jointPos].insert(std::make_pair(c, searchIt->second));
             }
         }
@@ -98,7 +98,7 @@ Size JointNPVCube::samples() const { return cubes_[0]->samples(); }
 
 Size JointNPVCube::depth() const { return cubes_[0]->depth(); }
 
-const std::map<std::string, Size>& JointNPVCube::idAndIndex() const { return idIdx_; }
+const std::map<std::string, Size>& JointNPVCube::idsAndIndexes() const { return idIdx_; }
 
 const std::vector<QuantLib::Date>& JointNPVCube::dates() const { return cubes_[0]->dates(); }
 

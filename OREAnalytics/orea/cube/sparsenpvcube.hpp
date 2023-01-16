@@ -46,7 +46,7 @@ public:
     Size samples() const override;
     Size depth() const override;
     Date asof() const override;
-    const std::map<std::string, Size>& idAndIndex() const override;
+    const std::map<std::string, Size>& idsAndIndexes() const override;
     const std::vector<QuantLib::Date>& dates() const override;
     Real getT0(Size i, Size d) const override;
     void setT0(Real value, Size i, Size d) override;

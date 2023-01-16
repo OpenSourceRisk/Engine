@@ -77,7 +77,7 @@ public:
     bool hasTrade(const std::string& tradeId) const;
 
     //! Return the map of up trade id's to index in cube
-    const std::map<std::string, QuantLib::Size>& tradeIdx() const { return cube_->idAndIndex(); };
+    const std::map<std::string, QuantLib::Size>& tradeIdx() const { return cube_->idsAndIndexes(); };
 
     /*! Return factor for given up/down scenario index or None if given index
       is not an up/down scenario (to be reviewed) */

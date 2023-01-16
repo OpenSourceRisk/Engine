@@ -61,7 +61,7 @@ public:
     Size samples() const override;
     Size depth() const override;
 
-    const std::map<std::string, Size>& idAndIndex() const override;
+    const std::map<std::string, Size>& idsAndIndexes() const override;
     const std::vector<QuantLib::Date>& dates() const override;
     QuantLib::Date asof() const override;
 

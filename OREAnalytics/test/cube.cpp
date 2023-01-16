@@ -109,7 +109,7 @@ template <class T> void testCubeFileIO(NPVCube& cube, const std::string& cubeNam
 }
 
 void testCubeGetSetbyDateID(NPVCube& cube, Real tolerance) {
-    std::map<string, Size> ids = cube.idAndIndex();
+    std::map<string, Size> ids = cube.idsAndIndexes();
     vector<Date> dates = cube.dates();
     // set value for each cube entry
     Real i = 1.0;

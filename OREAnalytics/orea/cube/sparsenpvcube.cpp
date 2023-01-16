@@ -74,7 +74,7 @@ template <typename T> Size SparseNpvCube<T>::numDates() const { return dates_.si
 template <typename T> Size SparseNpvCube<T>::samples() const { return samples_; }
 template <typename T> Size SparseNpvCube<T>::depth() const { return depth_; }
 template <typename T> Date SparseNpvCube<T>::asof() const { return asof_; }
-template <typename T> const std::map<std::string, Size>& SparseNpvCube<T>::idAndIndex() const { return ids_; }
+template <typename T> const std::map<std::string, Size>& SparseNpvCube<T>::idsAndIndexes() const { return ids_; }
 template <typename T> const std::vector<QuantLib::Date>& SparseNpvCube<T>::dates() const { return dates_; }
 
 template <typename T> Size SparseNpvCube<T>::pos(Size i, Size j, Size d) const {
@@ -147,7 +147,7 @@ template Size SparseNpvCube<Real>::numDates() const;
 template Size SparseNpvCube<Real>::samples() const;
 template Size SparseNpvCube<Real>::depth() const;
 template Date SparseNpvCube<Real>::asof() const;
-template const std::map<std::string, Size>& SparseNpvCube<Real>::idAndIndex() const;
+template const std::map<std::string, Size>& SparseNpvCube<Real>::idsAndIndexes() const;
 template const std::vector<QuantLib::Date>& SparseNpvCube<Real>::dates() const;
 template Size SparseNpvCube<Real>::pos(Size i, Size j, Size d) const;
 template Real SparseNpvCube<Real>::getT0(Size i, Size d) const;
@@ -167,7 +167,7 @@ template Size SparseNpvCube<float>::numDates() const;
 template Size SparseNpvCube<float>::samples() const;
 template Size SparseNpvCube<float>::depth() const;
 template Date SparseNpvCube<float>::asof() const;
-template const std::map<std::string, Size>& SparseNpvCube<float>::idAndIndex() const;
+template const std::map<std::string, Size>& SparseNpvCube<float>::idsAndIndexes() const;
 template const std::vector<QuantLib::Date>& SparseNpvCube<float>::dates() const;
 template Size SparseNpvCube<float>::pos(Size i, Size j, Size d) const;
 template Real SparseNpvCube<float>::getT0(Size i, Size d) const;

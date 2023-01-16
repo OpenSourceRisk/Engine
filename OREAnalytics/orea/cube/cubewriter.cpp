@@ -44,7 +44,7 @@ void CubeWriter::write(const boost::shared_ptr<NPVCube>& cube, const std::map<st
     oss << QuantLib::io::iso_date(cube->asof());
     string asofString = oss.str();
 
-    const std::map<string, Size>& ids = cube->idAndIndex();
+    const std::map<string, Size>& ids = cube->idsAndIndexes();
 
     FILE* fp = fopen(filename_.c_str(), append ? "a" : "w");
     QL_REQUIRE(fp, "error opening file " << filename_);

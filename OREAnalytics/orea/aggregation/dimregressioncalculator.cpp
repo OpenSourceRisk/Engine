@@ -381,7 +381,7 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
         .addColumn("NettingSet", string())
         .addColumn("Time", Real(), 6);
 
-    for (const auto& [nettingSet, _] : dimCube_->idAndIndex()) {
+    for (const auto& [nettingSet, _] : dimCube_->idsAndIndexes()) {
 
         LOG("Export DIM evolution for netting set " << nettingSet);
         for (Size i = 0; i < stopDatesLoop; ++i) {
@@ -421,7 +421,7 @@ void RegressionDynamicInitialMarginCalculator::exportDimRegression(
         LOG("Export DIM by sample for netting set " << nettingSet << " and time step " << timeStep);
 
         Size dates = dimCube_->dates().size();
-        const std::map<std::string, Size>& ids = dimCube_->idAndIndex();
+        const std::map<std::string, Size>& ids = dimCube_->idsAndIndexes();
 
         auto it = ids.find(nettingSet);
                 

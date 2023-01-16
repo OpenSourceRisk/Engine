@@ -78,12 +78,12 @@ public:
     }
     */
     //! Get a map of id and their index position in this cube 
-    virtual const std::map<std::string, Size>& idAndIndex() const = 0;
+    virtual const std::map<std::string, Size>& idsAndIndexes() const = 0;
 
     //! Get a set of all ids in the cube
-    const std::set<std::string> idsOnly() const {
+    const std::set<std::string> ids() const {
         std::set<std::string> result;
-        for (const auto& [id, pos] : idAndIndex()) {
+        for (const auto& [id, pos] : idsAndIndexes()) {
             result.insert(id);
         }
         return result;
@@ -130,8 +130,8 @@ public:
 
 protected:
     virtual Size index(const std::string& id) const {
-        const auto& it = idAndIndex().find(id);
-        QL_REQUIRE(it != idAndIndex().end(), "NPVCube can't find an index for id " << id);
+        const auto& it = idsAndIndexes().find(id);
+        QL_REQUIRE(it != idsAndIndexes().end(), "NPVCube can't find an index for id " << id);
         return it->second;
     };
 

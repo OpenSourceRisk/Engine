@@ -110,7 +110,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     // Loop is Samples, Dates, Trades
     const auto& dates = dg_->dates();
     const auto& trades = portfolio->trades();
-    auto& counterparties = outputCptyCube ? outputCptyCube->idAndIndex() : std::map<string, Size>();
+    auto& counterparties = outputCptyCube ? outputCptyCube->idsAndIndexes() : std::map<string, Size>();
     std::vector<bool> tradeHasError(portfolio->size(), false);
     LOG("Initialise state objects...");
     // initialise state objects for each trade (required for path-dependent derivatives in particular)

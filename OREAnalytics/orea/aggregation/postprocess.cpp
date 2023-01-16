@@ -90,12 +90,12 @@ PostProcess::PostProcess(
     QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
     // check portfolio and cube have the same trade ids, in the same order
-    QL_REQUIRE(portfolio->size() == cube_->idAndIndex().size(),
+    QL_REQUIRE(portfolio->size() == cube_->idsAndIndexes().size(),
                "PostProcess::PostProcess(): portfolio size ("
-                   << portfolio->size() << ") does not match cube trade size (" << cube_->idAndIndex().size() << ")");
+                   << portfolio->size() << ") does not match cube trade size (" << cube_->idsAndIndexes().size() << ")");
     
     auto portfolioIt = portfolio->trades().begin();
-    auto cubeIdIt = cube_->idAndIndex().begin();
+    auto cubeIdIt = cube_->idsAndIndexes().begin();
     for (size_t i = 0; i < portfolio->size(); i++, portfolioIt++, cubeIdIt++) {
         const std::string& portfolioTradeId = portfolioIt->first;
         const std::string& cubeTradeId = cubeIdIt->first;
@@ -109,13 +109,13 @@ PostProcess::PostProcess(
         // check portfolio and cptyCube have the same counterparties, in the same order
         auto cptyIds = portfolio->counterparties();
         cptyIds.insert(dvaName_);
-        QL_REQUIRE(cptyIds.size() == cptyCube_->idAndIndex().size(),
+        QL_REQUIRE(cptyIds.size() == cptyCube_->idsAndIndexes().size(),
                    "PostProcess::PostProcess(): portfolio counterparty size ("
                        << cptyIds.size() << ") does not match cpty cube trade size ("
-                       << cptyCube_->idAndIndex().size() << ")");
+                       << cptyCube_->idsAndIndexes().size() << ")");
 
         auto cptyIt = cptyIds.begin();
-        cubeIdIt = cptyCube_->idAndIndex().begin();
+        cubeIdIt = cptyCube_->idsAndIndexes().begin();
         for (size_t i = 0; i < cptyIds.size(); ++i, ++cptyIt, ++cubeIdIt) {
             const std::string& counterpartyId = *cptyIt;
             const std::string& cubeTradeId = cubeIdIt->first;

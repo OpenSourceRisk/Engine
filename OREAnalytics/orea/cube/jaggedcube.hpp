@@ -222,7 +222,7 @@ public:
     }
 
     //! Get the vector of ids for this cube
-    const std::map<std::string, Size>& idAndIndex() const override { return ids_; }
+    const std::map<std::string, Size>& idsAndIndexes() const override { return ids_; }
     //! Get the vector of dates for this cube
     const std::vector<QuantLib::Date>& dates() const override { return dates_; }
 

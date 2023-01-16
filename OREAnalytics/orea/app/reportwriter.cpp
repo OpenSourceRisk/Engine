@@ -1567,7 +1567,7 @@ void ReportWriter::writeCube(ore::data::Report& report, const boost::shared_ptr<
         .addColumn("Depth", Size())
         .addColumn("Value", double(), 4);
 
-    const map<string, Size>& idsAndPos = cube->idAndIndex();
+    const map<string, Size>& idsAndPos = cube->idsAndIndexes();
     vector<string> dateStrings(cube->numDates());
     for (Size i = 0; i < cube->numDates(); ++i) {
         std::ostringstream oss;

@@ -41,7 +41,7 @@ ExposureAllocator::ExposureAllocator(
 void ExposureAllocator::build() {
     LOG("Compute allocated trade exposures");
 
-    for (const auto& [nettingSetId, idx] : nettedExposureCube_->idAndIndex()) {
+    for (const auto& [nettingSetId, idx] : nettedExposureCube_->idsAndIndexes()) {
 
         for (const auto & [tid, trade] : portfolio_->trades()) {
             string nid = trade->envelope().nettingSetId();
