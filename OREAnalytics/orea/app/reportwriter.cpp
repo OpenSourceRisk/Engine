@@ -1567,7 +1567,7 @@ void ReportWriter::writeCube(ore::data::Report& report, const boost::shared_ptr<
         .addColumn("Depth", Size())
         .addColumn("Value", double(), 4);
 
-    const vector<string>& ids = cube->ids();
+    const map<string, Size>& idsAndPos = cube->idAndIndex();
     vector<string> dateStrings(cube->numDates());
     for (Size i = 0; i < cube->numDates(); ++i) {
         std::ostringstream oss;
@@ -1579,16 +1579,19 @@ void ReportWriter::writeCube(ore::data::Report& report, const boost::shared_ptr<
     oss << QuantLib::io::iso_date(cube->asof());
     string asofString = oss.str();
 
-    vector<string> nettingSetIds(ids.size());
-    for (Size i = 0; i < ids.size(); i++) {
-        if (nettingSetMap.find(ids[i]) != nettingSetMap.end())
-            nettingSetIds[i] = nettingSetMap.at(ids[i]);
+    vector<string> ids(idsAndPos.size());
+    vector<string> nettingSetIds(idsAndPos.size());
+    for (const auto& [id, idCubePos] : idsAndPos) {
+        ids[idCubePos] = id;
+        auto it = nettingSetMap.find(id);
+        if (it != nettingSetMap.end())
+            nettingSetIds[idCubePos] = it->second;
         else
-            nettingSetIds[i] = "";
+            nettingSetIds[idCubePos] = "";
     }
 
     // T0
-    for (Size i = 0; i < ids.size(); i++) {
+    for (Size i = 0; i < ids.size(); ++i) {
         report.next();
         report.add(ids[i])
             .add(nettingSetIds[i])
