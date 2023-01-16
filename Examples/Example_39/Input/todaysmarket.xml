@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<TodaysMarket>
+  <Configuration id="default">
+    <DiscountingCurvesId>ois</DiscountingCurvesId>
+  </Configuration>
+  <Configuration id="collateral_inccy">
+    <DiscountingCurvesId>ois</DiscountingCurvesId>
+  </Configuration>
+  <Configuration id="libor_inccy">
+    <DiscountingCurvesId>libor</DiscountingCurvesId>
+  </Configuration>
+  <DiscountingCurves id="ois">
+    <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
+  </DiscountingCurves>
+  <DiscountingCurves id="libor">
+    <DiscountingCurve currency="USD">Yield/USD/USD3M</DiscountingCurve>
+  </DiscountingCurves>
+  <YieldCurves id="default">
+    <YieldCurve name="USD.BMK.GVN.CURVE_SHIFTED">Yield/USD/USD.BMK.GVN.CURVE_SHIFTED</YieldCurve>
+    <YieldCurve name="USD1D">Yield/USD/USD1D</YieldCurve>
+    <YieldCurve name="USD3M">Yield/USD/USD3M</YieldCurve>
+  </YieldCurves>
+  <IndexForwardingCurves id="default">
+    <Index name="USD-FedFunds">Yield/USD/USD1D</Index>
+    <Index name="USD-LIBOR-1M">Yield/USD/USD1M</Index>
+    <Index name="USD-LIBOR-3M">Yield/USD/USD3M</Index>
+    <Index name="USD-LIBOR-6M">Yield/USD/USD6M</Index>
+    <Index name="USD-LIBOR-12M">Yield/USD/USD12M</Index>
+    <Index name="USD-SOFR">Yield/USD/USDSOFR1D</Index>
+  </IndexForwardingCurves>
+  <FxSpots id="default">
+    <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot> 
+    <FxSpot pair="USDEUR">FX/USD/EUR</FxSpot>
+  </FxSpots>
+  <SwapIndexCurves id="default">
+    <SwapIndex name="USD-CMS-1Y">
+      <Discounting>USD-FedFunds</Discounting>
+    </SwapIndex>
+    <SwapIndex name="USD-CMS-30Y">
+      <Discounting>USD-FedFunds</Discounting>
+    </SwapIndex>
+  </SwapIndexCurves>
+  <DefaultCurves id="default">
+  </DefaultCurves>
+  <Securities id="default">
+    <Security name="DUMMY_SECURITY">Security/DUMMY_SECURITY</Security>
+  </Securities>
+</TodaysMarket>
