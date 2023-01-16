@@ -83,9 +83,30 @@ The meanings and allowable values of the elements in the \lstinline!FxAsianOptio
 	Allowable values: all positive real numbers
 	\item Underlying: An \lstinline!Underlying! node where \lstinline!Type! must be set to \emph{FX} and \lstinline!Name! is the foreign exchange currency pair (on the form SOURCE-CCY1-CCY2) including the \lstinline!Currency! above typically as CCY2 and another currency defined as the underlying currency as CCY1.   \\
 	Allowable values:  See \ref{ss:underlying}
-	\item OptionData: The relevant fields in the \lstinline!OptionData! node for an FxAsianOption are the \lstinline!LongShort! flag, the \lstinline!OptionType! (\emph{call/put}), the \lstinline!PayoffType! which must be set to \emph{Asian} or \emph{AverageStrike} to
-	identify a fixed or floating strike asian payoff, and the \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given. \lstinline!PayoffType2! can be optionally set to \emph{Arithmetic} or \emph{Geometric} and defaults to \emph{Arithmetic} if not given. Furthermore, a \emph{Premiums} node can be added to represent deterministic option premia to be paid by the option holder. \\
-	Allowable values: See \ref{ss:option_data} for the general structure of the \lstinline!OptionData! node.
+	
+	\item OptionData:  This is a trade component sub-node outlined in section \ref{ss:option_data}.  The relevant fields in the \lstinline!OptionData! node for an FxAsianOption are:
+	
+	\begin{itemize}
+	
+	\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}.
+	
+	\item \lstinline!OptionType! The allowable values are \emph{Call} or \emph{Put}. 
+	
+	 \item \lstinline!PayoffType! which must be set to \emph{Asian} or \emph{AverageStrike} to
+	identify a fixed or floating strike asian payoff, 
+	
+	 \item \lstinline!PayoffType2! [Optional] can be optionally set to \emph{Arithmetic} or \emph{Geometric} and defaults to \emph{Arithmetic} if not given. 
+	
+	\item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given. 
+	
+	\item A \lstinline!PaymentData! [Optional] node can be added which defines the settlement of the option payoff.
+	
+	\item A \lstinline!Premiums! [Optional] node can be added to represent deterministic option premia to be paid by the option holder. See section \ref{ss:premiums}
+	
+	\end{itemize}
+	
+	
+	
 	\item Settlement[Optional]: The settlement date.  \\
 	Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. Defaults to the ExerciseDate if left blank or omitted.
 	\item ObservationDates: The observation dates for the asian period, given as a rules-based or dates-based schedule, analogous to a \lstinline!ScheduleData! node but called \lstinline!ObservationDates!.  \\

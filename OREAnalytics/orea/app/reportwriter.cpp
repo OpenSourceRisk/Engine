@@ -1555,5 +1555,72 @@ void ReportWriter::writePricingStats(ore::data::Report& report, const boost::sha
     LOG("Pricing stats report written");
 }
 
+void ReportWriter::writeCube(ore::data::Report& report, const boost::shared_ptr<NPVCube>& cube,
+                             const std::map<std::string, std::string>& nettingSetMap) {
+    LOG("Writing cube report");
+
+    report.addColumn("Id", string())
+        .addColumn("NettingSet", string())
+        .addColumn("DateIndex", Size())
+        .addColumn("Date", string())
+        .addColumn("Sample", Size())
+        .addColumn("Depth", Size())
+        .addColumn("Value", double(), 4);
+
+    const vector<string>& ids = cube->ids();
+    vector<string> dateStrings(cube->numDates());
+    for (Size i = 0; i < cube->numDates(); ++i) {
+        std::ostringstream oss;
+        oss << QuantLib::io::iso_date(cube->dates()[i]);
+        dateStrings[i] = oss.str();
+    }
+
+    std::ostringstream oss;
+    oss << QuantLib::io::iso_date(cube->asof());
+    string asofString = oss.str();
+
+    vector<string> nettingSetIds(ids.size());
+    for (Size i = 0; i < ids.size(); i++) {
+        if (nettingSetMap.find(ids[i]) != nettingSetMap.end())
+            nettingSetIds[i] = nettingSetMap.at(ids[i]);
+        else
+            nettingSetIds[i] = "";
+    }
+
+    // T0
+    for (Size i = 0; i < ids.size(); i++) {
+        report.next();
+        report.add(ids[i])
+            .add(nettingSetIds[i])
+            .add(static_cast<Size>(0))
+            .add(asofString)
+            .add(static_cast<Size>(0))
+            .add(static_cast<Size>(0))
+            .add(cube->getT0(i));
+    }
+    
+    // Cube
+    for (Size i = 0; i < ids.size(); i++) {
+        for (Size j = 0; j < cube->numDates(); j++) {
+            for (Size k = 0; k < cube->samples(); k++) {
+                for (Size l = 0; l < cube->depth(); l++) {
+                    report.next();
+                    report.add(ids[i])
+                        .add(nettingSetIds[i])
+                        .add(j + 1)
+                        .add(dateStrings[j])
+                        .add(k+1)
+                        .add(l)
+                        .add(cube->get(i, j, k, l));
+                }
+            }
+        }
+    }
+
+    report.end();
+
+    LOG("Cube report written");
+}
+
 } // namespace analytics
 } // namespace ore

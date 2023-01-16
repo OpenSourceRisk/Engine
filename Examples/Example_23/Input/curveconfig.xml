@@ -2010,7 +2010,7 @@
           <Extrapolation>true</Extrapolation>
           <Calendar>UK</Calendar>
           <DayCounter>A365</DayCounter>
-          <Lag>3M</Lag>
+          <Lag>2M</Lag>
           <Frequency>Monthly</Frequency>
           <BaseRate>0.01</BaseRate>
           <Tolerance>0.000000000001</Tolerance>

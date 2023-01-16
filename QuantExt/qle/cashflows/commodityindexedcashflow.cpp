@@ -59,8 +59,13 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
     init(calc, ref, paymentTiming, startDate, endDate, paymentLag, paymentConvention, paymentCalendar);
 }
 
+void CommodityIndexedCashFlow::performCalculations() const {
+    amount_ = periodQuantity_ * gearing_ * (index_->fixing(pricingDate_) + spread_);
+}
+
 Real CommodityIndexedCashFlow::amount() const {
-    return periodQuantity_ * gearing_ * (index_->fixing(pricingDate_) + spread_);
+    calculate();
+    return amount_;
 }
 
 void CommodityIndexedCashFlow::accept(AcyclicVisitor& v) {
@@ -69,8 +74,6 @@ void CommodityIndexedCashFlow::accept(AcyclicVisitor& v) {
     else
         CashFlow::accept(v);
 }
-
-void CommodityIndexedCashFlow::update() { notifyObservers(); }
 
 void CommodityIndexedCashFlow::setPeriodQuantity(Real periodQuantity) { periodQuantity_ = periodQuantity; }
 

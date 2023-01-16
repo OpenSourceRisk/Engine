@@ -40,6 +40,7 @@
 #include <ored/portfolio/builders/cpicapfloor.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/builders/creditdefaultswapoption.hpp>
+#include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/portfolio/builders/durationadjustedcms.hpp>
 #include <ored/portfolio/builders/equityasianoption.hpp>
 #include <ored/portfolio/builders/equitybarrieroption.hpp>
@@ -61,16 +62,18 @@
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/fxtouchoption.hpp>
+#include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/builders/varianceswap.hpp>
 #include <ored/portfolio/durationadjustedcmslegbuilder.hpp>
-#include <ored/portfolio/enginefactory.hpp>
-#include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/commoditylegbuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/equityfxlegbuilder.hpp>
+#include <ored/portfolio/legbuilders.hpp>
+#include <ored/portfolio/multilegoption.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <boost/algorithm/string/join.hpp>
@@ -274,6 +277,9 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<QuantoEquityEuropeanOptionEngineBuilder>());
     registerBuilder(boost::make_shared<CommoditySpreadOptionEngineBuilder>());
 
+    registerBuilder(boost::make_shared<LgmMcBermudanSwaptionEngineBuilder>());
+    registerBuilder(boost::make_shared<CamMcMultiLegOptionEngineBuilder>());
+
     registerLegBuilder(boost::make_shared<DurationAdjustedCmsLegBuilder>());
     registerLegBuilder(boost::make_shared<FixedLegBuilder>());
     registerLegBuilder(boost::make_shared<ZeroCouponFixedLegBuilder>());
@@ -290,6 +296,7 @@ void EngineFactory::addDefaultBuilders() {
     registerLegBuilder(boost::make_shared<CommodityFixedLegBuilder>());
     registerLegBuilder(boost::make_shared<CommodityFloatingLegBuilder>());
     registerLegBuilder(boost::make_shared<EquityMarginLegBuilder>());
+
 }
 
 void EngineFactory::addExtraBuilders(const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,

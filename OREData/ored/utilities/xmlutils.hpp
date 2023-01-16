@@ -237,8 +237,16 @@ public:
     static string getAttribute(XMLNode* node, const string& attrName);
 
     //! Returns all the children with a given name
-    // To get all children, set name equal to Null or ""
+    // To get all children, set name equal to ""
     static vector<XMLNode*> getChildrenNodes(XMLNode* node, const string& name);
+
+    static vector<XMLNode*> getChildrenNodesWithAttributes(XMLNode* node, const string& names, const string& name,
+                                                           const string& attrName, vector<string>& attrs,
+                                                           bool mandatory = false);
+    static vector<XMLNode*> getChildrenNodesWithAttributes(XMLNode* node, const string& names, const string& name,
+                                                           const vector<string>& attrNames,
+                                                           const vector<std::reference_wrapper<vector<string>>>& attrs,
+                                                           bool mandatory = false);
 
     //! Get and set a node's name
     static string getNodeName(XMLNode* n);

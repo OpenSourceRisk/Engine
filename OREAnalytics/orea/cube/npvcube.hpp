@@ -36,12 +36,19 @@ namespace analytics {
 using QuantLib::Real;
 using QuantLib::Size;
 //! NPV Cube class stores both future and current NPV values.
-/*! The cube class stores futures NPV values in a 3-D array, i.e. each side can be of a different
- *  length (so a cuboid).
+/*! The cube class stores future NPV values in a 4-D array.
  *
  *  This abstract base class is just used for the storage of a cube.
  *  This class also stores the tradeIds, dates and vector of T0 NPVs
-  \ingroup cube
+ *
+ *  The values in the cube must be set according to the following rules to ensure consistent behavior:
+ *  - T0 values need to be set first using setT0(), in arbitrary order for (id, date, sample, depth), not all
+ *    possible tuples have to be covered
+ *  - after that the other values can be set using set(), again in arbitrary order for (id, date, sample, depth)
+ *    and again not all possible tuples have to be covered
+ *  - for each tuple (id, date, sample, depth) setT0() and set() should only be called once
+ *
+    \ingroup cube
  */
 class NPVCube {
 public:
@@ -110,6 +117,10 @@ public:
         set(value, index(id), index(date), sample, depth);
     }
 
+    /*! remove all values for a given id, i.e. change the state as if setT0() and set() has never been called for the id
+        the default implementation has generelly to be overriden in derived classes depending on how values are stored */
+    virtual void remove(Size id);
+
     //! Load cube contents from disk
     virtual void load(const std::string& fileName) = 0;
     //! Persist cube contents to disk
@@ -131,5 +142,19 @@ protected:
     };
 
 };
+
+// impl
+
+inline void NPVCube::remove(Size id) {
+    for (Size date = 0; date < this->numDates(); ++date) {
+        for (Size depth = 0; depth < this->depth(); ++depth) {
+            setT0(0.0, id, depth);
+            for (Size sample = 0; sample < this->samples(); ++sample) {
+                set(0.0, id, date, sample, depth);
+            }
+        }
+    }
+}
+
 } // namespace analytics
 } // namespace ore

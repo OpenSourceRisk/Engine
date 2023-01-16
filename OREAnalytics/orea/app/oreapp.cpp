@@ -63,8 +63,88 @@ vector<string> getFilenames(const string& fileString, const string& path) {
 namespace ore {
 namespace analytics {
 
+void OREApp::analytics(ostream& out) {
+
+    try {
+        //setupLog();
+
+        LOG("ORE analytics starting");
+
+        // Read all inputs from params and files referenced in params
+        out_ << setw(tab_) << left << "Loading inputs " << flush;
+        auto inputs = boost::make_shared<OREAppInputParameters>(params_);
+        out_ << "OK" << std::endl;
+        
+        // Set global evaluation date, though already set in the OREAppInputParameters c'tor
+        Settings::instance().evaluationDate() = inputs->asof();
+
+        // FIXME
+        GlobalPseudoCurrencyMarketParameters::instance().set(inputs->pricingEngine()->globalParameters());
+
+        // Initialize the global conventions 
+        InstrumentConventions::instance().setConventions(inputs->conventions());
+
+        // Create a market data loader that reads market data, fixings, dividends from csv files
+        auto loader = boost::make_shared<MarketDataCsvLoader>(inputs, inputs->csvLoader());
+
+        // Create the analytics manager
+        auto analyticsManager = boost::make_shared<AnalyticsManager>(inputs, loader, out);
+        LOG("Available analytics: " << to_string(analyticsManager->validAnalytics()));
+        out_ << setw(tab_) << left << "Requested analytics " << to_string(inputs->runTypes()) << std::endl;
+        LOG("Requested analytics: " << to_string(inputs->runTypes()));
+
+        // Run the requested analytics
+        // FIXME: How is the market calibration report supposed to work, no concrete implementation in orea yet
+        // auto marketCalibrationReport = boost::make_shared<MarketCalibrationReport>();
+        // analyticsManager->runAnalytics(inputs->runTypes(), marketCalibrationReport);
+        analyticsManager->runAnalytics(inputs->runTypes());
+
+        // Write reports to files in the results path
+        Analytic::analytic_reports reports = analyticsManager->reports();
+        for (auto a : reports) {
+            for (auto b : a.second) {
+                string reportName = b.first;            
+                std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "csv");
+                boost::shared_ptr<InMemoryReport> rpt = b.second;
+                LOG("Write report " << reportName << " for analytic " << a.first);
+                rpt->toFile(fileName);
+            }
+        }
+        
+        // Write npv cube(s)
+        for (auto a : analyticsManager->npvCubes()) {
+            for (auto b : a.second) {
+                LOG("write npv cube " << b.first);
+                string reportName = b.first;
+                std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "dat");
+                LOG("write npv cube " << reportName << " to file " << fileName);
+                b.second->save(fileName);
+            }
+        }
+        
+        // Write market cube(s)
+        for (auto a : analyticsManager->mktCubes()) {
+            for (auto b : a.second) {
+                string reportName = b.first;
+                std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "dat");
+                LOG("write market cube " << reportName << " to file " << fileName);
+                b.second->save(fileName);
+            }
+        }        
+    }
+    catch (std::exception& e) {
+        ALOG("Error: " << e.what());
+        out_ << "Error: " << e.what() << endl;
+        exit(1);
+    }
+
+    LOG("ORE analytics done");
+
+    exit(0);
+}
+    
 OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
-    : tab_(40), progressBarWidth_(72 - std::min<Size>(tab_, 67)), params_(params),
+    : tab_(50), progressBarWidth_(72 - std::min<Size>(tab_, 67)), params_(params),
       asof_(parseDate(params_->get("setup", "asofDate"))), out_(out), cubeDepth_(0) {
 
     // Set global evaluation date
@@ -89,13 +169,25 @@ OREApp::~OREApp() {
     closeLog();
 }
 
-int OREApp::run() {
+int OREApp::run(bool useAnalytics) {
 
     cpu_timer timer;
-
+    
     try {
-        out_ << "ORE starting" << std::endl;
-        LOG("ORE starting");
+
+        if (useAnalytics) {
+            analytics(out_);
+            return 0;
+        }
+
+        out_ << endl 
+             << "=====================================" << endl
+             << "=== DEPRECATED useAnalytics=false ===" << endl
+             << "=====================================" << endl
+             << endl
+             << "ORE starting" << std::endl;
+
+        LOG("ORE starting: DEPRECATED ORE App");
         // readSetup();
 
         /*********
@@ -108,10 +200,13 @@ int OREApp::run() {
         /*********
          * Build Markets
          */
+        cpu_timer mtimer;
         buildMarket();
+        mtimer.stop();
+        LOG("Market Build Time " << setprecision(2) << mtimer.format(default_places, "%w") << " sec");
 
         /************************
-         *Build Pricing Engine Factory
+         * Build Pricing Engine Factory
          */
         out_ << setw(tab_) << left << "Engine factory... " << flush;
         engineFactory_ = buildEngineFactory(market_, "setup", true);
@@ -296,6 +391,7 @@ int OREApp::run() {
     out_ << "ORE done." << endl;
 
     LOG("ORE done.");
+
     return 0;
 }
 
@@ -518,6 +614,7 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
+    LOG("MarketContext::pricing = " << params_->get("markets", "pricing"));
     boost::shared_ptr<EngineFactory> factory =
         boost::make_shared<EngineFactory>(engineData, market, configurations, getExtraEngineBuilders(),
                                           getExtraLegBuilders(), referenceData_, iborFallbackConfig_);
@@ -1250,6 +1347,7 @@ void OREApp::runPostProcessor() {
     // FIXME: Needs the "simulation" section in ore.xml with consistent simulation.xml
     if (!cubeInterpreter_) {
         boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
+        LOG("withCloseOutLag=" << (sgd->withCloseOutLag() ? "Y" : "N"));
         if (sgd->withCloseOutLag())
             cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->getGrid(), analytics["flipViewXVA"]);
         else
@@ -1440,6 +1538,8 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
 
     LOG("Today's market built");
     MEM_LOG;
+
+
 }
 
 boost::shared_ptr<MarketImpl> OREApp::getMarket() const {

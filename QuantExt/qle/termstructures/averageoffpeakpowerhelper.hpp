@@ -93,6 +93,8 @@ public:
     void accept(QuantLib::AcyclicVisitor& v) override;
     //@}
 
+    void deepUpdate() override;
+
 private:
     //! Shared initialisation method.
     void init(const boost::shared_ptr<CommodityIndex>& index,

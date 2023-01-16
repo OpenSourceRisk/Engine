@@ -80,15 +80,12 @@ public:
     void accept(QuantLib::AcyclicVisitor& v) override;
     //@}
 
-    //! \name Observer interface
-    //@{
-    void update() override;
-    //@}
-
     //! Allow the full calculation period quantity to be updated.
     void setPeriodQuantity(QuantLib::Real periodQuantity);
 
 private:
+    void performCalculations() const override;
+
     QuantLib::Date pricingDate_;
     QuantLib::Date paymentDate_;
     bool useFutureExpiryDate_;
