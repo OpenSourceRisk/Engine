@@ -3404,7 +3404,7 @@ scenarios is described in more detail in section \ref{sec:stress}.
       <Parameter name="salvageCovarianceMatrix">N</Parameter>
       <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter> 
       <Parameter name="breakdown">Y</Parameter> 
-      <!-- Delta, DeltaGammaNormal, MonteCarlo --> 
+      <!-- Delta, DeltaGammaNormal, Cornish-Fisher, Saddlepoint, MonteCarlo --> 
       <Parameter name="method">DeltaGammaNormal</Parameter> 
       <Parameter name="mcSamples">100000</Parameter> 
       <Parameter name="mcSeed">42</Parameter> 
@@ -3424,7 +3424,7 @@ The parameters have the following interpretation:
 \item {\tt salvageCovarianceMatrix:} If set to Y, turn the input covariance matrix into a valid (positive definite) matrix applying a Salvaging algorithm; if set to N, throw an exception if the matrix is not positive definite
 \item {\tt quantiles:} Several desired quantiles can be specified here in a comma separated list; these lead to several columns of results in the output file, see below. Note that e.g. the 1\% quantile corresponds to the lower tail of the P\&L distribution (VaR), 99\% to the upper tail.
 \item {\tt breakdown:} If yes, VaR is computed by portfolio, risk class (All, Interest Rate, FX, Inflation, Equity, Credit) and risk type (All, Delta \& Gamma, Vega)
-\item {\tt method:} Choices are {\em Delta, DeltaGammaNormal, MonteCarlo}, see appendix \ref{sec:app_var}
+\item {\tt method:} Choices are {\em Delta, DeltaGammaNormal, Cornish-Fisher, Saddlepoint, MonteCarlo}, see appendix \ref{sec:app_var}
 \item {\tt mcSamples:} Number of Monte Carlo samples used when the {\em MonteCarlo} method is chosen 
 \item {\tt mcSeed:} Random number generator seed when the {\em MonteCarlo} method is chosen
 \item {\tt outputFile:} Output file name
@@ -7706,6 +7706,15 @@ VaR = m + N^{-1}(q)\,\sqrt{v}
 $$
 for the desired quantile $q$ ($N$ is the cumulative standard normal distribution). Omitting the second order terms in \eqref{taylorPl2} yields the delta normal approximation.
  
+\subsubsection*{Cornish-Fisher Expansion}
+
+The first four moments of the distribution of $\pi_S$ in \eqref{taylorPl2} can be computed in closed form using the covariance matrix $C$ and the sensitivities of first and second order $D_i$
+and $D_{i,k}$, see e.g. \cite{alexander}. Once these moments are known, an approximation to the true quantile of $\pi_S$ can be computed using the Cornish-Fisher expansion, see also [7], which in practice often gives a decent approximation of the true value, but may also show bigger differences in certain configurations.
+
+\subsubsection*{Saddlepoint Approximation}
+
+Another approximation of the true quantile of $\pi_S$ can be computed using the Saddlepoint approximation using results from \cite{Lugannani} and \cite{Daniels}. This method typically produces more accurate results than the Cornish-Fisher method, while still being fast to evaluate.
+
 \subsubsection*{Monte Carlo Simulation}
 
 By simulating a large number of realisations of the return vector $Y=\{ Y_i \}_i$ and computing the corresponding
@@ -7802,6 +7811,11 @@ implementation of the inverse cumulative normal distribution to transform $U[0,1
   \url{http://www.quarchome.org/correlationmatrix.pdf}
 
 \bibitem{alexander} Carol Alexander, Market Risk Analysis, Volume IV, Value at Risk Models, Wiley 2009
+
+\bibitem{Lugannani} Lugannani, R.and S.Rice (1980), Saddlepoint Approximations for the Distribution of the Sum of
+  Independent Random Variables, Advances in Applied Probability, 12,475-490.
+
+\bibitem{Daniels} Daniels, H. E. (1987), Tail Probability Approximations, International Statistical Review, 55, 37-48.
 
 \end{thebibliography}
 

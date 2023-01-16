@@ -142,6 +142,14 @@ Real deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamm
     return deltaGammaVarMc<RNG>(omega, delta, gamma, pv, paths, seed, sal).front();
 }
 
+/* delta-gamma VaR using Cornish-Fisher extrapolation (or normal delta-gamma VaR) */
+Real deltaGammaVarCornishFisher(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p,
+                                const CovarianceSalvage& sal = NoCovarianceSalvage());
+
+/* delta-gamma VaR using Saddlepoint approximation */
+Real deltaGammaVarSaddlepoint(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p,
+                              const CovarianceSalvage& sal = NoCovarianceSalvage());
+
 } // namespace QuantExt
 
 #endif

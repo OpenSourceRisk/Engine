@@ -9,6 +9,7 @@ blackvariancesurfacesparse.cpp
 blackvariancesurfacestddevs.cpp
 blackvolsurfacedelta.cpp
 blackvolsurfaceproxy.cpp
+blockmatrixinverse.cpp
 bondoption.cpp
 bonds.cpp
 bondtrs.cpp
