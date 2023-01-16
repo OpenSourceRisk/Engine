@@ -1387,18 +1387,23 @@ void YieldCurve::buildBondYieldShiftedCurve() {
             Date thisMaturity = qlInstr->maturityDate();
             bondYield = qlInstr->yield(rescaledBondQuote->value() * inflationQuoteFactor,
                                                       ActualActual(ActualActual::ISDA), Continuous, NoFrequency);
-            DLOG("found bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
-                                       << ", clean price = " << rescaledBondQuote->value() * inflationQuoteFactor
-                                       << ", yield (cont,act/act) = " << bondYield);
+
             thisDuration = QuantLib::BondFunctions::duration(*qlInstr,InterestRate(bondYield,ActualActual(ActualActual::ISDA),Continuous,NoFrequency)
                                                                            ,Duration::Modified,asofDate_);
+
+            DLOG("found bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
+                << ", clean price = " << rescaledBondQuote->value() * inflationQuoteFactor
+                << ", yield (cont,act/act) = " << bondYield
+                << ", duration = " << thisDuration);
 
             bondYields.push_back(bondYield);
             bondDurations.push_back(thisDuration);
 
-                    DLOG("calculated duration of the bond " << securityID << " is equal to " << thisDuration)
+            DLOG("calculated duration of the bond " << securityID << " is equal to " << thisDuration)
+        
         } else {
-                    DLOG("error in data collection of bond " << securityID << " with settlement date "
+            
+            DLOG("error in data collection of bond " << securityID << " with settlement date "
                                          << QuantLib::io::iso_date(qlInstr->settlementDate()) << ", isTradable = "
                                          << std::boolalpha << QuantLib::BondFunctions::isTradable(*qlInstr));
         }
