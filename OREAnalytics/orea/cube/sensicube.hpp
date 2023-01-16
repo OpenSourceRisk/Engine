@@ -112,6 +112,12 @@ public:
         }
     }
 
+    void remove(Size i) override {
+        this->check(i,0,0);
+        this->t0Data_[i] = 0.0;
+        this->tradeNPVs_[i].clear();
+    }
+
     std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(QuantLib::Size i) const override { return tradeNPVs_[i]; }
 
     std::set<QuantLib::Size> relevantScenarios() const override { return relevantScenarios_; }

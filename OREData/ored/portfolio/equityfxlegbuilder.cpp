@@ -38,7 +38,7 @@ namespace data {
 
 Leg EquityMarginLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                                      RequiredFixings& requiredFixings, const string& configuration,
-                                     const QuantLib::Date& openEndDateReplacement) const {
+                                     const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
     auto eqMarginData = boost::dynamic_pointer_cast<EquityMarginLegData>(data.concreteLegData());
     QL_REQUIRE(eqMarginData, "Wrong LegType, expected EquityMargin");
      

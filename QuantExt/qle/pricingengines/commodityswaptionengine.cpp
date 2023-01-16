@@ -290,37 +290,67 @@ Real CommoditySwaptionEngine::crossTerms(const boost::shared_ptr<CashFlow>& cf_1
         // depending on whether cashflows reference a future price or spot.
         Real cross = 0.0;
         if (ccf_1->useFuturePrice()) {
-            for (const auto& p_1 : ccf_1->indices()) {
-                Date e_1 = p_1.second->expiryDate();
-                Real fxRate1{1.};
+
+            std::vector<Real> prices1(ccf_1->indices().size()), prices2(ccf_2->indices().size()),
+                vol1(ccf_1->indices().size()), vol2(ccf_2->indices().size());
+            std::vector<Date> expiries1(ccf_1->indices().size()), expiries2(ccf_2->indices().size());
+
+            Size i = 0;
+            for (const auto& [d, p] : ccf_1->indices()) {
+                expiries1[i] = p->expiryDate();
+                Real fxRate{1.};
                 if (ccf_1->fxIndex())
-                    fxRate1 = ccf_1->fxIndex()->fixing(e_1);
-                Real fwd_1 = fxRate1 * p_1.second->fixing(e_1);
-                Real v_1 = volStructure_->blackVol(e_1, strike);
-                for (const auto& p_2 : ccf_2->indices()) {
-                    Date e_2 = p_2.second->expiryDate();
-                    Real fxRate2{1.};
-                    if(ccf_2->fxIndex())
-                        fxRate2 = ccf_2->fxIndex()->fixing(e_2);
-                    Real fwd_2 = fxRate2 * p_2.second->fixing(e_2);
-                    Real v_2 = volStructure_->blackVol(e_2, strike);
-                    cross += fwd_1 * fwd_2 * exp(rho(e_1, e_2) * v_1 * v_2 * t_e);
+                    fxRate = ccf_1->fxIndex()->fixing(expiries1[i]);
+                prices1[i] = fxRate * p->fixing(expiries1[i]);
+                vol1[i] = volStructure_->blackVol(expiries1[i], strike);
+                ++i;
+            }
+
+            i = 0;
+            for (const auto& [d, p] : ccf_2->indices()) {
+                expiries2[i] = p->expiryDate();
+                Real fxRate{1.};
+                if (ccf_2->fxIndex())
+                    fxRate = ccf_2->fxIndex()->fixing(expiries2[i]);
+                prices2[i] = fxRate * p->fixing(expiries2[i]);
+                vol2[i] = volStructure_->blackVol(expiries2[i], strike);
+                ++i;
+            }
+
+            for (Size i = 0; i < prices1.size(); ++i) {
+                for (Size j = 0; j < prices2.size(); ++j) {
+                    cross += prices1[i] * prices2[j] * exp(rho(expiries1[i], expiries2[j]) * vol1[i] * vol2[j] * t_e);
                 }
             }
+
         } else {
-            for (const auto& p_1 : ccf_1->indices()) {
-                Real fxRate1{1.};
-                if(ccf_1->fxIndex())
-                    fxRate1 = ccf_1->fxIndex()->fixing(p_1.first);
-                Real fwd_1 = fxRate1 * p_1.second->fixing(p_1.first);
-                for (const auto& p_2 : ccf_2->indices()) {
-                    Real fxRate2{1.};
-                    if(ccf_2->fxIndex())
-                        fxRate2 = ccf_2->fxIndex()->fixing(p_2.first);
-                    Real fwd_2 = fxRate2 * p_2.second->fixing(p_2.first);
-                    cross += fwd_1 * fwd_2;
+
+            std::vector<Real> prices1(ccf_1->indices().size()), prices2(ccf_2->indices().size());
+
+            Size i = 0;
+            for (const auto& [d, p] : ccf_1->indices()) {
+                Real fxRate{1.};
+                if (ccf_1->fxIndex())
+                    fxRate = ccf_1->fxIndex()->fixing(d);
+                prices1[i] = fxRate * p->fixing(d);
+                ++i;
+            }
+
+            i = 0;
+            for (const auto& [d, p] : ccf_2->indices()) {
+                Real fxRate{1.};
+                if (ccf_2->fxIndex())
+                    fxRate = ccf_2->fxIndex()->fixing(d);
+                prices2[i] = fxRate * p->fixing(d);
+                ++i;
+            }
+
+            for (Size i = 0; i < prices1.size(); ++i) {
+                for (Size j = 0; j < prices2.size(); ++j) {
+                    cross += prices1[i] * prices2[j];
                 }
             }
+
             cross *= exp(volStructure_->blackVariance(t_e, strike));
         }
         result *= cross;
@@ -603,9 +633,9 @@ void CommoditySwaptionMonteCarloEngine::futureFloatLegFactors(Size idxFloat, Rea
                 QL_REQUIRE(it != expiries.end(), "futureFloatLegFactors: expected to find expiry in expiries vector");
                 auto idx = distance(expiries.begin(), it);
                 Real fxRate{1.};
-                if(ccf->fxIndex())
-                    fxRate=ccf->fxIndex()->fixing(expiry);
-                floatLegFactors[i][idx] += fxRate*p.second->fixing(expiry) / numObs;
+                if (ccf->fxIndex())
+                    fxRate = ccf->fxIndex()->fixing(expiry);
+                floatLegFactors[i][idx] += fxRate * p.second->fixing(expiry) / numObs;
             }
             discounts[i] = discountCurve_->discount(ccf->date());
             amounts[i] = ccf->periodQuantity();

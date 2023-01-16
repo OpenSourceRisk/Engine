@@ -62,6 +62,7 @@
 #include <ored/portfolio/inflationswap.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/portfolio/varianceswap.hpp>
+#include <ored/portfolio/multilegoption.hpp>
 #include <ored/portfolio/failedtrade.hpp>
 #include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/log.hpp>
@@ -122,6 +123,7 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
 
     addBuilder("EquityFutureOption", boost::make_shared<TradeBuilder<EquityFutureOption>>());
     addBuilder("Failed", boost::make_shared<TradeBuilder<FailedTrade>>());
+    addBuilder("MultiLegOption", boost::make_shared<TradeBuilder<MultiLegOption>>());
     if (extraBuilders.size() > 0)
         addExtraBuilders(extraBuilders);
 }

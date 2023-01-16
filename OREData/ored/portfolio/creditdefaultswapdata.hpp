@@ -33,7 +33,7 @@ namespace ore {
 namespace data {
 
 //! CDS debt tier enumeration
-enum class CdsTier { SNRFOR, SUBLT2, SNRLAC, SECDOM, JRSUBUT2, PREFT1 };
+enum class CdsTier { SNRFOR, SUBLT2, SNRLAC, SECDOM, JRSUBUT2, PREFT1, LIEN1, LIEN2, LIEN3 };
 CdsTier parseCdsTier(const std::string& s);
 std::ostream& operator<<(std::ostream& out, const CdsTier& cdsTier);
 
