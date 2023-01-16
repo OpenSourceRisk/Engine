@@ -24,6 +24,8 @@
 #pragma once
 
 #include <ored/portfolio/referencedatafactory.hpp>
+#include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/underlying.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/time/date.hpp>
@@ -187,6 +189,143 @@ private:
     static ReferenceDatumRegister<ReferenceDatumBuilder<CreditIndexReferenceDatum>> reg_;
 };
 
+
+/*
+<ReferenceDatum id="SP500">
+  <Type>EquityIndex</Type>
+  <EquityIndexReferenceData>
+      <Underlying>
+        <Name>Apple</Name>
+        <Weight>0.03</Weight>
+      </Underlying>
+      ...
+  </EquityIndexReferenceData>
+</ReferenceDatum>
+*/
+//! Base class for indices - lets see if we can keep this, they might diverge too much...
+class IndexReferenceDatum : public ReferenceDatum {
+protected:
+    IndexReferenceDatum() {}
+    IndexReferenceDatum(const string& type, const string& id) : ReferenceDatum(type, id) {}
+
+public:
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+    // Get all underlyings (names and weights)
+    const vector<pair<string, double>> underlyings() const { return data_; }
+    // Set all underlying (or reset)
+    void setUnderlyings(const vector<pair<string, double>>& data) { data_ = data; }
+    // add a new underlying
+    void addUnderlying(const string& name, double weight) { data_.push_back(make_pair(name, weight)); }
+
+private:
+    vector<pair<string, double>> data_;
+};
+
+//! EquityIndex Reference data, contains the names and weights of an equity index
+class EquityIndexReferenceDatum : public IndexReferenceDatum {
+public:
+    static constexpr const char* TYPE = "EquityIndex";
+
+    EquityIndexReferenceDatum() {}
+    EquityIndexReferenceDatum(const string& name) : IndexReferenceDatum(TYPE, name) {}
+
+private:
+    static ReferenceDatumRegister<ReferenceDatumBuilder<EquityIndexReferenceDatum>> reg_;
+};
+
+//! CreditIndex Reference data, contains the names and weights of a credit index
+class CreditReferenceDatum : public ReferenceDatum {
+public:
+    static constexpr const char* TYPE = "Credit";
+
+    struct CreditData {
+        string name;
+        string group;
+        string successor;
+    };
+    CreditReferenceDatum() {}
+
+    CreditReferenceDatum(const string& id) : ReferenceDatum(TYPE, id) {}
+
+    CreditReferenceDatum(const string& id, const CreditData& creditData)
+        : ReferenceDatum(TYPE, id), creditData_(creditData) {}
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+    const CreditData& creditData() const { return creditData_; }
+    void setCreditData(const CreditData& creditData) { creditData_ = creditData; }
+
+private:
+    CreditData creditData_;
+
+    static ReferenceDatumRegister<ReferenceDatumBuilder<CreditReferenceDatum>> reg_;
+};
+
+
+//! Equity Reference data
+class EquityReferenceDatum : public ReferenceDatum {
+public:
+    static constexpr const char* TYPE = "Equity";
+
+    struct EquityData {
+        std::string equityId;
+        std::string equityName;
+        std::string currency;
+        QuantLib::Size scalingFactor;
+        std::string exchangeCode;
+        bool isIndex;
+        QuantLib::Date equityStartDate;
+        std::string proxyIdentifier;
+        std::string simmBucket;
+        std::string crifQualifier;
+        std::string proxyVolatilityId;
+    };
+
+    EquityReferenceDatum() { setType(TYPE); }
+
+    EquityReferenceDatum(const std::string& id) : ore::data::ReferenceDatum(TYPE, id) {}
+
+    EquityReferenceDatum(const std::string& id, const EquityData& equityData) : ReferenceDatum(TYPE, id), equityData_(equityData) {}
+
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+   
+    const EquityData& equityData() const { return equityData_; }
+    void setEquityData(const EquityData& equityData) { equityData_ = equityData; }
+
+protected:
+    EquityData equityData_;
+
+private:
+    static ore::data::ReferenceDatumRegister<ore::data::ReferenceDatumBuilder<EquityReferenceDatum>> reg_;
+};
+
+//! Bond Basket Reference Data
+class BondBasketReferenceDatum : public ReferenceDatum {
+public:
+    static constexpr const char* TYPE = "BondBasket";
+
+    BondBasketReferenceDatum() { setType(TYPE); }
+
+    BondBasketReferenceDatum(const std::string& id) : ore::data::ReferenceDatum(TYPE, id) {}
+
+    BondBasketReferenceDatum(const std::string& id, const std::vector<BondUnderlying>& underlyingData)
+        : ReferenceDatum(TYPE, id), underlyingData_(underlyingData) {}
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+    const std::vector<BondUnderlying>& underlyingData() const { return underlyingData_; }
+
+private:
+    std::vector<BondUnderlying> underlyingData_;
+    static ore::data::ReferenceDatumRegister<ore::data::ReferenceDatumBuilder<BondBasketReferenceDatum>> reg_;
+};
+    
 //! Interface for Reference Data lookups
 /*! The ReferenceDataManager is a repository of ReferenceDatum objects.
  *

@@ -19,6 +19,9 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/builders/bondoption.hpp>
+#include <ored/portfolio/builders/bondrepo.hpp>
+#include <ored/portfolio/builders/bondtotalreturnswap.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
@@ -27,6 +30,7 @@
 #include <ored/portfolio/builders/capfloorednonstandardyoyleg.hpp>
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
+#include <ored/portfolio/builders/cdo.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/builders/commodityasianoption.hpp>
@@ -40,6 +44,7 @@
 #include <ored/portfolio/builders/cpicapfloor.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/builders/creditdefaultswapoption.hpp>
+#include <ored/portfolio/builders/creditlinkedswap.hpp>
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/portfolio/builders/durationadjustedcms.hpp>
 #include <ored/portfolio/builders/equityasianoption.hpp>
@@ -62,16 +67,25 @@
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/fxtouchoption.hpp>
+#include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
+#include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
 #include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/builders/varianceswap.hpp>
+#include <ored/portfolio/bondoption.hpp>
+#include <ored/portfolio/bondrepo.hpp>
+#include <ored/portfolio/bondtotalreturnswap.hpp>
+#include <ored/portfolio/cdo.hpp>
+#include <ored/portfolio/creditlinkedswap.hpp>
 #include <ored/portfolio/durationadjustedcmslegbuilder.hpp>
 #include <ored/portfolio/commoditylegbuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/equityfxlegbuilder.hpp>
+#include <ored/portfolio/indexcreditdefaultswap.hpp>
+#include <ored/portfolio/indexcreditdefaultswapoption.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/multilegoption.hpp>
 #include <ored/utilities/log.hpp>
@@ -256,6 +270,16 @@ void EngineFactory::addDefaultBuilders() {
 
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
     registerBuilder(boost::make_shared<BlackCdsOptionEngineBuilder>());
+
+    registerBuilder(boost::make_shared<BondOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<DiscountingBondTRSEngineBuilder>());
+    registerBuilder(boost::make_shared<DiscountingBondRepoEngineBuilder>());
+    registerBuilder(boost::make_shared<AccrualBondRepoEngineBuilder>());
+    registerBuilder(boost::make_shared<MidPointIndexCdsEngineBuilder>());
+    registerBuilder(boost::make_shared<BlackIndexCdsOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<GaussCopulaBucketingCdoEngineBuilder>());
+    registerBuilder(boost::make_shared<CreditLinkedSwapEngineBuilder>());
+
     registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityEuropeanOptionEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityEuropeanForwardOptionEngineBuilder>());
