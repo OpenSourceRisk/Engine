@@ -18,7 +18,11 @@
 */
 
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/bondoption.hpp>
+#include <ored/portfolio/bondrepo.hpp>
+#include <ored/portfolio/bondtotalreturnswap.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/cliquetoption.hpp>
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commodityoption.hpp>
@@ -32,6 +36,7 @@
 #include <ored/portfolio/commodityswaption.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapoption.hpp>
+#include <ored/portfolio/creditlinkedswap.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityfuturesoption.hpp>
 #include <ored/portfolio/equityoption.hpp>
@@ -57,6 +62,8 @@
 #include <ored/portfolio/fxkikobarrieroption.hpp>
 #include <ored/portfolio/fxswap.hpp>
 #include <ored/portfolio/fxtouchoption.hpp>
+#include <ored/portfolio/indexcreditdefaultswap.hpp>
+#include <ored/portfolio/indexcreditdefaultswapoption.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/crosscurrencyswap.hpp>
 #include <ored/portfolio/inflationswap.hpp>
@@ -72,7 +79,10 @@ using namespace std;
 namespace ore {
 namespace data {
 
-TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders) {
+    TradeFactory::TradeFactory(const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                               std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders)
+        : referenceData_(referenceData) {
+
     addBuilder("Swap", boost::make_shared<TradeBuilder<Swap>>());
     addBuilder("CrossCurrencySwap", boost::make_shared<TradeBuilder<CrossCurrencySwap>>());
     addBuilder("InflationSwap", boost::make_shared<TradeBuilder<InflationSwap>>());
@@ -105,10 +115,22 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
     addBuilder("EquityForward", boost::make_shared<TradeBuilder<EquityForward>>());
     addBuilder("EquitySwap", boost::make_shared<TradeBuilder<EquitySwap>>());
     addBuilder("EquityVarianceSwap", boost::make_shared<TradeBuilder<EqVarSwap>>());
+
     addBuilder("Bond", boost::make_shared<TradeBuilder<Bond>>());
+    addBuilder("BondOption", boost::make_shared<TradeBuilder<BondOption>>());
+    addBuilder("BondTRS", boost::make_shared<TradeBuilder<BondTRS>>());
+    addBuilder("BondRepo", boost::make_shared<TradeBuilder<BondRepo>>());
     addBuilder("ForwardBond", boost::make_shared<TradeBuilder<ForwardBond>>());
     addBuilder("CreditDefaultSwap", boost::make_shared<TradeBuilder<CreditDefaultSwap>>());
     addBuilder("CreditDefaultSwapOption", boost::make_shared<TradeBuilder<CreditDefaultSwapOption>>());
+    addBuilder("IndexCreditDefaultSwap", boost::make_shared<
+        TradeBuilder1<IndexCreditDefaultSwap, boost::shared_ptr<ReferenceDataManager>>>(referenceData_));
+    addBuilder("IndexCreditDefaultSwapOption", boost::make_shared<
+        TradeBuilder1<IndexCreditDefaultSwapOption, boost::shared_ptr<ReferenceDataManager>>>(referenceData_));
+    addBuilder("SyntheticCDO", boost::make_shared<
+        TradeBuilder1<SyntheticCDO, boost::shared_ptr<ReferenceDataManager>>>(referenceData_));
+    addBuilder("CreditLinkedSwap", boost::make_shared<TradeBuilder<ore::data::CreditLinkedSwap>>());
+
     addBuilder("CommodityForward", boost::make_shared<TradeBuilder<CommodityForward>>());
     addBuilder("CommodityOption", boost::make_shared<TradeBuilder<CommodityOption>>());
 //    addBuilder("CommoditySpreadOption", boost::make_shared<TradeBuilder<CommoditySpreadOption>>());
