@@ -196,7 +196,7 @@ void OREAppInputParameters::loadParameters() {
     std::string portfolioFileString = params_->get("setup", "portfolioFile");
     if (portfolioFileString != "") {
         vector<string> portfolioFiles = getFilenames(portfolioFileString, inputPath);
-        boost::shared_ptr<TradeFactory> tf = boost::make_shared<TradeFactory>();
+        boost::shared_ptr<TradeFactory> tf = boost::make_shared<TradeFactory>(refDataManager_);
         for (auto portfolioFile : portfolioFiles) {
             LOG("Loading portfolio from file: " << portfolioFile);
             portfolio_->load(portfolioFile, tf);

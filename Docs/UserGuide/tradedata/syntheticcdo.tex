@@ -1,0 +1,113 @@
+\subsubsection{Synthetic CDO}
+
+A Synthetic Collateralized Debt Obligation (CDO), uses trade type \emph{SyntheticCDO} and is set up using a {\tt  CdoData} block as shown in listing \ref{lst:cdodata}.
+
+A synthetic CDO is a basket credit derivative, where
+the protection seller receives a premium cash flow in exchange for providing (notional)
+protection against portfolio losses due to defaults in a specific tranche characterized by
+the attachment point A and detachment point D.
+
+CDOs can refer to the constituents of an index such as CDX or iTraxx, or be bespoke, i.e. refer to a bespoke basket of underlying credit names, using the \lstinline!BasketData! sub-node, (see section \ref{ss:basket_data})
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <CdoData>
+      <Qualifier>RED:2I65BRHH6</Qualifier>
+      <AttachmentPoint>0.12</AttachmentPoint>
+      <DetachmentPoint>0.22</DetachmentPoint>
+      <ProtectionStart> 20140425 </ProtectionStart>
+      <UpfrontDate/>
+      <UpfrontFee/>
+      <SettlesAccrual>Y</SettlesAccrual>
+      <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
+      <!-- Premium leg -->
+      <LegData>
+       <LegType>Fixed</LegType>
+       <Payer>true</Payer>
+          ...
+      </LegData>
+      <BasketData>
+        ...
+      </BasketData>
+    </CdoData>
+\end{minted}
+\caption{CDO Data}
+\label{lst:cdodata}
+\end{listing}
+
+The meanings of the elements of the {\tt CdoData}  node follow below:
+
+\begin{itemize}
+\item Qualifier: The identifier of the credit index defining the default and base correlation curves used for pricing.  In the case of a bespoke basket, i.e. when the \lstinline!BasketData! sub-node is used, the Qualifer should be set to the credit index most closely matching the bespoke basket.
+
+Allowable values: See \lstinline!CreditCurveId! for credit trades - index in Table \ref{tab:equity_credit_data}. 
+
+\item AttachmentPoint: Losses where protection starts, expressed as a fraction of the basket notional. Note that Attachment- and DetachmentPoints (AP, DP) are defined as fractions of the current basket notional. 
+%Fractions of the initial basket notional must be adjusted for defaulted entities in the basket if there are any such entities. 
+
+%As an example, we assume we have a CDO with 100mn index notional, initial AP 0.15 and initial DP 0.35 \\
+%If 1\% of the index defaults, AP and DP should be updated as per: \\
+%Current AP = (0.15 - 0.01) / (1 - 0.01) = 0.1414 \\
+%Current DP = (0.35 - 0.01) / (1 - 0.01) = 0.3434 
+
+%If 20\% of the index defaults, AP and DP should be updated as per: \\
+%Current AP = 0 \\
+%Current DP = (0.35 - 0.20) / (1 - 0.20) = 0.1875
+
+Allowable values: A number between 0 and 1, below the DetachmentPoint. 
+
+\item DetachmentPoint: Losses where protection end, expressed as a fraction of the basket notional
+
+Note that Attachment- and DetachmentPoints (AP, DP) are defined as fractions of the current basket notional. 
+%Fractions of the initial basket notional must be adjusted for defaulted entities in the basket if there are any such entities. 
+
+Allowable values: A number between 0 and 1, above the AttachmentPoint. 
+
+\item SettlesAccrual: Whether or not the accrued coupon is due in the event of a default.
+  
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}. 
+  
+\item ProtectionPaymentTime [Optional]: Controls the payment time of protection and premium accrual payments in case of  a default event. Defaults to \lstinline!atDefault!. 
+ 
+Allowable values: \emph{atDefault}, \emph{atPeriodEnd},  \emph{!atMaturity}. Overrides the \lstinline!PaysAtDefaultTime! node
+
+\item PaysAtDefaultTime [Deprecated]: \emph{true} is equivalent to ProtectionPaymentTime = atDefault,
+  \emph{false} to ProtectionPaymentTime = atPeriodEnd. Overridden by the \lstinline!ProtectionPaymentTime! node if set
+  
+ Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.  
+  
+\item ProtectionStart: The first date where a default event will trigger the contract
+
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. Must be set to a date before or on the first date in the premium leg schedule.
+
+\item UpfrontDate[Optional]: Settlement date for the UpfrontFee if an UpfrontFee is
+provided. If an UpfrontFee is provided and it is non-zero, UpfrontDate is required. 
+
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. The UpfrontDate, if provided, must be on or after the ProtectionStart
+date.
+
+\item UpfrontFee[Optional]: The upfront payment, expressed as a rate, to be multiplied by the tranche \lstinline!Notional! amount. Note that a positive amount indicates that the UpfrontFee is paid by the protection buyer to the protection seller, and a negative amount indicates that the UpfrontFee is paid by the protection seller to the protection buyer. The UpfrontFee cannot be left blank.
+
+Allowable values: Any  real number 
+
+\item FixedRecoveryRate[Optional]: If provided, this recovery rate will be used in palce of the market quoted recovery rates of the underlying basket or index constituents, to work out the portfolio loss distribution and expected tranche loss.
+  
+Allowable values: Any  real number in the range [0, 1]
+
+\item LegData: Premium leg description as in an Index CDS (see section
+  \ref{ss:indexcds}) with \lstinline!Notional! corresponding to the initial tranche notional. \\
+  Note that the \lstinline!Payer! field in  \lstinline!LegData! determines whereas protection is bought (\emph{true}) or sold (\emph{false}). \\
+  The \lstinline!StartDate! in  \lstinline!LegData!  is the first accrual start date on the premium leg of the index tranche. If the date generation \lstinline!Rule! is \emph{CDS2015}, one can enter the index tranche trade date for StartDate and the correct accrual start date will be deduced, i.e. the first accrual start date before the trade date using the \emph{CDS2015} date generation rules.
+\item BasketData[Optional]: Underlying basket description for bespoke baskets (see section \ref{ss:basket_data}).  This is analogous to a bespoke basket in an Index CDS  (see section
+  \ref{ss:indexcds}). If omitted, CreditIndex static data, with \emph{id} {\tt Qualifier} element in {\tt CdoData},
+  is extracted from ReferenceData.
+  
+  Note that the sum of notionals of the basket components must add up to the complete basket notional. \\
+  \medskip
+  $
+  Sum of Component Notionals = Complete Basket Notional = Initial Tranche Notional / (Detachment Point - Attachment Point)
+  $
+  \\  \medskip
+  If weights are used instead of notionals in the basket components, the sum of the weights must add up to 1.
+\end{itemize}

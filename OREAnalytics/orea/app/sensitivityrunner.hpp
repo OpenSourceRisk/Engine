@@ -48,20 +48,6 @@ public:
           extraLegBuilders_(extraLegBuilders), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
           continueOnError_(continueOnError) {}
 
-    /*! \deprecated use other TradeFactory dependent constructor.
-         Provided for backwards compatibility only
-    */
-    QL_DEPRECATED
-    SensitivityRunner(boost::shared_ptr<Parameters> params,
-                      std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraTradeBuilders = {},
-                      std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
-                      std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
-                      const bool continueOnError = false)
-        : params_(params), extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders),
-          iborFallbackConfig_(IborFallbackConfig::defaultConfig()), continueOnError_(continueOnError) {
-        tradeFactory_ = boost::make_shared<TradeFactory>(extraTradeBuilders);
-    }
-
     virtual ~SensitivityRunner(){};
 
     virtual void runSensitivityAnalysis(boost::shared_ptr<ore::data::Market> market,
