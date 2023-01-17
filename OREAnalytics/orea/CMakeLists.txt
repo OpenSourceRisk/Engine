@@ -37,6 +37,8 @@ engine/filteredsensitivitystream.cpp
 engine/mporcalculator.cpp
 engine/npvrecord.cpp
 engine/parametricvar.cpp
+engine/parsensitivityanalysis.cpp
+engine/parsensitivitycubestream.cpp
 engine/riskfilter.cpp
 engine/sensitivityaggregator.cpp
 engine/sensitivityanalysis.cpp
@@ -47,6 +49,7 @@ engine/sensitivityrecord.cpp
 engine/stresstest.cpp
 engine/valuationcalculator.cpp
 engine/valuationengine.cpp
+engine/zerotoparcube.cpp
 scenario/clonedscenariogenerator.cpp
 scenario/clonescenariofactory.cpp
 scenario/crossassetmodelscenariogenerator.cpp
@@ -113,6 +116,8 @@ engine/mporcalculator.hpp
 engine/npvrecord.hpp
 engine/observationmode.hpp
 engine/parametricvar.hpp
+engine/parsensitivityanalysis.hpp
+engine/parsensitivitycubestream.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp
 engine/sensitivityanalysis.hpp
@@ -124,6 +129,7 @@ engine/sensitivitystream.hpp
 engine/stresstest.hpp
 engine/valuationcalculator.hpp
 engine/valuationengine.hpp
+engine/zerotoparcube.hpp
 scenario/aggregationscenariodata.hpp
 scenario/clonedscenariogenerator.hpp
 scenario/clonescenariofactory.hpp
