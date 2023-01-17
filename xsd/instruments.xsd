@@ -394,7 +394,7 @@
   <xs:element name="CPILegData" substitutionGroup="legDataType">
     <xs:complexType>
       <xs:choice maxOccurs="unbounded" minOccurs="0">
-        <xs:element type="xs:string" name="Index"/>
+        <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
         <xs:element name="Rates">
           <xs:complexType>
             <xs:sequence>
