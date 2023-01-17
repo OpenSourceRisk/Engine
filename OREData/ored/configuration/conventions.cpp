@@ -257,20 +257,21 @@ XMLNode* FraConvention::toXML(XMLDocument& doc) {
 boost::shared_ptr<IborIndex> FraConvention::index() const { return parseIborIndex(strIndex_); }
 
 OisConvention::OisConvention(const string& id, const string& spotLag, const string& index,
-                             const string& fixedDayCounter, const string& paymentLag, const string& eom,
-                             const string& fixedFrequency, const string& fixedConvention,
+                             const string& fixedDayCounter, const string& fixedCalendar, const string& paymentLag,
+                             const string& eom, const string& fixedFrequency, const string& fixedConvention,
                              const string& fixedPaymentConvention, const string& rule, const string& paymentCal)
     : Convention(id, Type::OIS), strSpotLag_(spotLag), strIndex_(index), strFixedDayCounter_(fixedDayCounter),
-      strPaymentLag_(paymentLag), strEom_(eom), strFixedFrequency_(fixedFrequency),
+      strFixedCalendar_(fixedCalendar), strPaymentLag_(paymentLag), strEom_(eom), strFixedFrequency_(fixedFrequency),
       strFixedConvention_(fixedConvention), strFixedPaymentConvention_(fixedPaymentConvention), strRule_(rule),
       strPaymentCal_(paymentCal) {
     build();
 }
 
 void OisConvention::build() {
-    parseIborIndex(strIndex_);
+    auto tmpIndex = parseIborIndex(strIndex_);
     spotLag_ = lexical_cast<Natural>(strSpotLag_);
     fixedDayCounter_ = parseDayCounter(strFixedDayCounter_);
+    fixedCalendar_ = strFixedCalendar_.empty() ? tmpIndex->fixingCalendar() : parseCalendar(strFixedCalendar_);
     paymentLag_ = strPaymentLag_.empty() ? 0 : lexical_cast<Natural>(strPaymentLag_);
     eom_ = strEom_.empty() ? false : parseBool(strEom_);
     fixedFrequency_ = strFixedFrequency_.empty() ? Annual : parseFrequency(strFixedFrequency_);
@@ -291,6 +292,8 @@ void OisConvention::fromXML(XMLNode* node) {
     strSpotLag_ = XMLUtils::getChildValue(node, "SpotLag", true);
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
     strFixedDayCounter_ = XMLUtils::getChildValue(node, "FixedDayCounter", true);
+    // bwd compatibility
+    strFixedCalendar_ = XMLUtils::getChildValue(node, "FixedCalendar", false);
     strPaymentLag_ = XMLUtils::getChildValue(node, "PaymentLag", false);
     strEom_ = XMLUtils::getChildValue(node, "EOM", false);
     strFixedFrequency_ = XMLUtils::getChildValue(node, "FixedFrequency", false);
@@ -309,6 +312,8 @@ XMLNode* OisConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "SpotLag", strSpotLag_);
     XMLUtils::addChild(doc, node, "Index", strIndex_);
     XMLUtils::addChild(doc, node, "FixedDayCounter", strFixedDayCounter_);
+    if(!strFixedCalendar_.empty())
+        XMLUtils::addChild(doc, node, "FixedCalendar", strFixedCalendar_);
     if (!strPaymentLag_.empty())
         XMLUtils::addChild(doc, node, "PaymentLag", strPaymentLag_);
     if (!strEom_.empty())

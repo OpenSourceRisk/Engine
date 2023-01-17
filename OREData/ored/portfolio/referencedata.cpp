@@ -235,6 +235,126 @@ void CreditIndexReferenceDatum::add(const CreditIndexConstituent& c) {
 
 const set<CreditIndexConstituent>& CreditIndexReferenceDatum::constituents() const { return constituents_; }
 
+ReferenceDatumRegister<ReferenceDatumBuilder<EquityIndexReferenceDatum>> EquityIndexReferenceDatum::reg_(TYPE);
+
+// Index
+void IndexReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    XMLNode* innerNode = XMLUtils::getChildNode(node, type() + "ReferenceData");
+    QL_REQUIRE(innerNode, "No " + type() + "ReferenceData node");
+
+    // clear map
+    data_.clear();
+
+    // and populate it...
+    for (XMLNode* child = XMLUtils::getChildNode(innerNode, "Underlying"); child;
+         child = XMLUtils::getNextSibling(child, "Underlying")) {
+        string name = XMLUtils::getChildValue(child, "Name", true);
+        double weight = XMLUtils::getChildValueAsDouble(child, "Weight", true);
+        addUnderlying(name, weight);
+    }
+}
+
+XMLNode* IndexReferenceDatum::toXML(XMLDocument& doc) {
+    XMLNode* node = ReferenceDatum::toXML(doc);
+    XMLNode* rdNode = XMLUtils::addChild(doc, node, type() + "ReferenceData");
+
+    for (auto d : data_) {
+        XMLNode* underlyingNode = XMLUtils::addChild(doc, rdNode, "Underlying");
+        XMLUtils::addChild(doc, underlyingNode, "Name", d.first);
+        XMLUtils::addChild(doc, underlyingNode, "Weight", d.second);
+    }
+
+    return node;
+}
+
+// Credit
+void CreditReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    XMLNode* innerNode = XMLUtils::getChildNode(node, "CreditReferenceData");
+    QL_REQUIRE(innerNode, "No CreditReferenceData node");
+
+    creditData_.name = XMLUtils::getChildValue(innerNode, "Name", true);
+    creditData_.group = XMLUtils::getChildValue(innerNode, "Group", false);
+    creditData_.successor = XMLUtils::getChildValue(innerNode, "Successor", false);
+}
+
+XMLNode* CreditReferenceDatum::toXML(XMLDocument& doc) {
+    XMLNode* node = ReferenceDatum::toXML(doc);
+    XMLNode* creditNode = doc.allocNode("CreditReferenceData");
+    XMLUtils::appendNode(node, creditNode);
+    XMLUtils::addChild(doc, creditNode, "Name", creditData_.name);
+    XMLUtils::addChild(doc, creditNode, "Group", creditData_.group);
+    XMLUtils::addChild(doc, creditNode, "Successor", creditData_.successor);
+    return node;
+}
+
+ReferenceDatumRegister<ReferenceDatumBuilder<CreditReferenceDatum>> CreditReferenceDatum::reg_(TYPE);
+
+// Equity
+void EquityReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    XMLNode* innerNode = XMLUtils::getChildNode(node, "EquityReferenceData");
+    QL_REQUIRE(innerNode, "No EquityReferenceData node");
+
+    equityData_.equityId = XMLUtils::getChildValue(innerNode, "EquityId", true);
+    equityData_.equityName = XMLUtils::getChildValue(innerNode, "EquityName", true);
+    equityData_.currency = XMLUtils::getChildValue(innerNode, "Currency", true);
+    equityData_.scalingFactor = XMLUtils::getChildValueAsInt(innerNode, "ScalingFactor", true);
+    equityData_.exchangeCode = XMLUtils::getChildValue(innerNode, "ExchangeCode", true);
+    equityData_.isIndex = XMLUtils::getChildValueAsBool(innerNode, "IsIndex", true);
+    equityData_.equityStartDate = parseDate(XMLUtils::getChildValue(innerNode, "EquityStartDate", true));
+    equityData_.proxyIdentifier = XMLUtils::getChildValue(innerNode, "ProxyIdentifier", true);
+    equityData_.simmBucket = XMLUtils::getChildValue(innerNode, "SimmBucket", true);
+    equityData_.crifQualifier = XMLUtils::getChildValue(innerNode, "CrifQualifier", true);
+    equityData_.proxyVolatilityId = XMLUtils::getChildValue(innerNode, "ProxyVolatilityId", true);
+}
+
+XMLNode* EquityReferenceDatum::toXML(ore::data::XMLDocument& doc) {
+    XMLNode* node = ReferenceDatum::toXML(doc);
+    XMLNode* equityNode = doc.allocNode("EquityReferenceData");
+    XMLUtils::appendNode(node, equityNode);
+    XMLUtils::addChild(doc, equityNode, "EquityId", equityData_.equityId);
+    XMLUtils::addChild(doc, equityNode, "EquityName", equityData_.equityName);
+    XMLUtils::addChild(doc, equityNode, "Currency", equityData_.currency);
+    XMLUtils::addChild(doc, equityNode, "ScalingFactor", int(equityData_.scalingFactor));
+    XMLUtils::addChild(doc, equityNode, "ExchangeCode", equityData_.exchangeCode);
+    XMLUtils::addChild(doc, equityNode, "IsIndex", equityData_.isIndex);
+    XMLUtils::addChild(doc, equityNode, "EquityStartDate", to_string(equityData_.equityStartDate));
+    XMLUtils::addChild(doc, equityNode, "ProxyIdentifier", equityData_.proxyIdentifier);
+    XMLUtils::addChild(doc, equityNode, "SimmBucket", equityData_.simmBucket);
+    XMLUtils::addChild(doc, equityNode, "CrifQualifier", equityData_.crifQualifier);
+    XMLUtils::addChild(doc, equityNode, "ProxyVolatilityId", equityData_.proxyVolatilityId);
+    return node;
+}
+
+ReferenceDatumRegister<ReferenceDatumBuilder<EquityReferenceDatum>> EquityReferenceDatum::reg_(TYPE);
+
+// Bond Basket
+void BondBasketReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    XMLNode* b = XMLUtils::getChildNode(node, "BondBasketData");
+    QL_REQUIRE(b, "No BondBasketData node");
+    underlyingData_.clear();
+    auto c = XMLUtils::getChildrenNodes(b, "Underlying");
+    for (auto const n : c) {
+        underlyingData_.push_back(BondUnderlying());
+        underlyingData_.back().fromXML(n);
+    }
+}
+
+XMLNode* BondBasketReferenceDatum::toXML(ore::data::XMLDocument& doc) {
+    XMLNode* res = ReferenceDatum::toXML(doc);
+    XMLNode* node = doc.allocNode("BondBasketData");
+    XMLUtils::appendNode(res, node);
+    for (auto& u : underlyingData_) {
+        XMLUtils::appendNode(node, u.toXML(doc));
+    }
+    return res;
+}
+
+ReferenceDatumRegister<ReferenceDatumBuilder<BondBasketReferenceDatum>> BondBasketReferenceDatum::reg_(TYPE);
+    
 // BasicReferenceDataManager
 
 void BasicReferenceDataManager::fromXML(XMLNode* node) {

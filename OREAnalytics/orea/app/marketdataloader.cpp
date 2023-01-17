@@ -18,10 +18,8 @@
 
 #include <orea/app/marketdataloader.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
-// FIXME post credit migration
-// #include <orepbase/ored/portfolio/referencedata.hpp>
-// #include <orepcredit/ored/portfolio/indexcreditdefaultswap.hpp>
-// #include <orepcredit/ored/portfolio/indexcreditdefaultswapoption.hpp>
+#include <ored/portfolio/indexcreditdefaultswap.hpp>
+#include <ored/portfolio/indexcreditdefaultswapoption.hpp>
 
 using namespace ore::data;
 using QuantExt::OptionPriceSurface;

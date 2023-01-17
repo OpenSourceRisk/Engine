@@ -25,6 +25,7 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/referencedata.hpp>
 
 namespace ore {
 namespace data {
@@ -48,6 +49,16 @@ public:
     virtual boost::shared_ptr<Trade> build() const override { return boost::make_shared<T>(); }
 };
 
+//! Template TradeBuilder class that takes 1 parameter
+template <class T, class U> class TradeBuilder1 : public AbstractTradeBuilder {
+public:
+    TradeBuilder1(const U& param1) : param1_(param1) {}
+    virtual boost::shared_ptr<Trade> build() const override { return boost::make_shared<T>(param1_); }
+
+private:
+    U param1_;
+};
+
 //! TradeFactory (todo)
 /*!
   \ingroup tradedata
@@ -55,7 +66,8 @@ public:
 class TradeFactory {
 public:
     //! Construct a factory with the default builders
-    TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders = {});
+    TradeFactory(const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                 std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders = {});
 
     //! Add a new custom builder
     void addBuilder(const string& className, const boost::shared_ptr<AbstractTradeBuilder>&);
@@ -66,6 +78,7 @@ public:
     boost::shared_ptr<Trade> build(const string& className) const;
 
 private:
+    boost::shared_ptr<ReferenceDataManager> referenceData_;
     map<string, boost::shared_ptr<AbstractTradeBuilder>> builders_;
 };
 } // namespace data

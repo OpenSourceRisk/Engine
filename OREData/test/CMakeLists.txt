@@ -6,6 +6,7 @@ calendaradjustment.cpp
 calendars.cpp
 ccyswapwithresets.cpp
 cds.cpp
+cdsindexoption.cpp
 cms.cpp
 commodityapo.cpp
 commodityasianoption.cpp
