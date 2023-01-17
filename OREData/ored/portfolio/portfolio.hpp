@@ -99,7 +99,7 @@ public:
     //! Return the map tradeId -> trade
     const std::map<std::string, boost::shared_ptr<Trade>>& trades() const;
 
-    //! Build a vector of tradeIds
+    //! Build a set of tradeIds
     std::set<std::string> ids() const;
 
     //! Build a map from trade Ids to NettingSet

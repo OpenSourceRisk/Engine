@@ -68,15 +68,6 @@ public:
     virtual Size samples() const = 0;
     virtual Size depth() const = 0;
 
-    //! Get the sorted vector of id of this cube
-    /* const std::vector<std::string> ids() const {
-        std::vector<std::string> results;
-        for (const auto& [id, index] : idAndIndex()) {
-            results.push_back(id);
-        }
-        return results;
-    }
-    */
     //! Get a map of id and their index position in this cube 
     virtual const std::map<std::string, Size>& idsAndIndexes() const = 0;
 
