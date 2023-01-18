@@ -94,6 +94,8 @@ public:
     const std::vector<QuantLib::Period>& maturities() { return maturities_; }
     const QuantLib::Matrix& volData() { return volData_; }
     //@}
+    QuantLib::Real atmStrike(const QuantLib::Date& maturity,
+                             const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days)) const override;
 
 private:
     QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const override;
@@ -311,6 +313,19 @@ StrippedCPIVolatilitySurface<Interpolator2D>::ObjectiveFunction::operator()(Quan
 
     QuantLib::Real npv = cpiCapFloor_.NPV();
     return priceToMatch_ - npv;
+}
+
+template <class Interpolator2D>
+QuantLib::Real StrippedCPIVolatilitySurface<Interpolator2D>::atmStrike(const QuantLib::Date& maturity,
+                                                                           const QuantLib::Period& obsLag) const {
+    QuantLib::Period lag = obsLag == -1 * QuantLib::Days ? observationLag() : obsLag;
+    QuantLib::Date fixingDate = ZeroInflation::fixingDate(maturity, lag, frequency(), indexIsInterpolated());
+    double forwardCPI = ZeroInflation::cpiFixing(index_, maturity, lag, indexIsInterpolated());
+    double baseCPI = ZeroInflation::cpiFixing(index_, capFloorStartDate(), observationLag(), indexIsInterpolated());
+    double atm = forwardCPI / baseCPI;
+    double ttm =
+        QuantLib::inflationYearFraction(frequency(), indexIsInterpolated(), dayCounter(), baseDate(), fixingDate);
+    return std::pow(atm, 1.0 / ttm) - 1.0;
 }
 
 } // namespace QuantExt

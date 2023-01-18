@@ -24,13 +24,14 @@
 
 namespace QuantExt {
 
-SpreadedCPIVolatilitySurface::SpreadedCPIVolatilitySurface(const Handle<CPIVolatilitySurface>& baseVol,
+SpreadedCPIVolatilitySurface::SpreadedCPIVolatilitySurface(const Handle<QuantExt::CPIVolatilitySurface>& baseVol,
                                                            const std::vector<Date>& optionDates,
                                                            const std::vector<Real>& strikes,
                                                            const std::vector<std::vector<Handle<Quote>>>& volSpreads)
-    : CPIVolatilitySurface(baseVol->settlementDays(), baseVol->calendar(), baseVol->businessDayConvention(),
-                           baseVol->dayCounter(), baseVol->observationLag(), baseVol->frequency(),
-                           baseVol->indexIsInterpolated()),
+    : QuantExt::CPIVolatilitySurface(baseVol->settlementDays(), baseVol->calendar(), baseVol->businessDayConvention(),
+                                     baseVol->dayCounter(), baseVol->observationLag(), baseVol->frequency(),
+                                     baseVol->indexIsInterpolated(), baseVol->capFloorStartDate(),
+                                     baseVol->volatilityType(), baseVol->displacement()),
       baseVol_(baseVol), optionDates_(optionDates), strikes_(strikes), volSpreads_(volSpreads) {
     registerWith(baseVol_);
     optionTimes_.resize(optionDates_.size());
@@ -78,5 +79,11 @@ void SpreadedCPIVolatilitySurface::deepUpdate() {
     baseVol_->update();
     update();
 }
+
+QuantLib::Real SpreadedCPIVolatilitySurface::atmStrike(const QuantLib::Date& maturity,
+                                                       const QuantLib::Period& obsLag) const {
+    // Not relevant for constantCPIVolatiltiy;
+    return baseVol_->atmStrike(maturity, obsLag);
+};
 
 } // namespace QuantExt
