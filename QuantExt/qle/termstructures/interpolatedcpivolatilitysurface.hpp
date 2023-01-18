@@ -121,7 +121,7 @@ template <class Interpolator2D> void InterpolatedCPIVolatilitySurface<Interpolat
     QL_REQUIRE(quotes_.size() == optionTenors_.size(), "quotes rows does not match option tenors size");
     optionTimes_.clear();
     for (Size i = 0; i < optionTenors_.size(); ++i) {
-        QuantLib::Date d = optionMaturityFromTenor(optionTenors_[i]);
+        QuantLib::Date d = optionDateFromTenor(optionTenors_[i]);
         // Save the vols at their fixing times and not maturity
         optionTimes_.push_back(fixingTime(d));
         for (QuantLib::Size j = 0; j < strikes_.size(); j++)
