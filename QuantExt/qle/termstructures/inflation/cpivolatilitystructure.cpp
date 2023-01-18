@@ -19,6 +19,7 @@
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
 #include <qle/utilities/inflation.hpp>
+#include <iostream>
 
 namespace QuantExt {
 
@@ -58,10 +59,19 @@ double CPIVolatilitySurface::fixingTime(const QuantLib::Date& maturityDate) cons
     return timeFromReference(ZeroInflation::fixingDate(maturityDate, observationLag(), frequency(), indexIsInterpolated()));
 }
 
+QuantLib::Volatility CPIVolatilitySurface::volatility(const QuantLib::Date& maturityDate, QuantLib::Rate strike,
+                                                      const QuantLib::Period& obsLag, bool extrapolate) const {
+    if (strike == QuantLib::Null<QuantLib::Real>()) {
+        strike = atmStrike(maturityDate, obsLag);
+        std::cout << "ATM Strike " << strike << std::endl;
+    }
+    return QuantLib::CPIVolatilitySurface::volatility(maturityDate, strike, obsLag, extrapolate);
+}
+
 QuantLib::Volatility CPIVolatilitySurface::volatility(const QuantLib::Period& optionTenor, QuantLib::Rate strike,
                                                       const QuantLib::Period& obsLag, bool extrapolate) const {
     QuantLib::Date maturityDate = optionMaturityFromTenor(optionTenor);
-    return QuantLib::CPIVolatilitySurface::volatility(maturityDate, strike, obsLag, extrapolate);
+    return volatility(maturityDate, strike, obsLag, extrapolate);
 }
 
 QuantLib::Volatility CPIVolatilitySurface::totalVariance(const QuantLib::Period& optionTenor, QuantLib::Rate strike,

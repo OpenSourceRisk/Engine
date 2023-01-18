@@ -128,6 +128,9 @@ protected:
 
     double atmGrowth(const QuantLib::Date& date) const;
 
+    QuantLib::Real atmStrike(const QuantLib::Date& maturity,
+                             const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days)) const override;
+
 private:
     virtual void validateInputParameters() const;
 
@@ -501,5 +504,18 @@ double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::implyVol
     QuantLib::Brent solver;
     QuantLib::Real guess = (upperVolBound_ + lowerVolBound_) / 2.0;
     return solver.solve(targetFunction, solverTolerance_, guess, lowerVolBound_, upperVolBound_);
+}
+
+template <class InterpolatorStrike, class InterpolatorTime>
+QuantLib::Real
+CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::atmStrike(const QuantLib::Date& maturity,
+                                                                           const QuantLib::Period& obsLag) const {
+    QuantLib::Period lag = obsLag == -1 * QuantLib::Days ? observationLag() : obsLag;
+    QuantLib::Date fixingDate = ZeroInflation::fixingDate(maturity, lag, frequency(), indexIsInterpolated());
+    double forwardCPI = ZeroInflation::cpiFixing(index_, maturity, lag, indexIsInterpolated());
+    double atm = forwardCPI / baseCPI();
+    double ttm =
+        QuantLib::inflationYearFraction(frequency(), indexIsInterpolated(), dayCounter(), baseDate(), fixingDate);
+    return std::pow(atm, 1.0 / ttm) - 1.0;
 }
 } // namespace QuantExt
