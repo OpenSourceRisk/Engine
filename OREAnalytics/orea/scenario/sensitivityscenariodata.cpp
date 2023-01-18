@@ -975,13 +975,15 @@ string SensitivityScenarioData::getIndexCurrency(string indexName) {
 
 void SensitivityScenarioData::parDataFromXML(XMLNode* child, CurveShiftParData& data) {
     XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
-    QL_REQUIRE(par, "parData must be provided for parConversion");
-    data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
-    data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
-    data.discountCurve = XMLUtils::getChildValue(par, "DiscountCurve", false);
-    data.otherCurrency = XMLUtils::getChildValue(par, "OtherCurrency", false);
-    XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
-    data.parInstrumentConventions = XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
+    // QL_REQUIRE(par, "parData must be provided for parConversion");
+    if (par) {
+        data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
+        data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
+        data.discountCurve = XMLUtils::getChildValue(par, "DiscountCurve", false);
+        data.otherCurrency = XMLUtils::getChildValue(par, "OtherCurrency", false);
+        XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
+        data.parInstrumentConventions = XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
+    }
 }
 
 XMLNode* SensitivityScenarioData::parDataToXML(XMLDocument& doc,
