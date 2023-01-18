@@ -360,7 +360,7 @@ double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::baseCPI(
 
 template <class InterpolatorStrike, class InterpolatorTime>
 double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::atmGrowth(QuantLib::Period& tenor) const {
-    return atmGrowth(optionMaturityFromTenor(tenor));
+    return atmGrowth(optionDateFromTenor(tenor));
 }
 
 template <class InterpolatorStrike, class InterpolatorTime>
