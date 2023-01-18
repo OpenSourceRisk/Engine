@@ -167,11 +167,13 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
     // Discount curve instruments
     if (typesDisabled_.count(RiskFactorKey::KeyType::DiscountCurve) == 0) {
 
+        LOG("ParSensitivityAnalysis: Discount curve par instruments");
         for (auto c : sensitivityData_.discountCurveShiftData()) {
             string ccy = c.first;
             QL_REQUIRE(simMarket || yieldCurvePillars_.find(ccy) == yieldCurvePillars_.end(), "duplicate entry in yieldCurvePillars '" << ccy << "'");
             SensitivityScenarioData::CurveShiftParData data =
                 *boost::dynamic_pointer_cast<SensitivityScenarioData::CurveShiftParData>(c.second);
+            LOG("ParSensitivityAnalysis: Discount curve ccy=" << ccy);
             Size n_ten = data.shiftTenors.size();
             QL_REQUIRE(data.parInstruments.size() == n_ten,
                        "number of tenors does not match number of discount curve par instruments, "
@@ -241,11 +243,12 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
 
     if (typesDisabled_.count(RiskFactorKey::KeyType::YieldCurve) == 0) {
 
+        LOG("ParSensitivityAnalysis: Yield curve par instruments");
         // Yield curve instruments
         QL_REQUIRE(simMarketParams_->yieldCurveNames().size() == simMarketParams_->yieldCurveCurrencies().size(),
             "vector size mismatch in sim market parameters yield curve names/currencies");
         for (auto y : sensitivityData_.yieldCurveShiftData()) {
-            string curveName = y.first;
+            string curveName = y.first;            
             QL_REQUIRE(simMarket || yieldCurvePillars_.find(curveName) == yieldCurvePillars_.end(),
                 "duplicate entry in yieldCurvePillars '" << curveName << "'");
             string equityForecastCurveName = ""; // ignored, if empty
@@ -254,6 +257,7 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 if (curveName == simMarketParams_->yieldCurveNames()[j])
                     ccy = simMarketParams_->yieldCurveCurrencies().at(curveName);
             }
+            LOG("ParSensitivityAnalysis: yield curve name " << curveName);
             QL_REQUIRE(ccy != "", "yield curve currency not found for yield curve " << curveName);
             SensitivityScenarioData::CurveShiftParData data =
                 *boost::static_pointer_cast<SensitivityScenarioData::CurveShiftParData>(y.second);
@@ -319,6 +323,7 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
     
     if (typesDisabled_.count(RiskFactorKey::KeyType::IndexCurve) == 0) {
 
+        LOG("ParSensitivityAnalysis: Index curve par instruments");
         // Index curve instruments
         for (auto index : sensitivityData_.indexCurveShiftData()) {
             string indexName = index.first;
@@ -392,6 +397,8 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
     if (typesDisabled_.count(RiskFactorKey::KeyType::OptionletVolatility) == 0) {
 
         // Caps/Floors
+        LOG("ParSensitivityAnalysis: Cap/Floor par instruments");
+
         for (auto c : sensitivityData_.capFloorVolShiftData()) {
             string key = c.first;
             auto datap =
@@ -446,6 +453,7 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
     if (typesDisabled_.count(RiskFactorKey::KeyType::SurvivalProbability) == 0) {
 
         // CDS Instruments
+        LOG("ParSensitivityAnalysis: CDS par instruments");
         for (auto c : sensitivityData_.creditCurveShiftData()) {
             string name = c.first;
             string ccy = sensitivityData_.creditCcys()[name];
@@ -492,6 +500,7 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
 
     if (typesDisabled_.count(RiskFactorKey::KeyType::ZeroInflationCurve) == 0) {
 
+        LOG("ParSensitivityAnalysis: ZCI curve par instruments");
         // Zero Inflation Curve instruments
         for (auto z : sensitivityData_.zeroInflationCurveShiftData()) {
             string indexName = z.first;
@@ -532,6 +541,7 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
     if (typesDisabled_.count(RiskFactorKey::KeyType::YoYInflationCurve) == 0) {
 
         // YoY Inflation Curve instruments
+        LOG("ParSensitivityAnalysis: YOYI curve par instruments");
         for (auto y : sensitivityData_.yoyInflationCurveShiftData()) {
             string indexName = y.first;
             SensitivityScenarioData::CurveShiftParData data = *boost::static_pointer_cast<SensitivityScenarioData::CurveShiftParData>(y.second);
@@ -578,6 +588,7 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
     if (typesDisabled_.count(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility) == 0) {
 
         // YY Caps/Floors
+        LOG("ParSensitivityAnalysis: YOYI Cap/Floor par instruments");
         for (auto y : sensitivityData_.yoyInflationCapFloorVolShiftData()) {
             string indexName = y.first;
             SensitivityScenarioData::CapFloorVolShiftParData data =

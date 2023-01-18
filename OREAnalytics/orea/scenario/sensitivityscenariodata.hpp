@@ -129,7 +129,7 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData(bool parConversion = false)
+    SensitivityScenarioData(bool parConversion = true)
         : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion) {};
 
     //! \name Inspectors

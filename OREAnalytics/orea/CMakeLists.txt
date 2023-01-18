@@ -35,6 +35,7 @@ engine/bufferedsensitivitystream.cpp
 engine/cptycalculator.cpp
 engine/filteredsensitivitystream.cpp
 engine/mporcalculator.cpp
+engine/multithreadedvaluationengine.cpp
 engine/npvrecord.cpp
 engine/parametricvar.cpp
 engine/parsensitivityanalysis.cpp
@@ -42,6 +43,7 @@ engine/parsensitivitycubestream.cpp
 engine/riskfilter.cpp
 engine/sensitivityaggregator.cpp
 engine/sensitivityanalysis.cpp
+engine/sensitivityanalysisplus.cpp
 engine/sensitivitycubestream.cpp
 engine/sensitivityfilestream.cpp
 engine/sensitivityinmemorystream.cpp
@@ -53,12 +55,15 @@ engine/zerotoparcube.cpp
 scenario/clonedscenariogenerator.cpp
 scenario/clonescenariofactory.cpp
 scenario/crossassetmodelscenariogenerator.cpp
+scenario/deltascenario.cpp
+scenario/deltascenariofactory.cpp
 scenario/lgmscenariogenerator.cpp
 scenario/scenario.cpp
 scenario/scenariogeneratorbuilder.cpp
 scenario/scenariogeneratordata.cpp
 scenario/scenariosimmarket.cpp
 scenario/scenariosimmarketparameters.cpp
+scenario/scenariosimmarketplus.cpp
 scenario/scenariowriter.cpp
 scenario/sensitivityscenariodata.cpp
 scenario/sensitivityscenariogenerator.cpp
@@ -113,6 +118,7 @@ engine/bufferedsensitivitystream.hpp
 engine/cptycalculator.hpp
 engine/filteredsensitivitystream.hpp
 engine/mporcalculator.hpp
+engine/multithreadedvaluationengine.hpp
 engine/npvrecord.hpp
 engine/observationmode.hpp
 engine/parametricvar.hpp
@@ -121,6 +127,7 @@ engine/parsensitivitycubestream.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp
 engine/sensitivityanalysis.hpp
+engine/sensitivityanalysisplus.hpp
 engine/sensitivitycubestream.hpp
 engine/sensitivityfilestream.hpp
 engine/sensitivityinmemorystream.hpp
@@ -134,6 +141,8 @@ scenario/aggregationscenariodata.hpp
 scenario/clonedscenariogenerator.hpp
 scenario/clonescenariofactory.hpp
 scenario/crossassetmodelscenariogenerator.hpp
+scenario/deltascenario.hpp
+scenario/deltascenariofactory.hpp
 scenario/lgmscenariogenerator.hpp
 scenario/scenario.hpp
 scenario/scenariofactory.hpp
@@ -142,6 +151,7 @@ scenario/scenariogeneratorbuilder.hpp
 scenario/scenariogeneratordata.hpp
 scenario/scenariosimmarket.hpp
 scenario/scenariosimmarketparameters.hpp
+scenario/scenariosimmarketplus.hpp
 scenario/scenariowriter.hpp
 scenario/sensitivityscenariodata.hpp
 scenario/sensitivityscenariogenerator.hpp

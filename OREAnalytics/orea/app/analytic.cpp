@@ -24,6 +24,10 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivitycubestream.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/engine/sensitivityanalysisplus.hpp>
+#include <orea/engine/parsensitivitycubestream.hpp>
+#include <orea/engine/parsensitivityanalysis.hpp>
+#include <orea/engine/zerotoparcube.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <orea/engine/parametricvar.hpp>
 #include <orea/cube/cubewriter.hpp>
@@ -287,58 +291,80 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraBuilders;// = getExtraEngineBuilders();
             std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;// = getExtraLegBuilders();
 	    boost::shared_ptr<ore::analytics::SensitivityAnalysis> sensiAnalysis;
-	    // FIXME: integrate the multi-threaded sensi analysis once released
-            //if (inputs_->nThreads() == 1) {
-            sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
+	    // FIXME: Integrate with the multi-threaded sensi analysis 
+            // FIXME: Integrate with delta scenario, sensi analysis plus and scenario sim market plus
+            if (inputs_->nThreads() == 1) {
+                sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
                     portfolio_, market_, configuration, inputs_->pricingEngine(),
                     configurations_.simMarketParams, configurations_.sensiScenarioData, recalibrateModels,
                     inputs_->curveConfigs().at(0), configurations_.todaysMarketParams, ccyConv, extraBuilders,
                     extraLegBuilders, inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, false,
                     inputs_->dryRun());
-            // }
-            // else {
-            //     sensiAnalysis = boost::make_shared<oreplus::sensitivity::SensitivityAnalysis>(
-            //         inputs_->nThreads(), inputs_->asof(), this->loader(), portfolio_, Market::defaultConfiguration,
-            //         inputs_->pricingEngine(), configurations_.simMarketParams, configurations_.sensitivityScenarioData,
-            //         recalibrateModels, inputs_->curveConfigs().at(0), configurations_.todaysMarketParams, ccyConv,
-            //         getExtraTradeBuilders, getExtraEngineBuilders, getExtraLegBuilders, inputs_->refDataManager(),
-            //         *inputs_->iborFallbackConfig(), true, false, true, inputs_->dryRun());
-            // }
+            }
+            else {
+                QL_FAIL("multi-threaded sensitivity analysis not implemented yet");
+                // sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
+                //     inputs_->nThreads(), inputs_->asof(), this->loader(), portfolio_, Market::defaultConfiguration,
+                //     inputs_->pricingEngine(), configurations_.simMarketParams, configurations_.sensitivityScenarioData,
+                //     recalibrateModels, inputs_->curveConfigs().at(0), configurations_.todaysMarketParams, ccyConv,
+                //     getExtraTradeBuilders, getExtraEngineBuilders, getExtraLegBuilders, inputs_->refDataManager(),
+                //     *inputs_->iborFallbackConfig(), true, false, true, inputs_->dryRun());
+            }
+
+            // FIXME: Why are these disabled?
+            set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
+            boost::shared_ptr<ParSensitivityAnalysis> parAnalysis = nullptr;
+            if (inputs_->parSensi()) {
+                parAnalysis= boost::make_shared<ParSensitivityAnalysis>(
+                    inputs_->asof(), configurations_.simMarketParams, *configurations_.sensiScenarioData, "",
+                    true, typesDisabled);
+                if (inputs_->alignPillars()) {
+                    LOG("Sensi analysis - align pillars for the par conversion");
+                    parAnalysis->alignPillars();
+                    sensiAnalysis->overrideTenors(true);
+                } else {
+                    LOG("Sensi analysis - skip aligning pillars");
+                }
+            }
             
-
-            // FIXME: integrate par sensitivity analysis here once released
-            // try {
-            //     LOG("Align pillars for the par sensitivity calculation");
-            //     set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
-            //     boost::shared_ptr<ParSensitivityAnalysis> parAnalysis = boost::make_shared<ParSensitivityAnalysis>(
-            //         inputs_->asof(), configurations_.simMarketParams, *configurations_.sensitivityScenarioData, "",
-            //         true, typesDisabled);
-            //     parAnalysis->alignPillars();
-            //     sensiAnalysis->overrideTenors(true);
-            //     LOG("Pillars aligned");
-            // } catch (...) {
-            //     WLOG("Could not align pillars for sensitivity calculation, continuing without");
-            // }
-                        
-            LOG("Sensi Analysis - Generate");
-
+            LOG("Sensi analysis - generate");
             boost::shared_ptr<NPVSensiCube> npvCube;
             sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities"));
             sensiAnalysis->generateSensitivities(npvCube);
 
-            LOG("Sensi Analysis - Write Reports");
-
+            LOG("Sensi analysis - write sensitivity report in memory");
             auto baseCurrency = sensiAnalysis->simMarketData()->baseCcy();
             auto ss = boost::make_shared<SensitivityCubeStream>(sensiAnalysis->sensiCube(), baseCurrency);
             ore::analytics::ReportWriter(inputs_->reportNaString())
                 .writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
             reports_[analytic]["sensitivity"] = report;
 
+            LOG("Sensi analysis - write sensitivity scenario report in memory");
             boost::shared_ptr<InMemoryReport> scenarioReport = boost::make_shared<InMemoryReport>();
             ore::analytics::ReportWriter(inputs_->reportNaString())
                 .writeScenarioReport(*scenarioReport, sensiAnalysis->sensiCube(), inputs_->sensiThreshold());
             reports_[analytic]["sensitivity_scenario"] = scenarioReport;
 
+            if (inputs_->parSensi()) {
+                LOG("Sensi analysis - par conversion");
+                parAnalysis->computeParInstrumentSensitivities(sensiAnalysis->simMarket());
+                boost::shared_ptr<ParSensitivityConverter> parConverter =
+                    boost::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
+                auto parCube = boost::make_shared<ZeroToParCube>(sensiAnalysis->sensiCube(), parConverter, typesDisabled, true);
+                LOG("Sensi analysis - write par sensitivity report in memory");
+                boost::shared_ptr<ParSensitivityCubeStream> pss = boost::make_shared<ParSensitivityCubeStream>(parCube, baseCurrency);
+                // If the stream is going to be reused - wrap it into a buffered stream to gain some
+                // performance. The cost for this is the memory footpring of the buffer.
+                // ss = boost::make_shared<ore::analytics::BufferedSensitivityStream>(ss);
+                boost::shared_ptr<InMemoryReport> parSensiReport = boost::make_shared<InMemoryReport>();
+                ore::analytics::ReportWriter(inputs_->reportNaString())
+                    .writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold());
+                reports_[analytic]["par_sensitivity"] = parSensiReport;
+            }
+            else {
+                LOG("Sensi Analysis - skip par conversion");
+            }
+        
             LOG("Sensi Analysis - Completed");
             out_ << "OK" << endl;
         }
