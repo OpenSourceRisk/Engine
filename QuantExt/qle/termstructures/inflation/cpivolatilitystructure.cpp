@@ -19,7 +19,6 @@
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
 #include <qle/utilities/inflation.hpp>
-#include <iostream>
 
 namespace QuantExt {
 
@@ -63,7 +62,6 @@ QuantLib::Volatility CPIVolatilitySurface::volatility(const QuantLib::Date& matu
                                                       const QuantLib::Period& obsLag, bool extrapolate) const {
     if (strike == QuantLib::Null<QuantLib::Real>()) {
         strike = atmStrike(maturityDate, obsLag);
-        std::cout << "ATM Strike " << strike << std::endl;
     }
     return QuantLib::CPIVolatilitySurface::volatility(maturityDate, strike, obsLag, extrapolate);
 }
