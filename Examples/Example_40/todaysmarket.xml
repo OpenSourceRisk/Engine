@@ -202,11 +202,9 @@
     <DefaultCurve name="CPTY_B">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_C">Default/EUR/CPTY_C_SR_EUR</DefaultCurve>
     <DefaultCurve name="BOND_YIELD_EUR_OVER_OIS">Default/EUR/BOND_YIELD_EUR_OVER_OIS</DefaultCurve>
-    <!--
     <DefaultCurve name="CPTY_1">Default/EUR/CPTY_1_SR_EUR</DefaultCurve>
     <DefaultCurve name="CPTY_2">Default/EUR/CPTY_2_SR_EUR</DefaultCurve>
     <DefaultCurve name="CPTY_3">Default/EUR/CPTY_3_SR_EUR</DefaultCurve>
-    -->
   </DefaultCurves>
   <!-- inflation volatility curves definition -->
   <YYInflationCapFloorVolatilities id="default">
