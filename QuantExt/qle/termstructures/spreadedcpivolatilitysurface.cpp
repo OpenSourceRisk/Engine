@@ -21,6 +21,7 @@
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/flatextrapolation2d.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
+#include <qle/utilities/inflation.hpp>
 
 namespace QuantExt {
 
@@ -54,11 +55,7 @@ Volatility SpreadedCPIVolatilitySurface::volatilityImpl(Time length, Rate strike
 
 void SpreadedCPIVolatilitySurface::performCalculations() const {
     for (Size i = 0; i < optionDates_.size(); ++i) {
-        // we can not support a custom obsLag here
-        if (indexIsInterpolated())
-            optionTimes_[i] = timeFromReference(optionDates_[i] - observationLag());
-        else
-            optionTimes_[i] = timeFromReference(inflationPeriod(optionDates_[i] - observationLag(), frequency()).first);
+        optionTimes_[i] = fixingTime(optionDates_[i]);
     }
     for (Size k = 0; k < strikes_.size(); ++k) {
         for (Size i = 0; i < optionDates_.size(); ++i) {

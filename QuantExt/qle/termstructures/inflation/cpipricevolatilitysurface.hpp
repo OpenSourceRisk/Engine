@@ -225,7 +225,7 @@ void CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::performCal
     std::vector<double> vols;
 
     for (QuantLib::Size tenorIdx = 0; tenorIdx < expiries_.size(); tenorIdx++) {
-        QuantLib::Date maturityDate = optionMaturityFromTenor(expiries_[tenorIdx]);
+        QuantLib::Date maturityDate = optionDateFromTenor(expiries_[tenorIdx]);
         QuantLib::Date fixingDate =
             ZeroInflation::fixingDate(maturityDate, observationLag(), frequency(), indexIsInterpolated());
         double atm = atmGrowth(maturityDate);
@@ -342,7 +342,7 @@ QuantLib::Real CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::
 
 template <class InterpolatorStrike, class InterpolatorTime>
 QuantLib::Date CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::maxDate() const {
-    return optionMaturityFromTenor(expiries_.back());
+    return optionDateFromTenor(expiries_.back());
 }
 
 template <class InterpolatorStrike, class InterpolatorTime>

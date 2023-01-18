@@ -175,7 +175,7 @@ template <class Interpolator2D> void StrippedCPIVolatilitySurface<Interpolator2D
     for (QuantLib::Size i = 0; i < strikes_.size(); i++) {
         for (QuantLib::Size j = 0; j < maturities_.size(); j++) {
 
-            QuantLib::Date maturityDate = optionMaturityFromTenor(maturities_[j]);
+            QuantLib::Date maturityDate = optionDateFromTenor(maturities_[j]);
             QuantLib::Date fixDate =
                 ZeroInflation::fixingDate(maturityDate, observationLag(), frequency(), indexIsInterpolated());
             Rate I1 = ZeroInflation::cpiFixing(index_, maturityDate, observationLag(), indexIsInterpolated());
@@ -204,7 +204,7 @@ template <class Interpolator2D> void StrippedCPIVolatilitySurface<Interpolator2D
 
     maturityTimes_.clear();
     for (QuantLib::Size i = 0; i < maturities_.size(); i++) {
-        QuantLib::Date d = optionMaturityFromTenor(maturities_[i]);
+        QuantLib::Date d = optionDateFromTenor(maturities_[i]);
         maturityTimes_.push_back(fixingTime(d));
     }
 

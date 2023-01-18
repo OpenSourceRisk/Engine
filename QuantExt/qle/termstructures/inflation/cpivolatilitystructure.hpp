@@ -44,7 +44,7 @@ public:
                          QuantLib::VolatilityType volType = QuantLib::ShiftedLognormal, double displacement = 0.0);
 
     //! Computes the expiry date from the capFloorStartDate()
-    QuantLib::Date optionMaturityFromTenor(const QuantLib::Period& tenor) const;
+    QuantLib::Date optionDateFromTenor(const QuantLib::Period& tenor) const override;
 
     //! base date will be in the past
     QuantLib::Date baseDate() const override;
@@ -60,16 +60,6 @@ public:
     QuantLib::Volatility volatility(const QuantLib::Date& maturityDate, QuantLib::Rate strike,
                                   const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days),
                                   bool extrapolate = false) const override;
-
-    QuantLib::Volatility volatility(const QuantLib::Period& optionTenor, QuantLib::Rate strike,
-                                            const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days),
-                                            bool extrapolate = false) const override;
-
-    using QuantLib::CPIVolatilitySurface::totalVariance;
-
-    QuantLib::Volatility totalVariance(const QuantLib::Period& tenor, QuantLib::Rate strike,
-                                               const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days),
-                                               bool extrapolate = false) const override;
 
     virtual QuantLib::Real atmStrike(const QuantLib::Date& maturity,
                                      const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days)) const = 0;
