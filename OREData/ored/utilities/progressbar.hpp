@@ -30,6 +30,7 @@
 
 #include <string>
 #include <thread>
+#include <set>
 
 namespace ore {
 namespace data {
