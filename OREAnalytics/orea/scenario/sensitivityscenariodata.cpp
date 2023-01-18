@@ -581,13 +581,15 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string index = XMLUtils::getAttribute(child, "index");
             CapFloorVolShiftParData data(*yoyInflationCapFloorVolShiftData_.find(index)->second);
             XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
-            QL_REQUIRE(par, "parData must be provided for YYCapFloorVolatilities");
-            data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
-            data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
-            data.discountCurve = XMLUtils::getChildValue(par, "DiscountCurve", false);
-            XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
-            data.parInstrumentConventions =
-                XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
+            //QL_REQUIRE(par, "parData must be provided for YYCapFloorVolatilities");
+            if (par) {
+                data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
+                data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
+                data.discountCurve = XMLUtils::getChildValue(par, "DiscountCurve", false);
+                XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
+                data.parInstrumentConventions =
+                    XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
+            }
             yoyInflationCapFloorVolShiftData_[index] = boost::make_shared<CapFloorVolShiftParData>(data);
         }
     }
