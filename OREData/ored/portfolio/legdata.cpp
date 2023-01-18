@@ -206,7 +206,7 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     if (lastRecentPeriod_)
         XMLUtils::addChild(doc, node, "LastRecentPeriod", *lastRecentPeriod_);
     if (!lastRecentPeriodCalendar_.empty())
-        XMLUtils::addChild(doc, node, "LastRecentPeriod", lastRecentPeriodCalendar_);
+        XMLUtils::addChild(doc, node, "LastRecentPeriodCalendar", lastRecentPeriodCalendar_);
     XMLUtils::addChild(doc, node, "IsAveraged", isAveraged_);
     XMLUtils::addChild(doc, node, "HasSubPeriods", hasSubPeriods_);
     XMLUtils::addChild(doc, node, "IncludeSpread", includeSpread_);
