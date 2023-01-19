@@ -28,9 +28,6 @@
 namespace ore {
 namespace data {
 
-// check if map has an entry for the given id
-template <class T> bool has(const string& id, const map<string, boost::shared_ptr<T>>& m) { return m.count(id) == 1; }
-
 // utility function to add a set of nodes from a given map of curve configs
 template <class T>
 void addMinimalCurves(const char* nodeName, const map<string, boost::shared_ptr<T>>& m,
@@ -60,6 +57,17 @@ void addQuotes(set<string>& quotes, const map<string, boost::shared_ptr<T>>& con
     for (auto m : configs) {
         quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     }
+}
+
+template <class T> bool CurveConfigurations::has(const string& id, const map<string, boost::shared_ptr<T>>& m) const {
+    auto err = parseErrors_.find(std::make_pair(std::type_index(typeid(T)), id));
+    if (err != parseErrors_.end()) {
+        ALOG(StructuredCurveErrorMessage(id,
+                                         "Curve config '" + id + "' under node '" + err->second.first +
+                                             "' was requested, but could not be parsed.",
+                                         err->second.second));
+    }
+    return m.find(id) != m.end();
 }
 
 template <class T>
