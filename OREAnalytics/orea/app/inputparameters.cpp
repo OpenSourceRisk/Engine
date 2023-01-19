@@ -914,10 +914,10 @@ void OREAppInputParameters::loadParameters() {
     fileNameMap_["netcube"] = netCubeFileName_;
     fileNameMap_["dim_evolution"] = dimEvolutionFileName_;
     fileNameMap_["sensitivity"] = sensitivityFileName_;
+    fileNameMap_["sensitivity_scenario"] = sensitivityScenarioFileName_;
     fileNameMap_["parSensitivity"] = parSensitivityFileName_;
     fileNameMap_["jacobi"] = jacobiFileName_;
-    fileNameMap_["jacobi_inverse"] = jacobiFileName_;
-    fileNameMap_["sensitivity_scenario"] = jacobiInverseFileName_;
+    fileNameMap_["jacobi_inverse"] = jacobiInverseFileName_;
     fileNameMap_["stress"] = stressTestFileName_;
     fileNameMap_["var"] = varFileName_;
     
