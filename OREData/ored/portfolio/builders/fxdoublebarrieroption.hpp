@@ -63,7 +63,7 @@ protected:
             vol->enableExtrapolation();
         }
         return boost::make_shared<GeneralizedBlackScholesProcess>(
-            market_->fxRate(pair, configuration(ore::data::MarketContext::pricing)),
+            market_->fxSpot(pair, configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(forCcy.code(),
                                    configuration(ore::data::MarketContext::pricing)), // dividend yield ~ foreign yield
             market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)), vol);
