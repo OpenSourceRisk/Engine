@@ -445,6 +445,7 @@ private:
     std::string sensitivityScenarioFileName_;
     std::string parSensitivityFileName_;
     std::string jacobiFileName_;
+    std::string jacobiInverseFileName_;
     std::string stressTestFileName_;
     std::string varFileName_;
 };

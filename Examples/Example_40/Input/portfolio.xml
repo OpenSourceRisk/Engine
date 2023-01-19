@@ -201,8 +201,8 @@
       <ProtectionStart>20160206</ProtectionStart>
       <UpfrontDate>20160208</UpfrontDate>
       <UpfrontFee>0.0</UpfrontFee>
-      <AttachmentPoint>0.00</AttachmentPoint>
-      <DetachmentPoint>0.18</DetachmentPoint>
+      <AttachmentPoint>0.0</AttachmentPoint>
+      <DetachmentPoint>0.1</DetachmentPoint>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>true</Payer>

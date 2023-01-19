@@ -898,6 +898,7 @@ void OREAppInputParameters::loadParameters() {
     sensitivityFileName_ = params_->get("sensitivity", "sensitivityOutputFile", false);    
     parSensitivityFileName_ = params_->get("sensitivity", "parSensitivityOutputFile", false);    
     jacobiFileName_ = params_->get("sensitivity", "jacobiOutputFile", false);    
+    jacobiInverseFileName_ = params_->get("sensitivity", "jacobiInverseOutputFile", false);    
     sensitivityScenarioFileName_ = params_->get("sensitivity", "scenarioOutputFile", false);    
     stressTestFileName_ = params_->get("stress", "scenarioOutputFile", false);    
     varFileName_ = params_->get("var", "outputFile", false);
@@ -915,7 +916,8 @@ void OREAppInputParameters::loadParameters() {
     fileNameMap_["sensitivity"] = sensitivityFileName_;
     fileNameMap_["parSensitivity"] = parSensitivityFileName_;
     fileNameMap_["jacobi"] = jacobiFileName_;
-    fileNameMap_["sensitivity_scenario"] = sensitivityScenarioFileName_;
+    fileNameMap_["jacobi_inverse"] = jacobiFileName_;
+    fileNameMap_["sensitivity_scenario"] = jacobiInverseFileName_;
     fileNameMap_["stress"] = stressTestFileName_;
     fileNameMap_["var"] = varFileName_;
     

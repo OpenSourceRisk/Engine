@@ -288,27 +288,30 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             bool recalibrateModels = true;
             bool ccyConv = false;
             std::string configuration = inputs_->marketConfig("pricing");
-            std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraBuilders;// = getExtraEngineBuilders();
-            std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;// = getExtraLegBuilders();
 	    boost::shared_ptr<ore::analytics::SensitivityAnalysis> sensiAnalysis;
 	    // FIXME: Integrate with the multi-threaded sensi analysis 
-            // FIXME: Integrate with delta scenario, sensi analysis plus and scenario sim market plus
             if (inputs_->nThreads() == 1) {
+                std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
+                std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
                 sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
                     portfolio_, market_, configuration, inputs_->pricingEngine(),
                     configurations_.simMarketParams, configurations_.sensiScenarioData, recalibrateModels,
-                    inputs_->curveConfigs().at(0), configurations_.todaysMarketParams, ccyConv, extraBuilders,
+                    inputs_->curveConfigs().at(0), configurations_.todaysMarketParams, ccyConv, extraEngineBuilders,
                     extraLegBuilders, inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, false,
                     inputs_->dryRun());
             }
             else {
-                QL_FAIL("multi-threaded sensitivity analysis not implemented yet");
-                // sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
-                //     inputs_->nThreads(), inputs_->asof(), this->loader(), portfolio_, Market::defaultConfiguration,
-                //     inputs_->pricingEngine(), configurations_.simMarketParams, configurations_.sensitivityScenarioData,
-                //     recalibrateModels, inputs_->curveConfigs().at(0), configurations_.todaysMarketParams, ccyConv,
-                //     getExtraTradeBuilders, getExtraEngineBuilders, getExtraLegBuilders, inputs_->refDataManager(),
-                //     *inputs_->iborFallbackConfig(), true, false, true, inputs_->dryRun());
+                std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
+                    const boost::shared_ptr<ReferenceDataManager>&, const boost::shared_ptr<TradeFactory>&)>
+                    extraTradeBuilders;
+                std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuilders;
+                std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuilders;
+                sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
+                    inputs_->nThreads(), inputs_->asof(), this->loader(), portfolio_, Market::defaultConfiguration,
+                    inputs_->pricingEngine(), configurations_.simMarketParams, configurations_.sensiScenarioData,
+                    recalibrateModels, inputs_->curveConfigs().at(0), configurations_.todaysMarketParams, ccyConv,
+                    extraTradeBuilders, extraEngineBuilders, extraLegBuilders, inputs_->refDataManager(),
+                    *inputs_->iborFallbackConfig(), true, false, inputs_->dryRun());
             }
 
             // FIXME: Why are these disabled?
@@ -328,9 +331,8 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             }
             
             LOG("Sensi analysis - generate");
-            boost::shared_ptr<NPVSensiCube> npvCube;
             sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities"));
-            sensiAnalysis->generateSensitivities(npvCube);
+            sensiAnalysis->generateSensitivities();
 
             LOG("Sensi analysis - write sensitivity report in memory");
             auto baseCurrency = sensiAnalysis->simMarketData()->baseCcy();
@@ -360,6 +362,16 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                 ore::analytics::ReportWriter(inputs_->reportNaString())
                     .writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold());
                 reports_[analytic]["par_sensitivity"] = parSensiReport;
+
+                if (inputs_->outputJacobi()) {
+                    boost::shared_ptr<InMemoryReport> jacobiReport = boost::make_shared<InMemoryReport>();
+                    writeParConversionMatrix(parAnalysis->parSensitivities(), *jacobiReport);
+                    reports_[analytic]["jacobi"] = jacobiReport;
+                    
+                    boost::shared_ptr<InMemoryReport> jacobiInverseReport = boost::make_shared<InMemoryReport>();
+                    parConverter->writeConversionMatrix(*jacobiInverseReport);
+                    reports_[analytic]["jacobi_inverse"] = jacobiInverseReport;
+                }
             }
             else {
                 LOG("Sensi Analysis - skip par conversion");

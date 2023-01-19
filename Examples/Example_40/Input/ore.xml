@@ -83,7 +83,8 @@
       <Parameter name="parSensitivity">Y</Parameter>
       <Parameter name="parSensitivityOutputFile">parsensitivity.csv</Parameter>
       <Parameter name="outputJacobi">Y</Parameter>
-      <Parameter name="jacobiOutputFile">parjacobi.csv</Parameter>
+      <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
+      <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
     </Analytic>
     <!--
     <Analytic type="parSensitivity">
