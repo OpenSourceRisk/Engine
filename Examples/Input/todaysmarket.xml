@@ -239,6 +239,9 @@
     <Security name="SECURITY_2">Security/SECURITY_2</Security>
     <Security name="ISIN:XS0983610930">Security/ISIN:XS0983610930</Security>
    </Securities>
+  <BaseCorrelations id="default">
+   <BaseCorrelation name="CDXIG">BaseCorrelation/CDXIG</BaseCorrelation>
+  </BaseCorrelations>
   <CommodityCurves id="default">
     <CommodityCurve name="COMDTY_GOLD_USD">Commodity/USD/GOLD_USD</CommodityCurve>
     <CommodityCurve name="COMDTY_WTI_USD">Commodity/USD/WTI_USD</CommodityCurve>
@@ -247,8 +250,4 @@
       <CommodityVolatility name="COMDTY_GOLD_USD">CommodityVolatility/USD/GOLD_USD_VOLS</CommodityVolatility>
       <CommodityVolatility name="COMDTY_WTI_USD">CommodityVolatility/USD/WTI_USD_VOLS</CommodityVolatility>
   </CommodityVolatilities>
-  <!-- base correlation definition -->
-  <BaseCorrelations id="default">
-   <BaseCorrelation name="CDXIG">BaseCorrelation/CDXIG</BaseCorrelation>
-  </BaseCorrelations>
 </TodaysMarket>

@@ -9,8 +9,6 @@
       <Currency>EUR</Currency>
       <Currency>USD</Currency>
       <Currency>GBP</Currency>
-      <Currency>CHF</Currency>
-      <Currency>JPY</Currency>
     </Currencies>
 
     <YieldCurves>
@@ -26,10 +24,8 @@
     <FxRates>
       <CurrencyPairs>
         <CurrencyPair>USDEUR</CurrencyPair>
-	    <CurrencyPair>GBPEUR</CurrencyPair>
-	    <CurrencyPair>CHFEUR</CurrencyPair>
-	    <CurrencyPair>JPYEUR</CurrencyPair>
-        <!--<CurrencyPair>GBPUSD</CurrencyPair>-->
+	<CurrencyPair>GBPEUR</CurrencyPair>
+	<CurrencyPair>JPYEUR</CurrencyPair>
       </CurrencyPairs>      
     </FxRates>
     
@@ -44,10 +40,6 @@
       <Index>GBP-LIBOR-6M</Index>
       <Index>GBP-LIBOR-3M</Index>
       <Index>GBP-SONIA</Index>
-      <Index>CHF-LIBOR-6M</Index>
-      <Index>CHF-TOIS</Index>
-      <Index>JPY-LIBOR-6M</Index>
-      <Index>JPY-TONAR</Index>
     </Indices>
 
     <SwapIndices>
@@ -76,7 +68,6 @@
 
     <Equities>
       <Names> 
-        <Name>SX5E</Name>
         <Name>FTSE</Name>
         <Name>SPX</Name>
       </Names> 
@@ -84,9 +75,6 @@
       <SimulateDividendYield>false</SimulateDividendYield>
     </Equities>
 
-    <!-- Even if we do not simulate them - option pricing needs vol
-	   surfaces, so we need to specify here how we propagate the
-	   vol structure and what its composition will be -->
     <SwaptionVolatilities>
       <Simulate>true</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
@@ -95,8 +83,6 @@
         <Currency>EUR</Currency>
         <Currency>USD</Currency>
         <Currency>GBP</Currency>
-        <Currency>CHF</Currency>
-        <Currency>JPY</Currency>
       </Currencies>
       <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
       <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
@@ -130,8 +116,6 @@
       <CurrencyPairs>
         <CurrencyPair>USDEUR</CurrencyPair>
         <CurrencyPair>GBPEUR</CurrencyPair>
-        <CurrencyPair>JPYEUR</CurrencyPair>
-        <!--<CurrencyPair>GBPUSD</CurrencyPair>-->
       </CurrencyPairs>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
       <Surface>
@@ -143,7 +127,6 @@
       <Simulate>true</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Names>
-        <Name>SX5E</Name>
         <Name>FTSE</Name>
         <Name>SPX</Name>
       </Names>
@@ -154,17 +137,14 @@
       </Surface>
     </EquityVolatilities>
     
-    <BenchmarkCurves>
-      <BenchmarkCurve>
-	<Currency>EUR</Currency>
-	<Name>BENCHMARK_EUR</Name>
-      </BenchmarkCurve>
-    </BenchmarkCurves>
+    <BenchmarkCurves/>
 
     <Securities>
       <Simulate>true</Simulate>
       <Names>
         <Name>SECURITY_1</Name>
+        <Name>SECURITY_2</Name>
+        <Name>SECURITY_3</Name>
       </Names>
     </Securities>
 

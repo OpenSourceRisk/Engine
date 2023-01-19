@@ -3108,6 +3108,18 @@
       <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1</SpreadQuote>
       <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1</RecoveryRateQuote>
     </Security>
+    <Security>
+      <CurveId>SECURITY_2</CurveId>
+      <CurveDescription>Security</CurveDescription>
+      <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_2</SpreadQuote>
+      <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_2</RecoveryRateQuote>
+    </Security>
+    <Security>
+      <CurveId>SECURITY_3</CurveId>
+      <CurveDescription>Security</CurveDescription>
+      <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_3</SpreadQuote>
+      <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_3</RecoveryRateQuote>
+    </Security>
   </Securities>
   <CommodityCurves>
     <CommodityCurve>

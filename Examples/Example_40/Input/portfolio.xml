@@ -81,8 +81,8 @@
       <AdditionalFields/>
     </Envelope>
     <CreditDefaultSwapData>
-      <IssuerId>CPTY_1</IssuerId>
-      <CreditCurveId>CPTY_1</CreditCurveId>
+      <IssuerId>CPTY_A</IssuerId>
+      <CreditCurveId>CPTY_A</CreditCurveId>
       <SettlesAccrual>Y</SettlesAccrual>
       <PaysAtDefaultTime>Y</PaysAtDefaultTime>
       <ProtectionStart>20160206</ProtectionStart>
@@ -1040,6 +1040,7 @@
       </Floors>
     </CapFloorData>
   </Trade>
+  <!--
   <Trade id="Bond">
     <TradeType>Bond</TradeType>
     <Envelope>
@@ -1086,6 +1087,7 @@
       </LegData>
     </BondData>
   </Trade>
+  -->
   <Trade id="CPI_Swap">
     <TradeType>Swap</TradeType>
     <Envelope>

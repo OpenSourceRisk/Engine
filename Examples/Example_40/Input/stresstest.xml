@@ -1,7 +1,6 @@
 <StressTesting>
 
   <StressTest id="parallel_rates">
-
     <DiscountCurves>
       <DiscountCurve ccy="EUR">
 	<ShiftType>Absolute</ShiftType>
@@ -14,11 +13,6 @@
 	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
       </DiscountCurve>
       <DiscountCurve ccy="GBP">
-	<ShiftType>Absolute</ShiftType>
-	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
-	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      </DiscountCurve>
-      <DiscountCurve ccy="JPY">
 	<ShiftType>Absolute</ShiftType>
 	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
 	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
@@ -61,25 +55,9 @@
 	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
 	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
       </IndexCurve>
-      <IndexCurve index="CHF-LIBOR-6M">
-	<ShiftType>Absolute</ShiftType>
-	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
-	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      </IndexCurve>
-      <IndexCurve index="JPY-LIBOR-6M">
-	<ShiftType>Absolute</ShiftType>
-	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
-	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      </IndexCurve>
     </IndexCurves>
     
-    <YieldCurves>
-      <YieldCurve name="BENCHMARK_EUR">
-	<ShiftType>Absolute</ShiftType>
-	<Shifts>0.001,0.002,0.003,0.004,0.005,0.006,0.007,0.008,0.009</Shifts>
-	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      </YieldCurve>
-    </YieldCurves>
+    <YieldCurves/>
   
     <FxSpots>
       <FxSpot ccypair="USDEUR">
@@ -90,17 +68,9 @@
 	<ShiftType>Relative</ShiftType>
 	<ShiftSize>0.01</ShiftSize>
       </FxSpot>
-      <FxSpot ccypair="CHFEUR">
-	<ShiftType>Relative</ShiftType>
-	<ShiftSize>0.01</ShiftSize>
-      </FxSpot>
-      <FxSpot ccypair="JPYEUR">
-	<ShiftType>Relative</ShiftType>
-	<ShiftSize>0.01</ShiftSize>
-      </FxSpot>
     </FxSpots>
   
-    <FxVolatilities><!-- strike dimension ignored -->
+    <FxVolatilities>
       <FxVolatility ccypair="USDEUR">
 	<ShiftType>Absolute</ShiftType>
 	<Shifts>0.1,0.1,0.1,0.1</Shifts>
@@ -111,14 +81,8 @@
 	<Shifts>0.1,0.1,0.1,0.1</Shifts>
 	<ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
       </FxVolatility>
-      <FxVolatility ccypair="JPYEUR">
-	<ShiftType>Absolute</ShiftType>
-	<Shifts>0.1,0.1,0.1,0.1</Shifts>
-	<ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
-      </FxVolatility>
     </FxVolatilities>
   
-    <!-- Swaption ATM vol shifts, strike dimension ignored -->
     <SwaptionVolatilities>
       <SwaptionVolatility ccy="EUR">
 	<ShiftType>Absolute</ShiftType>
@@ -164,11 +128,6 @@
     <IndexCurves>
     </IndexCurves>
     <YieldCurves>
-      <YieldCurve name="BENCHMARK_EUR">
-	<ShiftType>Absolute</ShiftType>
-	<Shifts>-0.005,-0.004,-0.003,-0.002,0.002,0.004,0.006,0.008,0.01</Shifts>
-	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      </YieldCurve>
     </YieldCurves>
     <FxSpots>
     </FxSpots>
@@ -180,7 +139,7 @@
     </CapFloorVolatilities>
     <SecuritySpreads />
     <RecoveryRates/>
-	<SurvivalProbabilities/>	
+    <SurvivalProbabilities/>	
   </StressTest>
     
 </StressTesting>
