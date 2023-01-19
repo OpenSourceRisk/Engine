@@ -147,7 +147,7 @@ void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engin
 
     Settlement::Type settleType = parseSettlementType(option_.settlement());
 
-    Handle<Quote> spot = market->fxRate(boughtCcy.code() + soldCcy.code());
+    Handle<Quote> spot = market->fxSpot(boughtCcy.code() + soldCcy.code());
     instrument_ = boost::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
         barrier, positionType == Position::Long ? true : false, expiryDate,
         settleType == Settlement::Physical ? true : false, vanilla, barrierType, spot, level, rebate, soldCcy,
