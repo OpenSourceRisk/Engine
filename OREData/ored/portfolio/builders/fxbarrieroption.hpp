@@ -66,7 +66,7 @@ protected:
             vol->enableExtrapolation();
         }
         return boost::make_shared<GeneralizedBlackScholesProcess>(
-            market_->fxRate(ccyPairCode, configuration(ore::data::MarketContext::pricing)),
+            market_->fxSpot(ccyPairCode, configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(forCcy.code(), configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)), vol);
     }

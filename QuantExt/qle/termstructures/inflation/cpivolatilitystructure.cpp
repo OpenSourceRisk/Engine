@@ -38,7 +38,7 @@ QuantLib::Date CPIVolatilitySurface::capFloorStartDate() const {
     }
 }
 
-QuantLib::Date CPIVolatilitySurface::optionMaturityFromTenor(const QuantLib::Period& tenor) const {
+QuantLib::Date CPIVolatilitySurface::optionDateFromTenor(const QuantLib::Period& tenor) const {
     return calendar().advance(capFloorStartDate(), tenor, businessDayConvention());
 }
 
@@ -56,6 +56,14 @@ QuantLib::Date CPIVolatilitySurface::baseDate() const {
 
 double CPIVolatilitySurface::fixingTime(const QuantLib::Date& maturityDate) const {
     return timeFromReference(ZeroInflation::fixingDate(maturityDate, observationLag(), frequency(), indexIsInterpolated()));
+}
+
+QuantLib::Volatility CPIVolatilitySurface::volatility(const QuantLib::Date& maturityDate, QuantLib::Rate strike,
+                                                      const QuantLib::Period& obsLag, bool extrapolate) const {
+    if (strike == QuantLib::Null<QuantLib::Real>()) {
+        strike = atmStrike(maturityDate, obsLag);
+    }
+    return QuantLib::CPIVolatilitySurface::volatility(maturityDate, strike, obsLag, extrapolate);
 }
 
 } // namespace QuantExt
