@@ -2532,7 +2532,7 @@ FX Option pricing with the risk factor evolution model.
 
 To use the AMC engine for an XVA simulation the following needs to be added to the {\tt simulation} analytic in {\tt ore.xml}:
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Analytic type="simulation">
   ...
   <Parameter name="amc">Y</Parameter>
@@ -2562,7 +2562,7 @@ At this point we assume that the reader is generally familiar with the configura
 
 The pricing engine configuration is similar for all AMC enabled products, e.g. for Bermudan Swaptions:
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Product type="BermudanSwaption">
   <Model>LGM</Model>
   <ModelParameters/>
@@ -2638,7 +2638,7 @@ The following listing shows a sample configuration for the MC Bermudan Swaption 
 identical to the LGM Grid engine configuration. The engine parameters on the other hand are the same as for the AMC
 engine, see \ref{sec:amc_pricingengineconfig}.
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Product type="BermudanSwaption">
   <Model>LGM</Model>
   <ModelParameters>
@@ -2684,7 +2684,7 @@ missing, the legs themselves represent the trade.
 
 See \ref{sec:amc_limitations} for limitations of the multileg option pricing engine.
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Trade id="Sample_MultiLegOption">
   <TradeType>MultiLegOption</TradeType>
   <Envelope>...</Envelope>
@@ -2726,7 +2726,7 @@ See \ref{sec:amc_limitations} for limitations of the multileg option pricing eng
 The pricing engine configuration is similar to that of the MC Bermudan swaption engine, cf.
 \ref{sec:mc_bermudan_engine}, also see the following listing.
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
   <Product type="MultiLegOption">
   <Model>CrossAssetModel</Model>
   <ModelParameters>
@@ -2780,6 +2780,95 @@ Model Parameters special to that product are
   \verb+Key1+ and \verb+Key2+ is the same as in the simulation configuration for the cross asset model
 \end{enumerate}
 
+%--------------------------------------------------------------------
+\subsection{Par Sensitivity Analysis}% Example 40
+\label{example:40}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_40}  demonstrates ORE's par sensitivity analysis (e.g. to Swap rates) 
+that is implemented  by means of a Jacobi transformation of the "raw" sensitivities (e.g. to zero rates). 
+The key change in {\tt ore.xml} is highlighted below
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <Analytic type="sensitivity">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="scenarioOutputFile">sensi_scenarios.csv</Parameter>
+      <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
+      <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
+      <!-- Additional parametrisation for par sensitivity analysis -->
+      <Parameter name="parSensitivity">Y</Parameter>
+      <Parameter name="parSensitivityOutputFile">parsensitivity.csv</Parameter>
+      <Parameter name="outputJacobi">Y</Parameter>
+      <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
+      <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
+    </Analytic>
+\end{minted}
+
+The portfolio used in this example includes products sensitive to 
+\begin{itemize}
+\item Discount and index curves
+\item Credit curves
+\item Inflation curves
+\item CapFloor volatilities
+\end{itemize}
+
+The usual sensitivity analysis is performed by bumping the "raw" rates (zero rates, hazard rates, inflation zero rates, optionlet vols).
+This is followed by the Jacobi transformation that turns "raw" sensitivities  into sensitivities in the par domain (Deposit/FRA/Swap rates, FX Forwards, CC Basis Swap spreads, 
+CDS spreads, ZC and YOY Inflation Swap rates, flat Cap/Floor vols). The conversion is controlled by the additional {\tt ParConversion} data blocks 
+in {\tt sensitivity.xml} where the assumed par instruments and corresponding conventions are coded, as shown below for three types of discount curves.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <DiscountCurves>
+  
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+        <!--DEP, FRA, IRS, OIS, FXF, XBS -->
+	<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>   
+    
+    <DiscountCurve ccy="USD">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+	<Instruments>FXF,FXF,FXF,FXF,FXF,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="XBS">EUR-USD-XCCY-BASIS-CONVENTIONS</Convention>
+	  <Convention id="FXF">EUR-USD-FX-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+
+    <DiscountCurve ccy="GBP">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+	<Instruments>DEP,DEP,DEP,DEP,DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">GBP-DEPOSIT</Convention>
+	  <Convention id="IRS">GBP-6M-SWAP-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>
+  
+  </DiscountCurves>
+\end{minted}
+
+Finally note that par sensitivity analysis requires that the shift tenor grid in the sensitivity data above matches the corresponding grid in the simulation (market) configuration.
+See also section \ref{sec:sensitivity}.
 
 \clearpage
 %========================================================
@@ -3337,6 +3426,12 @@ shows a typical configuration for sensitivity calculation.
    <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
    <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
    <Parameter name="recalibrateModels">Y</Parameter>
+   <!-- Additional parametrisation for par sensitivity analysis -->
+   <Parameter name="parSensitivity">Y</Parameter>
+   <Parameter name="parSensitivityOutputFile">parsensitivity.csv</Parameter>
+   <Parameter name="outputJacobi">Y</Parameter>
+   <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
+   <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
  </Analytic>
 </Analytics>
 \end{minted}
@@ -3362,6 +3457,12 @@ The parameters have the following interpretation:
 \item {\tt outputSensitivityThreshold:} Only finite differences with absolute value greater than this number are written
   to the output files.
 \item {\tt recalibrateModels:} If set to Y, then recalibrate pricing models after each shift of relevant term structures; otherwise do not recalibrate
+\item {\tt parSensitivity}: If set to Y, par sensitivity analysis is performed following the "raw" sensitivity analysis; note that in this case the 
+{\tt sensitivityConfigFile} needs to contain {\tt ParConversion} sections, see {\tt Example\_40}   
+\item {\tt parSensitivityOutputFile}: Output file name for the par sensitivity report
+\item {\tt outputJacobi}: If set to Y, then the relevant Jacobi and inverse Jacobi matrix is written to a file, see below
+\item {\tt jacobiOutputFile}: Output file name for the Jacobi matrx
+\item {\tt jacobiInverseOutputFile}: Output file name for the inverse Jacobi matrix
 \end{itemize}
 
 The stress analytics configuration is similar to the one of the sensitivity calculation. Listing \ref{lst:ore_stress}
@@ -5099,6 +5200,62 @@ Additional flags:
 \caption{Sensitivity configuration}
 \label{lst:sensitivity_config}
 \end{longlisting}
+
+\subsubsection*{Par Sensitivity Analysis}
+
+To perform a par sensitivity analysis, additional sensitivity configuration is required that describes the assumed par instruments and related conventions.
+This additional data is required for:
+\begin{itemize}
+\item DiscountCurves
+\item IndexCurves
+\item CapFloorVolatilities
+\item CreditCurves
+\item ZeroInflationIndexCurves
+\item YYInflationIndexCurves
+\item YYCapFloorVolatilities
+\end{itemize}
+
+Using DiscountCurves as an example, the full sensitivity specification including par conversion data is as follows:
+
+\begin{longlisting}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+        <!--DEP, FRA, IRS, OIS, FXF, XBS -->
+	<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+	  <Convention id="IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
+	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>   
+\end{minted}
+\caption{Par sensitivity configuration}
+\label{lst:par_sensitivity_config}
+\end{longlisting}
+
+Note
+\begin{itemize}
+\item The list of shift tenors needs to match the list of tenors matches the corresponding grid in the simulation (market) configuration
+\item The length of list of (par) instruments needs to match the length of the list of shift tenors
+\item Permissible codes for the assumed par instruments:
+	\begin{itemize}
+	\item DEP, FRA, IRS, OIS, TBS, FXF, XBS in the case of DiscountCurves 
+	\item DEP, FRA, IRS, OIS, TBS in the case of IndexCurves
+	\item DEP, FRA, IRS, OIS, TBS, XBS in the case of YieldCurves 
+	\item Any code for CapFloorVolatilities, interpreted as flat Cap/Floor
+	\item Any code for CreditCurves, interpreted as CDS
+	\item Any code for ZeroInflationIndexCurves, interpreted as CPI Swaps linked to Zero Inflation curves
+	\item ZIS, YYS for YYInflationIndexCurves, interpreted as Year-on-Year Inflation Swaps linked to Zero Inflation resp. YoY Inflation curves
+	\item ZIS, YYS for YYCapFloorVolatilities, interpreted as Year-on-Year Inflation Cap Floor linked to Zero Inflation resp. YoY Inflation curves
+	\end{itemize}
+\item One convention needs to be referenced for each of the instrument codes	
+\end{itemize}
 
 %--------------------------------------------------------
 \subsection{Stress Scenario Analysis: {\tt stressconfig.xml}}\label{sec:stress}
