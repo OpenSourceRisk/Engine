@@ -333,11 +333,14 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
                 auto itu = upFactors.find(forCcyKey);
                 if (itu != upFactors.end()) {
                     TLOG("Adding analytic " << forCcy << " up sensitivity to cube.");
+                    sensiCube_->npvCube()->remove(tradeIdx, itu->second.index);
                     sensiCube_->npvCube()->set(baseNpv + forCcySensi, tradeIdx, itu->second.index);
+                    std::cout << "baseNpv=" << baseNpv << " forCcySneis=" << forCcySensi << std::endl;
                 }
                 auto itd = downFactors.find(forCcyKey);
                 if (itd != downFactors.end()) {
                     TLOG("Adding analytic " << forCcy << " down sensitivity to cube.");
+                    sensiCube_->npvCube()->remove(tradeIdx, itd->second.index);
                     sensiCube_->npvCube()->set(baseNpv - forCcySensi, tradeIdx, itd->second.index);
                 }
             }
@@ -347,11 +350,13 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
                 auto itu = upFactors.find(domCcyKey);
                 if (itu != upFactors.end()) {
                     TLOG("Adding analytic " << domCcy << " up sensitivity to cube.");
+                    sensiCube_->npvCube()->remove(tradeIdx, itu->second.index);
                     sensiCube_->npvCube()->set(baseNpv + domCcySensi, tradeIdx, itu->second.index);
                 }
                 auto itd = downFactors.find(domCcyKey);
                 if (itd != downFactors.end()) {
                     TLOG("Adding analytic " << domCcy << " down sensitivity to cube.");
+                    sensiCube_->npvCube()->remove(tradeIdx, itd->second.index);
                     sensiCube_->npvCube()->set(baseNpv - domCcySensi, tradeIdx, itd->second.index);
                 }
             }
