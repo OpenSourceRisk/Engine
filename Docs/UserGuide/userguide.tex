@@ -2786,8 +2786,10 @@ Model Parameters special to that product are
 %--------------------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_40}  demonstrates ORE's par sensitivity analysis (e.g. to Swap rates) 
-that is implemented  by means of a Jacobi transformation of the "raw" sensitivities (e.g. to zero rates). 
-The key change in {\tt ore.xml} is highlighted below
+that is implemented  by means of a Jacobi transformation of the "raw" sensitivities (e.g. to zero rates), see a sketch of the 
+methodology in appendix \ref{app:par_sensi} and section \ref{sec:sensitivity} for configuration details.
+
+To perform a par sensitivity analysis, the following required change in {\tt ore.xml} is required
 
 \begin{minted}[fontsize=\scriptsize]{xml}
     <Analytic type="sensitivity">
@@ -5248,11 +5250,11 @@ Note
 	\item DEP, FRA, IRS, OIS, TBS, FXF, XBS in the case of DiscountCurves 
 	\item DEP, FRA, IRS, OIS, TBS in the case of IndexCurves
 	\item DEP, FRA, IRS, OIS, TBS, XBS in the case of YieldCurves 
-	\item Any code for CapFloorVolatilities, interpreted as flat Cap/Floor
-	\item Any code for CreditCurves, interpreted as CDS
-	\item Any code for ZeroInflationIndexCurves, interpreted as CPI Swaps linked to Zero Inflation curves
 	\item ZIS, YYS for YYInflationIndexCurves, interpreted as Year-on-Year Inflation Swaps linked to Zero Inflation resp. YoY Inflation curves
 	\item ZIS, YYS for YYCapFloorVolatilities, interpreted as Year-on-Year Inflation Cap Floor linked to Zero Inflation resp. YoY Inflation curves
+	\item Any code for CreditCurves, interpreted as CDS
+	\item Any code for ZeroInflationIndexCurves, interpreted as CPI Swaps linked to Zero Inflation curves
+	\item Any code for CapFloorVolatilities, interpreted as flat Cap/Floor
 	\end{itemize}
 \item One convention needs to be referenced for each of the instrument codes	
 \end{itemize}
@@ -7819,6 +7821,58 @@ the underlying spot price changes.
     \label{sensi_config_overview}
   \end{center}
   \end{table}
+
+\subsection{Par Sensitivity Analysis}
+\label{app:par_sensi}
+
+The ``raw'' sensitivities in ORE are generated in a computationally convenient domain (such as zero rates, caplet/floorlet volatilities, integrated hazard rates, inflation zero rates). These raw sensitivities are typically further processed in risk analytics such as VaR measures. On the other hand, for hedging purposes one is rather interested in sensitivities with respect to fair rates of hedge instruments such as Forward Rate Agreements, Swaps, flat Caps/Floors, CDS, Zero Coupon Inflation Swaps. \\
+
+It is possible to generate par sensitivities from raw sensitivities using the chain rule as follows, and this is the approach taken in ORE. Recall for example the fair swap rate $c$ for some maturity as a function of zero rates $z_i$ in a single curve setting:
+$$
+c = \frac{1 - e^{-z_n\,t_n}}{\sum_{i=1}^n \delta_i\,e^{-z_i\, t_i}}
+$$
+More realistically, a given fair swap rate might be a function of the zero rates spanning the discount and index curves in the chosen currency. In a multi currency curve setting, that swap rate might even be a function of the zero rates spanning a foreign (collateral) currency discount curve, foreign and domestic currency index curves. Generally, we can write any fair par rate $c_i$ as function of raw rates $z_j$,
+$$
+c_i \equiv c_i(z_1, z_2, ..., z_n)
+$$
+This function may not be available in closed form, but numerically we can evaluate the sensitivity of $c_i$ with respect to changes in all raw rates,
+$$
+\frac{\partial c_i}{\partial z_j}.
+$$
+These sensitivities form a {\em Jacobi} matrix of derivatives. Now let $V$ denote some trade's price. Its sensitivity with respect a raw rate change $\partial V/\partial z_k$ can then be expressed in terms of sensitivities w.r.t. par rates using the chain rule
+$$
+\frac{\partial V}{\partial z_j} = \sum_{i=1}^n \frac{\partial V}{\partial c_i}\,\frac{\partial c_i}{\partial z_j},
+$$
+or in vector/matrix form
+$$
+\nabla_z V = C \cdot \nabla_c V, \qquad C_{ji} = \frac{\partial c_i}{\partial z_j}.
+$$
+Given the raw sensitivity vector $\nabla_z V$, we need to invert the Jacobi matrix $C$ to obtain the par rate sensitivity vector
+$$
+\nabla_c V = C^{-1} \cdot \nabla_z V.
+$$
+
+We then compute the Jacobi matrix $C$ by
+\begin{itemize}
+\item setting up par instruments with links to all required term structures expressed in terms of raw rates
+\item ``bumping'' all relevant raw rates and numerically computing the par instrument's fair rate shift for each bump
+\item thus filling the Jacobi matrix with finite difference approximations of the partial derivatives $\partial c_i/\partial z_j$.
+\end{itemize}
+
+The par rate conversion supports the following par instruments:
+\begin{itemize}
+\item Deposits
+\item Forward rate Agreements
+\item Interest Rate Swaps (fixed vs. ibor)
+\item Overnight Index Swaps
+\item Tenor Basis Swaps (ibor vs. ibor)
+\item Overnight Index Basis Swaps (ibor vs. OIS)
+\item FX Forwards
+\item Cross Currency Basis Swaps
+\item Credit Default Swaps
+\item Caps/Floors
+\end{itemize}
+
 
 \subsection{Value at Risk}\label{sec:app_var}
 
