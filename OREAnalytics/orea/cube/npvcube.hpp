@@ -100,6 +100,9 @@ public:
         the default implementation has generelly to be overriden in derived classes depending on how values are stored */
     virtual void remove(Size id);
 
+    /*! simliar as above, but remove all values for a given id and scenario and keep T0 values */
+    virtual void remove(Size id, Size sample);
+
     //! Load cube contents from disk
     virtual void load(const std::string& fileName) = 0;
     //! Persist cube contents to disk
@@ -128,6 +131,14 @@ inline void NPVCube::remove(Size id) {
             for (Size sample = 0; sample < this->samples(); ++sample) {
                 set(0.0, id, date, sample, depth);
             }
+        }
+    }
+}
+
+inline void NPVCube::remove(Size id, Size sample) {
+    for (Size date = 0; date < this->numDates(); ++date) {
+        for (Size depth = 0; depth < this->depth(); ++depth) {
+            set(0.0, id, date, sample, depth);
         }
     }
 }
