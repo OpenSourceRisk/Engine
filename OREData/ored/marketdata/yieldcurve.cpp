@@ -62,7 +62,6 @@
 
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
-#include <ored/marketdata/bondyieldshiftedcurvehelpermarket.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/portfolio/bond.hpp>
@@ -1353,7 +1352,7 @@ void YieldCurve::buildBondYieldShiftedCurve() {
     }
 
     auto engineFactory = boost::make_shared<EngineFactory>(
-        engineData, boost::make_shared<BondYieldShiftedCurveHelperMarket>(iborCurveMapping),
+        engineData, boost::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping),
         std::map<MarketContext, string>(), std::vector<boost::shared_ptr<EngineBuilder>>(),
         std::vector<boost::shared_ptr<LegBuilder>>(), referenceData_, iborFallbackConfig_);
 

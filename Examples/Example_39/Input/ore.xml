@@ -38,13 +38,13 @@
   <Analytics>
     <Analytic type="curves">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="outputFileName">curves_TIMESTAMP.csv</Parameter>
+      <Parameter name="outputFileName">curves.csv</Parameter>
       <Parameter name="configuration">default</Parameter>
       <Parameter name="grid">360,1M</Parameter>
     </Analytic>
     <Analytic type="npv">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="outputFileName">npv_TIMESTAMP.csv</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="extendedResults">false</Parameter>
     </Analytic>
@@ -55,7 +55,7 @@
     </Analytic>
     <Analytic type="greeks">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="outputFileName">greeks_TIMESTAMP.csv</Parameter>
+      <Parameter name="outputFileName">greeks.csv</Parameter>
     </Analytic>
   </Analytics>
 </ORE>

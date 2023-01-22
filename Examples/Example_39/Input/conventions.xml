@@ -18,7 +18,6 @@
     <DayCounter>A365</DayCounter>
     <CompoundingFrequency>Daily</CompoundingFrequency>
   </Zero>
-  <!-- CDS -->
   <Deposit>
     <Id>USD-LIBOR-CONVENTIONS</Id>
     <IndexBased>true</IndexBased>
