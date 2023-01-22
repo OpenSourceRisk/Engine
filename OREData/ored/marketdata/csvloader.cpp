@@ -198,9 +198,13 @@ std::set<boost::shared_ptr<MarketDatum>> CSVLoader::get(const std::set<std::stri
 
 std::set<boost::shared_ptr<MarketDatum>> CSVLoader::get(const Wildcard& wildcard,
                                                              const QuantLib::Date& asof) const {
-    if(!wildcard.hasWildcard()) {
+    if (!wildcard.hasWildcard()) {
         // no wildcard => use get by name function
-        return {get(wildcard.pattern(), asof)};
+        try {
+            return {get(wildcard.pattern(), asof)};
+        } catch (...) {
+        }
+        return {};
     }
     auto it = data_.find(asof);
     if (it == data_.end())
