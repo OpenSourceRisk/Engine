@@ -186,6 +186,14 @@
   <CDSVolatilities id="default">
     <CDSVolatility name="CPTY_A">CDSVolatility/CPTY_A</CDSVolatility>
     <CDSVolatility name="CPTY_B">CDSVolatility/CPTY_A</CDSVolatility>
+    <CDSVolatility name="BANK">CDSVolatility/CDXIG</CDSVolatility>
+    <CDSVolatility name="CDXIG">CDSVolatility/CDXIG</CDSVolatility>
+  </CDSVolatilities>
+  <CDSVolatilities id="collateral_eur">
+    <CDSVolatility name="CPTY_A">CDSVolatility/CPTY_A</CDSVolatility>
+    <CDSVolatility name="CPTY_B">CDSVolatility/CPTY_A</CDSVolatility>
+    <CDSVolatility name="BANK">CDSVolatility/CDXIG</CDSVolatility>
+    <CDSVolatility name="CDXIG">CDSVolatility/CDXIG</CDSVolatility>
   </CDSVolatilities>
   <!-- default curves definition -->
   <DefaultCurves id="default">
@@ -194,6 +202,11 @@
     <DefaultCurve name="CPTY_B">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_C">Default/EUR/CPTY_C_SR_EUR</DefaultCurve>
     <DefaultCurve name="BOND_YIELD_EUR_OVER_OIS">Default/EUR/BOND_YIELD_EUR_OVER_OIS</DefaultCurve>
+    <!--
+    <DefaultCurve name="CPTY_1">Default/EUR/CPTY_1_SR_EUR</DefaultCurve>
+    <DefaultCurve name="CPTY_2">Default/EUR/CPTY_2_SR_EUR</DefaultCurve>
+    <DefaultCurve name="CPTY_3">Default/EUR/CPTY_3_SR_EUR</DefaultCurve>
+    -->
   </DefaultCurves>
   <!-- inflation volatility curves definition -->
   <YYInflationCapFloorVolatilities id="default">
@@ -207,17 +220,28 @@
   <EquityCurves id="default">
       <EquityCurve name="SP5">Equity/USD/SP5</EquityCurve>
       <EquityCurve name="Lufthansa">Equity/EUR/Lufthansa</EquityCurve>
+      <EquityCurve name="SX5E">Equity/EUR/SX5E</EquityCurve>
+      <EquityCurve name="FTSE">Equity/GBP/FTSE</EquityCurve>
+      <EquityCurve name="SPX">Equity/USD/SPX</EquityCurve>
   </EquityCurves>
   <EquityVolatilities id="default">
       <EquityVolatility name="SP5">EquityVolatility/USD/SP5</EquityVolatility>
       <EquityVolatility name="Lufthansa">EquityVolatility/EUR/Lufthansa</EquityVolatility>
+      <EquityVolatility name="SX5E">EquityVolatility/EUR/SX5E</EquityVolatility>
+      <EquityVolatility name="FTSE">EquityVolatility/GBP/FTSE</EquityVolatility>
+      <EquityVolatility name="SPX">EquityVolatility/USD/SPX</EquityVolatility>
   </EquityVolatilities>
   <Securities id="collateral_eur">
      <Security name="SECURITY_1">Security/SECURITY_1</Security>
    </Securities>
   <Securities id="default">
-     <Security name="SECURITY_1">Security/SECURITY_1</Security>
+    <Security name="SECURITY_1">Security/SECURITY_1</Security>
+    <Security name="SECURITY_2">Security/SECURITY_2</Security>
+    <Security name="ISIN:XS0983610930">Security/ISIN:XS0983610930</Security>
    </Securities>
+  <BaseCorrelations id="default">
+   <BaseCorrelation name="CDXIG">BaseCorrelation/CDXIG</BaseCorrelation>
+  </BaseCorrelations>
   <CommodityCurves id="default">
     <CommodityCurve name="COMDTY_GOLD_USD">Commodity/USD/GOLD_USD</CommodityCurve>
     <CommodityCurve name="COMDTY_WTI_USD">Commodity/USD/WTI_USD</CommodityCurve>

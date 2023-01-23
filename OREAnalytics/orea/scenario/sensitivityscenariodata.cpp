@@ -471,6 +471,128 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             TLOG("Added key type " << keyType << " from TwoSidedDeltaKeyTypes.");
         }
     }
+
+    if (!parConversion_)
+        return;
+
+    node = XMLUtils::locateNode(root, "SensitivityAnalysis");
+    XMLUtils::checkNode(node, "SensitivityAnalysis");
+
+    LOG("Get discount curve parSensitivity parameters");
+    discountCurves = XMLUtils::getChildNode(node, "DiscountCurves");
+    if (discountCurves) {
+        for (XMLNode* child = XMLUtils::getChildNode(discountCurves, "DiscountCurve"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string ccy = XMLUtils::getAttribute(child, "ccy");
+            CurveShiftParData data(*discountCurveShiftData_.find(ccy)->second);
+            parDataFromXML(child, data);
+            discountCurveShiftData_[ccy] = boost::make_shared<CurveShiftParData>(data);
+        }
+    }
+
+    LOG("Get index curve parSensitivity parameters");
+    indexCurves = XMLUtils::getChildNode(node, "IndexCurves");
+    if (indexCurves) {
+        for (XMLNode* child = XMLUtils::getChildNode(indexCurves, "IndexCurve"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            CurveShiftParData data(*indexCurveShiftData_.find(index)->second);
+            parDataFromXML(child, data);
+            indexCurveShiftData_[index] = boost::make_shared<CurveShiftParData>(data);
+        }
+    }
+
+    LOG("Get yield curve parSensitivity parameters");
+    yieldCurves = XMLUtils::getChildNode(node, "YieldCurves");
+    if (yieldCurves) {
+        for (XMLNode* child = XMLUtils::getChildNode(yieldCurves, "YieldCurve"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string curveName = XMLUtils::getAttribute(child, "name");
+            string curveType = XMLUtils::getChildValue(child, "CurveType", false);
+            CurveShiftParData data(*yieldCurveShiftData_.find(curveName)->second);
+            parDataFromXML(child, data);
+            yieldCurveShiftData_[curveName] = boost::make_shared<CurveShiftParData>(data);
+        }
+    }
+
+    LOG("Get cap/floor vol par sensitivity parameters");
+    capVols = XMLUtils::getChildNode(node, "CapFloorVolatilities");
+    if (capVols) {
+        for (XMLNode* child = XMLUtils::getChildNode(capVols, "CapFloorVolatility"); child;
+             child = XMLUtils::getNextSibling(child)) {
+	    string key = XMLUtils::getAttribute(child, "key");
+	    if(key.empty()) {
+		string ccyAttr = XMLUtils::getAttribute(child, "ccy");
+		if(!ccyAttr.empty()) {
+		    key = ccyAttr;
+                    ALOG("SensitivityData: attribute 'ccy' for CapFloorVolatilities is deprecated, use 'key' instead.");
+                }
+	    }
+	    CapFloorVolShiftParData data(*capFloorVolShiftData_.find(key)->second);
+            XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
+            if (par) {
+                data.discountCurve = XMLUtils::getChildValue(par, "DiscountCurve", false);
+            }
+            capFloorVolShiftData_[key] = boost::make_shared<CapFloorVolShiftParData>(data);
+        }
+    }
+
+    LOG("Get credit curve parSensitivity parameters");
+    creditCurves = XMLUtils::getChildNode(node, "CreditCurves");
+    if (creditCurves) {
+        for (XMLNode* child = XMLUtils::getChildNode(creditCurves, "CreditCurve"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string name = XMLUtils::getAttribute(child, "name");
+            CurveShiftParData data(*creditCurveShiftData_.find(name)->second);
+            parDataFromXML(child, data);
+            creditCurveShiftData_[name] = boost::make_shared<CurveShiftParData>(data);
+        }
+    }
+
+    LOG("Get Zero Inflation parSensitivity parameters");
+    zeroInflation = XMLUtils::getChildNode(node, "ZeroInflationIndexCurves");
+    if (zeroInflation) {
+        for (XMLNode* child = XMLUtils::getChildNode(zeroInflation, "ZeroInflationIndexCurve"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            CurveShiftParData data(*zeroInflationCurveShiftData_.find(index)->second);
+            parDataFromXML(child, data);
+            zeroInflationCurveShiftData_[index] = boost::make_shared<CurveShiftParData>(data);
+        }
+    }
+
+    LOG("Get Yoy Inflation parSensitivity parameters");
+    yoyInflation = XMLUtils::getChildNode(node, "YYInflationIndexCurves");
+    if (yoyInflation) {
+        for (XMLNode* child = XMLUtils::getChildNode(yoyInflation, "YYInflationIndexCurve"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            CurveShiftParData data(*yoyInflationCurveShiftData_.find(index)->second);
+            parDataFromXML(child, data);
+            yoyInflationCurveShiftData_[index] = boost::make_shared<CurveShiftParData>(data);
+        }
+    }
+
+    LOG("Get Yoy cap/floor vol par sensitivity parameters");
+    yoyCapVols = XMLUtils::getChildNode(node, "YYCapFloorVolatilities");
+    if (yoyCapVols) {
+        for (XMLNode* child = XMLUtils::getChildNode(yoyCapVols, "YYCapFloorVolatility"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            CapFloorVolShiftParData data(*yoyInflationCapFloorVolShiftData_.find(index)->second);
+            XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
+            //QL_REQUIRE(par, "parData must be provided for YYCapFloorVolatilities");
+            if (par) {
+                data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
+                data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
+                data.discountCurve = XMLUtils::getChildValue(par, "DiscountCurve", false);
+                XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
+                data.parInstrumentConventions =
+                    XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
+            }
+            yoyInflationCapFloorVolShiftData_[index] = boost::make_shared<CapFloorVolShiftParData>(data);
+        }
+    }
 }
 
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
@@ -728,6 +850,121 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         }
     }
 
+    // If not par, no more to do
+    if (!parConversion_)
+        return root;
+
+    // If par, add par nodes where necessary
+    XMLNode* discountCurves = XMLUtils::getChildNode(root, "DiscountCurves");
+    if (discountCurves) {
+        LOG("toXML for DiscountCurves ParConversion node");
+        for (XMLNode* child = XMLUtils::getChildNode(discountCurves, "DiscountCurve"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string ccy = XMLUtils::getAttribute(child, "ccy");
+            XMLNode* parNode = parDataToXML(doc, discountCurveShiftData_[ccy]);
+            XMLUtils::appendNode(child, parNode);
+        }
+    }
+
+    XMLNode* indexCurves = XMLUtils::getChildNode(root, "IndexCurves");
+    if (indexCurves) {
+        LOG("toXML for IndexCurves ParConversion node");
+        for (XMLNode* child = XMLUtils::getChildNode(indexCurves, "IndexCurve"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            XMLNode* parNode = parDataToXML(doc, indexCurveShiftData_[index]);
+            XMLUtils::appendNode(child, parNode);
+        }
+    }
+
+    XMLNode* yieldCurves = XMLUtils::getChildNode(root, "YieldCurves");
+    if (yieldCurves) {
+        LOG("toXML for YieldCurves ParConversion node");
+        for (XMLNode* child = XMLUtils::getChildNode(yieldCurves, "YieldCurve"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string curveName = XMLUtils::getAttribute(child, "name");
+            string curveType = XMLUtils::getChildValue(child, "CurveType", false);
+            auto data = yieldCurveShiftData_.at(curveName);
+            if (data) {
+                XMLNode* parNode = parDataToXML(doc, data);
+                XMLUtils::appendNode(child, parNode);
+            }
+        }
+    }
+
+    XMLNode* creditCurves = XMLUtils::getChildNode(root, "CreditCurves");
+    if (creditCurves) {
+        LOG("toXML for CreditCurves ParConversion node");
+        for (XMLNode* child = XMLUtils::getChildNode(creditCurves, "CreditCurve"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string name = XMLUtils::getAttribute(child, "name");
+            XMLNode* parNode = parDataToXML(doc, creditCurveShiftData_[name]);
+            XMLUtils::appendNode(child, parNode);
+        }
+    }
+
+    XMLNode* zeroInflation = XMLUtils::getChildNode(root, "ZeroInflationIndexCurves");
+    if (zeroInflation) {
+        LOG("toXML for ZeroInflationIndexCurves ParConversion node");
+        for (XMLNode* child = XMLUtils::getChildNode(zeroInflation, "ZeroInflationIndexCurve"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            XMLNode* parNode = parDataToXML(doc, zeroInflationCurveShiftData_[index]);
+            XMLUtils::appendNode(child, parNode);
+        }
+    }
+
+    XMLNode* yoyInflation = XMLUtils::getChildNode(root, "YYInflationIndexCurves");
+    if (yoyInflation) {
+        LOG("toXML for YYInflationIndexCurves ParConversion node");
+        for (XMLNode* child = XMLUtils::getChildNode(yoyInflation, "YYInflationIndexCurve"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            XMLNode* parNode = parDataToXML(doc, yoyInflationCurveShiftData_[index]);
+            XMLUtils::appendNode(child, parNode);
+        }
+    }
+
+    XMLNode* capFloor = XMLUtils::getChildNode(root, "CapFloorVolatilities");
+    if (capFloor) {
+        LOG("toXML for CapFloorVolatilities ParConversion node");
+        for (XMLNode* child = XMLUtils::getChildNode(capFloor, "CapFloorVolatility"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string key = XMLUtils::getAttribute(child, "key");
+            auto data = boost::dynamic_pointer_cast<CapFloorVolShiftParData>(capFloorVolShiftData_[key]);
+            if (data) {
+                XMLNode* parNode = doc.allocNode("ParConversion");
+                if (!data->discountCurve.empty())
+                    XMLUtils::addChild(doc, parNode, "DiscountCurve", data->discountCurve);
+                XMLUtils::appendNode(child, parNode);
+            }
+        }
+    }
+
+    XMLNode* yoyCapFloor = XMLUtils::getChildNode(root, "YYCapFloorVolatilities");
+    if (yoyCapFloor) {
+        LOG("toXML for YYCapFloorVolatilities ParConversion node");
+        for (XMLNode* child = XMLUtils::getChildNode(yoyCapFloor, "YYCapFloorVolatility"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            auto data = boost::dynamic_pointer_cast<CapFloorVolShiftParData>(yoyInflationCapFloorVolShiftData_[index]);
+            if (data) {
+                XMLNode* parNode = doc.allocNode("ParConversion");
+                XMLUtils::addGenericChildAsList(doc, parNode, "Instruments", data->parInstruments);
+                XMLUtils::addChild(doc, parNode, "SingleCurve", data->parInstrumentSingleCurve);
+                if (!data->discountCurve.empty())
+                    XMLUtils::addChild(doc, parNode, "DiscountCurve", data->discountCurve);
+                XMLUtils::appendNode(child, parNode);
+                XMLNode* conventionsNode = XMLUtils::addChild(doc, parNode, "Conventions");
+                for (const auto& kv : data->parInstrumentConventions) {
+                    XMLNode* conventionNode = doc.allocNode("Convention", kv.second);
+                    XMLUtils::addAttribute(doc, conventionNode, "id", kv.first);
+                    XMLUtils::appendNode(conventionsNode, conventionNode);
+                }
+            }
+        }
+    }
+
     return root;
 }
 
@@ -737,5 +974,45 @@ string SensitivityScenarioData::getIndexCurrency(string indexName) {
     QL_REQUIRE(tokens.size() > 1, "expected 2 or 3 tokens, found " << tokens.size() << " in " << indexName);
     return tokens[0];
 }
+
+void SensitivityScenarioData::parDataFromXML(XMLNode* child, CurveShiftParData& data) {
+    XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
+    // QL_REQUIRE(par, "parData must be provided for parConversion");
+    if (par) {
+        data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
+        data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
+        data.discountCurve = XMLUtils::getChildValue(par, "DiscountCurve", false);
+        data.otherCurrency = XMLUtils::getChildValue(par, "OtherCurrency", false);
+        XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
+        data.parInstrumentConventions = XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
+    }
+}
+
+XMLNode* SensitivityScenarioData::parDataToXML(XMLDocument& doc,
+                                               const boost::shared_ptr<CurveShiftData>& csd) const {
+
+    // Check that we have a CurveShiftParData node
+    auto data = boost::dynamic_pointer_cast<CurveShiftParData>(csd);
+
+    // TODO: Fail here because fromXML requires par everywhere but maybe needs to be revisited
+    QL_REQUIRE(data, "The sensitivity configuration should have par conversion data");
+
+    XMLNode* parNode = doc.allocNode("ParConversion");
+    XMLUtils::addGenericChildAsList(doc, parNode, "Instruments", data->parInstruments);
+    XMLUtils::addChild(doc, parNode, "SingleCurve", data->parInstrumentSingleCurve);
+    if (!data->discountCurve.empty())
+        XMLUtils::addChild(doc, parNode, "DiscountCurve", data->discountCurve);
+    if (!data->otherCurrency.empty())
+        XMLUtils::addChild(doc, parNode, "OtherCurrency", data->otherCurrency);
+    XMLNode* conventionsNode = XMLUtils::addChild(doc, parNode, "Conventions");
+    for (const auto& kv : data->parInstrumentConventions) {
+        XMLNode* conventionNode = doc.allocNode("Convention", kv.second);
+        XMLUtils::addAttribute(doc, conventionNode, "id", kv.first);
+        XMLUtils::appendNode(conventionsNode, conventionNode);
+    }
+
+    return parNode;
+}
+
 } // namespace analytics
 } // namespace ore
