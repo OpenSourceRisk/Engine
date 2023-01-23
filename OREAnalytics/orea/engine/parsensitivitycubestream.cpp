@@ -30,8 +30,7 @@ namespace analytics {
 // Note: iterator initialisation below works because currentDeltas_ is
 //       (empty) initialised before itCurrent_
 ParSensitivityCubeStream::ParSensitivityCubeStream(const boost::shared_ptr<ZeroToParCube>& cube, const string& currency)
-    : cube_(cube), currency_(currency), tradeIdx_(0), itCurrent_(currentDeltas_.begin()) {
-
+    : cube_(cube), currency_(currency), tradeIdx_(cube_->zeroCube()->tradeIdx().begin()), itCurrent_(currentDeltas_.begin()) {
     // Call init
     init();
 }
@@ -40,65 +39,58 @@ SensitivityRecord ParSensitivityCubeStream::next() {
 
     SensitivityRecord sr;
 
-    // Underlying cube's trade IDs
-    const auto& tradeIds = cube_->zeroCube()->tradeIds();
-
-    while (itCurrent_ == currentDeltas_.end() && tradeIdx_ < tradeIds.size()) {
+    while (itCurrent_ == currentDeltas_.end() && tradeIdx_ != cube_->zeroCube()->tradeIdx().end()) {
         // Move to next trade
         tradeIdx_++;
+        // update par deltas
+        if (tradeIdx_ != cube_->zeroCube()->tradeIdx().end()) {
+            DLOG("Retrieving par deltas for trade " << tradeIdx_->first);
+            currentDeltas_ = cube_->parDeltas(tradeIdx_->second);
+            itCurrent_ = currentDeltas_.begin();
+            DLOG("There are " << currentDeltas_.size() << " par deltas for trade " << tradeIdx_->first);
+        }
 
-        // If no more trade IDs, return empty record
-        if (tradeIdx_ == tradeIds.size())
-            return sr;
-        tradeId_ = tradeIds[tradeIdx_];
-
-        // If more trades, update par deltas and iterator to them
-        // They may be empty, in which case, itCurrent_ is still end()
-        DLOG("Retrieving par deltas for trade " << tradeId_);
-        currentDeltas_ = cube_->parDeltas(tradeIdx_);
-        itCurrent_ = currentDeltas_.begin();
-        DLOG("There are " << currentDeltas_.size() << " par deltas for trade " << tradeId_);
     }
+    if (tradeIdx_ != cube_->zeroCube()->tradeIdx().end()) {
+        // Populate current sensitivity record
+        
+        sr.tradeId = tradeIdx_->first;
+        sr.isPar = true;
+        sr.currency = currency_;
+        sr.baseNpv = cube_->zeroCube()->npv(tradeIdx_->second);
 
-    // Populate current sensitivity record
-    DLOG("Processing par delta [" << itCurrent_->first << ", " << itCurrent_->second << "]");
-    sr.tradeId = tradeId_;
-    sr.isPar = true;
-    sr.currency = currency_;
-    sr.key_1 = itCurrent_->first;
-    auto fullDescription = cube_->zeroCube()->factorDescription(sr.key_1);
-    sr.desc_1 = deconstructFactor(fullDescription).second;
-    sr.shift_1 = cube_->zeroCube()->shiftSize(sr.key_1);
-    sr.baseNpv = cube_->zeroCube()->npv(tradeIdx_);
-    sr.delta = itCurrent_->second;
-    sr.gamma = Null<Real>();
-
-    // Move iterator to next par delta
-    itCurrent_++;
-
-    // Return record
+        if (itCurrent_ != currentDeltas_.end()) {
+            DLOG("Processing par delta [" << itCurrent_->first << ", " << itCurrent_->second << "]");
+            sr.key_1 = itCurrent_->first;
+            auto fullDescription = cube_->zeroCube()->factorDescription(sr.key_1);
+            sr.desc_1 = deconstructFactor(fullDescription).second;
+            sr.shift_1 = cube_->zeroCube()->shiftSize(sr.key_1);
+            sr.delta = itCurrent_->second;
+            sr.gamma = Null<Real>();
+            // Move iterator to next par delta
+            itCurrent_++;
+        }
+    } 
     return sr;
 }
 
 void ParSensitivityCubeStream::reset() {
     // Reset all
-    tradeIdx_ = 0;
-    tradeId_ = cube_->zeroCube()->tradeIds().front();
+    tradeIdx_ = cube_->zeroCube()->tradeIdx().begin();
     currentDeltas_ = {};
     itCurrent_ = currentDeltas_.begin();
-
     // Call init
     init();
 }
 
 void ParSensitivityCubeStream::init() {
     // If we have trade IDs in the underlying cube
-    if (!cube_->zeroCube()->tradeIds().empty()) {
-        tradeId_ = cube_->zeroCube()->tradeIds().front();
-        DLOG("Retrieving par deltas for trade " << tradeId_);
-        currentDeltas_ = cube_->parDeltas(tradeId_);
+    if (!cube_->zeroCube()->tradeIdx().empty()) {
+        tradeIdx_ = cube_->zeroCube()->tradeIdx().begin();
+        DLOG("Retrieving par deltas for trade " << tradeIdx_->first);
+        currentDeltas_ = cube_->parDeltas(tradeIdx_->second);
         itCurrent_ = currentDeltas_.begin();
-        DLOG("There are " << currentDeltas_.size() << " par deltas for trade " << tradeId_);
+        DLOG("There are " << currentDeltas_.size() << " par deltas for trade " << tradeIdx_->first);
     }
 }
 

@@ -96,7 +96,7 @@ public:
 
     // get a vector of netting set ids for the given portfolio sorted in alphabetical order, if no portfolio
     // is given here, the netting sets for the global portfolio set in the ctor are returned
-    std::vector<std::string> getNettingSetIds(const boost::shared_ptr<Portfolio>& portfolio = nullptr) const;
+    std::set<std::string> getNettingSetIds(const boost::shared_ptr<Portfolio>& portfolio = nullptr) const;
 
 protected:
     virtual boost::shared_ptr<NPVCube>
@@ -105,7 +105,7 @@ protected:
         return nullptr;
     };
 
-    virtual boost::shared_ptr<NPVCube> getNpvCube(const Date& asof, const std::vector<std::string>& ids,
+    virtual boost::shared_ptr<NPVCube> getNpvCube(const Date& asof, const std::set<std::string>& ids,
                                                   const std::vector<Date>& dates, const Size samples,
                                                   const Size depth) const;
 

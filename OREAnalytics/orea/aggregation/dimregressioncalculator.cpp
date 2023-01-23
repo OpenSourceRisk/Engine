@@ -57,12 +57,12 @@ RegressionDynamicInitialMarginCalculator::RegressionDynamicInitialMarginCalculat
       localRegressionEvaluations_(localRegressionEvaluations), localRegressionBandWidth_(localRegressionBandWidth) {
     Size dates = cube_->dates().size();
     Size samples = cube_->samples();
-    for (Size i = 0; i < nettingSetIds_.size(); ++i) {
-        regressorArray_[nettingSetIds_[i]] = vector<vector<Array>>(dates, vector<Array>(samples));
-        nettingSetLocalDIM_[nettingSetIds_[i]] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
-        nettingSetZeroOrderDIM_[nettingSetIds_[i]] = vector<Real>(dates, 0.0);
-        nettingSetSimpleDIMh_[nettingSetIds_[i]] = vector<Real>(dates, 0.0);
-        nettingSetSimpleDIMp_[nettingSetIds_[i]] = vector<Real>(dates, 0.0);
+    for (const auto& nettingSetId : nettingSetIds_) {
+        regressorArray_[nettingSetId] = vector<vector<Array>>(dates, vector<Array>(samples));
+        nettingSetLocalDIM_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
+        nettingSetZeroOrderDIM_[nettingSetId] = vector<Real>(dates, 0.0);
+        nettingSetSimpleDIMh_[nettingSetId] = vector<Real>(dates, 0.0);
+        nettingSetSimpleDIMp_[nettingSetId] = vector<Real>(dates, 0.0);
     }
 }
 
@@ -381,7 +381,7 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
         .addColumn("NettingSet", string())
         .addColumn("Time", Real(), 6);
 
-    for (auto nettingSet : dimCube_->ids()) {
+    for (const auto& [nettingSet, _] : dimCube_->idsAndIndexes()) {
 
         LOG("Export DIM evolution for netting set " << nettingSet);
         for (Size i = 0; i < stopDatesLoop; ++i) {
@@ -421,16 +421,11 @@ void RegressionDynamicInitialMarginCalculator::exportDimRegression(
         LOG("Export DIM by sample for netting set " << nettingSet << " and time step " << timeStep);
 
         Size dates = dimCube_->dates().size();
-        const std::vector<std::string>& ids = dimCube_->ids();
+        const std::map<std::string, Size>& ids = dimCube_->idsAndIndexes();
 
-        int index = -1;
-        for (Size i = 0; i < ids.size(); ++i) {
-            if (ids[i] == nettingSet) {
-                index = i;
-                break;
-            }
-        }
-        QL_REQUIRE(index >= 0, "netting set " << nettingSet << " not found in DIM cube");
+        auto it = ids.find(nettingSet);
+                
+        QL_REQUIRE(it != ids.end(), "netting set " << nettingSet << " not found in DIM cube");
 
         QL_REQUIRE(timeStep < dates - 1, "selected time step " << timeStep << " out of range [0, " << dates - 1 << "]");
 

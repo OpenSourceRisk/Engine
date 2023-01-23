@@ -28,6 +28,8 @@
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 #include <vector>
+#include <map>
+#include <set>
 
 namespace ore {
 namespace analytics {
@@ -66,8 +68,18 @@ public:
     virtual Size samples() const = 0;
     virtual Size depth() const = 0;
 
-    //! Get the vector of ids for this cube
-    virtual const std::vector<std::string>& ids() const = 0;
+    //! Get a map of id and their index position in this cube 
+    virtual const std::map<std::string, Size>& idsAndIndexes() const = 0;
+
+    //! Get a set of all ids in the cube
+    const std::set<std::string> ids() const {
+        std::set<std::string> result;
+        for (const auto& [id, pos] : idsAndIndexes()) {
+            result.insert(id);
+        }
+        return result;
+    }
+
     //! Get the vector of dates for this cube
     virtual const std::vector<QuantLib::Date>& dates() const = 0; // TODO: Should this be the full date grid?
 
@@ -108,11 +120,13 @@ public:
     //! Persist cube contents to disk
     virtual void save(const std::string& fileName) const = 0;
 
+    Size getTradeIndex(const std::string& id) const { return index(id); }
+
 protected:
     virtual Size index(const std::string& id) const {
-        auto it = std::find(ids().begin(), ids().end(), id);
-        QL_REQUIRE(it != ids().end(), "NPVCube can't find an index for id " << id);
-        return std::distance(ids().begin(), it);
+        const auto& it = idsAndIndexes().find(id);
+        QL_REQUIRE(it != idsAndIndexes().end(), "NPVCube can't find an index for id " << id);
+        return it->second;
     };
 
     virtual Size index(const QuantLib::Date& date) const {
@@ -120,6 +134,7 @@ protected:
         QL_REQUIRE(it != dates().end(), "NPVCube can't find an index for date " << date);
         return std::distance(dates().begin(), it);
     };
+
 };
 
 // impl

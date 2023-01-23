@@ -72,7 +72,7 @@ void parSensiBumpAnalysis(boost::shared_ptr<Portfolio>& portfolio, boost::shared
                           string& shiftType, std::map<std::pair<std::string, std::string>, Real>& parDelta,
                           std::map<std::pair<std::string, std::string>, Real>& zeroDelta, map<string, Real>& basePv) {
 
-    Size trnCount = portfolio->size();
+    Size tradeCount = portfolio->size();
     Real basePvTol = 0.00001;      // tolerance for base PV after re-bootstrapping
     Real sensiThold = 0.0001;      // sensi values below this are ignored
     Real sensiRelTol = 1.0;        // relative tolerance on par sensitivities
@@ -89,17 +89,17 @@ void parSensiBumpAnalysis(boost::shared_ptr<Portfolio>& portfolio, boost::shared
     boost::shared_ptr<EngineFactory> manualFactory2 = registerBuilders(engineData, initMarket);
     portfolio->reset();
     portfolio->build(manualFactory2);
-    BOOST_CHECK_MESSAGE(portfolio->size() == trnCount,
-                        "Some trades not built correctly," << portfolio->size() << " vs. " << trnCount);
-    for (auto trn : portfolio->trades()) {
+    BOOST_CHECK_MESSAGE(portfolio->size() == tradeCount,
+                        "Some trades not built correctly," << portfolio->size() << " vs. " << tradeCount);
+    for (auto& [tradeId, trade] : portfolio->trades()) {
         Real fx = 1.0;
-        if (trn->npvCurrency() != "EUR") {
-            string ccyPair = trn->npvCurrency() + baseCcy;
+        if (trade->npvCurrency() != "EUR") {
+            string ccyPair = trade->npvCurrency() + baseCcy;
             fx = initMarket->fxRate(ccyPair)->value();
         }
-        BOOST_CHECK_MESSAGE(std::fabs(baseManualPv[trn->id()] - (fx * trn->instrument()->NPV())) <= basePvTol,
-                            "Equality error for trade " << trn->id() << "; got " << (fx * trn->instrument()->NPV())
-                                                        << ", but expected " << baseManualPv[trn->id()]);
+        BOOST_CHECK_MESSAGE(std::fabs(baseManualPv[tradeId] - (fx * trade->instrument()->NPV())) <= basePvTol,
+                            "Equality error for trade " << tradeId << "; got " << (fx * trade->instrument()->NPV())
+                                                        << ", but expected " << baseManualPv[tradeId]);
     }
     // bump each point in sequence and generate new par curve
     for (Size i = 0; i < parValVecBase.size(); ++i) {
@@ -118,25 +118,25 @@ void parSensiBumpAnalysis(boost::shared_ptr<Portfolio>& portfolio, boost::shared
         boost::shared_ptr<EngineFactory> manualFactoryDisc = registerBuilders(engineData, initMarket);
         portfolio->reset();
         portfolio->build(manualFactoryDisc);
-        BOOST_CHECK_MESSAGE(portfolio->size() == trnCount,
-                            "Some trades not built correctly," << portfolio->size() << " vs. " << trnCount);
-        for (auto trn : portfolio->trades()) {
+        BOOST_CHECK_MESSAGE(portfolio->size() == tradeCount,
+                            "Some trades not built correctly," << portfolio->size() << " vs. " << tradeCount);
+        for (auto [tradeId, trade] : portfolio->trades()) {
             Real fx = 1.0;
-            if (trn->npvCurrency() != "EUR") {
-                string ccyPair = trn->npvCurrency() + baseCcy;
+            if (trade->npvCurrency() != "EUR") {
+                string ccyPair = trade->npvCurrency() + baseCcy;
                 fx = initMarket->fxRate(ccyPair)->value();
             }
-            Real shiftedNPV = fx * trn->instrument()->NPV();
-            Real anticipatedParDelta = shiftedNPV - baseManualPv[trn->id()];
+            Real shiftedNPV = fx * trade->instrument()->NPV();
+            Real anticipatedParDelta = shiftedNPV - baseManualPv[tradeId];
             Real computedParDelta = 0.0;
-            if (parDelta.find(std::make_pair(trn->id(), sensiLabel)) != parDelta.end())
-                computedParDelta = parDelta[std::make_pair(trn->id(), sensiLabel)];
+            if (parDelta.find(std::make_pair(tradeId, sensiLabel)) != parDelta.end())
+                computedParDelta = parDelta[std::make_pair(tradeId, sensiLabel)];
 
             if ((std::fabs(anticipatedParDelta) > sensiThold) || (std::fabs(computedParDelta) > sensiThold)) {
-                BOOST_TEST_MESSAGE("#reportrow," << trn->id() << "," << sensiLabel << "," << baseManualPv[trn->id()]
-                                                 << "," << basePv[trn->id()] << "," << anticipatedParDelta << ","
+                BOOST_TEST_MESSAGE("#reportrow," << tradeId << "," << sensiLabel << "," << baseManualPv[tradeId]
+                                                 << "," << basePv[tradeId] << "," << anticipatedParDelta << ","
                                                  << computedParDelta << ","
-                                                 << zeroDelta[std::make_pair(trn->id(), sensiLabel)]);
+                                                 << zeroDelta[std::make_pair(tradeId, sensiLabel)]);
 
                 if ((std::fabs(anticipatedParDelta) > relAbsTolBoundary) &&
                     (std::fabs(computedParDelta) > relAbsTolBoundary))
@@ -154,17 +154,17 @@ void parSensiBumpAnalysis(boost::shared_ptr<Portfolio>& portfolio, boost::shared
 
     portfolio->reset();
     portfolio->build(manualFactory3);
-    BOOST_CHECK_MESSAGE(portfolio->size() == trnCount,
-                        "Some trades not built correctly," << portfolio->size() << " vs. " << trnCount);
-    for (auto trn : portfolio->trades()) {
+    BOOST_CHECK_MESSAGE(portfolio->size() == tradeCount,
+                        "Some trades not built correctly," << portfolio->size() << " vs. " << tradeCount);
+    for (auto [tradeId, trade] : portfolio->trades()) {
         Real fx = 1.0;
-        if (trn->npvCurrency() != "EUR") {
-            string ccyPair = trn->npvCurrency() + baseCcy;
+        if (trade->npvCurrency() != "EUR") {
+            string ccyPair = trade->npvCurrency() + baseCcy;
             fx = initMarket->fxRate(ccyPair)->value();
         }
-        BOOST_CHECK_MESSAGE(std::fabs(baseManualPv[trn->id()] - (fx * trn->instrument()->NPV())) <= basePvTol,
-                            "Equality error for trade " << trn->id() << "; got " << (fx * trn->instrument()->NPV())
-                                                        << ", but expected " << baseManualPv[trn->id()]);
+        BOOST_CHECK_MESSAGE(std::fabs(baseManualPv[tradeId] - (fx * trade->instrument()->NPV())) <= basePvTol,
+                            "Equality error for trade " << tradeId << "; got " << (fx * trade->instrument()->NPV())
+                                                        << ", but expected " << baseManualPv[tradeId]);
     }
 }
 } // namespace
@@ -397,10 +397,10 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
                                         0.0, "1Y", "ACT/ACT", "GBP-LIBOR-6M", "1Y", "ACT/ACT",
                                         "UKRPI", "2M", 2));
 
-    Size trnCount = portfolio->size();
+    Size tradeCount = portfolio->size();
     portfolio->build(factory);
-    BOOST_CHECK_MESSAGE(portfolio->size() == trnCount,
-                        "Some trades not built correctly," << portfolio->size() << " vs. " << trnCount);
+    BOOST_CHECK_MESSAGE(portfolio->size() == tradeCount,
+                        "Some trades not built correctly," << portfolio->size() << " vs. " << tradeCount);
     // build the sensitivity analysis object
     boost::shared_ptr<SensitivityAnalysis> zeroAnalysis =
         boost::make_shared<SensitivityAnalysisPlus>(portfolio, initMarket, "default", engineData,
@@ -438,22 +438,22 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     portfolio->reset();
     portfolio->build(manualFactory);
 
-    for (auto trn : portfolio->trades()) {
+    for (auto [tradeId, trade] : portfolio->trades()) {
         Real fx = 1.0;
-        if (trn->npvCurrency() != "EUR") {
-            string ccyPair = trn->npvCurrency() + baseCcy;
+        if (trade->npvCurrency() != "EUR") {
+            string ccyPair = trade->npvCurrency() + baseCcy;
             fx = initMarket->fxRate(ccyPair)->value();
         }
-        baseManualPv[trn->id()] = fx * trn->instrument()->NPV();
-        Real trnNotional = fx * trn->notional();
+        baseManualPv[tradeId] = fx * trade->instrument()->NPV();
+        Real tradeNotional = fx * trade->notional();
         Real simMarketTol =
-            1.e-5 * trnNotional; // tolerance for difference to sim market is 0.1bp upfront (should this be tightened?)
+            1.e-5 * tradeNotional; // tolerance for difference to sim market is 0.1bp upfront (should this be tightened?)
 
-        BOOST_TEST_MESSAGE("Base PV check for trade " << trn->id() << "; got " << baseManualPv[trn->id()]
-                                                      << ", expected " << basePv[trn->id()]);
-        BOOST_CHECK_MESSAGE(std::fabs(baseManualPv[trn->id()] - basePv[trn->id()]) < simMarketTol,
-                            "Base PV check error for trade " << trn->id() << "; got " << baseManualPv[trn->id()]
-                                                             << ", but expected " << basePv[trn->id()]);
+        BOOST_TEST_MESSAGE("Base PV check for trade " << tradeId << "; got " << baseManualPv[tradeId]
+                                                      << ", expected " << basePv[tradeId]);
+        BOOST_CHECK_MESSAGE(std::fabs(baseManualPv[tradeId] - basePv[tradeId]) < simMarketTol,
+                            "Base PV check error for trade " << tradeId << "; got " << baseManualPv[tradeId]
+                                                             << ", but expected " << basePv[tradeId]);
     }
 
     boost::shared_ptr<TestMarketParCurves> initParMarket = boost::dynamic_pointer_cast<TestMarketParCurves>(initMarket);

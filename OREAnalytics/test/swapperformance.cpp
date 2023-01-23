@@ -201,8 +201,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
     DayCounter dc = ActualActual(ActualActual::ISDA);
     map<string, Size> fixedFreqs;
     map<string, Size> floatFreqs;
-    for (Size i = 0; i < portfolioSize; ++i) {
-        boost::shared_ptr<Trade> trade = portfolio->trades()[i];
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
         maturity += dc.yearFraction(today, trade->maturity());
 
         // fixed Freq

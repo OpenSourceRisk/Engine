@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(testSingleCurrencyYieldCurveBootstrap) {
     // The single trade in the portfolio is a MXN 10Y swap, i.e. 10 x 13 28D coupons, with nominal 100 million. The
     // rate on the swap is equal to the 10Y rate in the market file 'market_01.txt' so we should get an NPV of 0.
     BOOST_CHECK_EQUAL(portfolio->size(), 1);
-    BOOST_CHECK_SMALL(portfolio->trades()[0]->instrument()->NPV(), 0.01);
+    BOOST_CHECK_SMALL(portfolio->trades().begin()->second->instrument()->NPV(), 0.01);
 }
 
 // Test cross-currency yield curve bootstrap
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(testCrossCurrencyYieldCurveBootstrap) {
     // nominal USD 100 million. The spread on the swap is equal to the 10Y basis spread in the market file
     // 'market_02.txt' so we should get an NPV of 0.
     BOOST_CHECK_EQUAL(portfolio->size(), 1);
-    BOOST_CHECK_SMALL(portfolio->trades()[0]->instrument()->NPV(), 0.01);
+    BOOST_CHECK_SMALL(portfolio->trades().begin()->second->instrument()->NPV(), 0.01);
 }
 
 // Test cap floor strip
@@ -152,15 +152,16 @@ BOOST_AUTO_TEST_CASE(testCapFloorStrip) {
     BOOST_CHECK_EQUAL(portfolio->size(), 1);
 
     // Get the npv of the trade using the market i.e. the stripped optionlet surface from TodaysMarket
-    Real npvTodaysMarket = portfolio->trades()[0]->instrument()->NPV();
+    Real npvTodaysMarket = portfolio->trades().begin()->second->instrument()->NPV();
     BOOST_TEST_MESSAGE("NPV using TodaysMarket is: " << npvTodaysMarket);
 
     // Price the same cap using the constant volatility from the market
-    BOOST_REQUIRE(portfolio->trades()[0]);
-    BOOST_REQUIRE(portfolio->trades()[0]->legs().size() == 1);
+    auto trade = portfolio->trades().begin()->second;
+    BOOST_REQUIRE(trade);
+    BOOST_REQUIRE(trade->legs().size() == 1);
     auto pricer = boost::make_shared<BlackIborCouponPricer>(Handle<OptionletVolatilityStructure>(
         boost::make_shared<ConstantOptionletVolatility>(0, NullCalendar(), Unadjusted, 0.20320, Actual365Fixed())));
-    Leg leg = portfolio->trades()[0]->legs().front();
+    Leg leg = trade->legs().front();
     setCouponPricer(leg, pricer);
     Real npvMarketVol = CashFlows::npv(leg, **market->discountCurve("MXN"), false);
     BOOST_TEST_MESSAGE("NPV using the constant market volatility is: " << npvMarketVol);

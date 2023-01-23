@@ -118,9 +118,8 @@ boost::shared_ptr<Portfolio> buildPortfolio(const Date& asof, const string& inpu
 
 // Check portfolio prices are within tolerance
 void checkNpvs(const boost::shared_ptr<Portfolio>& portfolio, Real tol, Real relTol = Null<Real>()) {
-    for (const auto& trade : portfolio->trades()) {
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
         auto npv = trade->instrument()->NPV();
-        const auto& tradeId = trade->id();
         if (relTol != Null<Real>()) {
             auto opt = boost::dynamic_pointer_cast<ore::data::IndexCreditDefaultSwapOption>(trade);
             Real expNpv = opt->option().premiumData().premiumData().front().amount;

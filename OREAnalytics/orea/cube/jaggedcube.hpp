@@ -162,9 +162,10 @@ public:
         // create a TradeBlock with these parameters and store it.
         //
         // setup asof, .....
-        for (auto t : portfolio->trades()) {
+        Size pos = 0;
+        for (const auto& [tid, t] : portfolio->trades()) {
             // for each trade: set id and set a tradeblock
-            ids_.push_back(t->id());
+            ids_[tid] = pos++;
             // TradeBlock
             Size depth = dc.depth(t);
             maxDepth_ = std::max(maxDepth_, depth);
@@ -221,7 +222,7 @@ public:
     }
 
     //! Get the vector of ids for this cube
-    const std::vector<std::string>& ids() const override { return ids_; }
+    const std::map<std::string, Size>& idsAndIndexes() const override { return ids_; }
     //! Get the vector of dates for this cube
     const std::vector<QuantLib::Date>& dates() const override { return dates_; }
 
@@ -274,7 +275,7 @@ private:
     }
 
     QuantLib::Date asof_;
-    vector<std::string> ids_;
+    std::map<std::string, Size> ids_;
     vector<QuantLib::Date> dates_;
     Size samples_;
     Size maxDepth_;

@@ -53,11 +53,8 @@ private:
     boost::shared_ptr<ZeroToParCube> cube_;
     //! Currency of the sensitivities in the SensitivityCube
     std::string currency_;
-
-    //! Index of current trade ID in the underlying cube
-    QuantLib::Size tradeIdx_;
-    //! Current trade ID
-    std::string tradeId_;
+    //! TradeId and index of current trade ID in the underlying cube
+    std::map<std::string, QuantLib::Size>::const_iterator tradeIdx_;
     //! Par deltas for current trade ID
     std::map<ore::analytics::RiskFactorKey, QuantLib::Real> currentDeltas_;
     //! Iterator to current delta

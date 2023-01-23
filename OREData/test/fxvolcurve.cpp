@@ -126,8 +126,13 @@ BOOST_AUTO_TEST_CASE(testFxVolWildCards) {
 
         BOOST_CHECK_EQUAL(portfolio_full->size(), portfolio_wc->size());
         
+        auto portfolioFullIt = portfolio_full->trades().begin();
+        auto portfolioWCIt = portfolio_wc->trades().begin();
+
         for (Size i = 0; i < portfolio_full->trades().size(); i++) {
-            BOOST_CHECK_CLOSE(portfolio_full->trades()[i]->instrument()->NPV(), portfolio_wc->trades()[i]->instrument()->NPV(), 0.001);
+            BOOST_CHECK_CLOSE(portfolioFullIt->second->instrument()->NPV(), portfolioWCIt->second->instrument()->NPV(), 0.001);
+            portfolioFullIt++;
+            portfolioWCIt++;
         }
     }
 }

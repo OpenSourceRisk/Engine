@@ -220,7 +220,7 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
                                            << "] but got a map containing " << m.size() << " indices");
 
         // Trade should not throw if we ask for NPV
-        BOOST_CHECK_NO_THROW(p.trades()[0]->instrument()->NPV());
+        BOOST_CHECK_NO_THROW(p.trades().begin()->second->instrument()->NPV());
 
     } else {
         // Check the retrieved fixings against the expected fixings
@@ -235,14 +235,14 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
         // Trade should throw if we ask for NPV and have not added the fixings
         // If it is the zciis trade, it won't throw because the fixings were added for the bootstrap
         if (tradeType != "zciis_with_interp" && tradeType != "cpi_swap_with_interp") {
-            BOOST_CHECK_THROW(p.trades()[0]->instrument()->NPV(), Error);
+            BOOST_CHECK_THROW(p.trades().begin()->second->instrument()->NPV(), Error);
         }
 
         // Add the fixings
         loadFixings(m);
 
         // Trade should now not throw when we try to price it
-        BOOST_CHECK_NO_THROW(p.trades()[0]->instrument()->NPV());
+        BOOST_CHECK_NO_THROW(p.trades().begin()->second->instrument()->NPV());
     }
 }
 
@@ -373,13 +373,13 @@ BOOST_FIXTURE_TEST_CASE(testFxNotionalResettingSwapFirstCoupon, F) {
     }
 
     // Trade should throw if we ask for NPV and have not added the fixings
-    BOOST_CHECK_THROW(p.trades()[0]->instrument()->NPV(), Error);
+    BOOST_CHECK_THROW(p.trades().begin()->second->instrument()->NPV(), Error);
 
     // Add the fixings
     loadFixings(m);
 
     // Trade should now not throw when we try to price it
-    BOOST_CHECK_NO_THROW(p.trades()[0]->instrument()->NPV());
+    BOOST_CHECK_NO_THROW(p.trades().begin()->second->instrument()->NPV());
 }
 
 BOOST_FIXTURE_TEST_CASE(testDividends, F) {

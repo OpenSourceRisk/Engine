@@ -207,7 +207,7 @@ private:
     void buildScenarioGenerator(bool continueOnError);
 
     void initCubeDepth();
-    void initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids, Size cubeDepth);    
+    void initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth);    
 
     void initClassicRun(const boost::shared_ptr<Portfolio>& portfolio);
     virtual void buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio);

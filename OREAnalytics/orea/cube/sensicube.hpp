@@ -32,6 +32,7 @@
 
 #include <boost/make_shared.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/map.hpp>
 #include <boost/math/special_functions/relative_difference.hpp>
 
 #include <fstream>
@@ -45,9 +46,14 @@ namespace analytics {
 //! SensiCube stores only npvs not equal to the base npvs
 template <typename T> class SensiCube : public NPVSensiCube {
 public:
-    SensiCube(const std::vector<std::string>& ids, const QuantLib::Date& asof, QuantLib::Size samples, const T& t = T())
-        : ids_(ids), asof_(asof), dates_(1, asof), samples_(samples), t0Data_(ids.size(), t),
-          tradeNPVs_(ids.size(), map<Size, T>()) {}
+    SensiCube(const std::set<std::string>& ids, const QuantLib::Date& asof, QuantLib::Size samples, const T& t = T())
+        : asof_(asof), dates_(1, asof), samples_(samples), t0Data_(ids.size(), t),
+          tradeNPVs_(ids.size(), map<Size, T>()) {
+        Size pos = 0;
+        for (const auto& id : ids) {
+            idIdx_[id] = pos++; 
+        }
+    }
 
     //! load cube from an archive
     void load(const std::string& fileName) override {
@@ -66,11 +72,11 @@ public:
     }
 
     //! Return the length of each dimension
-    QuantLib::Size numIds() const override { return ids_.size(); }
+    QuantLib::Size numIds() const override { return idIdx_.size(); }
     QuantLib::Size samples() const override { return samples_; }
 
     //! Get the vector of ids for this cube
-    const std::vector<std::string>& ids() const override { return ids_; }
+    const std::map<std::string, Size>& idsAndIndexes() const override { return idIdx_; }
 
     //! Get the vector of dates for this cube
     const std::vector<QuantLib::Date>& dates() const override { return dates_; }
@@ -130,14 +136,14 @@ public:
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int) {
-        ar& ids_;
+        ar& idIdx_;
         ar& asof_;
         ar& samples_;
         ar& t0Data_;
         ar& tradeNPVs_;
     }
 
-    std::vector<std::string> ids_;
+    std::map<std::string, Size> idIdx_;
     QuantLib::Date asof_;
     std::vector<QuantLib::Date> dates_;
     QuantLib::Size samples_;

@@ -175,7 +175,7 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
 
     // FIXME why do we need this? portfolio_->reset() is not sufficient to ensure XVA simulation run fast (and this is
     // called before)
-    for (auto const& t : portfolio_->trades()) {
+    for (auto const& [tid, t] : portfolio_->trades()) {
         try {
             t->build(simFactory_);
         } catch (...) {
@@ -277,15 +277,15 @@ boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(
     return dimCalculator;
 }
 
-std::vector<std::string> XvaRunner::getNettingSetIds(const boost::shared_ptr<Portfolio>& portfolio) const {
+std::set<std::string> XvaRunner::getNettingSetIds(const boost::shared_ptr<Portfolio>& portfolio) const {
     // collect netting set ids from portfolio
     std::set<std::string> nettingSetIds;
-    for (auto const& t : portfolio == nullptr ? portfolio_->trades() : portfolio->trades())
-        nettingSetIds.insert(t->envelope().nettingSetId());
-    return std::vector<std::string>(nettingSetIds.begin(), nettingSetIds.end());
+    for (auto const& [tradeId,trade] : portfolio == nullptr ? portfolio_->trades() : portfolio->trades())
+        nettingSetIds.insert(trade->envelope().nettingSetId());
+    return nettingSetIds;
 }
 
-boost::shared_ptr<NPVCube> XvaRunner::getNpvCube(const Date& asof, const std::vector<std::string>& ids,
+boost::shared_ptr<NPVCube> XvaRunner::getNpvCube(const Date& asof, const std::set<std::string>& ids,
                                                  const std::vector<Date>& dates, const Size samples,
                                                  const Size depth) const {
     if (depth == 1) {

@@ -1025,17 +1025,17 @@ void ParSensitivityAnalysisTest::testPortfolioZeroSensitivity() {
     Real tolerance = 0.01;
     Size count = 0;
     vector<ShiftScenarioGenerator::ScenarioDescription> desc = scenarioGenerator->scenarioDescriptions();
-    for (Size i = 0; i < portfolio->size(); ++i) {
-        Real npv0 = cube->getT0(i, 0);
-        string id = portfolio->trades()[i]->id();
+    size_t currentTradeIdx = 0;
+    for (const auto& [tradeId, _] : portfolio->trades()) {
+        Real npv0 = cube->getT0(currentTradeIdx, 0);
         for (Size j = 1; j < scenarioGenerator->samples(); ++j) { // skip j = 0, this is the base scenario
-            Real npv = cube->get(i, 0, j, 0);
+            Real npv = cube->get(currentTradeIdx, 0, j, 0);
             Real sensi = npv - npv0;
             string label = to_string(desc[j]);
             if (fabs(sensi) > tiny) {
                 count++;
 
-                pair<string, string> p(id, label);
+                pair<string, string> p(tradeId, label);
                 ids.push_back(p);
                 QL_REQUIRE(npvMap.find(p) != npvMap.end(),
                            "pair (" << p.first << ", " << p.second << ") not found in npv map");
@@ -1053,6 +1053,7 @@ void ParSensitivityAnalysisTest::testPortfolioZeroSensitivity() {
                 // "},");
             }
         }
+        currentTradeIdx++;
     }
     BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero sensitivities ("
                                                            << count << ") do not match regression data ("

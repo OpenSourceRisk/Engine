@@ -66,9 +66,11 @@ namespace {
 
 void initCube(NPVCube& cube, boost::shared_ptr<Portfolio>& portfolio, boost::shared_ptr<DateGrid>& dg) {
     // Set every (i,j,k,d) node to be i*1000000 + j + (k/1000000) + d*3
+    auto tradeIt = portfolio->trades().begin();
     for (Size i = 0; i < cube.numIds(); ++i) {
+        auto trade = tradeIt->second;
         Size dateLen = 0;
-        Date tradeMaturity = portfolio->trades()[i]->maturity();
+        Date tradeMaturity = trade->maturity();
         while (dateLen < dg->dates().size() && dg->dates()[dateLen] < tradeMaturity) {
             dateLen++;
         }
@@ -79,15 +81,18 @@ void initCube(NPVCube& cube, boost::shared_ptr<Portfolio>& portfolio, boost::sha
                 }
             }
         }
+        tradeIt++;
     }
 }
 
 void checkCube(NPVCube& cube, Real tolerance, boost::shared_ptr<Portfolio>& portfolio,
                boost::shared_ptr<DateGrid>& dg) {
     // Now check each value
+    auto tradeIt = portfolio->trades().begin();
     for (Size i = 0; i < cube.numIds(); ++i) {
+        auto trade = tradeIt->second;
         Size dateLen = 0;
-        Date tradeMaturity = portfolio->trades()[i]->maturity();
+        Date tradeMaturity = trade->maturity();
         while (dateLen < dg->dates().size() && dg->dates()[dateLen] < tradeMaturity) {
             dateLen++;
         }
@@ -100,6 +105,7 @@ void checkCube(NPVCube& cube, Real tolerance, boost::shared_ptr<Portfolio>& port
                 }
             }
         }
+        tradeIt++;
     }
 }
 
@@ -263,8 +269,8 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
     DayCounter dc = ActualActual(ActualActual::ISDA);
     map<string, Size> fixedFreqs;
     map<string, Size> floatFreqs;
-    for (Size i = 0; i < portfolioSize; ++i) {
-        boost::shared_ptr<Trade> trade = portfolio->trades()[i];
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
+        
         maturity += dc.yearFraction(today, trade->maturity());
 
         // fixed Freq

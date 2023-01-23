@@ -39,7 +39,7 @@ class JointNPVCube : public NPVCube {
 public:
     /*! ctor for two input cubes */
     JointNPVCube(const boost::shared_ptr<NPVCube>& cube1, const boost::shared_ptr<NPVCube>& cube2,
-                 const std::vector<std::string>& ids = {}, const bool requireUniqueIds = true);
+                 const std::set<std::string>& ids = {}, const bool requireUniqueIds = true);
 
     /*! ctor for n input cubes
         - If no ids are given, the order of the ids in the input cubes define the order in the resulting cube. If ids
@@ -52,7 +52,7 @@ public:
         - If one id in the result cube corresponds to several input cubes, it is not allowed to call set on this id,
           this will result in an exception.
      */
-    JointNPVCube(const std::vector<boost::shared_ptr<NPVCube>>& cubes, const std::vector<std::string>& ids = {},
+    JointNPVCube(const std::vector<boost::shared_ptr<NPVCube>>& cubes, const std::set<std::string>& ids = {},
                  const bool requireUniqueIds = true);
 
     //! Return the length of each dimension
@@ -61,7 +61,7 @@ public:
     Size samples() const override;
     Size depth() const override;
 
-    const std::vector<std::string>& ids() const override;
+    const std::map<std::string, Size>& idsAndIndexes() const override;
     const std::vector<QuantLib::Date>& dates() const override;
     QuantLib::Date asof() const override;
 
@@ -76,7 +76,7 @@ public:
 
 private:
     std::set<std::pair<boost::shared_ptr<NPVCube>, Size>> cubeAndId(Size id) const;
-    std::vector<std::string> ids_;
+    std::map<std::string, Size> idIdx_;
     std::vector<std::set<std::pair<boost::shared_ptr<NPVCube>, Size>>> cubeAndId_;
     const std::vector<boost::shared_ptr<NPVCube>> cubes_;
 };

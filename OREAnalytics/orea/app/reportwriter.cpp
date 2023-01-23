@@ -21,6 +21,7 @@
 #include <orea/app/reportwriter.hpp>
 
 // FIXME: including all is slow and bad
+#include <boost/range/adaptor/indexed.hpp>
 #include <boost/lexical_cast.hpp>
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
@@ -41,6 +42,7 @@
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <stdio.h>
+
 
 using ore::data::to_string;
 using QuantLib::Date;
@@ -73,7 +75,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("Notional(Base)", double(), 2)
         .addColumn("NettingSet", string())
         .addColumn("CounterParty", string());
-    for (auto trade : portfolio->trades()) {
+    for (auto & [tradeId, trade] : portfolio->trades()) {
         try {
             string npvCcy = trade->npvCurrency();
             Real fx = 1.0, fxNotional = 1.0;
@@ -153,14 +155,14 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         .addColumn("FloorVolatility", double(), 6)
         .addColumn("CapVolatility", double(), 6);
 
-    const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
+    std::map<std::string, boost::shared_ptr<Trade>> trades = portfolio->trades();
 
-    for (Size k = 0; k < trades.size(); k++) {
+    for (auto [tradeId, trade]: trades) {
 
         // if trade is marked as not having cashflows, we skip it
 
-        if (!trades[k]->hasCashflows()) {
-            WLOG("cashflow for " << trades[k]->tradeType() << " " << trades[k]->id() << " skipped");
+        if (!trade->hasCashflows()) {
+            WLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
             continue;
         }
 
@@ -168,24 +170,24 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
 
         bool useAdditionalResults = false;
         try {
-            useAdditionalResults = trades[k]->instrument()->additionalResults().find("cashFlowResults") !=
-                                   trades[k]->instrument()->additionalResults().end();
+            useAdditionalResults = trade->instrument()->additionalResults().find("cashFlowResults") !=
+                                   trade->instrument()->additionalResults().end();
         } catch (...) {
         }
 
         try {
 
-            const Real multiplier = trades[k]->instrument()->multiplier();
+            const Real multiplier = trade->instrument()->multiplier();
 
             if (!useAdditionalResults) {
 
                 // leg based cashflow reporting
 
-                const vector<Leg>& legs = trades[k]->legs();
+                const vector<Leg>& legs = trade->legs();
                 for (size_t i = 0; i < legs.size(); i++) {
                     const QuantLib::Leg& leg = legs[i];
-                    bool payer = trades[k]->legPayers()[i];
-                    string ccy = trades[k]->legCurrencies()[i];
+                    bool payer = trade->legPayers()[i];
+                    string ccy = trade->legCurrencies()[i];
                     Handle<YieldTermStructure> discountCurve;
                     if (market)
                         discountCurve = market->discountCurve(ccy, configuration);
@@ -197,7 +199,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             string flowType = "";
                             if (payer)
                                 amount *= -1.0;
-                            std::string ccy = trades[k]->legCurrencies()[i];
+                            std::string ccy = trade->legCurrencies()[i];
                             boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
                                 boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
                             boost::shared_ptr<QuantExt::CommodityIndexedCashFlow> ptrCommCf =
@@ -402,8 +404,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             }
 
                             report.next()
-                                .add(trades[k]->id())
-                                .add(trades[k]->tradeType())
+                                .add(trade->id())
+                                .add(trade->tradeType())
                                 .add(j + 1)
                                 .add(i)
                                 .add(payDate)
@@ -432,9 +434,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
 
                 // additional result based cashflow reporting
 
-                auto tmp = trades[k]->instrument()->additionalResults().find("cashFlowResults");
+                auto tmp = trade->instrument()->additionalResults().find("cashFlowResults");
                 QL_REQUIRE(
-                    tmp != trades[k]->instrument()->additionalResults().end(),
+                    tmp != trade->instrument()->additionalResults().end(),
                     "internal error: expected cashFlowResults in additional results when writing cashflow report");
                 QL_REQUIRE(tmp->second.type() == typeid(std::vector<CashFlowResults>),
                            "cashflowResults type not handlded");
@@ -444,10 +446,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                     string ccy = "";
                     if (!cf.currency.empty()) {
                         ccy = cf.currency;
-                    } else if (trades[k]->legCurrencies().size() > cf.legNumber) {
-                        ccy = trades[k]->legCurrencies()[cf.legNumber];
+                    } else if (trade->legCurrencies().size() > cf.legNumber) {
+                        ccy = trade->legCurrencies()[cf.legNumber];
                     } else {
-                        ccy = trades[k]->npvCurrency();
+                        ccy = trade->npvCurrency();
                     }
 
                     Real effectiveAmount = Null<Real>();
@@ -481,8 +483,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                         capVolatility = cf.capVolatility;
 
                     report.next()
-                        .add(trades[k]->id())
-                        .add(trades[k]->tradeType())
+                        .add(trade->id())
+                        .add(trade->tradeType())
                         .add(++cashflowNumber[cf.legNumber])
                         .add(cf.legNumber)
                         .add(cf.payDate)
@@ -794,7 +796,7 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
         .addColumn("BaselEE", double(), 2)
         .addColumn("BaselEEE", double(), 2);
 
-    for (auto n : postProcess->nettingSetIds()) {
+    for (const auto& [n,_] : postProcess->nettingSetIds()) {
         addNettingSetExposure(report, postProcess, n);
     }
     report.end();
@@ -848,7 +850,7 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
         .addColumn("BaselEPE", double(), precision)
         .addColumn("BaselEEPE", double(), precision);
 
-    for (auto n : postProcess->nettingSetIds()) {
+    for (const auto& [n,_] : postProcess->nettingSetIds()) {
         report.next()
             .add("")
             .add(n)
@@ -873,9 +875,9 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
             .add(postProcess->netEPE_B(n))
             .add(postProcess->netEEPE_B(n));
 
-        for (Size k = 0; k < portfolio->trades().size(); ++k) {
-            string tid = portfolio->trades()[k]->id();
-            string nid = portfolio->trades()[k]->envelope().nettingSetId();
+        for (auto& [tid, trade] : portfolio->trades()) {
+            
+            string nid = trade->envelope().nettingSetId();
             if (nid != n)
                 continue;
             report.next()
@@ -986,13 +988,12 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
     report.addColumn("Difference", double(), 2);
 
     auto scenarioDescriptions = sensitivityCube->scenarioDescriptions();
-    auto tradeIds = sensitivityCube->tradeIds();
+    auto tradeIds = sensitivityCube->tradeIdx();
     auto npvCube = sensitivityCube->npvCube();
 
-    for (Size i = 0; i < tradeIds.size(); i++) {
-        Real baseNpv = npvCube->getT0(i);
-        auto tradeId = tradeIds[i];
+    for (const auto& [tradeId, i] : tradeIds) {
 
+        Real baseNpv = npvCube->getT0(i);
         for (Size j = 0; j < scenarioDescriptions.size(); j++) {
             auto scenarioDescription = scenarioDescriptions[j];
 
@@ -1084,10 +1085,10 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
         .addColumn("ResultType", string())
         .addColumn("ResultValue", string());
 
-    for (auto trade : portfolio->trades()) {
+    for (auto & [tId, trade] : portfolio->trades()) {
         try {
             // we first add any additional trade data.
-            string tradeId = trade->id();
+            string tradeId = tId;
             string tradeType = trade->tradeType();
             Real notional2 = Null<Real>();
             string notional2Ccy = "";
@@ -1543,11 +1544,11 @@ void ReportWriter::writePricingStats(ore::data::Report& report, const boost::sha
         .addColumn("CumulativeTiming", Size())
         .addColumn("AverageTiming", Size());
 
-    for (auto const& t : portfolio->trades()) {
-        std::size_t num = t->getNumberOfPricings();
-        Size cumulative = t->getCumulativePricingTime() / 1000;
+    for (auto const& [tid, trade] : portfolio->trades()) {
+        std::size_t num = trade->getNumberOfPricings();
+        Size cumulative = trade->getCumulativePricingTime() / 1000;
         Size average = num > 0 ? cumulative / num : 0;
-        report.next().add(t->id()).add(t->tradeType()).add(num).add(cumulative).add(average);
+        report.next().add(tid).add(trade->tradeType()).add(num).add(cumulative).add(average);
     }
 
     report.end();
@@ -1566,7 +1567,7 @@ void ReportWriter::writeCube(ore::data::Report& report, const boost::shared_ptr<
         .addColumn("Depth", Size())
         .addColumn("Value", double(), 4);
 
-    const vector<string>& ids = cube->ids();
+    const map<string, Size>& idsAndPos = cube->idsAndIndexes();
     vector<string> dateStrings(cube->numDates());
     for (Size i = 0; i < cube->numDates(); ++i) {
         std::ostringstream oss;
@@ -1578,16 +1579,19 @@ void ReportWriter::writeCube(ore::data::Report& report, const boost::shared_ptr<
     oss << QuantLib::io::iso_date(cube->asof());
     string asofString = oss.str();
 
-    vector<string> nettingSetIds(ids.size());
-    for (Size i = 0; i < ids.size(); i++) {
-        if (nettingSetMap.find(ids[i]) != nettingSetMap.end())
-            nettingSetIds[i] = nettingSetMap.at(ids[i]);
+    vector<string> ids(idsAndPos.size());
+    vector<string> nettingSetIds(idsAndPos.size());
+    for (const auto& [id, idCubePos] : idsAndPos) {
+        ids[idCubePos] = id;
+        auto it = nettingSetMap.find(id);
+        if (it != nettingSetMap.end())
+            nettingSetIds[idCubePos] = it->second;
         else
-            nettingSetIds[i] = "";
+            nettingSetIds[idCubePos] = "";
     }
 
     // T0
-    for (Size i = 0; i < ids.size(); i++) {
+    for (Size i = 0; i < ids.size(); ++i) {
         report.next();
         report.add(ids[i])
             .add(nettingSetIds[i])

@@ -65,7 +65,7 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, co
                                const std::string& configuration) {
 
     // populate the map "Index -> set of required fixing dates", where the index on the LHS is linked to curves
-    for (auto const& t : portfolio->trades()) {
+    for (auto const& [tradeId,t] : portfolio->trades()) {
         auto r = t->requiredFixings();
         r.unsetPayDates();
         for (auto const& [name, dates] : r.fixingDatesIndices(QuantLib::Date::maxDate())) {

@@ -59,7 +59,7 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
     const ore::data::IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
     const bool handlePseudoCurrenciesSimMarket,
     const std::function<boost::shared_ptr<ore::analytics::NPVCube>(
-        const QuantLib::Date&, const std::vector<std::string>&, const std::vector<QuantLib::Date>&,
+        const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
         const QuantLib::Size)>& cubeFactory,
     const std::string& context)
     : nThreads_(nThreads), today_(today), dateGrid_(dateGrid), nSamples_(nSamples), loader_(loader),
@@ -82,7 +82,7 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
     // if no cube factory is given, create a default one
 
     if (!cubeFactory_)
-        cubeFactory_ = [](const QuantLib::Date& asof, const std::vector<std::string>& ids,
+        cubeFactory_ = [](const QuantLib::Date& asof, const std::set<std::string>& ids,
                           const std::vector<QuantLib::Date>& dates, const Size samples) {
             return boost::make_shared<ore::analytics::DoublePrecisionInMemoryCube>(asof, ids, dates, samples);
         };
@@ -102,8 +102,8 @@ std::vector<boost::shared_ptr<ore::analytics::NPVCube>> MultiThreadedValuationEn
     LOG("Extract pricing stats and clear them in the current portfolio");
 
     std::map<std::string, std::pair<std::size_t, boost::timer::nanosecond_type>> pricingStats;
-    for (auto const& t : portfolio->trades())
-        pricingStats[t->id()] = std::make_pair(t->getNumberOfPricings(), t->getCumulativePricingTime());
+    for (auto const& [tid, t] : portfolio->trades())
+        pricingStats[tid] = std::make_pair(t->getNumberOfPricings(), t->getCumulativePricingTime());
 
     // build portfolio against init market and trigger single pricing to generate pricing stats
 
@@ -122,8 +122,8 @@ std::vector<boost::shared_ptr<ore::analytics::NPVCube>> MultiThreadedValuationEn
 
     portfolio->build(engineFactory, context_ + " (mt val engine, pricing stats)", false);
 
-    for (auto const& t : portfolio->trades()) {
-        TLOG("got npv for " << t->id() << ": " << std::setprecision(12) << t->instrument()->NPV() << " "
+    for (auto const& [tid,t] : portfolio->trades()) {
+        TLOG("got npv for " << tid << ": " << std::setprecision(12) << t->instrument()->NPV() << " "
                             << t->npvCurrency());
     }
 
@@ -145,14 +145,14 @@ std::vector<boost::shared_ptr<ore::analytics::NPVCube>> MultiThreadedValuationEn
 
     double totalAvgPricingTime = 0.0;
     std::vector<std::pair<std::string, double>> timings;
-    for (auto const& t : portfolio->trades()) {
+    for (auto const& [tid,t] : portfolio->trades()) {
         if (t->getNumberOfPricings() != 0) {
             double dt = t->getCumulativePricingTime() / static_cast<double>(t->getNumberOfPricings());
-            timings.push_back(std::make_pair(t->id(), dt));
+            timings.push_back(std::make_pair(tid, dt));
             totalAvgPricingTime += dt;
         } else {
             // trade might be a failed trade
-            timings.push_back(std::make_pair(t->id(), 0.0));
+            timings.push_back(std::make_pair(tid, 0.0));
         }
     }
 
@@ -302,8 +302,8 @@ std::vector<boost::shared_ptr<ore::analytics::NPVCube>> MultiThreadedValuationEn
 
                 // set pricing stats for val engine run
 
-                for (auto const& t : portfolio->trades())
-                    workerPricingStats[id][t->id()] =
+                for (auto const& [tid, t] : portfolio->trades())
+                    workerPricingStats[id][tid] =
                         std::make_pair(t->getNumberOfPricings(), t->getCumulativePricingTime());
 
                 // return code 0 = ok
@@ -361,12 +361,12 @@ std::vector<boost::shared_ptr<ore::analytics::NPVCube>> MultiThreadedValuationEn
 
     LOG("Update pricing stats of trades.");
 
-    for (auto const& t : portfolio->trades()) {
-        auto p = pricingStats[t->id()];
+    for (auto const& [tid,t] : portfolio->trades()) {
+        auto p = pricingStats[tid];
         std::size_t n = p.first;
         boost::timer::nanosecond_type d = p.second;
         for (auto const& w : workerPricingStats) {
-            auto p = w.find(t->id());
+            auto p = w.find(tid);
             if (p != w.end()) {
                 n += p->second.first;
                 d += p->second.second;

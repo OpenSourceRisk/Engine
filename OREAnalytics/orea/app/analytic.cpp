@@ -149,8 +149,8 @@ void Analytic::buildPortfolio() {
 
     inputs_->portfolio()->reset();
     // populate with trades
-    for (const auto& t : inputs_->portfolio()->trades())
-        portfolio_->add(t);
+    for (const auto& [tradeId, trade] : inputs_->portfolio()->trades())
+        portfolio_->add(trade);
     
     if (market_) {
         LOG("Build the portfolio");
@@ -411,8 +411,8 @@ void VarAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
 
     LOG("Build trade to portfolio id mapping");
     map<string, set<string>> tradePortfolio;
-    for (auto const& t : portfolio_->trades()) {
-        tradePortfolio[t->id()].insert(t->portfolioIds().begin(), t->portfolioIds().end());
+    for (auto const& [tradeId, trade] : portfolio_->trades()) {
+        tradePortfolio[tradeId].insert(trade->portfolioIds().begin(), trade->portfolioIds().end());
     }
 
     // FIXME: Add Delta-Gamma (Saddlepoint) 
@@ -546,7 +546,7 @@ void XvaAnalytic::initCubeDepth() {
 }
 
 
-void XvaAnalytic::initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids, Size cubeDepth) {
+void XvaAnalytic::initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth) {
 
     LOG("Init cube with depth " << cubeDepth);
 
@@ -576,7 +576,7 @@ void XvaAnalytic::initClassicRun(const boost::shared_ptr<Portfolio>& portfolio) 
     if (inputs_->storeSurvivalProbabilities()) {
         // Use full list of counterparties, not just those in the sub-portflio
         auto counterparties = inputs_->portfolio()->counterparties();
-        counterparties.push_back(inputs_->dvaName());
+        counterparties.insert(inputs_->dvaName());
         initCube(cptyCube_, counterparties, 1);
     } else {
         cptyCube_ = nullptr; 
@@ -604,8 +604,8 @@ boost::shared_ptr<Portfolio> XvaAnalytic::classicRun(const boost::shared_ptr<Por
     out_ << setw(tab_) << left << "XVA: Build Portfolio " << flush;
     classicPortfolio_ = boost::make_shared<Portfolio>(inputs_->buildFailedTrades());
     portfolio->reset();
-    for (const auto& t : portfolio->trades())
-        classicPortfolio_->add(t);    
+    for (const auto& [tradeId, trade] : portfolio->trades())
+        classicPortfolio_->add(trade);    
     QL_REQUIRE(market_, "today's market not set");
     boost::shared_ptr<EngineFactory> factory = engineFactory();
     classicPortfolio_->build(factory, "analytic/" + label_);
@@ -743,30 +743,30 @@ void XvaAnalytic::buildAmcPortfolio() {
     amcPortfolio_ = boost::make_shared<Portfolio>();
     Size count = 0, amcCount = 0, total = portfolio->size();
     Real timingTraining = 0.0;
-    for (auto const& t : portfolio->trades()) {
+    for (auto const& [tradeId, trade] : portfolio->trades()) {
         bool tradeBuilt = false;
-        if (std::find(excludeTradeTypes.begin(), excludeTradeTypes.end(), t->tradeType()) == excludeTradeTypes.end()) {
+        if (std::find(excludeTradeTypes.begin(), excludeTradeTypes.end(), trade->tradeType()) == excludeTradeTypes.end()) {
             try {
-                t->reset();
-                t->build(factory);
+                trade->reset();
+                trade->build(factory);
                 tradeBuilt = true;
             } catch (const std::exception& e) {
-                ALOG("trade " << t->id() << " could not be built with AMC factory: " << e.what());
+                ALOG("trade " << tradeId << " could not be built with AMC factory: " << e.what());
             }
             if (tradeBuilt) {
                 try {
                     boost::timer::cpu_timer timer;
                     // retrieving the amcCalculator triggers the training!
-                    t->instrument()->qlInstrument()->result<boost::shared_ptr<AmcCalculator>>("amcCalculator");
+                    trade->instrument()->qlInstrument()->result<boost::shared_ptr<AmcCalculator>>("amcCalculator");
                     timer.stop();
                     Real tmp = timer.elapsed().wall * 1e-6;
-                    amcPortfolio_->add(t);
-                    LOG("trade " << t->id() << " is added to amc portfolio (training took " << tmp << " ms), pv "
-                        << t->instrument()->NPV() << ", mat " << io::iso_date(t->maturity()));
+                    amcPortfolio_->add(trade);
+                    LOG("trade " << tradeId << " is added to amc portfolio (training took " << tmp << " ms), pv "
+                        << trade->instrument()->NPV() << ", mat " << io::iso_date(trade->maturity()));
                     timingTraining += tmp;
                     ++amcCount;
                 } catch (const std::exception& e) {
-                    DLOG("trade " << t->id() << " can not processed by AMC valuation engine (" << e.what()
+                    DLOG("trade " << tradeId << " can not processed by AMC valuation engine (" << e.what()
                                   << "), it will be simulated clasically");
                 }
             }
@@ -937,16 +937,16 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
         // Initialize the residual "classical" portfolio that we do not process using AMC
         inputs_->portfolio()->reset();
         auto residualPortfolio = boost::make_shared<Portfolio>(inputs_->buildFailedTrades());
-        for (const auto& t : inputs_->portfolio()->trades()) 
-            residualPortfolio->add(t);
+        for (const auto& [tradeId, trade] : inputs_->portfolio()->trades()) 
+            residualPortfolio->add(trade);
 
         if (inputs_->amc()) {
             // Build a separate sub-portfolio for the AMC cube generation and perform its training
             buildAmcPortfolio();
 
             // Build the residual portfolio for the classic cube generation, i.e. strip out the AMC part
-            for (auto const& t : amcPortfolio_->trades())
-                residualPortfolio->remove(t->id());
+            for (auto const& [tradeId, trade] : amcPortfolio_->trades())
+                residualPortfolio->remove(tradeId);
 
             LOG("AMC portfolio size " << amcPortfolio_->size());
             LOG("Residual portfolio size " << residualPortfolio->size());
@@ -1009,10 +1009,10 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
         LOG("Classic portfolio size " << classicPortfolio_->size());
         LOG("AMC portfolio size " << amcPortfolio_->size());
         portfolio_ = boost::make_shared<Portfolio>();
-        for (const auto& t : classicPortfolio_->trades())
-            portfolio_->add(t);
-        for (auto const& t : amcPortfolio_->trades())
-            portfolio_->add(t);
+        for (const auto& [tradeId, trade] : classicPortfolio_->trades())
+            portfolio_->add(trade);
+        for (const auto& [tradeId, trade] : amcPortfolio_->trades())
+            portfolio_->add(trade);
         LOG("Total portfolio size " << portfolio_->size());
         if (portfolio_->size() < inputs_->portfolio()->size()) {
             ALOG("input portfolio size is " << inputs_->portfolio()->size()
@@ -1057,30 +1057,29 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
     LOG("Generating XVA reports and cube outputs");
 
     if (inputs_->exposureProfilesByTrade()) {
-        for (auto t : postProcess_->tradeIds()) {
+        for (const auto& [tradeId, tradeIdCubePos] : postProcess_->tradeIds()) {
             auto report = boost::make_shared<InMemoryReport>();
-            ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeTradeExposures(*report, postProcess_, t);
-            reports_["xva"]["exposure_trade_" + t] = report;
+            ore::analytics::ReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_, tradeId);
+            reports_["xva"]["exposure_trade_" + tradeId] = report;
         }
     }
 
     if (inputs_->exposureProfiles()) {
-        for (auto n : postProcess_->nettingSetIds()) {
+        for (auto [nettingSet, nettingSetPosInCube] : postProcess_->nettingSetIds()) {
             auto exposureReport = boost::make_shared<InMemoryReport>();
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeNettingSetExposures(*exposureReport, postProcess_, n);
-            reports_["xva"]["exposure_nettingset_" + n] = exposureReport;
+                .writeNettingSetExposures(*exposureReport, postProcess_, nettingSet);
+            reports_["xva"]["exposure_nettingset_" + nettingSet] = exposureReport;
 
             auto colvaReport = boost::make_shared<InMemoryReport>();
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeNettingSetColva(*colvaReport, postProcess_, n);
-            reports_["xva"]["colva_nettingset_" + n] = colvaReport;
+                .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
+            reports_["xva"]["colva_nettingset_" + nettingSet] = colvaReport;
 
             auto cvaSensiReport = boost::make_shared<InMemoryReport>();
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, n);
-            reports_["xva"]["cva_sensitivity_nettingset_" + n] = cvaSensiReport;
+                .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
+            reports_["xva"]["cva_sensitivity_nettingset_" + nettingSet] = cvaSensiReport;
         }
     }
     

@@ -39,14 +39,14 @@ class JointNPVSensiCube : public NPVSensiCube {
 public:
     /*! ctor for two input cubes */
     JointNPVSensiCube(const boost::shared_ptr<NPVSensiCube>& cube1, const boost::shared_ptr<NPVSensiCube>& cube2,
-                      const std::vector<std::string>& ids = {});
+                      const std::set<std::string>& ids = {});
 
     /*! ctor for n input cubes
         - If no ids are given, the order of the ids in the input cubes define the order in the resulting cube. If ids
           are given they define the order of the ids in the output cube. The ids must be unique in either case.
      */
     JointNPVSensiCube(const std::vector<boost::shared_ptr<NPVSensiCube>>& cubes,
-                      const std::vector<std::string>& ids = {});
+                      const std::set<std::string>& ids = {});
 
     //! Return the length of each dimension
     Size numIds() const override;
@@ -54,7 +54,7 @@ public:
     Size samples() const override;
     Size depth() const override;
 
-    const std::vector<std::string>& ids() const override;
+    const std::map<std::string, Size>& idsAndIndexes() const override;
     const std::vector<QuantLib::Date>& dates() const override;
     QuantLib::Date asof() const override;
 
@@ -75,7 +75,7 @@ public:
 
 private:
     const std::pair<boost::shared_ptr<NPVSensiCube>, Size>& cubeAndId(Size id) const;
-    std::vector<std::string> ids_;
+    std::map<std::string, Size> idIdx_;
     std::vector<std::pair<boost::shared_ptr<NPVSensiCube>, Size>> cubeAndId_;
     const std::vector<boost::shared_ptr<NPVSensiCube>> cubes_;
 };
