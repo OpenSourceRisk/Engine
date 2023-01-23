@@ -296,12 +296,12 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::map<std::st
         calc->initScenario();
     // loop over trades
     size_t j = 0;
-    for (const auto& [tradeId, trade]:trades) {
+    for (auto tradeIt = trades.begin(); tradeIt != trades.end(); ++tradeIt, ++j) {
+        auto trade = tradeIt->second;
         if (tradeHasError[j]) {
-            j++;
             continue;
         }
-        
+
         // We can avoid checking mode here and always call updateQlInstruments()
         if (om == ObservationMode::Mode::Disable || om == ObservationMode::Mode::Unregister)
             trade->instrument()->updateQlInstruments();
@@ -315,7 +315,6 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::map<std::st
             ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "ScenarioValuation", expMsg.c_str()));
             tradeHasError[j] = true;
         }
-        j++;
     }
 }
 

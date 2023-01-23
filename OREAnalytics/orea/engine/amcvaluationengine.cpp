@@ -201,10 +201,14 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
     std::vector<Size> currencyIndex;
     timer.start();
     size_t currentTradeIdx = 0;
-    for (auto& [tId, trade] : portfolio->trades()) {
+    for (auto tradeIt = portfolio->trades().begin(); tradeIt != portfolio->trades().end();
+         ++tradeIt, ++currentTradeIdx) {
+        auto trade = tradeIt->second;
+        string tId = tradeIt->first;
         boost::shared_ptr<AmcCalculator> amcCalc;
         try {
-            amcCalc = trade->instrument()->qlInstrument(true)->result<boost::shared_ptr<AmcCalculator>>("amcCalculator");
+            amcCalc =
+                trade->instrument()->qlInstrument(true)->result<boost::shared_ptr<AmcCalculator>>("amcCalculator");
             LOG("AMCCalculator extracted for \"" << trade->id() << "\"");
         } catch (const std::exception& e) {
             WLOG("could not extract AMCCalculator for trade \"" << tId << "\": " << e.what());
@@ -224,7 +228,6 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
             // TODO additional instruments (fees)
         }
         updateProgress(currentTradeIdx, portfolio->size());
-        currentTradeIdx++;
     }
     timer.stop();
     calibrationTime += timer.elapsed().wall * 1e-9;
