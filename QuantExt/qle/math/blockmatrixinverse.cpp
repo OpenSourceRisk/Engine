@@ -23,7 +23,8 @@
 using namespace boost::numeric::ublas;
 
 namespace QuantExt {
-
+using namespace QuantLib;
+    
 namespace {
 bool isNull(const Matrix& A) {
     for (auto const& a : A) {

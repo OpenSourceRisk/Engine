@@ -28,17 +28,16 @@
 #include <ql/math/matrixutilities/sparsematrix.hpp>
 
 namespace QuantExt {
-using namespace QuantLib;
 
 /* inverse of a sparse matrix per LU decomposition */
-SparseMatrix inverse(SparseMatrix m);
+QuantLib::SparseMatrix inverse(QuantLib::SparseMatrix m);
 
 /* Reference: https://en.wikipedia.org/wiki/Invertible_matrix#Blockwise_inversion */
-Matrix blockMatrixInverse(const Matrix& A, const std::vector<Size>& blockIndices);
-SparseMatrix blockMatrixInverse(const SparseMatrix& A, const std::vector<Size>& blockIndices);
+QuantLib::Matrix blockMatrixInverse(const QuantLib::Matrix& A, const std::vector<QuantLib::Size>& blockIndices);
+QuantLib::SparseMatrix blockMatrixInverse(const QuantLib::SparseMatrix& A, const std::vector<QuantLib::Size>& blockIndices);
 
 /*! modified max norm of a sparse matrix, i.e. std::sqrt(row * columns) * max_i,j abs(a_i,j) */
-Real modifiedMaxNorm(const SparseMatrix& A);
+QuantLib::Real modifiedMaxNorm(const QuantLib::SparseMatrix& A);
 
 } // namespace QuantExt
 

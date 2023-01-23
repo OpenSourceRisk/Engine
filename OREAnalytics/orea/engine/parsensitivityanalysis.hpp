@@ -302,7 +302,7 @@ private:
     std::set<ore::analytics::RiskFactorKey> rawKeys_;
     std::set<ore::analytics::RiskFactorKey> parKeys_;
     // transposed inverse Jacobian, i.e. the matrix we use for the zero-par conversion effectively
-    SparseMatrix jacobi_transp_inv_;
+    QuantLib::SparseMatrix jacobi_transp_inv_;
     //! Vector of absolute zero shift sizes
     boost::numeric::ublas::vector<QuantLib::Real> zeroShifts_;
     //! Vector of absolute par shift sizes
