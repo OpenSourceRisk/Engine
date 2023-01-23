@@ -262,7 +262,6 @@ void OREAppInputParameters::loadParameters() {
     // FIXME: To be loaded from params or removed from the base class
     // xbsParConversion_ = false;
     // analyticFxSensis_ = true;
-    // outputJacobi_ = false;
     // useSensiSpreadedTermStructures_ = true;
 
     tmp = params_->get("sensitivity", "active", false);
@@ -270,6 +269,18 @@ void OREAppInputParameters::loadParameters() {
         sensi_ = parseBool(tmp);
 
     if (sensi_) {
+        tmp = params_->get("sensitivity", "parSensitivity", false);
+        if (tmp != "")
+            parSensi_ = parseBool(tmp);
+
+        tmp = params_->get("sensitivity", "outputJacobi", false);
+        if (tmp != "")
+            outputJacobi_ = parseBool(tmp);
+
+        tmp = params_->get("sensitivity", "alignPillars", false);
+        if (tmp != "")
+            alignPillars_ = parseBool(tmp);
+
         sensiSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
         tmp = params_->get("sensitivity", "marketConfigFile", false);
         if (tmp != "") {
@@ -885,6 +896,9 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         dimRegressionFileNames_ = parseListOfValues(tmp);
     sensitivityFileName_ = params_->get("sensitivity", "sensitivityOutputFile", false);    
+    parSensitivityFileName_ = params_->get("sensitivity", "parSensitivityOutputFile", false);    
+    jacobiFileName_ = params_->get("sensitivity", "jacobiOutputFile", false);    
+    jacobiInverseFileName_ = params_->get("sensitivity", "jacobiInverseOutputFile", false);    
     sensitivityScenarioFileName_ = params_->get("sensitivity", "scenarioOutputFile", false);    
     stressTestFileName_ = params_->get("stress", "scenarioOutputFile", false);    
     varFileName_ = params_->get("var", "outputFile", false);
@@ -901,6 +915,9 @@ void OREAppInputParameters::loadParameters() {
     fileNameMap_["dim_evolution"] = dimEvolutionFileName_;
     fileNameMap_["sensitivity"] = sensitivityFileName_;
     fileNameMap_["sensitivity_scenario"] = sensitivityScenarioFileName_;
+    fileNameMap_["parSensitivity"] = parSensitivityFileName_;
+    fileNameMap_["jacobi"] = jacobiFileName_;
+    fileNameMap_["jacobi_inverse"] = jacobiInverseFileName_;
     fileNameMap_["stress"] = stressTestFileName_;
     fileNameMap_["var"] = varFileName_;
     

@@ -257,6 +257,18 @@ std::vector<Real> ParametricVarCalculator::computeVar(const Matrix& omega, const
         QL_REQUIRE(mcSeed_ != Null<Size>(),
                    "ParametricVarCalculator::computeVar(): method MonteCarlo requires mcSamples");
         return QuantExt::deltaGammaVarMc<PseudoRandom>(omega, delta, gamma, p, mcSamples_, mcSeed_, covarianceSalvage);
+    } else if (method_ == "Cornish-Fisher") {
+        std::vector<Real> res(p.size());
+        for (Size i = 0; i < p.size(); ++i) {
+            res[i] = QuantExt::deltaGammaVarCornishFisher(omega, delta, gamma, p[i], covarianceSalvage);
+        }
+        return res;
+    } else if (method_ == "Saddlepoint") {
+        std::vector<Real> res(p.size());
+        for (Size i = 0; i < p.size(); ++i) {
+            res[i] = QuantExt::deltaGammaVarSaddlepoint(omega, delta, gamma, p[i], covarianceSalvage);
+        }
+        return res;
     } else {
         QL_FAIL("ParametricVarCalculator::computeVar(): method " << method_ << " not known.");
     }

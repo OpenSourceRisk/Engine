@@ -26,9 +26,8 @@
 #include <ql/cashflow.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! %cashflow-analysis functions in addition to those in QuantLib
 class CashFlows {

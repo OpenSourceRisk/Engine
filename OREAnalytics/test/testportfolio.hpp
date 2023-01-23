@@ -38,7 +38,8 @@ string toString(Date d);
 
 boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term, Real rate,
                                    Real spread, string fixedFreq, string fixedDC, string floatFreq, string floatDC,
-                                   string index);
+                                   string index, Calendar cal = TARGET(),
+                                   QuantLib::Natural fixingDays = 2, bool spotStartLag = false);
 
 boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
                                                int start, Size term, Real rate, Real spread, string fixedFreq,
@@ -64,16 +65,42 @@ boost::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size ex
                                             string currency, Real strike, Real quantity);
 
 boost::shared_ptr<Trade> buildCap(string id, string ccy, string longShort, Real capRate, Real notional, int start,
-                                  Size term, string floatFreq, string floatDC, string index);
+                                  Size term, string floatFreq, string floatDC, string index,
+                                  Calendar cal = TARGET(), QuantLib::Natural fixingDays = 2,
+                                  bool spotStartLag = false);
 
 boost::shared_ptr<Trade> buildFloor(string id, string ccy, string longShort, Real floorRate, Real notional, int start,
-                                    Size term, string floatFreq, string floatDC, string index);
+                                    Size term, string floatFreq, string floatDC, string index,
+                                    Calendar cal = TARGET(), QuantLib::Natural fixingDays = 2,
+                                    bool spotStartLag = false);
 
 boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, vector<Real> capRates,
                                        vector<Real> floorRates, Real notional, int start, Size term, string floatFreq,
-                                       string floatDC, string index);
+                                       string floatDC, string index,
+                                       Calendar cal = TARGET(), QuantLib::Natural fixingDays = 2,
+                                       bool spotStartLag = false);
 
-boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term);
+boost::shared_ptr<Trade> buildCrossCcyBasisSwap(
+        string id, string recCcy, Real recNotional, string payCcy, Real payNotional, int start, Size term,
+        Real recLegSpread, Real payLegSpread, string recFreq, string recDC, string recIndex, Calendar recCalendar,
+        string payFreq, string payDC, string payIndex, Calendar payCalendar, QuantLib::Natural spotDays = 2,
+        bool spotStartLag = false, bool notionalInitialExchange = false, bool notionalFinalExchange = false,
+        bool notionalAmortizingExchange = false, bool isRecLegFXResettable = false, bool isPayLegFXResettable = false);
+    
+boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term, string suffix = "1");
+
+boost::shared_ptr<Trade> buildCreditDefaultSwap(string id, string ccy, string issuerId, string creditCurveId,
+                                                bool isPayer, Real notional, int start, Size term, Real rate,
+                                                Real spread, string fixedFreq, string fixedDC);
+
+boost::shared_ptr<Trade> buildSyntheticCDO(string id, string name, vector<string> names, string longShort,
+                                           string ccy, vector<string> ccys, bool isPayer,
+                                           vector<Real> notionals, Real notional, int start, Size term,
+                                           Real rate, Real spread, string fixedFreq, string fixedDC);
+
+boost::shared_ptr<Trade> buildCmsCapFloor(string id, string ccy, string indexId, bool isPayer, Real notional,
+                                          int start, Size term, Real capRate, Real floorRate, Real spread,
+                                          string freq, string dc);
 
 boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
                                                Real spread, string floatFreq, string floatDC, string index,
@@ -84,6 +111,11 @@ boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPaye
                                               Real spread, string floatFreq, string floatDC, string index,
                                               string yyFreq, string yyDC, string yyIndex, string observationLag,
                                               Size fixDays);
+
+boost::shared_ptr<Trade> buildYYInflationCapFloor(string id, string ccy, Real notional, bool isCap,
+                                                  bool isLong, Real capFloorRate, int start, Size term,
+                                                  string yyFreq, string yyDC, string yyIndex,
+                                                  string observationLag, Size fixDays);
 
 boost::shared_ptr<Trade> buildCommodityForward(const std::string& id, const std::string& position, Size term,
                                                const std::string& commodityName, const std::string& currency,

@@ -111,6 +111,8 @@ public:
     bool sensi() { return sensi_; }
     bool xbsParConversion() { return xbsParConversion_; }
     bool analyticFxSensis() { return analyticFxSensis_; }
+    bool parSensi() const { return parSensi_; };
+    bool alignPillars() const { return alignPillars_; };
     bool outputJacobi() const { return outputJacobi_; };
     bool useSensiSpreadedTermStructures() { return useSensiSpreadedTermStructures_; }
     QuantLib::Real sensiThreshold() const { return sensiThreshold_; }
@@ -290,7 +292,9 @@ protected:
     bool sensi_ = false;
     bool xbsParConversion_ = false;
     bool analyticFxSensis_ = true;
+    bool parSensi_ = false;
     bool outputJacobi_ = false;
+    bool alignPillars_ = false;
     bool useSensiSpreadedTermStructures_ = true;
     QuantLib::Real sensiThreshold_ = 0.0;
     boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensiSimMarketParams_;
@@ -439,6 +443,9 @@ private:
     std::vector<std::string> dimRegressionFileNames_;
     std::string sensitivityFileName_;
     std::string sensitivityScenarioFileName_;
+    std::string parSensitivityFileName_;
+    std::string jacobiFileName_;
+    std::string jacobiInverseFileName_;
     std::string stressTestFileName_;
     std::string varFileName_;
 };

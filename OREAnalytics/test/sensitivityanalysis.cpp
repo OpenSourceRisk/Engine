@@ -196,8 +196,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     portfolio->add(buildFxOption("8_FxOption_EUR_GBP", "Long", "Call", 7, "EUR", 10000000.0, "GBP", 11000000.0));
     portfolio->add(buildCap("9_Cap_EUR", "EUR", "Long", 0.05, 1000000.0, 0, 10, "6M", "A360", "EUR-EURIBOR-6M"));
     portfolio->add(buildFloor("10_Floor_USD", "USD", "Long", 0.01, 1000000.0, 0, 10, "3M", "A360", "USD-LIBOR-3M"));
-    portfolio->add(buildZeroBond("11_ZeroBond_EUR", "EUR", 1.0, 10));
-    portfolio->add(buildZeroBond("12_ZeroBond_USD", "USD", 1.0, 10));
+    portfolio->add(buildZeroBond("11_ZeroBond_EUR", "EUR", 1.0, 10, "0"));
+    portfolio->add(buildZeroBond("12_ZeroBond_USD", "USD", 1.0, 10, "0"));
     portfolio->add(buildEquityOption("14_EquityOption_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 775));
     portfolio->add(buildCPIInflationSwap("15_CPIInflationSwap_UKRPI", "GBP", true, 100000.0, 0, 10, 0.0, "6M",
                                          "ACT/ACT", "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", 201.0, "2M", false,
@@ -557,20 +557,20 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         // time to maturity T = YEARFRAC(14/4/16, 14/4/26, 1) = 9.99800896, yields
         // sensi to up shift d=1bp: exp(-(z+d)*T)-exp(z*T)
         // = -0.00060616719559925
-        {"11_ZeroBond_EUR", "Up:YieldCurve/BondCurve1/6/10Y", 0.60659, -0.000606168}, // OK, diff 1e-9
+        {"11_ZeroBond_EUR", "Up:YieldCurve/BondCurve0/6/10Y", 0.60659, -0.000606168}, // OK, diff 1e-9
         // sensi to down shift d=-1bp: 0.00060677354516836
-        {"11_ZeroBond_EUR", "Down:YieldCurve/BondCurve1/6/10Y", 0.60659, 0.000606774}, // OK, diff < 1e-9
+        {"11_ZeroBond_EUR", "Down:YieldCurve/BondCurve0/6/10Y", 0.60659, 0.000606774}, // OK, diff < 1e-9
         // A relative shift in yield curve is equivalent to a relative shift in default curve
-        {"11_ZeroBond_EUR", "Up:SurvivalProbability/BondIssuer1/6/10Y", 0.60659, -0.000606168},
-        {"11_ZeroBond_EUR", "Down:SurvivalProbability/BondIssuer1/6/10Y", 0.60659, 0.000606774},
+        {"11_ZeroBond_EUR", "Up:SurvivalProbability/BondIssuer0/6/10Y", 0.60659, -0.000606168},
+        {"11_ZeroBond_EUR", "Down:SurvivalProbability/BondIssuer0/6/10Y", 0.60659, 0.000606774},
         // sensi to up shift d=+1bp: exp(-(z+d)*T)*USDEUR - exp(-z*T)*USDEUR
         // = -0.000505139329666004
-        {"12_ZeroBond_USD", "Up:YieldCurve/BondCurve1/6/10Y", 0.505492, -0.00050514}, // OK, diff < 1e-8
+        {"12_ZeroBond_USD", "Up:YieldCurve/BondCurve0/6/10Y", 0.505492, -0.00050514}, // OK, diff < 1e-8
         // sensi to down shift d=-1bp: 0.000505644620973689
-        {"12_ZeroBond_USD", "Down:YieldCurve/BondCurve1/6/10Y", 0.505492, 0.000505645}, // OK, diff < 1e-9
+        {"12_ZeroBond_USD", "Down:YieldCurve/BondCurve0/6/10Y", 0.505492, 0.000505645}, // OK, diff < 1e-9
         // A relative shift in yield curve is equivalent to a relative shift in default curve
-        {"12_ZeroBond_USD", "Up:SurvivalProbability/BondIssuer1/6/10Y", 0.505492, -0.00050514},
-        {"12_ZeroBond_USD", "Down:SurvivalProbability/BondIssuer1/6/10Y", 0.505492, 0.000505645},
+        {"12_ZeroBond_USD", "Up:SurvivalProbability/BondIssuer0/6/10Y", 0.505492, -0.00050514},
+        {"12_ZeroBond_USD", "Down:SurvivalProbability/BondIssuer0/6/10Y", 0.505492, 0.000505645},
         // sensi to EURUSD upshift d=+1%: exp(-z*T)*USDEUR/(1+d) - exp(-z*T)*USDEUR
         // = -0.00500487660122262
         {"12_ZeroBond_USD", "Up:FXSpot/EURUSD/0/spot", 0.505492, -0.00500487}, // OK, diff < 1e-8
@@ -788,8 +788,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     std::vector<Results> cachedResults2 = {
         // trade, factor, delta, gamma
-        {"11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y", -0.000606168, 6.06352e-07}, // gamma OK see case 1 below
-        {"12_ZeroBond_USD", "YieldCurve/BondCurve1/6/10Y", -0.00050514, 5.05294e-07},  // gamma OK, see case 2 below
+        {"11_ZeroBond_EUR", "YieldCurve/BondCurve0/6/10Y", -0.000606168, 6.06352e-07}, // gamma OK see case 1 below
+        {"12_ZeroBond_USD", "YieldCurve/BondCurve0/6/10Y", -0.00050514, 5.05294e-07},  // gamma OK, see case 2 below
         {"12_ZeroBond_USD", "FXSpot/EURUSD/0/spot", -0.00500487, 0.000101108}          // gamma OK, see case 3
     };
 

@@ -70,6 +70,9 @@ public:
     std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(Size tradeIdx) const override;
     std::set<QuantLib::Size> relevantScenarios() const override;
 
+    void remove(Size id) override;
+    void remove(Size id, Size sample) override;
+
 private:
     const std::pair<boost::shared_ptr<NPVSensiCube>, Size>& cubeAndId(Size id) const;
     std::map<std::string, Size> idIdx_;

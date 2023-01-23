@@ -144,5 +144,15 @@ std::set<QuantLib::Size> JointNPVSensiCube::relevantScenarios() const {
     return tmp;
 }
 
+void JointNPVSensiCube::remove(Size id) {
+    const auto& c = cubeAndId(id);
+    c.first->remove(c.second);
+}
+
+void JointNPVSensiCube::remove(Size id, Size sample) {
+    const auto& c = cubeAndId(id);
+    c.first->remove(c.second, sample);
+}
+
 } // namespace analytics
 } // namespace ore

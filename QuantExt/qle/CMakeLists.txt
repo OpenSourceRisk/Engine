@@ -130,6 +130,7 @@ instruments/subperiodsswap.cpp
 instruments/syntheticcdo.cpp
 instruments/tenorbasisswap.cpp
 instruments/varianceswap.cpp
+math/blockmatrixinverse.cpp
 math/deltagammavar.cpp
 math/differentialevolution_mt.cpp
 math/fillemptymatrix.cpp
@@ -538,6 +539,7 @@ instruments/varianceswap.hpp
 interpolators/optioninterpolator2d.hpp
 math/constantinterpolation.hpp
 math/covariancesalvage.hpp
+math/blockmatrixinverse.hpp
 math/deltagammavar.hpp
 math/differentialevolution_mt.hpp
 math/fillemptymatrix.hpp
