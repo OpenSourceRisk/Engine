@@ -276,7 +276,7 @@ std::vector<boost::shared_ptr<ore::analytics::NPVCube>> MultiThreadedValuationEn
 
                 // build portfolio against sim market
 
-                auto tradeFactory = boost::make_shared<ore::data::TradeFactory>();
+                auto tradeFactory = boost::make_shared<ore::data::TradeFactory>(referenceData_);
                 tradeFactory->addExtraBuilders(extraTradeBuilders_(referenceData_, tradeFactory));
                 auto portfolio = boost::make_shared<ore::data::Portfolio>();
                 portfolio->loadFromXMLString(portfoliosAsString[id], tradeFactory);
@@ -287,9 +287,7 @@ std::vector<boost::shared_ptr<ore::analytics::NPVCube>> MultiThreadedValuationEn
                     extraLegBuilders_ ? extraLegBuilders_() : std::vector<boost::shared_ptr<ore::data::LegBuilder>>(),
                     referenceData_, iborFallbackConfig_);
 
-                portfolio->build(engineFactory,
-                                 context_ + " (mt val engine, mini-cube build thread " + std::to_string(id) + ")",
-                                 false);
+                portfolio->build(engineFactory, context_, true);
 
                 // build valuation engine
 

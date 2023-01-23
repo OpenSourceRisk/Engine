@@ -370,7 +370,7 @@
   </xs:element>
   <xs:element name="FloatingLegData" substitutionGroup="legDataType">
     <xs:complexType>
-      <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:all>
         <xs:element type="indexNameType" name="Index"/>
         <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="LastRecentPeriod" minOccurs="0"/>
@@ -388,13 +388,13 @@
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="LocalCapFloor" minOccurs="0"/>
-      </xs:choice>
+      </xs:all>
     </xs:complexType>
   </xs:element>
   <xs:element name="CPILegData" substitutionGroup="legDataType">
     <xs:complexType>
       <xs:choice maxOccurs="unbounded" minOccurs="0">
-        <xs:element type="xs:string" name="Index"/>
+        <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
         <xs:element name="Rates">
           <xs:complexType>
             <xs:sequence>
@@ -427,7 +427,7 @@
   </xs:element>
   <xs:element name="YYLegData" substitutionGroup="legDataType">
     <xs:complexType>
-      <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:all>
         <xs:element type="xs:string" name="Index"/>
         <xs:element type="xs:integer" name="FixingDays" maxOccurs="1"/>
         <xs:element type="xs:string" name="ObservationLag" maxOccurs="1"/>
@@ -438,12 +438,12 @@
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="AddInflationNotional" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="IrregularYoY" minOccurs="0" maxOccurs="1"/>
-      </xs:choice>
+      </xs:all>
     </xs:complexType>
   </xs:element>
   <xs:element name="CMSLegData" substitutionGroup="legDataType">
     <xs:complexType>
-      <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:all>
         <xs:element type="indexNameType" name="Index"/>
         <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1"/>
@@ -452,12 +452,12 @@
         <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
-      </xs:choice>
+      </xs:all>
     </xs:complexType>
   </xs:element>
   <xs:element name="CMBLegData" substitutionGroup="legDataType">
     <xs:complexType>
-      <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:all>
         <xs:element type="xs:string" name="Index"/>
         <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:integer" name="FixingDays"/>
@@ -467,7 +467,7 @@
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="CreditRisk" minOccurs="0" maxOccurs="1"/>
-      </xs:choice>
+      </xs:all>
     </xs:complexType>
   </xs:element>
   <xs:element name="DigitalCMSLegData" substitutionGroup="legDataType">
@@ -475,7 +475,7 @@
       <xs:choice maxOccurs="unbounded" minOccurs="0">
         <xs:element name="CMSLegData">
           <xs:complexType>
-            <xs:choice maxOccurs="unbounded" minOccurs="0">
+            <xs:all>
               <xs:element type="indexNameType" name="Index"/>
               <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
               <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1"/>
@@ -484,7 +484,7 @@
               <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
               <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
               <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
-            </xs:choice>
+            </xs:all>
           </xs:complexType>
         </xs:element>
         <xs:element type="xs:string" name="CallPosition"/>
@@ -524,7 +524,7 @@
   </xs:element>
   <xs:element name="DurationAdjustedCMSLegData" substitutionGroup="legDataType">
     <xs:complexType>
-      <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:all>
         <xs:element type="indexNameType" name="Index"/>
         <xs:element type="xs:integer" name="Duration" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
@@ -534,12 +534,12 @@
         <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
-      </xs:choice>
+      </xs:all>
     </xs:complexType>
   </xs:element>
   <xs:element name="CMSSpreadLegData" substitutionGroup="legDataType">
     <xs:complexType>
-      <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:all>
         <xs:element type="indexNameType" name="Index1"/>
         <xs:element type="indexNameType" name="Index2"/>
         <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
@@ -549,7 +549,7 @@
         <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
-      </xs:choice>
+      </xs:all>
     </xs:complexType>
   </xs:element>
   <xs:element name="DigitalCMSSpreadLegData" substitutionGroup="legDataType">
@@ -557,7 +557,7 @@
       <xs:choice maxOccurs="unbounded" minOccurs="0">
         <xs:element name="CMSSpreadLegData">
           <xs:complexType>
-            <xs:choice maxOccurs="unbounded" minOccurs="0">
+            <xs:all>
               <xs:element type="indexNameType" name="Index1"/>
               <xs:element type="indexNameType" name="Index2"/>
               <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
@@ -567,7 +567,7 @@
               <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
               <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
               <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
-            </xs:choice>
+            </xs:all>
           </xs:complexType>
         </xs:element>
         <xs:element type="xs:string" name="CallPosition"/>

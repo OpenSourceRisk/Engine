@@ -165,7 +165,7 @@ void SensitivityAnalysisPlus::generateSensitivities(boost::shared_ptr<NPVSensiCu
            const QuantLib::Size samples) {
             return boost::make_shared<ore::analytics::DoublePrecisionSensiCube>(ids, asof, samples);
         },
-        "sensi analysis");
+        context_);
     for (auto const& i : this->progressIndicators())
         engine.registerProgressIndicator(i);
 

@@ -81,14 +81,15 @@ public:
         const std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()>& extraLegBuilders = {},
         const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-        const bool continueOnError = false, bool analyticFxSensis = false, bool dryRun = false)
+        const bool continueOnError = false, bool analyticFxSensis = false, bool dryRun = false,
+        const std::string& context = "sensi analysis")
         : ore::analytics::SensitivityAnalysis(
               portfolio, nullptr, marketConfiguration, engineData, simMarketData, sensitivityData, recalibrateModels,
               curveConfigs, todaysMarketParams, nonShiftedBaseCurrencyConversion, extraEngineBuilders(),
               extraLegBuilders(), referenceData, iborFallbackConfig, continueOnError, analyticFxSensis, dryRun),
           useSingleThreadedEngine_(false), nThreads_(nThreads), loader_(loader),
           extraTradeBuildersGenerator_(extraTradeBuilders), extraEngineBuildersGenerator_(extraEngineBuilders),
-          extraLegBuildersGenerator_(extraLegBuilders) {
+          extraLegBuildersGenerator_(extraLegBuilders), context_(context) {
         asof_ = asof;
     }
 
@@ -120,6 +121,7 @@ private:
         extraTradeBuildersGenerator_;
     std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuildersGenerator_;
     std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuildersGenerator_;
+    std::string context_;
 };
 } // namespace analytics
 } // namespace ore

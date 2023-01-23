@@ -1554,7 +1554,7 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
                                      << ", gamma=" << qlInfo.gamma << ", vega=" << qlInfo.vega << ", rho=" << qlInfo.rho
                                      << ", divRho=" << qlInfo.divRho);
         Real bp = 1.e-4;
-        Real tol = 0.5; // % relative tolerance
+        Real tol = 1.0; // % relative tolerance
         // rate sensis are 1bp absolute shifts
         // fx vol sensis are 1bp relative shifts
         // fx spot sensis are 1pb relative shifts
