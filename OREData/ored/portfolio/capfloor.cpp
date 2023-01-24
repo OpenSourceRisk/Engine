@@ -550,9 +550,12 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
 			    continue;
 
 			boost::shared_ptr<CappedFlooredCoupon> cfc = strippedCfc->underlying();
-			boost::shared_ptr<IborCouponPricer> pricer =
-			    boost::dynamic_pointer_cast<IborCouponPricer>(cfc->pricer());
-			if (pricer && (cfc->fixingDate() > asof)) {
+                        // enfore coupon pricer to hold the results of the current coupon
+                        cfc->deepUpdate();
+                        cfc->amount();
+                        boost::shared_ptr<IborCouponPricer> pricer =
+                            boost::dynamic_pointer_cast<IborCouponPricer>(cfc->pricer());
+                        if (pricer && (cfc->fixingDate() > asof)) {
 			    // We write the vols if an Ibor coupon pricer is found and the fixing date is in the future
 			    if (cfc->isCapped()) {
 			        caps.push_back(cfc->cap());
