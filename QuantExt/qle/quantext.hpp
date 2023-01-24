@@ -200,6 +200,7 @@
 #include <qle/instruments/vanillaforwardoption.hpp>
 #include <qle/instruments/varianceswap.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
+#include <qle/math/blockmatrixinverse.hpp>
 #include <qle/math/constantinterpolation.hpp>
 #include <qle/math/covariancesalvage.hpp>
 #include <qle/math/deltagammavar.hpp>
