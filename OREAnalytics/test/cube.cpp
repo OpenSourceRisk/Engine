@@ -164,9 +164,9 @@ void testCubeGetSetbyDateID(NPVCube& cube, Real tolerance) {
 
 void initCube(NPVCube& cube, boost::shared_ptr<Portfolio>& portfolio, boost::shared_ptr<DateGrid>& dg) {
     // Set every (i,j,k,d) node to be i*1000000 + j + (k/1000000) + d*3
-    for (Size i = 0; i < cube.numIds(); ++i) {
+    for (const auto& [id, i]: cube.idsAndIndexes()) {
         Size dateLen = 0;
-        Date tradeMaturity = portfolio->trades()[i]->maturity();
+        Date tradeMaturity = portfolio->get(id)->maturity();
         while (dateLen < dg->dates().size() && dg->dates()[dateLen] < tradeMaturity) {
             dateLen++;
         }
@@ -183,9 +183,9 @@ void initCube(NPVCube& cube, boost::shared_ptr<Portfolio>& portfolio, boost::sha
 void checkCube(NPVCube& cube, Real tolerance, boost::shared_ptr<Portfolio>& portfolio,
                boost::shared_ptr<DateGrid>& dg) {
     // Now check each value
-    for (Size i = 0; i < cube.numIds(); ++i) {
+    for (const auto& [id, i] : cube.idsAndIndexes()) {
         Size dateLen = 0;
-        Date tradeMaturity = portfolio->trades()[i]->maturity();
+        Date tradeMaturity = portfolio->get(id)->maturity();
         while (dateLen < dg->dates().size() && dg->dates()[dateLen] < tradeMaturity) {
             dateLen++;
         }
@@ -362,8 +362,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
     DayCounter dc = ActualActual(ActualActual::ISDA);
     map<string, Size> fixedFreqs;
     map<string, Size> floatFreqs;
-    for (Size i = 0; i < portfolioSize; ++i) {
-        boost::shared_ptr<Trade> trade = portfolio->trades()[i];
+    for (const auto&  [tradeId, trade] : portfolio->trades()) {
         maturity += dc.yearFraction(today, trade->maturity());
 
         // fixed Freq
