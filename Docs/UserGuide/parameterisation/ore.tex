@@ -1,0 +1,550 @@
+\subsection{Master Input File: {\tt ore.xml}}\label{sec:master_input}
+
+The master input file contains general setup information (paths to configuration, trade data and market data), as well
+as the selection and configuration of analytics. The file has an opening and closing root element {\tt <ORE>}, {\tt
+  </ORE>} with three sections
+\begin{itemize}
+\item Setup
+\item Markets
+\item Analytics
+\end{itemize}
+which we will explain in the following.
+
+\subsubsection{Setup}
+
+This subset of data is easiest explained using an example, see listing \ref{lst:ore_setup}.
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Setup>
+  <Parameter name="asofDate">2016-02-05</Parameter>
+  <Parameter name="inputPath">Input</Parameter>
+  <Parameter name="outputPath">Output</Parameter>
+  <Parameter name="logFile">log.txt</Parameter>
+  <Parameter name="logMask">255</Parameter>
+  <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
+  <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
+  <Parameter name="dividendDataFile">../../Input/dividends_20160205.txt</Parameter> <!-- Optional -->
+  <Parameter name="implyTodaysFixings">Y</Parameter>
+  <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
+  <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
+  <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
+  <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+  <Parameter name="portfolioFile">portfolio.xml</Parameter>
+  <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
+  <Parameter name="currencyConfiguration">../../Input/currencies.xml</Parameter>
+  <Parameter name="referenceDataFile">../../Input/referencedata.xml</Parameter>
+  <Parameter name="iborFallbackConfig">../../Input/iborFallbackConfig.xml</Parameter>
+  <!-- None, Unregister, Defer or Disable -->
+  <Parameter name="observationModel">Disable</Parameter>
+  <Parameter name="lazyMarketBuilding">false</Parameter>
+  <Parameter name="continueOnError">false</Parameter>
+  <Parameter name="buildFailedTrades">true</Parameter>
+</Setup>
+\end{minted}
+%\hrule
+\caption{ORE setup example}
+\label{lst:ore_setup}
+\end{listing}
+
+Parameter names are self explanatory: Input and output path are interpreted relative from the directory where the ORE
+executable is executed, but can also be specified using absolute paths. All file names are then interpreted relative to the
+'inputPath' and 'outputPath', respectively. The files starting with {\tt ../../Input/} then point to files in the global
+Example input directory {\tt Example/Input/*}, whereas files such as {\tt portfolio.xml} are local inputs in {\tt 
+Example/Example\_\#/Input/}. 
+
+Parameter {\tt logMask} determines the verbosity of log file output. Log messages are 
+internally labelled as Alert, Critical, Error, Warning, Notice, Debug, associated with logMask values 1, 2, 4, 8, ..., 64. 
+The logMask allows filtering subsets of these categories and controlling the verbosity of log file output\footnote{by bitwise comparison of the the external logMask value with each message's log level}. LogMask 255 ensures maximum verbosity. \\
+
+When ORE starts, it will initialise today's market, i.e. load market data, fixings and dividends, and build all term
+structures as specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the trades in {\tt portfolio.xml} and link
+them with pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt implyTodaysFixings} is set to Y,
+today's fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as
+e.g. in scenario analysis and stress testing. The curveConfigFile {\tt curveconfig.xml}, the conventionsFile {\tt
+  conventions.xml}, the referenceDataFile {\tt referencedata.xml}, the iborFallbackConfig, the marketDataFile and the
+fixingDataFile are explained in the sections below.
+
+\medskip Parameter {\tt calendarAdjustment} includes the {\tt calendarAdjustment.xml} which lists out additional holidays and
+business days to be added to specified calendars.
+
+\medskip The optional parameter {\tt currencyConfiguration} points to a configuration file that contains additional currencies
+to be added to ORE's setup, see {\tt Examples/Input/currencies.xml} for a full list of ISO currencies and a few unofficial currency
+codes that can thus be made available in ORE. Note that the external configuration does not override any currencies that are
+hard-coded in the QuantLib/QuantExt libraries, only currencies not present already are added from the external configuration file.
+
+\medskip The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
+{\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users
+familiar with the QuantLib design - the parameter controls to which extent {\em QuantLib observer notifications} are
+used when market and fixing data is updated and the evaluation date is shifted:
+\begin{itemize}
+\item The 'Unregister' option limits the amount of notifications by unregistering floating rate coupons from indices;
+\item Option 'Defer' disables all notifications during market data and fixing updates with
+{\tt ObservableSettings::instance().disableUpdates(true)}
+and kicks off updates afterwards when enabled again
+\item The 'Disable' option goes one step further and disables all notifications during market data and fixing updates,
+  and in particular when the evaluation date is changed along a path, with \\
+  {\tt ObservableSettings::instance().disableUpdates(false)} \\
+  Updates are not deferred here. Required term structure and instrument recalculations are triggered explicitly.
+\end{itemize}
+%\todo[inline]{Expand the technical description of observationModel}
+
+\medskip If the parameter {\tt lazyMarketBuilding} is set to true, the build of the curves in the TodaysMarket is
+delayed until they are actually requested. This can speed up the processing when some curves configured in TodaysMarket
+are not used. If not given, the parameter defaults to {\tt true}.
+
+\medskip If the parameter {\tt continueOnError} is set to true, the application will not exit on an error, but try to
+continue the processing. If not given, the parameter defaults to {\tt false}.
+
+\medskip If the parameter {\tt buildFailedTrades} is set to true, the application will build a dummy trade if loading or
+building the original trade fails. The dummy trade has trade type ``Failed'', zero notional and NPV.
+If not given, the parameter defaults to {\tt false}.
+
+\subsubsection{Markets}\label{sec:master_input_markets}
+
+The {\tt Markets} section (see listing \ref{lst:ore_markets}) is used to choose market configurations for calibrating
+the IR, FX and EQ simulation model components, pricing and simulation, respectively. These configurations have to be 
+defined
+in {\tt todaysmarket.xml} (see section \ref{sec:market}).
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Markets>
+  <Parameter name="lgmcalibration">collateral_inccy</Parameter>
+  <Parameter name="fxcalibration">collateral_eur</Parameter>
+  <Parameter name="eqcalibration">collateral_inccy</Parameter>
+  <Parameter name="pricing">collateral_eur</Parameter>
+  <Parameter name="simulation">collateral_eur</Parameter>
+</Markets>
+\end{minted}
+%\hrule
+\caption{ORE markets}
+\label{lst:ore_markets}
+\end{listing}
+
+For example, the calibration of the simulation model's interest rate components requires local OIS discounting whereas
+the simulation phase requires cross currency adjusted discount curves to get FX product pricing right. So far, the
+market configurations are used only to distinguish discount curve sets, but the market configuration concept in ORE
+applies to all term structure types.
+
+\subsubsection{Analytics}\label{sec:analytics}
+
+The {\tt Analytics} section lists all permissible analytics using tags {\tt <Analytic type="..."> ... </Analytic>} where
+type can be (so far) in
+\begin{itemize}
+\item npv
+\item cashflow
+\item additionalResults
+\item todaysMarketCalibration
+\item curves
+\item simulation
+\item xva
+\item sensitivity
+\item stress
+\end{itemize}
+
+Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter
+  name="key">value</Parameter>}. Each analysis must have one key {\tt active} set to Y or N to activate/deactivate this
+analysis.  The following listing \ref{lst:ore_analytics} shows the parametrisation of the first four basic analytics in
+the list above.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>    
+  <Analytic type="npv">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="baseCurrency">EUR</Parameter>
+    <Parameter name="outputFileName">npv.csv</Parameter>
+  </Analytic>      
+  <Analytic type="cashflow">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="outputFileName">flows.csv</Parameter>
+  </Analytic>      
+  <Analytic type="curves">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="configuration">default</Parameter>
+    <Parameter name="grid">240,1M</Parameter>
+    <Parameter name="outputFileName">curves.csv</Parameter>
+  </Analytic>
+  <Analytic type="additionalResults">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="outputFileName">additional_results.csv</Parameter>
+  </Analytic> 
+  <Analytic type="todaysMarketCalibration">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="outputFileName">todaysmarketcalibration.csv</Parameter>
+  </Analytic>
+  <Analytic type="...">
+    <!-- ... -->
+  </Analytic>      
+</Analytics>      
+\end{minted}
+\caption{ORE analytics: npv, cashflow, curves, additional results, todays market calibration}
+\label{lst:ore_analytics}
+\end{listing}
+
+The cashflow analytic writes a report containing all future cashflows of the portfolio. Table \ref{cashflowreport} shows
+a typical output for a vanilla swap.
+
+\begin{table}[hbt]
+\scriptsize
+\begin{center}
+  \begin{tabular}{l|l|l|l|r|l|r|r|l|r|r}
+\hline
+\#ID & Type & LegNo & PayDate & Amount & Currency & Coupon & Accrual & fixingDate & fixingValue & Notional \\
+\hline
+\hline
+tr123 & Swap & 0 & 13/03/17 & -111273.76 & EUR & -0.00201 & 0.50556 & 08/09/16 & -0.00201 & 100000000.00 \\
+tr123 & Swap & 0 & 12/09/17 & -120931.71 & EUR & -0.002379 & 0.50833 & 09/03/17 & -0.002381 & 100000000.00 \\
+\ldots
+\end{tabular}
+\caption{Cashflow Report}
+\label{cashflowreport}
+\end{center}
+\end{table}
+
+The amount column contains the projected amount including embedded caps and floors and convexity (if applicable), the
+coupon column displays the corresponding rate estimation. The fixing value on the other hand is the plain fixing
+projection as given by the forward value, i.e. without embedded caps and floors or convexity.
+
+Note that the fixing value might deviate from the coupon value even for a vanilla coupon, if the QuantLib library was
+compiled {\em without} the flag \verb+QL_USE_INDEXED_COUPON+ (which is the default case). In this case the coupon value
+uses a par approximation for the forward rate assuming the index estimation period to be identical to the accrual
+period, while the fixing value is the actual forward rate for the index estimation period, i.e. whenever the index estimation
+period differs from the accrual period the values will be slightly different.
+
+The Notional column contains the underlying notional used to compute the amount of each coupon. It contains \verb+#NA+
+if a payment is not a coupon payment.
+
+The curves analytic exports all yield curves that have been built according to the specification in {\tt
+  todaysmarket.xml}. Key {\tt configuration} selects the curve set to be used (see explanation in the previous Markets
+section).  Key {\tt grid} defines the time grid on which the yield curves are evaluated, in the example above a grid of
+240 monthly time steps from today. The discount factors for all curves with configuration default will be exported on
+this monthly grid into the csv file specified by key {\tt outputFileName}. The grid can also be specified explicitly by
+a comma separated list of tenor points such as {\tt 1W, 1M, 2M, 3M, \dots}.
+
+The additionalResults analytic writes a report containing any additional results generated for the portfolio. The results are pricing engine specific but Table \ref{additionalreport} shows the output for a vanilla swaption.
+
+\begin{table}[hbt]
+\scriptsize
+\begin{center}
+  \begin{tabular}{l|l|l|l}
+\hline
+\#TradeId & ResultId & ResultType & ResultValue \\
+example\_swaption & annuity & double & 2123720984 \\
+example\_swaption & atmForward & double & 0.01664135 \\
+example\_swaption & spreadCorrection & double & 0 \\
+example\_swaption & stdDev & double & 0.00546015 \\
+example\_swaption & strike & double & 0.024 \\
+example\_swaption & swapLength & double & 4 \\
+example\_swaption & vega & double & 309237709.5 \\
+\hline
+\hline
+\ldots
+\end{tabular}
+\caption{AdditionalResults Report}
+\label{additionalreport}
+\end{center}
+\end{table}
+
+The todaysMarketCalibration analytic writes a report containing information on the build of the t0 market.
+
+\medskip The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulation which evolves the market as
+specified in the simulation config file. The primary result is an NPV cube file, i.e. valuations of all trades in the
+portfolio file (see section Setup), for all future points in time on the simulation grid and for all paths. Apart from
+the NPV cube, additional scenario data (such as simulated overnight rates etc) are stored in this process which are
+needed for subsequent XVA analytics.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+  <Analytic type="simulation">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+    <Parameter name="baseCurrency">EUR</Parameter>
+    <Parameter name="storeFlows">Y</Parameter>
+    <Parameter name="storeSurvivalProbabilities">Y</Parameter>
+    <Parameter name="cubeFile">cube_A.dat</Parameter>
+    <Parameter name="nettingSetCubeFile">nettingSetCube_A.dat</Parameter>
+    <Parameter name="cptyCubeFile">cptyCube_A.dat</Parameter>
+    <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
+    <Parameter name="aggregationScenarioDump">scenariodump.csv</Parameter>
+  </Analytic>
+</Analytics>      
+\end{minted}
+\caption{ORE analytic: simulation}
+\label{lst:ore_simulation}
+\end{listing}
+
+The pricing engines file specifies how trades are priced under future scenarios which can differ from pricing as of
+today (specified in section Setup).  Key base currency determines into which currency all NPVs will be converted. Key
+store scenarios (Y or N) determines whether the market scenarios are written to a file for later reuse. Key
+`store flows' (Y or N) controls whether cumulative cash flows between simulation dates are stored in the (hyper-)
+cube for post processing in the context of Dynamic Initial Margin and Variation Margin calculations. And finally, the
+key `store survival probabilities' (Y or N) controls whether survival probabilities on simulation dates are stored in the
+cube for post processing in the context of Dynamic Credit XVA calculation. The additional
+scenario data (written to the specified file here) is likewise required in the post processor step. These data comprise
+simulated index fixing e.g. for collateral compounding and simulated FX rates for cash collateral conversion into base
+currency. The scenario dump file, if specified here, causes ORE to write simulated market data to a human-readable csv
+file. Only those currencies or indices are written here that are stated in the AggregationScenarioDataCurrencies and 
+AggregationScenarioDataIndices subsections of the simulation files market section, see also section
+\ref{sec:sim_market}.
+ 
+\medskip The XVA analytic section offers CVA, DVA, FVA and COLVA calculations which can be selected/deselected here
+individually. All XVA calculations depend on a previously generated NPV cube (see above) which is referenced here via
+the {\tt cubeFile} parameter. This means one can re-run the XVA analytics without regenerating the cube each time. The
+XVA reports depend in particular on the settings in the {\tt csaFile} which determines CSA details such as margining
+frequency, collateral thresholds, minimum transfer amounts, margin period of risk. By splitting the processing into
+pre-processing (cube generation) and post-processing (aggregation and XVA analysis) it is possible to vary these CSA
+details and analyse their impact on XVAs quickly without re-generating the NPV cube.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+  <Analytic type="xva">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="csaFile">netting.xml</Parameter>
+    <Parameter name="cubeFile">cube.dat</Parameter>
+    <Parameter name="hyperCube">Y</Parameter>
+    <Parameter name="scenarioFile">scenariodata.dat</Parameter>
+    <Parameter name="baseCurrency">EUR</Parameter>
+    <Parameter name="exposureProfiles">Y</Parameter>
+    <Parameter name="exposureProfilesByTrade">Y</Parameter>
+    <Parameter name="quantile">0.95</Parameter>
+    <Parameter name="calculationType">Symmetric</Parameter>      
+    <Parameter name="allocationMethod">None</Parameter>    
+    <Parameter name="marginalAllocationLimit">1.0</Parameter>
+    <Parameter name="exerciseNextBreak">N</Parameter>
+    <Parameter name="cva">Y</Parameter>
+    <Parameter name="dva">N</Parameter>
+    <Parameter name="dvaName">BANK</Parameter>
+    <Parameter name="fva">N</Parameter>
+    <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
+    <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
+    <Parameter name="colva">Y</Parameter>
+    <Parameter name="collateralFloor">Y</Parameter>
+    <Parameter name="dynamicCredit">N</Parameter>
+    <Parameter name="kva">Y</Parameter>
+    <Parameter name="kvaCapitalDiscountRate">0.10</Parameter>
+    <Parameter name="kvaAlpha">1.4</Parameter>
+    <Parameter name="kvaRegAdjustment">12.5</Parameter>
+    <Parameter name="kvaCapitalHurdle">0.012</Parameter>
+    <Parameter name="kvaOurPdFloor">0.03</Parameter>
+    <Parameter name="kvaTheirPdFloor">0.03</Parameter>
+    <Parameter name="kvaOurCvaRiskWeight">0.005</Parameter>
+    <Parameter name="kvaTheirCvaRiskWeight">0.05</Parameter>
+    <Parameter name="dim">Y</Parameter>
+    <Parameter name="mva">Y</Parameter>
+    <Parameter name="dimQuantile">0.99</Parameter>
+    <Parameter name="dimHorizonCalendarDays">14</Parameter>
+    <Parameter name="dimRegressionOrder">1</Parameter>
+    <Parameter name="dimRegressors">EUR-EURIBOR-3M,USD-LIBOR-3M,USD</Parameter>
+    <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
+    <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
+    <Parameter name="dimScaling">1.0</Parameter>
+    <Parameter name="dimEvolutionFile">dim_evolution.txt</Parameter>
+    <Parameter name="dimRegressionFiles">dim_regression.txt</Parameter>
+    <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>      
+    <Parameter name="dimOutputGridPoints">0</Parameter>
+    <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
+    <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+    <Parameter name="fullInitialCollateralisation">true</Parameter>
+    <Parameter name="flipViewXVA">N</Parameter>
+    <Parameter name="flipViewBorrowingCurvePostfix">_BORROW</Parameter>
+    <Parameter name="flipViewLendingCurvePostfix">_LEND</Parameter>
+  </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: xva}
+\label{lst:ore_xva}
+\end{listing}
+
+Parameters:
+\begin{itemize}
+\item {\tt csaFile:} Netting set definitions file covering CSA details such as margining frequency, thresholds, minimum
+transfer amounts, margin period of risk
+\item {\tt cubeFile:} NPV cube file previously generated and to be post-processed here
+\item {\tt hyperCube:} If set to N, the cube file is expected to have depth 1 (storing NPV data only), if set to Y it is
+expected to have depth $>$ 1 (e.g. storing NPVs and cumulative flows)
+\item {\tt scenarioFile:} Scenario data previously generated and used in the post-processor (simulated index fixings and
+FX rates)
+\item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures
+\item {\tt exposureProfiles:} Flag to enable/disable exposure output for each netting set
+\item {\tt exposureProfilesByTrade:} Flag to enable/disable stand-alone exposure output for each trade
+\item {\tt quantile} Confidence level for Potential Future Exposure (PFE) reporting
+\item {\tt calculationType} Determines the settlement of margin calls, choices are: \\
+	\begin{itemize}
+	\item {\em Symmetric} - margin for both counterparties settled after the margin period of risk; 
+	\item {\em AsymmetricCVA} - margin requested from the counterparty settles with delay,
+	margin requested from us settles immediately; 
+	\item {\em AsymmetricDVA} - vice versa 
+	\item {\em NoLag} - used to disable any delayed settlement of the margin; this option is applied in combination with a ``close-out'' grid, see section \ref{sec:simulation}. 
+	\end{itemize}
+	\todo[inline]{Move calculationType into the {\tt csaFile}?}
+\item {\tt allocationMethod:} XVA allocation method, choices are {\em None, Marginal, RelativeXVA, RelativeFairValueGross, RelativeFairValueNet}
+\item {\tt marginalAllocationLimit:} The marginal allocation method a la Pykhtin/Rosen breaks down when the netting set
+value vanishes while the exposure does not. This parameter acts as a cutoff for the marginal allocation when the
+absolute netting set value falls below this limit and switches to equal distribution of the exposure in this case.
+\item {\tt exerciseNextBreak:} Flag to terminate all trades at their next break date before aggregation and the
+subsequent analytics
+\item {\tt cva, dva, fva, colva, collateralFloor, dim, mva:} Flags to enable/disable these analytics. \todo[inline]{Add
+collateral rates floor to the collateral model file (netting.xml)}
+\item {\tt dvaName:} Credit name to look up the own default probability curve and recovery rate for DVA calculation
+\item {\tt fvaBorrowingCurve:} Identifier of the borrowing yield curve
+\item {\tt fvaLendingCurve:} Identifier of the lending yield curve
+%\item {\tt collateralSpread:} Deviation between collateral rate and overnight rate, expressed in absolute terms (one
+%basis point is 0.0001) assuming the day count convention of the
+%collateral rate. 
+%basis point is 0.0001) assuming the day count convention of the collateral rate.
+\item {\tt dynamicCredit:} Flag to enable using pathwise survival probabilities when calculating CVA, DVA, FVA and MVA increments from exposures. If set to N the survival probabilities are extracted from T0 curves.
+\item {\tt kva:} Flag to enable setting the kva ccr parameters.
+\item {\tt kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight:} the kva CCR parameters (see \ref{sec:app_kva} and \ref{sec:app_kva_cva}.
+\item {\tt dimQuantile:} Quantile for Dynamic Initial Margin (DIM) calculation
+\item {\tt dimHorizonCalendarDays:} Horizon for DIM calculation, 14 calendar days for 2 weeks, etc.
+\item {\tt dimRegressionOrder:} Order of the regression polynomial (netting set clean NPV move over the simulation
+period versus netting set NPV at period start)
+\item {\tt dimRegressors:} Variables used as regressors in a single- or multi-dimensional regression; these variable
+  names need to match entries in the {\tt simulation.xml}'s AggregationScenarioDataCurrencies and
+  AggregationScenarioDataIndices sections (only these scenario data are passed on to the post processor); if the list is
+  empty, the NPV will be used as a single regressor
+\item {\tt dimLocalRegressionEvaluations:} Nadaraya-Watson local regression evaluated at the given number of points to
+validate polynomial regression. Note that Nadaraya-Watson needs a large number of samples for meaningful
+results. Evaluating the local regression at many points (samples) has a significant performance impact, hence the option
+here to limit the number of evaluations.
+\item {\tt dimLocalRegressionBandwidth:} Nadaraya-Watson local regression bandwidth in standard deviations of the
+independent variable (NPV)
+\item {\tt dimScaling:} Scaling factor applied to all DIM values used, e.g. to reconcile simulated DIM with actual IM at
+$t_0$
+\item {\tt dimEvolutionFile:} Output file name to store the evolution of zero order DIM and average of nth order DIM
+through time
+\item {\tt dimRegressionFiles:} Output file name(s) for a DIM regression snapshot, comma separated list
+\item {\tt dimOutputNettingSet:} Netting set for the DIM regression snapshot
+\item {\tt dimOutputGridPoints:} Grid point(s) (in time) for the DIM regression snapshot, comma separated list
+\item {\tt rawCubeOutputFile:} File name for the trade NPV cube in human readable csv file format (per trade, date,
+sample), leave empty to skip generation of this file.
+\item {\tt netCubeOutputFile:} File name for the aggregated NPV cube in human readable csv file format (per netting set,
+date, sample) {\em after} taking collateral into account. Leave empty to skip generation of this file.
+\item {\tt fullInitialCollateralisation:} If set to {\tt true}, then for every netting set, the collateral balance at $t=0$ will be set to the NPV of the setting set. The resulting effect is that EPE, ENE and PFE are all zero at $t=0$. If set to {\tt false} (default value), then the collateral balance at $t=0$ will be set to zero.
+\item {\tt flipViewXVA:} If set to {\tt Y}, the perspective in XVA calculations is switched to the cpty view, the npvs and the netting sets being reverted during calculation. In order to get the lending/borrowing curve, the calculation assumes these curves being set up with the cptyname + the postfix given in the next two settings.
+\item {\tt flipViewBorrowingCurvePostfix:} postfix for the borrowing curve, the calculation assumes this is curves being set up with cptyname + postfix given.
+\item {\tt flipViewLendingCurvePostfix:} postfix for the lending curve, the calculation assumes this is curve being set up with cptyname + postfix given.
+\end{itemize}
+
+The two cube file outputs {\tt rawCubeOutputFile} and {\tt netCubeOutputFile} are provided for interactive analysis and visualisation purposes, see section
+\ref{sec:visualisation}.
+
+\medskip The {\tt sensitivity} and {\tt stress} 'analytics' provide computation of bump and revalue (zero rate
+resp. optionlet) sensitivities and NPV changes under user defined stress scenarios. Listing \ref{lst:ore_sensitivity}
+shows a typical configuration for sensitivity calculation.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+ <Analytic type="sensitivity">
+   <Parameter name="active">Y</Parameter>
+   <Parameter name="marketConfigFile">simulation.xml</Parameter>
+   <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+   <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
+   <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
+   <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
+   <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
+   <Parameter name="recalibrateModels">Y</Parameter>
+ </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: sensitivity}
+\label{lst:ore_sensitivity}
+\end{listing}
+%   <Parameter name="parRateSensitivityOutputFile">parsensi.csv</Parameter>
+
+The parameters have the following interpretation:
+
+\begin{itemize}
+\item {\tt marketConfigFile:} Configuration file defining the simulation market under which sensitivities are computed,
+  see \ref{sec:simulation}. Only a subset of the specification is needed (the one given under {\tt Market}, see
+  \ref{sec:sim_market} for a detailed description).
+\item {\tt sensitivityConfigFile:} Configuration file  for the sensitivity calculation, see section \ref{sec:sensitivity}.
+\item {\tt pricingEnginesFile:} Configuration file for the pricing engines to be used for sensitivity calculation.
+\item {\tt scenarioOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
+  NPV, the scenario NPV and their difference.
+\item {\tt sensitivityOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
+  NPV, the shift size together with the risk-factor and the resulting first and (pure) second order finite differences.
+  Also included is a second set of shift sizes together with the risk-factor with a (mixed) second order finite difference associated to a cross gamma calculation
+%\item {\tt parRateSensitivityOutputFile:} File containing par sensitivities (only available in ORE+)
+\item {\tt outputSensitivityThreshold:} Only finite differences with absolute value greater than this number are written
+  to the output files.
+\item {\tt recalibrateModels:} If set to Y, then recalibrate pricing models after each shift of relevant term structures; otherwise do not recalibrate
+\end{itemize}
+
+The stress analytics configuration is similar to the one of the sensitivity calculation. Listing \ref{lst:ore_stress}
+shows an example.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+ <Analytic type="stress">
+   <Parameter name="active">Y</Parameter>
+   <Parameter name="marketConfigFile">simulation.xml</Parameter>
+   <Parameter name="stressConfigFile">stresstest.xml</Parameter>
+   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+   <Parameter name="scenarioOutputFile">stresstest.csv</Parameter>
+   <Parameter name="outputThreshold">0.000001</Parameter>
+ </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: stress}
+\label{lst:ore_stress}
+\end{listing}
+
+The parameters have the same interpretation as for the sensitivity analytic. The configuration file for the stress
+scenarios is described in more detail in section \ref{sec:stress}.
+
+\medskip The {\tt VaR} 'analytics' provide computation of Value-at-Risk measures based on the sensitivity (delta, gamma, cross gamma) data above. Listing \ref{lst:ore_var} shows a configuration example.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+    <Analytic type="parametricVar"> 
+      <Parameter name="active">Y</Parameter> 
+      <Parameter name="portfolioFilter">PF1|PF2</Parameter>
+      <Parameter name="sensitivityInputFile">
+         ../Output/sensitivity.csv,../Output/crossgamma.csv
+      </Parameter> 
+      <Parameter name="covarianceInputFile">covariance.csv</Parameter> 
+      <Parameter name="salvageCovarianceMatrix">N</Parameter>
+      <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter> 
+      <Parameter name="breakdown">Y</Parameter> 
+      <!-- Delta, DeltaGammaNormal, MonteCarlo --> 
+      <Parameter name="method">DeltaGammaNormal</Parameter> 
+      <Parameter name="mcSamples">100000</Parameter> 
+      <Parameter name="mcSeed">42</Parameter> 
+      <Parameter name="outputFile">var.csv</Parameter> 
+    </Analytic> </Analytics>
+\end{minted}
+\caption{ORE analytic: VaR}
+\label{lst:ore_var}
+\end{listing}
+
+The parameters have the following interpretation:
+
+\begin{itemize}
+\item {\t portfolioFilter:} Regular expression used to filter the portfolio for which VaR is computed; if the filter is not provided, then the full portfolio is processed
+\item {\tt sensitivityInputFile:} Reference to the sensitivity (deltas, vegas, gammas) and cross gamma input as generated by ORE in a comma separated list
+\item {\tt covarianceFile:} Reference to the covariances input data; these are currently not calculated in ORE and need to be provided externally, in a blank/tab/comma separated file with three columns (factor1, factor2, covariance), where factor1 and factor2 follow the naming convention used in ORE's sensitivity and cross gamma output files. Covariances need to be consistent with the sensitivity data provided. For example, if sensitivity to factor1 is computed by absolute shifts and expressed in basis points, then the covariances with factor1 need to be based on absolute basis point shifts of factor1; if sensitivity is due to a relative factor1 shift of 1\%, then covariances with factor1 need to be based on relative shifts expressed in percentages to, etc. Also note that covariances are expected to include the desired holding period, i.e. no scaling with square root of time etc is performed in ORE; 
+\item {\tt salvageCovarianceMatrix:} If set to Y, turn the input covariance matrix into a valid (positive definite) matrix applying a Salvaging algorithm; if set to N, throw an exception if the matrix is not positive definite
+\item {\tt quantiles:} Several desired quantiles can be specified here in a comma separated list; these lead to several columns of results in the output file, see below. Note that e.g. the 1\% quantile corresponds to the lower tail of the P\&L distribution (VaR), 99\% to the upper tail.
+\item {\tt breakdown:} If yes, VaR is computed by portfolio, risk class (All, Interest Rate, FX, Inflation, Equity, Credit) and risk type (All, Delta \& Gamma, Vega)
+\item {\tt method:} Choices are {\em Delta, DeltaGammaNormal, MonteCarlo}, see appendix \ref{sec:app_var}
+\item {\tt mcSamples:} Number of Monte Carlo samples used when the {\em MonteCarlo} method is chosen 
+\item {\tt mcSeed:} Random number generator seed when the {\em MonteCarlo} method is chosen
+\item {\tt outputFile:} Output file name
+\end{itemize}
