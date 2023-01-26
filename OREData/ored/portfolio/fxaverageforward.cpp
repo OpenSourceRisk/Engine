@@ -72,6 +72,12 @@ void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     notionalCurrency_ = settlementCurrency_;
     maturity_ = payDate;
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Foreign Exchange";
+    additionalData_["isdaBaseProduct"] = "Forward";
+    additionalData_["isdaSubProduct"] = "";
+    additionalData_["isdaTransaction"] = "";  
+
     LOG("FxAverageForward::build() done");
 }
 

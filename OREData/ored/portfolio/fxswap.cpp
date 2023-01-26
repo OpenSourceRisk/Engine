@@ -101,6 +101,12 @@ void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["nearSoldAmount"] = nearSoldAmount_;
     additionalData_["nearBoughtAmount"] = nearBoughtAmount_;
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Foreign Exchange";
+    additionalData_["isdaBaseProduct"] = settlement_ == "Cash" ? "NDF" : "Forward";
+    additionalData_["isdaSubProduct"] = "";  
+    additionalData_["isdaTransaction"] = "";  
+
     DLOG("FxSwap leg 0: " << nearDate_ << " " << legs_[0][0]->amount());
     DLOG("FxSwap leg 1: " << nearDate_ << " " << legs_[1][0]->amount());
     DLOG("FxSwap leg 2: " << farDate_ << " " << legs_[2][0]->amount());

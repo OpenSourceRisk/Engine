@@ -223,6 +223,12 @@ void FxOptionWithBarrier::build(const boost::shared_ptr<ore::data::EngineFactory
     additionalData_["boughtCurrency"] = boughtCurrency_;
     additionalData_["soldAmount"] = soldAmount_;
     additionalData_["soldCurrency"] = soldCurrency_;
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Foreign Exchange";
+    additionalData_["isdaBaseProduct"] = "Simple Exotic";
+    additionalData_["isdaSubProduct"] = "Barrier";    
+    additionalData_["isdaTransaction"] = "";  
 }
 
 void FxOptionWithBarrier::additionalFromXml(XMLNode* node) {
@@ -262,6 +268,11 @@ void EquityOptionWithBarrier::build(const boost::shared_ptr<ore::data::EngineFac
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = tradeStrike_.value();
     additionalData_["strikeCurrency"] = tradeStrike_.currency();
+
+    additionalData_["isdaAssetClass"] = "Equity";
+    additionalData_["isdaBaseProduct"] = "Option";
+    additionalData_["isdaSubProduct"] = "Price Return Basic Performance";  
+    additionalData_["isdaTransaction"] = "";  
 }
 
 void EquityOptionWithBarrier::additionalFromXml(XMLNode* node) {

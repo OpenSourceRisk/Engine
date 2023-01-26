@@ -167,6 +167,13 @@ void EquityEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& 
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = strike_.value();
     additionalData_["strikeCurrency"] = strike_.currency();
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Equity";
+    additionalData_["isdaBaseProduct"] = "Other";
+    additionalData_["isdaSubProduct"] = "Price Return Basic Performance";
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = "";  
 }
 
 void EquityEuropeanBarrierOption::fromXML(XMLNode* node) {

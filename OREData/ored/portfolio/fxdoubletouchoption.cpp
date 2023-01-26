@@ -177,6 +177,12 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Foreign Exchange";
+    additionalData_["isdaBaseProduct"] = "Simple Exotic";
+    additionalData_["isdaSubProduct"] = "Barrier";  
+    additionalData_["isdaTransaction"] = "";  
 }
 
 bool FxDoubleTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {

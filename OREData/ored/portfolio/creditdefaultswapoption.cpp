@@ -94,6 +94,13 @@ void CreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>& engi
         buildNoDefault(engineFactory);
     }
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Credit";
+    additionalData_["isdaBaseProduct"] = "Swaptions";
+    // Deferring the mapping creditCurveId to Corporate, Muni, Sovereign
+    additionalData_["isdaSubProduct"] = swap_.creditCurveId(); 
+    // Skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = "";  
 }
 
 const OptionData& CreditDefaultSwapOption::option() const {

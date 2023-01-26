@@ -93,6 +93,26 @@ void CliquetOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
     additionalData_["notional"] = cliquetNotional_;
     additionalData_["currency"] = currency_;
+
+    // ISDA taxonomy
+    if (underlying_->type() == "EQ") {
+        additionalData_["isdaAssetClass"] = "Equity";
+        additionalData_["isdaBaseProduct"] = "Other";
+        additionalData_["isdaSubProduct"] = "Price Return Basic Performance";  
+    } 
+    else if (underlying_->type() == "COM") {
+        // assuming that Commoditiy is treated like Equity
+        additionalData_["isdaAssetClass"] = "Commodity";
+        additionalData_["isdaBaseProduct"] = "Other";
+        additionalData_["isdaSubProduct"] = "Price Return Basic Performance";  
+    }
+    else if (underlying_->type() == "FX") {
+        additionalData_["isdaAssetClass"] = "Foreign Exchange";
+        additionalData_["isdaBaseProduct"] = "Complex Exotic";
+        additionalData_["isdaSubProduct"] = "Generic";  
+    }
+    
+    additionalData_["isdaTransaction"] = "";  
 }
 
 void CliquetOption::fromXML(XMLNode* node) {

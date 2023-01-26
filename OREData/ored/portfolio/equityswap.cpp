@@ -117,6 +117,13 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // just underlying security, notionals and currencies are covered by the Swap class already
     additionalData_["underlyingSecurityId"] = eqLegData->eqName();
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Equity";
+    additionalData_["isdaBaseProduct"] = "Swap";
+    additionalData_["isdaSubProduct"] = "Price Return Basic Performance";
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = "";  
 }
 
 QuantLib::Real EquitySwap::notional() const {

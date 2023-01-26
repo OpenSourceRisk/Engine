@@ -77,6 +77,35 @@ void VarSwap::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFac
     for (Date d = cal_.advance(start_, -1 * Days); d <= endDate; d = cal_.advance(d, 1 * Days)) {
         requiredFixings_.addFixingDate(d, indexName_, varSwap->maturityDate());
     }
+
+    // ISDA taxonomy
+    if (assetClassUnderlying_ == AssetClass::FX) {
+        additionalData_["isdaAssetClass"] = "Foreign Exchange";
+        additionalData_["isdaBaseProduct"] = "Simple Exotic";
+        additionalData_["isdaSubProduct"] = "Vol/Var";
+    }
+    else if (assetClassUnderlying_ == AssetClass::EQ) {
+        additionalData_["isdaAssetClass"] = "Equity";
+        additionalData_["isdaBaseProduct"] = "Swap";
+        MomentType momentType = parseMomentType(momentType_);
+        if (momentType == MomentType::Variance)
+            additionalData_["isdaSubProduct"] = "Parameter Return Variance";
+        else
+            additionalData_["isdaSubProduct"] = "Parameter Return Volatility";
+    }
+    else if (assetClassUnderlying_ == AssetClass::COM) {
+        // guessing, that we should treat Commodities as Equities
+        additionalData_["isdaAssetClass"] = "Commodity";
+        additionalData_["isdaBaseProduct"] = "Swap";
+        MomentType momentType = parseMomentType(momentType_);
+        if (momentType == MomentType::Variance)
+            additionalData_["isdaSubProduct"] = "Parameter Return Variance";
+        else
+            additionalData_["isdaSubProduct"] = "Parameter Return Volatility";
+    }
+    
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = "";  
 }
 
 QuantLib::Real VarSwap::notional() const {

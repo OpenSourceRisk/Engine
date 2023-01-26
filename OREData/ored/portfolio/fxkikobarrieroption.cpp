@@ -273,6 +273,12 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     additionalData_["boughtCurrency"] = boughtCurrency_;
     additionalData_["soldAmount"] = soldAmount_;
     additionalData_["soldCurrency"] = soldCurrency_;
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Foreign Exchange";
+    additionalData_["isdaBaseProduct"] = "Simple Exotic";
+    additionalData_["isdaSubProduct"] = "Barrier";  
+    additionalData_["isdaTransaction"] = "";  
 }
 
 bool FxKIKOBarrierOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {

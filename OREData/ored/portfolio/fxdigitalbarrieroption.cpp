@@ -168,6 +168,12 @@ void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engin
     additionalData_["payoffCurrency"] = payoffCurrency_;
     additionalData_["effectiveForeignCurrency"] = boughtCcy.code();
     additionalData_["effectiveDomesticCurrency"] = soldCcy.code();
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Foreign Exchange";
+    additionalData_["isdaBaseProduct"] = "Simple Exotic";
+    additionalData_["isdaSubProduct"] = "Digital";  
+    additionalData_["isdaTransaction"] = "";  
 }
 
 bool checkBarrier(Real spot, Barrier::Type type, Real barrier) {

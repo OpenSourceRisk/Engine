@@ -211,6 +211,15 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
         additionalData_["startDate"] = to_string(schedule.dates().front());
 
     sensitivityDecomposition_ = cdsBuilder->sensitivityDecomposition();
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Credit";
+    additionalData_["isdaBaseProduct"] = "Index";
+    // Deferring the mapping of creditCurveId to CDX, LCDX, MCDX, iTraxx, ABX, CMBX, IOS, MBX, PO, PrimeX, TRX, SP
+    additionalData_["isdaSubProduct"] = swap_.creditCurveId(); 
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = "";  
+
 }
 
 const std::map<std::string, boost::any>& IndexCreditDefaultSwap::additionalData() const {
