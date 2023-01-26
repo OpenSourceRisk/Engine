@@ -2484,17 +2484,10 @@ boost::shared_ptr<Convention> Conventions::getFxConvention(const string& ccy1, c
     for (auto c : data_) {
         auto fxCon = boost::dynamic_pointer_cast<FXConvention>(c.second);
         if (fxCon) {
-            vector<string> tokens;
-            split(tokens, fxCon->id(), boost::is_any_of("-"));
-
-            // We only want conventions names FX-CCY1-CCY2 or CCY1-CCY2-FX, this avoids picking up conventions
-            // specific sources e.g. FX-BOE-CCY1-CCY2
-            if (tokens.size() == 2 || (tokens.size() == 3 && (tokens.at(0) == "FX" || tokens.at(2) == "FX"))) {
-                string source = fxCon->sourceCurrency().code();
-                string target = fxCon->targetCurrency().code();
-                if ((source == ccy1 && target == ccy2) || (target == ccy1 && source == ccy2))
-                    return fxCon;
-            }
+            string source = fxCon->sourceCurrency().code();
+            string target = fxCon->targetCurrency().code();
+            if ((source == ccy1 && target == ccy2) || (target == ccy1 && source == ccy2))
+                return fxCon;
         }
     }
     QL_FAIL("Cannot find FX conventions for ccys " << ccy1 << " and " << ccy2);
