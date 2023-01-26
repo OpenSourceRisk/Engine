@@ -165,6 +165,12 @@ void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Equity";
+    additionalData_["isdaBaseProduct"] = "Other";
+    additionalData_["isdaSubProduct"] = "Price Return Basic Performance";  
+    additionalData_["isdaTransaction"] = "";  
 }
 
 bool EquityTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {

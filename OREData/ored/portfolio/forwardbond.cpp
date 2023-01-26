@@ -152,6 +152,12 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondData_.bondNotional();
     additionalData_["originalNotional"] = originalNotional(bond->cashflows()) * bondData_.bondNotional();
     additionalData_["currency"] = currency_;
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Interest Rate";
+    additionalData_["isdaBaseProduct"] = "Forward";
+    additionalData_["isdaSubProduct"] = "Debt";  
+    additionalData_["isdaTransaction"] = "";  
 }
 
 void ForwardBond::fromXML(XMLNode* node) {

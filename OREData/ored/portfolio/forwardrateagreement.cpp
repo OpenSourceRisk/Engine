@@ -53,6 +53,12 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
         requiredFixings_.addFixingDates(fallback->onCoupon(fra->fixingDate())->fixingDates(),
                                         engineFactory->iborFallbackConfig().fallbackData(index_).rfrIndex);
     }
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Interest Rate";
+    additionalData_["isdaBaseProduct"] = "FRA";
+    additionalData_["isdaSubProduct"] = "";
+    additionalData_["isdaTransaction"] = "";  
 }
 
 void ForwardRateAgreement::fromXML(XMLNode* node) {

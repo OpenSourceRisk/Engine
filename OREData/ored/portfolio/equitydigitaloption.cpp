@@ -90,6 +90,13 @@ void EquityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Equity";
+    additionalData_["isdaBaseProduct"] = "Option";
+    additionalData_["isdaSubProduct"] = "Price Return Basic Performance";
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = "";  
 }
 
 void EquityDigitalOption::fromXML(XMLNode* node) {

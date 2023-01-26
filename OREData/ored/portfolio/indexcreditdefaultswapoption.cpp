@@ -330,6 +330,14 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     }
 
     sensitivityDecomposition_ = iCdsOptionEngineBuilder->sensitivityDecomposition();
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Credit";
+    additionalData_["isdaBaseProduct"] = "Swaptions";
+    // Deferring the mapping of creditCurveId to CDX, iTraxx, MCDX
+    additionalData_["isdaSubProduct"] = swap_.creditCurveId(); 
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = "";  
 }
 
 Real IndexCreditDefaultSwapOption::notional() const {

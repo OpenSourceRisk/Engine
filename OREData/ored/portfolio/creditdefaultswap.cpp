@@ -128,6 +128,15 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
         additionalData_["startDate"] = to_string(swap_.protectionStart());
     else
         additionalData_["startDate"] = to_string(schedule.dates().front());
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Credit";
+    additionalData_["isdaBaseProduct"] = "Single Name";
+    // Leaving the mapping of creditCurveId to ABS, Corporate, Loans, Muni, Recovery CDS, Sovereign
+    // to a subsequent process, e.g. to be picked up from extended curve configurations 
+    additionalData_["isdaSubProduct"] = swap_.creditCurveId(); 
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = "";  
 }
 
 const std::map<std::string, boost::any>& CreditDefaultSwap::additionalData() const {

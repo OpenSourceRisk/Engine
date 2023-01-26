@@ -70,6 +70,9 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (currencies[i] != currency)
             isXCCY_ = true;
         isResetting_ = isResetting_ || (!legData_[i].isNotResetXCCY());
+        if (legTypeCount_.find(legData_[i].legType()) == legTypeCount_.end()) 
+            legTypeCount_[legData_[i].legType()] = 0;
+        legTypeCount_[legData_[i].legType()] ++;
     }
 
     static std::set<std::string> eligibleForXbs = {"Fixed", "Floating"};
@@ -184,6 +187,23 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     additionalData_["startDate"] = to_string(startDate);
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Interest Rate";
+    additionalData_["isdaBaseProduct"] = isXCCY_ ? "Cross Currency" : "IR Swap";
+    Size nfixed = 0;
+    auto it1 = legTypeCount_.find("Fixed");
+    auto it2 = legTypeCount_.find("ZeroCouponFixed");
+    nfixed += (it1 == legTypeCount_.end() ? 0 : it1->second);
+    nfixed += (it2 == legTypeCount_.end() ? 0 : it2->second);    
+    if (nfixed == 0)
+        additionalData_["isdaSubProduct"] = "Basis";  
+    else if (nfixed == 1)
+        additionalData_["isdaSubProduct"] = "Fixed Float";  
+    else
+        additionalData_["isdaSubProduct"] = "Fixed Fixed";
+    // skip transaction level for now
+    additionalData_["isdaTransaction"] = "";  
 }
 
 const std::map<std::string,boost::any>& Swap::additionalData() const {

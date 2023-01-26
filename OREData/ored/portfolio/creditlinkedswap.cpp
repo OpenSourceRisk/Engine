@@ -180,6 +180,13 @@ void CreditLinkedSwap::build(const boost::shared_ptr<EngineFactory>& engineFacto
 
     qlInstr->setPricingEngine(builder->engine(npvCurrency_, creditCurveId_));
 
+    // ISDA taxonomy
+
+    additionalData_["isdaAssetClass"] = "Interest Rate";
+    additionalData_["isdaBaseProduct"] = "Exotic";
+    additionalData_["isdaSubProduct"] = "";  
+    additionalData_["isdaTransaction"] = "";  
+
     // log
 
     DLOG("Finished building credit linked swap " << id());
