@@ -200,30 +200,34 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
     std::vector<Real> effectiveMultiplier;
     std::vector<Size> currencyIndex;
     timer.start();
-    for (Size i = 0; i < portfolio->size(); ++i) {
+    size_t currentTradeIdx = 0;
+    for (auto tradeIt = portfolio->trades().begin(); tradeIt != portfolio->trades().end();
+         ++tradeIt, ++currentTradeIdx) {
+        auto trade = tradeIt->second;
+        string tId = tradeIt->first;
         boost::shared_ptr<AmcCalculator> amcCalc;
-        const boost::shared_ptr<Trade>& t = portfolio->trades()[i];
         try {
-            amcCalc = t->instrument()->qlInstrument(true)->result<boost::shared_ptr<AmcCalculator>>("amcCalculator");
-            LOG("AMCCalculator extracted for \"" << t->id() << "\"");
+            amcCalc =
+                trade->instrument()->qlInstrument(true)->result<boost::shared_ptr<AmcCalculator>>("amcCalculator");
+            LOG("AMCCalculator extracted for \"" << trade->id() << "\"");
         } catch (const std::exception& e) {
-            WLOG("could not extract AMCCalculator for trade \"" << t->id() << "\": " << e.what());
+            WLOG("could not extract AMCCalculator for trade \"" << tId << "\": " << e.what());
         }
         if (amcCalc != nullptr) {
             amcCalculators.push_back(amcCalc);
-            Real effMult = t->instrument()->multiplier();
-            auto ow = boost::dynamic_pointer_cast<OptionWrapper>(t->instrument());
+            Real effMult = trade->instrument()->multiplier();
+            auto ow = boost::dynamic_pointer_cast<OptionWrapper>(trade->instrument());
             if (ow != nullptr) {
                 effMult *= ow->isLong() ? 1.0 : -1.0;
                 // we can ignore the underlying multiplier, since this is not involved in the AMC engine
             }
             effectiveMultiplier.push_back(effMult);
             currencyIndex.push_back(model_->ccyIndex(amcCalc->npvCurrency()));
-            tradeId.push_back(i);
-            tradeLabel.push_back(t->id());
+            tradeId.push_back(currentTradeIdx);
+            tradeLabel.push_back(tId);
             // TODO additional instruments (fees)
         }
-        updateProgress(i, portfolio->size());
+        updateProgress(currentTradeIdx, portfolio->size());
     }
     timer.stop();
     calibrationTime += timer.elapsed().wall * 1e-9;

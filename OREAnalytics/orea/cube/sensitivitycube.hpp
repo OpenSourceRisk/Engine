@@ -68,14 +68,13 @@ public:
     //@{
     const boost::shared_ptr<NPVSensiCube>& npvCube() const { return cube_; }
     const std::vector<ShiftScenarioDescription>& scenarioDescriptions() const { return scenarioDescriptions_; }
-    const std::vector<string>& tradeIds() const { return cube_->ids(); }
     //@}
 
     //! Check if the cube has scenario NPVs for trade with ID \p tradeId
     bool hasTrade(const std::string& tradeId) const;
 
     //! Return the map of up trade id's to index in cube
-    const std::map<std::string, QuantLib::Size>& tradeIdx() const { return tradeIdx_; };
+    const std::map<std::string, QuantLib::Size>& tradeIdx() const { return cube_->idsAndIndexes(); };
 
     /*! Return factor for given up/down scenario index or None if given index
       is not an up/down scenario (to be reviewed) */

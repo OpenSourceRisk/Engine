@@ -230,6 +230,9 @@ private:
     template <class T>
     void parseNode(XMLNode* node, const char* parentName, const char* childName, map<string, boost::shared_ptr<T>>& m);
 
+    // check if map has an entry for the given id
+    template <class T> bool has(const string& id, const map<string, boost::shared_ptr<T>>& m) const;
+
     // utility function for getting a value from the map storing the configs, throwing if it is not present
     template <class T>
     const boost::shared_ptr<T>& get(const string& id, const map<string, boost::shared_ptr<T>>& m) const;

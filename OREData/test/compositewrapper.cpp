@@ -153,12 +153,12 @@ BOOST_AUTO_TEST_CASE(testCompositeInstrumentWrapperPrice) {
     std::vector<Handle<Quote>> fxRates;
 
     Real totalNPV = 0;
-    for (auto t : portfolio->trades()) {
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
         Handle<Quote> fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
-        if (t->npvCurrency() != "USD")
-            fx = factory->market()->fxRate(t->npvCurrency() + "USD");
+        if (trade->npvCurrency() != "USD")
+            fx = factory->market()->fxRate(trade->npvCurrency() + "USD");
         fxRates.push_back(fx);
-        iw.push_back(t->instrument());
+        iw.push_back(trade->instrument());
         BOOST_TEST_MESSAGE("NPV " << iw.back()->NPV());
         BOOST_TEST_MESSAGE("FX " << fxRates.back()->value());
 

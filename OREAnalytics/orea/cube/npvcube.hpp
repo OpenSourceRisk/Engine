@@ -28,6 +28,8 @@
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 #include <vector>
+#include <map>
+#include <set>
 
 namespace ore {
 namespace analytics {
@@ -66,8 +68,18 @@ public:
     virtual Size samples() const = 0;
     virtual Size depth() const = 0;
 
-    //! Get the vector of ids for this cube
-    virtual const std::vector<std::string>& ids() const = 0;
+    //! Get a map of id and their index position in this cube 
+    virtual const std::map<std::string, Size>& idsAndIndexes() const = 0;
+
+    //! Get a set of all ids in the cube
+    const std::set<std::string> ids() const {
+        std::set<std::string> result;
+        for (const auto& [id, pos] : idsAndIndexes()) {
+            result.insert(id);
+        }
+        return result;
+    }
+
     //! Get the vector of dates for this cube
     virtual const std::vector<QuantLib::Date>& dates() const = 0; // TODO: Should this be the full date grid?
 
@@ -100,16 +112,21 @@ public:
         the default implementation has generelly to be overriden in derived classes depending on how values are stored */
     virtual void remove(Size id);
 
+    /*! simliar as above, but remove all values for a given id and scenario and keep T0 values */
+    virtual void remove(Size id, Size sample);
+
     //! Load cube contents from disk
     virtual void load(const std::string& fileName) = 0;
     //! Persist cube contents to disk
     virtual void save(const std::string& fileName) const = 0;
 
+    Size getTradeIndex(const std::string& id) const { return index(id); }
+
 protected:
     virtual Size index(const std::string& id) const {
-        auto it = std::find(ids().begin(), ids().end(), id);
-        QL_REQUIRE(it != ids().end(), "NPVCube can't find an index for id " << id);
-        return std::distance(ids().begin(), it);
+        const auto& it = idsAndIndexes().find(id);
+        QL_REQUIRE(it != idsAndIndexes().end(), "NPVCube can't find an index for id " << id);
+        return it->second;
     };
 
     virtual Size index(const QuantLib::Date& date) const {
@@ -117,6 +134,7 @@ protected:
         QL_REQUIRE(it != dates().end(), "NPVCube can't find an index for date " << date);
         return std::distance(dates().begin(), it);
     };
+
 };
 
 // impl
@@ -128,6 +146,14 @@ inline void NPVCube::remove(Size id) {
             for (Size sample = 0; sample < this->samples(); ++sample) {
                 set(0.0, id, date, sample, depth);
             }
+        }
+    }
+}
+
+inline void NPVCube::remove(Size id, Size sample) {
+    for (Size date = 0; date < this->numDates(); ++date) {
+        for (Size depth = 0; depth < this->depth(); ++depth) {
+            set(0.0, id, date, sample, depth);
         }
     }
 }

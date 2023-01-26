@@ -626,7 +626,7 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
 }
 
 boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() const {
-    boost::shared_ptr<TradeFactory> tf = boost::make_shared<TradeFactory>();
+    boost::shared_ptr<TradeFactory> tf = boost::make_shared<TradeFactory>(referenceData_);
     tf->addExtraBuilders(getExtraTradeBuilders(tf));
     return tf;
 }
@@ -908,8 +908,8 @@ void OREApp::runParametricVar() {
 
     LOG("Build trade to portfolio id mapping");
     map<string, set<string>> tradePortfolio;
-    for (auto const& t : portfolio_->trades()) {
-        tradePortfolio[t->id()].insert(t->portfolioIds().begin(), t->portfolioIds().end());
+    for (auto const& [tradeId, trade] : portfolio_->trades()) {
+        tradePortfolio[tradeId].insert(trade->portfolioIds().begin(), trade->portfolioIds().end());
     }
 
     LOG("Load covariance matrix data");
@@ -996,7 +996,7 @@ void OREApp::initAggregationScenarioData() {
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_);
 }
 
-void OREApp::initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids, const Size cubeDepth) {
+void OREApp::initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, const Size cubeDepth) {
     QL_REQUIRE(cubeDepth > 0, "zero cube depth given");
     if (cubeDepth == 1)
         cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, ids, grid_->valuationDates(), samples_, 0.0f);
@@ -1118,8 +1118,8 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     if (params_->has("simulation", "storeSurvivalProbabilities") &&
         params_->get("simulation", "storeSurvivalProbabilities") == "Y") {
         storeSp_ = true;
-        auto counterparties = simPortfolio_->counterparties();
-        counterparties.push_back(params_->get("xva", "dvaName"));
+        std::set<std::string> counterparties = portfolio->counterparties();
+        counterparties.insert(params_->get("xva", "dvaName"));
         initCube(cptyCube_, counterparties, 1);
     } else {
         cptyCube_ = nullptr;
@@ -1391,7 +1391,7 @@ void OREApp::writeXVAReports() {
 
     if (params_->has("xva", "exposureProfilesByTrade")) {
         if (parseBool(params_->get("xva", "exposureProfilesByTrade"))) {
-            for (auto t : postProcess_->tradeIds()) {
+            for (const auto& [t,_] : postProcess_->tradeIds()) {
                 ostringstream o;
                 o << outputPath_ << "/exposure_trade_" << t << ".csv";
                 string tradeExposureFile = o.str();
@@ -1402,7 +1402,7 @@ void OREApp::writeXVAReports() {
     }
     if (params_->has("xva", "exposureProfiles")) {
         if (parseBool(params_->get("xva", "exposureProfiles"))) {
-            for (auto n : postProcess_->nettingSetIds()) {
+            for (const auto& [n, _] : postProcess_->nettingSetIds()) {
                 ostringstream o1;
                 o1 << outputPath_ << "/exposure_nettingset_" << n << ".csv";
                 string nettingSetExposureFile = o1.str();

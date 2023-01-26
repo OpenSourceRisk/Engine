@@ -2061,19 +2061,30 @@ ScenarioSimMarket::ScenarioSimMarket(
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
 
+
+
                             if (useSpreadedTermStructures_) {
+                                auto surface = boost::dynamic_pointer_cast<QuantExt::CPIVolatilitySurface>(wrapper.currentLink());
+                                QL_REQUIRE(surface,
+                                           "Internal error, todays market should build QuantExt::CPIVolatiltiySurface "
+                                           "instead of QuantLib::CPIVolatilitySurface");
                                 hCpiVol = Handle<QuantLib::CPIVolatilitySurface>(
                                     boost::make_shared<SpreadedCPIVolatilitySurface>(
-                                    wrapper, optionDates, strikes, quotes));
+                                        Handle<QuantExt::CPIVolatilitySurface>(surface), optionDates, strikes, quotes));
                             } else {
+                                auto surface =
+                                    boost::dynamic_pointer_cast<QuantExt::CPIVolatilitySurface>(wrapper.currentLink());
+                                QL_REQUIRE(surface,
+                                           "Internal error, todays market should build QuantExt::CPIVolatiltiySurface "
+                                           "instead of QuantLib::CPIVolatilitySurface");
                                 hCpiVol = Handle<QuantLib::CPIVolatilitySurface>(
                                     boost::make_shared<InterpolatedCPIVolatilitySurface<Bilinear>>(
                                         optionTenors, strikes, quotes, zeroInflationIndex.currentLink(),
                                         wrapper->settlementDays(), wrapper->calendar(),
                                         wrapper->businessDayConvention(), wrapper->dayCounter(),
-                                        wrapper->observationLag()));
+                                        wrapper->observationLag(), surface->capFloorStartDate(), Bilinear(),
+                                        surface->volatilityType(), surface->displacement()));
                             }
-
                         } else {
                             // string decayModeString = parameters->zeroInflationCapFloorVolDecayMode();
                             // ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);

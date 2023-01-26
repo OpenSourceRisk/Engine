@@ -1,0 +1,69 @@
+\subsubsection{Credit Linked Swap}
+
+A credit linked swap, trade type \lstinline!CreditLinkedSwap!, is set up using a \lstinline!CreditLinkedSwapData! block
+as shown in listing \ref{lst:creditlinkedswap}. The elements have the following meaning:
+
+\begin{itemize}
+\item CreditCurveId: The referenced CDS credit curve. \\
+  Allowable values: See \lstinline!CreditCurveId! for credit trades - single name in Table
+  \ref{tab:equity_credit_data}. A \lstinline!ReferenceInformation! node may be used in place of this
+  \lstinline!CreditCurveId! node.
+\item SettlesAccrual [Optional]: A flag indicating whether accrued coupon amounts are paid in case of a credit
+  event. Optional, defaults to \verb+true+. Applies to the payments specified under ContingentPayments.\\
+  Allowable values: true, false
+\item FixedRecoveryRate [Optional]: A fixed (digital) recovery rate to apply. If not given, the market recovery rate
+  is used. Applies to the payments specified under DefaultPayments and RecoveryPayments.\\
+  Allowable values: Any non-negative real number.
+\item DefaultPaymentTime [Optional]: Controls the timing of the payments specified under DefaultPayments and
+  RecoveryPayments. Defaults to \lstinline!atDefault!. \\
+  Allowable values: \lstinline!atDefault!, \lstinline!atPeriodEnd!, \lstinline!atMaturity!.
+\item IndependentPayments [Optional]: The legs for which payments are made independent from credit events. The node contains one or
+  more \lstinline!LegData! subnodes representing these legs. Optional, can be omitted if no such payments are made. \\
+  Allowable values: See \ref{ss:leg_data} for the \lstinline!LegData! subnode structure.
+\item ContingentPayments [Optional]: The legs for which payments are contingent on no credit event having occured until
+  the payment date. If no such payments are made, the node can be omitted. \\
+  Allowable values: See \ref{ss:leg_data} for the \lstinline!LegData! subnode structure.
+\item DefaultPayments [Optional]: The legs for which payments are contingent on a credit event having occured. If no
+  such payments are made, the node can be omitted. If a default happens at a date d, the associated payment is the
+  earliest payment with date greater or equal to d. \\
+  Allowable values: See \ref{ss:leg_data} for the \lstinline!LegData! subnode structure.
+\item RecoveryPayments [Optiopnal]: The legs for which payments are contingent on a credit event having occured. The
+  node works analogously to the DefaultPayments node, the only difference is that that payment amounts are weighted by
+  $RR$ instead of $1-RR$. \\
+  Allowable values: See \ref{ss:leg_data} for the \lstinline!LegData! subnode structure.
+\end{itemize}
+
+All legs must be given in the same currency.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CreditLinkedSwapData>
+    <CreditCurveId>RED:46A844|SNRFOR|USD|XR14</CreditCurveId>
+    <SettlesAccrual>false</SettlesAccrual>
+    <FixedRecoveryRate>0.4</FixedRecoveryRate>
+    <DefaultPaymentTime>atDefault</DefaultPaymentTime>
+    <IndependentPayments>
+      <LegData> ... </LegData>
+      <LegData> ... </LegData>
+      ...
+    </IndependentPayments>
+    <ContingentPayments>
+      <LegData> ... </LegData>
+      <LegData> ... </LegData>
+      ...
+    </ContingentPayments>
+    <DefaultPayments>
+      <LegData> ... </LegData>
+      <LegData> ... </LegData>
+      ...
+    </DefaultPayments>
+    <RecoveryPayments>
+      <LegData> ... </LegData>
+      <LegData> ... </LegData>
+      ...
+    </RecoveryPayments>
+  </CreditLinkedSwapData>
+\end{minted}
+\caption{Credit Linked Swap Data}
+\label{lst:creditlinkedswap}
+\end{listing}

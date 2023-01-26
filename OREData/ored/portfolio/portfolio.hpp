@@ -46,7 +46,7 @@ public:
     explicit Portfolio(bool buildFailedTrades = true) : buildFailedTrades_(buildFailedTrades) {}
 
     //! Add a trade to the portfolio
-    void add(const boost::shared_ptr<Trade>& trade, const bool checkForDuplicateIds = true);
+    void add(const boost::shared_ptr<Trade>& trade);
 
     //! Check if a trade id is already in the portfolio
     bool has(const string& id);
@@ -68,17 +68,14 @@ public:
 
     //! Load using a default or user supplied TradeFactory, existing trades are kept
     void load(const std::string& fileName,
-              const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>(),
-              const bool checkForDuplicateIds = true);
+              const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
 
     //! Load from an XML string using a default or user supplied TradeFactory, existing trades are kept
     void loadFromXMLString(const std::string& xmlString,
-                           const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>(),
-                           const bool checkForDuplicateIds = true);
+                           const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
 
     //! Load from XML Node
-    void fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>(),
-                 const bool checkForDuplicateIds = true);
+    void fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
 
     //! Save portfolio to an XML file
     void save(const std::string& fileName) const;
@@ -99,17 +96,17 @@ public:
     //! Calculates the maturity of the portfolio
     QuantLib::Date maturity() const;
 
-    //! Return trade list
-    const std::vector<boost::shared_ptr<Trade>>& trades() const { return trades_; }
+    //! Return the map tradeId -> trade
+    const std::map<std::string, boost::shared_ptr<Trade>>& trades() const;
 
-    //! Build a vector of tradeIds
-    std::vector<std::string> ids() const;
+    //! Build a set of tradeIds
+    std::set<std::string> ids() const;
 
     //! Build a map from trade Ids to NettingSet
     std::map<std::string, std::string> nettingSetMap() const;
 
-    //! Build a vector of unique counterparties
-    std::vector<std::string> counterparties() const;
+    //! Build a set of all counterparties in the portfolio
+    std::set<std::string> counterparties() const;
 
     //! Build a map from counterparty to NettingSet
     std::map<std::string, std::set<std::string>> counterpartyNettingSets() const;
@@ -142,8 +139,7 @@ private:
     // get representation as XMLDocument
     void doc(XMLDocument& doc) const;
     bool buildFailedTrades_;
-    std::vector<boost::shared_ptr<Trade>> trades_;
-    std::map<std::string, boost::shared_ptr<Trade>> tradeLookup_;
+    std::map<std::string, boost::shared_ptr<Trade>> trades_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
 };
 

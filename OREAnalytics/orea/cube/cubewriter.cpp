@@ -44,7 +44,7 @@ void CubeWriter::write(const boost::shared_ptr<NPVCube>& cube, const std::map<st
     oss << QuantLib::io::iso_date(cube->asof());
     string asofString = oss.str();
 
-    const vector<string>& ids = cube->ids();
+    const std::map<string, Size>& ids = cube->idsAndIndexes();
 
     FILE* fp = fopen(filename_.c_str(), append ? "a" : "w");
     QL_REQUIRE(fp, "error opening file " << filename_);
@@ -55,22 +55,24 @@ void CubeWriter::write(const boost::shared_ptr<NPVCube>& cube, const std::map<st
     // Get netting Set Ids (or "" if not there)
     vector<const char*> nettingSetIds(ids.size());
     // T0
-    for (Size i = 0; i < ids.size(); i++) {
-        if (nettingSetMap.find(ids[i]) != nettingSetMap.end())
-            nettingSetIds[i] = nettingSetMap.at(ids[i]).c_str();
-        else
-            nettingSetIds[i] = "";
 
-        fprintf(fp, fmt, ids[i].c_str(), nettingSetIds[i], static_cast<Size>(0), asofString.c_str(),
-                static_cast<Size>(0), static_cast<Size>(0), cube->getT0(i));
+    for (const auto& [id,idx] : ids) {
+        if (nettingSetMap.find(id) != nettingSetMap.end())
+            nettingSetIds[idx] = nettingSetMap.at(id).c_str();
+        else
+            nettingSetIds[idx] = "";
+
+        fprintf(fp, fmt, id.c_str(), nettingSetIds[idx], static_cast<Size>(0), asofString.c_str(),
+                static_cast<Size>(0), static_cast<Size>(0), cube->getT0(idx));        
     }
     // Cube
-    for (Size i = 0; i < ids.size(); i++) {
+    
+    for (const auto& [id, idx] : ids) {
         for (Size j = 0; j < cube->numDates(); j++) {
             for (Size k = 0; k < cube->samples(); k++) {
                 for (Size l = 0; l < cube->depth(); l++) {
-                    fprintf(fp, fmt, ids[i].c_str(), nettingSetIds[i], j + 1, dateStrings[j].c_str(), k + 1, l,
-                            cube->get(i, j, k, l));
+                    fprintf(fp, fmt, id.c_str(), nettingSetIds[idx], j + 1, dateStrings[j].c_str(), k + 1, l,
+                            cube->get(idx, j, k, l));
                 }
             }
         }

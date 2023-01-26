@@ -133,7 +133,7 @@ BOOST_DATA_TEST_CASE(testAuCpiZcInflationCurve, bdata::make(auCpiTestDates) * bd
     portfolio->build(factory);
 
     BOOST_CHECK_EQUAL(portfolio->size(), 2);
-    for (const auto& trade : portfolio->trades()) {
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
         BOOST_CHECK_SMALL(trade->instrument()->NPV(), 0.01);
     }
 }

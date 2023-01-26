@@ -1,0 +1,57 @@
+\subsubsection{Basket Data}
+\label{ss:basket_data} 
+This trade component node is used in credit derivative trades referencing more than one reference entity e.g. in the \lstinline!IndexCreditDefaultSwapData! node of an index CDS trade. It contains \lstinline!Name! sub-nodes with the details of each constituent reference entities (names) of the basket.  An example structure of the \lstinline!BasketData! trade component node is shown in Listing \ref{lst:basket_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BasketData>
+  <Name>
+    <IssuerId>CPTY_1</IssuerId>
+    <CreditCurveId>RED:...</CreditCurveId>
+    <Notional>100000.0</Notional>
+    <Currency>USD</Currency>
+  </Name>
+  <Name>
+    <IssuerId>CPTY_2</IssuerId>
+    <CreditCurveId>RED:...</CreditCurveId>
+    <Notional>100000.0</Notional>
+    <Currency>USD</Currency>
+  </Name>
+  <Name>
+    <IssuerId>CPTY_3</IssuerId>
+    <CreditCurveId>RED:...</CreditCurveId>
+    <Notional>100000.0</Notional>
+    <Currency>USD</Currency>
+  </Name>
+  ...
+</BasketData>
+\end{minted}
+\caption{Basket data}
+\label{lst:basket_data}
+\end{listing}
+
+The meanings and allowable values of the elements in each \lstinline!Name! sub-node of the \lstinline!BasketData! node follow below. 
+
+\begin{itemize}
+\item IssuerId: A unique identifier for the index component reference entity. For informational purposes and not used for pricing.
+
+Allowable values:  Any alphanumeric string.
+
+%\item Qualifier: SIMM qualifier.  Not currently used.  
+
+%Allowable values:  Any string.
+
+\item CreditCurveId:  The unique identifier of the index component defining one of the default curves used for pricing. The pricing can be set up to either use the curve identifiers of the index components, or one single index curve id defined in the trade specific data. A \lstinline!ReferenceInformation! node may be used in place of this \lstinline!CreditCurveId! node.
+
+Allowable values:  See \lstinline!CreditCurveId! for credit trades - single name in Table \ref{tab:equity_credit_data}. Duplicate CreditCurveId:s are not allowed. \\
+
+\item \lstinline!ReferenceInformation!: This node may be used as an alternative to the \lstinline!CreditCurveId! node to specify the reference entity, tier, currency and documentation clause for the basket constituent. This in turn defines the credit curve used for this basket constituent in the pricing. The \lstinline!ReferenceInformation! node is described in further detail in Section \ref{ss:cds_reference_information}.
+
+\item Notional: The notional of the index component reference entity. Note that the sum of index component notionals (all names) must match the fixed premium leg notional.  Allowable values:  Any positive real number.
+
+\item Weight: Can be used, instead of Notional, to specify the weight of the index component reference entity. Note that the sum of index component notionals (all names) must match 1.  Allowable values:  Any positive real number.
+
+\item Currency: Defines the currency of the component, only mandatory together with a given notional.
+
+\end{itemize}

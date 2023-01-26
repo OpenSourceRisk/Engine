@@ -258,7 +258,7 @@ BOOST_DATA_TEST_CASE_F(TopLevelFixture, testCreditDefaultSwapBuilding, bdata::ma
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(ed, market);
     BOOST_CHECK_NO_THROW(p.build(engineFactory));
     Real npv;
-    BOOST_CHECK_NO_THROW(npv = p.trades().at(0)->instrument()->NPV());
+    BOOST_CHECK_NO_THROW(npv = p.trades().begin()->second->instrument()->NPV());
     BOOST_TEST_MESSAGE("CDS NPV is: " << npv);
 }
 
@@ -301,9 +301,8 @@ BOOST_DATA_TEST_CASE(testUpfrontDefaultCurveConsistency, bdata::make(upfrontFile
     portfolio.load(TEST_INPUT_FILE(string(dir + "/portfolio.xml")));
     portfolio.build(ef);
 
-    for (const auto& trade : portfolio.trades()) {
+    for (const auto& [tradeId, trade] : portfolio.trades()) {
         auto npv = trade->instrument()->NPV();
-        auto tradeId = trade->id();
         BOOST_TEST_CONTEXT("NPV of trade " << tradeId << " is " << fixed << setprecision(12) << npv) {
             BOOST_CHECK_SMALL(trade->instrument()->NPV(), tol);
         }

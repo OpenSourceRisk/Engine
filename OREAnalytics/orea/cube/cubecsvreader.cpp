@@ -37,7 +37,7 @@ CubeCsvReader::CubeCsvReader(const std::string& filename) : filename_(filename) 
 
 void CubeCsvReader::read(boost::shared_ptr<NPVCube>& cube, std::map<std::string, std::string>& nettingSetMap) {
 
-    vector<string> tradeIds;
+    std::set<string> tradeIds;
     std::vector<Date> dateVec;
     std::set<Size> sampleIdxSet, depthIdxSet;
     Date asof;
@@ -71,8 +71,7 @@ void CubeCsvReader::read(boost::shared_ptr<NPVCube>& cube, std::map<std::string,
             } else if (std::find(dateVec.begin(), dateVec.end(), gridDate) == dateVec.end()) {
                 dateVec.push_back(gridDate);
             }
-            if (std::find(tradeIds.begin(), tradeIds.end(), tradeId) == tradeIds.end())
-                tradeIds.push_back(tradeId);
+            tradeIds.insert(tradeId);
             if (nettingSetMap.find(tradeId) == nettingSetMap.end())
                 nettingSetMap[tradeId] = nettingId;
             sampleIdxSet.insert(sampleIdx);
@@ -128,8 +127,7 @@ void CubeCsvReader::read(boost::shared_ptr<NPVCube>& cube, std::map<std::string,
             Size depthIdx = ore::data::parseInteger(tokens[5]);
             Real value = ore::data::parseReal(tokens[6]);
 
-            auto it_trade = std::find(tradeIds.begin(), tradeIds.end(), tradeId);
-            Size pos_trade = it_trade - tradeIds.begin();
+            auto pos_trade = cube->getTradeIndex(tradeId);
 
             if (dateIdx == 0) {
                 cube->setT0(value, pos_trade, depthIdx);

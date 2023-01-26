@@ -50,7 +50,9 @@ Handle<YieldTermStructure> getMarketDiscountCurve(const Market* market, const st
         return market->discountCurve(ccy);
     } catch (const std::exception&) {
         WLOG("FXTriangulation: could not get market discount curve '"
-             << ccy << "' - this can cause errors when compounding between today and spot is required");
+             << ccy
+             << "' - discounted fx spot rates will be replaced by non-discounted rates in future calculations, which "
+                "might lead to inaccuracies");
         return Handle<YieldTermStructure>();
     }
 }

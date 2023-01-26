@@ -27,10 +27,10 @@ namespace ore {
 namespace analytics {
 
 JointNPVCube::JointNPVCube(const boost::shared_ptr<NPVCube>& cube1, const boost::shared_ptr<NPVCube>& cube2,
-                           const std::vector<std::string>& ids, const bool requireUniqueIds)
+                           const std::set<std::string>& ids, const bool requireUniqueIds)
     : JointNPVCube({cube1, cube2}, ids, requireUniqueIds) {}
 
-JointNPVCube::JointNPVCube(const std::vector<boost::shared_ptr<NPVCube>>& cubes, const std::vector<std::string>& ids,
+JointNPVCube::JointNPVCube(const std::vector<boost::shared_ptr<NPVCube>>& cubes, const std::set<std::string>& ids,
                            const bool requireUniqueIds)
     : NPVCube(), cubes_(cubes) {
 
@@ -52,53 +52,45 @@ JointNPVCube::JointNPVCube(const std::vector<boost::shared_ptr<NPVCube>>& cubes,
                                                                  << cubes[0]->depth() << ")");
     }
 
-    // check that the input ids (if given) are unique
-
-    std::set<std::string> tmp(ids.begin(), ids.end());
-    QL_REQUIRE(tmp.size() == ids.size(), "JoingNPVCube: given input ids (" << ids.size() << ") are not unique (got "
-                                                                           << tmp.size() << " unique id)");
 
     // build list of result cube ids
-
     if (!ids.empty()) {
         // if ids are given, these define the order in the result cube
-        ids_ = ids;
+        Size pos = 0;
+        for (const auto& id : ids) {
+            idIdx_[id] = pos++;
+        }
     } else {
         // otherwise the ids in the source cubes define the order in the result cube
+        Size pos = 0;
         for (Size i = 0; i < cubes_.size(); ++i) {
-            const std::vector<std::string>& tmp = cubes_[i]->ids();
-            for (auto const& id : tmp) {
-                auto f = std::find(ids_.begin(), ids_.end(), id);
-                QL_REQUIRE(!requireUniqueIds || f == ids_.end(),
-                           "JointNPVCube: input cubes have duplicate id '"
-                               << id << "', but unique ids in the input cubes are required");
-                if (f == ids_.end())
-                    ids_.push_back(id);
+            for (auto const& [id, idxInCube] : cubes_[i]->idsAndIndexes()) {
+                const auto& [it, success] = idIdx_.insert({id, pos});
+                QL_REQUIRE(!requireUniqueIds || success,
+                           "JointNPVSensiCube: input cubes have duplicate id '" << id << "', this is not allowed");
             }
         }
     }
 
     // populate cubeAndId_ vector which is the basis for the lookup
-
-    cubeAndId_.resize(ids_.size());
-    for (Size i = 0; i < ids_.size(); ++i) {
+    cubeAndId_.resize(idIdx_.size());
+    for (const auto& [id, jointPos] : idIdx_) {
         for (auto const& c : cubes_) {
-            const std::vector<std::string>& tmp = c->ids();
-            for (Size j = 0; j < tmp.size(); ++j) {
-                if (ids_[i] == tmp[j])
-                    cubeAndId_[i].insert(std::make_pair(c, j));
+            auto searchIt = c->idsAndIndexes().find(id);
+            if (searchIt != c->idsAndIndexes().end()) {
+                cubeAndId_[jointPos].insert(std::make_pair(c, searchIt->second));
             }
         }
         // internal consistency checks
-        QL_REQUIRE(cubeAndId_[i].size() >= 1,
-                   "JointNPVCube: internal error, got no input cubes for id '" << ids_[i] << "'");
-        QL_REQUIRE(!requireUniqueIds || cubeAndId_[i].size() == 1,
+        QL_REQUIRE(cubeAndId_[jointPos].size() >= 1,
+                   "JointNPVCube: internal error, got no input cubes for id '" << id << "'");
+        QL_REQUIRE(!requireUniqueIds || cubeAndId_[jointPos].size() == 1,
                    "JointNPVCube: internal error, got more than one input cube for id '"
-                       << ids_[i] << "', but unique input ids qre required");
+                       << id << "', but unique input ids qre required");
     }
 }
 
-Size JointNPVCube::numIds() const { return ids_.size(); }
+Size JointNPVCube::numIds() const { return idIdx_.size(); }
 
 Size JointNPVCube::numDates() const { return cubes_[0]->numDates(); }
 
@@ -106,7 +98,7 @@ Size JointNPVCube::samples() const { return cubes_[0]->samples(); }
 
 Size JointNPVCube::depth() const { return cubes_[0]->depth(); }
 
-const std::vector<std::string>& JointNPVCube::ids() const { return ids_; }
+const std::map<std::string, Size>& JointNPVCube::idsAndIndexes() const { return idIdx_; }
 
 const std::vector<QuantLib::Date>& JointNPVCube::dates() const { return cubes_[0]->dates(); }
 

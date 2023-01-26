@@ -25,8 +25,8 @@
 #include <orea/cube/npvcube.hpp>
 
 #include <boost/serialization/access.hpp>
-
 #include <map>
+#include <set>
 
 namespace ore {
 namespace analytics {
@@ -37,7 +37,7 @@ using QuantLib::Size;
 template <typename T> class SparseNpvCube : public ore::analytics::NPVCube {
 public:
     SparseNpvCube();
-    SparseNpvCube(const Date& asof, const std::vector<std::string>& ids, const std::vector<Date>& dates, Size samples,
+    SparseNpvCube(const Date& asof, const std::set<std::string>& ids, const std::vector<Date>& dates, Size samples,
                   Size depth, const T& t = T());
     void load(const std::string& fileName) override;
     void save(const std::string& fileName) const override;
@@ -46,7 +46,7 @@ public:
     Size samples() const override;
     Size depth() const override;
     Date asof() const override;
-    const std::vector<std::string>& ids() const override;
+    const std::map<std::string, Size>& idsAndIndexes() const override;
     const std::vector<QuantLib::Date>& dates() const override;
     Real getT0(Size i, Size d) const override;
     void setT0(Real value, Size i, Size d) override;
@@ -60,7 +60,7 @@ private:
     template <class Archive> void serialize(Archive& ar, const unsigned int);
 
     QuantLib::Date asof_;
-    std::vector<std::string> ids_;
+    std::map<std::string, Size> ids_;
     std::vector<QuantLib::Date> dates_;
     Size samples_;
     Size depth_;

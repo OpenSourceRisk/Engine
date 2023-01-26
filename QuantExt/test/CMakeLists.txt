@@ -9,7 +9,10 @@ blackvariancesurfacesparse.cpp
 blackvariancesurfacestddevs.cpp
 blackvolsurfacedelta.cpp
 blackvolsurfaceproxy.cpp
+blockmatrixinverse.cpp
+bondoption.cpp
 bonds.cpp
+bondtrs.cpp
 calendars.cpp
 capfloortermvolcurve.cpp
 cashflow.cpp
@@ -41,6 +44,7 @@ exactbachelierimpliedvolatility.cpp
 fillemptymatrix.cpp
 forwardbond.cpp
 fxvolsmile.cpp
+hullwhitebucketing.cpp
 index.cpp
 inflationcurve.cpp
 inflationvol.cpp

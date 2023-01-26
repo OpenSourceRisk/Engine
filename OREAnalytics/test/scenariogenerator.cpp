@@ -188,8 +188,9 @@ struct TestData {
         cmb.addCorrelation("INF:UKRPI", "IR:GBP", Handle<Quote>(boost::make_shared<SimpleQuote>(0.1)));
         cmb.addCorrelation("INF:EUHICPXT", "IR:EUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.1)));
 
+        Real tolerance = 0.0001;
         boost::shared_ptr<CrossAssetModelData> config(boost::make_shared<CrossAssetModelData>(
-              irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs, comConfigs, cmb.correlations()));
+                                                                                              irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs, comConfigs, cmb.correlations(), tolerance));
 
         CrossAssetModelBuilder modelBuilder(market, config);
         ccLgm = *modelBuilder.model();
@@ -211,6 +212,7 @@ BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 void test_lgm(bool sobol, bool antithetic, bool brownianBridge) {
 
+    BOOST_TEST_MESSAGE("call test_lgm with sobol=" << sobol << " antithetic=" << antithetic << " brownianBridge=" << brownianBridge); 
     TestData d;
 
     // Simulation date grid

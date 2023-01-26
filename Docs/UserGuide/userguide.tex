@@ -2532,7 +2532,7 @@ FX Option pricing with the risk factor evolution model.
 
 To use the AMC engine for an XVA simulation the following needs to be added to the {\tt simulation} analytic in {\tt ore.xml}:
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Analytic type="simulation">
   ...
   <Parameter name="amc">Y</Parameter>
@@ -2562,7 +2562,7 @@ At this point we assume that the reader is generally familiar with the configura
 
 The pricing engine configuration is similar for all AMC enabled products, e.g. for Bermudan Swaptions:
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Product type="BermudanSwaption">
   <Model>LGM</Model>
   <ModelParameters/>
@@ -2638,7 +2638,7 @@ The following listing shows a sample configuration for the MC Bermudan Swaption 
 identical to the LGM Grid engine configuration. The engine parameters on the other hand are the same as for the AMC
 engine, see \ref{sec:amc_pricingengineconfig}.
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Product type="BermudanSwaption">
   <Model>LGM</Model>
   <ModelParameters>
@@ -2684,7 +2684,7 @@ missing, the legs themselves represent the trade.
 
 See \ref{sec:amc_limitations} for limitations of the multileg option pricing engine.
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Trade id="Sample_MultiLegOption">
   <TradeType>MultiLegOption</TradeType>
   <Envelope>...</Envelope>
@@ -2726,7 +2726,7 @@ See \ref{sec:amc_limitations} for limitations of the multileg option pricing eng
 The pricing engine configuration is similar to that of the MC Bermudan swaption engine, cf.
 \ref{sec:mc_bermudan_engine}, also see the following listing.
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
   <Product type="MultiLegOption">
   <Model>CrossAssetModel</Model>
   <ModelParameters>
@@ -2780,6 +2780,97 @@ Model Parameters special to that product are
   \verb+Key1+ and \verb+Key2+ is the same as in the simulation configuration for the cross asset model
 \end{enumerate}
 
+%--------------------------------------------------------------------
+\subsection{Par Sensitivity Analysis}% Example 40
+\label{example:40}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_40}  demonstrates ORE's par sensitivity analysis (e.g. to Swap rates) 
+that is implemented  by means of a Jacobi transformation of the "raw" sensitivities (e.g. to zero rates), see a sketch of the 
+methodology in appendix \ref{app:par_sensi} and section \ref{sec:sensitivity} for configuration details.
+
+To perform a par sensitivity analysis, the following required change in {\tt ore.xml} is required
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <Analytic type="sensitivity">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="scenarioOutputFile">sensi_scenarios.csv</Parameter>
+      <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
+      <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
+      <!-- Additional parametrisation for par sensitivity analysis -->
+      <Parameter name="parSensitivity">Y</Parameter>
+      <Parameter name="parSensitivityOutputFile">parsensitivity.csv</Parameter>
+      <Parameter name="outputJacobi">Y</Parameter>
+      <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
+      <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
+    </Analytic>
+\end{minted}
+
+The portfolio used in this example includes products sensitive to 
+\begin{itemize}
+\item Discount and index curves
+\item Credit curves
+\item Inflation curves
+\item CapFloor volatilities
+\end{itemize}
+
+The usual sensitivity analysis is performed by bumping the "raw" rates (zero rates, hazard rates, inflation zero rates, optionlet vols).
+This is followed by the Jacobi transformation that turns "raw" sensitivities  into sensitivities in the par domain (Deposit/FRA/Swap rates, FX Forwards, CC Basis Swap spreads, 
+CDS spreads, ZC and YOY Inflation Swap rates, flat Cap/Floor vols). The conversion is controlled by the additional {\tt ParConversion} data blocks 
+in {\tt sensitivity.xml} where the assumed par instruments and corresponding conventions are coded, as shown below for three types of discount curves.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <DiscountCurves>
+  
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+        <!--DEP, FRA, IRS, OIS, FXF, XBS -->
+	<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>   
+    
+    <DiscountCurve ccy="USD">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+	<Instruments>FXF,FXF,FXF,FXF,FXF,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="XBS">EUR-USD-XCCY-BASIS-CONVENTIONS</Convention>
+	  <Convention id="FXF">EUR-USD-FX-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+
+    <DiscountCurve ccy="GBP">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+	<Instruments>DEP,DEP,DEP,DEP,DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">GBP-DEPOSIT</Convention>
+	  <Convention id="IRS">GBP-6M-SWAP-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>
+  
+  </DiscountCurves>
+\end{minted}
+
+Finally note that par sensitivity analysis requires that the shift tenor grid in the sensitivity data above matches the corresponding grid in the simulation (market) configuration.
+See also section \ref{sec:sensitivity}.
 
 \clearpage
 %========================================================
@@ -3337,6 +3428,12 @@ shows a typical configuration for sensitivity calculation.
    <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
    <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
    <Parameter name="recalibrateModels">Y</Parameter>
+   <!-- Additional parametrisation for par sensitivity analysis -->
+   <Parameter name="parSensitivity">Y</Parameter>
+   <Parameter name="parSensitivityOutputFile">parsensitivity.csv</Parameter>
+   <Parameter name="outputJacobi">Y</Parameter>
+   <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
+   <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
  </Analytic>
 </Analytics>
 \end{minted}
@@ -3362,6 +3459,12 @@ The parameters have the following interpretation:
 \item {\tt outputSensitivityThreshold:} Only finite differences with absolute value greater than this number are written
   to the output files.
 \item {\tt recalibrateModels:} If set to Y, then recalibrate pricing models after each shift of relevant term structures; otherwise do not recalibrate
+\item {\tt parSensitivity}: If set to Y, par sensitivity analysis is performed following the "raw" sensitivity analysis; note that in this case the 
+{\tt sensitivityConfigFile} needs to contain {\tt ParConversion} sections, see {\tt Example\_40}   
+\item {\tt parSensitivityOutputFile}: Output file name for the par sensitivity report
+\item {\tt outputJacobi}: If set to Y, then the relevant Jacobi and inverse Jacobi matrix is written to a file, see below
+\item {\tt jacobiOutputFile}: Output file name for the Jacobi matrx
+\item {\tt jacobiInverseOutputFile}: Output file name for the inverse Jacobi matrix
 \end{itemize}
 
 The stress analytics configuration is similar to the one of the sensitivity calculation. Listing \ref{lst:ore_stress}
@@ -3404,7 +3507,7 @@ scenarios is described in more detail in section \ref{sec:stress}.
       <Parameter name="salvageCovarianceMatrix">N</Parameter>
       <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter> 
       <Parameter name="breakdown">Y</Parameter> 
-      <!-- Delta, DeltaGammaNormal, MonteCarlo --> 
+      <!-- Delta, DeltaGammaNormal, Cornish-Fisher, Saddlepoint, MonteCarlo --> 
       <Parameter name="method">DeltaGammaNormal</Parameter> 
       <Parameter name="mcSamples">100000</Parameter> 
       <Parameter name="mcSeed">42</Parameter> 
@@ -3424,7 +3527,7 @@ The parameters have the following interpretation:
 \item {\tt salvageCovarianceMatrix:} If set to Y, turn the input covariance matrix into a valid (positive definite) matrix applying a Salvaging algorithm; if set to N, throw an exception if the matrix is not positive definite
 \item {\tt quantiles:} Several desired quantiles can be specified here in a comma separated list; these lead to several columns of results in the output file, see below. Note that e.g. the 1\% quantile corresponds to the lower tail of the P\&L distribution (VaR), 99\% to the upper tail.
 \item {\tt breakdown:} If yes, VaR is computed by portfolio, risk class (All, Interest Rate, FX, Inflation, Equity, Credit) and risk type (All, Delta \& Gamma, Vega)
-\item {\tt method:} Choices are {\em Delta, DeltaGammaNormal, MonteCarlo}, see appendix \ref{sec:app_var}
+\item {\tt method:} Choices are {\em Delta, DeltaGammaNormal, Cornish-Fisher, Saddlepoint, MonteCarlo}, see appendix \ref{sec:app_var}
 \item {\tt mcSamples:} Number of Monte Carlo samples used when the {\em MonteCarlo} method is chosen 
 \item {\tt mcSeed:} Random number generator seed when the {\em MonteCarlo} method is chosen
 \item {\tt outputFile:} Output file name
@@ -5100,6 +5203,62 @@ Additional flags:
 \label{lst:sensitivity_config}
 \end{longlisting}
 
+\subsubsection*{Par Sensitivity Analysis}
+
+To perform a par sensitivity analysis, additional sensitivity configuration is required that describes the assumed par instruments and related conventions.
+This additional data is required for:
+\begin{itemize}
+\item DiscountCurves
+\item IndexCurves
+\item CapFloorVolatilities
+\item CreditCurves
+\item ZeroInflationIndexCurves
+\item YYInflationIndexCurves
+\item YYCapFloorVolatilities
+\end{itemize}
+
+Using DiscountCurves as an example, the full sensitivity specification including par conversion data is as follows:
+
+\begin{longlisting}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+        <!--DEP, FRA, IRS, OIS, FXF, XBS -->
+	<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+	  <Convention id="IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
+	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>   
+\end{minted}
+\caption{Par sensitivity configuration}
+\label{lst:par_sensitivity_config}
+\end{longlisting}
+
+Note
+\begin{itemize}
+\item The list of shift tenors needs to match the list of tenors matches the corresponding grid in the simulation (market) configuration
+\item The length of list of (par) instruments needs to match the length of the list of shift tenors
+\item Permissible codes for the assumed par instruments:
+	\begin{itemize}
+	\item DEP, FRA, IRS, OIS, TBS, FXF, XBS in the case of DiscountCurves 
+	\item DEP, FRA, IRS, OIS, TBS in the case of IndexCurves
+	\item DEP, FRA, IRS, OIS, TBS, XBS in the case of YieldCurves 
+	\item ZIS, YYS for YYInflationIndexCurves, interpreted as Year-on-Year Inflation Swaps linked to Zero Inflation resp. YoY Inflation curves
+	\item ZIS, YYS for YYCapFloorVolatilities, interpreted as Year-on-Year Inflation Cap Floor linked to Zero Inflation resp. YoY Inflation curves
+	\item Any code for CreditCurves, interpreted as CDS
+	\item Any code for ZeroInflationIndexCurves, interpreted as CPI Swaps linked to Zero Inflation curves
+	\item Any code for CapFloorVolatilities, interpreted as flat Cap/Floor
+	\end{itemize}
+\item One convention needs to be referenced for each of the instrument codes	
+\end{itemize}
+
 %--------------------------------------------------------
 \subsection{Stress Scenario Analysis: {\tt stressconfig.xml}}\label{sec:stress}
 %--------------------------------------------------------
@@ -6356,9 +6515,21 @@ This node should hold a real number. It provides an upper bound for the search d
 \input{tradedata/equitycliquetoption}
 \input{tradedata/cpiswap}
 \input{tradedata/yyswap}
+
 \input{tradedata/bond}
 \input{tradedata/forwardbond}
+\input{tradedata/bondForward_refdata}
+\input{tradedata/bondrepo}
+\input{tradedata/bondoption}
+\input{tradedata/bondoption_refdata}
+\input{tradedata/bondTotalReturnSwap}
+
 \input{tradedata/creditdefaultswap}
+\input{tradedata/indexcds}
+\input{tradedata/indexcdsoption}
+\input{tradedata/syntheticcdo}
+\input{tradedata/creditlinkedswap}
+
 \input{tradedata/commodityforward}
 \input{tradedata/commodityswap}
 \input{tradedata/commodityswaption}
@@ -6392,6 +6563,7 @@ This node should hold a real number. It provides an upper bound for the search d
 \input{tradecomponents/commodityfloatingleg}
 \input{tradecomponents/equitymarginleg}
 \input{tradecomponents/cdsreferenceinformation}
+\input{tradecomponents/basketdata}
 \input{tradecomponents/underlying}
 \input{tradecomponents/strikedata}
 \input{tradecomponents/barrierdata}
@@ -7650,6 +7822,58 @@ the underlying spot price changes.
   \end{center}
   \end{table}
 
+\subsection{Par Sensitivity Analysis}
+\label{app:par_sensi}
+
+The ``raw'' sensitivities in ORE are generated in a computationally convenient domain (such as zero rates, caplet/floorlet volatilities, integrated hazard rates, inflation zero rates). These raw sensitivities are typically further processed in risk analytics such as VaR measures. On the other hand, for hedging purposes one is rather interested in sensitivities with respect to fair rates of hedge instruments such as Forward Rate Agreements, Swaps, flat Caps/Floors, CDS, Zero Coupon Inflation Swaps. \\
+
+It is possible to generate par sensitivities from raw sensitivities using the chain rule as follows, and this is the approach taken in ORE. Recall for example the fair swap rate $c$ for some maturity as a function of zero rates $z_i$ in a single curve setting:
+$$
+c = \frac{1 - e^{-z_n\,t_n}}{\sum_{i=1}^n \delta_i\,e^{-z_i\, t_i}}
+$$
+More realistically, a given fair swap rate might be a function of the zero rates spanning the discount and index curves in the chosen currency. In a multi currency curve setting, that swap rate might even be a function of the zero rates spanning a foreign (collateral) currency discount curve, foreign and domestic currency index curves. Generally, we can write any fair par rate $c_i$ as function of raw rates $z_j$,
+$$
+c_i \equiv c_i(z_1, z_2, ..., z_n)
+$$
+This function may not be available in closed form, but numerically we can evaluate the sensitivity of $c_i$ with respect to changes in all raw rates,
+$$
+\frac{\partial c_i}{\partial z_j}.
+$$
+These sensitivities form a {\em Jacobi} matrix of derivatives. Now let $V$ denote some trade's price. Its sensitivity with respect a raw rate change $\partial V/\partial z_k$ can then be expressed in terms of sensitivities w.r.t. par rates using the chain rule
+$$
+\frac{\partial V}{\partial z_j} = \sum_{i=1}^n \frac{\partial V}{\partial c_i}\,\frac{\partial c_i}{\partial z_j},
+$$
+or in vector/matrix form
+$$
+\nabla_z V = C \cdot \nabla_c V, \qquad C_{ji} = \frac{\partial c_i}{\partial z_j}.
+$$
+Given the raw sensitivity vector $\nabla_z V$, we need to invert the Jacobi matrix $C$ to obtain the par rate sensitivity vector
+$$
+\nabla_c V = C^{-1} \cdot \nabla_z V.
+$$
+
+We then compute the Jacobi matrix $C$ by
+\begin{itemize}
+\item setting up par instruments with links to all required term structures expressed in terms of raw rates
+\item ``bumping'' all relevant raw rates and numerically computing the par instrument's fair rate shift for each bump
+\item thus filling the Jacobi matrix with finite difference approximations of the partial derivatives $\partial c_i/\partial z_j$.
+\end{itemize}
+
+The par rate conversion supports the following par instruments:
+\begin{itemize}
+\item Deposits
+\item Forward rate Agreements
+\item Interest Rate Swaps (fixed vs. ibor)
+\item Overnight Index Swaps
+\item Tenor Basis Swaps (ibor vs. ibor)
+\item Overnight Index Basis Swaps (ibor vs. OIS)
+\item FX Forwards
+\item Cross Currency Basis Swaps
+\item Credit Default Swaps
+\item Caps/Floors
+\end{itemize}
+
+
 \subsection{Value at Risk}\label{sec:app_var}
 
 For the computation of the parametric, or variance-covariance VaR, we rely on a second order sensitivity-based P\&L approximation
@@ -7693,6 +7917,15 @@ VaR = m + N^{-1}(q)\,\sqrt{v}
 $$
 for the desired quantile $q$ ($N$ is the cumulative standard normal distribution). Omitting the second order terms in \eqref{taylorPl2} yields the delta normal approximation.
  
+\subsubsection*{Cornish-Fisher Expansion}
+
+The first four moments of the distribution of $\pi_S$ in \eqref{taylorPl2} can be computed in closed form using the covariance matrix $C$ and the sensitivities of first and second order $D_i$
+and $D_{i,k}$, see e.g. \cite{alexander}. Once these moments are known, an approximation to the true quantile of $\pi_S$ can be computed using the Cornish-Fisher expansion, see also [7], which in practice often gives a decent approximation of the true value, but may also show bigger differences in certain configurations.
+
+\subsubsection*{Saddlepoint Approximation}
+
+Another approximation of the true quantile of $\pi_S$ can be computed using the Saddlepoint approximation using results from \cite{Lugannani} and \cite{Daniels}. This method typically produces more accurate results than the Cornish-Fisher method, while still being fast to evaluate.
+
 \subsubsection*{Monte Carlo Simulation}
 
 By simulating a large number of realisations of the return vector $Y=\{ Y_i \}_i$ and computing the corresponding
@@ -7789,6 +8022,11 @@ implementation of the inverse cumulative normal distribution to transform $U[0,1
   \url{http://www.quarchome.org/correlationmatrix.pdf}
 
 \bibitem{alexander} Carol Alexander, Market Risk Analysis, Volume IV, Value at Risk Models, Wiley 2009
+
+\bibitem{Lugannani} Lugannani, R.and S.Rice (1980), Saddlepoint Approximations for the Distribution of the Sum of
+  Independent Random Variables, Advances in Applied Probability, 12,475-490.
+
+\bibitem{Daniels} Daniels, H. E. (1987), Tail Probability Approximations, International Statistical Review, 55, 37-48.
 
 \end{thebibliography}
 

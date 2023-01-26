@@ -41,13 +41,13 @@ ExposureAllocator::ExposureAllocator(
 void ExposureAllocator::build() {
     LOG("Compute allocated trade exposures");
 
-    for (string nettingSetId : nettedExposureCube_->ids()) {
+    for (const auto& [nettingSetId, idx] : nettedExposureCube_->idsAndIndexes()) {
 
-        for (auto trade : portfolio_->trades()) {
+        for (const auto & [tid, trade] : portfolio_->trades()) {
             string nid = trade->envelope().nettingSetId();
             if (nid != nettingSetId)
                 continue;
-            string tid = trade->id();
+            
 
             for (Date date : tradeExposureCube_->dates()) {
                 for (Size k = 0; k < tradeExposureCube_->samples(); ++k) {
@@ -74,9 +74,11 @@ RelativeFairValueNetExposureAllocator::RelativeFairValueNetExposureAllocator(
                         allocatedTradeEpeIndex, allocatedTradeEneIndex,
                         tradeEpeIndex, tradeEneIndex,
                         nettingSetEpeIndex, nettingSetEneIndex) {
-    for (Size i = 0; i < portfolio->ids().size(); ++i) {
-        string tradeId = portfolio_->ids()[i];
-        string nettingSetId = portfolio->trades()[i]->envelope().nettingSetId();
+    size_t i = 0;
+    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++i) {
+        auto trade = tradeIt->second;
+        string tradeId = tradeIt->first;
+        string nettingSetId = trade->envelope().nettingSetId();
         if (nettingSetPositiveValueToday_.find(nettingSetId) == nettingSetPositiveValueToday_.end()) {
             nettingSetPositiveValueToday_[nettingSetId] = 0.0;
             nettingSetNegativeValueToday_[nettingSetId] = 0.0;
@@ -118,9 +120,11 @@ RelativeFairValueGrossExposureAllocator::RelativeFairValueGrossExposureAllocator
                         allocatedTradeEpeIndex, allocatedTradeEneIndex,
                         tradeEpeIndex, tradeEneIndex,
                         nettingSetEpeIndex, nettingSetEneIndex) {
-    for (Size i = 0; i < portfolio->ids().size(); ++i) {
-        string tradeId = portfolio_->ids()[i];
-        string nettingSetId = portfolio->trades()[i]->envelope().nettingSetId();
+    size_t i = 0;
+    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++i) {
+        auto trade = tradeIt->second;
+        string tradeId = tradeIt->first;
+        string nettingSetId = trade->envelope().nettingSetId();
         if (nettingSetValueToday_.find(nettingSetId) == nettingSetValueToday_.end())
             nettingSetValueToday_[nettingSetId] = 0.0;
         Real npv = npvCube->getT0(i);
