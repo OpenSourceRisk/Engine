@@ -139,8 +139,11 @@ const std::map<std::string, boost::any>& CreditDefaultSwap::additionalData() con
     additionalData_["isPayer[1]"] = !swap_.leg().isPayer();
     additionalData_["isPayer[2]"] = swap_.leg().isPayer();
     additionalData_["legType[2]"] = swap_.leg().legType();
+    additionalData_["legType[1]"] = std::string("Protection");
     additionalData_["currentNotional[1]"] = additionalData_["currentNotional[2]"];
     additionalData_["originalNotional[1]"] = additionalData_["originalNotional[2]"];
+    additionalData_["notionalCurrency[1]"] = notionalCurrency_;
+    additionalData_["notionalCurrency[2]"] = notionalCurrency_;
     return additionalData_;
 }
 
