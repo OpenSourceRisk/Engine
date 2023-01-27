@@ -146,11 +146,11 @@ void CommoditySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     instrument_ = boost::make_shared<VanillaInstrument>(swap);
 
     // ISDA taxonomy, assuming Commodity follows the Equity template
-    additionalData_["isdaAssetClass"] = "Commodity";
-    additionalData_["isdaBaseProduct"] = "Swap";
-    additionalData_["isdaSubProduct"] = "Price Return Basic Performance";
+    additionalData_["isdaAssetClass"] = string("Commodity");
+    additionalData_["isdaBaseProduct"] = string("Swap");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
     // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = "";  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
