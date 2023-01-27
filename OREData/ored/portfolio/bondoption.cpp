@@ -135,6 +135,12 @@ void BondOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // the required fixings are (at most) those of the underlying
     requiredFixings_ = underlying_->requiredFixings();
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Option");
+    additionalData_["isdaSubProduct"] = string("Debt");  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 void BondOption::fromXML(XMLNode* node) {

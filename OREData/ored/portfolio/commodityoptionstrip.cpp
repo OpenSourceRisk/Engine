@@ -112,6 +112,13 @@ void CommodityOptionStrip::build(const boost::shared_ptr<EngineFactory>& engineF
     legs_.push_back(leg);
     legPayers_.push_back(false);
     legCurrencies_.push_back(npvCurrency_);
+
+    // ISDA taxonomy, assuming Commodity follows the Equity template
+    additionalData_["isdaAssetClass"] = "Commodity";
+    additionalData_["isdaBaseProduct"] = "Option";
+    additionalData_["isdaSubProduct"] = "Price Return Basic Performance";
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = "";  
 }
 
 std::map<ore::data::AssetClass, std::set<std::string>>

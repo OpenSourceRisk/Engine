@@ -61,6 +61,12 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["boughtAmount"] = quantity_;
     additionalData_["soldCurrency"] = currency_;
     additionalData_["soldAmount"] = quantity_ * strike_.value();
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Vanilla Option");
+    additionalData_["isdaSubProduct"] = string("");  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 void FxOption::fromXML(XMLNode* node) {

@@ -156,6 +156,13 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
         additionalData_["fixingDate"] = fixingDate_;
         additionalData_["fxIndex"] = fxIndex;
     }
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Commodity");
+    additionalData_["isdaBaseProduct"] = string("Forward");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 Real CommodityForward::notional() const {

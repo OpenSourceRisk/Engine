@@ -164,6 +164,13 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
     // set the trade instrument
     // as the first argument is always the long position and the second is always the short, multiplier is set to 1
     instrument_ = boost::make_shared<VanillaInstrument>(qlInstrument, 1.0, additionalInstruments, std::vector<Real>(legs_[0].size()-1,1.0));
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Commodity";
+    additionalData_["isdaBaseProduct"] = "Other";
+    additionalData_["isdaSubProduct"] = "";
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = "";  
 }
 
 void CommoditySpreadOption::fromXML(XMLNode* node){
