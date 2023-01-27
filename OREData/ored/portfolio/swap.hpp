@@ -69,6 +69,7 @@ public:
     //! \name Inspectors
     //@{
     const vector<LegData>& legData() const { return legData_; }
+    const bool isXCCY() const { return isXCCY_; }
     //@}
 
     const std::map<std::string,boost::any>& additionalData() const override;
