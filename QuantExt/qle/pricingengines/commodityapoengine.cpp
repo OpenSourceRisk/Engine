@@ -43,6 +43,7 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     std::map<Date, Real> futureVols;
     std::vector<double> spotVariances;
     size_t n = flow->indices().size();
+    double forwardUnderlyingCurrency = 0;
 
     for (const auto& [pricingDate, index] : flow->indices()) {
         Date fixingDate = index->fixingCalendar().adjust(pricingDate, Preceding);
@@ -50,10 +51,11 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
         if (pricingDate <= today) {
             res.accruals += index->fixing(fixingDate) * fxRate;
         } else {
+            forwardUnderlyingCurrency = index->fixing(fixingDate);
             res.forwards.push_back(index->fixing(fixingDate) * fxRate);
             res.times.push_back(vol->timeFromReference(pricingDate));
             // use ATM vol if no strike is given
-            double K = strike == Null<Real>() ? res.forwards.back() : strike;
+            double K = strike == Null<Real>() ? forwardUnderlyingCurrency : strike;
             if (flow->useFuturePrice()) {
                 Date expiry = index->expiryDate();
                 futureExpiries.push_back(expiry);
