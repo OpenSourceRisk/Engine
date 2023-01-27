@@ -96,23 +96,26 @@ void CliquetOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
     // ISDA taxonomy
     if (underlying_->type() == "EQ") {
-        additionalData_["isdaAssetClass"] = "Equity";
-        additionalData_["isdaBaseProduct"] = "Other";
-        additionalData_["isdaSubProduct"] = "Price Return Basic Performance";  
+        additionalData_["isdaAssetClass"] = string("Equity");
+        additionalData_["isdaBaseProduct"] = string("Other");
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
     } 
     else if (underlying_->type() == "COM") {
         // assuming that Commoditiy is treated like Equity
-        additionalData_["isdaAssetClass"] = "Commodity";
-        additionalData_["isdaBaseProduct"] = "Other";
-        additionalData_["isdaSubProduct"] = "Price Return Basic Performance";  
+        additionalData_["isdaAssetClass"] = string("Commodity");
+        additionalData_["isdaBaseProduct"] = string("Other");
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
     }
     else if (underlying_->type() == "FX") {
-        additionalData_["isdaAssetClass"] = "Foreign Exchange";
-        additionalData_["isdaBaseProduct"] = "Complex Exotic";
-        additionalData_["isdaSubProduct"] = "Generic";  
+        additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+        additionalData_["isdaBaseProduct"] = string("Complex Exotic");
+        additionalData_["isdaSubProduct"] = string("Generic");  
+    }
+    else {
+        WLOG("ISDA taxonomy not set for trade " << id());
     }
     
-    additionalData_["isdaTransaction"] = "";  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 void CliquetOption::fromXML(XMLNode* node) {

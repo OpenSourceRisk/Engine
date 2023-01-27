@@ -97,6 +97,13 @@ void CommoditySwaption::build(const boost::shared_ptr<EngineFactory>& engineFact
     }
     // use underlying maturity independent of settlement type, following ISDA GRID/AANA guidance
     maturity_ = swap->maturityDate();
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = "Commodity";
+    additionalData_["isdaBaseProduct"] = "Other";
+    additionalData_["isdaSubProduct"] = "";
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = "";  
 }
 
 QuantLib::Real CommoditySwaption::notional() const {

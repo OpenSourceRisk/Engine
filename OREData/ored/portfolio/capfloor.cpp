@@ -465,10 +465,10 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["startDate"] = to_string(startDate);
 
     // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = "Interest Rate";
-    additionalData_["isdaBaseProduct"] = "CapFloor";
-    additionalData_["isdaSubProduct"] = "";  
-    additionalData_["isdaTransaction"] = "";  
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("CapFloor");
+    additionalData_["isdaSubProduct"] = string("");  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 const std::map<std::string, boost::any>& CapFloor::additionalData() const {

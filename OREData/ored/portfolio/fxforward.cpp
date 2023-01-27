@@ -125,10 +125,10 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["boughtAmount"] = boughtAmount_;
 
     // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = "Foreign Exchange";
-    additionalData_["isdaBaseProduct"] = settlement_ == "Cash" ? "NDF" : "Forward";
-    additionalData_["isdaSubProduct"] = "";  
-    additionalData_["isdaTransaction"] = "";  
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string(settlement_ == "Cash" ? "NDF" : "Forward");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 QuantLib::Real FxForward::notional() const {

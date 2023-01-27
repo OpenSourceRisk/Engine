@@ -103,10 +103,10 @@ void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     additionalData_["payoffCurrency"] = payoffCurrency_;
 
     // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = "Foreign Exchange";
-    additionalData_["isdaBaseProduct"] = "Simple Exotic";
-    additionalData_["isdaSubProduct"] = "Digital";  
-    additionalData_["isdaTransaction"] = "";  
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Digital");  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 void FxDigitalOption::fromXML(XMLNode* node) {

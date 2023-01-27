@@ -164,11 +164,11 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     additionalData_["strikeCurrency"] = strike_.currency();
 
     // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = "Equity";
-    additionalData_["isdaBaseProduct"] = "Option";
-    additionalData_["isdaSubProduct"] = "Price Return Basic Performance";
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Option");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
     // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = "";  
+    additionalData_["isdaTransaction"] = string("");
 }
 
 void EquityOption::fromXML(XMLNode* node) {

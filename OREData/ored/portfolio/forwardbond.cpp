@@ -154,10 +154,10 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["currency"] = currency_;
 
     // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = "Interest Rate";
-    additionalData_["isdaBaseProduct"] = "Forward";
-    additionalData_["isdaSubProduct"] = "Debt";  
-    additionalData_["isdaTransaction"] = "";  
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Forward");
+    additionalData_["isdaSubProduct"] = string("Debt");
+    additionalData_["isdaTransaction"] = string("");
 }
 
 void ForwardBond::fromXML(XMLNode* node) {
