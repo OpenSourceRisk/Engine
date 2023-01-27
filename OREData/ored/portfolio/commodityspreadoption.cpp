@@ -79,9 +79,15 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
         auto tmpFx = commLegData_[i]->fxIndex();
         if(tmpFx.empty()) {
             std::string pos = i == 0 ? "Long" : "Short";
-            QL_REQUIRE(underlyingCcy.code() == settlementCcy_,
-                       "CommoditySpreadOption: No FXIndex provided for the " << pos << "position");
+            QL_REQUIRE(underlyingCcy.code() == settlementCcy_ && legData_[i].currency() == settlementCcy_,
+                       "CommoditySpreadOption, inconsistent currencies: Settlement currency is "
+                           << npvCurrency_ << ", leg " << i + 1 << " currency " << legData_[i].currency()
+                           << ", underlying currency " << underlyingCcy << ", no FxIndex provided");
         }else {
+            QL_REQUIRE(underlyingCcy.code() != settlementCcy_ && legData_[i].currency() == settlementCcy_,
+                       "CommoditySpreadOption, inconsistent currencies: Settlement currency is "
+                           << npvCurrency_ << ", leg " << i + 1  << " currency " << legData_[i].currency()
+                           << ", underlying currency " << underlyingCcy << ", FxIndex " << tmpFx << "provided");
             auto domestic = npvCurrency_;
             auto foreign = underlyingCcy.code();
             FxIndex[i] = buildFxIndex(tmpFx, domestic, foreign, engineFactory->market(),

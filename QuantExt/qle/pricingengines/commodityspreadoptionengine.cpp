@@ -142,8 +142,11 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         if (fxIndex) {
             fxSpot = fxIndex->fixing(cf->pricingDate());
         }
-        res.atm = cf->index()->fixing(cf->pricingDate()) * fxSpot;
-        res.sigma = res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0) ? vol->blackVol(res.tn, res.atm, true) : 0.0;
+        double atmUnderlyingCurrency = cf->index()->fixing(cf->pricingDate());
+        res.atm = atmUnderlyingCurrency * fxSpot;
+        res.sigma = res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)
+                        ? vol->blackVol(res.tn, atmUnderlyingCurrency, true)
+                        : 0.0;
     } else if (auto avgCf = ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(flow)) {
         auto parameter = CommodityAveragePriceOptionMomementMatching::matchFirstTwoMomentsTurnbullWakeman(
             avgCf, vol,
