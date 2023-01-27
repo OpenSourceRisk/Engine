@@ -241,20 +241,20 @@ private:
   <Type>CurrencyHedgedEquityIndex</Type>
   <CurrencyHedgedEquityIndexReferenceDatum>
       <UnderlyingIndex>RIC:.SPX</UnderlyingIndex>
+      <UnderlyingIndexCurrency>USD</UnderlyingIndexCurrency>
       <HedgeCurrency>EUR</HedgeCurrency>
-      <RebalanceFrequency>Monthly</RebalanceFrequency>
-      <RebalanceBusinessDayOfMonth>-1</RebalanceBusinessDayOfMonth>
-      <ReferenceBusinessDaysOffset>1</ReferenceBusinessDaysOffset>
-      <HedgeAdjustmentFrequency>0*Days</HedgeAdjustmentFrequency>
-      <HedgingCalendar>EUR,USD<HedgingCalendar>
-      <HedgingBusinessDayConvention>Preceeding</HedgingBusinessDayConvention>
-      <CurrencyWeights>
-        <Currency>
-            <Name>USD</Name>
-            <Weight>1.0</Weight>
-        </Currency>
+      <RebalancingStrategy>EndOfMonth</RebalancingStrategy>
+      <ReferenceDateOffset>1</ReferenceDateOffset>
+      <HedgeAdjustment>None|Daily</HedgeAdjustment>
+      <HedgeCalendar>EUR,USD</HedgeCalendar>
+      <FxIndex>ECB-EUR-USD</FxIndex>
+      <IndexWeightsAtLastRebalancingDate>
+        <Underlying>
+            <Name>Apple</Name>
+            <Weight>0.1</Weight>
+        </Underlying>
         ...
-      </CurrencyWeights>
+      </IndexWeightsAtLastRebalancingDate>
   </CurrencyHedgedEquityIndexReferenceDatum>
 </ReferenceDatum>
 */
@@ -262,23 +262,34 @@ class CurrencyHedgedEquityIndexReferenceDatum : public ReferenceDatum {
 public:
     static constexpr const char* TYPE = "CurrencyHedgedEquityIndex";
 
+    struct RebalancingDate {
+        enum Strategy { EndOfMonth };
+    };
+
+    struct HedgeAdjustment {
+        enum Rule { None, Daily };
+    };
+
     CurrencyHedgedEquityIndexReferenceDatum() {}
 
     CurrencyHedgedEquityIndexReferenceDatum(const string& name)
-        : ReferenceDatum(TYPE, name), underlyingIndexName_(""), quoteCurrency_(""),
-          rebalancingFrequency_(QuantLib::Monthly), rebalancingBusinessDayOfMonth_(-1),
-          referenceDateBusinessDaysOffset_(0), hedgeAdjustmentFrequency_(0 * QuantLib::Days),
-          hedgeCalendar_(WeekendsOnly()), hedgeBdc_(QuantLib::Unadjusted) {}
+        : ReferenceDatum(TYPE, name), 
+          underlyingIndexName_(""), 
+          hedgeCurrency_(""),
+          rebalancingStrategy_(RebalancingDate::Strategy::EndOfMonth), 
+          referenceDateOffset_(0), 
+          hedgeAdjustmentRule_(HedgeAdjustment::Rule::None),
+          hedgeCalendar_(WeekendsOnly()), 
+          fxIndex_("") {}
 
     const std::string& underlyingIndexName() const { return underlyingIndexName_; }
-    const std::string& quoteCurrency() const { return quoteCurrency_; }
-    int referenceDateBusinessDaysOffset() const { return referenceDateBusinessDaysOffset_; }
-    QuantLib::Period rebalancingFrequency() const { return rebalancingFrequency_; }
-    int rebalancingBusinessDayOfMonth() const { return rebalancingBusinessDayOfMonth_; }
-    QuantLib::Period hedgeAdjustmentFrequency() const {return hedgeAdjustmentFrequency_; }
-    // use -1 for last businessDay of the month and 1 for the first BD of the month
+    const std::string& underlyingIndexCurrency() const { return underlyingIndexCurrency_; }
+    const std::string& hedgeCurrency() const { return hedgeCurrency_; }
+    int referenceDateOffset() const { return referenceDateOffset_; }
+    RebalancingDate::Strategy rebalancingStrategy() const { return rebalancingStrategy_; }
+    HedgeAdjustment::Rule hedgeAdjustmentRule() const { return hedgeAdjustmentRule_; }
     QuantLib::Calendar hedgeCalendar() const { return hedgeCalendar_; }
-    QuantLib::BusinessDayConvention hedgeBdc() const { return hedgeBdc_; }
+    const std::string& fxIndex() const { return fxIndex_; }
 
     //! Returns the currency weights at the last rebalancing date
     const vector<pair<string, double>>& currencyWeights() const { return data_; }
@@ -293,14 +304,13 @@ public:
 
 private:
     std::string underlyingIndexName_;
-    std::string quoteCurrency_;
-    QuantLib::Period rebalancingFrequency_;
-    int rebalancingBusinessDayOfMonth_;
-    int referenceDateBusinessDaysOffset_;
-    QuantLib::Period hedgeAdjustmentFrequency_;
-    // use -1 for last businessDay of the month and 1 for the first BD of the month
+    std::string underlyingIndexCurrency_;
+    std::string hedgeCurrency_;
+    RebalancingDate::Strategy rebalancingStrategy_;
+    int referenceDateOffset_;
+    HedgeAdjustment::Rule hedgeAdjustmentRule_;
     QuantLib::Calendar hedgeCalendar_;
-    QuantLib::BusinessDayConvention hedgeBdc_;
+    std::string fxIndex_;
     vector<pair<string, double>> data_;
     static ReferenceDatumRegister<ReferenceDatumBuilder<CurrencyHedgedEquityIndexReferenceDatum>> reg_;
 };
