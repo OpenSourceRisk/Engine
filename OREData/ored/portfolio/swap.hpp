@@ -80,7 +80,7 @@ protected:
 
 private:
     string settlement_;
-    bool isXCCY_;
+    bool isXCCY_ = false;
     bool isResetting_;
     Size notionalTakenFromLeg_;
 };
