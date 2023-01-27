@@ -182,10 +182,10 @@ void CreditLinkedSwap::build(const boost::shared_ptr<EngineFactory>& engineFacto
 
     // ISDA taxonomy
 
-    additionalData_["isdaAssetClass"] = "Interest Rate";
-    additionalData_["isdaBaseProduct"] = "Exotic";
-    additionalData_["isdaSubProduct"] = "";  
-    additionalData_["isdaTransaction"] = "";  
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Exotic");
+    additionalData_["isdaSubProduct"] = string("");  
+    additionalData_["isdaTransaction"] = string("");  
 
     // log
 

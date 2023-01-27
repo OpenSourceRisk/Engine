@@ -213,10 +213,10 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         buildBermudan(engineFactory);
 
     // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = "Interest Rate";
-    additionalData_["isdaBaseProduct"] = "Option";
-    additionalData_["isdaSubProduct"] = "Swaption";  
-    additionalData_["isdaTransaction"] = "";  
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Option");
+    additionalData_["isdaSubProduct"] = string("Swaption");  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFactory) {

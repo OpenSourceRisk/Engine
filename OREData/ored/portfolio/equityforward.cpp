@@ -88,11 +88,11 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     additionalData_["quantity"] = quantity_;
 
     // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = "Equity";
-    additionalData_["isdaBaseProduct"] = "Forward";
-    additionalData_["isdaSubProduct"] = "Price Return Basic Performance";
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Forward");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
     // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = "";  
+    additionalData_["isdaTransaction"] = string("");
 }
     
 void EquityForward::fromXML(XMLNode* node) {

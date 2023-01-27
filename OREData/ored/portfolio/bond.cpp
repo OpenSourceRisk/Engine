@@ -262,6 +262,13 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {bondData_.isPayer()};
 
+    // ISDA taxonomy: not a derivative, but define the asset class at least
+    // so that we can determine a TRS asset class that has Bond underlyings
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
     DLOG("Bond::build() finished for trade " << id());
 }
 

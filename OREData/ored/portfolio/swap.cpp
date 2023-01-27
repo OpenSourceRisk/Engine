@@ -189,21 +189,21 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["startDate"] = to_string(startDate);
 
     // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = "Interest Rate";
-    additionalData_["isdaBaseProduct"] = isXCCY_ ? "Cross Currency" : "IR Swap";
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string(isXCCY_ ? "Cross Currency" : "IR Swap");
     Size nfixed = 0;
     auto it1 = legTypeCount_.find("Fixed");
     auto it2 = legTypeCount_.find("ZeroCouponFixed");
     nfixed += (it1 == legTypeCount_.end() ? 0 : it1->second);
     nfixed += (it2 == legTypeCount_.end() ? 0 : it2->second);    
     if (nfixed == 0)
-        additionalData_["isdaSubProduct"] = "Basis";  
+        additionalData_["isdaSubProduct"] = string("Basis");  
     else if (nfixed == 1)
-        additionalData_["isdaSubProduct"] = "Fixed Float";  
+        additionalData_["isdaSubProduct"] = string("Fixed Float");  
     else
-        additionalData_["isdaSubProduct"] = "Fixed Fixed";
+        additionalData_["isdaSubProduct"] = string("Fixed Fixed");
     // skip transaction level for now
-    additionalData_["isdaTransaction"] = "";  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 const std::map<std::string,boost::any>& Swap::additionalData() const {

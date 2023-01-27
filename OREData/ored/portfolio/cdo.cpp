@@ -662,12 +662,12 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     additionalData_["currentNotional"] = currTrancheNtl;
 
     // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = "Credit";
-    additionalData_["isdaBaseProduct"] = "Index Tranche";
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Index Tranche");
     // Deferring the mapping of qualifier to CDX, LCDX, CDX Structured Tranche, iTraxx, iTraxx Structured Tranche, ABX, MCDX
     additionalData_["isdaSubProduct"] = qualifier_; 
     // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = "";  
+    additionalData_["isdaTransaction"] = string("");  
 
     DLOG("CDO instrument built");
 }

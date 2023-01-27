@@ -55,10 +55,10 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     }
 
     // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = "Interest Rate";
-    additionalData_["isdaBaseProduct"] = "FRA";
-    additionalData_["isdaSubProduct"] = "";
-    additionalData_["isdaTransaction"] = "";  
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("FRA");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
 }
 
 void ForwardRateAgreement::fromXML(XMLNode* node) {
