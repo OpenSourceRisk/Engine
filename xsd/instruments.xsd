@@ -1607,9 +1607,18 @@
     </xs:all>
   </xs:complexType>
   
+  <xs:complexType name="underlyings">
+    <xs:sequence>
+      <xs:element type="underlying" name="Underlying" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:element name="underlyingTypes" abstract="true"/>
+  <xs:element type="underlyings" name="Underlyings" substitutionGroup="underlyingTypes"/>
+  
   <xs:element name="equityNameType" abstract="true"/>
   <xs:element type="xs:string" name="Name" substitutionGroup="equityNameType"/>
-  <xs:element type="underlying" name="Underlying" substitutionGroup="equityNameType"/>
+  <xs:element type="underlying" name="Underlying" substitutionGroup="equityNameType underlyingTypes"/>
 
   <xs:element name="nettingSetGroup" abstract="true"/>
   <xs:element type="xs:string" name="NettingSetId" substitutionGroup="nettingSetGroup"/>
