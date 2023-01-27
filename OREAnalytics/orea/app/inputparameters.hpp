@@ -261,14 +261,15 @@ protected:
     boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     boost::shared_ptr<ore::data::Portfolio> portfolio_;
 
+    QuantLib::Size nThreads_ = 1;
+
     // FIXME: The following (down to dryRun_) is not explicitly initialized
     // in OREAppInputParameters so far. 
    
-    QuantLib::Size nThreads_ = 1;
-    bool entireMarket_ = true; // FIXME: ORE Example 17 part 2 breaks if set to false
-    bool allFixings_ = true; // FIXME
-    bool eomInflationFixings_ = false;
-    bool useMarketDataFixings_ = false;
+    bool entireMarket_ = false; 
+    bool allFixings_ = false; 
+    bool eomInflationFixings_ = true;
+    bool useMarketDataFixings_ = true;
     bool iborFallbackOverride_ = false;
     std::string reportNaString_;
     char csvQuoteChar_ = '\0';

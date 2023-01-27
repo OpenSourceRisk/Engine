@@ -43,6 +43,16 @@ void OREAppInputParameters::loadParameters() {
 
     LOG("OREAppInputParameters::loadParameters starting");
 
+    // Switch default values for backward compatibility
+    entireMarket_ = true; 
+    allFixings_ = true; 
+    eomInflationFixings_ = false;
+    useMarketDataFixings_ = false;
+    iborFallbackOverride_ = false;
+    csvQuoteChar_ = '\0';
+    dryRun_ = false;
+    outputAdditionalResults_ = false;
+
     QL_REQUIRE(params_->hasGroup("setup"), "parameter group 'setup' missing");
 
     std::string inputPath = params_->get("setup", "inputPath");
