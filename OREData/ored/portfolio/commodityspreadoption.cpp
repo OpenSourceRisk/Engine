@@ -166,11 +166,11 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
     instrument_ = boost::make_shared<VanillaInstrument>(qlInstrument, 1.0, additionalInstruments, std::vector<Real>(legs_[0].size()-1,1.0));
 
     // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = "Commodity";
-    additionalData_["isdaBaseProduct"] = "Other";
-    additionalData_["isdaSubProduct"] = "";
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Other");
+    additionalData_["isdaSubProduct"] = std::string("");
     // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = "";  
+    additionalData_["isdaTransaction"] = std::string("");
 }
 
 void CommoditySpreadOption::fromXML(XMLNode* node){
