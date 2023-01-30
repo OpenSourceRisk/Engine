@@ -279,8 +279,7 @@ public:
           rebalancingStrategy_(RebalancingDate::Strategy::EndOfMonth), 
           referenceDateOffset_(0), 
           hedgeAdjustmentRule_(HedgeAdjustment::Rule::None),
-          hedgeCalendar_(WeekendsOnly()), 
-          fxIndex_("") {}
+          hedgeCalendar_(WeekendsOnly()) {}
 
     const std::string& underlyingIndexName() const { return underlyingIndexName_; }
     const std::string& underlyingIndexCurrency() const { return underlyingIndexCurrency_; }
@@ -289,7 +288,7 @@ public:
     RebalancingDate::Strategy rebalancingStrategy() const { return rebalancingStrategy_; }
     HedgeAdjustment::Rule hedgeAdjustmentRule() const { return hedgeAdjustmentRule_; }
     QuantLib::Calendar hedgeCalendar() const { return hedgeCalendar_; }
-    const std::string& fxIndex() const { return fxIndex_; }
+    const std::map<std::string, std::string>& fxIndexes() const { return fxIndexes_; }
 
     //! Returns the currency weights at the last rebalancing date
     const vector<pair<string, double>>& currencyWeights() const { return data_; }
@@ -310,7 +309,7 @@ private:
     int referenceDateOffset_;
     HedgeAdjustment::Rule hedgeAdjustmentRule_;
     QuantLib::Calendar hedgeCalendar_;
-    std::string fxIndex_;
+    std::map<std::string, std::string> fxIndexes_;
     vector<pair<string, double>> data_;
     static ReferenceDatumRegister<ReferenceDatumBuilder<CurrencyHedgedEquityIndexReferenceDatum>> reg_;
 };

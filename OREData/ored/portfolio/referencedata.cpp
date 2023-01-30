@@ -310,7 +310,15 @@ void CurrencyHedgedEquityIndexReferenceDatum::fromXML(XMLNode* node) {
     std::string hedgeCalendarStr = XMLUtils::getChildValue(innerNode, "HedgeCalendar", true);
     hedgeCalendar_ = parseCalendar(hedgeCalendarStr);
  
-    fxIndex_ = XMLUtils::getChildValue(innerNode, "FxIndex", true);
+    XMLNode* fxIndexesNode = XMLUtils::getChildNode(innerNode, "FxIndexes");
+    if (fxIndexesNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(fxIndexesNode, "FxIndex"); child;
+             child = XMLUtils::getNextSibling(child, "FxIndex")) {
+            string currency = XMLUtils::getChildValue(child, "Currency", true);
+            string indexFamily = XMLUtils::getChildValue(child, "IndexName", true);
+            fxIndexes_[currency] = indexFamily;
+        }
+    }
 
     // Optional Fields
     referenceDateOffset_ = XMLUtils::getChildValueAsInt(innerNode, "ReferenceDateOffset", false, 0);
