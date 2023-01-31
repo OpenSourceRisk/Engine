@@ -360,12 +360,21 @@ XMLNode* CurrencyHedgedEquityIndexReferenceDatum::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, rdNode, "HedgeCurrency", hedgeCurrency_);
     XMLUtils::addChild(doc, rdNode, "RebalancingStrategy", "EndOfMonth");
     XMLUtils::addChild(doc, rdNode, "HedgeCalendar", to_string(hedgeCalendar_));
-    XMLUtils::addChild(doc, rdNode, "HedgeBusinessDayConvention", to_string(hedgeBdc_));
     if (referenceDateOffset_ != 0)
         XMLUtils::addChild(doc, rdNode, "ReferenceDateOffset", to_string(referenceDateOffset_));
     if (hedgeAdjustmentRule_ == HedgeAdjustment::Daily) {
         XMLUtils::addChild(doc, rdNode, "HedgeAdjustment", "Daily");
     } 
+
+    if (!fxIndexes_.empty()) {
+        XMLNode* currencyWeightNode = XMLUtils::addChild(doc, rdNode, "FxIndexes");
+        for (auto d : fxIndexes_) {
+            XMLNode* underlyingNode = XMLUtils::addChild(doc, currencyWeightNode, "FxIndex");
+            XMLUtils::addChild(doc, underlyingNode, "Currency", d.first);
+            XMLUtils::addChild(doc, underlyingNode, "IndexName", d.second);
+        }
+    }
+
     if (!data_.empty()) {
         XMLNode* currencyWeightNode = XMLUtils::addChild(doc, rdNode, "IndexWeightsAtLastRebalancingDate");
         for (auto d : data_) {
