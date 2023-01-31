@@ -79,9 +79,15 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
         auto tmpFx = commLegData_[i]->fxIndex();
         if(tmpFx.empty()) {
             std::string pos = i == 0 ? "Long" : "Short";
-            QL_REQUIRE(underlyingCcy.code() == settlementCcy_,
-                       "CommoditySpreadOption: No FXIndex provided for the " << pos << "position");
+            QL_REQUIRE(underlyingCcy.code() == settlementCcy_ && legData_[i].currency() == settlementCcy_,
+                       "CommoditySpreadOption, inconsistent currencies: Settlement currency is "
+                           << npvCurrency_ << ", leg " << i + 1 << " currency " << legData_[i].currency()
+                           << ", underlying currency " << underlyingCcy << ", no FxIndex provided");
         }else {
+            QL_REQUIRE(underlyingCcy.code() != settlementCcy_ && legData_[i].currency() == settlementCcy_,
+                       "CommoditySpreadOption, inconsistent currencies: Settlement currency is "
+                           << npvCurrency_ << ", leg " << i + 1  << " currency " << legData_[i].currency()
+                           << ", underlying currency " << underlyingCcy << ", FxIndex " << tmpFx << "provided");
             auto domestic = npvCurrency_;
             auto foreign = underlyingCcy.code();
             FxIndex[i] = buildFxIndex(tmpFx, domestic, foreign, engineFactory->market(),
@@ -158,6 +164,13 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
     // set the trade instrument
     // as the first argument is always the long position and the second is always the short, multiplier is set to 1
     instrument_ = boost::make_shared<VanillaInstrument>(qlInstrument, 1.0, additionalInstruments, std::vector<Real>(legs_[0].size()-1,1.0));
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Other");
+    additionalData_["isdaSubProduct"] = std::string("");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = std::string("");
 }
 
 void CommoditySpreadOption::fromXML(XMLNode* node){

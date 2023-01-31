@@ -47,8 +47,8 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("CapFloor::build() called for trade " << id() << ", leg type is " << legData_.legType());
 
     QL_REQUIRE((legData_.legType() == "Floating") || (legData_.legType() == "CMS") ||
-                   (legData_.legType() == "DurationAdjustedCMS") || (legData_.legType() == "CMSSpread") || (legData_.legType() == "CPI") ||
-                   (legData_.legType() == "YY"),
+                   (legData_.legType() == "DurationAdjustedCMS") || (legData_.legType() == "CMSSpread") ||
+                   (legData_.legType() == "CPI") || (legData_.legType() == "YY"),
                "CapFloor build error, LegType must be Floating, CMS, DurationAdjustedCMS, CMSSpread, CPI or YY");
 
     QL_REQUIRE(caps_.size() > 0 || floors_.size() > 0, "CapFloor build error, no cap rates or floor rates provided");
@@ -203,11 +203,11 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         qlInstrument->setPricingEngine(
             boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
         maturity_ = CashFlows::maturityDate(legs_.front());
-    }
-    else if (legData_.legType() == "CMSSpread") {
+    } else if (legData_.legType() == "CMSSpread") {
         builder = engineFactory->builder("Swap");
-        boost::shared_ptr<CMSSpreadLegData> cmsSpreadData = boost::dynamic_pointer_cast<CMSSpreadLegData>(legData_.concreteLegData());
-        QL_REQUIRE(cmsSpreadData, "Wrong LegType, expected CMSSpread");	
+        boost::shared_ptr<CMSSpreadLegData> cmsSpreadData =
+            boost::dynamic_pointer_cast<CMSSpreadLegData>(legData_.concreteLegData());
+        QL_REQUIRE(cmsSpreadData, "Wrong LegType, expected CMSSpread");
         LegData tmpLegData = legData_;
         boost::shared_ptr<CMSSpreadLegData> tmpFloatData = boost::make_shared<CMSSpreadLegData>(*cmsSpreadData);
         tmpFloatData->floors() = floors_;
@@ -224,8 +224,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         qlInstrument->setPricingEngine(
             boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
         maturity_ = CashFlows::maturityDate(legs_.front());
-    }
-    else if (legData_.legType() == "CPI") {
+    } else if (legData_.legType() == "CPI") {
         DLOG("CPI CapFloor Type " << capFloorType << " ID " << id());
 
         builder = engineFactory->builder("CpiCapFloor");
@@ -259,8 +258,8 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         boost::shared_ptr<InflationSwapConvention> cpiSwapConvention = nullptr;
 
-        auto inflationConventions =
-            InstrumentConventions::instance().conventions()->get(underlyingIndex + "_INFLATIONSWAP", Convention::Type::InflationSwap);
+        auto inflationConventions = InstrumentConventions::instance().conventions()->get(
+            underlyingIndex + "_INFLATIONSWAP", Convention::Type::InflationSwap);
 
         if (inflationConventions.first)
             cpiSwapConvention = boost::dynamic_pointer_cast<InflationSwapConvention>(inflationConventions.second);
@@ -337,8 +336,8 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             }
 
             if (capFloorType == QuantLib::CapFloor::Cap || capFloorType == QuantLib::CapFloor::Collar) {
-                boost::shared_ptr<CPICapFloor> capfloor =
-                    boost::make_shared<CPICapFloor>(Option::Call, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, caps_[i], zeroIndex,
+                boost::shared_ptr<CPICapFloor> capfloor = boost::make_shared<CPICapFloor>(
+                    Option::Call, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, caps_[i], zeroIndex,
                     observationLag, interpolationMethod);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 boost::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, gearing);
@@ -348,8 +347,8 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             if (capFloorType == QuantLib::CapFloor::Floor || capFloorType == QuantLib::CapFloor::Collar) {
                 // for collars we want a long cap, short floor
                 Real sign = capFloorType == QuantLib::CapFloor::Floor ? 1.0 : -1.0;
-                boost::shared_ptr<CPICapFloor> capfloor =
-                    boost::make_shared<CPICapFloor>(Option::Put, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, floors_[i], zeroIndex,
+                boost::shared_ptr<CPICapFloor> capfloor = boost::make_shared<CPICapFloor>(
+                    Option::Put, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, floors_[i], zeroIndex,
                     observationLag, interpolationMethod);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 boost::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, sign * gearing);
@@ -459,11 +458,17 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             startDate = std::min(startDate, l.front()->date());
             boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(l.front());
             if (coupon)
-                startDate = std::min(startDate, coupon->accrualStartDate());                
+                startDate = std::min(startDate, coupon->accrualStartDate());
         }
     }
 
     additionalData_["startDate"] = to_string(startDate);
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("CapFloor");
+    additionalData_["isdaSubProduct"] = string("");  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 const std::map<std::string, boost::any>& CapFloor::additionalData() const {
@@ -519,82 +524,87 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
     vector<Rate> caps;
     vector<Rate> effectiveCaps;
     vector<Volatility> capletVols;
-    vector<Real> capletPrices;
+    vector<Real> capletAmounts;
     vector<Rate> floors;
     vector<Rate> effectiveFloors;
     vector<Volatility> floorletVols;
-    vector<Real> floorletPrices;
+    vector<Real> floorletAmounts;
 
     try {
         for (const auto& flow : legs_[0]) {
-	    // pick flow with earliest future payment date on this leg
-	    if (flow->date() > asof) {
-	        amounts.push_back(flow->amount());
-		paymentDates.push_back(flow->date());
-		boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
-		if (coupon) {
-		    currentNotionals.push_back(coupon->nominal());
-		    rates.push_back(coupon->rate());
-		    boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
-		    if (frc) {
-		        fixingDates.push_back(frc->fixingDate());
-			indexFixings.push_back(frc->indexFixing());
-			spreads.push_back(frc->spread());
+            // pick flow with earliest future payment date on this leg
+            if (flow->date() > asof) {
+                amounts.push_back(flow->amount());
+                paymentDates.push_back(flow->date());
+                boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
+                if (coupon) {
+                    currentNotionals.push_back(coupon->nominal());
+                    rates.push_back(coupon->rate());
+                    boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
+                    if (frc) {
+                        fixingDates.push_back(frc->fixingDate());
+                        indexFixings.push_back(frc->indexFixing());
+                        spreads.push_back(frc->spread());
 
-			// The below code adds cap/floor levels, vols, and prices
-			// for capped/floored Ibor coupons
+                        // The below code adds cap/floor levels, vols, and amounts
+                        // for capped/floored Ibor coupons
 
-			boost::shared_ptr<StrippedCappedFlooredCoupon> strippedCfc =
-			    boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow);
-			if (!strippedCfc)
-			    continue;
+                        boost::shared_ptr<StrippedCappedFlooredCoupon> strippedCfc =
+                            boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow);
+                        if (!strippedCfc)
+                            continue;
 
-			boost::shared_ptr<CappedFlooredCoupon> cfc = strippedCfc->underlying();
-			boost::shared_ptr<IborCouponPricer> pricer =
-			    boost::dynamic_pointer_cast<IborCouponPricer>(cfc->pricer());
-			if (pricer && (cfc->fixingDate() > asof)) {
-			    // We write the vols if an Ibor coupon pricer is found and the fixing date is in the future
-			    if (cfc->isCapped()) {
-			        caps.push_back(cfc->cap());
-				const Rate effectiveCap = cfc->effectiveCap();
-				effectiveCaps.push_back(effectiveCap);
-				capletVols.push_back(
+                        boost::shared_ptr<CappedFlooredCoupon> cfc = strippedCfc->underlying();
+                        // enfore coupon pricer to hold the results of the current coupon
+                        cfc->deepUpdate();
+                        cfc->amount();
+                        boost::shared_ptr<IborCouponPricer> pricer =
+                            boost::dynamic_pointer_cast<IborCouponPricer>(cfc->pricer());
+                        if (pricer && (cfc->fixingDate() > asof)) {
+                            // We write the vols if an Ibor coupon pricer is found and the fixing date is in the future
+                            if (cfc->isCapped()) {
+                                caps.push_back(cfc->cap());
+                                const Rate effectiveCap = cfc->effectiveCap();
+                                effectiveCaps.push_back(effectiveCap);
+                                capletVols.push_back(
                                     pricer->capletVolatility()->volatility(cfc->fixingDate(), effectiveCap));
-				capletPrices.push_back(pricer->capletPrice(effectiveCap) * coupon->nominal());
-			    }
-			    if (cfc->isFloored()) {
-			        floors.push_back(cfc->floor());
-				const Rate effectiveFloor = cfc->effectiveFloor();
-				effectiveFloors.push_back(effectiveFloor);
-				floorletVols.push_back(
+                                capletAmounts.push_back(pricer->capletRate(effectiveCap) * coupon->accrualPeriod() *
+                                                        coupon->nominal());
+                            }
+                            if (cfc->isFloored()) {
+                                floors.push_back(cfc->floor());
+                                const Rate effectiveFloor = cfc->effectiveFloor();
+                                effectiveFloors.push_back(effectiveFloor);
+                                floorletVols.push_back(
                                     pricer->capletVolatility()->volatility(cfc->fixingDate(), effectiveFloor));
-				floorletPrices.push_back(pricer->floorletPrice(effectiveFloor) * coupon->nominal());
-			    }
-			}
-		    }
-		}
-	    }
-	}
+                                floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) * coupon->accrualPeriod() *
+                                                          coupon->nominal());
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
-	additionalData_["amounts"] = amounts;
-	additionalData_["paymentDates"] = paymentDates;
-	additionalData_["currentNotionals"] = currentNotionals;
-	additionalData_["rates"] = rates;
-	additionalData_["fixingDates"] = fixingDates;
-	additionalData_["indexFixings"] = indexFixings;
-	additionalData_["spreads"] = spreads;
-	if (caps.size() > 0) {
-	    additionalData_["caps"] = caps;
-	    additionalData_["effectiveCaps"] = effectiveCaps;
-	    additionalData_["capletVols"] = capletVols;
-	    additionalData_["capletPrices"] = capletPrices;
-	}
-	if (floors.size() > 0) {
-	    additionalData_["floors"] = floors;
-	    additionalData_["effectiveFloors"] = effectiveFloors;
-	    additionalData_["floorletVols"] = floorletVols;
-	    additionalData_["floorletPrices"] = floorletPrices;
-	}
+        additionalData_["amounts"] = amounts;
+        additionalData_["paymentDates"] = paymentDates;
+        additionalData_["currentNotionals"] = currentNotionals;
+        additionalData_["rates"] = rates;
+        additionalData_["fixingDates"] = fixingDates;
+        additionalData_["indexFixings"] = indexFixings;
+        additionalData_["spreads"] = spreads;
+        if (caps.size() > 0) {
+            additionalData_["caps"] = caps;
+            additionalData_["effectiveCaps"] = effectiveCaps;
+            additionalData_["capletVols"] = capletVols;
+            additionalData_["capletAmounts"] = capletAmounts;
+        }
+        if (floors.size() > 0) {
+            additionalData_["floors"] = floors;
+            additionalData_["effectiveFloors"] = effectiveFloors;
+            additionalData_["floorletVols"] = floorletVols;
+            additionalData_["floorletAmounts"] = floorletAmounts;
+        }
 
     } catch (std::exception& e) {
         ALOG("error getting additional data for capfloor trade " << id() << ". " << e.what());

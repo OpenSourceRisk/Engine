@@ -76,10 +76,11 @@ public:
 protected:
     virtual boost::shared_ptr<LegData> createLegData() const;
     vector<LegData> legData_;
-
-private:
     string settlement_;
     bool isXCCY_;
+    std::map<std::string,Size> legTypeCount_;
+    
+private:
     bool isResetting_;
     Size notionalTakenFromLeg_;
 };

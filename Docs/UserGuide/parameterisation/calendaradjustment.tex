@@ -1,0 +1,44 @@
+%--------------------------------------------------------
+\subsection{Calendar Adjustment: {\tt calendaradjustment.xml}}\label{sec:calendaradjustment}
+%--------------------------------------------------------
+
+\medskip
+ This file {\tt calendaradjustment.xml} list out all additional holidays and business days that are added to a specified calendar in ORE.
+ These dates would originally be missing from the calendar and has to be added.The general structure is shown in listing \ref{lst:calendar_adjustment}.
+In this example, two additional dates had been added to the calendar "Japan", one additional holiday and one additional business day. If the user is not certain
+wether the date is already included or not, adding it to the {\tt calendaradjustment.xml} to be safe won't raise any errors.
+A sample {\tt calendaradjustment.xml} file can be found in the global example input directory. However, it is only used in Example\_1.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+<CalendarAdjustments>
+  <Calendar name="Japan">
+    <AdditionalHolidays>
+      <Date>2020-01-01</Date>
+    </AdditionalHolidays>
+    <AdditionalBusinessDays>
+      <Date>2020-01-02</Date>
+    </AdditionalBusinessDays>
+</CalendarAdjustments>
+\end{minted}
+\caption{Calendar Adjustment}\label{lst:calendar_adjustment}
+\end{longlisting}
+
+If the parameter \lstinline!BaseCalendar! is provided then a new calendar will be created using the specified calendar as a base, and adding any \lstinline!AdditionalHolidays! or \lstinline!AdditionalBusinessDays!. In the example below a new calendar \lstinline!CUSTOM_Japan! is being created, it will include any additional holidays or business days specified in the original \lstinline!Japan! calendar plus one additional date.
+
+If a new calendar is added in this way and the schema is being used to validate XML input, the corresponding calendar name must be prefixed with `CUSTOM\_'.
+
+\begin{longlisting}
+\hrule\medskip
+\begin{minted}[fontsize=\scriptsize]{xml}
+<CalendarAdjustments>
+  <Calendar name="CUSTOM_Japan">
+    <BaseCalendar>Japan</BaseCalendar>
+    <AdditionalHolidays>
+      <Date>2020-04-06</Date>
+    </AdditionalHolidays>
+</CalendarAdjustments>
+\end{minted}
+\caption{Calendar Adjustment creating a new calendar}
+\label{lst:calendar_adjustment_2}
+\end{longlisting}
