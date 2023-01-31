@@ -241,7 +241,6 @@ private:
   <Type>CurrencyHedgedEquityIndex</Type>
   <CurrencyHedgedEquityIndexReferenceDatum>
       <UnderlyingIndex>RIC:.SPX</UnderlyingIndex>
-      <UnderlyingIndexCurrency>USD</UnderlyingIndexCurrency>
       <HedgeCurrency>EUR</HedgeCurrency>
       <RebalancingStrategy>EndOfMonth</RebalancingStrategy>
       <ReferenceDateOffset>1</ReferenceDateOffset>
@@ -282,7 +281,6 @@ public:
           hedgeCalendar_(WeekendsOnly()) {}
 
     const std::string& underlyingIndexName() const { return underlyingIndexName_; }
-    const std::string& underlyingIndexCurrency() const { return underlyingIndexCurrency_; }
     const std::string& hedgeCurrency() const { return hedgeCurrency_; }
     int referenceDateOffset() const { return referenceDateOffset_; }
     RebalancingDate::Strategy rebalancingStrategy() const { return rebalancingStrategy_; }
@@ -303,7 +301,6 @@ public:
 
 private:
     std::string underlyingIndexName_;
-    std::string underlyingIndexCurrency_;
     std::string hedgeCurrency_;
     RebalancingDate::Strategy rebalancingStrategy_;
     int referenceDateOffset_;

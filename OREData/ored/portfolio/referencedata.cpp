@@ -267,22 +267,23 @@ XMLNode* IndexReferenceDatum::toXML(XMLDocument& doc) {
 
     return node;
 }
-// Currency Hedged Equity Index
+// Currency Hedged Equity Indexes
 /*
 <ReferenceDatum id="RIC:.SPXEURHedgedMonthly">
   <Type>CurrencyHedgedEquityIndex</Type>
   <CurrencyHedgedEquityIndexReferenceDatum>
       <UnderlyingIndex>RIC:.SPX</UnderlyingIndex>
+      <UnderlyingIndexCurrency>USD</UnderlyingIndexCurrency>
       <HedgeCurrency>EUR</HedgeCurrency>
       <RebalancingStrategy>EndOfMonth</RebalancingStrategy>
       <ReferenceDateOffset>1</ReferenceDateOffset>
       <HedgeAdjustment>None|Daily</HedgeAdjustment>
       <HedgeCalendar>EUR,USD</HedgeCalendar>
-      <HedgeBusinessDayConvention>Preceeding</HedgeBusinessDayConvention>
+      <FxIndex>ECB-EUR-USD</FxIndex>
       <IndexWeightsAtLastRebalancingDate>
         <Underlying>
             <Name>Apple</Name>
-            <Weight>1.0</Weight>
+            <Weight>0.1</Weight>
         </Underlying>
         ...
       </IndexWeightsAtLastRebalancingDate>
@@ -298,6 +299,7 @@ void CurrencyHedgedEquityIndexReferenceDatum::fromXML(XMLNode* node) {
     QL_REQUIRE(innerNode, "No " + type() + "ReferenceData node");
 
     underlyingIndexName_ = XMLUtils::getChildValue(innerNode, "UnderlyingIndex", true);
+    
     hedgeCurrency_ = XMLUtils::getChildValue(innerNode, "HedgeCurrency", true);
     
     auto rebalancingStr = XMLUtils::getChildValue(innerNode, "RebalancingStrategy", false, "EndOfMonth");
