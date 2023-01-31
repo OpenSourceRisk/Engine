@@ -20,7 +20,7 @@
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/log.hpp>
-
+#include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
 #include <boost/make_shared.hpp>
@@ -41,79 +41,148 @@ void addMinimalCurves(const char* nodeName, const map<string, boost::shared_ptr<
     }
 }
 
-template <class T>
-void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName, const map<string, boost::shared_ptr<T>>& m) {
-    XMLNode* node = doc.allocNode(nodeName);
-    XMLUtils::appendNode(parent, node);
-    for (auto it : m)
-        XMLUtils::appendNode(node, it.second->toXML(doc));
-}
+void CurveConfigurations::addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName) {
+    const auto& ct = parseCurveConfigurationType(nodeName);
+    const auto& it = configs_.find(ct);
+    if (it != configs_.end()) {
+        XMLNode* node = doc.allocNode(nodeName);
+        XMLUtils::appendNode(parent, node);
 
-// Utility function for constructing the set of quotes needed by CurveConfigs
-// Used in the quotes(...) method
-template <class T>
-void addQuotes(set<string>& quotes, const map<string, boost::shared_ptr<T>>& configs, CurveSpec::CurveType curveType) {
-    // For each config in configs, add its quotes to the set
-    for (auto m : configs) {
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    }
-}
-
-template <class T> bool CurveConfigurations::has(const string& id, const map<string, boost::shared_ptr<T>>& m) const {
-    auto err = parseErrors_.find(std::make_pair(std::type_index(typeid(T)), id));
-    if (err != parseErrors_.end()) {
-        ALOG(StructuredCurveErrorMessage(id,
-                                         "Curve config '" + id + "' under node '" + err->second.first +
-                                             "' was requested, but could not be parsed.",
-                                         err->second.second));
-    }
-    return m.find(id) != m.end();
-}
-
-template <class T>
-void CurveConfigurations::parseNode(XMLNode* node, const char* parentName, const char* childName,
-                                    map<string, boost::shared_ptr<T>>& m) {
-
-    XMLNode* parentNode = XMLUtils::getChildNode(node, parentName);
-    if (parentNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(parentNode, childName); child;
-             child = XMLUtils::getNextSibling(child, childName)) {
-            boost::shared_ptr<T> curveConfig(new T());
-            try {
-                curveConfig->fromXML(child);
-                const string& id = curveConfig->curveID();
-                m[id] = curveConfig;
-                DLOG("Added curve config with ID = " << id);
-            } catch (std::exception& ex) {
-                string id = "(unknown curve id)";
-                try {
-                    // try to get the curve id for which an error was thrown
-                    id = XMLUtils::getChildValue(child, "CurveId", true);
-                    // if we got it, store the error, so that get() can include that information in its error message
-                    parseErrors_[std::make_pair(std::type_index(typeid(T)), id)] =
-                        std::make_pair(string(parentName), ex.what());
-                } catch (...) {
-                }
-                ALOG("Exception parsing curve config under node '" << parentName << "' for curve id '" << id
-                                                                   << "': " << ex.what());
-            }
+        for (const auto& c : it->second) {
+            XMLUtils::appendNode(node, c.second->toXML(doc));
         }
     }
 }
 
-template <class T>
-const boost::shared_ptr<T>& CurveConfigurations::get(const string& id,
-                                                     const map<string, boost::shared_ptr<T>>& m) const {
-    auto it = m.find(id);
-    if (it != m.end())
-        return it->second;
-    auto err = parseErrors_.find(std::make_pair(std::type_index(typeid(T)), id));
-    if (err != parseErrors_.end()) {
-        QL_FAIL("no curve id for '" << id << "' under node '" << err->second.first
-                                    << "' due to parser error: " << err->second.second);
-    } else {
-        QL_FAIL("no curve id for '" << id << "', is the id present in the curve configuration?");
+const boost::shared_ptr<CurveConfig>& CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const string& curveId) {
+    boost::shared_ptr<CurveConfig> config;
+    const auto& it = unparsed_.find(type);
+    if (it != unparsed_.end()) {
+        const auto& itc = it->second.find(curveId);
+        if (itc != it->second.end()) {
+            switch (type) {
+            case CurveSpec::CurveType::Yield: {
+                config = boost::make_shared<YieldCurveConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::Default: {
+                config = boost::make_shared<DefaultCurveConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::CDSVolatility: {
+                config = boost::make_shared<CDSVolatilityCurveConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::BaseCorrelation: {
+                config = boost::make_shared<BaseCorrelationCurveConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::FX: {
+                config = boost::make_shared<FXSpotConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::FXVolatility: {
+                config = boost::make_shared<FXVolatilityCurveConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::SwaptionVolatility: {
+                config = boost::make_shared<SwaptionVolatilityCurveConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::YieldVolatility: {
+                config = boost::make_shared<YieldVolatilityCurveConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::CapFloorVolatility: {
+                config = boost::make_shared<CapFloorVolatilityCurveConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::Inflation: {
+                config = boost::make_shared<InflationCurveConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::InflationCapFloorVolatility: {
+                config = boost::make_shared<InflationCapFloorVolatilityCurveConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::Equity: {
+                config = boost::make_shared<EquityCurveConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::EquityVolatility: {
+                config = boost::make_shared<EquityVolatilityCurveConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::Security: {
+                config = boost::make_shared<SecurityConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::Commodity: {
+                config = boost::make_shared<CommodityCurveConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::CommodityVolatility: {
+                config = boost::make_shared<CommodityVolatilityConfig>();
+                break;
+            }
+            case CurveSpec::CurveType::Correlation: {
+                config = boost::make_shared<CorrelationCurveConfig>();
+                break;
+            }
+            }
+            try {
+                config->fromXML(itc->second.get());
+            } catch (std::exception& ex) {
+                ALOG(StructuredCurveErrorMessage(curveId,
+                                                 "Curve config '" + curveId + "' under node '" + to_string(type) +
+                                                     "' was requested, but could not be parsed.",
+                                                 ex.what()));
+            }
+            add(type, curveId, config);            
+        } else
+            QL_FAIL("Could not find curveId " << curveId << " of type " << type << " in unparsed curve configurations");
+    } else
+        QL_FAIL("Could not find CurveType " << type << " in unparsed curve configurations");
+    return config;
+}
+
+void CurveConfigurations::add(const CurveSpec::CurveType& type, const string& curveId,
+    const boost::shared_ptr<CurveConfig>& config) const {
+    configs_[type][curveId] = config;
+}
+
+bool CurveConfigurations::has(const CurveSpec::CurveType& type, const string& curveId) {
+    // look in the parsed configs first
+    const auto& it = configs_.find(type);
+    if (it != configs_.end()) {
+        const auto& itc = it->second.find(curveId);
+        if (itc != it->second.end()) {
+            return true;
+        }
     }
+
+    // look in the unparsed nodes
+    const auto& itu = unparsed_.find(type);
+    if (itu != unparsed_.end()) {
+        const auto& itc = itu->second.find(curveId);
+        if (itc != itu->second.end()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+const boost::shared_ptr<CurveConfig>& CurveConfigurations::get(const CurveSpec::CurveType& type,
+    const string& curveId) {
+    const auto& it = configs_.find(type);
+    if (it != configs_.end()) {
+        const auto& itc = it->second.find(curveId);
+        if (itc != it->second.end()) {
+            return itc->second;
+        }
+    }
+    return parseNode(type, curveId);
 }
 
 boost::shared_ptr<CurveConfigurations>
@@ -142,6 +211,20 @@ CurveConfigurations::minimalCurveConfig(const boost::shared_ptr<TodaysMarketPara
             }
         }
     }
+
+    for (const auto& it : curveConfigIds) {
+        for (const auto& c : it.second) {
+            minimum->add(it.first,c, get(it.first, c));
+        }
+    }
+
+    for (auto it : m) {
+        if ((configIds.count(curveType) && configIds.at(curveType).count(it.first))) {
+            const string& id = it.second->curveID();
+            n[id] = it.second;
+        }
+    }
+
 
     // follow order in xsd
     addMinimalCurves("FXSpots", fxSpotConfigs_, minimum->fxSpotConfigs_, CurveSpec::CurveType::FX, curveConfigIds);
@@ -208,33 +291,19 @@ std::set<string> CurveConfigurations::quotes(const boost::shared_ptr<TodaysMarke
 }
 
 std::set<string> CurveConfigurations::quotes() const {
-
-    // Populate the set of quotes that will be returned
     set<string> quotes;
-    addQuotes(quotes, yieldCurveConfigs_, CurveSpec::CurveType::Yield);
-    addQuotes(quotes, fxVolCurveConfigs_, CurveSpec::CurveType::FXVolatility);
-    addQuotes(quotes, swaptionVolCurveConfigs_, CurveSpec::CurveType::SwaptionVolatility);
-    addQuotes(quotes, yieldVolCurveConfigs_, CurveSpec::CurveType::YieldVolatility);
-    addQuotes(quotes, capFloorVolCurveConfigs_, CurveSpec::CurveType::CapFloorVolatility);
-    addQuotes(quotes, defaultCurveConfigs_, CurveSpec::CurveType::Default);
-    addQuotes(quotes, cdsVolCurveConfigs_, CurveSpec::CurveType::CDSVolatility);
-    addQuotes(quotes, baseCorrelationCurveConfigs_, CurveSpec::CurveType::BaseCorrelation);
-    addQuotes(quotes, inflationCurveConfigs_, CurveSpec::CurveType::Inflation);
-    addQuotes(quotes, inflationCapFloorVolCurveConfigs_, CurveSpec::CurveType::InflationCapFloorVolatility);
-    addQuotes(quotes, equityCurveConfigs_, CurveSpec::CurveType::Equity);
-    addQuotes(quotes, equityVolCurveConfigs_, CurveSpec::CurveType::EquityVolatility);
-    addQuotes(quotes, securityConfigs_, CurveSpec::CurveType::Security);
-    addQuotes(quotes, fxSpotConfigs_, CurveSpec::CurveType::FX);
-    addQuotes(quotes, commodityCurveConfigs_, CurveSpec::CurveType::Commodity);
-    addQuotes(quotes, commodityVolatilityConfigs_, CurveSpec::CurveType::CommodityVolatility);
-    addQuotes(quotes, correlationCurveConfigs_, CurveSpec::CurveType::Correlation);
 
+    // only add quotes for parsed configs
+    for (const auto& ct : configs_) {
+        for (const auto& c : ct.second) {
+            quotes.insert(c.second->quotes().begin(), c.second->quotes().end());
+        }
+    }
     return quotes;
 }
 
 std::set<string> CurveConfigurations::conventions(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
                                                   const set<string>& configurations) const {
-
     set<string> conventions = minimalCurveConfig(todaysMarketParams, configurations)->conventions();
     // Checking for any swapIndices
 
@@ -521,45 +590,45 @@ void CurveConfigurations::fromXML(XMLNode* node) {
       
     
     // Load YieldCurves, FXVols, etc, etc
-    parseNode(node, "YieldCurves", "YieldCurve", yieldCurveConfigs_);
-    parseNode(node, "FXVolatilities", "FXVolatility", fxVolCurveConfigs_);
-    parseNode(node, "SwaptionVolatilities", "SwaptionVolatility", swaptionVolCurveConfigs_);
-    parseNode(node, "YieldVolatilities", "YieldVolatility", yieldVolCurveConfigs_);
-    parseNode(node, "CapFloorVolatilities", "CapFloorVolatility", capFloorVolCurveConfigs_);
-    parseNode(node, "DefaultCurves", "DefaultCurve", defaultCurveConfigs_);
-    parseNode(node, "CDSVolatilities", "CDSVolatility", cdsVolCurveConfigs_);
-    parseNode(node, "BaseCorrelations", "BaseCorrelation", baseCorrelationCurveConfigs_);
-    parseNode(node, "EquityCurves", "EquityCurve", equityCurveConfigs_);
-    parseNode(node, "EquityVolatilities", "EquityVolatility", equityVolCurveConfigs_);
-    parseNode(node, "InflationCurves", "InflationCurve", inflationCurveConfigs_);
-    parseNode(node, "InflationCapFloorVolatilities", "InflationCapFloorVolatility", inflationCapFloorVolCurveConfigs_);
-    parseNode(node, "Securities", "Security", securityConfigs_);
-    parseNode(node, "FXSpots", "FXSpot", fxSpotConfigs_);
-    parseNode(node, "CommodityCurves", "CommodityCurve", commodityCurveConfigs_);
-    parseNode(node, "CommodityVolatilities", "CommodityVolatility", commodityVolatilityConfigs_);
-    parseNode(node, "Correlations", "Correlation", correlationCurveConfigs_);
+    getNode(node, "YieldCurves", "YieldCurve");
+    getNode(node, "FXVolatilities", "FXVolatility");
+    getNode(node, "SwaptionVolatilities", "SwaptionVolatility");
+    getNode(node, "YieldVolatilities", "YieldVolatility");
+    getNode(node, "CapFloorVolatilities", "CapFloorVolatility");
+    getNode(node, "DefaultCurves", "DefaultCurve");
+    getNode(node, "CDSVolatilities", "CDSVolatility");
+    getNode(node, "BaseCorrelations", "BaseCorrelation");
+    getNode(node, "EquityCurves", "EquityCurve");
+    getNode(node, "EquityVolatilities", "EquityVolatility");
+    getNode(node, "InflationCurves", "InflationCurve");
+    getNode(node, "InflationCapFloorVolatilities", "InflationCapFloorVolatility");
+    getNode(node, "Securities", "Security");
+    getNode(node, "FXSpots", "FXSpot");
+    getNode(node, "CommodityCurves", "CommodityCurve");
+    getNode(node, "CommodityVolatilities", "CommodityVolatility");
+    getNode(node, "Correlations", "Correlation");
 }
 
 XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     XMLNode* parent = doc.allocNode("CurveConfiguration");
 
-    addNodes(doc, parent, "FXSpots", fxSpotConfigs_);
-    addNodes(doc, parent, "FXVolatilities", fxVolCurveConfigs_);
-    addNodes(doc, parent, "SwaptionVolatilities", swaptionVolCurveConfigs_);
-    addNodes(doc, parent, "YieldVolatilities", yieldVolCurveConfigs_);
-    addNodes(doc, parent, "CapFloorVolatilities", capFloorVolCurveConfigs_);
-    addNodes(doc, parent, "CDSVolatilities", cdsVolCurveConfigs_);
-    addNodes(doc, parent, "DefaultCurves", defaultCurveConfigs_);
-    addNodes(doc, parent, "YieldCurves", yieldCurveConfigs_);
-    addNodes(doc, parent, "InflationCurves", inflationCurveConfigs_);
-    addNodes(doc, parent, "InflationCapFloorVolatilities", inflationCapFloorVolCurveConfigs_);
-    addNodes(doc, parent, "EquityCurves", equityCurveConfigs_);
-    addNodes(doc, parent, "EquityVolatilities", equityVolCurveConfigs_);
-    addNodes(doc, parent, "Securities", securityConfigs_);
-    addNodes(doc, parent, "BaseCorrelations", baseCorrelationCurveConfigs_);
-    addNodes(doc, parent, "CommodityCurves", commodityCurveConfigs_);
-    addNodes(doc, parent, "CommodityVolatilities", commodityVolatilityConfigs_);
-    addNodes(doc, parent, "Correlations", correlationCurveConfigs_);
+    addNodes(doc, parent, "FXSpots");
+    addNodes(doc, parent, "FXVolatilities");
+    addNodes(doc, parent, "SwaptionVolatilities");
+    addNodes(doc, parent, "YieldVolatilities");
+    addNodes(doc, parent, "CapFloorVolatilities");
+    addNodes(doc, parent, "CDSVolatilities");
+    addNodes(doc, parent, "DefaultCurves");
+    addNodes(doc, parent, "YieldCurves");
+    addNodes(doc, parent, "InflationCurves");
+    addNodes(doc, parent, "InflationCapFloorVolatilities");
+    addNodes(doc, parent, "EquityCurves");
+    addNodes(doc, parent, "EquityVolatilities");
+    addNodes(doc, parent, "Securities");
+    addNodes(doc, parent, "BaseCorrelations");
+    addNodes(doc, parent, "CommodityCurves");
+    addNodes(doc, parent, "CommodityVolatilities");
+    addNodes(doc, parent, "Correlations");
 
     return parent;
 }
