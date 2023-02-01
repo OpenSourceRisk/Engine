@@ -254,7 +254,7 @@ CurveSpec::CurveType parseCurveConfigurationType(const std::string& s) {
         {"BaseCorrelations", CurveSpec::CurveType::BaseCorrelation},
         {"InflationCurves", CurveSpec::CurveType::Inflation},
         {"InflationCapFloorVolatilities", CurveSpec::CurveType::InflationCapFloorVolatility},
-        {"Equities", CurveSpec::CurveType::Equity},
+        {"EquityCurves", CurveSpec::CurveType::Equity},
         {"EquityVolatilities", CurveSpec::CurveType::EquityVolatility},
         {"Securities", CurveSpec::CurveType::Security},
         {"CommodityCurves", CurveSpec::CurveType::Commodity},

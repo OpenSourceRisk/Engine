@@ -37,6 +37,6 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const std::string&);
 //! function to convert a curve configursation node string into a curve spec
 /*! \ingroup curves
  */
-boost::shared_ptr<CurveSpec> parseCurveConfigurationType(const std::string&);
+CurveSpec::CurveType parseCurveConfigurationType(const std::string&);
 } // namespace data
 } // namespace ore

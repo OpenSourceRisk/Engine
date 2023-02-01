@@ -24,6 +24,8 @@
 #include <ql/errors.hpp>
 
 #include <boost/make_shared.hpp>
+#include <rapidxml.hpp>
+#include <rapidxml_print.hpp>
 
 namespace ore {
 namespace data {
@@ -54,7 +56,8 @@ void CurveConfigurations::addNodes(XMLDocument& doc, XMLNode* parent, const char
     }
 }
 
-const boost::shared_ptr<CurveConfig>& CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const string& curveId) {
+const boost::shared_ptr<CurveConfig>& CurveConfigurations::parseNode(const CurveSpec::CurveType& type,
+                                                                     const string& curveId) const {
     boost::shared_ptr<CurveConfig> config;
     const auto& it = unparsed_.find(type);
     if (it != unparsed_.end()) {
@@ -131,50 +134,34 @@ const boost::shared_ptr<CurveConfig>& CurveConfigurations::parseNode(const Curve
             }
             }
             try {
-                config->fromXML(itc->second.get());
+                config->fromXMLString(itc->second);
+                configs_[type][curveId] = config;
+                unparsed_.at(type).erase(curveId);
             } catch (std::exception& ex) {
-                ALOG(StructuredCurveErrorMessage(curveId,
-                                                 "Curve config '" + curveId + "' under node '" + to_string(type) +
-                                                     "' was requested, but could not be parsed.",
-                                                 ex.what()));
+                string err = "Curve config '" + curveId + "' under node '" + to_string(type) +
+                             "' was requested, but could not be parsed.";
+                ALOG(StructuredCurveErrorMessage(curveId, err, ex.what()));
+                QL_FAIL(err);
             }
-            add(type, curveId, config);            
         } else
             QL_FAIL("Could not find curveId " << curveId << " of type " << type << " in unparsed curve configurations");
     } else
         QL_FAIL("Could not find CurveType " << type << " in unparsed curve configurations");
-    return config;
+    return configs_[type][curveId];
 }
 
 void CurveConfigurations::add(const CurveSpec::CurveType& type, const string& curveId,
-    const boost::shared_ptr<CurveConfig>& config) const {
+    const boost::shared_ptr<CurveConfig>& config) {
     configs_[type][curveId] = config;
 }
 
-bool CurveConfigurations::has(const CurveSpec::CurveType& type, const string& curveId) {
-    // look in the parsed configs first
-    const auto& it = configs_.find(type);
-    if (it != configs_.end()) {
-        const auto& itc = it->second.find(curveId);
-        if (itc != it->second.end()) {
-            return true;
-        }
-    }
-
-    // look in the unparsed nodes
-    const auto& itu = unparsed_.find(type);
-    if (itu != unparsed_.end()) {
-        const auto& itc = itu->second.find(curveId);
-        if (itc != itu->second.end()) {
-            return true;
-        }
-    }
-
-    return false;
+bool CurveConfigurations::has(const CurveSpec::CurveType& type, const string& curveId) const {
+    return (configs_.count(type) > 0 && configs_.at(type).count(curveId) > 0) ||
+           (unparsed_.count(type) > 0 && unparsed_.at(type).count(curveId) > 0);
 }
 
 const boost::shared_ptr<CurveConfig>& CurveConfigurations::get(const CurveSpec::CurveType& type,
-    const string& curveId) {
+    const string& curveId) const {
     const auto& it = configs_.find(type);
     if (it != configs_.end()) {
         const auto& itc = it->second.find(curveId);
@@ -185,6 +172,20 @@ const boost::shared_ptr<CurveConfig>& CurveConfigurations::get(const CurveSpec::
     return parseNode(type, curveId);
 }
 
+void CurveConfigurations::getNode(XMLNode* node, const char* parentName, const char* childName) {
+    const auto& type = parseCurveConfigurationType(parentName);
+    XMLNode* parentNode = XMLUtils::getChildNode(node, parentName);
+    if (parentNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(parentNode, childName); child;
+             child = XMLUtils::getNextSibling(child, childName)) {
+            const auto& id = XMLUtils::getChildValue(child, "CurveId", true);
+            std::string xml_as_string;
+            rapidxml::print(std::back_inserter(xml_as_string), *child);
+            unparsed_[type][id] = xml_as_string;
+        }
+    }
+}
+
 boost::shared_ptr<CurveConfigurations>
 CurveConfigurations::minimalCurveConfig(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
                                         const set<string>& configurations) const {
@@ -192,76 +193,26 @@ CurveConfigurations::minimalCurveConfig(const boost::shared_ptr<TodaysMarketPara
     boost::shared_ptr<CurveConfigurations> minimum = boost::make_shared<CurveConfigurations>();
     // If tmparams is not null, organise its specs in to a map [CurveType, set of CurveConfigID]
     map<CurveSpec::CurveType, set<string>> curveConfigIds;
-    // This set of FXSpotSpec is used below
-    set<boost::shared_ptr<FXSpotSpec>> fxSpotSpecs;
 
     for (const auto& config : configurations) {
         for (const auto& strSpec : todaysMarketParams->curveSpecs(config)) {
             auto spec = parseCurveSpec(strSpec);
-            if (curveConfigIds.count(spec->baseType())) {
+            if (curveConfigIds.count(spec->baseType()))
                 curveConfigIds[spec->baseType()].insert(spec->curveConfigID());
-            } else {
+            else
                 curveConfigIds[spec->baseType()] = {spec->curveConfigID()};
-            }
-
-            if (spec->baseType() == CurveSpec::CurveType::FX) {
-                boost::shared_ptr<FXSpotSpec> fxss = boost::dynamic_pointer_cast<FXSpotSpec>(spec);
-                QL_REQUIRE(fxss, "Expected an FXSpotSpec but did not get one");
-                fxSpotSpecs.insert(fxss);
-            }
         }
     }
 
     for (const auto& it : curveConfigIds) {
-        for (const auto& c : it.second) {
-            minimum->add(it.first,c, get(it.first, c));
+        for (auto& c : it.second) {
+            try {
+                auto cc = get(it.first, c);
+                minimum->add(it.first, c, get(it.first, c));
+            } catch (...) {
+            }
         }
     }
-
-    for (auto it : m) {
-        if ((configIds.count(curveType) && configIds.at(curveType).count(it.first))) {
-            const string& id = it.second->curveID();
-            n[id] = it.second;
-        }
-    }
-
-
-    // follow order in xsd
-    addMinimalCurves("FXSpots", fxSpotConfigs_, minimum->fxSpotConfigs_, CurveSpec::CurveType::FX, curveConfigIds);
-    addMinimalCurves("FXVolatilities", fxVolCurveConfigs_, minimum->fxVolCurveConfigs_,
-                     CurveSpec::CurveType::FXVolatility, curveConfigIds);
-    addMinimalCurves("SwaptionVolatilities", swaptionVolCurveConfigs_, minimum->swaptionVolCurveConfigs_,
-                     CurveSpec::CurveType::SwaptionVolatility, curveConfigIds);
-    addMinimalCurves("YieldVolatilities", yieldVolCurveConfigs_, minimum->yieldVolCurveConfigs_,
-                     CurveSpec::CurveType::YieldVolatility, curveConfigIds);
-    addMinimalCurves("CapFloorVolatilities", capFloorVolCurveConfigs_, minimum->capFloorVolCurveConfigs_,
-                     CurveSpec::CurveType::CapFloorVolatility, curveConfigIds);
-    addMinimalCurves("CDSVolatilities", cdsVolCurveConfigs_, minimum->cdsVolCurveConfigs_,
-                     CurveSpec::CurveType::CDSVolatility, curveConfigIds);
-    addMinimalCurves("DefaultCurves", defaultCurveConfigs_, minimum->defaultCurveConfigs_,
-                     CurveSpec::CurveType::Default, curveConfigIds);
-    addMinimalCurves("YieldCurves", yieldCurveConfigs_, minimum->yieldCurveConfigs_, CurveSpec::CurveType::Yield,
-                     curveConfigIds);
-    addMinimalCurves("InflationCurves", inflationCurveConfigs_, minimum->inflationCurveConfigs_,
-                     CurveSpec::CurveType::Inflation, curveConfigIds);
-    addMinimalCurves("InflationCapFloorVolatilities", inflationCapFloorVolCurveConfigs_,
-                     minimum->inflationCapFloorVolCurveConfigs_, CurveSpec::CurveType::InflationCapFloorVolatility,
-                     curveConfigIds);
-    addMinimalCurves("EquityCurves", equityCurveConfigs_, minimum->equityCurveConfigs_, CurveSpec::CurveType::Equity,
-                     curveConfigIds);
-    addMinimalCurves("EquityVolatilities", equityVolCurveConfigs_, minimum->equityVolCurveConfigs_,
-                     CurveSpec::CurveType::EquityVolatility, curveConfigIds);
-    addMinimalCurves("Securities", securityConfigs_, minimum->securityConfigs_, CurveSpec::CurveType::Security,
-                     curveConfigIds);
-    addMinimalCurves("BaseCorrelations", baseCorrelationCurveConfigs_, minimum->baseCorrelationCurveConfigs_,
-                     CurveSpec::CurveType::BaseCorrelation, curveConfigIds);
-    addMinimalCurves("CommodityCurves", commodityCurveConfigs_, minimum->commodityCurveConfigs_,
-                     CurveSpec::CurveType::Commodity, curveConfigIds);
-    addMinimalCurves("CommodityVolatilities", commodityVolatilityConfigs_, minimum->commodityVolatilityConfigs_,
-                     CurveSpec::CurveType::CommodityVolatility, curveConfigIds);
-    addMinimalCurves("Correlations", correlationCurveConfigs_, minimum->correlationCurveConfigs_,
-                     CurveSpec::CurveType::Correlation, curveConfigIds);
-
     return minimum;
 }
 
@@ -319,237 +270,240 @@ std::set<string> CurveConfigurations::conventions(const boost::shared_ptr<Todays
 
 std::set<string> CurveConfigurations::conventions() const {
     set<string> conventions;
+    for (const auto& cc : configs_) {
+        if (cc.first == CurveSpec::CurveType::Yield) {
+            for (const auto& c : cc.second) {
+                auto ycc = boost::dynamic_pointer_cast<YieldCurveConfig>(c.second);
+                if (ycc) {
+                    for (auto& s : ycc->curveSegments())
+                        conventions.insert(s->conventionsID());
+                }
+            }
+        }
 
-    for (auto& y : yieldCurveConfigs_) {
-        for (auto& c : y.second->curveSegments()) {
-            if (c->conventionsID() != "")
-                conventions.insert(c->conventionsID());
+        if (cc.first == CurveSpec::CurveType::Default) {
+            for (const auto& c : cc.second) {
+                auto dcc = boost::dynamic_pointer_cast<DefaultCurveConfig>(c.second);
+                if (dcc) {
+                    for (auto& s : dcc->configs()) {
+                        if (s.second.conventionID() != "")
+                            conventions.insert(s.second.conventionID());
+                    }
+                }
+            }
+        }
+
+        if (cc.first == CurveSpec::CurveType::Inflation) {
+            for (const auto& c : cc.second) {
+                auto icc = boost::dynamic_pointer_cast<InflationCurveConfig>(c.second);
+                if (icc) {
+                    if (icc->conventions() != "")
+                        conventions.insert(icc->conventions());
+                }
+            }
+        }
+
+        if (cc.first == CurveSpec::CurveType::Correlation) {
+            for (const auto& c : cc.second) {
+                auto ccc = boost::dynamic_pointer_cast<CorrelationCurveConfig>(c.second);
+                if (ccc) {
+                    if (ccc->conventions() != "")
+                        conventions.insert(ccc->conventions());
+                }
+            }
+        }
+
+        if (cc.first == CurveSpec::CurveType::FXVolatility) {
+            for (const auto& c : cc.second) {
+                auto fcc = boost::dynamic_pointer_cast<FXVolatilityCurveConfig>(c.second);
+                if (fcc) {
+                    if (fcc->conventionsID() != "")
+                        conventions.insert(fcc->conventionsID());
+                }
+            }
         }
     }
-
-    for (auto& d : defaultCurveConfigs_) {
-        for (auto const& c : d.second->configs())
-            if (c.second.conventionID() != "")
-                conventions.insert(c.second.conventionID());
-    }
-
-    for (auto& i : inflationCurveConfigs_) {
-        if (i.second->conventions() != "")
-            conventions.insert(i.second->conventions());
-    }
-
-    for (auto& c : correlationCurveConfigs_) {
-        if (c.second->conventions() != "")
-            conventions.insert(c.second->conventions());
-    }
-
-    for (auto& c : fxVolCurveConfigs_) {
-        if (c.second->conventionsID() != "") {
-            conventions.insert(c.second->conventionsID());
-        }
-    }
-
     return conventions;
 }
 
 set<string> CurveConfigurations::yieldCurveConfigIds() {
 
     set<string> curves;
-    for (auto yc : yieldCurveConfigs_)
-        curves.insert(yc.first);
-
+    auto& it = configs_.find(CurveSpec::CurveType::Yield);
+    if (it != configs_.end()) {
+        for (auto& c : it->second)
+            curves.insert(c.first);
+    }
     return curves;
 }
 
-namespace {
-template <typename T>
-void addRequiredCurveIds(const std::string& curveId, const std::map<std::string, boost::shared_ptr<T>>& configs,
-                         std::map<CurveSpec::CurveType, std::set<string>>& result) {
-    auto c = configs.find(curveId);
-    if (c != configs.end()) {
-        auto r = c->second->requiredCurveIds();
-        result.insert(r.begin(), r.end());
-    }
-}
-} // namespace
-
 std::map<CurveSpec::CurveType, std::set<string>>
 CurveConfigurations::requiredCurveIds(const CurveSpec::CurveType& type, const std::string& curveId) const {
-    std::map<CurveSpec::CurveType, std::set<string>> result;
-    if (type == CurveSpec::CurveType::Yield)
-        addRequiredCurveIds(curveId, yieldCurveConfigs_, result);
-    else if (type == CurveSpec::CurveType::FXVolatility)
-        addRequiredCurveIds(curveId, fxVolCurveConfigs_, result);
-    else if (type == CurveSpec::CurveType::SwaptionVolatility)
-        addRequiredCurveIds(curveId, swaptionVolCurveConfigs_, result);
-    else if (type == CurveSpec::CurveType::YieldVolatility)
-        addRequiredCurveIds(curveId, yieldVolCurveConfigs_, result);
-    else if (type == CurveSpec::CurveType::CapFloorVolatility)
-        addRequiredCurveIds(curveId, capFloorVolCurveConfigs_, result);
-    else if (type == CurveSpec::CurveType::Default)
-        addRequiredCurveIds(curveId, defaultCurveConfigs_, result);
-    else if (type == CurveSpec::CurveType::CDSVolatility)
-        addRequiredCurveIds(curveId, cdsVolCurveConfigs_, result);
-    else if (type == CurveSpec::CurveType::BaseCorrelation)
-        addRequiredCurveIds(curveId, baseCorrelationCurveConfigs_, result);
-    else if (type == CurveSpec::CurveType::Inflation)
-        addRequiredCurveIds(curveId, inflationCurveConfigs_, result);
-    else if (type == CurveSpec::CurveType::InflationCapFloorVolatility)
-        addRequiredCurveIds(curveId, inflationCapFloorVolCurveConfigs_, result);
-    else if (type == CurveSpec::CurveType::Equity)
-        addRequiredCurveIds(curveId, equityCurveConfigs_, result);
-    else if (type == CurveSpec::CurveType::EquityVolatility)
-        addRequiredCurveIds(curveId, equityVolCurveConfigs_, result);
-    else if (type == CurveSpec::CurveType::Security)
-        addRequiredCurveIds(curveId, securityConfigs_, result);
-    else if (type == CurveSpec::CurveType::FX)
-        addRequiredCurveIds(curveId, fxSpotConfigs_, result);
-    else if (type == CurveSpec::CurveType::Commodity)
-        addRequiredCurveIds(curveId, commodityCurveConfigs_, result);
-    else if (type == CurveSpec::CurveType::CommodityVolatility)
-        addRequiredCurveIds(curveId, commodityVolatilityConfigs_, result);
-    else if (type == CurveSpec::CurveType::Correlation)
-        addRequiredCurveIds(curveId, correlationCurveConfigs_, result);
-    else {
-        QL_FAIL("CurveConfigurations::requiredCurveIds(): unhandled curve spec type");
-    }
-    return result;
+    boost::shared_ptr<CurveConfig> cc;
+    std::map<CurveSpec::CurveType, std::set<string>> ids;
+    if (!curveId.empty())
+        cc = get(type, curveId);
+    if (cc)
+        ids = cc->requiredCurveIds();
+    return ids;
 }
 
-bool CurveConfigurations::hasYieldCurveConfig(const string& curveID) const { return has(curveID, yieldCurveConfigs_); }
-
-const boost::shared_ptr<YieldCurveConfig>& CurveConfigurations::yieldCurveConfig(const string& curveID) const {
-    return get(curveID, yieldCurveConfigs_);
+bool CurveConfigurations::hasYieldCurveConfig(const string& curveID) const { return has(CurveSpec::CurveType::Yield, curveID); }
+boost::shared_ptr<YieldCurveConfig> CurveConfigurations::yieldCurveConfig(const string& curveID) const {
+    boost::shared_ptr<CurveConfig> cc = get(CurveSpec::CurveType::Yield, curveID);
+    return boost::dynamic_pointer_cast<YieldCurveConfig>(cc);
 }
 
-bool CurveConfigurations::hasFxVolCurveConfig(const string& curveID) const { return has(curveID, fxVolCurveConfigs_); }
+bool CurveConfigurations::hasFxVolCurveConfig(const string& curveID) const { 
+    return has(CurveSpec::CurveType::FXVolatility, curveID); 
+}
 
-const boost::shared_ptr<FXVolatilityCurveConfig>& CurveConfigurations::fxVolCurveConfig(const string& curveID) const {
-    return get(curveID, fxVolCurveConfigs_);
+boost::shared_ptr<FXVolatilityCurveConfig> CurveConfigurations::fxVolCurveConfig(const string& curveID) const {
+    auto cc = get(CurveSpec::CurveType::FXVolatility, curveID);
+    return boost::dynamic_pointer_cast<FXVolatilityCurveConfig>(cc);
 }
 
 bool CurveConfigurations::hasSwaptionVolCurveConfig(const string& curveID) const {
-    return has(curveID, swaptionVolCurveConfigs_);
+    return has(CurveSpec::CurveType::SwaptionVolatility, curveID);
 }
 
-const boost::shared_ptr<SwaptionVolatilityCurveConfig>&
+boost::shared_ptr<SwaptionVolatilityCurveConfig>
 CurveConfigurations::swaptionVolCurveConfig(const string& curveID) const {
-    return get(curveID, swaptionVolCurveConfigs_);
+    auto cc = get(CurveSpec::CurveType::SwaptionVolatility, curveID);
+    return boost::dynamic_pointer_cast<SwaptionVolatilityCurveConfig>(cc);
 }
 
 bool CurveConfigurations::hasYieldVolCurveConfig(const string& curveID) const {
-    return has(curveID, yieldVolCurveConfigs_);
+    return has(CurveSpec::CurveType::YieldVolatility, curveID);
 }
 
-const boost::shared_ptr<YieldVolatilityCurveConfig>&
+boost::shared_ptr<YieldVolatilityCurveConfig>
 CurveConfigurations::yieldVolCurveConfig(const string& curveID) const {
-    return get(curveID, yieldVolCurveConfigs_);
+    auto cc = get(CurveSpec::CurveType::YieldVolatility, curveID);
+    return boost::dynamic_pointer_cast<YieldVolatilityCurveConfig>(cc);
 }
 
 bool CurveConfigurations::hasCapFloorVolCurveConfig(const string& curveID) const {
-    return has(curveID, capFloorVolCurveConfigs_);
+    return has(CurveSpec::CurveType::CapFloorVolatility, curveID);
 }
 
-const boost::shared_ptr<CapFloorVolatilityCurveConfig>&
+boost::shared_ptr<CapFloorVolatilityCurveConfig>
 CurveConfigurations::capFloorVolCurveConfig(const string& curveID) const {
-    return get(curveID, capFloorVolCurveConfigs_);
+    auto cc = get(CurveSpec::CurveType::CapFloorVolatility, curveID);
+    return boost::dynamic_pointer_cast<CapFloorVolatilityCurveConfig>(cc);
 }
 
 bool CurveConfigurations::hasDefaultCurveConfig(const string& curveID) const {
-    return has(curveID, defaultCurveConfigs_);
+    return has(CurveSpec::CurveType::Default, curveID);
 }
 
-const boost::shared_ptr<DefaultCurveConfig>& CurveConfigurations::defaultCurveConfig(const string& curveID) const {
-    return get(curveID, defaultCurveConfigs_);
+boost::shared_ptr<DefaultCurveConfig> CurveConfigurations::defaultCurveConfig(const string& curveID) const {
+    auto cc = get(CurveSpec::CurveType::Default, curveID);
+    return boost::dynamic_pointer_cast<DefaultCurveConfig>(cc);
 }
 
 bool CurveConfigurations::hasCdsVolCurveConfig(const string& curveID) const {
-    return has(curveID, cdsVolCurveConfigs_);
+    return has(CurveSpec::CurveType::CDSVolatility, curveID);
 }
 
-const boost::shared_ptr<CDSVolatilityCurveConfig>& CurveConfigurations::cdsVolCurveConfig(const string& curveID) const {
-    return get(curveID, cdsVolCurveConfigs_);
+boost::shared_ptr<CDSVolatilityCurveConfig> CurveConfigurations::cdsVolCurveConfig(const string& curveID) const {
+    auto cc = get(CurveSpec::CurveType::CDSVolatility, curveID);
+    return boost::dynamic_pointer_cast<CDSVolatilityCurveConfig>(cc);
 }
 
 bool CurveConfigurations::hasBaseCorrelationCurveConfig(const string& curveID) const {
-    return has(curveID, baseCorrelationCurveConfigs_);
+    return has(CurveSpec::CurveType::BaseCorrelation, curveID);
 }
 
-const boost::shared_ptr<BaseCorrelationCurveConfig>&
+boost::shared_ptr<BaseCorrelationCurveConfig>
 CurveConfigurations::baseCorrelationCurveConfig(const string& curveID) const {
-    return get(curveID, baseCorrelationCurveConfigs_);
+    auto cc = get(CurveSpec::CurveType::BaseCorrelation, curveID);
+    return boost::dynamic_pointer_cast<BaseCorrelationCurveConfig>(cc);
 }
 
 bool CurveConfigurations::hasInflationCurveConfig(const string& curveID) const {
-    return has(curveID, inflationCurveConfigs_);
+    return has(CurveSpec::CurveType::Inflation, curveID);
 }
 
-const boost::shared_ptr<InflationCurveConfig>& CurveConfigurations::inflationCurveConfig(const string& curveID) const {
-    return get(curveID, inflationCurveConfigs_);
+boost::shared_ptr<InflationCurveConfig> CurveConfigurations::inflationCurveConfig(const string& curveID) const {
+    auto cc = get(CurveSpec::CurveType::Inflation, curveID);
+    return boost::dynamic_pointer_cast<InflationCurveConfig>(cc);
 }
 
 bool CurveConfigurations::hasInflationCapFloorVolCurveConfig(const string& curveID) const {
-    return has(curveID, inflationCapFloorVolCurveConfigs_);
+    return has(CurveSpec::CurveType::InflationCapFloorVolatility, curveID);
 }
 
-const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>&
+boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>
 CurveConfigurations::inflationCapFloorVolCurveConfig(const string& curveID) const {
-    return get(curveID, inflationCapFloorVolCurveConfigs_);
+    auto cc = get(CurveSpec::CurveType::InflationCapFloorVolatility, curveID);
+    return boost::dynamic_pointer_cast<InflationCapFloorVolatilityCurveConfig>(cc);
 }
 
 bool CurveConfigurations::hasEquityCurveConfig(const string& curveID) const {
-    return has(curveID, equityCurveConfigs_);
+    return has(CurveSpec::CurveType::Equity, curveID);
 }
 
-const boost::shared_ptr<EquityCurveConfig>& CurveConfigurations::equityCurveConfig(const string& curveID) const {
-    return get(curveID, equityCurveConfigs_);
+boost::shared_ptr<EquityCurveConfig> CurveConfigurations::equityCurveConfig(const string& curveID) const {
+    auto cc = get(CurveSpec::CurveType::Equity, curveID);
+    return boost::dynamic_pointer_cast<EquityCurveConfig>(cc);
 }
 
 bool CurveConfigurations::hasEquityVolCurveConfig(const string& curveID) const {
-    return has(curveID, equityVolCurveConfigs_);
+    return has(CurveSpec::CurveType::EquityVolatility, curveID);
 }
 
-const boost::shared_ptr<EquityVolatilityCurveConfig>&
+boost::shared_ptr<EquityVolatilityCurveConfig>
 CurveConfigurations::equityVolCurveConfig(const string& curveID) const {
-    return get(curveID, equityVolCurveConfigs_);
+    auto cc = get(CurveSpec::CurveType::EquityVolatility, curveID);
+    return boost::dynamic_pointer_cast<EquityVolatilityCurveConfig>(cc);
 }
 
-bool CurveConfigurations::hasSecurityConfig(const string& curveID) const { return has(curveID, securityConfigs_); }
-
-const boost::shared_ptr<SecurityConfig>& CurveConfigurations::securityConfig(const string& curveID) const {
-    return get(curveID, securityConfigs_);
+bool CurveConfigurations::hasSecurityConfig(const string& curveID) const {
+    return has(CurveSpec::CurveType::Security, curveID);
 }
 
-bool CurveConfigurations::hasFxSpotConfig(const string& curveID) const { return has(curveID, fxSpotConfigs_); }
+boost::shared_ptr<SecurityConfig> CurveConfigurations::securityConfig(const string& curveID) const {
+    auto cc = get(CurveSpec::CurveType::Security, curveID);
+    return boost::dynamic_pointer_cast<SecurityConfig>(cc);
+}
 
-const boost::shared_ptr<FXSpotConfig>& CurveConfigurations::fxSpotConfig(const string& curveID) const {
-    return get(curveID, fxSpotConfigs_);
+bool CurveConfigurations::hasFxSpotConfig(const string& curveID) const {
+    return has(CurveSpec::CurveType::FX, curveID);
+}
+
+boost::shared_ptr<FXSpotConfig> CurveConfigurations::fxSpotConfig(const string& curveID) const {
+    auto cc = get(CurveSpec::CurveType::FX, curveID);
+    return boost::dynamic_pointer_cast<FXSpotConfig>(cc);
 }
 
 bool CurveConfigurations::hasCommodityCurveConfig(const string& curveID) const {
-    return has(curveID, commodityCurveConfigs_);
+    return has(CurveSpec::CurveType::Commodity, curveID);
 }
 
-const boost::shared_ptr<CommodityCurveConfig>& CurveConfigurations::commodityCurveConfig(const string& curveID) const {
-    return get(curveID, commodityCurveConfigs_);
+boost::shared_ptr<CommodityCurveConfig> CurveConfigurations::commodityCurveConfig(const string& curveID) const {
+    auto cc = get(CurveSpec::CurveType::Commodity, curveID);
+    return boost::dynamic_pointer_cast<CommodityCurveConfig>(cc);
 }
 
 bool CurveConfigurations::hasCommodityVolatilityConfig(const string& curveID) const {
-    return has(curveID, commodityVolatilityConfigs_);
+    return has(CurveSpec::CurveType::CommodityVolatility, curveID);
 }
 
-const boost::shared_ptr<CommodityVolatilityConfig>&
+boost::shared_ptr<CommodityVolatilityConfig>
 CurveConfigurations::commodityVolatilityConfig(const string& curveID) const {
-    return get(curveID, commodityVolatilityConfigs_);
+    auto cc = get(CurveSpec::CurveType::CommodityVolatility, curveID);
+    return boost::dynamic_pointer_cast<CommodityVolatilityConfig>(cc);
 }
 
 bool CurveConfigurations::hasCorrelationCurveConfig(const string& curveID) const {
-    return has(curveID, correlationCurveConfigs_);
+    return has(CurveSpec::CurveType::Correlation, curveID);
 }
 
-const boost::shared_ptr<CorrelationCurveConfig>&
+boost::shared_ptr<CorrelationCurveConfig>
 CurveConfigurations::correlationCurveConfig(const string& curveID) const {
-    return get(curveID, correlationCurveConfigs_);
+    auto cc = get(CurveSpec::CurveType::Correlation, curveID);
+    return boost::dynamic_pointer_cast<CorrelationCurveConfig>(cc);
 }
 
 #include <iostream>
@@ -587,8 +541,7 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     else {
       WLOG("smile dynamics node not found in curve config, using default values");
     }
-      
-    
+     
     // Load YieldCurves, FXVols, etc, etc
     getNode(node, "YieldCurves", "YieldCurve");
     getNode(node, "FXVolatilities", "FXVolatility");
