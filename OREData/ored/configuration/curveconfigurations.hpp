@@ -73,56 +73,56 @@ public:
     const SmileDynamicsConfig& smileDynamicsConfig() const { return smileDynamicsConfig_; }
 
     bool hasYieldCurveConfig(const std::string& curveID) const;
-    const boost::shared_ptr<YieldCurveConfig>& yieldCurveConfig(const string& curveID) const;
+    boost::shared_ptr<YieldCurveConfig> yieldCurveConfig(const string& curveID) const;
 
     bool hasFxVolCurveConfig(const std::string& curveID) const;
-    const boost::shared_ptr<FXVolatilityCurveConfig>& fxVolCurveConfig(const string& curveID) const;
+    boost::shared_ptr<FXVolatilityCurveConfig> fxVolCurveConfig(const string& curveID) const;
 
     bool hasSwaptionVolCurveConfig(const std::string& curveID) const;
-    const boost::shared_ptr<SwaptionVolatilityCurveConfig>& swaptionVolCurveConfig(const string& curveID) const;
+    boost::shared_ptr<SwaptionVolatilityCurveConfig> swaptionVolCurveConfig(const string& curveID) const;
 
     bool hasYieldVolCurveConfig(const std::string& curveID) const;
-    const boost::shared_ptr<YieldVolatilityCurveConfig>& yieldVolCurveConfig(const string& curveID) const;
+    boost::shared_ptr<YieldVolatilityCurveConfig> yieldVolCurveConfig(const string& curveID) const;
 
     bool hasCapFloorVolCurveConfig(const std::string& curveID) const;
-    const boost::shared_ptr<CapFloorVolatilityCurveConfig>& capFloorVolCurveConfig(const string& curveID) const;
+    boost::shared_ptr<CapFloorVolatilityCurveConfig> capFloorVolCurveConfig(const string& curveID) const;
 
     bool hasDefaultCurveConfig(const std::string& curveID) const;
-    const boost::shared_ptr<DefaultCurveConfig>& defaultCurveConfig(const string& curveID) const;
+    boost::shared_ptr<DefaultCurveConfig> defaultCurveConfig(const string& curveID) const;
 
     bool hasCdsVolCurveConfig(const std::string& curveID) const;
-    const boost::shared_ptr<CDSVolatilityCurveConfig>& cdsVolCurveConfig(const string& curveID) const;
+    boost::shared_ptr<CDSVolatilityCurveConfig> cdsVolCurveConfig(const string& curveID) const;
 
     bool hasBaseCorrelationCurveConfig(const std::string& curveID) const;
-    const boost::shared_ptr<BaseCorrelationCurveConfig>& baseCorrelationCurveConfig(const string& curveID) const;
+    boost::shared_ptr<BaseCorrelationCurveConfig> baseCorrelationCurveConfig(const string& curveID) const;
 
     bool hasInflationCurveConfig(const std::string& curveID) const;
-    const boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) const;
+    boost::shared_ptr<InflationCurveConfig> inflationCurveConfig(const string& curveID) const;
 
     bool hasInflationCapFloorVolCurveConfig(const std::string& curveID) const;
-    const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>&
+    boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>
     inflationCapFloorVolCurveConfig(const string& curveID) const;
 
     bool hasEquityCurveConfig(const std::string& curveID) const;
-    const boost::shared_ptr<EquityCurveConfig>& equityCurveConfig(const string& curveID) const;
+    boost::shared_ptr<EquityCurveConfig> equityCurveConfig(const string& curveID) const;
 
     bool hasEquityVolCurveConfig(const std::string& curveID) const;
-    const boost::shared_ptr<EquityVolatilityCurveConfig>& equityVolCurveConfig(const string& curveID) const;
+    boost::shared_ptr<EquityVolatilityCurveConfig> equityVolCurveConfig(const string& curveID) const;
 
     bool hasSecurityConfig(const std::string& curveID) const;
-    const boost::shared_ptr<SecurityConfig>& securityConfig(const string& curveID) const;
+    boost::shared_ptr<SecurityConfig> securityConfig(const string& curveID) const;
 
     bool hasFxSpotConfig(const std::string& curveID) const;
-    const boost::shared_ptr<FXSpotConfig>& fxSpotConfig(const string& curveID) const;
+    boost::shared_ptr<FXSpotConfig> fxSpotConfig(const string& curveID) const;
 
     bool hasCommodityCurveConfig(const std::string& curveID) const;
-    const boost::shared_ptr<CommodityCurveConfig>& commodityCurveConfig(const std::string& curveID) const;
+    boost::shared_ptr<CommodityCurveConfig> commodityCurveConfig(const std::string& curveID) const;
 
     bool hasCommodityVolatilityConfig(const std::string& curveID) const;
-    const boost::shared_ptr<CommodityVolatilityConfig>& commodityVolatilityConfig(const std::string& curveID) const;
+    boost::shared_ptr<CommodityVolatilityConfig> commodityVolatilityConfig(const std::string& curveID) const;
 
     bool hasCorrelationCurveConfig(const std::string& curveID) const;
-    const boost::shared_ptr<CorrelationCurveConfig>& correlationCurveConfig(const std::string& curveID) const;
+    boost::shared_ptr<CorrelationCurveConfig> correlationCurveConfig(const std::string& curveID) const;
 
     boost::shared_ptr<CurveConfigurations>
     minimalCurveConfig(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
@@ -150,8 +150,8 @@ public:
     //@}
 
     void add(const CurveSpec::CurveType& type, const string& curveId, const boost::shared_ptr<CurveConfig>& config);    
-    bool has(const CurveSpec::CurveType& type, const string& curveId);
-    const boost::shared_ptr<CurveConfig>& get(const CurveSpec::CurveType& type, const string& curveId);
+    bool has(const CurveSpec::CurveType& type, const string& curveId) const;
+    const boost::shared_ptr<CurveConfig>& get(const CurveSpec::CurveType& type, const string& curveId) const;
 
     //! \name Serialisation
     //@{
@@ -171,11 +171,11 @@ protected:
 
     SmileDynamicsConfig smileDynamicsConfig_;
 
-    std::map<CurveSpec::CurveType, std::map<std::string, boost::shared_ptr<CurveConfig>>> configs_;
-    std::map<CurveSpec::CurveType, std::map<std::string, boost::shared_ptr<XMLNode>>> unparsed_;
+    mutable std::map<CurveSpec::CurveType, std::map<std::string, boost::shared_ptr<CurveConfig>>> configs_;
+    mutable std::map<CurveSpec::CurveType, std::map<std::string, std::string>> unparsed_;
 
     // utility function for parsing a node of name "parentName" and storing the result in the map
-    const boost::shared_ptr<CurveConfig>& parseNode(const CurveSpec::CurveType& type, const string& curveId);
+    const boost::shared_ptr<CurveConfig>& parseNode(const CurveSpec::CurveType& type, const string& curveId) const;
     
     // utility function for getting a child curve config node
     void getNode(XMLNode* node, const char* parentName, const char* childName);
