@@ -46,13 +46,22 @@ AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inp
                                    std::ostream& out)
     : inputs_(inputs), marketDataLoader_(marketDataLoader), out_(out) {    
     
-    addAnalytic("NPV", boost::make_shared<PricingAnalytic>(inputs_, out_));
+    addAnalytic("PRICING", boost::make_shared<PricingAnalytic>(inputs_, out_));
     addAnalytic("VAR", boost::make_shared<VarAnalytic>(inputs_, out_));
     addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_, out_));
 }
 
+void AnalyticsManager::clear() {
+    analytics_.clear();
+    validAnalytics_.clear();
+}
+    
 void AnalyticsManager::addAnalytic(const std::string& label, const boost::shared_ptr<Analytic>& analytic) {
-    QL_REQUIRE(analytics_.find(label) == analytics_.end(), "trying to add an analytic with duplicate label: " << label);
+    // QL_REQUIRE(analytics_.find(label) == analytics_.end(), "trying to add an analytic with duplicate label: " << label);
+    // Allow overriding, but warn 
+    if (analytics_.find(label) != analytics_.end()) {
+        WLOG("Overwriting analytic with label " << label);
+    }
     // Label is not necessarily a valid analytics type
     // Get the latter via analytic->analyticTypes()
     LOG("register analytic with label '" << label << "' and sub-analytics " << to_string(analytic->analyticTypes()));
@@ -71,9 +80,15 @@ const std::vector<std::string>& AnalyticsManager::validAnalytics() {
     return validAnalytics_;
 }
 
-bool AnalyticsManager::isValidAnalytic(const std::string& type) {
+bool AnalyticsManager::hasAnalytic(const std::string& type) {
     const std::vector<std::string>& va = validAnalytics();
     return std::find(va.begin(), va.end(), type) != va.end();
+}
+
+const boost::shared_ptr<Analytic>& AnalyticsManager::getAnalytic(const std::string& type) const {
+    auto it = analytics_.find(type);
+    QL_REQUIRE(it != analytics_.end(), "Analytic type " << type << " not found");
+    return it->second;
 }
 
 void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
@@ -88,10 +103,9 @@ void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
         tmps.insert(end(tmps), begin(atmps), end(atmps));
     }
 
-    // FIXME
-    // QuantExt::Date mporDate = QuantExt::Date();
-    // if (laggedMarket_)
-    //     mporDate = inputs_->mporCalendar().advance(inputs_->asof(), inputs_->mporDays(), QuantExt::Days);
+    QuantExt::Date mporDate = QuantExt::Date();
+    if (laggedMarket_)
+        mporDate = inputs_->mporCalendar().advance(inputs_->asof(), inputs_->mporDays(), QuantExt::Days);
 
     // Do we need market data
     bool requireMarketData = false;
@@ -106,7 +120,8 @@ void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
         // load the market data
         if (tmps.size() > 0) {
             LOG("AnalyticsManager::runAnalytics: populate loader");
-            marketDataLoader_->populateLoader(tmps);
+            //marketDataLoader_->populateLoader(tmps);
+            marketDataLoader_->populateLoader(tmps, false, laggedMarket_, mporDate, inputs_->includeMporExpired());
         }
         
         boost::shared_ptr<InMemoryReport> mdReport = boost::make_shared<InMemoryReport>();

@@ -60,6 +60,21 @@ namespace ore {
 namespace analytics {
 
 // Analytic
+bool Analytic::match(const std::vector<std::string>& runTypes) {
+    if (runTypes.size() == 0)
+        return true;
+    
+    for (const auto& rt : runTypes) {
+        if (std::find(types_.begin(), types_.end(), rt) == types_.end()) {
+            WLOG("requested analytic " << rt << " not covered by the " << label_ << " analytic");
+        }
+        else
+            return true;
+    }
+    WLOG("None of the requested analytics are covered by the " << label_ << " analytic");
+    return false;
+}
+
 std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::todaysMarketParams() {
     buildConfigurations();
     std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
@@ -220,10 +235,13 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                 boost::shared_ptr<InMemoryReport> addReport = boost::make_shared<InMemoryReport>();;
                 ore::analytics::ReportWriter(inputs_->reportNaString())
                     .writeAdditionalResultsReport(*addReport, portfolio_, market_, inputs_->baseCurrency());
+                // FIXME: clean this up and keep one
                 reports_[analytic]["additional_results"] = addReport;
+                reports_["ADDITIONAL_RESULTS"]["AdditionalResults"] = addReport;
+                reports_["ADDITIONAL_RESULTS"]["additional_results"] = addReport;
                 out_ << "OK" << endl;
             }
-            // FIXME: Leave this here as additional output within the NPV analytic?
+            // FIXME: Leave this here as additional output within the NPV analytic, or store report as separate analytic?
             if (inputs_->outputTodaysMarketCalibration()) {
                 out_ << setw(tab_) << left << "Pricing: Market Calibration " << flush;
                 LOG("Write todays market calibration report");
@@ -284,13 +302,13 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
         }
         else if (analytic == "SENSITIVITY") {
             out_ << setw(tab_) << left << "Risk: Sensitivity Report " << flush;
-            LOG("Sensi Analysis - Initalise");
+            LOG("Sensi Analysis - Initialise");
             bool recalibrateModels = true;
             bool ccyConv = false;
             std::string configuration = inputs_->marketConfig("pricing");
 	    boost::shared_ptr<ore::analytics::SensitivityAnalysis> sensiAnalysis;
-	    // FIXME: Integrate with the multi-threaded sensi analysis 
             if (inputs_->nThreads() == 1) {
+                LOG("Single-threaded sensi analysis");
                 std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
                 std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
                 sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
@@ -299,21 +317,23 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                     inputs_->curveConfigs().at(0), configurations_.todaysMarketParams, ccyConv, extraEngineBuilders,
                     extraLegBuilders, inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, false,
                     inputs_->dryRun());
+                LOG("Single-threaded sensi analysis created");
             }
             else {
+                LOG("Multi-threaded sensi analysis");
                 std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
                     const boost::shared_ptr<ReferenceDataManager>&, const boost::shared_ptr<TradeFactory>&)>
-                    extraTradeBuilders;
-                std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuilders;
-                std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuilders;
+                    extraTradeBuilders = {};
+                std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuilders = {};
+                std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuilders = {};
                 sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
-                    inputs_->nThreads(), inputs_->asof(), this->loader(), portfolio_, Market::defaultConfiguration,
+                    inputs_->nThreads(), inputs_->asof(), loader, portfolio_, Market::defaultConfiguration,
                     inputs_->pricingEngine(), configurations_.simMarketParams, configurations_.sensiScenarioData,
                     recalibrateModels, inputs_->curveConfigs().at(0), configurations_.todaysMarketParams, ccyConv,
                     extraTradeBuilders, extraEngineBuilders, extraLegBuilders, inputs_->refDataManager(),
                     *inputs_->iborFallbackConfig(), true, false, inputs_->dryRun());
+                LOG("Multi-threaded sensi analysis created");
             }
-
             // FIXME: Why are these disabled?
             set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
             boost::shared_ptr<ParSensitivityAnalysis> parAnalysis = nullptr;

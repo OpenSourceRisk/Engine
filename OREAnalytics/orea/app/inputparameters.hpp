@@ -80,6 +80,16 @@ public:
     const std::string& reportNaString() { return reportNaString_; }
     char csvQuoteChar() const { return csvQuoteChar_; }
     bool dryRun() const { return dryRun_; }
+    QuantLib::Size mporDays() { return mporDays_; }
+    const QuantLib::Calendar mporCalendar() {
+        if (mporCalendar_.empty()) {
+            QL_REQUIRE(!baseCurrency_.empty(), "mpor calendar or baseCurrency must be provided";);
+            return parseCalendar(baseCurrency_);
+        } else
+            return mporCalendar_;
+    }
+    bool mporForward() { return mporForward_; }
+    bool includeMporExpired() const { return includeMporExpired_; };
 
     /***************************
      * Getters for npv analytics
@@ -274,6 +284,10 @@ protected:
     std::string reportNaString_;
     char csvQuoteChar_ = '\0';
     bool dryRun_ = false;
+    QuantLib::Size mporDays_ = 10;
+    QuantLib::Calendar mporCalendar_;
+    bool mporForward_ = true;
+    bool includeMporExpired_ = true;
 
     // npv
     bool npv_ = false;

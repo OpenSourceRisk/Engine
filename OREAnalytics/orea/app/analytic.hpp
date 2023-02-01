@@ -73,14 +73,14 @@ public:
              const std::vector<std::string>& analyticTypes,
              //! Any inputs required by this Analytic
              const boost::shared_ptr<InputParameters>& inputs,
-             //! Stream for optional output
-             std::ostream& out = std::cout,
              //! Flag to indicate whether a simularion config file is required for this analytic
              bool simulationConfig = false,
              //! Flag to indicate whether a sensitivity config file is required for this analytic
-             bool sensitivityConfig = false)
-        : label_(label), types_(analyticTypes), inputs_(inputs), out_(out),
-          simulationConfig_(simulationConfig), sensitivityConfig_(sensitivityConfig),
+             bool sensitivityConfig = false,
+             //! Stream for optional output
+             std::ostream& out = std::cout)
+        : label_(label), types_(analyticTypes), inputs_(inputs), 
+          simulationConfig_(simulationConfig), sensitivityConfig_(sensitivityConfig), out_(out),
           tab_(50), progressBarWidth_(72 - std::min<Size>(tab_, 67)) {
         // This call does not work with pure virtual functions, compiler error.
         // setUpConfigurations();
@@ -94,7 +94,7 @@ public:
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::vector<std::string>& runTypes = {}) = 0;
 
-    // we usually build configurations here (today's market params, scenario sim market params, sensitivity scenasrio data)
+    // we can build configurations here (today's market params, scenario sim market params, sensitivity scenasrio data)
     virtual void buildConfigurations() {};
     virtual void setUpConfigurations() = 0;
     virtual void buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -119,6 +119,9 @@ public:
     const bool getWriteIntermediateReports() const { return writeIntermediateReports_; }
     void setWriteIntermediateReports(const bool flag) { writeIntermediateReports_ = flag; }
 
+    //! Check whether any of the requested run types is covered by this analytic
+    bool match(const std::vector<std::string>& runTypes);
+
 protected:
     //! label for logging purposes primarily
     const std::string label_;
@@ -126,6 +129,10 @@ protected:
     std::vector<std::string> types_;
     //! contains all the input parameters for the run
     boost::shared_ptr<InputParameters> inputs_;
+    //! Booleans to determine if these configs are needed
+    bool simulationConfig_ = false;
+    bool sensitivityConfig_ = false;
+    //! Stream for progress output
     std::ostream& out_;
 
     Configurations configurations_;
@@ -136,10 +143,6 @@ protected:
     analytic_reports reports_;
     analytic_npvcubes npvCubes_;
     analytic_mktcubes mktCubes_;
-
-    //! Booleans to determine if these configs are needed
-    bool simulationConfig_ = false;
-    bool sensitivityConfig_ = false;
 
     //! flag to replace trades with schedule trades
     bool replaceScheduleTrades_ = false;
@@ -167,7 +170,7 @@ public:
     PricingAnalytic(const boost::shared_ptr<InputParameters>& inputs, 
                     std::ostream& out = std::cout,
                     bool applySimmExemptions = false)
-        : Analytic("PRICING", {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"}, inputs, out) {
+        : Analytic("PRICING", {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"}, inputs, false, false, out) {
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -182,7 +185,7 @@ class VarAnalytic : public Analytic {
 public:
     // FIXME: Add DELTA-GAMMA-VAR (Saddlepoint method)
     VarAnalytic(const boost::shared_ptr<InputParameters>& inputs, std::ostream& out = std::cout)
-        : Analytic("VAR", {"DELTA-VAR", "DELTA-GAMMA-NORMAL-VAR", "MONTE-CARLO-VAR"}, inputs, out) {
+        : Analytic("VAR", {"DELTA-VAR", "DELTA-GAMMA-NORMAL-VAR", "MONTE-CARLO-VAR"}, inputs, false, false, out) {
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -193,7 +196,7 @@ public:
 class XvaAnalytic : public Analytic {
 public:
     XvaAnalytic(const boost::shared_ptr<InputParameters>& inputs, std::ostream& out = std::cout)
-        : Analytic("XVA", {"EXPOSURE", "CVA", "DVA", "FVA", "COLVA", "COLLATERALFLOOR", "KVA", "MVA"}, inputs, out) {
+        : Analytic("XVA", {"EXPOSURE", "CVA", "DVA", "FVA", "COLVA", "COLLATERALFLOOR", "KVA", "MVA"}, inputs, true, false, out) {
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
