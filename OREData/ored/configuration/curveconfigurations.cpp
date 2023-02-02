@@ -24,7 +24,23 @@
 #include <ql/errors.hpp>
 
 #include <boost/make_shared.hpp>
+
+// we only want to include these here.
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsuggest-override"
+#endif
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsuggest-override"
+#endif
 #include <rapidxml_print.hpp>
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 namespace ore {
 namespace data {
