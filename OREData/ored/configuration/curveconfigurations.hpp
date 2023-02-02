@@ -159,9 +159,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
-protected:
-    void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName);
-
  private:
     ReportConfig reportConfigEqVols_;
     ReportConfig reportConfigFxVols_;
@@ -179,6 +176,8 @@ protected:
     
     // utility function for getting a child curve config node
     void getNode(XMLNode* node, const char* parentName, const char* childName);
+
+    void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName);
 };
 
 } // namespace data

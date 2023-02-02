@@ -24,7 +24,6 @@
 #include <ql/errors.hpp>
 
 #include <boost/make_shared.hpp>
-#include <rapidxml.hpp>
 #include <rapidxml_print.hpp>
 
 namespace ore {
