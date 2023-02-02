@@ -335,7 +335,6 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
                     TLOG("Adding analytic " << forCcy << " up sensitivity to cube.");
                     sensiCube_->npvCube()->remove(tradeIdx, itu->second.index);
                     sensiCube_->npvCube()->set(baseNpv + forCcySensi, tradeIdx, itu->second.index);
-                    std::cout << "baseNpv=" << baseNpv << " forCcySneis=" << forCcySensi << std::endl;
                 }
                 auto itd = downFactors.find(forCcyKey);
                 if (itd != downFactors.end()) {
