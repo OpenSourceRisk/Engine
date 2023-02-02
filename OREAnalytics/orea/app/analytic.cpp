@@ -216,7 +216,11 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             WLOG("requested analytic " << rt << " not covered by the PricingAnalytic");
         }
     }
-    
+
+    // This hook allows modifying the portfolio in derived classes before running the analytics below,
+    // e.g. to apply SIMM exemptions.
+    modifyPortfolio();
+
     for (const auto& analytic : types_) {
         boost::shared_ptr<InMemoryReport> report = boost::make_shared<InMemoryReport>();
         InMemoryReport tmpReport;

@@ -161,17 +161,22 @@ protected:
   \todo align pillars for par sensitivity analysis
   \todo add par sensi analysis
 */
-class PricingAnalytic : public Analytic {
+class PricingAnalytic : public virtual Analytic {
 public:
     PricingAnalytic(const boost::shared_ptr<InputParameters>& inputs, 
-                    std::ostream& out = std::cout,
-                    bool applySimmExemptions = false)
+                    std::ostream& out = std::cout)
         : Analytic("PRICING", {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"}, inputs, false, false, out) {
+        if (find(begin(types_), end(types_), "SENSITIVITY") != end(types_)) {
+            simulationConfig_ = true;
+            sensitivityConfig_ = true;
+        }        
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::vector<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+
+    virtual void modifyPortfolio() {}
 
 protected:
     boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;
@@ -199,7 +204,7 @@ public:
                              const std::vector<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
     
-private:
+protected:
     boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;
     void buildScenarioSimMarket();
     void buildCrossAssetModel(bool continueOnError);
