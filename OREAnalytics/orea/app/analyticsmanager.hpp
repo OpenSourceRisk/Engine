@@ -46,6 +46,7 @@ public:
     bool hasAnalytic(const std::string& type);
     const std::vector<std::string>& validAnalytics();
     const boost::shared_ptr<Analytic>& getAnalytic(const std::string& type) const;
+    const boost::shared_ptr<InputParameters>& inputs() { return inputs_; }
     void runAnalytics(const std::vector<std::string>& runTypes,
                       const boost::shared_ptr<MarketCalibrationReport>& marketCalibrationReport = nullptr);
     void addAnalytic(const std::string& label, const boost::shared_ptr<Analytic>& analytic);

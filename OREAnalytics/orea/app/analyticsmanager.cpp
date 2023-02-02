@@ -52,6 +52,7 @@ AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inp
 }
 
 void AnalyticsManager::clear() {
+    LOG("AnalyticsManager: Remove all analytics currently registered");
     analytics_.clear();
     validAnalytics_.clear();
 }

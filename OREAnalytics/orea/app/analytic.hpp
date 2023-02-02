@@ -40,10 +40,6 @@
 #include <boost/any.hpp>
 #include <iostream>
 
-// #include <orepsensi/orea/scenario/sensitivityscenariodataplus.hpp>
-// #include <orepsensi/orea/engine/parsensitivityanalysis.hpp>
-// #include <orepsensi/orea/engine/sensitivityanalysis.hpp>
-
 namespace ore {
 namespace analytics {
 
