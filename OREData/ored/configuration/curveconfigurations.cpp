@@ -327,11 +327,10 @@ std::set<string> CurveConfigurations::conventions() const {
 }
 
 set<string> CurveConfigurations::yieldCurveConfigIds() {
-
     set<string> curves;
-    auto& it = configs_.find(CurveSpec::CurveType::Yield);
+    const auto& it = configs_.find(CurveSpec::CurveType::Yield);
     if (it != configs_.end()) {
-        for (auto& c : it->second)
+        for (const auto& c : it->second)
             curves.insert(c.first);
     }
     return curves;
