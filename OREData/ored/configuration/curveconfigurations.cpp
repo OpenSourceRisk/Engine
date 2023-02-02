@@ -159,7 +159,6 @@ bool CurveConfigurations::has(const CurveSpec::CurveType& type, const string& cu
     return (configs_.count(type) > 0 && configs_.at(type).count(curveId) > 0) ||
            (unparsed_.count(type) > 0 && unparsed_.at(type).count(curveId) > 0);
 }
-<<<<<<< HEAD
 
 const boost::shared_ptr<CurveConfig>& CurveConfigurations::get(const CurveSpec::CurveType& type,
     const string& curveId) const {
@@ -173,21 +172,6 @@ const boost::shared_ptr<CurveConfig>& CurveConfigurations::get(const CurveSpec::
     return parseNode(type, curveId);
 }
 
-=======
-
-const boost::shared_ptr<CurveConfig>& CurveConfigurations::get(const CurveSpec::CurveType& type,
-    const string& curveId) const {
-    const auto& it = configs_.find(type);
-    if (it != configs_.end()) {
-        const auto& itc = it->second.find(curveId);
-        if (itc != it->second.end()) {
-            return itc->second;
-        }
-    }
-    return parseNode(type, curveId);
-}
-
->>>>>>> origin/QPR-11480
 void CurveConfigurations::getNode(XMLNode* node, const char* parentName, const char* childName) {
     const auto& type = parseCurveConfigurationType(parentName);
     XMLNode* parentNode = XMLUtils::getChildNode(node, parentName);
