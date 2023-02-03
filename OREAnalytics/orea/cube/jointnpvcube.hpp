@@ -38,8 +38,11 @@ using QuantLib::Size;
 class JointNPVCube : public NPVCube {
 public:
     /*! ctor for two input cubes */
-    JointNPVCube(const boost::shared_ptr<NPVCube>& cube1, const boost::shared_ptr<NPVCube>& cube2,
-                 const std::set<std::string>& ids = {}, const bool requireUniqueIds = true);
+    JointNPVCube(
+        const boost::shared_ptr<NPVCube>& cube1, const boost::shared_ptr<NPVCube>& cube2,
+        const std::set<std::string>& ids = {}, const bool requireUniqueIds = true,
+        const std::function<Real(Real a, Real x)>& accumulator = [](Real a, Real x) { return a + x; },
+        const Real accumulatorInit = 0.0);
 
     /*! ctor for n input cubes
         - If no ids are given, the order of the ids in the input cubes define the order in the resulting cube. If ids
@@ -52,8 +55,11 @@ public:
         - If one id in the result cube corresponds to several input cubes, it is not allowed to call set on this id,
           this will result in an exception.
      */
-    JointNPVCube(const std::vector<boost::shared_ptr<NPVCube>>& cubes, const std::set<std::string>& ids = {},
-                 const bool requireUniqueIds = true);
+    JointNPVCube(
+        const std::vector<boost::shared_ptr<NPVCube>>& cubes, const std::set<std::string>& ids = {},
+        const bool requireUniqueIds = true,
+        const std::function<Real(Real a, Real x)>& accumulator = [](Real a, Real x) { return a + x; },
+        const Real accumulatorInit = 0.0);
 
     //! Return the length of each dimension
     Size numIds() const override;
@@ -76,9 +82,13 @@ public:
 
 private:
     std::set<std::pair<boost::shared_ptr<NPVCube>, Size>> cubeAndId(Size id) const;
+
+    const std::vector<boost::shared_ptr<NPVCube>> cubes_;
+    const std::function<Real(Real a, Real x)> accumulator_;
+    const Real accumulatorInit_;
+
     std::map<std::string, Size> idIdx_;
     std::vector<std::set<std::pair<boost::shared_ptr<NPVCube>, Size>>> cubeAndId_;
-    const std::vector<boost::shared_ptr<NPVCube>> cubes_;
 };
 
 } // namespace analytics
