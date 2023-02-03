@@ -108,7 +108,7 @@ public:
     /*! Quantity for the full calculation period i.e. the effective quantity after taking into account the
         quantity frequency setting.
     */
-    QuantLib::Real periodQuantity() const { return periodQuantity_; }
+    QuantLib::Real periodQuantity() const override { return periodQuantity_; }
     //@}
 
     //! \name Event interface
