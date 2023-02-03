@@ -356,7 +356,10 @@ CurveConfigurations::requiredCurveIds(const CurveSpec::CurveType& type, const st
     boost::shared_ptr<CurveConfig> cc;
     std::map<CurveSpec::CurveType, std::set<string>> ids;
     if (!curveId.empty())
-        cc = get(type, curveId);
+        try {
+            cc = get(type, curveId);
+        } catch (...) {
+        }
     if (cc)
         ids = cc->requiredCurveIds();
     return ids;
