@@ -232,7 +232,7 @@ void TodaysMarket::initialise(const Date& asof) {
     for (auto const& t : timings) {
         std::size_t c = counts[t.first].count == 0 ? 1 : counts[t.first].count;
         double timing = static_cast<double>(t.second) / 1.0E6;
-        LOG(std::left << std::setw(30) << t.first << ": " << std::right << std::setprecision(3) << std::setw(15)
+        LOG(std::left << std::setw(34) << t.first << ": " << std::right << std::setprecision(3) << std::setw(15)
                       << timing << " ms" << std::setw(10) << c << std::setw(15) << timing / c << " ms");
         sum += t.second;
     }
