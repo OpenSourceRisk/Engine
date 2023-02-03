@@ -228,7 +228,8 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
         if (runTypes.size() > 0 && std::find(runTypes.begin(), runTypes.end(), analytic) == runTypes.end())
             continue;
 
-        if (analytic == "NPV") {
+        if (analytic == "NPV" ||
+            analytic == "NPV_LAGGED") {
             out_ << setw(tab_) << left << "Pricing: NPV Report " << flush;
             ore::analytics::ReportWriter(inputs_->reportNaString())
                 .writeNpv(*report, inputs_->baseCurrency(), market_, "", portfolio_);
@@ -254,7 +255,7 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                 boost::shared_ptr<InMemoryReport> mktReport = boost::make_shared<InMemoryReport>();
                 ore::analytics::ReportWriter(inputs_->reportNaString())
                     .writeTodaysMarketCalibrationReport(*mktReport, t->calibrationInfo());
-                reports_[analytic]["marketcalibration"] = mktReport;
+                reports_[analytic]["todaysmarketcalibration"] = mktReport;
                 out_ << "OK" << endl;
             }
             if (inputs_->outputCurves()) {

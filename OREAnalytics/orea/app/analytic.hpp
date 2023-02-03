@@ -165,7 +165,8 @@ class PricingAnalytic : public virtual Analytic {
 public:
     PricingAnalytic(const boost::shared_ptr<InputParameters>& inputs, 
                     std::ostream& out = std::cout)
-        : Analytic("PRICING", {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"}, inputs, false, false, out) {
+        : Analytic("PRICING", {"NPV", "NPV_LAGGED", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"},
+                   inputs, false, false, out) {
         if (find(begin(types_), end(types_), "SENSITIVITY") != end(types_)) {
             simulationConfig_ = true;
             sensitivityConfig_ = true;
