@@ -888,7 +888,6 @@ void OREAppInputParameters::loadParameters() {
             runTypes_.push_back("KVA");
     }
     
-
     /***************************
      * Collect output file names
      */
