@@ -133,6 +133,7 @@ void InMemoryLoader::reset() {
     data_.clear();
     fixings_.clear();
     dividends_.clear();
+    actualDate_ = Date();
 }
 
 void load(InMemoryLoader& loader, const vector<string>& data, bool isMarket, bool implyTodaysFixings) {
