@@ -57,6 +57,10 @@ public:
     Analytic::analytic_mktcubes const mktCubes();
 
     std::ostream& stream() { return out_; }
+
+    void setLaggedMarket() { laggedMarket_ = true; }
+    void unsetLaggedMarket() { laggedMarket_ = false; }
+    
 private:
     std::map<std::string, boost::shared_ptr<Analytic>> analytics_;
     boost::shared_ptr<InputParameters> inputs_;
