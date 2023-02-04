@@ -1455,8 +1455,9 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
     LOG("TodaysMktCalibration report written");
 }
 
-void ReportWriter::addMarketDatum(Report& report, const ore::data::MarketDatum& md) {
-    report.next().add(md.asofDate()).add(md.name()).add(md.quote()->value());
+void ReportWriter::addMarketDatum(Report& report, const ore::data::MarketDatum& md, const Date& actualDate) {
+    const Date& d = actualDate == Null<Date>() ? md.asofDate() : actualDate;
+    report.next().add(d).add(md.name()).add(md.quote()->value());
 }
 
 void ReportWriter::writeMarketData(Report& report, const boost::shared_ptr<Loader>& loader, const Date& asof,
@@ -1468,7 +1469,7 @@ void ReportWriter::writeMarketData(Report& report, const boost::shared_ptr<Loade
 
     if (returnAll) {
         for (const auto& md : loader->loadQuotes(asof)) {
-            addMarketDatum(report, *md);
+            addMarketDatum(report, *md, loader->actualDate());
         }
         return;
     }
@@ -1487,14 +1488,14 @@ void ReportWriter::writeMarketData(Report& report, const boost::shared_ptr<Loade
         const auto& mdName = md->name();
 
         if (names.find(mdName) != names.end()) {
-            addMarketDatum(report, *md);
+            addMarketDatum(report, *md, loader->actualDate());
             continue;
         }
 
         // This could be slow
         for (const auto& regex : regexes) {
             if (regex_match(mdName, regex)) {
-                addMarketDatum(report, *md);
+                addMarketDatum(report, *md, loader->actualDate());
                 break;
             }
         }
