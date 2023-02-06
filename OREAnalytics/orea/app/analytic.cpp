@@ -569,25 +569,28 @@ void XvaAnalytic::initClassicRun(const boost::shared_ptr<Portfolio>& portfolio) 
 
     initCubeDepth();
 
-    if (portfolio->size() > 0)
-        initCube(cube_, portfolio->ids(), cubeDepth_);
-    // not required by any calculators in ore at the moment
-    nettingSetCube_ = nullptr;
-    // Init counterparty cube for the storage of survival probabilities
-    if (inputs_->storeSurvivalProbabilities()) {
-        // Use full list of counterparties, not just those in the sub-portflio
-        auto counterparties = inputs_->portfolio()->counterparties();
-        counterparties.insert(inputs_->dvaName());
-        initCube(cptyCube_, counterparties, 1);
-    } else {
-        cptyCube_ = nullptr; 
-    }
-
     // May have been set already
     if (!scenarioData_) {
         LOG("XVA: Create asd " << grid_->valuationDates().size() << " x " << samples_);
         scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_);
         simMarket_->aggregationScenarioData() = scenarioData_;
+    }
+
+    // We can skip the cube initialization if the mt val engine is used, since it builds its own cubes
+    if (inputs_->nThreads() == 1) {
+        if (portfolio->size() > 0)
+            initCube(cube_, portfolio->ids(), cubeDepth_);
+        // not required by any calculators in ore at the moment
+        nettingSetCube_ = nullptr;
+        // Init counterparty cube for the storage of survival probabilities
+        if (inputs_->storeSurvivalProbabilities()) {
+            // Use full list of counterparties, not just those in the sub-portflio
+            auto counterparties = inputs_->portfolio()->counterparties();
+            counterparties.insert(inputs_->dvaName());
+            initCube(cptyCube_, counterparties, 1);
+        } else {
+            cptyCube_ = nullptr;
+        }
     }
 
     LOG("XVA: initClassicRun completed");
@@ -695,7 +698,7 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
 
         // multi-threaded engine run
 
-        // TODO we can skip the cube_ build, portfolio build, ssm build when using the mt engine
+        // TODO we can skip the portfolio build and ssm build when using the mt engine?
         // TODO we assume no netting output cube is needed, this is only used by the sensitivity calculator in ore+
 
         auto cubeFactory = [this](const QuantLib::Date& asof, const std::set<std::string>& ids,
