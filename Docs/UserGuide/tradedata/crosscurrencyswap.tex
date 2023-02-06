@@ -1,7 +1,12 @@
 \subsubsection{Cross Currency Swap}
 \label{ss:cross_currency_swap}
 
-A Cross Currency Swap can be represented with either trade type \emph{Swap} or \emph{CrossCurrencySwap}. In the case of \emph{Swap}, it is set up using a {\tt SwapData} container. For \emph{CrossCurrencySwap}, we use {\tt CrossCurrencySwapData} with the same {\tt LegData} sub-nodes within the container, and it is explicitly required for this trade type to have exactly two legs, each of type \emph{Fixed} or \emph{Floating}, i.e. \emph{Fixed}-\emph{Fixed}, \emph{Floating}-\emph{Floating}, \emph{Fixed}-\emph{Floating}, or \emph{Floating}-\emph{Fixed} combinations are allowed. 
+A Cross Currency Swap can be represented with either trade type \emph{Swap} or \emph{CrossCurrencySwap}. In the case of \emph{Swap}, it is set up using a {\tt SwapData} container. For \emph{CrossCurrencySwap}, we use {\tt CrossCurrencySwapData} with the same {\tt LegData} sub-nodes within the container, and it is required for this trade type to have: 
+\begin{itemize}
+ \item Two legs, each of type \emph{Fixed} or \emph{Floating}, i.e. \emph{Fixed}-\emph{Fixed}, \emph{Floating}-\emph{Floating}, \emph{Fixed}-\emph{Floating}, or \emph{Floating}-\emph{Fixed} combinations are allowed. 
+\item  Optionally additional legs of type \emph{Cashflow}.
+\end{itemize}
+
 
 A Cross Currency Swap can be rebalancing, meaning the notional amount on one leg resets to the equivalent of a fixed amount in another currency (called ForeignCurrency, and is typically the currency of the other leg) at each period. This is represented using an \lstinline!FXReset! node on the resetting/rebalancing leg, within the \lstinline!Notionals! node. Note that the Notional in leg currency must be set even on the rebalancing leg, but this is only used as starting notional.
 
