@@ -58,16 +58,16 @@ void AnalyticsManager::clear() {
 }
     
 void AnalyticsManager::addAnalytic(const std::string& label, const boost::shared_ptr<Analytic>& analytic) {
-    // QL_REQUIRE(analytics_.find(label) == analytics_.end(), "trying to add an analytic with duplicate label: " << label);
     // Allow overriding, but warn 
     if (analytics_.find(label) != analytics_.end()) {
         WLOG("Overwriting analytic with label " << label);
     }
+
     // Label is not necessarily a valid analytics type
     // Get the latter via analytic->analyticTypes()
     LOG("register analytic with label '" << label << "' and sub-analytics " << to_string(analytic->analyticTypes()));
     analytics_[label] = analytic;
-    // force this so that we update valid analytics vector with the next call to validAnalytics()
+    // This forces an update of valid analytics vector with the next call to validAnalytics()
     validAnalytics_.clear();
 }
     
@@ -184,15 +184,6 @@ Analytic::analytic_mktcubes const AnalyticsManager::mktCubes() {
     }
     return results;
 }
-
-// boost::shared_ptr<AnalyticsManager> parseAnalytics(const std::string& s,
-//     const boost::shared_ptr<InputParameters>& inputs,
-//     const boost::shared_ptr<MarketDataLoader>& marketDataLoader) {
-//     DLOG("Parse Analytics Request " << s);
-//     vector<string> analyticStrs;
-//     boost::split(analyticStrs, s, boost::is_any_of(", |;:"));
-//     return boost::make_shared<AnalyticsManager>(analyticStrs, inputs, marketDataLoader);
-// }
 
 }
 }

@@ -29,18 +29,16 @@ namespace {
 // Additional quotes are needed for backtesting, just for Credit Indexes for now
 void additional_quotes(set<string>& quotes, const boost::shared_ptr<Portfolio>& portfolio,
                        const boost::shared_ptr<CurveConfigurations>& configs) {
-    for (auto t : portfolio->trades()) {
+    for (const auto& [_, trade]: portfolio->trades()) {
         string cdsIndex = "";
-        // FIXME post credit migration
-        /*
-        if (t->tradeType() == "IndexCreditDefaultSwap") {
-            boost::shared_ptr<oreplus::data::IndexCreditDefaultSwap> icds =
-                boost::dynamic_pointer_cast<oreplus::data::IndexCreditDefaultSwap>(t);
+        if (trade->tradeType() == "IndexCreditDefaultSwap") {
+            boost::shared_ptr<ore::data::IndexCreditDefaultSwap> icds =
+                boost::dynamic_pointer_cast<ore::data::IndexCreditDefaultSwap>(trade);
             if (icds)
                 cdsIndex = icds->swap().creditCurveId();
-        } else if (t->tradeType() == "IndexCreditDefaultSwapOption") {
+        } else if (trade->tradeType() == "IndexCreditDefaultSwapOption") {
             boost::shared_ptr<IndexCreditDefaultSwapOption> icdso =
-                boost::dynamic_pointer_cast<IndexCreditDefaultSwapOption>(t);
+                boost::dynamic_pointer_cast<IndexCreditDefaultSwapOption>(trade);
             if (icdso)
                 cdsIndex = icdso->swap().creditCurveId();
         }
@@ -49,7 +47,6 @@ void additional_quotes(set<string>& quotes, const boost::shared_ptr<Portfolio>& 
             for (auto q : qts)
                 quotes.insert(q);
         }
-        */
     }
 }
 
@@ -170,14 +167,13 @@ void MarketDataLoader::populateLoader(
         if (tmp->hasMarketObject(MarketObject::EquityCurve)) {
             auto eqMap = tmp->mapping(MarketObject::EquityCurve, Market::defaultConfiguration);
             for (auto eq : eqMap) {
-                // FIXME post credit migration
-                // if (inputs_->refDataManager() && inputs_->refDataManager()->hasData("Equity", eq.first)) {
-                //     auto refData = boost::dynamic_pointer_cast<EquityReferenceDatum>(
-                //         inputs_->refDataManager()->getData("Equity", eq.first));
-                //     auto erData = refData->equityData();
-                //     equities[eq.first] = erData.equityId;
-                // } else
-                equities[eq.first] = eq.first;
+                if (inputs_->refDataManager() && inputs_->refDataManager()->hasData("Equity", eq.first)) {
+                    auto refData = boost::dynamic_pointer_cast<EquityReferenceDatum>(
+                        inputs_->refDataManager()->getData("Equity", eq.first));
+                    auto erData = refData->equityData();
+                    equities[eq.first] = erData.equityId;
+                } else
+                    equities[eq.first] = eq.first;
             }
         }
     }
