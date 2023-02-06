@@ -36,6 +36,10 @@ namespace analytics {
 
 class MultiThreadedValuationEngine : public ore::data::ProgressReporter {
 public:
+    /* if no cube factories are given, we create default ones as follows
+       - cubeFactory          : creates DoublePrecisionInMemoryCube
+       - nettingSetCubeFactory: creates nullptr
+       - cptyCubeFactory:       creates nullptr */
     MultiThreadedValuationEngine(
         const QuantLib::Size nThreads, const QuantLib::Date& today,
         const boost::shared_ptr<ore::analytics::DateGrid>& dateGrid, const QuantLib::Size nSamples,
@@ -60,14 +64,36 @@ public:
         const std::function<boost::shared_ptr<ore::analytics::NPVCube>(
             const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
             const QuantLib::Size)>& cubeFactory = {},
+        const std::function<boost::shared_ptr<ore::analytics::NPVCube>(
+            const QuantLib::Date&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>& nettingSetCubeFactory =
+            {},
+        const std::function<boost::shared_ptr<ore::analytics::NPVCube>(
+            const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
+            const QuantLib::Size)>& cptyCubeFactory = {},
         const std::string& context = "unspecified");
 
-    /* - no support yet for netting set level results, cpty level results,
-       - returns mini-cubes, use JointNPVCube, JointNPVSensiCube etc. to combine them to a single cube */
-    std::vector<boost::shared_ptr<ore::analytics::NPVCube>>
+    // can be optionally called to set the agg scen data (which is done in the ssm for single-threaded runs)
+    void setAggregationScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData);
+
+    /* analoguous to buildCube() in the single-threaded engine, results are retrieved using below constructors
+       if no cptyCalculators is given a function returning an empty vector of calculators will be returned */
+    void
     buildCube(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
               const std::function<std::vector<boost::shared_ptr<ore::analytics::ValuationCalculator>>()>& calculators,
+              const std::function<std::vector<boost::shared_ptr<ore::analytics::CounterpartyCalculator>>()>&
+                  cptyCalculators = {},
               bool mporStickyDate = true, bool dryRun = false);
+
+    // result output cubes (mini-cubes, one per thread)
+    std::vector<boost::shared_ptr<ore::analytics::NPVCube>> outputCubes() const { return miniCubes_; }
+
+    // result netting cubes (might be null, if nettingSetCubeFactory is returning null)
+    std::vector<boost::shared_ptr<ore::analytics::NPVCube>> outputNettingSetCubes() const {
+        return miniNettingSetCubes_;
+    }
+
+    // result cpty cubes (might be null, if cptyCubeFactory is returning null)
+    std::vector<boost::shared_ptr<ore::analytics::NPVCube>> outputCptyCubes() const { return miniCptyCubes_; }
 
 private:
     QuantLib::Size nThreads_;
@@ -96,7 +122,19 @@ private:
     std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                              const std::vector<QuantLib::Date>&, const QuantLib::Size)>
         cubeFactory_;
+    std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::vector<QuantLib::Date>&,
+                                                             const QuantLib::Size)>
+        nettingSetCubeFactory_;
+    std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
+                                                             const std::vector<QuantLib::Date>&, const QuantLib::Size)>
+        cptyCubeFactory_;
     std::string context_;
+
+    boost::shared_ptr<AggregationScenarioData> aggregationScenarioData_;
+
+    std::vector<boost::shared_ptr<ore::analytics::NPVCube>> miniCubes_;
+    std::vector<boost::shared_ptr<ore::analytics::NPVCube>> miniNettingSetCubes_;
+    std::vector<boost::shared_ptr<ore::analytics::NPVCube>> miniCptyCubes_;
 };
 
 } // namespace analytics

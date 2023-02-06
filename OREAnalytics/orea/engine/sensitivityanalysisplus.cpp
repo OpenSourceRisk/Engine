@@ -165,19 +165,19 @@ void SensitivityAnalysisPlus::generateSensitivities(boost::shared_ptr<NPVSensiCu
            const QuantLib::Size samples) {
             return boost::make_shared<ore::analytics::DoublePrecisionSensiCube>(ids, asof, samples);
         },
-        context_);
+        {}, {}, context_);
     for (auto const& i : this->progressIndicators())
         engine.registerProgressIndicator(i);
 
     auto baseCcy = simMarketData_->baseCcy();
-    auto tmp = engine.buildCube(
+    engine.buildCube(
         portfolio_,
         [&baseCcy]() -> std::vector<boost::shared_ptr<ValuationCalculator>> {
             return {boost::make_shared<NPVCalculator>(baseCcy)};
         },
-        true, dryRun_);
+        {}, true, dryRun_);
     std::vector<boost::shared_ptr<NPVSensiCube>> miniCubes;
-    for (auto const& c : tmp) {
+    for (auto const& c : engine.outputCubes()) {
         miniCubes.push_back(boost::dynamic_pointer_cast<NPVSensiCube>(c));
         QL_REQUIRE(miniCubes.back() != nullptr,
                    "SensitivityAnalysis::generateSensitivities(): internal error, could not cast to NPVSensiCube.");
