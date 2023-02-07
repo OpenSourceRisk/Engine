@@ -25,23 +25,6 @@
 
 #include <boost/make_shared.hpp>
 
-// we only want to include these here.
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wsuggest-override"
-#endif
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsuggest-override"
-#endif
-#include <rapidxml_print.hpp>
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
-
 namespace ore {
 namespace data {
 
@@ -194,9 +177,7 @@ void CurveConfigurations::getNode(XMLNode* node, const char* parentName, const c
         for (XMLNode* child = XMLUtils::getChildNode(parentNode, childName); child;
              child = XMLUtils::getNextSibling(child, childName)) {
             const auto& id = XMLUtils::getChildValue(child, "CurveId", true);
-            std::string xml_as_string;
-            rapidxml::print(std::back_inserter(xml_as_string), *child);
-            unparsed_[type][id] = xml_as_string;
+            unparsed_[type][id] = XMLUtils::toString(child);
         }
     }
 }
