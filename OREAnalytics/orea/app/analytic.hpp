@@ -197,7 +197,8 @@ class VarAnalytic : public virtual Analytic {
 public:
     // FIXME: Add DELTA-GAMMA-VAR (Saddlepoint method)
     VarAnalytic(const boost::shared_ptr<InputParameters>& inputs, std::ostream& out = std::cout)
-        : Analytic("VAR", {"DELTA-VAR", "DELTA-GAMMA-NORMAL-VAR", "MONTE-CARLO-VAR"}, inputs, false, false, false, false, out) {
+        : Analytic("VAR", {"DELTA-VAR", "DELTA-GAMMA-NORMAL-VAR", "MONTE-CARLO-VAR"},
+                   inputs, false, false, false, false, out) {
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -205,14 +206,13 @@ public:
     void setUpConfigurations() override;
 
 protected:
-    boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;
+    // boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;
 };
 
 class XvaAnalytic : public virtual Analytic {
 public:
     XvaAnalytic(const boost::shared_ptr<InputParameters>& inputs, std::ostream& out = std::cout)
-        //        : Analytic("XVA", {"EXPOSURE", "CVA", "DVA", "FVA", "COLVA", "COLLATERALFLOOR", "KVA", "MVA"}, inputs, true, false, true, true, out) {
-        : Analytic("XVA", {"XVA"}, inputs, true, false, true, true, out) {
+        : Analytic("XVA", {"XVA"}, inputs, true, false, false, false, out) {
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,

@@ -851,8 +851,8 @@ void OREAppInputParameters::loadParameters() {
     if (sensi_)
         runTypes_.push_back("SENSITIVITY");
 
-    if (simulation_)
-        runTypes_.push_back("EXPOSURE");
+    // if (simulation_)
+    //     runTypes_.push_back("EXPOSURE");
 
     if (stress_)
         runTypes_.push_back("STRESS");
@@ -869,24 +869,8 @@ void OREAppInputParameters::loadParameters() {
         }
     }
 
-    if (xva_) {
-        if (cvaAnalytic_)
-            runTypes_.push_back("CVA");
-        if (dvaAnalytic_)
-            runTypes_.push_back("DVA");
-        if (fvaAnalytic_)
-            runTypes_.push_back("FVA");
-        if (colvaAnalytic_)
-            runTypes_.push_back("COLVA");
-        if (collateralFloorAnalytic_)
-            runTypes_.push_back("COLLATERALFLOOR");
-        if (dimAnalytic_)
-            runTypes_.push_back("DIM");
-        if (mvaAnalytic_)
-            runTypes_.push_back("MVA");
-        if (kvaAnalytic_)
-            runTypes_.push_back("KVA");
-    }
+    if (xva_)
+        runTypes_.push_back("XVA");
     
     /***************************
      * Collect output file names

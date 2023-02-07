@@ -28,6 +28,7 @@
 #include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/zerotoparcube.hpp>
+#include <orea/engine/multithreadedvaluationengine.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <orea/engine/parametricvar.hpp>
 #include <orea/cube/cubewriter.hpp>
@@ -180,7 +181,7 @@ void Analytic::buildPortfolio() {
         LOG("Filter trades that expire before " << maturityDate);
         portfolio_->removeMatured(maturityDate);
     } else {
-        ALOG("Skip building the portfolio");
+        ALOG("Skip building the portfolio, because market not set");
     }
 }
 
@@ -419,23 +420,25 @@ void VarAnalytic::setUpConfigurations() {
     configurations_.todaysMarketParams = inputs_->todaysMarketParams();
 }
 
+/*
 boost::shared_ptr<EngineFactory> VarAnalytic::engineFactory() {
-    LOG("XvaAnalytic::engineFactory() called");
-    boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->amcPricingEngine());
-    edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
-    edCopy->globalParameters()["RunType"] = "NPV";
-    map<MarketContext, string> configurations;
-    configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");    
-    configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
-    configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
-    std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders; 
-    std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders;
-    auto factory = boost::make_shared<EngineFactory>(edCopy, market_, configurations,
-                                                     extraEngineBuilders, extraLegBuilders,
-                                                     inputs_->refDataManager(),
-                                                     *inputs_->iborFallbackConfig());        
-    return factory;
+     LOG("CarAnalytic::engineFactory() called");
+     boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->pricingEngine());
+     edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
+     edCopy->globalParameters()["RunType"] = "NPV";
+     map<MarketContext, string> configurations;
+     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");    
+     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
+     configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
+     std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders; 
+     std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders;
+     auto factory = boost::make_shared<EngineFactory>(edCopy, market_, configurations,
+                                                      extraEngineBuilders, extraLegBuilders,
+                                                      inputs_->refDataManager(),
+                                                      *inputs_->iborFallbackConfig());        
+     return factory;
 }
+*/
 
 void VarAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                               const std::vector<std::string>& runTypes) {
@@ -524,11 +527,11 @@ void XvaAnalytic::buildScenarioSimMarket() {
     std::string configuration = inputs_->marketConfig("simulation");
     simMarket_ = boost::make_shared<ScenarioSimMarket>(
             market_,
-            configurations_.simMarketParams, //inputs_->exposureSimMarketParams(),
+            configurations_.simMarketParams,
             boost::make_shared<FixingManager>(inputs_->asof()),
             configuration,
             *inputs_->curveConfigs()[0],
-            *configurations_.todaysMarketParams, //*inputs_->todaysMarketParams(),
+            *configurations_.todaysMarketParams,
             inputs_->continueOnError(), 
             false, true, false,
             *inputs_->iborFallbackConfig(),
@@ -538,11 +541,9 @@ void XvaAnalytic::buildScenarioSimMarket() {
 void XvaAnalytic::buildScenarioGenerator(const bool continueOnCalibrationError) {
     if (!model_)
         buildCrossAssetModel(continueOnCalibrationError);
-    //ScenarioGeneratorBuilder sgb(inputs_->scenarioGeneratorData());
     ScenarioGeneratorBuilder sgb(configurations_.scenarioGeneratorData);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
     string config = inputs_->marketConfig("simulation");
-    //    scenarioGenerator_ = sgb.build(model_, sf, inputs_->exposureSimMarketParams(), inputs_->asof(), market_, config); 
     scenarioGenerator_ = sgb.build(model_, sf, configurations_.simMarketParams, inputs_->asof(), market_, config); 
     QL_REQUIRE(scenarioGenerator_, "failed to build the scenario generator"); 
     grid_ = configurations_.scenarioGeneratorData->getGrid();
@@ -555,7 +556,7 @@ void XvaAnalytic::buildScenarioGenerator(const bool continueOnCalibrationError) 
 
     if (inputs_->writeScenarios()) {
         auto report = boost::make_shared<InMemoryReport>();
-        reports_["xva"]["scenario"] = report;
+        reports_["XVA"]["scenario"] = report;
         scenarioGenerator_ = boost::make_shared<ScenarioWriter>(scenarioGenerator_, report);
     }
 }
@@ -574,7 +575,6 @@ void XvaAnalytic::buildCrossAssetModel(const bool continueOnCalibrationError) {
                                         dc, false, continueOnCalibrationError);
     model_ = *modelBuilder.model();
 }
-
 
 void XvaAnalytic::initCubeDepth() {
 
@@ -618,25 +618,28 @@ void XvaAnalytic::initClassicRun(const boost::shared_ptr<Portfolio>& portfolio) 
 
     initCubeDepth();
 
-    if (portfolio->size() > 0)
-        initCube(cube_, portfolio->ids(), cubeDepth_);
-    // will be set/filled by the postprocessor
-    nettingSetCube_ = nullptr; 
-    // Init counterparty cube for the storage of survival probabilities
-    if (inputs_->storeSurvivalProbabilities()) {
-        // Use full list of counterparties, not just those in the sub-portflio
-        auto counterparties = inputs_->portfolio()->counterparties();
-        counterparties.insert(inputs_->dvaName());
-        initCube(cptyCube_, counterparties, 1);
-    } else {
-        cptyCube_ = nullptr; 
-    }
-
     // May have been set already
     if (!scenarioData_) {
         LOG("XVA: Create asd " << grid_->valuationDates().size() << " x " << samples_);
         scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_);
         simMarket_->aggregationScenarioData() = scenarioData_;
+    }
+
+    // We can skip the cube initialization if the mt val engine is used, since it builds its own cubes
+    if (inputs_->nThreads() == 1) {
+        if (portfolio->size() > 0)
+            initCube(cube_, portfolio->ids(), cubeDepth_);
+        // not required by any calculators in ore at the moment
+        nettingSetCube_ = nullptr;
+        // Init counterparty cube for the storage of survival probabilities
+        if (inputs_->storeSurvivalProbabilities()) {
+            // Use full list of counterparties, not just those in the sub-portflio
+            auto counterparties = inputs_->portfolio()->counterparties();
+            counterparties.insert(inputs_->dvaName());
+            initCube(cptyCube_, counterparties, 1);
+        } else {
+            cptyCube_ = nullptr;
+        }
     }
 
     LOG("XVA: initClassicRun completed");
@@ -682,49 +685,118 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
 
     LOG("XVA::buildCube");
 
-    // Valuation calculators
-    string baseCurrency = inputs_->exposureBaseCurrency();
-    vector<boost::shared_ptr<ValuationCalculator>> calculators;
+    // set up valuation calculator factory
 
-    if (configurations_.scenarioGeneratorData->withCloseOutLag()) {
-        boost::shared_ptr<NPVCalculator> npvCalc = boost::make_shared<NPVCalculator>(baseCurrency);
-        calculators.push_back(boost::make_shared<MPORCalculator>(npvCalc, 0, 1));
-    } else {
-        calculators.push_back(boost::make_shared<NPVCalculator>(baseCurrency));
-    }
+    auto calculators = [this]() {
+        vector<boost::shared_ptr<ValuationCalculator>> calculators;
+        if (configurations_.scenarioGeneratorData->withCloseOutLag()) {
+            boost::shared_ptr<NPVCalculator> npvCalc =
+                boost::make_shared<NPVCalculator>(inputs_->exposureBaseCurrency());
+            calculators.push_back(boost::make_shared<MPORCalculator>(npvCalc, 0, 1));
+        } else {
+            calculators.push_back(boost::make_shared<NPVCalculator>(inputs_->exposureBaseCurrency()));
+        }
+        if (inputs_->storeFlows()) {
+            // cash flow stored at index 1 (no close-out lag) or 2 (have close-out lag)
+            calculators.push_back(boost::make_shared<CashflowCalculator>(inputs_->exposureBaseCurrency(),
+                                                                         inputs_->asof(), grid_, cubeDepth_ - 1));
+        }
+        return calculators;
+    };
 
-    if (inputs_->storeFlows()) {
-        // cash flow stored at index 1 (no close-out lag) or 2 (have close-out lag)
-        calculators.push_back(boost::make_shared<CashflowCalculator>(baseCurrency, inputs_->asof(), grid_, cubeDepth_ - 1));
-    }
+    // set up cpty calculator factory
+
+    auto cptyCalculators = [this]() {
+        vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators;
+        if (inputs_->storeSurvivalProbabilities()) {
+            string configuration = inputs_->marketConfig("simulation");
+            cptyCalculators.push_back(boost::make_shared<SurvivalProbabilityCalculator>(configuration));
+        }
+        return cptyCalculators;
+    };
+
+    // set cube interpretation depending on close-out lag
 
     if (configurations_.scenarioGeneratorData->withCloseOutLag())
         cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(grid_, inputs_->flipViewXVA());
     else
         cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(inputs_->flipViewXVA());
 
-    vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators;
-    if (inputs_->storeSurvivalProbabilities()) {
-        string configuration = inputs_->marketConfig("simulation");
-        cptyCalculators.push_back(boost::make_shared<SurvivalProbabilityCalculator>(configuration));
-    }
-
-    // FIXME: integrate the multi-threaded engine here once released
-    ValuationEngine engine(inputs_->asof(), grid_, simMarket_);
+    // log message
 
     ostringstream o;
     o << "XVA: Build Cube " << portfolio->size() << " x " << grid_->valuationDates().size() << " x " << samples_;
     out_ << setw(tab_) << o.str() << flush;
     LOG(o.str());
 
+    // set up progress indicators
+
     auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab_, progressBarWidth_);
     auto progressLog = boost::make_shared<ProgressLog>("Building cube");
-    engine.registerProgressIndicator(progressBar);
-    engine.registerProgressIndicator(progressLog);
 
-    bool mporStickyDate = configurations_.scenarioGeneratorData->withMporStickyDate();
-    engine.buildCube(portfolio, cube_, calculators, mporStickyDate, nettingSetCube_, cptyCube_, cptyCalculators);
-    
+    if(inputs_->nThreads() == 1) {
+
+        // single-threaded engine run
+
+        ValuationEngine engine(inputs_->asof(), grid_, simMarket_);
+        engine.registerProgressIndicator(progressBar);
+        engine.registerProgressIndicator(progressLog);
+        engine.buildCube(portfolio, cube_, calculators(), configurations_.scenarioGeneratorData->withMporStickyDate(),
+                         nettingSetCube_, cptyCube_, cptyCalculators());
+    } else {
+
+        // multi-threaded engine run
+
+        // TODO we can skip the portfolio build and ssm build when using the mt engine?
+        // TODO we assume no netting output cube is needed, this is only used by the sensitivity calculator in ore+
+
+        auto cubeFactory = [this](const QuantLib::Date& asof, const std::set<std::string>& ids,
+                                  const std::vector<QuantLib::Date>& dates,
+                                  const Size samples) -> boost::shared_ptr<NPVCube> {
+            if (cubeDepth_ == 1)
+                return boost::make_shared<ore::analytics::SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
+            else
+                return boost::make_shared<ore::analytics::SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples,
+                                                                                        cubeDepth_, 0.0f);
+        };
+
+        std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
+                                                                 const std::vector<QuantLib::Date>&,
+                                                                 const QuantLib::Size)>
+            cptyCubeFactory;
+        if (inputs_->storeSurvivalProbabilities()) {
+            cptyCubeFactory = [](const QuantLib::Date& asof, const std::set<std::string>& ids,
+                                 const std::vector<QuantLib::Date>& dates,
+                                 const Size samples) -> boost::shared_ptr<NPVCube> {
+                return boost::make_shared<ore::analytics::SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
+            };
+        } else {
+            cptyCubeFactory = [](const QuantLib::Date& asof, const std::set<std::string>& ids,
+                                 const std::vector<QuantLib::Date>& dates,
+                                 const Size samples) -> boost::shared_ptr<NPVCube> { return nullptr; };
+        }
+
+        MultiThreadedValuationEngine engine(
+            inputs_->nThreads(), inputs_->asof(), grid_, samples_, loader_, scenarioGenerator_,
+            inputs_->simulationPricingEngine(), inputs_->curveConfigs()[0], configurations_.todaysMarketParams,
+            inputs_->marketConfig("simulation"), configurations_.simMarketParams, false, false,
+            boost::make_shared<ore::analytics::ScenarioFilter>(), {}, {}, {}, inputs_->refDataManager(),
+            *inputs_->iborFallbackConfig(), true, false, cubeFactory, {}, cptyCubeFactory, "xva-simulation");
+
+        engine.registerProgressIndicator(progressBar);
+        engine.registerProgressIndicator(progressLog);
+
+        engine.buildCube(portfolio, calculators, cptyCalculators,
+                         configurations_.scenarioGeneratorData->withMporStickyDate());
+
+        cube_ = boost::make_shared<JointNPVCube>(engine.outputCubes(), portfolio->ids());
+
+        if (inputs_->storeSurvivalProbabilities())
+            cptyCube_ = boost::make_shared<JointNPVCube>(
+                engine.outputCptyCubes(), portfolio->counterparties(), false,
+                [](Real a, Real x) { return std::max(a, x); }, 0.0);
+    }
+
     out_ << "OK" << endl;
 
     LOG("XVA::buildCube done");
@@ -860,7 +932,6 @@ void XvaAnalytic::amcRun(bool doClassicRun) {
     }
 
     // We only need to generate asd, if this does not happen in the classic run
-    // FIXME?
     if (!doClassicRun)
         amcEngine.aggregationScenarioData() = scenarioData_;
 
