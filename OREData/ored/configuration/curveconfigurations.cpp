@@ -329,6 +329,13 @@ set<string> CurveConfigurations::yieldCurveConfigIds() {
         for (const auto& c : it->second)
             curves.insert(c.first);
     }
+
+    const auto& itu = unparsed_.find(CurveSpec::CurveType::Yield);
+    if (itu != unparsed_.end()) {
+        for (const auto& c : itu->second)
+            curves.insert(c.first);
+    }
+
     return curves;
 }
 
