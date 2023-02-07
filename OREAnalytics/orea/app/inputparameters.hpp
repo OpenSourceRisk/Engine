@@ -357,7 +357,7 @@ protected:
 
     // xva
     bool xva_ = false;
-    std::string xvaBaseCurrency_ = "EUR";
+    std::string xvaBaseCurrency_ = "";
     bool loadCube_ = false;
     bool hyperCube_ = false;
     bool hyperNettingSetCube_ = false;
