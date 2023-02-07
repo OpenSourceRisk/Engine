@@ -711,13 +711,21 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
                                                                                         cubeDepth_, 0.0f);
         };
 
-        auto cptyCubeFactory = inputs_->storeSurvivalProbabilities()
-            ? [](const QuantLib::Date& asof, const std::set<std::string>& ids, const std::vector<QuantLib::Date>& dates,
-                 const Size samples) -> boost::shared_ptr<NPVCube> {
-            return boost::make_shared<ore::analytics::SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
+        std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
+                                                                 const std::vector<QuantLib::Date>&,
+                                                                 const QuantLib::Size)>
+            cptyCubeFactory;
+        if (inputs_->storeSurvivalProbabilities()) {
+            cptyCubeFactory = [](const QuantLib::Date& asof, const std::set<std::string>& ids,
+                                 const std::vector<QuantLib::Date>& dates,
+                                 const Size samples) -> boost::shared_ptr<NPVCube> {
+                return boost::make_shared<ore::analytics::SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
+            };
+        } else {
+            cptyCubeFactory = [](const QuantLib::Date& asof, const std::set<std::string>& ids,
+                                 const std::vector<QuantLib::Date>& dates,
+                                 const Size samples) -> boost::shared_ptr<NPVCube> { return nullptr; };
         }
-        : [](const QuantLib::Date& asof, const std::set<std::string>& ids, const std::vector<QuantLib::Date>& dates,
-             const Size samples) -> boost::shared_ptr<NPVCube> { return nullptr; };
 
         MultiThreadedValuationEngine engine(
             inputs_->nThreads(), inputs_->asof(), grid_, samples_, loader_, scenarioGenerator_,
