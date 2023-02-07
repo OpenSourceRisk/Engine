@@ -998,6 +998,12 @@ Example & Description \\
 37 & Multifactor Hull-White scenario generation \\
 \hline
 38 & Cross Currency Exposure using Multifactor Hull-White Models \\
+\hline
+39 & EPE and ENE computed with AMC valuation engine \\
+\hline
+40 & Sensitivity analysis including par sensitivities \\
+\hline
+41 & Exposure generation using multithreaded valuation engine \\
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -2530,7 +2536,22 @@ FX Option pricing with the risk factor evolution model.
   \label{epe_fxoption}
 \end{figure}
 
-\subsubsection*{Analytic Configuration}
+%--------------------------------------------------------------------
+\subsection{Sensitivity analysis including par sensitivities}% Example 40
+\label{example:40}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_40} demonstrates the generation of zero and par sensitivities.
+
+%--------------------------------------------------------------------
+\subsection{Sensitivity analysis including par sensitivities}% Example 41
+\label{example:41}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_41} uses the multithreaded valuation engine to generate the exposure for a
+portfolio of 8 copies of the vanilla swap in example 1.
+
+\subsubsection{Analytic Configuration}
 
 To use the AMC engine for an XVA simulation the following needs to be added to the {\tt simulation} analytic in {\tt ore.xml}:
 
