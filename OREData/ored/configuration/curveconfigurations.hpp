@@ -152,6 +152,7 @@ public:
     void add(const CurveSpec::CurveType& type, const string& curveId, const boost::shared_ptr<CurveConfig>& config);    
     bool has(const CurveSpec::CurveType& type, const string& curveId) const;
     const boost::shared_ptr<CurveConfig>& get(const CurveSpec::CurveType& type, const string& curveId) const;
+    void loadAll();
 
     //! \name Serialisation
     //@{
@@ -177,6 +178,7 @@ public:
     // utility function for getting a child curve config node
     void getNode(XMLNode* node, const char* parentName, const char* childName);
 
+    // add to XML doc
     void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName);
 };
 

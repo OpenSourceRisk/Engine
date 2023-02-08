@@ -170,6 +170,14 @@ const boost::shared_ptr<CurveConfig>& CurveConfigurations::get(const CurveSpec::
     return parseNode(type, curveId);
 }
 
+void CurveConfigurations::loadAll() {
+    for (const auto& u : unparsed_) {
+        for (const auto& c : u.second) {
+            parseNode(u.first, c.first);
+        }
+    }
+}
+
 void CurveConfigurations::getNode(XMLNode* node, const char* parentName, const char* childName) {
     const auto& type = parseCurveConfigurationType(parentName);
     XMLNode* parentNode = XMLUtils::getChildNode(node, parentName);
