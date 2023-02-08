@@ -145,7 +145,7 @@ const boost::shared_ptr<CurveConfig>& CurveConfigurations::parseNode(const Curve
             QL_FAIL("Could not find curveId " << curveId << " of type " << type << " in unparsed curve configurations");
     } else
         QL_FAIL("Could not find CurveType " << type << " in unparsed curve configurations");
-    return configs_[type][curveId];
+    return config;
 }
 
 void CurveConfigurations::add(const CurveSpec::CurveType& type, const string& curveId,
