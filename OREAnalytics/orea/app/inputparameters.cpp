@@ -851,9 +851,6 @@ void OREAppInputParameters::loadParameters() {
     if (sensi_)
         runTypes_.push_back("SENSITIVITY");
 
-    // if (simulation_)
-    //     runTypes_.push_back("EXPOSURE");
-
     if (stress_)
         runTypes_.push_back("STRESS");
 
@@ -869,7 +866,7 @@ void OREAppInputParameters::loadParameters() {
         }
     }
 
-    if (xva_)
+    if (xva_ || simulation_)
         runTypes_.push_back("XVA");
     
     /***************************

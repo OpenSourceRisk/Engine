@@ -1139,8 +1139,7 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
             ALOG("input portfolio size is " << inputs_->portfolio()->size()
                  << ", but we have built only " << portfolio_->size() << " trades");
         }
-    }
-    else { // inputs_->simulation() == false
+    } else { // inputs_->simulation() == false
 
         // build the portfolio linked to today's market
         buildPortfolio();
@@ -1159,55 +1158,8 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
             cptyCube_ = inputs_->cptyCube();
         out_ << "OK" << std::endl;
     }
-    
+
     MEM_LOG;
-
-    /*********************************************************************
-     * This is where the aggregation work is done: call the post-processor
-     *********************************************************************/
-
-    out_ << setw(tab_) << left << "XVA: Aggregation " << flush;
-    runPostProcessor();
-    out_ << "OK" << std::endl;
-
-    /******************************************************
-     * Finally generate various (in-memory) reports/outputs
-     ******************************************************/
-
-    out_ << setw(tab_) << left << "XVA: Reports " << flush;
-    LOG("Generating XVA reports and cube outputs");
-
-    if (inputs_->exposureProfilesByTrade()) {
-        for (const auto& [tradeId, tradeIdCubePos] : postProcess_->tradeIds()) {
-            auto report = boost::make_shared<InMemoryReport>();
-            ore::analytics::ReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_, tradeId);
-            reports_["XVA"]["exposure_trade_" + tradeId] = report;
-        }
-    }
-
-    if (inputs_->exposureProfiles()) {
-        for (auto [nettingSet, nettingSetPosInCube] : postProcess_->nettingSetIds()) {
-            auto exposureReport = boost::make_shared<InMemoryReport>();
-            ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeNettingSetExposures(*exposureReport, postProcess_, nettingSet);
-            reports_["XVA"]["exposure_nettingset_" + nettingSet] = exposureReport;
-
-            auto colvaReport = boost::make_shared<InMemoryReport>();
-            ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
-            reports_["XVA"]["colva_nettingset_" + nettingSet] = colvaReport;
-
-            auto cvaSensiReport = boost::make_shared<InMemoryReport>();
-            ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
-            reports_["XVA"]["cva_sensitivity_nettingset_" + nettingSet] = cvaSensiReport;
-        }
-    }
-    
-    auto xvaReport = boost::make_shared<InMemoryReport>();
-    ore::analytics::ReportWriter(inputs_->reportNaString())
-        .writeXVA(*xvaReport, inputs_->exposureAllocationMethod(), portfolio_, postProcess_);
-    reports_["XVA"]["xva"] = xvaReport;
 
     // Return the cubes to serialalize
     if (inputs_->writeCube()) {
@@ -1225,34 +1177,85 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
     if (inputs_->rawCubeOutput()) {
         map<string, string> nettingSetMap = portfolio_->nettingSetMap();
         auto report = boost::make_shared<InMemoryReport>();
-        ore::analytics::ReportWriter(inputs_->reportNaString())
-            .writeCube(*report, postProcess_->cube(), nettingSetMap);
+        ore::analytics::ReportWriter(inputs_->reportNaString()).writeCube(*report, cube_, nettingSetMap);
         reports_["XVA"]["rawcube"] = report;
-    }    
-    if (inputs_->netCubeOutput()) {
-        auto report = boost::make_shared<InMemoryReport>();
-        ore::analytics::ReportWriter(inputs_->reportNaString())
-            .writeCube(*report, postProcess_->netCube());
-        reports_["XVA"]["netcube"] = report;
     }
 
-    if (inputs_->dimAnalytic() || inputs_->mvaAnalytic()) {
-        // Generate DIM evolution report
-        auto dimEvolutionReport = boost::make_shared<InMemoryReport>();
-        postProcess_->exportDimEvolution(*dimEvolutionReport);
-        reports_["XVA"]["dim_evolution"] = dimEvolutionReport;
-    
-        // Generate DIM regression reports
-        vector<boost::shared_ptr<ore::data::Report>> dimRegReports;
-        for (Size i = 0; i < inputs_->dimOutputGridPoints().size(); ++i) {
-            auto rep = boost::make_shared<InMemoryReport>();
-            dimRegReports.push_back(rep);
-            reports_["XVA"]["dim_regression_" + to_string(i)] = rep;
+    if (inputs_->xva()) {
+
+        /*********************************************************************
+         * This is where the aggregation work is done: call the post-processor
+         *********************************************************************/
+
+        out_ << setw(tab_) << left << "XVA: Aggregation " << flush;
+        runPostProcessor();
+        out_ << "OK" << std::endl;
+
+        /******************************************************
+         * Finally generate various (in-memory) reports/outputs
+         ******************************************************/
+
+        out_ << setw(tab_) << left << "XVA: Reports " << flush;
+        LOG("Generating XVA reports and cube outputs");
+
+        if (inputs_->exposureProfilesByTrade()) {
+            for (const auto& [tradeId, tradeIdCubePos] : postProcess_->tradeIds()) {
+                auto report = boost::make_shared<InMemoryReport>();
+                ore::analytics::ReportWriter(inputs_->reportNaString())
+                    .writeTradeExposures(*report, postProcess_, tradeId);
+                reports_["XVA"]["exposure_trade_" + tradeId] = report;
+            }
         }
-        postProcess_->exportDimRegression(inputs_->dimOutputNettingSet(), inputs_->dimOutputGridPoints(), dimRegReports);
+
+        if (inputs_->exposureProfiles()) {
+            for (auto [nettingSet, nettingSetPosInCube] : postProcess_->nettingSetIds()) {
+                auto exposureReport = boost::make_shared<InMemoryReport>();
+                ore::analytics::ReportWriter(inputs_->reportNaString())
+                    .writeNettingSetExposures(*exposureReport, postProcess_, nettingSet);
+                reports_["XVA"]["exposure_nettingset_" + nettingSet] = exposureReport;
+
+                auto colvaReport = boost::make_shared<InMemoryReport>();
+                ore::analytics::ReportWriter(inputs_->reportNaString())
+                    .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
+                reports_["XVA"]["colva_nettingset_" + nettingSet] = colvaReport;
+
+                auto cvaSensiReport = boost::make_shared<InMemoryReport>();
+                ore::analytics::ReportWriter(inputs_->reportNaString())
+                    .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
+                reports_["XVA"]["cva_sensitivity_nettingset_" + nettingSet] = cvaSensiReport;
+            }
+        }
+
+        auto xvaReport = boost::make_shared<InMemoryReport>();
+        ore::analytics::ReportWriter(inputs_->reportNaString())
+            .writeXVA(*xvaReport, inputs_->exposureAllocationMethod(), portfolio_, postProcess_);
+        reports_["XVA"]["xva"] = xvaReport;
+
+        if (inputs_->netCubeOutput()) {
+            auto report = boost::make_shared<InMemoryReport>();
+            ore::analytics::ReportWriter(inputs_->reportNaString()).writeCube(*report, postProcess_->netCube());
+            reports_["XVA"]["netcube"] = report;
+        }
+
+        if (inputs_->dimAnalytic() || inputs_->mvaAnalytic()) {
+            // Generate DIM evolution report
+            auto dimEvolutionReport = boost::make_shared<InMemoryReport>();
+            postProcess_->exportDimEvolution(*dimEvolutionReport);
+            reports_["XVA"]["dim_evolution"] = dimEvolutionReport;
+
+            // Generate DIM regression reports
+            vector<boost::shared_ptr<ore::data::Report>> dimRegReports;
+            for (Size i = 0; i < inputs_->dimOutputGridPoints().size(); ++i) {
+                auto rep = boost::make_shared<InMemoryReport>();
+                dimRegReports.push_back(rep);
+                reports_["XVA"]["dim_regression_" + to_string(i)] = rep;
+            }
+            postProcess_->exportDimRegression(inputs_->dimOutputNettingSet(), inputs_->dimOutputGridPoints(),
+                                              dimRegReports);
+        }
+
+        out_ << "OK" << std::endl;
     }
-    
-    out_ << "OK" << std::endl;
 
     // reset that mode
     ObservationMode::instance().setMode(inputs_->observationModel());
