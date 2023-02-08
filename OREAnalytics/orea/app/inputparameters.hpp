@@ -95,14 +95,12 @@ public:
      * Getters for npv analytics
      ***************************/
 
-    bool npv() const { return npv_; };
     bool outputAdditionalResults() const { return outputAdditionalResults_; };
 
     /***********************
      * Getters for cashflows
      ***********************/
 
-    bool cashflow() { return cashflow_; }
     bool includePastCashflows() { return includePastCashflows_; }
 
     /****************************
@@ -118,7 +116,6 @@ public:
      * Getters for sensi analytics
      *****************************/
     
-    bool sensi() { return sensi_; }
     bool xbsParConversion() { return xbsParConversion_; }
     bool analyticFxSensis() { return analyticFxSensis_; }
     bool parSensi() const { return parSensi_; };
@@ -135,7 +132,6 @@ public:
      * Getters for stress testing
      ****************************/
 
-    bool stress() { return stress_; }
     QuantLib::Real stressThreshold() { return stressThreshold_; }
     const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& stressSimMarketParams() { return stressSimMarketParams_; }
     const boost::shared_ptr<ore::analytics::StressTestScenarioData>& stressScenarioData() { return stressScenarioData_; }
@@ -145,7 +141,6 @@ public:
      * Getters for VaR
      *****************/
 
-    bool var() { return var_; }
     bool salvageCovariance() { return salvageCovariance_; }
     const std::vector<Real>& varQuantiles() { return varQuantiles_; }
     bool varBreakDown() { return varBreakDown_; }
@@ -160,7 +155,6 @@ public:
      * Getters for exposure simulation 
      *********************************/
     
-    bool simulation() { return simulation_; }
     bool amc() { return amc_; }
     const std::vector<std::string>& amcExcludeTradeTypes() { return amcExcludeTradeTypes_; }
     const std::string& exposureBaseCurrency() { return exposureBaseCurrency_; }
@@ -184,7 +178,6 @@ public:
      * Getters for xva
      *****************/
 
-    bool xva() { return xva_; }
     const std::string& xvaBaseCurrency() { return xvaBaseCurrency_; }
     bool loadCube() { return loadCube_; }
     boost::shared_ptr<NPVCube> cube() { return cube_; }
@@ -290,11 +283,9 @@ protected:
     bool includeMporExpired_ = true;
 
     // npv
-    bool npv_ = false;
     bool outputAdditionalResults_ = false;
 
     // cashflow
-    bool cashflow_ = false;
     bool includePastCashflows_ = false;
 
     // curves
@@ -304,7 +295,6 @@ protected:
     bool outputTodaysMarketCalibration_ = false;
         
     // sensi
-    bool sensi_ = false;
     bool xbsParConversion_ = false;
     bool analyticFxSensis_ = true;
     bool parSensi_ = false;
@@ -318,14 +308,12 @@ protected:
     // boost::shared_ptr<ore::data::TodaysMarketParameters> sensiTodaysMarketParams_;
 
     // stress
-    bool stress_ = false;
     QuantLib::Real stressThreshold_ = 0.0;
     boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> stressSimMarketParams_;
     boost::shared_ptr<ore::analytics::StressTestScenarioData> stressScenarioData_;
     boost::shared_ptr<ore::data::EngineData> stressPricingEngine_;
 
     // var
-    bool var_ = false;
     bool salvageCovariance_ = false;
     std::vector<Real> varQuantiles_;
     bool varBreakDown_ = false;
@@ -337,7 +325,6 @@ protected:
     boost::shared_ptr<SensitivityStream> sensitivityStream_;
     
     // exposure simulation
-    bool simulation_ = false;
     bool amc_ = false;
     std::vector<std::string> amcExcludeTradeTypes_;
     std::string exposureBaseCurrency_ = "";
@@ -356,7 +343,6 @@ protected:
     boost::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
 
     // xva
-    bool xva_ = false;
     std::string xvaBaseCurrency_ = "";
     bool loadCube_ = false;
     bool hyperCube_ = false;

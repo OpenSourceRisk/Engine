@@ -226,8 +226,8 @@ void OREAppInputParameters::loadParameters() {
      *************/
 
     tmp = params_->get("npv", "active", false);
-    if (tmp != "")
-        npv_ = parseBool(tmp);
+    if (!tmp.empty() && parseBool(tmp))
+        runTypes_.push_back("NPV");
 
     tmp = params_->get("npv", "additionalResults", false);
     if (tmp != "")
@@ -238,8 +238,8 @@ void OREAppInputParameters::loadParameters() {
      *************/
 
     tmp = params_->get("cashflow", "active", false);
-    if (tmp != "")
-        cashflow_ = parseBool(tmp);
+    if (!tmp.empty() && parseBool(tmp))
+        runTypes_.push_back("CASHFLOW");
 
     tmp = params_->get("cashflow", "includePastCashflows", false);
     if (tmp != "")
@@ -275,10 +275,9 @@ void OREAppInputParameters::loadParameters() {
     // useSensiSpreadedTermStructures_ = true;
 
     tmp = params_->get("sensitivity", "active", false);
-    if (tmp != "")
-        sensi_ = parseBool(tmp);
+    if (!tmp.empty() && parseBool(tmp)) {
+        runTypes_.push_back("SENSITIVITY");
 
-    if (sensi_) {
         tmp = params_->get("sensitivity", "parSensitivity", false);
         if (tmp != "")
             parSensi_ = parseBool(tmp);
@@ -300,7 +299,7 @@ void OREAppInputParameters::loadParameters() {
         } else {
             WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
         }
-        
+
         sensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
         tmp = params_->get("sensitivity", "sensitivityConfigFile", false);
         if (tmp != "") {
@@ -321,23 +320,20 @@ void OREAppInputParameters::loadParameters() {
             WLOG("Pricing engine data not found for sensitivity analysis, using global");
             sensiPricingEngine_ = pricingEngine_;
         }
-        
-        tmp = params_->get("sensitivity", "outputSensitivityThreshold", false); 
+
+        tmp = params_->get("sensitivity", "outputSensitivityThreshold", false);
         if (tmp != "")
             sensiThreshold_ = parseReal(tmp);
     }
-    
+
     /****************
      * Stress Testing
      ****************/
 
     tmp = params_->get("stress", "active", false);
-    if (tmp != "")
-        stress_ = parseBool(tmp);
-
-    stressPricingEngine_ = pricingEngine_;
-
-    if (stress_) {
+    if (!tmp.empty() && parseBool(tmp)) {
+        runTypes_.push_back("STRESS");
+        stressPricingEngine_ = pricingEngine_;
         stressSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
         tmp = params_->get("stress", "marketConfigFile", false);
         if (tmp != "") {
@@ -378,10 +374,8 @@ void OREAppInputParameters::loadParameters() {
      ****************/
 
     tmp = params_->get("parametricVar", "active", false);
-    if (tmp != "")
-        var_ = parseBool(tmp);
+    if (!tmp.empty() && parseBool(tmp)) {
 
-    if (var_) {
         tmp = params_->get("parametricVar", "salvageCovarianceMatrix", false);
         if (tmp != "")
             salvageCovariance_ = parseBool(tmp);
@@ -428,20 +422,32 @@ void OREAppInputParameters::loadParameters() {
         std::string sensiFile = inputPath + "/" + tmp;
         LOG("Get sensitivity data from file " << sensiFile);
         sensitivityStream_ = boost::make_shared<SensitivityFileStream>(sensiFile);
+
+        if (varMethod_ == "Delta")
+            runTypes_.push_back("DELTA");
+        else if (varMethod_ == "DeltaGammaNormal")
+            runTypes_.push_back("DELTA-GAMMA-NORMAL-VAR");
+        else if (varMethod_ == "MonteCarlo")
+            runTypes_.push_back("MONTE-CARLO-VAR");
+        else {
+            QL_FAIL("VaR method " << varMethod_ << " not covered");
+        }
+
     }
 
     /************
      * Simulation
      ************/
-    
+
     tmp = params_->get("simulation", "active", false);
-    if (tmp != "")
-        simulation_ = parseBool(tmp);
+    if (!tmp.empty() && parseBool(tmp)) {
+        runTypes_.push_back("EXPOSURE");
+    }
 
     // check this here because we need to know 10 lines below
     tmp = params_->get("xva", "active", false);
-    if (tmp != "")
-        xva_ = parseBool(tmp);
+    if (!tmp.empty() && parseBool(tmp))
+        runTypes_.push_back("XVA");
     
     tmp = params_->get("simulation", "amc", false);
     if (tmp != "")
@@ -455,7 +461,8 @@ void OREAppInputParameters::loadParameters() {
     exposureObservationModel_ = observationModel_;
     exposureBaseCurrency_ = baseCurrency_;
 
-    if (simulation_ || xva_) {
+    if (std::find(runTypes_.begin(), runTypes_.end(), "EXPOSURE") != runTypes_.end() ||
+        std::find(runTypes_.begin(), runTypes_.end(), "XVA") != runTypes_.end()) {
         exposureSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
         crossAssetModelData_ = boost::make_shared<CrossAssetModelData>();
         // A bit confusing: The scenario generator data are needed for XVA post-processing
@@ -541,8 +548,9 @@ void OREAppInputParameters::loadParameters() {
         xvaBaseCurrency_ = tmp;
     else
         xvaBaseCurrency_ = exposureBaseCurrency_;
-        
-    if (xva_ && !simulation_) {
+
+    if (std::find(runTypes_.begin(), runTypes_.end(), "XVA") != runTypes_.end() &&
+        std::find(runTypes_.begin(), runTypes_.end(), "EXPOSURE") == runTypes_.end()) {
         loadCube_ = true;
         tmp = params_->get("xva", "cubeFile", false);
         if (tmp != "") {
@@ -562,9 +570,10 @@ void OREAppInputParameters::loadParameters() {
             ALOG("cube file name not provided");
         }
     }
-    
+
     nettingSetManager_ = boost::make_shared<NettingSetManager>();
-    if (xva_ || simulation_) {
+    if (std::find(runTypes_.begin(), runTypes_.end(), "XVA") != runTypes_.end() ||
+        std::find(runTypes_.begin(), runTypes_.end(), "EXPOSURE") != runTypes_.end()) {
         tmp = params_->get("xva", "csaFile", false);
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
         string csaFile = inputPath + "/" + tmp;
@@ -836,38 +845,6 @@ void OREAppInputParameters::loadParameters() {
     }
 
     csvLoader_ = boost::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings_);
-
-    /*****************************
-     * Collect requested run types
-     */
-    runTypes_.clear();
-    
-    if (npv_)
-        runTypes_.push_back("NPV");
-    
-    if (cashflow_)
-        runTypes_.push_back("CASHFLOW");
-
-    if (sensi_)
-        runTypes_.push_back("SENSITIVITY");
-
-    if (stress_)
-        runTypes_.push_back("STRESS");
-
-    if (var_) {
-        if (varMethod_ == "Delta")
-            runTypes_.push_back("DELTA");
-        else if (varMethod_ == "DeltaGammaNormal")
-            runTypes_.push_back("DELTA-GAMMA-NORMAL-VAR");
-        else if (varMethod_ == "MonteCarlo")
-            runTypes_.push_back("MONTE-CARLO-VAR");
-        else {
-            QL_FAIL("VaR method " << varMethod_ << " not covered");
-        }
-    }
-
-    if (xva_ || simulation_)
-        runTypes_.push_back("XVA");
     
     /***************************
      * Collect output file names

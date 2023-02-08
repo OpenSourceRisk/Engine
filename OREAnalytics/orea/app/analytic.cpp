@@ -506,7 +506,7 @@ boost::shared_ptr<EngineFactory> XvaAnalytic::engineFactory() {
     //configurations[MarketContext::simulation] = inputs_->marketConfig("simulation");
     std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders; 
     std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders;
-    if (inputs_->simulation()) {
+    if (simMarket_ != nullptr) {
         // link to the sim market here
         QL_REQUIRE(simMarket_, "Simulaton market not set");
         engineFactory_ = boost::make_shared<EngineFactory>(edCopy, simMarket_, configurations,
@@ -1036,9 +1036,9 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
     out_ << setw(tab_) << left << "XVA: Build Market " << flush;
     buildMarket(loader, inputs_->curveConfigs()[0]);
     out_ << "OK" << endl;
-    
-    if (inputs_->simulation()) {
-    
+
+    if (runTypes.empty() || std::find(runTypes.begin(), runTypes.end(), "EXPOSURE") != runTypes.end()) {
+
         LOG("XVA: Build simulation market");
         buildScenarioSimMarket();
 
@@ -1139,7 +1139,7 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
             ALOG("input portfolio size is " << inputs_->portfolio()->size()
                  << ", but we have built only " << portfolio_->size() << " trades");
         }
-    } else { // inputs_->simulation() == false
+    } else { // EXPOSURE run type was not requested
 
         // build the portfolio linked to today's market
         buildPortfolio();
@@ -1181,7 +1181,7 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
         reports_["XVA"]["rawcube"] = report;
     }
 
-    if (inputs_->xva()) {
+    if (runTypes.empty() || std::find(runTypes.begin(), runTypes.end(), "XVA") != runTypes.end()) {
 
         /*********************************************************************
          * This is where the aggregation work is done: call the post-processor

@@ -212,7 +212,7 @@ protected:
 class XvaAnalytic : public virtual Analytic {
 public:
     XvaAnalytic(const boost::shared_ptr<InputParameters>& inputs, std::ostream& out = std::cout)
-        : Analytic("XVA", {"XVA"}, inputs, true, false, false, false, out) {
+        : Analytic("XVA", {"XVA", "EXPOSURE"}, inputs, true, false, false, false, out) {
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
