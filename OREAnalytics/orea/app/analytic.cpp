@@ -506,6 +506,7 @@ boost::shared_ptr<EngineFactory> XvaAnalytic::engineFactory() {
     //configurations[MarketContext::simulation] = inputs_->marketConfig("simulation");
     std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders; 
     std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders;
+
     if (runSimulation_) {
         // link to the sim market here
         QL_REQUIRE(simMarket_, "Simulaton market not set");
@@ -1029,10 +1030,10 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
     
     LOG("XVA analytic called with asof " << io::iso_date(inputs_->asof()));
 
-    if (std::find(runTypes.begin(), runTypes.end(), "EXPOSURE") != runTypes.end())
+    if (std::find(runTypes.begin(), runTypes.end(), "EXPOSURE") != runTypes.end() || runTypes.empty())
         runSimulation_ = true;
 
-    if (std::find(runTypes.begin(), runTypes.end(), "XVA") != runTypes.end())
+    if (std::find(runTypes.begin(), runTypes.end(), "XVA") != runTypes.end() || runTypes.empty())
         runXva_ = true;
 
     Settings::instance().evaluationDate() = inputs_->asof();
