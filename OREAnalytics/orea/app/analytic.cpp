@@ -506,7 +506,7 @@ boost::shared_ptr<EngineFactory> XvaAnalytic::engineFactory() {
     //configurations[MarketContext::simulation] = inputs_->marketConfig("simulation");
     std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders; 
     std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders;
-    if (inputs_->simulation()) {
+    if (runSimulation_) {
         // link to the sim market here
         QL_REQUIRE(simMarket_, "Simulaton market not set");
         engineFactory_ = boost::make_shared<EngineFactory>(edCopy, simMarket_, configurations,
@@ -1029,6 +1029,12 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
     
     LOG("XVA analytic called with asof " << io::iso_date(inputs_->asof()));
 
+    if (std::find(runTypes.begin(), runTypes.end(), "EXPOSURE") != runTypes.end())
+        runSimulation_ = true;
+
+    if (std::find(runTypes.begin(), runTypes.end(), "XVA") != runTypes.end())
+        runXva_ = true;
+
     Settings::instance().evaluationDate() = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->exposureObservationModel());
 
@@ -1037,7 +1043,7 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
     buildMarket(loader, inputs_->curveConfigs()[0]);
     out_ << "OK" << endl;
     
-    if (inputs_->simulation()) {
+    if (runSimulation_) {
     
         LOG("XVA: Build simulation market");
         buildScenarioSimMarket();
@@ -1139,7 +1145,7 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
             ALOG("input portfolio size is " << inputs_->portfolio()->size()
                  << ", but we have built only " << portfolio_->size() << " trades");
         }
-    } else { // inputs_->simulation() == false
+    } else { // runSimulation_
 
         // build the portfolio linked to today's market
         buildPortfolio();
@@ -1148,9 +1154,9 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
 
         LOG("Skip cube generation, load input cubes for XVA");
         out_ << setw(tab_) << left << "XVA: Load Cubes " << flush;
-        QL_REQUIRE(inputs_->cube(), "input cube not povided");
+        QL_REQUIRE(inputs_->cube(), "XVA without EXPOSURE requires an NPV cube as input");
         cube_= inputs_->cube();
-        QL_REQUIRE(inputs_->mktCube(), "input market cube not provided"); 
+        QL_REQUIRE(inputs_->mktCube(), "XVA without EXPOSURE requires a market cube as input"); 
         scenarioData_ = inputs_->mktCube();
         if (inputs_->nettingSetCube())
             nettingSetCube_= inputs_->nettingSetCube();
@@ -1181,7 +1187,7 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
         reports_["XVA"]["rawcube"] = report;
     }
 
-    if (inputs_->xva()) {
+    if (runXva_) {
 
         /*********************************************************************
          * This is where the aggregation work is done: call the post-processor

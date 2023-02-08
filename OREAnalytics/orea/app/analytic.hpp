@@ -197,8 +197,7 @@ class VarAnalytic : public virtual Analytic {
 public:
     // FIXME: Add DELTA-GAMMA-VAR (Saddlepoint method)
     VarAnalytic(const boost::shared_ptr<InputParameters>& inputs, std::ostream& out = std::cout)
-        : Analytic("VAR", {"DELTA-VAR", "DELTA-GAMMA-NORMAL-VAR", "MONTE-CARLO-VAR"},
-                   inputs, false, false, false, false, out) {
+        : Analytic("VAR", {"VAR"}, inputs, false, false, false, false, out) {
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -212,7 +211,7 @@ protected:
 class XvaAnalytic : public virtual Analytic {
 public:
     XvaAnalytic(const boost::shared_ptr<InputParameters>& inputs, std::ostream& out = std::cout)
-        : Analytic("XVA", {"XVA"}, inputs, true, false, false, false, out) {
+        : Analytic("XVA", {"XVA", "EXPOSURE"}, inputs, true, false, false, false, out) {
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -252,6 +251,9 @@ protected:
     Size cubeDepth_ = 0;
     boost::shared_ptr<DateGrid> grid_;
     Size samples_ = 0;
+
+    bool runSimulation_ = false;
+    bool runXva_ = false;
 };
 
 } // namespace analytics
