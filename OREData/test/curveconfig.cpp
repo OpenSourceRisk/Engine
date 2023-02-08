@@ -72,6 +72,7 @@ public:
 
         // Read curve configurations from file
         curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
+        curveConfigs.loadAll();
     }
 
     ~F() {}
