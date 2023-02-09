@@ -24,7 +24,6 @@
 
 #include <orea/cube/npvcube.hpp>
 
-#include <boost/serialization/access.hpp>
 #include <map>
 #include <set>
 
@@ -39,8 +38,6 @@ public:
     SparseNpvCube();
     SparseNpvCube(const Date& asof, const std::set<std::string>& ids, const std::vector<Date>& dates, Size samples,
                   Size depth, const T& t = T());
-    void load(const std::string& fileName) override;
-    void save(const std::string& fileName) const override;
     Size numIds() const override;
     Size numDates() const override;
     Size samples() const override;
@@ -56,8 +53,6 @@ public:
 private:
     void check(Size i, Size j, Size k, Size d) const;
     Size pos(Size i, Size j, Size d) const;
-    friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int);
 
     QuantLib::Date asof_;
     std::map<std::string, Size> ids_;
