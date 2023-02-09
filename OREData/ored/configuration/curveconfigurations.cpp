@@ -54,7 +54,7 @@ void CurveConfigurations::addNodes(XMLDocument& doc, XMLNode* parent, const char
     }
 }
 
-const boost::shared_ptr<CurveConfig>& CurveConfigurations::parseNode(const CurveSpec::CurveType& type,
+void CurveConfigurations::parseNode(const CurveSpec::CurveType& type,
                                                                      const string curveId) const {
     boost::shared_ptr<CurveConfig> config;
     const auto& it = unparsed_.find(type);
@@ -145,7 +145,6 @@ const boost::shared_ptr<CurveConfig>& CurveConfigurations::parseNode(const Curve
             QL_FAIL("Could not find curveId " << curveId << " of type " << type << " in unparsed curve configurations");
     } else
         QL_FAIL("Could not find CurveType " << type << " in unparsed curve configurations");
-    return configs_.at(type).at(curveId);
 }
 
 void CurveConfigurations::add(const CurveSpec::CurveType& type, const string& curveId,
@@ -167,7 +166,8 @@ const boost::shared_ptr<CurveConfig>& CurveConfigurations::get(const CurveSpec::
             return itc->second;
         }
     }
-    return parseNode(type, curveId);
+    parseNode(type, curveId);
+    return configs_.at(type).at(curveId);
 }
 
 void CurveConfigurations::loadAll() {
