@@ -203,13 +203,13 @@ portfolio/referencedatafactory.cpp
 portfolio/schedule.cpp
 portfolio/swap.cpp
 portfolio/swaption.cpp
-portfolio/tranche.cpp
 portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradebarrier.cpp
 portfolio/tradefactory.cpp
 portfolio/trademonetary.cpp
 portfolio/tradestrike.cpp
+portfolio/tranche.cpp
 portfolio/underlying.cpp
 portfolio/vanillaoption.cpp
 portfolio/varianceswap.cpp
@@ -350,6 +350,7 @@ portfolio/barrieroption.hpp
 portfolio/barrieroptionwrapper.hpp
 portfolio/basketdata.hpp
 portfolio/bond.hpp
+portfolio/bondoption.hpp
 portfolio/bondrepo.hpp
 portfolio/bondtotalreturnswap.hpp
 portfolio/bondutils.hpp
@@ -375,6 +376,7 @@ portfolio/builders/commodityapomodelbuilder.hpp
 portfolio/builders/commodityasianoption.hpp
 portfolio/builders/commodityforward.hpp
 portfolio/builders/commodityoption.hpp
+portfolio/builders/commodityspreadoption.hpp
 portfolio/builders/commodityswap.hpp
 portfolio/builders/commodityswaption.hpp
 portfolio/builders/cpicapfloor.hpp
@@ -470,11 +472,11 @@ portfolio/fxkikobarrieroption.hpp
 portfolio/fxoption.hpp
 portfolio/fxswap.hpp
 portfolio/fxtouchoption.hpp
-portfolio/indexing.hpp
-portfolio/inflationswap.hpp
 portfolio/indexcreditdefaultswap.hpp
 portfolio/indexcreditdefaultswapdata.hpp
 portfolio/indexcreditdefaultswapoption.hpp
+portfolio/indexing.hpp
+portfolio/inflationswap.hpp
 portfolio/instrumentwrapper.hpp
 portfolio/legbuilders.hpp
 portfolio/legdata.hpp
