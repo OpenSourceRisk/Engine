@@ -118,7 +118,7 @@ void OREApp::analytics(ostream& out) {
                 string reportName = b.first;
                 std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "dat");
                 LOG("write npv cube " << reportName << " to file " << fileName);
-                b.second->save(fileName);
+                saveCube(fileName, *b.second);
             }
         }
         
@@ -128,7 +128,7 @@ void OREApp::analytics(ostream& out) {
                 string reportName = b.first;
                 std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "dat");
                 LOG("write market cube " << reportName << " to file " << fileName);
-                b.second->save(fileName);
+                saveAggregationScenarioData(fileName, *b.second);
             }
         }        
     }
@@ -1158,7 +1158,7 @@ void OREApp::writeCube(boost::shared_ptr<NPVCube> cube, const std::string& cubeF
     out_ << setw(tab_) << left << "Write Cube... " << flush;
     if (params_->has("simulation", cubeFileParam)) {
         string cubeFileName = outputPath_ + "/" + params_->get("simulation", cubeFileParam);
-        cube->save(cubeFileName);
+        saveCube(cubeFileName, *cube);
         LOG("Write cube '" << cubeFileName << "'");
         out_ << "OK" << endl;
     } else {
@@ -1175,7 +1175,7 @@ void OREApp::writeScenarioData() {
         // binary output
         string outputFileNameAddScenData =
             outputPath_ + "/" + params_->get("simulation", "aggregationScenarioDataFileName");
-        scenarioData_->save(outputFileNameAddScenData);
+        saveAggregationScenarioData(outputFileNameAddScenData, *scenarioData_);
         out_ << "OK" << endl;
         skipped = false;
     }
@@ -1194,7 +1194,7 @@ void OREApp::writeScenarioData() {
 void OREApp::loadScenarioData() {
     string scenarioFile = outputPath_ + "/" + params_->get("xva", "scenarioFile");
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>();
-    scenarioData_->load(scenarioFile);
+    scenarioData_ = loadAggregationScenarioData(scenarioFile);
 }
 
 void OREApp::loadCube() {
@@ -1211,7 +1211,7 @@ void OREApp::loadCube() {
     else
         cube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
     LOG("Load cube from file " << cubeFile);
-    cube_->load(cubeFile);
+    cube_ = ore::analytics::loadCube(cubeFile);
     cubeDepth_ = cube_->depth();
     LOG("Cube loading done: ids=" << cube_->numIds() << " dates=" << cube_->numDates()
                                   << " samples=" << cube_->samples() << " depth=" << cube_->depth());
@@ -1229,7 +1229,7 @@ void OREApp::loadCube() {
         else
             nettingSetCube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
         LOG("Load netting set cube from file " << cubeFile2);
-        nettingSetCube_->load(cubeFile2);
+        nettingSetCube_ = ore::analytics::loadCube(cubeFile2);
         LOG("Cube loading done: ids=" << nettingSetCube_->numIds() << " dates=" << nettingSetCube_->numDates()
                                       << " samples=" << nettingSetCube_->samples()
                                       << " depth=" << nettingSetCube_->depth());
@@ -1241,7 +1241,7 @@ void OREApp::loadCube() {
         string cubeFile3 = outputPath_ + "/" + params_->get("xva", "cptyCubeFile");
         cptyCube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
         LOG("Load counterparty cube from file " << cubeFile3);
-        cptyCube_->load(cubeFile3);
+        cptyCube_ = ore::analytics::loadCube(cubeFile3);
         LOG("Cube loading done: ids=" << cptyCube_->numIds() << " dates=" << cptyCube_->numDates()
                                       << " samples=" << cptyCube_->samples()
                                       << " depth=" << cptyCube_->depth());
