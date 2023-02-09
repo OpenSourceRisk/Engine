@@ -23,7 +23,6 @@ app/parameters.cpp
 app/reportwriter.cpp
 app/sensitivityrunner.cpp
 app/xvarunner.cpp
-cube/cube_io.cpp
 cube/cubecsvreader.cpp
 cube/cubeinterpretation.cpp
 cube/cubewriter.cpp
@@ -103,7 +102,6 @@ app/structuredanalyticserror.hpp
 app/structuredanalyticswarning.hpp
 app/xvarunner.hpp
 auto_link.hpp
-cube/cube_io.hpp
 cube/cubecsvreader.hpp
 cube/cubeinterpretation.hpp
 cube/cubewriter.hpp
