@@ -115,11 +115,6 @@ public:
     /*! simliar as above, but remove all values for a given id and scenario and keep T0 values */
     virtual void remove(Size id, Size sample);
 
-    //! Load cube contents from disk
-    virtual void load(const std::string& fileName) = 0;
-    //! Persist cube contents to disk
-    virtual void save(const std::string& fileName) const = 0;
-
     Size getTradeIndex(const std::string& id) const { return index(id); }
 
 protected:
