@@ -1051,20 +1051,6 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
             // Join the two cubes and set cube_ to the union; use the ordering of the
             // original portfolio for the trades in the cube
             cube_ = boost::make_shared<JointNPVCube>(cube_, amcCube_, inputs_->portfolio()->ids(), true);
-            // If the cube has to be written, create a physical one from the wrapper
-            if (inputs_->writeCube()) {
-                boost::shared_ptr<NPVCube> tmpCube;
-                initCube(tmpCube, cube_->ids(), cubeDepth_);
-                for (Size i = 0; i < tmpCube->numIds(); ++i) 
-                    for (Size d = 0; d < tmpCube->depth(); ++d)
-                        tmpCube->setT0(cube_->getT0(i), i, d);
-                for (Size i = 0; i < tmpCube->numIds(); ++i)
-                    for (Size j = 0; j < tmpCube->numDates(); ++j)
-                        for (Size k = 0; k < tmpCube->samples(); ++k)
-                            for (Size d = 0; d < tmpCube->depth(); ++d)
-                                tmpCube->set(cube_->get(i, j, k, d), i, j, k, d);
-                cube_ = tmpCube;
-            }
         } else if (!doClassicRun && doAmcRun) {
             LOG("We have generated an AMC cube only");
             cube_ = amcCube_;
