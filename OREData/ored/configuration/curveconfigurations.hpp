@@ -173,7 +173,7 @@ public:
     mutable std::map<CurveSpec::CurveType, std::map<std::string, std::string>> unparsed_;
 
     // utility function for parsing a node of name "parentName" and storing the result in the map
-    void parseNode(const CurveSpec::CurveType& type, const string curveId) const;
+    void parseNode(const CurveSpec::CurveType& type, const string& curveId) const;
     
     // utility function for getting a child curve config node
     void getNode(XMLNode* node, const char* parentName, const char* childName);

@@ -54,8 +54,7 @@ void CurveConfigurations::addNodes(XMLDocument& doc, XMLNode* parent, const char
     }
 }
 
-void CurveConfigurations::parseNode(const CurveSpec::CurveType& type,
-                                                                     const string curveId) const {
+void CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const string& curveId) const {
     boost::shared_ptr<CurveConfig> config;
     const auto& it = unparsed_.find(type);
     if (it != unparsed_.end()) {
