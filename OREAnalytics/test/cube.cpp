@@ -19,6 +19,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/cube/cube_io.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/jaggedcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -117,12 +118,11 @@ template <class T> void testCubeFileIO(NPVCube& cube, const std::string& cubeNam
     // get a random filename
     string filename = boost::filesystem::unique_path().string();
     BOOST_TEST_MESSAGE("Saving cube " << cubeName << " to file " << filename);
-    cube.save(filename);
+    saveCube(filename, cube);
 
     // Create a new Cube and load it
-    T* cube2 = new T();
     BOOST_TEST_MESSAGE("Loading from file " << filename);
-    cube2->load(filename);
+    auto cube2 = loadCube(filename);
     BOOST_TEST_MESSAGE("Cube " << cubeName << " loaded from file.");
 
     // Delete the file to make sure all reads are from memory
@@ -136,8 +136,6 @@ template <class T> void testCubeFileIO(NPVCube& cube, const std::string& cubeNam
 
     // check all values
     checkCube(*cube2, tolerance);
-    // All done
-    delete cube2;
 }
 
 void testCubeGetSetbyDateID(NPVCube& cube, Real tolerance) {
@@ -227,12 +225,12 @@ void testCubeFileIO(NPVCube& cube, const std::string& cubeName, Real tolerance, 
     // get a random filename
     string filename = boost::filesystem::unique_path().string();
     BOOST_TEST_MESSAGE("Saving cube " << cubeName << " to file " << filename);
-    cube.save(filename);
+    saveCube(filename, cube);
 
     // Create a new Cube and load it
     T* cube2 = new T();
     BOOST_TEST_MESSAGE("Loading from file " << filename);
-    cube2->load(filename);
+    cube2 = loadCube(filename);
     BOOST_TEST_MESSAGE("Cube " << cubeName << " loaded from file.");
 
     // Delete the file to make sure all reads are from memory
