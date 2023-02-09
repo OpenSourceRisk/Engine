@@ -116,6 +116,7 @@
 #include <ored/portfolio/barrieroptionwrapper.hpp>
 #include <ored/portfolio/basketdata.hpp>
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/bondoption.hpp>
 #include <ored/portfolio/bondrepo.hpp>
 #include <ored/portfolio/bondtotalreturnswap.hpp>
 #include <ored/portfolio/bondutils.hpp>
@@ -141,6 +142,7 @@
 #include <ored/portfolio/builders/commodityasianoption.hpp>
 #include <ored/portfolio/builders/commodityforward.hpp>
 #include <ored/portfolio/builders/commodityoption.hpp>
+#include <ored/portfolio/builders/commodityspreadoption.hpp>
 #include <ored/portfolio/builders/commodityswap.hpp>
 #include <ored/portfolio/builders/commodityswaption.hpp>
 #include <ored/portfolio/builders/cpicapfloor.hpp>
