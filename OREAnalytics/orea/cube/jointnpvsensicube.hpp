@@ -64,9 +64,6 @@ public:
     Real get(Size id, Size date, Size sample, Size depth = 0) const override;
     void set(Real value, Size id, Size date, Size sample, Size depth = 0) override;
 
-    void load(const std::string& fileName) override { QL_FAIL("JointNPVSensiCube::load() not implemented"); }
-    void save(const std::string& fileName) const override { QL_FAIL("JointNPVSensiCube::save() not implemented"); }
-
     std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(Size tradeIdx) const override;
     std::set<QuantLib::Size> relevantScenarios() const override;
 
