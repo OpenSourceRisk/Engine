@@ -171,8 +171,9 @@ const boost::shared_ptr<CurveConfig>& CurveConfigurations::get(const CurveSpec::
 
 void CurveConfigurations::loadAll() {
     for (const auto& u : unparsed_) {
-        for (const auto& c : u.second) {
-            parseNode(u.first, c.first);
+        for (auto it = u.second.cbegin(), nit = it; it != u.second.cend(); it = nit) {
+            nit++;
+            parseNode(u.first, it->first);
         }
     }
 }
