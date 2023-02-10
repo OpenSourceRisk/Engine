@@ -86,12 +86,13 @@ XMLNode* Envelope::toXML(XMLDocument& doc) {
     XMLNode* additionalNode = doc.allocNode("AdditionalFields");
     XMLUtils::appendNode(node, additionalNode);
 
-    std::function<void(XMLNode*, string, boost::any)> addChild;
-    addChild = [&addChild, &doc](XMLNode* node, const string& name, boost::any& val) {
+    std::function<void(XMLNode*, const string&, const boost::any&)> addChild;
+    addChild = [&addChild, &doc](XMLNode* node, const string& name, const boost::any& val) {
         if (val.type() == typeid(string)) {
             XMLUtils::addChild(doc, node, name, boost::any_cast<string>(val));
         } else {
-            QL_REQUIRE(val.type() == typeid(std::multimap<string, boost::any>), "Additional field type must be either string or map<string, boost::any>");
+            QL_REQUIRE(val.type() == typeid(std::multimap<string, boost::any>),
+                       "Additional field type must be either string or map<string, boost::any>");
             for (const auto& kv : boost::any_cast<std::multimap<string, boost::any>>(val)) {
                 addChild(node, kv.first, kv.second);
             }
