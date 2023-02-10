@@ -34,7 +34,7 @@ namespace data {
  */
 boost::shared_ptr<CurveSpec> parseCurveSpec(const std::string&);
 
-//! function to convert a curve configursation node string into a curve spec
+//! function to convert a curve configuration node string into a curve spec type
 /*! \ingroup curves
  */
 CurveSpec::CurveType parseCurveConfigurationType(const std::string&);

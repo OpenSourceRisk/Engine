@@ -169,7 +169,7 @@ const boost::shared_ptr<CurveConfig>& CurveConfigurations::get(const CurveSpec::
     return configs_.at(type).at(curveId);
 }
 
-void CurveConfigurations::loadAll() {
+void CurveConfigurations::parseAll() {
     for (const auto& u : unparsed_) {
         for (auto it = u.second.cbegin(), nit = it; it != u.second.cend(); it = nit) {
             nit++;
