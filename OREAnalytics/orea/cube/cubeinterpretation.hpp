@@ -61,11 +61,11 @@ public:
     virtual bool hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const = 0;
 
     //! Retrieve a (default date) simulated risk factor value from AggregationScenarioData
-    virtual Real getDefaultAggrionScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx,
+    virtual Real getDefaultAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx,
                                                Size sampleIdx, const std::string& qualifier = "") const = 0;
 
     //! Retrieve a (default date) simulated risk factor value from AggregationScenarioData
-    virtual Real getCloseOutAggrionScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx,
+    virtual Real getCloseOutAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx,
                                                 Size sampleIdx, const std::string& qualifier = "") const = 0;
 
     //! Number of Calendar Days between a given default date and corresponding close-out date
@@ -101,10 +101,10 @@ public:
 
     bool hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const override;
 
-    Real getDefaultAggrionScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
+    Real getDefaultAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
                                        const std::string& qualifier = "") const override;
 
-    Real getCloseOutAggrionScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
+    Real getCloseOutAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
                                         const std::string& qualifier = "") const override;
 
     Size getMporCalendarDays(const boost::shared_ptr<NPVCube>& cube, Size dateIdx) const override;
@@ -150,10 +150,10 @@ public:
 
     bool hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const override;
 
-    Real getDefaultAggrionScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
+    Real getDefaultAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
                                        const std::string& qualifier = "") const override;
 
-    Real getCloseOutAggrionScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
+    Real getCloseOutAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
                                         const std::string& qualifier = "") const override;
 
     Size getMporCalendarDays(const boost::shared_ptr<NPVCube>& cube, Size dateIdx) const override;
