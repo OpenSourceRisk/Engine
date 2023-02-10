@@ -152,7 +152,7 @@ public:
     void add(const CurveSpec::CurveType& type, const string& curveId, const boost::shared_ptr<CurveConfig>& config);    
     bool has(const CurveSpec::CurveType& type, const string& curveId) const;
     const boost::shared_ptr<CurveConfig>& get(const CurveSpec::CurveType& type, const string& curveId) const;
-    void loadAll();
+    void parseAll();
 
     //! \name Serialisation
     //@{

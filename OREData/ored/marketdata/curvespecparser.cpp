@@ -242,7 +242,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
 
 
 CurveSpec::CurveType parseCurveConfigurationType(const std::string& s) {
-    static map<string, CurveSpec::CurveType> b = {
+    static const map<string, CurveSpec::CurveType> b = {
         {"YieldCurves", CurveSpec::CurveType::Yield},
         {"CapFloorVolatilities", CurveSpec::CurveType::CapFloorVolatility},
         {"SwaptionVolatilities", CurveSpec::CurveType::SwaptionVolatility},
