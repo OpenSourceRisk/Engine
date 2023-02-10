@@ -52,8 +52,6 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube_C.csv.gz</Parameter>
-      <!-- is the cube file of depth 1 (N) or higher (Y) -->
-      <Parameter name="hyperCube">Y</Parameter>
       <Parameter name="scenarioFile">scenariodata_C.csv.gz</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
