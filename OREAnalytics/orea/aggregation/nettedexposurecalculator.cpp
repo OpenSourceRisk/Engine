@@ -413,12 +413,12 @@ NettedExposureCalculator::collateralPaths(
     for (Size j = 0; j < cube_->dates().size(); ++j) {
         for (Size k = 0; k < cube_->samples(); ++k) {
 	  if (netting->csaDetails()->csaCurrency() != baseCurrency_)
-              csaScenFxRates[j][k] = cubeInterpretation_->getDefaultAggrionScenarioData(
+              csaScenFxRates[j][k] = cubeInterpretation_->getDefaultAggregationScenarioData(
                   AggregationScenarioDataType::FXSpot, j, k, netting->csaDetails()->csaCurrency());
             else
                 csaScenFxRates[j][k] = 1.0;
             if (csaIndexName != "") {
-                csaScenRates[j][k] = cubeInterpretation_->getDefaultAggrionScenarioData(
+                csaScenRates[j][k] = cubeInterpretation_->getDefaultAggregationScenarioData(
                     AggregationScenarioDataType::IndexFixing, j, k, csaIndexName);
             }
         }
