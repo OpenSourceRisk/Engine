@@ -221,12 +221,13 @@ void CommodityForward::fromXML(XMLNode* node) {
     if (XMLNode* n = XMLUtils::getChildNode(commodityDataNode, "PaymentDate"))
         paymentDate_ = parseDate(XMLUtils::getNodeValue(n));
 
-        if (XMLNode* settlementDataNode = XMLUtils::getChildNode(commodityDataNode, "SettlementData")) {
-            // this node is used to provide data for NDF. This includes a fixing date, a settlement currency and the quote/settlement fx index.
-            payCcy_ = XMLUtils::getChildValue(settlementDataNode, "PayCurrency", true);
-            fxIndex_ = XMLUtils::getChildValue(settlementDataNode, "FXIndex", true);
-            fixingDate_ = parseDate(XMLUtils::getChildValue(settlementDataNode, "FixingDate", true));
-        }
+    if (XMLNode* settlementDataNode = XMLUtils::getChildNode(commodityDataNode, "SettlementData")) {
+        // this node is used to provide data for NDF. This includes a fixing date, a settlement currency and the
+        // quote/settlement fx index.
+        payCcy_ = XMLUtils::getChildValue(settlementDataNode, "PayCurrency", true);
+        fxIndex_ = XMLUtils::getChildValue(settlementDataNode, "FXIndex", true);
+        fixingDate_ = parseDate(XMLUtils::getChildValue(settlementDataNode, "FixingDate", true));
+    }
 }
 
 XMLNode* CommodityForward::toXML(XMLDocument& doc) {
