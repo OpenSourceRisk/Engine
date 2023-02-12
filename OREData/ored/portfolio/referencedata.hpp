@@ -244,6 +244,9 @@ public:
         string name;
         string group;
         string successor;
+        string predecessor;
+        QuantLib::Date successorImplementationDate;
+        QuantLib::Date predecessorImplementationDate;
     };
     CreditReferenceDatum() {}
 
