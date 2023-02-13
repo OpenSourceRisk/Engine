@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(testBootstrapAndFixings) {
         "Swap", "JPY-SWAP-CONVENTIONS", vector<string>(1, "IR_SWAP/RATE/JPY/2D/6M/2Y"))};
     boost::shared_ptr<YieldCurveConfig> jpyYieldConfig =
         boost::make_shared<YieldCurveConfig>("JPY6M", "JPY 6M curve", "JPY", "", segments);
-    curveConfigs.yieldCurveConfig("JPY6M") = jpyYieldConfig;
+    curveConfigs.add(CurveSpec::CurveType::Yield, "JPY6M", jpyYieldConfig);
 
     MarketDataLoader loader;
 
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
         boost::make_shared<YieldCurveConfig>("CHF-OIS", "CHF OIS curve", "CHF",
                                              "", segments,
                                              "Discount", "LogQuadratic");
-    curveConfigs.yieldCurveConfig("CHF-OIS") = chfYieldConfig;
+    curveConfigs.add(CurveSpec::CurveType::Yield, "CHF-OIS", chfYieldConfig);
     
     boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();;
     InstrumentConventions::instance().setConventions(conventions);

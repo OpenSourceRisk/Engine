@@ -239,5 +239,35 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
 
     QL_FAIL("Unable to convert \"" << s << "\" into CurveSpec");
 }
+
+
+CurveSpec::CurveType parseCurveConfigurationType(const std::string& s) {
+    static const map<string, CurveSpec::CurveType> b = {
+        {"YieldCurves", CurveSpec::CurveType::Yield},
+        {"CapFloorVolatilities", CurveSpec::CurveType::CapFloorVolatility},
+        {"SwaptionVolatilities", CurveSpec::CurveType::SwaptionVolatility},
+        {"YieldVolatilities", CurveSpec::CurveType::YieldVolatility},
+        {"FXSpots", CurveSpec::CurveType::FX},
+        {"FXVolatilities", CurveSpec::CurveType::FXVolatility},
+        {"DefaultCurves", CurveSpec::CurveType::Default},
+        {"CDSVolatilities", CurveSpec::CurveType::CDSVolatility},
+        {"BaseCorrelations", CurveSpec::CurveType::BaseCorrelation},
+        {"InflationCurves", CurveSpec::CurveType::Inflation},
+        {"InflationCapFloorVolatilities", CurveSpec::CurveType::InflationCapFloorVolatility},
+        {"EquityCurves", CurveSpec::CurveType::Equity},
+        {"EquityVolatilities", CurveSpec::CurveType::EquityVolatility},
+        {"Securities", CurveSpec::CurveType::Security},
+        {"CommodityCurves", CurveSpec::CurveType::Commodity},
+        {"Correlations", CurveSpec::CurveType::Correlation},
+        {"CommodityVolatilities", CurveSpec::CurveType::CommodityVolatility}};
+
+    auto it = b.find(s);
+    if (it != b.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Cannot convert \"" << s << "\" to CurveSpecType");
+    }
+}
+
 } // namespace data
 } // namespace ore

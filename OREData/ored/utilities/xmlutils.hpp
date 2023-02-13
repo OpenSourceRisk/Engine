@@ -260,6 +260,9 @@ public:
 
     //! Get a node's compact values as vector of doubles
     static vector<Real> getNodeValueAsDoublesCompact(XMLNode* node);
+
+    //! Write a node out as a string
+    static string toString(XMLNode* node);
 };
 } // namespace data
 } // namespace ore

@@ -33,5 +33,10 @@ namespace data {
 /*! \ingroup curves
  */
 boost::shared_ptr<CurveSpec> parseCurveSpec(const std::string&);
+
+//! function to convert a curve configuration node string into a curve spec type
+/*! \ingroup curves
+ */
+CurveSpec::CurveType parseCurveConfigurationType(const std::string&);
 } // namespace data
 } // namespace ore
