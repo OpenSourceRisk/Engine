@@ -29,7 +29,7 @@ namespace ore {
 namespace analytics {
 using namespace ore::data;
     
-class MarketDataCsvLoader : public ore::analytics::MarketDataLoader {
+class MarketDataCsvLoader : virtual public ore::analytics::MarketDataLoader {
 public:
     MarketDataCsvLoader(const boost::shared_ptr<ore::analytics::InputParameters>& inputParameters,
         const boost::shared_ptr<CSVLoader>& csvLoader)

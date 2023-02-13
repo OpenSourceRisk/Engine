@@ -121,8 +121,7 @@ void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
         // load the market data
         if (tmps.size() > 0) {
             LOG("AnalyticsManager::runAnalytics: populate loader");
-            //marketDataLoader_->populateLoader(tmps);
-            marketDataLoader_->populateLoader(tmps, false, laggedMarket_, mporDate, inputs_->includeMporExpired());
+            marketDataLoader_->populateLoader(tmps, laggedMarket_, mporDate, inputs_->includeMporExpired());
         }
         
         boost::shared_ptr<InMemoryReport> mdReport = boost::make_shared<InMemoryReport>();

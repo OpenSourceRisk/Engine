@@ -102,6 +102,21 @@ void MarketDataCsvLoader::retrieveFixings(const boost::shared_ptr<ore::data::InM
             }
         }
     }
+
+    for (const auto& fp : lastAvailableFixingLookupMap) {
+        if (loader->getFixing(fp.first.first, fp.first.second).empty()) {
+            set<Date>::reverse_iterator rit;
+            for (rit = fp.second.rbegin(); rit != fp.second.rend(); rit++) {
+                auto f = loader->getFixing(fp.first.first, *rit);
+                if (!f.empty()) {
+                    loader->addFixing(fp.first.second, fp.first.first, f.fixing);
+                    break;
+                }
+            }
+            WLOG("MarketDataCsvLoader::retrieveFixings(::load Could not find fixing for id " << fp.first.first << " on date "
+                                                                       << fp.first.second << ". ");
+        }
+    }
 }    
 
 MarketDataFixings MarketDataCsvLoader::retrieveMarketDataFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,

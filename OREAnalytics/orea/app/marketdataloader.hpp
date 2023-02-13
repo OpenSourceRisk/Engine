@@ -54,8 +54,8 @@ private:
 
 class MarketDataLoader {
 public:
-    MarketDataLoader(const boost::shared_ptr<InputParameters>& inputs, const bool useMarketDataFixings = false)
-        : inputs_(inputs), useMarketDataFixings_(useMarketDataFixings) {
+    MarketDataLoader(const boost::shared_ptr<InputParameters>& inputs)
+        : inputs_(inputs) {
         loader_ = boost::make_shared<ore::data::InMemoryLoader>();
     }
     virtual ~MarketDataLoader() {}
@@ -64,10 +64,14 @@ public:
         marketdata and fixing services
     */
     void populateLoader(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
-                        bool doBacktest = false,
                         bool doNPVLagged = false,
                         const QuantLib::Date& npvLaggedDate = QuantLib::Date(),
                         bool includeMporExpired = true);
+
+    virtual void populateFixings(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters);
+
+    virtual void addRelevantFixings(const pair<string, set<Date>>& fixing, map<string, set<Date>>& relevantFixings,
+                                    map<pair<string, Date>, set<Date>>& lastAvailableFixingLookupMap);
 
     //! load corporate action data
     virtual void loadCorporateActionData(boost::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -99,8 +103,8 @@ public:
 
 protected:
     boost::shared_ptr<InputParameters> inputs_;
-    bool useMarketDataFixings_;
     boost::shared_ptr<ore::data::InMemoryLoader> loader_;
+    map<string, set<Date>> fixings_;
     std::set<std::string> quotes_;
         
     /*! Look up and add contracts that expired between \c asofDate_ and \p npvLaggedDate when populating the loader
