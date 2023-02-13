@@ -437,9 +437,11 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         amc_ = parseBool(tmp);
 
-    tmp = params_->get("simulation", "amcExcludeTradeTypes", false);
-    if (tmp != "")
-        amcExcludeTradeTypes_ = parseListOfValues(tmp);
+    tmp = params_->get("simulation", "amcTradeTypes", false);
+    if (tmp != "") {
+        auto v = parseListOfValues(tmp);
+        amcTradeTypes_ = std::set<std::string>(v.begin(), v.end());
+    }
 
     simulationPricingEngine_ = pricingEngine_;
     exposureObservationModel_ = observationModel_;

@@ -52,7 +52,7 @@
     <Analytic type="amc">
       <Parameter name="active">Y</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine_amc.xml</Parameter>
-      <Parameter name="excludeTradeTypes"/>
+      <Parameter name="amcTradeTypes">Swap,Swaption,FxOption</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>

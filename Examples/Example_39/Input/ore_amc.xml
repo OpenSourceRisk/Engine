@@ -42,7 +42,7 @@
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="amc">Y</Parameter>
-      <Parameter name="amcExcludeTradeTypes"/>
+      <Parameter name="amcTradeTypes">Swap,Swaption,FxOption</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
@@ -52,13 +52,6 @@
       <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
       <Parameter name="aggregationScenarioDataDump">scenariodata.csv</Parameter>
     </Analytic>
-    <!--
-    <Analytic type="amc">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="pricingEnginesFile">pricingengine_amc.xml</Parameter>
-      <Parameter name="excludeTradeTypes"/>
-    </Analytic>
-    -->
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>

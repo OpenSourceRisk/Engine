@@ -46,6 +46,7 @@
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 
 #include <boost/timer/timer.hpp>
 
@@ -810,7 +811,6 @@ void XvaAnalytic::buildAmcPortfolio() {
 
     LOG("buildAmcPortfolio: Load Portfolio");
     boost::shared_ptr<Portfolio> portfolio = inputs_->portfolio();
-    std::vector<std::string> excludeTradeTypes = inputs_->amcExcludeTradeTypes();
 
     LOG("Build Portfolio with AMC Engine factory and select amc-enabled trades")
     amcPortfolio_ = boost::make_shared<Portfolio>();
@@ -818,13 +818,13 @@ void XvaAnalytic::buildAmcPortfolio() {
     Real timingTraining = 0.0;
     for (auto const& [tradeId, trade] : portfolio->trades()) {
         bool tradeBuilt = false;
-        if (std::find(excludeTradeTypes.begin(), excludeTradeTypes.end(), trade->tradeType()) == excludeTradeTypes.end()) {
+        if (inputs_->amcTradeTypes().find(trade->tradeType()) != inputs_->amcTradeTypes().end()) {
             try {
                 trade->reset();
                 trade->build(factory);
                 tradeBuilt = true;
             } catch (const std::exception& e) {
-                ALOG("trade " << tradeId << " could not be built with AMC factory: " << e.what());
+                ALOG(StructuredTradeErrorMessage(trade, "Error building trade for AMC simulation", e.what()));
             }
             if (tradeBuilt) {
                 try {
@@ -839,8 +839,7 @@ void XvaAnalytic::buildAmcPortfolio() {
                     timingTraining += tmp;
                     ++amcCount;
                 } catch (const std::exception& e) {
-                    DLOG("trade " << tradeId << " can not processed by AMC valuation engine (" << e.what()
-                                  << "), it will be simulated clasically");
+                    ALOG(StructuredTradeErrorMessage(trade, "Error extracting AMC calculator from trade.", e.what()));
                 }
             }
         }
@@ -1009,23 +1008,26 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
         // Initialize the residual "classical" portfolio that we do not process using AMC
         inputs_->portfolio()->reset();
         auto residualPortfolio = boost::make_shared<Portfolio>(inputs_->buildFailedTrades());
-        for (const auto& [tradeId, trade] : inputs_->portfolio()->trades()) 
-            residualPortfolio->add(trade);
 
         if (inputs_->amc()) {
             // Build a separate sub-portfolio for the AMC cube generation and perform its training
             buildAmcPortfolio();
 
             // Build the residual portfolio for the classic cube generation, i.e. strip out the AMC part
-            for (auto const& [tradeId, trade] : amcPortfolio_->trades())
-                residualPortfolio->remove(tradeId);
+            for (auto const& [tradeId, trade] : inputs_->portfolio()->trades()) {
+                if (inputs_->amcTradeTypes().find(trade->tradeType()) != inputs_->amcTradeTypes().end())
+                    residualPortfolio->add(trade);
+            }
 
             LOG("AMC portfolio size " << amcPortfolio_->size());
             LOG("Residual portfolio size " << residualPortfolio->size());
 
             doAmcRun = !amcPortfolio_->trades().empty();
             doClassicRun = !residualPortfolio->trades().empty();
-        }            
+        } else {
+            for (const auto& [tradeId, trade] : inputs_->portfolio()->trades())
+                residualPortfolio->add(trade);
+        }
 
         /********************************************************************************
          * This is where we build cubes and the "classic" valuation work is done
