@@ -858,7 +858,7 @@ void OREAppInputParameters::loadParameters() {
     jacobiInverseFileName_ = params_->get("sensitivity", "jacobiInverseOutputFile", false);    
     sensitivityScenarioFileName_ = params_->get("sensitivity", "scenarioOutputFile", false);    
     stressTestFileName_ = params_->get("stress", "scenarioOutputFile", false);    
-    varFileName_ = params_->get("var", "outputFile", false);
+    varFileName_ = params_->get("parametricVar", "outputFile", false);
     
     // map internal report name to output file name
     fileNameMap_["npv"] = npvOutputFileName_;

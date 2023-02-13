@@ -465,7 +465,7 @@ void VarAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
             inputs_->mcVarSamples(), inputs_->mcVarSeed(), inputs_->varBreakDown(), inputs_->salvageCovariance());
 
     boost::shared_ptr<InMemoryReport> report = boost::make_shared<InMemoryReport>();
-    reports_["var"]["var"] = report;
+    reports_["VAR"]["var"] = report;
 
     LOG("Call VaR calculation");
     out_ << setw(tab_) << left << "Risk: VaR Calculation " << flush;
@@ -475,7 +475,7 @@ void VarAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
     LOG("Parametric VaR completed");
     MEM_LOG;
 }
-    
+
 
 /******************************************************************************
  * XVA Analytic: EXPOSURE, CVA, DVA, FVA, KVA, COLVA, COLLATERALFLOOR, DIM, MVA
