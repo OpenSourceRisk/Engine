@@ -140,7 +140,7 @@ void MultiThreadedValuationEngine::buildCube(
         extraLegBuilders_ ? extraLegBuilders_() : std::vector<boost::shared_ptr<ore::data::LegBuilder>>(),
         referenceData_, iborFallbackConfig_);
 
-    portfolio->build(engineFactory, context_ + " (mt val engine, pricing stats)", false);
+    portfolio->build(engineFactory, context_, true);
 
     for (auto const& [tid, t] : portfolio->trades()) {
         TLOG("got npv for " << tid << ": " << std::setprecision(12) << t->instrument()->NPV() << " "
