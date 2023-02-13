@@ -61,18 +61,17 @@ namespace ore {
 namespace analytics {
 
 // Analytic
-bool Analytic::match(const std::vector<std::string>& runTypes) {
+bool Analytic::match(const std::set<std::string>& runTypes) {
     if (runTypes.size() == 0)
         return true;
     
     for (const auto& rt : runTypes) {
-        if (std::find(types_.begin(), types_.end(), rt) == types_.end()) {
-            WLOG("requested analytic " << rt << " not covered by the " << label_ << " analytic");
-        }
-        else
+        if (types_.find(rt) != types_.end()) {
+            LOG("Requested analytics " <<  to_string(runTypes) << " match analytic class " << label_);
             return true;
+        }
     }
-    WLOG("None of the requested analytics are covered by the " << label_ << " analytic");
+    WLOG("None of the requested analytics " << to_string(runTypes) << " are covered by the analytic class " << label_);
     return false;
 }
 
@@ -196,7 +195,7 @@ void PricingAnalytic::setUpConfigurations() {
 }
 
 void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                                  const std::vector<std::string>& runTypes) {
+                                  const std::set<std::string>& runTypes) {
 
     Settings::instance().evaluationDate() = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());
@@ -226,7 +225,7 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
         boost::shared_ptr<InMemoryReport> report = boost::make_shared<InMemoryReport>();
         InMemoryReport tmpReport;
         // skip analytics not requested
-        if (runTypes.size() > 0 && std::find(runTypes.begin(), runTypes.end(), analytic) == runTypes.end())
+        if (runTypes.find(analytic) == runTypes.end())
             continue;
 
         if (analytic == "NPV" ||
@@ -241,10 +240,7 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                 boost::shared_ptr<InMemoryReport> addReport = boost::make_shared<InMemoryReport>();;
                 ore::analytics::ReportWriter(inputs_->reportNaString())
                     .writeAdditionalResultsReport(*addReport, portfolio_, market_, inputs_->baseCurrency());
-                // FIXME: clean this up and keep one
                 reports_[analytic]["additional_results"] = addReport;
-                reports_["ADDITIONAL_RESULTS"]["AdditionalResults"] = addReport;
-                reports_["ADDITIONAL_RESULTS"]["additional_results"] = addReport;
                 out_ << "OK" << endl;
             }
             // FIXME: Leave this here as additional output within the NPV analytic, or store report as separate analytic?
@@ -441,7 +437,7 @@ boost::shared_ptr<EngineFactory> VarAnalytic::engineFactory() {
 */
 
 void VarAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                              const std::vector<std::string>& runTypes) {
+                              const std::set<std::string>& runTypes) {
     MEM_LOG;
     LOG("Running parametric VaR");
 
@@ -463,7 +459,6 @@ void VarAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
         tradePortfolio[tradeId].insert(trade->portfolioIds().begin(), trade->portfolioIds().end());
     }
 
-    // FIXME: Add Delta-Gamma (Saddlepoint) 
     LOG("Build VaR calculator");
     auto calc = boost::make_shared<ParametricVarCalculator>(tradePortfolio, inputs_->portfolioFilter(),
             inputs_->sensitivityStream(), inputs_->covarianceData(), inputs_->varQuantiles(), inputs_->varMethod(),
@@ -1026,14 +1021,14 @@ void XvaAnalytic::runPostProcessor() {
 }
 
 void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                              const std::vector<std::string>& runTypes) {
+                              const std::set<std::string>& runTypes) {
     
     LOG("XVA analytic called with asof " << io::iso_date(inputs_->asof()));
 
-    if (std::find(runTypes.begin(), runTypes.end(), "EXPOSURE") != runTypes.end() || runTypes.empty())
+    if (runTypes.find("EXPOSURE") != runTypes.end() || runTypes.empty())
         runSimulation_ = true;
 
-    if (std::find(runTypes.begin(), runTypes.end(), "XVA") != runTypes.end() || runTypes.empty())
+    if (runTypes.find("XVA") != runTypes.end() || runTypes.empty())
         runXva_ = true;
 
     Settings::instance().evaluationDate() = inputs_->asof();

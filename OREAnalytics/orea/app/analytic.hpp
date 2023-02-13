@@ -69,7 +69,7 @@ public:
              const std::string& label,
              //! The types of all (sub) analytics covered by this Analytic object
              //! e.g. NPV, CASHFLOW, CASHFLOWNPV, etc., covered by the PricingAnalytic
-             const std::vector<std::string>& analyticTypes,
+             const std::set<std::string>& analyticTypes,
              //! Any inputs required by this Analytic
              const boost::shared_ptr<InputParameters>& inputs,
              //! Flag to indicate whether a simularion config file is required for this analytic
@@ -96,7 +96,7 @@ public:
 
     //! Run only those analytic types that are inclcuded in the runTypes vector, run all if the runType vector is empty 
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                             const std::vector<std::string>& runTypes = {}) = 0;
+                             const std::set<std::string>& runTypes = {}) = 0;
 
     // we can build configurations here (today's market params, scenario sim market params, sensitivity scenasrio data)
     virtual void buildConfigurations() {};
@@ -109,7 +109,7 @@ public:
 
     //! Inspectors
     const std::string& label() const { return label_; }
-    const std::vector<std::string>& analyticTypes() const { return types_; }
+    const std::set<std::string>& analyticTypes() const { return types_; }
     const boost::shared_ptr<ore::data::Market>& market() const { return market_; };
     const boost::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; };
     virtual std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
@@ -124,13 +124,13 @@ public:
     void setWriteIntermediateReports(const bool flag) { writeIntermediateReports_ = flag; }
 
     //! Check whether any of the requested run types is covered by this analytic
-    bool match(const std::vector<std::string>& runTypes);
+    bool match(const std::set<std::string>& runTypes);
 
 protected:
     //! label for logging purposes primarily
     const std::string label_;
     //! list of analytic types run by this analytic
-    std::vector<std::string> types_;
+    std::set<std::string> types_;
     //! contains all the input parameters for the run
     boost::shared_ptr<InputParameters> inputs_;
     //! Booleans to determine if these configs are needed
@@ -184,7 +184,7 @@ public:
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                             const std::vector<std::string>& runTypes = {}) override;
+                             const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 
     virtual void modifyPortfolio() {}
@@ -201,7 +201,7 @@ public:
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                             const std::vector<std::string>& runTypes = {}) override;
+                             const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 
 protected:
@@ -215,7 +215,7 @@ public:
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                             const std::vector<std::string>& runTypes = {}) override;
+                             const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
     
 protected:

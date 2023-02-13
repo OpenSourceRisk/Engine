@@ -32,10 +32,10 @@ using ore::data::InMemoryReport;
 namespace ore {
 namespace analytics {
 
-Size matches(const std::vector<std::string>& requested, const std::vector<std::string>& available) {
+Size matches(const std::set<std::string>& requested, const std::set<std::string>& available) {
     Size count = 0;
     for (auto r : requested) {
-        if (std::find(available.begin(), available.end(), r) != available.end())
+        if (available.find(r) != available.end())
             count++;
     }
     return count;
@@ -71,19 +71,19 @@ void AnalyticsManager::addAnalytic(const std::string& label, const boost::shared
     validAnalytics_.clear();
 }
     
-const std::vector<std::string>& AnalyticsManager::validAnalytics() {
+const std::set<std::string>& AnalyticsManager::validAnalytics() {
     if (validAnalytics_.size() == 0) {
         for (auto a : analytics_) {
-            const std::vector<std::string>& types = a.second->analyticTypes();
-            validAnalytics_.insert(validAnalytics_.end(), types.begin(), types.end());
+            const std::set<std::string>& types = a.second->analyticTypes();
+            validAnalytics_.insert(types.begin(), types.end());
         }
     }
     return validAnalytics_;
 }
 
 bool AnalyticsManager::hasAnalytic(const std::string& type) {
-    const std::vector<std::string>& va = validAnalytics();
-    return std::find(va.begin(), va.end(), type) != va.end();
+    const std::set<std::string>& va = validAnalytics();
+    return va.find(type) != va.end();
 }
 
 const boost::shared_ptr<Analytic>& AnalyticsManager::getAnalytic(const std::string& type) const {
@@ -92,7 +92,7 @@ const boost::shared_ptr<Analytic>& AnalyticsManager::getAnalytic(const std::stri
     return it->second;
 }
 
-void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
+void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
                                     const boost::shared_ptr<MarketCalibrationReport>& marketCalibrationReport) {
 
     if (analytics_.size() == 0)
@@ -142,11 +142,11 @@ void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
         marketDataReports_["DIVIDENDS"]["dividends"] = dividendReport;
     }
 
-    // run requested run types across all analytics
+    // run requested analytics
     for (auto a : analytics_) {
-        if (matches(runTypes, a.second->analyticTypes()) > 0) {
+        if (matches(analyticTypes, a.second->analyticTypes()) > 0) {
             LOG("run analytic with label '" << a.first << "'");
-            a.second->runAnalytic(marketDataLoader_->loader(), runTypes);
+            a.second->runAnalytic(marketDataLoader_->loader(), analyticTypes);
             LOG("run analytic with label '" << a.first << "' finished.");
             // then populate the market calibration report if required
             if (marketCalibrationReport)
@@ -183,6 +183,70 @@ Analytic::analytic_mktcubes const AnalyticsManager::mktCubes() {
         results.insert(rs.begin(), rs.end());
     }
     return results;
+}
+
+std::map<std::string, Size> checkReportNames(const ore::analytics::Analytic::analytic_reports& rpts) {                                     
+    std::map<std::string, Size> m;
+    for (const auto& rep : rpts) {
+        for (auto b : rep.second) {
+            string reportName = b.first;
+            auto it = m.find(reportName);
+            if (it == m.end())
+                m[reportName] = 1;
+            else
+                m[reportName] ++;
+        }
+    }
+    for (auto r : m) {
+        LOG("report name " << r.first << " occurs " << r.second << " times");
+    }
+    return m;
+}
+
+bool endsWith(const std::string& name, const std::string& suffix) {
+    if (suffix.size() > name.size())
+        return false;
+    else
+        return std::equal(suffix.rbegin(), suffix.rend(), name.rbegin());
+}
+
+void  AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& rpts,
+                               const std::string& outputPath,
+                               const std::map<std::string,std::string>& reportNames,
+                               const char sep,
+                               const bool commentCharacter,
+                               char quoteChar,
+                               const string& nullString,
+                               bool lowerHeader) {
+    std::map<std::string, Size> hits = checkReportNames(rpts);    
+    for (const auto& rep : rpts) {
+        string analytic = rep.first;
+        for (auto b : rep.second) {
+            string reportName = b.first;
+            boost::shared_ptr<InMemoryReport> report = b.second;
+            string fileName;
+            auto it = hits.find(reportName);
+            QL_REQUIRE(it != hits.end(), "something wrong here");
+            if (it->second == 1) {
+                // The report name is unique, check whether we want to rename it or use the standard name
+                auto it2 = reportNames.find(reportName);
+                fileName = it2 != reportNames.end() ? it2->second : reportName;
+            }
+            else {
+                ALOG("Report " << reportName << " occurs " << it->second << " times, fix report naming");
+                fileName = analytic + "_" + reportName + "_" + to_string(hits[fileName]);
+            }
+
+            // attach a suffix only if it does not have one already
+            string suffix = "";
+            if (!endsWith(fileName,".csv") && !endsWith(fileName, ".txt"))
+                suffix = ".csv";
+            std::string fullFileName = outputPath + "/" + fileName + suffix;
+
+            report->toFile(fullFileName, sep, commentCharacter, quoteChar, nullString, lowerHeader);
+            LOG("report " << reportName << " written to " << fullFileName); 
+        }
+    }
 }
 
 }
