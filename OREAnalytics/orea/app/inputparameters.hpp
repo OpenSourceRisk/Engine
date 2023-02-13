@@ -79,6 +79,8 @@ public:
     bool iborFallbackOverride() { return iborFallbackOverride_; }
     const std::string& reportNaString() { return reportNaString_; }
     char csvQuoteChar() const { return csvQuoteChar_; }
+    char csvSeparator() const { return csvSeparator_; }
+    char csvCommentCharacter() const { return csvCommentCharacter_; }
     bool dryRun() const { return dryRun_; }
     QuantLib::Size mporDays() { return mporDays_; }
     const QuantLib::Calendar mporCalendar() {
@@ -245,7 +247,7 @@ public:
      * List of analytics that shall be run
      *************************************/
 
-    const std::vector<std::string>& runTypes() { return runTypes_; }
+    const std::set<std::string>& analytics() { return analytics_; }
 
     virtual void loadParameters() = 0;
     virtual void writeOutParameters() = 0;
@@ -262,7 +264,7 @@ protected:
     // - EXPOSURE
     // - XVA
     // Each analytic type comes with additional input requirements, see below
-    std::vector<std::string> runTypes_;
+    std::set<std::string> analytics_;
 
     /***********************************
      * Basic setup, across all run types
@@ -290,8 +292,10 @@ protected:
     bool eomInflationFixings_ = true;
     bool useMarketDataFixings_ = true;
     bool iborFallbackOverride_ = false;
-    std::string reportNaString_;
+    char csvSeparator_ = ',';
+    bool csvCommentCharacter_ = false;
     char csvQuoteChar_ = '\0';
+    std::string reportNaString_ = "#N/A";
     bool dryRun_ = false;
     QuantLib::Size mporDays_ = 10;
     QuantLib::Calendar mporCalendar_;
@@ -452,6 +456,7 @@ public:
     const boost::shared_ptr<CSVLoader>& csvLoader() { return csvLoader_; }
 
     //! map internal report name to the configured external file name
+    const std::map<std::string, std::string>& fileNameMap() { return fileNameMap_; }
     std::string outputFileName(const std::string& internalName, const std::string& suffix);
     
 private:
