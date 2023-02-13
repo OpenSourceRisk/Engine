@@ -515,15 +515,11 @@ void XvaAnalytic::buildScenarioGenerator(const bool continueOnCalibrationError) 
 void XvaAnalytic::buildCrossAssetModel(const bool continueOnCalibrationError) {
     LOG("XVA: Build Simulation Model (continueOnCalibrationError = "
         << std::boolalpha << continueOnCalibrationError << ")");
-    DayCounter dc = ActualActual(ActualActual::ISDA);
     CrossAssetModelBuilder modelBuilder(market_, inputs_->crossAssetModelData(),
-                                        inputs_->marketConfig("lgmcalibration"),
-                                        inputs_->marketConfig("fxcalibration"),
-                                        inputs_->marketConfig("eqcalibration"),
-                                        inputs_->marketConfig("infcalibration"),
-                                        inputs_->marketConfig("crcalibration"),
-                                        inputs_->marketConfig("simulation"),
-                                        dc, false, continueOnCalibrationError);
+                                        inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
+                                        inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
+                                        inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"),
+                                        false, continueOnCalibrationError);
     model_ = *modelBuilder.model();
 }
 
