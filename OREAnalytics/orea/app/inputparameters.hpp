@@ -293,7 +293,7 @@ protected:
     bool useMarketDataFixings_ = true;
     bool iborFallbackOverride_ = false;
     char csvSeparator_ = ',';
-    bool csvCommentCharacter_ = false;
+    bool csvCommentCharacter_ = true;
     char csvQuoteChar_ = '\0';
     std::string reportNaString_ = "#N/A";
     bool dryRun_ = false;
