@@ -1015,7 +1015,7 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
 
             // Build the residual portfolio for the classic cube generation, i.e. strip out the AMC part
             for (auto const& [tradeId, trade] : inputs_->portfolio()->trades()) {
-                if (inputs_->amcTradeTypes().find(trade->tradeType()) != inputs_->amcTradeTypes().end())
+                if (inputs_->amcTradeTypes().find(trade->tradeType()) == inputs_->amcTradeTypes().end())
                     residualPortfolio->add(trade);
             }
 
