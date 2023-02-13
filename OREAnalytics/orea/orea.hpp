@@ -19,6 +19,7 @@
 #include <orea/aggregation/xvacalculator.hpp>
 #include <orea/app/analytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
 #include <orea/app/marketdataloader.hpp>

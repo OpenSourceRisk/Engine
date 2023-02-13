@@ -277,6 +277,11 @@ void CreditReferenceDatum::fromXML(XMLNode* node) {
     creditData_.name = XMLUtils::getChildValue(innerNode, "Name", true);
     creditData_.group = XMLUtils::getChildValue(innerNode, "Group", false);
     creditData_.successor = XMLUtils::getChildValue(innerNode, "Successor", false);
+    creditData_.predecessor = XMLUtils::getChildValue(innerNode, "Predecessor", false);
+    creditData_.successorImplementationDate =
+        parseDate(XMLUtils::getChildValue(innerNode, "SuccessorImplementationDate", false));
+    creditData_.predecessorImplementationDate =
+        parseDate(XMLUtils::getChildValue(innerNode, "PredecessorImplementationDate", false));
 }
 
 XMLNode* CreditReferenceDatum::toXML(XMLDocument& doc) {
@@ -286,6 +291,13 @@ XMLNode* CreditReferenceDatum::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, creditNode, "Name", creditData_.name);
     XMLUtils::addChild(doc, creditNode, "Group", creditData_.group);
     XMLUtils::addChild(doc, creditNode, "Successor", creditData_.successor);
+    XMLUtils::addChild(doc, creditNode, "Predecessor", creditData_.predecessor);
+    if (creditData_.successorImplementationDate != Date())
+        XMLUtils::addChild(doc, creditNode, "SuccessorImplementationDate",
+                           to_string(creditData_.successorImplementationDate));
+    if (creditData_.predecessorImplementationDate != Date())
+        XMLUtils::addChild(doc, creditNode, "PredecessorImplementationDate",
+                           to_string(creditData_.predecessorImplementationDate));
     return node;
 }
 
