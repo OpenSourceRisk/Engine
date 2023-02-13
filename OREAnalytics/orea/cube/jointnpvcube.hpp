@@ -45,13 +45,11 @@ public:
         const Real accumulatorInit = 0.0);
 
     /*! ctor for n input cubes
-        - If no ids are given, the order of the ids in the input cubes define the order in the resulting cube. If ids
-          are given they define the order of the ids in the output cube. The ids vector must contain unique ids in this
-          case.
+        - If no ids are given, the ids in the input cubes define the ids in the resulting cube. The order is
+       lexicographic. If ids are given they define the ids in the output cube.
         - If requireUniqueIds is true, there must be no duplicate ids in the input cubes. If requireUniqueIds is false,
-          they may be duplicate ids in which case get() will return the sum of the entries in the input cubes over the
-          matching ids. In this case the first id among several possible duplicate ids in the input cubes defines the
-          order of the ids in the output cube, i.e. the output cube has unique ids in this case, too.
+          they may be duplicate ids in which case get() will return an aggregate of the entries in the input cubes over
+       the matching ids using the accumulator function and accumulator initialization.
         - If one id in the result cube corresponds to several input cubes, it is not allowed to call set on this id,
           this will result in an exception.
      */
