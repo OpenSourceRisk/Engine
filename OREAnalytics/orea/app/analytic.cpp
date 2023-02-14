@@ -1022,9 +1022,8 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
         
         if (doClassicRun && doAmcRun) {
             LOG("Joining classical and AMC cube");
-            // Join the two cubes and set cube_ to the union; use the ordering of the
-            // original portfolio for the trades in the cube
-            cube_ = boost::make_shared<JointNPVCube>(cube_, amcCube_, inputs_->portfolio()->ids(), true);
+            // Join the two cubes and set cube_ to the union
+            cube_ = boost::make_shared<JointNPVCube>(cube_, amcCube_);
             // If the cube has to be written, create a physical one from the wrapper
             if (inputs_->writeCube()) {
                 boost::shared_ptr<NPVCube> tmpCube;
