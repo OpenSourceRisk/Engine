@@ -237,32 +237,32 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
     std::vector<Real> effectiveMultiplier;
     std::vector<Size> currencyIndex;
     timer.start();
-    size_t currentTradeIdx = 0;
-    for (auto tradeIt = portfolio->trades().begin(); tradeIt != portfolio->trades().end();
-         ++tradeIt, ++currentTradeIdx) {
-        auto trade = tradeIt->second;
-        string tId = tradeIt->first;
+    for (auto const& trade: portfolio->trades()) {
         boost::shared_ptr<AmcCalculator> amcCalc;
         try {
-            amcCalc =
-                trade->instrument()->qlInstrument(true)->result<boost::shared_ptr<AmcCalculator>>("amcCalculator");
-            LOG("AMCCalculator extracted for \"" << trade->id() << "\"");
+            amcCalc = trade.second->instrument()->qlInstrument(true)->result<boost::shared_ptr<AmcCalculator>>(
+                "amcCalculator");
+            LOG("AMCCalculator extracted for \"" << trade.first << "\"");
             amcCalculators.push_back(amcCalc);
-            Real effMult = trade->instrument()->multiplier();
-            auto ow = boost::dynamic_pointer_cast<OptionWrapper>(trade->instrument());
+            Real effMult = trade.second->instrument()->multiplier();
+            auto ow = boost::dynamic_pointer_cast<OptionWrapper>(trade.second->instrument());
             if (ow != nullptr) {
                 effMult *= ow->isLong() ? 1.0 : -1.0;
                 // we can ignore the underlying multiplier, since this is not involved in the AMC engine
             }
             effectiveMultiplier.push_back(effMult);
             currencyIndex.push_back(model_->ccyIndex(amcCalc->npvCurrency()));
-            tradeId.push_back(currentTradeIdx);
-            tradeLabel.push_back(tId);
+            if (auto id = outputCube->idsAndIndexes().find(trade.first); id != outputCube->idsAndIndexes().end()) {
+                tradeId.push_back(id->second);
+            } else {
+                QL_FAIL("trade id is not present in output cube.");
+            }
+            tradeLabel.push_back(trade.first);
             // TODO additional instruments (fees)
         } catch (const std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(trade, "Error building trade for AMC simulation", e.what()));
+            ALOG(StructuredTradeErrorMessage(trade.second, "Error building trade for AMC simulation", e.what()));
         }
-        updateProgress(currentTradeIdx, portfolio->size());
+        updateProgress(amcCalculators.size(), portfolio->size());
     }
     timer.stop();
     calibrationTime += timer.elapsed().wall * 1e-9;
