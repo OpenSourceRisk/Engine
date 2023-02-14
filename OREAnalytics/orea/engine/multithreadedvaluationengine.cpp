@@ -364,7 +364,7 @@ void MultiThreadedValuationEngine::buildCube(
 
         // results[i] = threadPool.push(job);
 
-        // no needed if thread pool is used
+        // not needed if thread pool is used
         std::packaged_task<resultType(int)> task(job);
         results[i] = task.get_future();
         std::thread thread(std::move(task), i);
