@@ -42,14 +42,15 @@ class AMCValuationEngine : public ore::data::ProgressReporter {
 public:
     //! Constructor for single-threaded runs
     AMCValuationEngine(const boost::shared_ptr<QuantExt::CrossAssetModel>& model,
-                       const boost::shared_ptr<ore::analytics::ScenarioGeneratorData>& sgd,
+                       const boost::shared_ptr<ore::analytics::ScenarioGeneratorData>& scenarioGeneratorData,
                        const boost::shared_ptr<ore::data::Market>& market, const std::vector<string>& aggDataIndices,
                        const std::vector<string>& aggDataCurrencies);
 
     //! Constructor for multi threaded runs
     AMCValuationEngine(
-        const QuantLib::Size nThreads, const QuantLib::Date& today,
+        const QuantLib::Size nThreads, const QuantLib::Date& today, const QuantLib::Size nSamples,
         const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
+        const std::vector<string>& aggDataIndices, const std::vector<string>& aggDataCurrencies,
         const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
         const boost::shared_ptr<ore::data::EngineData>& engineData,
         const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
@@ -89,16 +90,21 @@ private:
     // set / get via additional methods
     boost::shared_ptr<ore::analytics::AggregationScenarioData> asd_;
 
+    // running in single or multi threaded mode?
+    bool useMultithreading_;
+
+    // shared inputs
+    const std::vector<string> aggDataIndices_, aggDataCurrencies_;
+    boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
+
     // inputs for single-threaded run
     const boost::shared_ptr<QuantExt::CrossAssetModel> model_;
-    const boost::shared_ptr<ore::analytics::ScenarioGeneratorData> sgd_;
     const boost::shared_ptr<ore::data::Market> market_;
-    const std::vector<string> aggDataIndices_, aggDataCurrencies_;
 
     // inputs for muulti-threaded run
     QuantLib::Size nThreads_;
     QuantLib::Date today_;
-    boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
+    QuantLib::Size nSamples_;
     boost::shared_ptr<CrossAssetModelData> crossAssetModelData_;
     boost::shared_ptr<ore::data::EngineData> engineData_;
     boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
