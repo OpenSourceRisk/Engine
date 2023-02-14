@@ -86,11 +86,6 @@ public:
     const boost::shared_ptr<ore::analytics::AggregationScenarioData>& aggregationScenarioData() const { return asd_; }
 
 private:
-    // Only for the case of grids with close-out lag and mpor mode sticky date:
-    // If processCloseOutDates is true, filter the path on the close out dates and move the close-out times to the
-    // valuation times. If processCloseOutDates is false, filter the path on the valuation dates.
-    QuantExt::MultiPath effectiveSimulationPath(const QuantExt::MultiPath& p, const bool processCloseOutDates) const;
-
     // set / get via additional methods
     boost::shared_ptr<ore::analytics::AggregationScenarioData> asd_;
 

@@ -18,6 +18,8 @@
 
 #include <orea/engine/amcvaluationengine.hpp>
 
+#include <ored/portfolio/structuredtradeerror.hpp>
+
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
@@ -86,6 +88,27 @@ simulatePathInterface2(const boost::shared_ptr<AmcCalculatorMultiVariates>& amcC
     }
 }
 
+// Only used for the case of grids with close-out lag and mpor mode sticky date:
+// If processCloseOutDates is true, filter the path on the close out dates and move the close-out times to the
+// valuation times. If processCloseOutDates is false, filter the path on the valuation dates.
+MultiPath effectiveSimulationPath(const boost::shared_ptr<ScenarioGeneratorData>& sgd, const MultiPath& p,
+                                  const bool processCloseOutDates) {
+    QL_REQUIRE(sgd->withCloseOutLag() && sgd->withMporStickyDate(),
+               "effectiveSimulationPath(): expected grid with close-out lag and sticky date mpor mode");
+    MultiPath filteredPath(p.assetNumber(), sgd->getGrid()->valuationTimeGrid());
+    Size filteredTimeIndex = 0;
+    for (Size i = 0; i < p.pathSize(); ++i) {
+        if (i == 0 || (i > 0 && (processCloseOutDates ? sgd->getGrid()->isCloseOutDate()[i - 1]
+                                                      : sgd->getGrid()->isValuationDate()[i - 1]))) {
+            for (Size j = 0; j < p.assetNumber(); ++j) {
+                filteredPath[j][filteredTimeIndex] = p[j][i];
+            }
+            ++filteredTimeIndex;
+        }
+    }
+    return filteredPath;
+}
+
 } // namespace
 
 AMCValuationEngine::AMCValuationEngine(
@@ -117,8 +140,6 @@ AMCValuationEngine::AMCValuationEngine(
       extraTradeBuilders_(extraTradeBuilders), extraEngineBuilders_(extraEngineBuilders),
       extraLegBuilders_(extraLegBuilders), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
       handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket), cubeFactory_(cubeFactory) {
-    std::cout << nThreads_;
-    std::cout << handlePseudoCurrenciesTodaysMarket_;
 }
 
 AMCValuationEngine::AMCValuationEngine(const boost::shared_ptr<QuantExt::CrossAssetModel>& model,
@@ -140,23 +161,6 @@ AMCValuationEngine::AMCValuationEngine(const boost::shared_ptr<QuantExt::CrossAs
             << sgd->getGrid()->dayCounter() << ") is different from model day counter ("
             << model->irlgm1f(0)->termStructure()->dayCounter()
             << "), align these e.g. by setting the day counter in the simulation parameters to the model day counter");
-}
-
-MultiPath AMCValuationEngine::effectiveSimulationPath(const MultiPath& p, const bool processCloseOutDates) const {
-    QL_REQUIRE(sgd_->withCloseOutLag() && sgd_->withMporStickyDate(),
-               "effectiveSimulationPath(): expected grid with close-out lag and sticky date mpor mode");
-    MultiPath filteredPath(p.assetNumber(), sgd_->getGrid()->valuationTimeGrid());
-    Size filteredTimeIndex = 0;
-    for (Size i = 0; i < p.pathSize(); ++i) {
-        if (i == 0 || (i > 0 && (processCloseOutDates ? sgd_->getGrid()->isCloseOutDate()[i - 1]
-                                                      : sgd_->getGrid()->isValuationDate()[i - 1]))) {
-            for (Size j = 0; j < p.assetNumber(); ++j) {
-                filteredPath[j][filteredTimeIndex] = p[j][i];
-            }
-            ++filteredTimeIndex;
-        }
-    }
-    return filteredPath;
 }
 
 void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio,
@@ -349,10 +353,10 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
                 // with close-out lag, fille depth 0 with valuation date npvs, depth 1 with (inflated) close-out npvs
                 if (sgd_->withMporStickyDate()) {
                     // stikcy date mpor mode, simulate the valuation times and close out times separately
-                    Array res =
-                        simulatePathInterface1(amcCalc, effectiveSimulationPath(path, false), false, tradeLabel[j], i);
-                    Array resCout =
-                        simulatePathInterface1(amcCalc, effectiveSimulationPath(path, true), true, tradeLabel[j], i);
+                    Array res = simulatePathInterface1(
+                        amcCalc, effectiveSimulationPath(scenarioGeneratorData_, path, false), false, tradeLabel[j], i);
+                    Array resCout = simulatePathInterface1(
+                        amcCalc, effectiveSimulationPath(scenarioGeneratorData_, path, true), true, tradeLabel[j], i);
                     outputCube->setT0(res[0] * fx(fxBuffer, currencyIndex[j], 0, 0) *
                                           numRatio(model_, irStateBuffer, currencyIndex[j], 0, 0.0, 0) *
                                           effectiveMultiplier[j],
