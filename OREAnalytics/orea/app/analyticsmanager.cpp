@@ -129,7 +129,8 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
         boost::shared_ptr<InMemoryReport> dividendReport = boost::make_shared<InMemoryReport>();
 
         ore::analytics::ReportWriter(inputs_->reportNaString())
-            .writeMarketData(*mdReport, marketDataLoader_->loader(), inputs_->asof(), marketDataLoader_->quotes(),
+            .writeMarketData(*mdReport, marketDataLoader_->loader(), inputs_->asof(),
+                             marketDataLoader_->quotes()[inputs_->asof()],
                              !inputs_->entireMarket());
         ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeFixings(*fixingReport, marketDataLoader_->loader());
@@ -209,7 +210,7 @@ bool endsWith(const std::string& name, const std::string& suffix) {
         return std::equal(suffix.rbegin(), suffix.rend(), name.rbegin());
 }
 
-void  AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& rpts,
+void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& rpts,
                                const std::string& outputPath,
                                const std::map<std::string,std::string>& reportNames,
                                const char sep,

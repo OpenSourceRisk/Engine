@@ -24,7 +24,8 @@
 using namespace ore::data;
 using QuantExt::OptionPriceSurface;
 
-namespace {
+namespace ore {
+namespace analytics {
 
 // Additional quotes for fx fixings, add fixing quotes with USD and EUR to the list of fixings
 // requested in order to triangulate missing fixings
@@ -115,42 +116,41 @@ void additional_commodity_fixings(const string& fixingId, const set<Date>& fixin
             }
         }
     }
-
 }
 
-} // namespace
+const boost::shared_ptr<MarketDataLoaderImpl>& MarketDataLoader::impl() const {
+    QL_REQUIRE(impl_, "No MarketDataLoader implementation of type MarketDataLoaderImpl set");
+    return impl_;
+}
 
-namespace ore {
-namespace analytics {
-
-void MarketDataLoader::addRelevantFixings(const pair<string, set<Date>>& fixing,
-                                          map<string, set<Date>>& relevantFixings,
-                                          map<pair<string, Date>, set<Date>>& lastAvailableFixingLookupMap) {
+void MarketDataLoader::addRelevantFixings(
+    const std::pair<std::string, std::set<QuantLib::Date>>& fixing,
+    std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>>& lastAvailableFixingLookupMap) {
     if (isFxIndex(fixing.first)) {
         // for FX fixings we want to add additional fixings to allow triangulation in case of missing
         // fixings if we need EUR/GBP fixing but it is not available, we can imply from EUR/USD and GBP/USD
-        additional_fx_fixings(fixing.first, fixing.second, relevantFixings);
+        additional_fx_fixings(fixing.first, fixing.second, fixings_);
     }
     if (isCommodityIndex(fixing.first)) {
-        additional_commodity_fixings(fixing.first, fixing.second, relevantFixings, lastAvailableFixingLookupMap);
+        additional_commodity_fixings(fixing.first, fixing.second, fixings_, lastAvailableFixingLookupMap);
     }
-    relevantFixings[fixing.first].insert(fixing.second.begin(), fixing.second.end());
+    fixings_[fixing.first].insert(fixing.second.begin(), fixing.second.end());
 }
 
 void MarketDataLoader::populateFixings(
     const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters) {
     if (inputs_->allFixings()) {
-        retrieveFixings(loader_);
+        impl()->retrieveFixings(loader_);
     } else {
         LOG("Asking portfolio for its required fixings");
-        map<string, set<Date>> portfolioFixings;
-        map<pair<string, Date>, set<Date>> lastAvailableFixingLookupMap;
+        std::map<std::string, std::set<QuantLib::Date>> portfolioFixings;
+        std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap;
 
         if (inputs_->portfolio()) {
             portfolioFixings = inputs_->portfolio()->fixings();
             LOG("The portfolio depends on fixings from " << portfolioFixings.size() << " indices");
             for (const auto& it : portfolioFixings) {
-                addRelevantFixings(it, fixings_, lastAvailableFixingLookupMap);
+                addRelevantFixings(it, lastAvailableFixingLookupMap);
             }
         }
 
@@ -164,26 +164,26 @@ void MarketDataLoader::populateFixings(
         }
 
         if (fixings_.size() > 0)
-            retrieveFixings(loader_, fixings_, lastAvailableFixingLookupMap);
+            impl()->retrieveFixings(loader_, fixings_, lastAvailableFixingLookupMap);
     }
 }
 
 void MarketDataLoader::populateLoader(
-    const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
-    bool doNPVLagged, const QuantLib::Date& npvLaggedDate, bool includeMporExpired) {
+    const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters, bool doNPVLagged,
+    const QuantLib::Date& npvLaggedDate, bool includeMporExpired) {
 
     // create a loader if doesn't already exist
     if (!loader_)
         loader_ = boost::make_shared<InMemoryLoader>();
     else
         loader_->reset(); // can only populate once to avoid duplicates
-    
+
     // check input data
     QL_REQUIRE(!inputs_->curveConfigs().empty(), "Need at least one curve configuration to populate loader.");
     QL_REQUIRE(todaysMarketParameters.size() > 0, "No todaysMarketParams provided to populate market data loader.");
-    
+
     // for equitites check if we have corporate action data
-    map<string, string> equities;
+    std::map<std::string, std::string> equities;
     for (const auto& tmp : todaysMarketParameters) {
         if (tmp->hasMarketObject(MarketObject::EquityCurve)) {
             auto eqMap = tmp->mapping(MarketObject::EquityCurve, Market::defaultConfiguration);
@@ -199,8 +199,8 @@ void MarketDataLoader::populateLoader(
         }
     }
     if (equities.size() > 0)
-        loadCorporateActionData(loader_, equities);
-    
+        impl()->loadCorporateActionData(loader_, equities);
+
     populateFixings(todaysMarketParameters);
 
     LOG("Adding the loaded fixings to the IndexManager");
@@ -210,22 +210,22 @@ void MarketDataLoader::populateLoader(
     LOG("Generating market datum set");
     for (const auto& tmp : todaysMarketParameters) {
         // Find all configurations in this todaysMarket
-        set<string> configurations;
+        std::set<std::string> configurations;
         for (auto c : tmp->configurations())
             configurations.insert(c.first);
 
         for (const auto& curveConfig : inputs_->curveConfigs()) {
             auto qs = curveConfig->quotes(tmp, configurations);
-            quotes_.insert(qs.begin(), qs.end());
+            quotes_[inputs_->asof()].insert(qs.begin(), qs.end());
         }
     }
     LOG("CurveConfigs require " << quotes_.size() << " quotes");
 
     // Get the relevant market data loader for the pricing call
-    Date relabelMd = doNPVLagged ? inputs_->asof() : Date();
-    retrieveMarketData(loader_, quotes_, relabelMd);
+    QuantLib::Date relabelMd = doNPVLagged ? inputs_->asof() : Date();
+    impl()->retrieveMarketData(loader_, quotes_, relabelMd);
     if (doNPVLagged && includeMporExpired)
-        addExpiredContracts(*loader_, quotes_, npvLaggedDate);
+        impl()->retrieveExpiredContracts(loader_, quotes_, npvLaggedDate);
     LOG("Got market data");
 }
 
