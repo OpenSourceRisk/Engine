@@ -25,6 +25,8 @@
 
 #include <orea/cube/npvcube.hpp>
 #include <orea/scenario/scenariogeneratordata.hpp>
+
+#include <ored/model/crossassetmodeldata.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/progressbar.hpp>
 
@@ -38,17 +40,40 @@ using std::string;
 //! AMC Valuation Engine
 class AMCValuationEngine : public ore::data::ProgressReporter {
 public:
-    //! Constructor
+    //! Constructor for multithreaded runs
+    AMCValuationEngine(
+        const QuantLib::Size nThreads, const QuantLib::Date& today,
+        const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
+        const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
+        const boost::shared_ptr<ore::data::EngineData>& engineData,
+        const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+        const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+        const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
+        const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
+        const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
+        const std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
+            const boost::shared_ptr<ore::data::ReferenceDataManager>&,
+            const boost::shared_ptr<ore::data::TradeFactory>&)>& extraTradeBuilders = {},
+        const std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()>& extraEngineBuilders = {},
+        const std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()>& extraLegBuilders = {},
+        const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
+        const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
+        const bool handlePseudoCurrenciesTodaysMarket = true,
+        const std::function<boost::shared_ptr<ore::analytics::NPVCube>(
+            const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
+            const QuantLib::Size)>& cubeFactory = {});
+
+    //! Constructor for single-threaded runs
     AMCValuationEngine(const boost::shared_ptr<QuantExt::CrossAssetModel>& model,
                        const boost::shared_ptr<ore::analytics::ScenarioGeneratorData>& sgd,
                        const boost::shared_ptr<ore::data::Market>& market, const std::vector<string>& aggDataIndices,
                        const std::vector<string>& aggDataCurrencies);
     //! Build NPV cube
-    void buildCube(
-        //! Portfolio to be priced
-        const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-        //! Object for storing the resulting NPV cube
-        boost::shared_ptr<ore::analytics::NPVCube>& outputCube);
+    void buildCube(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
+                   boost::shared_ptr<ore::analytics::NPVCube>& outputCube);
+
+    // result output cubes (mini-cubes, one per thread)
+    std::vector<boost::shared_ptr<ore::analytics::NPVCube>> outputCubes() const { return miniCubes_; }
 
     //! Set aggregation data
     boost::shared_ptr<ore::analytics::AggregationScenarioData>& aggregationScenarioData() { return asd_; }
@@ -61,12 +86,44 @@ private:
     // valuation times. If processCloseOutDates is false, filter the path on the valuation dates.
     QuantExt::MultiPath effectiveSimulationPath(const QuantExt::MultiPath& p, const bool processCloseOutDates) const;
 
+    // set / get via additional methods
+    boost::shared_ptr<ore::analytics::AggregationScenarioData> asd_;
+
+    // inputs for single-threaded run
     const boost::shared_ptr<QuantExt::CrossAssetModel> model_;
     const boost::shared_ptr<ore::analytics::ScenarioGeneratorData> sgd_;
     const boost::shared_ptr<ore::data::Market> market_;
     const std::vector<string> aggDataIndices_, aggDataCurrencies_;
 
-    boost::shared_ptr<ore::analytics::AggregationScenarioData> asd_;
+    // inputs for muulti-threaded run
+    QuantLib::Size nThreads_;
+    QuantLib::Date today_;
+    boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
+    boost::shared_ptr<CrossAssetModelData> crossAssetModelData_;
+    boost::shared_ptr<ore::data::EngineData> engineData_;
+    boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
+    boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
+    std::string configurationLgmCalibration_;
+    std::string configurationFxCalibration_;
+    std::string configurationEqCalibration_;
+    std::string configurationInfCalibration_;
+    std::string configurationCrCalibration_;
+    std::string configurationFinalModel_;
+    std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
+        const boost::shared_ptr<ore::data::ReferenceDataManager>&, const boost::shared_ptr<ore::data::TradeFactory>&)>
+        extraTradeBuilders_;
+    std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuilders_;
+    std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuilders_;
+    boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
+    ore::data::IborFallbackConfig iborFallbackConfig_;
+    bool handlePseudoCurrenciesTodaysMarket_;
+    std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
+                                                             const std::vector<QuantLib::Date>&, const QuantLib::Size)>
+        cubeFactory_;
+
+    // result cubes
+    std::vector<boost::shared_ptr<ore::analytics::NPVCube>> miniCubes_;
 };
+
 } // namespace analytics
 } // namespace ore

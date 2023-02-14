@@ -18,9 +18,9 @@
 
 #include <orea/engine/amcvaluationengine.hpp>
 
-#include <qle/pricingengines/mcmultilegbaseengine.hpp>
-#include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/methods/multipathvariategenerator.hpp>
+#include <qle/pricingengines/mcmultilegbaseengine.hpp>
 
 #include <ored/portfolio/optionwrapper.hpp>
 
@@ -87,6 +87,39 @@ simulatePathInterface2(const boost::shared_ptr<AmcCalculatorMultiVariates>& amcC
 }
 
 } // namespace
+
+AMCValuationEngine::AMCValuationEngine(
+    const QuantLib::Size nThreads, const QuantLib::Date& today,
+    const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
+    const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
+    const boost::shared_ptr<ore::data::EngineData>& engineData,
+    const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+    const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+    const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
+    const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
+    const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
+    const std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
+        const boost::shared_ptr<ore::data::ReferenceDataManager>&, const boost::shared_ptr<ore::data::TradeFactory>&)>&
+        extraTradeBuilders,
+    const std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()>& extraEngineBuilders,
+    const std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()>& extraLegBuilders,
+    const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
+    const ore::data::IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
+    const std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
+                                                                   const std::vector<QuantLib::Date>&,
+                                                                   const QuantLib::Size)>& cubeFactory)
+    : nThreads_(nThreads), today_(today), scenarioGeneratorData_(scenarioGeneratorData),
+      crossAssetModelData_(crossAssetModelData), engineData_(engineData), curveConfigs_(curveConfigs),
+      todaysMarketParams_(todaysMarketParams), configurationLgmCalibration_(configurationLgmCalibration),
+      configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
+      configurationInfCalibration_(configurationInfCalibration),
+      configurationCrCalibration_(configurationCrCalibration), configurationFinalModel_(configurationFinalModel),
+      extraTradeBuilders_(extraTradeBuilders), extraEngineBuilders_(extraEngineBuilders),
+      extraLegBuilders_(extraLegBuilders), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
+      handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket), cubeFactory_(cubeFactory) {
+    std::cout << nThreads_;
+    std::cout << handlePseudoCurrenciesTodaysMarket_;
+}
 
 AMCValuationEngine::AMCValuationEngine(const boost::shared_ptr<QuantExt::CrossAssetModel>& model,
                                        const boost::shared_ptr<ScenarioGeneratorData>& sgd,
