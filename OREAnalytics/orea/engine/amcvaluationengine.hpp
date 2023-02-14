@@ -92,7 +92,7 @@ private:
     boost::shared_ptr<ore::analytics::AggregationScenarioData> asd_;
 
     // running in single or multi threaded mode?
-    bool useMultithreading_;
+    bool useMultithreading_ = false;
 
     // shared inputs
     const std::vector<string> aggDataIndices_, aggDataCurrencies_;
@@ -130,7 +130,7 @@ private:
                                                              const std::vector<QuantLib::Date>&, const QuantLib::Size)>
         cubeFactory_;
 
-    // result cubes
+    // result cubes for multi-threaded run
     std::vector<boost::shared_ptr<ore::analytics::NPVCube>> miniCubes_;
 };
 
