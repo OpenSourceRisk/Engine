@@ -342,7 +342,7 @@ protected:
     boost::shared_ptr<ore::data::EngineData> stressPricingEngine_;
 
     /*****************
-     * VaR analytics
+     * VAR analytics
      *****************/
     bool salvageCovariance_ = false;
     std::vector<Real> varQuantiles_;
