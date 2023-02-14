@@ -40,7 +40,13 @@ using std::string;
 //! AMC Valuation Engine
 class AMCValuationEngine : public ore::data::ProgressReporter {
 public:
-    //! Constructor for multithreaded runs
+    //! Constructor for single-threaded runs
+    AMCValuationEngine(const boost::shared_ptr<QuantExt::CrossAssetModel>& model,
+                       const boost::shared_ptr<ore::analytics::ScenarioGeneratorData>& sgd,
+                       const boost::shared_ptr<ore::data::Market>& market, const std::vector<string>& aggDataIndices,
+                       const std::vector<string>& aggDataCurrencies);
+
+    //! Constructor for multi threaded runs
     AMCValuationEngine(
         const QuantLib::Size nThreads, const QuantLib::Date& today,
         const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
@@ -63,20 +69,19 @@ public:
             const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
             const QuantLib::Size)>& cubeFactory = {});
 
-    //! Constructor for single-threaded runs
-    AMCValuationEngine(const boost::shared_ptr<QuantExt::CrossAssetModel>& model,
-                       const boost::shared_ptr<ore::analytics::ScenarioGeneratorData>& sgd,
-                       const boost::shared_ptr<ore::data::Market>& market, const std::vector<string>& aggDataIndices,
-                       const std::vector<string>& aggDataCurrencies);
-    //! Build NPV cube
+    //! build cube in single threaded run
     void buildCube(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                    boost::shared_ptr<ore::analytics::NPVCube>& outputCube);
 
-    // result output cubes (mini-cubes, one per thread)
+    //! build cube in multi threaded run
+    void buildCube(const boost::shared_ptr<ore::data::Portfolio>& portfolio);
+
+    // result output cubes for multi threaded runs (mini-cubes, one per thread)
     std::vector<boost::shared_ptr<ore::analytics::NPVCube>> outputCubes() const { return miniCubes_; }
 
     //! Set aggregation data
     boost::shared_ptr<ore::analytics::AggregationScenarioData>& aggregationScenarioData() { return asd_; }
+
     //! Get aggregation data
     const boost::shared_ptr<ore::analytics::AggregationScenarioData>& aggregationScenarioData() const { return asd_; }
 
