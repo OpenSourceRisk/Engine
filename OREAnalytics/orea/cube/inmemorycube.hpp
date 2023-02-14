@@ -29,10 +29,7 @@
 #include <ql/errors.hpp>
 
 #include <boost/make_shared.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/map.hpp>
 #include <orea/cube/npvcube.hpp>
-#include <ored/utilities/serializationdate.hpp>
 #include <set>
 
 namespace ore {
@@ -66,31 +63,9 @@ public:
         }
         
     }
-    //! construct from file
-    InMemoryCubeBase(const std::string& fileName) {
-        load(fileName);
-        QL_REQUIRE(numIds() > 0 && numDates() > 0 && samples() > 0,
-                   "InMemoryCube::InMemoryCube failed to load from file " << fileName);
-    }
 
     //! default constructor
     InMemoryCubeBase() {}
-
-    //! load cube from an archive
-    void load(const std::string& fileName) override {
-        std::ifstream ifs(fileName.c_str(), std::fstream::binary);
-        QL_REQUIRE(ifs.is_open(), "error opening file " << fileName);
-        boost::archive::binary_iarchive ia(ifs);
-        ia >> *this;
-    }
-
-    //! write cube to an archive
-    void save(const std::string& fileName) const override {
-        std::ofstream ofs(fileName.c_str(), std::fstream::binary);
-        QL_REQUIRE(ofs.is_open(), "error opening file " << fileName);
-        boost::archive::binary_oarchive oa(ofs);
-        oa << *this;
-    }
 
     //! Return the length of each dimension
     Size numIds() const override { return idIdx_.size(); }
@@ -113,26 +88,13 @@ protected:
         QL_REQUIRE(d < depth(), "Out of bounds on depth (d=" << d << ", depth=" << depth() << ")");
     }
 
-private:
-    friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int) {
-        ar& asof_;
-        ar& idIdx_;
-        ar& dates_;
-        ar& samples_;
-        ar& t0Data_;
-        ar& data_;
-    }
-
-private:
     QuantLib::Date asof_;
-    std::map<std::string, Size> idIdx_;
     vector<QuantLib::Date> dates_;
     Size samples_;
-
-protected:
     vector<T> t0Data_;
     vector<vector<vector<T>>> data_;
+
+    std::map<std::string, Size> idIdx_;
 };
 
 //! InMemoryCube of fixed depth 1
