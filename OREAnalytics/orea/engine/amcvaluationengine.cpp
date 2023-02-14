@@ -243,10 +243,6 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
             amcCalc =
                 trade->instrument()->qlInstrument(true)->result<boost::shared_ptr<AmcCalculator>>("amcCalculator");
             LOG("AMCCalculator extracted for \"" << trade->id() << "\"");
-        } catch (const std::exception& e) {
-            WLOG("could not extract AMCCalculator for trade \"" << tId << "\": " << e.what());
-        }
-        if (amcCalc != nullptr) {
             amcCalculators.push_back(amcCalc);
             Real effMult = trade->instrument()->multiplier();
             auto ow = boost::dynamic_pointer_cast<OptionWrapper>(trade->instrument());
@@ -259,6 +255,8 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
             tradeId.push_back(currentTradeIdx);
             tradeLabel.push_back(tId);
             // TODO additional instruments (fees)
+        } catch (const std::exception& e) {
+            ALOG(StructuredTradeErrorMessage(trade, "Error building trade for AMC simulation", e.what()));
         }
         updateProgress(currentTradeIdx, portfolio->size());
     }

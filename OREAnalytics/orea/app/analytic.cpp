@@ -788,9 +788,7 @@ boost::shared_ptr<EngineFactory> XvaAnalytic::amcEngineFactory() {
 
 void XvaAnalytic::buildAmcPortfolio() {
     LOG("XVA: buildAmcPortfolio");
-    std::string message = "XVA: Build AMC portfolio ";
-    auto progressBar = boost::make_shared<SimpleProgressBar>(message, tab_, progressBarWidth_);
-    auto progressLog = boost::make_shared<ProgressLog>(message);
+    out_ << setw(tab_) << "XVA: Build AMC portfolio " << flush;
 
     LOG("buildAmcPortfolio: Check sim dates");
     std::vector<Date> simDates =
@@ -810,41 +808,19 @@ void XvaAnalytic::buildAmcPortfolio() {
 
     LOG("Build Portfolio with AMC Engine factory and select amc-enabled trades")
     amcPortfolio_ = boost::make_shared<Portfolio>();
-    Size count = 0, amcCount = 0, total = portfolio->size();
-    Real timingTraining = 0.0;
     for (auto const& [tradeId, trade] : portfolio->trades()) {
-        bool tradeBuilt = false;
         if (inputs_->amcTradeTypes().find(trade->tradeType()) != inputs_->amcTradeTypes().end()) {
             try {
                 trade->reset();
                 trade->build(factory);
-                tradeBuilt = true;
+                amcPortfolio_->add(trade);
+                DLOG("trade " << tradeId << " is added to amc portfolio");
             } catch (const std::exception& e) {
                 ALOG(StructuredTradeErrorMessage(trade, "Error building trade for AMC simulation", e.what()));
             }
-            if (tradeBuilt) {
-                try {
-                    boost::timer::cpu_timer timer;
-                    // retrieving the amcCalculator triggers the training!
-                    trade->instrument()->qlInstrument()->result<boost::shared_ptr<AmcCalculator>>("amcCalculator");
-                    timer.stop();
-                    Real tmp = timer.elapsed().wall * 1e-6;
-                    amcPortfolio_->add(trade);
-                    LOG("trade " << tradeId << " is added to amc portfolio (training took " << tmp << " ms), pv "
-                        << trade->instrument()->NPV() << ", mat " << io::iso_date(trade->maturity()));
-                    timingTraining += tmp;
-                    ++amcCount;
-                } catch (const std::exception& e) {
-                    ALOG(StructuredTradeErrorMessage(trade, "Error extracting AMC calculator from trade.", e.what()));
-                }
-            }
         }
-        ++count;
-        progressBar->updateProgress(count, total);
-        progressLog->updateProgress(count, total);
     }
-    LOG("added " << amcCount << " of out " << count << " trades to amc simulation, training took " << timingTraining
-                 << " ms, avg. " << timingTraining / static_cast<Real>(amcCount) << " ms/trade");
+    LOG("AMC portfolio built, size is " << amcPortfolio_->size());
 
     out_ << "OK" << endl;
 
