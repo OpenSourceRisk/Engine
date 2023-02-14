@@ -714,9 +714,9 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
     // set cube interpretation depending on close-out lag
 
     if (configurations_.scenarioGeneratorData->withCloseOutLag())
-        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(grid_, inputs_->flipViewXVA());
+        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(scenarioData_, grid_, inputs_->flipViewXVA());
     else
-        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(inputs_->flipViewXVA());
+        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_, inputs_->flipViewXVA());
 
     // log message
 
@@ -990,9 +990,10 @@ void XvaAnalytic::runPostProcessor() {
         boost::shared_ptr<ScenarioGeneratorData> sgd = configurations_.scenarioGeneratorData;
         LOG("withCloseOutLag=" << (sgd->withCloseOutLag() ? "Y" : "N"));
         if (sgd->withCloseOutLag())
-            cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->getGrid(), analytics["flipViewXVA"]);
+            cubeInterpreter_ =
+                boost::make_shared<MporGridCubeInterpretation>(scenarioData_, sgd->getGrid(), analytics["flipViewXVA"]);
         else
-            cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(analytics["flipViewXVA"]);
+            cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_, analytics["flipViewXVA"]);
     }
 
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {

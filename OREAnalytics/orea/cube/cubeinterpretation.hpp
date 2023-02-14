@@ -61,13 +61,11 @@ public:
     virtual bool hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const = 0;
 
     //! Retrieve a (default date) simulated risk factor value from AggregationScenarioData
-    virtual Real getDefaultAggrionScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
-                                               const AggregationScenarioDataType& dataType, Size dateIdx,
+    virtual Real getDefaultAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx,
                                                Size sampleIdx, const std::string& qualifier = "") const = 0;
 
     //! Retrieve a (default date) simulated risk factor value from AggregationScenarioData
-    virtual Real getCloseOutAggrionScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
-                                                const AggregationScenarioDataType& dataType, Size dateIdx,
+    virtual Real getCloseOutAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx,
                                                 Size sampleIdx, const std::string& qualifier = "") const = 0;
 
     //! Number of Calendar Days between a given default date and corresponding close-out date
@@ -80,14 +78,17 @@ public:
 class RegularCubeInterpretation : public CubeInterpretation {
 public:
     //! ctor (default)
-    RegularCubeInterpretation() : npvIdx_(0), mporFlowsIdx_(1), flipViewXVA_(false) {}
+    explicit RegularCubeInterpretation(const boost::shared_ptr<AggregationScenarioData>& aggScenData)
+        : aggScenData_(aggScenData), npvIdx_(0), mporFlowsIdx_(1), flipViewXVA_(false) {}
 
     //! ctor
-    RegularCubeInterpretation(Size npvIdx, Size mporFlowsIdx = 1)
-        : npvIdx_(npvIdx), mporFlowsIdx_(mporFlowsIdx), flipViewXVA_(false) {}
+    RegularCubeInterpretation(const boost::shared_ptr<AggregationScenarioData>& aggScenData, Size npvIdx,
+                              Size mporFlowsIdx = 1)
+        : aggScenData_(aggScenData), npvIdx_(npvIdx), mporFlowsIdx_(mporFlowsIdx), flipViewXVA_(false) {}
 
     //! ctor
-    RegularCubeInterpretation(bool flipViewXVA) : npvIdx_(0), mporFlowsIdx_(1), flipViewXVA_(flipViewXVA) {}
+    RegularCubeInterpretation(const boost::shared_ptr<AggregationScenarioData>& aggScenData, bool flipViewXVA)
+        : aggScenData_(aggScenData), npvIdx_(0), mporFlowsIdx_(1), flipViewXVA_(flipViewXVA) {}
 
     Real getGenericValue(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx,
                          Size depth) const override;
@@ -100,17 +101,16 @@ public:
 
     bool hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const override;
 
-    Real getDefaultAggrionScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
-                                       const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
+    Real getDefaultAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
                                        const std::string& qualifier = "") const override;
 
-    Real getCloseOutAggrionScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
-                                        const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
+    Real getCloseOutAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
                                         const std::string& qualifier = "") const override;
 
     Size getMporCalendarDays(const boost::shared_ptr<NPVCube>& cube, Size dateIdx) const override;
 
 private:
+    boost::shared_ptr<AggregationScenarioData> aggScenData_;
     Size npvIdx_, mporFlowsIdx_;
     bool flipViewXVA_;
 };
@@ -121,19 +121,23 @@ private:
 class MporGridCubeInterpretation : public CubeInterpretation {
 public:
     //! ctor (default)
-    MporGridCubeInterpretation(const boost::shared_ptr<DateGrid>& dateGrid)
-        : defaultDateNpvIdx_(0), closeOutDateNpvIdx_(1), mporFlowsIdx_(2), dateGrid_(dateGrid), flipViewXVA_(false) {}
-
-    //! ctor
-    MporGridCubeInterpretation(const boost::shared_ptr<DateGrid>& dateGrid, Size defaultDateNpvIdx,
-                               Size closeOutDateNpvIdx, Size mporFlowsIdx = 2)
-        : defaultDateNpvIdx_(defaultDateNpvIdx), closeOutDateNpvIdx_(closeOutDateNpvIdx), mporFlowsIdx_(mporFlowsIdx),
+    MporGridCubeInterpretation(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
+                               const boost::shared_ptr<DateGrid>& dateGrid)
+        : aggScenData_(aggScenData), defaultDateNpvIdx_(0), closeOutDateNpvIdx_(1), mporFlowsIdx_(2),
           dateGrid_(dateGrid), flipViewXVA_(false) {}
 
     //! ctor
-    MporGridCubeInterpretation(const boost::shared_ptr<DateGrid>& dateGrid, bool flipViewXVA)
-        : defaultDateNpvIdx_(0), closeOutDateNpvIdx_(1), mporFlowsIdx_(2), dateGrid_(dateGrid),
-          flipViewXVA_(flipViewXVA) {}
+    MporGridCubeInterpretation(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
+                               const boost::shared_ptr<DateGrid>& dateGrid, Size defaultDateNpvIdx,
+                               Size closeOutDateNpvIdx, Size mporFlowsIdx = 2)
+        : aggScenData_(aggScenData), defaultDateNpvIdx_(defaultDateNpvIdx), closeOutDateNpvIdx_(closeOutDateNpvIdx),
+          mporFlowsIdx_(mporFlowsIdx), dateGrid_(dateGrid), flipViewXVA_(false) {}
+
+    //! ctor
+    MporGridCubeInterpretation(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
+                               const boost::shared_ptr<DateGrid>& dateGrid, bool flipViewXVA)
+        : aggScenData_(aggScenData), defaultDateNpvIdx_(0), closeOutDateNpvIdx_(1), mporFlowsIdx_(2),
+          dateGrid_(dateGrid), flipViewXVA_(flipViewXVA) {}
 
     Real getGenericValue(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx,
                          Size depth) const override;
@@ -146,17 +150,16 @@ public:
 
     bool hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const override;
 
-    Real getDefaultAggrionScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
-                                       const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
+    Real getDefaultAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
                                        const std::string& qualifier = "") const override;
 
-    Real getCloseOutAggrionScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
-                                        const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
+    Real getCloseOutAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
                                         const std::string& qualifier = "") const override;
 
     Size getMporCalendarDays(const boost::shared_ptr<NPVCube>& cube, Size dateIdx) const override;
 
 private:
+    boost::shared_ptr<AggregationScenarioData> aggScenData_;
     Size defaultDateNpvIdx_, closeOutDateNpvIdx_, mporFlowsIdx_;
     boost::shared_ptr<DateGrid> dateGrid_;
     bool flipViewXVA_;
