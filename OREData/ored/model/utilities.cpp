@@ -166,10 +166,11 @@ std::string getCalibrationDetails(LgmCalibrationInfo& info,
         << " irlgm1fHwSigma = " << modelHwSigma << "\n";
     return log.str();
 }
+
 std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                                   const boost::shared_ptr<FxBsParametrization>& parametrization,
                                   const boost::shared_ptr<Parametrization>& domesticIrModel) {
-    auto lgmParametrization = boost::dynamic_pointer_cast<IrLgm1fParametrization>(parametrization);
+    auto lgmParametrization = boost::dynamic_pointer_cast<IrLgm1fParametrization>(domesticIrModel);
     if (lgmParametrization) {
         return getCalibrationDetails(basket, parametrization, lgmParametrization);
     } else {
