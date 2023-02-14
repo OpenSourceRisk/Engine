@@ -509,10 +509,11 @@ AMCValuationEngine::AMCValuationEngine(
     const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
     const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
     const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
+    const std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>(
+        const boost::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& grid)>& amcEngineBuilders,
     const std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
         const boost::shared_ptr<ore::data::ReferenceDataManager>&, const boost::shared_ptr<ore::data::TradeFactory>&)>&
         extraTradeBuilders,
-    const std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()>& extraEngineBuilders,
     const std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()>& extraLegBuilders,
     const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
     const ore::data::IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
@@ -526,7 +527,7 @@ AMCValuationEngine::AMCValuationEngine(
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
       configurationCrCalibration_(configurationCrCalibration), configurationFinalModel_(configurationFinalModel),
-      extraTradeBuilders_(extraTradeBuilders), extraEngineBuilders_(extraEngineBuilders),
+      amcEngineBuilders_(amcEngineBuilders), extraTradeBuilders_(extraTradeBuilders),
       extraLegBuilders_(extraLegBuilders), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
       handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket), cubeFactory_(cubeFactory) {
 #ifndef QL_ENABLE_SESSIONS

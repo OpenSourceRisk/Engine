@@ -811,8 +811,11 @@ void XvaAnalytic::buildAmcPortfolio() {
     for (auto const& [tradeId, trade] : portfolio->trades()) {
         if (inputs_->amcTradeTypes().find(trade->tradeType()) != inputs_->amcTradeTypes().end()) {
             try {
-                trade->reset();
-                trade->build(factory);
+                // building the trades is only required for single-threaded runs
+                if (inputs_->nThreads() == 1) {
+                    trade->reset();
+                    trade->build(factory);
+                }
                 amcPortfolio_->add(trade);
                 DLOG("trade " << tradeId << " is added to amc portfolio");
             } catch (const std::exception& e) {
@@ -827,25 +830,9 @@ void XvaAnalytic::buildAmcPortfolio() {
     LOG("XVA: buildAmcPortfolio completed");
 }
 
-
 void XvaAnalytic::amcRun(bool doClassicRun) {
 
     LOG("XVA: amcRun");
-
-    initCubeDepth();
-    
-    initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
-
-    AMCValuationEngine amcEngine(model_, inputs_->scenarioGeneratorData(), market_,
-                                 inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
-                                 inputs_->exposureSimMarketParams()->additionalScenarioDataCcys());
-    std::string message = "XVA: Build AMC Cube " + std::to_string(amcPortfolio_->size()) + " x " +
-        std::to_string(grid_->valuationDates().size()) + " x " + std::to_string(samples_) +
-        "... ";
-    auto progressBar = boost::make_shared<SimpleProgressBar>(message, tab_, progressBarWidth_);
-    auto progressLog = boost::make_shared<ProgressLog>("Building AMC Cube...");
-    amcEngine.registerProgressIndicator(progressBar);
-    amcEngine.registerProgressIndicator(progressLog);
 
     if (!scenarioData_) {
         LOG("XVA: Create asd " << grid_->valuationDates().size() << " x " << samples_);
@@ -853,17 +840,56 @@ void XvaAnalytic::amcRun(bool doClassicRun) {
         simMarket_->aggregationScenarioData() = scenarioData_;
     }
 
-    // We only need to generate asd, if this does not happen in the classic run
-    if (!doClassicRun)
-        amcEngine.aggregationScenarioData() = scenarioData_;
+    initCubeDepth();
 
-    amcEngine.buildCube(amcPortfolio_, amcCube_);
+    std::string message = "XVA: Build AMC Cube " + std::to_string(amcPortfolio_->size()) + " x " +
+                          std::to_string(grid_->valuationDates().size()) + " x " + std::to_string(samples_) + "... ";
+    auto progressBar = boost::make_shared<SimpleProgressBar>(message, tab_, progressBarWidth_);
+    auto progressLog = boost::make_shared<ProgressLog>("Building AMC Cube...");
+
+    if (inputs_->nThreads() == 1) {
+        initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
+        AMCValuationEngine amcEngine(model_, inputs_->scenarioGeneratorData(), market_,
+                                     inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
+                                     inputs_->exposureSimMarketParams()->additionalScenarioDataCcys());
+        amcEngine.registerProgressIndicator(progressBar);
+        amcEngine.registerProgressIndicator(progressLog);
+        // We only need to generate asd, if this does not happen in the classic run
+        if (!doClassicRun)
+            amcEngine.aggregationScenarioData() = scenarioData_;
+        amcEngine.buildCube(amcPortfolio_, amcCube_);
+    } else {
+        auto cubeFactory = [this](const QuantLib::Date& asof, const std::set<std::string>& ids,
+                                  const std::vector<QuantLib::Date>& dates,
+                                  const Size samples) -> boost::shared_ptr<NPVCube> {
+            if (cubeDepth_ == 1)
+                return boost::make_shared<ore::analytics::SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
+            else
+                return boost::make_shared<ore::analytics::SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples,
+                                                                                        cubeDepth_, 0.0f);
+        };
+        AMCValuationEngine amcEngine(
+            inputs_->nThreads(), inputs_->asof(), samples_, inputs_->scenarioGeneratorData(),
+            inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
+            inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(), inputs_->crossAssetModelData(),
+            inputs_->amcPricingEngine(), inputs_->curveConfigs()[0], configurations_.todaysMarketParams,
+            inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
+            inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
+            inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"), getAmcEngineBuilders, {}, {},
+            inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory);
+        amcEngine.registerProgressIndicator(progressBar);
+        amcEngine.registerProgressIndicator(progressLog);
+        // as for the single-threaded case, we only need to generate asd, if this does not happen in the classic run
+        if (!doClassicRun)
+            amcEngine.aggregationScenarioData() = scenarioData_;
+        amcEngine.buildCube(amcPortfolio_);
+        amcCube_ = boost::make_shared<JointNPVCube>(amcEngine.outputCubes());
+    }
 
     out_ << "OK" << endl;
 
     LOG("XVA: amcRun completed");
 }
-    
 
 void XvaAnalytic::runPostProcessor() {
     boost::shared_ptr<NettingSetManager> netting = inputs_->nettingSetManager();
