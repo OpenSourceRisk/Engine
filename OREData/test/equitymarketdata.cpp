@@ -206,10 +206,9 @@ BOOST_AUTO_TEST_CASE(testEqCurveConfigBadLoad) {
     // check that the root node is as expected
     ore::data::XMLNode* badNode = testBadDoc.getFirstNode("CurveConfiguration");
     BOOST_CHECK_NO_THROW(ore::data::XMLUtils::checkNode(badNode, "CurveConfiguration"));
-    ore::data::CurveConfigurations cc;
+    ore::data::CurveConfigurations cc;    
     BOOST_CHECK_NO_THROW(cc.fromXML(badNode)); // the spot price is missing, but the correct behaviour is to log error and move on
-    boost::shared_ptr<ore::data::EquityCurveConfig> ec = cc.equityCurveConfig("SP5Mini");
-    BOOST_CHECK(!ec); // this checks that the XML did not actually get loaded
+    BOOST_CHECK_THROW(cc.equityCurveConfig("SP5Mini"), QuantLib::Error); // this checks that the XML throws when we try to load
 }
 
 BOOST_AUTO_TEST_SUITE_END()

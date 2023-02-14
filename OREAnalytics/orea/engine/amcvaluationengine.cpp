@@ -286,7 +286,7 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
         // TODO we do not need this if there are no amc calculators implementing interface 2
         for (Size k = 0; k < nStates; ++k) {
             for (Size j = 0; j < pathTimes.size(); ++j) {
-                paths[j][k].set(i, path[k][j]);
+                paths[j][k].set(i, path[k][j + 1]);
             }
         }
 

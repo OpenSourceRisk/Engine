@@ -1033,9 +1033,9 @@ void OREApp::buildNPVCube() {
     }
 
     if (useCloseOutLag_)
-        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(grid_, flipViewXVA);
+        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(scenarioData_, grid_, flipViewXVA);
     else
-        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(flipViewXVA);
+        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_, flipViewXVA);
 
     vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators;
 
@@ -1349,9 +1349,10 @@ void OREApp::runPostProcessor() {
         boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
         LOG("withCloseOutLag=" << (sgd->withCloseOutLag() ? "Y" : "N"));
         if (sgd->withCloseOutLag())
-            cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->getGrid(), analytics["flipViewXVA"]);
+            cubeInterpreter_ =
+                boost::make_shared<MporGridCubeInterpretation>(scenarioData_, sgd->getGrid(), analytics["flipViewXVA"]);
         else
-            cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(analytics["flipViewXVA"]);
+            cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_, analytics["flipViewXVA"]);
     }
 
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
