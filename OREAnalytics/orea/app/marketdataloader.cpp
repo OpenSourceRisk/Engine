@@ -20,6 +20,7 @@
 #include <qle/termstructures/optionpricesurface.hpp>
 #include <ored/portfolio/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/indexcreditdefaultswapoption.hpp>
+#include <ored/utilities/to_string.hpp>
 
 using namespace ore::data;
 using QuantExt::OptionPriceSurface;
@@ -165,6 +166,16 @@ void MarketDataLoader::populateFixings(
 
         if (fixings_.size() > 0)
             impl()->retrieveFixings(loader_, fixings_, lastAvailableFixingLookupMap);
+
+        // check and alert any missing fixings
+        for (const auto& f : fixings_) {
+            for (const auto& d : f.second) {
+                if (!loader_->hasFixing(f.first, d)) {
+                    ALOG(StructuredFixingErrorMessage(f.first, "Missing fixing", 
+                        "Could not find required fixing id " + f.first + " for data " + ore::data::to_string(d)));
+                }
+            }
+        }
     }
 }
 

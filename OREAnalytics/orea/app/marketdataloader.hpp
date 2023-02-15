@@ -31,6 +31,16 @@ namespace analytics {
 typedef std::map<QuantLib::Date, std::set<std::string>> QuoteMap;
 typedef std::map<std::string, std::set<QuantLib::Date>> FixingMap;
 
+//! Utility class for Structured Fixing errors
+class StructuredFixingErrorMessage : public StructuredMessage {
+public:
+    StructuredFixingErrorMessage(const std::string& fixingId, const std::string& exceptionType,
+                                const std::string& exceptionWhat = "")
+        : StructuredMessage(
+              "Error", "Fixing", exceptionWhat,
+              std::map<std::string, std::string>({{"exceptionType", exceptionType}, {"fixingId", fixingId}})) {}
+};
+
 class MarketDataLoaderImpl {
 public:
     MarketDataLoaderImpl() {}

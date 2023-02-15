@@ -81,6 +81,8 @@ public:
 
     virtual std::set<Fixing> loadFixings() const = 0;
 
+    virtual bool hasFixing(const string& name, const QuantLib::Date& d) const;
+
     //! Default implementation for getFixing
     virtual Fixing getFixing(const string& name, const QuantLib::Date& d) const;
     //@}
