@@ -74,8 +74,8 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
     if (auto ibor = boost::dynamic_pointer_cast<IborIndex>(index)) {
         Date d1 = ibor->valueDate(fixingDate);
         Date d2 = ibor->maturityDate(d1);
-        Time T1 = p_->termStructure()->timeFromReference(d1);
-        Time T2 = p_->termStructure()->timeFromReference(d2);
+        Time T1 = std::max(t, p_->termStructure()->timeFromReference(d1));
+        Time T2 = std::max(T1, p_->termStructure()->timeFromReference(d2));
         Time dt = ibor->dayCounter().yearFraction(d1, d2);
         // reducedDiscountBond is faster to compute, there we use this here instead of discountBond
         RandomVariable disc1 = reducedDiscountBond(t, T1, x, ibor->forwardingTermStructure());
@@ -100,9 +100,10 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
                 Date fixingValueDate = swap->iborIndex()->fixingCalendar().advance(
                     cpn->fixingDate(), swap->iborIndex()->fixingDays(), Days);
                 Date fixingEndDate = cpn->fixingEndDate();
-                Time T1 = p_->termStructure()->timeFromReference(fixingValueDate);
-                Time T2 = p_->termStructure()->timeFromReference(fixingEndDate); // accounts for QL_INDEXED_COUPON
-                Time T3 = p_->termStructure()->timeFromReference(cpn->date());
+                Time T1 = std::max(t, p_->termStructure()->timeFromReference(fixingValueDate));
+                Time T2 = std::max(
+                    T1, p_->termStructure()->timeFromReference(fixingEndDate)); // accounts for QL_INDEXED_COUPON
+                Time T3 = std::max(T2, p_->termStructure()->timeFromReference(cpn->date()));
                 RandomVariable disc1 = reducedDiscountBond(t, T1, x, swap->forwardingTermStructure());
                 RandomVariable disc2 = reducedDiscountBond(t, T2, x, swap->forwardingTermStructure());
                 Real adjFactor =
@@ -117,9 +118,9 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
             } else if (auto cpn = boost::dynamic_pointer_cast<OvernightIndexedCoupon>(c)) {
                 Date start = cpn->valueDates().front();
                 Date end = cpn->valueDates().back();
-                Time T1 = p_->termStructure()->timeFromReference(start);
-                Time T2 = p_->termStructure()->timeFromReference(end);
-                Time T3 = p_->termStructure()->timeFromReference(cpn->date());
+                Time T1 = std::max(t, p_->termStructure()->timeFromReference(start));
+                Time T2 = std::max(T1, p_->termStructure()->timeFromReference(end));
+                Time T3 = std::max(T2, p_->termStructure()->timeFromReference(cpn->date()));
                 RandomVariable disc1 = reducedDiscountBond(t, T1, x, swap->forwardingTermStructure());
                 RandomVariable disc2 = reducedDiscountBond(t, T2, x, swap->forwardingTermStructure());
                 Real adjFactor =
@@ -148,7 +149,7 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
             auto cpn = boost::dynamic_pointer_cast<FixedRateCoupon>(c);
             QL_REQUIRE(cpn, "LgmVectorised::fixing(): excepted fixed coupon");
             Date d = cpn->date();
-            Time T = p_->termStructure()->timeFromReference(d);
+            Time T = std::max(t, p_->termStructure()->timeFromReference(d));
             denominator +=
                 reducedDiscountBond(t, T, x, swapDiscountCurve) * RandomVariable(x.size(), cpn->accrualPeriod());
         }
