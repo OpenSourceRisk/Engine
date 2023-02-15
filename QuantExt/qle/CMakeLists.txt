@@ -26,8 +26,8 @@ calendars/unitedarabemirates.cpp
 calendars/wmr.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
-cashflows/bondtrscashflow.cpp
 cashflows/blackovernightindexedcouponpricer.cpp
+cashflows/bondtrscashflow.cpp
 cashflows/brlcdicouponpricer.cpp
 cashflows/cashflows.cpp
 cashflows/cashflowtable.cpp
@@ -71,6 +71,7 @@ currencies/metals.cpp
 indexes/bondindex.cpp
 indexes/commodityindex.cpp
 indexes/compoequityindex.cpp
+indexes/compositeindex.cpp
 indexes/equityindex.cpp
 indexes/fallbackiborindex.cpp
 indexes/fallbackovernightindex.cpp
@@ -79,7 +80,6 @@ indexes/genericiborindex.cpp
 indexes/ibor/ameribor.cpp
 indexes/ibor/boebaserate.cpp
 indexes/ibor/brlcdi.cpp
-indexes/compositeindex.cpp
 indexes/ibor/ester.cpp
 indexes/ibor/primeindex.cpp
 indexes/ibor/sofr.cpp
@@ -169,8 +169,8 @@ models/fxbspiecewiseconstantparametrization.cpp
 models/fxeqoptionhelper.cpp
 models/gaussian1dcrossassetadaptor.cpp
 models/gaussianlhplossmodel.cpp
-models/hwmodel.cpp
 models/hullwhitebucketing.cpp
+models/hwmodel.cpp
 models/infjyparameterization.cpp
 models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
@@ -195,12 +195,12 @@ models/yoyswaphelper.cpp
 models/zeroinflationmodeltermstructure.cpp
 pricingengines/accrualbondrepoengine.cpp
 pricingengines/analyticbarrierengine.cpp
-pricingengines/analyticdoublebarrierengine.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
 pricingengines/analyticcclgmfxoptionengine.cpp
 pricingengines/analyticdigitalamericanengine.cpp
 pricingengines/analyticdkcpicapfloorengine.cpp
 pricingengines/analyticdoublebarrierbinaryengine.cpp
+pricingengines/analyticdoublebarrierengine.cpp
 pricingengines/analyticeuropeanengine.cpp
 pricingengines/analyticeuropeanforwardengine.cpp
 pricingengines/analyticjycpicapfloorengine.cpp
@@ -213,8 +213,8 @@ pricingengines/blackbondoptionengine.cpp
 pricingengines/blackcdsoptionengine.cpp
 pricingengines/blackindexcdsoptionengine.cpp
 pricingengines/commodityapoengine.cpp
-pricingengines/commodityspreadoptionengine.cpp
 pricingengines/commodityschwartzfutureoptionengine.cpp
+pricingengines/commodityspreadoptionengine.cpp
 pricingengines/commodityswaptionengine.cpp
 pricingengines/cpibacheliercapfloorengine.cpp
 pricingengines/cpiblackcapfloorengine.cpp
@@ -537,9 +537,9 @@ instruments/tenorbasisswap.hpp
 instruments/vanillaforwardoption.hpp
 instruments/varianceswap.hpp
 interpolators/optioninterpolator2d.hpp
+math/blockmatrixinverse.hpp
 math/constantinterpolation.hpp
 math/covariancesalvage.hpp
-math/blockmatrixinverse.hpp
 math/deltagammavar.hpp
 math/differentialevolution_mt.hpp
 math/fillemptymatrix.hpp
@@ -644,12 +644,12 @@ models/zeroinflationmodeltermstructure.hpp
 pricingengines/accrualbondrepoengine.hpp
 pricingengines/amccalculator.hpp
 pricingengines/analyticbarrierengine.hpp
-pricingengines/analyticdoublebarrierengine.hpp
 pricingengines/analyticcashsettledeuropeanengine.hpp
 pricingengines/analyticcclgmfxoptionengine.hpp
 pricingengines/analyticdigitalamericanengine.hpp
 pricingengines/analyticdkcpicapfloorengine.hpp
 pricingengines/analyticdoublebarrierbinaryengine.hpp
+pricingengines/analyticdoublebarrierengine.hpp
 pricingengines/analyticeuropeanengine.hpp
 pricingengines/analyticeuropeanforwardengine.hpp
 pricingengines/analyticjycpicapfloorengine.hpp
@@ -662,8 +662,8 @@ pricingengines/blackbondoptionengine.hpp
 pricingengines/blackcdsoptionengine.hpp
 pricingengines/blackindexcdsoptionengine.hpp
 pricingengines/commodityapoengine.hpp
-pricingengines/commodityspreadoptionengine.hpp
 pricingengines/commodityschwartzfutureoptionengine.hpp
+pricingengines/commodityspreadoptionengine.hpp
 pricingengines/commodityswaptionengine.hpp
 pricingengines/cpibacheliercapfloorengine.hpp
 pricingengines/cpiblackcapfloorengine.hpp
@@ -673,8 +673,8 @@ pricingengines/depositengine.hpp
 pricingengines/discountingbondrepoengine.hpp
 pricingengines/discountingbondtrsengine.hpp
 pricingengines/discountingcommodityforwardengine.hpp
-pricingengines/discountingcurrencyswapengine.hpp
 pricingengines/discountingcreditlinkedswapengine.hpp
+pricingengines/discountingcurrencyswapengine.hpp
 pricingengines/discountingequityforwardengine.hpp
 pricingengines/discountingforwardbondengine.hpp
 pricingengines/discountingfxforwardengine.hpp

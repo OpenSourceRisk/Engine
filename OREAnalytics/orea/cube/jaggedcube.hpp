@@ -28,7 +28,6 @@
 #include <vector>
 
 #include <boost/make_shared.hpp>
-#include <boost/serialization/vector.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/trade.hpp>
@@ -175,22 +174,6 @@ public:
                 dateLen++;
             blocks_.push_back(TradeBlock<T>(dateLen, depth, samples));
         }
-    }
-
-    //! load cube from an archive
-    void load(const std::string& fileName) override {
-        std::ifstream ifs(fileName.c_str(), std::fstream::binary);
-        QL_REQUIRE(ifs.is_open(), "error opening file " << fileName);
-        boost::archive::binary_iarchive ia(ifs);
-        ia >> *this;
-    }
-
-    //! write cube to an archive
-    void save(const std::string& fileName) const override {
-        std::ofstream ofs(fileName.c_str(), std::fstream::binary);
-        QL_REQUIRE(ofs.is_open(), "error opening file " << fileName);
-        boost::archive::binary_oarchive oa(ofs);
-        oa << *this;
     }
 
     //! Return the length of each dimension

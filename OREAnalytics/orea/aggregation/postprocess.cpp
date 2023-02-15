@@ -78,7 +78,7 @@ PostProcess::PostProcess(
     // set a default value for the cube interpretation object if it is NULL
     if (!cubeInterpretation_) {
         WLOG("cube interpretation is not set, use regular");
-        cubeInterpretation_ = boost::make_shared<RegularCubeInterpretation>();
+        cubeInterpretation_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_);
     }
     boost::shared_ptr<RegularCubeInterpretation> regularCubeInterpretation =
         boost::dynamic_pointer_cast<RegularCubeInterpretation>(cubeInterpretation_);

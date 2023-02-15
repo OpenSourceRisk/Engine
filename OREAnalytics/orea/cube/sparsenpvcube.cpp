@@ -24,8 +24,6 @@
 #include <ql/math/comparison.hpp>
 
 #include <boost/make_shared.hpp>
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/vector.hpp>
 
 #include <fstream>
 
@@ -53,20 +51,6 @@ SparseNpvCube<T>::SparseNpvCube(const Date& asof, const std::set<std::string>& i
     for (const auto& id : ids) {
         ids_[id] = pos++;
     }
-}
-
-template <typename T> void SparseNpvCube<T>::load(const std::string& fileName) {
-    std::ifstream ifs(fileName.c_str(), std::fstream::binary);
-    QL_REQUIRE(ifs.is_open(), "error opening file " << fileName);
-    boost::archive::binary_iarchive ia(ifs);
-    ia >> *this;
-}
-
-template <typename T> void SparseNpvCube<T>::save(const std::string& fileName) const {
-    std::ofstream ofs(fileName.c_str(), std::fstream::binary);
-    QL_REQUIRE(ofs.is_open(), "error opening file " << fileName);
-    boost::archive::binary_oarchive oa(ofs);
-    oa << *this;
 }
 
 template <typename T> Size SparseNpvCube<T>::numIds() const { return ids_.size(); }
@@ -127,21 +111,10 @@ template <typename T> void SparseNpvCube<T>::check(Size i, Size j, Size k, Size 
     QL_REQUIRE(d < depth(), "Out of bounds on depth (d=" << d << ", depth=" << depth() << ")");
 }
 
-template <typename T> template <typename Archive> void SparseNpvCube<T>::serialize(Archive& ar, const unsigned int) {
-    ar& asof_;
-    ar& ids_;
-    ar& dates_;
-    ar& samples_;
-    ar& depth_;
-    ar& data_;
-}
-
 // template instantiations for Real and float
 
 template SparseNpvCube<Real>::SparseNpvCube(const Date& asof, const std::set<std::string>& ids,
                                             const std::vector<Date>& dates, Size samples, Size depth, const Real& t);
-template void SparseNpvCube<Real>::load(const std::string& fileName);
-template void SparseNpvCube<Real>::save(const std::string& fileName) const;
 template Size SparseNpvCube<Real>::numIds() const;
 template Size SparseNpvCube<Real>::numDates() const;
 template Size SparseNpvCube<Real>::samples() const;
@@ -155,13 +128,10 @@ template void SparseNpvCube<Real>::setT0(Real value, Size i, Size d);
 template Real SparseNpvCube<Real>::get(Size i, Size j, Size k, Size d) const;
 template void SparseNpvCube<Real>::set(Real value, Size i, Size j, Size k, Size d);
 template void SparseNpvCube<Real>::check(Size i, Size j, Size k, Size d) const;
-template void SparseNpvCube<Real>::serialize(boost::archive::binary_iarchive& ar, const unsigned int);
 
 template SparseNpvCube<float>::SparseNpvCube();
 template SparseNpvCube<float>::SparseNpvCube(const Date& asof, const std::set<std::string>& ids,
                                              const std::vector<Date>& dates, Size samples, Size depth, const float& t);
-template void SparseNpvCube<float>::load(const std::string& fileName);
-template void SparseNpvCube<float>::save(const std::string& fileName) const;
 template Size SparseNpvCube<float>::numIds() const;
 template Size SparseNpvCube<float>::numDates() const;
 template Size SparseNpvCube<float>::samples() const;
@@ -175,7 +145,6 @@ template void SparseNpvCube<float>::setT0(Real value, Size i, Size d);
 template Real SparseNpvCube<float>::get(Size i, Size j, Size k, Size d) const;
 template void SparseNpvCube<float>::set(Real value, Size i, Size j, Size k, Size d);
 template void SparseNpvCube<float>::check(Size i, Size j, Size k, Size d) const;
-template void SparseNpvCube<float>::serialize(boost::archive::binary_iarchive& ar, const unsigned int);
 
 } // namespace analytics
 } // namespace ore

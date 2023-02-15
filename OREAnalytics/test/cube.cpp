@@ -19,6 +19,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/cube/cube_io.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/jaggedcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -110,19 +111,19 @@ void testCube(NPVCube& cube, const std::string& cubeName, Real tolerance) {
     // All done
 }
 
-template <class T> void testCubeFileIO(NPVCube& cube, const std::string& cubeName, Real tolerance) {
+template <class T>
+void testCubeFileIO(NPVCube& cube, const std::string& cubeName, Real tolerance, bool doublePrecision) {
 
     initCube(cube);
 
     // get a random filename
     string filename = boost::filesystem::unique_path().string();
     BOOST_TEST_MESSAGE("Saving cube " << cubeName << " to file " << filename);
-    cube.save(filename);
+    saveCube(filename, cube, doublePrecision);
 
     // Create a new Cube and load it
-    T* cube2 = new T();
     BOOST_TEST_MESSAGE("Loading from file " << filename);
-    cube2->load(filename);
+    auto cube2 = loadCube(filename, doublePrecision);
     BOOST_TEST_MESSAGE("Cube " << cubeName << " loaded from file.");
 
     // Delete the file to make sure all reads are from memory
@@ -136,8 +137,6 @@ template <class T> void testCubeFileIO(NPVCube& cube, const std::string& cubeNam
 
     // check all values
     checkCube(*cube2, tolerance);
-    // All done
-    delete cube2;
 }
 
 void testCubeGetSetbyDateID(NPVCube& cube, Real tolerance) {
@@ -220,19 +219,19 @@ void testCube(NPVCube& cube, const std::string& cubeName, Real tolerance, boost:
 
 template <class T>
 void testCubeFileIO(NPVCube& cube, const std::string& cubeName, Real tolerance, boost::shared_ptr<Portfolio>& portfolio,
-                    boost::shared_ptr<DateGrid>& d) {
+                    boost::shared_ptr<DateGrid>& d, bool doublePrecision) {
 
     initCube(cube, portfolio, d);
 
     // get a random filename
     string filename = boost::filesystem::unique_path().string();
     BOOST_TEST_MESSAGE("Saving cube " << cubeName << " to file " << filename);
-    cube.save(filename);
+    saveCube(filename, cube, doublePrecision);
 
     // Create a new Cube and load it
     T* cube2 = new T();
     BOOST_TEST_MESSAGE("Loading from file " << filename);
-    cube2->load(filename);
+    cube2 = loadCube(filename, doublePrecision);
     BOOST_TEST_MESSAGE("Cube " << cubeName << " loaded from file.");
 
     // Delete the file to make sure all reads are from memory
@@ -447,7 +446,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileIO) {
     vector<Date> dates(100, d);
     Size samples = 1000;
     DoublePrecisionInMemoryCube c(d, ids, dates, samples);
-    testCubeFileIO<DoublePrecisionInMemoryCube>(c, "DoublePrecisionInMemoryCube", 1e-14);
+    testCubeFileIO<DoublePrecisionInMemoryCube>(c, "DoublePrecisionInMemoryCube", 1e-14, true);
 }
 
 BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileNIO) {
@@ -457,7 +456,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileNIO) {
     Size samples = 200;
     Size depth = 6;
     DoublePrecisionInMemoryCubeN c(d, ids, dates, samples, depth);
-    testCubeFileIO<DoublePrecisionInMemoryCubeN>(c, "DoublePrecisionInMemoryCubeN", 1e-14);
+    testCubeFileIO<DoublePrecisionInMemoryCubeN>(c, "DoublePrecisionInMemoryCubeN", 1e-14, true);
 }
 
 BOOST_AUTO_TEST_CASE(testInMemoryCubeGetSetbyDateID) {

@@ -560,8 +560,8 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // clang-format on
     segments.push_back(boost::make_shared<SimpleYieldCurveSegment>("OIS", "EUR-OIS-CONVENTIONS", quotes));
 
-    configs->yieldCurveConfig("EUR1D") =
-        boost::make_shared<YieldCurveConfig>("EUR1D", "Eonia Curve", "EUR", "", segments);
+    configs->add(CurveSpec::CurveType::Yield, "EUR1D", 
+        boost::make_shared<YieldCurveConfig>("EUR1D", "Eonia Curve", "EUR", "", segments));
 
     // Lending curve
     segments.clear();
@@ -574,8 +574,8 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     segments.push_back(boost::make_shared<ZeroSpreadedYieldCurveSegment>(
         "Zero Spread", "EUR-ZERO-CONVENTIONS-TENOR-BASED", quotes, "EUR1D"));
 
-    configs->yieldCurveConfig("BANK_EUR_LEND") =
-        boost::make_shared<YieldCurveConfig>("BANK_EUR_LEND", "Eonia Curve", "EUR", "", segments);
+    configs->add(CurveSpec::CurveType::Yield, "BANK_EUR_LEND", 
+        boost::make_shared<YieldCurveConfig>("BANK_EUR_LEND", "Eonia Curve", "EUR", "", segments));
 
     // Borrowing curve
     segments.clear();
@@ -588,8 +588,8 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     segments.push_back(boost::make_shared<ZeroSpreadedYieldCurveSegment>(
         "Zero Spread", "EUR-ZERO-CONVENTIONS-TENOR-BASED", quotes, "EUR1D"));
 
-    configs->yieldCurveConfig("BANK_EUR_BORROW") =
-        boost::make_shared<YieldCurveConfig>("BANK_EUR_LEND", "Eonia Curve", "EUR", "", segments);
+    configs->add(CurveSpec::CurveType::Yield, "BANK_EUR_BORROW",
+        boost::make_shared<YieldCurveConfig>("BANK_EUR_LEND", "Eonia Curve", "EUR", "", segments));
 
     // USD Fed Funds curve
     segments.clear();
@@ -617,8 +617,8 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // clang-format on
     segments.push_back(boost::make_shared<SimpleYieldCurveSegment>("OIS", "USD-OIS-CONVENTIONS", quotes));
 
-    configs->yieldCurveConfig("USD1D") =
-        boost::make_shared<YieldCurveConfig>("USD1D", "Fed Funds curve", "USD", "", segments);
+    configs->add(CurveSpec::CurveType::Yield, "USD1D",
+        boost::make_shared<YieldCurveConfig>("USD1D", "Fed Funds curve", "USD", "", segments));
 
     // USD 3M forward curve
     segments.clear();
@@ -654,8 +654,8 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // clang-format on
     segments.push_back(boost::make_shared<SimpleYieldCurveSegment>("Swap", "USD-3M-SWAP-CONVENTIONS", quotes, "USD3M"));
 
-    configs->yieldCurveConfig("USD3M") =
-        boost::make_shared<YieldCurveConfig>("USD3M", "USD 3M curve", "USD", "USD1D", segments);
+    configs->add(CurveSpec::CurveType::Yield, "USD3M",
+        boost::make_shared<YieldCurveConfig>("USD3M", "USD 3M curve", "USD", "USD1D", segments));
 
     // Swaption volatilities
 
@@ -700,35 +700,36 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // clang-format on
 
     // USD Lognormal swaption volatility "curve" configuration
-    configs->swaptionVolCurveConfig("USD_SW_LN") = boost::make_shared<SwaptionVolatilityCurveConfig>(
+    configs->add(CurveSpec::CurveType::SwaptionVolatility,
+                 "USD_SW_LN", boost::make_shared<SwaptionVolatilityCurveConfig>(
         "USD_SW_LN", "USD Lognormal swaption volatilities", SwaptionVolatilityCurveConfig::Dimension::ATM,
         SwaptionVolatilityCurveConfig::VolatilityType::Lognormal, extrapolate, flatExtrapolate, optionTenors,
-        swapTenors, dayCounter, UnitedStates(UnitedStates::Settlement), bdc, "USD-CMS-1Y", "USD-CMS-30Y");
+        swapTenors, dayCounter, UnitedStates(UnitedStates::Settlement), bdc, "USD-CMS-1Y", "USD-CMS-30Y"));
 
     // Capfloor volatility structure tenors and strikes
     vector<string> capTenors{"1Y", "2Y", "5Y", "7Y", "10Y"};
     vector<string> strikes{"0.005", "0.010", "0.015", "0.020", "0.025", "0.030"};
 
     // USD Lognormal capfloor volatility "curve" configuration
-    configs->capFloorVolCurveConfig("USD_CF_LN") = boost::make_shared<CapFloorVolatilityCurveConfig>(
+    configs->add(CurveSpec::CurveType::CapFloorVolatility, "USD_CF_LN", boost::make_shared<CapFloorVolatilityCurveConfig>(
         "USD_CF_LN", "USD Lognormal capfloor volatilities", CapFloorVolatilityCurveConfig::VolatilityType::Lognormal,
         extrapolate, false, false, capTenors, strikes, dayCounter, 0, UnitedStates(UnitedStates::Settlement), bdc,
-        "USD-LIBOR-3M", 3 * Months, 0, "Yield/USD/USD1D");
+        "USD-LIBOR-3M", 3 * Months, 0, "Yield/USD/USD1D"));
 
     vector<string> optionTenors2{"1Y"};
 
     vector<string> optionTenors3{"1Y", "2Y"};
     // Correlation curve
-    configs->correlationCurveConfig("EUR-CORR") = boost::make_shared<CorrelationCurveConfig>(
+    configs->add(CurveSpec::CurveType::Correlation, "EUR-CORR", boost::make_shared<CorrelationCurveConfig>(
         "EUR-CORR", "EUR CMS Correlations", CorrelationCurveConfig::Dimension::Constant,
         CorrelationCurveConfig::CorrelationType::CMSSpread, "EUR-CMS-1Y-10Y-CONVENTION",
         MarketDatum::QuoteType::RATE, extrapolate, optionTenors2, dayCounter, UnitedStates(UnitedStates::Settlement), bdc,
-        "EUR-CMS-10Y", "EUR-CMS-2Y", "EUR");
-    configs->correlationCurveConfig("USD-CORR") = boost::make_shared<CorrelationCurveConfig>(
+        "EUR-CMS-10Y", "EUR-CMS-2Y", "EUR"));
+    configs->add(CurveSpec::CurveType::Correlation, "USD-CORR", boost::make_shared<CorrelationCurveConfig>(
         "USD-CORR", "USD CMS Correlations", CorrelationCurveConfig::Dimension::ATM,
         CorrelationCurveConfig::CorrelationType::CMSSpread, "USD-CMS-10Y-2Y-CONVENTION",
         MarketDatum::QuoteType::PRICE, extrapolate, optionTenors3, Actual360(), TARGET(), ModifiedFollowing,
-        "USD-CMS-10Y", "USD-CMS-2Y", "USD", "USD_SW_LN", "USD1D");
+        "USD-CMS-10Y", "USD-CMS-2Y", "USD", "USD_SW_LN", "USD1D"));
 
     // clang-format off
     vector<string> eqFwdQuotes{
@@ -741,15 +742,16 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     };
     // clang-format on
 
-    configs->equityCurveConfig("SP5") = boost::make_shared<EquityCurveConfig>(
-        "SP5", "", "USD1D", "USD", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes);
+    configs->add(CurveSpec::CurveType::Equity, "SP5", boost::make_shared<EquityCurveConfig>(
+        "SP5", "", "USD1D", "USD", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes));
 
     vector<string> eqVolQuotes = {"EQUITY_OPTION/RATE_LNVOL/SP5/USD/1Y/ATMF",
                                   "EQUITY_OPTION/RATE_LNVOL/SP5/USD/2018-02-26/ATMF"};
     vector<boost::shared_ptr<VolatilityConfig>> vcc;
     vcc.push_back(boost::make_shared<VolatilityCurveConfig>(eqVolQuotes, "Flat", "Flat"));
 
-    configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>("SP5", "", "USD", vcc, "A365", "USD");
+    configs->add(CurveSpec::CurveType::EquityVolatility, "SP5", boost::make_shared<EquityVolatilityCurveConfig>(
+        "SP5", "", "USD", vcc, "A365", "USD"));
 
     // clang-format off
     vector<string> commodityQuotes{
@@ -762,8 +764,8 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     };
     // clang-format on
 
-    configs->commodityCurveConfig("GOLD_USD") =
-        boost::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", commodityQuotes, "COMMODITY/PRICE/GOLD/USD");
+    configs->add(CurveSpec::CurveType::Commodity, "GOLD_USD",
+        boost::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", commodityQuotes, "COMMODITY/PRICE/GOLD/USD"));
 
     return configs;
 }

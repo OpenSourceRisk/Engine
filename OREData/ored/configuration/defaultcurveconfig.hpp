@@ -97,6 +97,7 @@ public:
 
         //! \name Setters
         //@{
+        int& priority() { return priority_; }
         Type& type() { return type_; }
         string& discountCurveID() { return discountCurveID_; }
         string& benchmarkCurveID() { return benchmarkCurveID_; }
@@ -178,7 +179,7 @@ public:
     //@}
 
     const string& currency() const { return currency_; }
-    const std::map<int, Config> configs() const { return configs_; }
+    const std::map<int, Config>& configs() const { return configs_; }
 
 private:
     void populateQuotes();

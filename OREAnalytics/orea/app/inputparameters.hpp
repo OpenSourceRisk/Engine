@@ -293,7 +293,7 @@ protected:
     bool useMarketDataFixings_ = true;
     bool iborFallbackOverride_ = false;
     char csvSeparator_ = ',';
-    bool csvCommentCharacter_ = false;
+    bool csvCommentCharacter_ = true;
     char csvQuoteChar_ = '\0';
     std::string reportNaString_ = "#N/A";
     bool dryRun_ = false;
@@ -342,7 +342,7 @@ protected:
     boost::shared_ptr<ore::data::EngineData> stressPricingEngine_;
 
     /*****************
-     * VaR analytics
+     * VAR analytics
      *****************/
     bool salvageCovariance_ = false;
     std::vector<Real> varQuantiles_;
@@ -391,9 +391,6 @@ protected:
      **************/
     std::string xvaBaseCurrency_ = "";
     bool loadCube_ = false;
-    bool hyperCube_ = false;
-    bool hyperNettingSetCube_ = false;
-    bool hyperCptyCube_ = false;
     bool flipViewXVA_ = false;
     bool exerciseNextBreak_ = false;
     bool cvaAnalytic_ = true;
