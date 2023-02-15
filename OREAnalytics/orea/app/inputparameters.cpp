@@ -18,6 +18,7 @@
 
 #include <orea/app/inputparameters.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/cube/cube_io.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityfilestream.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
@@ -539,15 +540,8 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("xva", "cubeFile", false);
         if (tmp != "") {
             string cubeFile = resultsPath_.string() + "/" + tmp;
-            tmp = params_->get("xva", "hyperCube", false);
-            if (tmp != "")
-                hyperCube_ = parseBool(tmp);        
-            if (hyperCube_)
-                cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
-            else
-                cube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
             LOG("Load cube from file " << cubeFile);
-            cube_->load(cubeFile);
+            cube_ = ore::analytics::loadCube(cubeFile);
             LOG("Cube loading done: ids=" << cube_->numIds() << " dates=" << cube_->numDates()
                 << " samples=" << cube_->samples() << " depth=" << cube_->depth());
         } else {
@@ -567,15 +561,8 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("xva", "nettingSetCubeFile", false);
     if (loadCube_ && tmp != "") {
         string cubeFile = resultsPath_.string() + "/" + tmp;
-        tmp = params_->get("xva", "nettingSetHyperCube", false);
-        if (tmp != "")
-            hyperNettingSetCube_ = parseBool(tmp);        
-        if (hyperNettingSetCube_)
-            nettingSetCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
-        else
-            nettingSetCube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
         LOG("Load nettingset cube from file " << cubeFile);
-        nettingSetCube_->load(cubeFile);
+        nettingSetCube_ = ore::analytics::loadCube(cubeFile);
         LOG("NettingSetCube loading done: ids=" << nettingSetCube_->numIds() << " dates=" << nettingSetCube_->numDates()
             << " samples=" << nettingSetCube_->samples() << " depth=" << nettingSetCube_->depth());
     }
@@ -583,15 +570,8 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("xva", "cptyCubeFile", false);
     if (loadCube_ && tmp != "") {
         string cubeFile = resultsPath_.string() + "/" + tmp;
-        tmp = params_->get("xva", "cptyHyperCube", false);
-        if (tmp != "")
-            hyperCptyCube_ = parseBool(tmp);        
-        if (hyperCptyCube_)
-            cptyCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
-        else
-            cptyCube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
         LOG("Load cpty cube from file " << cubeFile);
-        cptyCube_->load(cubeFile);
+        cptyCube_ = ore::analytics::loadCube(cubeFile);
         LOG("CptyCube loading done: ids=" << cptyCube_->numIds() << " dates=" << cptyCube_->numDates()
             << " samples=" << cptyCube_->samples() << " depth=" << cptyCube_->depth());
     }
@@ -599,8 +579,8 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("xva", "scenarioFile", false);
     if (loadCube_ && tmp != "") {
         string cubeFile = resultsPath_.string() + "/" + tmp;
-        mktCube_ = boost::make_shared<InMemoryAggregationScenarioData>();
-        mktCube_->load(cubeFile);
+        LOG("Load agg scen data from file " << cubeFile);
+        mktCube_ = loadAggregationScenarioData(cubeFile);
         LOG("MktCube loading done");
     }
     

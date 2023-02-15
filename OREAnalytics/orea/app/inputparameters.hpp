@@ -344,9 +344,6 @@ protected:
     bool xva_ = false;
     std::string xvaBaseCurrency_ = "EUR";
     bool loadCube_ = false;
-    bool hyperCube_ = false;
-    bool hyperNettingSetCube_ = false;
-    bool hyperCptyCube_ = false;
     boost::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_;
     boost::shared_ptr<AggregationScenarioData> mktCube_;
     bool flipViewXVA_ = false;

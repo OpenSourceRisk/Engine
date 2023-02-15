@@ -193,7 +193,8 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
         // depth 2: NPV and close-out NPV
         cube_ = getNpvCube(asof_, portfolio->ids(), scenarioGeneratorData_->getGrid()->valuationDates(),
                            scenarioGeneratorData_->samples(), 2);
-        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(scenarioGeneratorData_->getGrid());
+        cubeInterpreter_ =
+            boost::make_shared<MporGridCubeInterpretation>(scenarioData_, scenarioGeneratorData_->getGrid());
         // default date value stored at index 0, close-out value at index 1
         calculators.push_back(boost::make_shared<MPORCalculator>(npvCalculator, 0, 1));
         calculationType_ = "NoLag";
@@ -212,7 +213,7 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
             cube_ = getNpvCube(asof_, portfolio->ids(), scenarioGeneratorData_->getGrid()->dates(),
                                scenarioGeneratorData_->samples(), 1);
 
-        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
+        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_);
         calculators.push_back(npvCalculator);
         calculationType_ = inputCalculationType_;
     }

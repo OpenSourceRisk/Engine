@@ -666,9 +666,9 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
     // set cube interpretation depending on close-out lag
 
     if (inputs_->scenarioGeneratorData()->withCloseOutLag())
-        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(grid_, inputs_->flipViewXVA());
+        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(scenarioData_, grid_, inputs_->flipViewXVA());
     else
-        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(inputs_->flipViewXVA());
+        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_, inputs_->flipViewXVA());
 
     // log message
 
@@ -942,9 +942,10 @@ void XvaAnalytic::runPostProcessor() {
         boost::shared_ptr<ScenarioGeneratorData> sgd = inputs_->scenarioGeneratorData();
         LOG("withCloseOutLag=" << (sgd->withCloseOutLag() ? "Y" : "N"));
         if (sgd->withCloseOutLag())
-            cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->getGrid(), analytics["flipViewXVA"]);
+            cubeInterpreter_ =
+                boost::make_shared<MporGridCubeInterpretation>(scenarioData_, sgd->getGrid(), analytics["flipViewXVA"]);
         else
-            cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(analytics["flipViewXVA"]);
+            cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_, analytics["flipViewXVA"]);
     }
 
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
@@ -1048,22 +1049,7 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
         
         if (doClassicRun && doAmcRun) {
             LOG("Joining classical and AMC cube");
-            // Join the two cubes and set cube_ to the union
             cube_ = boost::make_shared<JointNPVCube>(cube_, amcCube_);
-            // If the cube has to be written, create a physical one from the wrapper
-            if (inputs_->writeCube()) {
-                boost::shared_ptr<NPVCube> tmpCube;
-                initCube(tmpCube, cube_->ids(), cubeDepth_);
-                for (Size i = 0; i < tmpCube->numIds(); ++i) 
-                    for (Size d = 0; d < tmpCube->depth(); ++d)
-                        tmpCube->setT0(cube_->getT0(i), i, d);
-                for (Size i = 0; i < tmpCube->numIds(); ++i)
-                    for (Size j = 0; j < tmpCube->numDates(); ++j)
-                        for (Size k = 0; k < tmpCube->samples(); ++k)
-                            for (Size d = 0; d < tmpCube->depth(); ++d)
-                                tmpCube->set(cube_->get(i, j, k, d), i, j, k, d);
-                cube_ = tmpCube;
-            }
         } else if (!doClassicRun && doAmcRun) {
             LOG("We have generated an AMC cube only");
             cube_ = amcCube_;

@@ -1072,7 +1072,7 @@ File Name & Description \\
 {\tt exposure\_nettingset\_*.csv} &  Netting set exposure evolution reports\\
 {\tt rawcube.csv} & NPV cube in readable text format \\
 {\tt netcube.csv} & NPV cube after netting and colateral, in readable text format \\
-{\tt *.dat} & Intermediate storage of NPV cube and scenario data in binary format \\
+{\tt *.csv.gz} & Intermediate storage of NPV cube and scenario data \\
 {\tt *.pdf} &  Exposure graphics produced by the python script {\tt run.py} after ORE completed\\
 \hline
 \end{tabular}
@@ -3262,10 +3262,10 @@ needed for subsequent XVA analytics.
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="storeFlows">Y</Parameter>
     <Parameter name="storeSurvivalProbabilities">Y</Parameter>
-    <Parameter name="cubeFile">cube_A.dat</Parameter>
-    <Parameter name="nettingSetCubeFile">nettingSetCube_A.dat</Parameter>
-    <Parameter name="cptyCubeFile">cptyCube_A.dat</Parameter>
-    <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
+    <Parameter name="cubeFile">cube_A.csv.gz</Parameter>
+    <Parameter name="nettingSetCubeFile">nettingSetCube_A.csv.gz</Parameter>
+    <Parameter name="cptyCubeFile">cptyCube_A.csv.gz</Parameter>
+    <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
     <Parameter name="aggregationScenarioDump">scenariodump.csv</Parameter>
   </Analytic>
 </Analytics>      
@@ -3294,7 +3294,9 @@ the {\tt cubeFile} parameter. This means one can re-run the XVA analytics withou
 XVA reports depend in particular on the settings in the {\tt csaFile} which determines CSA details such as margining
 frequency, collateral thresholds, minimum transfer amounts, margin period of risk. By splitting the processing into
 pre-processing (cube generation) and post-processing (aggregation and XVA analysis) it is possible to vary these CSA
-details and analyse their impact on XVAs quickly without re-generating the NPV cube.
+details and analyse their impact on XVAs quickly without re-generating the NPV cube. The cube file is usually a
+compressed csv file (using gzip compression, with file ending .csv.gz), except when the file extension is set explicitly
+to txt or csv in which case an uncompressed version of the file is written to disk.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -3303,9 +3305,8 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
   <Analytic type="xva">
     <Parameter name="active">Y</Parameter>
     <Parameter name="csaFile">netting.xml</Parameter>
-    <Parameter name="cubeFile">cube.dat</Parameter>
-    <Parameter name="hyperCube">Y</Parameter>
-    <Parameter name="scenarioFile">scenariodata.dat</Parameter>
+    <Parameter name="cubeFile">cube.csv.gz</Parameter>
+    <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="exposureProfiles">Y</Parameter>
     <Parameter name="exposureProfilesByTrade">Y</Parameter>
@@ -3363,8 +3364,6 @@ Parameters:
 \item {\tt csaFile:} Netting set definitions file covering CSA details such as margining frequency, thresholds, minimum
 transfer amounts, margin period of risk
 \item {\tt cubeFile:} NPV cube file previously generated and to be post-processed here
-\item {\tt hyperCube:} If set to N, the cube file is expected to have depth 1 (storing NPV data only), if set to Y it is
-expected to have depth $>$ 1 (e.g. storing NPVs and cumulative flows)
 \item {\tt scenarioFile:} Scenario data previously generated and used in the post-processor (simulated index fixings and
 FX rates)
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures

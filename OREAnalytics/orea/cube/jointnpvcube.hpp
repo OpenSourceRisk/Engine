@@ -75,9 +75,6 @@ public:
     Real get(Size id, Size date, Size sample, Size depth = 0) const override;
     void set(Real value, Size id, Size date, Size sample, Size depth = 0) override;
 
-    void load(const std::string& fileName) override { QL_FAIL("JointNPVCube::load() not implemented"); }
-    void save(const std::string& fileName) const override { QL_FAIL("JointNPVCube::save() not implemented"); }
-
 private:
     std::set<std::pair<boost::shared_ptr<NPVCube>, Size>> cubeAndId(Size id) const;
 

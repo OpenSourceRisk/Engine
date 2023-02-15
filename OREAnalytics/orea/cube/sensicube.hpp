@@ -31,8 +31,6 @@
 #include <ql/errors.hpp>
 
 #include <boost/make_shared.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/map.hpp>
 #include <boost/math/special_functions/relative_difference.hpp>
 
 #include <fstream>
@@ -53,22 +51,6 @@ public:
         for (const auto& id : ids) {
             idIdx_[id] = pos++; 
         }
-    }
-
-    //! load cube from an archive
-    void load(const std::string& fileName) override {
-        std::ifstream ifs(fileName.c_str(), std::fstream::binary);
-        QL_REQUIRE(ifs.is_open(), "error opening file " << fileName);
-        boost::archive::binary_iarchive ia(ifs);
-        ia >> *this;
-    }
-
-    //! write cube to an archive
-    void save(const std::string& fileName) const override {
-        std::ofstream ofs(fileName.c_str(), std::fstream::binary);
-        QL_REQUIRE(ofs.is_open(), "error opening file " << fileName);
-        boost::archive::binary_oarchive oa(ofs);
-        oa << *this;
     }
 
     //! Return the length of each dimension
@@ -134,15 +116,6 @@ public:
     std::set<QuantLib::Size> relevantScenarios() const override { return relevantScenarios_; }
 
 private:
-    friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int) {
-        ar& idIdx_;
-        ar& asof_;
-        ar& samples_;
-        ar& t0Data_;
-        ar& tradeNPVs_;
-    }
-
     std::map<std::string, Size> idIdx_;
     QuantLib::Date asof_;
     std::vector<QuantLib::Date> dates_;
