@@ -379,8 +379,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                 Date d = sgd->getGrid()->dates()[k - 1];
                 for (Size j = 0; j < asdIndex.size(); ++j) {
                     asdIndexCurve[j]->move(d, state(irStateBuffer, asdIndexIndex[j], k, i));
-                    asd->set(dateIndex, i, asdIndex[j]->fixing(d), AggregationScenarioDataType::IndexFixing,
-                             asdIndexName[j]);
+                    asd->set(dateIndex, i, asdIndex[j]->fixing(asdIndex[j]->fixingCalendar().adjust(d)),
+                             AggregationScenarioDataType::IndexFixing, asdIndexName[j]);
                 }
                 ++dateIndex;
             }
