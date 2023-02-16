@@ -90,27 +90,21 @@ void OREApp::analytics(ostream& out) {
         // Create the analytics manager
         auto analyticsManager = boost::make_shared<AnalyticsManager>(inputs, loader, out);
         LOG("Available analytics: " << to_string(analyticsManager->validAnalytics()));
-        out_ << setw(tab_) << left << "Requested analytics " << to_string(inputs->runTypes()) << std::endl;
-        LOG("Requested analytics: " << to_string(inputs->runTypes()));
+        out_ << setw(tab_) << left << "Requested analytics " << to_string(inputs->analytics()) << std::endl;
+        LOG("Requested analytics: " << to_string(inputs->analytics()));
 
         // Run the requested analytics
         // FIXME: How is the market calibration report supposed to work, no concrete implementation in orea yet
         // auto marketCalibrationReport = boost::make_shared<MarketCalibrationReport>();
         // analyticsManager->runAnalytics(inputs->runTypes(), marketCalibrationReport);
-        analyticsManager->runAnalytics(inputs->runTypes());
+        analyticsManager->runAnalytics(inputs->analytics());
 
         // Write reports to files in the results path
         Analytic::analytic_reports reports = analyticsManager->reports();
-        for (auto a : reports) {
-            for (auto b : a.second) {
-                string reportName = b.first;            
-                std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "csv");
-                boost::shared_ptr<InMemoryReport> rpt = b.second;
-                LOG("Write report " << reportName << " for analytic " << a.first);
-                rpt->toFile(fileName);
-            }
-        }
-        
+        analyticsManager->toFile(reports, inputs->resultsPath().string(), inputs->fileNameMap(),
+                                 inputs->csvSeparator(), inputs->csvCommentCharacter(),
+                                 inputs->csvQuoteChar(), inputs->reportNaString());
+
         // Write npv cube(s)
         for (auto a : analyticsManager->npvCubes()) {
             for (auto b : a.second) {
