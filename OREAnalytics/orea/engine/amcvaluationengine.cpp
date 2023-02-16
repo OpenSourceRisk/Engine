@@ -398,8 +398,8 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
                 Date d = sgd_->getGrid()->dates()[k - 1];
                 for (Size j = 0; j < asdIndex.size(); ++j) {
                     asdIndexCurve[j]->move(d, state(irStateBuffer, asdIndexIndex[j], k, i));
-                    asd_->set(dateIndex, i, asdIndex[j]->fixing(d), AggregationScenarioDataType::IndexFixing,
-                              asdIndexName[j]);
+                    asd_->set(dateIndex, i, asdIndex[j]->fixing(asdIndex[j]->fixingCalendar().adjust(d)),
+                              AggregationScenarioDataType::IndexFixing, asdIndexName[j]);
                 }
                 ++dateIndex;
             }
