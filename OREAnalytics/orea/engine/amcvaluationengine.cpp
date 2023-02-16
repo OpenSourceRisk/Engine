@@ -18,6 +18,14 @@
 
 #include <orea/engine/amcvaluationengine.hpp>
 
+#include <orea/app/structuredanalyticserror.hpp>
+#include <orea/cube/inmemorycube.hpp>
+#include <orea/engine/observationmode.hpp>
+
+#include <ored/marketdata/clonedloader.hpp>
+#include <ored/marketdata/todaysmarket.hpp>
+#include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 
 #include <qle/methods/multipathgeneratorbase.hpp>
@@ -27,6 +35,8 @@
 #include <ored/portfolio/optionwrapper.hpp>
 
 #include <boost/timer/timer.hpp>
+
+#include <future>
 
 using namespace ore::data;
 using namespace ore::analytics;
@@ -501,6 +511,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
 
 AMCValuationEngine::AMCValuationEngine(
     const QuantLib::Size nThreads, const QuantLib::Date& today, const QuantLib::Size nSamples,
+    const boost::shared_ptr<ore::data::Loader>& loader,
     const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData, const std::vector<string>& aggDataIndices,
     const std::vector<string>& aggDataCurrencies, const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
     const boost::shared_ptr<ore::data::EngineData>& engineData,
@@ -522,7 +533,7 @@ AMCValuationEngine::AMCValuationEngine(
                                                                    const QuantLib::Size)>& cubeFactory)
     : useMultithreading_(true), aggDataIndices_(aggDataIndices), aggDataCurrencies_(aggDataCurrencies),
       scenarioGeneratorData_(scenarioGeneratorData), nThreads_(nThreads), today_(today), nSamples_(nSamples),
-      crossAssetModelData_(crossAssetModelData), engineData_(engineData), curveConfigs_(curveConfigs),
+      loader_(loader), crossAssetModelData_(crossAssetModelData), engineData_(engineData), curveConfigs_(curveConfigs),
       todaysMarketParams_(todaysMarketParams), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
@@ -537,6 +548,11 @@ AMCValuationEngine::AMCValuationEngine(
     QL_REQUIRE(scenarioGeneratorData_->seed() != 0,
                "AMCValuationEngine: path generation uses seed 0 - this might lead to inconsistent results to a classic "
                "simulation run, if both are combined. Consider using a non-zero seed.");
+    if (!cubeFactory_)
+        cubeFactory_ = [](const QuantLib::Date& asof, const std::set<std::string>& ids,
+                          const std::vector<QuantLib::Date>& dates, const Size samples) {
+            return boost::make_shared<ore::analytics::DoublePrecisionInMemoryCube>(asof, ids, dates, samples);
+        };
 }
 
 AMCValuationEngine::AMCValuationEngine(const boost::shared_ptr<QuantExt::CrossAssetModel>& model,
@@ -589,6 +605,8 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
     } catch (const std::exception& e) {
         QL_FAIL("Error during amc val engine run: " << e.what());
     }
+
+    LOG("Finished single-threaded AMCValuationEngine run.");
 }
 
 void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>& portfolio) {
@@ -600,6 +618,189 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
                                    "multi-threaded run, but engine was constructed for single-threaded runs");
 
     QL_REQUIRE(portfolio->size() > 0, "AMCValuationEngine::buildCube: empty portfolio");
+
+    // split portfolio into nThreads parts (just distribute the trades assuming all are approximately expensive)
+
+    LOG("Splitting portfolio.");
+
+    Size eff_nThreads = std::min(portfolio->size(), nThreads_);
+
+    LOG("Splitting portfolio.");
+
+    LOG("portfolio size = " << portfolio->size());
+    LOG("nThreads       = " << nThreads_);
+    LOG("eff nThreads   = " << eff_nThreads);
+
+    QL_REQUIRE(eff_nThreads > 0, "effective threads are zero, this is not allowed.");
+
+    std::vector<boost::shared_ptr<ore::data::Portfolio>> portfolios;
+    for (Size i = 0; i < eff_nThreads; ++i)
+        portfolios.push_back(boost::make_shared<ore::data::Portfolio>());
+
+    Size portfolioIndex = 0;
+    for (auto const& t : portfolio->trades()) {
+        portfolios[portfolioIndex]->add(t.second);
+        if (++portfolioIndex >= eff_nThreads)
+            portfolioIndex = 0;
+    }
+
+    // output the portfolios into strings so that the worker threads can load them from there
+
+    std::vector<std::string> portfoliosAsString;
+    for (auto const& p : portfolios) {
+        portfoliosAsString.emplace_back(p->saveToXMLString());
+    }
+
+    // log info on the portfolio split
+
+    for (Size i = 0; i < eff_nThreads; ++i) {
+        LOG("Portfolio #" << i << " number of trades       : " << portfolios[i]->size());
+    }
+
+    // build loaders for each thread as clones of the original one
+
+    LOG("Cloning loaders for " << eff_nThreads << " threads...");
+    std::vector<boost::shared_ptr<ore::data::ClonedLoader>> loaders;
+    for (Size i = 0; i < eff_nThreads; ++i)
+        loaders.push_back(boost::make_shared<ore::data::ClonedLoader>(today_, loader_));
+
+    // build nThreads mini-cubes to which each thread writes its results
+
+    LOG("Build " << eff_nThreads << " mini result cubes...");
+    miniCubes_.clear();
+    for (Size i = 0; i < eff_nThreads; ++i) {
+        miniCubes_.push_back(
+            cubeFactory_(today_, portfolios[i]->ids(), scenarioGeneratorData_->getGrid()->dates(), nSamples_));
+    }
+
+    // build progress indicator consolidating the results from the threads
+
+    auto progressIndicator =
+        boost::make_shared<ore::analytics::MultiThreadedProgressIndicator>(this->progressIndicators());
+
+    // create the thread pool with eff_nThreads and queue size = eff_nThreads as well
+
+    // LOG("Create thread pool with " << eff_nThreads);
+    // ctpl::thread_pool threadPool(eff_nThreads);
+
+    // create the jobs and push them to the pool
+
+    using resultType = int;
+    std::vector<std::future<resultType>> results(eff_nThreads);
+
+    std::vector<std::thread> jobs; // not needed if thread pool is used
+
+    // get obs mode of main thread, so that we can set this mode in the worker threads below
+
+    ore::analytics::ObservationMode::Mode obsMode = ore::analytics::ObservationMode::instance().mode();
+
+    for (Size i = 0; i < eff_nThreads; ++i) {
+
+        auto job = [this, obsMode, &portfoliosAsString, &loaders, &progressIndicator](int id) -> resultType {
+            // set thread local singletons
+
+            QuantLib::Settings::instance().evaluationDate() = today_;
+            ore::analytics::ObservationMode::instance().setMode(obsMode);
+
+            LOG("Start thread " << id);
+
+            int rc;
+
+            try {
+
+                // build todays market using cloned market data
+
+                boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<ore::data::TodaysMarket>(
+                    today_, todaysMarketParams_, loaders[id], curveConfigs_, true, true, true, referenceData_, false,
+                    iborFallbackConfig_, false, handlePseudoCurrenciesTodaysMarket_);
+
+                // build cam
+
+                ore::data::CrossAssetModelBuilder modelBuilder(
+                    initMarket, crossAssetModelData_, configurationLgmCalibration_, configurationFxCalibration_,
+                    configurationEqCalibration_, configurationInfCalibration_, configurationCrCalibration_,
+                    configurationFinalModel_, false, true);
+
+                auto cam = *modelBuilder.model();
+
+                // build portfolio against init market
+
+                auto tradeFactory = boost::make_shared<ore::data::TradeFactory>(referenceData_);
+                if (extraTradeBuilders_)
+                    tradeFactory->addExtraBuilders(extraTradeBuilders_(referenceData_, tradeFactory));
+
+                auto portfolio = boost::make_shared<ore::data::Portfolio>();
+                portfolio->loadFromXMLString(portfoliosAsString[id], tradeFactory);
+
+                boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*engineData_);
+                edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
+                edCopy->globalParameters()["RunType"] = "NPV";
+                map<MarketContext, string> configurations{{MarketContext::irCalibration, configurationLgmCalibration_},
+                                                          {MarketContext::fxCalibration, configurationFxCalibration_},
+                                                          {MarketContext::pricing, configurationFinalModel_}};
+
+                auto engineFactory = boost::make_shared<EngineFactory>(
+                    edCopy, initMarket, configurations,
+                    amcEngineBuilders_(cam, scenarioGeneratorData_->getGrid()->dates()), extraLegBuilders_(),
+                    referenceData_, iborFallbackConfig_);
+
+                portfolio->build(engineFactory, "amc-val-engine", true);
+
+                // run core engine code (asd is written for thread id 0 only)
+
+                runCoreEngine(portfolio, cam, initMarket, scenarioGeneratorData_, aggDataIndices_, aggDataCurrencies_,
+                              id == 0 ? asd_ : nullptr, miniCubes_[id], progressIndicator);
+
+                // return code 0 = ok
+
+                LOG("Thread " << id << " successfully finished.");
+
+                rc = 0;
+
+            } catch (const std::exception& e) {
+
+                // log error and return code 1 = not ok
+
+                ALOG(ore::analytics::StructuredAnalyticsErrorMessage("AMC Valuation Engine (multithreaded mode)",
+                                                                     e.what()));
+                rc = 1;
+            }
+
+            // exit
+
+            return rc;
+        };
+
+        // results[i] = threadPool.push(job);
+
+        // not needed if thread pool is used
+        std::packaged_task<resultType(int)> task(job);
+        results[i] = task.get_future();
+        std::thread thread(std::move(task), i);
+        jobs.emplace_back(std::move(thread));
+    }
+
+    // not needed if thread pool is used
+    for (auto& t : jobs)
+        t.join();
+
+    for (Size i = 0; i < results.size(); ++i) {
+        results[i].wait();
+    }
+
+    for (Size i = 0; i < results.size(); ++i) {
+        QL_REQUIRE(results[i].valid(), "internal error: did not get a valid result");
+        int rc = results[i].get();
+        QL_REQUIRE(rc == 0, "error: thread " << i << " exited with return code " << rc
+                                             << ". Check for structured errors from 'AMCValuationEngine'.");
+    }
+
+    // stop the thread pool, wait for unfinished jobs
+
+    // LOG("Stop thread pool");
+    // threadPool.stop(true);
+
+    LOG("Finished multi-threaded AMCValuationEngine run.");
 }
 
 } // namespace analytics

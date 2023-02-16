@@ -29,6 +29,7 @@
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/progressbar.hpp>
+#include <ored/marketdata/loader.hpp>
 
 #include <qle/models/crossassetmodel.hpp>
 
@@ -49,6 +50,7 @@ public:
     //! Constructor for multi threaded runs
     AMCValuationEngine(
         const QuantLib::Size nThreads, const QuantLib::Date& today, const QuantLib::Size nSamples,
+        const boost::shared_ptr<ore::data::Loader>& loader,
         const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
         const std::vector<string>& aggDataIndices, const std::vector<string>& aggDataCurrencies,
         const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
@@ -106,6 +108,7 @@ private:
     QuantLib::Size nThreads_;
     QuantLib::Date today_;
     QuantLib::Size nSamples_;
+    boost::shared_ptr<ore::data::Loader> loader_;
     boost::shared_ptr<CrossAssetModelData> crossAssetModelData_;
     boost::shared_ptr<ore::data::EngineData> engineData_;
     boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
