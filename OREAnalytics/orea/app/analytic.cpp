@@ -781,7 +781,7 @@ boost::shared_ptr<EngineFactory> XvaAnalytic::amcEngineFactory() {
     auto factory = boost::make_shared<EngineFactory>(edCopy, market_, configurations,
                                                      extraEngineBuilders, extraLegBuilders,
                                                      inputs_->refDataManager(),
-                                                     *inputs_->iborFallbackConfig());        
+                                                     *inputs_->iborFallbackConfig());
     return factory;
 }
 
@@ -869,7 +869,7 @@ void XvaAnalytic::amcRun(bool doClassicRun) {
                                                                                         cubeDepth_, 0.0f);
         };
         AMCValuationEngine amcEngine(
-            inputs_->nThreads(), inputs_->asof(), samples_, inputs_->scenarioGeneratorData(),
+            inputs_->nThreads(), inputs_->asof(), samples_, loader_, inputs_->scenarioGeneratorData(),
             inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
             inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(), inputs_->crossAssetModelData(),
             inputs_->amcPricingEngine(), inputs_->curveConfigs()[0], configurations_.todaysMarketParams,
