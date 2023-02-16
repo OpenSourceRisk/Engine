@@ -625,8 +625,6 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
 
     Size eff_nThreads = std::min(portfolio->size(), nThreads_);
 
-    LOG("Splitting portfolio.");
-
     LOG("portfolio size = " << portfolio->size());
     LOG("nThreads       = " << nThreads_);
     LOG("eff nThreads   = " << eff_nThreads);
@@ -670,8 +668,15 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
     miniCubes_.clear();
     for (Size i = 0; i < eff_nThreads; ++i) {
         miniCubes_.push_back(
-            cubeFactory_(today_, portfolios[i]->ids(), scenarioGeneratorData_->getGrid()->dates(), nSamples_));
+            cubeFactory_(today_, portfolios[i]->ids(), scenarioGeneratorData_->getGrid()->valuationDates(), nSamples_));
     }
+
+    // precompute sim dates
+
+    std::vector<Date> simDates =
+        scenarioGeneratorData_->withCloseOutLag() && !scenarioGeneratorData_->withMporStickyDate()
+            ? scenarioGeneratorData_->getGrid()->dates()
+            : scenarioGeneratorData_->getGrid()->valuationDates();
 
     // build progress indicator consolidating the results from the threads
 
@@ -696,7 +701,7 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
 
     for (Size i = 0; i < eff_nThreads; ++i) {
 
-        auto job = [this, obsMode, &portfoliosAsString, &loaders, &progressIndicator](int id) -> resultType {
+        auto job = [this, obsMode, &portfoliosAsString, &loaders, &simDates, &progressIndicator](int id) -> resultType {
             // set thread local singletons
 
             QuantLib::Settings::instance().evaluationDate() = today_;
@@ -740,8 +745,8 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
                                                           {MarketContext::pricing, configurationFinalModel_}};
 
                 auto engineFactory = boost::make_shared<EngineFactory>(
-                    edCopy, initMarket, configurations,
-                    amcEngineBuilders_(cam, scenarioGeneratorData_->getGrid()->dates()), extraLegBuilders_(),
+                    edCopy, initMarket, configurations, amcEngineBuilders_(cam, simDates),
+                    extraLegBuilders_ ? extraLegBuilders_() : std::vector<boost::shared_ptr<ore::data::LegBuilder>>(),
                     referenceData_, iborFallbackConfig_);
 
                 portfolio->build(engineFactory, "amc-val-engine", true);
