@@ -221,7 +221,7 @@ void MultiThreadedValuationEngine::buildCube(
         DLOG("generator for thread " << (i + 1) << " cloned.");
     }
 
-    // build loaders for each thread as clones or the original one
+    // build loaders for each thread as clones of the original one
 
     LOG("Cloning loaders for " << eff_nThreads << " threads...");
     std::vector<boost::shared_ptr<ore::data::ClonedLoader>> loaders;
@@ -242,6 +242,7 @@ void MultiThreadedValuationEngine::buildCube(
     }
 
     // build progress indicator consolidating the results from the threads
+
     auto progressIndicator =
         boost::make_shared<ore::analytics::MultiThreadedProgressIndicator>(this->progressIndicators());
 
@@ -250,7 +251,7 @@ void MultiThreadedValuationEngine::buildCube(
     // LOG("Create thread pool with " << eff_nThreads);
     // ctpl::thread_pool threadPool(eff_nThreads);
 
-    // 8 create the jobs and push them to the pool
+    // create the jobs and push them to the pool
 
     using resultType = int;
     std::vector<std::future<resultType>> results(eff_nThreads);
@@ -310,7 +311,7 @@ void MultiThreadedValuationEngine::buildCube(
                 // build portfolio against sim market
 
                 auto tradeFactory = boost::make_shared<ore::data::TradeFactory>(referenceData_);
-                if(extraTradeBuilders_)
+                if (extraTradeBuilders_)
                     tradeFactory->addExtraBuilders(extraTradeBuilders_(referenceData_, tradeFactory));
                 auto portfolio = boost::make_shared<ore::data::Portfolio>();
                 portfolio->loadFromXMLString(portfoliosAsString[id], tradeFactory);
@@ -357,7 +358,7 @@ void MultiThreadedValuationEngine::buildCube(
                 rc = 1;
             }
 
-            // 8j exit
+            // exit
 
             return rc;
         };
@@ -391,7 +392,6 @@ void MultiThreadedValuationEngine::buildCube(
     // stop the thread pool, wait for unfinished jobs
 
     // LOG("Stop thread pool");
-
     // threadPool.stop(true);
 
     // set updated pricing stats in original portfolio
