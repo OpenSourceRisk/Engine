@@ -243,8 +243,8 @@ boost::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engineImpl(
 
     auto builder = boost::make_shared<CrossAssetModelBuilder>(
         market_, boost::make_shared<CrossAssetModelData>(irData, fxData, corr, tolerance), configurationInCcy,
-        configurationXois, configurationXois, configurationInCcy, configurationInCcy, configurationXois,
-        discountCurves.front()->dayCounter(), !calibrate, continueOnCalibrationError);
+        configurationXois, configurationXois, configurationInCcy, configurationInCcy, configurationXois, !calibrate,
+        continueOnCalibrationError);
 
     // build the pricing engine
 

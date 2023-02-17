@@ -158,7 +158,7 @@ public:
      *********************************/
     
     bool amc() { return amc_; }
-    const std::vector<std::string>& amcExcludeTradeTypes() { return amcExcludeTradeTypes_; }
+    const std::set<std::string>& amcTradeTypes() { return amcTradeTypes_; }
     const std::string& exposureBaseCurrency() { return exposureBaseCurrency_; }
     const std::string& exposureObservationModel() { return exposureObservationModel_; }
     const std::string& nettingSetId() { return nettingSetId_; }
@@ -360,7 +360,7 @@ protected:
      *******************/
     // bool simulation_ = false;
     bool amc_ = false;
-    std::vector<std::string> amcExcludeTradeTypes_;
+    std::set<std::string> amcTradeTypes_;
     std::string exposureBaseCurrency_ = "";
     std::string exposureObservationModel_ = "Disable";
     std::string nettingSetId_ = "";

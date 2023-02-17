@@ -66,7 +66,7 @@ protected:
     mutable std::vector<Currency> currency_;
     mutable std::vector<Real> payer_;
     mutable boost::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
-    mutable Settlement::Type optionSettlement_;
+    mutable Settlement::Type optionSettlement_ = Settlement::Physical;
 
     // data members
     const Handle<CrossAssetModel> model_;
