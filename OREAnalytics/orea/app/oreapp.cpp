@@ -63,26 +63,41 @@ vector<string> getFilenames(const string& fileString, const string& path) {
 namespace ore {
 namespace analytics {
 
-    std::set<std::string> OREApp::getAnalyticTypes() {
-    return analyticsManager_->validAnalytics();
+std::set<std::string> OREApp::getAnalyticTypes() {
+    if (!analyticsManager_) {
+        ALOG("analyticsManager_ not set yet, call analyticd first");
+        return std::set<std::string>();
+    }
+    else
+        return analyticsManager_->validAnalytics();
 }
 
-    const boost::shared_ptr<Analytic>& OREApp::getAnalytic(std::string type) {
+const boost::shared_ptr<Analytic>& OREApp::getAnalytic(std::string type) {
+    if (!analyticsManager_) {
+        string msg = "analyticsManager_ not set yet, call analyticd first";
+        ALOG(msg);
+        QL_FAIL(msg);
+    }
     return analyticsManager_->getAnalytic(type);
 }
 
 std::set<std::string> OREApp::getReportNames() {
     std::set<std::string> names;
-    Analytic::analytic_reports reports = analyticsManager_->reports();
-    for (const auto& rep : reports) {
-        string analytic = rep.first;
-        for (auto b : rep.second) {
-            string reportName = b.first;
-            if (names.find(reportName) == names.end())
-                names.insert(reportName);
-            else {
-                ALOG("report name " << reportName
-                     << " occurs more than once, will retrieve the first report with that only");
+    if (!analyticsManager_) {
+        ALOG("analyticsManager_ not set yet, call analyticd first");
+    }
+    else {
+        Analytic::analytic_reports reports = analyticsManager_->reports();
+        for (const auto& rep : reports) {
+            string analytic = rep.first;
+            for (auto b : rep.second) {
+                string reportName = b.first;
+                if (names.find(reportName) == names.end())
+                    names.insert(reportName);
+                else {
+                    ALOG("report name " << reportName
+                         << " occurs more than once, will retrieve the first report with that only");
+                }
             }
         }
     }
@@ -90,6 +105,12 @@ std::set<std::string> OREApp::getReportNames() {
 }
 
 boost::shared_ptr<PlainInMemoryReport> OREApp::getReport(std::string reportName) {
+    if (!analyticsManager_) {
+        string msg = "analyticsManager_ not set yet, call analyticd first";
+        ALOG(msg);
+        QL_FAIL(msg);
+    }
+
     for (const auto& rep : analyticsManager_->reports()) {
         string analytic = rep.first;
         for (auto b : rep.second) {
@@ -104,15 +125,20 @@ boost::shared_ptr<PlainInMemoryReport> OREApp::getReport(std::string reportName)
 
 std::set<std::string> OREApp::getCubeNames() {
     std::set<std::string> names;
-    for (const auto& c : analyticsManager_->npvCubes()) {
-        string analytic = c.first;
-        for (auto b : c.second) {
-            string cubeName = b.first;
-            if (names.find(cubeName) == names.end())
-                names.insert(cubeName);
-            else {
-                ALOG("cube name " << cubeName
-                     << " occurs more than once, will retrieve the first cube with that name only");
+    if (!analyticsManager_) {
+        ALOG("analyticsManager_ not set yet, call analytics first");
+    }
+    else {
+        for (const auto& c : analyticsManager_->npvCubes()) {
+            string analytic = c.first;
+            for (auto b : c.second) {
+                string cubeName = b.first;
+                if (names.find(cubeName) == names.end())
+                    names.insert(cubeName);
+                else {
+                    ALOG("cube name " << cubeName
+                         << " occurs more than once, will retrieve the first cube with that name only");
+                }
             }
         }
     }
@@ -120,6 +146,12 @@ std::set<std::string> OREApp::getCubeNames() {
 }
     
 boost::shared_ptr<NPVCube> OREApp::getCube(std::string cubeName) {
+    if (!analyticsManager_) {
+        string msg = "analyticsManager_ not set yet, call analyticd first";
+        ALOG(msg);
+        QL_FAIL(msg);
+    }
+
     for (const auto& c : analyticsManager_->npvCubes()) {
         string analytic = c.first;
         for (auto b : c.second) {
