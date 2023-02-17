@@ -63,6 +63,67 @@ vector<string> getFilenames(const string& fileString, const string& path) {
 namespace ore {
 namespace analytics {
 
+std::set<std::string> OREApp::getReportNames() {
+    std::set<std::string> names;
+    Analytic::analytic_reports reports = analyticsManager_->reports();
+    for (const auto& rep : reports) {
+        string analytic = rep.first;
+        for (auto b : rep.second) {
+            string reportName = b.first;
+            if (names.find(reportName) == names.end())
+                names.insert(reportName);
+            else {
+                ALOG("report name " << reportName
+                     << " occurs more than once, will retrieve the first report with that only");
+            }
+        }
+    }
+    return names;
+}
+
+boost::shared_ptr<PlainInMemoryReport> OREApp::getReport(std::string reportName) {
+    for (const auto& rep : analyticsManager_->reports()) {
+        string analytic = rep.first;
+        for (auto b : rep.second) {
+            if (reportName == b.first)
+                return boost::make_shared<PlainInMemoryReport>(b.second);
+        }
+    }
+    std::string msg = "report " + reportName + " not found in results";
+    ALOG(msg);
+    QL_FAIL(msg);
+}
+
+std::set<std::string> OREApp::getCubeNames() {
+    std::set<std::string> names;
+    for (const auto& c : analyticsManager_->npvCubes()) {
+        string analytic = c.first;
+        for (auto b : c.second) {
+            string cubeName = b.first;
+            if (names.find(cubeName) == names.end())
+                names.insert(cubeName);
+            else {
+                ALOG("cube name " << cubeName
+                     << " occurs more than once, will retrieve the first cube with that name only");
+            }
+        }
+    }
+    return names;
+}
+    
+boost::shared_ptr<NPVCube> OREApp::getCube(std::string cubeName) {
+    for (const auto& c : analyticsManager_->npvCubes()) {
+        string analytic = c.first;
+        for (auto b : c.second) {
+            if (cubeName == b.first)
+                return b.second;
+        }
+    }
+    std::string msg = "report " + cubeName + " not found in results";
+    ALOG(msg);
+    QL_FAIL(msg);
+}
+
 void OREApp::analytics(ostream& out) {
 
     try {
@@ -88,8 +149,8 @@ void OREApp::analytics(ostream& out) {
         auto loader = boost::make_shared<MarketDataCsvLoader>(inputs, inputs->csvLoader());
 
         // Create the analytics manager
-        auto analyticsManager = boost::make_shared<AnalyticsManager>(inputs, loader, out);
-        LOG("Available analytics: " << to_string(analyticsManager->validAnalytics()));
+        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs, loader, out);
+        LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
         out_ << setw(tab_) << left << "Requested analytics " << to_string(inputs->analytics()) << std::endl;
         LOG("Requested analytics: " << to_string(inputs->analytics()));
 
@@ -97,16 +158,17 @@ void OREApp::analytics(ostream& out) {
         // FIXME: How is the market calibration report supposed to work, no concrete implementation in orea yet
         // auto marketCalibrationReport = boost::make_shared<MarketCalibrationReport>();
         // analyticsManager->runAnalytics(inputs->runTypes(), marketCalibrationReport);
-        analyticsManager->runAnalytics(inputs->analytics());
+        analyticsManager_->runAnalytics(inputs->analytics());
 
         // Write reports to files in the results path
-        Analytic::analytic_reports reports = analyticsManager->reports();
-        analyticsManager->toFile(reports, inputs->resultsPath().string(), inputs->fileNameMap(),
-                                 inputs->csvSeparator(), inputs->csvCommentCharacter(),
-                                 inputs->csvQuoteChar(), inputs->reportNaString());
+        Analytic::analytic_reports reports = analyticsManager_->reports();
+        analyticsManager_->toFile(reports,
+                                  inputs->resultsPath().string(), inputs->fileNameMap(),
+                                  inputs->csvSeparator(), inputs->csvCommentCharacter(),
+                                  inputs->csvQuoteChar(), inputs->reportNaString());
 
         // Write npv cube(s)
-        for (auto a : analyticsManager->npvCubes()) {
+        for (auto a : analyticsManager_->npvCubes()) {
             for (auto b : a.second) {
                 LOG("write npv cube " << b.first);
                 string reportName = b.first;
@@ -117,7 +179,7 @@ void OREApp::analytics(ostream& out) {
         }
         
         // Write market cube(s)
-        for (auto a : analyticsManager->mktCubes()) {
+        for (auto a : analyticsManager_->mktCubes()) {
             for (auto b : a.second) {
                 string reportName = b.first;
                 std::string fileName = inputs->resultsPath().string() + "/" + inputs->outputFileName(reportName, "dat");

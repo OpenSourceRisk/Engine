@@ -33,6 +33,7 @@
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
 #include <orea/app/xvarunner.hpp>
+#include <orea/app/analyticsmanager.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/engine/parametricvar.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
@@ -77,6 +78,12 @@ public:
     boost::shared_ptr<ore::data::EngineFactory>
     buildEngineFactoryFromXMLString(const boost::shared_ptr<ore::data::Market>& market,
                                     const std::string& pricingEngineXML, const bool generateAdditionalResults = false);
+
+    std::set<std::string> getReportNames();
+    boost::shared_ptr<PlainInMemoryReport> getReport(std::string reportName);
+
+    std::set<std::string> getCubeNames();
+    boost::shared_ptr<NPVCube> getCube(std::string cubeName);
 
 protected:
     //! Use ORE functioanlity in analytics/analyticsmanager
@@ -264,8 +271,11 @@ protected:
 
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
 
+    boost::shared_ptr<AnalyticsManager> analyticsManager_;
+
 private:
     virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }
+
 };
 
 } // namespace analytics
