@@ -50,43 +50,40 @@ JointNPVSensiCube::JointNPVSensiCube(const std::vector<boost::shared_ptr<NPVSens
         QL_REQUIRE(cubes_[i]->depth() == cubes_[0]->depth(), "JointNPVSensiCube: depth do not match for cube #"
                                                                  << i << " (" << cubes_[i]->depth() << " vs. cube #0 ("
                                                                  << cubes[0]->depth() << ")");
-    }    
-    // build list of result cube ids
+    }
 
+    std::set<std::string> allIds;
     if (!ids.empty()) {
-        // if ids are given, these define the order in the result cube
-        Size pos = 0;
-        for (const auto& id : ids) {
-            idIdx_[id] = pos++;
-        }
+        // if ids are given, these define the ids in the result cube
+        allIds = ids;
     } else {
-        // otherwise the ids in the source cubes define the order in the result cube
-        Size pos = 0;
+        // otherwise the ids in the source cubes define the ids in the result cube
         for (Size i = 0; i < cubes_.size(); ++i) {
-            for (auto const& [id, _cubeIdx] : cubes_[i]->idsAndIndexes()) {
-                const auto& [it, success] = idIdx_.insert({id, pos});
+            for (auto const& [id, ignored] : cubes_[i]->idsAndIndexes()) {
+                const auto& [ignored2, success] = allIds.insert(id);
                 QL_REQUIRE(success,
                            "JointNPVSensiCube: input cubes have duplicate id '" << id << "', this is not allowed");
             }
         }
     }
 
-    // populate cubeAndId_ vector which is the basis for the lookup
+    // build list of result cube ids
+    Size pos = 0;
+    for (const auto& id : allIds) {
+        idIdx_[id] = pos++;
+    }
 
+    // populate cubeAndId_ vector which is the basis for the lookup
     cubeAndId_.resize(idIdx_.size());
     for (const auto& [id, jointPos] : idIdx_) {
-        bool foundUniqueId = false;
         for (auto const& c : cubes_) {
             auto searchIt = c->idsAndIndexes().find(id);
             if (searchIt != c->idsAndIndexes().end()) {
-                QL_REQUIRE(!foundUniqueId, "JointNPVSensiCube: internal error, found id '"
-                                               << id << "' in more than one input cubes");
-                foundUniqueId = true;
+                QL_REQUIRE(cubeAndId_[jointPos].first == nullptr,
+                           "JointNPVSensiCube: input cubes have duplicate id '" << id << "', this is not allowed");
                 cubeAndId_[jointPos] = std::make_pair(c, searchIt->second);
             }
         }
-        // internal consistency checks
-        QL_REQUIRE(foundUniqueId, "JointNPVSensiCube: internal error, got no input cube for id '" << id << "'");
     }
 }
 

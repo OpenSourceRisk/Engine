@@ -2560,15 +2560,14 @@ To use the AMC engine for an XVA simulation the following needs to be added to t
   ...
   <Parameter name="amc">Y</Parameter>
   <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
-  <Parameter name="amcExcludeTradeTypes">Swap,FxOption</Parameter>
+  <Parameter name="amcTradeTypes">Swaption</Parameter>
   ...
 </Analytic>
 \end{minted}
 
-The trades which can be built against engines in the given pricing engine configuration with engine type \verb+AMC+ and
-which do not have a trade type matching one of the types in the \verb+excludeTradeTypes+ list, will be processed in the
-AMC engine: As a naming convention, pricing engines with this engine type provide the required functionality to be
-processed by the AMC engine, for technical details cf. \ref{sec:app_amc}.
+The trades which have a trade type matching one of the types in the \verb+amcTradeTypes+ list, will be built against the
+pricing engine config provided and processed in the AMC engine. As a naming convention, pricing engines with engine type
+AMC provide the required functionality to be processed by the AMC engine, for technical details cf. \ref{sec:app_amc}.
 
 All other trades are processed by the classic simulation engine in ORE. The resulting cubes from the classic and AMC
 simulation are joined and passed to the post processor in the usual way.
@@ -3035,6 +3034,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="lazyMarketBuilding">false</Parameter>
   <Parameter name="continueOnError">false</Parameter>
   <Parameter name="buildFailedTrades">true</Parameter>
+  <Parameter name="nThreads">4</Parameter>
 </Setup>
 \end{minted}
 %\hrule
@@ -3094,6 +3094,9 @@ continue the processing. If not given, the parameter defaults to {\tt false}.
 \medskip If the parameter {\tt buildFailedTrades} is set to true, the application will build a dummy trade if loading or
 building the original trade fails. The dummy trade has trade type ``Failed'', zero notional and NPV.
 If not given, the parameter defaults to {\tt false}.
+
+\medskip If the parameter {\tt nThreads} is given, multiple threads will be used for valuation engine runs where
+applicable (Sensitivity, Exposure Classic, Exposure AMC). If not given, the parameter defaults to $1$.
 
 \subsubsection{Markets}\label{sec:master_input_markets}
 

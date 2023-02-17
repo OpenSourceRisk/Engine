@@ -42,8 +42,8 @@ public:
                       const std::set<std::string>& ids = {});
 
     /*! ctor for n input cubes
-        - If no ids are given, the order of the ids in the input cubes define the order in the resulting cube. If ids
-          are given they define the order of the ids in the output cube. The ids must be unique in either case.
+        If no ids are given, the ids in the input cubes define theids in the resulting cube, the ids must be unique
+        in this case. If ids are given they define the ids in the output cube.
      */
     JointNPVSensiCube(const std::vector<boost::shared_ptr<NPVSensiCube>>& cubes,
                       const std::set<std::string>& ids = {});
