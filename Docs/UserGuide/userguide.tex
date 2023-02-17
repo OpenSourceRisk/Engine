@@ -3034,6 +3034,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="lazyMarketBuilding">false</Parameter>
   <Parameter name="continueOnError">false</Parameter>
   <Parameter name="buildFailedTrades">true</Parameter>
+  <Parameter name="nThreads">4</Parameter>
 </Setup>
 \end{minted}
 %\hrule
@@ -3093,6 +3094,9 @@ continue the processing. If not given, the parameter defaults to {\tt false}.
 \medskip If the parameter {\tt buildFailedTrades} is set to true, the application will build a dummy trade if loading or
 building the original trade fails. The dummy trade has trade type ``Failed'', zero notional and NPV.
 If not given, the parameter defaults to {\tt false}.
+
+\medskip If the parameter {\tt nThreads} is given, multiple threads will be used for valuation engine runs where
+applicable (Sensitivity, Exposure Classic, Exposure AMC). If not given, the parameter defaults to $1$.
 
 \subsubsection{Markets}\label{sec:master_input_markets}
 
