@@ -127,6 +127,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                    boost::shared_ptr<ore::analytics::AggregationScenarioData> asd,
                    boost::shared_ptr<NPVCube> outputCube, boost::shared_ptr<ProgressIndicator> progressIndicator) {
 
+    progressIndicator->updateProgress(0, portfolio->size() + 1);
+
     // base currency is the base currency of the cam
 
     Currency baseCurrency = model->irlgm1f(0)->currency();
@@ -184,6 +186,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     std::vector<Real> effectiveMultiplier;
     std::vector<Size> currencyIndex;
     timer.start();
+    Size progressCounter = 0;
     for (auto const& trade : portfolio->trades()) {
         boost::shared_ptr<AmcCalculator> amcCalc;
         try {
@@ -209,7 +212,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
         } catch (const std::exception& e) {
             ALOG(StructuredTradeErrorMessage(trade.second, "Error building trade for AMC simulation", e.what()));
         }
-        progressIndicator->updateProgress(amcCalculators.size(), portfolio->size());
+        progressIndicator->updateProgress(++progressCounter, portfolio->size() + 1);
     }
     timer.stop();
     calibrationTime += timer.elapsed().wall * 1e-9;
@@ -244,7 +247,6 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     auto pathGenerator = makeMultiPathGenerator(sgd->sequenceType(), process, sgd->getGrid()->timeGrid(), sgd->seed());
     LOG("Run simulation (amc calculators implementing interface 1, write ASD, fill internal fx and irState "
         "buffers)...");
-    progressIndicator->reset();
     for (Size i = 0; i < outputCube->samples(); ++i) {
         timer.start();
         const MultiPath& path = pathGenerator->next().value;
@@ -387,13 +389,12 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
             timer.stop();
             asdTime += timer.elapsed().wall * 1e-9;
         }
-        progressIndicator->updateProgress(i + 1, outputCube->samples());
     }
+    progressIndicator->updateProgress(++progressCounter, portfolio->size() + 1);
 
     // Run AmcCalculators implementing interface 2
 
     LOG("Run simulation (amc calculators implementing interface 2)...");
-    progressIndicator->reset();
 
     // set up vectors indicating valuation times, close-out times and all times
 
@@ -491,7 +492,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                 }
             }
         }
-        progressIndicator->updateProgress(j + 1, amcCalculators.size());
+        progressIndicator->updateProgress(++progressCounter, portfolio->size() + 1);
     }
     timer.stop();
     valuationTime += timer.elapsed().wall * 1e-9;
@@ -504,7 +505,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     LOG("asd time             : " << asdTime << " sec");
     LOG("residual time        : " << residualTime << " sec");
     LOG("total time           : " << totalTime << " sec");
-    LOG("AMCValuationEngine finished");
+    LOG("AMCValuationEngine finished for one of possibly multiple threads.");
 } // runCoreEngine()
 
 } // namespace
