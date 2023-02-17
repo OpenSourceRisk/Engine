@@ -142,6 +142,8 @@ else()
     include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
 endif()
 
+# workaround when building with boost 1.81, see https://github.com/boostorg/phoenix/issues/111
+add_definitions(-DBOOST_PHOENIX_STL_TUPLE_H_)
 
 # set library locations
 get_filename_component(QUANTLIB_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../QuantLib" ABSOLUTE)
