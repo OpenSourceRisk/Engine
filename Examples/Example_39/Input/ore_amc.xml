@@ -15,6 +15,7 @@
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
+    <Parameter name="nThreads">2</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>
