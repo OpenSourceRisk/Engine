@@ -69,7 +69,7 @@ public:
     const QuantLib::Date& pricingDate() const { return pricingDate_; }
     bool useFutureExpiryDate() const { return useFutureExpiryDate_; }
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
-    QuantLib::Real periodQuantity() const { return periodQuantity_; }
+    QuantLib::Real periodQuantity() const override { return periodQuantity_; }
     QuantLib::Natural dailyExpiryOffset() const { return dailyExpiryOffset_; }
 
     //@}

@@ -935,12 +935,11 @@
 
   <xs:complexType name="commoditySpreadOptionData">
     <xs:sequence>
-      <xs:element type="legData" name="LegData" minOccurs="2" maxOccurs="unbounded"/>
+      <xs:element type="legData" name="LegData" minOccurs="2" maxOccurs="2"/>
+      <xs:element type="optionData" name="OptionData" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:double" name="SpreadStrike" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="optionType" name="OptionType" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="currencyCode" name="Currency" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="date" name="SettlementDate" minOccurs="0" maxOccurs="1"/>
-    </xs:sequence>
+      
+    </xs:sequence>  
   </xs:complexType>
 
   <xs:complexType name="commodityAveragePriceOptionData">
