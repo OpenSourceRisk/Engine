@@ -42,26 +42,44 @@ public:
                      std::ostream& out = std::cout);
     virtual ~AnalyticsManager() {};
 
-    //! Valid analytics in the base analytics manager are the union of analytics types provided by analytics_ map
-    bool isValidAnalytic(const std::string& type);
-    const std::vector<std::string>& validAnalytics();
-
-    void runAnalytics(const std::vector<std::string>& runTypes,
+    //! Valid analytics in the analytics manager are the union of analytics types provided by analytics_ map
+    bool hasAnalytic(const std::string& type);
+    const std::set<std::string>& validAnalytics();
+    const boost::shared_ptr<Analytic>& getAnalytic(const std::string& type) const;
+    Size numberOfAnalytics() { return analytics_.size(); }
+    const boost::shared_ptr<InputParameters>& inputs() { return inputs_; }
+    void runAnalytics(const std::set<std::string>& analyticTypes,
                       const boost::shared_ptr<MarketCalibrationReport>& marketCalibrationReport = nullptr);
-
     void addAnalytic(const std::string& label, const boost::shared_ptr<Analytic>& analytic);
-
+    void clear();
+    
     Analytic::analytic_reports const reports();
     Analytic::analytic_npvcubes const npvCubes();
     Analytic::analytic_mktcubes const mktCubes();
 
+    std::ostream& stream() { return out_; }
+
+    void setLaggedMarket() { laggedMarket_ = true; }
+    void unsetLaggedMarket() { laggedMarket_ = false; }
+
+    // Write all reports to files, reportNames map can be used to replace standard report names
+    // with custom names
+    void toFile(const Analytic::analytic_reports& reports,
+                const std::string& outputPath,
+                const std::map<std::string,std::string>& reportNames = {},
+                const char sep = ',',
+                const bool commentCharacter = false,
+                char quoteChar = '\0',
+                const string& nullString = "#N/A",
+                bool lowerHeader = false);
 private:
     std::map<std::string, boost::shared_ptr<Analytic>> analytics_;
     boost::shared_ptr<InputParameters> inputs_;
     boost::shared_ptr<MarketDataLoader> marketDataLoader_;
     Analytic::analytic_reports marketDataReports_;
-    std::vector<std::string> validAnalytics_;
+    std::set<std::string> validAnalytics_;
     std::ostream& out_;
+    bool laggedMarket_ = false;
 };
 
 boost::shared_ptr<AnalyticsManager> parseAnalytics(const std::string& s,

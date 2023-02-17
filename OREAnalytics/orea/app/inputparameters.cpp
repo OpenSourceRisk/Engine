@@ -44,6 +44,15 @@ void OREAppInputParameters::loadParameters() {
 
     LOG("OREAppInputParameters::loadParameters starting");
 
+    // Switch default values for backward compatibility
+    entireMarket_ = true; 
+    allFixings_ = true; 
+    eomInflationFixings_ = false;
+    useMarketDataFixings_ = false;
+    iborFallbackOverride_ = false;
+    dryRun_ = false;
+    outputAdditionalResults_ = false;
+
     QL_REQUIRE(params_->hasGroup("setup"), "parameter group 'setup' missing");
 
     std::string inputPath = params_->get("setup", "inputPath");
@@ -217,20 +226,20 @@ void OREAppInputParameters::loadParameters() {
      *************/
 
     tmp = params_->get("npv", "active", false);
-    if (tmp != "")
-        npv_ = parseBool(tmp);
+    if (!tmp.empty() && parseBool(tmp))
+        analytics_.insert("NPV");
 
     tmp = params_->get("npv", "additionalResults", false);
     if (tmp != "")
         outputAdditionalResults_ = parseBool(tmp);
 
     /*************
-     * Cashflows
+     * CASHFLOW
      *************/
 
     tmp = params_->get("cashflow", "active", false);
-    if (tmp != "")
-        cashflow_ = parseBool(tmp);
+    if (!tmp.empty() && parseBool(tmp))
+        analytics_.insert("CASHFLOW");
 
     tmp = params_->get("cashflow", "includePastCashflows", false);
     if (tmp != "")
@@ -257,7 +266,7 @@ void OREAppInputParameters::loadParameters() {
         outputTodaysMarketCalibration_ = parseBool(tmp);
     
     /*************
-     * Sensitivity
+     * SENSITIVITY
      *************/
 
     // FIXME: To be loaded from params or removed from the base class
@@ -266,10 +275,9 @@ void OREAppInputParameters::loadParameters() {
     // useSensiSpreadedTermStructures_ = true;
 
     tmp = params_->get("sensitivity", "active", false);
-    if (tmp != "")
-        sensi_ = parseBool(tmp);
+    if (!tmp.empty() && parseBool(tmp)) {
+        analytics_.insert("SENSITIVITY");
 
-    if (sensi_) {
         tmp = params_->get("sensitivity", "parSensitivity", false);
         if (tmp != "")
             parSensi_ = parseBool(tmp);
@@ -291,7 +299,7 @@ void OREAppInputParameters::loadParameters() {
         } else {
             WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
         }
-        
+
         sensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
         tmp = params_->get("sensitivity", "sensitivityConfigFile", false);
         if (tmp != "") {
@@ -312,23 +320,20 @@ void OREAppInputParameters::loadParameters() {
             WLOG("Pricing engine data not found for sensitivity analysis, using global");
             sensiPricingEngine_ = pricingEngine_;
         }
-        
-        tmp = params_->get("sensitivity", "outputSensitivityThreshold", false); 
+
+        tmp = params_->get("sensitivity", "outputSensitivityThreshold", false);
         if (tmp != "")
             sensiThreshold_ = parseReal(tmp);
     }
-    
+
     /****************
-     * Stress Testing
+     * STRESS
      ****************/
 
     tmp = params_->get("stress", "active", false);
-    if (tmp != "")
-        stress_ = parseBool(tmp);
-
-    stressPricingEngine_ = pricingEngine_;
-
-    if (stress_) {
+    if (!tmp.empty() && parseBool(tmp)) {
+        analytics_.insert("STRESS");
+        stressPricingEngine_ = pricingEngine_;
         stressSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
         tmp = params_->get("stress", "marketConfigFile", false);
         if (tmp != "") {
@@ -369,10 +374,9 @@ void OREAppInputParameters::loadParameters() {
      ****************/
 
     tmp = params_->get("parametricVar", "active", false);
-    if (tmp != "")
-        var_ = parseBool(tmp);
-
-    if (var_) {
+    if (!tmp.empty() && parseBool(tmp)) {
+        analytics_.insert("VAR");
+        
         tmp = params_->get("parametricVar", "salvageCovarianceMatrix", false);
         if (tmp != "")
             salvageCovariance_ = parseBool(tmp);
@@ -424,15 +428,16 @@ void OREAppInputParameters::loadParameters() {
     /************
      * Simulation
      ************/
-    
+
     tmp = params_->get("simulation", "active", false);
-    if (tmp != "")
-        simulation_ = parseBool(tmp);
+    if (!tmp.empty() && parseBool(tmp)) {
+        analytics_.insert("EXPOSURE");
+    }
 
     // check this here because we need to know 10 lines below
     tmp = params_->get("xva", "active", false);
-    if (tmp != "")
-        xva_ = parseBool(tmp);
+    if (!tmp.empty() && parseBool(tmp))
+        analytics_.insert("XVA");
     
     tmp = params_->get("simulation", "amc", false);
     if (tmp != "")
@@ -448,7 +453,8 @@ void OREAppInputParameters::loadParameters() {
     exposureObservationModel_ = observationModel_;
     exposureBaseCurrency_ = baseCurrency_;
 
-    if (simulation_ || xva_) {
+    if (analytics_.find("EXPOSURE") != analytics_.end() ||
+        analytics_.find("XVA") != analytics_.end()) {
         exposureSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
         crossAssetModelData_ = boost::make_shared<CrossAssetModelData>();
         // A bit confusing: The scenario generator data are needed for XVA post-processing
@@ -526,7 +532,7 @@ void OREAppInputParameters::loadParameters() {
     }
 
     /**********************
-     * XVA
+     * XVA specifically
      **********************/
 
     tmp = params_->get("xva", "baseCurrency", false);
@@ -534,8 +540,9 @@ void OREAppInputParameters::loadParameters() {
         xvaBaseCurrency_ = tmp;
     else
         xvaBaseCurrency_ = exposureBaseCurrency_;
-        
-    if (xva_ && !simulation_) {
+
+    if (analytics_.find("XVA") != analytics_.end() &&
+        analytics_.find("EXPOSURE") == analytics_.end()) {
         loadCube_ = true;
         tmp = params_->get("xva", "cubeFile", false);
         if (tmp != "") {
@@ -548,9 +555,11 @@ void OREAppInputParameters::loadParameters() {
             ALOG("cube file name not provided");
         }
     }
-    
+
     nettingSetManager_ = boost::make_shared<NettingSetManager>();
-    if (xva_ || simulation_) {
+
+    if (analytics_.find("XVA") != analytics_.end() ||
+        analytics_.find("EXPOSURE") != analytics_.end()) {
         tmp = params_->get("xva", "csaFile", false);
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
         string csaFile = inputPath + "/" + tmp;
@@ -809,58 +818,6 @@ void OREAppInputParameters::loadParameters() {
 
     csvLoader_ = boost::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings_);
 
-    /*****************************
-     * Collect requested run types
-     */
-    runTypes_.clear();
-    
-    if (npv_)
-        runTypes_.push_back("NPV");
-    
-    if (cashflow_)
-        runTypes_.push_back("CASHFLOW");
-
-    if (sensi_)
-        runTypes_.push_back("SENSITIVITY");
-
-    if (simulation_)
-        runTypes_.push_back("EXPOSURE");
-
-    if (stress_)
-        runTypes_.push_back("STRESS");
-
-    if (var_) {
-        if (varMethod_ == "Delta")
-            runTypes_.push_back("DELTA");
-        else if (varMethod_ == "DeltaGammaNormal")
-            runTypes_.push_back("DELTA-GAMMA-NORMAL-VAR");
-        else if (varMethod_ == "MonteCarlo")
-            runTypes_.push_back("MONTE-CARLO-VAR");
-        else {
-            QL_FAIL("VaR method " << varMethod_ << " not covered");
-        }
-    }
-
-    if (xva_) {
-        if (cvaAnalytic_)
-            runTypes_.push_back("CVA");
-        if (dvaAnalytic_)
-            runTypes_.push_back("DVA");
-        if (fvaAnalytic_)
-            runTypes_.push_back("FVA");
-        if (colvaAnalytic_)
-            runTypes_.push_back("COLVA");
-        if (collateralFloorAnalytic_)
-            runTypes_.push_back("COLLATERALFLOOR");
-        if (dimAnalytic_)
-            runTypes_.push_back("DIM");
-        if (mvaAnalytic_)
-            runTypes_.push_back("MVA");
-        if (kvaAnalytic_)
-            runTypes_.push_back("KVA");
-    }
-    
-
     /***************************
      * Collect output file names
      */
@@ -883,7 +840,7 @@ void OREAppInputParameters::loadParameters() {
     jacobiInverseFileName_ = params_->get("sensitivity", "jacobiInverseOutputFile", false);    
     sensitivityScenarioFileName_ = params_->get("sensitivity", "scenarioOutputFile", false);    
     stressTestFileName_ = params_->get("stress", "scenarioOutputFile", false);    
-    varFileName_ = params_->get("var", "outputFile", false);
+    varFileName_ = params_->get("parametricVar", "outputFile", false);
     
     // map internal report name to output file name
     fileNameMap_["npv"] = npvOutputFileName_;
