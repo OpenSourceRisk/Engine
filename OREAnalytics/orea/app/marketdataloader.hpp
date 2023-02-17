@@ -24,6 +24,7 @@
 
 #include <ored/marketdata/inmemoryloader.hpp>
 #include <orea/app/inputparameters.hpp>
+#include <ored/utilities/to_string.hpp>
 
 namespace ore {
 namespace analytics {
@@ -32,13 +33,13 @@ typedef std::map<QuantLib::Date, std::set<std::string>> QuoteMap;
 typedef std::map<std::string, std::set<QuantLib::Date>> FixingMap;
 
 //! Utility class for Structured Fixing errors
-class StructuredFixingErrorMessage : public StructuredMessage {
+class StructuredFixingWarningMessage : public StructuredMessage {
 public:
-    StructuredFixingErrorMessage(const std::string& fixingId, const std::string& exceptionType,
-                                const std::string& exceptionWhat = "")
-        : StructuredMessage(
-              "Error", "Fixing", exceptionWhat,
-              std::map<std::string, std::string>({{"exceptionType", exceptionType}, {"fixingId", fixingId}})) {}
+    StructuredFixingWarningMessage(const std::string& fixingId, const QuantLib::Date& fixingDate,
+        const std::string& exceptionType, const std::string& exceptionWhat = "")
+        : StructuredMessage("Warning", "Fixing", exceptionWhat, 
+            std::map<std::string, std::string>({{"exceptionType", exceptionType}, {"fixingId", fixingId}, 
+                {"fixingDate", ore::data::to_string(fixingDate)}})) {}
 };
 
 class MarketDataLoaderImpl {
@@ -79,7 +80,7 @@ public:
 
     virtual void populateFixings(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters);
 
-    virtual void addRelevantFixings(const std::pair<std::string, std::set<QuantLib::Date>>& fixing,
+    virtual void addRelevantFixings(const std::pair<std::string, std::set<QuantLib::Date>>& fixing, FixingMap& fixings,
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>>& lastAvailableFixingLookupMap);
 
     //! clear the loader
@@ -92,7 +93,6 @@ public:
 protected:
     boost::shared_ptr<InputParameters> inputs_;
     boost::shared_ptr<ore::data::InMemoryLoader> loader_;
-    FixingMap fixings_;
     QuoteMap quotes_;
 
     const boost::shared_ptr<MarketDataLoaderImpl>& impl() const;
