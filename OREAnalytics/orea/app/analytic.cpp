@@ -1005,7 +1005,6 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
         bool doAmcRun = false;
 
         // Initialize the residual "classical" portfolio that we do not process using AMC
-        inputs_->portfolio()->reset();
         auto residualPortfolio = boost::make_shared<Portfolio>(inputs_->buildFailedTrades());
 
         if (inputs_->amc()) {
