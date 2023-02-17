@@ -88,7 +88,7 @@ void XvaRunner::buildCamModel(const boost::shared_ptr<ore::data::Market>& market
     CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, Market::defaultConfiguration,
                                         Market::defaultConfiguration, Market::defaultConfiguration,
                                         Market::defaultConfiguration, Market::defaultConfiguration,
-                                        Market::defaultConfiguration, ActualActual(ActualActual::ISDA), false, continueOnErr);
+                                        Market::defaultConfiguration, false, continueOnErr);
     model_ = *modelBuilder.model();
 }
 

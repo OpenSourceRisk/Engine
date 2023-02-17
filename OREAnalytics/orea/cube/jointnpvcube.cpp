@@ -54,25 +54,25 @@ JointNPVCube::JointNPVCube(const std::vector<boost::shared_ptr<NPVCube>>& cubes,
                                                                  << cubes[0]->depth() << ")");
     }
 
-    // build list of result cube ids
+    std::set<std::string> allIds;
     if (!ids.empty()) {
-        // if ids are given, these define the order in the result cube
-        Size pos = 0;
-        for (const auto& id : ids) {
-            idIdx_[id] = pos++;
-        }
+        // if ids are given, these define the ids in the result cube
+        allIds = ids;
     } else {
-        // otherwise the ids in the source cubes define the order in the result cube
-        Size pos = 0;
+        // otherwise the ids in the source cubes define the ids in the result cube
         for (Size i = 0; i < cubes_.size(); ++i) {
-            for (auto const& [id, idxInCube] : cubes_[i]->idsAndIndexes()) {
-                const auto& [it, success] = idIdx_.insert({id, pos});
+            for (auto const& [id, ignored] : cubes_[i]->idsAndIndexes()) {
+                const auto& [ignored2, success] = allIds.insert(id);
                 QL_REQUIRE(!requireUniqueIds || success,
                            "JointNPVSensiCube: input cubes have duplicate id '" << id << "', this is not allowed");
-                if (success)
-                    ++pos;
             }
         }
+    }
+
+    // build list of result cube ids
+    Size pos = 0;
+    for (const auto& id : allIds) {
+        idIdx_[id] = pos++;
     }
 
     // populate cubeAndId_ vector which is the basis for the lookup

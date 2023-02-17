@@ -25,7 +25,6 @@
 
 #include <vector>
 
-#include <ql/time/daycounters/actualactual.hpp>
 #include <ql/types.hpp>
 
 #include <qle/models/crossassetmodel.hpp>
@@ -76,8 +75,6 @@ public:
         const std::string& configurationCrCalibration = Market::defaultConfiguration,
         //! Market configuration for simulation
         const std::string& configurationFinalModel = Market::defaultConfiguration,
-        //! Daycounter for date/time conversions
-        const DayCounter& dayCounter = ActualActual(ActualActual::ISDA),
         //! calibrate the model?
         const bool dontCalibrate = false,
         //! continue if bootstrap error exceeds tolerance
@@ -137,7 +134,6 @@ private:
     const boost::shared_ptr<CrossAssetModelData> config_;
     const std::string configurationLgmCalibration_, configurationFxCalibration_, configurationEqCalibration_,
         configurationInfCalibration_, configurationCrCalibration_, configurationComCalibration_, configurationFinalModel_;
-    const DayCounter dayCounter_;
     const bool dontCalibrate_;
     const bool continueOnError_;
     const std::string referenceCalibrationGrid_;
