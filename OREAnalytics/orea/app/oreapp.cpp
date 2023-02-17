@@ -63,6 +63,14 @@ vector<string> getFilenames(const string& fileString, const string& path) {
 namespace ore {
 namespace analytics {
 
+    std::set<std::string> OREApp::getAnalyticTypes() {
+    return analyticsManager_->validAnalytics();
+}
+
+    const boost::shared_ptr<Analytic>& OREApp::getAnalytic(std::string type) {
+    return analyticsManager_->getAnalytic(type);
+}
+
 std::set<std::string> OREApp::getReportNames() {
     std::set<std::string> names;
     Analytic::analytic_reports reports = analyticsManager_->reports();

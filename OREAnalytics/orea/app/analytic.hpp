@@ -96,11 +96,11 @@ public:
 
     //! Run only those analytic types that are inclcuded in the runTypes vector, run all if the runType vector is empty 
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                             const std::set<std::string>& runTypes = {}) = 0;
+                             const std::set<std::string>& runTypes = {}) {}
 
     // we can build configurations here (today's market params, scenario sim market params, sensitivity scenasrio data)
-    virtual void buildConfigurations() {};
-    virtual void setUpConfigurations() = 0;
+    virtual void buildConfigurations() {}
+    virtual void setUpConfigurations() {}
     virtual void buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const boost::shared_ptr<CurveConfigurations>& curveConfig, 
                              const bool marketRequired = true);

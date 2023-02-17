@@ -61,7 +61,7 @@ public:
     //! Destructor
     virtual ~OREApp();
     //! generates XVA reports for a given portfolio and market
-    virtual int run(bool useAnalytics = false);
+    virtual int run(bool useAnalytics = true);
 
     //! Load curve configurations from xml file, build t0 market using market data provided.
     //! If any of the passed vectors are empty fall back on OREApp::buildMarket() and use market/fixing data files
@@ -79,6 +79,9 @@ public:
     buildEngineFactoryFromXMLString(const boost::shared_ptr<ore::data::Market>& market,
                                     const std::string& pricingEngineXML, const bool generateAdditionalResults = false);
 
+    std::set<std::string> getAnalyticTypes();
+    const boost::shared_ptr<Analytic>& getAnalytic(std::string type); 
+    
     std::set<std::string> getReportNames();
     boost::shared_ptr<PlainInMemoryReport> getReport(std::string reportName);
 

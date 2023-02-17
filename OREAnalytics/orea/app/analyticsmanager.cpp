@@ -70,7 +70,7 @@ void AnalyticsManager::addAnalytic(const std::string& label, const boost::shared
     // This forces an update of valid analytics vector with the next call to validAnalytics()
     validAnalytics_.clear();
 }
-    
+
 const std::set<std::string>& AnalyticsManager::validAnalytics() {
     if (validAnalytics_.size() == 0) {
         for (auto a : analytics_) {
@@ -87,9 +87,12 @@ bool AnalyticsManager::hasAnalytic(const std::string& type) {
 }
 
 const boost::shared_ptr<Analytic>& AnalyticsManager::getAnalytic(const std::string& type) const {
-    auto it = analytics_.find(type);
-    QL_REQUIRE(it != analytics_.end(), "Analytic type " << type << " not found");
-    return it->second;
+    for (const auto& a : analytics_) {
+        const std::set<std::string>& types = a.second->analyticTypes();
+        if (types.find(type) != types.end())
+            return a.second;
+    }
+    QL_FAIL("analytic type " << type << " not found, check validAnalytics()");
 }
 
 void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
