@@ -98,7 +98,7 @@ public:
     const set<string>& portfolioIds() const { return portfolioIds_; }
     const map<string, string> additionalFields() const {
         map<string, string> stringAddFields;
-        for (const auto f : additionalFields_)
+        for (const auto& f : additionalFields_)
             if (f.second.type() == typeid(string))
                 stringAddFields[f.first] = boost::any_cast<string>(f.second);
         return stringAddFields;
