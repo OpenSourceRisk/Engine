@@ -15,8 +15,6 @@ contribution to risk analytics and model standardisation, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
-
 #pragma once
 
 #include <boost/make_shared.hpp>
@@ -74,7 +72,7 @@ protected:
                                                         << ", using default value " << beta);
         }
         if(longIndex->underlyingName() == shortIndex->underlyingName()){ // calendar spread option
-            rho = Handle<QuantExt::CorrelationTermStructure>(boost::make_shared<FlatCorrelation>(0,QuantLib::NullCalendar(), 1.0, QuantLib::Actual365Fixed()));
+            rho = Handle<QuantExt::CorrelationTermStructure>(boost::make_shared<QuantExt::FlatCorrelation>(0,QuantLib::NullCalendar(), 1.0, QuantLib::Actual365Fixed()));
         }else {
             rho = market_->correlationCurve("COMM-"+longIndex->underlyingName(), "COMM-"+shortIndex->underlyingName(),
                                                   configuration(MarketContext::pricing));
