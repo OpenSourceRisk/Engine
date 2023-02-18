@@ -62,7 +62,7 @@ CommoditySpreadOption::CommoditySpreadOption(const boost::shared_ptr<CommodityCa
     }
 }
 
-bool CommoditySpreadOption::isExpired() const { return exercise_->lastDate() < Settings::instance().evaluationDate(); }
+bool CommoditySpreadOption::isExpired() const { return paymentDate_ < Settings::instance().evaluationDate(); }
 
 Real CommoditySpreadOption::effectiveStrike() const {
     return (strikePrice_ - longAssetFlow_->spread() + shortAssetFlow_->spread());

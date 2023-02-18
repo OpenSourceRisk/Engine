@@ -66,6 +66,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
 
     double df = discountCurve_->discount(paymentDate);
 
+    Time ttp = discountCurve_->timeFromReference(paymentDate);
     Time tte = discountCurve_->timeFromReference(exerciseDate);
 
     auto parameterFlow1 =
@@ -92,15 +93,14 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     // Adjust strike for past fixings
     double effectiveStrike = arguments_.effectiveStrike - w1 * accruals1 + w2 * accruals2;
 
-    if (exerciseDate <= today && paymentDate >= today) {
+    if (exerciseDate <= today && paymentDate <= today) {
         results_.value = 0;
-    } else if (exerciseDate <= today && paymentDate < today) {
+    } else if (exerciseDate <= today && paymentDate > today) {
         // if observation time is before expiry, continue the process with zero vol and zero drift from pricing date to
         // expiry
         double omega = arguments_.type == Option::Call ? 1 : -1;
 
-        results_.value =
-            df * arguments_.quantity * omega * std::max(w1 * F1 - w2 * F2 - arguments_.effectiveStrike, 0.0);
+        results_.value = df * arguments_.quantity * omega * std::max(w1 * F1 - w2 * F2 - effectiveStrike, 0.0);
 
     } else if (effectiveStrike + F2 * w2 < 0) {
         // Effective strike can be become negative if accrueds large enough
@@ -136,11 +136,16 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     mp["sigma2"] = sigma2;
     mp["obsTime2"] = obsTime2;
     mp["tte"] = tte;
+    mp["ttp"] = ttp;
+    mp["df"] = df;
     mp["sigma"] = sigma;
     mp["stdDev"] = stdDev;
     mp["Y"] = Y;
     mp["Z"] = Z;
+    mp["quantity"] = arguments_.quantity;
     mp["npv"] = results_.value;
+    mp["exerciseDate"] = exerciseDate;
+    mp["paymentDate"] = paymentDate;
 }
 
 CommoditySpreadOptionAnalyticalEngine::PricingParameter
