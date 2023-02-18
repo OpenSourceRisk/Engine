@@ -25,8 +25,8 @@ using QuantExt::OptionPriceSurface;
 namespace ore {
 namespace analytics {
 
-void MarketDataCsvLoader::loadCorporateActionData(boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                                                  const std::map<std::string, std::string>& equities) {
+void MarketDataCsvLoaderImpl::loadCorporateActionData(boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+                                                  const map<string, string>& equities) {
     for (const auto& div : csvLoader_->loadDividends()) {
         for (const auto& it : equities) {
             if (div.name == it.second)
@@ -35,13 +35,10 @@ void MarketDataCsvLoader::loadCorporateActionData(boost::shared_ptr<ore::data::I
     }
 }
 
-void MarketDataCsvLoader::addExpiredContracts(ore::data::InMemoryLoader& loader, const std::set<std::string>& quotes, 
-                                              const QuantLib::Date& npvLaggedDate) {
-}
-
-void MarketDataCsvLoader::retrieveMarketData(
-        const boost::shared_ptr<ore::data::InMemoryLoader>& loader, const std::set<std::string>& quotes,
-        const QuantLib::Date& relabelDate) {        
+void MarketDataCsvLoaderImpl::retrieveMarketData(
+    const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    const map<Date, set<string>>& quotes,
+    const Date& relabelDate) {        
     // load csvLoader quotes and add to loader if valid
     // doesn't currently handle Lagged or Mpor Date
     if (inputs_->entireMarket()) {
@@ -49,30 +46,33 @@ void MarketDataCsvLoader::retrieveMarketData(
             loader->add(inputs_->asof(), md->name(), md->quote()->value());
         }
     } else {
-        for (const auto& q : quotes) {
-            Wildcard wc(q);
-            if (!wc.hasWildcard()) {
-                // if we don't have it, it's probably optional, just leave it out for now
-                if (csvLoader_->has(q, inputs_->asof())) {
-                    boost::shared_ptr<MarketDatum> datum = csvLoader_->get(q, inputs_->asof());
-                    loader->add(inputs_->asof(), datum->name(), datum->quote()->value());
+        for (const auto& qd : quotes) {
+            auto d = qd.first;
+            for (const auto& q : qd.second) {
+                Wildcard wc(q);
+                if (!wc.hasWildcard()) {
+                    // if we don't have it, it's probably optional, just leave it out for now
+                    if (csvLoader_->has(q, d)) {
+                        boost::shared_ptr<MarketDatum> datum = csvLoader_->get(q, d);
+                        loader->add(d, datum->name(), datum->quote()->value());
+                    } else {
+                        WLOG("Missing required quote " << q << " for date " << d);
+                    }
+
                 } else {
-                    WLOG("Missing required quote " << q); 
-                }
-                
-            } else {
-                // a bit messy, we loop over all quotes each time
-                for (auto md : csvLoader_->loadQuotes(inputs_->asof())) {
-                    if (wc.matches(md->name()))
-                        loader->add(inputs_->asof(), md->name(), md->quote()->value());
+                    // a bit messy, we loop over all quotes each time
+                    for (auto md : csvLoader_->loadQuotes(d)) {
+                        if (wc.matches(md->name()))
+                            loader->add(d, md->name(), md->quote()->value());
+                    }
                 }
             }
         }
     }
 }
 
-void MarketDataCsvLoader::retrieveFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-        std::map<std::string, std::set<QuantLib::Date>> fixings,
+void MarketDataCsvLoaderImpl::retrieveFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+        map<string, set<Date>> fixings,
         map<pair<string, Date>, set<Date>> lastAvailableFixingLookupMap) {
 
     LOG("MarketDataCsvLoader::retrieveFixings called: all fixings ? " << (inputs_->allFixings() ? "Y" : "N"));
@@ -102,34 +102,21 @@ void MarketDataCsvLoader::retrieveFixings(const boost::shared_ptr<ore::data::InM
             }
         }
     }
-}    
 
-MarketDataFixings MarketDataCsvLoader::retrieveMarketDataFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                                                                 const MarketDataFixings& mdFixings) {
-    MarketDataFixings missingFixings;
-
-    for (const auto& mdFixing : mdFixings.fixings()) {
-        MarketDataFixings::FixingInfo fi;
-        fi.fixingNames = mdFixing.second.fixingNames;
-        vector<Date> dates;
-        for (const auto& d : mdFixing.second.dates) {
-            if (csvLoader_->has(mdFixing.first, d))
-                dates.push_back(d);
-            else
-                fi.dates.insert(d);
-        }
-        if (dates.size() > 0) {
-            for (const auto& d : dates) {
-                auto fix = csvLoader_->get(mdFixing.first, d);
-                for (const auto& fm : mdFixing.second.fixingNames)
-                    loader->add(d, fm, fix->quote()->value());
+    for (const auto& fp : lastAvailableFixingLookupMap) {
+        if (loader->getFixing(fp.first.first, fp.first.second).empty()) {
+            set<Date>::reverse_iterator rit;
+            for (rit = fp.second.rbegin(); rit != fp.second.rend(); rit++) {
+                auto f = loader->getFixing(fp.first.first, *rit);
+                if (!f.empty()) {
+                    loader->addFixing(fp.first.second, fp.first.first, f.fixing);
+                    break;
+                }
             }
+            WLOG("MarketDataCsvLoader::retrieveFixings(::load Could not find fixing for id " << fp.first.first << " on date "
+                                                                       << fp.first.second << ". ");
         }
-        if (fi.dates.size() > 0)
-            missingFixings.add(mdFixing.first, fi);
     }
-    
-    return missingFixings;    
 }
 
 } // namespace analytics

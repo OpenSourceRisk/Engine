@@ -81,6 +81,13 @@ boost::shared_ptr<MarketDatum> Loader::get(const std::pair<std::string, bool>& n
     }
 }
 
+bool Loader::hasFixing(const string& name, const QuantLib::Date& d) const {
+    try {
+        return !getFixing(name, d).empty();
+    } catch (...) {
+        return false;
+    }
+}
 
 Fixing Loader::getFixing(const string& name, const QuantLib::Date& d) const {
     Fixing fixing;

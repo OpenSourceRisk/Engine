@@ -27,37 +27,40 @@
 
 namespace ore {
 namespace analytics {
-using namespace ore::data;
     
-class MarketDataCsvLoader : public ore::analytics::MarketDataLoader {
+class MarketDataCsvLoaderImpl : public MarketDataLoaderImpl {
 public:
-    MarketDataCsvLoader(const boost::shared_ptr<ore::analytics::InputParameters>& inputParameters,
-        const boost::shared_ptr<CSVLoader>& csvLoader)
-        : MarketDataLoader(inputParameters), csvLoader_(csvLoader) {}
+    MarketDataCsvLoaderImpl() {}
+
+    MarketDataCsvLoaderImpl(const boost::shared_ptr<InputParameters>& inputs, 
+        const boost::shared_ptr<ore::data::CSVLoader>& csvLoader)
+        : inputs_(inputs), csvLoader_(csvLoader) {}
     
     void loadCorporateActionData(boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                                  const std::map<std::string, std::string>& equities) override;
     
     void retrieveMarketData(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                            const std::set<std::string>& quotes,
-                            const QuantLib::Date& relabelDate = QuantExt::Null<QuantLib::Date>()) override;
-        
+        const ore::analytics::QuoteMap& quotes,
+        const QuantLib::Date& relabelDate = QuantExt::Null<QuantLib::Date>()) override;        
     
     void retrieveFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                         std::map<std::string, std::set<QuantLib::Date>> fixings = {},
-                         map<pair<string, Date>, set<Date>> lastAvailableFixingLookupMap = {}) override; 
+        ore::analytics::FixingMap fixings = {},
+        std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap = {}) override;
 
-    MarketDataFixings retrieveMarketDataFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                                                const MarketDataFixings& mdFixings) override;  
-
-    void addExpiredContracts(ore::data::InMemoryLoader& loader, const std::set<std::string>& quotes, 
-                             const QuantLib::Date& npvLaggedDate) override;
+    void retrieveExpiredContracts(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, const QuoteMap& quotes,
+                             const Date& npvLaggedDate) override {};
 
 private:
-    boost::shared_ptr<CSVLoader> csvLoader_;
+    boost::shared_ptr<InputParameters> inputs_;
+    boost::shared_ptr<ore::data::CSVLoader> csvLoader_;
 };
 
-
+class MarketDataCsvLoader : public MarketDataLoader {
+public: 
+    MarketDataCsvLoader(const boost::shared_ptr<InputParameters>& inputs,
+                        const boost::shared_ptr<ore::data::CSVLoader>& csvLoader)
+        : MarketDataLoader(inputs, boost::make_shared<MarketDataCsvLoaderImpl>(inputs, csvLoader)) {}
+};
     
 } // namespace analytics
 } // namespace ore
