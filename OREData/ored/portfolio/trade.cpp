@@ -197,6 +197,16 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                     if (arc.forecastDividends != Null<Real>())
                         additionalData_["forecastDividends[" + legID + "]"] = arc.forecastDividends;
                 }
+
+                if (auto cpic = boost::dynamic_pointer_cast<QuantExt::CPICoupon>(flow)) {
+                    Real baseCPI = cpic->baseCPI();
+                    if (baseCPI == Null<Real>())
+                        baseCPI =
+                            QuantLib::CPI::laggedFixing(cpic->cpiIndex(), cpic->baseDate() + cpic->observationLag(),
+                                                        cpic->observationLag(), cpic->observationInterpolation());
+
+                    additionalData_["baseCPI[" + legID + "]"] = baseCPI;
+                }
             }
             break;
         }
