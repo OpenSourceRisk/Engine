@@ -45,6 +45,7 @@ public:
     //! Valid analytics in the analytics manager are the union of analytics types provided by analytics_ map
     bool hasAnalytic(const std::string& type);
     const std::set<std::string>& validAnalytics();
+    const std::set<std::string>& requestedAnalytics();
     const boost::shared_ptr<Analytic>& getAnalytic(const std::string& type) const;
     Size numberOfAnalytics() { return analytics_.size(); }
     const boost::shared_ptr<InputParameters>& inputs() { return inputs_; }
@@ -78,6 +79,7 @@ private:
     boost::shared_ptr<MarketDataLoader> marketDataLoader_;
     Analytic::analytic_reports marketDataReports_;
     std::set<std::string> validAnalytics_;
+    std::set<std::string> requestedAnalytics_;
     std::ostream& out_;
     bool laggedMarket_ = false;
 };

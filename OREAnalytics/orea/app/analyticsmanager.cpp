@@ -81,6 +81,10 @@ const std::set<std::string>& AnalyticsManager::validAnalytics() {
     return validAnalytics_;
 }
 
+const std::set<std::string>& AnalyticsManager::requestedAnalytics() {
+    return requestedAnalytics_;
+}
+    
 bool AnalyticsManager::hasAnalytic(const std::string& type) {
     const std::set<std::string>& va = validAnalytics();
     return va.find(type) != va.end();
@@ -98,6 +102,8 @@ const boost::shared_ptr<Analytic>& AnalyticsManager::getAnalytic(const std::stri
 void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
                                     const boost::shared_ptr<MarketCalibrationReport>& marketCalibrationReport) {
 
+    requestedAnalytics_ = analyticTypes;
+    
     if (analytics_.size() == 0)
         return;
 

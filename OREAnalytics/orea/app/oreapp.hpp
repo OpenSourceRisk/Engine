@@ -80,6 +80,7 @@ public:
                                     const std::string& pricingEngineXML, const bool generateAdditionalResults = false);
 
     std::set<std::string> getAnalyticTypes();
+    std::set<std::string> getSupportedAnalyticTypes();
     const boost::shared_ptr<Analytic>& getAnalytic(std::string type); 
     
     std::set<std::string> getReportNames();

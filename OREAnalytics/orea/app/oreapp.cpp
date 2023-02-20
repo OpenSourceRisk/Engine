@@ -69,6 +69,15 @@ std::set<std::string> OREApp::getAnalyticTypes() {
         return std::set<std::string>();
     }
     else
+        return analyticsManager_->requestedAnalytics();
+}
+
+std::set<std::string> OREApp::getSupportedAnalyticTypes() {
+    if (!analyticsManager_) {
+        ALOG("analyticsManager_ not set yet, call analyticd first");
+        return std::set<std::string>();
+    }
+    else
         return analyticsManager_->validAnalytics();
 }
 
@@ -229,14 +238,14 @@ void OREApp::analytics(ostream& out) {
         }        
     }
     catch (std::exception& e) {
-        ALOG("Error: " << e.what());
-        out_ << "Error: " << e.what() << endl;
-        exit(1);
+        ostringstream oss;
+        oss << "Error in ORE analytics: " << e.what();
+        ALOG(oss.str());
+        out_ << oss.str() << endl;
+        QL_FAIL(oss.str());
     }
 
     LOG("ORE analytics done");
-
-    exit(0);
 }
     
 OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
