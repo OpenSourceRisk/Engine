@@ -203,7 +203,6 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                     baseCPI = cpic->baseCPI();
                     if (baseCPI == Null<Real>()) {
                         try {
-
                             baseCPI =
                                 QuantLib::CPI::laggedFixing(cpic->cpiIndex(), cpic->baseDate() + cpic->observationLag(),
                                                             cpic->observationLag(), cpic->observationInterpolation());
