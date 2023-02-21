@@ -206,6 +206,14 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                                                         cpic->observationLag(), cpic->observationInterpolation());
 
                     additionalData_["baseCPI[" + legID + "]"] = baseCPI;
+                } else if (auto cpicf = boost::dynamic_pointer_cast<QuantLib::CPICashFlow>(flow)) {
+                    Real baseCPI = cpicf->baseFixing();
+                    if (baseCPI == Null<Real>())
+                        baseCPI =
+                            QuantLib::CPI::laggedFixing(cpicf->cpiIndex(), cpicf->baseDate() + cpicf->observationLag(),
+                                                        cpicf->observationLag(), cpicf->interpolation());
+
+                    additionalData_["baseCPI[" + legID + "]"] = baseCPI;
                 }
             }
             break;
