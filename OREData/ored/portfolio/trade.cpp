@@ -200,30 +200,33 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
 
                 if (auto cpic = boost::dynamic_pointer_cast<QuantExt::CPICoupon>(flow)) {
                     Real baseCPI;
-                    try {
-                        baseCPI = cpic->baseCPI();
-                    } catch (std::exception& e) {
-                        ALOG("CPICoupon baseCPI could not be determined for additional results for trade " << id()
-                                                                                                           << ".")
+                    baseCPI = cpic->baseCPI();
+                    if (baseCPI == Null<Real>()) {
+                        try {
+
+                            baseCPI =
+                                QuantLib::CPI::laggedFixing(cpic->cpiIndex(), cpic->baseDate() + cpic->observationLag(),
+                                                            cpic->observationLag(), cpic->observationInterpolation());
+                        } catch (std::exception& e) {
+                            ALOG("CPICoupon baseCPI could not be inferred for additional results for trade " << id()
+                                                                                                             << ".")
+                        }
                     }
-                    if (baseCPI == Null<Real>())
-                        baseCPI =
-                            QuantLib::CPI::laggedFixing(cpic->cpiIndex(), cpic->baseDate() + cpic->observationLag(),
-                                                        cpic->observationLag(), cpic->observationInterpolation());
 
                     additionalData_["baseCPI[" + legID + "]"] = baseCPI;
                 } else if (auto cpicf = boost::dynamic_pointer_cast<QuantLib::CPICashFlow>(flow)) {
                     Real baseCPI;
-                    try {
-                        baseCPI = cpicf->baseFixing();
-                    } catch (std::exception& e) {
-                        ALOG("CPICashFlow baseCPI could not be determined for additional results for trade " << id()
-                                                                                                             << ".")
+                    baseCPI = cpicf->baseFixing();
+                    if (baseCPI == Null<Real>()) {
+                        try {
+                            baseCPI = QuantLib::CPI::laggedFixing(cpicf->cpiIndex(),
+                                                                  cpicf->baseDate() + cpicf->observationLag(),
+                                                                  cpicf->observationLag(), cpicf->interpolation());
+                        } catch (std::exception& e) {
+                            ALOG("CPICashFlow baseCPI could not be inferred for additional results for trade " << id()
+                                                                                                               << ".")
+                        }
                     }
-                    if (baseCPI == Null<Real>())
-                        baseCPI =
-                            QuantLib::CPI::laggedFixing(cpicf->cpiIndex(), cpicf->baseDate() + cpicf->observationLag(),
-                                                        cpicf->observationLag(), cpicf->interpolation());
 
                     additionalData_["baseCPI[" + legID + "]"] = baseCPI;
                 }
