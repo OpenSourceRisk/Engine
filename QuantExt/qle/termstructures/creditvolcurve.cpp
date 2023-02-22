@@ -532,6 +532,33 @@ void InterpolatingCreditVolCurve::createSmile(const Date& expiry, const Period& 
     }
 }
 
+ProxyCreditVolCurve::ProxyCreditVolCurve(const QuantLib::Handle<CreditVolCurve>& source,
+                                         const std::vector<QuantLib::Period>& terms,
+                                         const std::vector<QuantLib::Handle<CreditCurve>>& termCurves)
+    : CreditVolCurve(source->businessDayConvention(), source->dayCounter(), terms.empty() ? source->terms() : terms,
+                     termCurves.empty() ? source->termCurves() : termCurves, source->type()),
+      source_(source) {
+    // check inputs to ctor for consistency
+    QL_REQUIRE(terms.size() == termCurves.size(), "ProxyCreditVolCurve: given terms (" << terms.size()
+                                                                                       << ") do not match term curves ("
+                                                                                       << termCurves.size() << ")");
+    registerWith(source);
+}
+
+QuantLib::Real ProxyCreditVolCurve::volatility(const QuantLib::Date& exerciseDate,
+                                               const QuantLib::Real underlyingLength, const QuantLib::Real strike,
+                                               const Type& targetType) const {
+
+    // we read the vol from the source surface keeping the moneyness constant (if meaningful)
+
+    Real effectiveStrike = strike;
+    if(!this->terms().empty() && !source_->terms().empty()) {
+        effectiveStrike = this->strike(this->moneyness(strike, this->atmStrike(exerciseDate, underlyingLength)),
+                                       source_->atmStrike(exerciseDate, underlyingLength));
+    }
+    return source_->volatility(exerciseDate, underlyingLength, effectiveStrike, type());
+}
+
 SpreadedCreditVolCurve::SpreadedCreditVolCurve(const Handle<CreditVolCurve> baseCurve, const std::vector<Date> expiries,
                                                const std::vector<Handle<Quote>> spreads, const bool stickyMoneyness,
                                                const std::vector<Period>& terms,
