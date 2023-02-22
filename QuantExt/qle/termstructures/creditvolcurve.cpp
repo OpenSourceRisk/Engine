@@ -102,6 +102,8 @@ Real CreditVolCurve::minStrike() const { return -QL_MAX_REAL; }
 Real CreditVolCurve::maxStrike() const { return QL_MAX_REAL; }
 
 Real CreditVolCurve::moneyness(const Real strike, const Real atmStrike) const {
+    if (strike == Null<Real>())
+        return 0.0;
     if (type() == Type::Spread) {
         return strike - atmStrike;
     } else if (type() == Type::Price) {
@@ -589,11 +591,12 @@ void SpreadedCreditVolCurve::performCalculations() const {
 Real SpreadedCreditVolCurve::volatility(const Date& exerciseDate, const Real underlyingLength, const Real strike,
                                         const Type& targetType) const {
     calculate();
-    Real thisAtm =
-        (strike == Null<Real>() || stickyMoneyness_) ? this->atmStrike(exerciseDate, underlyingLength) : Null<Real>();
-    Real effStrike = strike == Null<Real>() ? thisAtm : strike;
-    Real adj = stickyMoneyness_ ? baseCurve_->atmStrike(exerciseDate, underlyingLength) - thisAtm : 0.0;
-    Real base = baseCurve_->volatility(exerciseDate, underlyingLength, effStrike + adj, targetType);
+    Real effectiveStrike = strike;
+    if (stickyMoneyness_ && !baseCurve_->terms().empty() && !this->terms().empty()) {
+        effectiveStrike = this->strike(this->moneyness(strike, this->atmStrike(exerciseDate, underlyingLength)),
+                                       baseCurve_->atmStrike(exerciseDate, underlyingLength));
+    }
+    Real base = baseCurve_->volatility(exerciseDate, underlyingLength, effectiveStrike, targetType);
     Real spread = interpolatedSpreads_->operator()(timeFromReference(exerciseDate));
     return base + spread;
 }
