@@ -134,7 +134,7 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
     if (v != atmStrikeCache_.end())
         return v->second;
 
-    /* we need at least on term curve to compute the atm strike properly - we set it to 0 / 1 (spread, price) if
+    /* we need at least one term curve to compute the atm strike properly - we set it to 0 / 1 (spread, price) if
        we don't have a term, so that we can build strike-independent curves without curves. It is the user's
        responsibility to provide terms for strike-dependent curves. */
     if (terms().empty())
@@ -160,8 +160,9 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
 
     /* Use index maturity date based on index start date. If no start date is given, assume this is a single name option
        running from today. */
-    Date mat = cdsMaturity(refData.startDate != Null<Date>() ? refData.startDate : referenceDate(), terms_[termIndex_m],
-                           refData.rule);
+    Date mat = std::max(cdsMaturity(refData.startDate != Null<Date>() ? refData.startDate : referenceDate(),
+                                    terms_[termIndex_m], refData.rule),
+                        referenceDate() + 1);
     Date effExp = std::min(mat - 1, expiry);
     Schedule schedule(effExp, mat, refData.tenor, refData.calendar, refData.convention, refData.termConvention,
                       refData.rule, refData.endOfMonth);
@@ -213,7 +214,9 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
     }
 
     if (!close_enough(term_alpha, 1.0)) {
-        Date mat = cdsMaturity(refData.startDate, terms_[termIndex_p], refData.rule);
+        Date mat = std::max(cdsMaturity(refData.startDate != Null<Date>() ? refData.startDate : referenceDate(),
+                                        terms_[termIndex_p], refData.rule),
+                            referenceDate() + 1);
         Date effExp = std::min(mat - 1, expiry);
         Schedule schedule(effExp, mat, refData.tenor, refData.calendar, refData.convention, refData.termConvention,
                           refData.rule, refData.endOfMonth);
