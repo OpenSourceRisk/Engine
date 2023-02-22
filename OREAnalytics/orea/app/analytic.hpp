@@ -111,6 +111,10 @@ public:
     const std::string& label() const { return label_; }
     const std::set<std::string>& analyticTypes() const { return types_; }
     const boost::shared_ptr<ore::data::Market>& market() const { return market_; };
+    // To allow SWIG wrapping
+    boost::shared_ptr<MarketImpl> getMarket() const {        
+        return boost::dynamic_pointer_cast<MarketImpl>(market_);
+    }
     const boost::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; };
     virtual std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
     const boost::shared_ptr<ore::data::Loader>& loader() const { return loader_; };

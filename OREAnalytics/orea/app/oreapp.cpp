@@ -64,49 +64,31 @@ namespace ore {
 namespace analytics {
 
 std::set<std::string> OREApp::getAnalyticTypes() {
-    if (!analyticsManager_) {
-        ALOG("analyticsManager_ not set yet, call analyticd first");
-        return std::set<std::string>();
-    }
-    else
-        return analyticsManager_->requestedAnalytics();
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
+    return analyticsManager_->requestedAnalytics();
 }
 
 std::set<std::string> OREApp::getSupportedAnalyticTypes() {
-    if (!analyticsManager_) {
-        ALOG("analyticsManager_ not set yet, call analyticd first");
-        return std::set<std::string>();
-    }
-    else
-        return analyticsManager_->validAnalytics();
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
+    return analyticsManager_->validAnalytics();
 }
 
 const boost::shared_ptr<Analytic>& OREApp::getAnalytic(std::string type) {
-    if (!analyticsManager_) {
-        string msg = "analyticsManager_ not set yet, call analyticd first";
-        ALOG(msg);
-        QL_FAIL(msg);
-    }
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
     return analyticsManager_->getAnalytic(type);
 }
 
 std::set<std::string> OREApp::getReportNames() {
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
     std::set<std::string> names;
-    if (!analyticsManager_) {
-        ALOG("analyticsManager_ not set yet, call analyticd first");
-    }
-    else {
-        Analytic::analytic_reports reports = analyticsManager_->reports();
-        for (const auto& rep : reports) {
-            string analytic = rep.first;
-            for (auto b : rep.second) {
-                string reportName = b.first;
-                if (names.find(reportName) == names.end())
-                    names.insert(reportName);
-                else {
-                    ALOG("report name " << reportName
-                         << " occurs more than once, will retrieve the first report with that only");
-                }
+    for (const auto& rep : analyticsManager_->reports()) {
+        for (auto b : rep.second) {
+            string reportName = b.first;
+            if (names.find(reportName) == names.end())
+                names.insert(reportName);
+            else {
+                ALOG("report name " << reportName
+                     << " occurs more than once, will retrieve the first report with that only");
             }
         }
     }
@@ -114,40 +96,27 @@ std::set<std::string> OREApp::getReportNames() {
 }
 
 boost::shared_ptr<PlainInMemoryReport> OREApp::getReport(std::string reportName) {
-    if (!analyticsManager_) {
-        string msg = "analyticsManager_ not set yet, call analyticd first";
-        ALOG(msg);
-        QL_FAIL(msg);
-    }
-
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
     for (const auto& rep : analyticsManager_->reports()) {
-        string analytic = rep.first;
         for (auto b : rep.second) {
             if (reportName == b.first)
                 return boost::make_shared<PlainInMemoryReport>(b.second);
         }
     }
-    std::string msg = "report " + reportName + " not found in results";
-    ALOG(msg);
-    QL_FAIL(msg);
+    QL_FAIL("report " << reportName << " not found in results");
 }
 
 std::set<std::string> OREApp::getCubeNames() {
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
     std::set<std::string> names;
-    if (!analyticsManager_) {
-        ALOG("analyticsManager_ not set yet, call analytics first");
-    }
-    else {
-        for (const auto& c : analyticsManager_->npvCubes()) {
-            string analytic = c.first;
-            for (auto b : c.second) {
-                string cubeName = b.first;
-                if (names.find(cubeName) == names.end())
-                    names.insert(cubeName);
-                else {
-                    ALOG("cube name " << cubeName
-                         << " occurs more than once, will retrieve the first cube with that name only");
-                }
+    for (const auto& c : analyticsManager_->npvCubes()) {
+        for (auto b : c.second) {
+            string cubeName = b.first;
+            if (names.find(cubeName) == names.end())
+                names.insert(cubeName);
+            else {
+                ALOG("cube name " << cubeName
+                     << " occurs more than once, will retrieve the first cube with that name only");
             }
         }
     }
@@ -155,22 +124,14 @@ std::set<std::string> OREApp::getCubeNames() {
 }
     
 boost::shared_ptr<NPVCube> OREApp::getCube(std::string cubeName) {
-    if (!analyticsManager_) {
-        string msg = "analyticsManager_ not set yet, call analyticd first";
-        ALOG(msg);
-        QL_FAIL(msg);
-    }
-
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
     for (const auto& c : analyticsManager_->npvCubes()) {
-        string analytic = c.first;
         for (auto b : c.second) {
             if (cubeName == b.first)
                 return b.second;
         }
     }
-    std::string msg = "report " + cubeName + " not found in results";
-    ALOG(msg);
-    QL_FAIL(msg);
+    QL_FAIL("report " << cubeName << " not found in results");
 }
 
 void OREApp::analytics(ostream& out) {
