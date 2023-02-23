@@ -75,10 +75,8 @@ Index CDS Option &  \emph{Call/Put} values are ignored, and the OptionType field
 Asian FX Options &  \emph{Call}: The right to buy/receive the underlying currency at the strike price.  \newline \emph{Put}: The right to sell/pay  the underlying currency at the strike price.   \\ \hline
 Digital FX Options &  \emph{Call}: The digital payout will occur if the fx rate at the expiry date is above the given
 strike, \newline \emph{Put}: The digital payout will occur if the fx rate at the expiry date is below the given strike.   \\ \hline
-FX Single Touch Options &  \emph{Call/Put} values are ignored, and are instead inferred from the BarrierData type, and the OptionType field is optional.   \\ \hline
-FX Double Touch Options &  \emph{Call/Put} values are ignored, and and the OptionType field is optional.  \\ \hline
-
-
+FX Single Touch Options &  The OptionType should be \emph{Call} for Up and \emph{Put} for Down barrier types - this is used to check whether the barrier has been hit in the past.   \\ \hline
+FX Double Touch Options &  \emph{Call/Put} values are ignored, and the OptionType field is optional.  \\ \hline
   \end{tabular}
   \caption{Specification of Option Type Call / Put}
   \label{tab:callput_specs}
@@ -114,8 +112,6 @@ FX Double Touch Options &  \emph{Call/Put} values are ignored, and and the Optio
   Commodity Swaption and Commodity Average Price Options must have style \emph{European}. 
   
   Index CDS Options must have style  \emph{European}. 
-  
-  Ascots must have style  \emph{American}. 
 
 \item PayoffType2 [Optional]: Subtype for payoff of exotic options. Only applicable to specific trade types as indicated in parantheses:
 
