@@ -23,6 +23,7 @@ configuration/reportconfig.cpp
 configuration/smiledynamicsconfig.cpp
 configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
+marketdata/adjustmentfactors.cpp
 marketdata/basecorrelationcurve.cpp
 marketdata/capfloorvolcurve.cpp
 marketdata/cdsvolcurve.cpp
@@ -266,6 +267,7 @@ configuration/swaptionvolcurveconfig.hpp
 configuration/volatilityconfig.hpp
 configuration/yieldcurveconfig.hpp
 configuration/yieldvolcurveconfig.hpp
+marketdata/adjustmentfactors.hpp
 marketdata/basecorrelationcurve.hpp
 marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
