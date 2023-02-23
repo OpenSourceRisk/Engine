@@ -14,8 +14,8 @@
 
 % Intro to the concept of structured messages, and that there are structured 'warnings' and structured 'errors'
 
-When any part of an anlytic or set of calculations fails, a corresponding message is returned in the log file and (when using the
-RESTORE API) in the JSON response, which we call a \lstinline!StructuredMessage!. Where possible, ORE will attempt to complete the
+When any part of an anlytic or set of calculations fails, a corresponding error or warning message is logged, which we call
+a \lstinline!StructuredMessage!. Where possible, ORE will attempt to complete the
 rest of the calculation, e.g.\ where the error pertains to a specific netting set or trade, then the output reports might still be
 produced with the correct values for all other netting sets or trades, and a \lstinline!StructuredMessage! will provide the user with
 information to help with debugging and fixing the issue.

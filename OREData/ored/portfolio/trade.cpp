@@ -197,6 +197,38 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                     if (arc.forecastDividends != Null<Real>())
                         additionalData_["forecastDividends[" + legID + "]"] = arc.forecastDividends;
                 }
+
+                if (auto cpic = boost::dynamic_pointer_cast<QuantExt::CPICoupon>(flow)) {
+                    Real baseCPI;
+                    baseCPI = cpic->baseCPI();
+                    if (baseCPI == Null<Real>()) {
+                        try {
+                            baseCPI =
+                                QuantLib::CPI::laggedFixing(cpic->cpiIndex(), cpic->baseDate() + cpic->observationLag(),
+                                                            cpic->observationLag(), cpic->observationInterpolation());
+                        } catch (std::exception& e) {
+                            ALOG("CPICoupon baseCPI could not be interpolated for additional results for trade " << id()
+                                                                                                             << ".")
+                        }
+                    }
+
+                    additionalData_["baseCPI[" + legID + "]"] = baseCPI;
+                } else if (auto cpicf = boost::dynamic_pointer_cast<QuantLib::CPICashFlow>(flow)) {
+                    Real baseCPI;
+                    baseCPI = cpicf->baseFixing();
+                    if (baseCPI == Null<Real>()) {
+                        try {
+                            baseCPI = QuantLib::CPI::laggedFixing(cpicf->cpiIndex(),
+                                                                  cpicf->baseDate() + cpicf->observationLag(),
+                                                                  cpicf->observationLag(), cpicf->interpolation());
+                        } catch (std::exception& e) {
+                            ALOG("CPICashFlow baseCPI could not be interpolated for additional results for trade " << id()
+                                                                                                               << ".")
+                        }
+                    }
+
+                    additionalData_["baseCPI[" + legID + "]"] = baseCPI;
+                }
             }
             break;
         }
