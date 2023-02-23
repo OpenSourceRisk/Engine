@@ -124,7 +124,8 @@ public:
 
 protected:
     std::string nullString_;
-    void addMarketDatum(ore::data::Report& report, const ore::data::MarketDatum& md);
+    void addMarketDatum(ore::data::Report& report, const ore::data::MarketDatum& md,
+                        const QuantLib::Date& actualDate = Date());
 };
 
 } // namespace analytics
