@@ -286,6 +286,7 @@
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/currencyconfig.hpp>
+#include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/flowanalysis.hpp>
