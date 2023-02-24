@@ -49,6 +49,8 @@ struct CashFlowResults {
     QuantLib::Real notional = QuantLib::Null<QuantLib::Real>();
     QuantLib::Real discountFactor = QuantLib::Null<QuantLib::Real>();
     QuantLib::Real presentValue = QuantLib::Null<QuantLib::Real>();
+    QuantLib::Real presentValueBase = QuantLib::Null<QuantLib::Real>();
+    QuantLib::Real fxRateLocalBase = QuantLib::Null<QuantLib::Real>();
     QuantLib::Real floorStrike = QuantLib::Null<QuantLib::Real>();
     QuantLib::Real capStrike = QuantLib::Null<QuantLib::Real>();
     QuantLib::Real floorVolatility = QuantLib::Null<QuantLib::Real>();
