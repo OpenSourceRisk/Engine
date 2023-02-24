@@ -29,6 +29,7 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/time/date.hpp>
+#include <ql/time/period.hpp>
 #include <set>
 
 namespace ore {
@@ -233,6 +234,81 @@ public:
 
 private:
     static ReferenceDatumRegister<ReferenceDatumBuilder<EquityIndexReferenceDatum>> reg_;
+};
+
+/*
+<ReferenceDatum id="RIC:.SPXEURHedgedMonthly">
+  <Type>CurrencyHedgedEquityIndex</Type>
+  <CurrencyHedgedEquityIndexReferenceDatum>
+      <UnderlyingIndex>RIC:.SPX</UnderlyingIndex>
+      <HedgeCurrency>EUR</HedgeCurrency>
+      <RebalancingStrategy>EndOfMonth</RebalancingStrategy>
+      <ReferenceDateOffset>1</ReferenceDateOffset>
+      <HedgeAdjustment>None|Daily</HedgeAdjustment>
+      <HedgeCalendar>EUR,USD</HedgeCalendar>
+      <FxIndex>ECB-EUR-USD</FxIndex>
+      <IndexWeightsAtLastRebalancingDate>
+        <Underlying>
+            <Name>Apple</Name>
+            <Weight>0.1</Weight>
+        </Underlying>
+        ...
+      </IndexWeightsAtLastRebalancingDate>
+  </CurrencyHedgedEquityIndexReferenceDatum>
+</ReferenceDatum>
+*/
+class CurrencyHedgedEquityIndexReferenceDatum : public ReferenceDatum {
+public:
+    static constexpr const char* TYPE = "CurrencyHedgedEquityIndex";
+
+    struct RebalancingDate {
+        enum Strategy { EndOfMonth };
+    };
+
+    struct HedgeAdjustment {
+        enum Rule { None, Daily };
+    };
+
+    CurrencyHedgedEquityIndexReferenceDatum() {}
+
+    CurrencyHedgedEquityIndexReferenceDatum(const string& name)
+        : ReferenceDatum(TYPE, name), 
+          underlyingIndexName_(""), 
+          hedgeCurrency_(""),
+          rebalancingStrategy_(RebalancingDate::Strategy::EndOfMonth), 
+          referenceDateOffset_(0), 
+          hedgeAdjustmentRule_(HedgeAdjustment::Rule::None),
+          hedgeCalendar_(WeekendsOnly()) {}
+
+    const std::string& underlyingIndexName() const { return underlyingIndexName_; }
+    const std::string& hedgeCurrency() const { return hedgeCurrency_; }
+    int referenceDateOffset() const { return referenceDateOffset_; }
+    RebalancingDate::Strategy rebalancingStrategy() const { return rebalancingStrategy_; }
+    HedgeAdjustment::Rule hedgeAdjustmentRule() const { return hedgeAdjustmentRule_; }
+    QuantLib::Calendar hedgeCalendar() const { return hedgeCalendar_; }
+    const std::map<std::string, std::string>& fxIndexes() const { return fxIndexes_; }
+
+    //! Returns the currency weights at the last rebalancing date
+    const vector<pair<string, double>>& currencyWeights() const { return data_; }
+
+    Date referenceDate(const Date& asof);
+    Date rebalancingDate(const Date& asof);
+    
+    Date nextHedgeAdjustmentDate(const Date& asof);
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+private:
+    std::string underlyingIndexName_;
+    std::string hedgeCurrency_;
+    RebalancingDate::Strategy rebalancingStrategy_;
+    int referenceDateOffset_;
+    HedgeAdjustment::Rule hedgeAdjustmentRule_;
+    QuantLib::Calendar hedgeCalendar_;
+    std::map<std::string, std::string> fxIndexes_;
+    vector<pair<string, double>> data_;
+    static ReferenceDatumRegister<ReferenceDatumBuilder<CurrencyHedgedEquityIndexReferenceDatum>> reg_;
 };
 
 //! CreditIndex Reference data, contains the names and weights of a credit index
