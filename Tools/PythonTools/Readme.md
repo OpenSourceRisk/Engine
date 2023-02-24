@@ -70,6 +70,8 @@ Each object under a given key, `file_name`, has the following format:
 - The `drop_rows` object allows you to specify a threshold for the values in a given set of columns. If the absolute value for a given row, in one of the specified columns, is below the threshold, the row is dropped from the comparison.
 - The `column_settings` object allows you to specify an absolute and/or a relative tolerance that should be used for a group of columns when comparing their values. There can be multiple groupings used in the `column_settings` array with different values of absolute and relative tolerance.
 
+For new files that would require the same comparison config as another standard file, e.g "simm_additional.csv" from a SIMM Impact calc would be the same as a "simm.csv" report from a SIMM calc, they can copy that file's comparison config:
+
 For the regression tests under the *RegressionTests* directory and the Example tests under *Examples* and *ExamplesPlus*, each test may have its own specific comparison configuration file following this format. If a test specific comparison configuration file is present, it is merged with this default comparison configuration file to give the final comparison configuration file used for the test. The merge function is in the file *merge_comparison_configs.py* and it uses the following logic:
 - The test specific file is used as the starting point for the final merged configuration `OrderedDict`.
 - Any file names in the default comparison configuration file that are not in the test specific comparison configuration file, are added *at the end* of the merged configuration `OrderedDict`. They will therefore only be used during comparison if there is not a match in the test specific file.
