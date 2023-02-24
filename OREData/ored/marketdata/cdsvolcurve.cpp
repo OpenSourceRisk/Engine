@@ -373,11 +373,28 @@ void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveSpec
                                   const CDSVolatilityCurveConfig& vc, const CDSProxyVolatilityConfig& pvc,
                                   const std::map<std::string, boost::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves,
                                   const std::map<std::string, boost::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
+    LOG("CDSVolCurve: start building proxy volatility surface");
     auto proxyVolCurve = requiredCdsVolCurves.find(CDSVolatilityCurveSpec(pvc.cdsVolatilityCurve()).name());
     QL_REQUIRE(proxyVolCurve != requiredCdsVolCurves.end(), "CDSVolCurve: Failed to find cds vol curve '"
                                                                 << pvc.cdsVolatilityCurve() << "' when building '"
                                                                 << spec.name() << "'");
-    vol_ = proxyVolCurve->second->volTermStructure();
+    std::vector<QuantLib::Period> effTerms;
+    std::vector<QuantLib::Handle<CreditCurve>> termCurves;
+    for (Size i = 0; i < vc.termCurves().size(); ++i) {
+        if (vc.termCurves()[i].empty())
+            continue;
+        auto t = requiredCdsCurves.find(vc.termCurves()[i]);
+        QL_REQUIRE(t != requiredCdsCurves.end(), "CDSVolCurve: required cds curve '"
+                                                     << vc.termCurves()[i]
+                                                     << "' was not found during vol curve building.");
+        termCurves.push_back(Handle<QuantExt::CreditCurve>(t->second->creditCurve()));
+        effTerms.push_back(vc.terms()[i]);
+    }
+    LOG("Will use " << termCurves.size()
+                    << " term curves in target surface to determine atm levels and moneyness-adjustments");
+    vol_ = boost::make_shared<QuantExt::ProxyCreditVolCurve>(
+        Handle<CreditVolCurve>(proxyVolCurve->second->volTermStructure()), effTerms, termCurves);
+    LOG("CDSVolCurve: finished building proxy volatility surface");
 }
 
 void CDSVolCurve::buildVolatilityExplicit(
