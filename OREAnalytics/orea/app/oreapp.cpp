@@ -134,13 +134,56 @@ boost::shared_ptr<NPVCube> OREApp::getCube(std::string cubeName) {
     QL_FAIL("report " << cubeName << " not found in results");
 }
 
-void OREApp::analytics(ostream& out) {
-
+void OREApp::run(const std::vector<std::string>& marketData,
+                 const std::vector<std::string>& fixingData) {
     try {
-        //setupLog();
-
         LOG("ORE analytics starting");
 
+        QL_REQUIRE(inputs_, "ORE input parameters not set");
+        
+        // Set global evaluation date, though already set in the OREAppInputParameters c'tor
+        Settings::instance().evaluationDate() = inputs_->asof();
+
+        // FIXME
+        QL_REQUIRE(inputs_->pricingEngine(), "pricingEngine not set");
+        GlobalPseudoCurrencyMarketParameters::instance().set(inputs_->pricingEngine()->globalParameters());
+
+        // Initialize the global conventions 
+        QL_REQUIRE(inputs_->conventions(), "conventions not set");
+        InstrumentConventions::instance().setConventions(inputs_->conventions());
+
+        // Create a market data loader that takes input from the provided vectors
+        auto loader = boost::make_shared<MarketDataInMemoryLoader>(inputs_, marketData, fixingData);
+
+        // Create the analytics manager
+        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs_, loader, out_);
+        LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
+        out_ << setw(tab_) << left << "Requested analytics " << to_string(inputs_->analytics()) << std::endl;
+        LOG("Requested analytics: " << to_string(inputs_->analytics()));
+
+        // Run the requested analytics
+        analyticsManager_->runAnalytics(inputs_->analytics());
+
+        // Leave any report writing to the calling aplication
+    }
+    catch (std::exception& e) {
+        ostringstream oss;
+        oss << "Error in ORE analytics: " << e.what();
+        ALOG(oss.str());
+        out_ << oss.str() << endl;
+        QL_FAIL(oss.str());
+    }
+
+    LOG("ORE analytics done");
+}
+
+void OREApp::analytics() {
+
+    try {
+        LOG("ORE analytics starting");
+
+        QL_REQUIRE(params_, "ORE input parameters not set");
+        
         // Read all inputs from params and files referenced in params
         out_ << setw(tab_) << left << "Loading inputs " << flush;
         auto inputs = boost::make_shared<OREAppInputParameters>(params_);
@@ -159,7 +202,7 @@ void OREApp::analytics(ostream& out) {
         auto loader = boost::make_shared<MarketDataCsvLoader>(inputs, inputs->csvLoader());
 
         // Create the analytics manager
-        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs, loader, out);
+        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs, loader, out_);
         LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
         out_ << setw(tab_) << left << "Requested analytics " << to_string(inputs->analytics()) << std::endl;
         LOG("Requested analytics: " << to_string(inputs->analytics()));
@@ -210,9 +253,10 @@ void OREApp::analytics(ostream& out) {
 }
     
 OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
-    : tab_(50), progressBarWidth_(72 - std::min<Size>(tab_, 67)), params_(params),
-      asof_(parseDate(params_->get("setup", "asofDate"))), out_(out), cubeDepth_(0) {
-
+    : tab_(50), progressBarWidth_(72 - std::min<Size>(tab_, 67)),
+    params_(params), inputs_(nullptr), 
+    asof_(parseDate(params_->get("setup", "asofDate"))), out_(out), cubeDepth_(0) {
+    
     // Set global evaluation date
     Settings::instance().evaluationDate() = asof_;
 
@@ -230,6 +274,28 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
     readSetup();
 }
 
+OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs,
+               const std::string& logFile, Size logMask, ostream& out)
+    : tab_(50), progressBarWidth_(72 - std::min<Size>(tab_, 67)),
+    params_(nullptr), inputs_(inputs), asof_(inputs->asof()), out_(out), cubeDepth_(0) {
+
+    // Initialise Singletons
+    Settings::instance().evaluationDate() = asof_;
+    InstrumentConventions::instance().setConventions(inputs_->conventions());
+
+    // initialise logger
+    string logFilePath = (inputs_->resultsPath() / logFile).string();
+    boost::filesystem::path p{inputs_->resultsPath()};
+    if (!boost::filesystem::exists(p)) {
+        boost::filesystem::create_directories(p);
+    }
+    QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << inputs_->resultsPath() << "' is not a directory.");
+
+    Log::instance().registerLogger(boost::make_shared<FileLogger>(logFilePath));
+    Log::instance().setMask(logMask);
+    Log::instance().switchOn();
+}
+
 OREApp::~OREApp() {
     // Close logs
     closeLog();
@@ -242,7 +308,7 @@ int OREApp::run(bool useAnalytics) {
     try {
 
         if (useAnalytics) {
-            analytics(out_);
+            analytics();
             return 0;
         }
 

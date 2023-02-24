@@ -56,13 +56,22 @@ class SensitivityAnalysis;
  */
 class OREApp {
 public:
-    //! Constructor
+    //! Constructor that uses ORE parameters and inputs data from files
     OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout);
+    //! Minimal constructor that assumes we have assembled input parameters via API 
+    OREApp(const boost::shared_ptr<InputParameters>& inputs,
+           const std::string& logFile, Size logMask = 15, ostream& out = std::cout);
+
     //! Destructor
     virtual ~OREApp();
     //! generates XVA reports for a given portfolio and market
     virtual int run(bool useAnalytics = true);
 
+    //! generates reports for the given InputParameters or Parameters
+    void analytics();
+    void run(const std::vector<std::string>& marketData,
+             const std::vector<std::string>& fixingData);
+    
     //! Load curve configurations from xml file, build t0 market using market data provided.
     //! If any of the passed vectors are empty fall back on OREApp::buildMarket() and use market/fixing data files
     void buildMarket(const std::string& todaysMarketXML = "", const std::string& curveConfigXML = "",
@@ -228,6 +237,7 @@ protected:
     Size tab_, progressBarWidth_;
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
+    boost::shared_ptr<InputParameters> inputs_;
     Date asof_;
     std::ostream& out_;    
     bool writeInitialReports_;

@@ -126,6 +126,9 @@ void Analytic::buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& l
                            const bool marketRequired) {
     LOG("Analytic::buildMarket called");    
     cpu_timer mtimer;
+
+    QL_REQUIRE(loader, "market data loader not set");
+    QL_REQUIRE(curveConfig, "curve configurations not set");
     
     // first build the market if we have a todaysMarketParams
     if (configurations_.todaysMarketParams) {
