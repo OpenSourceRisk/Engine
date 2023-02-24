@@ -267,6 +267,126 @@ XMLNode* IndexReferenceDatum::toXML(XMLDocument& doc) {
 
     return node;
 }
+// Currency Hedged Equity Indexes
+/*
+<ReferenceDatum id="RIC:.SPXEURHedgedMonthly">
+  <Type>CurrencyHedgedEquityIndex</Type>
+  <CurrencyHedgedEquityIndexReferenceDatum>
+      <UnderlyingIndex>RIC:.SPX</UnderlyingIndex>
+      <UnderlyingIndexCurrency>USD</UnderlyingIndexCurrency>
+      <HedgeCurrency>EUR</HedgeCurrency>
+      <RebalancingStrategy>EndOfMonth</RebalancingStrategy>
+      <ReferenceDateOffset>1</ReferenceDateOffset>
+      <HedgeAdjustment>None|Daily</HedgeAdjustment>
+      <HedgeCalendar>EUR,USD</HedgeCalendar>
+      <FxIndex>ECB-EUR-USD</FxIndex>
+      <IndexWeightsAtLastRebalancingDate>
+        <Underlying>
+            <Name>Apple</Name>
+            <Weight>0.1</Weight>
+        </Underlying>
+        ...
+      </IndexWeightsAtLastRebalancingDate>
+  </CurrencyHedgedEquityIndexReferenceDatum>
+</ReferenceDatum>
+*/
+ReferenceDatumRegister<ReferenceDatumBuilder<CurrencyHedgedEquityIndexReferenceDatum>>
+    CurrencyHedgedEquityIndexReferenceDatum::reg_(TYPE);
+
+void CurrencyHedgedEquityIndexReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    XMLNode* innerNode = XMLUtils::getChildNode(node, type() + "ReferenceData");
+    QL_REQUIRE(innerNode, "No " + type() + "ReferenceData node");
+
+    underlyingIndexName_ = XMLUtils::getChildValue(innerNode, "UnderlyingIndex", true);
+    
+    hedgeCurrency_ = XMLUtils::getChildValue(innerNode, "HedgeCurrency", true);
+    
+    auto rebalancingStr = XMLUtils::getChildValue(innerNode, "RebalancingStrategy", false, "EndOfMonth");
+    if (rebalancingStr == "EndOfMonth") {
+        rebalancingStrategy_ = CurrencyHedgedEquityIndexReferenceDatum::RebalancingDate::EndOfMonth;
+    } else {
+        QL_FAIL("unexpected rebalancing strategy " << rebalancingStr);
+    }
+
+    std::string hedgeCalendarStr = XMLUtils::getChildValue(innerNode, "HedgeCalendar", true);
+    hedgeCalendar_ = parseCalendar(hedgeCalendarStr);
+ 
+    XMLNode* fxIndexesNode = XMLUtils::getChildNode(innerNode, "FxIndexes");
+    if (fxIndexesNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(fxIndexesNode, "FxIndex"); child;
+             child = XMLUtils::getNextSibling(child, "FxIndex")) {
+            string currency = XMLUtils::getChildValue(child, "Currency", true);
+            string indexFamily = XMLUtils::getChildValue(child, "IndexName", true);
+            fxIndexes_[currency] = indexFamily;
+        }
+    }
+
+    // Optional Fields
+    referenceDateOffset_ = XMLUtils::getChildValueAsInt(innerNode, "ReferenceDateOffset", false, 0);
+    auto hedgeAdjStr = XMLUtils::getChildValue(innerNode, "HedgeAdjustment", false, "None");
+    
+    if (hedgeAdjStr == "None") {
+        hedgeAdjustmentRule_ = HedgeAdjustment::None;
+    } else if (hedgeAdjStr == "Daily") {
+        hedgeAdjustmentRule_ = HedgeAdjustment::Daily;
+    } else {
+        QL_FAIL("unexpected rebalancing strategy " << hedgeAdjStr);
+    }
+    // clear map
+    data_.clear();
+
+    // and populate it...
+    XMLNode* currencyWeightNode = XMLUtils::getChildNode(innerNode, "IndexWeightsAtLastRebalancingDate");
+    if (currencyWeightNode) {
+        double totalWeight = 0.0;
+        for (XMLNode* child = XMLUtils::getChildNode(currencyWeightNode, "Underlying"); child;
+             child = XMLUtils::getNextSibling(child, "Underlying")) {
+            string name = XMLUtils::getChildValue(child, "Name", true);
+            double weight = XMLUtils::getChildValueAsDouble(child, "Weight", true);
+            QL_REQUIRE(weight > 0 || QuantLib::close_enough(weight, 0.0),
+                       "Try to add negtive weight for Underlying" << name);
+            data_.push_back(make_pair(name, weight));
+            totalWeight += weight;
+        }
+        QL_REQUIRE(data_.empty() || QuantLib::close_enough(totalWeight, 1.0),
+                   "Sum of underlying weights at last rebalancing date (" << totalWeight << ") is not 1.0");
+    }
+}
+
+XMLNode* CurrencyHedgedEquityIndexReferenceDatum::toXML(XMLDocument& doc) {
+    XMLNode* node = ReferenceDatum::toXML(doc);
+    XMLNode* rdNode = XMLUtils::addChild(doc, node, type() + "ReferenceData");
+
+    XMLUtils::addChild(doc, rdNode, "UnderlyingIndex", underlyingIndexName_);
+    XMLUtils::addChild(doc, rdNode, "HedgeCurrency", hedgeCurrency_);
+    XMLUtils::addChild(doc, rdNode, "RebalancingStrategy", "EndOfMonth");
+    XMLUtils::addChild(doc, rdNode, "HedgeCalendar", to_string(hedgeCalendar_));
+    if (referenceDateOffset_ != 0)
+        XMLUtils::addChild(doc, rdNode, "ReferenceDateOffset", to_string(referenceDateOffset_));
+    if (hedgeAdjustmentRule_ == HedgeAdjustment::Daily) {
+        XMLUtils::addChild(doc, rdNode, "HedgeAdjustment", "Daily");
+    } 
+
+    if (!fxIndexes_.empty()) {
+        XMLNode* currencyWeightNode = XMLUtils::addChild(doc, rdNode, "FxIndexes");
+        for (auto d : fxIndexes_) {
+            XMLNode* underlyingNode = XMLUtils::addChild(doc, currencyWeightNode, "FxIndex");
+            XMLUtils::addChild(doc, underlyingNode, "Currency", d.first);
+            XMLUtils::addChild(doc, underlyingNode, "IndexName", d.second);
+        }
+    }
+
+    if (!data_.empty()) {
+        XMLNode* currencyWeightNode = XMLUtils::addChild(doc, rdNode, "IndexWeightsAtLastRebalancingDate");
+        for (auto d : data_) {
+            XMLNode* underlyingNode = XMLUtils::addChild(doc, currencyWeightNode, "Underlying");
+            XMLUtils::addChild(doc, underlyingNode, "Name", d.first);
+            XMLUtils::addChild(doc, underlyingNode, "Weight", d.second);
+        }
+    }
+    return node;
+}
 
 // Credit
 void CreditReferenceDatum::fromXML(XMLNode* node) {
