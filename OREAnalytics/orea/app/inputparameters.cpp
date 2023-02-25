@@ -42,41 +42,7 @@ vector<string> getFilenames(const string& fileString, const string& path) {
 
 
 InputParameters::InputParameters() {
-
     iborFallbackConfig_ = boost::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
-
-    conventions_ = boost::make_shared<Conventions>();
-    curveConfigs_.clear();
-
-    pricingEngine_ = boost::make_shared<EngineData>();
-    sensiPricingEngine_ = boost::make_shared<EngineData>();
-    stressPricingEngine_ = boost::make_shared<EngineData>();
-    simulationPricingEngine_ = boost::make_shared<EngineData>();
-    amcPricingEngine_ = boost::make_shared<EngineData>();
-
-    todaysMarketParams_ = boost::make_shared<TodaysMarketParameters>();
-
-    refDataManager_ = boost::make_shared<BasicReferenceDataManager>();
-    portfolio_ = boost::make_shared<Portfolio>();
-
-    sensiSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
-    stressSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
-    exposureSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
-
-    sensiScenarioData_ = boost::make_shared<SensitivityScenarioData>(); 
-    stressScenarioData_ = boost::make_shared<StressTestScenarioData>();
-    scenarioGeneratorData_ = boost::shared_ptr<ScenarioGeneratorData>();
-
-    crossAssetModelData_ = boost::make_shared<CrossAssetModelData>();
-
-    nettingSetManager_ = boost::make_shared<NettingSetManager>();
-
-    sensitivityStream_ = nullptr;
-    cube_ = nullptr;
-    nettingSetCube_ = nullptr;
-    cptyCube_ = nullptr;
-    mktCube_ = nullptr;
-
     loadParameters();
 }
 
