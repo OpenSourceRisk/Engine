@@ -60,7 +60,8 @@ public:
     OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout);
     //! Minimal constructor that assumes we have assembled input parameters via API 
     OREApp(const boost::shared_ptr<InputParameters>& inputs,
-           const std::string& logFile, Size logMask = 15, ostream& out = std::cout);
+           const std::string& logFile, Size logLevel = 31, Size bufferLogLevel = 15,
+           ostream& out = std::cout);
 
     //! Destructor
     virtual ~OREApp();
@@ -98,6 +99,8 @@ public:
     std::set<std::string> getCubeNames();
     boost::shared_ptr<NPVCube> getCube(std::string cubeName);
 
+    std::vector<std::string> getErrors();
+    
 protected:
     //! Use ORE functioanlity in analytics/analyticsmanager
     void analytics(std::ostream& out);
@@ -286,6 +289,8 @@ protected:
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
 
     boost::shared_ptr<AnalyticsManager> analyticsManager_;
+    //boost::shared_ptr<ore::data::FilteredBufferedLoggerGuard> fbLogger_;
+    boost::shared_ptr<BufferLogger> bLogger_;
 
 private:
     virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }

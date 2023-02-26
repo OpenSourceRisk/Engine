@@ -40,6 +40,8 @@
 
 #include <orea/app/oreapp.hpp>
 
+#include <iostream>
+
 using namespace std;
 using namespace ore::data;
 using namespace ore::analytics;
@@ -134,6 +136,15 @@ boost::shared_ptr<NPVCube> OREApp::getCube(std::string cubeName) {
     QL_FAIL("report " << cubeName << " not found in results");
 }
 
+std::vector<std::string> OREApp::getErrors() {
+    std::vector<std::string> errors;
+    // while (bLogger_ && bLogger_->logger->hasNext())
+    //     errors.push_back(bLogger_->logger->next());
+    while (bLogger_ && bLogger_->hasNext())
+        errors.push_back(bLogger_->next());
+    return errors;
+}
+    
 void OREApp::run(const std::vector<std::string>& marketData,
                  const std::vector<std::string>& fixingData) {
     try {
@@ -173,7 +184,7 @@ void OREApp::run(const std::vector<std::string>& marketData,
         out_ << oss.str() << endl;
         QL_FAIL(oss.str());
     }
-
+    
     LOG("ORE analytics done");
 }
 
@@ -275,7 +286,7 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
 }
 
 OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs,
-               const std::string& logFile, Size logMask, ostream& out)
+               const std::string& logFile, Size logLevel, Size bufferLogLevel, ostream& out)
     : tab_(50), progressBarWidth_(72 - std::min<Size>(tab_, 67)),
     params_(nullptr), inputs_(inputs), asof_(inputs->asof()), out_(out), cubeDepth_(0) {
 
@@ -283,16 +294,23 @@ OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs,
     Settings::instance().evaluationDate() = asof_;
     InstrumentConventions::instance().setConventions(inputs_->conventions());
 
-    // initialise logger
+    // Initialise file logger and buffered logger
     string logFilePath = (inputs_->resultsPath() / logFile).string();
     boost::filesystem::path p{inputs_->resultsPath()};
-    if (!boost::filesystem::exists(p)) {
+    if (!boost::filesystem::exists(p))
         boost::filesystem::create_directories(p);
-    }
-    QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << inputs_->resultsPath() << "' is not a directory.");
+    QL_REQUIRE(boost::filesystem::is_directory(p),
+               "output path '" << inputs_->resultsPath() << "' is not a directory.");
 
+    // A critical subset of the log messages can be reported via the BufferLogger, at best
+    // everything that is determined by the overall logLevel. We can filter by setting
+    // bufferLogLevel < logLevel, e.g. logLevel might include NOTICE, WARNING, ERROR, CRITICAL,
+    // ALERT, but bufferLogLevel includes  ERROR, CRITICAL and ALERT only.
+    bLogger_ = boost::make_shared<BufferLogger>(bufferLogLevel);
+    Log::instance().registerLogger(bLogger_);
     Log::instance().registerLogger(boost::make_shared<FileLogger>(logFilePath));
-    Log::instance().setMask(logMask);
+    // Overall log level
+    Log::instance().setMask(logLevel);
     Log::instance().switchOn();
 }
 
