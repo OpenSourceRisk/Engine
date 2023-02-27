@@ -204,6 +204,12 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
     additionalData_["isdaSubProduct"] = std::string("");
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = std::string("");
+    if (!optionData_.premiumData().premiumData().empty()) {
+        auto premium = optionData_.premiumData().premiumData().front();
+        additionalData_["premiumAmount"] = premium.amount;
+        additionalData_["premiumPaymentDate"] = premium.payDate;
+        additionalData_["premiumCurrency"] = premium.ccy;
+    }
 }
 
 void CommoditySpreadOption::fromXML(XMLNode* node) {
