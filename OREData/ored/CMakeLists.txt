@@ -220,6 +220,7 @@ utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
 utilities/currencyconfig.cpp
+utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
 utilities/dategrid.cpp
 utilities/flowanalysis.cpp
@@ -520,6 +521,7 @@ utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
 utilities/currencyconfig.hpp
+utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
 utilities/dategrid.hpp
 utilities/flowanalysis.hpp
