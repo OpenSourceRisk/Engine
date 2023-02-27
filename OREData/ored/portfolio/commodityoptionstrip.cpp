@@ -284,8 +284,9 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
         Date start = cf->indices().begin()->first;
 
         // Build a commodity APO for the call and/or put in this period
-        boost::shared_ptr<Trade> commOption;
+        
         for (const auto& tempDatum : tempData) {
+            boost::shared_ptr<Trade> commOption;
             OptionData optionData(to_string(tempDatum.position), tempDatum.type, "European", true, strExerciseDate);
              if (!isDigital()) {
                 commOption = boost::make_shared<CommodityAveragePriceOption>(
