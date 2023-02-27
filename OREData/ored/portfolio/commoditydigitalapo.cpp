@@ -42,7 +42,7 @@ CommodityDigitalAveragePriceOption::CommodityDigitalAveragePriceOption(
     CommodityQuantityFrequency commodityQuantityFrequency, CommodityPayRelativeTo commodityPayRelativeTo,
     QuantLib::Natural futureMonthOffset, QuantLib::Natural deliveryRollDays, bool includePeriodEnd,
     const BarrierData& barrierData, const std::string& fxIndex)
-    : Trade("CommodityAveragePriceOption", envelope), optionData_(optionData), barrierData_(barrierData),
+    : Trade("CommodityDigitalAveragePriceOption", envelope), optionData_(optionData), barrierData_(barrierData),
       strike_(strike), digitalCashPayoff_(digitalCashPayoff), currency_(currency), name_(name),
       priceType_(priceType),
       startDate_(startDate), endDate_(endDate), paymentCalendar_(paymentCalendar), paymentLag_(paymentLag),

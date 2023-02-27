@@ -26,6 +26,7 @@
 #include <ored/portfolio/cliquetoption.hpp>
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commodityoption.hpp>
+#include <ored/portfolio/commoditydigitalapo.hpp>
 #include <ored/portfolio/commoditydigitaloption.hpp>
 #include <ored/portfolio/compositetrade.hpp>
 #include <ored/portfolio/commodityapo.hpp>
@@ -134,6 +135,7 @@ namespace data {
     addBuilder("CommodityForward", boost::make_shared<TradeBuilder<CommodityForward>>());
     addBuilder("CommodityOption", boost::make_shared<TradeBuilder<CommodityOption>>());
 //    addBuilder("CommoditySpreadOption", boost::make_shared<TradeBuilder<CommoditySpreadOption>>());
+    addBuilder("CommodityDigitalAveragePriceOption", boost::make_shared<TradeBuilder<CommodityDigitalAveragePriceOption>>());
     addBuilder("CommodityDigitalOption", boost::make_shared<TradeBuilder<CommodityDigitalOption>>());
     addBuilder("CommodityAsianOption", boost::make_shared<TradeBuilder<CommodityAsianOption>>());
     addBuilder("CommoditySwap", boost::make_shared<TradeBuilder<CommoditySwap>>());
