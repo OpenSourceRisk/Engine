@@ -26,6 +26,7 @@
 #include <ored/portfolio/commodityapo.hpp>
 #include <ored/portfolio/commoditylegbuilder.hpp>
 #include <ored/portfolio/commodityoptionstrip.hpp>
+#include <ored/portfolio/commoditydigitalapo.hpp>
 #include <ored/portfolio/commoditydigitaloption.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
@@ -283,27 +284,41 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
         Date start = cf->indices().begin()->first;
 
         // Build a commodity APO for the call and/or put in this period
+        boost::shared_ptr<Trade> commOption;
         for (const auto& tempDatum : tempData) {
             OptionData optionData(to_string(tempDatum.position), tempDatum.type, "European", true, strExerciseDate);
-
-            CommodityAveragePriceOption commOption(
-                envelope(), optionData, cf->quantity(), tempDatum.strike, legData_.currency(), commLegData_->name(),
-                commLegData_->priceType(), to_string(start), to_string(cf->endDate()), legData_.paymentCalendar(),
-                legData_.paymentLag(), legData_.paymentConvention(), commLegData_->pricingCalendar(),
-                to_string(cf->date()), cf->gearing(), cf->spread(), cf->quantityFrequency(),
-                CommodityPayRelativeTo::CalculationPeriodEndDate, commLegData_->futureMonthOffset(),
-                commLegData_->deliveryRollDays(), true, tempDatum.type == "Call" ? callBarrierData_ : putBarrierData_,
-                fxIndex_);
-
-            commOption.id() = tempDatum.id;
-            commOption.build(engineFactory);
-            boost::shared_ptr<InstrumentWrapper> instWrapper = commOption.instrument();
+             if (!isDigital()) {
+                commOption = boost::make_shared<CommodityAveragePriceOption>(
+                    envelope(), optionData, cf->quantity(), tempDatum.strike, legData_.currency(), commLegData_->name(),
+                    commLegData_->priceType(), to_string(start), to_string(cf->endDate()), legData_.paymentCalendar(),
+                    legData_.paymentLag(), legData_.paymentConvention(), commLegData_->pricingCalendar(),
+                    to_string(cf->date()), cf->gearing(), cf->spread(), cf->quantityFrequency(),
+                    CommodityPayRelativeTo::CalculationPeriodEndDate, commLegData_->futureMonthOffset(),
+                    commLegData_->deliveryRollDays(), true,
+                    tempDatum.type == "Call" ? callBarrierData_ : putBarrierData_, fxIndex_);
+             } else {
+                 auto undCcy = cf->index()->priceCurve()->currency();
+                 QL_REQUIRE(undCcy.code() == legData_.currency(),
+                            "Strips of commodity digital options do not support intra-currency trades yet.");
+                 commOption = boost::make_shared<CommodityDigitalAveragePriceOption>(
+                     envelope(), optionData, tempDatum.strike, cf->periodQuantity() * payoffPerUnit(),
+                     legData_.currency(), commLegData_->name(), commLegData_->priceType(), to_string(start),
+                     to_string(cf->endDate()), legData_.paymentCalendar(), legData_.paymentLag(),
+                     legData_.paymentConvention(), commLegData_->pricingCalendar(), to_string(cf->date()),
+                     cf->gearing(), cf->spread(), cf->quantityFrequency(),
+                     CommodityPayRelativeTo::CalculationPeriodEndDate, commLegData_->futureMonthOffset(),
+                     commLegData_->deliveryRollDays(), true,
+                     tempDatum.type == "Call" ? callBarrierData_ : putBarrierData_, fxIndex_);
+             }
+            commOption->id() = tempDatum.id;
+            commOption->build(engineFactory);
+            boost::shared_ptr<InstrumentWrapper> instWrapper = commOption->instrument();
             additionalInstruments.push_back(instWrapper->qlInstrument());
             additionalMultipliers.push_back(instWrapper->multiplier());
 
             // Update the notional_ each time. It will hold the notional of the last instrument which is arbitrary
             // but reasonable as this is the instrument that we use as the main instrument below.
-            notional_ = commOption.notional();
+            notional_ = commOption->notional();
 
             if (!fxIndex_.empty()) { // if fx is applied, the notional is still quoted in the domestic ccy
                 auto underlyingCcy = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(leg[0])->index()->priceCurve()->currency();

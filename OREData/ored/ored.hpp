@@ -185,6 +185,7 @@
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/cliquetoption.hpp>
 #include <ored/portfolio/commodityapo.hpp>
+#include <ored/portfolio/commoditydigitalapo.hpp>
 #include <ored/portfolio/commoditydigitaloption.hpp>
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commoditylegbuilder.hpp>

@@ -130,6 +130,7 @@ portfolio/capfloor.cpp
 portfolio/cdo.cpp
 portfolio/cliquetoption.cpp
 portfolio/commodityapo.cpp
+portfolio/commoditydigitalapo.cpp
 portfolio/commoditydigitaloption.cpp
 portfolio/commodityforward.cpp
 portfolio/commoditylegbuilder.cpp
@@ -420,6 +421,7 @@ portfolio/capfloor.hpp
 portfolio/cdo.hpp
 portfolio/cliquetoption.hpp
 portfolio/commodityapo.hpp
+portfolio/commoditydigitalapo.hpp
 portfolio/commoditydigitaloption.hpp
 portfolio/commodityforward.hpp
 portfolio/commoditylegbuilder.hpp
