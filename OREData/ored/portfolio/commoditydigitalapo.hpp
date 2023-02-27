@@ -38,7 +38,7 @@ namespace data {
 class CommodityDigitalAveragePriceOption : public ore::data::Trade {
 
 public:
-    CommodityDigitalAveragePriceOption() : ore::data::Trade("CommodityAveragePriceOption") {}
+    CommodityDigitalAveragePriceOption() : ore::data::Trade("CommodityDigitalAveragePriceOption") {}
 
     CommodityDigitalAveragePriceOption(
         const ore::data::Envelope& envelope, const ore::data::OptionData& optionData,
