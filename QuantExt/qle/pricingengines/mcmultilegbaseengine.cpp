@@ -695,9 +695,60 @@ void McMultiLegBaseEngine::calculate() const {
 
 boost::shared_ptr<AmcCalculator> McMultiLegBaseEngine::amcCalculator() const {
     return boost::make_shared<MultiLegBaseAmcCalculator>(
-        model_->irlgm1f(0)->currency(), externalModelIndices_, exercise_ != nullptr,
-        optionSettlement_ == Settlement::Physical, times_, indexes_, exerciseIdx_, simulationIdx_, isTrappedDate_,
-        numSim_, resultValue_, coeffsItm_, coeffsUndEx_, coeffsFull_, coeffsUndTrapped_, coeffsUndDirty_, basisFns_);
+        model_->irlgm1f(0)->currency(), model_->stateProcess()->initialValues(), externalModelIndices_,
+        exercise_ != nullptr, optionSettlement_ == Settlement::Physical, times_, indexes_, exerciseIdx_, simulationIdx_,
+        isTrappedDate_, numSim_, resultValue_, coeffsItm_, coeffsUndEx_, coeffsFull_, coeffsUndTrapped_,
+        coeffsUndDirty_, basisFns_);
+}
+
+std::vector<QuantExt::RandomVariable>
+MultiLegBaseAmcCalculator::simulatePath(const std::vector<QuantLib::Real>& pathTimes,
+                                        std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+                                        const std::vector<bool>& isRelevantTime, const bool stickyCloseOutRun) {
+
+    QL_REQUIRE(!paths.empty(), "MultiLegBaseAmcCalculator: no future path times, this is not allowed.");
+    QL_REQUIRE(pathTimes.size() == paths.size(), "MultiLegBaseAmcCalculator: inconsistent pathTimes size ("
+                                                     << pathTimes.size() << ") and paths size (" << paths.size()
+                                                     << ") - internal error.");
+
+    std::vector<Real> simTimes(1, 0.0);
+    for (Size i = 0; i < pathTimes.size(); ++i) {
+        if (isRelevantTime[i]) {
+            simTimes.push_back(pathTimes[i]);
+        }
+    }
+    TimeGrid timeGrid(simTimes.begin(), simTimes.end());
+
+    std::vector<QuantExt::RandomVariable> result(simTimes.size(), RandomVariable(paths.front().front().size(), 0.0));
+
+    for (Size sample = 0; sample < paths.front().front().size(); ++sample) {
+
+        MultiPath path(externalModelIndices_.size(), timeGrid);
+        for (Size j = 0; j < externalModelIndices_.size(); ++j) {
+            path[j][0] = x0_[j];
+        }
+
+        Size timeIndex = 0;
+        for (Size i = 0; i < pathTimes.size(); ++i) {
+            if (isRelevantTime[i]) {
+                int ind = stickyCloseOutRun ? i - 1 : i;
+                QL_REQUIRE(ind >= 0,
+                           "MultiLegBaseAmcCalculator: sticky close out run time index is negative - internal error.");
+                for (Size j = 0; j < externalModelIndices_.size(); ++j) {
+                    path[j][timeIndex] = paths[ind][externalModelIndices_[j]][sample];
+                }
+                ++timeIndex;
+            }
+        }
+
+        auto res = simulatePath(path, stickyCloseOutRun);
+
+        for (Size k = 0; k < res.size(); ++k) {
+            result[k].set(sample, res[k]);
+        }
+    }
+
+    return result;
 }
 
 Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool reuseLastEvents) {
@@ -715,7 +766,7 @@ Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool 
             if (simIdx == Null<Size>())
                 continue;
             for (Size j = 0; j < externalModelIndices_.size(); ++j) {
-                s[j] = path[externalModelIndices_[j]][simIdx + 1];
+                s[j] = path[j][simIdx + 1];
             }
             result[simIdx + 1] = evalRegression(coeffsUndDirty_[simIdx], s, basisFns_);
         }
@@ -749,8 +800,8 @@ Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool 
             Real t1 = path[0].time(ind - 1), t2 = path[0].time(ind);
             Array s1(externalModelIndices_.size()), s2(externalModelIndices_.size());
             for (Size j = 0; j < externalModelIndices_.size(); ++j) {
-                s1[j] = path[externalModelIndices_[j]][ind - 1];
-                s2[j] = path[externalModelIndices_[j]][ind];
+                s1[j] = path[j][ind - 1];
+                s2[j] = path[j][ind];
             }
             s = ((tex - t1) * s2 + (t2 - tex) * s1) / (t2 - t1);
             Real exVal = evalRegression(coeffsUndEx_[exIdxTmp], s, basisFns_);
@@ -777,7 +828,7 @@ Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool 
         if (simIdx == Null<Size>())
             continue;
         for (Size j = 0; j < externalModelIndices_.size(); ++j) {
-            s[j] = path[externalModelIndices_[j]][simIdx + 1];
+            s[j] = path[j][simIdx + 1];
         }
         if (exercisedNow) {
             // we are on the first sim date on or after the exercise ...
