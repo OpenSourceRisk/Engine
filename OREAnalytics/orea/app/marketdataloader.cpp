@@ -21,6 +21,7 @@
 #include <ored/portfolio/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/indexcreditdefaultswapoption.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 
 using namespace ore::data;
 using QuantExt::OptionPriceSurface;
@@ -118,6 +119,27 @@ void additional_commodity_fixings(const string& fixingId, const set<Date>& fixin
     }
 }
 
+// Additional fixings for equity index decomposition
+void additional_equity_fixings(map<string, set<Date>>& fixings, const TodaysMarketParameters& mktParams,
+                               const boost::shared_ptr<ReferenceDataManager> refData,
+                               const boost::shared_ptr<CurveConfigurations>& curveConfigs) {
+    std::string configuration = Market::defaultConfiguration;
+    Date asof = Settings::instance().evaluationDate();
+    boost::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum> currencyHedgedIndexData;
+    if (mktParams.hasMarketObject(MarketObject::EquityCurve)) {
+        for (const auto& [equityName, _] : mktParams.mapping(MarketObject::EquityCurve, configuration)) {
+            try {    
+                auto indexDecomposition = loadCurrencyHedgedIndexDecomposition(equityName, refData, curveConfigs);
+                if (indexDecomposition) {
+                    indexDecomposition->addAdditionalFixingsForEquityIndexDecomposition(asof, fixings);
+                }
+            } catch (const std::exception& e) {
+                ALOG("adding addtional equity fixing failed, " << e.what());
+            }
+        }
+    }
+}
+
 const boost::shared_ptr<MarketDataLoaderImpl>& MarketDataLoader::impl() const {
     QL_REQUIRE(impl_, "No MarketDataLoader implementation of type MarketDataLoaderImpl set");
     return impl_;
@@ -157,8 +179,12 @@ void MarketDataLoader::populateFixings(
         fixings = portfolioFixings;
 
         LOG("Add fixings possibly required for bootstrapping TodaysMarket");
-        for (const auto& tmp : todaysMarketParameters)
+        for (const auto& tmp : todaysMarketParameters) {
             addMarketFixingDates(fixings, *tmp);
+            LOG("Add fixing possibly required for equity index delta risk decomposition")
+            additional_equity_fixings(fixings, *tmp, inputs_->refDataManager(),
+                                  inputs_->curveConfigs().front());
+        }
 
         if (inputs_->eomInflationFixings()) {
             LOG("Adjust inflation fixing dates to the end of the month before the request");

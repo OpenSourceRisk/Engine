@@ -959,8 +959,8 @@ void OREApp::writeInitialReports() {
                                     parseBool(params_->get("cashflow", "includePastCashflows"));
         string fileName = outputPath_ + "/" + params_->get("cashflow", "outputFileName");
         CSVFileReport cashflowReport(fileName);
-        getReportWriter()->writeCashflow(cashflowReport, portfolio_, market_, params_->get("markets", "pricing"),
-                                         includePastCashflows);
+        getReportWriter()->writeCashflow(cashflowReport, params_->get("npv", "baseCurrency"), portfolio_, market_,
+                                         params_->get("markets", "pricing"), includePastCashflows);
         CONSOLE("OK");
     } else {
         LOG("skip cashflow generation");
@@ -982,7 +982,8 @@ void OREApp::writeInitialReports() {
         InMemoryReport cashflowReport;
         bool includePastCashflows = false;
         string config = params_->get("markets", "pricing");
-        getReportWriter()->writeCashflow(cashflowReport, portfolio_, market_, config, includePastCashflows);
+        getReportWriter()->writeCashflow(cashflowReport, params_->get("npv", "baseCurrency"), portfolio_, market_,
+                                         config, includePastCashflows);
 
         CSVFileReport cfNpvReport(fileName);
         getReportWriter()->writeCashflowNpv(cfNpvReport, cashflowReport, market_, config, baseCcy, horizon);

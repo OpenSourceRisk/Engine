@@ -90,10 +90,19 @@ public:
     //! Optional load dividends method
     virtual std::set<Fixing> loadDividends() const;
 
+    void setActualDate(const QuantLib::Date& d) { actualDate_ = d; }
+    const Date& actualDate() const { return actualDate_; }
+
 private:
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version) {}
+
+protected:
+    /*! For lagged market data, where we need to take data from a different date but want to treat it as belonging to
+       the valuation date.
+     */
+    Date actualDate_ = Date();
 };
 } // namespace data
 } // namespace ore

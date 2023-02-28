@@ -16,6 +16,7 @@ def has_csv_config(config, filename_1, filename_2):
     # Check if config has a configuration for filename_1 or filename_2
 
     for filename in [filename_1, filename_2]:
+
         for key in config['csv_settings']['files']:
             if re.match(key, filename):
                 return config['csv_settings']['files'][key]
@@ -118,7 +119,6 @@ def create_df(file, col_types=None):
                         saccr_df[col].replace(0.0, np.nan, inplace=True)
 
                     saccr_df.rename(columns=saccr_cols, inplace=True)
-                    saccr_df.drop(columns='jobId', inplace=True)
                     return saccr_df
                 else:
                     logger.warning('Expected saccr json file %s to contain the field saccr', file)
@@ -152,6 +152,31 @@ def create_df(file, col_types=None):
                 else:
                     logger.warning('Expected frtb json file %s to contain the field frtb', file)
                     return None
+        if filename == 'bacva.json':
+            with open(file, 'r') as json_file:
+                bacva_json = json.load(json_file)
+                if 'bacva' in bacva_json:
+                    logger.debug('Creating DataFrame from bacva json file %s.', file)
+                    bacva_df = pd.DataFrame(bacva_json['bacva'])
+
+                    bacva_cols = {
+                        'analytic': 'Analytic',
+                        'counterparty': 'Counterparty',
+                        'nettingSetId': 'NettingSet',
+                        'value': 'Value',
+                    }
+
+                    for col in ['analytic', 'counterparty', 'nettingSetId']:
+                        bacva_df[col].replace('', np.nan, inplace=True)
+
+                    for col in ['value']:
+                        bacva_df[col].replace(0.0, np.nan, inplace=True)
+
+                    bacva_df.rename(columns=bacva_cols, inplace=True)
+                    return bacva_df
+                else:
+                    logger.warning('Expected bacva json file %s to contain the field bacva', file)
+                    return None   
     else:
         logger.warning('File %s is neither a csv nor a json file so cannot create DataFrame.', file)
         return None
@@ -404,8 +429,8 @@ def compare_files_df(name, file_1, file_2, config):
             if 'rel_tol' in col_group_config and col_group_config['rel_tol'] is not None:
                 rel_tol = col_group_config['rel_tol']
 
-            sub_df_1 = df_1[col_names]
-            sub_df_2 = df_2[col_names]
+            sub_df_1 = df_1[col_names].copy(deep=True)
+            sub_df_2 = df_2[col_names].copy(deep=True)
 
             comp = Compare(sub_df_1, sub_df_2, join_columns=keys, abs_tol=abs_tol, rel_tol=rel_tol,
                            df1_name='expected', df2_name='calculated')
@@ -420,8 +445,8 @@ def compare_files_df(name, file_1, file_2, config):
     # Get the remaining columns that have not been compared.
     rem_cols_1 = [col for col in df_1.columns if col not in cols_compared]
     rem_cols_2 = [col for col in df_2.columns if col not in cols_compared]
-    sub_df_1 = df_1[rem_cols_1]
-    sub_df_2 = df_2[rem_cols_2]
+    sub_df_1 = df_1[rem_cols_1].copy(deep=True)
+    sub_df_2 = df_2[rem_cols_2].copy(deep=True)
     logger.debug('The remaining columns in the first file are: %s.', str(rem_cols_1))
     logger.debug('The remaining columns in the second file are: %s.', str(rem_cols_2))
 

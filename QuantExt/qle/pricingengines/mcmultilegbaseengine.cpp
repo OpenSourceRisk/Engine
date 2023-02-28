@@ -16,8 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 
+#include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/cmscoupon.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
@@ -551,13 +554,51 @@ void McMultiLegBaseEngine::calculate() const {
                 flooredRate_[index].push_back(-QL_MAX_REAL);
             } else {
                 auto flr = flrcpn(leg_[i][j]);
-                QL_REQUIRE(flr != nullptr, "McMultiLegBaseEngine: unexpected coupon type");
+                QL_REQUIRE(flr != nullptr,
+                           "McMultiLegBaseEngine: unexpected coupon type, expected fixed or (cf) floating rate coupon");
+
+                // proxy ON compounded, averaged and BMA by ibor coupons, ibor coupons are handled below
+
+                if (auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cpn)) {
+                    flr = boost::make_shared<IborCoupon>(
+                        on->date(), on->nominal(), on->accrualStartDate(), on->accrualEndDate(), on->fixingDays(),
+                        boost::make_shared<IborIndex>(
+                            "proxy-ibor", (on->accrualEndDate() - on->accrualStartDate()) * Days, on->fixingDays(),
+                            on->overnightIndex()->currency(), on->overnightIndex()->fixingCalendar(),
+                            on->overnightIndex()->businessDayConvention(), on->overnightIndex()->endOfMonth(),
+                            on->dayCounter(), on->overnightIndex()->forwardingTermStructure()),
+                        on->gearing(), on->spread(), on->referencePeriodStart(), on->referencePeriodEnd(),
+                        on->dayCounter(), false, Date());
+                } else if (auto on = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(cpn)) {
+                    flr = boost::make_shared<IborCoupon>(
+                        on->date(), on->nominal(), on->accrualStartDate(), on->accrualEndDate(), on->fixingDays(),
+                        boost::make_shared<IborIndex>(
+                            "proxy-ibor", (on->accrualEndDate() - on->accrualStartDate()) * Days, on->fixingDays(),
+                            on->overnightIndex()->currency(), on->overnightIndex()->fixingCalendar(),
+                            on->overnightIndex()->businessDayConvention(), on->overnightIndex()->endOfMonth(),
+                            on->dayCounter(), on->overnightIndex()->forwardingTermStructure()),
+                        on->gearing(), on->spread(), on->referencePeriodStart(), on->referencePeriodEnd(),
+                        on->dayCounter(), false, Date());
+                } else if (auto bma = boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(cpn)) {
+                    auto bmaIndex = boost::dynamic_pointer_cast<BMAIndex>(bma->index());
+                    QL_REQUIRE(bmaIndex, "McMultiLegBaseEngine: could not cast to BMAIndex, internal error.");
+                    flr = boost::make_shared<IborCoupon>(
+                        bma->date(), bma->nominal(), bma->accrualStartDate(), bma->accrualEndDate(), bma->fixingDays(),
+                        boost::make_shared<IborIndex>(
+                            "proxy-ibor", (bma->accrualEndDate() - bma->accrualStartDate()) * Days, bma->fixingDays(),
+                            bmaIndex->currency(), bmaIndex->fixingCalendar(), Following, false, bma->dayCounter(),
+                            bmaIndex->forwardingTermStructure()),
+                        bma->gearing(), bma->spread(), bma->referencePeriodStart(), bma->referencePeriodEnd(),
+                        bma->dayCounter(), false, Date());
+                }
 
                 // in arrears?
+
                 if (flr->isInArrears())
                     allowsVanillaValuation = false;
 
                 // cap / floors
+
                 Real cappedRate = QL_MAX_REAL, flooredRate = -QL_MAX_REAL;
                 auto cfc = boost::dynamic_pointer_cast<CappedFlooredCoupon>(leg_[i][j]);
                 if (cfc != nullptr && cfc->isCapped()) {
@@ -573,6 +614,7 @@ void McMultiLegBaseEngine::calculate() const {
                 // TODO add support for stripped capped floored coupon
 
                 // handle the floating rate coupon types
+
                 Size ccyIndex = model_->ccyIndex(flr->index()->currency());
                 fixingDate_[index].push_back(flr->fixingDate());
                 gearing_[index].push_back(flr->gearing());
@@ -581,20 +623,17 @@ void McMultiLegBaseEngine::calculate() const {
 
                 bool cpnrec = false;
 
-                // IBOR
-                auto iborcpn = boost::dynamic_pointer_cast<IborCoupon>(flr);
-                if (iborcpn != nullptr) {
+                if (auto iborcpn = boost::dynamic_pointer_cast<IborCoupon>(flr)) {
+                    // IBOR
                     indexCcyIndex_[index].push_back(model_->pIdx(CrossAssetModel::AssetType::IR, ccyIndex));
                     indexFwdCurve_[index].push_back(boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
                         model_->lgm(ccyIndex), iborcpn->iborIndex()->forwardingTermStructure()));
                     indexDscCurve_[index].push_back(nullptr);
                     modelIndex_[index].push_back(
                         iborcpn->iborIndex()->clone(Handle<YieldTermStructure>(indexFwdCurve_[index].back())));
-                }
-                cpnrec = true;
-                // CMS
-                auto cmscpn = boost::dynamic_pointer_cast<CmsCoupon>(flr);
-                if (cmscpn != nullptr) {
+                    cpnrec = true;
+                } else if (auto cmscpn = boost::dynamic_pointer_cast<CmsCoupon>(flr)) {
+                    // CMS
                     allowsVanillaValuation = false;
                     indexCcyIndex_[index].push_back(model_->pIdx(CrossAssetModel::AssetType::IR, ccyIndex));
                     indexFwdCurve_[index].push_back(boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
@@ -607,8 +646,8 @@ void McMultiLegBaseEngine::calculate() const {
                 }
                 // add more coupon types here ...
 
-                QL_REQUIRE(cpnrec,
-                           "McMultiLegBaseEngine: index type in leg " << i << ", coupon " << j << " not supported.");
+                QL_REQUIRE(cpnrec, "McMultiLegBaseEngine: floating rate coupon type in leg " << i << ", coupon " << j
+                                                                                             << " not supported.");
             }
 
             // other data

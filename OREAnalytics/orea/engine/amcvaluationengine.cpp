@@ -28,6 +28,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 
+#include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
@@ -381,7 +382,12 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                 Date d = sgd->getGrid()->dates()[k - 1];
                 for (Size j = 0; j < asdIndex.size(); ++j) {
                     asdIndexCurve[j]->move(d, state(irStateBuffer, asdIndexIndex[j], k, i));
-                    asd->set(dateIndex, i, asdIndex[j]->fixing(asdIndex[j]->fixingCalendar().adjust(d)),
+                    auto index = asdIndex[j];
+                    if (auto fb = boost::dynamic_pointer_cast<FallbackIborIndex>(asdIndex[j])) {
+                        // proxy fallback ibor index by its rfr index's fixing
+                        index = fb->rfrIndex();
+                    }
+                    asd->set(dateIndex, i, index->fixing(index->fixingCalendar().adjust(d)),
                              AggregationScenarioDataType::IndexFixing, asdIndexName[j]);
                 }
                 ++dateIndex;

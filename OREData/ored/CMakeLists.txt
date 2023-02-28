@@ -130,6 +130,7 @@ portfolio/capfloor.cpp
 portfolio/cdo.cpp
 portfolio/cliquetoption.cpp
 portfolio/commodityapo.cpp
+portfolio/commoditydigitalapo.cpp
 portfolio/commoditydigitaloption.cpp
 portfolio/commodityforward.cpp
 portfolio/commoditylegbuilder.cpp
@@ -220,6 +221,7 @@ utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
 utilities/currencyconfig.cpp
+utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
 utilities/dategrid.cpp
 utilities/filteredbufferedlogger.cpp
@@ -420,6 +422,7 @@ portfolio/capfloor.hpp
 portfolio/cdo.hpp
 portfolio/cliquetoption.hpp
 portfolio/commodityapo.hpp
+portfolio/commoditydigitalapo.hpp
 portfolio/commoditydigitaloption.hpp
 portfolio/commodityforward.hpp
 portfolio/commoditylegbuilder.hpp
@@ -521,6 +524,7 @@ utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
 utilities/currencyconfig.hpp
+utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
 utilities/dategrid.hpp
 utilities/filteredbufferedlogger.hpp
