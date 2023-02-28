@@ -117,10 +117,11 @@ protected:
     mutable Real resultUnderlyingNpv_, resultValue_;
 };
 
-class MultiLegBaseAmcCalculator : public AmcCalculatorSinglePath {
+class MultiLegBaseAmcCalculator : public AmcCalculator {
 public:
-    MultiLegBaseAmcCalculator(const Currency& baseCurrency, const std::vector<Size>& externalModelIndices,
-                              const bool hasExercise, const bool isPhysicalSettlement, const std::vector<Real>& times,
+    MultiLegBaseAmcCalculator(const Currency& baseCurrency, const Array& x0,
+                              const std::vector<Size>& externalModelIndices, const bool hasExercise,
+                              const bool isPhysicalSettlement, const std::vector<Real>& times,
                               const std::vector<Size>& indexes, const std::vector<Size>& exerciseIdx,
                               const std::vector<Size>& simulationIdx, const std::vector<bool>& isTrappedDate,
                               const Size numSim, const Real resultValue, const std::vector<Array> coeffsItm,
@@ -131,17 +132,23 @@ public:
 #else
                               const std::vector<boost::function1<Real, Array>>& basisFns)
 #endif
-        : baseCurrency_(baseCurrency), externalModelIndices_(externalModelIndices), hasExercise_(hasExercise),
+        : baseCurrency_(baseCurrency), x0_(x0), externalModelIndices_(externalModelIndices), hasExercise_(hasExercise),
           isPhysicalSettlement_(isPhysicalSettlement), times_(times), indexes_(indexes), exerciseIdx_(exerciseIdx),
           simulationIdx_(simulationIdx), isTrappedDate_(isTrappedDate), numSim_(numSim), resultValue_(resultValue),
           coeffsItm_(coeffsItm), coeffsUndEx_(coeffsUndEx), coeffsFull_(coeffsFull),
           coeffsUndTrapped_(coeffsUndTrapped), coeffsUndDirty_(coeffsUndDirty), basisFns_(basisFns) {
     }
-    Array simulatePath(const MultiPath& path, const bool reuseLastEvents) override;
     Currency npvCurrency() override { return baseCurrency_; }
 
+    std::vector<QuantExt::RandomVariable>
+    simulatePath(const std::vector<QuantLib::Real>& pathTimes,
+                 std::vector<std::vector<QuantExt::RandomVariable>>& paths, const std::vector<bool>& isRelevantTime,
+                 const bool stickyCloseOutRun) override;
+
 private:
+    Array simulatePath(const MultiPath& path, const bool reuseLastEvents);
     const Currency baseCurrency_;
+    const Array x0_;
     const std::vector<Size> externalModelIndices_;
     const bool hasExercise_;
     const bool isPhysicalSettlement_;
