@@ -146,7 +146,7 @@ public:
                  const bool stickyCloseOutRun) override;
 
 private:
-    Array simulatePath(const MultiPath& path, const bool reuseLastEvents);
+    Array simulatePath(const MultiPath& path, const bool reuseLastEvents, const Size sample);
     const Currency baseCurrency_;
     const Array x0_;
     const std::vector<Size> externalModelIndices_;
@@ -168,7 +168,7 @@ private:
 #else
     const std::vector<boost::function1<Real, Array>> basisFns_;
 #endif
-    Size storedExerciseIndex_ = Null<Size>();
+    std::vector<Size> storedExerciseIndex_;
 };
 
 } // namespace QuantExt
