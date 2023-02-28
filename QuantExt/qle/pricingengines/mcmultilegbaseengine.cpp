@@ -711,6 +711,9 @@ MultiLegBaseAmcCalculator::simulatePath(const std::vector<QuantLib::Real>& pathT
                                                      << pathTimes.size() << ") and paths size (" << paths.size()
                                                      << ") - internal error.");
 
+    if(storedExerciseIndex_.empty())
+        storedExerciseIndex_.resize(paths.front().front().size());
+
     std::vector<Real> simTimes(1, 0.0);
     for (Size i = 0; i < pathTimes.size(); ++i) {
         if (isRelevantTime[i]) {
@@ -741,7 +744,7 @@ MultiLegBaseAmcCalculator::simulatePath(const std::vector<QuantLib::Real>& pathT
             }
         }
 
-        auto res = simulatePath(path, stickyCloseOutRun);
+        auto res = simulatePath(path, stickyCloseOutRun, sample);
 
         for (Size k = 0; k < res.size(); ++k) {
             result[k].set(sample, res[k]);
@@ -751,7 +754,7 @@ MultiLegBaseAmcCalculator::simulatePath(const std::vector<QuantLib::Real>& pathT
     return result;
 }
 
-Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool reuseLastEvents) {
+Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool reuseLastEvents, const Size sample) {
     // we assume that the path exactly contains the simulation times (and 0)
     // we only check that the path has the right length here
     QL_REQUIRE(path[0].length() == numSim_ + 1, "MultiLegBaseAmcCalculator::simulatePath: expected path size "
@@ -776,7 +779,7 @@ Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool 
     Size exIdx = Null<Size>();
     if (reuseLastEvents) {
         // if reuseLastEvents is true, we set the exercise index to the one from the last simulationPath() call
-        exIdx = storedExerciseIndex_;
+        exIdx = storedExerciseIndex_[sample];
     } else {
         // otherweise we determine the exercise index explicitly
         for (Size i = 0; i < indexes_.size(); ++i) {
@@ -813,7 +816,7 @@ Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool 
                 }
             }
         }
-        storedExerciseIndex_ = exIdx;
+        storedExerciseIndex_[sample] = exIdx;
     }
     // now populate the result array using the exercise time information
     bool exercised = false, exercisedNow = false;
