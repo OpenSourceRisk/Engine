@@ -267,10 +267,11 @@ void OREApp::analytics() {
 
     LOG("ORE analytics done");
 }
-    
+
 OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, Size width, Size progressBarWidth)
-    : params_(params), inputs_(nullptr), asof_(parseDate(params_->get("setup", "asofDate"))), cubeDepth_(0) {
-    
+    : tab_(width), progressBarWidth_(progressBarWidth), params_(params), inputs_(nullptr),
+      asof_(parseDate(params_->get("setup", "asofDate"))), cubeDepth_(0) {
+
     // Set global evaluation date
     Settings::instance().evaluationDate() = asof_;
 
@@ -293,10 +294,10 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, Size width, S
     readSetup();
 }
 
-OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs,
-               const std::string& logFile, Size logLevel, Size bufferLogLevel,
-               bool console, Size width, Size progressBarWidth)
-    : params_(nullptr), inputs_(inputs), asof_(inputs->asof()), cubeDepth_(0) {
+OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel,
+               Size bufferLogLevel, bool console, Size width, Size progressBarWidth)
+    : tab_(width), progressBarWidth_(progressBarWidth), params_(nullptr), inputs_(inputs), asof_(inputs->asof()),
+      cubeDepth_(0) {
 
     // Initialise Singletons
     Settings::instance().evaluationDate() = asof_;
