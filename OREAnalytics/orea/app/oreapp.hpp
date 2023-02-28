@@ -57,12 +57,10 @@ class SensitivityAnalysis;
 class OREApp {
 public:
     //! Constructor that uses ORE parameters and input data from files
-    OREApp(boost::shared_ptr<Parameters> params,
-           bool console = true, Size width = 50, Size progressBarWidth = 22);
-    //! Constructor that assumes we have already assembled input parameters via API 
-    OREApp(const boost::shared_ptr<InputParameters>& inputs,
-           const std::string& logFile, Size logLevel = 31, Size bufferLogLevel = 15,
-           bool console = false, Size width = 50, Size progressBarWidth = 22);
+    OREApp(boost::shared_ptr<Parameters> params, bool console = true);
+    //! Constructor that assumes we have already assembled input parameters via API
+    OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel = 31,
+           Size bufferLogLevel = 15, bool console = false);
 
     //! Destructor
     virtual ~OREApp();
@@ -238,7 +236,6 @@ protected:
 
     void writePricingStats(const std::string& filename, const boost::shared_ptr<Portfolio>& portfolio);
 
-    Size tab_, progressBarWidth_;
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
     boost::shared_ptr<InputParameters> inputs_;
