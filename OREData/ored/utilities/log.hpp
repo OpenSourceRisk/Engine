@@ -478,5 +478,75 @@ private:
 
 inline std::ostream& operator<<(std::ostream& out, const StructuredMessage& sm) { return out << sm.msg(); }
 
+//! Singleton to control console logging
+//
+class ConsoleLog : public QuantLib::Singleton<ConsoleLog, std::integral_constant<bool, true>> {
+    friend class QuantLib::Singleton<ConsoleLog, std::integral_constant<bool, true>>;
+
+private:
+    // may be empty but never uninitialised
+    ConsoleLog() : enabled_(false), width_(50), progressBarWidth_(72 - std::min<QuantLib::Size>(width_, 67)) {}
+
+    bool enabled_;
+    QuantLib::Size width_;
+    QuantLib::Size progressBarWidth_;
+    // mutable boost::shared_mutex mutex_;
+
+public:
+    bool enabled() {
+        // boost::shared_lock<boost::shared_mutex> lock(mutex());
+        return enabled_;
+    }
+    QuantLib::Size width() {
+        // boost::shared_lock<boost::shared_mutex> lock(mutex_);
+        return width_;
+    }
+    QuantLib::Size progressBarWidth() {
+        // boost::shared_lock<boost::shared_mutex> lock(mutex_);
+        return progressBarWidth_;
+    }
+    void switchOn() {
+        // boost::unique_lock<boost::shared_mutex> lock(mutex_);
+        enabled_ = true;
+    }
+    void switchOff() {
+        // boost::unique_lock<boost::shared_mutex> lock(mutex_);
+        enabled_ = false;
+    }
+    void setWidth(QuantLib::Size w) {
+        // boost::unique_lock<boost::shared_mutex> lock(mutex_);
+        width_ = w;
+    }
+    void setProgressBarWidth(QuantLib::Size w) {
+        // boost::unique_lock<boost::shared_mutex> lock(mutex_);
+        progressBarWidth_ = w;
+    }
+    //! mutex to acquire locks
+    // boost::shared_mutex& mutex() { return mutex_; }
+};
+
+    // boost::unique_lock<boost::shared_mutex> lock(ore::data::ConsoleLog::instance().mutex());             
+
+#define CONSOLEW(text)                                                                                                 \
+    {                                                                                                                  \
+        if (ore::data::ConsoleLog::instance().enabled()) {                                                             \
+            std::ostringstream oss;                                                                                    \
+            oss << text;                                                                                               \
+            std::cout << setw(ore::data::ConsoleLog::instance().width()) << left << oss.str() << std::flush;           \
+        }                                                                                                              \
+    }
+
+    // boost::unique_lock<boost::shared_mutex> lock(ore::data::ConsoleLog::instance().mutex());                 
+ 
+#define CONSOLE(text)                                                                                                  \
+    {                                                                                                                  \
+        if (ore::data::ConsoleLog::instance().enabled()) {                                                             \
+            std::ostringstream oss;                                                                                    \
+            oss << text;                                                                                               \
+            std::cout << oss.str() << std::endl;                                                                       \
+        }                                                                                                              \
+    }
+    
+
 } // namespace data
 } // namespace ore

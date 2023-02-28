@@ -42,13 +42,12 @@ Size matches(const std::set<std::string>& requested, const std::set<std::string>
 }
     
 AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inputs, 
-                                   const boost::shared_ptr<MarketDataLoader>& marketDataLoader,
-                                   std::ostream& out)
-    : inputs_(inputs), marketDataLoader_(marketDataLoader), out_(out) {    
+                                   const boost::shared_ptr<MarketDataLoader>& marketDataLoader)
+    : inputs_(inputs), marketDataLoader_(marketDataLoader) {    
     
-    addAnalytic("PRICING", boost::make_shared<PricingAnalytic>(inputs_, out_));
-    addAnalytic("VAR", boost::make_shared<VarAnalytic>(inputs_, out_));
-    addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_, out_));
+    addAnalytic("PRICING", boost::make_shared<PricingAnalytic>(inputs));
+    addAnalytic("VAR", boost::make_shared<VarAnalytic>(inputs_));
+    addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_));
 }
 
 void AnalyticsManager::clear() {

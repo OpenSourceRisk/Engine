@@ -37,9 +37,7 @@ public:
     AnalyticsManager(//! Container for the inputs required by the standard analytics
                      const boost::shared_ptr<InputParameters>& inputs,
                      //! A market data loader object that can retrieve required data from a large repository
-                     const boost::shared_ptr<MarketDataLoader>& marketDataLoader,
-                     //! Stream for optional output
-                     std::ostream& out = std::cout);
+                     const boost::shared_ptr<MarketDataLoader>& marketDataLoader);
     virtual ~AnalyticsManager() {};
 
     //! Valid analytics in the analytics manager are the union of analytics types provided by analytics_ map
@@ -57,8 +55,6 @@ public:
     Analytic::analytic_reports const reports();
     Analytic::analytic_npvcubes const npvCubes();
     Analytic::analytic_mktcubes const mktCubes();
-
-    std::ostream& stream() { return out_; }
 
     void setLaggedMarket() { laggedMarket_ = true; }
     void unsetLaggedMarket() { laggedMarket_ = false; }
@@ -80,7 +76,6 @@ private:
     Analytic::analytic_reports marketDataReports_;
     std::set<std::string> validAnalytics_;
     std::set<std::string> requestedAnalytics_;
-    std::ostream& out_;
     bool laggedMarket_ = false;
 };
 
