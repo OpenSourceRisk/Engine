@@ -714,7 +714,10 @@ MultiLegBaseAmcCalculator::simulatePath(const std::vector<QuantLib::Real>& pathT
     std::vector<Real> simTimes(1, 0.0);
     for (Size i = 0; i < pathTimes.size(); ++i) {
         if (isRelevantTime[i]) {
-            simTimes.push_back(pathTimes[i]);
+            int ind = stickyCloseOutRun ? i - 1 : i;
+            QL_REQUIRE(ind >= 0,
+                       "MultiLegBaseAmcCalculator: sticky close out run time index is negative - internal error.");
+            simTimes.push_back(pathTimes[ind]);
         }
     }
     TimeGrid timeGrid(simTimes.begin(), simTimes.end());
@@ -731,11 +734,8 @@ MultiLegBaseAmcCalculator::simulatePath(const std::vector<QuantLib::Real>& pathT
         Size timeIndex = 0;
         for (Size i = 0; i < pathTimes.size(); ++i) {
             if (isRelevantTime[i]) {
-                int ind = stickyCloseOutRun ? i - 1 : i;
-                QL_REQUIRE(ind >= 0,
-                           "MultiLegBaseAmcCalculator: sticky close out run time index is negative - internal error.");
                 for (Size j = 0; j < externalModelIndices_.size(); ++j) {
-                    path[j][timeIndex] = paths[ind][externalModelIndices_[j]][sample];
+                    path[j][timeIndex] = paths[i][externalModelIndices_[j]][sample];
                 }
                 ++timeIndex;
             }
