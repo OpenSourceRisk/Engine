@@ -734,10 +734,10 @@ MultiLegBaseAmcCalculator::simulatePath(const std::vector<QuantLib::Real>& pathT
         Size timeIndex = 0;
         for (Size i = 0; i < pathTimes.size(); ++i) {
             if (isRelevantTime[i]) {
+                ++timeIndex;
                 for (Size j = 0; j < externalModelIndices_.size(); ++j) {
                     path[j][timeIndex] = paths[i][externalModelIndices_[j]][sample];
                 }
-                ++timeIndex;
             }
         }
 
