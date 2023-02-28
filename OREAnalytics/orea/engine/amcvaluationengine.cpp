@@ -349,8 +349,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
 
     timer.start();
     for (Size j = 0; j < amcCalculators.size(); ++j) {
-        auto resFee = feeContributions(j, sgd, market->asofDate(), outputCube->samples(), tradeFees, model, fxBuffer,
-                                       irStateBuffer);
+        auto resFee = feeContributions(j, sgd, model->irModel(0)->termStructure()->referenceDate(),
+                                       outputCube->samples(), tradeFees, model, fxBuffer, irStateBuffer);
 
         if (!sgd->withCloseOutLag()) {
             // no close-out lag, fill depth 0 with npv on path
