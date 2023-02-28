@@ -1212,7 +1212,8 @@ void OREApp::buildNPVCube() {
 
     auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab_, progressBarWidth_);
     auto progressLog = boost::make_shared<ProgressLog>("Building cube...");
-    engine.registerProgressIndicator(progressBar);
+    if (ConsoleLog::instance().enabled()) 
+        engine.registerProgressIndicator(progressBar);
     engine.registerProgressIndicator(progressLog);
 
     engine.buildCube(simPortfolio_, cube_, calculators, useMporStickyDate_, nettingSetCube_, cptyCube_, cptyCalculators);

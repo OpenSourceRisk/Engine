@@ -737,7 +737,8 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
         // single-threaded engine run
 
         ValuationEngine engine(inputs_->asof(), grid_, simMarket_);
-        engine.registerProgressIndicator(progressBar);
+        if (ConsoleLog::instance().enabled())
+            engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
         engine.buildCube(portfolio, cube_, calculators(), configurations_.scenarioGeneratorData->withMporStickyDate(),
                          nettingSetCube_, cptyCube_, cptyCalculators());
@@ -781,7 +782,8 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
             boost::make_shared<ore::analytics::ScenarioFilter>(), {}, {}, {}, inputs_->refDataManager(),
             *inputs_->iborFallbackConfig(), true, false, cubeFactory, {}, cptyCubeFactory, "xva-simulation");
 
-        engine.registerProgressIndicator(progressBar);
+        if (ConsoleLog::instance().enabled())
+            engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
 
         engine.buildCube(portfolio, calculators, cptyCalculators,
@@ -902,7 +904,8 @@ void XvaAnalytic::amcRun(bool doClassicRun) {
         AMCValuationEngine amcEngine(model_, inputs_->scenarioGeneratorData(), market_,
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataCcys());
-        amcEngine.registerProgressIndicator(progressBar);
+        if (ConsoleLog::instance().enabled())
+            amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);
         // We only need to generate asd, if this does not happen in the classic run
         if (!doClassicRun)
@@ -927,7 +930,8 @@ void XvaAnalytic::amcRun(bool doClassicRun) {
             inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
             inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"), getAmcEngineBuilders, {}, {},
             inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory);
-        amcEngine.registerProgressIndicator(progressBar);
+        if (ConsoleLog::instance().enabled())
+            amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);
         // as for the single-threaded case, we only need to generate asd, if this does not happen in the classic run
         if (!doClassicRun)
