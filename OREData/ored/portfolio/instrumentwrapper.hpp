@@ -104,6 +104,8 @@ public:
     }
     /*! The multiplier */
     const Real& multiplier() const { return multiplier_; }
+    /*! multiplier to be applied on top of multiplier(), e.g. -1 for short options  */
+    virtual Real multiplier2() const { return 1.0; }
     /*! additional instruments */
     const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments() const {
         return additionalInstruments_;

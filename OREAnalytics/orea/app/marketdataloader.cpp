@@ -146,17 +146,19 @@ const boost::shared_ptr<MarketDataLoaderImpl>& MarketDataLoader::impl() const {
 }
 
 void MarketDataLoader::addRelevantFixings(
-    const std::pair<std::string, std::set<QuantLib::Date>>& fixing, FixingMap& fixings,
+    const std::pair<std::string, std::set<QuantLib::Date>>& fixing,
     std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>>& lastAvailableFixingLookupMap) {
     if (isFxIndex(fixing.first)) {
         // for FX fixings we want to add additional fixings to allow triangulation in case of missing
         // fixings if we need EUR/GBP fixing but it is not available, we can imply from EUR/USD and GBP/USD
-        additional_fx_fixings(fixing.first, fixing.second, fixings);
+        additional_fx_fixings(fixing.first, fixing.second, fixings_);
     }
     if (isCommodityIndex(fixing.first)) {
-        additional_commodity_fixings(fixing.first, fixing.second, fixings, lastAvailableFixingLookupMap);
+        additional_commodity_fixings(fixing.first, fixing.second, fixings_, lastAvailableFixingLookupMap);
     }
-    fixings[fixing.first].insert(fixing.second.begin(), fixing.second.end());
+    fixings_[fixing.first].insert(fixing.second.begin(), fixing.second.end());
+    // also add to portfolioFixings_, used for alerting missing required fixings
+    portfolioFixings_[fixing.first].insert(fixing.second.begin(), fixing.second.end());
 }
 
 void MarketDataLoader::populateFixings(
@@ -165,7 +167,7 @@ void MarketDataLoader::populateFixings(
         impl()->retrieveFixings(loader_);
     } else {
         LOG("Asking portfolio for its required fixings");
-        FixingMap portfolioFixings, fixings;
+        FixingMap portfolioFixings;
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap;
                 
         // portfolio fixings will warn if missinbg
@@ -173,29 +175,27 @@ void MarketDataLoader::populateFixings(
             portfolioFixings = inputs_->portfolio()->fixings();
             LOG("The portfolio depends on fixings from " << portfolioFixings.size() << " indices");
             for (const auto& it : portfolioFixings)
-                addRelevantFixings(it, portfolioFixings, lastAvailableFixingLookupMap);
+                addRelevantFixings(it, lastAvailableFixingLookupMap);
         }
-
-        fixings = portfolioFixings;
 
         LOG("Add fixings possibly required for bootstrapping TodaysMarket");
         for (const auto& tmp : todaysMarketParameters) {
-            addMarketFixingDates(fixings, *tmp);
+            addMarketFixingDates(fixings_, *tmp);
             LOG("Add fixing possibly required for equity index delta risk decomposition")
-            additional_equity_fixings(fixings, *tmp, inputs_->refDataManager(),
+            additional_equity_fixings(fixings_, *tmp, inputs_->refDataManager(),
                                   inputs_->curveConfigs().front());
         }
 
         if (inputs_->eomInflationFixings()) {
             LOG("Adjust inflation fixing dates to the end of the month before the request");
-            amendInflationFixingDates(fixings);
+            amendInflationFixingDates(fixings_);
         }
 
-        if (fixings.size() > 0)
-            impl()->retrieveFixings(loader_, fixings, lastAvailableFixingLookupMap);
+        if (fixings_.size() > 0)
+            impl()->retrieveFixings(loader_, fixings_, lastAvailableFixingLookupMap);
 
         // check and warn any missing fixings - only warn for portfolio fixings
-        for (const auto& f : portfolioFixings) {
+        for (const auto& f : portfolioFixings_) {
             for (const auto& d : f.second) {
                 if (!loader_->hasFixing(f.first, d)) {
                     WLOG(StructuredFixingWarningMessage(f.first, d, "Missing fixing",
