@@ -16,8 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/algorithm/string.hpp>
-#include <boost/timer/timer.hpp>
 
 #ifdef BOOST_MSVC
 // disable warning C4503: '__LINE__Var': decorated name length exceeded, name was truncated
@@ -27,18 +25,21 @@
 #pragma warning(disable : 4503)
 #endif
 
-#include <boost/filesystem.hpp>
-
+#include <orea/app/marketdatainmemoryloader.hpp>
+#include <orea/app/oreapp.hpp>
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
+
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
-#include <ored/report/inmemoryreport.hpp>
 
-#include <orea/app/oreapp.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/timer/timer.hpp>
 
 #include <iostream>
 
