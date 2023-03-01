@@ -17,6 +17,7 @@ app/analyticsmanager.cpp
 app/inputparameters.cpp
 app/marketcalibrationreport.cpp
 app/marketdatacsvloader.cpp
+app/marketdatainmemoryloader.cpp
 app/marketdataloader.cpp
 app/oreapp.cpp
 app/parameters.cpp
@@ -94,6 +95,7 @@ app/analyticsmanager.hpp
 app/inputparameters.hpp
 app/marketcalibrationreport.hpp
 app/marketdatacsvloader.hpp
+app/marketdatainmemoryloader.hpp
 app/marketdataloader.hpp
 app/oreapp.hpp
 app/parameters.hpp

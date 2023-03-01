@@ -63,7 +63,7 @@ protected:
         Handle<QuantLib::BlackVolTermStructure> volShort =
             market_->commodityVolatility(shortIndex->underlyingName(), configuration(MarketContext::pricing));
         Real beta = 0;
-        QuantLib::Handle<QuantExt::CorrelationTermStructure> rho{nullptr};
+        Handle<QuantExt::CorrelationTermStructure> rho{nullptr};
         auto param = engineParameters_.find("beta");
         if (param != engineParameters_.end())
             beta = parseReal(param->second);

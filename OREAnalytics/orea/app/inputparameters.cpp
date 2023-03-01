@@ -40,18 +40,181 @@ vector<string> getFilenames(const string& fileString, const string& path) {
     return fileNames;
 }
 
+
+InputParameters::InputParameters() {
+    iborFallbackConfig_ = boost::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
+    loadParameters();
+}
+
+void InputParameters::setAsOfDate(const std::string& s) {
+    asof_ = parseDate(s);
+    Settings::instance().evaluationDate() = asof_;
+}
+
+void InputParameters::setMarketConfig(const std::string& config, const std::string& context) {
+    auto it = marketConfigs_.find(context);
+    QL_REQUIRE(it == marketConfigs_.end(),
+               "market config " << it->second << " already set for context " << it->first);
+    marketConfigs_[context] = config;
+}
+
+void InputParameters::setRefDataManager(const std::string& xml) {
+    refDataManager_ = boost::make_shared<BasicReferenceDataManager>();
+    refDataManager_->fromXMLString(xml);
+}
+
+void InputParameters::setConventions(const std::string& xml) {
+    conventions_ = boost::make_shared<Conventions>();
+    conventions_->fromXMLString(xml);
+}
+    
+void InputParameters::setCurveConfigs(const std::string& xml) {
+    auto curveConfig = boost::make_shared<CurveConfigurations>();
+    curveConfig->fromXMLString(xml);
+    curveConfigs_.push_back(curveConfig);
+}
+
+void InputParameters::setIborFallbackConfig(const std::string& xml) {
+    iborFallbackConfig_= boost::make_shared<IborFallbackConfig>();
+    iborFallbackConfig_->fromXMLString(xml);
+}
+
+void InputParameters::setPricingEngine(const std::string& xml) {
+    pricingEngine_ = boost::make_shared<EngineData>();
+    pricingEngine_->fromXMLString(xml);
+}
+
+void InputParameters::setTodaysMarketParams(const std::string& xml) {
+    todaysMarketParams_ = boost::make_shared<TodaysMarketParameters>();
+    todaysMarketParams_->fromXMLString(xml);
+}
+
+void InputParameters::setPortfolio(const std::string& xml) {
+    portfolio_ = boost::make_shared<Portfolio>(buildFailedTrades_);
+    boost::shared_ptr<TradeFactory> tradeFactory = nullptr;
+    if (!refDataManager_) {
+        ALOG("reference data manager not set when loading portfolio");
+        tradeFactory = boost::make_shared<TradeFactory>();
+    }
+    tradeFactory = boost::make_shared<TradeFactory>(refDataManager_);
+    portfolio_->loadFromXMLString(xml, tradeFactory);
+}
+
+void InputParameters::setMporCalendar(const std::string& s) {
+    mporCalendar_ = parseCalendar(s);
+}
+
+void InputParameters::setSensiSimMarketParams(const std::string& xml) {
+    sensiSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    sensiSimMarketParams_->fromXMLString(xml);
+}
+
+void InputParameters::setSensiScenarioData(const std::string& xml) {
+    sensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    sensiScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setSensiPricingEngine(const std::string& xml) {
+    sensiPricingEngine_ = boost::make_shared<EngineData>();
+    sensiPricingEngine_->fromXMLString(xml);
+}
+
+void InputParameters::setStressSimMarketParams(const std::string& xml) {
+    stressSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    stressSimMarketParams_->fromXMLString(xml);
+}
+    
+void InputParameters::setStressScenarioData(const std::string& xml) {
+    stressScenarioData_ = boost::make_shared<StressTestScenarioData>();
+    stressScenarioData_->fromXMLString(xml);
+}
+    
+void InputParameters::setStressPricingEngine(const std::string& xml) {
+    stressPricingEngine_ = boost::make_shared<EngineData>();
+    stressPricingEngine_->fromXMLString(xml);
+}
+
+void InputParameters::setExposureSimMarketParams(const std::string& xml) {
+    exposureSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    exposureSimMarketParams_->fromXMLString(xml);
+}
+    
+void InputParameters::setScenarioGeneratorData(const std::string& xml) {
+    scenarioGeneratorData_ = boost::make_shared<ScenarioGeneratorData>();
+    scenarioGeneratorData_->fromXMLString(xml);
+}
+
+void InputParameters::setCrossAssetModelData(const std::string& xml) {
+    crossAssetModelData_ = boost::make_shared<CrossAssetModelData>();
+    crossAssetModelData_->fromXMLString(xml);
+}
+
+void InputParameters::setSimulationPricingEngine(const std::string& xml) {
+    simulationPricingEngine_ = boost::make_shared<EngineData>();
+    simulationPricingEngine_->fromXMLString(xml);
+}
+
+void InputParameters::setAmcPricingEngine(const std::string& xml) {
+    amcPricingEngine_ = boost::make_shared<EngineData>();
+    amcPricingEngine_->fromXMLString(xml);
+}
+
+void InputParameters::setNettingSetManager(const std::string& xml) {
+    nettingSetManager_ = boost::make_shared<NettingSetManager>();
+    nettingSetManager_->fromXMLString(xml);
+}
+
+void InputParameters::setVarQuantiles(const std::string& s) {
+    // parse to vector<Real>
+    varQuantiles_ = parseListOfValues<Real>(s, &parseReal);
+}
+    
+void InputParameters::setAmcTradeTypes(const std::string& s) {
+    // parse to set<string>
+    auto v = parseListOfValues(s);
+    amcTradeTypes_ = std::set<std::string>(v.begin(), v.end());
+}
+    
+void InputParameters::setCvaSensiGrid(const std::string& s) {
+    // parse to vector<Period>
+    cvaSensiGrid_ = parseListOfValues<Period>(s, &parsePeriod);
+}
+    
+void InputParameters::setDimRegressors(const std::string& s) {
+    // parse to vector<string>
+    dimRegressors_ = parseListOfValues(s);
+}
+    
+void InputParameters::setDimOutputGridPoints(const std::string& s) {
+    // parse to vector<Size>
+    dimOutputGridPoints_ = parseListOfValues<Size>(s, &parseInteger);
+}
+    
+void InputParameters::setCashflowHorizon(const std::string& s) {
+    // parse to Date
+    cashflowHorizon_ = parseDate(s);
+}
+    
+void InputParameters::setPortfolioFilterDate(const std::string& s) {
+    // parse to Date
+    portfolioFilterDate_ = parseDate(s);
+}
+    
+void InputParameters::setAnalytics(const std::string& s) {
+    // parse to set<string>
+    auto v = parseListOfValues(s);
+    analytics_ = std::set<std::string>(v.begin(), v.end());
+}
+    
 void OREAppInputParameters::loadParameters() {
 
     LOG("OREAppInputParameters::loadParameters starting");
 
-    // Switch default values for backward compatibility
+    // Switch default values for ORE backward compatibility
     entireMarket_ = true; 
     allFixings_ = true; 
     eomInflationFixings_ = false;
     useMarketDataFixings_ = false;
-    iborFallbackOverride_ = false;
-    dryRun_ = false;
-    outputAdditionalResults_ = false;
 
     QL_REQUIRE(params_->hasGroup("setup"), "parameter group 'setup' missing");
 
@@ -218,7 +381,7 @@ void OREAppInputParameters::loadParameters() {
     if (params_->hasGroup("markets")) {
         marketConfigs_ = params_->markets();
         for (auto m: marketConfigs_)
-        LOG("MarketContext::" << m.first << " = " << m.second);
+            LOG("MarketContext::" << m.first << " = " << m.second);
     }
     
     /*************

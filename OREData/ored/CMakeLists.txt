@@ -224,6 +224,7 @@ utilities/currencyconfig.cpp
 utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
 utilities/dategrid.cpp
+utilities/filteredbufferedlogger.cpp
 utilities/flowanalysis.cpp
 utilities/indexnametranslator.cpp
 utilities/indexparser.cpp
@@ -526,6 +527,7 @@ utilities/currencyconfig.hpp
 utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
 utilities/dategrid.hpp
+utilities/filteredbufferedlogger.hpp
 utilities/flowanalysis.hpp
 utilities/indexnametranslator.hpp
 utilities/indexparser.hpp

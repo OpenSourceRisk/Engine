@@ -33,6 +33,7 @@
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
 #include <orea/app/xvarunner.hpp>
+#include <orea/app/analyticsmanager.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/engine/parametricvar.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
@@ -55,13 +56,22 @@ class SensitivityAnalysis;
  */
 class OREApp {
 public:
-    //! Constructor
-    OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout);
+    //! Constructor that uses ORE parameters and input data from files
+    OREApp(boost::shared_ptr<Parameters> params, bool console = true);
+    //! Constructor that assumes we have already assembled input parameters via API
+    OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel = 31,
+           Size bufferLogLevel = 15, bool console = false);
+
     //! Destructor
     virtual ~OREApp();
-    //! generates XVA reports for a given portfolio and market
-    virtual int run(bool useAnalytics = false);
+    //! Runs analytics and generates reports after using the first OREApp c'tor
+    virtual int run(bool useAnalytics = true);
+    void analytics();
 
+    //! Runs analytics and generates reports after using the second OREApp c'tor
+    int run(const std::vector<std::string>& marketData,
+            const std::vector<std::string>& fixingData);
+    
     //! Load curve configurations from xml file, build t0 market using market data provided.
     //! If any of the passed vectors are empty fall back on OREApp::buildMarket() and use market/fixing data files
     void buildMarket(const std::string& todaysMarketXML = "", const std::string& curveConfigXML = "",
@@ -78,6 +88,18 @@ public:
     buildEngineFactoryFromXMLString(const boost::shared_ptr<ore::data::Market>& market,
                                     const std::string& pricingEngineXML, const bool generateAdditionalResults = false);
 
+    std::set<std::string> getAnalyticTypes();
+    std::set<std::string> getSupportedAnalyticTypes();
+    const boost::shared_ptr<Analytic>& getAnalytic(std::string type); 
+    
+    std::set<std::string> getReportNames();
+    boost::shared_ptr<PlainInMemoryReport> getReport(std::string reportName);
+
+    std::set<std::string> getCubeNames();
+    boost::shared_ptr<NPVCube> getCube(std::string cubeName);
+
+    std::vector<std::string> getErrors();
+    
 protected:
     //! Use ORE functioanlity in analytics/analyticsmanager
     void analytics(std::ostream& out);
@@ -214,11 +236,10 @@ protected:
 
     void writePricingStats(const std::string& filename, const boost::shared_ptr<Portfolio>& portfolio);
 
-    Size tab_, progressBarWidth_;
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
+    boost::shared_ptr<InputParameters> inputs_;
     Date asof_;
-    std::ostream& out_;    
     bool writeInitialReports_;
     bool simulate_;
     bool buildSimMarket_;
@@ -264,8 +285,13 @@ protected:
 
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
 
+    boost::shared_ptr<AnalyticsManager> analyticsManager_;
+    //boost::shared_ptr<ore::data::FilteredBufferedLoggerGuard> fbLogger_;
+    boost::shared_ptr<BufferLogger> bLogger_;
+
 private:
     virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }
+
 };
 
 } // namespace analytics
