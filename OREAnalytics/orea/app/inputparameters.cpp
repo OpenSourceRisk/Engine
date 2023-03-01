@@ -1040,9 +1040,5 @@ std::string OREAppInputParameters::outputFileName(const std::string& internalNam
         return it->second; // contains suffix
 }
 
-void OREAppInputParameters::writeOutParameters() {
-    QL_FAIL("OREAppInputParameters::writeOutParameters() not implmented");    
-}
-
 } // namespace analytics
 } // namespace ore
