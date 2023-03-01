@@ -30,6 +30,8 @@
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<FxForward>> FxForward::reg_("FxForward");
+
 void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // If you Buy EURUSD forward, then you buy EUR and sell USD.
     // EUR = foreign, USD = Domestic.

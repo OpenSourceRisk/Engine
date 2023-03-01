@@ -31,6 +31,8 @@
    \ingroup tradedata
  */
  class FxAverageForward : public Trade {
+     static TradeBuilderRegister<TradeBuilder<FxAverageForward>> reg_;
+
  public:
      //! Default constructor
      FxAverageForward() : Trade("FxAverageForward") {}

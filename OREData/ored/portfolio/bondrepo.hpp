@@ -32,6 +32,8 @@ namespace ore {
 namespace data {
 
 class BondRepo : public Trade {
+    static TradeBuilderRegister<TradeBuilder<BondRepo>> reg_;
+
 public:
     BondRepo() : Trade("BondRepo") {}
 

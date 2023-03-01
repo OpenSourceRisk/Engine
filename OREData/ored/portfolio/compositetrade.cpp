@@ -30,6 +30,8 @@ namespace ore {
 namespace data {
 using QuantExt::MultiCcyCompositeInstrument;
 
+TradeBuilderRegister<TradeBuilder<CompositeTrade>> CompositeTrade::reg_("CompositeTrade");
+
 void CompositeTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Building Composite Trade: " << id());
     npvCurrency_ = currency_;
@@ -142,12 +144,7 @@ void CompositeTrade::fromXML(XMLNode* node) {
         id = this->id() + "_" + std::to_string(i);
         DLOG("Parsing composite trade " << this->id() << " node " << i << " with id: " << id);
 
-        boost::shared_ptr<Trade> trade;
-        if (auto s = tradeFactory_.lock()) {
-            trade = s->build(tradeType);
-        } else {
-            QL_FAIL("Internal error: could not lock trade factory. Contact dev.");
-        }
+        boost::shared_ptr<Trade> trade = TradeFactory::instance().build(tradeType);
 
         if (trade) {
             try {

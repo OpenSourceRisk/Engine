@@ -36,6 +36,8 @@ using std::string;
 \ingroup tradedata
 */
 class EquityForward : public Trade {
+    static TradeBuilderRegister<TradeBuilder<EquityForward>> reg_;
+
 public:
     EquityForward() : Trade("EquityForward"), quantity_(0.0), strike_(0.0) {}
     EquityForward(Envelope& env, string longShort, EquityUnderlying equityUnderlying, string currency,

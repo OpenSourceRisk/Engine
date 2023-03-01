@@ -33,6 +33,10 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<FxVarSwap>> FxVarSwap::reg_("FxVarianceSwap");
+TradeBuilderRegister<TradeBuilder<EqVarSwap>> EqVarSwap::reg_("EquityVarianceSwap");
+TradeBuilderRegister<TradeBuilder<ComVarSwap>> ComVarSwap::reg_("CommodityVarianceSwap");
+
 void VarSwap::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     Currency ccy = ore::data::parseCurrency(currency_);
     Position::Type longShort = ore::data::parsePositionType(longShort_);

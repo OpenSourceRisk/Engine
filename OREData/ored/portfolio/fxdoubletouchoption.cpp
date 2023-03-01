@@ -38,6 +38,8 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<FxDoubleTouchOption>> FxDoubleTouchOption::reg_("FxDoubleTouchOption");
+
 FxDoubleTouchOption::FxDoubleTouchOption(Envelope& env, OptionData option, BarrierData barrier, string foreignCurrency,
                                          string domesticCurrency, string payoffCurrency, double payoffAmount,
                                          string startDate, string calendar, string fxIndex)

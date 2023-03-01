@@ -34,6 +34,8 @@ namespace ore {
 namespace data {
 
 class CreditDefaultSwap : public Trade {
+    static TradeBuilderRegister<TradeBuilder<CreditDefaultSwap>> reg_;
+
 public:
     //! Default constructor
     CreditDefaultSwap() : Trade("CreditDefaultSwap") {}
