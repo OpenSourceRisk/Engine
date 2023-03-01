@@ -138,10 +138,8 @@ boost::shared_ptr<NPVCube> OREApp::getCube(std::string cubeName) {
 
 std::vector<std::string> OREApp::getErrors() {
     std::vector<std::string> errors;
-    // while (bLogger_ && bLogger_->logger->hasNext())
-    //     errors.push_back(bLogger_->logger->next());
-    while (bLogger_ && bLogger_->hasNext())
-        errors.push_back(bLogger_->next());
+    while (fbLogger_ && fbLogger_->logger->hasNext())
+        errors.push_back(fbLogger_->logger->next());
     return errors;
 }
     
@@ -292,7 +290,7 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console)
 }
 
 OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel,
-               Size bufferLogLevel, bool console)
+               bool console)
     : params_(nullptr), inputs_(inputs), asof_(inputs->asof()), cubeDepth_(0) {
 
     // Initialise Singletons
@@ -310,14 +308,9 @@ OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::stri
     QL_REQUIRE(boost::filesystem::is_directory(p),
                "output path '" << inputs_->resultsPath() << "' is not a directory.");
 
-    // A critical subset of the log messages can be reported via the BufferLogger, at best
-    // everything that is determined by the overall logLevel. We can filter by setting
-    // bufferLogLevel < logLevel, e.g. logLevel might include NOTICE, WARNING, ERROR, CRITICAL,
-    // ALERT, but bufferLogLevel could include  ERROR, CRITICAL and ALERT only.
-    bLogger_ = boost::make_shared<BufferLogger>(bufferLogLevel);
-    Log::instance().registerLogger(bLogger_);
+    // Report StructuredErrorMessages with level WARNING, ERROR, CRITICAL, ALERT
+    fbLogger_ = boost::make_shared<FilteredBufferedLoggerGuard>();
     Log::instance().registerLogger(boost::make_shared<FileLogger>(logFilePath));
-    // Overall log level
     Log::instance().setMask(logLevel);
     Log::instance().switchOn();
 }
