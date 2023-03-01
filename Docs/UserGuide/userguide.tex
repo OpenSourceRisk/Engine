@@ -128,7 +128,7 @@
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Acadia Inc.}
-\date{27 March 2023}
+\date{3 March 2023}
 \maketitle
 
 \newpage
@@ -149,7 +149,7 @@ Date & Author & Comment \\
 30 June 2021 & Acadia & updates for release 6\\
 16 September 2022 & Acadia & updates for release 7\\
 6 December 2022 & Acadia & updates for release 8\\
-27 March 2023 & Acadia & updates for release 9\\
+3 March 2023 & Acadia & updates for release 9\\
 \hline
 \end{supertabular}
 \end{center}
@@ -320,92 +320,92 @@ parametrisation and the structure of trade and market data input.
 \section{Release Notes}\label{sec:releasenotes}
 %========================================================
 
-This section summarises the notable changes between release 7 (September 2022) and 8 (December 2022).
+This section summarises the notable changes between release 8 (December 2022) and 9 (March 2023).
 
 \bigskip
 INSTRUMENTS 
 \begin{itemize}
-\item roll out Commodity derivatives, thanks to Acadia Inc., as announced in September 22:
+\item roll out of Credit derivatives, thanks to Acadia Inc., as announced in September 22:
   \begin{itemize}
-    \item add Commodity Swap
-    \item add Commodity Swaption
-    \item add Commodity Average Price Option
-    \item add Commodity Option Strips and Digital Option Strip
+	\item Bond Option
+	\item Bond Repo
+  	\item Bond Total Return Swap
+  	\item Credit-Linked Swap
+  	\item Index Credit Default Swap
+  	\item Index Credit Default Swap Option
+  	\item Credit Index Tranche, Synthetic CDO
   \end{itemize}
-  see user guide and in particular Example 24
-\item add Equity Cliquet Option, missed in the 7th release, thanks to Acadia
-\item add Equity/FX/Commodity Variance Swap, missed in the 7th release, thanks to Acadia
-\item introduce separate trade types for Cross Currency and Inflation Swap
-\item merge QuantExt and QuantLib CDS and midpoint engine in ORE's QuantLib fork;
-  QuantLib pull request to follow
+ including related models and pricing engines    
+\item optimize performance for the analytical Commodity Swaption engine
+\item add missing FxIndex registrations in Commodity APO and Commodity Indexed Average Cashflows
+\item include leg NPVs in additional results of CDS products
+\item fix LGM Swaption pricing for cases where fixing date < exercise date
 \end{itemize}
 
 \bigskip
-MARKETS
+MARKETS \& TERM STRUCTURES
 
 \begin{itemize}
-\item performance optimizations for curve builders
-\item extend the market interface to optionally handle precious metals and crypto currencies as commodities instead of FX
-\end{itemize}
-
-\bigskip
-TERM STRUCTURES
-
-\begin{itemize}
-\item (no notable changes)
+\item fix shifted lognormal Swaption vol surface (SwaptionVolCubeWithATM, add missing shift)
 \end{itemize}
 
 \bigskip
 ANALYTICS
 
 \begin{itemize}
-\item add American Monte Carlo simulation components to support fast Bermudan Swaption
-  exposure simulation and more, thanks to Acadia;\\
-  the integration into the ORE command line app will follow with the next release (March 23)
-  as it requires some refactoring.
-\item add Commodity simulation to the cross asset model and market simulation, integraded
-  with the LGM-based Cross Asset Model, thanks to Acadia
-\item  add a multi-factor Hull-White / FX / Commodity simulation model, thanks to Acadia; 
-  calibration to be added
+\item integrate American Monte Carlo simulation, see the {\bf new Example 39}
+\item add Par Sensitivity Analysis, see the {\bf new Example 40}
+\item add more parametric VaR types (delta-gamma normal, delta-gamma Saddlepoint)
+\item support multi-threading in sensitivity analysis
+\item support multi-threading in exposure simulation, see the {\bf new Example 41}
+\item fix exposure/XVA analytics with simulation of fixings for ceased IBOR indices
 \end{itemize}
 
 \bigskip
 TESTS
 
 \begin{itemize}
-\item QuantExt: 242 test functions (vs 214 in the previous release)
-\item OREData: 199 test functions (vs. 192 in the previous release)
-\item OREAnalytics: 66 test functions (vs. 65 in the previous release)
+\item QuantExt: 263 test functions (vs 242 in the previous release)
+\item OREData: 203 test functions (vs. 199 in the previous release)
+\item OREAnalytics: 68 test functions (vs. 66 in the previous release)
 \end{itemize}
-with associated increases in the number of data driven test cases 
 
 \bigskip
 DOCUMENTATION
 
 \begin{itemize}
-\item the user guide is maintained continuously incorporating user feedback, in particular
-  from Acadia service clients; it has grown from 404 to 440 pages, mainly due to the
-  migration of Commodity and Equity/FX instruments into ORE
+\item The user guide has grown from 440 to 480 pages, mainly due to the
+  migration of Credit derivative instruments into ORE, as well as new examples
 \end{itemize}
 
 \bigskip
 LANGUAGE BINDUNGS
 
 \begin{itemize}
-\item maintenance to ensure ORE SWIG wrappers build with the current ORE release,
-  QuantLib-1.28 and QuantLib-SWIG-1.28
-\end{itemize}
+\item The SWIG wrapper has been extended to provide access to ORE input
+  construction in memory and to query in-memory results (reports etc), in line
+  with the refactoring mentioned below.
+  See the {\bf new Python example} OREAnalytics-SWIG/Python/Examples/ore3.py
+\item To facilitate access to ORE Python, we are providing Python wheels for various
+  OS types and Python versions starting with this release, thanks to Eric Ehlers's
+  effort and Luigi Ballabio's support to get in up and running using github actions.
+  See the \href{https://github.com/OpenSourceRisk/ORE-SWIG#readme}{ORE-SWIG repository} for {\bf how to install the ORE module}.
+  \end{itemize}
 
 \bigskip
 OTHER
 
 \begin{itemize}
-\item changes to build with QuantLib 1.28
-\item extend the CMake setup for Windows / Visual Studio users; \\
-  We will stop maintaining the *.vcxproj and *.vcxproj.filters from the now on
-  and rely on CMakeLists for both *nix and Windows. \\
-  See section 4.2.3 on how to "Generate Visual Studio Projects with CMake"
-\end{itemize}
+\item Refactor the serialization of NPV cube and market cube (aggregation scenario data)
+\item Refactor OREAnalytics/orea/app by separating input construction from processing
+  and persisting results. This is to faciliate re-using the processing element
+  (analyticsManager->runAnalytics(...)) in different applications, a command line
+  application such as ore[.exe] that reads/writes from/to files, an ORE Python wrapper
+  that receives input and provides results in memory (see language bindings above),
+  or a REST service built around ORE. Results (reports, cubes etc) are stored in
+  memory and only saved to files on demand. Inputs for the ORE processor can be
+  assembled in memory, or read from files.
+  \end{itemize}
 
 %========================================================
 \section{ORE Data Flow}\label{sec:process}
@@ -999,11 +999,11 @@ Example & Description \\
 \hline
 38 & Cross Currency Exposure using Multifactor Hull-White Models \\
 \hline
-39 & EPE and ENE computed with AMC valuation engine \\
+39 & Exposure Simulation using American Monte Carlo \\
 \hline
-40 & Sensitivity analysis including par sensitivities \\
+40 & Par Sensitivity Analysis \\
 \hline
-41 & Exposure generation using multithreaded valuation engine \\
+41 & Multi-threaded Exposure Simulation \\
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -2536,22 +2536,7 @@ FX Option pricing with the risk factor evolution model.
   \label{epe_fxoption}
 \end{figure}
 
-%--------------------------------------------------------------------
-\subsection{Sensitivity analysis including par sensitivities}% Example 40
-\label{example:40}
-%--------------------------------------------------------------------
-
-The example in folder {\tt Examples/Example\_40} demonstrates the generation of zero and par sensitivities.
-
-%--------------------------------------------------------------------
-\subsection{Sensitivity analysis including par sensitivities}% Example 41
-\label{example:41}
-%--------------------------------------------------------------------
-
-The example in folder {\tt Examples/Example\_41} uses the multithreaded valuation engine to generate the exposure for a
-portfolio of 8 copies of the vanilla swap in example 1.
-
-\subsubsection{Analytic Configuration}
+\subsubsection*{Analytic Configuration}
 
 To use the AMC engine for an XVA simulation the following needs to be added to the {\tt simulation} analytic in {\tt ore.xml}:
 
@@ -2893,6 +2878,15 @@ in {\tt sensitivity.xml} where the assumed par instruments and corresponding con
 
 Finally note that par sensitivity analysis requires that the shift tenor grid in the sensitivity data above matches the corresponding grid in the simulation (market) configuration.
 See also section \ref{sec:sensitivity}.
+
+%--------------------------------------------------------------------
+\subsection{Multi-threaded Exposure Simultion}% Example 41
+\label{example:41}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_41} demonstrates the multithreaded valuation engine to generate the exposure for a
+portfolio of 8 copies of the vanilla swap in {\tt Example\_1}.
+
 
 \clearpage
 %========================================================
