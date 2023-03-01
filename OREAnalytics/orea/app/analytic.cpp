@@ -338,8 +338,8 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                     inputs_->nThreads(), inputs_->asof(), loader, portfolio_, Market::defaultConfiguration,
                     inputs_->pricingEngine(), configurations_.simMarketParams, configurations_.sensiScenarioData,
                     recalibrateModels, inputs_->curveConfigs().at(0), configurations_.todaysMarketParams, ccyConv,
-                    extraTradeBuilders, extraEngineBuilders, extraLegBuilders, inputs_->refDataManager(),
-                    *inputs_->iborFallbackConfig(), true, false, inputs_->dryRun());
+                    extraEngineBuilders, extraLegBuilders, inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
+                    true, false, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
             // FIXME: Why are these disabled?
@@ -779,7 +779,7 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
             inputs_->nThreads(), inputs_->asof(), grid_, samples_, loader_, scenarioGenerator_,
             inputs_->simulationPricingEngine(), inputs_->curveConfigs()[0], configurations_.todaysMarketParams,
             inputs_->marketConfig("simulation"), configurations_.simMarketParams, false, false,
-            boost::make_shared<ore::analytics::ScenarioFilter>(), {}, {}, {}, inputs_->refDataManager(),
+            boost::make_shared<ore::analytics::ScenarioFilter>(), {}, {}, inputs_->refDataManager(),
             *inputs_->iborFallbackConfig(), true, false, cubeFactory, {}, cptyCubeFactory, "xva-simulation");
 
         if (ConsoleLog::instance().enabled())
@@ -928,7 +928,7 @@ void XvaAnalytic::amcRun(bool doClassicRun) {
             inputs_->amcPricingEngine(), inputs_->curveConfigs()[0], configurations_.todaysMarketParams,
             inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
             inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
-            inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"), getAmcEngineBuilders, {}, {},
+            inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"), getAmcEngineBuilders, {},
             inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory);
         if (ConsoleLog::instance().enabled())
             amcEngine.registerProgressIndicator(progressBar);

@@ -62,9 +62,6 @@ public:
         const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
         const std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>(
             const boost::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& grid)>& amcEngineBuilders,
-        const std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
-            const boost::shared_ptr<ore::data::ReferenceDataManager>&,
-            const boost::shared_ptr<ore::data::TradeFactory>&)>& extraTradeBuilders = {},
         const std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()>& extraLegBuilders = {},
         const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
         const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
@@ -122,9 +119,6 @@ private:
     std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>(
         const boost::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& grid)>
         amcEngineBuilders_;
-    std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
-        const boost::shared_ptr<ore::data::ReferenceDataManager>&, const boost::shared_ptr<ore::data::TradeFactory>&)>
-        extraTradeBuilders_;
     std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuilders_;
     boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
     ore::data::IborFallbackConfig iborFallbackConfig_;

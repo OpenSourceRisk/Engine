@@ -476,9 +476,6 @@ AMCValuationEngine::AMCValuationEngine(
     const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
     const std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>(
         const boost::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& grid)>& amcEngineBuilders,
-    const std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
-        const boost::shared_ptr<ore::data::ReferenceDataManager>&, const boost::shared_ptr<ore::data::TradeFactory>&)>&
-        extraTradeBuilders,
     const std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()>& extraLegBuilders,
     const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
     const ore::data::IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
@@ -492,9 +489,9 @@ AMCValuationEngine::AMCValuationEngine(
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
       configurationCrCalibration_(configurationCrCalibration), configurationFinalModel_(configurationFinalModel),
-      amcEngineBuilders_(amcEngineBuilders), extraTradeBuilders_(extraTradeBuilders),
-      extraLegBuilders_(extraLegBuilders), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
-      handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket), cubeFactory_(cubeFactory) {
+      amcEngineBuilders_(amcEngineBuilders), extraLegBuilders_(extraLegBuilders), referenceData_(referenceData),
+      iborFallbackConfig_(iborFallbackConfig), handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket),
+      cubeFactory_(cubeFactory) {
 #ifndef QL_ENABLE_SESSIONS
     QL_FAIL(
         "AMCValuationEngine requires a build with QL_ENABLE_SESSIONS = ON when ctor multi-threaded runs is called.");
@@ -600,7 +597,7 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
 
     std::vector<std::string> portfoliosAsString;
     for (auto const& p : portfolios) {
-        portfoliosAsString.emplace_back(p->saveToXMLString());
+        portfoliosAsString.emplace_back(p->toXMLString());
     }
 
     // log info on the portfolio split
@@ -684,12 +681,8 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
 
                 // build portfolio against init market
 
-                auto tradeFactory = boost::make_shared<ore::data::TradeFactory>(referenceData_);
-                if (extraTradeBuilders_)
-                    tradeFactory->addExtraBuilders(extraTradeBuilders_(referenceData_, tradeFactory));
-
                 auto portfolio = boost::make_shared<ore::data::Portfolio>();
-                portfolio->loadFromXMLString(portfoliosAsString[id], tradeFactory);
+                portfolio->fromXMLString(portfoliosAsString[id]);
 
                 boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*engineData_);
                 edCopy->globalParameters()["GenerateAdditionalResults"] = "false";

@@ -50,9 +50,6 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
     const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
     const bool useSpreadedTermStructures, const bool cacheSimData,
     const boost::shared_ptr<ore::analytics::ScenarioFilter>& scenarioFilter,
-    const std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
-        const boost::shared_ptr<ore::data::ReferenceDataManager>&, const boost::shared_ptr<ore::data::TradeFactory>&)>&
-        extraTradeBuilders,
     const std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()>& extraEngineBuilders,
     const std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()>& extraLegBuilders,
     const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
@@ -71,9 +68,9 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
       scenarioGenerator_(scenarioGenerator), engineData_(engineData), curveConfigs_(curveConfigs),
       todaysMarketParams_(todaysMarketParams), configuration_(configuration), simMarketData_(simMarketData),
       useSpreadedTermStructures_(useSpreadedTermStructures), cacheSimData_(cacheSimData),
-      scenarioFilter_(scenarioFilter), extraTradeBuilders_(extraTradeBuilders),
-      extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders), referenceData_(referenceData),
-      iborFallbackConfig_(iborFallbackConfig), handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket),
+      scenarioFilter_(scenarioFilter), extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders),
+      referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
+      handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket),
       handlePseudoCurrenciesSimMarket_(handlePseudoCurrenciesSimMarket), cubeFactory_(cubeFactory),
       nettingSetCubeFactory_(nettingSetCubeFactory), cptyCubeFactory_(cptyCubeFactory), context_(context) {
 
@@ -197,7 +194,7 @@ void MultiThreadedValuationEngine::buildCube(
 
     std::vector<std::string> portfoliosAsString;
     for (auto const& p : portfolios) {
-        portfoliosAsString.emplace_back(p->saveToXMLString());
+        portfoliosAsString.emplace_back(p->toXMLString());
     }
 
     // log info on the portfolio split
@@ -310,11 +307,8 @@ void MultiThreadedValuationEngine::buildCube(
 
                 // build portfolio against sim market
 
-                auto tradeFactory = boost::make_shared<ore::data::TradeFactory>(referenceData_);
-                if (extraTradeBuilders_)
-                    tradeFactory->addExtraBuilders(extraTradeBuilders_(referenceData_, tradeFactory));
                 auto portfolio = boost::make_shared<ore::data::Portfolio>();
-                portfolio->loadFromXMLString(portfoliosAsString[id], tradeFactory);
+                portfolio->fromXMLString(portfoliosAsString[id]);
                 auto engineFactory = boost::make_shared<ore::data::EngineFactory>(
                     engineData_, simMarket, std::map<ore::data::MarketContext, string>(),
                     extraEngineBuilders_ ? extraEngineBuilders_()

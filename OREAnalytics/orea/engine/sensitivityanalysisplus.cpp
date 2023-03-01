@@ -159,8 +159,7 @@ void SensitivityAnalysisPlus::generateSensitivities(boost::shared_ptr<NPVSensiCu
         nThreads_, asof_, boost::make_shared<ore::analytics::DateGrid>(), scenarioGenerator_->numScenarios(), loader_,
         scenarioGenerator_, ed, curveConfigs_, todaysMarketParams_, marketConfiguration_, simMarketData_,
         sensitivityData_->useSpreadedTermStructures(), false, boost::make_shared<ore::analytics::ScenarioFilter>(),
-        extraTradeBuildersGenerator_, extraEngineBuildersGenerator_, extraLegBuildersGenerator_, referenceData_,
-        iborFallbackConfig_, true, true,
+        extraEngineBuildersGenerator_, extraLegBuildersGenerator_, referenceData_, iborFallbackConfig_, true, true,
         [](const QuantLib::Date& asof, const std::set<std::string>& ids, const std::vector<QuantLib::Date>&,
            const QuantLib::Size samples) {
             return boost::make_shared<ore::analytics::DoublePrecisionSensiCube>(ids, asof, samples);

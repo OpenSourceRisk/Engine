@@ -40,7 +40,7 @@ class ReferenceDataManager;
 /*!
   \ingroup portfolio
 */
-class Portfolio {
+class Portfolio : public XMLSerializable {
 public:
     //! Default constructor
     explicit Portfolio(bool buildFailedTrades = true) : buildFailedTrades_(buildFailedTrades) {}
@@ -66,22 +66,9 @@ public:
     //! Portfolio size
     QuantLib::Size size() const { return trades_.size(); }
 
-    //! Load using a default or user supplied TradeFactory, existing trades are kept
-    void load(const std::string& fileName,
-              const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
-
-    //! Load from an XML string using a default or user supplied TradeFactory, existing trades are kept
-    void loadFromXMLString(const std::string& xmlString,
-                           const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
-
-    //! Load from XML Node
-    void fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
-
-    //! Save portfolio to an XML file
-    void save(const std::string& fileName) const;
-
-    //! Save portfolio to an XML string
-    string saveToXMLString() const;
+    //! XMLSerializable interface
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
 
     //! Remove specified trade from the portfolio
     bool remove(const std::string& tradeID);
@@ -136,8 +123,6 @@ public:
                       const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr);
 
 private:
-    // get representation as XMLDocument
-    void doc(XMLDocument& doc) const;
     bool buildFailedTrades_;
     std::map<std::string, boost::shared_ptr<Trade>> trades_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;

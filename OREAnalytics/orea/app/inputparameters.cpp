@@ -91,13 +91,7 @@ void InputParameters::setTodaysMarketParams(const std::string& xml) {
 
 void InputParameters::setPortfolio(const std::string& xml) {
     portfolio_ = boost::make_shared<Portfolio>(buildFailedTrades_);
-    boost::shared_ptr<TradeFactory> tradeFactory = nullptr;
-    if (!refDataManager_) {
-        ALOG("reference data manager not set when loading portfolio");
-        tradeFactory = boost::make_shared<TradeFactory>();
-    }
-    tradeFactory = boost::make_shared<TradeFactory>(refDataManager_);
-    portfolio_->loadFromXMLString(xml, tradeFactory);
+    portfolio_->fromXMLString(xml);
 }
 
 void InputParameters::setMporCalendar(const std::string& s) {
@@ -369,10 +363,9 @@ void OREAppInputParameters::loadParameters() {
     std::string portfolioFileString = params_->get("setup", "portfolioFile");
     if (portfolioFileString != "") {
         vector<string> portfolioFiles = getFilenames(portfolioFileString, inputPath);
-        boost::shared_ptr<TradeFactory> tf = boost::make_shared<TradeFactory>(refDataManager_);
         for (auto portfolioFile : portfolioFiles) {
             LOG("Loading portfolio from file: " << portfolioFile);
-            portfolio_->load(portfolioFile, tf);
+            portfolio_->fromFile(portfolioFile);
         }
     } else {
         ALOG("Portfolio data not found");

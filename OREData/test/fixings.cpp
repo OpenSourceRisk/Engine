@@ -30,6 +30,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/trade.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -197,7 +198,7 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
     // Read in the trade
     Portfolio p;
     string portfolioFile = "trades/" + tradeType + "/" + tradeCase + ".xml";
-    p.load(TEST_INPUT_FILE(portfolioFile));
+    p.fromFile(TEST_INPUT_FILE(portfolioFile));
     BOOST_REQUIRE_MESSAGE(p.size() == 1, "Expected portfolio to contain a single trade");
 
     // Ask for fixings before trades are built should return empty set
@@ -348,7 +349,7 @@ BOOST_FIXTURE_TEST_CASE(testFxNotionalResettingSwapFirstCoupon, F) {
     // Read in the trade
     Portfolio p;
     string portfolioFile = "trades/xccy_resetting_swap/simple_case_in_first_coupon.xml";
-    p.load(TEST_INPUT_FILE(portfolioFile));
+    p.fromFile(TEST_INPUT_FILE(portfolioFile));
     BOOST_REQUIRE_MESSAGE(p.size() == 1, "Expected portfolio to contain a single trade");
 
     // Ask for fixings before trades are built should return empty set

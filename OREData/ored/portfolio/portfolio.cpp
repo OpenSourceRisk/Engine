@@ -46,25 +46,7 @@ void Portfolio::reset() {
         t->reset();
 }
 
-void Portfolio::load(const string& fileName, const boost::shared_ptr<TradeFactory>& factory) {
-
-    LOG("Parsing XML " << fileName.c_str());
-    XMLDocument doc(fileName);
-    LOG("Loaded XML file");
-    XMLNode* node = doc.getFirstNode("Portfolio");
-    fromXML(node, factory);
-}
-
-void Portfolio::loadFromXMLString(const string& xmlString, const boost::shared_ptr<TradeFactory>& factory) {
-    LOG("Parsing XML string");
-    XMLDocument doc;
-    doc.fromXMLString(xmlString);
-    LOG("Loaded XML string");
-    XMLNode* node = doc.getFirstNode("Portfolio");
-    fromXML(node, factory);
-}
-
-void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& factory) {
+void Portfolio::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Portfolio");
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(node, "Trade");
     for (Size i = 0; i < nodes.size(); i++) {
@@ -74,7 +56,7 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
         string id = XMLUtils::getAttribute(nodes[i], "id");
         QL_REQUIRE(id != "", "No id attribute in Trade Node");
         DLOG("Parsing trade id:" << id);
-        boost::shared_ptr<Trade> trade = factory->build(tradeType);
+        boost::shared_ptr<Trade> trade = TradeFactory::instance().build(tradeType);
 
         bool failedToLoad = false;
         if (trade) {
@@ -97,7 +79,7 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
         // If trade loading failed, then insert a dummy trade with same id and envelope
         if (failedToLoad && buildFailedTrades_) {
             try {
-                trade = factory->build("Failed");
+                trade = TradeFactory::instance().build("Failed");
                 // this loads only type, id and envelope, but type will be set to the original trade's type
                 trade->fromXML(nodes[i]);
                 // create a dummy trade of type "Dummy"
@@ -118,25 +100,12 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
     LOG("Finished Parsing XML doc");
 }
 
-void Portfolio::doc(XMLDocument& doc) const {
+XMLNode* Portfolio::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Portfolio");
     doc.appendNode(node);
-    for (auto& [id, t] : trades_)
-        XMLUtils::appendNode(node, t->toXML(doc));
-}
-
-void Portfolio::save(const string& fileName) const {
-    XMLDocument document;
-    LOG("Saving Portfolio to " << fileName);
-    doc(document);
-    document.toFile(fileName);
-}
-
-string Portfolio::saveToXMLString() const {
-    XMLDocument document;
-    LOG("Write Portfolio to xml string.");
-    doc(document);
-    return document.toString();
+    for (auto& t : trades_)
+        XMLUtils::appendNode(node, t.second->toXML(doc));
+    return node;
 }
 
 bool Portfolio::remove(const std::string& tradeID) {

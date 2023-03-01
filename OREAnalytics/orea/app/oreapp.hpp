@@ -217,11 +217,6 @@ protected:
     virtual std::vector<boost::shared_ptr<EngineBuilder>> getExtraEngineBuilders() const { return {}; };
     //! Add extra leg builders
     virtual std::vector<boost::shared_ptr<LegBuilder>> getExtraLegBuilders() const { return {}; };
-    //! Add extra trade builders
-    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>>
-    getExtraTradeBuilders(const boost::shared_ptr<TradeFactory>& = {}) const {
-        return {};
-    };
     //! Get parametric var calculator
     virtual boost::shared_ptr<ParametricVarCalculator>
     buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,

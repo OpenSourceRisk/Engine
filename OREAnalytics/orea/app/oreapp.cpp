@@ -778,12 +778,6 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     return factory;
 }
 
-boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() const {
-    boost::shared_ptr<TradeFactory> tf = boost::make_shared<TradeFactory>(referenceData_);
-    tf->addExtraBuilders(getExtraTradeBuilders(tf));
-    return tf;
-}
-
 boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory, bool buildFailedTrades) {
     MEM_LOG;
     LOG("Building portfolio");
@@ -801,7 +795,7 @@ boost::shared_ptr<Portfolio> OREApp::loadPortfolio(bool buildFailedTrades) {
         return portfolio;
     vector<string> portfolioFiles = getFilenames(portfoliosString, inputPath_);
     for (auto portfolioFile : portfolioFiles) {
-        portfolio->load(portfolioFile, buildTradeFactory());
+        portfolio->fromFile(portfolioFile);
     }
     return portfolio;
 }
@@ -997,9 +991,8 @@ boost::shared_ptr<ReportWriter> OREApp::getReportWriter() const {
 }
 
 boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() {
-    return boost::make_shared<SensitivityRunner>(params_, buildTradeFactory(), getExtraEngineBuilders(),
-                                                 getExtraLegBuilders(), referenceData_, iborFallbackConfig_,
-                                                 continueOnError_);
+    return boost::make_shared<SensitivityRunner>(params_, getExtraEngineBuilders(), getExtraLegBuilders(),
+                                                 referenceData_, iborFallbackConfig_, continueOnError_);
 }
 
 void OREApp::runStressTest() {

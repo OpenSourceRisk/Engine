@@ -74,9 +74,6 @@ public:
         const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
         const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
         const bool nonShiftedBaseCurrencyConversion = false,
-        const std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
-            const boost::shared_ptr<ReferenceDataManager>&, const boost::shared_ptr<TradeFactory>&)>&
-            extraTradeBuilders = {},
         const std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()>& extraEngineBuilders = {},
         const std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()>& extraLegBuilders = {},
         const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
@@ -88,8 +85,8 @@ public:
               curveConfigs, todaysMarketParams, nonShiftedBaseCurrencyConversion, extraEngineBuilders(),
               extraLegBuilders(), referenceData, iborFallbackConfig, continueOnError, analyticFxSensis, dryRun),
           useSingleThreadedEngine_(false), nThreads_(nThreads), loader_(loader),
-          extraTradeBuildersGenerator_(extraTradeBuilders), extraEngineBuildersGenerator_(extraEngineBuilders),
-          extraLegBuildersGenerator_(extraLegBuilders), context_(context) {
+          extraEngineBuildersGenerator_(extraEngineBuilders), extraLegBuildersGenerator_(extraLegBuilders),
+          context_(context) {
         asof_ = asof;
     }
 
@@ -116,9 +113,6 @@ private:
     // additional members needed for multihreaded constructor
     Size nThreads_;
     boost::shared_ptr<ore::data::Loader> loader_;
-    std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
-        const boost::shared_ptr<ReferenceDataManager>&, const boost::shared_ptr<TradeFactory>&)>
-        extraTradeBuildersGenerator_;
     std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuildersGenerator_;
     std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuildersGenerator_;
     std::string context_;

@@ -104,7 +104,7 @@ void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarket
     vector<string> portfolioFiles = getFilenames(portfoliosString, inputPath);
     // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
     for (auto portfolioFile : portfolioFiles) {
-        sensiPortfolio->load(portfolioFile, tradeFactory_);
+        sensiPortfolio->fromFile(portfolioFile);
     }
 
     DLOG("sensiInputInitialize done");

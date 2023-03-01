@@ -99,21 +99,6 @@ std::vector<boost::shared_ptr<ore::data::EngineBuilder>> getExtraEngineBuilders(
     return eb;
 }
 
-std::map<string, boost::shared_ptr<AbstractTradeBuilder>> getExtraTradeBuilders() {
-
-    // add extra trade builders
-    std::map<string, boost::shared_ptr<AbstractTradeBuilder>> tb = {
-        {"FxDigitalOption", boost::make_shared<TradeBuilder<FxDigitalOption>>()},
-        {"FxBarrierOption", boost::make_shared<TradeBuilder<FxBarrierOption>>()},
-        {"FxKIKOBarrierOption", boost::make_shared<TradeBuilder<FxKIKOBarrierOption>>()},
-        {"FxDigitalBarrierOption", boost::make_shared<TradeBuilder<FxDigitalBarrierOption>>()},
-        {"FxTouchOption", boost::make_shared<TradeBuilder<FxTouchOption>>()},
-        {"FxDoubleBarrierOption", boost::make_shared<TradeBuilder<FxDoubleBarrierOption>>()},
-        {"FxDoubleTouchOption", boost::make_shared<TradeBuilder<FxDoubleTouchOption>>()}};
-
-    return tb;
-}
-
 } // namespace
 
 // Common variables used in the tests below
@@ -133,10 +118,7 @@ BOOST_AUTO_TEST_CASE(testCompositeInstrumentWrapperPrice) {
     loadFromXMLString(*todaysMarketConfig, vars.todaysMarketConfig);
     loadFromXMLString(*pricingEngineConfig, vars.pricingEngineConfig);
 
-    auto tradeFactory = boost::make_shared<TradeFactory>();
-    tradeFactory->addExtraBuilders(getExtraTradeBuilders());
-
-    portfolio->loadFromXMLString(vars.portfolio, tradeFactory);
+    portfolio->fromXMLString(vars.portfolio);
 
     boost::shared_ptr<Market> market =
         boost::make_shared<TodaysMarket>(vars.asof, todaysMarketConfig, vars.loader, curveConfig, true);
