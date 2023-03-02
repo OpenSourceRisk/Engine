@@ -38,7 +38,7 @@ boost::shared_ptr<AbstractTradeBuilder> TradeFactory::getBuilder(const std::stri
     return b->second;
 }
 void TradeFactory::addBuilder(const std::string& className, const boost::shared_ptr<AbstractTradeBuilder>& builder) {
-    boost::unique_lock<boost::shared_mutex> locK(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     builders_[className] = builder;
 }
 
