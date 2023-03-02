@@ -45,48 +45,42 @@ class SensitivityAnalysisPlus : public SensitivityAnalysis {
 public:
     //! Constructor using single-threaded engine
     SensitivityAnalysisPlus(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-                        const boost::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
-                        const boost::shared_ptr<ore::data::EngineData>& engineData,
-                        const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
-                        const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
-                        const bool recalibrateModels,
-                        const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
-                        const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams = nullptr,
-                        const bool nonShiftedBaseCurrencyConversion = false,
-                        std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraBuilders = {},
-                        std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
-                        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                        const bool continueOnError = false, bool analyticFxSensis = false, bool dryRun = false)
-        : ore::analytics::SensitivityAnalysis(
-              portfolio, market, marketConfiguration, engineData, simMarketData, sensitivityData, recalibrateModels,
-              curveConfigs, todaysMarketParams, nonShiftedBaseCurrencyConversion, extraBuilders, extraLegBuilders,
-              referenceData, iborFallbackConfig, continueOnError, analyticFxSensis, dryRun),
-          extraBuilders_(extraBuilders), extraLegBuilders_(extraLegBuilders), useSingleThreadedEngine_(true) {}
+                            const boost::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
+                            const boost::shared_ptr<ore::data::EngineData>& engineData,
+                            const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
+                            const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
+                            const bool recalibrateModels,
+                            const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
+                            const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams = nullptr,
+                            const bool nonShiftedBaseCurrencyConversion = false,
+                            const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                            const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                            const bool continueOnError = false, bool analyticFxSensis = false, bool dryRun = false)
+        : ore::analytics::SensitivityAnalysis(portfolio, market, marketConfiguration, engineData, simMarketData,
+                                              sensitivityData, recalibrateModels, curveConfigs, todaysMarketParams,
+                                              nonShiftedBaseCurrencyConversion, referenceData, iborFallbackConfig,
+                                              continueOnError, analyticFxSensis, dryRun),
+          useSingleThreadedEngine_(true) {}
 
     //! Constructor using multi-threaded engine
-    SensitivityAnalysisPlus(
-        const Size nThreads, const Date& asof, const boost::shared_ptr<ore::data::Loader>& loader,
-        const boost::shared_ptr<ore::data::Portfolio>& portfolio, const string& marketConfiguration,
-        const boost::shared_ptr<ore::data::EngineData>& engineData,
-        const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
-        const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData, const bool recalibrateModels,
-        const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-        const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
-        const bool nonShiftedBaseCurrencyConversion = false,
-        const std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()>& extraEngineBuilders = {},
-        const std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()>& extraLegBuilders = {},
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-        const bool continueOnError = false, bool analyticFxSensis = false, bool dryRun = false,
-        const std::string& context = "sensi analysis")
-        : ore::analytics::SensitivityAnalysis(
-              portfolio, nullptr, marketConfiguration, engineData, simMarketData, sensitivityData, recalibrateModels,
-              curveConfigs, todaysMarketParams, nonShiftedBaseCurrencyConversion, extraEngineBuilders(),
-              extraLegBuilders(), referenceData, iborFallbackConfig, continueOnError, analyticFxSensis, dryRun),
-          useSingleThreadedEngine_(false), nThreads_(nThreads), loader_(loader),
-          extraEngineBuildersGenerator_(extraEngineBuilders), extraLegBuildersGenerator_(extraLegBuilders),
-          context_(context) {
+    SensitivityAnalysisPlus(const Size nThreads, const Date& asof, const boost::shared_ptr<ore::data::Loader>& loader,
+                            const boost::shared_ptr<ore::data::Portfolio>& portfolio, const string& marketConfiguration,
+                            const boost::shared_ptr<ore::data::EngineData>& engineData,
+                            const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
+                            const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
+                            const bool recalibrateModels,
+                            const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+                            const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+                            const bool nonShiftedBaseCurrencyConversion = false,
+                            const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                            const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                            const bool continueOnError = false, bool analyticFxSensis = false, bool dryRun = false,
+                            const std::string& context = "sensi analysis")
+        : ore::analytics::SensitivityAnalysis(portfolio, nullptr, marketConfiguration, engineData, simMarketData,
+                                              sensitivityData, recalibrateModels, curveConfigs, todaysMarketParams,
+                                              nonShiftedBaseCurrencyConversion, referenceData, iborFallbackConfig,
+                                              continueOnError, analyticFxSensis, dryRun),
+          useSingleThreadedEngine_(false), nThreads_(nThreads), loader_(loader), context_(context) {
         asof_ = asof;
     }
 
@@ -113,8 +107,6 @@ private:
     // additional members needed for multihreaded constructor
     Size nThreads_;
     boost::shared_ptr<ore::data::Loader> loader_;
-    std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuildersGenerator_;
-    std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuildersGenerator_;
     std::string context_;
 };
 } // namespace analytics

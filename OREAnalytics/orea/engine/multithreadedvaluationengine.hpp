@@ -53,8 +53,6 @@ public:
         const bool useSpreadedTermStructures = false, const bool cacheSimData = false,
         const boost::shared_ptr<ore::analytics::ScenarioFilter>& scenarioFilter =
             boost::make_shared<ore::analytics::ScenarioFilter>(),
-        const std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()>& extraEngineBuilders = {},
-        const std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()>& extraLegBuilders = {},
         const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
         const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
         const bool handlePseudoCurrenciesTodaysMarket = true, const bool handlePseudoCurrenciesSimMarket = true,
@@ -107,8 +105,6 @@ private:
     bool useSpreadedTermStructures_;
     bool cacheSimData_;
     boost::shared_ptr<ore::analytics::ScenarioFilter> scenarioFilter_;
-    std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuilders_;
-    std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuilders_;
     boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
     ore::data::IborFallbackConfig iborFallbackConfig_;
     bool handlePseudoCurrenciesTodaysMarket_;

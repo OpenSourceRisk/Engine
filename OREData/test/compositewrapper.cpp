@@ -82,23 +82,6 @@ struct CommonVars {
     SavedSettings savedSettings;
 };
 
-std::vector<boost::shared_ptr<ore::data::EngineBuilder>> getExtraEngineBuilders() {
-
-    // add extra builders
-    std::vector<boost::shared_ptr<EngineBuilder>> eb;
-
-    // FX
-    eb.push_back(boost::make_shared<FxDigitalOptionEngineBuilder>());
-    eb.push_back(boost::make_shared<FxDigitalBarrierOptionEngineBuilder>());
-    eb.push_back(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
-    eb.push_back(boost::make_shared<FxBarrierOptionFDEngineBuilder>());
-    eb.push_back(boost::make_shared<FxTouchOptionEngineBuilder>());
-    eb.push_back(boost::make_shared<FxDoubleTouchOptionAnalyticEngineBuilder>());
-    eb.push_back(boost::make_shared<FxDoubleBarrierOptionAnalyticEngineBuilder>());
-
-    return eb;
-}
-
 } // namespace
 
 // Common variables used in the tests below
@@ -124,7 +107,7 @@ BOOST_AUTO_TEST_CASE(testCompositeInstrumentWrapperPrice) {
         boost::make_shared<TodaysMarket>(vars.asof, todaysMarketConfig, vars.loader, curveConfig, true);
     auto configurations = std::map<MarketContext, string>();
     boost::shared_ptr<EngineFactory> factory =
-        boost::make_shared<EngineFactory>(pricingEngineConfig, market, configurations, getExtraEngineBuilders());
+        boost::make_shared<EngineFactory>(pricingEngineConfig, market, configurations);
 
     BOOST_TEST_MESSAGE("number trades " << portfolio->size());
     portfolio->build(factory);

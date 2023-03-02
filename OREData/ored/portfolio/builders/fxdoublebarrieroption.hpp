@@ -76,6 +76,7 @@ protected:
     \ingroup portfolio
  */
 class FxDoubleBarrierOptionAnalyticEngineBuilder : public FxDoubleBarrierOptionEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(FxDoubleBarrierOptionAnalyticEngineBuilder)
 public:
     FxDoubleBarrierOptionAnalyticEngineBuilder()
         : FxDoubleBarrierOptionEngineBuilder("GarmanKohlhagen", "AnalyticDoubleBarrierEngine") {}

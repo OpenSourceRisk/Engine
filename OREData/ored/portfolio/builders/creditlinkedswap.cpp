@@ -23,6 +23,8 @@
 namespace ore {
 namespace data {
 
+ORE_REGISTER_ENGINE_BUILDER_IMPL(CreditLinkedSwapEngineBuilder)
+
 std::string CreditLinkedSwapEngineBuilder::keyImpl(const std::string& currency, const std::string& creditCurveId) {
     return currency + "_" + creditCurveId;
 }

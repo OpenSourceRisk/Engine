@@ -78,8 +78,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(const Date& asof, const string& inpu
         boost::make_shared<BlackIndexCdsOptionEngineBuilder>()
     };
     vector<boost::shared_ptr<LegBuilder>> extraLegBuilders;
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(data, tm,
-        configurations, extraEngineBuilders, extraLegBuilders, rdm);
+    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(data, tm, configurations, rdm);
 
     auto portfolio = boost::make_shared<Portfolio>();
     portfolio->fromFile(TEST_INPUT_FILE(string(inputDir + "/portfolio.xml")));

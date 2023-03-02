@@ -38,13 +38,11 @@ namespace analytics {
 class SensitivityRunner {
 public:
     SensitivityRunner(boost::shared_ptr<Parameters> params,
-                      std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
-                      std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
                       const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
                       const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                       const bool continueOnError = false)
-        : params_(params), extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders),
-          referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError) {}
+        : params_(params), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
+          continueOnError_(continueOnError) {}
 
     virtual ~SensitivityRunner(){};
 
@@ -69,8 +67,6 @@ public:
 
 protected:
     boost::shared_ptr<Parameters> params_;
-    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
-    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
     boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
     const bool continueOnError_;

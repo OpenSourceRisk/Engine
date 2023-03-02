@@ -59,6 +59,7 @@ protected:
 */
 
 class MidPointIndexCdsEngineBuilder : public IndexCreditDefaultSwapEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(MidPointIndexCdsEngineBuilder)
 public:
     MidPointIndexCdsEngineBuilder()
         : IndexCreditDefaultSwapEngineBuilder("DiscountedCashflows", "MidPointIndexCdsEngine") {}

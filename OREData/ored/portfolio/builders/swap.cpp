@@ -31,6 +31,10 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
+ORE_REGISTER_ENGINE_BUILDER_IMPL(SwapEngineBuilder)
+ORE_REGISTER_ENGINE_BUILDER_IMPL(CrossCurrencySwapEngineBuilder)
+ORE_REGISTER_AMC_ENGINE_BUILDER_IMPL(CamAmcSwapEngineBuilder)
+
 boost::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::buildMcEngine(const boost::shared_ptr<LGM>& lgm,
                                                                         const Handle<YieldTermStructure>& discountCurve,
                                                                         const std::vector<Date>& simulationDates,

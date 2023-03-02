@@ -474,9 +474,6 @@ AMCValuationEngine::AMCValuationEngine(
     const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
     const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
     const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
-    const std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>(
-        const boost::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& grid)>& amcEngineBuilders,
-    const std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()>& extraLegBuilders,
     const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
     const ore::data::IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
     const std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
@@ -489,9 +486,8 @@ AMCValuationEngine::AMCValuationEngine(
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
       configurationCrCalibration_(configurationCrCalibration), configurationFinalModel_(configurationFinalModel),
-      amcEngineBuilders_(amcEngineBuilders), extraLegBuilders_(extraLegBuilders), referenceData_(referenceData),
-      iborFallbackConfig_(iborFallbackConfig), handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket),
-      cubeFactory_(cubeFactory) {
+      referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
+      handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket), cubeFactory_(cubeFactory) {
 #ifndef QL_ENABLE_SESSIONS
     QL_FAIL(
         "AMCValuationEngine requires a build with QL_ENABLE_SESSIONS = ON when ctor multi-threaded runs is called.");
@@ -692,9 +688,8 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
                                                           {MarketContext::pricing, configurationFinalModel_}};
 
                 auto engineFactory = boost::make_shared<EngineFactory>(
-                    edCopy, initMarket, configurations, amcEngineBuilders_(cam, simDates),
-                    extraLegBuilders_ ? extraLegBuilders_() : std::vector<boost::shared_ptr<ore::data::LegBuilder>>(),
-                    referenceData_, iborFallbackConfig_);
+                    edCopy, initMarket, configurations, referenceData_, iborFallbackConfig_,
+                    EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, simDates));
 
                 portfolio->build(engineFactory, "amc-val-engine", true);
 

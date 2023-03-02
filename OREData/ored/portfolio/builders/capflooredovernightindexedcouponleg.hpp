@@ -37,6 +37,7 @@ namespace data {
  */
 class CapFlooredOvernightIndexedCouponLegEngineBuilder
     : public CachingCouponPricerBuilder<string, const std::string&, const QuantLib::Period&> {
+    ORE_REGISTER_ENGINE_BUILDER(CapFlooredOvernightIndexedCouponLegEngineBuilder)
 public:
     CapFlooredOvernightIndexedCouponLegEngineBuilder()
         : CachingEngineBuilder("BlackOrBachelier", "BlackOvernightIndexedCouponPricer",

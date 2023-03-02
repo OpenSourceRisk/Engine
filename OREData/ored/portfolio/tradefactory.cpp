@@ -37,9 +37,11 @@ boost::shared_ptr<AbstractTradeBuilder> TradeFactory::getBuilder(const std::stri
     QL_REQUIRE(b != builders_.end(), "TradeFactory::getBuilder(" << className << "): no builder found");
     return b->second;
 }
+
 void TradeFactory::addBuilder(const std::string& className, const boost::shared_ptr<AbstractTradeBuilder>& builder) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    builders_[className] = builder;
+    QL_REQUIRE(builders_.insert(std::make_pair(className, builder)).second,
+               "TradeFactory: duplicate builder for className '" << className << "'.");
 }
 
 boost::shared_ptr<Trade> TradeFactory::build(const string& className) const {

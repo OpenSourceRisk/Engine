@@ -47,6 +47,7 @@ namespace data {
 class BondOptionEngineBuilder
     : public CachingPricingEngineBuilder<string, const string&, const Currency&, const string&, const bool,
                                          const string&, const string&, const string&> {
+    ORE_REGISTER_ENGINE_BUILDER(BondOptionEngineBuilder)
 public:
     BondOptionEngineBuilder() : CachingEngineBuilder("Black", "BlackBondOptionEngine", {"BondOption"}) {}
 
