@@ -20,6 +20,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <ored/report/csvreport.hpp>
+#include <ored/utilities/fileio.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 #include <ql/math/comparison.hpp>
@@ -85,7 +86,8 @@ private:
 };
 
 CSVFileReport::CSVFileReport(const string& filename, const char sep, const bool commentCharacter, char quoteChar,
-                             const string& nullString, bool lowerHeader, QuantLib::Size rolloverSize)
+                             const string& nullString, bool lowerHeader,
+                             QuantLib::Size rolloverSize)
     : filename_(filename), sep_(sep), commentCharacter_(commentCharacter), quoteChar_(quoteChar),
       nullString_(nullString), lowerHeader_(lowerHeader), rolloverSize_(rolloverSize), i_(0), fp_(NULL) {    
     baseFilename_ = filename_;
@@ -101,7 +103,7 @@ CSVFileReport::~CSVFileReport() {
 
 void CSVFileReport::open() {
     LOG("Opening CSV file report '" << filename_ << "'");
-    fp_ = fopen(filename_.c_str(), "w");
+    fp_ = FileIO::fopen(filename_.c_str(), "w");
     QL_REQUIRE(fp_, "Error opening file '" << filename_ << "'");
     finalized_ = false;
 }

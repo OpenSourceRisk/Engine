@@ -267,6 +267,8 @@ public:
     const boost::shared_ptr<ore::data::EngineData>& pricingEngine() { return pricingEngine_; }
     const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams() { return todaysMarketParams_; }
     const boost::shared_ptr<ore::data::Portfolio>& portfolio() { return portfolio_; }
+
+    QuantLib::Size maxRetries() const { return maxRetries_; }
     QuantLib::Size nThreads() const { return nThreads_; }
     bool entireMarket() { return entireMarket_; }
     bool allFixings() { return allFixings_; }
@@ -471,7 +473,9 @@ protected:
     boost::shared_ptr<ore::data::EngineData> pricingEngine_;
     boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     boost::shared_ptr<ore::data::Portfolio> portfolio_;
-    QuantLib::Size nThreads_ = 1;   
+    QuantLib::Size maxRetries_ = 7;
+    QuantLib::Size nThreads_ = 1;
+   
     bool entireMarket_ = false; 
     bool allFixings_ = false; 
     bool eomInflationFixings_ = true;
