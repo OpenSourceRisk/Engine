@@ -221,15 +221,25 @@ for portfolios with netting, variation and initial margin agreements.
 The sensitivity framework yields further {\bf market risk measures} such as ORE's parametric Value at Risk which takes deltas, vegas, gammas and cross gammas into account. This may be used to benchmark initial margin models such ISDA's Standard Initial Margin Model. \\
 
 \medskip
-Subsequent ORE releases will also compute {\bf regulatory capital charges} for counterparty credit risk under the new standardised approach (SA-CCR), and the Monte Carlo based market risk measures will be complemented by parametric methods, e.g. for benchmarking various initial margin calculation models applied in cleared and non-cleared derivatives business.
+Subsequent ORE releases will also compute {\bf regulatory capital charges} for counterparty credit risk under the standardised approach (SA-CCR), and the market risk measures will be extended , e.g. for benchmarking various initial margin calculation models applied in cleared and non-cleared derivatives business.
+
+\medskip
+In September 2022 Acadia announced to contribute a wide range of financial instruments (currently in its proprietary extension of ORE) in a series of quarterly releases:
+\begin{itemize}
+\item Commodity products (Swaps, Basis Swaps, Av. Price Options, Swaptions), released December 22 with ORE v8
+\item Credit products (Index CDS and Index CDS Options, Credit-Linked Swaps, Synthetic CDOs), released March 23 with ORE v9
+\item Bond products and Hybrids (Bond Options, Bond Repos, Bond TRS, Convertible Bonds, Generic TRS with mixed basket underlyings, CFDs), to be released in June 23
+\item Exotics (Scripted trade framework for modelling highly structured hybrid payoffs such as Accumulators, TARFs, PRDCs, etc.), to be released in September 23
+\end{itemize}
+These contributions were (and will be) accompanied by analytics extensions to enhance ORE usability:
+\begin{itemize}
+\item Credit exposure including Commodity and American Monte Carlo for Exotics, released in December 22 with ORE v8
+\item Market Risk including multi-threaded sensitivities, par sensitivity, delta/gamma VaR, released in March 23 with ORE v9
+\item Portfolio Credit Model, to be released in June 23
+\end{itemize}
 
 \medskip 
-%The first release of ORE in October 2016 covers the simulation of interest rate and FX risk factors and
-%portfolios of Interest Rate Swaps, Caps/Floors, Swaptions, FX Forwards, Cross Currency Swaps and FX Options. Subsequent
-%releases from Q1 2017 onwards will extend the derivative product and the risk factor range to Inflation, Credit, Equity
-%and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products
-%(loans and bonds) and related portfolio analytics.
-The product coverage of the seventh release of ORE in September 2022 is sketched in Table \ref{tab_coverage}.
+The product coverage of the 9th release of ORE in March 2023 is sketched in Table \ref{tab_coverage}.
 \begin{table}[hbt]
 \scriptsize
 \begin{center}
@@ -281,16 +291,19 @@ Year-on-Year Inflation Swaps & Y & Y & N & Y \\
 \hline
 Year-on-Year Inflation Caps/Floors & Y & Y & N & N\\
 \hline
-Credit Default Swaps & Y & Y & N & N \\
+Credit Default Swaps, Options & Y & Y & N & Y \\
 \hline
-
+Index Credit Default Swaps, Options & Y & Y & N & Y \\
+\hline
+Credit Linked Swaps & Y & Y & N & Y \\
+\hline
+Index Tranches, Synthetic CDOs & Y & Y & N & Y \\
+\hline
 \end{tabular}
 \caption{ORE product coverage. FX/Equity Exotics include Barrier, Digital, Digital Barrier (FX only), Double Barrier, European Barrier, KIKO Barrier (FX only), Touch and Double Touch Options.}
 \label{tab_coverage}
 \end{center}
 \end{table}
-
-Future releases will further extend the product range and analytics coverage indicated in the table above, expand on the market risk analytics, add integrated credit/market risk analytics. 
 
 \medskip The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em
   Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX/INF/EQ risk factor evolution is based on
