@@ -52,6 +52,7 @@ void OREAppInputParameters::loadParameters() {
     iborFallbackOverride_ = false;
     dryRun_ = false;
     outputAdditionalResults_ = false;
+    buildFailedTrades_ = false;
 
     QL_REQUIRE(params_->hasGroup("setup"), "parameter group 'setup' missing");
 

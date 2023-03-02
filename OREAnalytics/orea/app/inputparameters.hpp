@@ -274,7 +274,7 @@ protected:
     std::string baseCurrency_;
     bool continueOnError_ = true;
     bool lazyMarketBuilding_ = true;
-    bool buildFailedTrades_ = false;
+    bool buildFailedTrades_ = true;
     std::string observationModel_ = "None";
     bool implyTodaysFixings_ = false;
     std::map<std::string, std::string> marketConfigs_;
