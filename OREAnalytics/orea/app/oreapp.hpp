@@ -60,7 +60,7 @@ public:
     OREApp(boost::shared_ptr<Parameters> params, bool console = true);
     //! Constructor that assumes we have already assembled input parameters via API
     OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel = 31,
-           Size bufferLogLevel = 15, bool console = false);
+           bool console = false);
 
     //! Destructor
     virtual ~OREApp();
@@ -101,6 +101,11 @@ public:
     std::vector<std::string> getErrors();
     
 protected:
+    //! Populate InputParameters object from classic ORE key-value pairs in Parameters 
+    void buildInputParameters(boost::shared_ptr<InputParameters> inputs,
+                              const boost::shared_ptr<Parameters>& params);
+    vector<string> getFileNames(const string& fileString, const string& path);
+    boost::shared_ptr<CSVLoader> buildCsvLoader(const boost::shared_ptr<Parameters>& params);
     //! Use ORE functioanlity in analytics/analyticsmanager
     void analytics(std::ostream& out);
     //! read setup from params_
@@ -277,8 +282,7 @@ protected:
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
 
     boost::shared_ptr<AnalyticsManager> analyticsManager_;
-    //boost::shared_ptr<ore::data::FilteredBufferedLoggerGuard> fbLogger_;
-    boost::shared_ptr<BufferLogger> bLogger_;
+    boost::shared_ptr<FilteredBufferedLoggerGuard> fbLogger_;
 
 private:
     virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }

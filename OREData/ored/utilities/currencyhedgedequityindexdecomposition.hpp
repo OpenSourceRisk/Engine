@@ -3,7 +3,7 @@
   All rights reserved.
 */
 
-/*! \file orepsimm/ored/portfolio/equityindexdecomposition.cpp
+/*! \file ored/utilities/currencyhedgedequityindexdecomposition.hpp
     \brief Helper function used for the index decompositon
  */
 
