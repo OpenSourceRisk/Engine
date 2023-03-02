@@ -101,6 +101,11 @@ public:
     std::vector<std::string> getErrors();
     
 protected:
+    //! Populate InputParameters object from classic ORE key-value pairs in Parameters 
+    void buildInputParameters(boost::shared_ptr<InputParameters> inputs,
+                              const boost::shared_ptr<Parameters>& params);
+    vector<string> getFileNames(const string& fileString, const string& path);
+    boost::shared_ptr<CSVLoader> buildCsvLoader(const boost::shared_ptr<Parameters>& params);
     //! Use ORE functioanlity in analytics/analyticsmanager
     void analytics(std::ostream& out);
     //! read setup from params_

@@ -64,12 +64,20 @@ public:
     void setImplyTodaysFixings(bool b) { implyTodaysFixings_ = b; }
     void setMarketConfig(const std::string& config, const std::string& context);
     void setRefDataManager(const std::string& xml);
+    void setRefDataManagerFromFile(const std::string& fileName);
     void setConventions(const std::string& xml);
+    void setConventionsFromFile(const std::string& fileName);
     void setIborFallbackConfig(const std::string& xml);
+    void setIborFallbackConfigFromFile(const std::string& fileName);
     void setCurveConfigs(const std::string& xml);
+    void setCurveConfigsFromFile(const std::string& fileName);
     void setPricingEngine(const std::string& xml);
+    void setPricingEngineFromFile(const std::string& fileName);
     void setTodaysMarketParams(const std::string& xml);
+    void setTodaysMarketParamsFromFile(const std::string& fileName);
     void setPortfolio(const std::string& xml); 
+    void setPortfolioFromFile(const std::string& fileNameString, const std::string& inputPath); 
+    void setMarketConfigs(const std::map<std::string, std::string>& m);
     void setThreads(int i) { nThreads_ = i; }
     void setEntireMarket(bool b) { entireMarket_ = b; }
     void setAllFixings(bool b) { allFixings_ = b; }
@@ -107,14 +115,26 @@ public:
     void setUseSensiSpreadedTermStructures(bool b) { useSensiSpreadedTermStructures_ = b; }
     void setSensiThreshold(Real r) { sensiThreshold_ = r; }
     void setSensiSimMarketParams(const std::string& xml);
+    void setSensiSimMarketParamsFromFile(const std::string& fileName);
     void setSensiScenarioData(const std::string& xml);
+    void setSensiScenarioDataFromFile(const std::string& fileName);
     void setSensiPricingEngine(const std::string& xml);
+    void setSensiPricingEngineFromFile(const std::string& fileName);
+    void setSensiPricingEngine(const boost::shared_ptr<EngineData>& engineData) {
+        sensiPricingEngine_ = engineData;
+    }
 
     // Setters for stress testing
     void setStressThreshold(Real r) { stressThreshold_ = r; }
     void setStressSimMarketParams(const std::string& xml); 
+    void setStressSimMarketParamsFromFile(const std::string& fileName); 
     void setStressScenarioData(const std::string& xml); 
+    void setStressScenarioDataFromFile(const std::string& fileName); 
     void setStressPricingEngine(const std::string& xml); 
+    void setStressPricingEngineFromFile(const std::string& fileName); 
+    void setStressPricingEngine(const boost::shared_ptr<EngineData>& engineData) {
+        stressPricingEngine_ = engineData;
+    }
 
     // Setters for VaR
     void setSalvageCovariance(bool b) { salvageCovariance_ = b; }
@@ -124,10 +144,8 @@ public:
     void setVarMethod(const std::string& s) { varMethod_ = s; }
     void setMcVarSamples(Size s) { mcVarSamples_ = s; }
     void setMcVarSeed(long l) { mcVarSeed_ = l; }
-    // TODO: API for setting covariance data 
-    //const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& covarianceData();
-    // TODO: API for setting a sensitivity stream
-    //const boost::shared_ptr<SensitivityStream>& sensitivityStream();
+    void setCovarianceDataFromFile(const std::string& fileName);
+    void setSensitivityStreamFromFile(const std::string& fileName);
 
     // Setters for exposure simulation 
     void setAmc(bool b) { amc_ = b; }
@@ -141,11 +159,23 @@ public:
     void setWriteCube(bool b) { writeCube_ = b; }
     void setWriteScenarios(bool b) { writeScenarios_ = b; }
     void setExposureSimMarketParams(const std::string& xml);
+    void setExposureSimMarketParamsFromFile(const std::string& fileName);
     void setScenarioGeneratorData(const std::string& xml);
+    void setScenarioGeneratorDataFromFile(const std::string& fileName);
     void setCrossAssetModelData(const std::string& xml);
+    void setCrossAssetModelDataFromFile(const std::string& fileName);
     void setSimulationPricingEngine(const std::string& xml);
+    void setSimulationPricingEngineFromFile(const std::string& fileName);
+    void setSimulationPricingEngine(const boost::shared_ptr<EngineData>& engineData) {
+        simulationPricingEngine_ = engineData;
+    }
     void setAmcPricingEngine(const std::string& xml);
+    void setAmcPricingEngineFromFile(const std::string& fileName);
+    void setAmcPricingEngine(const boost::shared_ptr<EngineData>& engineData) {
+        amcPricingEngine_ = engineData;
+    }
     void setNettingSetManager(const std::string& xml);
+    void setNettingSetManagerFromFile(const std::string& fileName);
     // TODO: load from XML
     // void setCounterpartyManager(const std::string& xml);
     // TODO: load from XML
@@ -155,9 +185,10 @@ public:
     void setXvaBaseCurrency(const std::string& s) { xvaBaseCurrency_ = s; }
     void setLoadCube(bool b) { loadCube_ = b; }
     // TODO: API for setting NPV and market cubes
-    // boost::shared_ptr<NPVCube> cube();
-    // boost::shared_ptr<NPVCube> nettingSetCube();
-    // boost::shared_ptr<NPVCube> cptyCube();
+    void setCubeFromFile(const std::string& file);
+    void setNettingSetCubeFromFile(const std::string& file);
+    void setCptyCubeFromFile(const std::string& file);
+    void setMarketCubeFromFile(const std::string& file);
     // boost::shared_ptr<AggregationScenarioData> mktCube();
     void setFlipViewXVA(bool b) { flipViewXVA_ = b; }
     void setFullInitialCollateralisation(bool b) { fullInitialCollateralisation_ = b; }
@@ -214,6 +245,7 @@ public:
     void setPortfolioFilterDate(const std::string& s); // parse to Date
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>
+    void insertAnalytic(const std::string& s); 
 
     /***************************
      * Getters for general setup
@@ -594,6 +626,7 @@ inline const std::string& InputParameters::marketConfig(const std::string& conte
     return (it != marketConfigs_.end() ? it->second : Market::defaultConfiguration);
 }
 
+    /*
 //! Traditional ORE input via ore.xml and various files, output into files
 class OREAppInputParameters : public InputParameters {
 public:
@@ -634,172 +667,36 @@ private:
     std::string stressTestFileName_;
     std::string varFileName_;
 };
-
-    /*
-class InMemoryInputParameters : public InputParameters {
-public:
-    InMemoryInputParameters() {}
-
-    void setAsOfDate(const std::string& s); // parse to Date
-    void setResultsPath(const std::string& s); // parse to boost::path
-    void setBaseCurrency(const std::string& s); // parse to Currency
-    void setContinueOnError(bool b) { continueOnError_ = b; }
-    void setLazyMarketBuilding(bool b) { lazyMarketBuilding_ = b; }
-    void setBuildFailedTrades(bool b) { buildFailedTrades_ = b; }
-    void setObservationModel(const std::string& s) { observationModel_ = s; }
-    void setImplyTodaysFixings(bool b) { implyTodaysFixings_ = b; }
-    // todo
-    //const std::map<std::string, std::string>&  marketConfigs() { return marketConfigs_; }
-    // todo
-    //const std::string& marketConfig(const std::string& context);
-    void setRefDataManager(const std::string& xml); // load from XML
-    void setConventions(const std::string& xml); // load from XML
-    void setIborFallbackConfig(const std::string& xml); // load from XML
-    void setCurveConfigs(const std::string& xml); // load from XML
-    void setPricingEngine(const std::string& xml); // load from XML
-    void setTodaysMarketParams(const std::string& xml); // load from XML
-    void setPortfolio(const std::string& xml); // load from XML
-    void setThreads(int i) { nThreads_ = i; }
-    void setEtireMarket(bool b) { entireMarket_ = b; }
-    void setAllFixings(bool b) { allFixings_ = b; }
-    void setEomInflationFixings(bool b) { eomInflationFixings_ = b; }
-    void setUseMarketDataFixings(bool b) { useMarketDataFixings_ = b; }
-    void setIborFallbackOverride(bool b) { iborFallbackOverride_ = b; }
-    void setReportNaString(const std::string& s) { reportNaString_ = s; }
-    void setCsvQuoteChar(const char& c) { csvQuoteChar_ = c; }
-    void setCsvSeparator(const char& c) { csvSeparator_ = c; }
-    void setCsvCommentCharacter(const char& c) { csvCommentCharacter_ = c; }
-    void setDryRun(bool b) { dryRun_ = b; }
-    void setMporDays(Size s) { mporDays_ = s; }
-    void setMporCalendar(const std::string& s); // parse to Calendar
-    void setMporForward(bool b) { mporForward_ = b; }
-    void setIncludeMporExpired(bool b) { includeMporExpired_ = b; }
-    // Setters for npv analytics
-    void setOutputAdditionalResults(bool b) { outputAdditionalResults_ = b; }
-    // Setters for cashflows
-    void setIncludePastCashflows(bool b) { includePastCashflows_ = b; }
-    // Setters for curves/markets
-    void setOutputCurves(bool b) { outputCurves_ = b; }
-    void setOutputTodaysMarketCalibration(bool b) { outputTodaysMarketCalibration_ = b; }
-    void setCurvesMarketConfig(const std::string& s) { curvesMarketConfig_ = s; }
-    void setCurvesGrid(const std::string& s) { curvesGrid_ = s; }
-    // Setters for sensi analytics
-    void setXbsParConversion(bool b) { xbsParConversion_ = b; }
-    void setAnalyticFxSensis(bool b) { analyticFxSensis_ = b; }
-    void setParSensi(bool b) { parSensi_ = b; }
-    void setAlignPillars(bool b) { alignPillars_ = b; }
-    void setOutputJacobi(bool b) { outputJacobi_ = b; }
-    void setUseSensiSpreadedTermStructures(bool b) { useSensiSpreadedTermStructures_ = b; }
-    void setSensiThreshold(Real r) { sensiThreshold_ = r; }
-    void setSensiSimMarketParams(const std::string& xml); // load from XML
-    void setSensiScenarioData(const std::string& xml); // load from XML
-    void setSensiPricingEngine(const std::string& xml); // load from XML    
-    // Setters for stress testing
-    void setStressThreshold(Real r) { stressThreshold_ = r; }
-    void setStressSimMarketParams(const std::string& xml); // load from XML
-    void setStressScenarioData(const std::string& xml); // load from XML
-    void setStressPricingEngine(const std::string& xml); // load from XML
-    // Setters for VaR
-    void setSalvageCovariance(bool b) { salvageCovariance_ = b; }
-    void setVarQuantiles(const std::string& s); // parse to vector<Real>
-    void setVarBreakDown(bool b) { varBreakDown_ = b; }
-    void setPortfolioFilter(const std::string& s) { portfolioFilter_ = s; }
-    void setVarMethod(const std::string& s) { varMethod_ = s; }
-    void setMcVarSamples(Size s) { mcVarSamples_ = s; }
-    void setMcVarSeed(long l) { mcVarSeed_ = l; }
-    // todo
-    //const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& covarianceData() { return covarianceData_; }
-    // todo
-    //const boost::shared_ptr<SensitivityStream>& sensitivityStream() { return sensitivityStream_; }
-    // Setters for exposure simulation 
-    void setAmc(bool b) { amc_ = b; }
-    void setAmcTradeTypes(const std::string& s); // parse to set<string>
-    void setExposureBaseCurrency(const std::string& s) { exposureBaseCurrency_ = s; } 
-    void setExposureObservationModel(const std::string& s) { exposureObservationModel_ = s; }
-    void setNettingSetId(const std::string& s) { nettingSetId_ = s; }
-    void setScenarioGenType(const std::string& s) { scenarioGenType_ = s; }
-    void setSoreFlows(bool b) { storeFlows_ = b; }
-    void setStoreSurvivalProbabilities(bool b) { storeSurvivalProbabilities_ = b; }
-    void setWriteCube(bool b) { writeCube_ = b; }
-    void setWriteScenarios(bool b) { writeScenarios_ = b; }
-    void setExposureSimMarketParams(const std::string& xml); // load from XML
-    void setScenarioGeneratorData(const std::string& xml); // load from XML
-    void setCrossAssetModelData(const std::string& xml); // load from XML
-    void setSimulationPricingEngine(const std::string& xml); // load from XML
-    void setAmcPricingEngine(const std::string& xml); // load from XML
-    void setNettingSetManager(const std::string& xml); // load from XML
-    // todo
-    void setCounterpartyManager(const std::string& xml); // load from XML
-    // todo
-    void setCollateralBalances(const std::string& xml); // load from XML
-    // Setters for xva
-    void setXvaBaseCurrency(const std::string& s) { xvaBaseCurrency_ = s; }
-    void setLoadCube(bool b) { loadCube_ = b; }
-    // todo
-    // boost::shared_ptr<NPVCube> cube() { return cube_; }
-    // boost::shared_ptr<NPVCube> nettingSetCube() { return nettingSetCube_; }
-    // boost::shared_ptr<NPVCube> cptyCube() { return cptyCube_; }
-    // boost::shared_ptr<AggregationScenarioData> mktCube() { return mktCube_; }
-    void setFlipViewXVA(bool b) { flipViewXVA_ = b; }
-    void setFullInitialCollateralisation(bool b) { fullInitialCollateralisation_ = b; }
-    void setExposureProfiles(bool b) { exposureProfiles_ = b; }
-    void setExposureProfilesByTrade(bool b) { exposureProfilesByTrade_ = b; }
-    void setPfeQuantile(Real r) { pfeQuantile_ = r; }
-    void setCollateralCalculationType(const std::string& s) { collateralCalculationType_ = s; }
-    void setExposureAllocationMethod(const std::string& s) { exposureAllocationMethod_ = s; }
-    void setMarginalAllocationLimit(Real r) { marginalAllocationLimit_ = r; }
-    void setExerciseNextBreak(bool b) { exerciseNextBreak_ = b; }
-    void setCvaAnalytic(bool b) { cvaAnalytic_ = b; }
-    void setDvaAnalytic(bool b) { dvaAnalytic_ = b; }
-    void setFvaAnalytic(bool b) { fvaAnalytic_ = b; }
-    void setColvaAnalytic(bool b) { colvaAnalytic_ = b; }
-    void setCollateralFloorAnalytic(bool b) { collateralFloorAnalytic_ = b; }
-    void setDimAnalytic(bool b) { dimAnalytic_ = b; }
-    void setMvaAnalytic(bool b) { mvaAnalytic_ = b; }
-    void setKvaAnalytic(bool b) { kvaAnalytic_ = b; }
-    void setDynamicCredit(bool b) { dynamicCredit_ = b; }
-    void setCvaSensi(bool b) { cvaSensi_ = b; }
-    void setCvaSensiGrid(const std::string& s); // parse to vector<Period>
-    void setCvaSensiShiftSize(Real r) { cvaSensiShiftSize_ = r; }
-    void setDvaName(const std::string& s) { dvaName_ = s; }
-    void setRawCubeOutput(bool b) { rawCubeOutput_ = b; }
-    void setNetCubeOutput(bool b) { netCubeOutput_ = b; }
-    // FIXME: remove this from the base class?
-    void setRawCubeOutputFile(const std::string& s) { rawCubeOutputFile_ = s; }
-    void setNetCubeOutputFile(const std::string& s) { netCubeOutputFile_ = s; }
-    // funding value adjustment details
-    void setFvaBorrowingCurve(const std::string& s) { fvaBorrowingCurve_ = s; }
-    void setFvaLendingCurve(const std::string& s) { fvaLendingCurve_ = s; }
-    void setFlipViewBorrowingCurvePostfix(const std::string& s) { flipViewBorrowingCurvePostfix_ = s; }
-    void setFlipViewLendingCurvePostfix(const std::string& s) { flipViewLendingCurvePostfix_ = s; }
-    // dynamic initial margin details
-    void setDimQuantile(Real r) { dimQuantile_ = r; }
-    void setDimHorizonCalendarDays(Size s) { dimHorizonCalendarDays_ = s; }
-    void setDimRegressionOrder(Size s) { dimRegressionOrder_ = s; }
-    void setDimRegressors(const std::string& s); // parse to vector<string>
-    void setDimOutputGridPoints(const std::string& s); // parse to vector<Size>
-    void setDimOutputNettingSet(const std::string& s) { dimOutputNettingSet_ = s; }
-    void setDimLocalRegressionEvaluations(Size s) { dimLocalRegressionEvaluations_ = s; }
-    void setDimLocalRegressionBandwidth(Real r) { dimLocalRegressionBandwidth_ = r; }
-    // capital value adjustment details
-    void setKvaCapitalDiscountRate(Real r) { kvaCapitalDiscountRate_ = r; } 
-    void setKvaAlpha(Real r) { kvaAlpha_ = r; }
-    void setKvaRegAdjustment(Real r) { kvaRegAdjustment_ = r; }
-    void setKvaCapitalHurdle(Real r) { kvaCapitalHurdle_ = r; }
-    void setKvaOurPdFloor(Real r) { kvaOurPdFloor_ = r; }
-    void setKvaTheirPdFloor(Real r) { kvaTheirPdFloor_ = r; }
-    void setKvaOurCvaRiskWeight(Real r) { kvaOurCvaRiskWeight_ = r; }
-    void setKvaTheirCvaRiskWeight(Real r) { kvaTheirCvaRiskWeight_ = r; }
-    // Setters for cashflow npv and dynamic backtesting
-    void setCashflowHorizon(const std::string& s); // parse to Date
-    void setPortfolioFilterDate(const std::string& s); // parse to Date
-    // Set list of analytics that shall be run
-    void setAnalytics(const std::string& s); // parse to set<string>
-
-    void loadParameters() override;
-    void writeOutParameters() override;
-};
     */
+    
+//! Traditional ORE input via ore.xml and various files, output into files
+class OutputParameters {
+public:
+    OutputParameters(const boost::shared_ptr<Parameters>& params);
+    //! map internal report name to the configured external file name
+    const std::map<std::string, std::string>& fileNameMap() { return fileNameMap_; }
+    std::string outputFileName(const std::string& internalName, const std::string& suffix);
+    
+private:
+    std::map<std::string, std::string> fileNameMap_;    
+    std::string npvOutputFileName_;
+    std::string cashflowOutputFileName_;
+    std::string curvesOutputFileName_;
+    std::string scenarioDumpFileName_;
+    std::string cubeFileName_;
+    std::string mktCubeFileName_;
+    std::string rawCubeFileName_;
+    std::string netCubeFileName_;
+    std::string dimEvolutionFileName_;
+    std::vector<std::string> dimRegressionFileNames_;
+    std::string sensitivityFileName_;
+    std::string sensitivityScenarioFileName_;
+    std::string parSensitivityFileName_;
+    std::string jacobiFileName_;
+    std::string jacobiInverseFileName_;
+    std::string stressTestFileName_;
+    std::string varFileName_;
+};
     
 } // namespace analytics
 } // namespace ore
