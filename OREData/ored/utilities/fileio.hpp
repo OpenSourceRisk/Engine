@@ -39,13 +39,20 @@ public:
 
     //! The maximum number of retries, defaults to 7
     static QuantLib::Size maxRetries();
+    static QuantLib::Real backoff();
+    static QuantLib::Real maxBackoff();
     static void setMaxRetries(QuantLib::Size);
+    static void setBackoff(QuantLib::Real);
+    static void setMaxBackoff(QuantLib::Real);
 
     //! Retry wrapper for std::fopen
     static FILE* fopen(const char*, const char*);
 
     //! Retry wrapper for boost::filesystem::create_directories
     static bool create_directories(const path&);
+
+    //! Retry wrapper for boost::filesystem::remove_all
+    static bool remove_all(const path&);
 };
 
 } // namespace data

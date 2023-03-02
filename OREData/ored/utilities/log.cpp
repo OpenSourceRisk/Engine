@@ -266,12 +266,18 @@ string EventMessage::json() const {
                 value = boost::posix_time::to_iso_extended_string(time);
             } else if (p.second.type() == typeid(int)) {
                 value = to_string(boost::any_cast<int>(p.second));
+            } else if (p.second.type() == typeid(unsigned int)) {
+                value = to_string(boost::any_cast<unsigned int>(p.second));
+            } else if (p.second.type() == typeid(unsigned short)) {
+                value = to_string(boost::any_cast<unsigned short>(p.second));
+            } else if (p.second.type() == typeid(QuantLib::Size)) {
+                value = to_string(boost::any_cast<QuantLib::Size>(p.second));
             } else if (p.second.type() == typeid(QuantLib::Real)) {
                 value = to_string(boost::any_cast<QuantLib::Real>(p.second));
             } else if (p.second.type() == typeid(bool)) {
                 value = to_string(boost::any_cast<bool>(p.second));
             } else {
-                WLOG(StructuredMessage("Error", "Event Logging", "Unrecognised value type for key '" + p.first + "'",
+                WLOG(StructuredMessage("Error", "Event Message Logging", "Unrecognised value type for key '" + p.first + "'",
                                        std::pair<string, string>()));
             }
 

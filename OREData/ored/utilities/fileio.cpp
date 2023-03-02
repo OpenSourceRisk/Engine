@@ -37,60 +37,104 @@ using QuantLib::Size;
 
 // Defaults
 static Size _s_maxRetries = 7;
-static std::vector<Real> _s_backoff = {0.5, 1, 2, 4, 8, 16, 30};
+static Real _s_backoff = 0.5;
+static Real _s_maxBackoff = 30;
 
 Size FileIO::maxRetries() { return _s_maxRetries; }
 
-void FileIO::setMaxRetries(Size numOfRetries) {
-    LOG("Setting FileOpen max retries to " << numOfRetries);
-    _s_maxRetries = numOfRetries;
+Real FileIO::backoff() { return _s_backoff; }
+
+Real FileIO::maxBackoff() { return _s_maxBackoff; }
+
+void FileIO::setMaxRetries(Size n) {
+    LOG("Setting FileOpen max retries to " << n);
+    _s_maxRetries = n;
+}
+
+void FileIO::setBackoff(Real b) {
+    LOG("Setting FileOpen backoff to " << b);
+    _s_backoff = b;
+}
+
+void FileIO::setMaxBackoff(Real m) {
+    LOG("Setting FileOpen max backoff to " << m);
+    _s_maxBackoff = m;
 }
 
 FILE* FileIO::fopen(const char* filename, const char* mode) {
     FILE* fp;
-    int i = 0;
+    Real currentBackoff = backoff();
 
-    do {
+    for (Size i = 0; i <= maxRetries(); i++) {
         if (i > 0) {
-            Real backoff = (i >= _s_backoff.size()) ? _s_backoff.back() : _s_backoff[i - 1];
-            int backoffMillis = backoff * 1000;
-            auto em = EventMessage("Error opening file '" + std::string(filename) + "'.");
+            int backoffMillis = currentBackoff * 1000;
+            auto em = EventMessage("Error opening file '" + std::string(filename) + "'. Retrying...");
             em.set("retry_count", i);
             em.set("retry_interval", backoffMillis);
             WLOG(em);
             std::this_thread::sleep_for(std::chrono::milliseconds(backoffMillis));
+            Real nextBackoff = currentBackoff * 2;
+            currentBackoff = (nextBackoff >= maxBackoff()) ? maxBackoff() : nextBackoff;
         }
 
         fp = std::fopen(filename, mode);
-
-        i++;
-    } while (fp == nullptr && i <= maxRetries());
+        if (fp)
+            break;
+    }
 
     return fp;
 }
 
 bool FileIO::create_directories(const path& p) {
     bool res = false;
-    int i = 0;
+    Real currentBackoff = backoff();
 
-    do {
+    for (Size i = 0; i <= maxRetries(); i++) {
         if (i > 0) {
-            Real backoff = (i >= _s_backoff.size()) ? _s_backoff.back() : _s_backoff[i - 1];
-            int backoffMillis = backoff * 1000;
-            auto em = EventMessage("Error creating directory '" + p.string() + "'.");
+            int backoffMillis = currentBackoff * 1000;
+            auto em = EventMessage("Error creating directory '" + p.string() + "'. Retrying...");
             em.set("retry_count", i);
             em.set("retry_interval", backoffMillis);
             WLOG(em);
             std::this_thread::sleep_for(std::chrono::milliseconds(backoffMillis));
+            Real nextBackoff = currentBackoff * 2;
+            currentBackoff = (nextBackoff >= maxBackoff()) ? maxBackoff() : nextBackoff;
         }
 
         try {
             res = boost::filesystem::create_directories(p);
+            if (res)
+                break;
         } catch (...) {
         }
+    }
 
-        i++;
-    } while (res == false && i <= maxRetries());
+    return res;
+}
+
+bool FileIO::remove_all(const path& p) {
+    bool res = false;
+    Real currentBackoff = backoff();
+
+    for (Size i = 0; i <= maxRetries(); i++) {
+        if (i > 0) {
+            int backoffMillis = currentBackoff * 1000;
+            auto em = EventMessage("Error emptying directory '" + p.string() + "'. Retrying...");
+            em.set("retry_count", i);
+            em.set("retry_interval", backoffMillis);
+            WLOG(em);
+            std::this_thread::sleep_for(std::chrono::milliseconds(backoffMillis));
+            Real nextBackoff = currentBackoff * 2;
+            currentBackoff = (nextBackoff >= maxBackoff()) ? maxBackoff() : nextBackoff;
+        }
+
+        try {
+            res = boost::filesystem::remove_all(p);
+            if (res)
+                break;
+        } catch (...) {
+        }
+    }
 
     return res;
 }
