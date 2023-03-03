@@ -30,6 +30,8 @@ A Forward Bond is set up using a {\tt ForwardBondData} block as shown below and 
    \begin{itemize}
        \item ForwardMaturityDate: The date of maturity of the forward contract. \\
          Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+       \item ForwardSettlementDate [Optional]: Settlement date for forward bond or cash settlement payment date.  \\
+         Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
        \item Settlement [Optional]: Cash or Physical. Option, defaults to Physcial, except in case the settlement is
          defined by LockRate, in which case it defaults to Cash. \\
          Allowable values: Cash, Physical
