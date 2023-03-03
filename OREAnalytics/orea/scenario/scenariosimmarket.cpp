@@ -89,6 +89,7 @@
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/timer/timer.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -1966,6 +1967,11 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         for (Size i = 1; i < zeroCurveTimes.size(); i++) {
                             Real rate = inflationTs->zeroRate(quoteDates[i - 1]);
+                            if (inflationTs->hasSeasonality()) {
+                                Date fixingDate = quoteDates[i - 1] - inflationTs->observationLag();
+                                rate = inflationTs->seasonality()->deseasonalisedZeroRate(fixingDate,                                 
+                                    rate, *inflationTs.currentLink());
+                            }
                             auto q = boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : rate);
                             if (i == 1) {
                                 // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1

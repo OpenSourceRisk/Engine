@@ -32,6 +32,7 @@
      \ingroup builders
   */
  class FxEuropeanAsianOptionMCDAAPEngineBuilder : public EuropeanAsianOptionMCDAAPEngineBuilder {
+     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionMCDAAPEngineBuilder)
  public:
      FxEuropeanAsianOptionMCDAAPEngineBuilder()
          : EuropeanAsianOptionMCDAAPEngineBuilder("GarmanKohlhagen", {"FxAsianOptionArithmeticPrice"}, AssetClass::FX,
@@ -44,6 +45,7 @@
      \ingroup builders
   */
  class FxEuropeanAsianOptionMCDAASEngineBuilder : public EuropeanAsianOptionMCDAASEngineBuilder {
+     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionMCDAASEngineBuilder)
  public:
      FxEuropeanAsianOptionMCDAASEngineBuilder()
          : EuropeanAsianOptionMCDAASEngineBuilder("GarmanKohlhagen", {"FxAsianOptionArithmeticStrike"},
@@ -56,6 +58,7 @@
      \ingroup builders
   */
  class FxEuropeanAsianOptionMCDGAPEngineBuilder : public EuropeanAsianOptionMCDGAPEngineBuilder {
+     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionMCDGAPEngineBuilder)
  public:
      FxEuropeanAsianOptionMCDGAPEngineBuilder()
          : EuropeanAsianOptionMCDGAPEngineBuilder("GarmanKohlhagen", {"FxAsianOptionGeometricPrice"}, AssetClass::FX,
@@ -67,6 +70,7 @@
      \ingroup builders
   */
  class FxEuropeanAsianOptionADGAPEngineBuilder : public EuropeanAsianOptionADGAPEngineBuilder {
+     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionADGAPEngineBuilder)
  public:
      FxEuropeanAsianOptionADGAPEngineBuilder()
          : EuropeanAsianOptionADGAPEngineBuilder("GarmanKohlhagen", {"FxAsianOptionGeometricPrice"}, AssetClass::FX) {
@@ -78,6 +82,7 @@
      \ingroup builders
   */
  class FxEuropeanAsianOptionADGASEngineBuilder : public EuropeanAsianOptionADGASEngineBuilder {
+     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionADGASEngineBuilder)
  public:
      FxEuropeanAsianOptionADGASEngineBuilder()
          : EuropeanAsianOptionADGASEngineBuilder("GarmanKohlhagen", {"FxAsianOptionGeometricStrike"},
@@ -89,6 +94,7 @@
      \ingroup builders
   */
  class FxEuropeanAsianOptionACGAPEngineBuilder : public EuropeanAsianOptionACGAPEngineBuilder {
+     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionACGAPEngineBuilder)
  public:
      FxEuropeanAsianOptionACGAPEngineBuilder()
          : EuropeanAsianOptionACGAPEngineBuilder("GarmanKohlhagen", {"FxAsianOptionGeometricPrice"}, AssetClass::FX) {
@@ -100,6 +106,7 @@
      \ingroup builders
   */
  class FxEuropeanAsianOptionTWEngineBuilder : public EuropeanAsianOptionTWEngineBuilder {
+     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionTWEngineBuilder)
  public:
      FxEuropeanAsianOptionTWEngineBuilder()
          : EuropeanAsianOptionTWEngineBuilder("GarmanKohlhagen", {"FxAsianOptionArithmeticPrice"}, AssetClass::FX) {}

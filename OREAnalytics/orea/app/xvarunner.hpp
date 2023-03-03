@@ -48,8 +48,6 @@ public:
               const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
               const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
               const boost::shared_ptr<ore::data::CrossAssetModelData>& crossAssetModelData,
-              std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
-              std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
               const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
               const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
               QuantLib::Real dimQuantile = 0.99, QuantLib::Size dimHorizonCalendarDays = 14,
@@ -135,8 +133,6 @@ protected:
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
     boost::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData_;
-    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
-    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
     boost::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
     QuantLib::Real dimQuantile_;

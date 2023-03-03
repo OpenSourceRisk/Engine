@@ -19,6 +19,8 @@
 #include <orea/aggregation/exposureallocator.hpp>
 #include <orea/cube/inmemorycube.hpp>
 
+#include <ored/portfolio/trade.hpp>
+
 using namespace std;
 using namespace QuantLib;
 

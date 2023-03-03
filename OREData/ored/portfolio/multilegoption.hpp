@@ -30,6 +30,8 @@ namespace ore {
 namespace data {
 
 class MultiLegOption : public Trade {
+    static TradeBuilderRegister<TradeBuilder<MultiLegOption>> reg_;
+
 public:
     // default ctor
     MultiLegOption() : Trade("MultiLegOption"), hasOption_(false) {}

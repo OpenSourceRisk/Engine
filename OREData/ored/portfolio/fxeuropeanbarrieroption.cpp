@@ -38,6 +38,8 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<FxEuropeanBarrierOption>> FxEuropeanBarrierOption::reg_("FxEuropeanBarrierOption");
+
 void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     const boost::shared_ptr<Market> market = engineFactory->market();

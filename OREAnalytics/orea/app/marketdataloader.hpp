@@ -80,7 +80,7 @@ public:
 
     virtual void populateFixings(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters);
 
-    virtual void addRelevantFixings(const std::pair<std::string, std::set<QuantLib::Date>>& fixing, FixingMap& fixings,
+    virtual void addRelevantFixings(const std::pair<std::string, std::set<QuantLib::Date>>& fixing,
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>>& lastAvailableFixingLookupMap);
 
     //! clear the loader
@@ -94,6 +94,7 @@ protected:
     boost::shared_ptr<InputParameters> inputs_;
     boost::shared_ptr<ore::data::InMemoryLoader> loader_;
     QuoteMap quotes_;
+    FixingMap portfolioFixings_, fixings_;
 
     const boost::shared_ptr<MarketDataLoaderImpl>& impl() const;
 

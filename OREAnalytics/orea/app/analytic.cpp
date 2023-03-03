@@ -100,8 +100,8 @@ boost::shared_ptr<EngineFactory> Analytic::engineFactory() {
     configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
     LOG("MarketContext::pricing = " << inputs_->marketConfig("pricing"));
     //configurations[MarketContext::simulation] = inputs_->marketConfig("simulation");
-    return boost::make_shared<EngineFactory>(edCopy, market_, configurations, extraEngineBuilders, extraLegBuilders,
-                                             inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+    return boost::make_shared<EngineFactory>(edCopy, market_, configurations, inputs_->refDataManager(),
+                                             *inputs_->iborFallbackConfig());
 }
 
 boost::shared_ptr<ore::data::EngineFactory> PricingAnalytic::engineFactory() {
@@ -117,8 +117,8 @@ boost::shared_ptr<ore::data::EngineFactory> PricingAnalytic::engineFactory() {
     //configurations[MarketContext::simulation] = inputs_->marketConfig("simulation");
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraBuilders;
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
-    return boost::make_shared<EngineFactory>(edCopy, market_, configurations, extraBuilders, extraLegBuilders,
-                                             inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+    return boost::make_shared<EngineFactory>(edCopy, market_, configurations, inputs_->refDataManager(),
+                                             *inputs_->iborFallbackConfig());
 }
 
 void Analytic::buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -299,11 +299,10 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             std::string marketConfig = inputs_->marketConfig("pricing");
             std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
             std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
-	    boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
-                 portfolio_, market_, marketConfig, inputs_->pricingEngine(), inputs_->stressSimMarketParams(),
-                 inputs_->stressScenarioData(), *inputs_->curveConfigs().at(0),
-                 *configurations_.todaysMarketParams, nullptr, extraEngineBuilders, extraLegBuilders,
-                 inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError());
+            boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
+                portfolio_, market_, marketConfig, inputs_->pricingEngine(), inputs_->stressSimMarketParams(),
+                inputs_->stressScenarioData(), *inputs_->curveConfigs().at(0), *configurations_.todaysMarketParams,
+                nullptr, inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError());
             stressTest->writeReport(report, inputs_->stressThreshold());
             reports_[analytic]["stress"] = report;
             CONSOLE("OK");
@@ -320,11 +319,10 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                 std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
                 std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
                 sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
-                    portfolio_, market_, configuration, inputs_->pricingEngine(),
-                    configurations_.simMarketParams, configurations_.sensiScenarioData, recalibrateModels,
-                    inputs_->curveConfigs().at(0), configurations_.todaysMarketParams, ccyConv, extraEngineBuilders,
-                    extraLegBuilders, inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, false,
-                    inputs_->dryRun());
+                    portfolio_, market_, configuration, inputs_->pricingEngine(), configurations_.simMarketParams,
+                    configurations_.sensiScenarioData, recalibrateModels, inputs_->curveConfigs().at(0),
+                    configurations_.todaysMarketParams, ccyConv, inputs_->refDataManager(),
+                    *inputs_->iborFallbackConfig(), true, false, inputs_->dryRun());
                 LOG("Single-threaded sensi analysis created");
             }
             else {
@@ -338,8 +336,7 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                     inputs_->nThreads(), inputs_->asof(), loader, portfolio_, Market::defaultConfiguration,
                     inputs_->pricingEngine(), configurations_.simMarketParams, configurations_.sensiScenarioData,
                     recalibrateModels, inputs_->curveConfigs().at(0), configurations_.todaysMarketParams, ccyConv,
-                    extraTradeBuilders, extraEngineBuilders, extraLegBuilders, inputs_->refDataManager(),
-                    *inputs_->iborFallbackConfig(), true, false, inputs_->dryRun());
+                    inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, false, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
             // FIXME: Why are these disabled?
@@ -512,13 +509,11 @@ boost::shared_ptr<EngineFactory> XvaAnalytic::engineFactory() {
         // link to the sim market here
         QL_REQUIRE(simMarket_, "Simulaton market not set");
         engineFactory_ = boost::make_shared<EngineFactory>(edCopy, simMarket_, configurations,
-                                                 extraEngineBuilders, extraLegBuilders, inputs_->refDataManager(),
-                                                 *inputs_->iborFallbackConfig());
+                                                           inputs_->refDataManager(), *inputs_->iborFallbackConfig());
     } else {
         // we just link to today's market if simulation is not required
-        engineFactory_ = boost::make_shared<EngineFactory>(edCopy, market_, configurations,
-                                                 extraEngineBuilders, extraLegBuilders, inputs_->refDataManager(),
-                                                 *inputs_->iborFallbackConfig());        
+        engineFactory_ = boost::make_shared<EngineFactory>(edCopy, market_, configurations, inputs_->refDataManager(),
+                                                           *inputs_->iborFallbackConfig());
     }
     return engineFactory_;
 }
@@ -779,7 +774,7 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
             inputs_->nThreads(), inputs_->asof(), grid_, samples_, loader_, scenarioGenerator_,
             inputs_->simulationPricingEngine(), inputs_->curveConfigs()[0], configurations_.todaysMarketParams,
             inputs_->marketConfig("simulation"), configurations_.simMarketParams, false, false,
-            boost::make_shared<ore::analytics::ScenarioFilter>(), {}, {}, {}, inputs_->refDataManager(),
+            boost::make_shared<ore::analytics::ScenarioFilter>(), inputs_->refDataManager(),
             *inputs_->iborFallbackConfig(), true, false, cubeFactory, {}, cptyCubeFactory, "xva-simulation");
 
         if (ConsoleLog::instance().enabled())
@@ -804,22 +799,8 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
     Settings::instance().evaluationDate() = inputs_->asof();
 }
 
-
-std::vector<boost::shared_ptr<EngineBuilder>>
-getAmcEngineBuilders(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& grid) {
-    std::vector<boost::shared_ptr<EngineBuilder>> eb;
-    eb.push_back(boost::make_shared<data::CamAmcCurrencySwapEngineBuilder>(cam, grid));
-    eb.push_back(boost::make_shared<data::CamAmcFxOptionEngineBuilder>(cam, grid));
-    eb.push_back(boost::make_shared<data::CamAmcMultiLegOptionEngineBuilder>(cam, grid));
-    eb.push_back(boost::make_shared<data::CamAmcSwapEngineBuilder>(cam, grid));
-    eb.push_back(boost::make_shared<data::LgmAmcBermudanSwaptionEngineBuilder>(cam, grid));
-    // FIXME: Uncomment for release 10
-    // eb.push_back(boost::make_shared<data::ScriptedTradeEngineBuilder>(ScriptLibraryStorage::scriptLibrary, cam, grid));
-    return eb;
-}
-
-
-boost::shared_ptr<EngineFactory> XvaAnalytic::amcEngineFactory() {
+boost::shared_ptr<EngineFactory> XvaAnalytic::amcEngineFactory(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                                               const std::vector<Date>& grid) {
     LOG("XvaAnalytic::engineFactory() called");
     boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->amcPricingEngine());
     edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
@@ -830,13 +811,11 @@ boost::shared_ptr<EngineFactory> XvaAnalytic::amcEngineFactory() {
     configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
     std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders; 
     std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders;
-    auto factory = boost::make_shared<EngineFactory>(edCopy, market_, configurations,
-                                                     extraEngineBuilders, extraLegBuilders,
-                                                     inputs_->refDataManager(),
-                                                     *inputs_->iborFallbackConfig());
+    auto factory = boost::make_shared<EngineFactory>(
+        edCopy, market_, configurations, inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
+        EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, grid), true);
     return factory;
 }
-
 
 void XvaAnalytic::buildAmcPortfolio() {
     LOG("XVA: buildAmcPortfolio");
@@ -846,14 +825,9 @@ void XvaAnalytic::buildAmcPortfolio() {
     std::vector<Date> simDates =
         configurations_.scenarioGeneratorData->withCloseOutLag() && !configurations_.scenarioGeneratorData->withMporStickyDate() ?
         configurations_.scenarioGeneratorData->getGrid()->dates() : configurations_.scenarioGeneratorData->getGrid()->valuationDates();
-
-    LOG("buildAmcPortfolio: Get engine builders");
-    auto eb = getAmcEngineBuilders(model_, simDates);
     
     LOG("buildAmcPortfolio: Register additional engine builders");
-    auto factory = amcEngineFactory();
-    for(auto const& b : eb)
-        factory->registerBuilder(b);
+    auto factory = amcEngineFactory(model_, simDates);
 
     LOG("buildAmcPortfolio: Load Portfolio");
     boost::shared_ptr<Portfolio> portfolio = inputs_->portfolio();
@@ -928,8 +902,8 @@ void XvaAnalytic::amcRun(bool doClassicRun) {
             inputs_->amcPricingEngine(), inputs_->curveConfigs()[0], configurations_.todaysMarketParams,
             inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
             inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
-            inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"), getAmcEngineBuilders, {}, {},
-            inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory);
+            inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"), inputs_->refDataManager(),
+            *inputs_->iborFallbackConfig(), true, cubeFactory);
         if (ConsoleLog::instance().enabled())
             amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);

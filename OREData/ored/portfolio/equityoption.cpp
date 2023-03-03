@@ -34,6 +34,8 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<EquityOption>> EquityOption::reg_("EquityOption");
+
 void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Set the assetName_ as it may have changed after lookup

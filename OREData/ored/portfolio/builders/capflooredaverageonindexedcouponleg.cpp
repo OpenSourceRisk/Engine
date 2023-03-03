@@ -28,6 +28,8 @@
 namespace ore {
 namespace data {
 
+ORE_REGISTER_ENGINE_BUILDER_IMPL(CapFlooredAverageONIndexedCouponLegEngineBuilder)
+
 boost::shared_ptr<FloatingRateCouponPricer>
 CapFlooredAverageONIndexedCouponLegEngineBuilder::engineImpl(const std::string& index,
                                                              const QuantLib::Period& rateComputationPeriod) {

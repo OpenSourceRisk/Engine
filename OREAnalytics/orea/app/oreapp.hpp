@@ -60,7 +60,7 @@ public:
     OREApp(boost::shared_ptr<Parameters> params, bool console = true);
     //! Constructor that assumes we have already assembled input parameters via API
     OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel = 31,
-           Size bufferLogLevel = 15, bool console = false);
+           bool console = false);
 
     //! Destructor
     virtual ~OREApp();
@@ -101,6 +101,11 @@ public:
     std::vector<std::string> getErrors();
     
 protected:
+    //! Populate InputParameters object from classic ORE key-value pairs in Parameters 
+    void buildInputParameters(boost::shared_ptr<InputParameters> inputs,
+                              const boost::shared_ptr<Parameters>& params);
+    vector<string> getFileNames(const string& fileString, const string& path);
+    boost::shared_ptr<CSVLoader> buildCsvLoader(const boost::shared_ptr<Parameters>& params);
     //! Use ORE functioanlity in analytics/analyticsmanager
     void analytics(std::ostream& out);
     //! read setup from params_
@@ -213,15 +218,6 @@ protected:
     boost::shared_ptr<ReportWriter> getReportWriter() const;
     //! Get sensitivity runner
     virtual boost::shared_ptr<SensitivityRunner> getSensitivityRunner();
-    //! Add extra engine builders
-    virtual std::vector<boost::shared_ptr<EngineBuilder>> getExtraEngineBuilders() const { return {}; };
-    //! Add extra leg builders
-    virtual std::vector<boost::shared_ptr<LegBuilder>> getExtraLegBuilders() const { return {}; };
-    //! Add extra trade builders
-    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>>
-    getExtraTradeBuilders(const boost::shared_ptr<TradeFactory>& = {}) const {
-        return {};
-    };
     //! Get parametric var calculator
     virtual boost::shared_ptr<ParametricVarCalculator>
     buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
@@ -286,8 +282,7 @@ protected:
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
 
     boost::shared_ptr<AnalyticsManager> analyticsManager_;
-    //boost::shared_ptr<ore::data::FilteredBufferedLoggerGuard> fbLogger_;
-    boost::shared_ptr<BufferLogger> bLogger_;
+    boost::shared_ptr<FilteredBufferedLoggerGuard> fbLogger_;
 
 private:
     virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }

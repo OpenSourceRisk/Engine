@@ -19,6 +19,8 @@
 #include <orea/aggregation/exposurecalculator.hpp>
 #include <orea/cube/inmemorycube.hpp>
 
+#include <ored/portfolio/trade.hpp>
+
 #include <ql/time/date.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 

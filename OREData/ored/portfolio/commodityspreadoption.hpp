@@ -24,6 +24,7 @@
 namespace ore::data {
 
 class CommoditySpreadOption : public ore::data::Trade {
+    static TradeBuilderRegister<TradeBuilder<CommoditySpreadOption>> reg_;
 
 public:
     CommoditySpreadOption() : ore::data::Trade("CommoditySpreadOption"){}

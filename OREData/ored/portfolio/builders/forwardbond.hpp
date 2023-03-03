@@ -28,6 +28,7 @@
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 #include <qle/instruments/impliedbondspread.hpp>
 #include <qle/pricingengines/discountingforwardbondengine.hpp>
@@ -60,10 +61,10 @@ protected:
 };
 
 class DiscountingForwardBondEngineBuilder : public fwdBondEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(DiscountingForwardBondEngineBuilder)
 public:
     DiscountingForwardBondEngineBuilder()
-        : fwdBondEngineBuilder("DiscountedCashflows" /*the model; dont touch*/,
-                               "DiscountingForwardBondEngine" /*the engine*/) {}
+        : fwdBondEngineBuilder("DiscountedCashflows", "DiscountingForwardBondEngine") {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& id, const Currency& ccy,

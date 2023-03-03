@@ -308,6 +308,9 @@ void updateQuantities(Leg& leg, bool isAveragingFuture, CommodityQuantityFrequen
 namespace ore {
 namespace data {
 
+ORE_REGISTER_LEG_BUILDER_IMPL(CommodityFixedLegBuilder)
+ORE_REGISTER_LEG_BUILDER_IMPL(CommodityFloatingLegBuilder)
+
 Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                                        RequiredFixings& requiredFixings, const string& configuration,
                                        const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
