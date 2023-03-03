@@ -112,9 +112,7 @@ BOOST_AUTO_TEST_CASE(testFxVolWildCards) {
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
         boost::shared_ptr<EngineFactory> engineFactory_full = boost::make_shared<EngineFactory>(engineData, market_full);
-        engineFactory_full->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
         boost::shared_ptr<EngineFactory> engineFactory_wc = boost::make_shared<EngineFactory>(engineData, market_wc);
-        engineFactory_wc->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
         
         
         string portfolioFile = "portfolio.xml";

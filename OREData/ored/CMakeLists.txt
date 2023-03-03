@@ -136,6 +136,7 @@ portfolio/builders/currencyswap.cpp
 portfolio/builders/durationadjustedcms.cpp
 portfolio/builders/equityasianoption.cpp
 portfolio/builders/equitybarrieroption.cpp
+portfolio/builders/equitycompositeoption.cpp
 portfolio/builders/equitydigitaloption.cpp
 portfolio/builders/equitydoublebarrieroption.cpp
 portfolio/builders/equitydoubletouchoption.cpp
