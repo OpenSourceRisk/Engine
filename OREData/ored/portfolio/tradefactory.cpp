@@ -44,9 +44,7 @@ void TradeFactory::addBuilder(const std::string& className, const boost::shared_
                "TradeFactory: duplicate builder for className '" << className << "'.");
 }
 
-boost::shared_ptr<Trade> TradeFactory::build(const string& className) const {
-        return getBuilder(className)->build();
-}
+boost::shared_ptr<Trade> TradeFactory::build(const string& className) const { return getBuilder(className)->build(); }
 
 } // namespace data
 } // namespace ore
