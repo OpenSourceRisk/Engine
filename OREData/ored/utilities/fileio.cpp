@@ -67,12 +67,12 @@ FILE* FileIO::fopen(const char* filename, const char* mode) {
 
     for (Size i = 0; i <= maxRetries(); i++) {
         if (i > 0) {
-            int backoffMillis = currentBackoff * 1000;
             auto em = EventMessage("Error opening file '" + std::string(filename) + "'. Retrying...");
             em.set("retry_count", i);
+            Real backoffMillis = currentBackoff * 1000;
             em.set("retry_interval", backoffMillis);
             WLOG(em);
-            std::this_thread::sleep_for(std::chrono::milliseconds(backoffMillis));
+            std::this_thread::sleep_for(std::chrono::duration<Real>(currentBackoff));
             Real nextBackoff = currentBackoff * 2;
             currentBackoff = (nextBackoff >= maxBackoff()) ? maxBackoff() : nextBackoff;
         }
@@ -91,12 +91,12 @@ bool FileIO::create_directories(const path& p) {
 
     for (Size i = 0; i <= maxRetries(); i++) {
         if (i > 0) {
-            int backoffMillis = currentBackoff * 1000;
             auto em = EventMessage("Error creating directory '" + p.string() + "'. Retrying...");
             em.set("retry_count", i);
+            Real backoffMillis = currentBackoff * 1000;
             em.set("retry_interval", backoffMillis);
             WLOG(em);
-            std::this_thread::sleep_for(std::chrono::milliseconds(backoffMillis));
+            std::this_thread::sleep_for(std::chrono::duration<Real>(currentBackoff));
             Real nextBackoff = currentBackoff * 2;
             currentBackoff = (nextBackoff >= maxBackoff()) ? maxBackoff() : nextBackoff;
         }
@@ -118,12 +118,12 @@ bool FileIO::remove_all(const path& p) {
 
     for (Size i = 0; i <= maxRetries(); i++) {
         if (i > 0) {
-            int backoffMillis = currentBackoff * 1000;
             auto em = EventMessage("Error emptying directory '" + p.string() + "'. Retrying...");
             em.set("retry_count", i);
+            Real backoffMillis = currentBackoff * 1000;
             em.set("retry_interval", backoffMillis);
             WLOG(em);
-            std::this_thread::sleep_for(std::chrono::milliseconds(backoffMillis));
+            std::this_thread::sleep_for(std::chrono::duration<Real>(currentBackoff));
             Real nextBackoff = currentBackoff * 2;
             currentBackoff = (nextBackoff >= maxBackoff()) ? maxBackoff() : nextBackoff;
         }
