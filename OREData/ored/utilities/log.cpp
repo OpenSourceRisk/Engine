@@ -270,6 +270,8 @@ string EventMessage::json() const {
                 value = to_string(boost::any_cast<unsigned int>(p.second));
             } else if (p.second.type() == typeid(unsigned short)) {
                 value = to_string(boost::any_cast<unsigned short>(p.second));
+            } else if (p.second.type() == typeid(float)) {
+                value = to_string(boost::any_cast<float>(p.second));
             } else if (p.second.type() == typeid(QuantLib::Size)) {
                 value = to_string(boost::any_cast<QuantLib::Size>(p.second));
             } else if (p.second.type() == typeid(QuantLib::Real)) {
