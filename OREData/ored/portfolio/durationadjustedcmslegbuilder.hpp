@@ -31,6 +31,7 @@ namespace ore {
 namespace data {
 
 class DurationAdjustedCmsLegBuilder : public ore::data::LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(FixedLegBuilder)
 public:
     DurationAdjustedCmsLegBuilder() : LegBuilder("DurationAdjustedCMS") {}
 
