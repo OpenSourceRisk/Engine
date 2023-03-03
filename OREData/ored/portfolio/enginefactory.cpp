@@ -161,7 +161,7 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
 
 void EngineFactory::registerLegBuilder(const boost::shared_ptr<LegBuilder>& legBuilder, const bool allowOverwrite) {
     if(allowOverwrite)
-        builders_.erase(legBuilder->legType());
+        legBuilders_.erase(legBuilder->legType());
     QL_REQUIRE(legBuilders_.insert(make_pair(legBuilder->legType(), legBuilder)).second,
                "EngineFactory duplicate leg builder for '" << legBuilder->legType()
                                                            << "' - this is an internal error.");
