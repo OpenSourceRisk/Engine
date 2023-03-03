@@ -189,6 +189,7 @@ void MarketDataLoader::populateFixings(
         if (inputs_->eomInflationFixings()) {
             LOG("Adjust inflation fixing dates to the end of the month before the request");
             amendInflationFixingDates(fixings_);
+            amendInflationFixingDates(portfolioFixings_);
         }
 
         if (fixings_.size() > 0)

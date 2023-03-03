@@ -88,6 +88,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     double stdDev = 0;
     double Y = 0;
     double Z = 0;
+    double sigmaY = 0;
     double w1 = arguments_.longAssetFlow->gearing();
     double w2 = arguments_.shortAssetFlow->gearing();
     // Adjust strike for past fixings
@@ -117,9 +118,9 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
         // KirkFormula
         Y = (F2 * w2 + effectiveStrike);
         Z = w1 * F1 / Y;
-        double sigmaTilde = sigma2 * F2 * w2 / Y;
+        sigmaY = sigma2 * F2 * w2 / Y;
 
-        sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaTilde, 2.0) - 2 * sigma1 * sigmaTilde * rho());
+        sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaY, 2.0) - 2 * sigma1 * sigmaY * rho());
 
         stdDev = sigma * sqrt(tte);
 
@@ -142,10 +143,14 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     mp["stdDev"] = stdDev;
     mp["Y"] = Y;
     mp["Z"] = Z;
+    mp["sigma_Y"] = sigmaY;
     mp["quantity"] = arguments_.quantity;
     mp["npv"] = results_.value;
     mp["exerciseDate"] = exerciseDate;
     mp["paymentDate"] = paymentDate;
+    mp["w1"] = w1;
+    mp["w2"] = w2;
+    mp["rho"] = rho();
 }
 
 CommoditySpreadOptionAnalyticalEngine::PricingParameter
