@@ -32,6 +32,7 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 ORE_REGISTER_ENGINE_BUILDER_IMPL(SwapEngineBuilder)
+ORE_REGISTER_ENGINE_BUILDER_IMPL(SwapEngineBuilderOptimised);
 ORE_REGISTER_ENGINE_BUILDER_IMPL(CrossCurrencySwapEngineBuilder)
 ORE_REGISTER_AMC_ENGINE_BUILDER_IMPL(CamAmcSwapEngineBuilder)
 

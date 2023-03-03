@@ -73,6 +73,8 @@ protected:
     \ingroup builders
 */
 class SwapEngineBuilderOptimised : public SwapEngineBuilderBase {
+    ORE_REGISTER_ENGINE_BUILDER(SwapEngineBuilderOptimised);
+
 public:
     SwapEngineBuilderOptimised() : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngineOptimised") {}
 
