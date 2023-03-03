@@ -37,6 +37,7 @@
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/irlgmdata.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
+#include <ored/portfolio/trade.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <orea/engine/amcvaluationengine.hpp>

@@ -31,6 +31,8 @@ using std::vector;
 
 namespace ore::data {
 
+TradeBuilderRegister<TradeBuilder<CommoditySpreadOption>> CommoditySpreadOption::reg_("CommoditySpreadOption");
+
 void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
 
     DLOG("CommoditySpreadOption::build() called for trade " << id());

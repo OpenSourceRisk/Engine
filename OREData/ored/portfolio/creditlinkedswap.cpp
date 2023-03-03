@@ -28,6 +28,8 @@
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<CreditLinkedSwap>> CreditLinkedSwap::reg_("CreditLinkedSwap");
+
 void CreditLinkedSwap::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* n = XMLUtils::getChildNode(node, "CreditLinkedSwapData");

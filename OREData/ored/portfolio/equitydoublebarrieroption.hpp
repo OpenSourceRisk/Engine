@@ -36,6 +36,8 @@ namespace data {
   \ingroup tradedata
 */
 class EquityDoubleBarrierOption : public EquityOptionWithBarrier {
+    static TradeBuilderRegister<TradeBuilder<EquityDoubleBarrierOption>> reg_;
+
 public: 
 	//! Default constructor
     EquityDoubleBarrierOption() : ore::data::Trade("EquityDoubleBarrierOption"), EquityOptionWithBarrier("") {}

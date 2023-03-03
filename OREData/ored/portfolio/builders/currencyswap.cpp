@@ -38,6 +38,8 @@ struct CcyComp {
 };
 } // namespace
 
+ORE_REGISTER_AMC_ENGINE_BUILDER_IMPL(CamAmcCurrencySwapEngineBuilder)
+
 boost::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys,
                                                                              const Currency& base) {
 

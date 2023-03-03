@@ -35,6 +35,7 @@ namespace data {
 */
 
 class YoYCapFloorEngineBuilder : public CachingPricingEngineBuilder<string, const string&> {
+    ORE_REGISTER_ENGINE_BUILDER(YoYCapFloorEngineBuilder)
 public:
     YoYCapFloorEngineBuilder() : CachingEngineBuilder("YYCapModel", "YYCapEngine", {"YYCapFloor"}) {}
 

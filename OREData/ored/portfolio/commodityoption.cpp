@@ -38,6 +38,8 @@ using QuantExt::PriceTermStructure;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<CommodityOption>> CommodityOption::reg_("CommodityOption");
+
 CommodityOption::CommodityOption() : VanillaOptionTrade(AssetClass::COM) { tradeType_ = "CommodityOption"; }
 
 CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionData, const string& commodityName,

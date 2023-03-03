@@ -31,6 +31,8 @@
 namespace ore {
 namespace data {
 
+ORE_REGISTER_ENGINE_BUILDER_IMPL(LinearTsrDurationAdjustedCmsCouponPricerBuilder)
+
 using namespace QuantExt;
 
 boost::shared_ptr<FloatingRateCouponPricer>

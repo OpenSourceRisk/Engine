@@ -70,8 +70,6 @@ public:
                         const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
                         const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams = nullptr,
                         const bool nonShiftedBaseCurrencyConversion = false,
-                        std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
-                        std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
                         const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                         const bool continueOnError = false, bool analyticFxSensis = false, bool dryRun = false);
@@ -116,9 +114,7 @@ protected:
     //! initialize the cube with the appropriate dimensions
     virtual void initializeCube(boost::shared_ptr<NPVSensiCube>& cube) const;
     //! build engine factory
-    virtual boost::shared_ptr<EngineFactory>
-    buildFactory(const std::vector<boost::shared_ptr<EngineBuilder>> extraBuilders = {},
-                 const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders = {}) const;
+    virtual boost::shared_ptr<EngineFactory> buildFactory() const;
     //! reset and rebuild the portfolio to make use of the appropriate engine factory
     virtual void resetPortfolio(const boost::shared_ptr<EngineFactory>& factory);
     /*! build the ScenarioSimMarket that will be used by ValuationEngine and
@@ -147,8 +143,6 @@ protected:
 
     // if true, convert sensis to base currency using the original (non-shifted) FX rate
     bool nonShiftedBaseCurrencyConversion_;
-    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
-    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
     boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
     // if true, the processing is continued even on build errors

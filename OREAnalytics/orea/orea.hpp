@@ -22,6 +22,7 @@
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
+#include <orea/app/marketdatainmemoryloader.hpp>
 #include <orea/app/marketdataloader.hpp>
 #include <orea/app/oreapp.hpp>
 #include <orea/app/parameters.hpp>

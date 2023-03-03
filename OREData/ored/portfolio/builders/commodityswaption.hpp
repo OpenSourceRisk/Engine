@@ -49,6 +49,7 @@ protected:
 \ingroup builders
 */
 class CommoditySwaptionAnalyticalEngineBuilder : public CommoditySwaptionEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(CommoditySwaptionAnalyticalEngineBuilder)
 public:
     CommoditySwaptionAnalyticalEngineBuilder() : CommoditySwaptionEngineBuilder("AnalyticalApproximation") {}
 
@@ -67,6 +68,7 @@ protected:
 \ingroup builders
 */
 class CommoditySwaptionMonteCarloEngineBuilder : public CommoditySwaptionEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(CommoditySwaptionMonteCarloEngineBuilder)
 public:
     CommoditySwaptionMonteCarloEngineBuilder() : CommoditySwaptionEngineBuilder("MonteCarlo") {}
 

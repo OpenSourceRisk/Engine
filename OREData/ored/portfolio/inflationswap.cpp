@@ -21,6 +21,8 @@
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<InflationSwap>> InflationSwap::reg_("InflationSwap");
+
 InflationSwap::InflationSwap(const Envelope& env, const vector<LegData>& legData)
     : Swap(env, legData, "InflationSwap") {}
 

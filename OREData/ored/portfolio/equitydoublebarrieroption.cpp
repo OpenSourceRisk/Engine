@@ -21,6 +21,9 @@
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<EquityDoubleBarrierOption>>
+    EquityDoubleBarrierOption::reg_("EquityDoubleBarrierOption");
+
 void EquityDoubleBarrierOption::checkBarriers() {
     QL_REQUIRE(barrier().levels().size() == 2, "Invalid number of barrier levels. Must have two.");
     QL_REQUIRE(barrier().style().empty() || barrier().style() == "American", "Only American barrier style supported");

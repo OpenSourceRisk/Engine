@@ -34,6 +34,8 @@ using std::string;
 using std::vector;
 
 class CreditLinkedSwap : public Trade {
+    static TradeBuilderRegister<TradeBuilder<CreditLinkedSwap>> reg_;
+
 public:
     CreditLinkedSwap() : Trade("CreditLinkedSwap") {}
     CreditLinkedSwap(const std::string& creditCurveId, const bool settlesAccrual, const Real fixedRecoveryRate,

@@ -37,6 +37,7 @@ namespace data {
 \ingroup builders
 */
 class CommoditySwapEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&> {
+    ORE_REGISTER_ENGINE_BUILDER(CommoditySwapEngineBuilder)
 public:
     CommoditySwapEngineBuilder()
         : CachingEngineBuilder("DiscountedCashflows", "CommoditySwapEngine", {"CommoditySwap"}) {}

@@ -37,6 +37,7 @@ namespace data {
     \ingroup builders
  */
 class EquityForwardEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&> {
+    ORE_REGISTER_ENGINE_BUILDER(EquityForwardEngineBuilder)
 public:
     EquityForwardEngineBuilder()
         : CachingEngineBuilder("DiscountedCashflows", "DiscountingEquityForwardEngine", {"EquityForward"}) {}

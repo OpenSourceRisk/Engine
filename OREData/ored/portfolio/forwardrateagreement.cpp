@@ -28,6 +28,8 @@ using namespace std;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<ForwardRateAgreement>> ForwardRateAgreement::reg_("ForwardRateAgreement");
+
 void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     const boost::shared_ptr<Market> market = engineFactory->market();
 

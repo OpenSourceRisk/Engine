@@ -89,6 +89,7 @@
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/timer/timer.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
