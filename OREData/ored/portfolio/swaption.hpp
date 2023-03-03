@@ -37,6 +37,7 @@ namespace data {
   \ingroup tradedata
 */
 class Swaption : public Trade {
+    static TradeBuilderRegister<TradeBuilder<Swaption>> reg_;
 public:
     Swaption() : Trade("Swaption") {}
     Swaption(const Envelope& env, const OptionData& optionData, const vector<LegData>& legData)

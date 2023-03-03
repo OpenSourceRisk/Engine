@@ -85,8 +85,52 @@ public:
         vector<Period> shiftTerms;
     };
 
+    struct CurveShiftParData : SensitivityScenarioData::CurveShiftData {
+        CurveShiftParData(SensitivityScenarioData::CurveShiftData c) {
+            shiftType = c.shiftType;
+            shiftSize = c.shiftSize;
+            shiftTenors = c.shiftTenors;
+        }
+        CurveShiftParData() {}
+        vector<string> parInstruments;
+        bool parInstrumentSingleCurve = true;
+
+        // Allows direct specification of discount curve if parInstrumentSingleCurve is false
+        // If not given, we default to old behaviour of using the market's discount curve for
+        // that currency. This string will be an index name that is searched for in the market.
+        std::string discountCurve;
+
+        // Allow specification of the other currency when creating cross currency basis swap
+        // par instruments for discount curves. If left empty, we take the base currency of the
+        // run as the other leg's currency.
+        std::string otherCurrency;
+
+        map<string, string> parInstrumentConventions;
+    };
+
+    struct CapFloorVolShiftParData : SensitivityScenarioData::CapFloorVolShiftData {
+        CapFloorVolShiftParData(SensitivityScenarioData::CapFloorVolShiftData c) {
+            shiftType = c.shiftType;
+            shiftSize = c.shiftSize;
+            shiftExpiries = c.shiftExpiries;
+            shiftStrikes = c.shiftStrikes;
+            indexName = c.indexName;
+        }
+        CapFloorVolShiftParData() {}
+        vector<string> parInstruments;
+        bool parInstrumentSingleCurve = true;
+
+        // Allows direct specification of discount curve
+        // If not given, we default to old behaviour of using the market's discount curve for
+        // that currency. This string will be an index name that is searched for in the market.
+        std::string discountCurve;
+
+        map<string, string> parInstrumentConventions;
+    };
+
     //! Default constructor
-    SensitivityScenarioData() : computeGamma_(true), useSpreadedTermStructures_(false){};
+    SensitivityScenarioData(bool parConversion = true)
+        : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion) {};
 
     //! \name Inspectors
     //@{
@@ -148,6 +192,8 @@ public:
 
     //! \name Setters
     //@{
+    bool& parConversion() { return parConversion_; }
+
     map<string, boost::shared_ptr<CurveShiftData>>& discountCurveShiftData() { return discountCurveShiftData_; }
     map<string, boost::shared_ptr<CurveShiftData>>& indexCurveShiftData() { return indexCurveShiftData_; }
     map<string, boost::shared_ptr<CurveShiftData>>& yieldCurveShiftData() { return yieldCurveShiftData_; }
@@ -244,10 +290,17 @@ protected:
     vector<pair<string, string>> crossGammaFilter_;
     bool computeGamma_;
     bool useSpreadedTermStructures_;
+    bool parConversion_;
 
     /*! Set of risk factor keys for which a two sided delta has been configured.
     */
     std::set<RiskFactorKey::KeyType> twoSidedDeltas_;
+
+private:
+    void parDataFromXML(XMLNode* child, CurveShiftParData& data);
+
+    //! toXML helper method
+    XMLNode* parDataToXML(ore::data::XMLDocument& doc, const boost::shared_ptr<CurveShiftData>& csd) const;
 };
 } // namespace analytics
 } // namespace ore

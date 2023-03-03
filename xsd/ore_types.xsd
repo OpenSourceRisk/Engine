@@ -895,4 +895,17 @@
     </xs:all>
   </xs:complexType>
 
+  <xs:simpleType name="CurrencyHedgedIndexRebalancingStrategy">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="EndOfMonth"/>
+    </xs:restriction>
+   </xs:simpleType>
+    
+  <xs:simpleType name="CurrencyHedgedIndexRehedgingStrategy">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="None"/>
+      <xs:enumeration value="Daily"/>
+    </xs:restriction>
+  </xs:simpleType>
+    
 </xs:schema>

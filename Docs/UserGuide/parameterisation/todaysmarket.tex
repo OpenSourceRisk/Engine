@@ -1,0 +1,489 @@
+%--------------------------------------------------------
+\subsection{Market: {\tt todaysmarket.xml}}\label{sec:market}
+%--------------------------------------------------------
+
+This configuration file determines the subset of the 'market' universe which is going to be built by ORE. It is the
+user's responsibility to make sure that this subset is sufficient to cover the portfolio to be analysed. If it is not,
+the application will complain at run time and exit.
+
+\medskip We assume that the market configuration is provided in file {\tt todaysmarket.xml}, however, the file name can
+be chosen by the user. The file name needs to be entered into the master configuration file {\tt ore.xml}, see section
+\ref{sec:master_input}.
+
+\medskip 
+The file starts and ends with the opening and closing tags {\tt <TodaysMarket>} 
+and {\tt </TodaysMarket>}. The file then contains configuration blocks for
+\begin{itemize}
+\item Discounting curves
+\item Index curves (to project index fixings)
+\item Yield curves (for other purposes, e.g. as benchmark curve for bond pricing)
+\item Swap index curves (to project Swap rates)
+\item FX spot rates
+\item Inflation index curves (to project zero or yoy inflation fixings)
+\item Equity curves (to project forward prices)
+\item Default curves
+\item Swaption volatility structures
+\item Cap/Floor volatility structures
+\item FX volatility structures
+\item Inflation Cap/Floor volatility surfaces
+\item Equity volatility structures
+\item CDS volatility structures
+\item Base correlation structures
+\item Correlation structures
+\item Securities
+\end{itemize}
+
+There can be alternative versions of each block each labeled with a unique identifier (e.g. Discount curve block with ID
+'default', discount curve block with ID 'ois', another one with ID 'xois', etc). The purpose of these IDs will be
+explained at the end of this section. We now discuss each block's layout.
+
+\subsubsection{Discounting Curves} 
+
+We pick one discounting curve block as an example here (see {\tt Examples/Input/todaysmarket.xml}), the one with ID 'ois' 
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <DiscountingCurves id="ois">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
+    <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
+    <DiscountingCurve currency="GBP">Yield/GBP/GBP1D</DiscountingCurve>
+    <DiscountingCurve currency="CHF">Yield/CHF/CHF6M</DiscountingCurve>
+    <DiscountingCurve currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
+    <!-- ... -->
+  </DiscountingCurves>
+\end{minted}
+\caption{Discount curve block with ID 'ois'}
+\label{lst:discountcurve_spec}
+\end{listing}
+
+This block instructs ORE to build five discount curves for the indicated currencies. The string within the tags,
+e.g. Yield/EUR/EUR1D, uniquely identifies the curve to be built.  Curve Yield/EUR/EUR1D is defined in the curve
+configuration file explained in section \ref{sec:curveconfig} below. In this case ORE is instructed to build an Eonia
+Swap curve made of Overnight Deposit and Eonia Swap quotes. The right most token of the string Yield/EUR/EUR1D (EUR1D)
+is user defined, the first two tokens Yield/EUR have to be used to point to a yield curve in currency EUR.
+ 
+\subsubsection{Index Curves} 
+
+See an excerpt of the index curve block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<IndexForwardingCurves id="default">
+  <Index name="EUR-EURIBOR-3M">Yield/EUR/EUR3M</Index>
+  <Index name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</Index>
+  <Index name="EUR-EURIBOR-12M">Yield/EUR/EUR12M</Index>
+  <Index name="EUR-EONIA">Yield/EUR/EUR1D</Index>
+  <Index name="USD-LIBOR-3M">Yield/USD/USD3M</Index>
+  <!-- ... -->
+</IndexForwardingCurves>
+\end{minted}
+\caption{Index curve block with ID 'default'}
+\label{lst:indexcurve_spec}
+\end{listing}
+
+This block of curve specifications instructs ORE to build another set of yield curves, unique strings
+(e.g. Yield/EUR/EUR6M etc.) point to the {\tt curveconfig.xml} file where these curves are defined. Each curve is then
+associated with an index name (of format Ccy-IndexName-Tenor, e.g. EUR-EURIBOR-6M) so that ORE will project the
+respective index using the selected curve (e.g. Yield/EUR/EUR6M).
+
+\subsubsection{Yield Curves}
+
+See an excerpt of the yield curve block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<YieldCurves id="default">
+  <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
+  <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+  <!-- ... -->
+</YieldCurves>
+\end{minted}
+\caption{Yield curve block with ID 'default'}
+\label{lst:yieldcurve_spec}
+\end{listing}
+
+This block of curve specifications instructs ORE to build another set of yield curves, unique strings
+(e.g. Yield/EUR/EUR6M etc.) point to the {\tt curveconfig.xml} file where these curves are defined. Other than
+discounting and index curves the yield curves in this block are not tied to a particular purpose. The curves defined in
+this block typically include
+
+\begin{itemize}
+\item additional curves needed in the XVA post processor, e.g. for the FVA calculation
+\item benchmark curves used for bond pricing
+\end{itemize}
+
+\subsubsection{Swap Index Curves}
+
+The following is an excerpt of the swap index curve block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SwapIndexCurves id="default">
+  <SwapIndex name="EUR-CMS-1Y">
+    <Index>EUR-EURIBOR-6M</Index>
+    <Discounting>EUR-EONIA</Discounting>
+  </SwapIndex>
+  <SwapIndex name="EUR-CMS-30Y">
+    <Index>EUR-EURIBOR-6M</Index>
+    <Discounting>EUR-EONIA</Discounting>
+  </SwapIndex>
+  <!-- ... -->
+</SwapIndexCurves>
+\end{minted}
+\caption{Swap index curve block with ID 'default'}
+\label{lst:swapindexcurve_spec}
+\end{listing}
+
+These instructions do not build any additional curves. They only build the respective swap index objects and associate
+them with the required index forwarding and discounting curves already built above. This enables a swap index to project
+the fair rate of forward starting Swaps. Swap indices are also containers for conventions. Swaption volatility surfaces
+require two swap indices each available in the market object, a long term and a short term swap index. The curve
+configuration file below will show that in particular the required short term index has term 1Y, and the required long
+term index has 30Y term. This is why we build these two indices at this point.
+
+\subsubsection{FX Spot}
+
+The following is an excerpt of the FX spot block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<FxSpots id="default">
+  <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
+  <FxSpot pair="EURGBP">FX/EUR/GBP</FxSpot>
+  <FxSpot pair="EURCHF">FX/EUR/CHF</FxSpot>
+  <FxSpot pair="EURJPY">FX/EUR/JPY</FxSpot>
+  <!-- ... -->
+</FxSpots>
+\end{minted}
+\caption{FX spot block with ID 'default'}
+\label{lst:fxspot_spec}
+\end{listing}
+
+This block instructs ORE to provide four FX quotes, all quoted with target currency EUR so
+that foreign currency amounts can be converted into EUR via multiplication with that rate.
+ 
+\subsubsection{FX Volatilities}
+
+The following is an excerpt of the FX Volatilities block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<FxVolatilities id="default">
+  <FxVolatility pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
+  <FxVolatility pair="EURGBP">FXVolatility/EUR/GBP/EURGBP</FxVolatility>
+  <FxVolatility pair="EURCHF">FXVolatility/EUR/CHF/EURCHF</FxVolatility>
+  <FxVolatility pair="EURJPY">FXVolatility/EUR/JPY/EURJPY</FxVolatility>
+  <!-- ... -->
+</FxVolatilities>
+\end{minted}
+\caption{FX volatility block with ID 'default'}
+\label{lst:fxvol_spec}
+\end{listing}
+
+This instructs ORE to build four FX volatility structures for all FX pairs with target currency EUR, see curve
+configuration file for the definition of the volatility structure.
+
+\subsubsection{Swaption Volatilities}
+
+The following is an excerpt of the Swaption Volatilities block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SwaptionVolatilities id="default">
+  <SwaptionVolatility currency="EUR">SwaptionVolatility/EUR/EUR_SW_N</SwaptionVolatility>
+  <SwaptionVolatility currency="USD">SwaptionVolatility/USD/USD_SW_N</SwaptionVolatility>
+  <SwaptionVolatility currency="GBP">SwaptionVolatility/GBP/GBP_SW_N</SwaptionVolatility>
+  <SwaptionVolatility currency="CHF">SwaptionVolatility/CHF/CHF_SW_N</SwaptionVolatility>
+  <SwaptionVolatility currency="JPY">SwaptionVolatility/CHF/JPY_SW_N</SwaptionVolatility>
+</SwaptionVolatilities>
+\end{minted}
+\caption{Swaption volatility block with ID 'default'}
+\label{lst:swaptionvol_spec}
+\end{listing}
+
+This instructs ORE to build five Swaption volatility structures, see the curve configuration file for the definition of
+the volatility structure. The latter token (e.g. EUR\_SW\_N) is user defined and will be found in the curve
+configuration's CurveId tag.
+
+\subsubsection{Cap/Floor Volatilities}
+
+The following is an excerpt of the Cap/Floor Volatilities block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CapFloorVolatilities id="default">
+  <CapFloorVolatility currency="EUR">CapFloorVolatility/EUR/EUR_CF_N</CapFloorVolatility>
+  <CapFloorVolatility currency="USD">CapFloorVolatility/USD/USD_CF_N</CapFloorVolatility>
+  <CapFloorVolatility currency="GBP">CapFloorVolatility/GBP/GBP_CF_N</CapFloorVolatility>
+</CapFloorVolatilities>
+\end{minted}
+\caption{Cap/Floor volatility block with ID 'default'}
+\label{lst:capfloorvol_spec}
+\end{listing}
+
+This instructs ORE to build three Cap/Floor volatility structures, see the curve configuration file for the definition
+of the volatility structure. The latter token (e.g. EUR\_CF\_N) is user defined and will be found in the curve
+configuration's CurveId tag.
+
+\subsubsection{Default Curves}
+
+The following is an excerpt of the Default Curves block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<DefaultCurves id="default">
+  <DefaultCurve name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
+  <DefaultCurve name="CPTY_A">Default/USD/CUST_A_SR_USD</DefaultCurve>
+  <DefaultCurve name="CPTY_B">Default/USD/CUST_A_SR_USD</DefaultCurve>
+  <!-- ... -->
+</DefaultCurves>
+\end{minted}
+\caption{Default curves block with ID 'default'}
+\label{lst:defaultcurve_spec}
+\end{listing}
+
+This instructs ORE to build a set of default probability curves, again defined in the curve configuration file. Each
+curve is then associated with a name (BANK, CUST\_A) for subsequent lookup.  As before, the last token
+(e.g. BANK\_SR\_USD) is user defined and will be found in the curve configuration's CurveId tag.
+
+\subsubsection{Securities}\label{sssec:securities}
+
+The following is an excerpt of the Security block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+	%\hrule\medskip
+	\begin{minted}[fontsize=\footnotesize]{xml}
+<Securities id="default">
+  <Security name="SECURITY_1">Security/SECURITY_1</Security>
+</Securities>
+	\end{minted}
+	\caption{Securities block with ID 'default'}
+	\label{lst:secspread_spec}
+\end{listing}
+
+The pricing of bonds includes (among other components) a security specific spread and rate. 
+This block links a security name to a spread and rate pair defined in the curve configuration file. This name may then be referenced 
+as the security id in the bond trade definition.
+
+\subsubsection{Equity Curves}
+The following is an excerpt of the Equity curves block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityCurves id="default">
+  <EquityCurve name="SP5">Equity/USD/SP5</EquityCurve>
+  <EquityCurve name="Lufthansa">Equity/EUR/Lufthansa</EquityCurve>
+</EquityCurves>
+\end{minted}
+\caption{Equity curves block with ID 'default'}
+\label{lst:eqcurve_spec}
+\end{listing}
+
+This instructs ORE to build a set of equity curves, again defined in the curve configuration file. Each equity curve 
+after construction will consist of a spot equity price, as well as a term structure of dividend yields, which can be 
+used to determine forward prices. This object is then associated with a name (e.g. SP5) for subsequent lookup. 
+
+\subsubsection{Equity Volatilities}
+
+The following is an excerpt of the equity volatilities block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityVolatilities id="default">
+  <EquityVolatility name="SP5">EquityVolatility/USD/SP5</EquityVolatility>
+  <EquityVolatility name="Lufthansa">EquityVolatility/EUR/Lufthansa</EquityVolatility>
+</EquityVolatilities>
+\end{minted}
+\caption{EQ volatility block with ID 'default'}
+\label{lst:eqvol_spec}
+\end{listing}
+
+This instructs ORE to build two equity volatility structures for SP5 and Lufthansa, respectively. See the curve
+configuration file for the definition of the equity volatility structure.
+
+
+\subsubsection{Inflation Index Curves}
+
+The following is an excerpt of the Zero Inflation Index Curves block with ID 'default' from the sample example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<ZeroInflationIndexCurves id="default">
+    <ZeroInflationIndexCurve name="EUHICPXT">
+        Inflation/EUHICPXT/EUHICPXT_ZC_Swaps
+    </ZeroInflationIndexCurve>
+    <ZeroInflationIndexCurve name="FRHICP">
+        Inflation/FRHICP/FRHICP_ZC_Swaps
+    </ZeroInflationIndexCurve>
+    <ZeroInflationIndexCurve name="UKRPI">
+        Inflation/UKRPI/UKRPI_ZC_Swaps
+    </ZeroInflationIndexCurve>
+    <ZeroInflationIndexCurve name="USCPI">
+        Inflation/USCPI/USCPI_ZC_Swaps
+    </ZeroInflationIndexCurve>
+    ...
+</ZeroInflationIndexCurves>
+\end{minted}
+\caption{Zero Inflation Index Curves block with ID 'default'}
+\label{lst:zeroinflationindexcurve_spec}
+\end{listing}
+
+This instructs ORE to build a set of zero inflation index curves, which are defined in the curve configuration
+file. Each curve is then associated with an index name (like e.g. EUHICPXT or UKRPI). The last token
+(e.g. EUHICPXT\_ZC\_Swap) is user defined and will be found in the curve configuration's CurveId tag.
+
+In a similar way, Year on Year index curves are specified:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <YYInflationIndexCurves id="default">
+      <YYInflationIndexCurve name="EUHICPXT">
+          Inflation/EUHICPXT/EUHICPXT_YY_Swaps
+      </YYInflationIndexCurve>
+      ...
+  </YYInflationIndexCurves>
+\end{minted}
+\caption{YoY Inflation Index Curves block with ID 'default'}
+\label{lst:yoyinflationindexcurve_spec}
+\end{listing}
+
+Note that the index name is the same as in the corresponding zero index curve definition, but the token corresponding to
+the CurveId tag is different. This is because the actual underlying index (and in particular its fixings) are shared
+between the two index types, while different projection curves are used to forecast future index realisations.
+
+\subsubsection{Inflation Cap/Floor Volatility Surfaces}
+
+The following is an excerpt of the Inflation Cap/Floor Volatility Surfaces blocks with ID 'default' from the sample example
+file:
+
+{
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <YYInflationCapFloorVolatilities id="default">
+    <YYInflationCapFloorVolatility name="EUHICPXT">
+        InflationCapFloorVolatility/EUHICPXT/EUHICPXT_YY_CF
+    </InflationCapFloorVolatility>
+  </YYInflationCapFloorVolatilities>
+
+  <ZeroInflationCapFloorVolatilities id="default">
+    <ZeroInflationCapFloorVolatility name="UKRPI">
+        InflationCapFloorVolatility/UKRPI/UKRPI_ZC_CF
+    </ZeroInflationCapFloorVolatility>
+    <ZeroInflationCapFloorVolatility name="EUHICPXT">
+        InflationCapFloorVolatility/EUHICPXT/EUHICPXT_ZC_CF
+    </ZeroInflationCapFloorVolatility>
+    <ZeroInflationCapFloorVolatility name="USCPI">
+        InflationCapFloorVolatility/USCPI/USCPI_ZC_CF
+    </ZeroInflationCapFloorVolatility>
+  </ZeroInflationCapFloorVolatilities>
+\end{minted}
+\caption{Inflation Cap/Floor Volatility Surfaces block with ID 'default'}
+\label{lst:inflation_cap_floor_surface_spec}
+\end{listing}
+
+This instructs ORE to build a set of year-on-year and zero inflation cap floor volatility surfaces, which are defined in the curve
+configuration file. Each surface is associated with an index name. The last token (e.g. EUHICPXT\_ZC\_CF) is user defined
+and will be found in the curve configuration's CurveId tag.
+
+\subsubsection{CDS Volatility Structures}
+
+CDS volatility structures are configured as follows
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CDSVolatilities id="default">
+   <CDSVolatility name="CDSVOL_A">CDSVolatility/CDXIG</CDSVolatility>
+   <CDSVolatility name="CDSVOL_B">CDSVolatility/CDXHY</CDSVolatility>
+  </CDSVolatilities>
+\end{minted}
+\caption{CDS volatility structure block with ID 'default'}
+\label{lst:cdsvol_spec}
+\end{listing}
+
+The composition of the CDS volatility structures is defined in the curve configuration.
+
+\subsubsection{Base Correlation Structures}
+
+Base correlation structures are configured as follows
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <BaseCorrelations id="default">
+   <BaseCorrelation name="CDXIG">BaseCorrelation/CDXIG</BaseCorrelation>
+  </BaseCorrelations>
+\end{minted}
+\caption{Base Correlations block with ID 'default'}
+\label{lst:basecorr_spec}
+\end{listing}
+
+The composition of the base correlation structure is defined in the curve configuration.
+
+\subsubsection{Correlation Structures}
+
+Correlation structures are configured as follows
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+ <Correlations id="default">
+      <Correlation name="EUR-CMS-10Y:EUR-CMS-1Y">Correlation/EUR-CORR</Correlation>  
+      <Correlation name="USD-CMS-10Y:USD-CMS-1Y">Correlation/USD-CORR</Correlation>
+ </Correlations>
+\end{minted}
+\caption{Correlations block with ID 'default'}
+\label{lst:corr_spec}
+\end{listing}
+
+The composition of the correlation structure is defined in the curve configuration.
+\subsubsection{Market Configurations}
+
+Finally, representatives of each type of block (Discount Curves, Index Curves, Volatility structures, etc, up to
+Inflation Cap/Floor Price Surfaces) can be bundled into a market configuration. This is done by adding the following to
+the {\tt todaysmarket.xml} file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Configuration id="default">
+  <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
+</Configuration>
+<Configuration id="collateral_inccy">
+  <DiscountingCurvesId>ois</DiscountingCurvesId>
+</Configuration>
+<Configuration id="collateral_eur">
+  <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
+</Configuration>
+<Configuration id="libor">
+  <DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
+</Configuration>
+\end{minted}
+\caption{Market configurations}
+\label{lst:config_spec}
+\end{listing}
+
+When ORE constructs the market object, all market configurations will be build and labelled using the 'Configuration
+Id'.  This allows configuring a market setup for different alternative purposes side by side in the same {\tt
+  todaysmarket.xml} file. Typical use cases are
+\begin{itemize}
+\item different discount curves needed for model calibration and risk factor evolution, respectively
+\item different discount curves needed for collateralised and uncollateralised derivatives pricing.
+\end{itemize}
+The former is actually used throughout the {\tt Examples} section. Each master input file {\tt ore.xml} has a Markets
+section (see \ref{sec:master_input}) where four market configuration IDs have to be provided - the ones used for
+'lgmcalibration', 'fxcalibration', 'pricing' and 'simulation' (i.e. risk factor evolution).
+
+\medskip The configuration ID concept extends across all curve and volatility objects though currently used only to
+distinguish discounting.

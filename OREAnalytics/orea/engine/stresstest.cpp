@@ -52,12 +52,10 @@ namespace analytics {
 StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                        const boost::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
                        const boost::shared_ptr<ore::data::EngineData>& engineData,
-                       boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                       const boost::shared_ptr<StressTestScenarioData>& stressData, 
+                       const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                       const boost::shared_ptr<StressTestScenarioData>& stressData,
                        const CurveConfigurations& curveConfigs, const TodaysMarketParameters& todaysMarketParams,
                        boost::shared_ptr<ScenarioFactory> scenarioFactory,
-                       std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
-                       std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
                        const boost::shared_ptr<ReferenceDataManager>& referenceData,
                        const IborFallbackConfig& iborFallbackConfig, bool continueOnError) {
 
@@ -79,8 +77,8 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     configurations[MarketContext::pricing] = marketConfiguration;
     auto ed = boost::make_shared<EngineData>(*engineData);
     ed->globalParameters()["RunType"] = "Stress";
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
-        ed, simMarket, configurations, extraEngineBuilders, extraLegBuilders, referenceData, iborFallbackConfig);
+    boost::shared_ptr<EngineFactory> factory =
+        boost::make_shared<EngineFactory>(ed, simMarket, configurations, referenceData, iborFallbackConfig);
 
     LOG("Reset and Build Portfolio");
     portfolio->reset();
@@ -113,15 +111,16 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     shiftedNPV_.clear();
     delta_.clear();
     labels_.clear();
-    for (Size i = 0; i < portfolio->size(); ++i) {
+    size_t i = 0;
+    for (auto tradeIt = portfolio->trades().begin(); tradeIt != portfolio->trades().end(); ++tradeIt, ++i) {
+        string tradeId = tradeIt->first;
         Real npv0 = cube->getT0(i, 0);
-        string id = portfolio->trades()[i]->id();
-        trades_.insert(id);
-        baseNPV_[id] = npv0;
+        trades_.insert(tradeId);
+        baseNPV_[tradeId] = npv0;
         for (Size j = 0; j < scenarioGenerator->samples(); ++j) {
             string label = scenarioGenerator->scenarios()[j]->label();
             Real npv = cube->get(i, 0, j, 0);
-            pair<string, string> p(id, label);
+            pair<string, string> p(tradeId, label);
             shiftedNPV_[p] = npv;
             delta_[p] = npv - npv0;
             labels_.insert(label);

@@ -308,9 +308,12 @@ void updateQuantities(Leg& leg, bool isAveragingFuture, CommodityQuantityFrequen
 namespace ore {
 namespace data {
 
+ORE_REGISTER_LEG_BUILDER_IMPL(CommodityFixedLegBuilder)
+ORE_REGISTER_LEG_BUILDER_IMPL(CommodityFloatingLegBuilder)
+
 Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                                        RequiredFixings& requiredFixings, const string& configuration,
-                                       const QuantLib::Date& openEndDateReplacement) const {
+                                       const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
 
     // Check that our leg data has commodity fixed leg data
     auto fixedLegData = boost::dynamic_pointer_cast<CommodityFixedLegData>(data.concreteLegData());
@@ -398,7 +401,7 @@ Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_
         commodityFixedLeg.push_back(boost::make_shared<SimpleCashFlow>(cp->amount(), pmtDate));
     }
 
-    applyIndexing(commodityFixedLeg, data, engineFactory, requiredFixings, openEndDateReplacement);
+    applyIndexing(commodityFixedLeg, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     addToRequiredFixings(commodityFixedLeg, boost::make_shared<FixingDateGetter>(requiredFixings));
 
     addToRequiredFixings(commodityFixedLeg, boost::make_shared<ore::data::FixingDateGetter>(requiredFixings));
@@ -408,7 +411,7 @@ Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_
 
 Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                                           RequiredFixings& requiredFixings, const string& configuration,
-                                          const QuantLib::Date& openEndDateReplacement) const {
+                                          const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
 
     // allAveraging_ flag should be reset to false before each build. If we do not do this, the allAveraging_
     // flag may have been set from building a different leg previously
@@ -685,7 +688,7 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
         }
     } else {
         // standard indexing approach
-        applyIndexing(leg, data, engineFactory, requiredFixings, openEndDateReplacement);
+        applyIndexing(leg, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     }
 
     addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(requiredFixings));

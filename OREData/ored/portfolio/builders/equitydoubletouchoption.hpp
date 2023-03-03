@@ -74,6 +74,7 @@ protected:
     \ingroup portfolio
  */
 class EquityDoubleTouchOptionAnalyticEngineBuilder : public EquityDoubleTouchOptionEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(EquityDoubleTouchOptionAnalyticEngineBuilder)
 public:
     EquityDoubleTouchOptionAnalyticEngineBuilder()
         : EquityDoubleTouchOptionEngineBuilder("GarmanKohlhagen", "AnalyticDoubleBarrierBinaryEngine") {}

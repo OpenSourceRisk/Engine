@@ -26,17 +26,18 @@
 #include <ql/math/interpolations/interpolation2d.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
-#include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
+#include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
 
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
-class SpreadedCPIVolatilitySurface : public QuantLib::CPIVolatilitySurface, public LazyObject {
+class SpreadedCPIVolatilitySurface : public QuantExt::CPIVolatilitySurface, public LazyObject {
 public:
     // warning we assume that volatilities are retrieved with obLag = -1D, i.e. using the standard lag from the ts
-    SpreadedCPIVolatilitySurface(const Handle<CPIVolatilitySurface>& baseVol, const std::vector<Date>& optionDates,
+    SpreadedCPIVolatilitySurface(const Handle<QuantExt::CPIVolatilitySurface>& baseVol,
+                                 const std::vector<Date>& optionDates,
                                  const std::vector<Real>& strikes,
                                  const std::vector<std::vector<Handle<Quote>>>& volSpreads);
     Rate minStrike() const override;
@@ -46,13 +47,15 @@ public:
     const Date& referenceDate() const override;
     void update() override;
     void deepUpdate() override;
+    QuantLib::Real atmStrike(const QuantLib::Date& maturity,
+                             const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days)) const override;
 
 protected:
     Volatility volatilityImpl(Time length, Rate strike) const override;
     void performCalculations() const override;
 
 private:
-    Handle<CPIVolatilitySurface> baseVol_;
+    Handle<QuantExt::CPIVolatilitySurface> baseVol_;
     std::vector<Date> optionDates_;
     std::vector<Real> strikes_;
     std::vector<std::vector<Handle<Quote>>> volSpreads_;

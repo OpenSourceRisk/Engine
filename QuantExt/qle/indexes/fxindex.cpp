@@ -57,8 +57,8 @@ Real FxRateQuote::value() const {
     if (fixingDays_ == 0)
         return spotQuote_->value();
     else {
-        QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(),
-                   "FxRateQuote: empty curve handles, need curves to discount from spot to today");
+        if (sourceYts_.empty() || targetYts_.empty())
+            return spotQuote_->value();
         Date today = sourceYts_->referenceDate();
         Date refValueDate = fixingCalendar_.advance(today, fixingDays_, Days);
         return spotQuote_->value() * targetYts_->discount(refValueDate) / sourceYts_->discount(refValueDate);

@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeConstant) {
 
     // Curve configurations
     CurveConfigurations curveConfigs;
-    curveConfigs.commodityVolatilityConfig("GOLD_USD_VOLS") = curveConfig;
+    curveConfigs.add(CurveSpec::CurveType::CommodityVolatility, "GOLD_USD_VOLS", curveConfig);
 
     // Commodity curve spec
     CommodityVolatilityCurveSpec curveSpec("USD", "GOLD_USD_VOLS");
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeCurve) {
 
     // Curve configurations
     CurveConfigurations curveConfigs;
-    curveConfigs.commodityVolatilityConfig("GOLD_USD_VOLS") = curveConfig;
+    curveConfigs.add(CurveSpec::CurveType::CommodityVolatility,"GOLD_USD_VOLS", curveConfig);
 
     // Commodity curve spec
     CommodityVolatilityCurveSpec curveSpec("USD", "GOLD_USD_VOLS");
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeSurface) {
 
     // Curve configurations
     CurveConfigurations curveConfigs;
-    curveConfigs.commodityVolatilityConfig("GOLD_USD_VOLS") = curveConfig;
+    curveConfigs.add(CurveSpec::CurveType::CommodityVolatility, "GOLD_USD_VOLS", curveConfig);
 
     // Commodity curve spec
     CommodityVolatilityCurveSpec curveSpec("USD", "GOLD_USD_VOLS");

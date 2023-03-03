@@ -82,6 +82,9 @@ public:
 
     QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const override;
 
+    QuantLib::Real atmStrike(const QuantLib::Date& maturity,
+                             const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days)) const override;
+
 private:
     
     mutable std::vector<QuantLib::Period> optionTenors_;
@@ -118,7 +121,7 @@ template <class Interpolator2D> void InterpolatedCPIVolatilitySurface<Interpolat
     QL_REQUIRE(quotes_.size() == optionTenors_.size(), "quotes rows does not match option tenors size");
     optionTimes_.clear();
     for (Size i = 0; i < optionTenors_.size(); ++i) {
-        QuantLib::Date d = optionMaturityFromTenor(optionTenors_[i]);
+        QuantLib::Date d = optionDateFromTenor(optionTenors_[i]);
         // Save the vols at their fixing times and not maturity
         optionTimes_.push_back(fixingTime(d));
         for (QuantLib::Size j = 0; j < strikes_.size(); j++)
@@ -150,6 +153,20 @@ QuantLib::Volatility InterpolatedCPIVolatilitySurface<Interpolator2D>::volatilit
                                                                                       QuantLib::Rate strike) const {
     calculate();
     return vols_(length, strike);
+}
+
+template <class Interpolator2D>
+QuantLib::Real InterpolatedCPIVolatilitySurface<Interpolator2D>::atmStrike(const QuantLib::Date& maturity,
+                                                                           const QuantLib::Period& obsLag) const {
+    QuantLib::Period lag = obsLag == -1 * QuantLib::Days ? observationLag() : obsLag;
+    QuantLib::Date fixingDate = ZeroInflation::fixingDate(maturity, lag, frequency(), indexIsInterpolated());
+    double forwardCPI = ZeroInflation::cpiFixing(index_, maturity, lag, indexIsInterpolated());
+    double baseCPI = ZeroInflation::cpiFixing(
+        index_, capFloorStartDate(), observationLag(), indexIsInterpolated());
+    double atm = forwardCPI / baseCPI;
+    double ttm =
+        QuantLib::inflationYearFraction(frequency(), indexIsInterpolated(), dayCounter(), baseDate(), fixingDate);
+    return std::pow(atm, 1.0 / ttm) - 1.0;
 }
 
 } // namespace QuantExt

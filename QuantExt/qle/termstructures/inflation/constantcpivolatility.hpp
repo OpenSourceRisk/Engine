@@ -41,6 +41,9 @@ public:
 
     QuantLib::Real maxStrike() const override { return QL_MAX_REAL; }
 
+    QuantLib::Real atmStrike(const QuantLib::Date& maturity,
+                             const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days)) const override;
+
 private:
     virtual QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const override;
     double constantVol_;

@@ -147,6 +147,7 @@ class IndexedCouponLeg {
 public:
     IndexedCouponLeg(const Leg& underlyingLeg, const Real qty, const boost::shared_ptr<Index>& index);
     IndexedCouponLeg& withInitialFixing(const Real initialFixing);
+    IndexedCouponLeg& withInitialNotionalFixing(const Real initialNotionalFixing);
     IndexedCouponLeg& withValuationSchedule(const Schedule& valuationSchedule);
     IndexedCouponLeg& withFixingDays(const Size fixingDays);
     IndexedCouponLeg& withFixingCalendar(const Calendar& fixingCalendar);
@@ -160,6 +161,7 @@ private:
     const Real qty_;
     const boost::shared_ptr<Index> index_;
     Real initialFixing_;
+    Real initialNotionalFixing_;
     Schedule valuationSchedule_;
     Size fixingDays_;
     Calendar fixingCalendar_;

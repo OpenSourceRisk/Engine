@@ -1,0 +1,800 @@
+\ifdefined\RiskCatalogue\newcommand{\simsection}{\section}\fi
+\ifdefined\RiskCatalogue\newcommand{\simsubsection}{\subsection}\fi
+\ifdefined\UserGuide\newcommand{\simsection}{\subsection}\fi
+\ifdefined\UserGuide\newcommand{\simsubsection}{\subsubsection}\fi
+%--------------------------------------------------------
+\simsection{Simulation: {\tt simulation.xml}}\label{sec:simulation}
+%--------------------------------------------------------
+
+This file determines the behaviour of the risk factor simulation (scenario generation) module.
+It is structured in three blocks of data.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Simulation>
+  <Parameters> ... </Parameters>
+  <CrossAssetModel> ... </CrossAssetModel>
+  <Market> ... </Market>
+</Simulation>
+\end{minted}
+\caption{Simulation configuration}
+\label{lst:simulation_configuration}
+\end{listing}
+
+Each of the three blocks is sketched in the following.
+
+\simsubsection{Parameters}\label{sec:sim_params}
+
+Let us discuss this section using the following example
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Parameters>
+  <Grid>80,3M</Grid>
+  <Calendar>EUR,USD,GBP,CHF</Calendar>
+  <DayCounter>ACT/ACT</DayCounter>
+  <Sequence>SobolBrownianBridge</Sequence>
+  <Seed>42</Seed>
+  <Samples>1000</Samples>
+  <Ordering>Steps</Ordering>
+  <DirectionIntegers>JoeKuoD7</DirectionIntegers>
+  <!-- The following two nodes are optional -->
+  <CloseOutLag>2W</CloseOutLag>
+  <MporMode>StickyDate</MporMode>
+</Parameters>
+\end{minted}
+\caption{Simulation configuration}
+\label{lst:simulation_params_configuration}
+\end{listing}
+
+\begin{itemize}
+\item {\tt Grid:} Specifies the simulation time grid, here 80 quarterly steps.\footnote{For exposure calculation under DIM, the second parameter has to match the Margin Period of Risk, i.e. if {\tt MarginPeriodOfRisk} is set to for instance {\tt 2W} in a netting set definition in {\tt netting.xml}, then one has to set {\tt Grid} to for instance {\tt 80,2W}.}
+\item {\tt Calendar:} Calendar or combination of calendars used to adjust the dates of the grid. Date adjustment is
+required because the simulation must step over 'good' dates on which index fixings can be stored.
+%\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for
+% more efficient memory usage. \todo[inline]{Remove Scenario choice}
+\item {\tt DayCounter:} Day count convention used to translate dates to times. Optional, defaults to ActualActual ISDA.
+\item {\tt Sequence:} Choose random sequence generator ({\em MersenneTwister, MersenneTwisterAntithetic, Sobol,
+SobolBrownianBridge}).
+\item {\tt Seed:} Random number generator seed
+\item {\tt Samples:} Number of Monte Carlo paths to be produced
+%\item {\tt Fixings: } Choose whether fixings should be simulated or not, and if so which fixing simulation method to
+use ({\em Backward, Forward, BestOfForwardBackward, InterpolatedForwardBackward}), which number of forward horizon days
+to use if one of the {\em Forward } related methods is chosen.
+\item {\tt Ordering:} If the sequence type {\em SobolBrownianBridge} is used, ordering of variates ({\em Factors, Steps,
+    Diagonal})
+\item {\tt DirectionIntegers:} If the sequence type {\em SobolBrownianBridge} or {\em Sobol} is used, type of direction
+  integers in Sobol generator ({\em Unit, Jaeckel, SobolLevitan, SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo,
+    Kuo2, Kuo3})
+\item {\tt CloseOutLag}: If this tag is present, this specifies the close-out period length (e.g. 2W) used; otherwise no close-out grid is built. The close-out grid is an auxiliary time grid that is offset from the main default date grid by the close-out period, typically set to the applicable margin period of risk. If present, it is used to evolve the portfolio value and determine close-out values associated with the preceding default date valuation.
+\item {\tt MporMode}: This tag is expected if the previous one is present, permissible values are then {\tt StickyDate} and {\tt ActualDate}. {\tt StickyDate} means that only market data is evolved from the default date to close-out date for close-out date valuation, the valuation as of date remains unchanged and trades do not ``age'' over the period. As a consequence, exposure evolutions will not show spikes caused by cash flows within the close-out period. {\tt ActualDate} means that trades will also age over the close-out period so that one can experience exposure evolution spikes due to cash flows. 
+\end{itemize}
+
+\simsubsection{Model}\label{sec:sim_model}
+
+The {\tt CrossAssetModel} section determines the cross asset model's number of currencies covered, composition, and each
+component's calibration. It is currently made of 
+\begin{itemize}
+\item a sequence of LGM models for each currency (say $n_c$ currencies), 
+\item $n_c-1$ FX models for each exchange rate to the base currency, 
+\item $n_e$ equity models,
+\item $n_i$ inflation models, 
+\item $n_{cr}$ credit models, 
+\item $n_{com}$ commodity models, 
+\item a specification of the correlation structure between all components.
+\end{itemize}
+
+\medskip The simulated currencies are specified as follows, with clearly identifying the domestic currency which is also
+the target currency for all FX models listed subsequently. If the portfolio requires more currencies to be simulated,
+this will lead to an exception at run time, so that it is the user's responsibility to make sure that the list of
+currencies here is sufficient. The list can be larger than actually required by the portfolio. This will not lead to any
+exceptions, but add to the run time of ORE.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>
+  <DomesticCcy>EUR</DomesticCcy>
+  <Currencies>
+    <Currency>EUR</Currency>
+    <Currency>USD</Currency>
+    <Currency>GBP</Currency>
+    <Currency>CHF</Currency>
+    <Currency>JPY</Currency>
+  </Currencies>
+  <Equities>
+	<!-- ... -->
+  </Equities>
+  <InflationIndices>
+	<!-- ... -->
+  </InflationIndices>
+  <CreditNames>
+	<!-- ... -->
+  </CreditNames>
+  <Commodities>
+	<!-- ... -->
+  </Commodities>
+  <BootstrapTolerance>0.0001</BootstrapTolerance>
+  <Measure>LGM</Measure><!-- Choices: LGM, BA -->
+  <Discretization>Exact</Discretization>
+  <!-- ... -->
+</CrossAssetModel>
+\end{minted}
+\caption{Simulation model currencies configuration}
+\label{lst:simulation_model_currencies_configuration}
+\end{listing}
+ 
+Bootstrap tolerance is a global parameter that applies to the calibration of all model components. If the calibration
+error of any component exceeds this tolerance, this will trigger an exception at runtime, early in the ORE process.
+
+The Measure tag allows switching between the LGM and the Bank Account (BA) measure for the risk-neutral market simulations using the Cross Asset Model. Note that within LGM one can shift the horizon (see ParameterTransformation below) to effectively switch to a T-Forward measure.
+
+The Discretization tag chooses between time discretization schemes for the risk factor evolution. {\em Exact} means
+exploiting the analytical tractability of the model to avoid any time discretization error. {\em Euler} uses a naive
+time discretization scheme which has numerical error and requires small time steps for accurate results (useful for
+testing purposes or if more sophisticated component models are used.)
+ 
+\medskip
+
+Each interest rate model is specified by a block as follows
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>	
+  <!-- ... -->
+  <InterestRateModels>
+    <LGM ccy="default">
+      <CalibrationType>Bootstrap</CalibrationType>
+      <Volatility>
+        <Calibrate>Y</Calibrate>
+        <VolatilityType>Hagan</VolatilityType>
+        <ParamType>Piecewise</ParamType>
+        <TimeGrid>1.0,2.0,3.0,4.0,5.0,7.0,10.0</TimeGrid>
+        <InitialValue>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01<InitialValue>
+      </Volatility>
+      <Reversion>
+        <Calibrate>N</Calibrate>
+        <ReversionType>HullWhite</ReversionType>
+        <ParamType>Constant</ParamType>
+        <TimeGrid/>
+        <InitialValue>0.03</InitialValue>
+      </Reversion>
+      <CalibrationSwaptions>
+        <Expiries>1Y,2Y,4Y,6Y,8Y,10Y,12Y,14Y,16Y,18Y,19Y</Expiries>
+        <Terms>19Y,18Y,16Y,14Y,12Y,10Y,8Y,6Y,4Y,2Y,1Y</Terms>
+        <Strikes/>
+      </CalibrationSwaptions>
+      <ParameterTransformation>
+        <ShiftHorizon>0.0</ShiftHorizon>
+        <Scaling>1.0</Scaling>
+      </ParameterTransformation>
+    </LGM>
+    <LGM ccy="EUR">
+      <!-- ... -->
+    </LGM>
+    <LGM ccy="USD">
+      <!-- ... -->
+    </LGM>
+  </InterestRateModels>	
+  <!-- ... -->		
+</CrossAssetModel>
+\end{minted}
+\caption{Simulation model IR configuration}
+\label{lst:simulation_model_ir_configuration}
+\end{listing}
+
+We have LGM sections by currency, but starting with a section for currency 'default'. As the name implies, this is used
+as default configuration for any currency in the currency list for which we do not provide an explicit
+parametrisation. Within each LGM section, the interpretation of elements is as follows:
+
+\begin{itemize}
+\item {\tt CalibrationType: } Choose between {\em Bootstrap} and {\em BestFit}, where Bootstrap is chosen when we expect
+to be able to achieve a perfect fit (as with calibration of piecewise volatility to a series of co-terminal Swaptions)
+\item {\tt Volatility/Calibrate: } Flag to enable/disable calibration of this particular parameter
+\item {\tt Volatility/VolatilityType: } Choose volatility parametrisation a la {\em HullWhite} or {\em Hagan}
+\item {\tt Volatility/ParamType: } Choose between {\em Constant} and {\em Piecewise}
+\item {\tt Volatility/TimeGrid: } Initial time grid for this parameter, can be left empty if ParamType is Constant
+\item {\tt Volatility/InitialValue: } Vector of initial values, matching number of entries in time (for CalibrationType {\em BestFit} this should be one more entry than the {\tt Volatility/TimeGrid} entries, for {\em Bootstrap} this is ignored), or single value if the time grid is empty
+\item {\tt Reversion/Calibrate: } Flag to enable/disable calibration of this particular parameter
+\item {\tt Reversion/VolatilityType: } Choose reversion parametrisation a la {\em HullWhite} or {\em Hagan}
+\item {\tt Reversion/ParamType: } Choose between {\em Constant} and {\em Piecewise}
+\item {\tt Reversion/TimeGrid: } Initial time grid for this parameter, can be left empty if ParamType is Constant
+\item {\tt Reversion/InitialValue: } Vector of initial values, matching number of entries in time, or single value if
+the time grid is empty
+\item {\tt CalibrationSwaptions: } Choice of calibration instruments by expiry, underlying Swap term and strike. There have to be at least one more calibration options configured than {\tt Volatility/TimeGrid} entries were given.
+\item {\tt ParameterTransformation: } LGM model prices are invariant under scaling and shift transformations
+\cite{Lichters} with advantages for numerical convergence of results in long term simulations. These transformations can
+be chosen here. Default settings are shiftHorizon 0 (time in years) and scaling factor 1.
+\end{itemize}
+
+The reason for having to specify one more {\tt Volatility/InitialValue} entries than {\tt Volatility/TimeGrid} entries (and at least one more calibration option than {\tt Volatility/TimeGrid} entries) is the fact that the intervals defined by the {\tt Volatility/TimeGrid} entries are spanning from $[0,t_1],[t_1,t_2]\ldots[t_n,\infty]$, which results in $n+1$ intervals.
+
+\medskip
+
+Each FX model is specified by a block as follows
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>	
+  <!-- ... -->
+  <ForeignExchangeModels>
+    <CrossCcyLGM foreignCcy="default">
+      <DomesticCcy>EUR</DomesticCcy>
+      <CalibrationType>Bootstrap</CalibrationType>
+      <Sigma>
+        <Calibrate>Y</Calibrate>
+        <ParamType>Piecewise</ParamType>
+        <TimeGrid>1.0,2.0,3.0,4.0,5.0,7.0,10.0</TimeGrid>
+        <InitialValue>0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1</InitialValue>
+      </Sigma>
+      <CalibrationOptions>
+        <Expiries>1Y,2Y,3Y,4Y,5Y,10Y</Expiries>
+        <Strikes/>
+      </CalibrationOptions>
+    </CrossCcyLGM>
+    <CrossCcyLGM foreignCcy="USD">
+      <!-- ... -->
+    </CrossCcyLGM>
+    <CrossCcyLGM foreignCcy="GBP">
+      <!-- ... -->
+    </CrossCcyLGM>
+    <!-- ... -->
+  </ForeignExchangeModels>
+  <!-- ... -->
+<CrossAssetModel>	
+\end{minted}
+\caption{Simulation model FX configuration}
+\label{lst:simulation_model_fx_configuration}
+\end{listing}
+
+CrossCcyLGM sections are defined by foreign currency, but we also support a default configuration as above for the IR
+model parametrisations.  Within each CrossCcyLGM section, the interpretation of elements is as follows:
+
+\begin{itemize}
+\item {\tt DomesticCcy: } Domestic currency completing the FX pair
+\item {\tt CalibrationType: } Choose between {\em Bootstrap} and {\em BestFit} as in the IR section
+\item {\tt Sigma/Calibrate: } Flag to enable/disable calibration of this particular parameter
+\item {\tt Sigma/ParamType: } Choose between {\em Constant} and {\em Piecewise}
+\item {\tt Sigma/TimeGrid: } Initial time grid for this parameter, can be left empty if ParamType is Constant
+\item {\tt Sigma/InitialValue: } Vector of initial values, matching number of entries in time (for CalibrationType {\em BestFit} this should be one more entry than the {\tt Sigma/TimeGrid} entries, for {\em Bootstrap} this is ignored), or single value if the time grid is empty
+\item {\tt CalibrationOptions: } Choice of calibration instruments by expiry and strike, strikes can be empty (implying
+the default, ATMF options), or explicitly specified (in terms of FX rates as absolute strike values, in delta notation
+such as $\pm 25D$, $ATMF$ for at the money). There have to be at least one more calibration options configured than {\tt Sigma/TimeGrid} entries were given
+\end{itemize}
+
+
+\medskip
+
+Each equity model is specified by a block as follows
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>	
+  <!-- ... -->
+  <EquityModels>
+    <CrossAssetLGM name="default">
+      <Currency>EUR</Currency>
+      <CalibrationType>Bootstrap</CalibrationType>
+      <Sigma>
+        <Calibrate>Y</Calibrate>
+        <ParamType>Piecewise</ParamType>
+        <TimeGrid>1.0,2.0,3.0,4.0,5.0,7.0,10.0</TimeGrid>
+        <InitialValue>0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1</InitialValue>
+      </Sigma>
+      <CalibrationOptions>
+        <Expiries>1Y,2Y,3Y,4Y,5Y,10Y</Expiries>
+        <Strikes/>
+      </CalibrationOptions>
+    </CrossAssetLGM>
+    <CrossAssetLGM name="SP5">
+      <!-- ... -->
+    </CrossAssetLGM>
+    <CrossAssetLGM name="Lufthansa">
+      <!-- ... -->
+    </CrossAssetLGM>
+      <!-- ... -->
+  </EquityModels>
+  <!-- ... -->
+<CrossAssetModel>	
+\end{minted}
+\caption{Simulation model equity configuration}
+\label{lst:simulation_model_eq_configuration}
+\end{listing}
+
+CrossAssetLGM sections are defined by equity name, but we also support a default configuration as above for the IR and 
+FX model parameterisations.  Within each CrossAssetLGM section, the interpretation of elements is as follows:
+
+\begin{itemize}
+	\item {\tt Currency: } Currency of denomination
+	\item {\tt CalibrationType: } Choose between {\em Bootstrap} and {\em BestFit} as in the IR section
+	\item {\tt Sigma/Calibrate: } Flag to enable/disable calibration of this particular parameter
+	\item {\tt Sigma/ParamType: } Choose between {\em Constant} and {\em Piecewise}
+	\item {\tt Sigma/TimeGrid: } Initial time grid for this parameter, can be left empty if ParamType is Constant
+	\item {\tt Sigma/InitialValue: } Vector of initial values, matching number of entries in time (for CalibrationType {\em BestFit} this should be one more entry than the {\tt Sigma/TimeGrid} entries, for {\em Bootstrap} this is ignored), or single value if the time grid is empty
+	\item {\tt CalibrationOptions: } Choice of calibration instruments by expiry and strike, strikes can be empty 
+	(implying the default, ATMF options), or explicitly specified (in terms of equity prices as absolute strike values). There have to be at least one more calibration options configured than {\tt Sigma/TimeGrid} entries were given
+\end{itemize}
+
+\medskip
+
+For the inflation model component, there is a choice between a Dodgson Kainth model and a Jarrow Yildrim model. The Dodgson Kainth 
+model is specified in a \lstinline!LGM! or \lstinline!DodgsonKainth! node as outlined in Listing \ref{lst:simulation_model_dk_inflation_configuration}.
+The inflation model parameterisation inherits from the LGM parameterisation for interest rate components, in particular the \lstinline!CalibrationType!, 
+\lstinline!Volatility! and \lstinline!Reversion! elements. The \lstinline!CalibrationCapFloors! element specify the model's calibration to a selection of 
+either CPI caps or CPI floors with specified strike.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>	
+  ...
+  <InflationIndexModels>
+    <LGM index="EUHICPXT">
+      <Currency>EUR</Currency>
+      <!-- As in the LGM parameterisation for any IR components -->
+      <CalibrationType> ... </CalibrationType>
+      <Volatility> ... </Volatility>
+      <Reversion> ... </Reversion> 
+      <ParameterTransformation> ... </ParameterTransformation>
+      <!-- Inflation model specific -->
+      <CalibrationCapFloors>
+        <!-- not used yet, as there is only one strategy so far -->
+        <CalibrationStrategy> ... </CalibrationStrategy> 
+        <CapFloor> Floor </CapFloor> <!-- Cap, Floor -->
+        <Expiries> 2Y, 4Y, 6Y, 8Y, 10Y </Expiries>
+        <!-- can be empty, this will yield calibration to ATM -->
+        <Strikes> 0.03, 0.03, 0.03, 0.03, 0.03 </Strikes> 
+      </CalibrationCapFloors>
+    </LGM>
+    <LGM index="USCPI">
+      ...
+    </LGM>
+    ...
+  </InflationIndexModels>
+  ...
+<CrossAssetModel>	
+\end{minted}
+\caption{Simulation model DK inflation component configuration}
+\label{lst:simulation_model_dk_inflation_configuration}
+\end{listing}
+
+The calibration instruments may be specified in an alternative way via a \lstinline!CalibrationBaskets! node. In general, a \lstinline!CalibrationBaskets! node 
+can contain multiple \lstinline!CalibrationBasket! nodes each containing a list of calibration instruments of the same type. For Dodgson Kainth, only a single 
+calibration basket is allowed and the instruments must be of type \lstinline!CpiCapFloor!. So, for example, the \lstinline!CalibrationCapFloors! node in 
+Listing \ref{lst:simulation_model_dk_inflation_configuration} could be replaced with the \lstinline!CalibrationBaskets! node in \ref{lst:dk_inflation_calibration_basket}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CalibrationBaskets>
+  <CalibrationBasket>
+    <CpiCapFloor>
+      <Type>Floor</Type>
+      <Maturity>2Y</Maturity>
+      <Strike>0.03</Strike>
+    </CpiCapFloor>
+    <CpiCapFloor>
+      <Type>Floor</Type>
+      <Maturity>4Y</Maturity>
+      <Strike>0.03</Strike>
+    </CpiCapFloor>
+    <CpiCapFloor>
+      <Type>Floor</Type>
+      <Maturity>6Y</Maturity>
+      <Strike>0.03</Strike>
+    </CpiCapFloor>
+    <CpiCapFloor>
+      <Type>Floor</Type>
+      <Maturity>8Y</Maturity>
+      <Strike>0.03</Strike>
+    </CpiCapFloor>
+    <CpiCapFloor>
+      <Type>Floor</Type>
+      <Maturity>10Y</Maturity>
+      <Strike>0.03</Strike>
+    </CpiCapFloor>
+  </CalibrationBasket>
+</CalibrationBaskets>
+\end{minted}
+\caption{Calibration basket for DK inflation model component}
+\label{lst:dk_inflation_calibration_basket}
+\end{listing}
+
+The Jarrow Yildrim model is specified in a \lstinline!JarrowYildirim! node as outlined in Listing \ref{lst:simulation_model_jy_inflation_configuration}. The \lstinline!RealRate! 
+node describes the JY real rate process and has \lstinline!Volatility! and \lstinline!Reversion! nodes that follow those outlined in the interest rate LGM section above. The  
+\lstinline!Index! node describes the JY index process and has a \lstinline!Volatility! component that follows the \lstinline!Sigma! component of the FX model above. The 
+\lstinline!CalibrationBaskets! node is as outlined above for Dodgson Kainth but up to two baskets may be used and extra inflation instruments are supported in the calibration. More 
+information is provided below.
+
+The \lstinline!CalibrationType! determines the calibration approach, if any, that is used to calibrate the various parameters of the model i.e.\ the real rate reversion, the real 
+rate volatility and the index volatility. If the \lstinline!CalibrationType! is \lstinline!None!, no calibration is attempted and all parameter values must be explicitly specified.
+If the \lstinline!CalibrationType! is \lstinline!BestFit!, the parameters that have \lstinline!Calibrate! set to \lstinline!Y! will be calibrated to the instruments specified in 
+the \lstinline!CalibrationBaskets! node. If the \lstinline!CalibrationType! is \lstinline!Bootstrap!, there are a number of options:
+
+\begin{enumerate}
+\item
+The index volatility parameter may be calibrated, indicated by setting \lstinline!Calibrate! to \lstinline!Y! for that parameter, with both of the real rate parameters not calibrated 
+and set explicitly in the \lstinline!RealRate! node. There should be exactly one \lstinline!CalibrationBasket! in the \lstinline!CalibrationBaskets! node and its \lstinline!parameter! 
+attribute may be set to \lstinline!Index! or omitted.
+
+\item
+One of the real rate parameters may be calibrated, indicated by setting \lstinline!Calibrate! to \lstinline!Y! for that parameter, with the index volatility not calibrated and set 
+explicitly in the \lstinline!Volatility! node. There should be exactly one \lstinline!CalibrationBasket! in the \lstinline!CalibrationBaskets! node and its \lstinline!parameter! 
+attribute may be set to \lstinline!RealRate! or omitted.
+
+\item
+One of the real rate parameters and the index volatility parameter may be calibrated together. There should be exactly two \lstinline!CalibrationBasket! nodes in the \lstinline!CalibrationBaskets! 
+node. The \lstinline!parameter! attribute should be set to \lstinline!RealRate! on the \lstinline!CalibrationBasket! node that should be used for the real rate parameter calibration. 
+Similarly, the \lstinline!parameter! attribute should be set to \lstinline!Index! on the \lstinline!CalibrationBasket! node that should be used for the index volatility parameter calibration. 
+The parameters are calibrated iteratively in turn until the root mean squared error over all calibration instruments in the two baskets is below the tolerance specified by the 
+\lstinline!RmseTolerance! in the \lstinline!CalibrationConfiguration! node or until the maximum number of iterations as specified by the \lstinline!MaxIterations! in the 
+\lstinline!CalibrationConfiguration! node has been reached. The \lstinline!CalibrationConfiguration! node is optional. If it is omitted, the \lstinline!RmseTolerance! defaults to 0.0001 and the 
+\lstinline!MaxIterations! defaults to 50.
+
+\end{enumerate}
+
+Note that it is an error to attempt to calibrate both of the real rate parameters together when \lstinline!CalibrationType! is \lstinline!Bootstrap!. If a parameter is being calibrated 
+with \lstinline!CalibrationType! set to \lstinline!Bootstrap!, the \lstinline!ParamType! should be \lstinline!Piecewise!. The \lstinline!TimeGrid! will be overridden for that parameter by 
+the relevant calibration instrument times and the parameter's initial values are set to the first element of the \lstinline!InitialValue! list. So, leaving the \lstinline!TimeGrid! node 
+empty and giving a single value in the \lstinline!InitialValue! node is the clearest XML setup in this case.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<JarrowYildirim index="EUHICPXT">
+  <Currency>EUR</Currency>
+  <CalibrationType>Bootstrap</CalibrationType>
+  <RealRate>
+    <Volatility>
+      <Calibrate>Y</Calibrate>
+      <VolatilityType>Hagan</VolatilityType>
+      <ParamType>Piecewise</ParamType>
+      <TimeGrid/>
+      <InitialValue>0.0001</InitialValue>
+    </Volatility>
+    <Reversion>
+      <Calibrate>N</Calibrate>
+      <ReversionType>HullWhite</ReversionType>
+      <ParamType>Constant</ParamType>
+      <TimeGrid/>
+      <InitialValue>0.5</InitialValue>
+    </Reversion>
+    <ParameterTransformation>
+      <ShiftHorizon>0.0</ShiftHorizon>
+      <Scaling>1.0</Scaling>
+    </ParameterTransformation>
+  </RealRate>
+  <Index>
+    <Volatility>
+      <Calibrate>Y</Calibrate>
+      <ParamType>Piecewise</ParamType>
+      <TimeGrid/>
+      <InitialValue>0.0001</InitialValue>
+    </Volatility>
+  </Index>
+  <CalibrationBaskets>
+    <CalibrationBasket parameter="Index">
+      <CpiCapFloor>
+        <Type>Floor</Type>
+        <Maturity>2Y</Maturity>
+        <Strike>0.0</Strike>
+      </CpiCapFloor>
+      ...
+    </CalibrationBasket>
+    <CalibrationBasket parameter="RealRate">
+      <YoYSwap>
+        <Tenor>2Y</Tenor>
+      </YoYSwap>
+      ...
+    </CalibrationBasket>
+  </CalibrationBaskets>
+  <CalibrationConfiguration>
+    <RmseTolerance>0.00000001</RmseTolerance>
+    <MaxIterations>40</MaxIterations>
+  </CalibrationConfiguration>
+</JarrowYildirim>
+\end{minted}
+\caption{Simulation model JY inflation component configuration}
+\label{lst:simulation_model_jy_inflation_configuration}
+\end{listing}
+
+The \lstinline!CpiCapFloor! and \lstinline!YoYSwap! calibration instruments can be seen in Listing \ref{lst:simulation_model_jy_inflation_configuration}. A \lstinline!YoYCapFloor! is 
+also allowed and it has the structure shown in Listing \ref{lst:yoy_cf_calibration_inst}. The \lstinline!Type! may be \lstinline!Cap! or \lstinline!Floor!. The \lstinline!Tenor! should 
+be a maturity period e.g.\ \lstinline!5Y!. The \lstinline!Strike! should be an absolute strike level for the year on year cap or floor e.g.\ \lstinline!0.01! for 1\%.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<YoYCapFloor>
+  <Type>...</Type>
+  <Tenor>...</Tenor>
+  <Strike>...</Strike>
+</YoYCapFloor>
+\end{minted}
+\caption{Layout for \lstinline!YoYCapFloor! calibration instrument.}
+\label{lst:yoy_cf_calibration_inst}
+\end{listing}
+
+% credit models: todo
+
+% commodity models
+
+For commodity simulation we currently provide one model, as described in the methodology appendix. 
+Commodity model components are specified by commodity name, by a block as follows
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>	
+  <!-- ... -->
+  <CommodityModels>
+    <CommoditySchwartz name="default">
+      <Currency>EUR</Currency>
+      <CalibrationType>None</CalibrationType>
+      <Sigma>
+        <Calibrate>Y</Calibrate>
+        <InitialValue>0.1</InitialValue>
+      </Sigma>
+      <Kappa>
+        <Calibrate>Y</Calibrate>
+        <InitialValue>0.1</InitialValue>
+      </Kappa>
+      <CalibrationOptions>
+           ...
+      </CalibrationOptions>
+      <DriftFreeState>false</DriftFreeState>
+    </CommoditySchwartz>
+    <CommoditySchwartz name="WTI">
+      <!-- ... -->
+    </CommoditySchwartz>
+    <CommoditySchwartz name="NG">
+      <!-- ... -->
+    </CommoditySchwartz>
+      <!-- ... -->
+  </CommodityModels>
+  <!-- ... -->
+<CrossAssetModel>	
+\end{minted}
+\caption{Simulation model commodity configuration}
+\label{lst:simulation_model_com_configuration}
+\end{listing}
+
+CommoditySchwartz sections are defined by commodity name, but we also support a default configuration as above for the IR and 
+FX model parameterisations.  Each component is parameterised in terms of two constant, non time-dependent parameters $\sigma$ and $\kappa$ so far (see appendix).
+Within each CommoditySchwartz section, the interpretation of elements is as follows:
+
+\begin{itemize}
+\item {\tt Currency: } Currency of denomination
+\item {\tt CalibrationType:} Choose between {\em BestFit} and {\em None}.  The choice {\em None} will deactivate calibration as usual. {\em BestFit} will attempt to set the model parameter(s) such that the error in matching calibration instrument prices is minimised.  The option  {\em Bootstrap} is not available here because the model parameters are not time-dependent and the model's degrees of freedom in general do not suffice to perfectly match the calibration instrument prices.
+\item {\tt Sigma/Calibrate:} Flag to enable/disable calibration of this particular parameter
+\item {\tt Sigma/InitialValue:} Initial value of the constant parameter
+\item {\tt Kappa/Calibrate:} Flag to enable/disable calibration of this particular parameter
+\item {\tt Kappa/InitialValue:} Initial value of the constant parameter
+\item {\tt CalibrationOptions:} Choice of calibration instruments by expiry and strike, strikes can be empty 	(implying the default, ATMF options), or explicitly specified (in terms of commodity prices as absolute strike values). 
+\item {\tt DriftFreeState[Optional]:} Boolean to switch between the two implementations of the state variable, see appendix. By default this is set to {\tt false}.        
+\end{itemize}
+
+\medskip
+Finally, the instantaneous correlation structure is specified as follows.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>
+  <!-- ... -->
+  <InstantaneousCorrelations>
+    <Correlation factor1="IR:EUR" factor2="IR:USD">0.3</Correlation>
+    <Correlation factor1="IR:EUR" factor2="IR:GBP">0.3</Correlation>
+    <Correlation factor1="IR:USD" factor2="IR:GBP">0.3</Correlation>
+    <Correlation factor1="IR:EUR" factor2="FX:USDEUR">0</Correlation>
+    <Correlation factor1="IR:EUR" factor2="FX:GBPEUR">0</Correlation>
+    <Correlation factor1="IR:GBP" factor2="FX:USDEUR">0</Correlation>
+    <Correlation factor1="IR:GBP" factor2="FX:GBPEUR">0</Correlation>
+    <Correlation factor1="IR:USD" factor2="FX:USDEUR">0</Correlation>
+    <Correlation factor1="IR:USD" factor2="FX:GBPEUR">0</Correlation>
+    <Correlation factor1="FX:USDEUR" factor2="FX:GBPEUR">0</Correlation>
+    <!-- ... --> 
+  </InstantaneousCorrelations>
+</CrossAssetModel>
+\end{minted}
+\caption{Simulation model correlation configuration}
+\label{lst:simulation_model_correlation_configuration}
+\end{listing}
+
+Any risk factor pair not specified explicitly here will be assumed to have zero correlation. Note that the commodity components can have non-zero correlations among each other, but correlations to all other CAM components must remain set to zero for the time being.
+
+\simsubsection{Market}\label{sec:sim_market}
+
+The last part of the simulation configuration file covers the specification of the simulated market.  Note that the
+simulation model will yield the evolution of risk factors such as short rates which need to be translated into entire
+yield curves that can be 'understood' by the instruments which we want to price under scenarios.  
+
+Moreover we need to specify how volatility structures evolve even if we do not explicitly simulate volatility. This 
+translation happens based on the information in the {\em simulation market} object, which is configured in the section 
+within the enclosing tags {\tt <Market>} and {\tt </Market>}, as shown in the following small example.
+
+It should be noted that equity volatilities are taken to be a curve by default. To simulate an equity volatility surface with smile the xml node {\tt <Surface> } must be supplied.
+There are two methods in ORE for equity volatility simulation: 
+\begin{itemize}
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
+\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
+\end{itemize}
+
+Swaption volatilities are taken to be a surface by default. To simulate a swaption volatility cube with smile the xml node {\tt <Cube> } must be supplied.
+There are two methods in ORE for swaption volatility cube simulation: 
+\begin{itemize}
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
+\item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit strike spreads for simulation should be provided.
+\end{itemize}
+
+FX volatilities are taken to be a curve by default. To simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
+
+For Yield Curves, Swaption Volatilities, CapFloor Volatilities, Default Curves, Base Correlations and Inflation Curves, a DayCounter may be specified for each risk factor using the node {\tt <DayCounter name="EXAMPLE\_CURVE">}.  
+If no day counter is specified for a given risk factor then the default Actual365 is used. To specify a new default for a risk factor type then use the daycounter node without any attribute,  {\tt <DayCounter>}.
+
+For Yield Curves, there are several choices for the interpolation and extrapolation:
+\begin{itemize}
+\item Interpolation: This can be LogLinear or LinearZero. If not given, the value defaults to LogLinear.
+\item Extrapolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
+\end{itemize}
+
+For Default Curve, there is a similar choice for the extrapolation:
+\begin{itemize}
+\item Extrapolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
+\end{itemize}
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Market>
+  <BaseCurrency>EUR</BaseCurrency>
+  <Currencies>
+    <Currency>EUR</Currency>
+    <Currency>USD</Currency>
+  </Currencies>
+  <YieldCurves>
+    <Configuration>
+      <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
+      <Interpolation>LogLinear</Interpolation>
+      <Extrapolation>FlatFwd</Extrapolation>
+      <DayCounter>ACT/ACT</DayCounter> <!-- Sets a new default for all yieldCurves -->
+    </Configuration>
+  </YieldCurves>
+  <Indices>
+    <Index>EUR-EURIBOR-6M</Index>
+    <Index>EUR-EURIBOR-3M</Index>
+    <Index>EUR-EONIA</Index>
+    <Index>USD-LIBOR-3M</Index>
+  </Indices>
+  <SwapIndices>
+    <SwapIndex>
+      <Name>EUR-CMS-1Y</Name>
+      <ForwardingIndex>EUR-EURIBOR-6M</ForwardingIndex>
+      <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+    </SwapIndex>
+  </SwapIndices>
+  <DefaultCurves> 
+      <Names> 
+        <Name>CPTY1</Name> 
+        <Name>CPTY2</Name> 
+      </Names> 
+      <Tenors>6M,1Y,2Y</Tenors> 
+      <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities> 
+      <DayCounter name="CPTY1">ACT/ACT</DayCounter>
+      <Extrapolation>FlatFwd</Extrapolation>
+  </DefaultCurves> 
+  <SwaptionVolatilities>
+    <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </Currencies>
+    <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
+    <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
+    <Cube>
+     <SimulateATMOnly>false</SimulateATMOnly>
+     <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
+    </Cube>
+    <!-- Sets a new daycounter for just the EUR swaptionVolatility surface -->
+    <DayCounter ccy="EUR">ACT/ACT</DayCounter> 
+  </SwaptionVolatilities> 
+  <CapFloorVolatilities>
+    <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </Currencies>
+    <DayCounter ccy="EUR">ACT/ACT</DayCounter>
+  </CapFloorVolatilities>
+  <FxVolatilities>
+    <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+    <CurrencyPairs>
+      <CurrencyPair>EURUSD</CurrencyPair>
+    </CurrencyPairs>
+    <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+    <Surface>
+     <Moneyness>0.5,0.6,0.7,0.8,0.9</Moneyness>
+    </Surface>
+  </FxVolatilities>
+  <EquityVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <!-- Alternative: ConstantVariance -->
+      <Names>
+        <Name>SP5</Name>
+        <Name>Lufthansa</Name>
+      </Names>
+      <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+      <Surface>
+        <SimulateATMOnly>false</SimulateATMOnly><!-- false -->
+        <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness><!-- omitted if SimulateATMOnly true -->
+      </Surface>
+      <TimeExtrapolation>Flat</TimeExtrapolation>
+      <StrikeExtrapolation>Flat</StrikeExtrapolation>
+
+  </EquityVolatilities>
+  ...
+  <BenchmarkCurves>
+    <BenchmarkCurve>
+      <Currency>EUR</Currency>
+      <Name>BENCHMARK_EUR</Name>
+  </BenchmarkCurve>
+  ...
+  </BenchmarkCurves>
+  <Securities>
+    <Simulate>true</Simulate>
+    <Names>
+      <Name>SECURITY_1</Name>
+      ...
+    </Names>
+  </Securities>
+  <ZeroInflationIndexCurves>
+    <Names>
+      <Name>EUHICP</Name>
+      <Name>UKRPI</Name>
+      <Name>USCPI</Name>
+      ...
+    </Names>
+    <Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+  </ZeroInflationIndexCurves>
+  <YYInflationIndexCurves>
+    <Names>
+      <Name>EUHICPXT</Name>
+      ...
+    </Names>
+    <Tenors>1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+  </YYInflationIndexCurves>
+  <DefaultCurves>
+    <Names>
+      <Name>ItraxxEuropeCrossoverS26V1</Name>
+      ...
+    </Names>
+    <Tenors>1Y,2Y,3Y,5Y,10Y</Tenors>
+    <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
+  </DefaultCurves>
+  <BaseCorrelations/>
+  <CDSVolatilities/>
+  <Correlations>
+    <Simulate>true</Simulate>
+    <Pairs>
+      <Pair>EUR-CMS-10Y,EUR-CMS-2Y</Pair>
+    </Pairs>
+    <Expiries>1Y,2Y</Expiries>
+  </Correlations>
+  <AdditionalScenarioDataCurrencies>
+    <Currency>EUR</Currency>
+    <Currency>USD</Currency>
+  </AdditionalScenarioDataCurrencies>
+  <AdditionalScenarioDataIndices>
+    <Index>EUR-EURIBOR-3M</Index>
+    <Index>EUR-EONIA</Index>
+    <Index>USD-LIBOR-3M</Index>
+  </AdditionalScenarioDataIndices>
+</Market>
+\end{minted}
+\caption{Simulation market configuration}
+\label{lst:simulation_market_configuration}
+\end{longlisting}
+
+\todo[inline]{Comment on cap/floor surface structure and reaction to time decay}

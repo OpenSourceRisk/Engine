@@ -35,4 +35,9 @@ QuantLib::Volatility ConstantCPIVolatility::volatilityImpl(QuantLib::Time length
     return constantVol_;
 };
 
+QuantLib::Real ConstantCPIVolatility::atmStrike(const QuantLib::Date& maturity, const QuantLib::Period& obsLag) const {
+    // Not relevant for constantCPIVolatiltiy;
+    return 0.0;
+};
+
 } // namespace QuantExt

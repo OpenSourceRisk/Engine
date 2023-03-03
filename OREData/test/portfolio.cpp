@@ -91,15 +91,15 @@ BOOST_AUTO_TEST_CASE(testTrades) {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
     boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
-    std::vector<boost::shared_ptr<Trade>> trade_list;
+    std::map<std::string, boost::shared_ptr<Trade>> trade_list;
     trade1->id() = "1";
     trade2->id() = "2";
     BOOST_CHECK(portfolio->trades() == trade_list);
     portfolio->add(trade1);
-    trade_list.push_back(trade1);
+    trade_list["1"]  = trade1;
     BOOST_CHECK(portfolio->trades() == trade_list);
     portfolio->add(trade2);
-    trade_list.push_back(trade2);
+    trade_list["2"] = trade2;
     BOOST_CHECK(portfolio->trades() == trade_list);
 }
 
@@ -109,13 +109,13 @@ BOOST_AUTO_TEST_CASE(testIds) {
     boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
     trade1->id() = "1";
     trade2->id() = "2";
-    std::vector<std::string> trade_ids;
+    std::set<std::string> trade_ids;
     BOOST_CHECK(portfolio->ids() == trade_ids);
     portfolio->add(trade1);
-    trade_ids.push_back("1");
+    trade_ids.insert("1");
     BOOST_CHECK(portfolio->ids() == trade_ids);
     portfolio->add(trade2);
-    trade_ids.push_back("2");
+    trade_ids.insert("2");
     BOOST_CHECK(portfolio->ids() == trade_ids);
 }
 

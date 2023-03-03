@@ -43,9 +43,14 @@ CdsTier parseCdsTier(const string& s) {
         return CdsTier::JRSUBUT2;
     } else if (s == "PREFT1") {
         return CdsTier::PREFT1;
-    } else {
-        QL_FAIL("Could not parse \"" << s << "\" to CdsTier");
+    } else if (s == "LIEN1") {
+        return CdsTier::LIEN1;
+    } else if (s == "LIEN2") {
+        return CdsTier::LIEN2;
+    } else if (s == "LIEN3") {
+        return CdsTier::LIEN3;
     }
+    QL_FAIL("Could not parse \"" << s << "\" to CdsTier");
 }
 
 ostream& operator<<(ostream& out, const CdsTier& cdsTier) {
@@ -62,6 +67,12 @@ ostream& operator<<(ostream& out, const CdsTier& cdsTier) {
         return out << "JRSUBUT2";
     case CdsTier::PREFT1:
         return out << "PREFT1";
+    case CdsTier::LIEN1:
+        return out << "LIEN1";
+    case CdsTier::LIEN2:
+        return out << "LIEN2";
+    case CdsTier::LIEN3:
+        return out << "LIEN3";
     default:
         QL_FAIL("Do not recognise CdsTier " << static_cast<int>(cdsTier));
     }

@@ -43,15 +43,14 @@
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
-      <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting_threshold.xml</Parameter>
-      <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="hyperCube">Y</Parameter>
-      <Parameter name="scenarioFile">scenariodata.dat</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="exposureProfilesByTrade">Y</Parameter>
@@ -77,8 +76,8 @@
       <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
       <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
       <Parameter name="dimScaling">1.0</Parameter>
-      <Parameter name="dimEvolutionFile">dim_evolution.txt</Parameter>      
-      <Parameter name="dimRegressionFiles">dim_regression.txt</Parameter>
+      <Parameter name="dimEvolutionFile">dim_evolution.csv</Parameter>
+      <Parameter name="dimRegressionFiles">dim_regression.csv</Parameter>
       <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>      
       <Parameter name="dimOutputGridPoints">0</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>

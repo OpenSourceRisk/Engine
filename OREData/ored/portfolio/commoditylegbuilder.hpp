@@ -31,17 +31,19 @@ namespace ore {
 namespace data {
 
 class CommodityFixedLegBuilder : public ore::data::LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(CommodityFixedLegBuilder)
 public:
     CommodityFixedLegBuilder() : LegBuilder("CommodityFixed") {}
 
     QuantLib::Leg buildLeg(const ore::data::LegData& data,
                            const boost::shared_ptr<ore::data::EngineFactory>& engineFactory,
                            RequiredFixings& requiredFixings, const std::string& configuration,
-                           const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                           const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                           const bool useXbsCurves = false) const override;
 };
 
 class CommodityFloatingLegBuilder : public ore::data::LegBuilder {
-
+    ORE_REGISTER_LEG_BUILDER(CommodityFloatingLegBuilder)
 public:
     CommodityFloatingLegBuilder()
         : LegBuilder("CommodityFloating"), allAveraging_(false) {}
@@ -49,7 +51,8 @@ public:
     QuantLib::Leg buildLeg(const ore::data::LegData& data,
                            const boost::shared_ptr<ore::data::EngineFactory>& engineFactory,
                            RequiredFixings& requiredFixings, const std::string& configuration,
-                           const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                           const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                           const bool useXbsCurves = false) const override;
 
     //! Inspect the \c allAveraging_ flag
     bool allAveraging() const { return allAveraging_; }

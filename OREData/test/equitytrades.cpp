@@ -132,8 +132,6 @@ BOOST_AUTO_TEST_CASE(testEquityTradePrices) {
     engineData->model("EquityForward") = "DiscountedCashflows";
     engineData->engine("EquityForward") = "DiscountingEquityForwardEngine";
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
-    engineFactory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
 
     eqCall.build(engineFactory);
     eqCallPremium.build(engineFactory);
@@ -201,9 +199,6 @@ BOOST_AUTO_TEST_CASE(testEquityFutureOptionPrices) {
     engineData->model("EquityFutureOption") = "BlackScholes";
     engineData->engine("EquityFutureOption") = "AnalyticEuropeanForwardEngine";
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
-    engineFactory->registerBuilder(boost::make_shared<EquityFutureEuropeanOptionEngineBuilder>());
-    engineFactory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
 
     eqFwdCall.build(engineFactory);
     eqFwdCallPremium.build(engineFactory);
@@ -268,9 +263,6 @@ BOOST_AUTO_TEST_CASE(testEquityFutureParity) {
     engineData->model("EquityForward") = "DiscountedCashflows";
     engineData->engine("EquityForward") = "DiscountingEquityForwardEngine";
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
-    engineFactory->registerBuilder(boost::make_shared<EquityFutureEuropeanOptionEngineBuilder>());
-    engineFactory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
 
     eqCall.build(engineFactory);
     eqCallPremium.build(engineFactory);

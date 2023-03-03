@@ -978,7 +978,8 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeSimpleLeg(const LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,
-                    const BusinessDayConvention paymentConvention, const Calendar paymentCalendar);
+                    const BusinessDayConvention paymentConvention, const Calendar paymentCalendar,
+                    const bool excludeIndexing = true);
 Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>& index,
                const boost::shared_ptr<EngineFactory>& engineFactory,
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
@@ -1056,7 +1057,8 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 
 // apply indexing (if given in LegData) to existing leg
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                   RequiredFixings& requiredFixings, const QuantLib::Date& openEndDateReplacement = Null<Date>());
+                   RequiredFixings& requiredFixings, const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                   const bool useXbsCurves = false);
 
 // template implementations
 

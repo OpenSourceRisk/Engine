@@ -116,6 +116,8 @@ public:
     boost::shared_ptr<CommodityIndexedAverageCashFlow> averageCashflow() const;
     //@}
 
+    void deepUpdate() override;
+
 private:
     //! Shared initialisation method.
     void init(const boost::shared_ptr<CommodityIndex>& index,

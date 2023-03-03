@@ -38,6 +38,8 @@ using std::string;
  + Bond Option = Callable Bond. \ingroup portfolio
 */
 class CompositeTrade : public Trade {
+    static TradeBuilderRegister<TradeBuilder<CompositeTrade>> reg_;
+
 public:
     /// This enum decalres how the notional of the CompositeTrade should be calculated
     enum class NotionalCalculation {
@@ -51,18 +53,16 @@ public:
     };
 
     //! Constructor requires a trade factory so that subtrades can be built
-    CompositeTrade(const boost::weak_ptr<TradeFactory>& tf, const Envelope& env = Envelope(),
-                   const TradeActions& ta = TradeActions())
-        : Trade("CompositeTrade", env, ta), tradeFactory_(tf) {
+    CompositeTrade(const Envelope& env = Envelope(), const TradeActions& ta = TradeActions())
+        : Trade("CompositeTrade", env, ta) {
         reset();
     }
 
     //! Fully-specified Constructor
     CompositeTrade(const string currency, const vector<boost::shared_ptr<Trade>>& trades,
                    const string notionalCalculation = "", const Real notionalOverride = 0.0,
-                   const Envelope& env = Envelope(), const TradeActions& ta = TradeActions(),
-                   const boost::weak_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>())
-        : Trade("CompositeTrade", env, ta), tradeFactory_(tf), currency_(currency), notionalOverride_(notionalOverride),
+                   const Envelope& env = Envelope(), const TradeActions& ta = TradeActions())
+        : Trade("CompositeTrade", env, ta), currency_(currency), notionalOverride_(notionalOverride),
           notionalCalculation_(notionalCalculation), trades_(trades) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
@@ -71,7 +71,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::weak_ptr<TradeFactory>& tradeFactory() const { return tradeFactory_; }
     const string& currency() const { return currency_; }
     const string& notionalCalculation() const { return notionalCalculation_; }
     const vector<boost::shared_ptr<Trade>>& trades() const { return trades_; }
@@ -100,7 +99,6 @@ public:
     //@}
 
 private:
-    const boost::weak_ptr<TradeFactory>& tradeFactory_;
     string currency_;
     Real notionalOverride_;
     string notionalCalculation_;

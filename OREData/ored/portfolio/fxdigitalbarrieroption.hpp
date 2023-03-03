@@ -34,6 +34,8 @@ using std::string;
   \ingroup tradedata
 */
 class FxDigitalBarrierOption : public FxSingleAssetDerivative {
+    static TradeBuilderRegister<TradeBuilder<FxDigitalBarrierOption>> reg_;
+
 public:
     //! Default constructor
     FxDigitalBarrierOption()

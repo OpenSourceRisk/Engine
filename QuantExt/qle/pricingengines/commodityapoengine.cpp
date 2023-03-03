@@ -1,6 +1,19 @@
 /*
  Copyright (C) 2019, 2022 Quaternion Risk Management Ltd
  All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
@@ -43,6 +56,7 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     std::map<Date, Real> futureVols;
     std::vector<double> spotVariances;
     size_t n = flow->indices().size();
+    double forwardUnderlyingCurrency = 0;
 
     for (const auto& [pricingDate, index] : flow->indices()) {
         Date fixingDate = index->fixingCalendar().adjust(pricingDate, Preceding);
@@ -50,10 +64,11 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
         if (pricingDate <= today) {
             res.accruals += index->fixing(fixingDate) * fxRate;
         } else {
+            forwardUnderlyingCurrency = index->fixing(fixingDate);
             res.forwards.push_back(index->fixing(fixingDate) * fxRate);
             res.times.push_back(vol->timeFromReference(pricingDate));
             // use ATM vol if no strike is given
-            double K = strike == Null<Real>() ? res.forwards.back() : strike;
+            double K = strike == Null<Real>() ? forwardUnderlyingCurrency : strike;
             if (flow->useFuturePrice()) {
                 Date expiry = index->expiryDate();
                 futureExpiries.push_back(expiry);
@@ -99,6 +114,10 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     }
     EA2 /= std::pow(static_cast<double>(n), 2.0);
     res.EA2 = EA2;
+
+    QL_REQUIRE(!std::isinf(EA2),
+               "moment matching fails (EA2 = inf) - this is possibly due to too high input volatilities.");
+
     // Calculate value
     if (!res.times.empty()) {
         res.tn = res.times.back();

@@ -51,7 +51,7 @@ FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
     LOG("Start building FxBs model for " << ccyPair);
 
     // get market data
-    fxSpot_ = market_->fxRate(ccyPair, configuration_);
+    fxSpot_ = market_->fxSpot(ccyPair, configuration_);
     ytsDom_ = market_->discountCurve(domesticCcy.code(), configuration_);
     ytsFor_ = market_->discountCurve(ccy.code(), configuration_);
 

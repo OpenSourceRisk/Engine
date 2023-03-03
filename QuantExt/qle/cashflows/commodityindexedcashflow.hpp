@@ -1,6 +1,19 @@
 /*
  Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 /*! \file qle/cashflows/commodityindexedcashflow.hpp
@@ -56,7 +69,7 @@ public:
     const QuantLib::Date& pricingDate() const { return pricingDate_; }
     bool useFutureExpiryDate() const { return useFutureExpiryDate_; }
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
-    QuantLib::Real periodQuantity() const { return periodQuantity_; }
+    QuantLib::Real periodQuantity() const override { return periodQuantity_; }
     QuantLib::Natural dailyExpiryOffset() const { return dailyExpiryOffset_; }
 
     //@}
@@ -80,15 +93,12 @@ public:
     void accept(QuantLib::AcyclicVisitor& v) override;
     //@}
 
-    //! \name Observer interface
-    //@{
-    void update() override;
-    //@}
-
     //! Allow the full calculation period quantity to be updated.
     void setPeriodQuantity(QuantLib::Real periodQuantity);
 
 private:
+    void performCalculations() const override;
+
     QuantLib::Date pricingDate_;
     QuantLib::Date paymentDate_;
     bool useFutureExpiryDate_;

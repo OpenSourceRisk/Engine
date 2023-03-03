@@ -49,14 +49,14 @@ Real BarrierOptionWrapper::NPV() const {
     if (exercised_) {
         Real npv;
         if (barrierType_ == Barrier::DownOut || barrierType_ == Barrier::UpOut)
-            npv = (today == exerciseDate_) ? (isLong_ ? 1.0 : -1.0) * rebate_ * undMultiplier_ : 0.0;
+            npv = (today == exerciseDate_) ? multiplier2() * rebate_ * undMultiplier_ : 0.0;
         else
-            npv = (isLong_ ? 1.0 : -1.0) * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_;
+            npv = multiplier2() * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_;
         
         return npv + addNPV;
     } else {
         // if not exercised we just return the original option's NPV
-        Real npv = (isLong_ ? 1.0 : -1.0) * getTimedNPV(instrument_) * multiplier_;
+        Real npv = multiplier2() * getTimedNPV(instrument_) * multiplier_;
         return npv + addNPV;
     }
 }

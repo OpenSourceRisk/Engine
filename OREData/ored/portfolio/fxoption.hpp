@@ -25,6 +25,8 @@
 
 #include <ored/portfolio/vanillaoption.hpp>
 
+#include <ored/portfolio/tradefactory.hpp>
+
 namespace ore {
 namespace data {
 using std::string;
@@ -34,6 +36,8 @@ using std::string;
   \ingroup tradedata
 */
 class FxOption : public VanillaOptionTrade {
+    static TradeBuilderRegister<TradeBuilder<FxOption>> reg_;
+
 public:
     //! Default constructor
     FxOption() : VanillaOptionTrade(AssetClass::FX) { tradeType_ = "FxOption"; }

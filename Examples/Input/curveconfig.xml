@@ -303,6 +303,45 @@
       <SpotLag>0</SpotLag>
       <Calendar>TARGET</Calendar>
     </DefaultCurve>
+    <DefaultCurve>
+      <CurveId>CPTY_1_SR_EUR</CurveId>
+      <CurveDescription>CPTY_1 SR HR EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <Type>HazardRate</Type>
+      <DiscountCurve/>
+      <DayCounter>A360</DayCounter>
+      <RecoveryRate>RECOVERY_RATE/RATE/CPTY_1/SR/EUR</RecoveryRate>
+      <Quotes>
+        <Quote>HAZARD_RATE/RATE/CPTY_1/SR/EUR/1Y</Quote>
+      </Quotes>
+      <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+    </DefaultCurve>
+    <DefaultCurve>
+      <CurveId>CPTY_2_SR_EUR</CurveId>
+      <CurveDescription>CPTY_2 SR HR EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <Type>HazardRate</Type>
+      <DiscountCurve/>
+      <DayCounter>A360</DayCounter>
+      <RecoveryRate>RECOVERY_RATE/RATE/CPTY_2/SR/EUR</RecoveryRate>
+      <Quotes>
+        <Quote>HAZARD_RATE/RATE/CPTY_2/SR/EUR/1Y</Quote>
+      </Quotes>
+      <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+    </DefaultCurve>
+    <DefaultCurve>
+      <CurveId>CPTY_3_SR_EUR</CurveId>
+      <CurveDescription>CPTY_3 SR HR EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <Type>HazardRate</Type>
+      <DiscountCurve/>
+      <DayCounter>A360</DayCounter>
+      <RecoveryRate>RECOVERY_RATE/RATE/CPTY_3/SR/EUR</RecoveryRate>
+      <Quotes>
+        <Quote>HAZARD_RATE/RATE/CPTY_3/SR/EUR/1Y</Quote>
+      </Quotes>
+      <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+    </DefaultCurve>
   </DefaultCurves>
   <YieldCurves>
     <YieldCurve>
@@ -2947,60 +2986,120 @@
   </InflationCapFloorVolatilities>
   
   <EquityCurves>
-        <EquityCurve>
-            <CurveId>SP5</CurveId>
-            <CurveDescription>SP 500 equity price projection curve</CurveDescription>
-            <Currency>USD</Currency>
-            <ForecastingCurve>USD1D</ForecastingCurve>
-            <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
-            <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
-            <Quotes>
-                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/3M</Quote>
-                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20160915</Quote>
-                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/1Y</Quote>
-                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
-            </Quotes>
-            <DayCounter>A365</DayCounter>
-            <DividendInterpolation>
-                <InterpolationVariable>Zero</InterpolationVariable>
-                <InterpolationMethod>Linear</InterpolationMethod>
-            </DividendInterpolation>
-        </EquityCurve>
-        <EquityCurve>
-            <CurveId>Lufthansa</CurveId>
-            <CurveDescription>Lufthansa equity price projection curve</CurveDescription>
-            <Currency>EUR</Currency>
-            <ForecastingCurve>EUR1D</ForecastingCurve>
-            <Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->
-            <SpotQuote>EQUITY/PRICE/Lufthansa/EUR</SpotQuote> <!--  the spot quote from the market data file -->
-            <Quotes>
-                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2016-06-16</Quote>
-                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/6M</Quote>
-                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2017-06-16</Quote>
-                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2Y</Quote>
-            </Quotes>
-            <DayCounter>A365</DayCounter>
-        </EquityCurve> 
+    <EquityCurve>
+      <CurveId>SP5</CurveId>
+      <CurveDescription>SP 500 equity price projection curve</CurveDescription>
+      <Currency>USD</Currency>
+      <ForecastingCurve>USD1D</ForecastingCurve>
+      <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
+      <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
+      <Quotes>
+        <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/3M</Quote>
+        <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20160915</Quote>
+        <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/1Y</Quote>
+        <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <DividendInterpolation>
+        <InterpolationVariable>Zero</InterpolationVariable>
+        <InterpolationMethod>Linear</InterpolationMethod>
+      </DividendInterpolation>
+    </EquityCurve>
+    <EquityCurve>
+      <CurveId>Lufthansa</CurveId>
+      <CurveDescription>Lufthansa equity price projection curve</CurveDescription>
+      <Currency>EUR</Currency>
+      <ForecastingCurve>EUR1D</ForecastingCurve>
+      <Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->
+      <SpotQuote>EQUITY/PRICE/Lufthansa/EUR</SpotQuote> 
+      <Quotes>
+        <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2016-06-16</Quote>
+        <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/6M</Quote>
+        <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2017-06-16</Quote>
+        <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2Y</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+    </EquityCurve>
+    <EquityCurve>
+      <CurveId>SX5E</CurveId>
+      <CurveDescription/>
+      <Currency>EUR</Currency>
+      <ForecastingCurve>EUR1D</ForecastingCurve>
+      <Type>ForwardPrice</Type>
+      <SpotQuote>EQUITY/PRICE/SX5E/EUR</SpotQuote> 
+      <Quotes>
+        <Quote>EQUITY_FWD/PRICE/SX5E/EUR/6M</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter> 
+    </EquityCurve>
+    <EquityCurve>
+      <CurveId>FTSE</CurveId>
+      <CurveDescription/>
+      <Currency>GBP</Currency>
+      <ForecastingCurve>GBP1D</ForecastingCurve>
+      <Type>ForwardPrice</Type>
+      <SpotQuote>EQUITY/PRICE/FTSE/GBP</SpotQuote>
+      <Quotes>
+        <Quote>EQUITY_FWD/PRICE/FTSE/GBP/6M</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+    </EquityCurve>
+    <EquityCurve>
+      <CurveId>SPX</CurveId>
+      <CurveDescription/>
+      <Currency>USD</Currency>
+      <ForecastingCurve>USD1D</ForecastingCurve>
+      <Type>ForwardPrice</Type>
+      <SpotQuote>EQUITY/PRICE/SPX/USD</SpotQuote>
+      <Quotes>
+        <Quote>EQUITY_FWD/PRICE/SPX/USD/6M</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+    </EquityCurve>
   </EquityCurves>
   <EquityVolatilities>
-        <EquityVolatility>
-            <CurveId>SP5</CurveId>
-            <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
-            <Currency>USD</Currency>
-            <Dimension>ATM</Dimension>
-            <Expiries>
-              6M
-            </Expiries>
-        </EquityVolatility>
-        <EquityVolatility>
-            <CurveId>Lufthansa</CurveId>
-            <CurveDescription/>
-            <Currency>EUR</Currency>
-            <Dimension>ATM</Dimension>
-            <Expiries>
-              2016-06-15
-            </Expiries>
-        </EquityVolatility>
+    <EquityVolatility>
+      <CurveId>SP5</CurveId>
+      <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+      <Currency>USD</Currency>
+      <Dimension>ATM</Dimension>
+      <Expiries>
+        6M
+      </Expiries>
+    </EquityVolatility>
+    <EquityVolatility>
+      <CurveId>Lufthansa</CurveId>
+      <CurveDescription/>
+      <Currency>EUR</Currency>
+      <Dimension>ATM</Dimension>
+      <Expiries>
+        2016-06-15
+      </Expiries>
+    </EquityVolatility>
+    <EquityVolatility>
+      <CurveId>SX5E</CurveId>
+      <CurveDescription/>
+      <Currency>EUR</Currency>
+      <Dimension>ATM</Dimension>
+      <Expiries>6M</Expiries>
+      <Strikes/>
+    </EquityVolatility>
+    <EquityVolatility>
+      <CurveId>FTSE</CurveId>
+      <CurveDescription/>
+      <Currency>GBP</Currency>
+      <Dimension>ATM</Dimension>
+      <Expiries>6M</Expiries>
+      <Strikes/>
+    </EquityVolatility>
+    <EquityVolatility>
+      <CurveId>SPX</CurveId>
+      <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+      <Currency>USD</Currency>
+      <Dimension>ATM</Dimension>
+      <Expiries>6M</Expiries>
+      <Strikes/>
+    </EquityVolatility>
   </EquityVolatilities>
   <Securities>
     <Security>
@@ -3008,6 +3107,18 @@
       <CurveDescription>Security</CurveDescription>
       <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1</SpreadQuote>
       <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1</RecoveryRateQuote>
+    </Security>
+    <Security>
+      <CurveId>SECURITY_2</CurveId>
+      <CurveDescription>Security</CurveDescription>
+      <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_2</SpreadQuote>
+      <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_2</RecoveryRateQuote>
+    </Security>
+    <Security>
+      <CurveId>SECURITY_3</CurveId>
+      <CurveDescription>Security</CurveDescription>
+      <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_3</SpreadQuote>
+      <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_3</RecoveryRateQuote>
     </Security>
   </Securities>
   <CommodityCurves>
@@ -3213,5 +3324,25 @@
         1M,3M,6M,1Y,2Y,3Y,4Y,5Y
       </Expiries>
     </CDSVolatility>
+    <CDSVolatility>
+      <CurveId>CDXIG</CurveId>
+      <CurveDescription>Lognormal option implied vols for CDX IG</CurveDescription>
+      <Expiries>
+        1M,3M,6M
+      </Expiries>
+    </CDSVolatility>
   </CDSVolatilities>
+  <BaseCorrelations>
+    <BaseCorrelation>
+      <CurveId>CDXIG</CurveId>
+      <CurveDescription>CDX IG Bbase correlations</CurveDescription>
+      <Terms>1D</Terms>
+      <DetachmentPoints>0.03, 0.06, 0.10, 0.20, 1.0</DetachmentPoints>
+      <SettlementDays>0</SettlementDays>
+      <Calendar>US</Calendar>
+      <BusinessDayConvention>F</BusinessDayConvention>
+      <DayCounter>A365</DayCounter>
+      <Extrapolate>Y</Extrapolate>
+    </BaseCorrelation>
+  </BaseCorrelations>
 </CurveConfiguration>

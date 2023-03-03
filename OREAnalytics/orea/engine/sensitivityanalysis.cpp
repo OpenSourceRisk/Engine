@@ -60,18 +60,15 @@ SensitivityAnalysis::SensitivityAnalysis(
     const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, const bool recalibrateModels,
     const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
-    const bool nonShiftedBaseCurrencyConversion,
-    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
-    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
-    const boost::shared_ptr<ReferenceDataManager>& referenceData, const IborFallbackConfig& iborFallbackConfig,
-    const bool continueOnError, bool analyticFxSensis, bool dryRun)
+    const bool nonShiftedBaseCurrencyConversion, const boost::shared_ptr<ReferenceDataManager>& referenceData,
+    const IborFallbackConfig& iborFallbackConfig, const bool continueOnError, bool analyticFxSensis, bool dryRun)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market ? market->asofDate() : Date()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels),
       curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
-      nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), extraEngineBuilders_(extraEngineBuilders),
-      extraLegBuilders_(extraLegBuilders), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
-      continueOnError_(continueOnError), engineData_(engineData), portfolio_(portfolio),
-      analyticFxSensis_(analyticFxSensis), dryRun_(dryRun), initialized_(false), computed_(false) {}
+      nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), referenceData_(referenceData),
+      iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError), engineData_(engineData),
+      portfolio_(portfolio), analyticFxSensis_(analyticFxSensis), dryRun_(dryRun), initialized_(false),
+      computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -87,7 +84,7 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVSensiCube>& cube) {
     initializeSimMarket();
 
     LOG("Build Engine Factory and rebuild portfolio");
-    boost::shared_ptr<EngineFactory> factory = buildFactory(extraEngineBuilders_, extraLegBuilders_);
+    boost::shared_ptr<EngineFactory> factory = buildFactory();
     resetPortfolio(factory);
     if (recalibrateModels_)
         modelBuilders_ = factory->modelBuilders();
@@ -156,16 +153,14 @@ void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory>
     simMarket_->scenarioGenerator() = scenarioGenerator_;
 }
 
-boost::shared_ptr<EngineFactory>
-SensitivityAnalysis::buildFactory(const std::vector<boost::shared_ptr<EngineBuilder>> extraBuilders,
-                                  const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders) const {
+boost::shared_ptr<EngineFactory> SensitivityAnalysis::buildFactory() const {
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = marketConfiguration_;
     auto ed = boost::make_shared<EngineData>(*engineData_);
     ed->globalParameters()["RunType"] =
         std::string("Sensitivity") + (sensitivityData_->computeGamma() ? "DeltaGamma" : "Delta");
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
-        ed, simMarket_, configurations, extraBuilders, extraLegBuilders, referenceData_, iborFallbackConfig_);
+    boost::shared_ptr<EngineFactory> factory =
+        boost::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
     return factory;
 }
 
@@ -192,24 +187,24 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
     // The currency of the sensitivities.
     string baseCcy = simMarketData_->baseCcy();
 
-    for (const auto& trade : portfolio_->trades()) {
+    for (const auto& [tradeId, trade] : portfolio_->trades()) {
 
         if (auto fxo = boost::dynamic_pointer_cast<FxOption>(trade)) {
 
-            DLOG("addAnalyticFxSensitivities: trade id " << trade->id() << " is an FX option so include.");
+            DLOG("addAnalyticFxSensitivities: trade id " << tradeId << " is an FX option so include.");
 
             // Skip this option if it has matured.
             if (QuantLib::detail::simple_event(fxo->maturity()).hasOccurred()) {
                 DLOG("addAnalyticFxSensitivities: skipping FX option with id "
-                     << trade->id() << " as it has matured. Maturity is " << io::iso_date(fxo->maturity()) << ".");
+                     << tradeId << " as it has matured. Maturity is " << io::iso_date(fxo->maturity()) << ".");
                 continue;
             }
 
-            Size tradeIdx = sensiCube_->tradeIdx().at(trade->id());
+            Size tradeIdx = sensiCube_->tradeIdx().at(tradeId);
 
             const auto& domCcy = fxo->soldCurrency();
             if (isMetal(parseCurrency(domCcy))) {
-                DLOG("addAnalyticFxSensitivities: FX option " << trade->id() << " references the price of a metal, "
+                DLOG("addAnalyticFxSensitivities: FX option " << tradeId << " references the price of a metal, "
                                                               << domCcy << ", so skipping it.");
                 continue;
             }
@@ -219,7 +214,7 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
 
             const auto& forCcy = fxo->boughtCurrency();
             if (isMetal(parseCurrency(forCcy))) {
-                DLOG("addAnalyticFxSensitivities: FX option " << trade->id() << " references the price of a metal, "
+                DLOG("addAnalyticFxSensitivities: FX option " << tradeId << " references the price of a metal, "
                                                               << forCcy << ", so skipping it.");
                 continue;
             }
@@ -239,14 +234,14 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
                     delta = vo->delta();
                 } catch (...) {
                     DLOG("addAnalyticFxSensitivities: underlying engine for trade id "
-                         << trade->id() << " does not provide delta so skipping this trade.");
+                         << tradeId << " does not provide delta so skipping this trade.");
                     continue;
                 }
 
                 // Delta may possibly still not populated at this point in some cases but unlikely.
                 if (delta == Null<Real>()) {
                     DLOG("addAnalyticFxSensitivities: underlying engine for trade id "
-                         << trade->id() << " does not populate delta so skipping this trade.");
+                         << tradeId << " does not populate delta so skipping this trade.");
                     continue;
                 }
 
@@ -275,7 +270,7 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
             // If we have nothing by now continue skip to next trade.
             if (domCcySensi == Null<Real>() && forCcySensi == Null<Real>()) {
                 DLOG("addAnalyticFxSensitivities: could not populate an analytical FX delta for trade id "
-                     << trade->id() << " so skipping this trade.");
+                     << tradeId << " so skipping this trade.");
                 continue;
             }
 
@@ -333,11 +328,13 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
                 auto itu = upFactors.find(forCcyKey);
                 if (itu != upFactors.end()) {
                     TLOG("Adding analytic " << forCcy << " up sensitivity to cube.");
+                    sensiCube_->npvCube()->remove(tradeIdx, itu->second.index);
                     sensiCube_->npvCube()->set(baseNpv + forCcySensi, tradeIdx, itu->second.index);
                 }
                 auto itd = downFactors.find(forCcyKey);
                 if (itd != downFactors.end()) {
                     TLOG("Adding analytic " << forCcy << " down sensitivity to cube.");
+                    sensiCube_->npvCube()->remove(tradeIdx, itd->second.index);
                     sensiCube_->npvCube()->set(baseNpv - forCcySensi, tradeIdx, itd->second.index);
                 }
             }
@@ -347,11 +344,13 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
                 auto itu = upFactors.find(domCcyKey);
                 if (itu != upFactors.end()) {
                     TLOG("Adding analytic " << domCcy << " up sensitivity to cube.");
+                    sensiCube_->npvCube()->remove(tradeIdx, itu->second.index);
                     sensiCube_->npvCube()->set(baseNpv + domCcySensi, tradeIdx, itu->second.index);
                 }
                 auto itd = downFactors.find(domCcyKey);
                 if (itd != downFactors.end()) {
                     TLOG("Adding analytic " << domCcy << " down sensitivity to cube.");
+                    sensiCube_->npvCube()->remove(tradeIdx, itd->second.index);
                     sensiCube_->npvCube()->set(baseNpv - domCcySensi, tradeIdx, itd->second.index);
                 }
             }

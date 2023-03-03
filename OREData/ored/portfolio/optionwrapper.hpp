@@ -54,6 +54,7 @@ public:
     void initialise(const std::vector<QuantLib::Date>& dates) override;
     void reset() override;
     QuantLib::Real NPV() const override;
+    Real multiplier2() const override { return (isLong_ ? 1.0 : -1.0); }
     const std::map<std::string, boost::any>& additionalResults() const override;
     void updateQlInstruments() override {
         for (QuantLib::Size i = 0; i < underlyingInstruments_.size(); ++i)

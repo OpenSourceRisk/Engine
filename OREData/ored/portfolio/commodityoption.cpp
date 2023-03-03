@@ -38,6 +38,8 @@ using QuantExt::PriceTermStructure;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<CommodityOption>> CommodityOption::reg_("CommodityOption");
+
 CommodityOption::CommodityOption() : VanillaOptionTrade(AssetClass::COM) { tradeType_ = "CommodityOption"; }
 
 CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionData, const string& commodityName,
@@ -103,6 +105,13 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = strike_.value();
     additionalData_["strikeCurrency"] = currency_;    
+
+    // ISDA taxonomy, assuming Commodity follows the Equity template
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Option");
+    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = std::string("");
 }
 
 std::map<AssetClass, std::set<std::string>>

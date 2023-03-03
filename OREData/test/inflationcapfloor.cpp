@@ -155,7 +155,6 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
     engineData->model("YYCapFloor") = "YYCapModel";
     engineData->engine("YYCapFloor") = "YYCapEngine";
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<YoYCapFloorEngineBuilder>());
 
     // build capfloor and portfolio
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());

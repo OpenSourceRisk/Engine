@@ -66,13 +66,14 @@ protected:
             vol->enableExtrapolation();
         }
         return boost::make_shared<GeneralizedBlackScholesProcess>(
-            market_->fxRate(ccyPairCode, configuration(ore::data::MarketContext::pricing)),
+            market_->fxSpot(ccyPairCode, configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(forCcy.code(), configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)), vol);
     }
 };
 
 class FxBarrierOptionAnalyticEngineBuilder : public FxBarrierOptionEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(FxBarrierOptionAnalyticEngineBuilder)
 public:
     FxBarrierOptionAnalyticEngineBuilder() : FxBarrierOptionEngineBuilder("GarmanKohlhagen", "AnalyticBarrierEngine") {}
 
@@ -85,6 +86,7 @@ protected:
 };
 
 class FxBarrierOptionFDEngineBuilder : public FxBarrierOptionEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(FxBarrierOptionFDEngineBuilder)
 public:
     FxBarrierOptionFDEngineBuilder() : FxBarrierOptionEngineBuilder("GarmanKohlhagen", "FdBlackScholesBarrierEngine") {}
 

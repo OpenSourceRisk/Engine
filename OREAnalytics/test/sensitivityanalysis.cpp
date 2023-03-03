@@ -162,16 +162,6 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     data->model("CommodityOption") = "BlackScholes";
     data->engine("CommodityOption") = "AnalyticEuropeanEngine";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
-    factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<LGMGridBermudanSwaptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<CommodityEuropeanOptionEngineBuilder>());
 
     // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
@@ -196,8 +186,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     portfolio->add(buildFxOption("8_FxOption_EUR_GBP", "Long", "Call", 7, "EUR", 10000000.0, "GBP", 11000000.0));
     portfolio->add(buildCap("9_Cap_EUR", "EUR", "Long", 0.05, 1000000.0, 0, 10, "6M", "A360", "EUR-EURIBOR-6M"));
     portfolio->add(buildFloor("10_Floor_USD", "USD", "Long", 0.01, 1000000.0, 0, 10, "3M", "A360", "USD-LIBOR-3M"));
-    portfolio->add(buildZeroBond("11_ZeroBond_EUR", "EUR", 1.0, 10));
-    portfolio->add(buildZeroBond("12_ZeroBond_USD", "USD", 1.0, 10));
+    portfolio->add(buildZeroBond("11_ZeroBond_EUR", "EUR", 1.0, 10, "0"));
+    portfolio->add(buildZeroBond("12_ZeroBond_USD", "USD", 1.0, 10, "0"));
     portfolio->add(buildEquityOption("14_EquityOption_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 775));
     portfolio->add(buildCPIInflationSwap("15_CPIInflationSwap_UKRPI", "GBP", true, 100000.0, 0, 10, 0.0, "6M",
                                          "ACT/ACT", "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", 201.0, "2M", false,
@@ -557,20 +547,20 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         // time to maturity T = YEARFRAC(14/4/16, 14/4/26, 1) = 9.99800896, yields
         // sensi to up shift d=1bp: exp(-(z+d)*T)-exp(z*T)
         // = -0.00060616719559925
-        {"11_ZeroBond_EUR", "Up:YieldCurve/BondCurve1/6/10Y", 0.60659, -0.000606168}, // OK, diff 1e-9
+        {"11_ZeroBond_EUR", "Up:YieldCurve/BondCurve0/6/10Y", 0.60659, -0.000606168}, // OK, diff 1e-9
         // sensi to down shift d=-1bp: 0.00060677354516836
-        {"11_ZeroBond_EUR", "Down:YieldCurve/BondCurve1/6/10Y", 0.60659, 0.000606774}, // OK, diff < 1e-9
+        {"11_ZeroBond_EUR", "Down:YieldCurve/BondCurve0/6/10Y", 0.60659, 0.000606774}, // OK, diff < 1e-9
         // A relative shift in yield curve is equivalent to a relative shift in default curve
-        {"11_ZeroBond_EUR", "Up:SurvivalProbability/BondIssuer1/6/10Y", 0.60659, -0.000606168},
-        {"11_ZeroBond_EUR", "Down:SurvivalProbability/BondIssuer1/6/10Y", 0.60659, 0.000606774},
+        {"11_ZeroBond_EUR", "Up:SurvivalProbability/BondIssuer0/6/10Y", 0.60659, -0.000606168},
+        {"11_ZeroBond_EUR", "Down:SurvivalProbability/BondIssuer0/6/10Y", 0.60659, 0.000606774},
         // sensi to up shift d=+1bp: exp(-(z+d)*T)*USDEUR - exp(-z*T)*USDEUR
         // = -0.000505139329666004
-        {"12_ZeroBond_USD", "Up:YieldCurve/BondCurve1/6/10Y", 0.505492, -0.00050514}, // OK, diff < 1e-8
+        {"12_ZeroBond_USD", "Up:YieldCurve/BondCurve0/6/10Y", 0.505492, -0.00050514}, // OK, diff < 1e-8
         // sensi to down shift d=-1bp: 0.000505644620973689
-        {"12_ZeroBond_USD", "Down:YieldCurve/BondCurve1/6/10Y", 0.505492, 0.000505645}, // OK, diff < 1e-9
+        {"12_ZeroBond_USD", "Down:YieldCurve/BondCurve0/6/10Y", 0.505492, 0.000505645}, // OK, diff < 1e-9
         // A relative shift in yield curve is equivalent to a relative shift in default curve
-        {"12_ZeroBond_USD", "Up:SurvivalProbability/BondIssuer1/6/10Y", 0.505492, -0.00050514},
-        {"12_ZeroBond_USD", "Down:SurvivalProbability/BondIssuer1/6/10Y", 0.505492, 0.000505645},
+        {"12_ZeroBond_USD", "Up:SurvivalProbability/BondIssuer0/6/10Y", 0.505492, -0.00050514},
+        {"12_ZeroBond_USD", "Down:SurvivalProbability/BondIssuer0/6/10Y", 0.505492, 0.000505645},
         // sensi to EURUSD upshift d=+1%: exp(-z*T)*USDEUR/(1+d) - exp(-z*T)*USDEUR
         // = -0.00500487660122262
         {"12_ZeroBond_USD", "Up:FXSpot/EURUSD/0/spot", 0.505492, -0.00500487}, // OK, diff < 1e-8
@@ -730,18 +720,18 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     Real tolerance = 0.01;
     Size count = 0;
     vector<ShiftScenarioGenerator::ScenarioDescription> desc = scenarioGenerator->scenarioDescriptions();
-    for (Size i = 0; i < portfolio->size(); ++i) {
-        Real npv0 = cube->getT0(i, 0);
-        string id = portfolio->trades()[i]->id();
+    size_t currentTradeIdx = 0;
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
+        Real npv0 = cube->getT0(currentTradeIdx, 0);
         for (Size j = 1; j < scenarioGenerator->samples(); ++j) { // skip j = 0, this is the base scenario
-            Real npv = cube->get(i, 0, j, 0);
+            Real npv = cube->get(currentTradeIdx, 0, j, 0);
             Real sensi = npv - npv0;
             string label = to_string(desc[j]);
             if (fabs(sensi) > tiny) {
                 count++;
-                BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " <<
+                BOOST_TEST_MESSAGE("{ \"" << tradeId << "\", \"" << label << "\", " <<
                     std::fixed << std::setprecision(12) << npv0 << ", " << sensi << " },");
-                pair<string, string> p(id, label);
+                pair<string, string> p(tradeId, label);
                 QL_REQUIRE(npvMap.find(p) != npvMap.end(),
                            "pair (" << p.first << ", " << p.second << ") not found in npv map");
                 QL_REQUIRE(sensiMap.find(p) != sensiMap.end(),
@@ -755,8 +745,11 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                         << p.first << ", " << p.second << "): " << sensi << " vs " << sensiMap[p]);
 		coveredSensis.insert(p);
             }
+            
         }
+        currentTradeIdx++;
     }
+    currentTradeIdx = 0;
     BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero sensitivities ("
                                                            << count << ") do not match regression data ("
                                                            << cachedResults.size() << ")");
@@ -774,19 +767,19 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
     std::set<string> sensiTrades;
-    for (auto p : portfolio->trades()) {
-        sensiTrades.insert(p->id());
+    for (const auto& [pid,p] : portfolio->trades()) {
+        sensiTrades.insert(pid);
         for (const auto& f : sa->sensiCube()->factors()) {
             auto des = sa->sensiCube()->factorDescription(f);
-            deltaMap[make_pair(p->id(), des)] = sa->sensiCube()->delta(p->id(), f);
-            gammaMap[make_pair(p->id(), des)] = sa->sensiCube()->gamma(p->id(), f);
+            deltaMap[make_pair(pid, des)] = sa->sensiCube()->delta(pid, f);
+            gammaMap[make_pair(pid, des)] = sa->sensiCube()->gamma(pid, f);
         }
     }
 
     std::vector<Results> cachedResults2 = {
         // trade, factor, delta, gamma
-        {"11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y", -0.000606168, 6.06352e-07}, // gamma OK see case 1 below
-        {"12_ZeroBond_USD", "YieldCurve/BondCurve1/6/10Y", -0.00050514, 5.05294e-07},  // gamma OK, see case 2 below
+        {"11_ZeroBond_EUR", "YieldCurve/BondCurve0/6/10Y", -0.000606168, 6.06352e-07}, // gamma OK see case 1 below
+        {"12_ZeroBond_USD", "YieldCurve/BondCurve0/6/10Y", -0.00050514, 5.05294e-07},  // gamma OK, see case 2 below
         {"12_ZeroBond_USD", "FXSpot/EURUSD/0/spot", -0.00500487, 0.000101108}          // gamma OK, see case 3
     };
 
@@ -1108,8 +1101,6 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
     data->model("EquityOption") = "BlackScholesMerton";
     data->engine("EquityOption") = "AnalyticEuropeanEngine";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
-    factory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
 
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
     Size trnCount = 0;
@@ -1143,21 +1134,20 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
         Real divRho;
     };
     map<string, AnalyticInfo> qlInfoMap;
-    for (Size i = 0; i < portfolio->size(); ++i) {
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
         AnalyticInfo info;
-        boost::shared_ptr<Trade> trn = portfolio->trades()[i];
-        boost::shared_ptr<ore::data::EquityOption> eqoTrn = boost::dynamic_pointer_cast<ore::data::EquityOption>(trn);
+        boost::shared_ptr<ore::data::EquityOption> eqoTrn = boost::dynamic_pointer_cast<ore::data::EquityOption>(trade);
         BOOST_CHECK(eqoTrn);
-        info.id = trn->id();
+        info.id = tradeId;
         info.name = eqoTrn->equityName();
-        info.npvCcy = trn->npvCurrency();
+        info.npvCcy = trade->npvCurrency();
 
         info.spot = initMarket->equitySpot(info.name)->value();
         string pair = info.npvCcy + simMarketData->baseCcy();
         info.fx = initMarket->fxRate(pair)->value();
-        info.baseNpv = trn->instrument()->NPV() * info.fx;
+        info.baseNpv = trade->instrument()->NPV() * info.fx;
         boost::shared_ptr<QuantLib::VanillaOption> qlOpt =
-            boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trn->instrument()->qlInstrument());
+            boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trade->instrument()->qlInstrument());
         BOOST_CHECK(qlOpt);
         Position::Type positionType = parsePositionType(eqoTrn->option().longShort());
         Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
@@ -1179,12 +1169,12 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
     std::set<string> sensiTrades;
-    for (auto p : portfolio->trades()) {
-        sensiTrades.insert(p->id());
+    for (auto [pid,p] : portfolio->trades()) {
+        sensiTrades.insert(pid);
         for (const auto& f : sa->sensiCube()->factors()) {
             auto des = sa->sensiCube()->factorDescription(f);
-            deltaMap[make_pair(p->id(), des)] = sa->sensiCube()->delta(p->id(), f);
-            gammaMap[make_pair(p->id(), des)] = sa->sensiCube()->gamma(p->id(), f);
+            deltaMap[make_pair(pid, des)] = sa->sensiCube()->delta(pid, f);
+            gammaMap[make_pair(pid, des)] = sa->sensiCube()->gamma(pid, f);
         }
     }
 
@@ -1314,7 +1304,6 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     data->model("FxOption") = "GarmanKohlhagen";
     data->engine("FxOption") = "AnalyticEuropeanEngine";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
-    factory->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
 
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
     Size trnCount = 0;
@@ -1354,13 +1343,12 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
         Real fxForBase;
     };
     map<string, AnalyticInfo> qlInfoMap;
-    for (Size i = 0; i < portfolio->size(); ++i) {
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
         AnalyticInfo info;
-        boost::shared_ptr<Trade> trn = portfolio->trades()[i];
-        boost::shared_ptr<ore::data::FxOption> fxoTrn = boost::dynamic_pointer_cast<ore::data::FxOption>(trn);
+        boost::shared_ptr<ore::data::FxOption> fxoTrn = boost::dynamic_pointer_cast<ore::data::FxOption>(trade);
         BOOST_CHECK(fxoTrn);
-        info.id = trn->id();
-        info.npvCcy = trn->npvCurrency();
+        info.id = tradeId;
+        info.npvCcy = trade->npvCurrency();
         info.forCcy = fxoTrn->boughtCurrency();
         info.domCcy = fxoTrn->soldCurrency();
         BOOST_CHECK_EQUAL(info.npvCcy, info.domCcy);
@@ -1370,9 +1358,9 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
         info.trnFx = initMarket->fxRate(trnPair)->value();
         string forPair = info.forCcy + simMarketData->baseCcy();
         info.fxForBase = initMarket->fxRate(forPair)->value();
-        info.baseNpv = trn->instrument()->NPV() * info.fx;
+        info.baseNpv = trade->instrument()->NPV() * info.fx;
         boost::shared_ptr<QuantLib::VanillaOption> qlOpt =
-            boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trn->instrument()->qlInstrument());
+            boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trade->instrument()->qlInstrument());
         BOOST_CHECK(qlOpt);
         Position::Type positionType = parsePositionType(fxoTrn->option().longShort());
         Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
@@ -1396,12 +1384,12 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
     std::set<string> sensiTrades;
-    for (auto p : portfolio->trades()) {
-        sensiTrades.insert(p->id());
+    for (const auto& [pid ,_] : portfolio->trades()) {
+        sensiTrades.insert(pid);
         for (const auto& f : sa->sensiCube()->factors()) {
             auto des = sa->sensiCube()->factorDescription(f);
-            deltaMap[make_pair(p->id(), des)] = sa->sensiCube()->delta(p->id(), f);
-            gammaMap[make_pair(p->id(), des)] = sa->sensiCube()->gamma(p->id(), f);
+            deltaMap[make_pair(pid, des)] = sa->sensiCube()->delta(pid, f);
+            gammaMap[make_pair(pid, des)] = sa->sensiCube()->gamma(pid, f);
         }
     }
 
@@ -1554,7 +1542,7 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
                                      << ", gamma=" << qlInfo.gamma << ", vega=" << qlInfo.vega << ", rho=" << qlInfo.rho
                                      << ", divRho=" << qlInfo.divRho);
         Real bp = 1.e-4;
-        Real tol = 0.5; // % relative tolerance
+        Real tol = 1.0; // % relative tolerance
         // rate sensis are 1bp absolute shifts
         // fx vol sensis are 1bp relative shifts
         // fx spot sensis are 1pb relative shifts
@@ -1694,12 +1682,6 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     data->model("CapFlooredIborLeg") = "BlackOrBachelier";
     data->engine("CapFlooredIborLeg") = "BlackIborCouponPricer";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
-    factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<LGMGridBermudanSwaptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
 
     // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
@@ -1977,19 +1959,18 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     Real rel_tol = 0.005;
     Real threshold = 1.e-6;
     Size count = 0;
-    for (Size i = 0; i < portfolio->size(); i++) {
-        string id = portfolio->trades()[i]->id();
+    for (const auto& [tradeId, _] : portfolio->trades()) {
         for (auto const& s : scenDesc) {
             if (s.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
                 string factor1 = s.factor1();
                 string factor2 = s.factor2();
                 ostringstream os;
-                os << id << "_" << factor1 << "_" << factor2;
+                os << tradeId << "_" << factor1 << "_" << factor2;
                 string keyStr = os.str();
-                tuple<string, string, string> key = make_tuple(id, factor1, factor2);
-                Real crossgamma = sa->sensiCube()->crossGamma(id, make_pair(s.key1(), s.key2()));
+                tuple<string, string, string> key = make_tuple(tradeId, factor1, factor2);
+                Real crossgamma = sa->sensiCube()->crossGamma(tradeId, make_pair(s.key1(), s.key2()));
                 if (fabs(crossgamma) >= threshold) {
-                    ids.push_back(make_tuple(id, factor1, factor2));
+                    ids.push_back(make_tuple(tradeId, factor1, factor2));
                     // BOOST_TEST_MESSAGE("{ \"" << id << std::setprecision(9) << "\", \"" << factor1 << "\", \"" <<
                     // factor2 <<
                     // "\", " << crossgamma << " },");

@@ -29,6 +29,8 @@
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/premiumdata.hpp>
 #include <ored/portfolio/tradeactions.hpp>
+#include <ored/portfolio/tradefactory.hpp> // just convenience so that client code needs to include trade.hpp only
+
 #include <ored/utilities/parsers.hpp>
 
 #include <ql/cashflow.hpp>
@@ -208,6 +210,11 @@ protected:
 
     RequiredFixings requiredFixings_;
     mutable std::map<std::string,boost::any> additionalData_;
+
+    /* sets additional data based on given internal legNo (0, 1, ...), the result leg id is derived from this
+       as "legNo + 1", i.e. starting with 1 (1, 2, ...). The result leg id can be overwriten using the second
+       parameter resultLegId. */
+    void setLegBasedAdditionalData(const Size legNo, Size resultLegId = Null<Size>()) const;
 
 private:
     string id_;
