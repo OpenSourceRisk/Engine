@@ -586,6 +586,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     inputs->setAllFixings(true); 
     inputs->setEomInflationFixings(false);
     inputs->setUseMarketDataFixings(false);
+    inputs->setBuildFailedTrades(false);
 
     QL_REQUIRE(params_->hasGroup("setup"), "parameter group 'setup' missing");
 
