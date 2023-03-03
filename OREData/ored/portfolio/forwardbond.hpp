@@ -35,13 +35,14 @@ public:
 
     //! Constructor taking an envelope and bond data
     ForwardBond(Envelope env, const BondData& bondData, string fwdMaturityDate, string fwdSettlementDate,
-                string settlement, string amount, string lockRate, string lockRateDayCounter, string settlementDirty,
-                string compensationPayment, string compensationPaymentDate, string longInForward)
+                string settlement, string amount, string lockRate, string lockRateDayCounter,
+                string settlementDirty,
+                string compensationPayment, string compensationPaymentDate, string dv01, string longInForward)
         : Trade("ForwardBond", env), originalBondData_(bondData), bondData_(bondData),
           fwdMaturityDate_(fwdMaturityDate), fwdSettlementDate_(fwdSettlementDate), settlement_(settlement),
           amount_(amount), lockRate_(lockRate), lockRateDayCounter_(lockRateDayCounter),
           settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
-          compensationPaymentDate_(compensationPaymentDate), longInForward_(longInForward) {}
+          compensationPaymentDate_(compensationPaymentDate), dv01_(dv01), longInForward_(longInForward) {}
 
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
@@ -64,6 +65,7 @@ public:
     const string& settlementDirty() const { return settlementDirty_; }
     const string& compensationPayment() const { return compensationPayment_; }
     const string& compensationPaymentDate() const { return compensationPaymentDate_; }
+    const string& dv01() const { return dv01_; }
     const string& longInForward() const { return longInForward_; }
 
 protected:
@@ -74,11 +76,12 @@ protected:
     string fwdSettlementDate_;
     string settlement_;
     string amount_;
-    string lockRate_;
+    string lockRate_; 
     string lockRateDayCounter_;
     string settlementDirty_;
     string compensationPayment_;
     string compensationPaymentDate_;
+    string dv01_;
     string longInForward_;
 };
 } // namespace data

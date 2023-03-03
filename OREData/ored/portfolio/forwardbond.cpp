@@ -75,6 +75,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
     Real amount = amount_.empty() ? Null<Real>() : parseReal(amount_);
     Real lockRate = lockRate_.empty() ? Null<Real>() : parseReal(lockRate_);
+    Real dv01 = dv01_.empty() ? Null<Real>() : parseReal(dv01_);
     DayCounter lockRateDayCounter = lockRateDayCounter_.empty() ? Actual360() : parseDayCounter(lockRateDayCounter_);
     bool settlementDirty = settlementDirty_.empty() ? true : parseBool(settlementDirty_);
     Real compensationPayment = parseReal(compensationPayment_);
@@ -138,7 +139,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                : boost::make_shared<QuantExt::ForwardBond>(bond, lockRate, lockRateDayCounter, longInForward,
                                                            fwdMaturityDate, fwdSettlementDate, isPhysicallySettled,
                                                            settlementDirty, compensationPayment,
-                                                           compensationPaymentDate, bondData_.bondNotional());
+                                                           compensationPaymentDate, dv01, bondData_.bondNotional());
 
     boost::shared_ptr<fwdBondEngineBuilder> fwdBondBuilder =
         boost::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
@@ -169,6 +170,7 @@ void ForwardBond::fromXML(XMLNode* node) {
     settlement_ = XMLUtils::getChildValue(fwdSettlementNode, "Settlement", false);
     amount_ = XMLUtils::getChildValue(fwdSettlementNode, "Amount", false);
     lockRate_ = XMLUtils::getChildValue(fwdSettlementNode, "LockRate", false);
+    dv01_ = XMLUtils::getChildValue(fwdSettlementNode, "dv01", false);
     lockRateDayCounter_ = XMLUtils::getChildValue(fwdSettlementNode, "LockRateDayCounter", false);
     settlementDirty_ = XMLUtils::getChildValue(fwdSettlementNode, "SettlementDirty", false);
 
@@ -201,6 +203,8 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, fwdSettlementNode, "Amount", amount_);
     if (!lockRate_.empty())
         XMLUtils::addChild(doc, fwdSettlementNode, "LockRate", lockRate_);
+    if (!dv01_.empty())
+        XMLUtils::addChild(doc, fwdSettlementNode, "dv01", dv01_);
     if (!lockRateDayCounter_.empty())
         XMLUtils::addChild(doc, fwdSettlementNode, "LockRateDayCounter", lockRateDayCounter_);
     if (!settlementDirty_.empty())
