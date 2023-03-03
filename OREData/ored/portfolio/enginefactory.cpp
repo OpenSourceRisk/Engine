@@ -190,7 +190,7 @@ void EngineFactory::addDefaultBuilders() {
 
 void EngineFactory::addExtraBuilders(const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
                                      const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders,
-                                     allowOverwrite) {
+                                     const bool allowOverwrite) {
 
     if (extraEngineBuilders.size() > 0) {
         DLOG("adding " << extraEngineBuilders.size() << " extra engine builders");
