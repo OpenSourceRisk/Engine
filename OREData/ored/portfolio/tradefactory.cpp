@@ -45,11 +45,7 @@ void TradeFactory::addBuilder(const std::string& className, const boost::shared_
 }
 
 boost::shared_ptr<Trade> TradeFactory::build(const string& className) const {
-    try {
         return getBuilder(className)->build();
-    } catch (...) {
-    }
-    return nullptr;
 }
 
 } // namespace data

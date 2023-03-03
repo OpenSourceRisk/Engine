@@ -144,23 +144,18 @@ void CompositeTrade::fromXML(XMLNode* node) {
         id = this->id() + "_" + std::to_string(i);
         DLOG("Parsing composite trade " << this->id() << " node " << i << " with id: " << id);
 
-        boost::shared_ptr<Trade> trade = TradeFactory::instance().build(tradeType);
-
-        if (trade) {
-            try {
-                trade->id() = id;
-                // we prefer that the component trades don't have envelopes, but we need one for validation
-                trade->envelope() = this->envelope();
-                trade->fromXML(nodes[i]);
-                trades_.push_back(trade);
-
-                DLOG("Added Trade " << id << " (" << trade->id() << ")"
-                                    << " type:" << tradeType << " to composite trade " << this->id() << ".");
-            } catch (std::exception& ex) {
-                ALOG("Failed to build subtrade " << trade->id() << " inside composite trade. " << ex.what());
-            }
-        } else {
-            WLOG("Unable to build Trade for tradeType=" << tradeType);
+        boost::shared_ptr<Trade> trade;
+        try {
+            trade = TradeFactory::instance().build(tradeType);
+            trade->id() = id;
+            // we prefer that the component trades don't have envelopes, but we need one for validation
+            trade->envelope() = this->envelope();
+            trade->fromXML(nodes[i]);
+            trades_.push_back(trade);
+            DLOG("Added Trade " << id << " (" << trade->id() << ")"
+                                << " type:" << tradeType << " to composite trade " << this->id() << ".");
+        } catch (std::exception& ex) {
+            ALOG("Failed to build subtrade with id '" << id << "' inside composite trade: " << ex.what());
         }
     }
     LOG("Finished Parsing XML doc");

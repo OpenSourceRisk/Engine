@@ -68,7 +68,7 @@ public:
     boost::shared_ptr<AbstractTradeBuilder> getBuilder(const std::string& tradeType) const;
     void addBuilder(const std::string& tradeType, const boost::shared_ptr<AbstractTradeBuilder>& builder);
 
-    //! Build, if className is unknown, an empty pointer is returned
+    //! Build, throws for unknown className
     boost::shared_ptr<Trade> build(const std::string& className) const;
 };
 

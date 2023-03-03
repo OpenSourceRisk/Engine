@@ -56,24 +56,19 @@ void Portfolio::fromXML(XMLNode* node) {
         string id = XMLUtils::getAttribute(nodes[i], "id");
         QL_REQUIRE(id != "", "No id attribute in Trade Node");
         DLOG("Parsing trade id:" << id);
-        boost::shared_ptr<Trade> trade = TradeFactory::instance().build(tradeType);
-
-        bool failedToLoad = false;
-        if (trade) {
-            try {
-                trade->fromXML(nodes[i]);
-                trade->id() = id;
-                add(trade);
-
-                DLOG("Added Trade " << id << " (" << trade->id() << ")"
-                                    << " type:" << tradeType);
-            } catch (std::exception& ex) {
-                ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing Trade XML", ex.what()));
-                failedToLoad = true;
-            }
-        } else {
-            ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing Trade XML"));
-            failedToLoad = true;
+        
+        boost::shared_ptr<Trade> trade;
+        bool failedToLoad = true;
+        try {
+            trade = TradeFactory::instance().build(tradeType);
+            trade->fromXML(nodes[i]);
+            trade->id() = id;
+            add(trade);
+            DLOG("Added Trade " << id << " (" << trade->id() << ")"
+                                << " type:" << tradeType);
+            failedToLoad = false;
+        } catch (std::exception& ex) {
+            ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing Trade XML", ex.what()));
         }
 
         // If trade loading failed, then insert a dummy trade with same id and envelope
