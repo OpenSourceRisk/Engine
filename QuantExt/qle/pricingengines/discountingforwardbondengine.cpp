@@ -306,10 +306,8 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
     /* Discounting and compounding, taking account of possible bond default before delivery*/
 
     if (cashSettlement) {
-        Real dsct = (incomeCurve_->discount(bondSettlementDate));
         forwardBondValue = spotValue / (incomeCurve_->discount(bondSettlementDate));
     } else {
-        Real dsct = incomeCurve_->discount(settlementDate);
         forwardBondValue = spotValue / (incomeCurve_->discount(settlementDate));
     }
 
@@ -331,7 +329,6 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
         Real yield = BondFunctions::yield(*bd, price, arguments_.lockRateDayCounter, Compounded, Semiannual,
                                           bondSettlementDate, 1E-10, 100, 0.05, Bond::Price::Dirty);
         if (arguments_.dv01 != Null<Real>()) {
-            Real dv01 = arguments_.dv01;
             QL_REQUIRE(arguments_.longInForward, "DiscountingForwardBondEngine: internal error, longInForward must be "
                                                  "populated if payoff is specified via lock-rate");
             Real multiplier = (*arguments_.longInForward) ? 1.0 : -1.0;
