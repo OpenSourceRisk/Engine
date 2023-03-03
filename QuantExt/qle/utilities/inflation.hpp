@@ -93,10 +93,12 @@ QuantLib::Date fixingDate(const QuantLib::Date& d, const QuantLib::Period obsLag
 * If curve base date and ZCIIS are the same, then the base rate is the ZCIIS rate
 */
 QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const QuantLib::Date& swapStart,
+                                  const QuantLib::Date& asof,
                                   const QuantLib::Period& swapTenor, const QuantLib::DayCounter& swapZCLegDayCounter,
                                   const QuantLib::Period& swapObsLag, const QuantLib::Rate zeroCouponRate, 
                                   const QuantLib::Period& curveObsLag, const QuantLib::DayCounter& curveDayCounter,
-                                  const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const bool interpolated);
+                                  const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const bool interpolated,
+                                  const boost::shared_ptr<QuantLib::Seasonality>& seasonality = nullptr);
 
 
 //! checks if the vols are normal or lognormal 

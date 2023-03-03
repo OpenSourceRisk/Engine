@@ -1,0 +1,169 @@
+%--------------------------------------------------------
+\subsection{Sensitivity Analysis: {\tt sensitivity.xml}}\label{sec:sensitivity}
+%--------------------------------------------------------
+
+ORE currently supports sensitivity analysis with respect to
+\begin{itemize}
+\item Discount curves  (in the zero rate domain)
+\item Index curves (in the zero rate domain)
+\item Yield curves including e.g. equity forecast yield curves (in the zero rate domain)
+\item FX Spots
+\item FX volatilities
+\item Swaption volatilities, ATM matrix or cube 
+\item Cap/Floor volatility matrices (in the caplet/floorlet domain)
+\item Default probability curves (in the ``zero rate'' domain, expressing survival probabilities $S(t)$ in term of zero rates $z(t)$ via $S(t)=\exp(-z(t)\times t)$ with Actual/365 day counter)
+\item Equity spot prices
+\item Equity volatilities, ATM or including strike dimension 
+\item Zero inflation curves
+\item Year-on-Year inflation curves
+\item CDS volatilities
+\item Bond credit spreads
+\item Base correlation curves
+\item Correlation termstructures
+\end{itemize}
+
+The {\tt sensitivity.xml} file specifies how sensitivities are computed for each market component. 
+The general structure is shown in listing \ref{lst:sensitivity_config}, for a more comprehensive case see {\tt Examples/Example\_15}. A subset of the following parameters is used in each market component to specify the sensitivity analysis:
+
+\begin{itemize}
+\item {\tt ShiftType:} Both absolute or relative shifts can be used to compute a sensitivity, specified by the key words
+  {\tt Absolute} resp. {\tt Relative}.
+\item {\tt ShiftSize:} The size of the shift to apply.
+\item {\tt ShiftTenors:} For curves, the tenor buckets to apply shifts to, given as a comma separated list of periods.
+\item {\tt ShiftExpiries:} For volatility surfaces, the option expiry buckets to apply shifts to, given as a comma
+  separated list of periods.
+\item {\tt ShiftStrikes:} For cap/floor, FX option and equity option volatility surfaces, the strikes to apply shifts to, given as a comma separated
+  list of absolute strikes
+\item {\tt ShiftTerms:} For swaption volatility surfaces, the underlying terms to apply shifts to, given as a comma
+  separated list of periods.
+\item {\tt Index:} For cap / floor volatility surfaces, the index which together with the currency defines the surface.
+  list of absolute strikes
+\item {\tt CurveType:} In the context of Yield Curves used to identify an equity ``risk free'' rate forecasting curve; set to {\tt EquityForecast} in this case
+\end{itemize}
+
+The cross gamma filter section contains a list of pairs of sensitivity keys. For each possible pair of sensitivity keys
+matching the given strings, a cross gamma sensitivity is computed. The given pair of keys can be (and usually are)
+shorter than the actual sensitivity keys. In this case only the prefix of the actual key is matched. For example, the
+pair {\tt DiscountCurve/EUR,DiscountCurve/EUR} matches all actual sensitivity pairs belonging to a cross sensitivity by
+one pillar of the EUR discount curve and another (different) pillar of the same curve. We list the possible keys by
+giving an example in each category:
+
+\begin{itemize}
+\item {\tt DiscountCurve/EUR/5/7Y}: 7y pillar of discounting curve in EUR, the pillar is at position 5 in the list of
+  all pillars (counting starts with zero)
+\item {\tt YieldCurve/BENCHMARK\_EUR/0/6M}: 6M pillar of yield curve ``BENCHMARK\_EUR'', the index of the 6M pillar is
+  zero (i.e. it is the first pillar)
+\item {\tt IndexCurve/EUR-EURIBOR-6M/2/2Y}: 2Y pillar of index forwarding curve for the Ibor index ``EUR-EURIBOR-6M'',
+  the pillar index is 2 in this case
+\item {\tt OptionletVolatility/EUR/18/5Y/0.04}: EUR caplet volatility surface, at 5Y option expiry and $4\%$ strike, the
+  running index for this expiry - strike pair is 18; the index counts the points in the surface in lexical order
+  w.r.t. the dimensions option expiry, strike
+\item {\tt FXSpot/USDEUR/0/spot}: FX spot USD vs EUR (with EUR as base ccy), the index is always zero for FX spots, the
+  pillar is labelled as ``spot'' always
+\item {\tt SwaptionVolatility/EUR/11/10Y/10Y/ATM}: EUR Swaption volatility surface at 10Y option expiry and 10Y
+  underlying term, ATM level, the running index for this expiry, term, strike triple has running index 11; the index
+  counts the points in the surface in lexical order w.r.t. the dimensions option expiry, underlying term and strike
+\end{itemize}
+
+Additional flags:
+
+\begin{itemize}
+\item ComputeGamma: If set to false, second order sensitivity computation is suppressed
+\item UseSpreadedTermStructures: If set to true, spreaded termstructures over t0 will be used for sensitivity
+  calculation (where supported), to improve the alignment of the scenario sim market and t0 curves
+\end{itemize}
+
+\begin{longlisting}
+%\hrule\medskip
+  \begin{minted}[fontsize=\scriptsize]{xml}
+<SensitivityAnalysis>
+  <DiscountCurves>
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+    ...
+  </DiscountCurves>
+  ...
+  <IndexCurves>
+    <IndexCurve index="EUR-EURIBOR-6M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+  </IndexCurves>
+  ...
+  <YieldCurves>
+    <YieldCurve name="BENCHMARK_EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YieldCurve>
+  </YieldCurves>
+  ...
+  <FxSpots>
+    <FxSpot ccypair="USDEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </FxSpot>
+  </FxSpots>
+  ...
+  <FxVolatilities>
+    <FxVolatility ccypair="USDEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+      <ShiftStrikes/>
+    </FxVolatility>
+  </FxVolatilities>
+  ...
+  <SwaptionVolatilities>
+    <SwaptionVolatility ccy="EUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,5Y,7Y,10Y</ShiftExpiries>
+      <ShiftStrikes/>
+      <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
+    </SwaptionVolatility>
+  </SwaptionVolatilities>
+  ...
+  <CapFloorVolatilities>
+    <CapFloorVolatility ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries>
+      <ShiftStrikes>0.01,0.02,0.03,0.04,0.05</ShiftStrikes>
+      <Index>EUR-EURIBOR-6M</Index>
+    </CapFloorVolatility>
+  </CapFloorVolatilities>
+  ...
+  <SecuritySpreads>
+    <SecuritySpread security="SECURITY_1">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+    </SecuritySpread>
+  </SecuritySpreads>
+  ...
+  <Correlations>
+    <Correlation index1="EUR-CMS-10Y" index2="EUR-CMS-2Y">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,2Y</ShiftExpiries>
+      <ShiftStrikes>0</ShiftStrikes>
+    </Correlation>
+  </Correlations>
+  ...
+  <CrossGammaFilter>
+    <Pair>DiscountCurve/EUR,DiscountCurve/EUR</Pair>
+    <Pair>IndexCurve/EUR,IndexCurve/EUR</Pair>
+    <Pair>DiscountCurve/EUR,IndexCurve/EUR</Pair>
+  </CrossGammaFilter>
+  ...
+  <ComputeGamma>true</ComputeGamma>
+  <UseSpreadedTermStructures>false</UseSpreadedTermStructures>
+</SensitivityAnalysis>
+\end{minted}
+\caption{Sensitivity configuration}
+\label{lst:sensitivity_config}
+\end{longlisting}

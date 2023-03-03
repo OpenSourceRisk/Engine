@@ -37,6 +37,7 @@
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/irlgmdata.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
+#include <ored/portfolio/trade.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <orea/engine/amcvaluationengine.hpp>
@@ -664,7 +665,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
     auto portfolio = boost::make_shared<Portfolio>();
     portfolio->add(trade);
     boost::shared_ptr<NPVCube> outputCube = boost::make_shared<DoublePrecisionInMemoryCube>(
-        referenceDate, std::vector<string>{"DummyTradeId"}, grid->dates(), testCase.samples);
+        referenceDate, std::set<string>{"DummyTradeId"}, grid->dates(), testCase.samples);
     boost::timer::cpu_timer timer;
     amcValEngine.buildCube(portfolio, outputCube);
     timer.stop();

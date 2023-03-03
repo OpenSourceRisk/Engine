@@ -106,8 +106,8 @@ struct CommodityCurveCalibrationInfo {
 
 // fx, eq vols
 
-struct FxEqVolCalibrationInfo {
-    virtual ~FxEqVolCalibrationInfo() {}
+struct FxEqCommVolCalibrationInfo {
+    virtual ~FxEqCommVolCalibrationInfo() {}
     std::string dayCounter;
     std::string calendar;
     std::string atmType;
@@ -177,11 +177,13 @@ struct TodaysMarketCalibrationInfo {
     // commodity curves
     std::map<std::string, boost::shared_ptr<CommodityCurveCalibrationInfo>> commodityCurveCalibrationInfo;
     // fx vols
-    std::map<std::string, boost::shared_ptr<FxEqVolCalibrationInfo>> fxVolCalibrationInfo;
+    std::map<std::string, boost::shared_ptr<FxEqCommVolCalibrationInfo>> fxVolCalibrationInfo;
     // eq vols
-    std::map<std::string, boost::shared_ptr<FxEqVolCalibrationInfo>> eqVolCalibrationInfo;
+    std::map<std::string, boost::shared_ptr<FxEqCommVolCalibrationInfo>> eqVolCalibrationInfo;
     // ir vols (swaption, capfloor)
     std::map<std::string, boost::shared_ptr<IrVolCalibrationInfo>> irVolCalibrationInfo;
+    // comm vols
+    std::map<std::string, boost::shared_ptr<FxEqCommVolCalibrationInfo>> commVolCalibrationInfo;
 };
 
 } // namespace data

@@ -152,6 +152,9 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
 
     smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
 
+    if(auto tmp = XMLUtils::getChildNode(node, "Report")){
+        reportConfig_.fromXML(tmp);
+    }
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -187,7 +190,7 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
     if (preferOutOfTheMoney_)
         XMLUtils::addChild(doc, node, "PreferOutOfTheMoney", *preferOutOfTheMoney_);
     XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
-	
+    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     return node;
 }
 

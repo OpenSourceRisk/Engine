@@ -1,3 +1,66 @@
+Changes for the 9th ORE release (1.8.9.0):
+============================================
+
+ORE 1.8.9.0 includes the following notable changes, details can be
+found in the commits between December 2022 and beginning of March 2023.
+
+INSTRUMENTS
+- roll out of Credit derivatives, thanks to Acadia Inc., as announced in September 22:
+  * Bond Option
+  * Bond Repo
+  * Bond Total Return Swap
+  * Credit-Linked Swap
+  * Index Credit Default Swap
+  * Index Credit Default Swap Option
+  * Credit Index Tranche, Synthetic CDO
+  including related models and pricing engines
+- optimize performance for the analytical Commodity Swaption engine
+- add missing FxIndex registrations in Commodity APO and Commodity Indexed Average Cashflows
+- include leg NPVs in additional results of CDS products
+- fix LGM Swaption pricing for cases where fixing date < exercise date
+
+MARKETS & TERM STRUCTURES
+- fix shifted lognormal Swaption vol surface (SwaptionVolCubeWithATM, add missing shift)
+
+ANALYTICS
+- integrate American Monte Carlo simulation, see the new Example 39
+- add Par Sensitivity Analysis, see the new Example 40
+- add more parametric VaR types (delta-gamma normal, delta-gamma Saddlepoint)
+- support multi-threading in sensitivity analysis
+- support multi-threading in exposure simulation, see the new Example 41
+- fix exposure/XVA analytics with simulation of fixings for ceased IBOR indices
+
+TEST
+- QuantExt: 263 test functions (vs 242 in the previous release)
+- OREData: 203 test functions (vs. 199 in the previous release)
+- OREAnalytics: 68 test functions (vs. 66 in the previous release)
+
+DOCUMENTATION
+- The user guide has grown from 440 to 480 pages, mainly due to the
+  migration of Credit derivative instruments into ORE, as well as new examples
+
+LANGUAGE BINDINGS
+- The SWIG wrapper has been extended to provide access to ORE input
+  construction in memory and to query in-memory results (reports etc), in line
+  with the refactoring mentioned below.
+  See the new Python example OREAnalytics-SWIG/Python/Examples/ore3.py
+- To facilitate access to ORE Python, we are providing Python wheels for various
+  OS types and Python versions starting with this release, thanks to Eric Ehlers's
+  effort and Luigi Ballabio's support to get in up and running using github actions.
+  See the ORE-SWIG repository for how to install the ORE module.
+
+OTHER
+- Refactor the serialization of NPV cube and market cube (aggregation scenario data)
+- Refactor OREAnalytics/orea/app by separating input construction from processing
+  and persisting results. This is to faciliate re-using the processing element
+  (analyticsManager->runAnalytics(...)) in different applications, a command line
+  application such as ore[.exe] that reads/writes from/to files, an ORE Python wrapper
+  that receives input and provides results in memory (see language bindings above),
+  or a REST service built around ORE. Results (reports, cubes etc) are stored in
+  memory and only saved to files on demand. Inputs for the ORE processor can be
+  assembled in memory, or read from files.
+
+
 Changes for the 8th ORE release (1.8.8.0):
 ============================================
 
@@ -7,10 +70,10 @@ found in the commits between September 2022 and December 2022.
 INSTRUMENTS
 
 - roll out Commodity derivatives, thanks to Acadia Inc., as announced in September 22:
-  * add Commodity Swap
-  * add Commodity Swaption
-  * add Commodity Average Price Option
-  * add Commodity Option Strips and Digital Option Strip
+  * Commodity Swap
+  * Commodity Swaption
+  * Commodity Average Price Option
+  * Commodity Option Strips and Digital Option Strip
   see user guide and in particular Example 24
 - add Equity Cliquet Option, missed in the 7th release, thanks to Acadia
 - add Equity/FX/Commodity Variance Swap, missed in the 7th release, thanks to Acadia

@@ -40,17 +40,18 @@ class Indexing : public XMLSerializable {
 public:
     Indexing()
         : hasData_(false), quantity_(1.0), initialFixing_(Null<Real>()), fixingDays_(0), inArrearsFixing_(false) {}
-    explicit Indexing(const std::string& index, const string& indexFixingCalendar = "",
-                      const bool indexIsDirty = false, const bool indexIsRelative = true,
-                      const bool indexIsConditionalOnSurvival = true, const Real quantity = 1.0,
-                      const Real initialFixing = Null<Real>(), const ScheduleData& valuationSchedule = ScheduleData(),
-                      const Size fixingDays = 0, const string& fixingCalendar = "", const string& fixingConvention = "",
+    explicit Indexing(const std::string& index, const string& indexFixingCalendar = "", const bool indexIsDirty = false,
+                      const bool indexIsRelative = true, const bool indexIsConditionalOnSurvival = true,
+                      const Real quantity = 1.0, const Real initialFixing = Null<Real>(),
+                      const Real initialNotionalFixing = Null<Real>(),
+                      const ScheduleData& valuationSchedule = ScheduleData(), const Size fixingDays = 0,
+                      const string& fixingCalendar = "", const string& fixingConvention = "",
                       const bool inArrearsFixing = false)
-        : hasData_(true), quantity_(quantity), index_(index), indexFixingCalendar_(indexFixingCalendar), 
-        indexIsDirty_(indexIsDirty), indexIsRelative_(indexIsRelative),
+        : hasData_(true), quantity_(quantity), index_(index), indexFixingCalendar_(indexFixingCalendar),
+          indexIsDirty_(indexIsDirty), indexIsRelative_(indexIsRelative),
           indexIsConditionalOnSurvival_(indexIsConditionalOnSurvival), initialFixing_(initialFixing),
-          valuationSchedule_(valuationSchedule), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar),
-          fixingConvention_(fixingConvention), inArrearsFixing_(inArrearsFixing) {}
+          initialNotionalFixing_(initialNotionalFixing), valuationSchedule_(valuationSchedule), fixingDays_(fixingDays),
+          fixingCalendar_(fixingCalendar), fixingConvention_(fixingConvention), inArrearsFixing_(inArrearsFixing) {}
 
     //! \name Inspectors
     //@{
@@ -65,6 +66,7 @@ public:
     bool indexIsConditionalOnSurvival() const { return indexIsConditionalOnSurvival_; }
     //
     Real initialFixing() const { return initialFixing_; }
+    Real initialNotionalFixing() const { return initialNotionalFixing_; }
     const ScheduleData& valuationSchedule() const { return valuationSchedule_; }
     Size fixingDays() const { return fixingDays_; }
     const string& fixingCalendar() const { return fixingCalendar_; }
@@ -84,6 +86,7 @@ public:
     bool& indexIsConditionalOnSurvival() { return indexIsConditionalOnSurvival_; }
     //
     Real& initialFixing() { return initialFixing_; }
+    Real& initialNotionalFixing() { return initialNotionalFixing_; }
     ScheduleData& valuationSchedule() { return valuationSchedule_; }
     Size& fixingDays() { return fixingDays_; }
     string& fixingCalendar() { return fixingCalendar_; }
@@ -105,6 +108,7 @@ private:
     bool indexIsRelative_;
     bool indexIsConditionalOnSurvival_;
     Real initialFixing_;
+    Real initialNotionalFixing_;
     ScheduleData valuationSchedule_;
     Size fixingDays_;
     string fixingCalendar_;

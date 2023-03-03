@@ -71,6 +71,7 @@ protected:
 
 class EquityDoubleBarrierOptionAnalyticEngineBuilder
     : public EquityDoubleBarrierOptionEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(EquityDoubleBarrierOptionAnalyticEngineBuilder)
 public:
     EquityDoubleBarrierOptionAnalyticEngineBuilder()
         : EquityDoubleBarrierOptionEngineBuilder("BlackScholesMerton", "AnalyticDoubleBarrierEngine") {}

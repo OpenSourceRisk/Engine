@@ -72,7 +72,14 @@ int main(int argc, char** argv) {
     try {
         params->fromFile(inputFile);
         OREApp ore(params);
-        return ore.run();
+
+        // By default we use the refactored version of ORE
+        bool useAnalytics = true;
+        // But we can actively switch this off and enable the old behaviour
+        string tmp = params->get("setup", "useAnalytics", false);
+        if (tmp != "")
+            useAnalytics = parseBool(tmp);
+        return ore.run(useAnalytics);
     } catch (const exception& e) {
         cout << endl << "an error occurred: " << e.what() << endl;
         return -1;

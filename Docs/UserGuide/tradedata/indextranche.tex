@@ -1,0 +1,49 @@
+\subsubsection{Synthetic CDO}
+
+A Synthetic CDO is set up using a {\tt  CdoData} block as shown in listing 
+\ref{lst:cdodata}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <CdoData>
+      <Qualifier> ItraxxEuropeS9V1 </Qualifier>
+      <ProtectionStart> 20140425 </ProtectionStart>
+      <UpfrontDate/>
+      <UpfrontFee/>
+      <AttachmentPoint>0.12</AttachmentPoint>
+      <DetachmentPoint>0.22</DetachmentPoint>
+      <SettlesAccrual>Y</SettlesAccrual>
+      <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
+      <!-- Premium leg -->
+      <LegData>
+          ...
+      </LegData>
+      <!-- Basket -->
+      <BasketData>
+        ...
+      </BasketData>
+    </CdoData>
+\end{minted}
+\caption{CDO Data}
+\label{lst:cdodata}
+\end{listing}
+
+The meanings of the elements of the {\tt CdoData}  node follow below:
+
+\begin{itemize}
+\item Qualifier: Used to reference the relevant base correlation curve
+\item ProtectionStart: The first date where a default event will
+  trigger the contract
+\item UpfrontDate[Optional]: Settlement date for the upfront payment.
+\item UpfrontFee[Optional]: The upfront payment, expressed as a rate, to be multiplied by notional amount.
+\item LegData: Premium leg description as in an Index CDS (see section
+  \ref{ss:indexcds}) with notional correspondig to the initial tranche
+  notional
+\item BasketData: Underlying basket description as in an Index CDS  (see section
+  \ref{ss:indexcds})
+\item AttachmentPoint: Losses where protection starts, expressed as a
+  fraction of the basket notional
+\item DetachmentPoint: Losses where protection end, expressed as a
+  fraction of the basket notional
+\end{itemize}

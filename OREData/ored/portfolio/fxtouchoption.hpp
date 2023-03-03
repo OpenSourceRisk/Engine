@@ -37,6 +37,8 @@ using std::string;
   \ingroup tradedata
 */
 class FxTouchOption : public FxSingleAssetDerivative {
+    static TradeBuilderRegister<TradeBuilder<FxTouchOption>> reg_;
+
 public:
     //! Default constructor
     FxTouchOption() : ore::data::Trade("FxTouchOption"), FxSingleAssetDerivative("") {}

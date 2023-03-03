@@ -1,6 +1,19 @@
 /*
  Copyright (C) 2022 Quaternion Risk Management Ltd
  All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 #include <iostream>
@@ -53,6 +66,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
 
     double df = discountCurve_->discount(paymentDate);
 
+    Time ttp = discountCurve_->timeFromReference(paymentDate);
     Time tte = discountCurve_->timeFromReference(exerciseDate);
 
     auto parameterFlow1 =
@@ -74,20 +88,20 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     double stdDev = 0;
     double Y = 0;
     double Z = 0;
+    double sigmaY = 0;
     double w1 = arguments_.longAssetFlow->gearing();
     double w2 = arguments_.shortAssetFlow->gearing();
     // Adjust strike for past fixings
     double effectiveStrike = arguments_.effectiveStrike - w1 * accruals1 + w2 * accruals2;
 
-    if (exerciseDate <= today && paymentDate >= today) {
+    if (exerciseDate <= today && paymentDate <= today) {
         results_.value = 0;
-    } else if (exerciseDate <= today && paymentDate < today) {
+    } else if (exerciseDate <= today && paymentDate > today) {
         // if observation time is before expiry, continue the process with zero vol and zero drift from pricing date to
         // expiry
         double omega = arguments_.type == Option::Call ? 1 : -1;
 
-        results_.value =
-            df * arguments_.quantity * omega * std::max(w1 * F1 - w2 * F2 - arguments_.effectiveStrike, 0.0);
+        results_.value = df * arguments_.quantity * omega * std::max(w1 * F1 - w2 * F2 - effectiveStrike, 0.0);
 
     } else if (effectiveStrike + F2 * w2 < 0) {
         // Effective strike can be become negative if accrueds large enough
@@ -104,9 +118,9 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
         // KirkFormula
         Y = (F2 * w2 + effectiveStrike);
         Z = w1 * F1 / Y;
-        double sigmaTilde = sigma2 * F2 * w2 / Y;
+        sigmaY = sigma2 * F2 * w2 / Y;
 
-        sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaTilde, 2.0) - 2 * sigma1 * sigmaTilde * rho());
+        sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaY, 2.0) - 2 * sigma1 * sigmaY * rho());
 
         stdDev = sigma * sqrt(tte);
 
@@ -123,11 +137,20 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     mp["sigma2"] = sigma2;
     mp["obsTime2"] = obsTime2;
     mp["tte"] = tte;
+    mp["ttp"] = ttp;
+    mp["df"] = df;
     mp["sigma"] = sigma;
     mp["stdDev"] = stdDev;
     mp["Y"] = Y;
     mp["Z"] = Z;
+    mp["sigma_Y"] = sigmaY;
+    mp["quantity"] = arguments_.quantity;
     mp["npv"] = results_.value;
+    mp["exerciseDate"] = exerciseDate;
+    mp["paymentDate"] = paymentDate;
+    mp["w1"] = w1;
+    mp["w2"] = w2;
+    mp["rho"] = rho();
 }
 
 CommoditySpreadOptionAnalyticalEngine::PricingParameter
@@ -142,8 +165,11 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         if (fxIndex) {
             fxSpot = fxIndex->fixing(cf->pricingDate());
         }
-        res.atm = cf->index()->fixing(cf->pricingDate()) * fxSpot;
-        res.sigma = res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0) ? vol->blackVol(res.tn, res.atm, true) : 0.0;
+        double atmUnderlyingCurrency = cf->index()->fixing(cf->pricingDate());
+        res.atm = atmUnderlyingCurrency * fxSpot;
+        res.sigma = res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)
+                        ? vol->blackVol(res.tn, atmUnderlyingCurrency, true)
+                        : 0.0;
     } else if (auto avgCf = ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(flow)) {
         auto parameter = CommodityAveragePriceOptionMomementMatching::matchFirstTwoMomentsTurnbullWakeman(
             avgCf, vol,

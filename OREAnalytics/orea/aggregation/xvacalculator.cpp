@@ -17,8 +17,11 @@
 */
 
 #include <orea/aggregation/xvacalculator.hpp>
+
+#include <ored/portfolio/trade.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/vectorutils.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/version.hpp>
 
@@ -58,11 +61,10 @@ ValueAdjustmentCalculator::ValueAdjustmentCalculator(
 
     QL_REQUIRE(portfolio_, "portfolio is null");
 
-    for (Size i = 0; i < portfolio_->size(); ++i) {
-        string tradeId = portfolio_->trades()[i]->id();
-        string nettingSetId = portfolio_->trades()[i]->envelope().nettingSetId();
+    for (const auto& [tradeId, trade] : portfolio_->trades()) {
+        string nettingSetId = trade->envelope().nettingSetId();
         if (nettingSetCpty_.find(nettingSetId) == nettingSetCpty_.end()) {
-            nettingSetCpty_[nettingSetId] = portfolio_->trades()[i]->envelope().counterparty();
+            nettingSetCpty_[nettingSetId] = trade->envelope().counterparty();
         }
     }
 
@@ -278,17 +280,16 @@ void ValueAdjustmentCalculator::build() {
 
     string origDvaName = dvaName_;
     // Trade XVA
-    for (Size i = 0; i < portfolio_->trades().size(); ++i) {
-        string tid = portfolio_->trades()[i]->id();
+    for (const auto& [tid, trade]:  portfolio_->trades()) {
         LOG("Update XVA for trade " << tid << (flipViewXVA_ ? ", inverted (flipViewXVA = Y)" : ", regular (flipViewXVA = N)"));
         string cid; 
         if (flipViewXVA_) {
             cid = origDvaName;
-            dvaName_ = portfolio_->trades()[i]->envelope().counterparty();
+            dvaName_ = trade->envelope().counterparty();
             fvaBorrowingCurve_ = dvaName_ + flipViewBorrowingCurvePostfix_;
             fvaLendingCurve_ = dvaName_ + flipViewLendingCurvePostfix_;
         } else {
-            cid = portfolio_->trades()[i]->envelope().counterparty();
+            cid = trade->envelope().counterparty();
         }
         if (fvaBorrowingCurve_ != "")
             borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
@@ -298,7 +299,7 @@ void ValueAdjustmentCalculator::build() {
         if (!borrowingCurve.empty() || !lendingCurve.empty()) {
             QL_REQUIRE(baseCurrency_ != "", "baseCurrency required for FVA calculation");
         }
-        string nid = portfolio_->trades()[i]->envelope().nettingSetId();
+        string nid = trade->envelope().nettingSetId();
         Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
         Real dvaRR = 0.0;
         if (dvaName_ != "")

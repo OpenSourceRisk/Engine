@@ -12,24 +12,40 @@ aggregation/nettedexposurecalculator.cpp
 aggregation/postprocess.cpp
 aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
+app/analytic.cpp
+app/analyticsmanager.cpp
+app/inputparameters.cpp
+app/marketcalibrationreport.cpp
+app/marketdatacsvloader.cpp
+app/marketdatainmemoryloader.cpp
+app/marketdataloader.cpp
 app/oreapp.cpp
 app/parameters.cpp
 app/reportwriter.cpp
 app/sensitivityrunner.cpp
 app/xvarunner.cpp
+cube/cube_io.cpp
+cube/cubecsvreader.cpp
 cube/cubeinterpretation.cpp
 cube/cubewriter.cpp
+cube/jointnpvcube.cpp
+cube/jointnpvsensicube.cpp
 cube/sensitivitycube.cpp
+cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
 engine/cptycalculator.cpp
 engine/filteredsensitivitystream.cpp
 engine/mporcalculator.cpp
+engine/multithreadedvaluationengine.cpp
 engine/npvrecord.cpp
 engine/parametricvar.cpp
+engine/parsensitivityanalysis.cpp
+engine/parsensitivitycubestream.cpp
 engine/riskfilter.cpp
 engine/sensitivityaggregator.cpp
 engine/sensitivityanalysis.cpp
+engine/sensitivityanalysisplus.cpp
 engine/sensitivitycubestream.cpp
 engine/sensitivityfilestream.cpp
 engine/sensitivityinmemorystream.cpp
@@ -37,15 +53,19 @@ engine/sensitivityrecord.cpp
 engine/stresstest.cpp
 engine/valuationcalculator.cpp
 engine/valuationengine.cpp
+engine/zerotoparcube.cpp
 scenario/clonedscenariogenerator.cpp
 scenario/clonescenariofactory.cpp
 scenario/crossassetmodelscenariogenerator.cpp
+scenario/deltascenario.cpp
+scenario/deltascenariofactory.cpp
 scenario/lgmscenariogenerator.cpp
 scenario/scenario.cpp
 scenario/scenariogeneratorbuilder.cpp
 scenario/scenariogeneratordata.cpp
 scenario/scenariosimmarket.cpp
 scenario/scenariosimmarketparameters.cpp
+scenario/scenariosimmarketplus.cpp
 scenario/scenariowriter.cpp
 scenario/sensitivityscenariodata.cpp
 scenario/sensitivityscenariogenerator.cpp
@@ -70,6 +90,13 @@ aggregation/nettedexposurecalculator.hpp
 aggregation/postprocess.hpp
 aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
+app/analytic.hpp
+app/analyticsmanager.hpp
+app/inputparameters.hpp
+app/marketcalibrationreport.hpp
+app/marketdatacsvloader.hpp
+app/marketdatainmemoryloader.hpp
+app/marketdataloader.hpp
 app/oreapp.hpp
 app/parameters.hpp
 app/reportwriter.hpp
@@ -78,24 +105,34 @@ app/structuredanalyticserror.hpp
 app/structuredanalyticswarning.hpp
 app/xvarunner.hpp
 auto_link.hpp
+cube/cube_io.hpp
+cube/cubecsvreader.hpp
 cube/cubeinterpretation.hpp
 cube/cubewriter.hpp
 cube/inmemorycube.hpp
+cube/jaggedcube.hpp
+cube/jointnpvcube.hpp
+cube/jointnpvsensicube.hpp
 cube/npvcube.hpp
 cube/npvsensicube.hpp
 cube/sensicube.hpp
 cube/sensitivitycube.hpp
+cube/sparsenpvcube.hpp
 engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cptycalculator.hpp
 engine/filteredsensitivitystream.hpp
 engine/mporcalculator.hpp
+engine/multithreadedvaluationengine.hpp
 engine/npvrecord.hpp
 engine/observationmode.hpp
 engine/parametricvar.hpp
+engine/parsensitivityanalysis.hpp
+engine/parsensitivitycubestream.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp
 engine/sensitivityanalysis.hpp
+engine/sensitivityanalysisplus.hpp
 engine/sensitivitycubestream.hpp
 engine/sensitivityfilestream.hpp
 engine/sensitivityinmemorystream.hpp
@@ -104,10 +141,13 @@ engine/sensitivitystream.hpp
 engine/stresstest.hpp
 engine/valuationcalculator.hpp
 engine/valuationengine.hpp
+engine/zerotoparcube.hpp
 scenario/aggregationscenariodata.hpp
 scenario/clonedscenariogenerator.hpp
 scenario/clonescenariofactory.hpp
 scenario/crossassetmodelscenariogenerator.hpp
+scenario/deltascenario.hpp
+scenario/deltascenariofactory.hpp
 scenario/lgmscenariogenerator.hpp
 scenario/scenario.hpp
 scenario/scenariofactory.hpp
@@ -116,6 +156,7 @@ scenario/scenariogeneratorbuilder.hpp
 scenario/scenariogeneratordata.hpp
 scenario/scenariosimmarket.hpp
 scenario/scenariosimmarketparameters.hpp
+scenario/scenariosimmarketplus.hpp
 scenario/scenariowriter.hpp
 scenario/sensitivityscenariodata.hpp
 scenario/sensitivityscenariogenerator.hpp
@@ -134,6 +175,7 @@ target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${Boost_LIBRARIES})
+target_link_libraries(${OREA_LIB_NAME} ZLIB::ZLIB)
 
 install(DIRECTORY . DESTINATION include/orea
         FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")

@@ -18,6 +18,8 @@
 
 #include <orea/aggregation/nettedexposurecalculator.hpp>
 
+#include <ored/portfolio/trade.hpp>
+
 #include <ql/time/date.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 
@@ -60,9 +62,9 @@ NettedExposureCalculator::NettedExposureCalculator(
       tradeExposureCube_(tradeExposureCube), allocatedEpeIndex_(allocatedEpeIndex),
       allocatedEneIndex_(allocatedEneIndex), flipViewXVA_(flipViewXVA) {
 
-    vector<string> nettingSetIds;
+    set<string> nettingSetIds;
     for (auto nettingSet : nettingSetDefaultValue) {
-        nettingSetIds.push_back(nettingSet.first);
+        nettingSetIds.insert(nettingSet.first);
         if (flipViewXVA_) {
             if (nettingSetManager_->get(nettingSet.first)->activeCsaFlag()) {
                 nettingSetManager_->get(nettingSet.first)->csaDetails()->invertCSA();
@@ -97,21 +99,22 @@ void NettedExposureCalculator::build() {
     map<string, Real> nettingSetValueToday;
     map<string, Date> nettingSetMaturity;
     map<string, Size> nettingSetSize;
-    for (Size i = 0; i < portfolio_->trades().size(); ++i) {
-        const auto& trade = portfolio_->trades()[i];
-        string tradeId = trade->id();
+    Size cubeIndex = 0;
+    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++cubeIndex) {
+        const auto& trade = tradeIt->second;
+        string tradeId = tradeIt->first;
         string nettingSetId = trade->envelope().nettingSetId();
-	string cp = trade->envelope().counterparty();
-	if (counterpartyMap_.find(nettingSetId) == counterpartyMap_.end())
-	    counterpartyMap_[nettingSetId] = trade->envelope().counterparty();
-	else {
-	    QL_REQUIRE(counterpartyMap_[nettingSetId] == cp, "counterparty name is not unique within the netting set");
-	}
+        string cp = trade->envelope().counterparty();
+        if (counterpartyMap_.find(nettingSetId) == counterpartyMap_.end())
+            counterpartyMap_[nettingSetId] = trade->envelope().counterparty();
+        else {
+            QL_REQUIRE(counterpartyMap_[nettingSetId] == cp, "counterparty name is not unique within the netting set");
+        }
         Real npv;
         if (flipViewXVA_) {
-            npv = -cube_->getT0(i);
+            npv = -cube_->getT0(cubeIndex);
         } else {
-            npv = cube_->getT0(i);
+            npv = cube_->getT0(cubeIndex);
         }
 
         if (nettingSetValueToday.find(nettingSetId) == nettingSetValueToday.end()) {
@@ -277,11 +280,14 @@ void NettedExposureCalculator::build() {
                 }
 
                 if (marginalAllocation_) {
-                    for (Size i = 0; i < portfolio_->trades().size(); ++i) {
-                        string nid = portfolio_->trades()[i]->envelope().nettingSetId();
+                    Size i = 0;
+                    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end();
+                         ++tradeIt, ++i) {
+                        const auto& trade = tradeIt->second;
+                        string nid = trade->envelope().nettingSetId();
                         if (nid != nettingSetId)
                             continue;
-                        string tid = portfolio_->trades()[i]->id();
+                        
                         Real allocation = 0.0;
                         if (balance == 0.0)
                             allocation = cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
@@ -409,13 +415,13 @@ NettedExposureCalculator::collateralPaths(
     for (Size j = 0; j < cube_->dates().size(); ++j) {
         for (Size k = 0; k < cube_->samples(); ++k) {
 	  if (netting->csaDetails()->csaCurrency() != baseCurrency_)
-                csaScenFxRates[j][k] = cubeInterpretation_->getDefaultAggrionScenarioData(
-                    scenarioData_, AggregationScenarioDataType::FXSpot, j, k, netting->csaDetails()->csaCurrency());
+              csaScenFxRates[j][k] = cubeInterpretation_->getDefaultAggregationScenarioData(
+                  AggregationScenarioDataType::FXSpot, j, k, netting->csaDetails()->csaCurrency());
             else
                 csaScenFxRates[j][k] = 1.0;
             if (csaIndexName != "") {
-                csaScenRates[j][k] = cubeInterpretation_->getDefaultAggrionScenarioData(
-                    scenarioData_, AggregationScenarioDataType::IndexFixing, j, k, csaIndexName);
+                csaScenRates[j][k] = cubeInterpretation_->getDefaultAggregationScenarioData(
+                    AggregationScenarioDataType::IndexFixing, j, k, csaIndexName);
             }
         }
     }
@@ -455,9 +461,10 @@ vector<Real> NettedExposureCalculator::getMeanExposure(const string& tid, Exposu
 }
 
 const string& NettedExposureCalculator::counterparty(const string nettingSetId) {
-    QL_REQUIRE(counterpartyMap_.find(nettingSetId) != counterpartyMap_.end(),
+    auto it = counterpartyMap_.find(nettingSetId);
+    QL_REQUIRE(it != counterpartyMap_.end(),
 	       "counterparty not found for netting set id " << nettingSetId);
-    return counterpartyMap_[nettingSetId];
+    return it->second;
 }
 
 } // namespace analytics

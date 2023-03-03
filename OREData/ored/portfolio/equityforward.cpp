@@ -36,6 +36,8 @@ using namespace std;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<EquityForward>> EquityForward::reg_("EquityForward");
+
 void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency ccy = parseCurrencyWithMinors(currency_);
 
@@ -86,6 +88,13 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     additionalData_["strike"] = strike;
     additionalData_["strikeCurrency"] = strikeCurrency_;
     additionalData_["quantity"] = quantity_;
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Forward");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
 }
     
 void EquityForward::fromXML(XMLNode* node) {

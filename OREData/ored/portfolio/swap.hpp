@@ -34,6 +34,8 @@ namespace data {
   \ingroup tradedata
 */
 class Swap : public Trade {
+    static TradeBuilderRegister<TradeBuilder<Swap>> reg_;
+
 public:
     //! Default constructor
     Swap(const string swapType = "Swap") : Trade(swapType) {}
@@ -76,12 +78,14 @@ public:
 protected:
     virtual boost::shared_ptr<LegData> createLegData() const;
     vector<LegData> legData_;
-
-private:
     string settlement_;
     bool isXCCY_;
+    std::map<std::string,Size> legTypeCount_;
+    
+private:
     bool isResetting_;
     Size notionalTakenFromLeg_;
 };
+
 } // namespace data
 } // namespace ore

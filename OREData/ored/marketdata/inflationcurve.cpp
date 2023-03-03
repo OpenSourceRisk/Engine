@@ -199,12 +199,16 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             if (config->baseRate() != Null<Real>()) {
                 baseRate = config->baseRate();
             } else if (index) {
-                baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(
-                    config->useLastAvailableFixingAsBaseDate(), swapStart, terms[0], conv->dayCounter(),
-                    conv->observationLag(), quotes[0]->value(), curveObsLag, config->dayCounter(), index,
-                    interpolatedIndex_);
+                try {
+                    baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(
+                     config->useLastAvailableFixingAsBaseDate(), swapStart, asof, terms[0], conv->dayCounter(),
+                     conv->observationLag(), quotes[0]->value(), curveObsLag, config->dayCounter(), index,
+                        interpolatedIndex_, seasonality);
+                } catch (const std::exception& e) {
+                    WLOG("base rate estimation failed with " << e.what() << ", fallback to use first quote");
+                    baseRate = quotes[0]->value();
+                }
             }
-
             curve_ = boost::shared_ptr<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
                 new QuantExt::PiecewiseZeroInflationCurve<Linear>(
                     asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), baseRate,

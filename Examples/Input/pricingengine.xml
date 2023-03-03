@@ -162,6 +162,46 @@
     <Engine>BlackCdsOptionEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="IndexCreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointIndexCdsEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Curve">Underlying</Parameter> <!-- Underlying or Index -->
+    </EngineParameters>
+  </Product>
+  <Product type="IndexCreditDefaultSwapOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackIndexCdsOptionEngine</Engine>
+    <EngineParameters>
+      <!-- this is only affecting the FE protection, for the underlying the Curve -->
+      <!-- parameter of the IndexCreditDefaultSwap is used -->
+      <Parameter name="Curve">Underlying</Parameter> <!-- Underlying or Index -->
+    </EngineParameters>
+  </Product>
+  <Product type="SyntheticCDO">
+    <Model>GaussCopula</Model>
+    <ModelParameters>
+      <Parameter name="correlation">0.0</Parameter>
+      <Parameter name="min">-5.0</Parameter>
+      <Parameter name="max">5.0</Parameter>
+      <!-- high copula correlation requires large number of steps -->
+      <Parameter name="steps">64</Parameter>
+    </ModelParameters>
+    <Engine>Bucketing</Engine>
+    <EngineParameters>
+      <!-- large number of names and inhomogeneous loss amounts
+	   require large number of buckets, for a homogeneous pool 
+	   buckets in the ballpark of the pool size seems to be sufficient -->
+      <Parameter name="buckets">124</Parameter>
+      <!-- we use the inhomgeneous pol loss model by default. If this
+	   flag is set to Y we switch to homogeneous pool when
+	   justified (same notionals, same recovery rates across the
+	   basket) -->
+      <Parameter name="homogeneousPoolWhenJustified">Y</Parameter>
+    </EngineParameters>
+  </Product>
   <!-- CMS Linear TRS Model -->
   <Product type="CMS">
     <Model>LinearTSR</Model>
@@ -266,6 +306,22 @@
     <ModelParameters/>
     <Engine>CPIBlackCapFloorEngine</Engine>
     <EngineParameters/>
+  </Product>
+  <Product type="BondOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackBondOptionEngine</Engine>
+    <EngineParameters>
+        <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="BondTRS">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingBondTRSEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
   </Product>
   <GlobalParameters>
     <Parameter name="ContinueOnCalibrationError">true</Parameter>

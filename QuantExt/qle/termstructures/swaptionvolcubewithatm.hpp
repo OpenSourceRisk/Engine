@@ -87,6 +87,8 @@ protected:
         }
     }
 
+    Real shiftImpl(Time optionTime, Time swapLength) const override { return cube_->shift(optionTime, swapLength); }
+
 private:
     boost::shared_ptr<SwaptionVolatilityCube> cube_;
 };

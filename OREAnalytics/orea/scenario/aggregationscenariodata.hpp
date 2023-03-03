@@ -26,11 +26,6 @@
 #include <ql/errors.hpp>
 #include <ql/types.hpp>
 
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/vector.hpp>
-
 #include <fstream>
 #include <map>
 #include <vector>
@@ -43,7 +38,7 @@ using std::map;
 using std::string;
 using std::vector;
 
-enum class AggregationScenarioDataType { IndexFixing, FXSpot, Numeraire, Generic };
+enum class AggregationScenarioDataType : unsigned int { IndexFixing = 0, FXSpot = 1, Numeraire = 2, Generic = 3 };
 
 //! Container for storing simulated market data
 /*! The indexes for dates and samples are (by convention) the
@@ -77,11 +72,6 @@ public:
 
     // Get available keys (type, qualifier)
     virtual std::vector<std::pair<AggregationScenarioDataType, std::string>> keys() const = 0;
-
-    //! Load cube contents from disk
-    virtual void load(const std::string&) {}
-    //! Persist cube contents to disk
-    virtual void save(const std::string&) const {}
 
     //! Set a value in the cube, assumes normal traversal of the cube (dates then samples)
     virtual void set(Real value, const AggregationScenarioDataType& type, const string& qualifier = "") {
@@ -142,28 +132,7 @@ public:
         data_[key][dateIndex][sampleIndex] = value;
     }
 
-    void load(const std::string& fileName) override {
-        std::ifstream ifs(fileName.c_str(), std::fstream::binary);
-        QL_REQUIRE(ifs.is_open(), "error opening file " << fileName);
-        boost::archive::binary_iarchive ia(ifs);
-        ia&* this;
-    }
-
-    void save(const std::string& fileName) const override {
-        std::ofstream ofs(fileName.c_str(), std::fstream::binary);
-        QL_REQUIRE(ofs.is_open(), "error opening file " << fileName);
-        boost::archive::binary_oarchive oa(ofs);
-        oa&* this;
-    }
-
 private:
-    friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int) {
-        ar& dimDates_;
-        ar& dimSamples_;
-        ar& data_;
-    }
-
     void check(Size dateIndex, Size sampleIndex, const AggregationScenarioDataType& type,
                const string& qualifier) const {
         QL_REQUIRE(dateIndex < dimDates_, "dateIndex (" << dateIndex << ") out of range 0..." << dimDates_ - 1);

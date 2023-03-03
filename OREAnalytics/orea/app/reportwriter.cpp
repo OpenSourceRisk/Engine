@@ -21,6 +21,7 @@
 #include <orea/app/reportwriter.hpp>
 
 // FIXME: including all is slow and bad
+#include <boost/range/adaptor/indexed.hpp>
 #include <boost/lexical_cast.hpp>
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
@@ -41,6 +42,7 @@
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <stdio.h>
+
 
 using ore::data::to_string;
 using QuantLib::Date;
@@ -73,7 +75,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("Notional(Base)", double(), 2)
         .addColumn("NettingSet", string())
         .addColumn("CounterParty", string());
-    for (auto trade : portfolio->trades()) {
+    for (auto & [tradeId, trade] : portfolio->trades()) {
         try {
             string npvCcy = trade->npvCurrency();
             Real fx = 1.0, fxNotional = 1.0;
@@ -123,7 +125,8 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
     LOG("NPV file written");
 }
 
-void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
+void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& baseCurrency,
+                                 boost::shared_ptr<ore::data::Portfolio> portfolio,
                                  boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
                                  const bool includePastCashflows) {
 
@@ -148,19 +151,22 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         .addColumn("Notional", double(), 4)
         .addColumn("DiscountFactor", double(), 10)
         .addColumn("PresentValue", double(), 10)
+        .addColumn("FXRate(Local-Base)", double(), 10)
+        .addColumn("PresentValue(Base)", double(), 10)
+        .addColumn("BaseCurrency", string())
         .addColumn("FloorStrike", double(), 6)
         .addColumn("CapStrike", double(), 6)
         .addColumn("FloorVolatility", double(), 6)
         .addColumn("CapVolatility", double(), 6);
 
-    const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
+    std::map<std::string, boost::shared_ptr<Trade>> trades = portfolio->trades();
 
-    for (Size k = 0; k < trades.size(); k++) {
+    for (auto [tradeId, trade]: trades) {
 
         // if trade is marked as not having cashflows, we skip it
 
-        if (!trades[k]->hasCashflows()) {
-            WLOG("cashflow for " << trades[k]->tradeType() << " " << trades[k]->id() << " skipped");
+        if (!trade->hasCashflows()) {
+            WLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
             continue;
         }
 
@@ -168,24 +174,24 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
 
         bool useAdditionalResults = false;
         try {
-            useAdditionalResults = trades[k]->instrument()->additionalResults().find("cashFlowResults") !=
-                                   trades[k]->instrument()->additionalResults().end();
+            useAdditionalResults = trade->instrument()->additionalResults().find("cashFlowResults") !=
+                                   trade->instrument()->additionalResults().end();
         } catch (...) {
         }
 
         try {
 
-            const Real multiplier = trades[k]->instrument()->multiplier();
+            const Real multiplier = trade->instrument()->multiplier();
 
             if (!useAdditionalResults) {
 
                 // leg based cashflow reporting
 
-                const vector<Leg>& legs = trades[k]->legs();
+                const vector<Leg>& legs = trade->legs();
                 for (size_t i = 0; i < legs.size(); i++) {
                     const QuantLib::Leg& leg = legs[i];
-                    bool payer = trades[k]->legPayers()[i];
-                    string ccy = trades[k]->legCurrencies()[i];
+                    bool payer = trade->legPayers()[i];
+                    string ccy = trade->legCurrencies()[i];
                     Handle<YieldTermStructure> discountCurve;
                     if (market)
                         discountCurve = market->discountCurve(ccy, configuration);
@@ -197,7 +203,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             string flowType = "";
                             if (payer)
                                 amount *= -1.0;
-                            std::string ccy = trades[k]->legCurrencies()[i];
+                            std::string ccy = trade->legCurrencies()[i];
                             boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
                                 boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
                             boost::shared_ptr<QuantExt::CommodityIndexedCashFlow> ptrCommCf =
@@ -310,6 +316,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             Real effectiveAmount = Null<Real>();
                             Real discountFactor = Null<Real>();
                             Real presentValue = Null<Real>();
+                            Real presentValueBase = Null<Real>();
+                            Real fxRateLocalBase = Null<Real>();
                             Real floorStrike = Null<Real>();
                             Real capStrike = Null<Real>();
                             Real floorVolatility = Null<Real>();
@@ -322,6 +330,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 discountFactor = ptrFlow->hasOccurred(asof) ? 0.0 : discountCurve->discount(payDate);
 				if(effectiveAmount != Null<Real>())
 				    presentValue = discountFactor * effectiveAmount;
+                                try {
+                                    fxRateLocalBase = market->fxRate(ccy + baseCurrency)->value();
+                                    presentValueBase = presentValue * fxRateLocalBase;
+                                } catch (...) {
+                                }
 
                                 // scan for known capped / floored coupons and extract cap / floor strike and fixing
                                 // date
@@ -402,8 +415,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             }
 
                             report.next()
-                                .add(trades[k]->id())
-                                .add(trades[k]->tradeType())
+                                .add(trade->id())
+                                .add(trade->tradeType())
                                 .add(j + 1)
                                 .add(i)
                                 .add(payDate)
@@ -420,6 +433,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 .add(notional * (notional == Null<Real>() ? 1.0 : multiplier))
                                 .add(discountFactor)
                                 .add(presentValue)
+                                .add(fxRateLocalBase)
+                                .add(presentValueBase)
+                                .add(baseCurrency)
                                 .add(floorStrike)
                                 .add(capStrike)
                                 .add(floorVolatility)
@@ -432,9 +448,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
 
                 // additional result based cashflow reporting
 
-                auto tmp = trades[k]->instrument()->additionalResults().find("cashFlowResults");
+                auto tmp = trade->instrument()->additionalResults().find("cashFlowResults");
                 QL_REQUIRE(
-                    tmp != trades[k]->instrument()->additionalResults().end(),
+                    tmp != trade->instrument()->additionalResults().end(),
                     "internal error: expected cashFlowResults in additional results when writing cashflow report");
                 QL_REQUIRE(tmp->second.type() == typeid(std::vector<CashFlowResults>),
                            "cashflowResults type not handlded");
@@ -444,15 +460,17 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                     string ccy = "";
                     if (!cf.currency.empty()) {
                         ccy = cf.currency;
-                    } else if (trades[k]->legCurrencies().size() > cf.legNumber) {
-                        ccy = trades[k]->legCurrencies()[cf.legNumber];
+                    } else if (trade->legCurrencies().size() > cf.legNumber) {
+                        ccy = trade->legCurrencies()[cf.legNumber];
                     } else {
-                        ccy = trades[k]->npvCurrency();
+                        ccy = trade->npvCurrency();
                     }
 
                     Real effectiveAmount = Null<Real>();
                     Real discountFactor = Null<Real>();
                     Real presentValue = Null<Real>();
+                    Real presentValueBase = Null<Real>();
+                    Real fxRateLocalBase = Null<Real>();
                     Real floorStrike = Null<Real>();
                     Real capStrike = Null<Real>();
                     Real floorVolatility = Null<Real>();
@@ -471,6 +489,19 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                     } else if (effectiveAmount != Null<Real>() && discountFactor != Null<Real>()) {
                         presentValue = effectiveAmount * discountFactor;
                     }
+                    if (cf.fxRateLocalBase != Null<Real>()) {
+                        fxRateLocalBase = cf.fxRateLocalBase;
+                    } else if (market) {
+                        try {
+                            fxRateLocalBase = market->fxRate(ccy + baseCurrency)->value();
+                        } catch (...) {
+                        }
+                    }
+                    if (cf.presentValueBase != Null<Real>()) {
+                        presentValueBase = cf.presentValueBase;
+                    } else if (presentValue != Null<Real>() && fxRateLocalBase != Null<Real>()) {
+                        presentValueBase = presentValue * fxRateLocalBase;
+                    }
                     if (cf.floorStrike != Null<Real>())
                         floorStrike = cf.floorStrike;
                     if (cf.capStrike != Null<Real>())
@@ -481,8 +512,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                         capVolatility = cf.capVolatility;
 
                     report.next()
-                        .add(trades[k]->id())
-                        .add(trades[k]->tradeType())
+                        .add(trade->id())
+                        .add(trade->tradeType())
                         .add(++cashflowNumber[cf.legNumber])
                         .add(cf.legNumber)
                         .add(cf.payDate)
@@ -499,6 +530,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                         .add(cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier))
                         .add(discountFactor)
                         .add(presentValue)
+                        .add(fxRateLocalBase)
+                        .add(presentValueBase)
+                        .add(baseCurrency)
                         .add(floorStrike)
                         .add(capStrike)
                         .add(floorVolatility)
@@ -794,7 +828,7 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
         .addColumn("BaselEE", double(), 2)
         .addColumn("BaselEEE", double(), 2);
 
-    for (auto n : postProcess->nettingSetIds()) {
+    for (const auto& [n,_] : postProcess->nettingSetIds()) {
         addNettingSetExposure(report, postProcess, n);
     }
     report.end();
@@ -848,7 +882,7 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
         .addColumn("BaselEPE", double(), precision)
         .addColumn("BaselEEPE", double(), precision);
 
-    for (auto n : postProcess->nettingSetIds()) {
+    for (const auto& [n,_] : postProcess->nettingSetIds()) {
         report.next()
             .add("")
             .add(n)
@@ -873,9 +907,9 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
             .add(postProcess->netEPE_B(n))
             .add(postProcess->netEEPE_B(n));
 
-        for (Size k = 0; k < portfolio->trades().size(); ++k) {
-            string tid = portfolio->trades()[k]->id();
-            string nid = portfolio->trades()[k]->envelope().nettingSetId();
+        for (auto& [tid, trade] : portfolio->trades()) {
+            
+            string nid = trade->envelope().nettingSetId();
             if (nid != n)
                 continue;
             report.next()
@@ -986,13 +1020,12 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
     report.addColumn("Difference", double(), 2);
 
     auto scenarioDescriptions = sensitivityCube->scenarioDescriptions();
-    auto tradeIds = sensitivityCube->tradeIds();
+    auto tradeIds = sensitivityCube->tradeIdx();
     auto npvCube = sensitivityCube->npvCube();
 
-    for (Size i = 0; i < tradeIds.size(); i++) {
-        Real baseNpv = npvCube->getT0(i);
-        auto tradeId = tradeIds[i];
+    for (const auto& [tradeId, i] : tradeIds) {
 
+        Real baseNpv = npvCube->getT0(i);
         for (Size j = 0; j < scenarioDescriptions.size(); j++) {
             auto scenarioDescription = scenarioDescriptions[j];
 
@@ -1084,10 +1117,10 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
         .addColumn("ResultType", string())
         .addColumn("ResultValue", string());
 
-    for (auto trade : portfolio->trades()) {
+    for (auto & [tId, trade] : portfolio->trades()) {
         try {
             // we first add any additional trade data.
-            string tradeId = trade->id();
+            string tradeId = tId;
             string tradeType = trade->tradeType();
             Real notional2 = Null<Real>();
             string notional2Ccy = "";
@@ -1273,7 +1306,7 @@ void addCommodityCurveCalibrationInfo(ore::data::Report& report, const std::stri
 }
 
 void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& type, const std::string& id,
-                               boost::shared_ptr<FxEqVolCalibrationInfo> info) {
+                               boost::shared_ptr<FxEqCommVolCalibrationInfo> info) {
     if (info == nullptr)
         return;
 
@@ -1440,6 +1473,11 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
         addFxEqVolCalibrationInfo(report, "eqVol", r.first, r.second);
     }
 
+    // comm vol results
+    for (auto const& r : calibrationInfo->commVolCalibrationInfo) {
+        addFxEqVolCalibrationInfo(report, "commVol", r.first, r.second);
+    }
+
     // ir vol results
     for (auto const& r : calibrationInfo->irVolCalibrationInfo) {
         addIrVolCalibrationInfo(report, "irVol", r.first, r.second);
@@ -1449,8 +1487,9 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
     LOG("TodaysMktCalibration report written");
 }
 
-void ReportWriter::addMarketDatum(Report& report, const ore::data::MarketDatum& md) {
-    report.next().add(md.asofDate()).add(md.name()).add(md.quote()->value());
+void ReportWriter::addMarketDatum(Report& report, const ore::data::MarketDatum& md, const Date& actualDate) {
+    const Date& d = actualDate == Null<Date>() ? md.asofDate() : actualDate;
+    report.next().add(d).add(md.name()).add(md.quote()->value());
 }
 
 void ReportWriter::writeMarketData(Report& report, const boost::shared_ptr<Loader>& loader, const Date& asof,
@@ -1462,7 +1501,7 @@ void ReportWriter::writeMarketData(Report& report, const boost::shared_ptr<Loade
 
     if (returnAll) {
         for (const auto& md : loader->loadQuotes(asof)) {
-            addMarketDatum(report, *md);
+            addMarketDatum(report, *md, loader->actualDate());
         }
         return;
     }
@@ -1481,14 +1520,14 @@ void ReportWriter::writeMarketData(Report& report, const boost::shared_ptr<Loade
         const auto& mdName = md->name();
 
         if (names.find(mdName) != names.end()) {
-            addMarketDatum(report, *md);
+            addMarketDatum(report, *md, loader->actualDate());
             continue;
         }
 
         // This could be slow
         for (const auto& regex : regexes) {
             if (regex_match(mdName, regex)) {
-                addMarketDatum(report, *md);
+                addMarketDatum(report, *md, loader->actualDate());
                 break;
             }
         }
@@ -1538,15 +1577,85 @@ void ReportWriter::writePricingStats(ore::data::Report& report, const boost::sha
         .addColumn("CumulativeTiming", Size())
         .addColumn("AverageTiming", Size());
 
-    for (auto const& t : portfolio->trades()) {
-        std::size_t num = t->getNumberOfPricings();
-        Size cumulative = t->getCumulativePricingTime() / 1000;
+    for (auto const& [tid, trade] : portfolio->trades()) {
+        std::size_t num = trade->getNumberOfPricings();
+        Size cumulative = trade->getCumulativePricingTime() / 1000;
         Size average = num > 0 ? cumulative / num : 0;
-        report.next().add(t->id()).add(t->tradeType()).add(num).add(cumulative).add(average);
+        report.next().add(tid).add(trade->tradeType()).add(num).add(cumulative).add(average);
     }
 
     report.end();
     LOG("Pricing stats report written");
+}
+
+void ReportWriter::writeCube(ore::data::Report& report, const boost::shared_ptr<NPVCube>& cube,
+                             const std::map<std::string, std::string>& nettingSetMap) {
+    LOG("Writing cube report");
+
+    report.addColumn("Id", string())
+        .addColumn("NettingSet", string())
+        .addColumn("DateIndex", Size())
+        .addColumn("Date", string())
+        .addColumn("Sample", Size())
+        .addColumn("Depth", Size())
+        .addColumn("Value", double(), 4);
+
+    const map<string, Size>& idsAndPos = cube->idsAndIndexes();
+    vector<string> dateStrings(cube->numDates());
+    for (Size i = 0; i < cube->numDates(); ++i) {
+        std::ostringstream oss;
+        oss << QuantLib::io::iso_date(cube->dates()[i]);
+        dateStrings[i] = oss.str();
+    }
+
+    std::ostringstream oss;
+    oss << QuantLib::io::iso_date(cube->asof());
+    string asofString = oss.str();
+
+    vector<string> ids(idsAndPos.size());
+    vector<string> nettingSetIds(idsAndPos.size());
+    for (const auto& [id, idCubePos] : idsAndPos) {
+        ids[idCubePos] = id;
+        auto it = nettingSetMap.find(id);
+        if (it != nettingSetMap.end())
+            nettingSetIds[idCubePos] = it->second;
+        else
+            nettingSetIds[idCubePos] = "";
+    }
+
+    // T0
+    for (Size i = 0; i < ids.size(); ++i) {
+        report.next();
+        report.add(ids[i])
+            .add(nettingSetIds[i])
+            .add(static_cast<Size>(0))
+            .add(asofString)
+            .add(static_cast<Size>(0))
+            .add(static_cast<Size>(0))
+            .add(cube->getT0(i));
+    }
+    
+    // Cube
+    for (Size i = 0; i < ids.size(); i++) {
+        for (Size j = 0; j < cube->numDates(); j++) {
+            for (Size k = 0; k < cube->samples(); k++) {
+                for (Size l = 0; l < cube->depth(); l++) {
+                    report.next();
+                    report.add(ids[i])
+                        .add(nettingSetIds[i])
+                        .add(j + 1)
+                        .add(dateStrings[j])
+                        .add(k+1)
+                        .add(l)
+                        .add(cube->get(i, j, k, l));
+                }
+            }
+        }
+    }
+
+    report.end();
+
+    LOG("Cube report written");
 }
 
 } // namespace analytics

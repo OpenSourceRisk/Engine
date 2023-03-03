@@ -48,8 +48,6 @@ public:
               const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
               const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
               const boost::shared_ptr<ore::data::CrossAssetModelData>& crossAssetModelData,
-              std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
-              std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
               const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
               const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
               QuantLib::Real dimQuantile = 0.99, QuantLib::Size dimHorizonCalendarDays = 14,
@@ -96,7 +94,7 @@ public:
 
     // get a vector of netting set ids for the given portfolio sorted in alphabetical order, if no portfolio
     // is given here, the netting sets for the global portfolio set in the ctor are returned
-    std::vector<std::string> getNettingSetIds(const boost::shared_ptr<Portfolio>& portfolio = nullptr) const;
+    std::set<std::string> getNettingSetIds(const boost::shared_ptr<Portfolio>& portfolio = nullptr) const;
 
 protected:
     virtual boost::shared_ptr<NPVCube>
@@ -105,7 +103,7 @@ protected:
         return nullptr;
     };
 
-    virtual boost::shared_ptr<NPVCube> getNpvCube(const Date& asof, const std::vector<std::string>& ids,
+    virtual boost::shared_ptr<NPVCube> getNpvCube(const Date& asof, const std::set<std::string>& ids,
                                                   const std::vector<Date>& dates, const Size samples,
                                                   const Size depth) const;
 
@@ -135,8 +133,6 @@ protected:
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
     boost::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData_;
-    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
-    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
     boost::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
     QuantLib::Real dimQuantile_;

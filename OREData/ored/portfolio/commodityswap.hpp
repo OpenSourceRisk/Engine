@@ -26,6 +26,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/tradefactory.hpp>
 #include <ored/portfolio/commoditylegdata.hpp>
 
 namespace ore {
@@ -35,6 +36,8 @@ namespace data {
     \ingroup tradedata
 */
 class CommoditySwap : public ore::data::Trade {
+    static TradeBuilderRegister<TradeBuilder<CommoditySwap>> reg_;
+
 public:
     CommoditySwap() : ore::data::Trade("CommoditySwap") {}
 

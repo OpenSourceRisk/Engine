@@ -34,6 +34,8 @@ using std::string;
   \ingroup tradedata
 */
 class FxSwap : public Trade {
+    static TradeBuilderRegister<TradeBuilder<FxSwap>> reg_;
+
 public:
     //! Default constructor
     FxSwap()

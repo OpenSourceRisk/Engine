@@ -46,6 +46,7 @@ using namespace QuantLib;
  */
 class FxDigitalBarrierOptionEngineBuilder
     : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&, const Date&> {
+    ORE_REGISTER_ENGINE_BUILDER(FxDigitalBarrierOptionEngineBuilder)
 public:
     FxDigitalBarrierOptionEngineBuilder()
         : CachingEngineBuilder("GarmanKohlhagen", "FdBlackScholesBarrierEngine", {"FxDigitalBarrierOption"}) {}
@@ -89,7 +90,7 @@ protected:
             vol->enableExtrapolation();
         }
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
-            market_->fxRate(pair, configuration(ore::data::MarketContext::pricing)),
+            market_->fxSpot(pair, configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(forCcy.code(), configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)), vol);
         return boost::make_shared<FdBlackScholesBarrierEngine>(gbsp, tGrid, xGrid, dampingSteps, scheme);

@@ -35,6 +35,8 @@ using std::string;
 \ingroup tradedata
 */
 class EquitySwap : public Swap {
+    static TradeBuilderRegister<TradeBuilder<EquitySwap>> reg_;
+
 public:
     //! Default constructor
     EquitySwap() : Swap("EquitySwap") {}

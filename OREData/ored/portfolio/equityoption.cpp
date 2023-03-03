@@ -34,6 +34,8 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<EquityOption>> EquityOption::reg_("EquityOption");
+
 void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Set the assetName_ as it may have changed after lookup
@@ -162,6 +164,13 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = strike_.value();
     additionalData_["strikeCurrency"] = strike_.currency();
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Option");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
 }
 
 void EquityOption::fromXML(XMLNode* node) {

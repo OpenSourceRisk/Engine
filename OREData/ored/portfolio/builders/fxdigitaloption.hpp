@@ -41,6 +41,7 @@ using std::string;
  */
 class FxDigitalOptionEngineBuilder
     : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&, const bool> {
+    ORE_REGISTER_ENGINE_BUILDER(FxDigitalOptionEngineBuilder)
 public:
     FxDigitalOptionEngineBuilder()
         : CachingEngineBuilder("GarmanKohlhagen", "AnalyticEuropeanEngine", {"FxDigitalOption"}) {}
@@ -55,7 +56,7 @@ protected:
         string pair = forCcy.code() + domCcy.code();
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
-            market_->fxRate(pair, configuration(ore::data::MarketContext::pricing)),
+            market_->fxSpot(pair, configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(forCcy.code(),
                                    configuration(ore::data::MarketContext::pricing)), // dividend yield ~ foreign yield
             market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)),
@@ -67,6 +68,7 @@ protected:
 //! Engine Builder for European cash-settled FX Digital Options
 class FxDigitalCSOptionEngineBuilder
     : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
+    ORE_REGISTER_ENGINE_BUILDER(FxDigitalCSOptionEngineBuilder)
 public:
     FxDigitalCSOptionEngineBuilder()
         : CachingEngineBuilder("GarmanKohlhagen", "AnalyticCashSettledEuropeanEngine", {"FxDigitalOptionEuropeanCS"}) {}
@@ -80,7 +82,7 @@ protected:
         string pair = forCcy.code() + domCcy.code();
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
-            market_->fxRate(pair, configuration(ore::data::MarketContext::pricing)),
+            market_->fxSpot(pair, configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(forCcy.code(),
                                    configuration(ore::data::MarketContext::pricing)), // dividend yield ~ foreign yield
             market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)),

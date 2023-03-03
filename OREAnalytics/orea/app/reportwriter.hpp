@@ -59,7 +59,8 @@ public:
                           boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
                           boost::shared_ptr<Portfolio> portfolio);
 
-    virtual void writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
+    virtual void writeCashflow(ore::data::Report& report, const std::string& baseCurrency,
+                               boost::shared_ptr<ore::data::Portfolio> portfolio,
                                boost::shared_ptr<ore::data::Market> market = boost::shared_ptr<ore::data::Market>(),
                                const std::string& configuration = ore::data::Market::defaultConfiguration,
                                const bool includePastCashflows = false);
@@ -117,11 +118,15 @@ public:
 
     virtual void writePricingStats(ore::data::Report& report, const boost::shared_ptr<Portfolio>& portfolio);
 
+    virtual void writeCube(ore::data::Report& report, const boost::shared_ptr<NPVCube>& cube,
+                           const std::map<std::string, std::string>& nettingSetMap = std::map<std::string, std::string>());
+
     const std::string& nullString() const { return nullString_; }
 
 protected:
     std::string nullString_;
-    void addMarketDatum(ore::data::Report& report, const ore::data::MarketDatum& md);
+    void addMarketDatum(ore::data::Report& report, const ore::data::MarketDatum& md,
+                        const QuantLib::Date& actualDate = Date());
 };
 
 } // namespace analytics

@@ -82,38 +82,6 @@ struct CommonVars {
     SavedSettings savedSettings;
 };
 
-std::vector<boost::shared_ptr<ore::data::EngineBuilder>> getExtraEngineBuilders() {
-
-    // add extra builders
-    std::vector<boost::shared_ptr<EngineBuilder>> eb;
-
-    // FX
-    eb.push_back(boost::make_shared<FxDigitalOptionEngineBuilder>());
-    eb.push_back(boost::make_shared<FxDigitalBarrierOptionEngineBuilder>());
-    eb.push_back(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
-    eb.push_back(boost::make_shared<FxBarrierOptionFDEngineBuilder>());
-    eb.push_back(boost::make_shared<FxTouchOptionEngineBuilder>());
-    eb.push_back(boost::make_shared<FxDoubleTouchOptionAnalyticEngineBuilder>());
-    eb.push_back(boost::make_shared<FxDoubleBarrierOptionAnalyticEngineBuilder>());
-
-    return eb;
-}
-
-std::map<string, boost::shared_ptr<AbstractTradeBuilder>> getExtraTradeBuilders() {
-
-    // add extra trade builders
-    std::map<string, boost::shared_ptr<AbstractTradeBuilder>> tb = {
-        {"FxDigitalOption", boost::make_shared<TradeBuilder<FxDigitalOption>>()},
-        {"FxBarrierOption", boost::make_shared<TradeBuilder<FxBarrierOption>>()},
-        {"FxKIKOBarrierOption", boost::make_shared<TradeBuilder<FxKIKOBarrierOption>>()},
-        {"FxDigitalBarrierOption", boost::make_shared<TradeBuilder<FxDigitalBarrierOption>>()},
-        {"FxTouchOption", boost::make_shared<TradeBuilder<FxTouchOption>>()},
-        {"FxDoubleBarrierOption", boost::make_shared<TradeBuilder<FxDoubleBarrierOption>>()},
-        {"FxDoubleTouchOption", boost::make_shared<TradeBuilder<FxDoubleTouchOption>>()}};
-
-    return tb;
-}
-
 } // namespace
 
 // Common variables used in the tests below
@@ -133,16 +101,13 @@ BOOST_AUTO_TEST_CASE(testCompositeInstrumentWrapperPrice) {
     loadFromXMLString(*todaysMarketConfig, vars.todaysMarketConfig);
     loadFromXMLString(*pricingEngineConfig, vars.pricingEngineConfig);
 
-    auto tradeFactory = boost::make_shared<TradeFactory>();
-    tradeFactory->addExtraBuilders(getExtraTradeBuilders());
-
-    portfolio->loadFromXMLString(vars.portfolio, tradeFactory);
+    portfolio->fromXMLString(vars.portfolio);
 
     boost::shared_ptr<Market> market =
         boost::make_shared<TodaysMarket>(vars.asof, todaysMarketConfig, vars.loader, curveConfig, true);
     auto configurations = std::map<MarketContext, string>();
     boost::shared_ptr<EngineFactory> factory =
-        boost::make_shared<EngineFactory>(pricingEngineConfig, market, configurations, getExtraEngineBuilders());
+        boost::make_shared<EngineFactory>(pricingEngineConfig, market, configurations);
 
     BOOST_TEST_MESSAGE("number trades " << portfolio->size());
     portfolio->build(factory);
@@ -153,12 +118,12 @@ BOOST_AUTO_TEST_CASE(testCompositeInstrumentWrapperPrice) {
     std::vector<Handle<Quote>> fxRates;
 
     Real totalNPV = 0;
-    for (auto t : portfolio->trades()) {
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
         Handle<Quote> fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
-        if (t->npvCurrency() != "USD")
-            fx = factory->market()->fxRate(t->npvCurrency() + "USD");
+        if (trade->npvCurrency() != "USD")
+            fx = factory->market()->fxRate(trade->npvCurrency() + "USD");
         fxRates.push_back(fx);
-        iw.push_back(t->instrument());
+        iw.push_back(trade->instrument());
         BOOST_TEST_MESSAGE("NPV " << iw.back()->NPV());
         BOOST_TEST_MESSAGE("FX " << fxRates.back()->value());
 

@@ -126,8 +126,6 @@ BOOST_AUTO_TEST_CASE(testEuropeanSwaptionPrice) {
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
-    engineFactory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
 
     swaptionCash.build(engineFactory);
     swaptionPhysical.build(engineFactory);

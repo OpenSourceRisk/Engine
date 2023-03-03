@@ -4,12 +4,15 @@ set(OREAnalytics-Test_SRC aggregationscenariodata.cpp
 amcbermudanswaption.cpp
 cube.cpp
 observationmode.cpp
+parsensitivityanalysis.cpp
+parsensitivityanalysismanual.cpp
 scenariogenerator.cpp
 scenariosimmarket.cpp
 sensitivityaggregator.cpp
 sensitivityanalysis.cpp
 sensitivityanalysisanalytic.cpp
 sensitivityperformance.cpp
+sensitivityperformanceplus.cpp
 shiftscenariogenerator.cpp
 simulationmeasures.cpp
 stresstest.cpp

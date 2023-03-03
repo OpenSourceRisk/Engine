@@ -75,7 +75,7 @@ protected:
 private:
     std::string currency_;
     std::string index_;
-    bool ignoreDuplicateCalibrationExpiryTimes_;
+    bool ignoreDuplicateCalibrationExpiryTimes_ = false;
 };
 
 }

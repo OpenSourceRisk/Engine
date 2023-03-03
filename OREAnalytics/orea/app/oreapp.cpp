@@ -16,8 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/algorithm/string.hpp>
-#include <boost/timer/timer.hpp>
 
 #ifdef BOOST_MSVC
 // disable warning C4503: '__LINE__Var': decorated name length exceeded, name was truncated
@@ -27,18 +25,23 @@
 #pragma warning(disable : 4503)
 #endif
 
-#include <boost/filesystem.hpp>
-
+#include <orea/app/marketdatainmemoryloader.hpp>
+#include <orea/app/oreapp.hpp>
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
+
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
-#include <ored/report/inmemoryreport.hpp>
 
-#include <orea/app/oreapp.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/timer/timer.hpp>
+
+#include <iostream>
 
 using namespace std;
 using namespace ore::data;
@@ -46,9 +49,135 @@ using namespace ore::analytics;
 using boost::timer::cpu_timer;
 using boost::timer::default_places;
 
-namespace {
+namespace ore {
+namespace analytics {
 
-vector<string> getFilenames(const string& fileString, const string& path) {
+std::set<std::string> OREApp::getAnalyticTypes() {
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
+    return analyticsManager_->requestedAnalytics();
+}
+
+std::set<std::string> OREApp::getSupportedAnalyticTypes() {
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
+    return analyticsManager_->validAnalytics();
+}
+
+const boost::shared_ptr<Analytic>& OREApp::getAnalytic(std::string type) {
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
+    return analyticsManager_->getAnalytic(type);
+}
+
+std::set<std::string> OREApp::getReportNames() {
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
+    std::set<std::string> names;
+    for (const auto& rep : analyticsManager_->reports()) {
+        for (auto b : rep.second) {
+            string reportName = b.first;
+            if (names.find(reportName) == names.end())
+                names.insert(reportName);
+            else {
+                ALOG("report name " << reportName
+                     << " occurs more than once, will retrieve the first report with that only");
+            }
+        }
+    }
+    return names;
+}
+
+boost::shared_ptr<PlainInMemoryReport> OREApp::getReport(std::string reportName) {
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
+    for (const auto& rep : analyticsManager_->reports()) {
+        for (auto b : rep.second) {
+            if (reportName == b.first)
+                return boost::make_shared<PlainInMemoryReport>(b.second);
+        }
+    }
+    QL_FAIL("report " << reportName << " not found in results");
+}
+
+std::set<std::string> OREApp::getCubeNames() {
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
+    std::set<std::string> names;
+    for (const auto& c : analyticsManager_->npvCubes()) {
+        for (auto b : c.second) {
+            string cubeName = b.first;
+            if (names.find(cubeName) == names.end())
+                names.insert(cubeName);
+            else {
+                ALOG("cube name " << cubeName
+                     << " occurs more than once, will retrieve the first cube with that name only");
+            }
+        }
+    }
+    return names;
+}
+    
+boost::shared_ptr<NPVCube> OREApp::getCube(std::string cubeName) {
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
+    for (const auto& c : analyticsManager_->npvCubes()) {
+        for (auto b : c.second) {
+            if (cubeName == b.first)
+                return b.second;
+        }
+    }
+    QL_FAIL("report " << cubeName << " not found in results");
+}
+
+std::vector<std::string> OREApp::getErrors() {
+    std::vector<std::string> errors;
+    while (fbLogger_ && fbLogger_->logger->hasNext())
+        errors.push_back(fbLogger_->logger->next());
+    return errors;
+}
+    
+int OREApp::run(const std::vector<std::string>& marketData,
+                const std::vector<std::string>& fixingData) {
+    try {
+        LOG("ORE analytics starting");
+
+        QL_REQUIRE(inputs_, "ORE input parameters not set");
+        
+        // Set global evaluation date, though already set in the OREAppInputParameters c'tor
+        Settings::instance().evaluationDate() = inputs_->asof();
+
+        // FIXME
+        QL_REQUIRE(inputs_->pricingEngine(), "pricingEngine not set");
+        GlobalPseudoCurrencyMarketParameters::instance().set(inputs_->pricingEngine()->globalParameters());
+
+        // Initialize the global conventions 
+        QL_REQUIRE(inputs_->conventions(), "conventions not set");
+        InstrumentConventions::instance().setConventions(inputs_->conventions());
+
+        // Create a market data loader that takes input from the provided vectors
+        auto loader = boost::make_shared<MarketDataInMemoryLoader>(inputs_, marketData, fixingData);
+
+        // Create the analytics manager
+        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs_, loader);
+        LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
+        CONSOLEW("Requested analytics:");
+        CONSOLE(to_string(inputs_->analytics()));
+        LOG("Requested analytics: " << to_string(inputs_->analytics()));
+
+        // Run the requested analytics
+        analyticsManager_->runAnalytics(inputs_->analytics());
+
+        // Leave any report writing to the calling aplication
+    }
+    catch (std::exception& e) {
+        ostringstream oss;
+        oss << "Error in ORE analytics: " << e.what();
+        ALOG(oss.str());
+        CONSOLE(oss.str());
+        QL_FAIL(oss.str());
+        return 1;
+    }
+    
+    LOG("ORE analytics done");
+
+    return 0;
+}
+
+vector<string> OREApp::getFileNames(const string& fileString, const string& path) {
     vector<string> fileNames;
     boost::split(fileNames, fileString, boost::is_any_of(",;"), boost::token_compress_on);
     for (auto it = fileNames.begin(); it < fileNames.end(); it++) {
@@ -58,14 +187,122 @@ vector<string> getFilenames(const string& fileString, const string& path) {
     return fileNames;
 }
 
-} // anonymous namespace
+boost::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const boost::shared_ptr<Parameters>& params) {
+    bool implyTodaysFixings = false;
+    vector<string> marketFiles = {};
+    vector<string> fixingFiles = {};
+    vector<string> dividendFiles = {};
 
-namespace ore {
-namespace analytics {
+    std::string inputPath = params_->get("setup", "inputPath");
 
-OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
-    : tab_(40), progressBarWidth_(72 - std::min<Size>(tab_, 67)), params_(params),
-      asof_(parseDate(params_->get("setup", "asofDate"))), out_(out), cubeDepth_(0) {
+    std::string tmp = params_->get("setup", "implyTodaysFixings", false);
+    if (tmp != "")
+        implyTodaysFixings = ore::data::parseBool(tmp);
+
+    tmp = params->get("setup", "marketDataFile", false);
+    if (tmp != "")
+        marketFiles = getFileNames(tmp, inputPath);
+    else {
+        ALOG("market data file not found");
+    }
+
+    tmp = params->get("setup", "fixingDataFile", false);
+    if (tmp != "")
+        fixingFiles = getFileNames(tmp, inputPath);
+    else {
+        ALOG("fixing data file not found");
+    }
+    
+    tmp = params->get("setup", "dividendDataFile", false);
+    if (tmp != "")
+        dividendFiles = getFileNames(tmp, inputPath);
+    else {
+        WLOG("dividend data file not found");
+    }
+
+    auto loader = boost::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings);
+
+    return loader;
+}
+
+void OREApp::analytics() {
+
+    try {
+        LOG("ORE analytics starting");
+
+        QL_REQUIRE(params_, "ORE input parameters not set");
+        
+        // Read all inputs from params and files referenced in params
+        CONSOLEW("Loading inputs");
+        auto inputs = boost::make_shared<InputParameters>();
+        buildInputParameters(inputs, params_);
+        auto outputs = boost::make_shared<OutputParameters>(params_);
+        CONSOLE("OK");
+        
+        // Set global evaluation date, though already set in the OREAppInputParameters c'tor
+        Settings::instance().evaluationDate() = inputs->asof();
+
+        // FIXME
+        GlobalPseudoCurrencyMarketParameters::instance().set(inputs->pricingEngine()->globalParameters());
+
+        // Initialize the global conventions 
+        InstrumentConventions::instance().setConventions(inputs->conventions());
+
+        // Create a market data loader that reads market data, fixings, dividends from csv files
+        auto csvLoader = buildCsvLoader(params_);
+        auto loader = boost::make_shared<MarketDataCsvLoader>(inputs, csvLoader);
+
+        // Create the analytics manager
+        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs, loader);
+        LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
+        CONSOLEW("Requested analytics");
+        CONSOLE(to_string(inputs->analytics()));
+        LOG("Requested analytics: " << to_string(inputs->analytics()));
+
+        // Run the requested analytics
+        analyticsManager_->runAnalytics(inputs->analytics());
+
+        // Write reports to files in the results path
+        Analytic::analytic_reports reports = analyticsManager_->reports();
+        analyticsManager_->toFile(reports,
+                                  inputs->resultsPath().string(), outputs->fileNameMap(),
+                                  inputs->csvSeparator(), inputs->csvCommentCharacter(),
+                                  inputs->csvQuoteChar(), inputs->reportNaString());
+
+        // Write npv cube(s)
+        for (auto a : analyticsManager_->npvCubes()) {
+            for (auto b : a.second) {
+                LOG("write npv cube " << b.first);
+                string reportName = b.first;
+                std::string fileName = inputs->resultsPath().string() + "/" + outputs->outputFileName(reportName, "dat");
+                LOG("write npv cube " << reportName << " to file " << fileName);
+                saveCube(fileName, *b.second);
+            }
+        }
+        
+        // Write market cube(s)
+        for (auto a : analyticsManager_->mktCubes()) {
+            for (auto b : a.second) {
+                string reportName = b.first;
+                std::string fileName = inputs->resultsPath().string() + "/" + outputs->outputFileName(reportName, "dat");
+                LOG("write market cube " << reportName << " to file " << fileName);
+                saveAggregationScenarioData(fileName, *b.second);
+            }
+        }        
+    }
+    catch (std::exception& e) {
+        ostringstream oss;
+        oss << "Error in ORE analytics: " << e.what();
+        ALOG(oss.str());
+        CONSOLE(oss.str());
+        QL_FAIL(oss.str());
+    }
+
+    LOG("ORE analytics done");
+}
+
+OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console)
+    : params_(params), inputs_(nullptr), asof_(parseDate(params_->get("setup", "asofDate"))), cubeDepth_(0) {
 
     // Set global evaluation date
     Settings::instance().evaluationDate() = asof_;
@@ -73,7 +310,10 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
     // initialise some pointers
     conventions_ = boost::make_shared<Conventions>();
     InstrumentConventions::instance().setConventions(conventions_);
-
+    if (console) {
+        ConsoleLog::instance().switchOn();
+    }
+    
     marketParameters_ = boost::make_shared<TodaysMarketParameters>();
     curveConfigs_ = boost::make_shared<CurveConfigurations>();
 
@@ -84,38 +324,77 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
     readSetup();
 }
 
+OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel,
+               bool console)
+    : params_(nullptr), inputs_(inputs), asof_(inputs->asof()), cubeDepth_(0) {
+
+    // Initialise Singletons
+    Settings::instance().evaluationDate() = asof_;
+    InstrumentConventions::instance().setConventions(inputs_->conventions());
+    if (console) {
+        ConsoleLog::instance().switchOn();
+    }
+
+    // Initialise file logger and buffered logger
+    string logFilePath = (inputs_->resultsPath() / logFile).string();
+    boost::filesystem::path p{inputs_->resultsPath()};
+    if (!boost::filesystem::exists(p))
+        boost::filesystem::create_directories(p);
+    QL_REQUIRE(boost::filesystem::is_directory(p),
+               "output path '" << inputs_->resultsPath() << "' is not a directory.");
+
+    // Report StructuredErrorMessages with level WARNING, ERROR, CRITICAL, ALERT
+    fbLogger_ = boost::make_shared<FilteredBufferedLoggerGuard>();
+    Log::instance().registerLogger(boost::make_shared<FileLogger>(logFilePath));
+    Log::instance().setMask(logLevel);
+    Log::instance().switchOn();
+}
+
 OREApp::~OREApp() {
     // Close logs
     closeLog();
 }
 
-int OREApp::run() {
+int OREApp::run(bool useAnalytics) {
 
     cpu_timer timer;
-
+    
     try {
-        out_ << "ORE starting" << std::endl;
-        LOG("ORE starting");
+
+        if (useAnalytics) {
+            analytics();
+            return 0;
+        }
+
+        CONSOLE("=====================================");
+        CONSOLE("=== DEPRECATED useAnalytics=false ===");
+        CONSOLE("=====================================");
+        CONSOLE("\nORE starting");
+
+        LOG("ORE starting: DEPRECATED ORE App");
         // readSetup();
 
         /*********
          * Load Reference Data
          */
-        out_ << setw(tab_) << left << "Reference... " << flush;
+        CONSOLEW("Reference... ");
         getReferenceData();
-        out_ << "OK" << endl;
+        CONSOLE("OK");
 
         /*********
          * Build Markets
          */
+        cpu_timer mtimer;
         buildMarket();
+        mtimer.stop();
+        LOG("Market Build Time " << setprecision(2) << mtimer.format(default_places, "%w") << " sec");
 
         /************************
-         *Build Pricing Engine Factory
+         * Build Pricing Engine Factory
          */
-        out_ << setw(tab_) << left << "Engine factory... " << flush;
+        CONSOLEW("Engine factory... ");
         engineFactory_ = buildEngineFactory(market_, "setup", true);
-        out_ << "OK" << endl;
+        CONSOLE("OK");
 
         /************************
          * Set global pseudo currency market parameters
@@ -126,9 +405,9 @@ int OREApp::run() {
         /******************************
          * Load and Build the Portfolio
          */
-        out_ << setw(tab_) << left << "Portfolio... " << flush;
+        CONSOLEW("Portfolio... ");
         portfolio_ = buildPortfolio(engineFactory_, buildFailedTrades_);
-        out_ << "OK" << endl;
+        CONSOLE("OK");
 
         /******************************
          * Write initial reports
@@ -144,30 +423,27 @@ int OREApp::run() {
         /**************************
          * Write base scenario file
          */
-        out_ << setw(tab_) << left << "Write Base Scenario... " << flush;
+        CONSOLEW("Write Base Scenario...");
         if (writeBaseScenario_) {
             writeBaseScenario();
-            out_ << "OK" << endl;
+            CONSOLE("OK");
         } else {
             LOG("skip base scenario");
-            out_ << "SKIP" << endl;
+            CONSOLE("SKIP");
         }
 
         /**********************
          * Sensitivity analysis
          */
+        CONSOLEW("Sensitivity Report...");
         if (sensitivity_) {
-            out_ << setw(tab_) << left << "Sensitivity Report... " << flush;
-
             // We reset this here because the date grid building in sensitivity analysis depends on it.
             Settings::instance().evaluationDate() = asof_;
             sensitivityRunner_ = getSensitivityRunner();
             sensitivityRunner_->runSensitivityAnalysis(market_, curveConfigs_, marketParameters_);
-            out_ << "OK" << endl;
+            CONSOLE("OK");
         } else {
-            LOG("skip sensitivity analysis");
-            out_ << setw(tab_) << left << "Sensitivity... ";
-            out_ << "SKIP" << endl;
+            CONSOLE("SKIP");
         }
 
         /****************
@@ -177,8 +453,8 @@ int OREApp::run() {
             runStressTest();
         } else {
             LOG("skip stress test");
-            out_ << setw(tab_) << left << "Stress testing... ";
-            out_ << "SKIP" << endl;
+            CONSOLEW("Stress testing...");
+            CONSOLE("SKIP");
         }
 
         /****************
@@ -188,8 +464,8 @@ int OREApp::run() {
             runParametricVar();
         } else {
             LOG("skip parametric var");
-            out_ << setw(tab_) << left << "Parametric VaR... ";
-            out_ << "SKIP" << endl;
+            CONSOLEW("Parametric VaR...");
+            CONSOLE("SKIP");
         }
 
         /***************************************************
@@ -222,17 +498,17 @@ int OREApp::run() {
             // QL_REQUIRE(scenarioData_->dimSamples() == cube_->samples(),
             //            "scenario sample size does not match cube sample size");
 
-	    out_ << setw(tab_) << left << "XVA simulation... " << flush;
+	    CONSOLEW("XVA simulation...");
 	    boost::shared_ptr<XvaRunner> xva = getXvaRunner();
             xva->runXva(market_, true);
             postProcess_ = xva->postProcess();
-            out_ << "OK" << endl;
+            CONSOLE("OK");
 
-            out_ << setw(tab_) << left << "Write XVA Reports... " << flush;
+            CONSOLEW("Write XVA Reports...");
             writeXVAReports();
             if (writeDIMReport_)
                 writeDIMReport();
-            out_ << "OK" << endl;
+            CONSOLE("OK");
 
         } else {
 
@@ -243,14 +519,14 @@ int OREApp::run() {
                 generateNPVCube();
             } else {
                 LOG("skip simulation");
-                out_ << setw(tab_) << left << "Simulation... ";
-                out_ << "SKIP" << endl;
+                CONSOLEW("Simulation...");
+                CONSOLE("SKIP");
             }
 
             /*****************************
              * Aggregation and XVA Reports
              */
-            out_ << setw(tab_) << left << "Aggregation and XVA Reports... " << flush;
+            CONSOLEW("Aggregation and XVA Reports...");
             if (xva_) {
                 // We reset this here because the date grid building below depends on it.
                 Settings::instance().evaluationDate() = asof_;
@@ -273,32 +549,746 @@ int OREApp::run() {
                            "scenario sample size does not match cube sample size");
 
                 runPostProcessor();
-                out_ << "OK" << endl;
-                out_ << setw(tab_) << left << "Write Reports... " << flush;
+                CONSOLE("OK");
+                CONSOLEW("Write Reports...");
                 writeXVAReports();
                 if (writeDIMReport_)
                     writeDIMReport();
-                out_ << "OK" << endl;
+                CONSOLE("OK");
             } else {
                 LOG("skip XVA reports");
-                out_ << "SKIP" << endl;
+                CONSOLE("SKIP");
             }
         }
 
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
-        out_ << "Error: " << e.what() << endl;
+        CONSOLE("Error: " << e.what());
         return 1;
     }
 
     timer.stop();
-    out_ << "run time: " << setprecision(2) << timer.format(default_places, "%w") << " sec" << endl;
-    out_ << "ORE done." << endl;
+    CONSOLE("run time: " << setprecision(2) << timer.format(default_places, "%w") << " sec");
+    CONSOLE("ORE done.");
 
     LOG("ORE done.");
+
     return 0;
 }
 
+void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
+                                  const boost::shared_ptr<Parameters>& params) {
+    QL_REQUIRE(inputs, "InputParameters not created yet");
+
+    LOG("buildInputParameters starting");
+
+    // switch default for backward compatibility
+    inputs->setEntireMarket(true); 
+    inputs->setAllFixings(true); 
+    inputs->setEomInflationFixings(false);
+    inputs->setUseMarketDataFixings(false);
+    inputs->setBuildFailedTrades(false);
+
+    QL_REQUIRE(params_->hasGroup("setup"), "parameter group 'setup' missing");
+
+    std::string inputPath = params_->get("setup", "inputPath");
+    std::string outputPath = params_->get("setup", "outputPath");
+
+    // Load calendar adjustments
+    std::string tmp =  params_->get("setup", "calendarAdjustment", false);
+    if (tmp != "") {
+        CalendarAdjustmentConfig calendarAdjustments;
+        string calendarAdjustmentFile = inputPath + "/" + tmp;
+        LOG("Loading calendar adjustments from file: " << calendarAdjustmentFile);
+        calendarAdjustments.fromFile(calendarAdjustmentFile);
+    } else {
+        WLOG("Calendar adjustments not found, using defaults");
+    }
+
+    // Load currency configs
+    tmp = params_->get("setup", "currencyConfiguration", false);
+    if (tmp != "") {
+        CurrencyConfig currencyConfig;
+        string currencyConfigFile = inputPath + "/" + tmp;
+        LOG("Loading currency configurations from file: " << currencyConfigFile);
+        currencyConfig.fromFile(currencyConfigFile);
+    } else {
+        WLOG("Currency configurations not found, using defaults");
+    }
+
+    inputs->setAsOfDate(params_->get("setup", "asofDate"));
+    
+    // Set it immediately, otherwise the scenario generator grid below will be based on today's date
+    Settings::instance().evaluationDate() = inputs->asof();
+    
+    inputs->setResultsPath(outputPath);
+
+    inputs->setBaseCurrency(params_->get("npv", "baseCurrency"));
+
+    tmp = params_->get("setup", "useMarketDataFixings", false);
+    if (tmp != "")
+        inputs->setUseMarketDataFixings(parseBool(tmp));
+
+    tmp = params_->get("setup", "dryRun", false);
+    if (tmp != "")
+        inputs->setDryRun(parseBool(tmp));
+
+    tmp = params_->get("setup", "reportNaString", false);
+    if (tmp != "")
+        inputs->setReportNaString(tmp);
+
+    tmp = params_->get("setup", "eomInflationFixings", false);
+    if (tmp != "")
+        inputs->setEomInflationFixings(parseBool(tmp));
+
+    tmp = params_->get("setup", "nThreads", false);
+    if (tmp != "")
+        inputs->setThreads(parseInteger(tmp));
+
+    tmp = params_->get("setup", "entireMarket", false);
+    if (tmp != "")
+        inputs->setEntireMarket(parseBool(tmp));
+
+    tmp = params_->get("setup", "iborFallbackOverride", false);
+    if (tmp != "")
+        inputs->setIborFallbackOverride(parseBool(tmp));
+
+    tmp = params_->get("setup", "continueOnError", false);
+    if (tmp != "")
+        inputs->setContinueOnError(parseBool(tmp));
+
+    tmp = params_->get("setup", "lazyMarketBuilding", false);
+    if (tmp != "")
+        inputs->setLazyMarketBuilding(parseBool(tmp));
+
+    tmp = params_->get("setup", "buildFailedTrades", false);
+    if (tmp != "")
+        inputs->setBuildFailedTrades(parseBool(tmp));
+
+    tmp = params_->get("setup", "observationModel", false);
+    if (tmp != "") {
+        inputs->setObservationModel(tmp);
+        ObservationMode::instance().setMode(inputs->observationModel());
+        LOG("Observation Mode is " << inputs->observationModel());
+    }
+
+    tmp = params_->get("setup", "implyTodaysFixings", false);
+    if (tmp != "")
+        inputs->setImplyTodaysFixings(ore::data::parseBool(tmp));
+
+    tmp = params_->get("setup", "referenceDataFile", false);
+    if (tmp != "") {
+        string refDataFile = inputPath + "/" + tmp;
+        LOG("Loading reference data from file: " << refDataFile);
+        inputs->setRefDataManagerFromFile(refDataFile);
+    } else {
+        WLOG("Reference data not found");
+    }
+
+    if (params_->has("setup", "conventionsFile") && params_->get("setup", "conventionsFile") != "") {
+        string conventionsFile = inputPath + "/" + params_->get("setup", "conventionsFile");
+        LOG("Loading conventions from file: " << conventionsFile);
+        inputs->setConventionsFromFile(conventionsFile);
+    } else {
+        ALOG("Conventions not found");
+    }
+
+    if (params_->has("setup", "iborFallbackConfig") && params_->get("setup", "iborFallbackConfig") != "") {
+        std::string tmp = inputPath + "/" + params_->get("setup", "iborFallbackConfig");
+        LOG("Loading Ibor fallback config from file: " << tmp);
+        inputs->setIborFallbackConfigFromFile(tmp);
+    } else {
+        WLOG("Using default Ibor fallback config");
+    }
+
+    if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
+        string curveConfigFile = inputPath + "/" + params_->get("setup", "curveConfigFile");
+        LOG("Load curve configurations from file: ");
+        inputs->setCurveConfigsFromFile(curveConfigFile);
+    } else {
+        ALOG("no curve configs loaded");
+    }
+    
+    tmp = params_->get("setup", "pricingEnginesFile", false);
+    if (tmp != "") {
+        string pricingEnginesFile = inputPath + "/" + tmp;
+        LOG("Load pricing engine data from file: " << pricingEnginesFile);
+        inputs->setPricingEngineFromFile(pricingEnginesFile);
+    } else {
+        ALOG("Pricing engine data not found");
+    }
+    
+    tmp = params_->get("setup", "marketConfigFile", false);
+    if (tmp != "") {
+        string marketConfigFile = inputPath + "/" + tmp;
+        LOG("Loading today's market parameters from file" << marketConfigFile);
+        inputs->setTodaysMarketParamsFromFile(marketConfigFile);
+    } else {
+        ALOG("Today's market parameters not found");
+    }
+
+    if (params_->has("setup", "buildFailedTrades"))
+        inputs->setBuildFailedTrades(parseBool(params_->get("setup", "buildFailedTrades")));
+
+    tmp = params_->get("setup", "portfolioFile");
+    if (tmp != "") {
+        inputs->setPortfolioFromFile(tmp, inputPath);
+    } else {
+        ALOG("Portfolio data not found");
+    }
+
+    if (params_->hasGroup("markets")) {
+        inputs->setMarketConfigs(params_->markets());
+        for (auto m: inputs->marketConfigs())
+            LOG("MarketContext::" << m.first << " = " << m.second);
+    }
+
+    /*************
+     * NPV
+     *************/
+
+    tmp = params_->get("npv", "active", false);
+    if (!tmp.empty() && parseBool(tmp))
+        inputs->insertAnalytic("NPV");
+
+    tmp = params_->get("npv", "additionalResults", false);
+    if (tmp != "")
+        inputs->setOutputAdditionalResults(parseBool(tmp));
+
+    /*************
+     * CASHFLOW
+     *************/
+
+    tmp = params_->get("cashflow", "active", false);
+    if (!tmp.empty() && parseBool(tmp))
+        inputs->insertAnalytic("CASHFLOW");
+
+    tmp = params_->get("cashflow", "includePastCashflows", false);
+    if (tmp != "")
+        inputs->setIncludePastCashflows(parseBool(tmp));
+    
+    /*************
+     * Curves
+     *************/
+
+    tmp = params_->get("curves", "active", false);
+    if (tmp != "") 
+        inputs->setOutputCurves(parseBool(tmp));
+    
+    tmp = params_->get("curves", "grid", false);
+    if (tmp != "") 
+        inputs->setCurvesGrid(tmp);
+
+    tmp = params_->get("curves", "configuration", false);
+    if (tmp != "") 
+        inputs->setCurvesMarketConfig(tmp);
+
+    tmp = params_->get("curves", "outputTodaysMarketCalibration", false);
+    if (tmp != "")
+        inputs->setOutputTodaysMarketCalibration(parseBool(tmp));
+
+    /*************
+     * SENSITIVITY
+     *************/
+
+    // FIXME: The following are not loaded from params so far, relying on defaults
+    // xbsParConversion_ = false;
+    // analyticFxSensis_ = true;
+    // useSensiSpreadedTermStructures_ = true;
+
+    tmp = params_->get("sensitivity", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        inputs->insertAnalytic("SENSITIVITY");
+
+        tmp = params_->get("sensitivity", "parSensitivity", false);
+        if (tmp != "")
+            inputs->setParSensi(parseBool(tmp));
+
+        tmp = params_->get("sensitivity", "outputJacobi", false);
+        if (tmp != "")
+            inputs->setOutputJacobi(parseBool(tmp));
+
+        tmp = params_->get("sensitivity", "alignPillars", false);
+        if (tmp != "")
+            inputs->setAlignPillars(parseBool(tmp));
+
+        tmp = params_->get("sensitivity", "marketConfigFile", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            LOG("Loading sensitivity scenario sim market parameters from file" << file);
+            inputs->setSensiSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
+        }
+
+        tmp = params_->get("sensitivity", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            LOG("Load sensitivity scenario data from file" << file);
+            inputs->setSensiScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded");
+        }
+
+        tmp = params_->get("sensitivity", "pricingEnginesFile", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            LOG("Load pricing engine data from file: " << file);
+            inputs->setSensiPricingEngineFromFile(file);
+        } else {
+            WLOG("Pricing engine data not found for sensitivity analysis, using global");
+            // FIXME
+            inputs->setSensiPricingEngine(inputs->pricingEngine());
+        }
+
+        tmp = params_->get("sensitivity", "outputSensitivityThreshold", false);
+        if (tmp != "")
+            inputs->setSensiThreshold(parseReal(tmp));
+    }
+
+    /****************
+     * STRESS
+     ****************/
+
+    tmp = params_->get("stress", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        inputs->insertAnalytic("STRESS");
+        inputs->setStressPricingEngine(inputs->pricingEngine());
+        tmp = params_->get("stress", "marketConfigFile", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            LOG("Loading stress test scenario sim market parameters from file" << file);
+            inputs->setStressSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for stress testing not loaded");
+        }
+        
+        tmp = params_->get("stress", "stressConfigFile", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            LOG("Load stress test scenario data from file" << file);
+            inputs->setStressScenarioDataFromFile(file);
+        } else {
+            WLOG("Stress scenario data not loaded");
+        }
+        
+        tmp = params_->get("stress", "pricingEnginesFile", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            LOG("Load pricing engine data from file: " << file);
+            inputs->setStressPricingEngineFromFile(file);
+        } else {
+            WLOG("Pricing engine data not found for stress testing, using global");
+        }
+        
+        tmp = params_->get("stress", "outputThreshold", false); 
+        if (tmp != "")
+            inputs->setStressThreshold(parseReal(tmp));
+    }
+
+    /****************
+     * VaR
+     ****************/
+
+    tmp = params_->get("parametricVar", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        inputs->insertAnalytic("VAR");
+        
+        tmp = params_->get("parametricVar", "salvageCovarianceMatrix", false);
+        if (tmp != "")
+            inputs->setSalvageCovariance(parseBool(tmp));
+        
+        tmp = params_->get("parametricVar", "quantiles", false);
+        if (tmp != "")
+            inputs->setVarQuantiles(tmp);
+        
+        tmp = params_->get("parametricVar", "breakdown", false);
+        if (tmp != "")
+            inputs->setVarBreakDown(parseBool(tmp));
+        
+        tmp = params_->get("parametricVar", "portfolioFilter", false);
+        if (tmp != "")
+            inputs->setPortfolioFilter(tmp);
+        
+        tmp = params_->get("parametricVar", "method", false);
+        if (tmp != "")
+            inputs->setVarMethod(tmp);
+        
+        tmp = params_->get("parametricVar", "mcSamples", false);
+        if (tmp != "")
+            inputs->setMcVarSamples(parseInteger(tmp));
+        
+        tmp = params_->get("parametricVar", "mcSeed", false);
+        if (tmp != "")
+            inputs->setMcVarSeed(parseInteger(tmp));
+        
+        tmp = params_->get("parametricVar", "covarianceInputFile", false);
+        QL_REQUIRE(tmp != "", "covarianceInputFile not provided");
+        std::string covFile = inputPath + "/" + tmp;
+        LOG("Load Covariance Data from file " << covFile);
+        inputs->setCovarianceDataFromFile(covFile);
+        
+        tmp = params_->get("parametricVar", "sensitivityInputFile", false);
+        QL_REQUIRE(tmp != "", "sensitivityInputFile not provided");
+        std::string sensiFile = inputPath + "/" + tmp;
+        LOG("Get sensitivity data from file " << sensiFile);
+        inputs->setSensitivityStreamFromFile(sensiFile);
+    }
+    
+    /************
+     * Simulation
+     ************/
+
+    tmp = params_->get("simulation", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        inputs->insertAnalytic("EXPOSURE");
+    }
+
+    // check this here because we need to know 10 lines below
+    tmp = params_->get("xva", "active", false);
+    if (!tmp.empty() && parseBool(tmp))
+        inputs->insertAnalytic("XVA");
+    
+    tmp = params_->get("simulation", "amc", false);
+    if (tmp != "")
+        inputs->setAmc(parseBool(tmp));
+
+    tmp = params_->get("simulation", "amcTradeTypes", false);
+    if (tmp != "")
+        inputs->setAmcTradeTypes(tmp);
+
+    inputs->setSimulationPricingEngine(inputs->pricingEngine());
+    inputs->setExposureObservationModel(inputs->observationModel());
+    inputs->setExposureBaseCurrency(inputs->baseCurrency());
+
+    if (inputs->analytics().find("EXPOSURE") != inputs->analytics().end() ||
+        inputs->analytics().find("XVA") != inputs->analytics().end()) {
+        tmp = params_->get("simulation", "simulationConfigFile", false) ;
+        if (tmp != "") {
+            string simulationConfigFile = inputPath + "/" + tmp;
+            LOG("Loading simulation config from file" << simulationConfigFile);
+            inputs->setExposureSimMarketParamsFromFile(simulationConfigFile);
+            inputs->setCrossAssetModelDataFromFile(simulationConfigFile);
+            inputs->setScenarioGeneratorDataFromFile(simulationConfigFile);
+            auto grid = inputs->scenarioGeneratorData()->getGrid();
+            DLOG("grid size=" << grid->size() << ", dates=" << grid->dates().size()
+                << ", valuationDates=" << grid->valuationDates().size()
+                << ", closeOutDates=" << grid->closeOutDates().size());
+        } else {
+            ALOG("Simulation market, model and scenario generator data not loaded");
+        }
+        
+        tmp = params_->get("simulation", "pricingEnginesFile", false);
+        if (tmp != "") {
+            string pricingEnginesFile = inputPath + "/" + tmp;
+            LOG("Load simulation pricing engine data from file: " << pricingEnginesFile);
+            inputs->setSimulationPricingEngineFromFile(pricingEnginesFile);
+        } else {
+            WLOG("Simulation pricing engine data not found, using standard pricing engines");
+        }
+
+        tmp = params_->get("simulation", "amcPricingEnginesFile", false);
+        if (tmp != "") {
+            string pricingEnginesFile = inputPath + "/" + tmp;
+            LOG("Load amc pricing engine data from file: " << pricingEnginesFile);
+            inputs->setAmcPricingEngineFromFile(pricingEnginesFile);
+        } else {
+            WLOG("AMC pricing engine data not found, using standard pricing engines");
+            inputs->setAmcPricingEngine(inputs->pricingEngine());
+        }
+
+        inputs->setExposureBaseCurrency(inputs->baseCurrency());
+        tmp = params_->get("simulation", "baseCurrency", false);
+        if (tmp != "")
+            inputs->setExposureBaseCurrency(tmp);
+        
+        tmp = params_->get("simulation", "observationModel", false);
+        if (tmp != "")
+            inputs->setExposureObservationModel(tmp);
+        else
+            inputs->setExposureObservationModel(inputs->observationModel());
+        
+        tmp = params_->get("simulation", "storeFlows", false);
+        if (tmp == "Y")
+            inputs->setStoreFlows(true);
+        
+        tmp = params_->get("simulation", "storeSurvivalProbabilities", false);
+        if (tmp == "Y")
+            inputs->setStoreSurvivalProbabilities(true);
+        
+        tmp = params_->get("simulation", "nettingSetId", false);
+        if (tmp != "")
+            inputs->setNettingSetId(tmp);
+        
+        tmp = params_->get("simulation", "cubeFile", false);
+        if (tmp != "")
+            inputs->setWriteCube(true);
+        
+        tmp = params_->get("simulation", "scenariodump", false);
+        if (tmp != "")
+            inputs->setWriteScenarios(true);
+    }
+
+    /**********************
+     * XVA specifically
+     **********************/
+
+    tmp = params_->get("xva", "baseCurrency", false);
+    if (tmp != "")
+        inputs->setXvaBaseCurrency(tmp);
+    else
+        inputs->setXvaBaseCurrency(inputs->exposureBaseCurrency());
+
+    if (inputs->analytics().find("XVA") != inputs->analytics().end() &&
+        inputs->analytics().find("EXPOSURE") == inputs->analytics().end()) {
+        inputs->setLoadCube(true);
+        tmp = params_->get("xva", "cubeFile", false);
+        if (tmp != "") {
+            string cubeFile = inputs->resultsPath().string() + "/" + tmp;
+            LOG("Load cube from file " << cubeFile);
+            inputs->setCubeFromFile(cubeFile);
+            LOG("Cube loading done: ids=" << inputs->cube()->numIds()
+                << " dates=" << inputs->cube()->numDates()
+                << " samples=" << inputs->cube()->samples()
+                << " depth=" << inputs->cube()->depth());
+        } else {
+            ALOG("cube file name not provided");
+        }
+    }
+
+    if (inputs->analytics().find("XVA") != inputs->analytics().end() ||
+        inputs->analytics().find("EXPOSURE") != inputs->analytics().end()) {
+        tmp = params_->get("xva", "csaFile", false);
+        QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
+        string csaFile = inputPath + "/" + tmp;
+        LOG("Loading netting and csa data from file" << csaFile);
+        inputs->setNettingSetManagerFromFile(csaFile);
+    }
+    
+    tmp = params_->get("xva", "nettingSetCubeFile", false);
+    if (inputs->loadCube() && tmp != "") {
+        string cubeFile = inputs->resultsPath().string() + "/" + tmp;
+        LOG("Load nettingset cube from file " << cubeFile);
+        inputs->setNettingSetCubeFromFile(cubeFile);
+        DLOG("NettingSetCube loading done: ids=" << nettingSetCube_->numIds() << " dates=" << nettingSetCube_->numDates()
+            << " samples=" << nettingSetCube_->samples() << " depth=" << nettingSetCube_->depth());
+    }
+
+    tmp = params_->get("xva", "cptyCubeFile", false);
+    if (inputs->loadCube() && tmp != "") {
+        string cubeFile = inputs->resultsPath().string() + "/" + tmp;
+        LOG("Load cpty cube from file " << cubeFile);
+        inputs->setCptyCubeFromFile(cubeFile);
+        DLOG("CptyCube loading done: ids=" << cptyCube_->numIds() << " dates=" << cptyCube_->numDates()
+            << " samples=" << cptyCube_->samples() << " depth=" << cptyCube_->depth());
+    }
+
+    tmp = params_->get("xva", "scenarioFile", false);
+    if (inputs->loadCube() && tmp != "") {
+        string cubeFile = inputs->resultsPath().string() + "/" + tmp;
+        LOG("Load agg scen data from file " << cubeFile);
+        inputs->setMarketCubeFromFile(cubeFile);
+        LOG("MktCube loading done");
+    }
+    
+    tmp = params_->get("xva", "flipViewXVA", false);
+    if (tmp != "")
+        inputs->setFlipViewXVA(parseBool(tmp));
+
+    tmp = params_->get("xva", "fullInitialCollateralisation", false);
+    if (tmp != "")
+        inputs->setFullInitialCollateralisation(parseBool(tmp));
+
+    tmp = params_->get("xva", "exposureProfilesByTrade", false);
+    if (tmp != "")
+        inputs->setExposureProfilesByTrade(parseBool(tmp));
+
+    tmp = params_->get("xva", "exposureProfiles", false);
+    if (tmp != "")
+        inputs->setExposureProfiles(parseBool(tmp));
+
+    tmp = params_->get("xva", "quantile", false);
+    if (tmp != "")
+        inputs->setPfeQuantile(parseReal(tmp));
+
+    tmp = params_->get("xva", "calculationType", false);
+    if (tmp != "")
+        inputs->setCollateralCalculationType(tmp);
+
+    tmp = params_->get("xva", "allocationMethod", false);
+    if (tmp != "")
+        inputs->setExposureAllocationMethod(tmp);
+
+    tmp = params_->get("xva", "marginalAllocationLimit", false);
+    if (tmp != "")
+        inputs->setMarginalAllocationLimit(parseReal(tmp));
+
+    tmp = params_->get("xva", "exerciseNextBreak", false);
+    if (tmp != "")
+        inputs->setExerciseNextBreak(parseBool(tmp));
+
+    tmp = params_->get("xva", "cva", false);
+    if (tmp != "")
+        inputs->setCvaAnalytic(parseBool(tmp));
+
+    tmp = params_->get("xva", "dva", false);
+    if (tmp != "")
+        inputs->setDvaAnalytic(parseBool(tmp));
+
+    tmp = params_->get("xva", "fva", false);
+    if (tmp != "")
+        inputs->setFvaAnalytic(parseBool(tmp));
+
+    tmp = params_->get("xva", "colva", false);
+    if (tmp != "")
+        inputs->setColvaAnalytic(parseBool(tmp));
+
+    tmp = params_->get("xva", "collateralFloor", false);
+    if (tmp != "")
+        inputs->setCollateralFloorAnalytic(parseBool(tmp));
+
+    tmp = params_->get("xva", "dim", false);
+    if (tmp != "")
+        inputs->setDimAnalytic(parseBool(tmp));
+
+    tmp = params_->get("xva", "mva", false);
+    if (tmp != "")
+        inputs->setMvaAnalytic(parseBool(tmp));
+
+    tmp = params_->get("xva", "kva", false);
+    if (tmp != "")
+        inputs->setKvaAnalytic(parseBool(tmp));
+
+    tmp = params_->get("xva", "dynamicCredit", false);
+    if (tmp != "")
+        inputs->setDynamicCredit(parseBool(tmp));
+
+    tmp = params_->get("xva", "cvaSensi", false);
+    if (tmp != "")
+        inputs->setCvaSensi(parseBool(tmp));
+
+    tmp = params_->get("xva", "cvaSensiGrid", false);
+    if (tmp != "")
+        inputs->setCvaSensiGrid(tmp);
+
+    tmp = params_->get("xva", "cvaSensiShiftSize", false);
+    if (tmp != "")
+        inputs->setCvaSensiShiftSize(parseReal(tmp));
+
+    tmp = params_->get("xva", "dvaName", false);
+    if (tmp != "")
+        inputs->setDvaName(tmp);
+
+    tmp = params_->get("xva", "rawCubeOutputFile", false);
+    if (tmp != "") {
+        inputs->setRawCubeOutputFile(tmp);
+        inputs->setRawCubeOutput(true);
+    }
+
+    tmp = params_->get("xva", "netCubeOutputFile", false);
+    if (tmp != "") {
+        inputs->setNetCubeOutputFile(tmp);
+        inputs->setNetCubeOutput(true);
+    }
+
+    // FVA
+
+    tmp = params_->get("xva", "fvaBorrowingCurve", false);
+    if (tmp != "")
+        inputs->setFvaBorrowingCurve(tmp);
+
+    tmp = params_->get("xva", "fvaLendingCurve", false);
+    if (tmp != "")
+        inputs->setFvaLendingCurve(tmp);
+
+    tmp = params_->get("xva", "flipViewBorrowingCurvePostfix", false);
+    if (tmp != "")
+        inputs->setFlipViewBorrowingCurvePostfix(tmp);
+
+    tmp = params_->get("xva", "flipViewLendingCurvePostfix", false);
+    if (tmp != "")
+        inputs->setFlipViewLendingCurvePostfix(tmp);
+
+    // DIM
+
+    tmp = params_->get("xva", "dimQuantile", false);
+    if (tmp != "")
+        inputs->setDimQuantile(parseReal(tmp));
+
+    tmp = params_->get("xva", "dimHorizonCalendarDays", false);
+    if (tmp != "")
+        inputs->setDimHorizonCalendarDays(parseInteger(tmp));
+
+    tmp = params_->get("xva", "dimRegressionOrder", false);
+    if (tmp != "")
+        inputs->setDimRegressionOrder(parseInteger(tmp));
+
+    tmp = params_->get("xva", "dimRegressors", false);
+    if (tmp != "")
+        inputs->setDimRegressors(tmp);
+
+    tmp = params_->get("xva", "dimOutputGridPoints", false);
+    if (tmp != "")
+        inputs->setDimOutputGridPoints(tmp);
+
+    tmp = params_->get("xva", "dimOutputNettingSet", false);
+    if (tmp != "")
+        inputs->setDimOutputNettingSet(tmp);
+    
+    tmp = params_->get("xva", "dimLocalRegressionEvaluations", false);
+    if (tmp != "")
+        inputs->setDimLocalRegressionEvaluations(parseInteger(tmp));
+
+    tmp = params_->get("xva", "dimLocalRegressionBandwidth", false);
+    if (tmp != "")
+        inputs->setDimLocalRegressionBandwidth(parseReal(tmp));
+
+    // KVA
+
+    tmp = params_->get("xva", "kvaCapitalDiscountRate", false);
+    if (tmp != "")
+        inputs->setKvaCapitalDiscountRate(parseReal(tmp));
+
+    tmp = params_->get("xva", "kvaAlpha", false);
+    if (tmp != "")
+        inputs->setKvaAlpha(parseReal(tmp));
+
+    tmp = params_->get("xva", "kvaRegAdjustment", false);
+    if (tmp != "")
+        inputs->setKvaRegAdjustment(parseReal(tmp));
+
+    tmp = params_->get("xva", "kvaCapitalHurdle", false);
+    if (tmp != "")
+        inputs->setKvaCapitalHurdle(parseReal(tmp));
+
+    tmp = params_->get("xva", "kvaOurPdFloor", false);
+    if (tmp != "")
+        inputs->setKvaOurPdFloor(parseReal(tmp));
+
+    tmp = params_->get("xva", "kvaTheirPdFloor", false);
+    if (tmp != "")
+        inputs->setKvaTheirPdFloor(parseReal(tmp));
+
+    tmp = params_->get("xva", "kvaOurCvaRiskWeight", false);
+    if (tmp != "")
+        inputs->setKvaOurCvaRiskWeight(parseReal(tmp));
+
+    tmp = params_->get("xva", "kvaTheirCvaRiskWeight", false);
+    if (tmp != "")
+        inputs->setKvaTheirCvaRiskWeight(parseReal(tmp));
+
+    // cashflow npv and dynamic backtesting
+
+    tmp = params_->get("cashflow", "cashFlowHorizon", false);
+    if (tmp != "")
+        inputs->setCashflowHorizon(tmp);
+
+    tmp = params_->get("cashflow", "portfolioFilterDate", false);
+    if (tmp != "")
+        inputs->setPortfolioFilterDate(tmp);
+
+}
+    
 void OREApp::writePricingStats(const std::string& filename, const boost::shared_ptr<Portfolio>& portfolio) {
     LOG("write pricing stats report");
     CSVFileReport pricingStatsReport(outputPath_ + "/" + filename);
@@ -367,10 +1357,10 @@ boost::shared_ptr<XvaRunner> OREApp::getXvaRunner() {
     }
 
     boost::shared_ptr<XvaRunner> xva = boost::make_shared<XvaRunner>(
-        asof_, baseCcy, portfolio_, nettingSetManager, engineData, curveConfigs_, marketParameters,
-        simMarketParameters, scenarioGeneratorData, modelData, getExtraLegBuilders(), getExtraEngineBuilders(),
-        referenceData, iborFallbackConfig_, dimQuantile, dimHorizonCalendarDays, analytics, calculationType, dvaName,
-        fvaBorrowingCurve, fvaLendingCurve, fullInitialCollateralisation, storeFlows);
+        asof_, baseCcy, portfolio_, nettingSetManager, engineData, curveConfigs_, marketParameters, simMarketParameters,
+        scenarioGeneratorData, modelData, referenceData, iborFallbackConfig_, dimQuantile, dimHorizonCalendarDays,
+        analytics, calculationType, dvaName, fvaBorrowingCurve, fvaLendingCurve, fullInitialCollateralisation,
+        storeFlows);
 
     return xva;
 }
@@ -518,20 +1508,14 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
+    LOG("MarketContext::pricing = " << params_->get("markets", "pricing"));
     boost::shared_ptr<EngineFactory> factory =
-        boost::make_shared<EngineFactory>(engineData, market, configurations, getExtraEngineBuilders(),
-                                          getExtraLegBuilders(), referenceData_, iborFallbackConfig_);
+        boost::make_shared<EngineFactory>(engineData, market, configurations, referenceData_, iborFallbackConfig_);
 
     LOG("Engine factory built");
     MEM_LOG;
 
     return factory;
-}
-
-boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() const {
-    boost::shared_ptr<TradeFactory> tf = boost::make_shared<TradeFactory>();
-    tf->addExtraBuilders(getExtraTradeBuilders(tf));
-    return tf;
 }
 
 boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory, bool buildFailedTrades) {
@@ -549,9 +1533,9 @@ boost::shared_ptr<Portfolio> OREApp::loadPortfolio(bool buildFailedTrades) {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>(buildFailedTrades);
     if (params_->get("setup", "portfolioFile") == "")
         return portfolio;
-    vector<string> portfolioFiles = getFilenames(portfoliosString, inputPath_);
+    vector<string> portfolioFiles = getFileNames(portfoliosString, inputPath_);
     for (auto portfolioFile : portfolioFiles) {
-        portfolio->load(portfolioFile, buildTradeFactory());
+        portfolio->fromFile(portfolioFile);
     }
     return portfolio;
 }
@@ -604,7 +1588,7 @@ boost::shared_ptr<QuantExt::CrossAssetModel> OREApp::buildCam(boost::shared_ptr<
 
     CrossAssetModelBuilder modelBuilder(market, modelData, lgmCalibrationMarketStr, fxCalibrationMarketStr,
                                         eqCalibrationMarketStr, infCalibrationMarketStr, crCalibrationMarketStr,
-                                        simulationMarketStr, ActualActual(ActualActual::ISDA), false, continueOnCalibrationError);
+                                        simulationMarketStr, false, continueOnCalibrationError);
     boost::shared_ptr<QuantExt::CrossAssetModel> model = *modelBuilder.model();
     return model;
 }
@@ -635,52 +1619,52 @@ void OREApp::writeInitialReports() {
     /************
      * Curve dump
      */
-    out_ << setw(tab_) << left << "Curve Report... " << flush;
+    CONSOLEW("Curve Report...");
     if (params_->hasGroup("curves") && params_->get("curves", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("curves", "outputFileName");
         CSVFileReport curvesReport(fileName);
         DateGrid grid(params_->get("curves", "grid"));
         getReportWriter()->writeCurves(curvesReport, params_->get("curves", "configuration"), grid, *marketParameters_,
                                        market_, continueOnError_);
-        out_ << "OK" << endl;
+        CONSOLE("OK");
     } else {
         LOG("skip curve report");
-        out_ << "SKIP" << endl;
+        CONSOLE("SKIP");
     }
 
     /*********************
      * Portfolio valuation
      */
-    out_ << setw(tab_) << left << "NPV Report... " << flush;
+    CONSOLEW("NPV Report...");
     if (params_->hasGroup("npv") && params_->get("npv", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("npv", "outputFileName");
         CSVFileReport npvReport(fileName);
         getReportWriter()->writeNpv(npvReport, params_->get("npv", "baseCurrency"), market_,
                                     params_->get("markets", "pricing"), portfolio_);
-        out_ << "OK" << endl;
+        CONSOLE("OK");
     } else {
         LOG("skip portfolio valuation");
-        out_ << "SKIP" << endl;
+        CONSOLE("SKIP");
     }
 
     /*********************
      * Additional Results
      */
-    out_ << setw(tab_) << left << "Additional Results... " << flush;
+    CONSOLEW("Additional Results...");
     if (params_->hasGroup("additionalResults") && params_->get("additionalResults", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("additionalResults", "outputFileName");
         CSVFileReport addResultReport(fileName);
         getReportWriter()->writeAdditionalResultsReport(addResultReport, portfolio_, market_, params_->get("npv", "baseCurrency"));
-        out_ << "OK" << endl;
+        CONSOLE("OK");
     } else {
         LOG("skip additional results");
-        out_ << "SKIP" << endl;
+        CONSOLE("SKIP");
     }
 
     /*********************
      * TodaysMarket calibration
      */
-    out_ << setw(tab_) << left << "TodaysMarket Calibration... " << flush;
+    CONSOLEW("TodaysMarket Calibration...");
     if (params_->hasGroup("todaysMarketCalibration") && params_->get("todaysMarketCalibration", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("todaysMarketCalibration", "outputFileName");
         CSVFileReport todaysMarketCalibrationReport(fileName);
@@ -689,34 +1673,34 @@ void OREApp::writeInitialReports() {
             getReportWriter()->writeTodaysMarketCalibrationReport(todaysMarketCalibrationReport,
                                                                   todaysMarket->calibrationInfo());
         }
-        out_ << "OK" << endl;
+        CONSOLE("OK");
     } else {
         LOG("skip additional results");
-        out_ << "SKIP" << endl;
+        CONSOLE("SKIP");
     }
 
     /**********************
      * Cash flow generation
      */
-    out_ << setw(tab_) << left << "Cashflow Report... " << flush;
+    CONSOLEW("Cashflow Report...");
     if (params_->hasGroup("cashflow") && params_->get("cashflow", "active") == "Y") {
         bool includePastCashflows = params_->has("cashflow", "includePastCashflows") &&
                                     parseBool(params_->get("cashflow", "includePastCashflows"));
         string fileName = outputPath_ + "/" + params_->get("cashflow", "outputFileName");
         CSVFileReport cashflowReport(fileName);
-        getReportWriter()->writeCashflow(cashflowReport, portfolio_, market_, params_->get("markets", "pricing"),
-                                         includePastCashflows);
-        out_ << "OK" << endl;
+        getReportWriter()->writeCashflow(cashflowReport, params_->get("npv", "baseCurrency"), portfolio_, market_,
+                                         params_->get("markets", "pricing"), includePastCashflows);
+        CONSOLE("OK");
     } else {
         LOG("skip cashflow generation");
-        out_ << "SKIP" << endl;
+        CONSOLE("SKIP");
     }
 
     /**********************
      * Cash flow NPV Report
      * NPV of future cash flows with payment dates from tomorrow up to today+horizonCalendarDays
      */
-    out_ << setw(tab_) << left << "Cashflow NPV report... " << flush;
+    CONSOLEW("Cashflow NPV report...");
     if (params_->hasGroup("cashflowNpv") && params_->get("cashflowNpv", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("cashflowNpv", "outputFileName");
         Date horizon = Date::maxDate();
@@ -727,14 +1711,15 @@ void OREApp::writeInitialReports() {
         InMemoryReport cashflowReport;
         bool includePastCashflows = false;
         string config = params_->get("markets", "pricing");
-        getReportWriter()->writeCashflow(cashflowReport, portfolio_, market_, config, includePastCashflows);
+        getReportWriter()->writeCashflow(cashflowReport, params_->get("npv", "baseCurrency"), portfolio_, market_,
+                                         config, includePastCashflows);
 
         CSVFileReport cfNpvReport(fileName);
         getReportWriter()->writeCashflowNpv(cfNpvReport, cashflowReport, market_, config, baseCcy, horizon);
-        out_ << "OK" << endl;
+        CONSOLE("OK");
     } else {
         LOG("skip cashflow npv report");
-        out_ << "SKIP" << endl;
+        CONSOLE("SKIP");
     }
 
     LOG("Initial reports written");
@@ -746,9 +1731,7 @@ boost::shared_ptr<ReportWriter> OREApp::getReportWriter() const {
 }
 
 boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() {
-    return boost::make_shared<SensitivityRunner>(params_, buildTradeFactory(), getExtraEngineBuilders(),
-                                                 getExtraLegBuilders(), referenceData_, iborFallbackConfig_,
-                                                 continueOnError_);
+    return boost::make_shared<SensitivityRunner>(params_, referenceData_, iborFallbackConfig_, continueOnError_);
 }
 
 void OREApp::runStressTest() {
@@ -756,7 +1739,7 @@ void OREApp::runStressTest() {
     MEM_LOG;
     LOG("Running stress test");
 
-    out_ << setw(tab_) << left << "Stress Test Report... " << flush;
+    CONSOLEW("Stress Test Report...");
     // We reset this here because the date grid building below depends on it.
     Settings::instance().evaluationDate() = asof_;
 
@@ -782,15 +1765,14 @@ void OREApp::runStressTest() {
     string marketConfiguration = params_->get("markets", "pricing");
     boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
         portfolio, market_, marketConfiguration, engineData, simMarketData, stressData, *curveConfigs_,
-        *marketParameters_, nullptr, getExtraEngineBuilders(), getExtraLegBuilders(), referenceData_,
-        iborFallbackConfig_, continueOnError_);
+        *marketParameters_, nullptr, referenceData_, iborFallbackConfig_, continueOnError_);
 
     string outputFile = outputPath_ + "/" + params_->get("stress", "scenarioOutputFile");
     Real threshold = parseReal(params_->get("stress", "outputThreshold"));
     boost::shared_ptr<Report> stressReport = boost::make_shared<CSVFileReport>(outputFile);
     stressTest->writeReport(stressReport, threshold);
 
-    out_ << "OK" << endl;
+    CONSOLE("OK");
 
     LOG("Stress test completed");
     MEM_LOG;
@@ -803,7 +1785,7 @@ void OREApp::runParametricVar() {
     MEM_LOG;
     LOG("Running parametric VaR");
 
-    out_ << setw(tab_) << left << "Parametric VaR Report... " << flush;
+    CONSOLEW("Parametric VaR Report...");
 
     LOG("Get sensitivity data");
     string sensiFile = inputPath_ + "/" + params_->get("parametricVar", "sensitivityInputFile");
@@ -811,8 +1793,8 @@ void OREApp::runParametricVar() {
 
     LOG("Build trade to portfolio id mapping");
     map<string, set<string>> tradePortfolio;
-    for (auto const& t : portfolio_->trades()) {
-        tradePortfolio[t->id()].insert(t->portfolioIds().begin(), t->portfolioIds().end());
+    for (auto const& [tradeId, trade] : portfolio_->trades()) {
+        tradePortfolio[tradeId].insert(trade->portfolioIds().begin(), trade->portfolioIds().end());
     }
 
     LOG("Load covariance matrix data");
@@ -838,7 +1820,7 @@ void OREApp::runParametricVar() {
 
     CSVFileReport report(outputPath_ + "/" + params_->get("parametricVar", "outputFile"));
     calc->calculate(report);
-    out_ << "OK" << endl;
+    CONSOLE("OK");
 
     LOG("Parametric VaR completed");
     MEM_LOG;
@@ -899,7 +1881,7 @@ void OREApp::initAggregationScenarioData() {
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_);
 }
 
-void OREApp::initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids, const Size cubeDepth) {
+void OREApp::initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, const Size cubeDepth) {
     QL_REQUIRE(cubeDepth > 0, "zero cube depth given");
     if (cubeDepth == 1)
         cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, ids, grid_->valuationDates(), samples_, 0.0f);
@@ -936,9 +1918,9 @@ void OREApp::buildNPVCube() {
     }
 
     if (useCloseOutLag_)
-        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(grid_, flipViewXVA);
+        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(scenarioData_, grid_, flipViewXVA);
     else
-        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(flipViewXVA);
+        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_, flipViewXVA);
 
     vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators;
 
@@ -954,14 +1936,16 @@ void OREApp::buildNPVCube() {
     o << "Build Cube " << simPortfolio_->size() << " x " << grid_->valuationDates().size() << " x " << samples_
       << "... ";
 
-    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab_, progressBarWidth_);
+    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), ConsoleLog::instance().width(),
+                                                             ConsoleLog::instance().progressBarWidth());
     auto progressLog = boost::make_shared<ProgressLog>("Building cube...");
-    engine.registerProgressIndicator(progressBar);
+    if (ConsoleLog::instance().enabled()) 
+        engine.registerProgressIndicator(progressBar);
     engine.registerProgressIndicator(progressLog);
 
     engine.buildCube(simPortfolio_, cube_, calculators, useMporStickyDate_, nettingSetCube_, cptyCube_, cptyCalculators);
 
-    out_ << "OK" << endl;
+    CONSOLE("OK");
 }
 
 void OREApp::setCubeDepth(const boost::shared_ptr<ScenarioGeneratorData>& sgd) {
@@ -974,7 +1958,7 @@ void OREApp::setCubeDepth(const boost::shared_ptr<ScenarioGeneratorData>& sgd) {
 }
 
 void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio) {
-    out_ << setw(tab_) << left << "Simulation Setup... ";
+    CONSOLEW("Simulation Setup...");
     LOG("Load Simulation Market Parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData = getSimMarketData();
     boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
@@ -1005,7 +1989,7 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
             ALOG("There were errors during the sim portfolio building - check the sim market setup? Could build "
                  << simPortfolio_->size() << " trades out of " << n);
         }
-        out_ << "OK" << endl;
+        CONSOLE("OK");
     }
 
     setCubeDepth(sgd);
@@ -1021,21 +2005,19 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     if (params_->has("simulation", "storeSurvivalProbabilities") &&
         params_->get("simulation", "storeSurvivalProbabilities") == "Y") {
         storeSp_ = true;
-        auto counterparties = simPortfolio_->counterparties();
-        counterparties.push_back(params_->get("xva", "dvaName"));
+        std::set<std::string> counterparties = portfolio->counterparties();
+        counterparties.insert(params_->get("xva", "dvaName"));
         initCube(cptyCube_, counterparties, 1);
     } else {
         cptyCube_ = nullptr;
     }
 
-    ostringstream o;
-    o << "Aggregation Scenario Data " << grid_->valuationDates().size() << " x " << samples_ << "... ";
-    out_ << setw(tab_) << o.str() << flush;
+    CONSOLEW("Aggregation Scenario Data " << grid_->valuationDates().size() << " x " << samples_ << "... ");
 
     initAggregationScenarioData();
     // Set AggregationScenarioData
     simMarket_->aggregationScenarioData() = scenarioData_;
-    out_ << "OK" << endl;
+    CONSOLE("OK");
 }
 
 void OREApp::generateNPVCube() {
@@ -1058,28 +2040,28 @@ void OREApp::generateNPVCube() {
 }
 
 void OREApp::writeCube(boost::shared_ptr<NPVCube> cube, const std::string& cubeFileParam) {
-    out_ << setw(tab_) << left << "Write Cube... " << flush;
+    CONSOLEW("Write Cube...");
     if (params_->has("simulation", cubeFileParam)) {
         string cubeFileName = outputPath_ + "/" + params_->get("simulation", cubeFileParam);
-        cube->save(cubeFileName);
+        saveCube(cubeFileName, *cube);
         LOG("Write cube '" << cubeFileName << "'");
-        out_ << "OK" << endl;
+        CONSOLE("OK");
     } else {
         LOG("Did not write cube, since parameter simulation/" << cubeFileParam << " not specified.");
-        out_ << "SKIP" << endl;
+        CONSOLE("SKIP");
     }
 }
 
 void OREApp::writeScenarioData() {
-    out_ << setw(tab_) << left << "Write Aggregation Scenario Data... " << flush;
+    CONSOLEW("Write Aggregation Scenario Data...");
     LOG("Write scenario data");
     bool skipped = true;
     if (params_->has("simulation", "aggregationScenarioDataFileName")) {
         // binary output
         string outputFileNameAddScenData =
             outputPath_ + "/" + params_->get("simulation", "aggregationScenarioDataFileName");
-        scenarioData_->save(outputFileNameAddScenData);
-        out_ << "OK" << endl;
+        saveAggregationScenarioData(outputFileNameAddScenData, *scenarioData_);
+        CONSOLE("OK");
         skipped = false;
     }
     if (params_->has("simulation", "aggregationScenarioDataDump")) {
@@ -1090,14 +2072,15 @@ void OREApp::writeScenarioData() {
         getReportWriter()->writeAggregationScenarioData(report, *scenarioData_);
         skipped = false;
     }
-    if (skipped)
-        out_ << "SKIP" << endl;
+    if (skipped) {
+        CONSOLE("SKIP");
+    }
 }
 
 void OREApp::loadScenarioData() {
     string scenarioFile = outputPath_ + "/" + params_->get("xva", "scenarioFile");
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>();
-    scenarioData_->load(scenarioFile);
+    scenarioData_ = loadAggregationScenarioData(scenarioFile);
 }
 
 void OREApp::loadCube() {
@@ -1114,7 +2097,7 @@ void OREApp::loadCube() {
     else
         cube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
     LOG("Load cube from file " << cubeFile);
-    cube_->load(cubeFile);
+    cube_ = ore::analytics::loadCube(cubeFile);
     cubeDepth_ = cube_->depth();
     LOG("Cube loading done: ids=" << cube_->numIds() << " dates=" << cube_->numDates()
                                   << " samples=" << cube_->samples() << " depth=" << cube_->depth());
@@ -1132,7 +2115,7 @@ void OREApp::loadCube() {
         else
             nettingSetCube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
         LOG("Load netting set cube from file " << cubeFile2);
-        nettingSetCube_->load(cubeFile2);
+        nettingSetCube_ = ore::analytics::loadCube(cubeFile2);
         LOG("Cube loading done: ids=" << nettingSetCube_->numIds() << " dates=" << nettingSetCube_->numDates()
                                       << " samples=" << nettingSetCube_->samples()
                                       << " depth=" << nettingSetCube_->depth());
@@ -1144,7 +2127,7 @@ void OREApp::loadCube() {
         string cubeFile3 = outputPath_ + "/" + params_->get("xva", "cptyCubeFile");
         cptyCube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
         LOG("Load counterparty cube from file " << cubeFile3);
-        cptyCube_->load(cubeFile3);
+        cptyCube_ = ore::analytics::loadCube(cubeFile3);
         LOG("Cube loading done: ids=" << cptyCube_->numIds() << " dates=" << cptyCube_->numDates()
                                       << " samples=" << cptyCube_->samples()
                                       << " depth=" << cptyCube_->depth());
@@ -1250,10 +2233,12 @@ void OREApp::runPostProcessor() {
     // FIXME: Needs the "simulation" section in ore.xml with consistent simulation.xml
     if (!cubeInterpreter_) {
         boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
+        LOG("withCloseOutLag=" << (sgd->withCloseOutLag() ? "Y" : "N"));
         if (sgd->withCloseOutLag())
-            cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->getGrid(), analytics["flipViewXVA"]);
+            cubeInterpreter_ =
+                boost::make_shared<MporGridCubeInterpretation>(scenarioData_, sgd->getGrid(), analytics["flipViewXVA"]);
         else
-            cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(analytics["flipViewXVA"]);
+            cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_, analytics["flipViewXVA"]);
     }
 
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
@@ -1293,7 +2278,7 @@ void OREApp::writeXVAReports() {
 
     if (params_->has("xva", "exposureProfilesByTrade")) {
         if (parseBool(params_->get("xva", "exposureProfilesByTrade"))) {
-            for (auto t : postProcess_->tradeIds()) {
+            for (const auto& [t,_] : postProcess_->tradeIds()) {
                 ostringstream o;
                 o << outputPath_ << "/exposure_trade_" << t << ".csv";
                 string tradeExposureFile = o.str();
@@ -1304,7 +2289,7 @@ void OREApp::writeXVAReports() {
     }
     if (params_->has("xva", "exposureProfiles")) {
         if (parseBool(params_->get("xva", "exposureProfiles"))) {
-            for (auto n : postProcess_->nettingSetIds()) {
+            for (const auto& [n, _] : postProcess_->nettingSetIds()) {
                 ostringstream o1;
                 o1 << outputPath_ << "/exposure_nettingset_" << n << ".csv";
                 string nettingSetExposureFile = o1.str();
@@ -1381,12 +2366,12 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     if (curveConfigXML != "")
         curveConfigs_->fromXMLString(curveConfigXML);
     else if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
-        out_ << setw(tab_) << left << "Curve configuration... " << flush;
+        CONSOLEW("Curve configuration...");
         string inputPath = params_->get("setup", "inputPath");
         string curveConfigFile = inputPath + "/" + params_->get("setup", "curveConfigFile");
         LOG("Load curve configurations from file");
         curveConfigs_->fromFile(curveConfigFile);
-        out_ << "OK" << endl;
+        CONSOLE("OK");
     } else {
         WLOG("No curve configurations loaded");
     }
@@ -1400,18 +2385,18 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
          * Market and fixing data loader
          */
         if (params_->has("setup", "marketDataFile") && params_->get("setup", "marketDataFile") != "") {
-            out_ << setw(tab_) << left << "Market data loader... " << flush;
+            CONSOLEW("Market data loader... ");
             string marketFileString = params_->get("setup", "marketDataFile");
-            vector<string> marketFiles = getFilenames(marketFileString, inputPath_);
+            vector<string> marketFiles = getFileNames(marketFileString, inputPath_);
             string fixingFileString = params_->get("setup", "fixingDataFile");
-            vector<string> fixingFiles = getFilenames(fixingFileString, inputPath_);
+            vector<string> fixingFiles = getFileNames(fixingFileString, inputPath_);
             vector<string> dividendFiles = {};
             if (params_->has("setup", "dividendDataFile")) {
                 string dividendFileString = params_->get("setup", "dividendDataFile");
-                dividendFiles = getFilenames(dividendFileString, inputPath_);
+                dividendFiles = getFileNames(dividendFileString, inputPath_);
             }
             loader = boost::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings);
-            out_ << "OK" << endl;
+            CONSOLE("OK");
         } else {
             WLOG("No market data loaded from file");
         }
@@ -1432,14 +2417,16 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     }
 
     // build market
-    out_ << setw(tab_) << left << "Market... " << flush;
+    CONSOLEW("Market... ");
     market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, jointLoader, curveConfigs_,
                                                continueOnError_, true, lazyMarketBuilding_, referenceData_, false,
                                                iborFallbackConfig_);
-    out_ << "OK" << endl;
+    CONSOLE("OK");
 
     LOG("Today's market built");
     MEM_LOG;
+
+
 }
 
 boost::shared_ptr<MarketImpl> OREApp::getMarket() const {
@@ -1463,8 +2450,7 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactoryFromXMLString(const b
         configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
         configurations[MarketContext::pricing] = params_->get("markets", "pricing");
         boost::shared_ptr<EngineFactory> factory =
-            boost::make_shared<EngineFactory>(engineData, market, configurations, getExtraEngineBuilders(),
-                                              getExtraLegBuilders(), referenceData_, iborFallbackConfig_);
+            boost::make_shared<EngineFactory>(engineData, market, configurations, referenceData_, iborFallbackConfig_);
         return factory;
     }
 }

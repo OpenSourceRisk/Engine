@@ -60,6 +60,9 @@ if(MSVC)
     add_compile_definitions(_SCL_SECURE_NO_DEPRECATE)
     add_compile_definitions(_CRT_SECURE_NO_DEPRECATE)
     add_compile_definitions(BOOST_ENABLE_ASSERT_HANDLER)
+    if(ENABLE_SESSIONS)
+        add_compile_definitions(QL_ENABLE_SESSIONS)
+    endif()
     add_compile_options(/bigobj)
     add_compile_options(/W3)
     #add_compile_options(/we4265) #no-virtual-destructor
@@ -71,6 +74,7 @@ if(MSVC)
     add_compile_options(/we5233) # unused lambda 
     add_compile_options(/we4508) # 'function' : function should return a value; 'void' return type assumed
     add_compile_options(/wd4834)
+    add_compile_options(/we26815) # dangling references/pointer
     # add_compiler_flag("/we4389" signed_compare_mscv)
     
     add_link_options(/LARGEADDRESSAWARE)
@@ -138,6 +142,8 @@ else()
     include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
 endif()
 
+# workaround when building with boost 1.81, see https://github.com/boostorg/phoenix/issues/111
+add_definitions(-DBOOST_PHOENIX_STL_TUPLE_H_)
 
 # set library locations
 get_filename_component(QUANTLIB_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../QuantLib" ABSOLUTE)

@@ -1,6 +1,19 @@
 /*
  Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
@@ -67,7 +80,7 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     init(calc);
 }
 
-Real CommodityIndexedAverageCashFlow::amount() const {
+void CommodityIndexedAverageCashFlow::performCalculations() const {
 
     // Calculate the average price
     Real averagePrice = 0.0;
@@ -88,7 +101,12 @@ Real CommodityIndexedAverageCashFlow::amount() const {
 
     // Amount is just average price times quantity
     // In case of Foreign currency settlement, the spread must be expressed in Foreign currency units
-    return periodQuantity_ * (gearing_ * averagePrice + spread_);
+    amount_ = periodQuantity_ * (gearing_ * averagePrice + spread_);
+}
+
+Real CommodityIndexedAverageCashFlow::amount() const {
+    calculate();
+    return amount_;
 }
 
 void CommodityIndexedAverageCashFlow::accept(AcyclicVisitor& v) {
@@ -96,10 +114,6 @@ void CommodityIndexedAverageCashFlow::accept(AcyclicVisitor& v) {
         v1->visit(*this);
     else
         CashFlow::accept(v);
-}
-
-void CommodityIndexedAverageCashFlow::update() {
-    notifyObservers();
 }
 
 void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator>& calc) {
@@ -174,6 +188,9 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
     for (auto& kv : indices_) {
         registerWith(kv.second);
     }
+
+    if (fxIndex_)
+        registerWith(fxIndex_);
 
     // If offPeakPowerData_ is provided, populate weights_
     if (offPeakPowerData_) {

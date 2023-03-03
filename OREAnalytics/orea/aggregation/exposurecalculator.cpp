@@ -19,6 +19,8 @@
 #include <orea/aggregation/exposurecalculator.hpp>
 #include <orea/cube/inmemorycube.hpp>
 
+#include <ored/portfolio/trade.hpp>
+
 #include <ql/time/date.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 
@@ -55,7 +57,7 @@ ExposureCalculator::ExposureCalculator(
     }
 
     set<string> nettingSetIdsSet;
-    for (const auto& trade : portfolio->trades())
+    for (const auto& [tradeId, trade] : portfolio->trades())
         nettingSetIdsSet.insert(trade->envelope().nettingSetId());
     nettingSetIds_= vector<string>(nettingSetIdsSet.begin(), nettingSetIdsSet.end());
 
@@ -70,10 +72,11 @@ ExposureCalculator::ExposureCalculator(
 
 void ExposureCalculator::build() {
     LOG("Compute trade exposure profiles, " << (flipViewXVA_ ? "inverted (flipViewXVA = Y)" : "regular (flipViewXVA = N)"));
-    
-    for (Size i = 0; i < portfolio_->size(); ++i) {
-        string tradeId = portfolio_->trades()[i]->id();
-        string nettingSetId = portfolio_->trades()[i]->envelope().nettingSetId();
+    size_t i = 0;
+    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++i) {
+        auto trade = tradeIt->second;
+        string tradeId = tradeIt->first;
+        string nettingSetId = trade->envelope().nettingSetId();
         LOG("Aggregate exposure for trade " << tradeId);
         if (nettingSetDefaultValue_.find(nettingSetId) == nettingSetDefaultValue_.end()) {
             nettingSetDefaultValue_[nettingSetId] = vector<vector<Real>>(dates_.size(), vector<Real>(cube_->samples(), 0.0));
@@ -81,8 +84,8 @@ void ExposureCalculator::build() {
         }
 
         // Identify the next break date if provided, default is trade maturity.
-        Date nextBreakDate = portfolio_->trades()[i]->maturity();
-        TradeActions ta = portfolio_->trades()[i]->tradeActions();
+        Date nextBreakDate = trade->maturity();
+        TradeActions ta = trade->tradeActions();
         if (exerciseNextBreak_ && !ta.empty()) {
             // loop over actions and pick next mutual break, if available
             vector<TradeAction> actions = ta.actions();
@@ -181,7 +184,7 @@ void ExposureCalculator::build() {
         This one year point is actually taken to be today+1Y+4D, so that the 1Y point on the dateGrid is always
         included.
         This may effect DateGrids with daily data points*/
-        Date maturity = std::min(cal.adjust(today_ + 1 * Years + 4 * Days), portfolio_->trades()[i]->maturity());
+        Date maturity = std::min(cal.adjust(today_ + 1 * Years + 4 * Days), trade->maturity());
         QuantLib::Real maturityTime = dc_.yearFraction(today_, maturity);
 
         while (t < dates_.size() && times_[t] <= maturityTime)

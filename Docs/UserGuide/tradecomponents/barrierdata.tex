@@ -65,6 +65,7 @@ The allowable values are given in Table \ref{tab:barriertype}.
  % KnockIn & Deprecated. For double level only. The underlying price starts between the barrier levels and has to move up
  % or down for the option to become activated. The recommended representation is via two barriers UpAndIn, DownAndIn. \\ \hline
  \emph{CumulatedProfitCap} & For TaRFs only. The instrument terminates once the generated profit reaches the CumulatedProfitCap. \\ \hline
+ \emph{CumulatedProfitCapPoints} & For TaRFs only. The instrument terminates once the generated profit divided by fixing amount and absolute value of leverage reaches the CumulatedProfitCapPoints. \\ \hline
  \emph{FixingCap} & For TaRFs only. The instrument terminates once the number of observations where a profit is generated reaches the FixingCap.\\ \hline
  \emph{FixingFloor} & For Accumulators only. The first $n$ fixings are guaranteed regardless of whether the trade has been knocked out already.\\ \hline
   \end{tabular}

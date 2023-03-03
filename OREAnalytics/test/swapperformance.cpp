@@ -201,8 +201,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
     DayCounter dc = ActualActual(ActualActual::ISDA);
     map<string, Size> fixedFreqs;
     map<string, Size> floatFreqs;
-    for (Size i = 0; i < portfolioSize; ++i) {
-        boost::shared_ptr<Trade> trade = portfolio->trades()[i];
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
         maturity += dc.yearFraction(today, trade->maturity());
 
         // fixed Freq
@@ -407,7 +406,6 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
-    factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
 
     boost::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize, factory);
 

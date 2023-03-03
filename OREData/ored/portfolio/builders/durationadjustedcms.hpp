@@ -41,6 +41,7 @@ protected:
 };
 
 class LinearTsrDurationAdjustedCmsCouponPricerBuilder : public DurationAdjustedCmsCouponPricerBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(LinearTsrDurationAdjustedCmsCouponPricerBuilder)
 public:
     LinearTsrDurationAdjustedCmsCouponPricerBuilder()
         : DurationAdjustedCmsCouponPricerBuilder("LinearTSR", "LinearTSRPricer") {}

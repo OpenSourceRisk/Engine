@@ -107,7 +107,7 @@ protected:
 
     bool cubeIsRegular_;
     Size datesLoopSize_;
-    vector<string> nettingSetIds_;
+    std::set<string> nettingSetIds_;
     map<string, Real> nettingSetScaling_;
 
     // For each netting set: matrix of values by date and sample, aggregated over trades

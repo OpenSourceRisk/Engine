@@ -36,6 +36,8 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<EquityTouchOption>> EquityTouchOption::reg_("EquityTouchOption");
+
 EquityTouchOption::EquityTouchOption(Envelope& env, OptionData option, BarrierData barrier,
                                      const EquityUnderlying& equityUnderlying, string payoffCurrency,
                                      double payoffAmount, string startDate, string calendar, string eqIndex)
@@ -165,6 +167,13 @@ void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Other");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
 }
 
 bool EquityTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {

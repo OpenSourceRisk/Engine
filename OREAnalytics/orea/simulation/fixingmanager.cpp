@@ -21,6 +21,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/portfolio/trade.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
@@ -65,7 +66,7 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, co
                                const std::string& configuration) {
 
     // populate the map "Index -> set of required fixing dates", where the index on the LHS is linked to curves
-    for (auto const& t : portfolio->trades()) {
+    for (auto const& [tradeId,t] : portfolio->trades()) {
         auto r = t->requiredFixings();
         r.unsetPayDates();
         for (auto const& [name, dates] : r.fixingDatesIndices(QuantLib::Date::maxDate())) {
@@ -77,7 +78,12 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, co
                 } else if (auto index = boost::dynamic_pointer_cast<BondIndex>(rawIndex)) {
                     QL_FAIL("BondIndex not handled");
                 } else if (auto index = boost::dynamic_pointer_cast<CommodityIndex>(rawIndex)) {
-                    fixingMap_[index->clone(QuantLib::Date(),
+                    // for comm indices with non-daily expiries the expiry date's day of month is 1 always
+                    Date safeExpiryDate = index->expiryDate();
+                    if (safeExpiryDate != Date() && !index->keepDays()) {
+                        safeExpiryDate = Date::endOfMonth(safeExpiryDate);
+                    }
+                    fixingMap_[index->clone(safeExpiryDate,
                                             market->commodityPriceCurve(index->underlyingName(), configuration))]
                         .insert(dates.begin(), dates.end());
                 } else if (auto index = boost::dynamic_pointer_cast<FxIndex>(rawIndex)) {
@@ -165,7 +171,13 @@ void FixingManager::applyFixings(Date start, Date end) {
         }
 
         if (needFixings) {
-            Rate currentFixing = m.first->fixing(currentFixingDate);
+            Rate currentFixing;
+            if (auto comm = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(m.first);
+                comm != nullptr && comm->expiryDate() < currentFixingDate) {
+                currentFixing = comm->priceCurve()->price(currentFixingDate);
+            } else {
+                currentFixing = m.first->fixing(currentFixingDate);
+            }
             // if we read the fixing from an inverted FxIndex we have to undo the inversion
             TimeSeries<Real> history;
             for (auto const& d : m.second) {

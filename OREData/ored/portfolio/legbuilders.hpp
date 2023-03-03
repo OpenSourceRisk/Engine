@@ -32,99 +32,123 @@ namespace ore {
 namespace data {
 
 class FixedLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(FixedLegBuilder)
 public:
     FixedLegBuilder() : LegBuilder("Fixed") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                 const bool useXbsCurves = false) const override;
 };
 
 class ZeroCouponFixedLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(ZeroCouponFixedLegBuilder)
 public:
     ZeroCouponFixedLegBuilder() : LegBuilder("ZeroCouponFixed") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                 const bool useXbsCurves = false) const override;
 };
 
 class FloatingLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(FloatingLegBuilder)
 public:
     FloatingLegBuilder() : LegBuilder("Floating") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                 const bool useXbsCurves = false) const override;
 };
 
 class CashflowLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(CashflowLegBuilder)
 public:
     CashflowLegBuilder() : LegBuilder("Cashflow") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                 const bool useXbsCurves = false) const override;
 };
 
 class CPILegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(CPILegBuilder)
 public:
     CPILegBuilder() : LegBuilder("CPI") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                 const bool useXbsCurves = false) const override;
 };
 
 class YYLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(YYLegBuilder)
 public:
     YYLegBuilder() : LegBuilder("YY") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                 const bool useXbsCurves = false) const override;
 };
 
 class CMSLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(CMSLegBuilder)
 public:
     CMSLegBuilder() : LegBuilder("CMS") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                 const bool useXbsCurves = false) const override;
 };
 
 class CMBLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(CMBLegBuilder)
 public:
     CMBLegBuilder() : LegBuilder("CMB") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                 const bool useXbsCurves = false) const override;
 };
 
 class DigitalCMSLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(DigitalCMSLegBuilder)
 public:
     DigitalCMSLegBuilder() : LegBuilder("DigitalCMS") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                 const bool useXbsCurves = false) const override;
 };
 
 class CMSSpreadLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(CMSSpreadLegBuilder)
 public:
     CMSSpreadLegBuilder() : LegBuilder("CMSSpread") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                 const bool useXbsCurves = false) const override;
 };
 
 class DigitalCMSSpreadLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(DigitalCMSSpreadLegBuilder)
 public:
     DigitalCMSSpreadLegBuilder() : LegBuilder("DigitalCMSSpread") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                 const bool useXbsCurves = false) const override;
 };
 
 class EquityLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(EquityLegBuilder)
 public:
     EquityLegBuilder() : LegBuilder("Equity") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                 const bool useXbsCurves = false) const override;
 };
 
 } // namespace data

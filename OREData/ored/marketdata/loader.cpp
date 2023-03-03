@@ -70,17 +70,25 @@ boost::shared_ptr<MarketDatum> Loader::get(const std::pair<std::string, bool>& n
     if (has(name.first, d)) {
         return get(name.first, d);
     } else {
+        const Date& originalDate = actualDate() == Null<Date>() ? d : actualDate();
         if (name.second) {
-            DLOG("Could not find quote for ID " << name.first << " with as of date " << QuantLib::io::iso_date(d)
+            DLOG("Could not find quote for ID " << name.first << " with as of date " << QuantLib::io::iso_date(originalDate)
                                                 << ".");
             return boost::shared_ptr<MarketDatum>();
         } else {
             QL_FAIL("Could not find quote for Mandatory ID " << name.first << " with as of date "
-                                                             << QuantLib::io::iso_date(d));
+                                                             << QuantLib::io::iso_date(originalDate));
         }
     }
 }
 
+bool Loader::hasFixing(const string& name, const QuantLib::Date& d) const {
+    try {
+        return !getFixing(name, d).empty();
+    } catch (...) {
+        return false;
+    }
+}
 
 Fixing Loader::getFixing(const string& name, const QuantLib::Date& d) const {
     Fixing fixing;

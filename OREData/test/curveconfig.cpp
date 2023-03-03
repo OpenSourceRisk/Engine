@@ -72,6 +72,7 @@ public:
 
         // Read curve configurations from file
         curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
+        curveConfigs.parseAll();
     }
 
     ~F() {}
@@ -125,6 +126,7 @@ BOOST_AUTO_TEST_CASE(testFromToXml) {
     // Read curve configurations from output file
     CurveConfigurations curveConfigsNew;
     curveConfigsNew.fromFile(outputFile_1);
+    curveConfigsNew.parseAll();
 
     // Write curve configurations to file again
     string outputFile_2 = TEST_OUTPUT_FILE("curve_config_out_2.xml");
