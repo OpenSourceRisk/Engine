@@ -109,19 +109,23 @@ EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, co
                              const map<MarketContext, string>& configurations,
                              const boost::shared_ptr<ReferenceDataManager>& referenceData,
                              const IborFallbackConfig& iborFallbackConfig,
-                             const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders)
+                             const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
+                             const bool allowOverwrite)
     : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData),
       iborFallbackConfig_(iborFallbackConfig) {
     LOG("Building EngineFactory");
 
     addDefaultBuilders();
-    addExtraBuilders(extraEngineBuilders, {});
+    addExtraBuilders(extraEngineBuilders, {}, allowOverwrite);
 }
 
-void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& builder) {
+void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& builder, const bool allowOverwrite) {
     const string& modelName = builder->model();
     const string& engineName = builder->engine();
-    QL_REQUIRE(builders_.insert(make_pair(make_tuple(modelName, engineName, builder->tradeTypes()), builder)).second,
+    auto key = make_tuple(modelName, engineName, builder->tradeTypes());
+    if(allowOverwrite)
+        builders_.erase(key);
+    QL_REQUIRE(builders_.insert(make_pair(key, builder)).second,
                "EngineFactory: duplicate engine builder for (" << modelName << "/" << engineName << "/"
                                                                << boost::algorithm::join(builder->tradeTypes(), ",")
                                                                << ") - this is an internal error.");
@@ -155,7 +159,9 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
     return builder;
 }
 
-void EngineFactory::registerLegBuilder(const boost::shared_ptr<LegBuilder>& legBuilder) {
+void EngineFactory::registerLegBuilder(const boost::shared_ptr<LegBuilder>& legBuilder, const bool allowOverwrite) {
+    if(allowOverwrite)
+        builders_.erase(legBuilder->legType());
     QL_REQUIRE(legBuilders_.insert(make_pair(legBuilder->legType(), legBuilder)).second,
                "EngineFactory duplicate leg builder for '" << legBuilder->legType()
                                                            << "' - this is an internal error.");
@@ -183,17 +189,18 @@ void EngineFactory::addDefaultBuilders() {
 }
 
 void EngineFactory::addExtraBuilders(const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
-                                     const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders) {
+                                     const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders,
+                                     allowOverwrite) {
 
     if (extraEngineBuilders.size() > 0) {
         DLOG("adding " << extraEngineBuilders.size() << " extra engine builders");
         for (auto eb : extraEngineBuilders)
-            registerBuilder(eb);
+            registerBuilder(eb, allowOverwrite);
     }
     if (extraLegBuilders.size() > 0) {
         DLOG("adding " << extraLegBuilders.size() << " extra leg builders");
         for (auto elb : extraLegBuilders)
-            registerLegBuilder(elb);
+            registerLegBuilder(elb, allowOverwrite);
     }
 }
 

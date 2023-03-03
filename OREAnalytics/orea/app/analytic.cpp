@@ -813,7 +813,7 @@ boost::shared_ptr<EngineFactory> XvaAnalytic::amcEngineFactory(const boost::shar
     std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders;
     auto factory = boost::make_shared<EngineFactory>(
         edCopy, market_, configurations, inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
-        EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, grid));
+        EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, grid), true);
     return factory;
 }
 

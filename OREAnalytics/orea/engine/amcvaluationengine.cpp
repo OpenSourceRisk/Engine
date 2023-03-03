@@ -689,7 +689,7 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
 
                 auto engineFactory = boost::make_shared<EngineFactory>(
                     edCopy, initMarket, configurations, referenceData_, iborFallbackConfig_,
-                    EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, simDates));
+                    EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, simDates), true);
 
                 portfolio->build(engineFactory, "amc-val-engine", true);
 
