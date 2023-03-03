@@ -53,11 +53,9 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                        const boost::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
                        const boost::shared_ptr<ore::data::EngineData>& engineData,
                        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                       const boost::shared_ptr<StressTestScenarioData>& stressData, 
+                       const boost::shared_ptr<StressTestScenarioData>& stressData,
                        const CurveConfigurations& curveConfigs, const TodaysMarketParameters& todaysMarketParams,
                        boost::shared_ptr<ScenarioFactory> scenarioFactory,
-                       std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
-                       std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
                        const boost::shared_ptr<ReferenceDataManager>& referenceData,
                        const IborFallbackConfig& iborFallbackConfig, bool continueOnError) {
 
@@ -79,8 +77,8 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     configurations[MarketContext::pricing] = marketConfiguration;
     auto ed = boost::make_shared<EngineData>(*engineData);
     ed->globalParameters()["RunType"] = "Stress";
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
-        ed, simMarket, configurations, extraEngineBuilders, extraLegBuilders, referenceData, iborFallbackConfig);
+    boost::shared_ptr<EngineFactory> factory =
+        boost::make_shared<EngineFactory>(ed, simMarket, configurations, referenceData, iborFallbackConfig);
 
     LOG("Reset and Build Portfolio");
     portfolio->reset();

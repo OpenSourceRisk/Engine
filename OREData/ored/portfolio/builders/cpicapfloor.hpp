@@ -35,6 +35,7 @@ namespace data {
 */
 
 class CpiCapFloorEngineBuilder : public CachingPricingEngineBuilder<string, const string&> {
+    ORE_REGISTER_ENGINE_BUILDER(CpiCapFloorEngineBuilder)
 public:
     CpiCapFloorEngineBuilder() : CachingEngineBuilder("CpiCapModel", "CpiCapEngine", {"CpiCapFloor"}) {}
 

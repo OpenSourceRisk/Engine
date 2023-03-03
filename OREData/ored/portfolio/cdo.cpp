@@ -72,6 +72,8 @@ void validateWeightRec(Real value, const string& name, const string& varName) {
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<SyntheticCDO>> SyntheticCDO::reg_("SyntheticCDO");
+
 void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("SyntheticCDO::build() called for trade " << id());
@@ -238,11 +240,12 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
         DLOG("Building constituents using CreditIndexReferenceDatum for ID " << qualifier_);
 
-        QL_REQUIRE(refDataManager_, "Trade " << id() << " has no basket data and there is no reference data manager.");
-        QL_REQUIRE(refDataManager_->hasData(CreditIndexReferenceDatum::TYPE, qualifier_),
+        QL_REQUIRE(engineFactory->referenceData(),
+                   "Trade " << id() << " has no basket data and there is no reference data manager.");
+        QL_REQUIRE(engineFactory->referenceData()->hasData(CreditIndexReferenceDatum::TYPE, qualifier_),
                    "Trade " << id() << " needs credit index reference data for ID " << qualifier_);
         auto crd = boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(
-            refDataManager_->getData(CreditIndexReferenceDatum::TYPE, qualifier_));
+            engineFactory->referenceData()->getData(CreditIndexReferenceDatum::TYPE, qualifier_));
 
         Real totalRemainingWeight = 0.0;
         Real totalPriorWeight = 0.0;

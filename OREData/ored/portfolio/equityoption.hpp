@@ -36,6 +36,8 @@ using std::string;
   \ingroup tradedata
 */
 class EquityOption : public VanillaOptionTrade {
+    static TradeBuilderRegister<TradeBuilder<EquityOption>> reg_;
+
 public:
     //! Default constructor
     EquityOption() : VanillaOptionTrade(AssetClass::EQ) { tradeType_ = "EquityOption"; }

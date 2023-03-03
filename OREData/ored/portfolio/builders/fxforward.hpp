@@ -52,6 +52,8 @@ protected:
     \ingroup builders
 */
 class FxForwardEngineBuilder : public FxForwardEngineBuilderBase {
+    ORE_REGISTER_ENGINE_BUILDER(FxForwardEngineBuilder)
+
 public:
     FxForwardEngineBuilder() : FxForwardEngineBuilderBase("DiscountedCashflows", "DiscountingFxForwardEngine") {}
 

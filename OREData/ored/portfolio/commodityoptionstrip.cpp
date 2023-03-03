@@ -60,6 +60,8 @@ struct TempOptionData {
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<CommodityOptionStrip>> CommodityOptionStrip::reg_("CommodityOptionStrip");
+
 CommodityOptionStrip::CommodityOptionStrip(const Envelope& envelope, const LegData& legData,
                                            const vector<Position::Type>& callPositions, const vector<Real>& callStrikes,
                                            const vector<Position::Type>& putPositions, const vector<Real>& putStrikes,

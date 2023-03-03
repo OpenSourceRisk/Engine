@@ -140,8 +140,6 @@ BOOST_AUTO_TEST_CASE(testSyntheticForward) {
     engineData->model("EquityForward") = "DiscountedCashflows";
     engineData->engine("EquityForward") = "DiscountingEquityForwardEngine";
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
-    engineFactory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
 
     syntheticForward.build(engineFactory);
     eqFwd.build(engineFactory);
@@ -192,7 +190,6 @@ BOOST_AUTO_TEST_CASE(testMultiCcyComposite) {
     engineData->model("EquityOption") = "BlackScholesMerton";
     engineData->engine("EquityOption") = "AnalyticEuropeanEngine";
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
 
     eurComp.build(engineFactory);
     usdComp.build(engineFactory);

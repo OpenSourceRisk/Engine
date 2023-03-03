@@ -23,8 +23,10 @@
 
 #include <ored/portfolio/optiondata.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/tradefactory.hpp>
 #include <ored/portfolio/tradestrike.hpp>
 #include <ored/utilities/parsers.hpp>
+
 #include <ql/instruments/averagetype.hpp>
 
 namespace ore {
@@ -98,18 +100,24 @@ protected:
 };
 
 class EquityAsianOption : public AsianOption {
+    static TradeBuilderRegister<TradeBuilder<EquityAsianOption>> reg_;
+
 public:
     EquityAsianOption() : AsianOption("EquityAsianOption") {}
     using AsianOption::AsianOption;
 };
 
 class FxAsianOption : public AsianOption {
+    static TradeBuilderRegister<TradeBuilder<FxAsianOption>> reg_;
+
 public:
     FxAsianOption() : AsianOption("FxAsianOption") {}
     using AsianOption::AsianOption;
 };
 
 class CommodityAsianOption : public AsianOption {
+    static TradeBuilderRegister<TradeBuilder<CommodityAsianOption>> reg_;
+
 public:
     CommodityAsianOption() : AsianOption("CommodityAsianOption") {}
     using AsianOption::AsianOption;

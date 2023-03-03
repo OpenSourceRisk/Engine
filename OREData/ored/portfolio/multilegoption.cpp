@@ -34,6 +34,8 @@ namespace data {
 
 using namespace QuantExt;
 
+TradeBuilderRegister<TradeBuilder<MultiLegOption>> MultiLegOption::reg_("MultiLegOption");
+
 void MultiLegOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("Building MultiLegOption " << id());

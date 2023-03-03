@@ -406,7 +406,6 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
-    factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
 
     boost::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize, factory);
 

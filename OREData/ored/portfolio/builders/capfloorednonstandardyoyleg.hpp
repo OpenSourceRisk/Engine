@@ -37,6 +37,7 @@ namespace data {
 \ingroup builders
 */
 class CapFlooredNonStandardYoYLegEngineBuilder : public CachingInflationCouponPricerBuilder<string, const string&> {
+    ORE_REGISTER_ENGINE_BUILDER(CapFlooredNonStandardYoYLegEngineBuilder)
 public:
     CapFlooredNonStandardYoYLegEngineBuilder()
         : CachingEngineBuilder("CapFlooredNonStdYYModel", "CapFlooredNonStdYYCouponPricer", {"CapFlooredNonStdYYLeg"}) {

@@ -31,6 +31,8 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<FxDigitalOption>> FxDigitalOption::reg_("FxDigitalOption");
+
 void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Only European Vanilla supported for now

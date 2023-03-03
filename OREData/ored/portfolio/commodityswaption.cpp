@@ -41,6 +41,8 @@ using std::sort;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<CommoditySwaption>> CommoditySwaption::reg_("CommoditySwaption");
+
 void CommoditySwaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     reset();

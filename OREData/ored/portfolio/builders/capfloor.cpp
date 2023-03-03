@@ -27,6 +27,8 @@
 namespace ore {
 namespace data {
 
+ORE_REGISTER_ENGINE_BUILDER_IMPL(CapFloorEngineBuilder)
+
 boost::shared_ptr<PricingEngine> CapFloorEngineBuilder::engineImpl(const std::string& index) {
     string ccyCode = parseIborIndex(index)->currency().code();
     Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));

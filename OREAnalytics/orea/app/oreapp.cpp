@@ -16,8 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/algorithm/string.hpp>
-#include <boost/timer/timer.hpp>
 
 #ifdef BOOST_MSVC
 // disable warning C4503: '__LINE__Var': decorated name length exceeded, name was truncated
@@ -27,18 +25,21 @@
 #pragma warning(disable : 4503)
 #endif
 
-#include <boost/filesystem.hpp>
-
+#include <orea/app/marketdatainmemoryloader.hpp>
+#include <orea/app/oreapp.hpp>
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
+
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
-#include <ored/report/inmemoryreport.hpp>
 
-#include <orea/app/oreapp.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/timer/timer.hpp>
 
 #include <iostream>
 
@@ -1356,10 +1357,10 @@ boost::shared_ptr<XvaRunner> OREApp::getXvaRunner() {
     }
 
     boost::shared_ptr<XvaRunner> xva = boost::make_shared<XvaRunner>(
-        asof_, baseCcy, portfolio_, nettingSetManager, engineData, curveConfigs_, marketParameters,
-        simMarketParameters, scenarioGeneratorData, modelData, getExtraLegBuilders(), getExtraEngineBuilders(),
-        referenceData, iborFallbackConfig_, dimQuantile, dimHorizonCalendarDays, analytics, calculationType, dvaName,
-        fvaBorrowingCurve, fvaLendingCurve, fullInitialCollateralisation, storeFlows);
+        asof_, baseCcy, portfolio_, nettingSetManager, engineData, curveConfigs_, marketParameters, simMarketParameters,
+        scenarioGeneratorData, modelData, referenceData, iborFallbackConfig_, dimQuantile, dimHorizonCalendarDays,
+        analytics, calculationType, dvaName, fvaBorrowingCurve, fvaLendingCurve, fullInitialCollateralisation,
+        storeFlows);
 
     return xva;
 }
@@ -1509,19 +1510,12 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
     LOG("MarketContext::pricing = " << params_->get("markets", "pricing"));
     boost::shared_ptr<EngineFactory> factory =
-        boost::make_shared<EngineFactory>(engineData, market, configurations, getExtraEngineBuilders(),
-                                          getExtraLegBuilders(), referenceData_, iborFallbackConfig_);
+        boost::make_shared<EngineFactory>(engineData, market, configurations, referenceData_, iborFallbackConfig_);
 
     LOG("Engine factory built");
     MEM_LOG;
 
     return factory;
-}
-
-boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() const {
-    boost::shared_ptr<TradeFactory> tf = boost::make_shared<TradeFactory>(referenceData_);
-    tf->addExtraBuilders(getExtraTradeBuilders(tf));
-    return tf;
 }
 
 boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory, bool buildFailedTrades) {
@@ -1541,7 +1535,7 @@ boost::shared_ptr<Portfolio> OREApp::loadPortfolio(bool buildFailedTrades) {
         return portfolio;
     vector<string> portfolioFiles = getFileNames(portfoliosString, inputPath_);
     for (auto portfolioFile : portfolioFiles) {
-        portfolio->load(portfolioFile, buildTradeFactory());
+        portfolio->fromFile(portfolioFile);
     }
     return portfolio;
 }
@@ -1737,9 +1731,7 @@ boost::shared_ptr<ReportWriter> OREApp::getReportWriter() const {
 }
 
 boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() {
-    return boost::make_shared<SensitivityRunner>(params_, buildTradeFactory(), getExtraEngineBuilders(),
-                                                 getExtraLegBuilders(), referenceData_, iborFallbackConfig_,
-                                                 continueOnError_);
+    return boost::make_shared<SensitivityRunner>(params_, referenceData_, iborFallbackConfig_, continueOnError_);
 }
 
 void OREApp::runStressTest() {
@@ -1773,8 +1765,7 @@ void OREApp::runStressTest() {
     string marketConfiguration = params_->get("markets", "pricing");
     boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
         portfolio, market_, marketConfiguration, engineData, simMarketData, stressData, *curveConfigs_,
-        *marketParameters_, nullptr, getExtraEngineBuilders(), getExtraLegBuilders(), referenceData_,
-        iborFallbackConfig_, continueOnError_);
+        *marketParameters_, nullptr, referenceData_, iborFallbackConfig_, continueOnError_);
 
     string outputFile = outputPath_ + "/" + params_->get("stress", "scenarioOutputFile");
     Real threshold = parseReal(params_->get("stress", "outputThreshold"));
@@ -2459,8 +2450,7 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactoryFromXMLString(const b
         configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
         configurations[MarketContext::pricing] = params_->get("markets", "pricing");
         boost::shared_ptr<EngineFactory> factory =
-            boost::make_shared<EngineFactory>(engineData, market, configurations, getExtraEngineBuilders(),
-                                              getExtraLegBuilders(), referenceData_, iborFallbackConfig_);
+            boost::make_shared<EngineFactory>(engineData, market, configurations, referenceData_, iborFallbackConfig_);
         return factory;
     }
 }
