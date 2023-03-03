@@ -625,49 +625,6 @@ inline const std::string& InputParameters::marketConfig(const std::string& conte
     auto it = marketConfigs_.find(context);
     return (it != marketConfigs_.end() ? it->second : Market::defaultConfiguration);
 }
-
-    /*
-//! Traditional ORE input via ore.xml and various files, output into files
-class OREAppInputParameters : public InputParameters {
-public:
-    OREAppInputParameters(const boost::shared_ptr<Parameters>& params) : params_(params) {
-        loadParameters();
-    }
-
-    void loadParameters() override;
-    void writeOutParameters() override;
-
-    const boost::shared_ptr<CSVLoader>& csvLoader() { return csvLoader_; }
-
-    //! map internal report name to the configured external file name
-    const std::map<std::string, std::string>& fileNameMap() { return fileNameMap_; }
-    std::string outputFileName(const std::string& internalName, const std::string& suffix);
-    
-private:
-    boost::shared_ptr<Parameters> params_;
-    boost::shared_ptr<CSVLoader> csvLoader_;
-
-    std::map<std::string, std::string> fileNameMap_;
-    
-    std::string npvOutputFileName_;
-    std::string cashflowOutputFileName_;
-    std::string curvesOutputFileName_;
-    std::string scenarioDumpFileName_;
-    std::string cubeFileName_;
-    std::string mktCubeFileName_;
-    std::string rawCubeFileName_;
-    std::string netCubeFileName_;
-    std::string dimEvolutionFileName_;
-    std::vector<std::string> dimRegressionFileNames_;
-    std::string sensitivityFileName_;
-    std::string sensitivityScenarioFileName_;
-    std::string parSensitivityFileName_;
-    std::string jacobiFileName_;
-    std::string jacobiInverseFileName_;
-    std::string stressTestFileName_;
-    std::string varFileName_;
-};
-    */
     
 //! Traditional ORE input via ore.xml and various files, output into files
 class OutputParameters {
