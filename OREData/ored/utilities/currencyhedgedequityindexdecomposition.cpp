@@ -77,30 +77,42 @@ loadCurrencyHedgedIndexDecomposition(const std::string& name, const boost::share
                                                                       currencyWeightsAndFxIndexNames);
 }
 
-QuantLib::Date CurrencyHedgedEquityIndexDecomposition::referenceDate(const QuantLib::Date& asof) const {
-    QuantLib::Date hedgingDate = rebalancingDate(asof);
+QuantLib::Date CurrencyHedgedEquityIndexDecomposition::referenceDate(
+    const boost::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum>& refData,
+                                                      const QuantLib::Date& asof) {
+    QuantLib::Date hedgingDate = CurrencyHedgedEquityIndexDecomposition::rebalancingDate(refData, asof);
     if (hedgingDate == QuantLib::Date()) {
         return QuantLib::Date();
     } else {
-        return indexRefData_->hedgeCalendar().advance(
-            hedgingDate, -indexRefData_->referenceDateOffset() * QuantLib::Days, QuantLib::Preceding);
+        return refData->hedgeCalendar().advance(hedgingDate, -refData->referenceDateOffset() * QuantLib::Days,
+                                                QuantLib::Preceding);
     }
 }
 
-QuantLib::Date CurrencyHedgedEquityIndexDecomposition::rebalancingDate(const QuantLib::Date& asof) const {
-    if (indexRefData_->rebalancingStrategy() ==
+QuantLib::Date CurrencyHedgedEquityIndexDecomposition::rebalancingDate(
+    const boost::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum>& refData,
+                                                        const QuantLib::Date& asof) {
+    if (refData->rebalancingStrategy() ==
         ore::data::CurrencyHedgedEquityIndexReferenceDatum::RebalancingDate::EndOfMonth) {
         QuantLib::Date lastBusinessDayOfCurrentMonth = QuantLib::Date::endOfMonth(asof);
         lastBusinessDayOfCurrentMonth =
-            indexRefData_->hedgeCalendar().adjust(lastBusinessDayOfCurrentMonth, QuantLib::Preceding);
+            refData->hedgeCalendar().adjust(lastBusinessDayOfCurrentMonth, QuantLib::Preceding);
         if (asof == lastBusinessDayOfCurrentMonth) {
             return asof;
         } else {
-            return indexRefData_->hedgeCalendar().advance(QuantLib::Date(1, asof.month(), asof.year()),
-                                                          -1 * QuantLib::Days, QuantLib::Preceding);
+            return refData->hedgeCalendar().advance(QuantLib::Date(1, asof.month(), asof.year()), -1 * QuantLib::Days,
+                                                    QuantLib::Preceding);
         }
     }
     return QuantLib::Date();
+}
+
+QuantLib::Date CurrencyHedgedEquityIndexDecomposition::referenceDate(const QuantLib::Date& asof) const {
+    return CurrencyHedgedEquityIndexDecomposition::referenceDate(this->indexRefData(), asof);
+}
+
+QuantLib::Date CurrencyHedgedEquityIndexDecomposition::rebalancingDate(const QuantLib::Date& asof) const {
+    return CurrencyHedgedEquityIndexDecomposition::rebalancingDate(this->indexRefData(), asof);
 }
 
 std::map<std::string, double> CurrencyHedgedEquityIndexDecomposition::fxSpotRiskFromForwards(

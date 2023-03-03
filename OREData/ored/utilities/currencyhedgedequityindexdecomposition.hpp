@@ -43,6 +43,12 @@ public:
 
     QuantLib::Date rebalancingDate(const QuantLib::Date& asof) const;
 
+    static QuantLib::Date referenceDate(const boost::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum>& refData,
+                                        const QuantLib::Date& asof);
+
+    static QuantLib::Date rebalancingDate(const boost::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum>& refData,
+                                          const QuantLib::Date& asof);
+
     const std::map<std::string, std::pair<double, std::string>>& currencyWeightsAndFxIndexNames() const {
         return currencyWeightsAndFxIndexNames_;
     }
