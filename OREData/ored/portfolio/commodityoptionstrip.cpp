@@ -304,7 +304,7 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
                  QL_REQUIRE(undCcy.code() == legData_.currency(),
                             "Strips of commodity digital options do not support intra-currency trades yet.");
                  commOption = boost::make_shared<CommodityDigitalAveragePriceOption>(
-                     envelope(), optionData, tempDatum.strike, cf->periodQuantity() * payoffPerUnit(),
+                     envelope(), optionData, tempDatum.strike, cf->quantity() * payoffPerUnit(),
                      legData_.currency(), commLegData_->name(), commLegData_->priceType(), to_string(start),
                      to_string(cf->endDate()), legData_.paymentCalendar(), legData_.paymentLag(),
                      legData_.paymentConvention(), commLegData_->pricingCalendar(), to_string(cf->date()),
