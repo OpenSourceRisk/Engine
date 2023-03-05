@@ -408,6 +408,67 @@ The \lstinline!BootstrapConfig! has the following interpretation for a fitted bo
 \label{lst:fitted_bond_segment}
 \end{listing}
 
+\subsubsection*{Bond Yield Shifted}
+\label{sec:bond_yield_shifted}
+
+When the node name is \lstinline!BondYieldShifted!, the \lstinline!Type! node has the only allowable value \emph{Bond Yield Shifted},
+and the node has the structure shown in Listing \ref{lst:bond_yield_shifted}. This segment is used to build yield
+curves which are adjusted by liquid bond yields. The adjustement is derived as an average of the spreads between the bond's 
+yields-to-maturity and the reference curve level at the tenor points corresponding the bond durations.
+
+Compared to the fitted bond segment the shifted curve can be built with only one liquid bond. This approach is usefull in 
+cases of limited number of liquid comparable bonds and hence unstable fitting of Nelson Siegel. The average spread 
+at the average duration point may be considered as a sensitivity point of a corresponding zero coupon bond.
+
+The segment has the following elements:
+
+\begin{itemize}
+  \item Quotes: a list of bond price quotes, for each security in the list, reference data must be available
+  \item ReferenceCurve: the curve which will be used to calculate the bond spread. This curve will also be shifted by the resulting spread product 
+  \item IborIndexCurves: for each Ibor index that is required by one of the bonds to which the curve is fitted, a mapping
+    to an estimation curve for that index must be provided
+  \item ExtrapolateFlat: if true, the parametric curve is extrapolated flat in the instantaneous forward rate before the
+    first and after the last maturity of the bonds in the calibration basket. This avoids unrealistic rates at the short
+    end or for long maturities in the resulting curve.
+  \end{itemize}
+
+  \begin{listing}[H]
+    %\hrule\medskip
+    \begin{minted}[fontsize=\footnotesize]{xml}
+        <YieldCurve>
+        <CurveId>USD.Benchmark.Curve_Shifted</CurveId>
+        <CurveDescription>Curve shifted with a bond's spreads at the bond duration tenors</CurveDescription>
+        <Currency>USD</Currency>
+        <DiscountCurve/>
+        <Segments>
+          <BondYieldShifted>
+            <Type>Bond Yield Shifted</Type>
+            <ReferenceCurve>USD1D</ReferenceCurve>
+            <Quotes>
+              <Quote>BOND/PRICE/EJ7706660</Quote>
+              <Quote>BOND/PRICE/ZR5330686</Quote>
+              <Quote>BOND/PRICE/AS0644417</Quote>
+            </Quotes>
+            <Conventions>BOND_CONVENTIONS</Conventions>
+            <ExtrapolateFlat>true</ExtrapolateFlat>
+            <IborIndexCurves>
+              <IborIndexCurve iborIndex="USD-LIBOR-3M">USD3M</IborIndexCurve>
+            </IborIndexCurves>
+          </BondYieldShifted>
+        </Segments>
+        <InterpolationVariable>Discount</InterpolationVariable>
+        <InterpolationMethod>Linear</InterpolationMethod>
+        <YieldCurveDayCounter>A365</YieldCurveDayCounter>
+        <Tolerance> </Tolerance>
+        <Extrapolation>true</Extrapolation>
+        <BootstrapConfig> </BootstrapConfig>
+    </YieldCurve>
+    \end{minted}
+    \caption{Bond Yield Shifted curve segment}
+    \label{lst:bond_yield_shifted}
+    \end{listing}
+
+
 \subsubsection*{Yield plus Default Segment}
 \label{sec:yield_plus_default}
 
