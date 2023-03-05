@@ -34,6 +34,8 @@ namespace ore {
 namespace data {
 
 class CreditDefaultSwap : public Trade {
+    static TradeBuilderRegister<TradeBuilder<CreditDefaultSwap>> reg_;
+
 public:
     //! Default constructor
     CreditDefaultSwap() : Trade("CreditDefaultSwap") {}
@@ -49,6 +51,8 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) override;
 
     const CreditDefaultSwapData& swap() const { return swap_; }
+
+    const std::map<std::string,boost::any>& additionalData() const override;
 
 private:
     CreditDefaultSwapData swap_;

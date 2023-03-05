@@ -32,6 +32,7 @@ namespace data {
     \ingroup builders
  */
 class EquityFutureEuropeanOptionEngineBuilder : public EuropeanForwardOptionEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(EquityFutureEuropeanOptionEngineBuilder)
 public:
     EquityFutureEuropeanOptionEngineBuilder()
         : EuropeanForwardOptionEngineBuilder("BlackScholes", {"EquityFutureOption"}, AssetClass::EQ) {}

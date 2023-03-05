@@ -30,6 +30,8 @@
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<FxAverageForward>> FxAverageForward::reg_("FxAverageForward");
+
 void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     LOG("FxAverageForward::build() called");
     QL_REQUIRE(!settlementCurrency_.empty(), "settlement currency must not be blank");
@@ -72,6 +74,12 @@ void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     notionalCurrency_ = settlementCurrency_;
     maturity_ = payDate;
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string(settlement_ == "Cash" ? "NDF" : "Forward");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");  
+
     LOG("FxAverageForward::build() done");
 }
 
@@ -107,6 +115,9 @@ void FxAverageForward::fromXML(XMLNode* node) {
     settlementCurrency_ = XMLUtils::getChildValue(fxNode, "SettlementCurrency", true);
     settlementNotional_ = XMLUtils::getChildValueAsDouble(fxNode, "SettlementNotional", true);
     fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", true);
+    settlement_ = XMLUtils::getChildValue(fxNode, "Settlement", false);
+    if (settlement_ == "")
+        settlement_ = "Cash";
 }
 
 XMLNode* FxAverageForward::toXML(XMLDocument& doc) {
@@ -125,6 +136,7 @@ XMLNode* FxAverageForward::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, fxNode, "SettlementCurrency", settlementCurrency_);
     XMLUtils::addChild(doc, fxNode, "SettlementNotional", settlementNotional_);
     XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);
+    XMLUtils::addChild(doc, fxNode, "Settlement", settlement_);
 
     return node;
 }

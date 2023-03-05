@@ -97,6 +97,7 @@
       <xs:element type="xs:integer" name="SpotLag" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
       <xs:element type="dayCounter" name="FixedDayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FixedCalendar" minOccurs="0"/>
       <xs:element type="xs:integer" name="PaymentLag" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
       <xs:element type="frequencyType" name="FixedFrequency" minOccurs="0" maxOccurs="1"/>

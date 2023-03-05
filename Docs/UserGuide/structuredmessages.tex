@@ -1,0 +1,79 @@
+
+
+% \ifdefined\UserGuidePlus\newcommand{\smsection}{\section}\fi
+% \ifdefined\UserGuidePlus\newcommand{\smsubsection}{\subsection}\fi
+% \ifdefined\UserGuide\newcommand{\smsection}{\section}\fi
+% \ifdefined\UserGuide\newcommand{\smsubsection}{\subsection}\fi
+% \ifdefined\RiskCatalogue\newcommand{\smsection}{\section}\fi
+% \ifdefined\RiskCatalogue\newcommand{\smsubsection}{\subsection}\fi
+% \ifdefined\ProductCatalogueBuild\newcommand{\smsection}{\section}\fi
+% \ifdefined\ProductCatalogueBuild\newcommand{\smsubsection}{\subsection}\fi
+%========================================================
+\section{Structured Messages}\label{sec:structured_messages}
+%========================================================
+
+% Intro to the concept of structured messages, and that there are structured 'warnings' and structured 'errors'
+
+When any part of an anlytic or set of calculations fails, a corresponding error or warning message is logged, which we call
+a \lstinline!StructuredMessage!. Where possible, ORE will attempt to complete the
+rest of the calculation, e.g.\ where the error pertains to a specific netting set or trade, then the output reports might still be
+produced with the correct values for all other netting sets or trades, and a \lstinline!StructuredMessage! will provide the user with
+information to help with debugging and fixing the issue.
+
+A structured message has the following form:
+
+\begin{minted}{json}
+  {
+    "category": "Error",
+    "group": "Trade",
+    "message": "...",
+    "subFields": [
+      {
+        "fieldName": "...",
+        "fieldValue": "..."
+      },
+      {
+        "fieldName": "...",
+        "fieldValue": "..."
+      }
+    ]
+  }
+\end{minted}
+
+% Structured Message Categories
+
+\subsection{Categories}
+
+There are two main types/categories of structured messages.
+\begin{enumerate}
+  \item \textbf{Warnings} - Structured warning messages are returned when there is an apparent inconsistency in input values, or when
+  amounts are unexpectedly large (or small). If the user intended this, then there may be nothing wrong with the calculation and the
+  output can be assumed to be correct.
+  \item \textbf{Errors} - Structured error messages are returned when part of a calculation has failed, or when something has gone
+  wrong to the extent that continuing the calculation would yield nonsensical results, and hence the calculation is either skipped
+  over or failed entirely. ORE will always attempt to complete the calculation so that only results from the failing components are
+  missing.
+\end{enumerate}
+Where the distinction between the two can sometimes be unclear, a structured warning will only ever be raised for apparent
+inconsistencies or unusual values, while a structured error would indicate that a component has failed. Depending on the circumstances,
+these can either lead to a larger failure later on in the calculations, or sometimes have no impact on the output reports.
+
+% Structured Message Groups
+
+\subsection{Groups}
+
+Within each category (i.e.\ warning or error), structured messages are further subdivided into groups, which give an indication of what
+part of ORE is failing. A structured error (warning) has a corresponding \lstinline!message! and usually an \lstinline!exceptionType!
+(\lstinline!warningType!) subfield. Additionally, there may be other subfields based on the structured message group, e.g.\ for
+structured trade error messages, the trade ID and trade type:
+
+\begin{itemize}
+  \item Analytics: \lstinline!analyticType!
+  \item Configuration: \lstinline!configurationType!, \lstinline!configurationId!
+  \item Model
+  \item Curve: \lstinline!curveId!
+  \item Trade: \lstinline!tradeId!, \lstinline!tradeType!
+\end{itemize}
+
+
+% Specific Instances of Warnings/Examples

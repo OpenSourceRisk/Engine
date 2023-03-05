@@ -302,11 +302,6 @@ BOOST_AUTO_TEST_CASE(regression) {
     engineData->model("CapFlooredIborLeg") = "BlackOrBachelier";
     engineData->engine("CapFlooredIborLeg") = "BlackIborCouponPricer";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, simMarket);
-    factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
 
     // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());

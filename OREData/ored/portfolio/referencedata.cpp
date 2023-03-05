@@ -235,6 +235,258 @@ void CreditIndexReferenceDatum::add(const CreditIndexConstituent& c) {
 
 const set<CreditIndexConstituent>& CreditIndexReferenceDatum::constituents() const { return constituents_; }
 
+ReferenceDatumRegister<ReferenceDatumBuilder<EquityIndexReferenceDatum>> EquityIndexReferenceDatum::reg_(TYPE);
+
+// Index
+void IndexReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    XMLNode* innerNode = XMLUtils::getChildNode(node, type() + "ReferenceData");
+    QL_REQUIRE(innerNode, "No " + type() + "ReferenceData node");
+
+    // clear map
+    data_.clear();
+
+    // and populate it...
+    for (XMLNode* child = XMLUtils::getChildNode(innerNode, "Underlying"); child;
+         child = XMLUtils::getNextSibling(child, "Underlying")) {
+        string name = XMLUtils::getChildValue(child, "Name", true);
+        double weight = XMLUtils::getChildValueAsDouble(child, "Weight", true);
+        addUnderlying(name, weight);
+    }
+}
+
+XMLNode* IndexReferenceDatum::toXML(XMLDocument& doc) {
+    XMLNode* node = ReferenceDatum::toXML(doc);
+    XMLNode* rdNode = XMLUtils::addChild(doc, node, type() + "ReferenceData");
+
+    for (auto d : data_) {
+        XMLNode* underlyingNode = XMLUtils::addChild(doc, rdNode, "Underlying");
+        XMLUtils::addChild(doc, underlyingNode, "Name", d.first);
+        XMLUtils::addChild(doc, underlyingNode, "Weight", d.second);
+    }
+
+    return node;
+}
+// Currency Hedged Equity Indexes
+/*
+<ReferenceDatum id="RIC:.SPXEURHedgedMonthly">
+  <Type>CurrencyHedgedEquityIndex</Type>
+  <CurrencyHedgedEquityIndexReferenceDatum>
+      <UnderlyingIndex>RIC:.SPX</UnderlyingIndex>
+      <UnderlyingIndexCurrency>USD</UnderlyingIndexCurrency>
+      <HedgeCurrency>EUR</HedgeCurrency>
+      <RebalancingStrategy>EndOfMonth</RebalancingStrategy>
+      <ReferenceDateOffset>1</ReferenceDateOffset>
+      <HedgeAdjustment>None|Daily</HedgeAdjustment>
+      <HedgeCalendar>EUR,USD</HedgeCalendar>
+      <FxIndex>ECB-EUR-USD</FxIndex>
+      <IndexWeightsAtLastRebalancingDate>
+        <Underlying>
+            <Name>Apple</Name>
+            <Weight>0.1</Weight>
+        </Underlying>
+        ...
+      </IndexWeightsAtLastRebalancingDate>
+  </CurrencyHedgedEquityIndexReferenceDatum>
+</ReferenceDatum>
+*/
+ReferenceDatumRegister<ReferenceDatumBuilder<CurrencyHedgedEquityIndexReferenceDatum>>
+    CurrencyHedgedEquityIndexReferenceDatum::reg_(TYPE);
+
+void CurrencyHedgedEquityIndexReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    XMLNode* innerNode = XMLUtils::getChildNode(node, type() + "ReferenceData");
+    QL_REQUIRE(innerNode, "No " + type() + "ReferenceData node");
+
+    underlyingIndexName_ = XMLUtils::getChildValue(innerNode, "UnderlyingIndex", true);
+    
+    hedgeCurrency_ = XMLUtils::getChildValue(innerNode, "HedgeCurrency", true);
+    
+    auto rebalancingStr = XMLUtils::getChildValue(innerNode, "RebalancingStrategy", false, "EndOfMonth");
+    if (rebalancingStr == "EndOfMonth") {
+        rebalancingStrategy_ = CurrencyHedgedEquityIndexReferenceDatum::RebalancingDate::EndOfMonth;
+    } else {
+        QL_FAIL("unexpected rebalancing strategy " << rebalancingStr);
+    }
+
+    std::string hedgeCalendarStr = XMLUtils::getChildValue(innerNode, "HedgeCalendar", true);
+    hedgeCalendar_ = parseCalendar(hedgeCalendarStr);
+ 
+    XMLNode* fxIndexesNode = XMLUtils::getChildNode(innerNode, "FxIndexes");
+    if (fxIndexesNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(fxIndexesNode, "FxIndex"); child;
+             child = XMLUtils::getNextSibling(child, "FxIndex")) {
+            string currency = XMLUtils::getChildValue(child, "Currency", true);
+            string indexFamily = XMLUtils::getChildValue(child, "IndexName", true);
+            fxIndexes_[currency] = indexFamily;
+        }
+    }
+
+    // Optional Fields
+    referenceDateOffset_ = XMLUtils::getChildValueAsInt(innerNode, "ReferenceDateOffset", false, 0);
+    auto hedgeAdjStr = XMLUtils::getChildValue(innerNode, "HedgeAdjustment", false, "None");
+    
+    if (hedgeAdjStr == "None") {
+        hedgeAdjustmentRule_ = HedgeAdjustment::None;
+    } else if (hedgeAdjStr == "Daily") {
+        hedgeAdjustmentRule_ = HedgeAdjustment::Daily;
+    } else {
+        QL_FAIL("unexpected rebalancing strategy " << hedgeAdjStr);
+    }
+    // clear map
+    data_.clear();
+
+    // and populate it...
+    XMLNode* currencyWeightNode = XMLUtils::getChildNode(innerNode, "IndexWeightsAtLastRebalancingDate");
+    if (currencyWeightNode) {
+        double totalWeight = 0.0;
+        for (XMLNode* child = XMLUtils::getChildNode(currencyWeightNode, "Underlying"); child;
+             child = XMLUtils::getNextSibling(child, "Underlying")) {
+            string name = XMLUtils::getChildValue(child, "Name", true);
+            double weight = XMLUtils::getChildValueAsDouble(child, "Weight", true);
+            QL_REQUIRE(weight > 0 || QuantLib::close_enough(weight, 0.0),
+                       "Try to add negtive weight for Underlying" << name);
+            data_.push_back(make_pair(name, weight));
+            totalWeight += weight;
+        }
+        QL_REQUIRE(data_.empty() || QuantLib::close_enough(totalWeight, 1.0),
+                   "Sum of underlying weights at last rebalancing date (" << totalWeight << ") is not 1.0");
+    }
+}
+
+XMLNode* CurrencyHedgedEquityIndexReferenceDatum::toXML(XMLDocument& doc) {
+    XMLNode* node = ReferenceDatum::toXML(doc);
+    XMLNode* rdNode = XMLUtils::addChild(doc, node, type() + "ReferenceData");
+
+    XMLUtils::addChild(doc, rdNode, "UnderlyingIndex", underlyingIndexName_);
+    XMLUtils::addChild(doc, rdNode, "HedgeCurrency", hedgeCurrency_);
+    XMLUtils::addChild(doc, rdNode, "RebalancingStrategy", "EndOfMonth");
+    XMLUtils::addChild(doc, rdNode, "HedgeCalendar", to_string(hedgeCalendar_));
+    if (referenceDateOffset_ != 0)
+        XMLUtils::addChild(doc, rdNode, "ReferenceDateOffset", to_string(referenceDateOffset_));
+    if (hedgeAdjustmentRule_ == HedgeAdjustment::Daily) {
+        XMLUtils::addChild(doc, rdNode, "HedgeAdjustment", "Daily");
+    } 
+
+    if (!fxIndexes_.empty()) {
+        XMLNode* currencyWeightNode = XMLUtils::addChild(doc, rdNode, "FxIndexes");
+        for (auto d : fxIndexes_) {
+            XMLNode* underlyingNode = XMLUtils::addChild(doc, currencyWeightNode, "FxIndex");
+            XMLUtils::addChild(doc, underlyingNode, "Currency", d.first);
+            XMLUtils::addChild(doc, underlyingNode, "IndexName", d.second);
+        }
+    }
+
+    if (!data_.empty()) {
+        XMLNode* currencyWeightNode = XMLUtils::addChild(doc, rdNode, "IndexWeightsAtLastRebalancingDate");
+        for (auto d : data_) {
+            XMLNode* underlyingNode = XMLUtils::addChild(doc, currencyWeightNode, "Underlying");
+            XMLUtils::addChild(doc, underlyingNode, "Name", d.first);
+            XMLUtils::addChild(doc, underlyingNode, "Weight", d.second);
+        }
+    }
+    return node;
+}
+
+// Credit
+void CreditReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    XMLNode* innerNode = XMLUtils::getChildNode(node, "CreditReferenceData");
+    QL_REQUIRE(innerNode, "No CreditReferenceData node");
+
+    creditData_.name = XMLUtils::getChildValue(innerNode, "Name", true);
+    creditData_.group = XMLUtils::getChildValue(innerNode, "Group", false);
+    creditData_.successor = XMLUtils::getChildValue(innerNode, "Successor", false);
+    creditData_.predecessor = XMLUtils::getChildValue(innerNode, "Predecessor", false);
+    creditData_.successorImplementationDate =
+        parseDate(XMLUtils::getChildValue(innerNode, "SuccessorImplementationDate", false));
+    creditData_.predecessorImplementationDate =
+        parseDate(XMLUtils::getChildValue(innerNode, "PredecessorImplementationDate", false));
+}
+
+XMLNode* CreditReferenceDatum::toXML(XMLDocument& doc) {
+    XMLNode* node = ReferenceDatum::toXML(doc);
+    XMLNode* creditNode = doc.allocNode("CreditReferenceData");
+    XMLUtils::appendNode(node, creditNode);
+    XMLUtils::addChild(doc, creditNode, "Name", creditData_.name);
+    XMLUtils::addChild(doc, creditNode, "Group", creditData_.group);
+    XMLUtils::addChild(doc, creditNode, "Successor", creditData_.successor);
+    XMLUtils::addChild(doc, creditNode, "Predecessor", creditData_.predecessor);
+    if (creditData_.successorImplementationDate != Date())
+        XMLUtils::addChild(doc, creditNode, "SuccessorImplementationDate",
+                           to_string(creditData_.successorImplementationDate));
+    if (creditData_.predecessorImplementationDate != Date())
+        XMLUtils::addChild(doc, creditNode, "PredecessorImplementationDate",
+                           to_string(creditData_.predecessorImplementationDate));
+    return node;
+}
+
+ReferenceDatumRegister<ReferenceDatumBuilder<CreditReferenceDatum>> CreditReferenceDatum::reg_(TYPE);
+
+// Equity
+void EquityReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    XMLNode* innerNode = XMLUtils::getChildNode(node, "EquityReferenceData");
+    QL_REQUIRE(innerNode, "No EquityReferenceData node");
+
+    equityData_.equityId = XMLUtils::getChildValue(innerNode, "EquityId", true);
+    equityData_.equityName = XMLUtils::getChildValue(innerNode, "EquityName", true);
+    equityData_.currency = XMLUtils::getChildValue(innerNode, "Currency", true);
+    equityData_.scalingFactor = XMLUtils::getChildValueAsInt(innerNode, "ScalingFactor", true);
+    equityData_.exchangeCode = XMLUtils::getChildValue(innerNode, "ExchangeCode", true);
+    equityData_.isIndex = XMLUtils::getChildValueAsBool(innerNode, "IsIndex", true);
+    equityData_.equityStartDate = parseDate(XMLUtils::getChildValue(innerNode, "EquityStartDate", true));
+    equityData_.proxyIdentifier = XMLUtils::getChildValue(innerNode, "ProxyIdentifier", true);
+    equityData_.simmBucket = XMLUtils::getChildValue(innerNode, "SimmBucket", true);
+    equityData_.crifQualifier = XMLUtils::getChildValue(innerNode, "CrifQualifier", true);
+    equityData_.proxyVolatilityId = XMLUtils::getChildValue(innerNode, "ProxyVolatilityId", true);
+}
+
+XMLNode* EquityReferenceDatum::toXML(ore::data::XMLDocument& doc) {
+    XMLNode* node = ReferenceDatum::toXML(doc);
+    XMLNode* equityNode = doc.allocNode("EquityReferenceData");
+    XMLUtils::appendNode(node, equityNode);
+    XMLUtils::addChild(doc, equityNode, "EquityId", equityData_.equityId);
+    XMLUtils::addChild(doc, equityNode, "EquityName", equityData_.equityName);
+    XMLUtils::addChild(doc, equityNode, "Currency", equityData_.currency);
+    XMLUtils::addChild(doc, equityNode, "ScalingFactor", int(equityData_.scalingFactor));
+    XMLUtils::addChild(doc, equityNode, "ExchangeCode", equityData_.exchangeCode);
+    XMLUtils::addChild(doc, equityNode, "IsIndex", equityData_.isIndex);
+    XMLUtils::addChild(doc, equityNode, "EquityStartDate", to_string(equityData_.equityStartDate));
+    XMLUtils::addChild(doc, equityNode, "ProxyIdentifier", equityData_.proxyIdentifier);
+    XMLUtils::addChild(doc, equityNode, "SimmBucket", equityData_.simmBucket);
+    XMLUtils::addChild(doc, equityNode, "CrifQualifier", equityData_.crifQualifier);
+    XMLUtils::addChild(doc, equityNode, "ProxyVolatilityId", equityData_.proxyVolatilityId);
+    return node;
+}
+
+ReferenceDatumRegister<ReferenceDatumBuilder<EquityReferenceDatum>> EquityReferenceDatum::reg_(TYPE);
+
+// Bond Basket
+void BondBasketReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    XMLNode* b = XMLUtils::getChildNode(node, "BondBasketData");
+    QL_REQUIRE(b, "No BondBasketData node");
+    underlyingData_.clear();
+    auto c = XMLUtils::getChildrenNodes(b, "Underlying");
+    for (auto const n : c) {
+        underlyingData_.push_back(BondUnderlying());
+        underlyingData_.back().fromXML(n);
+    }
+}
+
+XMLNode* BondBasketReferenceDatum::toXML(ore::data::XMLDocument& doc) {
+    XMLNode* res = ReferenceDatum::toXML(doc);
+    XMLNode* node = doc.allocNode("BondBasketData");
+    XMLUtils::appendNode(res, node);
+    for (auto& u : underlyingData_) {
+        XMLUtils::appendNode(node, u.toXML(doc));
+    }
+    return res;
+}
+
+ReferenceDatumRegister<ReferenceDatumBuilder<BondBasketReferenceDatum>> BondBasketReferenceDatum::reg_(TYPE);
+    
 // BasicReferenceDataManager
 
 void BasicReferenceDataManager::fromXML(XMLNode* node) {

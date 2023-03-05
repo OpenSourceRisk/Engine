@@ -46,6 +46,8 @@ namespace data {
     \ingroup builders
  */
 class EuropeanSwaptionEngineBuilder : public CachingPricingEngineBuilder<string, const string&> {
+    ORE_REGISTER_ENGINE_BUILDER(EuropeanSwaptionEngineBuilder)
+
 public:
     EuropeanSwaptionEngineBuilder()
         : CachingEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngine", {"EuropeanSwaption"}) {}
@@ -94,6 +96,8 @@ protected:
 /*! \ingroup builders
  */
 class LGMGridBermudanSwaptionEngineBuilder : public LGMBermudanSwaptionEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(LGMGridBermudanSwaptionEngineBuilder)
+
 public:
     LGMGridBermudanSwaptionEngineBuilder() : LGMBermudanSwaptionEngineBuilder("Grid") {}
 
@@ -115,6 +119,7 @@ protected:
 /*! \ingroup portfolio
  */
 class LgmMcBermudanSwaptionEngineBuilder : public LGMBermudanSwaptionEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(LgmMcBermudanSwaptionEngineBuilder)
 public:
     LgmMcBermudanSwaptionEngineBuilder() : LGMBermudanSwaptionEngineBuilder("MC") {}
 
@@ -134,6 +139,7 @@ protected:
 
 // Implementation of BermudanSwaptionEngineBuilder for external cam, with additional simulation dates (AMC)
 class LgmAmcBermudanSwaptionEngineBuilder : public BermudanSwaptionEngineBuilder {
+    ORE_REGISTER_AMC_ENGINE_BUILDER(LgmAmcBermudanSwaptionEngineBuilder)
 public:
     LgmAmcBermudanSwaptionEngineBuilder(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                         const std::vector<Date>& simulationDates)

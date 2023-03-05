@@ -163,9 +163,13 @@ public:
     const vector<Period>& spreadSensitivityGrid() { return cvaSpreadSensiGrid_; }
     
     //! Return list of Trade IDs in the portfolio
-    const vector<string>& tradeIds() { return cube_->ids(); }
+    const std::map<string, Size> tradeIds() {
+        return cube()->idsAndIndexes();
+    }
     //! Return list of netting set IDs in the portfolio
-    const vector<string>& nettingSetIds() { return netCube()->ids(); }
+    const std::map<string, Size> nettingSetIds() {
+        return netCube()->idsAndIndexes();
+    }
     //! Return the map of counterparty Ids
     const map<string, string>& counterpartyId() { return nettedExposureCalculator_->counterpartyMap(); }
 

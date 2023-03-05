@@ -146,6 +146,12 @@ The Indexings node contains the following elements:
 
   Allowable values: any number
 
+\item InitialNotionalFixing [Optional]: If given the index fixing value to apply on the fixing date of the first
+  notional exchange flow. This is used in non-deliverable XCCY swaps. If not given the value is read from the relevant
+  fixing history.
+
+  Allowable values: any number
+
 \item ValuationSchedule [Optional]: If given the schedule from which the fixing dates are deduced. If not given, it
   defaults to the original leg's schedule.
 

@@ -44,8 +44,8 @@
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
-      <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="flipViewXVA">N</Parameter>
@@ -53,8 +53,8 @@
       <Parameter name="flipViewLendingCurvePostfix">_LEND</Parameter>
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
-      <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="scenarioFile">scenariodata.dat</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="quantile">0.95</Parameter>

@@ -31,6 +31,8 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<FxDigitalOption>> FxDigitalOption::reg_("FxDigitalOption");
+
 void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Only European Vanilla supported for now
@@ -101,6 +103,12 @@ void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Digital");  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 void FxDigitalOption::fromXML(XMLNode* node) {

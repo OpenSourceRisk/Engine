@@ -29,6 +29,8 @@
 #include <boost/unordered_set.hpp>
 
 #include <string>
+#include <thread>
+#include <set>
 
 namespace ore {
 namespace data {
@@ -57,6 +59,9 @@ public:
     //! unregister a Progress Indicator
     void unregisterProgressIndicator(const boost::shared_ptr<ProgressIndicator>& indicator);
 
+    //! unregister all progress indicators
+    void unregisterAllProgressIndicators();
+
     //! update progress
     void updateProgress(const unsigned long progress, const unsigned long total);
 
@@ -64,10 +69,10 @@ public:
     void resetProgress();
 
     //! return progress indicators
-    const boost::unordered_set<boost::shared_ptr<ProgressIndicator>>& progressIndicators() const { return indicators_; }
+    const std::set<boost::shared_ptr<ProgressIndicator>>& progressIndicators() const { return indicators_; }
 
 private:
-    boost::unordered_set<boost::shared_ptr<ProgressIndicator>> indicators_;
+    std::set<boost::shared_ptr<ProgressIndicator>> indicators_;
 };
 
 //! Simple Progress Bar
@@ -97,7 +102,7 @@ private:
  */
 class ProgressLog : public ProgressIndicator {
 public:
-    ProgressLog(const std::string& message, const unsigned int numberOfMessages = 100);
+    ProgressLog(const std::string& message, const unsigned int numberOfMessages = 100, const int logLevel = ORE_DEBUG);
 
     //! ProgressIndicator interface
     void updateProgress(const unsigned long progress, const unsigned long total) override;
@@ -105,7 +110,9 @@ public:
 
 private:
     std::string message_;
-    unsigned int numberOfMessages_, messageCounter_;
+    unsigned int numberOfMessages_;
+    int logLevel_;
+    unsigned int messageCounter_;
 };
 
 /*! Progress Bar just writes the given message and flushes */
@@ -116,6 +123,19 @@ public:
     /*! ProgressIndicator interface */
     void updateProgress(const unsigned long progress, const unsigned long total) override {}
     void reset() override {}
+};
+
+/*! Progress Manager that consolidates updates from multiple threads */
+class MultiThreadedProgressIndicator : public ProgressIndicator {
+public:
+    explicit MultiThreadedProgressIndicator(const std::set<boost::shared_ptr<ProgressIndicator>>& indicators);
+    void updateProgress(const unsigned long progress, const unsigned long total) override;
+    void reset() override;
+
+private:
+    mutable boost::shared_mutex mutex_;
+    std::set<boost::shared_ptr<ProgressIndicator>> indicators_;
+    std::map<std::thread::id, std::pair<unsigned long, unsigned long>> threadData_;
 };
 
 } // namespace data

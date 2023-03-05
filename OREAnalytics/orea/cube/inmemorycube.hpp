@@ -29,9 +29,8 @@
 #include <ql/errors.hpp>
 
 #include <boost/make_shared.hpp>
-#include <boost/serialization/vector.hpp>
 #include <orea/cube/npvcube.hpp>
-#include <ored/utilities/serializationdate.hpp>
+#include <set>
 
 namespace ore {
 namespace analytics {
@@ -51,47 +50,30 @@ using std::vector;
 template <typename T> class InMemoryCubeBase : public NPVCube {
 public:
     //! default ctor
-    InMemoryCubeBase(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples,
+    InMemoryCubeBase(const Date& asof, const std::set<std::string>& ids, const vector<Date>& dates, Size samples,
                      const T& t = T())
-        : asof_(asof), ids_(ids), dates_(dates), samples_(samples), t0Data_(ids.size(), t),
+        : asof_(asof), dates_(dates), samples_(samples), t0Data_(ids.size(), t),
           data_(ids.size(), vector<vector<T>>(dates.size(), vector<T>(samples, t))) {
         QL_REQUIRE(ids.size() > 0, "InMemoryCube::InMemoryCube no ids specified");
         QL_REQUIRE(dates.size() > 0, "InMemoryCube::InMemoryCube no dates specified");
         QL_REQUIRE(samples > 0, "InMemoryCube::InMemoryCube samples must be > 0");
-    }
-    //! construct from file
-    InMemoryCubeBase(const std::string& fileName) {
-        load(fileName);
-        QL_REQUIRE(numIds() > 0 && numDates() > 0 && samples() > 0,
-                   "InMemoryCube::InMemoryCube failed to load from file " << fileName);
+        size_t pos = 0;
+        for (const auto& id : ids) {
+            idIdx_[id] = pos++;
+        }
+        
     }
 
     //! default constructor
     InMemoryCubeBase() {}
 
-    //! load cube from an archive
-    void load(const std::string& fileName) override {
-        std::ifstream ifs(fileName.c_str(), std::fstream::binary);
-        QL_REQUIRE(ifs.is_open(), "error opening file " << fileName);
-        boost::archive::binary_iarchive ia(ifs);
-        ia >> *this;
-    }
-
-    //! write cube to an archive
-    void save(const std::string& fileName) const override {
-        std::ofstream ofs(fileName.c_str(), std::fstream::binary);
-        QL_REQUIRE(ofs.is_open(), "error opening file " << fileName);
-        boost::archive::binary_oarchive oa(ofs);
-        oa << *this;
-    }
-
     //! Return the length of each dimension
-    Size numIds() const override { return ids_.size(); }
+    Size numIds() const override { return idIdx_.size(); }
     Size numDates() const override { return dates_.size(); }
     virtual Size samples() const override { return samples_; }
 
-    //! Get the vector of ids for this cube
-    const std::vector<std::string>& ids() const override { return ids_; }
+    //! Return a map of all ids and their position in the cube
+    const std::map<std::string, Size>& idsAndIndexes() const override { return idIdx_; }
     //! Get the vector of dates for this cube
     const std::vector<QuantLib::Date>& dates() const override { return dates_; }
 
@@ -106,26 +88,13 @@ protected:
         QL_REQUIRE(d < depth(), "Out of bounds on depth (d=" << d << ", depth=" << depth() << ")");
     }
 
-private:
-    friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int) {
-        ar& asof_;
-        ar& ids_;
-        ar& dates_;
-        ar& samples_;
-        ar& t0Data_;
-        ar& data_;
-    }
-
-private:
     QuantLib::Date asof_;
-    vector<std::string> ids_;
     vector<QuantLib::Date> dates_;
     Size samples_;
-
-protected:
     vector<T> t0Data_;
     vector<vector<vector<T>>> data_;
+
+    std::map<std::string, Size> idIdx_;
 };
 
 //! InMemoryCube of fixed depth 1
@@ -135,7 +104,7 @@ protected:
 template <typename T> class InMemoryCube1 : public InMemoryCubeBase<T> {
 public:
     //! ctor
-    InMemoryCube1(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples,
+    InMemoryCube1(const Date& asof, const std::set<std::string>& ids, const vector<Date>& dates, Size samples,
                   const T& t = T())
         : InMemoryCubeBase<T>(asof, ids, dates, samples, t) {}
 
@@ -176,7 +145,7 @@ public:
 template <typename T> class InMemoryCubeN : public InMemoryCubeBase<vector<T>> {
 public:
     //! ctor
-    InMemoryCubeN(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples, Size depth,
+    InMemoryCubeN(const Date& asof, const std::set<std::string>& ids, const vector<Date>& dates, Size samples, Size depth,
                   const T& t = T())
         : InMemoryCubeBase<vector<T>>(asof, ids, dates, samples, vector<T>(depth, t)) {}
 

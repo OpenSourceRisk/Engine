@@ -35,6 +35,9 @@ ScenarioWriter::ScenarioWriter(const std::string& filename, const char sep, cons
     open(filename, filemode);
 }
 
+    ScenarioWriter::ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, boost::shared_ptr<ore::data::InMemoryReport> report)
+    : src_(src), report_(report), fp_(nullptr), i_(0), sep_(',') {}
+
 void ScenarioWriter::open(const std::string& filename, const std::string& filemode) {
     fp_ = fopen(filename.c_str(), filemode.c_str());
     QL_REQUIRE(fp_, "Error opening file " << filename << " for scenarios");
@@ -53,6 +56,8 @@ void ScenarioWriter::close() {
         fclose(fp_);
         fp_ = nullptr;
     }
+    if (report_)
+        report_->end();
 }
 
 boost::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
@@ -63,11 +68,11 @@ boost::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
 }
 
 void ScenarioWriter::writeScenario(boost::shared_ptr<Scenario>& s, const bool writeHeader) {
+    const Date d = s->asof();
+    // take a copy of the keys here to ensure the order is preserved
+    keys_ = s->keys();
+    std::sort(keys_.begin(), keys_.end());
     if (fp_) {
-        const Date d = s->asof();
-        // take a copy of the keys here to ensure the order is preserved
-        keys_ = s->keys();
-        std::sort(keys_.begin(), keys_.end());
         if (writeHeader) {
             QL_REQUIRE(keys_.size() > 0, "No keys in scenario");
             fprintf(fp_, "Date%cScenario%cNumeraire%c%s", sep_, sep_, sep_, to_string(keys_[0]).c_str());
@@ -86,6 +91,27 @@ void ScenarioWriter::writeScenario(boost::shared_ptr<Scenario>& s, const bool wr
             fprintf(fp_, "%c%.8f", sep_, s->get(k));
         fprintf(fp_, "\n");
         fflush(fp_);
+    }
+
+    if (report_) {
+        if (writeHeader) {
+            QL_REQUIRE(keys_.size() > 0, "No keys in scenario");
+            report_->addColumn("Date", string());
+            report_->addColumn("Scenario", Size());
+            report_->addColumn("Numeraire", double(), 8);
+            for (Size i = 0; i < keys_.size(); i++)
+                report_->addColumn(to_string(keys_[i]), double(), 8);
+            // set the first date, this will bump i_ to 1 below
+            firstDate_ = d;
+        }
+        if (d == firstDate_)
+            i_++;
+        report_->next();
+        report_->add(to_string(d));
+        report_->add(i_);
+        report_->add(s->getNumeraire());
+        for (auto k : keys_)
+            report_->add(s->get(k));
     }
 }
 

@@ -91,8 +91,13 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
 
     // overwrite samples with environment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES
     if (auto c = getenv("OVERWRITE_SCENARIOGENERATOR_SAMPLES")) {
-        samples_ = std::stol(c);
-        LOG("Overwrite samples with " << samples_ << " from environment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES");
+        try {
+            samples_ = std::stol(c);
+        } catch (const std::exception& e) {
+            WLOG("enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES is set ("
+                 << c << ") but can not be parsed to a number - ignoring.");
+        }
+        LOG("Overwrite samples with " << samples_ << " from environment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES")
     }
 
     if (auto n = XMLUtils::getChildNode(node, "Ordering"))

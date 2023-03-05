@@ -35,6 +35,9 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveId, const string& curv
     : CurveConfig(curveId, curveDescription), currency_(currency), configs_(configs) {
     populateQuotes();
     populateRequiredCurveIds();
+    // ensure priority in config is consistent to the key used in the map
+    for (auto& c : configs_)
+        c.second.priority() = c.first;
 }
 
 void DefaultCurveConfig::populateRequiredCurveIds(const std::string& discountCurveID,

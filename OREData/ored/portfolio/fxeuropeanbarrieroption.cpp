@@ -38,6 +38,8 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<FxEuropeanBarrierOption>> FxEuropeanBarrierOption::reg_("FxEuropeanBarrierOption");
+
 void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     const boost::shared_ptr<Market> market = engineFactory->market();
@@ -309,6 +311,13 @@ void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engi
     additionalData_["soldAmount"] = soldAmount_;
     if (!fxIndex_.empty())
         additionalData_["FXIndex"] = fxIndex_;
+
+    // ISDA taxonomy
+   // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Barrier");  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 void FxEuropeanBarrierOption::fromXML(XMLNode* node) {

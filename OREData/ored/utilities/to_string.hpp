@@ -56,6 +56,38 @@ std::string to_string(bool aBool);
 */
 std::string to_string(const QuantLib::Period& period);
 
+//! Convert vector to std::string
+/*!
+  Returns a vector into a single string, with elemenst separated by Period as a string as up to QuantLib 1.25, e.g. 13M is written as 1Y1M etc.
+
+  \ingroup utilities
+*/
+template <class T>  std::string to_string(const std::vector<T>& vec, const std::string& sep = ",") {
+    std::ostringstream oss;
+    for (Size i = 0; i < vec.size(); ++i) {
+        oss << vec[i];
+        if (i < vec.size() - 1)
+            oss << sep;
+    }
+    return oss.str();    
+}
+
+//! Convert set to std::string
+/*!
+  \ingroup utilities
+*/
+template <class T>  std::string to_string(const std::set<T>& set, const std::string& sep = ",") {
+    std::ostringstream oss;
+    Size count = 1;
+    for (auto s: set) {
+        oss << s;
+        if (count < set.size())
+            oss << sep;
+        count++;
+    }
+    return oss.str();    
+}
+
 //! Convert type to std::string
 /*!
   Utility to give to_string() interface to classes and enums that have ostream<< operators defined.

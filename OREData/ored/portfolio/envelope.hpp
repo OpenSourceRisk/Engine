@@ -27,6 +27,7 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
+#include <boost/any.hpp>
 #include <set>
 #include <ored/portfolio/nettingsetdetails.hpp>
 
@@ -62,19 +63,26 @@ public:
 
     //! Constructor without netting set / portfolio ids, with additional fields
     Envelope(const string& counterparty, const map<string, string>& additionalFields)
-        : counterparty_(counterparty), nettingSetDetails_(NettingSetDetails()), additionalFields_(additionalFields) {}
+        : counterparty_(counterparty), nettingSetDetails_(NettingSetDetails()) {
+        for (const auto& addField : additionalFields)
+            additionalFields_[addField.first] = addField.second;
+    }
 
     //! Constructor with netting set, with additional fields
     Envelope(const string& counterparty, const string& nettingSetId, const map<string, string>& additionalFields,
              const set<string>& portfolioIds = set<string>())
-        : counterparty_(counterparty), nettingSetDetails_(NettingSetDetails(nettingSetId)), portfolioIds_(portfolioIds),
-          additionalFields_(additionalFields) {}
+        : counterparty_(counterparty), nettingSetDetails_(NettingSetDetails(nettingSetId)), portfolioIds_(portfolioIds) {
+        for (const auto& addField : additionalFields)
+            additionalFields_[addField.first] = addField.second;
+    }
 
     //! Constructor with netting set details, with additional fields
     Envelope(const string& counterparty, const NettingSetDetails& nettingSetDetails,
              const map<string, string>& additionalFields, const set<string>& portfolioIds = set<string>())
-        : counterparty_(counterparty), nettingSetDetails_(nettingSetDetails), portfolioIds_(portfolioIds),
-          additionalFields_(additionalFields) {}
+        : counterparty_(counterparty), nettingSetDetails_(nettingSetDetails), portfolioIds_(portfolioIds) {
+        for (const auto& addField : additionalFields)
+            additionalFields_[addField.first] = addField.second;
+    }
 
     //! \name Serialisation
     //@{
@@ -88,7 +96,14 @@ public:
     const string& nettingSetId() const { return nettingSetDetails_.nettingSetId(); }
     const NettingSetDetails nettingSetDetails() { return nettingSetDetails_; }
     const set<string>& portfolioIds() const { return portfolioIds_; }
-    const map<string, string>& additionalFields() const { return additionalFields_; }
+    const map<string, string> additionalFields() const {
+        map<string, string> stringAddFields;
+        for (const auto& f : additionalFields_)
+            if (f.second.type() == typeid(string))
+                stringAddFields[f.first] = boost::any_cast<string>(f.second);
+        return stringAddFields;
+    }
+    const map<string, boost::any>& fullAdditionalFields() const { return additionalFields_; }
     //@}
 
     //! \name Utility
@@ -103,7 +118,7 @@ private:
     string counterparty_;
     NettingSetDetails nettingSetDetails_;
     set<string> portfolioIds_;
-    map<string, string> additionalFields_;
+    map<string, boost::any> additionalFields_;
 };
 
 } // namespace data

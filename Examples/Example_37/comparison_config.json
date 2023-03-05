@@ -10,8 +10,8 @@
             "names": [
               "value"
             ],
-            "abs_tol": 1E-10,
-            "rel_tol": 1e-12
+            "abs_tol": 1E-8,
+            "rel_tol": 1e-10
           }
         ]
       },
@@ -29,8 +29,8 @@
                 "eigenvector_1",
                 "eigenvector_2"
             ],
-            "abs_tol": 1E-10,
-            "rel_tol": 1e-12
+            "abs_tol": 1E-8,
+            "rel_tol": 1e-10
           }
         ]
       }

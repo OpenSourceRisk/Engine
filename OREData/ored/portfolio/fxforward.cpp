@@ -30,6 +30,8 @@
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<FxForward>> FxForward::reg_("FxForward");
+
 void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // If you Buy EURUSD forward, then you buy EUR and sell USD.
     // EUR = foreign, USD = Domestic.
@@ -123,6 +125,12 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["boughtCurrency"] = boughtCurrency_;
     additionalData_["soldAmount"] = soldAmount_;
     additionalData_["boughtAmount"] = boughtAmount_;
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string(settlement_ == "Cash" ? "NDF" : "Forward");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 QuantLib::Real FxForward::notional() const {

@@ -27,6 +27,7 @@
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/trade.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <oret/datapaths.hpp>
@@ -129,11 +130,11 @@ BOOST_DATA_TEST_CASE(testAuCpiZcInflationCurve, bdata::make(auCpiTestDates) * bd
     engineData->fromFile(TEST_INPUT_FILE("aucpi_zc/pricingengine.xml"));
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market);
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    portfolio->load(TEST_INPUT_FILE(portfolioFile));
+    portfolio->fromFile(TEST_INPUT_FILE(portfolioFile));
     portfolio->build(factory);
 
     BOOST_CHECK_EQUAL(portfolio->size(), 2);
-    for (const auto& trade : portfolio->trades()) {
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
         BOOST_CHECK_SMALL(trade->instrument()->NPV(), 0.01);
     }
 }

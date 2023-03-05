@@ -57,12 +57,12 @@ RegressionDynamicInitialMarginCalculator::RegressionDynamicInitialMarginCalculat
       localRegressionEvaluations_(localRegressionEvaluations), localRegressionBandWidth_(localRegressionBandWidth) {
     Size dates = cube_->dates().size();
     Size samples = cube_->samples();
-    for (Size i = 0; i < nettingSetIds_.size(); ++i) {
-        regressorArray_[nettingSetIds_[i]] = vector<vector<Array>>(dates, vector<Array>(samples));
-        nettingSetLocalDIM_[nettingSetIds_[i]] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
-        nettingSetZeroOrderDIM_[nettingSetIds_[i]] = vector<Real>(dates, 0.0);
-        nettingSetSimpleDIMh_[nettingSetIds_[i]] = vector<Real>(dates, 0.0);
-        nettingSetSimpleDIMp_[nettingSetIds_[i]] = vector<Real>(dates, 0.0);
+    for (const auto& nettingSetId : nettingSetIds_) {
+        regressorArray_[nettingSetId] = vector<vector<Array>>(dates, vector<Array>(samples));
+        nettingSetLocalDIM_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
+        nettingSetZeroOrderDIM_[nettingSetId] = vector<Real>(dates, 0.0);
+        nettingSetSimpleDIMh_[nettingSetId] = vector<Real>(dates, 0.0);
+        nettingSetSimpleDIMp_[nettingSetId] = vector<Real>(dates, 0.0);
     }
 }
 
@@ -143,10 +143,10 @@ void RegressionDynamicInitialMarginCalculator::build() {
             accumulator_set<double, stats<tag::mean, tag::variance>> accDiff;
             accumulator_set<double, stats<tag::mean>> accOneOverNumeraire;
             for (Size k = 0; k < samples; ++k) {
-                Real numDefault = cubeInterpretation_->getDefaultAggrionScenarioData(
-                    scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
-                Real numCloseOut = cubeInterpretation_->getCloseOutAggrionScenarioData(
-                    scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
+                Real numDefault =
+                    cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::Numeraire, j, k);
+                Real numCloseOut =
+                    cubeInterpretation_->getCloseOutAggregationScenarioData(AggregationScenarioDataType::Numeraire, j, k);
                 Real npvDefault = nettingSetNPV_[n][j][k];
                 Real flow = nettingSetFLOW_[n][j][k];
                 Real npvCloseOut = nettingSetCloseOutNPV_[n][j][k];
@@ -169,10 +169,10 @@ void RegressionDynamicInitialMarginCalculator::build() {
             vector<Real> ry1(samples, 0.0);
             vector<Real> ry2(samples, 0.0);
             for (Size k = 0; k < samples; ++k) {
-                Real numDefault = cubeInterpretation_->getDefaultAggrionScenarioData(
-                    scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
-                Real numCloseOut = cubeInterpretation_->getCloseOutAggrionScenarioData(
-                    scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
+                Real numDefault =
+                    cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::Numeraire, j, k);
+                Real numCloseOut =
+                    cubeInterpretation_->getCloseOutAggregationScenarioData(AggregationScenarioDataType::Numeraire, j, k);
                 Real x = nettingSetNPV_[n][j][k] * numDefault;
                 Real f = nettingSetFLOW_[n][j][k] * numDefault;
                 Real y = nettingSetCloseOutNPV_[n][j][k] * numCloseOut;
@@ -224,8 +224,8 @@ void RegressionDynamicInitialMarginCalculator::build() {
                 // Evaluate regression function to compute DIM for each scenario
                 for (Size k = 0; k < samples; ++k) {
                     // Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
-                    Real numDefault = cubeInterpretation_->getDefaultAggrionScenarioData(
-                        scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
+                    Real numDefault = cubeInterpretation_->getDefaultAggregationScenarioData(
+                        AggregationScenarioDataType::Numeraire, j, k);
                     Array regressor = regressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
                     Real e = ls.eval(regressor, v);
                     if (e < 0.0)
@@ -270,14 +270,14 @@ Array RegressionDynamicInitialMarginCalculator::regressorArray(string nettingSet
             "NPV") // this allows possibility to include NPV as a regressor alongside more fundamental risk factors
             a[i] = nettingSetNPV_[nettingSet][dateIndex][sampleIndex];
         else if (scenarioData_->has(AggregationScenarioDataType::IndexFixing, variable))
-            a[i] = cubeInterpretation_->getDefaultAggrionScenarioData(
-                scenarioData_, AggregationScenarioDataType::IndexFixing, dateIndex, sampleIndex, variable);
+            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::IndexFixing,
+                                                                      dateIndex, sampleIndex, variable);
         else if (scenarioData_->has(AggregationScenarioDataType::FXSpot, variable))
-            a[i] = cubeInterpretation_->getDefaultAggrionScenarioData(
-                scenarioData_, AggregationScenarioDataType::FXSpot, dateIndex, sampleIndex, variable);
+            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::FXSpot, dateIndex,
+                                                                      sampleIndex, variable);
         else if (scenarioData_->has(AggregationScenarioDataType::Generic, variable))
-            a[i] = cubeInterpretation_->getDefaultAggrionScenarioData(
-                scenarioData_, AggregationScenarioDataType::Generic, dateIndex, sampleIndex, variable);
+            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::Generic, dateIndex,
+                                                                      sampleIndex, variable);
         else
             QL_FAIL("scenario data does not provide data for " << variable);
     }
@@ -381,7 +381,7 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
         .addColumn("NettingSet", string())
         .addColumn("Time", Real(), 6);
 
-    for (auto nettingSet : dimCube_->ids()) {
+    for (const auto& [nettingSet, _] : dimCube_->idsAndIndexes()) {
 
         LOG("Export DIM evolution for netting set " << nettingSet);
         for (Size i = 0; i < stopDatesLoop; ++i) {
@@ -421,16 +421,11 @@ void RegressionDynamicInitialMarginCalculator::exportDimRegression(
         LOG("Export DIM by sample for netting set " << nettingSet << " and time step " << timeStep);
 
         Size dates = dimCube_->dates().size();
-        const std::vector<std::string>& ids = dimCube_->ids();
+        const std::map<std::string, Size>& ids = dimCube_->idsAndIndexes();
 
-        int index = -1;
-        for (Size i = 0; i < ids.size(); ++i) {
-            if (ids[i] == nettingSet) {
-                index = i;
-                break;
-            }
-        }
-        QL_REQUIRE(index >= 0, "netting set " << nettingSet << " not found in DIM cube");
+        auto it = ids.find(nettingSet);
+                
+        QL_REQUIRE(it != ids.end(), "netting set " << nettingSet << " not found in DIM cube");
 
         QL_REQUIRE(timeStep < dates - 1, "selected time step " << timeStep << " out of range [0, " << dates - 1 << "]");
 
@@ -438,8 +433,8 @@ void RegressionDynamicInitialMarginCalculator::exportDimRegression(
         vector<Real> numeraires(samples, 0.0);
         for (Size k = 0; k < samples; ++k)
             // numeraires[k] = scenarioData_->get(timeStep, k, AggregationScenarioDataType::Numeraire);
-            numeraires[k] = cubeInterpretation_->getDefaultAggrionScenarioData(
-                scenarioData_, AggregationScenarioDataType::Numeraire, timeStep, k);
+            numeraires[k] =
+                cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::Numeraire, timeStep, k);
 
         auto p = sort_permutation(regressorArray_[nettingSet][timeStep], lessThan);
         vector<Array> reg = apply_permutation(regressorArray_[nettingSet][timeStep], p);

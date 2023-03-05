@@ -21,6 +21,8 @@
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<InflationSwap>> InflationSwap::reg_("InflationSwap");
+
 InflationSwap::InflationSwap(const Envelope& env, const vector<LegData>& legData)
     : Swap(env, legData, "InflationSwap") {}
 
@@ -45,6 +47,15 @@ void InflationSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     checkInflationSwap(legData_);
 
     Swap::build(engineFactory);
+
+    // ISDA taxonomy, override Swap settings Base Product and add Transaction here
+    additionalData_["isdaBaseProduct"] = string("Inflation Swap");
+    auto it1 = legTypeCount_.find("CPI");
+    auto it2 = legTypeCount_.find("YY");
+    if (it1 != legTypeCount_.end())
+        additionalData_["isdaTransaction"] = string("Zero Coupon");  
+    else if (it2 != legTypeCount_.end())
+        additionalData_["isdaTransaction"] = string("Year on Year");  
 }
 
 } // namespace data

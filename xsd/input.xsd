@@ -2,6 +2,7 @@
 
   <xs:include schemaLocation="ore_types.xsd"/>
   <xs:include schemaLocation="instruments.xsd"/>
+  <xs:include schemaLocation="referencedata.xsd"/>
   <xs:include schemaLocation="simulation.xsd"/>
   <xs:include schemaLocation="curveconfig.xsd"/>
   <xs:include schemaLocation="conventions.xsd"/>

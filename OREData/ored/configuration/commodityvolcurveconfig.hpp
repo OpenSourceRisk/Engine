@@ -27,6 +27,7 @@
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/onedimsolverconfig.hpp>
 #include <ored/configuration/volatilityconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 
 namespace ore {
 namespace data {
@@ -65,6 +66,7 @@ public:
     OneDimSolverConfig solverConfig() const;
     const boost::optional<bool>& preferOutOfTheMoney() const;
     const std::string& smileDynamics() const { return smileDynamics_; }
+    const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
     //! \name Serialisation
@@ -88,6 +90,7 @@ private:
     OneDimSolverConfig solverConfig_;
     boost::optional<bool> preferOutOfTheMoney_;
     std::string smileDynamics_;
+    ReportConfig reportConfig_;
 
     //! Populate CurveConfig::quotes_ with the required quotes.
     void populateQuotes();

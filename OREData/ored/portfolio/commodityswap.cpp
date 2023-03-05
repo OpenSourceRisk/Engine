@@ -40,6 +40,8 @@ using std::max;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<CommoditySwap>> CommoditySwap::reg_("CommoditySwap");
+
 void CommoditySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     reset();
@@ -144,6 +146,13 @@ void CommoditySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     boost::shared_ptr<PricingEngine> engine = engineBuilder->engine(parseCurrency(npvCurrency_));
     swap->setPricingEngine(engine);
     instrument_ = boost::make_shared<VanillaInstrument>(swap);
+
+    // ISDA taxonomy, assuming Commodity follows the Equity template
+    additionalData_["isdaAssetClass"] = string("Commodity");
+    additionalData_["isdaBaseProduct"] = string("Swap");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {

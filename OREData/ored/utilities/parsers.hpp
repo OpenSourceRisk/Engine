@@ -530,7 +530,7 @@ string normaliseFxIndex(const std::string& indexName);
 
 enum class MomentType { Variance, Volatility };
 
-//! Convert text to oreplus::data::MomentType
+//! Convert text to ore::data::MomentType
 /*!
 \ingroup utilities
 */

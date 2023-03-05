@@ -35,6 +35,9 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<EquityEuropeanBarrierOption>>
+    EquityEuropeanBarrierOption::reg_("EquityEuropeanBarrierOption");
+
 void EquityEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     const boost::shared_ptr<Market> market = engineFactory->market();
@@ -167,6 +170,13 @@ void EquityEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& 
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = strike_.value();
     additionalData_["strikeCurrency"] = strike_.currency();
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Other");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
 }
 
 void EquityEuropeanBarrierOption::fromXML(XMLNode* node) {

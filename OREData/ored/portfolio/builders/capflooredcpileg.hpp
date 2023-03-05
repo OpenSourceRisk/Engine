@@ -37,6 +37,7 @@ namespace data {
 \ingroup builders
 */
 class CapFlooredCpiLegCouponEngineBuilder : public CachingInflationCouponPricerBuilder<string, const string&> {
+    ORE_REGISTER_ENGINE_BUILDER(CapFlooredCpiLegCouponEngineBuilder)
 public:
     CapFlooredCpiLegCouponEngineBuilder()
         : CachingEngineBuilder("Black", "BlackAnalytic", {"CappedFlooredCpiLegCoupons"}) {}
@@ -69,6 +70,7 @@ protected:
 
 class CapFlooredCpiLegCashFlowEngineBuilder : public CachingInflationCashFlowPricerBuilder<string, const string&> {
 public:
+    ORE_REGISTER_ENGINE_BUILDER(CapFlooredCpiLegCashFlowEngineBuilder)
     CapFlooredCpiLegCashFlowEngineBuilder()
         : CachingEngineBuilder("Black", "BlackAnalytic", {"CappedFlooredCpiLegCashFlows"}) {}
 

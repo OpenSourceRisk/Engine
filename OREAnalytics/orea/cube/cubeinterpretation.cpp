@@ -59,17 +59,16 @@ bool RegularCubeInterpretation::hasMporFlows(const boost::shared_ptr<NPVCube>& c
     return cube->depth() > mporFlowsIdx_;
 }
 
-Real RegularCubeInterpretation::getDefaultAggrionScenarioData(
-    const boost::shared_ptr<AggregationScenarioData>& aggScenData, const AggregationScenarioDataType& dataType,
-    Size dateIdx, Size sampleIdx, const std::string& qualifier) const {
-    return aggScenData->get(dateIdx, sampleIdx, dataType, qualifier);
+Real RegularCubeInterpretation::getDefaultAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx,
+                                                              Size sampleIdx, const std::string& qualifier) const {
+    return aggScenData_->get(dateIdx, sampleIdx, dataType, qualifier);
 }
 
-Real RegularCubeInterpretation::getCloseOutAggrionScenarioData(
-    const boost::shared_ptr<AggregationScenarioData>& aggScenData, const AggregationScenarioDataType& dataType,
-    Size dateIdx, Size sampleIdx, const std::string& qualifier) const {
+Real RegularCubeInterpretation::getCloseOutAggregationScenarioData(const AggregationScenarioDataType& dataType,
+                                                               Size dateIdx, Size sampleIdx,
+                                                               const std::string& qualifier) const {
     Size closeOutDateIdx = dateIdx + 1;
-    return aggScenData->get(closeOutDateIdx, sampleIdx, dataType, qualifier);
+    return aggScenData_->get(closeOutDateIdx, sampleIdx, dataType, qualifier);
 }
 
 Size RegularCubeInterpretation::getMporCalendarDays(const boost::shared_ptr<NPVCube>& cube, Size dateIdx) const {
@@ -93,8 +92,10 @@ Real MporGridCubeInterpretation::getDefaultNpv(const boost::shared_ptr<NPVCube>&
 
 Real MporGridCubeInterpretation::getCloseOutNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
                                                 Size sampleIdx) const {
-    Size closeOutDateIdx = dateIdx; // close-outs stored using depth
-    return getGenericValue(cube, tradeIdx, closeOutDateIdx, sampleIdx, closeOutDateNpvIdx_);
+    // close-outs stored using depth and as non-discounted value!
+    Size closeOutDateIdx = dateIdx;
+    return getGenericValue(cube, tradeIdx, closeOutDateIdx, sampleIdx, closeOutDateNpvIdx_) /
+           getCloseOutAggregationScenarioData(AggregationScenarioDataType::Numeraire, dateIdx, sampleIdx);
 }
 
 Real MporGridCubeInterpretation::getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
@@ -113,18 +114,19 @@ bool MporGridCubeInterpretation::hasMporFlows(const boost::shared_ptr<NPVCube>& 
     return cube->depth() > mporFlowsIdx_;
 }
 
-Real MporGridCubeInterpretation::getDefaultAggrionScenarioData(
-    const boost::shared_ptr<AggregationScenarioData>& aggScenData, const AggregationScenarioDataType& dataType,
-    Size dateIdx, Size sampleIdx, const std::string& qualifier) const {
-    return aggScenData->get(dateIdx, sampleIdx, dataType, qualifier);
+Real MporGridCubeInterpretation::getDefaultAggregationScenarioData(const AggregationScenarioDataType& dataType,
+                                                               Size dateIdx, Size sampleIdx,
+                                                               const std::string& qualifier) const {
+    return aggScenData_->get(dateIdx, sampleIdx, dataType, qualifier);
 }
 
-Real MporGridCubeInterpretation::getCloseOutAggrionScenarioData(
-    const boost::shared_ptr<AggregationScenarioData>& aggScenData, const AggregationScenarioDataType& dataType,
-    Size dateIdx, Size sampleIdx, const std::string& qualifier) const {
+Real MporGridCubeInterpretation::getCloseOutAggregationScenarioData(const AggregationScenarioDataType& dataType,
+                                                                Size dateIdx, Size sampleIdx,
+                                                                const std::string& qualifier) const {
     QL_REQUIRE(dataType == AggregationScenarioDataType::Numeraire,
                "close out aggr scen data only available for numeraire");
-    return 1.0;
+    // this is an approximation
+    return getDefaultAggregationScenarioData(dataType, dateIdx, sampleIdx, qualifier);
 }
 
 Size MporGridCubeInterpretation::getMporCalendarDays(const boost::shared_ptr<NPVCube>& cube, Size dateIdx) const {

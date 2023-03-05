@@ -46,6 +46,9 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/blackvolsurfaceproxy.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
+#include <qle/termstructures/blackdeltautilities.hpp>
+#include <ql/pricingengines/blackformula.hpp>
+#include <qle/models/carrmadanarbitragecheck.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -165,7 +168,7 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
                                      const map<string, boost::shared_ptr<CommodityVolCurve>>& commodityVolCurves,
                                      const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves,
                                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
-                                     const Market* fxIndices) {
+                                     const Market* fxIndices, const bool buildCalibrationInfo) {
 
     try {
         LOG("CommodityVolCurve: start building commodity volatility structure with ID " << spec.curveConfigID());
@@ -260,7 +263,8 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
                 } else {
                     QL_FAIL("CommodityVolCurve: VolatilityConfig must be QuoteBased or a Proxy");
                 }
-
+            if (buildCalibrationInfo)
+                    this->buildVolCalibrationInfo(asof, vc, curveConfigs, config);
             } catch (std::exception& e) {
                 DLOG("CommodityVolCurve: equity vol curve building failed :" << e.what());
             } catch (...) {
@@ -411,7 +415,9 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
         TLOG("Added data point (" << io::iso_date(dates.back()) << "," << fixed << setprecision(9)
                                   << volatilities.back() << ")");
     }
-
+    // set max expiry date (used in buildCalibrationInfo())
+    if (!dates.empty())
+        maxExpiry_ = dates.back();
     DLOG("Creating BlackVarianceCurve object.");
     auto tmp = boost::make_shared<BlackVarianceCurve>(asof, dates, volatilities, dayCounter_);
 
@@ -811,6 +817,9 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
         expiryIdx++;
     }
 
+    // set max expiry date (used in buildCalibrationInfo())
+    maxExpiry_ = *max_element(expiryDates.begin(),expiryDates.end());
+
     // Trace log the surface
     TLOG("Explicit strike surface grid points:");
     TLOG("expiry,strike,volatility");
@@ -1039,6 +1048,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         copy(row.value().second.begin(), row.value().second.end(), vols.row_begin(row.index()));
     }
 
+    maxExpiry_ = *std::max_element(expiryDates.begin(),expiryDates.end());
+
     // Need to multiply each put delta value by -1 before passing it to the BlackVolatilitySurfaceDelta ctor
     // i.e. a put delta of 0.25 that is passed in to the config must be -0.25 when passed to the ctor.
     transform(putDeltas.begin(), putDeltas.end(), putDeltas.begin(), [](Real pd) { return -1.0 * pd; });
@@ -1260,6 +1271,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
             vols[i].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(row.value().second[i])));
         }
     }
+
+    maxExpiry_ = *std::max_element(expiryDates.begin(),expiryDates.end());
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurfaceMoneyness time extrapolation is hard-coded to constant in volatility.
@@ -1711,6 +1724,189 @@ vector<Real> CommodityVolCurve::checkMoneyness(const vector<string>& strMoneynes
 
     return moneynessLevels;
 }
+void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_ptr<VolatilityConfig>& vc,
+                                                const CurveConfigurations& curveConfigs,
+                                                const CommodityVolatilityConfig& config) {
+    DLOG("CommodityVolCurve: building volatility calibration info");
+    try{
+
+        ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigCommVols(), config.reportConfig());
+        bool reportOnDeltaGrid = *rc.reportOnDeltaGrid();
+        bool reportOnMoneynessGrid = *rc.reportOnMoneynessGrid();
+        std::vector<Real> moneyness = *rc.moneyness();
+        std::vector<std::string> deltas = *rc.deltas();
+        std::vector<Period> expiries = *rc.expiries();
+
+
+        auto info = boost::make_shared<FxEqCommVolCalibrationInfo>();
+
+        DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
+        DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Fwd;
+
+        if (auto vdsc = boost::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
+            atmType = parseAtmType(vdsc->atmType());
+            deltaType = parseDeltaType(vdsc->deltaType());
+        }
+
+        info->dayCounter = to_string(dayCounter_);
+        info->calendar = to_string(calendar_).empty() ? "na" : calendar_.name();
+        info->atmType = ore::data::to_string(atmType);
+        info->deltaType = ore::data::to_string(deltaType);
+        info->longTermAtmType = ore::data::to_string(atmType);
+        info->longTermDeltaType = ore::data::to_string(deltaType);
+        info->switchTenor = "na";
+        info->riskReversalInFavorOf = "na";
+        info->butterflyStyle = "na";
+
+        std::vector<Real> times, forwards;
+        for (auto const& p : expiries) {
+            auto d = volatility_->optionDateFromTenor(p);
+            info->expiryDates.push_back(d);
+            times.push_back(volatility_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, d)
+                                                              : volatility_->timeFromReference(d));
+            forwards.push_back(pts_->price(d));
+        }
+
+        info->times = times;
+        info->forwards = forwards;
+        std::vector<std::vector<Real>> callPricesDelta(times.size(), std::vector<Real>(deltas.size(), 0.0));
+        if (reportOnDeltaGrid) {
+            info->deltas = deltas;
+            info->deltaGridStrikes =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            info->deltaGridProb = std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            info->deltaGridImpliedVolatility =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            info->deltaGridCallSpreadArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
+            info->deltaGridButterflyArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
+
+            Real maxTime = QL_MAX_REAL;
+            if (maxExpiry_ != Date()) {
+                if (volatility_->dayCounter().empty())
+                    maxTime = Actual365Fixed().yearFraction(asof, maxExpiry_);
+                else
+                    maxTime = volatility_->timeFromReference(maxExpiry_);
+            }
+
+            DeltaVolQuote::AtmType at;
+            DeltaVolQuote::DeltaType dt;
+            for (Size i = 0; i < times.size(); ++i) {
+                Real t = times[i];
+                at = atmType;
+                dt = deltaType;
+                // for times after the last quoted expiry we use artificial conventions to avoid problems with strike (as in equities)
+                // from delta conversions: we use fwd delta always and ATM DNS
+                if (t > maxTime) {
+                    at = DeltaVolQuote::AtmDeltaNeutral;
+                    dt = DeltaVolQuote::Fwd;
+                }
+                bool validSlice = true;
+                for (Size j = 0; j < deltas.size(); ++j) {
+                    DeltaString d(deltas[j]);
+                    try {
+                        Real strike;
+                        if (d.isAtm()) {
+                            strike =
+                                QuantExt::getAtmStrike(dt, at, pts_->price(asof,true), yts_->discount(t), 1., volatility_, t);
+                        } else if (d.isCall()) {
+                            strike = QuantExt::getStrikeFromDelta(Option::Call, d.delta(), dt, pts_->price(asof,true),
+                                                                  yts_->discount(t), 1., volatility_, t);
+                        } else {
+                            strike = QuantExt::getStrikeFromDelta(Option::Put, d.delta(), dt, pts_->price(asof,true),
+                                                                  yts_->discount(t), 1., volatility_, t);
+                        }
+                        Real stddev = std::sqrt(volatility_->blackVariance(t, strike));
+                        callPricesDelta[i][j] = QuantExt::blackFormula(Option::Call, strike, forwards[i], stddev);
+                        info->deltaGridStrikes[i][j] = strike;
+                        info->deltaGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
+                    } catch (const std::exception& e) {
+                        validSlice = false;
+                        TLOG("CommodityVolCurve: error for time " << t << " delta " << deltas[j] << ": " << e.what());
+                    }
+                }
+                if (validSlice) {
+                    try {
+                        QuantExt::CarrMadanMarginalProbability cm(info->deltaGridStrikes[i], forwards[i],
+                                                                  callPricesDelta[i]);
+                        info->deltaGridCallSpreadArbitrage[i] = cm.callSpreadArbitrage();
+                        info->deltaGridButterflyArbitrage[i] = cm.butterflyArbitrage();
+                        if (!cm.arbitrageFree())
+                            info->isArbitrageFree = false;
+                        info->deltaGridProb[i] = cm.density();
+                        TLOGGERSTREAM(arbitrageAsString(cm));
+                    } catch (const std::exception& e) {
+                        TLOG("error for time " << t << ": " << e.what());
+                        info->isArbitrageFree = false;
+                        TLOGGERSTREAM("..(invalid slice)..");
+                    }
+                } else {
+                    info->isArbitrageFree = false;
+                    TLOGGERSTREAM("..(invalid slice)..");
+                }
+            }
+            TLOG("CommodityVolCurve: Delta surface arbitrage analysis completed.");
+        }
+        std::vector<std::vector<Real>> callPricesMoneyness(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+        if (reportOnMoneynessGrid) {
+            info->moneyness = moneyness;
+            info->moneynessGridStrikes =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+            info->moneynessGridProb =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+            info->moneynessGridImpliedVolatility =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+            info->moneynessGridCallSpreadArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
+            info->moneynessGridButterflyArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
+            info->moneynessGridCalendarArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
+            for (Size i = 0; i < times.size(); ++i) {
+                Real t = times[i];
+                for (Size j = 0; j < moneyness.size(); ++j) {
+                    try {
+                        Real strike = moneyness[j] * forwards[i];
+                        info->moneynessGridStrikes[i][j] = strike;
+                        Real stddev = std::sqrt(volatility_->blackVariance(t, strike));
+                        callPricesMoneyness[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
+                        info->moneynessGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
+                    } catch (const std::exception& e) {
+                        TLOG("CommodityVolCurve: error for time " << t << " moneyness " << moneyness[j] << ": " << e.what());
+                    }
+                }
+            }
+            if (!times.empty() && !moneyness.empty()) {
+                try {
+                    QuantExt::CarrMadanSurface cm(times, moneyness, pts_->price(asof,true), forwards,
+                                                  callPricesMoneyness);
+                    for (Size i = 0; i < times.size(); ++i) {
+                        info->moneynessGridProb[i] = cm.timeSlices()[i].density();
+                    }
+                    info->moneynessGridCallSpreadArbitrage = cm.callSpreadArbitrage();
+                    info->moneynessGridButterflyArbitrage = cm.butterflyArbitrage();
+                    info->moneynessGridCalendarArbitrage = cm.calendarArbitrage();
+                    if (!cm.arbitrageFree())
+                        info->isArbitrageFree = false;
+                    TLOG("CommodityVolCurve: Moneyness surface Arbitrage analysis result:");
+                    TLOGGERSTREAM(arbitrageAsString(cm));
+                } catch (const std::exception& e) {
+                    TLOG("CommodityVolCurve: error: " << e.what());
+                    info->isArbitrageFree = false;
+                }
+                TLOG("CommodityVolCurve: Moneyness surface Arbitrage analysis completed:");
+            }
+        }
+    calibrationInfo_ = info;
+    }
+    catch (std::exception& e){
+        QL_FAIL("CommodityVolCurve: calibration info building failed: " << e.what());
+    } catch (...) {
+        QL_FAIL("CommodityVolCurve:  calibration info building failed: unknown error");
+    }
+    }
+
 
 } // namespace data
 } // namespace ore

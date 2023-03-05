@@ -55,6 +55,8 @@ protected:
     \ingroup builders
 */
 class SwapEngineBuilder : public SwapEngineBuilderBase {
+    ORE_REGISTER_ENGINE_BUILDER(SwapEngineBuilder);
+
 public:
     SwapEngineBuilder() : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngine") {}
 
@@ -71,6 +73,8 @@ protected:
     \ingroup builders
 */
 class SwapEngineBuilderOptimised : public SwapEngineBuilderBase {
+    ORE_REGISTER_ENGINE_BUILDER(SwapEngineBuilderOptimised);
+
 public:
     SwapEngineBuilderOptimised() : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngineOptimised") {}
 
@@ -105,6 +109,8 @@ protected:
 
 //! Discounted Cashflows Engine Builder for Cross Currency Swaps
 class CrossCurrencySwapEngineBuilder : public CrossCurrencySwapEngineBuilderBase {
+    ORE_REGISTER_ENGINE_BUILDER(CrossCurrencySwapEngineBuilder)
+
 public:
     CrossCurrencySwapEngineBuilder()
         : CrossCurrencySwapEngineBuilderBase("DiscountedCashflows", "DiscountingCrossCurrencySwapEngine") {}
@@ -132,6 +138,8 @@ protected:
 /*! \ingroup portfolio
  */
 class CamAmcSwapEngineBuilder : public SwapEngineBuilderBase {
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcSwapEngineBuilder)
+
 public:
     CamAmcSwapEngineBuilder(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
                             const std::vector<Date>& simulationDates)

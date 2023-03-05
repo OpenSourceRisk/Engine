@@ -69,6 +69,8 @@ bool Mauritius::SemImpl::isBusinessDay(const Date& date) const {
     else if (y == 2023){
         if( // New year holiday
             (d == 2 && m == January)
+            // New year holiday
+            || (d == 3 && m == January)
             // Ugaadi
             || (d == 22 && m == March )
             // Labour day

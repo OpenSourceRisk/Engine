@@ -39,21 +39,17 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
                      const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                      const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
                      const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
-                     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
-                     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
                      const boost::shared_ptr<ReferenceDataManager>& referenceData,
                      const IborFallbackConfig& iborFallbackConfig, Real dimQuantile, Size dimHorizonCalendarDays,
                      map<string, bool> analytics, string calculationType, string dvaName, string fvaBorrowingCurve,
                      string fvaLendingCurve, bool fullInitialCollateralisation, bool storeFlows)
     : asof_(asof), baseCurrency_(baseCurrency), portfolio_(portfolio), netting_(netting), engineData_(engineData),
-      curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
-      simMarketData_(simMarketData), scenarioGeneratorData_(scenarioGeneratorData),
-      crossAssetModelData_(crossAssetModelData), extraLegBuilders_(extraLegBuilders),
-      extraEngineBuilders_(extraEngineBuilders), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
-      dimQuantile_(dimQuantile), dimHorizonCalendarDays_(dimHorizonCalendarDays), analytics_(analytics),
-      inputCalculationType_(calculationType), dvaName_(dvaName), fvaBorrowingCurve_(fvaBorrowingCurve),
-      fvaLendingCurve_(fvaLendingCurve), fullInitialCollateralisation_(fullInitialCollateralisation),
-      storeFlows_(storeFlows) {
+      curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), simMarketData_(simMarketData),
+      scenarioGeneratorData_(scenarioGeneratorData), crossAssetModelData_(crossAssetModelData),
+      referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), dimQuantile_(dimQuantile),
+      dimHorizonCalendarDays_(dimHorizonCalendarDays), analytics_(analytics), inputCalculationType_(calculationType),
+      dvaName_(dvaName), fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve),
+      fullInitialCollateralisation_(fullInitialCollateralisation), storeFlows_(storeFlows) {
 
     if (analytics_.size() == 0) {
         WLOG("post processor analytics not set, using defaults");
@@ -88,7 +84,7 @@ void XvaRunner::buildCamModel(const boost::shared_ptr<ore::data::Market>& market
     CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, Market::defaultConfiguration,
                                         Market::defaultConfiguration, Market::defaultConfiguration,
                                         Market::defaultConfiguration, Market::defaultConfiguration,
-                                        Market::defaultConfiguration, ActualActual(ActualActual::ISDA), false, continueOnErr);
+                                        Market::defaultConfiguration, false, continueOnErr);
     model_ = *modelBuilder.model();
 }
 
@@ -139,9 +135,6 @@ void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& marke
                                                        iborFallbackConfig_, false);
     simMarket_->scenarioGenerator() = sg;
 
-    for (auto b : extraEngineBuilders_)
-        b->reset();
-
     DLOG("build scenario data");
 
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(
@@ -150,8 +143,8 @@ void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& marke
 
     auto ed = boost::make_shared<EngineData>(*engineData_);
     ed->globalParameters()["RunType"] = "Exposure";
-    simFactory_ = boost::make_shared<EngineFactory>(ed, simMarket_, map<MarketContext, string>(), extraEngineBuilders_,
-                                                    extraLegBuilders_, referenceData_, iborFallbackConfig_);
+    simFactory_ = boost::make_shared<EngineFactory>(ed, simMarket_, map<MarketContext, string>(), referenceData_,
+                                                    iborFallbackConfig_);
 }
 
 void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds, const bool continueOnErr) {
@@ -175,7 +168,7 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
 
     // FIXME why do we need this? portfolio_->reset() is not sufficient to ensure XVA simulation run fast (and this is
     // called before)
-    for (auto const& t : portfolio_->trades()) {
+    for (auto const& [tid, t] : portfolio_->trades()) {
         try {
             t->build(simFactory_);
         } catch (...) {
@@ -193,7 +186,8 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
         // depth 2: NPV and close-out NPV
         cube_ = getNpvCube(asof_, portfolio->ids(), scenarioGeneratorData_->getGrid()->valuationDates(),
                            scenarioGeneratorData_->samples(), 2);
-        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(scenarioGeneratorData_->getGrid());
+        cubeInterpreter_ =
+            boost::make_shared<MporGridCubeInterpretation>(scenarioData_, scenarioGeneratorData_->getGrid());
         // default date value stored at index 0, close-out value at index 1
         calculators.push_back(boost::make_shared<MPORCalculator>(npvCalculator, 0, 1));
         calculationType_ = "NoLag";
@@ -212,7 +206,7 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
             cube_ = getNpvCube(asof_, portfolio->ids(), scenarioGeneratorData_->getGrid()->dates(),
                                scenarioGeneratorData_->samples(), 1);
 
-        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
+        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_);
         calculators.push_back(npvCalculator);
         calculationType_ = inputCalculationType_;
     }
@@ -277,15 +271,15 @@ boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(
     return dimCalculator;
 }
 
-std::vector<std::string> XvaRunner::getNettingSetIds(const boost::shared_ptr<Portfolio>& portfolio) const {
+std::set<std::string> XvaRunner::getNettingSetIds(const boost::shared_ptr<Portfolio>& portfolio) const {
     // collect netting set ids from portfolio
     std::set<std::string> nettingSetIds;
-    for (auto const& t : portfolio == nullptr ? portfolio_->trades() : portfolio->trades())
-        nettingSetIds.insert(t->envelope().nettingSetId());
-    return std::vector<std::string>(nettingSetIds.begin(), nettingSetIds.end());
+    for (auto const& [tradeId,trade] : portfolio == nullptr ? portfolio_->trades() : portfolio->trades())
+        nettingSetIds.insert(trade->envelope().nettingSetId());
+    return nettingSetIds;
 }
 
-boost::shared_ptr<NPVCube> XvaRunner::getNpvCube(const Date& asof, const std::vector<std::string>& ids,
+boost::shared_ptr<NPVCube> XvaRunner::getNpvCube(const Date& asof, const std::set<std::string>& ids,
                                                  const std::vector<Date>& dates, const Size samples,
                                                  const Size depth) const {
     if (depth == 1) {

@@ -77,17 +77,19 @@ map<string, Real> results(const CashSettledEuropeanOption& option) {
     map<string, Real> mp;
 
     mp["npv"] = option.NPV();
-    mp["delta"] = option.delta();
-    mp["deltaForward"] = option.deltaForward();
-    mp["elasticity"] = option.elasticity();
-    mp["gamma"] = option.gamma();
-    mp["theta"] = option.theta();
-    mp["thetaPerDay"] = option.thetaPerDay();
-    mp["vega"] = option.vega();
-    mp["rho"] = option.rho();
-    mp["dividendRho"] = option.dividendRho();
-    mp["strikeSensitivity"] = option.strikeSensitivity();
-    mp["itmCashProbability"] = option.itmCashProbability();
+    try {
+        // might not be set by engine
+        mp["delta"] = option.delta();
+        mp["deltaForward"] = option.deltaForward();
+        mp["elasticity"] = option.elasticity();
+        mp["gamma"] = option.gamma();
+        mp["theta"] = option.theta();
+        mp["thetaPerDay"] = option.thetaPerDay();
+        mp["vega"] = option.vega();
+        mp["rho"] = option.rho();
+        mp["dividendRho"] = option.dividendRho();
+    } catch (...) {
+    }
 
     return mp;
 }

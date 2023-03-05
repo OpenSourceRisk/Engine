@@ -1,0 +1,18 @@
+<PricingEngines>
+  <Product type="IndexCreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointIndexCdsEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Curve">Underlying</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="IndexCreditDefaultSwapOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackIndexCdsOptionEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Curve">Underlying</Parameter>
+    </EngineParameters>
+  </Product>
+</PricingEngines>
