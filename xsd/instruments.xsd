@@ -320,6 +320,7 @@
       <xs:element type="xs:string" name="Settlement" minOccurs="0"/>
       <xs:element type="xs:float" name="Amount" minOccurs="0"/>
       <xs:element type="xs:float" name="LockRate" minOccurs="0"/>
+	  <xs:element type="xs:float" name="dv01" minOccurs="0"/>
       <xs:element type="xs:string" name="LockRateDayCounter" minOccurs="0"/>
       <xs:element type="xs:string" name="SettlementDirty" minOccurs="0"/>
     </xs:all>
