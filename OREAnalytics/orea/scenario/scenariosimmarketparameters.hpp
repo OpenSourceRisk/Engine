@@ -87,12 +87,14 @@ public:
     vector<string> swapVolKeys() const { return paramsLookup(RiskFactorKey::KeyType::SwaptionVolatility); }
     const string& swapVolDecayMode() const { return swapVolDecayMode_; }
     const vector<Real>& swapVolStrikeSpreads(const string& key) const;
+    const string& swapVolSmileDynamics(const string& key) const;
 
     bool simulateYieldVols() const { return paramsSimulate(RiskFactorKey::KeyType::YieldVolatility); }
     const vector<Period>& yieldVolTerms() const { return yieldVolTerms_; }
     const vector<Period>& yieldVolExpiries() const { return yieldVolExpiries_; }
     vector<string> yieldVolNames() const { return paramsLookup(RiskFactorKey::KeyType::YieldVolatility); }
     const string& yieldVolDecayMode() const { return yieldVolDecayMode_; }
+    const string& yieldVolSmileDynamics(const string& key) const;
 
     bool simulateCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::OptionletVolatility); }
     vector<string> capFloorVolKeys() const { return paramsLookup(RiskFactorKey::KeyType::OptionletVolatility); }
@@ -110,6 +112,7 @@ public:
         volatility structure at the configured expiries. Otherwise, use the index forward rate.
     */
     bool capFloorVolUseCapAtm() const { return capFloorVolUseCapAtm_; }
+    const string& capFloorVolSmileDynamics(const string& key) const;
 
     bool simulateYoYInflationCapFloorVols() const {
         return paramsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility);
@@ -123,6 +126,7 @@ public:
     }
     const vector<Real>& yoyInflationCapFloorVolStrikes(const std::string& key) const;
     const string& yoyInflationCapFloorVolDecayMode() const { return yoyInflationCapFloorVolDecayMode_; }
+    const string& yoyInflationCapFloorVolSmileDynamics(const string& key) const;
 
     bool simulateZeroInflationCapFloorVols() const {
         return paramsSimulate(RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility);
@@ -136,6 +140,7 @@ public:
     }
     const vector<Real>& zeroInflationCapFloorVolStrikes(const string& key) const;
     const string& zeroInflationCapFloorVolDecayMode() const { return zeroInflationCapFloorVolDecayMode_; }
+    const string& zeroInflationCapFloorVolSmileDynamics(const string& key) const;
 
     bool simulateSurvivalProbabilities() const { return paramsSimulate(RiskFactorKey::KeyType::SurvivalProbability); }
     bool simulateRecoveryRates() const { return paramsSimulate(RiskFactorKey::KeyType::RecoveryRate); }
@@ -149,6 +154,7 @@ public:
     const vector<Period>& cdsVolExpiries() const { return cdsVolExpiries_; }
     vector<string> cdsVolNames() const { return paramsLookup(RiskFactorKey::KeyType::CDSVolatility); }
     const string& cdsVolDecayMode() const { return cdsVolDecayMode_; }
+    const string& cdsVolSmileDynamics(const string& key) const;
 
     vector<string> equityNames() const { return paramsLookup(RiskFactorKey::KeyType::EquitySpot); }
     const vector<Period>& equityDividendTenors(const string& key) const;
@@ -166,6 +172,7 @@ public:
     vector<string> fxVolCcyPairs() const { return paramsLookup(RiskFactorKey::KeyType::FXVolatility); }
     const vector<Real>& fxVolMoneyness(const string& ccypair) const;
     const vector<Real>& fxVolStdDevs(const string& ccypair) const;
+    const string& fxVolSmileDynamics(const string& key) const;
     
     bool simulateEquityVols() const { return paramsSimulate(RiskFactorKey::KeyType::EquityVolatility); }
     bool simulateEquityVolATMOnly() const { return equityVolSimulateATMOnly_; }
@@ -176,6 +183,7 @@ public:
     vector<string> equityVolNames() const { return paramsLookup(RiskFactorKey::KeyType::EquityVolatility); }
     const vector<Real>& equityVolMoneyness(const string& key) const;
     const vector<Real>& equityVolStandardDevs(const string& key) const;
+    const string& equityVolSmileDynamics(const string& key) const;
 
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
@@ -210,6 +218,7 @@ public:
     }
     const std::vector<QuantLib::Period>& commodityVolExpiries(const std::string& commodityName) const;
     const std::vector<QuantLib::Real>& commodityVolMoneyness(const std::string& commodityName) const;
+    const string& commodityVolSmileDynamics(const string& commodityName) const;
 
     bool simulateCorrelations() const { return paramsSimulate(RiskFactorKey::KeyType::Correlation); }
     bool correlationIsSurface() const { return correlationIsSurface_; }
@@ -247,12 +256,14 @@ public:
     void setSwapVolExpiries(const string& key, const vector<Period>& p);
     void setSwapVolStrikeSpreads(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
     string& swapVolDecayMode() { return swapVolDecayMode_; }
+    void setSwapVolSmileDynamics(const string& key, const string& smileDynamics);
   
     void setSimulateYieldVols(bool simulate);
     vector<Period>& yieldVolTerms() { return yieldVolTerms_; }
     void setYieldVolNames(vector<string> names);
     vector<Period>& yieldVolExpiries() { return yieldVolExpiries_; }
     string& yieldVolDecayMode() { return yieldVolDecayMode_; }
+    void setYieldVolSmileDynamics(const string& key, const string& smileDynamics);
 
     void setSimulateCapFloorVols(bool simulate);
     void setCapFloorVolKeys(vector<string> names);
@@ -266,18 +277,21 @@ public:
     void setCapFloorVolUseCapAtm(bool capFloorVolUseCapAtm) {
         capFloorVolUseCapAtm_ = capFloorVolUseCapAtm;
     }
+    void setCapFloorVolSmileDynamics(const string& key, const string& smileDynamics);
 
     void setSimulateYoYInflationCapFloorVols(bool simulate);
     void setYoYInflationCapFloorVolNames(vector<string> names);
     void setYoYInflationCapFloorVolExpiries(const string& key, const vector<Period>& p);
     void setYoYInflationCapFloorVolStrikes(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
     string& yoyInflationCapFloorVolDecayMode() { return yoyInflationCapFloorVolDecayMode_; }
+    void setYoYInflationCapFloorVolSmileDynamics(const string& key, const string& smileDynamics);
 
     void setSimulateZeroInflationCapFloorVols(bool simulate);
     void setZeroInflationCapFloorNames(vector<string> names);
     void setZeroInflationCapFloorVolExpiries(const string& key, const vector<Period>& p);
     void setZeroInflationCapFloorVolStrikes(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
     string& zeroInflationCapFloorVolDecayMode() { return zeroInflationCapFloorVolDecayMode_; }
+    void setZeroInflationCapFloorVolSmileDynamics(const string& key, const string& smileDynamics);
 
     void setSimulateSurvivalProbabilities(bool simulate);
     void setSimulateRecoveryRates(bool simulate);
@@ -290,6 +304,7 @@ public:
     vector<Period>& cdsVolExpiries() { return cdsVolExpiries_; }
     void setCdsVolNames(vector<string> names);
     string& cdsVolDecayMode() { return cdsVolDecayMode_; }
+    void setCdsVolSmileDynamics(const string& key, const string& smileDynamics);
 
     void setEquityNames(vector<string> names);
     void setEquityDividendCurves(vector<string> names);
@@ -308,6 +323,7 @@ public:
     void setFxVolMoneyness(const vector<Real>& moneyness);
     void setFxVolStdDevs(const string& ccypair, const vector<Real>& stdDevs);
     void setFxVolStdDevs(const vector<Real>& stdDevs);
+    void setFxVolSmileDynamics(const string& name, const string& smileDynamics);
 
     void setSimulateEquityVols(bool simulate);
     void setSimulateEquityVolATMOnly(bool simulateATMOnly) { equityVolSimulateATMOnly_ = simulateATMOnly; }
@@ -317,6 +333,7 @@ public:
     void setEquityVolNames(vector<string> names);
     void setEquityVolMoneyness(const string&name, const vector<Real>& moneyness);
     void setEquityVolStandardDevs(const string&name, const vector<Real>& standardDevs);
+    void setEquityVolSmileDynamics(const string& name, const string& smileDynamics);
 
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
@@ -357,6 +374,7 @@ public:
     std::vector<QuantLib::Real>& commodityVolMoneyness(const std::string& commodityName) {
         return commodityVolMoneyness_[commodityName];
     }
+    void setCommodityVolSmileDynamics(const string& key, const string& smileDynamics);
 
     void setSimulateCorrelations(bool simulate);
     bool& correlationIsSurface() { return correlationIsSurface_; }
@@ -397,10 +415,12 @@ private:
     map<string, vector<Period>> swapVolExpiries_;
     map<string, vector<Real>> swapVolStrikeSpreads_;
     string swapVolDecayMode_;
+    map<string, string> swapVolSmileDynamics_;
 
     vector<Period> yieldVolTerms_;
     vector<Period> yieldVolExpiries_;
     string yieldVolDecayMode_;
+    map<string, string> yieldVolSmileDynamics_;
 
     map<string, vector<Period>> capFloorVolExpiries_;
     map<std::string, std::vector<QuantLib::Rate>> capFloorVolStrikes_;
@@ -408,14 +428,17 @@ private:
     string capFloorVolDecayMode_;
     bool capFloorVolAdjustOptionletPillars_;
     bool capFloorVolUseCapAtm_;
+    map<string, string> capFloorVolSmileDynamics_;
 
     map<string, vector<Period>> yoyInflationCapFloorVolExpiries_;
     map<std::string, std::vector<QuantLib::Rate>> yoyInflationCapFloorVolStrikes_;
     string yoyInflationCapFloorVolDecayMode_;
+    map<string, string> yoyInflationCapFloorVolSmileDynamics_;
 
     map<string, vector<Period>> zeroInflationCapFloorVolExpiries_;
     map<std::string, std::vector<QuantLib::Rate>> zeroInflationCapFloorVolStrikes_;
     string zeroInflationCapFloorVolDecayMode_;
+    map<string, string> zeroInflationCapFloorVolSmileDynamics_;
 
     map<string, string> defaultCurveCalendars_;
     map<string, vector<Period>> defaultTenors_;
@@ -423,6 +446,7 @@ private:
 
     vector<Period> cdsVolExpiries_;
     string cdsVolDecayMode_;
+    map<string, string> cdsVolSmileDynamics_;
 
     map<string, vector<Period>> equityDividendTenors_;
 
@@ -433,6 +457,7 @@ private:
     string fxVolDecayMode_;
     map<string, vector<Real>> fxMoneyness_;
     map<string, vector<Real>> fxStandardDevs_;
+    map<string, string> fxVolSmileDynamics_;
 
     bool equityVolSimulateATMOnly_ = false;
     map<string, bool> equityVolIsSurface_;
@@ -440,6 +465,7 @@ private:
     string equityVolDecayMode_;
     map<string, vector<Real>> equityMoneyness_;
     map<string, vector<Real>> equityStandardDevs_;
+    map<string, string> equityVolSmileDynamics_;
 
     vector<string> additionalScenarioDataIndices_;
     vector<string> additionalScenarioDataCcys_;
@@ -460,6 +486,7 @@ private:
     std::string commodityVolDecayMode_;
     std::map<std::string, std::vector<QuantLib::Period>> commodityVolExpiries_;
     std::map<std::string, std::vector<QuantLib::Real>> commodityVolMoneyness_;
+    map<string, string> commodityVolSmileDynamics_;
 
     bool correlationIsSurface_;
     vector<Period> correlationExpiries_;
