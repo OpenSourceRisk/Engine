@@ -55,14 +55,12 @@ public:
                                 const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig,
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                                const boost::optional<bool>& preferOutOfTheMoney = boost::none,
-				const std::string& smileDynamics = "");
+                                const boost::optional<bool>& preferOutOfTheMoney = boost::none);
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                 const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                                const boost::optional<bool>& preferOutOfTheMoney = boost::none,
-				const std::string& smileDynamics = "");
+                                const boost::optional<bool>& preferOutOfTheMoney = boost::none);
     //@}
 
     //! \name Serialisation
@@ -84,7 +82,6 @@ public:
     const boost::optional<bool>& preferOutOfTheMoney() const {
         return preferOutOfTheMoney_;
     }
-    const std::string& smileDynamics() const { return smileDynamics_; }
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
@@ -103,7 +100,6 @@ private:
     string calendar_;
     OneDimSolverConfig solverConfig_;
     boost::optional<bool> preferOutOfTheMoney_;
-    std::string smileDynamics_;
     ReportConfig reportConfig_;
 
     // Return a default solver configuration. Used by solverConfig() if solverConfig_ is empty.

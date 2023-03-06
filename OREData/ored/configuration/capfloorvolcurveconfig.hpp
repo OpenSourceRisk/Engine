@@ -61,8 +61,7 @@ public:
         const QuantLib::Size onCapSettlementDays, const std::string& discountCurve,
         const std::string& interpolationMethod = "BicubicSpline", const std::string& interpolateOn = "TermVolatilities",
         const std::string& timeInterpolation = "LinearFlat", const std::string& strikeInterpolation = "LinearFlat",
-        const std::vector<std::string>& atmTenors = {}, const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
-        const std::string& smileDynamics = "");
+        const std::vector<std::string>& atmTenors = {}, const BootstrapConfig& bootstrapConfig = BootstrapConfig());
 
     //! Detailled constructor for proxy config
     CapFloorVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription,
@@ -102,7 +101,6 @@ public:
     bool quoteIncludesIndexName() const { return quoteIncludesIndexName_; }
     const std::vector<std::string>& atmTenors() const { return atmTenors_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
-    const std::string& smileDynamics() const { return smileDynamics_; }
     Type type() const { return type_; }
     const string& currency() const;
     string indexTenor() const;
@@ -142,7 +140,6 @@ private:
     bool quoteIncludesIndexName_ = false;
     std::vector<std::string> atmTenors_;
     BootstrapConfig bootstrapConfig_;
-    std::string smileDynamics_;
     Type type_ = Type::Surface;
     std::string extrapolation_;
     //
