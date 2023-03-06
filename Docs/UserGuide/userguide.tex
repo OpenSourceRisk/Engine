@@ -4910,6 +4910,21 @@ For Default Curve, there is a similar choice for the extrapolation:
 \item Extrapolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
 \end{itemize}
 
+For swap, yield, interest cap-floor, yoy inflation cap-floor, zc inflation cap-floor, cds, fx, equity, commodity
+volatilities the smile dynamics can be specified as shown in listing \ref{lst:smile_dynamics_configuration} for swap
+vols. The empty key serves as a default configuration for all keys for which no own smile dynamics node is present. The
+allowed smile dynamics values are StickyStrike and StickyMoneyness. If not given, the smile dynamics defaults to
+StickyStrike.
+
+\begin{listing}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <SmileDynamics key="">StickyStrike</SmileDynamics>
+    <SmileDynamics key="EUR-ESTER">StickyMoneyness</SmileDynamics>
+  \end{minted}
+\caption{Smile Configuration Node}
+\label{lst:smile_dynamics_configuration}
+\end{listing}
+
 \begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
