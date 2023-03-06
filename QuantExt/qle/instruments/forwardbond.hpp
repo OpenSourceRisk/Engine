@@ -78,7 +78,7 @@ private:
     bool isPhysicallySettled_;
     bool settlementDirty_;
     Real compensationPayment_;
-    Date compensationPaymentDate_; 
+    Date compensationPaymentDate_;
     Real bondNotional_;
     Real dv01_;
     mutable Real underlyingIncome_;
