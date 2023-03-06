@@ -30,6 +30,12 @@ void ReferenceDatum::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ReferenceDatum");
     type_ = XMLUtils::getChildValue(node, "Type", true);
     id_ = XMLUtils::getAttribute(node, "id");
+    std::string dateStr = XMLUtils::getAttribute(node, "validFrom");
+    if (!dateStr.empty()) {
+        validFrom_ = parseDate(dateStr);
+    } else {
+        validFrom_ = QuantLib::Date::minDate();    
+    }
 }
 
 XMLNode* ReferenceDatum::toXML(XMLDocument& doc) {
@@ -37,6 +43,9 @@ XMLNode* ReferenceDatum::toXML(XMLDocument& doc) {
     QL_REQUIRE(node, "Failed to create ReferenceDatum node");
     XMLUtils::addAttribute(doc, node, "id", id_);
     XMLUtils::addChild(doc, node, "Type", type_);
+    if (validFrom_ > QuantLib::Date::minDate()) {
+        XMLUtils::addAttribute(doc, node, "validFrom", to_string(validFrom_));    
+    }
     return node;
 }
 
@@ -192,6 +201,9 @@ ReferenceDatumRegister<ReferenceDatumBuilder<CreditIndexReferenceDatum>> CreditI
 CreditIndexReferenceDatum::CreditIndexReferenceDatum() {}
 
 CreditIndexReferenceDatum::CreditIndexReferenceDatum(const string& name) : ReferenceDatum(TYPE, name) {}
+
+CreditIndexReferenceDatum::CreditIndexReferenceDatum(const string& name, const QuantLib::Date& validFrom)
+    : ReferenceDatum(TYPE, name, validFrom) {}
 
 void CreditIndexReferenceDatum::fromXML(XMLNode* node) {
 
@@ -499,10 +511,11 @@ void BasicReferenceDataManager::fromXML(XMLNode* node) {
 
 void BasicReferenceDataManager::add(const boost::shared_ptr<ReferenceDatum>& rd) {
     // Add reference datum, it is overwritten if it is already present.
-    data_[make_pair(rd->type(), rd->id())] = rd;
+    data_[make_pair(rd->type(), rd->id())][rd->validFrom()] = rd;
 }
 
-boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::addFromXMLNode(XMLNode* node, const std::string& inputId) {
+boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::addFromXMLNode(XMLNode* node, const std::string& inputId,
+                                                                            const QuantLib::Date& inputValidFrom) {
     string refDataType = XMLUtils::getChildValue(node, "Type", false);
     boost::shared_ptr<ReferenceDatum> refData;
 
@@ -512,16 +525,23 @@ boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::addFromXMLNode(XMLN
     }
 
     string id = inputId.empty() ? XMLUtils::getAttribute(node, "id") : inputId;
+    QuantLib::Date validFrom = inputValidFrom == QuantLib::Null<QuantLib::Date>()
+                                   ? ore::data::parseDate(XMLUtils::getAttribute(node, "validFrom"))
+                                   : inputValidFrom;
+
 
     if (id.empty()) {
         ALOG("Found referenceDatum without id - skipping");
         return refData;
     }
 
-    if (data_.find(make_pair(refDataType, id)) != data_.end()) {
-        duplicates_.insert(make_pair(refDataType, id));
-        ALOG("Found duplicate referenceDatum for type='" << refDataType << "', id='" << id << "'");
-        return refData;
+    if (auto it = data_.find(make_pair(refDataType, id)); it != data_.end()) {
+        if (it->second.count(validFrom) > 0) {
+            duplicates_.insert(make_tuple(refDataType, id, validFrom));
+            ALOG("Found duplicate referenceDatum for type='" << refDataType << "', id='" << id << "', validFrom='"
+                                                             << validFrom << "'");
+            return refData;
+        }
     }
 
     try {
@@ -530,11 +550,14 @@ boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::addFromXMLNode(XMLN
         // set the type and id at top level (is this needed?)
         refData->setType(refDataType);
         refData->setId(id);
-        data_[make_pair(refDataType, id)] = refData;
-        TLOG("added referenceDatum for type='" << refDataType << "', id='" << id << "'");
+        refData->setValidFrom(validFrom);
+        data_[make_pair(refDataType, id)][validFrom] = refData;
+        TLOG("added referenceDatum for type='" << refDataType << "', id='" << id << "', validFrom='" << validFrom
+                                               << "'");
     } catch (const std::exception& e) {
-        buildErrors_[make_pair(refDataType, id)] = e.what();
-        ALOG("Error building referenceDatum for type='" << refDataType << "', id='" << id << "': " << e.what());
+        buildErrors_[make_pair(refDataType, id)][validFrom] = e.what();
+        ALOG("Error building referenceDatum for type='" << refDataType << "', id='" << id << "', validFrom='" << validFrom
+                                               << "': " << e.what());
     }
 
     return refData;
@@ -550,31 +573,56 @@ boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildReferenceDatum
 XMLNode* BasicReferenceDataManager::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("ReferenceData");
     for (const auto& kv : data_) {
-        XMLUtils::appendNode(node, kv.second->toXML(doc));
+        for (const auto& [_, refData] : kv.second) {
+            XMLUtils::appendNode(node, refData->toXML(doc));
+        }
     }
     return node;
 }
 
-void BasicReferenceDataManager::check(const string& type, const string& id) const {
-    auto key = make_pair(type, id);
-    if (duplicates_.find(key) != duplicates_.end())
-        ALOG("BasicReferenceDataManager: duplicate entries for type='" << type << "', id='" << id << "'");
-    auto err = buildErrors_.find(key);
-    if (err != buildErrors_.end())
-        ALOG("BasicReferenceDataManager: Build error for type='" << type << "', id='" << id << "': " << err->second);
-}
-
-bool BasicReferenceDataManager::hasData(const string& type, const string& id) const {
-    check(type, id);
-    return data_.find(make_pair(type, id)) != data_.end();
-}
-
-boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id) {
-    check(type, id);
+std::tuple<QuantLib::Date, boost::shared_ptr<ReferenceDatum>> BasicReferenceDataManager::latestValidFrom(const string& type, const string& id,
+                                                          const QuantLib::Date& asof) const {
     auto it = data_.find(make_pair(type, id));
-    QL_REQUIRE(it != data_.end(),
-               "BasicReferenceDataManager::getData(): No Reference data for type='" << type << "', id='" << id << "'");
-    return it->second;
+    if (it != data_.end() && !it->second.empty()){
+        auto uB = it->second.upper_bound(asof);
+        if (uB != it->second.begin()) {
+            return *(--uB);
+        } else if (uB == it->second.end()) {
+            *(it->second.rbegin());
+        }
+    }
+    return {QuantLib::Date(), nullptr};
+}
+
+void BasicReferenceDataManager::check(const string& type, const string& id, const QuantLib::Date& validFrom) const {
+    auto key = make_tuple(type, id, validFrom);
+    if (duplicates_.find(key) != duplicates_.end())
+        ALOG("BasicReferenceDataManager: duplicate entries for type='" << type << "', id='" << id << "', validFrom='"
+                                                                       << validFrom << "'");
+    auto err = buildErrors_.find(make_pair(type, id));
+    if (err != buildErrors_.end()) {
+        for (const auto& [validFrom, error] : err->second) {
+            ALOG("BasicReferenceDataManager: Build error for type='" << type << "', id='" << id << "', validFrom='"
+                                                                     << validFrom << "': " << error);
+        }
+    }
+        
+}
+
+bool BasicReferenceDataManager::hasData(const string& type, const string& id, const QuantLib::Date& asof) const {
+    
+    auto& [validFrom, refData] = latestValidFrom(type, id, QuantLib::Settings::instance().evaluationDate());
+    check(type, id, validFrom);
+    return refData != nullptr;
+}
+
+boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id,
+                                                                     const QuantLib::Date& asof) {
+    auto& [validFrom, refData] = latestValidFrom(type, id, QuantLib::Settings::instance().evaluationDate());
+    check(type, id, validFrom);
+    QL_REQUIRE(refData != nullptr, "BasicReferenceDataManager::getData(): No Reference data for type='"
+                                       << type << "', id='" << id << "', asof='" << asof << "'");
+    return refData;
 }
 
 } // namespace data
