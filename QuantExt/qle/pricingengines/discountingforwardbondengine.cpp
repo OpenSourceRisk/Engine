@@ -169,6 +169,7 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
         Probability S = creditCurvePtr->survivalProbability(bd->cashflows()[i]->date()) /
                         creditCurvePtr->survivalProbability(computeDate);
         npvValue += bd->cashflows()[i]->amount() * S * bondReferenceYieldCurve_->discount(bd->cashflows()[i]->date());
+
         bondCashflows.push_back(bd->cashflows()[i]->amount());
         bondCashflowPayDates.push_back(bd->cashflows()[i]->date());
         bondCashflowSurvivalProbabilities.push_back(S);

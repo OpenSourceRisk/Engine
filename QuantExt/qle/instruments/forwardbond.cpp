@@ -58,7 +58,7 @@ void ForwardBond::setupArguments(PricingEngine::arguments* args) const {
     arguments->isPhysicallySettled = isPhysicallySettled_;
     arguments->settlementDirty = settlementDirty_;
     arguments->compensationPayment = compensationPayment_;
-    arguments->compensationPaymentDate = compensationPaymentDate_; 
+    arguments->compensationPaymentDate = compensationPaymentDate_;
     arguments->bondNotional = bondNotional_;
     arguments->dv01 = dv01_;
 }
