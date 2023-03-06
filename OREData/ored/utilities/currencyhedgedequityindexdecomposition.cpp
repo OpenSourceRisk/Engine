@@ -44,12 +44,28 @@ loadCurrencyHedgedIndexDecomposition(const std::string& name, const boost::share
     // Load currency Weights
     std::map<std::string, double> currencyWeights;
     if (curveConfigs && curveConfigs->hasEquityCurveConfig(indexRefData->underlyingIndexName())) {
+        
+        std::string underlyingIndexName = indexRefData->underlyingIndexName();
         std::string underlyingIndexCurrency =
             curveConfigs->equityCurveConfig(indexRefData->underlyingIndexName())->currency();
-        if (indexRefData->currencyWeights().empty()) {
+        
+        QuantLib::Date refDate =
+            CurrencyHedgedEquityIndexDecomposition::referenceDate(indexRefData, Settings::instance().evaluationDate());
+        
+        std::vector<std::pair<std::string, double>> underlyingIndexWeightsAtRebalancing;
+
+        if (indexRefData->currencyWeights().empty() && refDataMgr->hasData("EquityIndex", underlyingIndexName, refDate)) {
+            auto undIndexRefDataAtRefDate = refDataMgr->getData("EquityIndex", underlyingIndexName, refDate);
+            underlyingIndexWeightsAtRebalancing =
+                boost::dynamic_pointer_cast<EquityIndexReferenceDatum>(undIndexRefDataAtRefDate)->underlyings();
+        } else {
+            underlyingIndexWeightsAtRebalancing = indexRefData->currencyWeights();
+        }
+        
+        if (underlyingIndexWeightsAtRebalancing.empty()) {
             currencyWeights[underlyingIndexCurrency] = 1.0;
         } else {
-            for (const auto& [name, weight] : indexRefData->currencyWeights()) {
+            for (const auto& [name, weight] : underlyingIndexWeightsAtRebalancing) {
                 // try look up currency in reference data and add if FX delta risk if necessary
                 if (curveConfigs->hasEquityCurveConfig(name)) {
                     auto ecc = curveConfigs->equityCurveConfig(name);
