@@ -81,7 +81,7 @@ Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. Defaults to
 
 \item \lstinline!CommodityPayRelativeTo! [Optional]: This is as described in section \ref{ss:commodity_floating_leg_data}.
 
-\item \lstinline!FutureMonthOffset! [Optional]: This is as described in section \ref{ss:commodity_floating_leg_data}.
+\item \lstinline!FutureMonthOffset! [Optional]: This is as described in section \ref{ss:commodity_floating_leg_data}. Note that IsAveraged defaults to \emph{false} as it cannot be used as a tag within the CommodityAveragePriceOptionData node. Thus, if e.g. FutureMonthOffset is set to \emph{2}, the future contract month and year is taken as the second month following the base date’s month and year; and so on for all positive values of FutureMonthOffset.
 
 \item \lstinline!DeliveryRollDays! [Optional]: This is as described in section \ref{ss:commodity_floating_leg_data}.
 
