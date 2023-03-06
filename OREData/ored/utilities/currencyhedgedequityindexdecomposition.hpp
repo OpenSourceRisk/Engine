@@ -29,8 +29,6 @@ public:
           currencyWeightsAndFxIndexNames_(currencyWeightsAndFxIndexNames) {
         QL_REQUIRE(indexRefData_, "CurrencyHedgedDecomposition requires a valid indexRefData");
         QL_REQUIRE(underlyingRefData_, "CurrencyHedgedDecomposition requires a valid underlyingRefData");
-        QL_REQUIRE(currencyWeightsAndFxIndexNames_.size() == 1,
-                   "CurrencyHedgedDecomposition supports only single currency hedged equity indexes");
     }
 
     const std::string& indexName() const { return name_; }

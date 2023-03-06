@@ -79,14 +79,16 @@ loadCurrencyHedgedIndexDecomposition(const std::string& name, const boost::share
         }
     }
     for (const auto& [currency, weight] : currencyWeights) {
-        auto fxIndexConfig = indexRefData->fxIndexes().find(currency);
-        if (fxIndexConfig != indexRefData->fxIndexes().end()) {
-            auto index = ore::data::parseFxIndex(fxIndexConfig->second);
-            std::string indexName = index->familyName() + "-" + currency + "-" + indexRefData->hedgeCurrency();
-            currencyWeightsAndFxIndexNames[currency] = std::make_pair(weight, indexName);
-        } else {
-            std::string indexName = "GENERIC-" + currency + "-" + indexRefData->hedgeCurrency();
-            currencyWeightsAndFxIndexNames[currency] = std::make_pair(weight, indexName);
+        if (currency != indexRefData->hedgeCurrency()) {    
+            auto fxIndexConfig = indexRefData->fxIndexes().find(currency);
+            if (fxIndexConfig != indexRefData->fxIndexes().end()) {
+                auto index = ore::data::parseFxIndex(fxIndexConfig->second);
+                std::string indexName = index->familyName() + "-" + currency + "-" + indexRefData->hedgeCurrency();
+                currencyWeightsAndFxIndexNames[currency] = std::make_pair(weight, indexName);
+            } else {
+                std::string indexName = "GENERIC-" + currency + "-" + indexRefData->hedgeCurrency();
+                currencyWeightsAndFxIndexNames[currency] = std::make_pair(weight, indexName);
+            }
         }
     }
     return boost::make_shared<CurrencyHedgedEquityIndexDecomposition>(name, indexRefData, underlyingRefData,
