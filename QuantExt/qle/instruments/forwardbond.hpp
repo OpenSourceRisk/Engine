@@ -70,7 +70,7 @@ public:
 private:
     boost::shared_ptr<QuantLib::Bond> underlying_;
     boost::shared_ptr<Payoff> payoff_;    // nullptr for tlocks
-    Real lockRate_;                       // Null<Real>() for vanilla forwards  
+    Real lockRate_;                       // Null<Real>() for vanilla forwards
     DayCounter lockRateDayCounter_;       // empty dc for vanilla forwards
     boost::optional<bool> longInForward_; // only filled for tlocks
     Date fwdMaturityDate_;
@@ -79,8 +79,8 @@ private:
     bool settlementDirty_;
     Real compensationPayment_;
     Date compensationPaymentDate_; 
-    Real dv01_;
     Real bondNotional_;
+    Real dv01_;
     mutable Real underlyingIncome_;
     mutable Real underlyingSpotValue_;
     mutable Real forwardValue_;
@@ -91,7 +91,7 @@ class ForwardBond::arguments : public virtual PricingEngine::arguments {
 public:
     boost::shared_ptr<QuantLib::Bond> underlying;
     boost::shared_ptr<Payoff> payoff;    // nullptr for tlocks
-    Real lockRate;                       // Null<Real>() for vanilla forwards   
+    Real lockRate;                       // Null<Real>() for vanilla forwards
     boost::optional<bool> longInForward; // only filled for tlocks
     DayCounter lockRateDayCounter;       // empty dc for vanilla forwards
     Date fwdMaturityDate;
@@ -100,8 +100,8 @@ public:
     bool settlementDirty;
     Real compensationPayment;
     Date compensationPaymentDate;
-    Real dv01;
     Real bondNotional;
+    Real dv01;
     void validate() const override;
 };
 

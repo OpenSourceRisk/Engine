@@ -139,7 +139,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                : boost::make_shared<QuantExt::ForwardBond>(bond, lockRate, lockRateDayCounter, longInForward,
                                                            fwdMaturityDate, fwdSettlementDate, isPhysicallySettled,
                                                            settlementDirty, compensationPayment,
-                                                           compensationPaymentDate, dv01, bondData_.bondNotional());
+                                                           compensationPaymentDate, bondData_.bondNotional(), dv01);
 
     boost::shared_ptr<fwdBondEngineBuilder> fwdBondBuilder =
         boost::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
@@ -170,9 +170,9 @@ void ForwardBond::fromXML(XMLNode* node) {
     settlement_ = XMLUtils::getChildValue(fwdSettlementNode, "Settlement", false);
     amount_ = XMLUtils::getChildValue(fwdSettlementNode, "Amount", false);
     lockRate_ = XMLUtils::getChildValue(fwdSettlementNode, "LockRate", false);
-    dv01_ = XMLUtils::getChildValue(fwdSettlementNode, "dv01", false);
     lockRateDayCounter_ = XMLUtils::getChildValue(fwdSettlementNode, "LockRateDayCounter", false);
     settlementDirty_ = XMLUtils::getChildValue(fwdSettlementNode, "SettlementDirty", false);
+    dv01_ = XMLUtils::getChildValue(fwdSettlementNode, "dv01", false);
 
     XMLNode* fwdPremiumNode = XMLUtils::getChildNode(fwdBondNode, "PremiumData");
     if (fwdPremiumNode) {

@@ -30,18 +30,18 @@ ForwardBond::ForwardBond(const boost::shared_ptr<Bond>& underlying, const boost:
     : underlying_(underlying), payoff_(payoff), lockRate_(Null<Real>()), fwdMaturityDate_(fwdMaturityDate),
       fwdSettlementDate_(fwdSettlementDate), isPhysicallySettled_(isPhysicallySettled),
       settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
-      compensationPaymentDate_(compensationPaymentDate), dv01_(Null<Real>()), bondNotional_(bondNotional) {}
+      compensationPaymentDate_(compensationPaymentDate), bondNotional_(bondNotional), dv01_(Null<Real>()) {}
 
 ForwardBond::ForwardBond(const boost::shared_ptr<Bond>& underlying, const Real lockRate, 
                          const DayCounter& lockRateDayCounter, const bool longInForward, const Date& fwdMaturityDate,
                          const Date& fwdSettlementDate, const bool isPhysicallySettled, const bool settlementDirty,
-                         const Real compensationPayment, const Date compensationPaymentDate, const Real dv01, 
-                         const Real bondNotional)
+                         const Real compensationPayment, const Date compensationPaymentDate, 
+                         const Real bondNotional,const Real dv01)
     : underlying_(underlying), payoff_(nullptr), lockRate_(lockRate), lockRateDayCounter_(lockRateDayCounter),
       longInForward_(longInForward), fwdMaturityDate_(fwdMaturityDate), fwdSettlementDate_(fwdSettlementDate),
       isPhysicallySettled_(isPhysicallySettled), settlementDirty_(settlementDirty),
-      compensationPayment_(compensationPayment), compensationPaymentDate_(compensationPaymentDate), dv01_(dv01),
-      bondNotional_(bondNotional) {}
+      compensationPayment_(compensationPayment), compensationPaymentDate_(compensationPaymentDate),
+      bondNotional_(bondNotional), dv01_(dv01) {}
 
 bool ForwardBond::isExpired() const { return detail::simple_event(fwdMaturityDate_).hasOccurred(); }
 
@@ -59,8 +59,8 @@ void ForwardBond::setupArguments(PricingEngine::arguments* args) const {
     arguments->settlementDirty = settlementDirty_;
     arguments->compensationPayment = compensationPayment_;
     arguments->compensationPaymentDate = compensationPaymentDate_; 
-    arguments->dv01 = dv01_;
     arguments->bondNotional = bondNotional_;
+    arguments->dv01 = dv01_;
 }
 
 void ForwardBond::results::reset() {

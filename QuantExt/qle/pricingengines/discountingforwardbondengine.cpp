@@ -328,30 +328,30 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
         Real price = forwardBondValue / arguments_.bondNotional / bd->notional(bondSettlementDate) * 100.0;
         Real yield = BondFunctions::yield(*bd, price, arguments_.lockRateDayCounter, Compounded, Semiannual,
                                           bondSettlementDate, 1E-10, 100, 0.05, Bond::Price::Dirty);
+        Real dv01;
         if (arguments_.dv01 != Null<Real>()) {
-            QL_REQUIRE(arguments_.longInForward, "DiscountingForwardBondEngine: internal error, longInForward must be "
-                                                 "populated if payoff is specified via lock-rate");
-            Real multiplier = (*arguments_.longInForward) ? 1.0 : -1.0;
-            forwardContractForwardValue = multiplier * (yield - arguments_.lockRate) * arguments_.dv01 * arguments_.bondNotional *
-                                          bd->notional(bondSettlementDate);
-            //EffectivePayoff don't handle a negative dv01 - I force it to be positive
-            effectivePayoff = boost::make_shared<ForwardBondTypePayoff>(
-                (*arguments_.longInForward) ? Position::Long : Position::Short,
-                arguments_.lockRate * (-arguments_.dv01) * arguments_.bondNotional * bd->notional(bondSettlementDate));
+
+            dv01 = arguments_.dv01;
 
         } else {
-            Real dv01 = price / 100.0 *
+
+            dv01 = price / 100.0 *
                         BondFunctions::duration(*bd, yield, arguments_.lockRateDayCounter, Compounded, Semiannual,
                                                 Duration::Modified, bondSettlementDate);
-            QL_REQUIRE(arguments_.longInForward, "DiscountingForwardBondEngine: internal error, longInForward must be "
-                                                 "populated if payoff is specified via lock-rate");
-            Real multiplier = (*arguments_.longInForward) ? 1.0 : -1.0;
-            forwardContractForwardValue = multiplier * (yield - arguments_.lockRate) * dv01 * arguments_.bondNotional *
-                                          bd->notional(bondSettlementDate);
-            effectivePayoff = boost::make_shared<ForwardBondTypePayoff>(
-                (*arguments_.longInForward) ? Position::Long : Position::Short,
-                arguments_.lockRate * dv01 * arguments_.bondNotional * bd->notional(bondSettlementDate));
         }
+
+        QL_REQUIRE(arguments_.longInForward, "DiscountingForwardBondEngine: internal error, longInForward must be "
+                                             "populated if payoff is specified via lock-rate");
+        Real multiplier = (*arguments_.longInForward) ? 1.0 : -1.0;
+        forwardContractForwardValue = multiplier * (yield - arguments_.lockRate) * dv01 * arguments_.bondNotional *
+                                      bd->notional(bondSettlementDate);
+        // Effective PayOff doesn't take negative DV01 therefore we flip it if needed
+        if (dv01 < 0) {
+            dv01 = - dv01;
+        }
+        effectivePayoff = boost::make_shared<ForwardBondTypePayoff>(
+            (*arguments_.longInForward) ? Position::Long : Position::Short,
+            arguments_.lockRate * dv01 * arguments_.bondNotional * bd->notional(bondSettlementDate));
         
 
     } else {
