@@ -20,7 +20,6 @@ configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
 configuration/onedimsolverconfig.cpp
 configuration/reportconfig.cpp
-configuration/smiledynamicsconfig.cpp
 configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
 marketdata/basecorrelationcurve.cpp
@@ -300,7 +299,6 @@ configuration/inflationcurveconfig.hpp
 configuration/onedimsolverconfig.hpp
 configuration/reportconfig.hpp
 configuration/securityconfig.hpp
-configuration/smiledynamicsconfig.hpp
 configuration/swaptionvolcurveconfig.hpp
 configuration/volatilityconfig.hpp
 configuration/yieldcurveconfig.hpp
