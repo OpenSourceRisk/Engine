@@ -27,7 +27,6 @@
 #include <ored/configuration/onedimsolverconfig.hpp>
 #include <ored/configuration/reportconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
-#include <ored/configuration/smiledynamicsconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/volatilityconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
