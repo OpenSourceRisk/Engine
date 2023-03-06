@@ -1066,7 +1066,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             string decayModeString = parameters->capFloorVolDecayMode();
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
 
-                            QL_REQUIRE(!boost::dynamic_pointer_cast<ProxyOptionletVolatility>(wrapper), 
+                            QL_REQUIRE(!boost::dynamic_pointer_cast<ProxyOptionletVolatility>(*wrapper), 
                                 "DynamicOptionletVolatilityStructure does not support ProxyOptionletVolatility surface.");
 
                             boost::shared_ptr<OptionletVolatilityStructure> capletVol =
