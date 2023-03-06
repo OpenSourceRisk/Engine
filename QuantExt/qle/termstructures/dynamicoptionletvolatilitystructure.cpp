@@ -17,7 +17,6 @@
 */
 
 #include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>
-#include <qle/termstructures/proxyoptionletvolatility.hpp>
 
 namespace QuantExt {
 DynamicOptionletVolatilityStructure::DynamicOptionletVolatilityStructure(
@@ -48,9 +47,7 @@ Date DynamicOptionletVolatilityStructure::maxDate() const {
     QL_FAIL("unexpected decay mode (" << decayMode_ << ")");
 }
 
-void DynamicOptionletVolatilityStructure::update() { 
-    if (boost::dynamic_pointer_cast<ProxyOptionletVolatility>(source_))
-        QL_FAIL("DynamicOptionletVolatilityStructure does not support ProxyOptionletVolatility surface for moving evalution date.");
+void DynamicOptionletVolatilityStructure::update() {
     TermStructure::update(); 
 }
 
