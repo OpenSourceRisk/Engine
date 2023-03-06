@@ -32,6 +32,7 @@ namespace ore {
 namespace data {
 
 class FixedLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(FixedLegBuilder)
 public:
     FixedLegBuilder() : LegBuilder("Fixed") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -41,6 +42,7 @@ public:
 };
 
 class ZeroCouponFixedLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(ZeroCouponFixedLegBuilder)
 public:
     ZeroCouponFixedLegBuilder() : LegBuilder("ZeroCouponFixed") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -50,6 +52,7 @@ public:
 };
 
 class FloatingLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(FloatingLegBuilder)
 public:
     FloatingLegBuilder() : LegBuilder("Floating") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -59,6 +62,7 @@ public:
 };
 
 class CashflowLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(CashflowLegBuilder)
 public:
     CashflowLegBuilder() : LegBuilder("Cashflow") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -68,6 +72,7 @@ public:
 };
 
 class CPILegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(CPILegBuilder)
 public:
     CPILegBuilder() : LegBuilder("CPI") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -77,6 +82,7 @@ public:
 };
 
 class YYLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(YYLegBuilder)
 public:
     YYLegBuilder() : LegBuilder("YY") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -86,6 +92,7 @@ public:
 };
 
 class CMSLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(CMSLegBuilder)
 public:
     CMSLegBuilder() : LegBuilder("CMS") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -95,6 +102,7 @@ public:
 };
 
 class CMBLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(CMBLegBuilder)
 public:
     CMBLegBuilder() : LegBuilder("CMB") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -104,6 +112,7 @@ public:
 };
 
 class DigitalCMSLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(DigitalCMSLegBuilder)
 public:
     DigitalCMSLegBuilder() : LegBuilder("DigitalCMS") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -113,6 +122,7 @@ public:
 };
 
 class CMSSpreadLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(CMSSpreadLegBuilder)
 public:
     CMSSpreadLegBuilder() : LegBuilder("CMSSpread") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -122,6 +132,7 @@ public:
 };
 
 class DigitalCMSSpreadLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(DigitalCMSSpreadLegBuilder)
 public:
     DigitalCMSSpreadLegBuilder() : LegBuilder("DigitalCMSSpread") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -131,6 +142,7 @@ public:
 };
 
 class EquityLegBuilder : public LegBuilder {
+    ORE_REGISTER_LEG_BUILDER(EquityLegBuilder)
 public:
     EquityLegBuilder() : LegBuilder("Equity") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,

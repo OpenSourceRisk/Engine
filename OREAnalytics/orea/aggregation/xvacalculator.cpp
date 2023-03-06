@@ -17,8 +17,11 @@
 */
 
 #include <orea/aggregation/xvacalculator.hpp>
+
+#include <ored/portfolio/trade.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/vectorutils.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/version.hpp>
 

@@ -37,6 +37,7 @@ namespace data {
  */
 class CommodityForwardEngineBuilder
     : public CachingPricingEngineBuilder<std::string, const QuantLib::Currency&> {
+    ORE_REGISTER_ENGINE_BUILDER(CommodityForwardEngineBuilder)
 public:
     CommodityForwardEngineBuilder()
         : CachingEngineBuilder("DiscountedCashflows", "DiscountingCommodityForwardEngine", {"CommodityForward"}) {}

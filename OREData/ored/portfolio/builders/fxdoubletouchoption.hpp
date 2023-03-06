@@ -77,6 +77,7 @@ protected:
     \ingroup portfolio
  */
 class FxDoubleTouchOptionAnalyticEngineBuilder : public FxDoubleTouchOptionEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(FxDoubleTouchOptionAnalyticEngineBuilder)
 public:
     FxDoubleTouchOptionAnalyticEngineBuilder()
         : FxDoubleTouchOptionEngineBuilder("GarmanKohlhagen", "AnalyticDoubleBarrierBinaryEngine") {}

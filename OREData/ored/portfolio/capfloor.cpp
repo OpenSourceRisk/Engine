@@ -42,6 +42,8 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<CapFloor>> CapFloor::reg_("CapFloor");
+
 void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("CapFloor::build() called for trade " << id() << ", leg type is " << legData_.legType());

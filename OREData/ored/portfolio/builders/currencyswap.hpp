@@ -31,6 +31,8 @@ namespace data {
 
 //! Multileg option engine builder for external cam, with additional simulation dates (AMC)
 class CamAmcCurrencySwapEngineBuilder : public CrossCurrencySwapEngineBuilderBase {
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcCurrencySwapEngineBuilder)
+
 public:
     // for external cam, with additional simulation dates (AMC)
     CamAmcCurrencySwapEngineBuilder(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,

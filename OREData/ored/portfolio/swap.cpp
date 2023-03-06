@@ -42,6 +42,8 @@ using std::make_pair;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<Swap>> Swap::reg_("Swap");
+
 void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Swap::build() called for trade " << id());
     
@@ -334,5 +336,6 @@ XMLNode* Swap::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));
     return node;
 }
+
 } // namespace data
 } // namespace ore

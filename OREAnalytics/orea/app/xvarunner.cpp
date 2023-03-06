@@ -39,21 +39,17 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
                      const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                      const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
                      const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
-                     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
-                     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
                      const boost::shared_ptr<ReferenceDataManager>& referenceData,
                      const IborFallbackConfig& iborFallbackConfig, Real dimQuantile, Size dimHorizonCalendarDays,
                      map<string, bool> analytics, string calculationType, string dvaName, string fvaBorrowingCurve,
                      string fvaLendingCurve, bool fullInitialCollateralisation, bool storeFlows)
     : asof_(asof), baseCurrency_(baseCurrency), portfolio_(portfolio), netting_(netting), engineData_(engineData),
-      curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
-      simMarketData_(simMarketData), scenarioGeneratorData_(scenarioGeneratorData),
-      crossAssetModelData_(crossAssetModelData), extraLegBuilders_(extraLegBuilders),
-      extraEngineBuilders_(extraEngineBuilders), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
-      dimQuantile_(dimQuantile), dimHorizonCalendarDays_(dimHorizonCalendarDays), analytics_(analytics),
-      inputCalculationType_(calculationType), dvaName_(dvaName), fvaBorrowingCurve_(fvaBorrowingCurve),
-      fvaLendingCurve_(fvaLendingCurve), fullInitialCollateralisation_(fullInitialCollateralisation),
-      storeFlows_(storeFlows) {
+      curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), simMarketData_(simMarketData),
+      scenarioGeneratorData_(scenarioGeneratorData), crossAssetModelData_(crossAssetModelData),
+      referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), dimQuantile_(dimQuantile),
+      dimHorizonCalendarDays_(dimHorizonCalendarDays), analytics_(analytics), inputCalculationType_(calculationType),
+      dvaName_(dvaName), fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve),
+      fullInitialCollateralisation_(fullInitialCollateralisation), storeFlows_(storeFlows) {
 
     if (analytics_.size() == 0) {
         WLOG("post processor analytics not set, using defaults");
@@ -139,9 +135,6 @@ void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& marke
                                                        iborFallbackConfig_, false);
     simMarket_->scenarioGenerator() = sg;
 
-    for (auto b : extraEngineBuilders_)
-        b->reset();
-
     DLOG("build scenario data");
 
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(
@@ -150,8 +143,8 @@ void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& marke
 
     auto ed = boost::make_shared<EngineData>(*engineData_);
     ed->globalParameters()["RunType"] = "Exposure";
-    simFactory_ = boost::make_shared<EngineFactory>(ed, simMarket_, map<MarketContext, string>(), extraEngineBuilders_,
-                                                    extraLegBuilders_, referenceData_, iborFallbackConfig_);
+    simFactory_ = boost::make_shared<EngineFactory>(ed, simMarket_, map<MarketContext, string>(), referenceData_,
+                                                    iborFallbackConfig_);
 }
 
 void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds, const bool continueOnErr) {

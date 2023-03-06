@@ -36,6 +36,8 @@ using namespace ore::data;
   \ingroup tradedata
 */
 class EquityFutureOption : public VanillaOptionTrade {
+    static TradeBuilderRegister<TradeBuilder<EquityFutureOption>> reg_;
+
 public:
 
     //! Default constructor

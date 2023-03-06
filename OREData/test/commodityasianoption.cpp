@@ -269,7 +269,7 @@ public:
 
      // Load portfolio from XML string
      Portfolio portfolio;
-     portfolio.loadFromXMLString(tradeXml);
+     portfolio.fromXMLString(tradeXml);
 
      // Extract CommodityAsianOption trade from portfolio
      boost::shared_ptr<Trade> trade = portfolio.trades().begin()->second;

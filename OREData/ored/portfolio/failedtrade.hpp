@@ -32,6 +32,8 @@ namespace data {
     \ingroup tradedata
 */
 class FailedTrade : public ore::data::Trade {
+    static TradeBuilderRegister<TradeBuilder<FailedTrade>> reg_;
+
 public:
     FailedTrade();
 

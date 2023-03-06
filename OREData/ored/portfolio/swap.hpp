@@ -34,6 +34,8 @@ namespace data {
   \ingroup tradedata
 */
 class Swap : public Trade {
+    static TradeBuilderRegister<TradeBuilder<Swap>> reg_;
+
 public:
     //! Default constructor
     Swap(const string swapType = "Swap") : Trade(swapType) {}
@@ -84,5 +86,6 @@ private:
     bool isResetting_;
     Size notionalTakenFromLeg_;
 };
+
 } // namespace data
 } // namespace ore

@@ -35,6 +35,8 @@ using namespace std;
 using namespace QuantLib;
 using namespace QuantExt;
 
+ORE_REGISTER_ENGINE_BUILDER_IMPL(GaussCopulaBucketingCdoEngineBuilder)
+
 boost::shared_ptr<PricingEngine> GaussCopulaBucketingCdoEngineBuilder::engineImpl(
     const Currency& ccy, bool isIndexCDS, const vector<string>& creditCurves,
     const boost::shared_ptr<SimpleQuote>& calibrationFactor,

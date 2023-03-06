@@ -601,14 +601,6 @@ void ParSensitivityAnalysisTest::testPortfolioZeroSensitivity() {
     data->model("EquityOption") = "BlackScholesMerton";
     data->engine("EquityOption") = "AnalyticEuropeanEngine";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
-    factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<YoYCapFloorEngineBuilder>());
-    //    factory->registerBuilder(boost::make_shared<oreplus::data::MidPointIndexCdsEngineBuilder>());
-    //    factory->registerBuilder(boost::make_shared<oreplus::data::BlackIndexCdsOptionEngineBuilder>());
 
     // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
@@ -1135,13 +1127,6 @@ void testParConversion(ObservationMode::Mode om) {
     engineData->model("EquityOption") = "BlackScholesMerton";
     engineData->engine("EquityOption") = "AnalyticEuropeanEngine";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, simMarket);
-    factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
-    // factory->registerBuilder(boost::make_shared<oreplus::data::MidPointIndexCdsEngineBuilder>());
 
     // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());

@@ -60,6 +60,8 @@ struct TempOptionData {
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<CommodityOptionStrip>> CommodityOptionStrip::reg_("CommodityOptionStrip");
+
 CommodityOptionStrip::CommodityOptionStrip(const Envelope& envelope, const LegData& legData,
                                            const vector<Position::Type>& callPositions, const vector<Real>& callStrikes,
                                            const vector<Position::Type>& putPositions, const vector<Real>& putStrikes,
@@ -302,7 +304,7 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
                  QL_REQUIRE(undCcy.code() == legData_.currency(),
                             "Strips of commodity digital options do not support intra-currency trades yet.");
                  commOption = boost::make_shared<CommodityDigitalAveragePriceOption>(
-                     envelope(), optionData, tempDatum.strike, cf->periodQuantity() * payoffPerUnit(),
+                     envelope(), optionData, tempDatum.strike, cf->quantity() * payoffPerUnit(),
                      legData_.currency(), commLegData_->name(), commLegData_->priceType(), to_string(start),
                      to_string(cf->endDate()), legData_.paymentCalendar(), legData_.paymentLag(),
                      legData_.paymentConvention(), commLegData_->pricingCalendar(), to_string(cf->date()),

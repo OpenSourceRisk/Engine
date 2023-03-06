@@ -46,27 +46,6 @@ using std::vector;
 
 namespace {
 
-// Extra trade builders
-class IndexCdsTradeBuilder : public AbstractTradeBuilder {
-public:
-    IndexCdsTradeBuilder(const boost::shared_ptr<ReferenceDataManager>& rdm) : rdm_(rdm) {}
-    boost::shared_ptr<Trade> build() const override {
-        return boost::make_shared<ore::data::IndexCreditDefaultSwap>(rdm_);
-    }
-private:
-    boost::shared_ptr<ReferenceDataManager> rdm_;
-};
-
-class IndexCdsOptionTradeBuilder : public AbstractTradeBuilder {
-public:
-    IndexCdsOptionTradeBuilder(const boost::shared_ptr<ReferenceDataManager>& rdm) : rdm_(rdm) {}
-    boost::shared_ptr<Trade> build() const override {
-        return boost::make_shared<ore::data::IndexCreditDefaultSwapOption>(rdm_);
-    }
-private:
-    boost::shared_ptr<ReferenceDataManager> rdm_;
-};
-
 // Create portfolio from input files.
 boost::shared_ptr<Portfolio> buildPortfolio(const Date& asof, const string& inputDir) {
 
@@ -99,18 +78,10 @@ boost::shared_ptr<Portfolio> buildPortfolio(const Date& asof, const string& inpu
         boost::make_shared<BlackIndexCdsOptionEngineBuilder>()
     };
     vector<boost::shared_ptr<LegBuilder>> extraLegBuilders;
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(data, tm,
-        configurations, extraEngineBuilders, extraLegBuilders, rdm);
-
-    auto tradeFactory = boost::make_shared<TradeFactory>(rdm);
-    map<string, boost::shared_ptr<AbstractTradeBuilder>> tradeBuilders{
-        {"IndexCreditDefaultSwap", boost::make_shared<IndexCdsTradeBuilder>(rdm)},
-        {"IndexCreditDefaultSwapOption", boost::make_shared<IndexCdsOptionTradeBuilder>(rdm)}
-    };
-    tradeFactory->addExtraBuilders(tradeBuilders);
+    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(data, tm, configurations, rdm);
 
     auto portfolio = boost::make_shared<Portfolio>();
-    portfolio->load(TEST_INPUT_FILE(string(inputDir + "/portfolio.xml")), tradeFactory);
+    portfolio->fromFile(TEST_INPUT_FILE(string(inputDir + "/portfolio.xml")));
     portfolio->build(engineFactory);
 
     return portfolio;

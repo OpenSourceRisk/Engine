@@ -24,6 +24,8 @@
 namespace ore {
 namespace data {
 
+ORE_REGISTER_ENGINE_BUILDER_IMPL(CapFlooredIborLegEngineBuilder)
+
 boost::shared_ptr<FloatingRateCouponPricer> CapFlooredIborLegEngineBuilder::engineImpl(const std::string& index) {
 
     std::string ccyCode = parseIborIndex(index)->currency().code();

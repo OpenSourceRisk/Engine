@@ -225,7 +225,8 @@ protected:
     void buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio);
     boost::shared_ptr<Portfolio> classicRun(const boost::shared_ptr<Portfolio>& portfolio);
 
-    boost::shared_ptr<EngineFactory> amcEngineFactory();
+    boost::shared_ptr<EngineFactory> amcEngineFactory(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                                      const std::vector<Date>& grid);
     void buildAmcPortfolio();
     void amcRun(bool doClassicRun);
 

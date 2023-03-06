@@ -43,6 +43,7 @@ protected:
 };
 
 class DiscountingBondTRSEngineBuilder : public BondTRSEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(DiscountingBondTRSEngineBuilder)
 public:
     DiscountingBondTRSEngineBuilder() : BondTRSEngineBuilder("DiscountedCashflows", "DiscountingBondTRSEngine") {}
 

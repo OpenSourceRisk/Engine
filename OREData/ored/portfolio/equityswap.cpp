@@ -25,6 +25,8 @@
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<EquitySwap>> EquitySwap::reg_("EquitySwap");
+
 EquitySwap::EquitySwap(const Envelope& env, const vector<LegData>& legData) : Swap(env, legData, "EquitySwap") {}
 
 EquitySwap::EquitySwap(const Envelope& env, const LegData& leg0, const LegData& leg1)
