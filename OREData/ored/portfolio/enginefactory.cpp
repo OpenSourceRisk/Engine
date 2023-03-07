@@ -123,7 +123,8 @@ void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& buil
     const string& modelName = builder->model();
     const string& engineName = builder->engine();
     auto key = make_tuple(modelName, engineName, builder->tradeTypes());
-    if(allowOverwrite)
+    // FIXME workaround to allow manual registration of builders on windows, remove once this is resolved
+    if(true || allowOverwrite)
         builders_.erase(key);
     QL_REQUIRE(builders_.insert(make_pair(key, builder)).second,
                "EngineFactory: duplicate engine builder for (" << modelName << "/" << engineName << "/"
@@ -160,7 +161,8 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
 }
 
 void EngineFactory::registerLegBuilder(const boost::shared_ptr<LegBuilder>& legBuilder, const bool allowOverwrite) {
-    if(allowOverwrite)
+    // FIXME workaround to allow manual registration of builders on windows, remove once this is resolved
+    if(true || allowOverwrite)
         legBuilders_.erase(legBuilder->legType());
     QL_REQUIRE(legBuilders_.insert(make_pair(legBuilder->legType(), legBuilder)).second,
                "EngineFactory duplicate leg builder for '" << legBuilder->legType()
