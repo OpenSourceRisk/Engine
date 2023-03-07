@@ -322,6 +322,8 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console)
 
     // Read setup
     readSetup();
+
+    dummyRegisterBuildersForWindows();
 }
 
 OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel,
@@ -348,6 +350,55 @@ OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::stri
     Log::instance().registerLogger(boost::make_shared<FileLogger>(logFilePath));
     Log::instance().setMask(logLevel);
     Log::instance().switchOn();
+
+    dummyRegisterBuildersForWindows();
+}
+
+void OREApp::dummyRegisterBuildersForWindows() {
+    std::size_t dummy = 0;
+
+    dummy |= (std::size_t)boost::make_shared<Swap>().get();
+    dummy |= (std::size_t)boost::make_shared<Swaption>().get();
+    dummy |= (std::size_t)boost::make_shared<CapFloor>().get();
+    dummy |= (std::size_t)boost::make_shared<ForwardRateAgreement>().get();
+    dummy |= (std::size_t)boost::make_shared<FxForward>().get();
+    dummy |= (std::size_t)boost::make_shared<FxOption>().get();
+    dummy |= (std::size_t)boost::make_shared<FxSwap>().get();
+
+    dummy |= (std::size_t)boost::make_shared<SwapEngineBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<CrossCurrencySwapEngineBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<FxForwardEngineBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<FxEuropeanOptionEngineBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<FxEuropeanCSOptionEngineBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<FxAmericanOptionFDEngineBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<FxAmericanOptionBAWEngineBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<CapFloorEngineBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<CapFlooredOvernightIndexedCouponLegEngineBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<CapFlooredAverageONIndexedCouponLegEngineBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<CapFlooredIborLegEngineBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<LinearTSRCmsCouponPricerBuilder>().get();
+
+    boost::shared_ptr<QuantExt::CrossAssetModel> cam;
+    std::vector<Date> simulationDates;
+    dummy |= (std::size_t)boost::make_shared<CamAmcFxOptionEngineBuilder>(cam, simulationDates).get();
+    dummy |= (std::size_t)boost::make_shared<CamAmcCurrencySwapEngineBuilder>(cam, simulationDates).get();
+    dummy |= (std::size_t)boost::make_shared<CamAmcSwapEngineBuilder>(cam, simulationDates).get();
+    dummy |= (std::size_t)boost::make_shared<LgmAmcBermudanSwaptionEngineBuilder>(cam, simulationDates).get();
+
+    dummy |= (std::size_t)boost::make_shared<FixedLegBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<ZeroCouponFixedLegBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<FloatingLegBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<CashflowLegBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<CPILegBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<YYLegBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<CMSLegBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<CMBLegBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<DigitalCMSLegBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<CMSSpreadLegBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<DigitalCMSSpreadLegBuilder>().get();
+    dummy |= (std::size_t)boost::make_shared<EquityLegBuilder>().get();
+
+    ELOG("Enforce builder registration: " << dummy);
 }
 
 OREApp::~OREApp() {
