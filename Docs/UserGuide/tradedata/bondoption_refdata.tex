@@ -14,6 +14,8 @@ specific to the bond option.
   node, see below for details
 \end{itemize}
 
+Note that only par redemption vanilla bonds are supported.
+
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -37,7 +39,6 @@ specific to the bond option.
 	  <Value>1.23</Value>
 	</StrikePrice>
       </StrikeData>
-      <Redemption>100.00</Redemption>
       <PriceType>Dirty</PriceType>
       <KnocksOut>false</KnocksOut>
       <BondData>
@@ -80,9 +81,9 @@ Allowable values:  See section \ref{ss:premiums}
     
     \item \lstinline!StrikeData!: A \lstinline!StrikeData! node is used as described in Section \ref{ss:strikedata} to represent the Bond Option strike price or strike yield. If StrikePrice is used, the strike price (\lstinline!Value! field) is expressed per unit notional.  If StrikeYield is used, the \lstinline!Yield! is quoted in decimal form, e.g. 5\% should be entered as 0.05.   
     
-  \item Redemption [Optional]: Redemption ratio in percent, e.g. \emph{100} means the bond is redeemed at par.
+%  \item Redemption [Optional]: Redemption ratio in percent, e.g. \emph{100} means the bond is redeemed at par.
   
-      Allowable values:  Any positive real number. Defaults to \emph{100} if left blank or omitted.
+ %     Allowable values:  Any positive real number. Defaults to \emph{100} if left blank or omitted.
   
     \item PriceType [Mandatory for StrikePrice, no impact for StrikeYield]: \\
     The payoff for a bond option is
