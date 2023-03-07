@@ -66,7 +66,8 @@ class TradeFactory : public QuantLib::Singleton<TradeFactory, std::integral_cons
 public:
     std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> getBuilders() const;
     boost::shared_ptr<AbstractTradeBuilder> getBuilder(const std::string& tradeType) const;
-    void addBuilder(const std::string& tradeType, const boost::shared_ptr<AbstractTradeBuilder>& builder);
+    void addBuilder(const std::string& tradeType, const boost::shared_ptr<AbstractTradeBuilder>& builder,
+                    const bool allowOverwrite = false);
 
     //! Build, throws for unknown className
     boost::shared_ptr<Trade> build(const std::string& className) const;
