@@ -36,16 +36,16 @@
 #error using an old version of Boost, please update.
 #endif
 
-// We require QuantLib 1.11 or higher
+// We require QuantLib 1.28 
 #include <ql/version.hpp>
-#if QL_HEX_VERSION < 0x011100f0
+#if QL_HEX_VERSION < 0x012800f0
 #error using an old version of QuantLib, please update.
 #endif
 
 //! Version string
-#define OPEN_SOURCE_RISK_VERSION "1.8.8.0"
+#define OPEN_SOURCE_RISK_VERSION "1.8.9.0"
 
 //! Version number
-#define OPEN_SOURCE_RISK_VERSION_NUM 1080800
+#define OPEN_SOURCE_RISK_VERSION_NUM 1080900
 
 #endif
