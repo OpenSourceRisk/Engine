@@ -31,7 +31,6 @@ namespace ore {
 namespace data {
 
 class EquityMarginLegBuilder : public ore::data::LegBuilder {
-    ORE_REGISTER_LEG_BUILDER(EquityMarginLegBuilder)
 public:
     EquityMarginLegBuilder() : LegBuilder("EquityMargin") {}
     QuantLib::Leg buildLeg(const ore::data::LegData& data,

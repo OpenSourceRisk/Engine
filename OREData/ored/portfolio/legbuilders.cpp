@@ -28,20 +28,6 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-ORE_REGISTER_LEG_BUILDER_IMPL(FixedLegBuilder)
-ORE_REGISTER_LEG_BUILDER_IMPL(ZeroCouponFixedLegBuilder)
-ORE_REGISTER_LEG_BUILDER_IMPL(FloatingLegBuilder)
-ORE_REGISTER_LEG_BUILDER_IMPL(CashflowLegBuilder)
-ORE_REGISTER_LEG_BUILDER_IMPL(CPILegBuilder)
-ORE_REGISTER_LEG_BUILDER_IMPL(YYLegBuilder)
-ORE_REGISTER_LEG_BUILDER_IMPL(CMSLegBuilder)
-ORE_REGISTER_LEG_BUILDER_IMPL(CMBLegBuilder)
-ORE_REGISTER_LEG_BUILDER_IMPL(DigitalCMSLegBuilder)
-ORE_REGISTER_LEG_BUILDER_IMPL(CMSSpreadLegBuilder)
-ORE_REGISTER_LEG_BUILDER_IMPL(DigitalCMSSpreadLegBuilder)
-ORE_REGISTER_LEG_BUILDER_IMPL(EquityLegBuilder)
-
-    
 Leg FixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                               RequiredFixings& requiredFixings, const string& configuration,
                               const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
