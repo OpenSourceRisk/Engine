@@ -234,47 +234,47 @@ void OREApp::analytics() {
         
         // Read all inputs from params and files referenced in params
         CONSOLEW("Loading inputs");
-        auto inputs = boost::make_shared<InputParameters>();
-        buildInputParameters(inputs, params_);
+        inputs_ = boost::make_shared<InputParameters>();
+        buildInputParameters(inputs_, params_);
         auto outputs = boost::make_shared<OutputParameters>(params_);
         CONSOLE("OK");
         
         // Set global evaluation date, though already set in the OREAppInputParameters c'tor
-        Settings::instance().evaluationDate() = inputs->asof();
+        Settings::instance().evaluationDate() = inputs_->asof();
 
         // FIXME
-        GlobalPseudoCurrencyMarketParameters::instance().set(inputs->pricingEngine()->globalParameters());
+        GlobalPseudoCurrencyMarketParameters::instance().set(inputs_->pricingEngine()->globalParameters());
 
         // Initialize the global conventions 
-        InstrumentConventions::instance().setConventions(inputs->conventions());
+        InstrumentConventions::instance().setConventions(inputs_->conventions());
 
         // Create a market data loader that reads market data, fixings, dividends from csv files
         auto csvLoader = buildCsvLoader(params_);
-        auto loader = boost::make_shared<MarketDataCsvLoader>(inputs, csvLoader);
+        auto loader = boost::make_shared<MarketDataCsvLoader>(inputs_, csvLoader);
 
         // Create the analytics manager
-        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs, loader);
+        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs_, loader);
         LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
         CONSOLEW("Requested analytics");
-        CONSOLE(to_string(inputs->analytics()));
-        LOG("Requested analytics: " << to_string(inputs->analytics()));
+        CONSOLE(to_string(inputs_->analytics()));
+        LOG("Requested analytics: " << to_string(inputs_->analytics()));
 
         // Run the requested analytics
-        analyticsManager_->runAnalytics(inputs->analytics());
+        analyticsManager_->runAnalytics(inputs_->analytics());
 
         // Write reports to files in the results path
         Analytic::analytic_reports reports = analyticsManager_->reports();
         analyticsManager_->toFile(reports,
-                                  inputs->resultsPath().string(), outputs->fileNameMap(),
-                                  inputs->csvSeparator(), inputs->csvCommentCharacter(),
-                                  inputs->csvQuoteChar(), inputs->reportNaString());
+                                  inputs_->resultsPath().string(), outputs->fileNameMap(),
+                                  inputs_->csvSeparator(), inputs_->csvCommentCharacter(),
+                                  inputs_->csvQuoteChar(), inputs_->reportNaString());
 
         // Write npv cube(s)
         for (auto a : analyticsManager_->npvCubes()) {
             for (auto b : a.second) {
                 LOG("write npv cube " << b.first);
                 string reportName = b.first;
-                std::string fileName = inputs->resultsPath().string() + "/" + outputs->outputFileName(reportName, "dat");
+                std::string fileName = inputs_->resultsPath().string() + "/" + outputs->outputFileName(reportName, "dat");
                 LOG("write npv cube " << reportName << " to file " << fileName);
                 saveCube(fileName, *b.second);
             }
@@ -284,7 +284,7 @@ void OREApp::analytics() {
         for (auto a : analyticsManager_->mktCubes()) {
             for (auto b : a.second) {
                 string reportName = b.first;
-                std::string fileName = inputs->resultsPath().string() + "/" + outputs->outputFileName(reportName, "dat");
+                std::string fileName = inputs_->resultsPath().string() + "/" + outputs->outputFileName(reportName, "dat");
                 LOG("write market cube " << reportName << " to file " << fileName);
                 saveAggregationScenarioData(fileName, *b.second);
             }
