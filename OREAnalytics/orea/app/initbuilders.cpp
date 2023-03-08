@@ -18,6 +18,10 @@
 
 #include <orea/app/initbuilders.hpp>
 
+#include <ored/model/calibrationinstrumentfactory.hpp>
+#include <ored/model/calibrationinstruments/cpicapfloor.hpp>
+#include <ored/model/calibrationinstruments/yoycapfloor.hpp>
+#include <ored/model/calibrationinstruments/yoyswap.hpp>
 #include <ored/portfolio/commoditylegdata.hpp>
 #include <ored/portfolio/durationadjustedcmslegdata.hpp>
 #include <ored/portfolio/equityfxlegdata.hpp>
@@ -29,6 +33,10 @@
 
 #define REG_LEGDATA(NAME, CLASS)                                                                                       \
     ore::data::LegDataFactory::instance().addBuilder(NAME, &ore::data::createLegData<CLASS>);
+
+#define REG_CALIBRATION_INSTR(NAME, CLASS)                                                                             \
+    ore::data::CalibrationInstrumentFactory::instance().addBuilder(NAME,                                               \
+                                                                   &ore::data::createCalibrationInstrument<CLASS>);
 
 namespace ore::analytics {
 
@@ -60,6 +68,10 @@ void initBuilders() {
     REG_LEGDATA("CommodityFloating", ore::data::CommodityFloatingLegData)
     REG_LEGDATA("DurationAdjustedCMS", ore::data::DurationAdjustedCmsLegData)
     REG_LEGDATA("EquityMargin", ore::data::EquityMarginLegData)
+
+    REG_CALIBRATION_INSTR("CpiCapFloor", ore::data::CpiCapFloor);
+    REG_CALIBRATION_INSTR("YoYCapFloor", ore::data::YoYCapFloor);
+    REG_CALIBRATION_INSTR("YoYSwap", ore::data::YoYSwap);
 }
 
 } // namespace ore::analytics
