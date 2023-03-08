@@ -146,8 +146,6 @@ private:
 \ingroup tradedata
 */
 class Bond : public Trade {
-    static TradeBuilderRegister<TradeBuilder<Bond>> reg_;
-
 public:
     //! Default Constructor
     explicit Bond() : Trade("Bond") {}

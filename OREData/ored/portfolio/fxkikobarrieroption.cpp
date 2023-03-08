@@ -43,8 +43,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<FxKIKOBarrierOption>> FxKIKOBarrierOption::reg_("FxKIKOBarrierOption");
-
 void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Date today = Settings::instance().evaluationDate();

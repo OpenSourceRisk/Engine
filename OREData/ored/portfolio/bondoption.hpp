@@ -37,8 +37,6 @@ namespace data {
 \ingroup tradedata
 */
 class BondOption : public Trade {
-    static TradeBuilderRegister<TradeBuilder<BondOption>> reg_;
-
 public:
     //! Default constructor
     BondOption() : Trade("BondOption"), redemption_(0.0), knocksOut_(false) {}

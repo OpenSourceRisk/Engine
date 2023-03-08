@@ -21,8 +21,6 @@
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<CrossCurrencySwap>> CrossCurrencySwap::reg_("CrossCurrencySwap");
-
 CrossCurrencySwap::CrossCurrencySwap(const Envelope& env, const vector<LegData>& legData) : Swap(env, legData, "CrossCurrencySwap") {}
 
 CrossCurrencySwap::CrossCurrencySwap(const Envelope& env, const LegData& leg0, const LegData& leg1)

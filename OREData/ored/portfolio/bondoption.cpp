@@ -46,8 +46,6 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<BondOption>> BondOption::reg_("BondOption");
-
 void BondOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Building Bond Option: " << id());
 

@@ -102,8 +102,6 @@ private:
 };
 
 class EquityCliquetOption : public CliquetOption {
-    static TradeBuilderRegister<TradeBuilder<EquityCliquetOption>> reg_;
-
 public:
     EquityCliquetOption() : CliquetOption("EquityCliquetOption") {}
     EquityCliquetOption(const std::string& tradeType, ore::data::Envelope& env,

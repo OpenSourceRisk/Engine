@@ -207,8 +207,6 @@ void BondData::checkData() const {
                                             << securityId_ << "'");
 }
 
-TradeBuilderRegister<TradeBuilder<Bond>> Bond::reg_("Bond");
-
 void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Bond::build() called for trade " << id());
 

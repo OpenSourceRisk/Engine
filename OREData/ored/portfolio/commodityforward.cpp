@@ -36,8 +36,6 @@ using namespace std;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<CommodityForward>> CommodityForward::reg_("CommodityForward");
-
 CommodityForward::CommodityForward() : Trade("CommodityForward"), quantity_(0.0), strike_(0.0) {}
 
 CommodityForward::CommodityForward(const Envelope& envelope, const string& position, const string& commodityName,

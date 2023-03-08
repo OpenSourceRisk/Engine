@@ -31,8 +31,6 @@ using QuantLib::Date;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<FailedTrade>> FailedTrade::reg_("Failed");
-
 FailedTrade::FailedTrade()
     : Trade("Failed") {}
 

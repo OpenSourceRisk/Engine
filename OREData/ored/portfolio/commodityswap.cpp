@@ -40,8 +40,6 @@ using std::max;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<CommoditySwap>> CommoditySwap::reg_("CommoditySwap");
-
 void CommoditySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     reset();
