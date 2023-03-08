@@ -87,8 +87,6 @@ private:
     ConvertibleBondData::ConversionData conversionData_;
     ConvertibleBondData::DividendProtectionData dividendProtectionData_;
     std::string detachable_;
-
-    static ReferenceDatumRegister<ReferenceDatumBuilder<ConvertibleBondReferenceDatum>> reg_;
 };
 
 } // namespace data

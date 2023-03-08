@@ -116,7 +116,6 @@ public:
 
 private:
     BondData bondData_;
-    static ReferenceDatumRegister<ReferenceDatumBuilder<BondReferenceDatum>> reg_;
 };
 
 /*! Hold reference data on a constituent of a credit index.
@@ -186,8 +185,6 @@ public:
 
 private:
     std::set<CreditIndexConstituent> constituents_;
-
-    static ReferenceDatumRegister<ReferenceDatumBuilder<CreditIndexReferenceDatum>> reg_;
 };
 
 
@@ -231,9 +228,6 @@ public:
 
     EquityIndexReferenceDatum() {}
     EquityIndexReferenceDatum(const string& name) : IndexReferenceDatum(TYPE, name) {}
-
-private:
-    static ReferenceDatumRegister<ReferenceDatumBuilder<EquityIndexReferenceDatum>> reg_;
 };
 
 /*
@@ -308,7 +302,6 @@ private:
     QuantLib::Calendar hedgeCalendar_;
     std::map<std::string, std::string> fxIndexes_;
     vector<pair<string, double>> data_;
-    static ReferenceDatumRegister<ReferenceDatumBuilder<CurrencyHedgedEquityIndexReferenceDatum>> reg_;
 };
 
 //! CreditIndex Reference data, contains the names and weights of a credit index
@@ -339,8 +332,6 @@ public:
 
 private:
     CreditData creditData_;
-
-    static ReferenceDatumRegister<ReferenceDatumBuilder<CreditReferenceDatum>> reg_;
 };
 
 
@@ -378,9 +369,6 @@ public:
 
 protected:
     EquityData equityData_;
-
-private:
-    static ore::data::ReferenceDatumRegister<ore::data::ReferenceDatumBuilder<EquityReferenceDatum>> reg_;
 };
 
 //! Bond Basket Reference Data
@@ -402,7 +390,6 @@ public:
 
 private:
     std::vector<BondUnderlying> underlyingData_;
-    static ore::data::ReferenceDatumRegister<ore::data::ReferenceDatumBuilder<BondBasketReferenceDatum>> reg_;
 };
     
 //! Interface for Reference Data lookups
