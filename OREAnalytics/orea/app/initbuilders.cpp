@@ -87,6 +87,7 @@
 #include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/inflationswap.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
+#include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/multilegoption.hpp>
@@ -115,6 +116,9 @@
 
 #define REG_TRADEBUILDER(NAME, CLASS)                                                                                  \
     ore::data::TradeFactory::instance().addBuilder(NAME, boost::make_shared<ore::data::TradeBuilder<CLASS>>());
+
+#define REG_LEGBUILDER(NAME, CLASS)                                                                                    \
+    ore::data::EngineBuilderFactory::instance().addLegBuilder([]() { return boost::make_shared<CLASS>(); });
 
 namespace ore::analytics {
 
@@ -220,6 +224,23 @@ void initBuilders() {
     REG_TRADEBUILDER("FxBarrierOption", ore::data::FxBarrierOption)
     REG_TRADEBUILDER("EquityOption", ore::data::EquityOption)
     REG_TRADEBUILDER("FxOption", ore::data::FxOption)
+
+    REG_LEGBUILDER("CommodityFixedLegBuilder", ore::data::CommodityFixedLegBuilder)
+    REG_LEGBUILDER("CommodityFloatingLegBuilder", ore::data::CommodityFloatingLegBuilder)
+    REG_LEGBUILDER("DurationAdjustedCmsLegBuilder", ore::data::DurationAdjustedCmsLegBuilder)
+    REG_LEGBUILDER("FixedLegBuilder", ore::data::FixedLegBuilder)
+    REG_LEGBUILDER("ZeroCouponFixedLegBuilder", ore::data::ZeroCouponFixedLegBuilder)
+    REG_LEGBUILDER("FloatingLegBuilder", ore::data::FloatingLegBuilder)
+    REG_LEGBUILDER("CashflowLegBuilder", ore::data::CashflowLegBuilder)
+    REG_LEGBUILDER("CPILegBuilder", ore::data::CPILegBuilder)
+    REG_LEGBUILDER("YYLegBuilder", ore::data::YYLegBuilder)
+    REG_LEGBUILDER("CMSLegBuilder", ore::data::CMSLegBuilder)
+    REG_LEGBUILDER("CMBLegBuilder", ore::data::CMBLegBuilder)
+    REG_LEGBUILDER("DigitalCMSLegBuilder", ore::data::DigitalCMSLegBuilder)
+    REG_LEGBUILDER("CMSSpreadLegBuilder", ore::data::CMSSpreadLegBuilder)
+    REG_LEGBUILDER("DigitalCMSSpreadLegBuilder", ore::data::DigitalCMSSpreadLegBuilder)
+    REG_LEGBUILDER("EquityLegBuilder", ore::data::EquityLegBuilder)
+    REG_LEGBUILDER("EquityMarginLegBuilder", ore::data::EquityMarginLegBuilder)
 }
 
 } // namespace ore::analytics

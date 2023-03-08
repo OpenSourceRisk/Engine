@@ -41,8 +41,6 @@
 #define ORE_REGISTER_ENGINE_BUILDER_IMPL(CLASSNAME) ore::data::EngineBuilderRegister<CLASSNAME> CLASSNAME::reg_eb_; 
 #define ORE_REGISTER_AMC_ENGINE_BUILDER(CLASSNAME) static ore::data::AmcEngineBuilderRegister<CLASSNAME> reg_amceb_;
 #define ORE_REGISTER_AMC_ENGINE_BUILDER_IMPL(CLASSNAME) ore::data::AmcEngineBuilderRegister<CLASSNAME> CLASSNAME::reg_amceb_; 
-#define ORE_REGISTER_LEG_BUILDER(CLASSNAME) static ore::data::LegBuilderRegister<CLASSNAME> reg_lb_;
-#define ORE_REGISTER_LEG_BUILDER_IMPL(CLASSNAME) ore::data::LegBuilderRegister<CLASSNAME> CLASSNAME::reg_lb_; 
 
 namespace ore {
 namespace data {
@@ -213,12 +211,6 @@ template <typename T> struct AmcEngineBuilderRegister {
             [](const boost::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& grid) {
                 return boost::make_shared<T>(cam, grid);
             });
-    }
-};
-
-template <typename T> struct LegBuilderRegister {
-    LegBuilderRegister<T>() {
-        EngineBuilderFactory::instance().addLegBuilder([]() { return boost::make_shared<T>(); });
     }
 };
 
