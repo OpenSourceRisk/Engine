@@ -34,6 +34,7 @@ namespace data {
     \ingroup builders
  */
 class QuantoEquityEuropeanOptionEngineBuilder : public QuantoEuropeanOptionEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(QuantoEquityEuropeanOptionEngineBuilder)
 public:
     QuantoEquityEuropeanOptionEngineBuilder()
         : QuantoEuropeanOptionEngineBuilder("BlackScholes", {"QuantoEquityOption"}, AssetClass::EQ) {}

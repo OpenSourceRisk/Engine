@@ -115,6 +115,10 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
                                    << " so switching to a price error helper.");
     }
 
+    DLOG("Created swaption helper with expiry " << expiry << " and term " << term << ": vol=" << vol->value()
+                                                << ", index=" << iborIndex->name() << ", strike=" << strike
+                                                << ", shift=" << shift);
+
     return std::make_pair(helper, strike);
 }
 

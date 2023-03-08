@@ -53,6 +53,8 @@ SimpleProgressBar::SimpleProgressBar(const std::string& message, const QuantLib:
 }
 
 void SimpleProgressBar::updateProgress(const unsigned long progress, const unsigned long total) {
+    if (!ConsoleLog::instance().enabled())
+        return; 
     if (finalized_)
         return;
     if (progress >= total) {

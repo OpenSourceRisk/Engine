@@ -27,12 +27,14 @@ namespace ore {
 namespace analytics {
 
 JointNPVCube::JointNPVCube(const boost::shared_ptr<NPVCube>& cube1, const boost::shared_ptr<NPVCube>& cube2,
-                           const std::set<std::string>& ids, const bool requireUniqueIds)
-    : JointNPVCube({cube1, cube2}, ids, requireUniqueIds) {}
+                           const std::set<std::string>& ids, const bool requireUniqueIds,
+                           const std::function<Real(Real a, Real x)>& accumulator, const Real accumulatorInit)
+    : JointNPVCube({cube1, cube2}, ids, requireUniqueIds, accumulator, accumulatorInit) {}
 
 JointNPVCube::JointNPVCube(const std::vector<boost::shared_ptr<NPVCube>>& cubes, const std::set<std::string>& ids,
-                           const bool requireUniqueIds)
-    : NPVCube(), cubes_(cubes) {
+                           const bool requireUniqueIds, const std::function<Real(Real a, Real x)>& accumulator,
+                           const Real accumulatorInit)
+    : NPVCube(), cubes_(cubes), accumulator_(accumulator), accumulatorInit_(accumulatorInit) {
 
     // check we have at least one input cube
 
@@ -52,24 +54,25 @@ JointNPVCube::JointNPVCube(const std::vector<boost::shared_ptr<NPVCube>>& cubes,
                                                                  << cubes[0]->depth() << ")");
     }
 
-
-    // build list of result cube ids
+    std::set<std::string> allIds;
     if (!ids.empty()) {
-        // if ids are given, these define the order in the result cube
-        Size pos = 0;
-        for (const auto& id : ids) {
-            idIdx_[id] = pos++;
-        }
+        // if ids are given, these define the ids in the result cube
+        allIds = ids;
     } else {
-        // otherwise the ids in the source cubes define the order in the result cube
-        Size pos = 0;
+        // otherwise the ids in the source cubes define the ids in the result cube
         for (Size i = 0; i < cubes_.size(); ++i) {
-            for (auto const& [id, idxInCube] : cubes_[i]->idsAndIndexes()) {
-                const auto& [it, success] = idIdx_.insert({id, pos});
+            for (auto const& [id, ignored] : cubes_[i]->idsAndIndexes()) {
+                const auto& [ignored2, success] = allIds.insert(id);
                 QL_REQUIRE(!requireUniqueIds || success,
                            "JointNPVSensiCube: input cubes have duplicate id '" << id << "', this is not allowed");
             }
         }
+    }
+
+    // build list of result cube ids
+    Size pos = 0;
+    for (const auto& id : allIds) {
+        idIdx_[id] = pos++;
     }
 
     // populate cubeAndId_ vector which is the basis for the lookup
@@ -111,10 +114,13 @@ std::set<std::pair<boost::shared_ptr<NPVCube>, Size>> JointNPVCube::cubeAndId(Si
 }
 
 Real JointNPVCube::getT0(Size id, Size depth) const {
-    Real sum = 0.0;
-    for (auto const& p : cubeAndId(id))
-        sum += p.first->getT0(p.second, depth);
-    return sum;
+    auto cids = cubeAndId(id);
+    if (cids.size() == 1)
+        return cids.begin()->first->getT0(cids.begin()->second, depth);
+    Real tmp = accumulatorInit_;
+    for (auto const& p : cids)
+        tmp = accumulator_(tmp, p.first->getT0(p.second, depth));
+    return tmp;
 }
 
 void JointNPVCube::setT0(Real value, Size id, Size depth) {
@@ -125,10 +131,13 @@ void JointNPVCube::setT0(Real value, Size id, Size depth) {
 }
 
 Real JointNPVCube::get(Size id, Size date, Size sample, Size depth) const {
-    Real sum = 0.0;
-    for (auto const& p : cubeAndId(id))
-        sum += p.first->get(p.second, date, sample, depth);
-    return sum;
+    auto cids = cubeAndId(id);
+    if (cids.size() == 1)
+        return cids.begin()->first->get(cids.begin()->second, date, sample, depth);
+    Real tmp = accumulatorInit_;
+    for (auto const& p : cids)
+        tmp = accumulator_(tmp, p.first->get(p.second, date, sample, depth));
+    return tmp;
 }
 
 void JointNPVCube::set(Real value, Size id, Size date, Size sample, Size depth) {

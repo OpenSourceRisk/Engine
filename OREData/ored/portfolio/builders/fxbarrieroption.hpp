@@ -73,6 +73,7 @@ protected:
 };
 
 class FxBarrierOptionAnalyticEngineBuilder : public FxBarrierOptionEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(FxBarrierOptionAnalyticEngineBuilder)
 public:
     FxBarrierOptionAnalyticEngineBuilder() : FxBarrierOptionEngineBuilder("GarmanKohlhagen", "AnalyticBarrierEngine") {}
 
@@ -85,6 +86,7 @@ protected:
 };
 
 class FxBarrierOptionFDEngineBuilder : public FxBarrierOptionEngineBuilder {
+    ORE_REGISTER_ENGINE_BUILDER(FxBarrierOptionFDEngineBuilder)
 public:
     FxBarrierOptionFDEngineBuilder() : FxBarrierOptionEngineBuilder("GarmanKohlhagen", "FdBlackScholesBarrierEngine") {}
 

@@ -25,6 +25,8 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/tradefactory.hpp>
+
 #include <utility>
 
 namespace ore {
@@ -144,6 +146,8 @@ private:
 \ingroup tradedata
 */
 class Bond : public Trade {
+    static TradeBuilderRegister<TradeBuilder<Bond>> reg_;
+
 public:
     //! Default Constructor
     explicit Bond() : Trade("Bond") {}

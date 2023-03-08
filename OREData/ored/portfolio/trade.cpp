@@ -154,7 +154,6 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
             additionalData_["amount[" + legID + "]"] = flowAmount;
             additionalData_["paymentDate[" + legID + "]"] = ore::data::to_string(flow->date());
             boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
-            string couponId = to_string(j);
             if (coupon) {
                 Real currentNotional = 0;
                 try {
@@ -171,7 +170,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                 } catch (std::exception& e) {
                     ALOG("coupon rate could not be determined for trade " << id() << ", set to zero: " << e.what());
                 }
-                additionalData_["rate[" + legID + "][" + couponId + "]"] = rate;
+                additionalData_["rate[" + legID + "]"] = rate;
 
                 if (auto frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow)) {
                     additionalData_["index[" + legID + "]"] = frc->index()->name();
@@ -180,23 +179,55 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
 
                 if (auto eqc = boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(flow)) {
                     auto arc = eqc->pricer()->additionalResultCache();
-                    additionalData_["initialPrice[" + legID + "][" + couponId + "]"] = arc.initialPrice;
-                    additionalData_["endEquityFixing[" + legID + "][" + couponId + "]"] = arc.endFixing;
+                    additionalData_["initialPrice[" + legID + "]"] = arc.initialPrice;
+                    additionalData_["endEquityFixing[" + legID + "]"] = arc.endFixing;
                     if (arc.startFixing != Null<Real>())
-                        additionalData_["startEquityFixing[" + legID + "][" + couponId + "]"] = arc.startFixing;
+                        additionalData_["startEquityFixing[" + legID + "]"] = arc.startFixing;
                     if (arc.startFixingTotal != Null<Real>())
-                        additionalData_["startEquityFixingTotal[" + legID + "][" + couponId + "]"] =
+                        additionalData_["startEquityFixingTotal[" + legID + "]"] =
                             arc.startFixingTotal;
                     if (arc.endFixingTotal != Null<Real>())
-                        additionalData_["endEquityFixingTotal[" + legID + "][" + couponId + "]"] = arc.endFixingTotal;
+                        additionalData_["endEquityFixingTotal[" + legID + "]"] = arc.endFixingTotal;
                     if (arc.startFxFixing != Null<Real>())
-                        additionalData_["startFxFixing[" + legID + "][" + couponId + "]"] = arc.startFxFixing;
+                        additionalData_["startFxFixing[" + legID + "]"] = arc.startFxFixing;
                     if (arc.endFxFixing != Null<Real>())
-                        additionalData_["endFxFixing[" + legID + "][" + couponId + "]"] = arc.endFxFixing;
+                        additionalData_["endFxFixing[" + legID + "]"] = arc.endFxFixing;
                     if (arc.pastDividends != Null<Real>())
-                        additionalData_["pastDividends[" + legID + "][" + couponId + "]"] = arc.pastDividends;
+                        additionalData_["pastDividends[" + legID + "]"] = arc.pastDividends;
                     if (arc.forecastDividends != Null<Real>())
-                        additionalData_["forecastDividends[" + legID + "][" + couponId + "]"] = arc.forecastDividends;
+                        additionalData_["forecastDividends[" + legID + "]"] = arc.forecastDividends;
+                }
+
+                if (auto cpic = boost::dynamic_pointer_cast<QuantExt::CPICoupon>(flow)) {
+                    Real baseCPI;
+                    baseCPI = cpic->baseCPI();
+                    if (baseCPI == Null<Real>()) {
+                        try {
+                            baseCPI =
+                                QuantLib::CPI::laggedFixing(cpic->cpiIndex(), cpic->baseDate() + cpic->observationLag(),
+                                                            cpic->observationLag(), cpic->observationInterpolation());
+                        } catch (std::exception& e) {
+                            ALOG("CPICoupon baseCPI could not be interpolated for additional results for trade " << id()
+                                                                                                             << ".")
+                        }
+                    }
+
+                    additionalData_["baseCPI[" + legID + "]"] = baseCPI;
+                } else if (auto cpicf = boost::dynamic_pointer_cast<QuantLib::CPICashFlow>(flow)) {
+                    Real baseCPI;
+                    baseCPI = cpicf->baseFixing();
+                    if (baseCPI == Null<Real>()) {
+                        try {
+                            baseCPI = QuantLib::CPI::laggedFixing(cpicf->cpiIndex(),
+                                                                  cpicf->baseDate() + cpicf->observationLag(),
+                                                                  cpicf->observationLag(), cpicf->interpolation());
+                        } catch (std::exception& e) {
+                            ALOG("CPICashFlow baseCPI could not be interpolated for additional results for trade " << id()
+                                                                                                               << ".")
+                        }
+                    }
+
+                    additionalData_["baseCPI[" + legID + "]"] = baseCPI;
                 }
             }
             break;

@@ -19,8 +19,10 @@
 #include <orea/aggregation/xvacalculator.hpp>
 #include <orea/app/analytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
+#include <orea/app/marketdatainmemoryloader.hpp>
 #include <orea/app/marketdataloader.hpp>
 #include <orea/app/oreapp.hpp>
 #include <orea/app/parameters.hpp>
@@ -29,6 +31,7 @@
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/app/xvarunner.hpp>
+#include <orea/cube/cube_io.hpp>
 #include <orea/cube/cubecsvreader.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/cube/cubewriter.hpp>

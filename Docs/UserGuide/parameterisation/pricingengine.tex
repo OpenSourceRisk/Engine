@@ -1,0 +1,212 @@
+%--------------------------------------------------------
+\subsection{Pricing Engines: {\tt pricingengine.xml}}
+%--------------------------------------------------------
+\label{sec:configuration_pricingengines}
+
+The pricing engine configuration file is provided to select pricing models and pricing engines by product type. The
+following is an overview over the Example section's {\tt pricingengine.xml}. Further below we discuss the Bermudan Swaption engine parametrisation in more detail.
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<PricingEngines>
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CrossCurrencySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCrossCurrencySwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingFxForwardEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxOptionAmerican">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
+      <Parameter name="XGrid">100</Parameter>
+      <Parameter name="DampingSteps">0</Parameter>
+      <!-- optional, prevents too small time grids for increased
+           Greek precision when expiry is near, set to 1 if omitted -->
+      <Parameter name="TimeGridMinimumSize">1</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EuropeanSwaption">
+    <Model>BlackBachelier</Model> <!-- depends on input vol -->
+    <ModelParameters/>
+    <Engine>BlackBachelierSwaptionEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="BermudanStrategy">CoterminalATM</Parameter>
+      <!-- ccy specific reversions -->
+      <Parameter name="Reversion_EUR">0.03</Parameter>
+      <Parameter name="Reversion_USD">0.04</Parameter>
+      <!-- reversion to use if no ccy specific value is given -->
+      <Parameter name="Reversion">0.02</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="ShiftHorizon">0.5</Parameter>
+      <Parameter name="Tolerance">0.0001</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <Parameter name="sy">3.0</Parameter>
+      <Parameter name="ny">10</Parameter>
+      <Parameter name="sx">3.0</Parameter>
+      <Parameter name="nx">10</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CapFloor">
+    <Model>IborCapModel</Model>
+    <ModelParameters/>
+    <Engine>IborCapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CapFlooredIborLeg">
+    <Model>BlackOrBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackIborCouponPricer</Engine>
+    <EngineParameters>
+      <!-- Black76 or BivariateLognormal -->
+      <TimingAdjustment>Black76</TimingAdjustment>
+      <!-- Correlation Parameter for BivariateLognormal -->
+      <Correlation>1.0</Correlation>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingEquityForwardEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="EquityOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointCdsEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CMS">
+    <Model>Hagan</Model><!-- or LinearTSR -->
+    <ModelParameters/>
+    <Engine>Analytic</Engine> <!-- or Numerical -->
+    <EngineParameters>
+      <!-- Alternative Yield Curve Models: ExactYield, ParallelShifts, NonParallelShifts -->
+      <Parameter name="YieldCurveModel">Standard</Parameter> 
+      <Parameter name="MeanReversion_EUR">0.01</Parameter>
+      <Parameter name="MeanReversion_USD">0.02</Parameter>
+      <Parameter name="MeanReversion">0.0</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CMSSpread">
+    <Model>BrigoMercurio</Model>
+    <ModelParameters/>
+    <Engine>Analytic</Engine>
+    <EngineParameters>
+      <Parameter name="IntegrationPoints">16</Parameter>
+    </EngineParameters>
+  </Product>
+  <GlobalParameters>
+    <Parameter name="ContinueOnCalibrationError">true</Parameter>
+    <!-- typically not present in a user configuration, but used internally -->
+    <Parameter name="Calibrate">true</Parameter>
+    <Parameter name="GenerateAdditionalResults">true</Parameter>
+    <Parameter name="RunType">NPV</Parameter>
+  </GlobalParameters>
+\end{minted}
+\caption{Pricing engine configuration}
+\label{lst:pricingengine_config}
+\end{longlisting}
+
+These settings will be taken into account when the engine factory is asked to build the respective pricing engines and required models, and to calibrate the required model.
+
+\medskip
+For example, in case of the Bermudan Swaption, the parameters are interpreted as follows:
+
+\begin{itemize}
+\item The only model currently supported for Bermudan Swaption pricing is the LGM selected here. 
+
+\item The first block of model parameters then provides initial values for the model (Reversion, Volatility) and chooses
+  the parametrisation of the LGM model with ReversionType and VolatilityType choices {\em HullWhite} and {\em
+    Hagan}. Notice the possibility to specify a currency-specific reversion. Calibration and BermudanStrategy can be set
+  to {\em None} in order to skip model calibration. Alternatively, Calibration is set to {\em Bootstrap} and
+  BermudanStrategy to {\em CoterminalATM} in order to calibrate to instrument-specific co-terminal ATM Swaptions,
+  i.e. chosen to match the instruments first expiry and final maturity.  If {\em CoterminalDealStrike} is chosen, the
+  co-terminal swaptions will match the fixed rate of the deal (if the deal has changing fixed rates, the first rate is
+  matched). Finally if the ShiftHorizon parameter is given, its value times the remaining maturity time of the deal is
+  chosen as the horizon shift parameter for the LGM model. If not given, this parameter defaults to $0.5$.
+
+\item The second block of engine parameters specifies the Numerical Swaption engine parameters which determine the
+  number of standard deviations covered in the probability density integrals (sy and sx), and the number of grid points
+  used per standard deviation (ny and nx).
+\end{itemize}
+
+To see the configuration options for the alternative CMS engines (Hagan Numerical, LinearTSR) or the Black Ibor coupon
+pricer (CapFlooredIborLeg), please refer to the commented parts in {\tt Examples/Input/pricingengine.xml}.
+
+\medskip
+This file is relevant in particular for structured products which are on the roadmap of future ORE releases. But it is also
+intended to allow the selection of optimised pricing engines for vanilla products such as Interest Rate Swaps.
+
+\medskip
+In addition to product specific settings there is also a block with global parameters with the following meaning:
+\begin{itemize}
+\item ContinueOnCalibrationError: If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
+  LGM model) will not cause the trade building to fail, instead a warning is logged and the trade is processed
+  anyway. Optional, defaults to false.
+\item Calibrate: If false, model calibration is disabled. This flag is usually not present in a user configuration, but
+  only used internally for certain workflows within ORE which do not require a model calibration. Optional, defaults to
+  true.
+\item GenerateAdditionalResults: If false, the generation of additional results within pricing engines will be
+  suppressed (for those pricing engines which support this). This flag is usually not present in a user configuration,
+  but only used internally to improve the performance for processes which only rely on the NPV as a result from pricing
+  engines, e.g. when repricing trades under sensitivity or stress scenarios. Option, defaults to false.
+\item RunType: Set automatically. One of NPV, SensitivityDelta, SensitivityDeltaGamma, Stress, Exposure, Capital,
+  TradeDetails, PortfolioAnalyser, HistoricalPnL, depending on the context for which a portfolio was built. Might also
+  be left empty. This is used by some pricing engines to adapt to certain run types. E.g. a first order sensitivity pnl
+  expansion might be used for a SensitivityDelta run by an engine which is able to compute analytical or AAD first order
+  sensitivities.
+\end{itemize}

@@ -28,6 +28,8 @@
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<CreditLinkedSwap>> CreditLinkedSwap::reg_("CreditLinkedSwap");
+
 void CreditLinkedSwap::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* n = XMLUtils::getChildNode(node, "CreditLinkedSwapData");
@@ -179,6 +181,13 @@ void CreditLinkedSwap::build(const boost::shared_ptr<EngineFactory>& engineFacto
     // set pricing engine
 
     qlInstr->setPricingEngine(builder->engine(npvCurrency_, creditCurveId_));
+
+    // ISDA taxonomy
+
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Exotic");
+    additionalData_["isdaSubProduct"] = string("");  
+    additionalData_["isdaTransaction"] = string("");  
 
     // log
 

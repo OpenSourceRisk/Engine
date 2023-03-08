@@ -116,6 +116,7 @@
 #include <ored/portfolio/barrieroptionwrapper.hpp>
 #include <ored/portfolio/basketdata.hpp>
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/bondoption.hpp>
 #include <ored/portfolio/bondrepo.hpp>
 #include <ored/portfolio/bondtotalreturnswap.hpp>
 #include <ored/portfolio/bondutils.hpp>
@@ -141,6 +142,7 @@
 #include <ored/portfolio/builders/commodityasianoption.hpp>
 #include <ored/portfolio/builders/commodityforward.hpp>
 #include <ored/portfolio/builders/commodityoption.hpp>
+#include <ored/portfolio/builders/commodityspreadoption.hpp>
 #include <ored/portfolio/builders/commodityswap.hpp>
 #include <ored/portfolio/builders/commodityswaption.hpp>
 #include <ored/portfolio/builders/cpicapfloor.hpp>
@@ -183,6 +185,7 @@
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/cliquetoption.hpp>
 #include <ored/portfolio/commodityapo.hpp>
+#include <ored/portfolio/commoditydigitalapo.hpp>
 #include <ored/portfolio/commoditydigitaloption.hpp>
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commoditylegbuilder.hpp>
@@ -284,8 +287,10 @@
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/currencyconfig.hpp>
+#include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/filteredbufferedlogger.hpp>
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>

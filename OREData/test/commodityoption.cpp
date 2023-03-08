@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(testCommodityOptionFromXml) {
 
     // Load portfolio from XML string
     Portfolio portfolio;
-    portfolio.loadFromXMLString(tradeXml);
+    portfolio.fromXMLString(tradeXml);
 
     // Extract CommodityOption trade from portfolio
     boost::shared_ptr<Trade> trade = portfolio.trades().begin()->second;
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(testCommodityOptionFromXml) {
     // Make trade short call and test price is negated
     replace_all(tradeXml, ">Long<", ">Short<");
     portfolio.clear();
-    portfolio.loadFromXMLString(tradeXml);
+    portfolio.fromXMLString(tradeXml);
     trade = portfolio.trades().begin()->second;
     BOOST_CHECK_NO_THROW(trade->build(td.engineFactory));
     BOOST_CHECK_CLOSE(trade->instrument()->NPV(), -cachedCallPrice, testTolerance);
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(testCommodityOptionFromXml) {
     // Make trade short put and test price
     replace_all(tradeXml, ">Call<", ">Put<");
     portfolio.clear();
-    portfolio.loadFromXMLString(tradeXml);
+    portfolio.fromXMLString(tradeXml);
     trade = portfolio.trades().begin()->second;
     BOOST_CHECK_NO_THROW(trade->build(td.engineFactory));
     BOOST_CHECK_CLOSE(trade->instrument()->NPV(), -cachedPutPrice, testTolerance);
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(testCommodityOptionFromXml) {
     // Make trade long put and test price
     replace_all(tradeXml, ">Short<", ">Long<");
     portfolio.clear();
-    portfolio.loadFromXMLString(tradeXml);
+    portfolio.fromXMLString(tradeXml);
     trade = portfolio.trades().begin()->second;
     BOOST_CHECK_NO_THROW(trade->build(td.engineFactory));
     BOOST_CHECK_CLOSE(trade->instrument()->NPV(), cachedPutPrice, testTolerance);

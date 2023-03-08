@@ -45,6 +45,8 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<ForwardBond>> ForwardBond::reg_("ForwardBond");
+
 void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("ForwardBond::build() called for trade " << id());
 
@@ -153,6 +155,12 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondData_.bondNotional();
     additionalData_["originalNotional"] = originalNotional(bond->cashflows()) * bondData_.bondNotional();
     additionalData_["currency"] = currency_;
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Forward");
+    additionalData_["isdaSubProduct"] = string("Debt");
+    additionalData_["isdaTransaction"] = string("");
 }
 
 void ForwardBond::fromXML(XMLNode* node) {

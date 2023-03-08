@@ -25,12 +25,14 @@
  namespace ore {
  namespace data {
 
- //! Serializable Fx Asian Option
+ //! Serializable Fx Average Forward
  /*!
    Payoff: (fixedPayer ? 1 : -1) * (referenceNotional * averageFX - settlementNotional)
    \ingroup tradedata
  */
  class FxAverageForward : public Trade {
+     static TradeBuilderRegister<TradeBuilder<FxAverageForward>> reg_;
+
  public:
      //! Default constructor
      FxAverageForward() : Trade("FxAverageForward") {}
@@ -39,12 +41,12 @@
 		      bool fixedPayer,
 		      const std::string& referenceCurrency, double referenceNotional,
 		      const std::string settlementCurrency, double settlementNotional,
-		      const std::string& fxIndex)
+		      const std::string& fxIndex, const string& settlement = "Cash")
        : Trade("FxAverageForward", env),
 	 observationDates_(observationDates), paymentDate_(paymentDate), fixedPayer_(fixedPayer),
 	 referenceCurrency_(referenceCurrency), referenceNotional_(referenceNotional),
 	 settlementCurrency_(settlementCurrency), settlementNotional_(settlementNotional),
-	 fxIndex_(fxIndex) {}
+	 fxIndex_(fxIndex), settlement_(settlement) {}
 
      //! Build QuantLib/QuantExt instrument, link pricing engine
      void build(const boost::shared_ptr<EngineFactory>&) override;
@@ -59,6 +61,7 @@
      const string& settlementCurrency() const { return settlementCurrency_; }
      double settlementNotional() const { return settlementNotional_; }
      const std::string& fxIndex() const { return fxIndex_; }
+     const string& settlement() const { return settlement_; }
      //@}
 
      //! \name Serialisation
@@ -79,6 +82,7 @@
      double settlementNotional_;
      //! Needed for past fixings
      std::string fxIndex_;
+     std::string settlement_;
      bool inverted_ = false; // set during build()
  };
 

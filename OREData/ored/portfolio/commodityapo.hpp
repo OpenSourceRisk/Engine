@@ -23,11 +23,13 @@
 
 #pragma once
 
-#include <qle/indexes/commodityindex.hpp>
-#include <ored/portfolio/optiondata.hpp>
 #include <ored/portfolio/barrierdata.hpp>
-#include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/commoditylegdata.hpp>
+#include <ored/portfolio/optiondata.hpp>
+#include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/tradefactory.hpp>
+
+#include <qle/indexes/commodityindex.hpp>
 
 namespace ore {
 namespace data {
@@ -36,6 +38,7 @@ namespace data {
     \ingroup tradedata
 */
 class CommodityAveragePriceOption : public ore::data::Trade {
+    static TradeBuilderRegister<TradeBuilder<CommodityAveragePriceOption>> reg_;
 
 public:
     CommodityAveragePriceOption() : ore::data::Trade("CommodityAveragePriceOption") {}

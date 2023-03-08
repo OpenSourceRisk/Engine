@@ -719,5 +719,12 @@ template vector<bool> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent,
                                                                 vector<string>& attrs,
                                                                 std::function<bool(string)> parser, bool mandatory);
 
+
+string XMLUtils::toString(XMLNode* node) {
+    string xml_as_string;
+    rapidxml::print(std::back_inserter(xml_as_string), *node);
+    return xml_as_string;
+}
+
 } // namespace data
 } // namespace ore

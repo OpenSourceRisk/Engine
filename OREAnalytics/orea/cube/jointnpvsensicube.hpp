@@ -42,8 +42,8 @@ public:
                       const std::set<std::string>& ids = {});
 
     /*! ctor for n input cubes
-        - If no ids are given, the order of the ids in the input cubes define the order in the resulting cube. If ids
-          are given they define the order of the ids in the output cube. The ids must be unique in either case.
+        If no ids are given, the ids in the input cubes define theids in the resulting cube, the ids must be unique
+        in this case. If ids are given they define the ids in the output cube.
      */
     JointNPVSensiCube(const std::vector<boost::shared_ptr<NPVSensiCube>>& cubes,
                       const std::set<std::string>& ids = {});
@@ -63,9 +63,6 @@ public:
 
     Real get(Size id, Size date, Size sample, Size depth = 0) const override;
     void set(Real value, Size id, Size date, Size sample, Size depth = 0) override;
-
-    void load(const std::string& fileName) override { QL_FAIL("JointNPVSensiCube::load() not implemented"); }
-    void save(const std::string& fileName) const override { QL_FAIL("JointNPVSensiCube::save() not implemented"); }
 
     std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(Size tradeIdx) const override;
     std::set<QuantLib::Size> relevantScenarios() const override;

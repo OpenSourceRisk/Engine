@@ -24,6 +24,10 @@
           ],
           "threshold": 0.0
         },
+        "use_cols": [
+          "Amount",
+          "IMModel"
+        ],
         "column_settings": [
           {
             "names": [
@@ -127,10 +131,13 @@
           "TradeId",
           "IsPar",
           "Factor_1",
-          "ShiftSize_1",
           "Factor_2",
-          "ShiftSize_2",
           "Currency"
+        ],
+        "use_cols": [
+          "Base NPV",
+          "Delta",
+          "Gamma"
         ],
         "column_settings": [
           {
@@ -143,7 +150,7 @@
           }
         ]
       },
-      "crif\\.csv": {
+      "combined_crif\\.csv": {
         "keys": [
           "TradeID",
           "PortfolioID",
@@ -157,7 +164,9 @@
         "use_cols": [
           "AmountCurrency",
           "Amount",
-          "AmountUSD"
+          "AmountUSD",
+          "IMModel",
+          "TradeType"
         ],
         "optional_cols": [
           "collect_regulations",
@@ -189,8 +198,66 @@
           },
           {
             "names": [
+              "IMModel",
+              "TradeType",
               "collect_regulations",
               "post_regulations"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
+          }
+        ]
+      },
+      "crif\\.csv": {
+        "keys": [
+          "TradeID",
+          "PortfolioID",
+          "ProductClass",
+          "RiskType",
+          "Qualifier",
+          "Bucket",
+          "Label1",
+          "Label2"
+        ],
+        "use_cols": [
+          "AmountCurrency",
+          "Amount",
+          "AmountUSD",
+          "IMModel",
+          "TradeType"
+        ],
+        "optional_keys": [
+          "collect_regulations",
+          "post_regulations"
+        ],
+        "col_types" : {
+          "ProductClass" : "str",
+          "RiskType" : "str",
+          "Qualifier" : "str",
+          "Bucket" : "str",
+          "Label1" : "str",
+          "Label2" : "str"
+        },
+        "drop_rows" : {
+          "cols": [
+            "Amount",
+            "AmountUSD"
+          ],
+          "threshold": 0.0
+        },
+        "column_settings": [
+          {
+            "names": [
+              "Amount",
+              "AmountUSD"
+            ],
+            "abs_tol": 1e-2,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "IMModel",
+              "TradeType"
             ],
             "abs_tol": null,
             "rel_tol": null
@@ -387,7 +454,7 @@
             "names": [
               "Value"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-6,
             "rel_tol": 1e-12
           }
         ]
@@ -893,54 +960,53 @@
           }
         ]
       },
-      ".*(flows|cashflow).*\\.csv": {
+      ".*(flow|flows|cashflow).*\\.csv": {
         "keys": [
           "TradeId",
           "Type",
           "CashflowNo",
           "LegNo"
         ],
+        "use_cols": [
+          "Amount",
+          "Coupon",
+          "fixingValue",
+          "PayDate",
+          "FlowType",
+          "Currency",
+          "AccrualStartDate",
+          "AccrualEndDate",
+          "AccruedAmount",
+          "fixingDate",
+          "Notional",
+          "FloorStrike",
+          "CapStrike",
+          "FloorVolatility",
+          "CapVolatility"
+        ],
         "optional_cols": [
           "PresentValue",
           "DiscountFactor",
-          "Coupon",
-          "fixingValue"
+          "fxRateBase",
+          "BaseCurrency",
+          "PresentValueBase"
         ],
         "column_settings": [
           {
             "names": [
               "Amount",
-              "PresentValue",
-              "DiscountFactor",
-      			  "Coupon",
-      			  "fixingValue"
-            ],
-            "abs_tol": 1e-8,
-            "rel_tol": 1e-8
-          }
-        ]
-      },
-      "flow.csv": {
-        "keys": [
-          "TradeId",
-          "Type",
-          "CashflowNo",
-          "LegNo"
-        ],
-        "optional_cols": [
-          "PresentValue",
-          "DiscountFactor",
-          "Coupon",
-          "fixingValue"
-        ],
-        "column_settings": [
-          {
-            "names": [
-              "Amount",
-              "PresentValue",
-              "DiscountFactor",
               "Coupon",
-              "fixingValue"
+              "fixingValue",
+              "AccruedAmount",
+              "Notional",
+              "FloorStrike",
+              "CapStrike",
+              "FloorVolatility",
+              "CapVolatility",
+              "PresentValue",
+              "DiscountFactor",
+              "fxRateBase",
+              "PresentValueBase"
             ],
             "abs_tol": 1e-8,
             "rel_tol": 1e-8
@@ -1119,6 +1185,21 @@
             ],
             "abs_tol": 1,
             "rel_tol": 1e-4
+          }
+        ]
+      },
+	  "dividends.csv": {
+        "keys": [
+          "dividendDate",
+          "equityId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "dividendRate"
+            ],
+            "abs_tol": 1e-6,
+            "rel_tol": 1e-6
           }
         ]
       }

@@ -220,7 +220,6 @@ BOOST_AUTO_TEST_CASE(testCcySwapWithResetsPrice) {
     engineData->model("CrossCurrencySwap") = "DiscountedCashflows";
     engineData->engine("CrossCurrencySwap") = "DiscountingCrossCurrencySwapEngine";
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<CrossCurrencySwapEngineBuilder>());
 
     // build swaps and portfolio
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());

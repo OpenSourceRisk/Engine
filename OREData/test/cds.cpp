@@ -243,7 +243,7 @@ BOOST_DATA_TEST_CASE_F(TopLevelFixture, testCreditDefaultSwapBuilding, bdata::ma
     // Read in the trade
     Portfolio p;
     string portfolioFile = "trades/" + trade + ".xml";
-    p.load(TEST_INPUT_FILE(portfolioFile));
+    p.fromFile(TEST_INPUT_FILE(portfolioFile));
     BOOST_REQUIRE_MESSAGE(p.size() == 1, "Expected portfolio to contain a single trade");
 
     // Use the test market
@@ -298,7 +298,7 @@ BOOST_DATA_TEST_CASE(testUpfrontDefaultCurveConsistency, bdata::make(upfrontFile
     boost::shared_ptr<EngineFactory> ef = boost::make_shared<EngineFactory>(data, tm);
 
     Portfolio portfolio;
-    portfolio.load(TEST_INPUT_FILE(string(dir + "/portfolio.xml")));
+    portfolio.fromFile(TEST_INPUT_FILE(string(dir + "/portfolio.xml")));
     portfolio.build(ef);
 
     for (const auto& [tradeId, trade] : portfolio.trades()) {

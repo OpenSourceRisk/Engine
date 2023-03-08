@@ -82,6 +82,8 @@
 % Inline code fragments can run over the page boundary without ragged right.
 \AtBeginDocument{\raggedright}
 
+\newcommand{\UserGuide}{}
+
 \renewcommand\P{\ensuremath{\mathbb{P}}}
 \newcommand\E{\ensuremath{\mathbb{E}}}
 \newcommand\Q{\ensuremath{\mathbb{Q}}}
@@ -126,7 +128,7 @@
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Acadia Inc.}
-\date{27 March 2023}
+\date{3 March 2023}
 \maketitle
 
 \newpage
@@ -147,7 +149,7 @@ Date & Author & Comment \\
 30 June 2021 & Acadia & updates for release 6\\
 16 September 2022 & Acadia & updates for release 7\\
 6 December 2022 & Acadia & updates for release 8\\
-27 March 2023 & Acadia & updates for release 9\\
+3 March 2023 & Acadia & updates for release 9\\
 \hline
 \end{supertabular}
 \end{center}
@@ -219,15 +221,25 @@ for portfolios with netting, variation and initial margin agreements.
 The sensitivity framework yields further {\bf market risk measures} such as ORE's parametric Value at Risk which takes deltas, vegas, gammas and cross gammas into account. This may be used to benchmark initial margin models such ISDA's Standard Initial Margin Model. \\
 
 \medskip
-Subsequent ORE releases will also compute {\bf regulatory capital charges} for counterparty credit risk under the new standardised approach (SA-CCR), and the Monte Carlo based market risk measures will be complemented by parametric methods, e.g. for benchmarking various initial margin calculation models applied in cleared and non-cleared derivatives business.
+Subsequent ORE releases will also compute {\bf regulatory capital charges} for counterparty credit risk under the standardised approach (SA-CCR), and the market risk measures will be extended , e.g. for benchmarking various initial margin calculation models applied in cleared and non-cleared derivatives business.
+
+\medskip
+In September 2022 Acadia announced to contribute a wide range of financial instruments (currently in its proprietary extension of ORE) in a series of quarterly releases:
+\begin{itemize}
+\item Commodity products (Swaps, Basis Swaps, Av. Price Options, Swaptions), released December 22 with ORE v8
+\item Credit products (Index CDS and Index CDS Options, Credit-Linked Swaps, Synthetic CDOs), released March 23 with ORE v9
+\item Bond products and Hybrids (Bond Options, Bond Repos, Bond TRS, Convertible Bonds, Generic TRS with mixed basket underlyings, CFDs), to be released in June 23
+\item Exotics (Scripted trade framework for modelling highly structured hybrid payoffs such as Accumulators, TARFs, PRDCs, etc.), to be released in September 23
+\end{itemize}
+These contributions were (and will be) accompanied by analytics extensions to enhance ORE usability:
+\begin{itemize}
+\item Credit exposure including Commodity and American Monte Carlo for Exotics, released in December 22 with ORE v8
+\item Market Risk including multi-threaded sensitivities, par sensitivity, delta/gamma VaR, released in March 23 with ORE v9
+\item Portfolio Credit Model, to be released in June 23
+\end{itemize}
 
 \medskip 
-%The first release of ORE in October 2016 covers the simulation of interest rate and FX risk factors and
-%portfolios of Interest Rate Swaps, Caps/Floors, Swaptions, FX Forwards, Cross Currency Swaps and FX Options. Subsequent
-%releases from Q1 2017 onwards will extend the derivative product and the risk factor range to Inflation, Credit, Equity
-%and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products
-%(loans and bonds) and related portfolio analytics.
-The product coverage of the seventh release of ORE in September 2022 is sketched in Table \ref{tab_coverage}.
+The product coverage of the 9th release of ORE in March 2023 is sketched in Table \ref{tab_coverage}.
 \begin{table}[hbt]
 \scriptsize
 \begin{center}
@@ -279,16 +291,19 @@ Year-on-Year Inflation Swaps & Y & Y & N & Y \\
 \hline
 Year-on-Year Inflation Caps/Floors & Y & Y & N & N\\
 \hline
-Credit Default Swaps & Y & Y & N & N \\
+Credit Default Swaps, Options & Y & Y & N & Y \\
 \hline
-
+Index Credit Default Swaps, Options & Y & Y & N & Y \\
+\hline
+Credit Linked Swaps & Y & Y & N & Y \\
+\hline
+Index Tranches, Synthetic CDOs & Y & Y & N & Y \\
+\hline
 \end{tabular}
 \caption{ORE product coverage. FX/Equity Exotics include Barrier, Digital, Digital Barrier (FX only), Double Barrier, European Barrier, KIKO Barrier (FX only), Touch and Double Touch Options.}
 \label{tab_coverage}
 \end{center}
 \end{table}
-
-Future releases will further extend the product range and analytics coverage indicated in the table above, expand on the market risk analytics, add integrated credit/market risk analytics. 
 
 \medskip The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em
   Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX/INF/EQ risk factor evolution is based on
@@ -318,92 +333,92 @@ parametrisation and the structure of trade and market data input.
 \section{Release Notes}\label{sec:releasenotes}
 %========================================================
 
-This section summarises the notable changes between release 7 (September 2022) and 8 (December 2022).
+This section summarises the notable changes between release 8 (December 2022) and 9 (March 2023).
 
 \bigskip
 INSTRUMENTS 
 \begin{itemize}
-\item roll out Commodity derivatives, thanks to Acadia Inc., as announced in September 22:
+\item roll out of Credit derivatives, thanks to Acadia Inc., as announced in September 22:
   \begin{itemize}
-    \item add Commodity Swap
-    \item add Commodity Swaption
-    \item add Commodity Average Price Option
-    \item add Commodity Option Strips and Digital Option Strip
+	\item Bond Option
+	\item Bond Repo
+  	\item Bond Total Return Swap
+  	\item Credit-Linked Swap
+  	\item Index Credit Default Swap
+  	\item Index Credit Default Swap Option
+  	\item Credit Index Tranche, Synthetic CDO
   \end{itemize}
-  see user guide and in particular Example 24
-\item add Equity Cliquet Option, missed in the 7th release, thanks to Acadia
-\item add Equity/FX/Commodity Variance Swap, missed in the 7th release, thanks to Acadia
-\item introduce separate trade types for Cross Currency and Inflation Swap
-\item merge QuantExt and QuantLib CDS and midpoint engine in ORE's QuantLib fork;
-  QuantLib pull request to follow
+ including related models and pricing engines    
+\item optimize performance for the analytical Commodity Swaption engine
+\item add missing FxIndex registrations in Commodity APO and Commodity Indexed Average Cashflows
+\item include leg NPVs in additional results of CDS products
+\item fix LGM Swaption pricing for cases where fixing date < exercise date
 \end{itemize}
 
 \bigskip
-MARKETS
+MARKETS \& TERM STRUCTURES
 
 \begin{itemize}
-\item performance optimizations for curve builders
-\item extend the market interface to optionally handle precious metals and crypto currencies as commodities instead of FX
-\end{itemize}
-
-\bigskip
-TERM STRUCTURES
-
-\begin{itemize}
-\item (no notable changes)
+\item fix shifted lognormal Swaption vol surface (SwaptionVolCubeWithATM, add missing shift)
 \end{itemize}
 
 \bigskip
 ANALYTICS
 
 \begin{itemize}
-\item add American Monte Carlo simulation components to support fast Bermudan Swaption
-  exposure simulation and more, thanks to Acadia;\\
-  the integration into the ORE command line app will follow with the next release (March 23)
-  as it requires some refactoring.
-\item add Commodity simulation to the cross asset model and market simulation, integraded
-  with the LGM-based Cross Asset Model, thanks to Acadia
-\item  add a multi-factor Hull-White / FX / Commodity simulation model, thanks to Acadia; 
-  calibration to be added
+\item integrate American Monte Carlo simulation, see the {\bf new Example 39}
+\item add Par Sensitivity Analysis, see the {\bf new Example 40}
+\item add more parametric VaR types (delta-gamma normal, delta-gamma Saddlepoint)
+\item support multi-threading in sensitivity analysis
+\item support multi-threading in exposure simulation, see the {\bf new Example 41}
+\item fix exposure/XVA analytics with simulation of fixings for ceased IBOR indices
 \end{itemize}
 
 \bigskip
 TESTS
 
 \begin{itemize}
-\item QuantExt: 242 test functions (vs 214 in the previous release)
-\item OREData: 199 test functions (vs. 192 in the previous release)
-\item OREAnalytics: 66 test functions (vs. 65 in the previous release)
+\item QuantExt: 263 test functions (vs 242 in the previous release)
+\item OREData: 203 test functions (vs. 199 in the previous release)
+\item OREAnalytics: 68 test functions (vs. 66 in the previous release)
 \end{itemize}
-with associated increases in the number of data driven test cases 
 
 \bigskip
 DOCUMENTATION
 
 \begin{itemize}
-\item the user guide is maintained continuously incorporating user feedback, in particular
-  from Acadia service clients; it has grown from 404 to 440 pages, mainly due to the
-  migration of Commodity and Equity/FX instruments into ORE
+\item The user guide has grown from 440 to 480 pages, mainly due to the
+  migration of Credit derivative instruments into ORE, as well as new examples
 \end{itemize}
 
 \bigskip
 LANGUAGE BINDUNGS
 
 \begin{itemize}
-\item maintenance to ensure ORE SWIG wrappers build with the current ORE release,
-  QuantLib-1.28 and QuantLib-SWIG-1.28
-\end{itemize}
+\item The SWIG wrapper has been extended to provide access to ORE input
+  construction in memory and to query in-memory results (reports etc), in line
+  with the refactoring mentioned below.
+  See the {\bf new Python example} OREAnalytics-SWIG/Python/Examples/ore3.py
+\item To facilitate access to ORE Python, we are providing Python wheels for various
+  OS types and Python versions starting with this release, thanks to Eric Ehlers's
+  effort and Luigi Ballabio's support to get in up and running using github actions.
+  See the \href{https://github.com/OpenSourceRisk/ORE-SWIG#readme}{ORE-SWIG repository} for {\bf how to install the ORE module}.
+  \end{itemize}
 
 \bigskip
 OTHER
 
 \begin{itemize}
-\item changes to build with QuantLib 1.28
-\item extend the CMake setup for Windows / Visual Studio users; \\
-  We will stop maintaining the *.vcxproj and *.vcxproj.filters from the now on
-  and rely on CMakeLists for both *nix and Windows. \\
-  See section 4.2.3 on how to "Generate Visual Studio Projects with CMake"
-\end{itemize}
+\item Refactor the serialization of NPV cube and market cube (aggregation scenario data)
+\item Refactor OREAnalytics/orea/app by separating input construction from processing
+  and persisting results. This is to faciliate re-using the processing element
+  (analyticsManager->runAnalytics(...)) in different applications, a command line
+  application such as ore[.exe] that reads/writes from/to files, an ORE Python wrapper
+  that receives input and provides results in memory (see language bindings above),
+  or a REST service built around ORE. Results (reports, cubes etc) are stored in
+  memory and only saved to files on demand. Inputs for the ORE processor can be
+  assembled in memory, or read from files.
+  \end{itemize}
 
 %========================================================
 \section{ORE Data Flow}\label{sec:process}
@@ -996,6 +1011,12 @@ Example & Description \\
 37 & Multifactor Hull-White scenario generation \\
 \hline
 38 & Cross Currency Exposure using Multifactor Hull-White Models \\
+\hline
+39 & Exposure Simulation using American Monte Carlo \\
+\hline
+40 & Par Sensitivity Analysis \\
+\hline
+41 & Multi-threaded Exposure Simulation \\
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -1064,7 +1085,7 @@ File Name & Description \\
 {\tt exposure\_nettingset\_*.csv} &  Netting set exposure evolution reports\\
 {\tt rawcube.csv} & NPV cube in readable text format \\
 {\tt netcube.csv} & NPV cube after netting and colateral, in readable text format \\
-{\tt *.dat} & Intermediate storage of NPV cube and scenario data in binary format \\
+{\tt *.csv.gz} & Intermediate storage of NPV cube and scenario data \\
 {\tt *.pdf} &  Exposure graphics produced by the python script {\tt run.py} after ORE completed\\
 \hline
 \end{tabular}
@@ -2528,7 +2549,7 @@ FX Option pricing with the risk factor evolution model.
   \label{epe_fxoption}
 \end{figure}
 
-\subsubsection{Analytic Configuration}
+\subsubsection*{Analytic Configuration}
 
 To use the AMC engine for an XVA simulation the following needs to be added to the {\tt simulation} analytic in {\tt ore.xml}:
 
@@ -2537,15 +2558,14 @@ To use the AMC engine for an XVA simulation the following needs to be added to t
   ...
   <Parameter name="amc">Y</Parameter>
   <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
-  <Parameter name="amcExcludeTradeTypes">Swap,FxOption</Parameter>
+  <Parameter name="amcTradeTypes">Swaption</Parameter>
   ...
 </Analytic>
 \end{minted}
 
-The trades which can be built against engines in the given pricing engine configuration with engine type \verb+AMC+ and
-which do not have a trade type matching one of the types in the \verb+excludeTradeTypes+ list, will be processed in the
-AMC engine: As a naming convention, pricing engines with this engine type provide the required functionality to be
-processed by the AMC engine, for technical details cf. \ref{sec:app_amc}.
+The trades which have a trade type matching one of the types in the \verb+amcTradeTypes+ list, will be built against the
+pricing engine config provided and processed in the AMC engine. As a naming convention, pricing engines with engine type
+AMC provide the required functionality to be processed by the AMC engine, for technical details cf. \ref{sec:app_amc}.
 
 All other trades are processed by the classic simulation engine in ORE. The resulting cubes from the classic and AMC
 simulation are joined and passed to the post processor in the usual way.
@@ -2554,7 +2574,7 @@ Note that since sometimes the AMC pricing engines have a different base ccy than
 below), a horizon shift parameter in the simulation set up should be set for all currencies, so that the shift also
 applies to these reduced models.
 
-\subsubsection{Pricing Engine Configuration}
+\subsubsection*{Pricing Engine Configuration}
 \label{sec:amc_pricingengineconfig}
 
 At this point we assume that the reader is generally familiar with the configuration section 
@@ -2627,7 +2647,7 @@ engine types. The engine parameters are the same for all products:
   \label{tbl:amcconfig}
 \end{table}
 
-\subsubsection{Additional Features}
+\subsubsection*{Additional Features}
 
 As a side product the AMC module provides plain MC pricing engines for Bermudan Swaptions and a new trade type
 \verb+MultiLegOption+ with a corresponding MC pricing engine.
@@ -2872,6 +2892,15 @@ in {\tt sensitivity.xml} where the assumed par instruments and corresponding con
 Finally note that par sensitivity analysis requires that the shift tenor grid in the sensitivity data above matches the corresponding grid in the simulation (market) configuration.
 See also section \ref{sec:sensitivity}.
 
+%--------------------------------------------------------------------
+\subsection{Multi-threaded Exposure Simultion}% Example 41
+\label{example:41}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_41} demonstrates the multithreaded valuation engine to generate the exposure for a
+portfolio of 8 copies of the vanilla swap in {\tt Example\_1}.
+
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
@@ -3012,6 +3041,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="lazyMarketBuilding">false</Parameter>
   <Parameter name="continueOnError">false</Parameter>
   <Parameter name="buildFailedTrades">true</Parameter>
+  <Parameter name="nThreads">4</Parameter>
 </Setup>
 \end{minted}
 %\hrule
@@ -3071,6 +3101,9 @@ continue the processing. If not given, the parameter defaults to {\tt false}.
 \medskip If the parameter {\tt buildFailedTrades} is set to true, the application will build a dummy trade if loading or
 building the original trade fails. The dummy trade has trade type ``Failed'', zero notional and NPV.
 If not given, the parameter defaults to {\tt false}.
+
+\medskip If the parameter {\tt nThreads} is given, multiple threads will be used for valuation engine runs where
+applicable (Sensitivity, Exposure Classic, Exposure AMC). If not given, the parameter defaults to $1$.
 
 \subsubsection{Markets}\label{sec:master_input_markets}
 
@@ -3240,10 +3273,10 @@ needed for subsequent XVA analytics.
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="storeFlows">Y</Parameter>
     <Parameter name="storeSurvivalProbabilities">Y</Parameter>
-    <Parameter name="cubeFile">cube_A.dat</Parameter>
-    <Parameter name="nettingSetCubeFile">nettingSetCube_A.dat</Parameter>
-    <Parameter name="cptyCubeFile">cptyCube_A.dat</Parameter>
-    <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
+    <Parameter name="cubeFile">cube_A.csv.gz</Parameter>
+    <Parameter name="nettingSetCubeFile">nettingSetCube_A.csv.gz</Parameter>
+    <Parameter name="cptyCubeFile">cptyCube_A.csv.gz</Parameter>
+    <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
     <Parameter name="aggregationScenarioDump">scenariodump.csv</Parameter>
   </Analytic>
 </Analytics>      
@@ -3272,7 +3305,9 @@ the {\tt cubeFile} parameter. This means one can re-run the XVA analytics withou
 XVA reports depend in particular on the settings in the {\tt csaFile} which determines CSA details such as margining
 frequency, collateral thresholds, minimum transfer amounts, margin period of risk. By splitting the processing into
 pre-processing (cube generation) and post-processing (aggregation and XVA analysis) it is possible to vary these CSA
-details and analyse their impact on XVAs quickly without re-generating the NPV cube.
+details and analyse their impact on XVAs quickly without re-generating the NPV cube. The cube file is usually a
+compressed csv file (using gzip compression, with file ending .csv.gz), except when the file extension is set explicitly
+to txt or csv in which case an uncompressed version of the file is written to disk.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -3281,9 +3316,8 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
   <Analytic type="xva">
     <Parameter name="active">Y</Parameter>
     <Parameter name="csaFile">netting.xml</Parameter>
-    <Parameter name="cubeFile">cube.dat</Parameter>
-    <Parameter name="hyperCube">Y</Parameter>
-    <Parameter name="scenarioFile">scenariodata.dat</Parameter>
+    <Parameter name="cubeFile">cube.csv.gz</Parameter>
+    <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="exposureProfiles">Y</Parameter>
     <Parameter name="exposureProfilesByTrade">Y</Parameter>
@@ -3341,8 +3375,6 @@ Parameters:
 \item {\tt csaFile:} Netting set definitions file covering CSA details such as margining frequency, thresholds, minimum
 transfer amounts, margin period of risk
 \item {\tt cubeFile:} NPV cube file previously generated and to be post-processed here
-\item {\tt hyperCube:} If set to N, the cube file is expected to have depth 1 (storing NPV data only), if set to Y it is
-expected to have depth $>$ 1 (e.g. storing NPVs and cumulative flows)
 \item {\tt scenarioFile:} Scenario data previously generated and used in the post-processor (simulated index fixings and
 FX rates)
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures
@@ -6475,7 +6507,7 @@ This node should hold a real number. It provides an upper bound for the search d
 
 
 %========================================================
-\section{Trade Data}
+%\section{Trade Data}
 %========================================================
 \input{tradedata/intro}
 \input{tradedata/envelope}

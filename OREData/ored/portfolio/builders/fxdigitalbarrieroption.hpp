@@ -46,6 +46,7 @@ using namespace QuantLib;
  */
 class FxDigitalBarrierOptionEngineBuilder
     : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&, const Date&> {
+    ORE_REGISTER_ENGINE_BUILDER(FxDigitalBarrierOptionEngineBuilder)
 public:
     FxDigitalBarrierOptionEngineBuilder()
         : CachingEngineBuilder("GarmanKohlhagen", "FdBlackScholesBarrierEngine", {"FxDigitalBarrierOption"}) {}

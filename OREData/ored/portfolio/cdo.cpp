@@ -72,6 +72,8 @@ void validateWeightRec(Real value, const string& name, const string& varName) {
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<SyntheticCDO>> SyntheticCDO::reg_("SyntheticCDO");
+
 void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("SyntheticCDO::build() called for trade " << id());
@@ -238,11 +240,12 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
         DLOG("Building constituents using CreditIndexReferenceDatum for ID " << qualifier_);
 
-        QL_REQUIRE(refDataManager_, "Trade " << id() << " has no basket data and there is no reference data manager.");
-        QL_REQUIRE(refDataManager_->hasData(CreditIndexReferenceDatum::TYPE, qualifier_),
+        QL_REQUIRE(engineFactory->referenceData(),
+                   "Trade " << id() << " has no basket data and there is no reference data manager.");
+        QL_REQUIRE(engineFactory->referenceData()->hasData(CreditIndexReferenceDatum::TYPE, qualifier_),
                    "Trade " << id() << " needs credit index reference data for ID " << qualifier_);
         auto crd = boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(
-            refDataManager_->getData(CreditIndexReferenceDatum::TYPE, qualifier_));
+            engineFactory->referenceData()->getData(CreditIndexReferenceDatum::TYPE, qualifier_));
 
         Real totalRemainingWeight = 0.0;
         Real totalPriorWeight = 0.0;
@@ -660,6 +663,14 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
     additionalData_["originalNotional"] = origTrancheNtl;
     additionalData_["currentNotional"] = currTrancheNtl;
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Index Tranche");
+    // Deferring the mapping of qualifier to CDX, LCDX, CDX Structured Tranche, iTraxx, iTraxx Structured Tranche, ABX, MCDX
+    additionalData_["isdaSubProduct"] = qualifier_; 
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");  
 
     DLOG("CDO instrument built");
 }

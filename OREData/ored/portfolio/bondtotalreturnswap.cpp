@@ -46,6 +46,8 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<BondTRS>> BondTRS::reg_("BondTRS");
+    
 void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("BondTRS::build() called for trade " << id());
 
@@ -226,6 +228,12 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             requiredFixings_.addFixingDate(fxIndex->fixingCalendar().adjust(c->date(), Preceding), fxIndex_, c->date());
         }
     }
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Total Return Swap");
+    additionalData_["isdaSubProduct"] = string("");  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 void BondTRS::fromXML(XMLNode* node) {

@@ -36,6 +36,8 @@ using namespace std;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<CommodityForward>> CommodityForward::reg_("CommodityForward");
+
 CommodityForward::CommodityForward() : Trade("CommodityForward"), quantity_(0.0), strike_(0.0) {}
 
 CommodityForward::CommodityForward(const Envelope& envelope, const string& position, const string& commodityName,
@@ -156,6 +158,13 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
         additionalData_["fixingDate"] = fixingDate_;
         additionalData_["fxIndex"] = fxIndex;
     }
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Commodity");
+    additionalData_["isdaBaseProduct"] = string("Forward");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 Real CommodityForward::notional() const {
@@ -214,12 +223,13 @@ void CommodityForward::fromXML(XMLNode* node) {
     if (XMLNode* n = XMLUtils::getChildNode(commodityDataNode, "PaymentDate"))
         paymentDate_ = parseDate(XMLUtils::getNodeValue(n));
 
-        if (XMLNode* settlementDataNode = XMLUtils::getChildNode(commodityDataNode, "SettlementData")) {
-            // this node is used to provide data for NDF. This includes a fixing date, a settlement currency and the quote/settlement fx index.
-            payCcy_ = XMLUtils::getChildValue(settlementDataNode, "PayCurrency", true);
-            fxIndex_ = XMLUtils::getChildValue(settlementDataNode, "FXIndex", true);
-            fixingDate_ = parseDate(XMLUtils::getChildValue(settlementDataNode, "FixingDate", true));
-        }
+    if (XMLNode* settlementDataNode = XMLUtils::getChildNode(commodityDataNode, "SettlementData")) {
+        // this node is used to provide data for NDF. This includes a fixing date, a settlement currency and the
+        // quote/settlement fx index.
+        payCcy_ = XMLUtils::getChildValue(settlementDataNode, "PayCurrency", true);
+        fxIndex_ = XMLUtils::getChildValue(settlementDataNode, "FXIndex", true);
+        fixingDate_ = parseDate(XMLUtils::getChildValue(settlementDataNode, "FixingDate", true));
+    }
 }
 
 XMLNode* CommodityForward::toXML(XMLDocument& doc) {

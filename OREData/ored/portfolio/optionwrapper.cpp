@@ -91,12 +91,12 @@ Real OptionWrapper::NPV() const {
         // that we will probably need an effective cash settlement date then to
         // maintain the relative position to the effective exercise date).
         Real npv = (isPhysicalDelivery_ || today == exerciseDate_)
-                       ? (isLong_ ? 1.0 : -1.0) * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_
+                       ? multiplier2() * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_
                        : 0.0;
         return npv + addNPV;
     } else {
         // if not exercised we just return the original option's NPV
-        Real npv = (isLong_ ? 1.0 : -1.0) * getTimedNPV(instrument_) * multiplier_;
+        Real npv = multiplier2() * getTimedNPV(instrument_) * multiplier_;
         return npv + addNPV;
     }
 }

@@ -96,6 +96,8 @@ private:
 };
 
 class EqVarSwap : public VarSwap {
+    static TradeBuilderRegister<TradeBuilder<EqVarSwap>> reg_;
+
 public:
     EqVarSwap() : VarSwap(AssetClass::EQ) { tradeType_ = "EquityVarianceSwap"; }
     EqVarSwap(ore::data::Envelope& env, string longShort, const boost::shared_ptr<ore::data::Underlying>& underlying,
@@ -112,6 +114,8 @@ public:
 };
 
 class FxVarSwap : public VarSwap {
+    static TradeBuilderRegister<TradeBuilder<FxVarSwap>> reg_;
+
 public:
     FxVarSwap() : VarSwap(AssetClass::FX) { tradeType_ = "FxVarianceSwap"; }
     FxVarSwap(ore::data::Envelope& env, string longShort, const boost::shared_ptr<ore::data::Underlying>& underlying,
@@ -124,6 +128,8 @@ public:
 };
 
 class ComVarSwap : public VarSwap {
+    static TradeBuilderRegister<TradeBuilder<ComVarSwap>> reg_;
+
 public:
     ComVarSwap() : VarSwap(AssetClass::COM) { tradeType_ = "CommodityVarianceSwap"; }
     ComVarSwap(ore::data::Envelope& env, string longShort, const boost::shared_ptr<ore::data::Underlying>& underlying,

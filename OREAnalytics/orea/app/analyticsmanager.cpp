@@ -32,53 +32,77 @@ using ore::data::InMemoryReport;
 namespace ore {
 namespace analytics {
 
-Size matches(const std::vector<std::string>& requested, const std::vector<std::string>& available) {
+Size matches(const std::set<std::string>& requested, const std::set<std::string>& available) {
     Size count = 0;
     for (auto r : requested) {
-        if (std::find(available.begin(), available.end(), r) != available.end())
+        if (available.find(r) != available.end())
             count++;
     }
     return count;
 }
     
 AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inputs, 
-                                   const boost::shared_ptr<MarketDataLoader>& marketDataLoader,
-                                   std::ostream& out)
-    : inputs_(inputs), marketDataLoader_(marketDataLoader), out_(out) {    
+                                   const boost::shared_ptr<MarketDataLoader>& marketDataLoader)
+    : inputs_(inputs), marketDataLoader_(marketDataLoader) {    
     
-    addAnalytic("NPV", boost::make_shared<PricingAnalytic>(inputs_, out_));
-    addAnalytic("VAR", boost::make_shared<VarAnalytic>(inputs_, out_));
-    addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_, out_));
+    addAnalytic("PRICING", boost::make_shared<PricingAnalytic>(inputs));
+    addAnalytic("VAR", boost::make_shared<VarAnalytic>(inputs_));
+    addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_));
 }
 
+void AnalyticsManager::clear() {
+    LOG("AnalyticsManager: Remove all analytics currently registered");
+    analytics_.clear();
+    validAnalytics_.clear();
+}
+    
 void AnalyticsManager::addAnalytic(const std::string& label, const boost::shared_ptr<Analytic>& analytic) {
-    QL_REQUIRE(analytics_.find(label) == analytics_.end(), "trying to add an analytic with duplicate label: " << label);
+    // Allow overriding, but warn 
+    if (analytics_.find(label) != analytics_.end()) {
+        WLOG("Overwriting analytic with label " << label);
+    }
+
     // Label is not necessarily a valid analytics type
     // Get the latter via analytic->analyticTypes()
     LOG("register analytic with label '" << label << "' and sub-analytics " << to_string(analytic->analyticTypes()));
     analytics_[label] = analytic;
-    // force this so that we update valid analytics vector with the next call to validAnalytics()
+    // This forces an update of valid analytics vector with the next call to validAnalytics()
     validAnalytics_.clear();
 }
-    
-const std::vector<std::string>& AnalyticsManager::validAnalytics() {
+
+const std::set<std::string>& AnalyticsManager::validAnalytics() {
     if (validAnalytics_.size() == 0) {
         for (auto a : analytics_) {
-            const std::vector<std::string>& types = a.second->analyticTypes();
-            validAnalytics_.insert(validAnalytics_.end(), types.begin(), types.end());
+            const std::set<std::string>& types = a.second->analyticTypes();
+            validAnalytics_.insert(types.begin(), types.end());
         }
     }
     return validAnalytics_;
 }
 
-bool AnalyticsManager::isValidAnalytic(const std::string& type) {
-    const std::vector<std::string>& va = validAnalytics();
-    return std::find(va.begin(), va.end(), type) != va.end();
+const std::set<std::string>& AnalyticsManager::requestedAnalytics() {
+    return requestedAnalytics_;
+}
+    
+bool AnalyticsManager::hasAnalytic(const std::string& type) {
+    const std::set<std::string>& va = validAnalytics();
+    return va.find(type) != va.end();
 }
 
-void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
+const boost::shared_ptr<Analytic>& AnalyticsManager::getAnalytic(const std::string& type) const {
+    for (const auto& a : analytics_) {
+        const std::set<std::string>& types = a.second->analyticTypes();
+        if (types.find(type) != types.end())
+            return a.second;
+    }
+    QL_FAIL("analytic type " << type << " not found, check validAnalytics()");
+}
+
+void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
                                     const boost::shared_ptr<MarketCalibrationReport>& marketCalibrationReport) {
 
+    requestedAnalytics_ = analyticTypes;
+    
     if (analytics_.size() == 0)
         return;
 
@@ -88,10 +112,9 @@ void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
         tmps.insert(end(tmps), begin(atmps), end(atmps));
     }
 
-    // FIXME
-    // QuantExt::Date mporDate = QuantExt::Date();
-    // if (laggedMarket_)
-    //     mporDate = inputs_->mporCalendar().advance(inputs_->asof(), inputs_->mporDays(), QuantExt::Days);
+    QuantExt::Date mporDate = QuantExt::Date();
+    if (laggedMarket_)
+        mporDate = inputs_->mporCalendar().advance(inputs_->asof(), inputs_->mporDays(), QuantExt::Days);
 
     // Do we need market data
     bool requireMarketData = false;
@@ -106,7 +129,7 @@ void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
         // load the market data
         if (tmps.size() > 0) {
             LOG("AnalyticsManager::runAnalytics: populate loader");
-            marketDataLoader_->populateLoader(tmps);
+            marketDataLoader_->populateLoader(tmps, laggedMarket_, mporDate, inputs_->includeMporExpired());
         }
         
         boost::shared_ptr<InMemoryReport> mdReport = boost::make_shared<InMemoryReport>();
@@ -114,7 +137,8 @@ void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
         boost::shared_ptr<InMemoryReport> dividendReport = boost::make_shared<InMemoryReport>();
 
         ore::analytics::ReportWriter(inputs_->reportNaString())
-            .writeMarketData(*mdReport, marketDataLoader_->loader(), inputs_->asof(), marketDataLoader_->quotes(),
+            .writeMarketData(*mdReport, marketDataLoader_->loader(), inputs_->asof(),
+                             marketDataLoader_->quotes()[inputs_->asof()],
                              !inputs_->entireMarket());
         ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeFixings(*fixingReport, marketDataLoader_->loader());
@@ -126,11 +150,11 @@ void AnalyticsManager::runAnalytics(const std::vector<std::string>& runTypes,
         marketDataReports_["DIVIDENDS"]["dividends"] = dividendReport;
     }
 
-    // run requested run types across all analytics
+    // run requested analytics
     for (auto a : analytics_) {
-        if (matches(runTypes, a.second->analyticTypes()) > 0) {
+        if (matches(analyticTypes, a.second->analyticTypes()) > 0) {
             LOG("run analytic with label '" << a.first << "'");
-            a.second->runAnalytic(marketDataLoader_->loader(), runTypes);
+            a.second->runAnalytic(marketDataLoader_->loader(), analyticTypes);
             LOG("run analytic with label '" << a.first << "' finished.");
             // then populate the market calibration report if required
             if (marketCalibrationReport)
@@ -169,14 +193,69 @@ Analytic::analytic_mktcubes const AnalyticsManager::mktCubes() {
     return results;
 }
 
-// boost::shared_ptr<AnalyticsManager> parseAnalytics(const std::string& s,
-//     const boost::shared_ptr<InputParameters>& inputs,
-//     const boost::shared_ptr<MarketDataLoader>& marketDataLoader) {
-//     DLOG("Parse Analytics Request " << s);
-//     vector<string> analyticStrs;
-//     boost::split(analyticStrs, s, boost::is_any_of(", |;:"));
-//     return boost::make_shared<AnalyticsManager>(analyticStrs, inputs, marketDataLoader);
-// }
+std::map<std::string, Size> checkReportNames(const ore::analytics::Analytic::analytic_reports& rpts) {                                     
+    std::map<std::string, Size> m;
+    for (const auto& rep : rpts) {
+        for (auto b : rep.second) {
+            string reportName = b.first;
+            auto it = m.find(reportName);
+            if (it == m.end())
+                m[reportName] = 1;
+            else
+                m[reportName] ++;
+        }
+    }
+    for (auto r : m) {
+        LOG("report name " << r.first << " occurs " << r.second << " times");
+    }
+    return m;
+}
+
+bool endsWith(const std::string& name, const std::string& suffix) {
+    if (suffix.size() > name.size())
+        return false;
+    else
+        return std::equal(suffix.rbegin(), suffix.rend(), name.rbegin());
+}
+
+void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& rpts,
+                               const std::string& outputPath,
+                               const std::map<std::string,std::string>& reportNames,
+                               const char sep,
+                               const bool commentCharacter,
+                               char quoteChar,
+                               const string& nullString,
+                               bool lowerHeader) {
+    std::map<std::string, Size> hits = checkReportNames(rpts);    
+    for (const auto& rep : rpts) {
+        string analytic = rep.first;
+        for (auto b : rep.second) {
+            string reportName = b.first;
+            boost::shared_ptr<InMemoryReport> report = b.second;
+            string fileName;
+            auto it = hits.find(reportName);
+            QL_REQUIRE(it != hits.end(), "something wrong here");
+            if (it->second == 1) {
+                // The report name is unique, check whether we want to rename it or use the standard name
+                auto it2 = reportNames.find(reportName);
+                fileName = it2 != reportNames.end() ? it2->second : reportName;
+            }
+            else {
+                ALOG("Report " << reportName << " occurs " << it->second << " times, fix report naming");
+                fileName = analytic + "_" + reportName + "_" + to_string(hits[fileName]);
+            }
+
+            // attach a suffix only if it does not have one already
+            string suffix = "";
+            if (!endsWith(fileName,".csv") && !endsWith(fileName, ".txt"))
+                suffix = ".csv";
+            std::string fullFileName = outputPath + "/" + fileName + suffix;
+
+            report->toFile(fullFileName, sep, commentCharacter, quoteChar, nullString, lowerHeader);
+            LOG("report " << reportName << " written to " << fullFileName); 
+        }
+    }
+}
 
 }
 }

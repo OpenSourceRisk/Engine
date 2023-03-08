@@ -40,10 +40,6 @@
 #include <boost/any.hpp>
 #include <iostream>
 
-// #include <orepsensi/orea/scenario/sensitivityscenariodataplus.hpp>
-// #include <orepsensi/orea/engine/parsensitivityanalysis.hpp>
-// #include <orepsensi/orea/engine/sensitivityanalysis.hpp>
-
 namespace ore {
 namespace analytics {
 
@@ -63,25 +59,30 @@ public:
         boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams;
         boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams;
         boost::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData;
+        boost::shared_ptr<ore::analytics::ScenarioGeneratorData> scenarioGeneratorData;
+        boost::shared_ptr<ore::analytics::CrossAssetModelData> crossAssetModelData;
     };
 
-    //! Constructor
+    //! Constructors
+    Analytic() {}
     Analytic(//! Label for logging purposes
              const std::string& label,
              //! The types of all (sub) analytics covered by this Analytic object
              //! e.g. NPV, CASHFLOW, CASHFLOWNPV, etc., covered by the PricingAnalytic
-             const std::vector<std::string>& analyticTypes,
+             const std::set<std::string>& analyticTypes,
              //! Any inputs required by this Analytic
              const boost::shared_ptr<InputParameters>& inputs,
-             //! Stream for optional output
-             std::ostream& out = std::cout,
              //! Flag to indicate whether a simularion config file is required for this analytic
              bool simulationConfig = false,
              //! Flag to indicate whether a sensitivity config file is required for this analytic
-             bool sensitivityConfig = false)
-        : label_(label), types_(analyticTypes), inputs_(inputs), out_(out),
+             bool sensitivityConfig = false,
+             //! Flag to indicate whether a scenario generator config file is required for this analytic
+             bool scenarioGeneratorConfig = false,
+             //! Flag to indicate whether a cross asset model config file is required for this analytic
+             bool crossAssetModelConfig = false)
+        : label_(label), types_(analyticTypes), inputs_(inputs), 
           simulationConfig_(simulationConfig), sensitivityConfig_(sensitivityConfig),
-          tab_(50), progressBarWidth_(72 - std::min<Size>(tab_, 67)) {
+          scenarioGeneratorConfig_(scenarioGeneratorConfig), crossAssetModelConfig_(crossAssetModelConfig) {
         // This call does not work with pure virtual functions, compiler error.
         // setUpConfigurations();
         // With a non-pure virtual function it calls the base class version here, not the overridden ones ?
@@ -92,11 +93,11 @@ public:
 
     //! Run only those analytic types that are inclcuded in the runTypes vector, run all if the runType vector is empty 
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                             const std::vector<std::string>& runTypes = {}) = 0;
+                             const std::set<std::string>& runTypes = {}) {}
 
-    // we usually build configurations here (today's market params, scenario sim market params, sensitivity scenasrio data)
-    virtual void buildConfigurations() {};
-    virtual void setUpConfigurations() = 0;
+    // we can build configurations here (today's market params, scenario sim market params, sensitivity scenasrio data)
+    virtual void buildConfigurations() {}
+    virtual void setUpConfigurations() {}
     virtual void buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const boost::shared_ptr<CurveConfigurations>& curveConfig, 
                              const bool marketRequired = true);
@@ -105,8 +106,12 @@ public:
 
     //! Inspectors
     const std::string& label() const { return label_; }
-    const std::vector<std::string>& analyticTypes() const { return types_; }
+    const std::set<std::string>& analyticTypes() const { return types_; }
     const boost::shared_ptr<ore::data::Market>& market() const { return market_; };
+    // To allow SWIG wrapping
+    boost::shared_ptr<MarketImpl> getMarket() const {        
+        return boost::dynamic_pointer_cast<MarketImpl>(market_);
+    }
     const boost::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; };
     virtual std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
     const boost::shared_ptr<ore::data::Loader>& loader() const { return loader_; };
@@ -119,14 +124,21 @@ public:
     const bool getWriteIntermediateReports() const { return writeIntermediateReports_; }
     void setWriteIntermediateReports(const bool flag) { writeIntermediateReports_ = flag; }
 
+    //! Check whether any of the requested run types is covered by this analytic
+    bool match(const std::set<std::string>& runTypes);
+
 protected:
     //! label for logging purposes primarily
     const std::string label_;
     //! list of analytic types run by this analytic
-    std::vector<std::string> types_;
+    std::set<std::string> types_;
     //! contains all the input parameters for the run
     boost::shared_ptr<InputParameters> inputs_;
-    std::ostream& out_;
+    //! Booleans to determine if these configs are needed
+    bool simulationConfig_ = false;
+    bool sensitivityConfig_ = false;
+    bool scenarioGeneratorConfig_ = false;
+    bool crossAssetModelConfig_ = false;
 
     Configurations configurations_;
     boost::shared_ptr<ore::data::Market> market_;
@@ -136,10 +148,6 @@ protected:
     analytic_reports reports_;
     analytic_npvcubes npvCubes_;
     analytic_mktcubes mktCubes_;
-
-    //! Booleans to determine if these configs are needed
-    bool simulationConfig_ = false;
-    bool sensitivityConfig_ = false;
 
     //! flag to replace trades with schedule trades
     bool replaceScheduleTrades_ = false;
@@ -151,10 +159,6 @@ protected:
 
     //! build an engine factory
     virtual boost::shared_ptr<ore::data::EngineFactory> engineFactory();
-
-    //! optional output formatting
-    Size tab_ = 50;
-    Size progressBarWidth_ = 32;
 };
     
 /*! Pricing-type analytics
@@ -162,45 +166,53 @@ protected:
   \todo align pillars for par sensitivity analysis
   \todo add par sensi analysis
 */
-class PricingAnalytic : public Analytic {
+class PricingAnalytic : public virtual Analytic {
 public:
-    PricingAnalytic(const boost::shared_ptr<InputParameters>& inputs, 
-                    std::ostream& out = std::cout,
-                    bool applySimmExemptions = false)
-        : Analytic("PRICING", {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"}, inputs, out) {
+    PricingAnalytic(const boost::shared_ptr<InputParameters>& inputs)
+        : Analytic("PRICING", {"NPV", "NPV_LAGGED", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"},
+                   inputs, false, false, false, false) {
+        if (find(begin(types_), end(types_), "SENSITIVITY") != end(types_)) {
+            simulationConfig_ = true;
+            sensitivityConfig_ = true;
+        }        
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                             const std::vector<std::string>& runTypes = {}) override;
+                             const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+
+    virtual void modifyPortfolio() {}
 
 protected:
     boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;
 };
 
-class VarAnalytic : public Analytic {
+class VarAnalytic : public virtual Analytic {
 public:
     // FIXME: Add DELTA-GAMMA-VAR (Saddlepoint method)
-    VarAnalytic(const boost::shared_ptr<InputParameters>& inputs, std::ostream& out = std::cout)
-        : Analytic("VAR", {"DELTA-VAR", "DELTA-GAMMA-NORMAL-VAR", "MONTE-CARLO-VAR"}, inputs, out) {
+    VarAnalytic(const boost::shared_ptr<InputParameters>& inputs)
+        : Analytic("VAR", {"VAR"}, inputs, false, false, false, false) {
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                             const std::vector<std::string>& runTypes = {}) override;
+                             const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+
+protected:
+    // boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;
 };
 
-class XvaAnalytic : public Analytic {
+class XvaAnalytic : public virtual Analytic {
 public:
-    XvaAnalytic(const boost::shared_ptr<InputParameters>& inputs, std::ostream& out = std::cout)
-        : Analytic("XVA", {"EXPOSURE", "CVA", "DVA", "FVA", "COLVA", "COLLATERALFLOOR", "KVA", "MVA"}, inputs, out) {
+    XvaAnalytic(const boost::shared_ptr<InputParameters>& inputs)
+        : Analytic("XVA", {"XVA", "EXPOSURE"}, inputs, true, false, false, false) {
         setUpConfigurations();
     }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                             const std::vector<std::string>& runTypes = {}) override;
+                             const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
     
-private:
+protected:
     boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;
     void buildScenarioSimMarket();
     void buildCrossAssetModel(bool continueOnError);
@@ -210,12 +222,13 @@ private:
     void initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth);    
 
     void initClassicRun(const boost::shared_ptr<Portfolio>& portfolio);
-    virtual void buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio);
+    void buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio);
     boost::shared_ptr<Portfolio> classicRun(const boost::shared_ptr<Portfolio>& portfolio);
 
-    boost::shared_ptr<EngineFactory> amcEngineFactory();
+    boost::shared_ptr<EngineFactory> amcEngineFactory(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                                      const std::vector<Date>& grid);
     void buildAmcPortfolio();
-    virtual void amcRun(bool doClassicRun);
+    void amcRun(bool doClassicRun);
 
     void runPostProcessor();
     
@@ -233,6 +246,9 @@ private:
     Size cubeDepth_ = 0;
     boost::shared_ptr<DateGrid> grid_;
     Size samples_ = 0;
+
+    bool runSimulation_ = false;
+    bool runXva_ = false;
 };
 
 } // namespace analytics

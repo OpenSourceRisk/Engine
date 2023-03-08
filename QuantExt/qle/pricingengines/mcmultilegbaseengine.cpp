@@ -16,8 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 
+#include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/cmscoupon.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
@@ -551,13 +554,51 @@ void McMultiLegBaseEngine::calculate() const {
                 flooredRate_[index].push_back(-QL_MAX_REAL);
             } else {
                 auto flr = flrcpn(leg_[i][j]);
-                QL_REQUIRE(flr != nullptr, "McMultiLegBaseEngine: unexpected coupon type");
+                QL_REQUIRE(flr != nullptr,
+                           "McMultiLegBaseEngine: unexpected coupon type, expected fixed or (cf) floating rate coupon");
+
+                // proxy ON compounded, averaged and BMA by ibor coupons, ibor coupons are handled below
+
+                if (auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cpn)) {
+                    flr = boost::make_shared<IborCoupon>(
+                        on->date(), on->nominal(), on->accrualStartDate(), on->accrualEndDate(), on->fixingDays(),
+                        boost::make_shared<IborIndex>(
+                            "proxy-ibor", (on->accrualEndDate() - on->accrualStartDate()) * Days, on->fixingDays(),
+                            on->overnightIndex()->currency(), on->overnightIndex()->fixingCalendar(),
+                            on->overnightIndex()->businessDayConvention(), on->overnightIndex()->endOfMonth(),
+                            on->dayCounter(), on->overnightIndex()->forwardingTermStructure()),
+                        on->gearing(), on->spread(), on->referencePeriodStart(), on->referencePeriodEnd(),
+                        on->dayCounter(), false, Date());
+                } else if (auto on = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(cpn)) {
+                    flr = boost::make_shared<IborCoupon>(
+                        on->date(), on->nominal(), on->accrualStartDate(), on->accrualEndDate(), on->fixingDays(),
+                        boost::make_shared<IborIndex>(
+                            "proxy-ibor", (on->accrualEndDate() - on->accrualStartDate()) * Days, on->fixingDays(),
+                            on->overnightIndex()->currency(), on->overnightIndex()->fixingCalendar(),
+                            on->overnightIndex()->businessDayConvention(), on->overnightIndex()->endOfMonth(),
+                            on->dayCounter(), on->overnightIndex()->forwardingTermStructure()),
+                        on->gearing(), on->spread(), on->referencePeriodStart(), on->referencePeriodEnd(),
+                        on->dayCounter(), false, Date());
+                } else if (auto bma = boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(cpn)) {
+                    auto bmaIndex = boost::dynamic_pointer_cast<BMAIndex>(bma->index());
+                    QL_REQUIRE(bmaIndex, "McMultiLegBaseEngine: could not cast to BMAIndex, internal error.");
+                    flr = boost::make_shared<IborCoupon>(
+                        bma->date(), bma->nominal(), bma->accrualStartDate(), bma->accrualEndDate(), bma->fixingDays(),
+                        boost::make_shared<IborIndex>(
+                            "proxy-ibor", (bma->accrualEndDate() - bma->accrualStartDate()) * Days, bma->fixingDays(),
+                            bmaIndex->currency(), bmaIndex->fixingCalendar(), Following, false, bma->dayCounter(),
+                            bmaIndex->forwardingTermStructure()),
+                        bma->gearing(), bma->spread(), bma->referencePeriodStart(), bma->referencePeriodEnd(),
+                        bma->dayCounter(), false, Date());
+                }
 
                 // in arrears?
+
                 if (flr->isInArrears())
                     allowsVanillaValuation = false;
 
                 // cap / floors
+
                 Real cappedRate = QL_MAX_REAL, flooredRate = -QL_MAX_REAL;
                 auto cfc = boost::dynamic_pointer_cast<CappedFlooredCoupon>(leg_[i][j]);
                 if (cfc != nullptr && cfc->isCapped()) {
@@ -573,6 +614,7 @@ void McMultiLegBaseEngine::calculate() const {
                 // TODO add support for stripped capped floored coupon
 
                 // handle the floating rate coupon types
+
                 Size ccyIndex = model_->ccyIndex(flr->index()->currency());
                 fixingDate_[index].push_back(flr->fixingDate());
                 gearing_[index].push_back(flr->gearing());
@@ -581,20 +623,17 @@ void McMultiLegBaseEngine::calculate() const {
 
                 bool cpnrec = false;
 
-                // IBOR
-                auto iborcpn = boost::dynamic_pointer_cast<IborCoupon>(flr);
-                if (iborcpn != nullptr) {
+                if (auto iborcpn = boost::dynamic_pointer_cast<IborCoupon>(flr)) {
+                    // IBOR
                     indexCcyIndex_[index].push_back(model_->pIdx(CrossAssetModel::AssetType::IR, ccyIndex));
                     indexFwdCurve_[index].push_back(boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
                         model_->lgm(ccyIndex), iborcpn->iborIndex()->forwardingTermStructure()));
                     indexDscCurve_[index].push_back(nullptr);
                     modelIndex_[index].push_back(
                         iborcpn->iborIndex()->clone(Handle<YieldTermStructure>(indexFwdCurve_[index].back())));
-                }
-                cpnrec = true;
-                // CMS
-                auto cmscpn = boost::dynamic_pointer_cast<CmsCoupon>(flr);
-                if (cmscpn != nullptr) {
+                    cpnrec = true;
+                } else if (auto cmscpn = boost::dynamic_pointer_cast<CmsCoupon>(flr)) {
+                    // CMS
                     allowsVanillaValuation = false;
                     indexCcyIndex_[index].push_back(model_->pIdx(CrossAssetModel::AssetType::IR, ccyIndex));
                     indexFwdCurve_[index].push_back(boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
@@ -607,8 +646,8 @@ void McMultiLegBaseEngine::calculate() const {
                 }
                 // add more coupon types here ...
 
-                QL_REQUIRE(cpnrec,
-                           "McMultiLegBaseEngine: index type in leg " << i << ", coupon " << j << " not supported.");
+                QL_REQUIRE(cpnrec, "McMultiLegBaseEngine: floating rate coupon type in leg " << i << ", coupon " << j
+                                                                                             << " not supported.");
             }
 
             // other data
@@ -656,12 +695,66 @@ void McMultiLegBaseEngine::calculate() const {
 
 boost::shared_ptr<AmcCalculator> McMultiLegBaseEngine::amcCalculator() const {
     return boost::make_shared<MultiLegBaseAmcCalculator>(
-        model_->irlgm1f(0)->currency(), externalModelIndices_, exercise_ != nullptr,
-        optionSettlement_ == Settlement::Physical, times_, indexes_, exerciseIdx_, simulationIdx_, isTrappedDate_,
-        numSim_, resultValue_, coeffsItm_, coeffsUndEx_, coeffsFull_, coeffsUndTrapped_, coeffsUndDirty_, basisFns_);
+        model_->irlgm1f(0)->currency(), model_->stateProcess()->initialValues(), externalModelIndices_,
+        exercise_ != nullptr, optionSettlement_ == Settlement::Physical, times_, indexes_, exerciseIdx_, simulationIdx_,
+        isTrappedDate_, numSim_, resultValue_, coeffsItm_, coeffsUndEx_, coeffsFull_, coeffsUndTrapped_,
+        coeffsUndDirty_, basisFns_);
 }
 
-Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool reuseLastEvents) {
+std::vector<QuantExt::RandomVariable>
+MultiLegBaseAmcCalculator::simulatePath(const std::vector<QuantLib::Real>& pathTimes,
+                                        std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+                                        const std::vector<bool>& isRelevantTime, const bool stickyCloseOutRun) {
+
+    QL_REQUIRE(!paths.empty(), "MultiLegBaseAmcCalculator: no future path times, this is not allowed.");
+    QL_REQUIRE(pathTimes.size() == paths.size(), "MultiLegBaseAmcCalculator: inconsistent pathTimes size ("
+                                                     << pathTimes.size() << ") and paths size (" << paths.size()
+                                                     << ") - internal error.");
+
+    if(storedExerciseIndex_.empty())
+        storedExerciseIndex_.resize(paths.front().front().size());
+
+    std::vector<Real> simTimes(1, 0.0);
+    for (Size i = 0; i < pathTimes.size(); ++i) {
+        if (isRelevantTime[i]) {
+            int ind = stickyCloseOutRun ? i - 1 : i;
+            QL_REQUIRE(ind >= 0,
+                       "MultiLegBaseAmcCalculator: sticky close out run time index is negative - internal error.");
+            simTimes.push_back(pathTimes[ind]);
+        }
+    }
+    TimeGrid timeGrid(simTimes.begin(), simTimes.end());
+
+    std::vector<QuantExt::RandomVariable> result(simTimes.size(), RandomVariable(paths.front().front().size(), 0.0));
+
+    for (Size sample = 0; sample < paths.front().front().size(); ++sample) {
+
+        MultiPath path(externalModelIndices_.size(), timeGrid);
+        for (Size j = 0; j < externalModelIndices_.size(); ++j) {
+            path[j][0] = x0_[j];
+        }
+
+        Size timeIndex = 0;
+        for (Size i = 0; i < pathTimes.size(); ++i) {
+            if (isRelevantTime[i]) {
+                ++timeIndex;
+                for (Size j = 0; j < externalModelIndices_.size(); ++j) {
+                    path[j][timeIndex] = paths[i][externalModelIndices_[j]][sample];
+                }
+            }
+        }
+
+        auto res = simulatePath(path, stickyCloseOutRun, sample);
+
+        for (Size k = 0; k < res.size(); ++k) {
+            result[k].set(sample, res[k]);
+        }
+    }
+
+    return result;
+}
+
+Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool reuseLastEvents, const Size sample) {
     // we assume that the path exactly contains the simulation times (and 0)
     // we only check that the path has the right length here
     QL_REQUIRE(path[0].length() == numSim_ + 1, "MultiLegBaseAmcCalculator::simulatePath: expected path size "
@@ -676,7 +769,7 @@ Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool 
             if (simIdx == Null<Size>())
                 continue;
             for (Size j = 0; j < externalModelIndices_.size(); ++j) {
-                s[j] = path[externalModelIndices_[j]][simIdx + 1];
+                s[j] = path[j][simIdx + 1];
             }
             result[simIdx + 1] = evalRegression(coeffsUndDirty_[simIdx], s, basisFns_);
         }
@@ -686,7 +779,7 @@ Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool 
     Size exIdx = Null<Size>();
     if (reuseLastEvents) {
         // if reuseLastEvents is true, we set the exercise index to the one from the last simulationPath() call
-        exIdx = storedExerciseIndex_;
+        exIdx = storedExerciseIndex_[sample];
     } else {
         // otherweise we determine the exercise index explicitly
         for (Size i = 0; i < indexes_.size(); ++i) {
@@ -710,8 +803,8 @@ Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool 
             Real t1 = path[0].time(ind - 1), t2 = path[0].time(ind);
             Array s1(externalModelIndices_.size()), s2(externalModelIndices_.size());
             for (Size j = 0; j < externalModelIndices_.size(); ++j) {
-                s1[j] = path[externalModelIndices_[j]][ind - 1];
-                s2[j] = path[externalModelIndices_[j]][ind];
+                s1[j] = path[j][ind - 1];
+                s2[j] = path[j][ind];
             }
             s = ((tex - t1) * s2 + (t2 - tex) * s1) / (t2 - t1);
             Real exVal = evalRegression(coeffsUndEx_[exIdxTmp], s, basisFns_);
@@ -723,7 +816,7 @@ Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool 
                 }
             }
         }
-        storedExerciseIndex_ = exIdx;
+        storedExerciseIndex_[sample] = exIdx;
     }
     // now populate the result array using the exercise time information
     bool exercised = false, exercisedNow = false;
@@ -738,7 +831,7 @@ Array MultiLegBaseAmcCalculator::simulatePath(const MultiPath& path, const bool 
         if (simIdx == Null<Size>())
             continue;
         for (Size j = 0; j < externalModelIndices_.size(); ++j) {
-            s[j] = path[externalModelIndices_[j]][simIdx + 1];
+            s[j] = path[j][simIdx + 1];
         }
         if (exercisedNow) {
             // we are on the first sim date on or after the exercise ...

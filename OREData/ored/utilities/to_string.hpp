@@ -72,6 +72,22 @@ template <class T>  std::string to_string(const std::vector<T>& vec, const std::
     return oss.str();    
 }
 
+//! Convert set to std::string
+/*!
+  \ingroup utilities
+*/
+template <class T>  std::string to_string(const std::set<T>& set, const std::string& sep = ",") {
+    std::ostringstream oss;
+    Size count = 1;
+    for (auto s: set) {
+        oss << s;
+        if (count < set.size())
+            oss << sep;
+        count++;
+    }
+    return oss.str();    
+}
+
 //! Convert type to std::string
 /*!
   Utility to give to_string() interface to classes and enums that have ostream<< operators defined.

@@ -15,20 +15,22 @@ aggregation/xvacalculator.cpp
 app/analytic.cpp
 app/analyticsmanager.cpp
 app/inputparameters.cpp
+app/marketcalibrationreport.cpp
 app/marketdatacsvloader.cpp
+app/marketdatainmemoryloader.cpp
 app/marketdataloader.cpp
 app/oreapp.cpp
-app/marketcalibrationreport.cpp
 app/parameters.cpp
 app/reportwriter.cpp
 app/sensitivityrunner.cpp
 app/xvarunner.cpp
+cube/cube_io.cpp
+cube/cubecsvreader.cpp
 cube/cubeinterpretation.cpp
 cube/cubewriter.cpp
-cube/sensitivitycube.cpp
-cube/cubecsvreader.cpp
 cube/jointnpvcube.cpp
 cube/jointnpvsensicube.cpp
+cube/sensitivitycube.cpp
 cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
@@ -90,28 +92,31 @@ aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
 app/analytic.hpp
 app/analyticsmanager.hpp
+app/inputparameters.hpp
+app/marketcalibrationreport.hpp
 app/marketdatacsvloader.hpp
+app/marketdatainmemoryloader.hpp
 app/marketdataloader.hpp
 app/oreapp.hpp
 app/parameters.hpp
-app/marketcalibrationreport.hpp
 app/reportwriter.hpp
 app/sensitivityrunner.hpp
 app/structuredanalyticserror.hpp
 app/structuredanalyticswarning.hpp
 app/xvarunner.hpp
 auto_link.hpp
+cube/cube_io.hpp
+cube/cubecsvreader.hpp
 cube/cubeinterpretation.hpp
 cube/cubewriter.hpp
 cube/inmemorycube.hpp
+cube/jaggedcube.hpp
+cube/jointnpvcube.hpp
+cube/jointnpvsensicube.hpp
 cube/npvcube.hpp
 cube/npvsensicube.hpp
 cube/sensicube.hpp
 cube/sensitivitycube.hpp
-cube/cubecsvreader.hpp
-cube/jaggedcube.hpp
-cube/jointnpvcube.hpp
-cube/jointnpvsensicube.hpp
 cube/sparsenpvcube.hpp
 engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
@@ -170,6 +175,7 @@ target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${Boost_LIBRARIES})
+target_link_libraries(${OREA_LIB_NAME} ZLIB::ZLIB)
 
 install(DIRECTORY . DESTINATION include/orea
         FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")

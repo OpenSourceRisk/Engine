@@ -37,6 +37,8 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<FxDigitalBarrierOption>> FxDigitalBarrierOption::reg_("FxDigitalBarrierOption");
+    
 bool checkBarrier(Real spot, Barrier::Type type, Real barrier);
 
 void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
@@ -168,6 +170,12 @@ void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engin
     additionalData_["payoffCurrency"] = payoffCurrency_;
     additionalData_["effectiveForeignCurrency"] = boughtCcy.code();
     additionalData_["effectiveDomesticCurrency"] = soldCcy.code();
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Digital");  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 bool checkBarrier(Real spot, Barrier::Type type, Real barrier) {

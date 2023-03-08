@@ -32,6 +32,12 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
+ORE_REGISTER_ENGINE_BUILDER_IMPL(FxEuropeanOptionEngineBuilder)
+ORE_REGISTER_ENGINE_BUILDER_IMPL(FxEuropeanCSOptionEngineBuilder)
+ORE_REGISTER_ENGINE_BUILDER_IMPL(FxAmericanOptionFDEngineBuilder)
+ORE_REGISTER_ENGINE_BUILDER_IMPL(FxAmericanOptionBAWEngineBuilder)
+ORE_REGISTER_AMC_ENGINE_BUILDER_IMPL(CamAmcFxOptionEngineBuilder)
+
 boost::shared_ptr<PricingEngine> CamAmcFxOptionEngineBuilder::engineImpl(const string& assetName,
                                                                          const Currency& domCcy,
                                                                          const AssetClass& assetClassUnderlying,

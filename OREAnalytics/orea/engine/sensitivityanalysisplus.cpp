@@ -68,9 +68,8 @@ void SensitivityAnalysisPlus::initialize(boost::shared_ptr<ore::analytics::NPVSe
     LOG("Build Sensitivity Scenario Generator and Simulation Market");
     initializeSimMarket();
 
-    LOG("Build Engine Factory and rebuild portfolio with " << extraBuilders_.size() << " extra engine builders, "
-                                                           << extraLegBuilders_.size() << " extra leg builders");
-    boost::shared_ptr<EngineFactory> factory = buildFactory(extraBuilders_, extraLegBuilders_);
+    LOG("Build Engine Factory and rebuild portfolio");
+    boost::shared_ptr<EngineFactory> factory = buildFactory();
     resetPortfolio(factory);
     if (recalibrateModels_)
         modelBuilders_ = factory->modelBuilders();
@@ -159,25 +158,24 @@ void SensitivityAnalysisPlus::generateSensitivities(boost::shared_ptr<NPVSensiCu
         nThreads_, asof_, boost::make_shared<ore::analytics::DateGrid>(), scenarioGenerator_->numScenarios(), loader_,
         scenarioGenerator_, ed, curveConfigs_, todaysMarketParams_, marketConfiguration_, simMarketData_,
         sensitivityData_->useSpreadedTermStructures(), false, boost::make_shared<ore::analytics::ScenarioFilter>(),
-        extraTradeBuildersGenerator_, extraEngineBuildersGenerator_, extraLegBuildersGenerator_, referenceData_,
-        iborFallbackConfig_, true, true,
+        referenceData_, iborFallbackConfig_, true, true,
         [](const QuantLib::Date& asof, const std::set<std::string>& ids, const std::vector<QuantLib::Date>&,
            const QuantLib::Size samples) {
             return boost::make_shared<ore::analytics::DoublePrecisionSensiCube>(ids, asof, samples);
         },
-        context_);
+        {}, {}, context_);
     for (auto const& i : this->progressIndicators())
         engine.registerProgressIndicator(i);
 
     auto baseCcy = simMarketData_->baseCcy();
-    auto tmp = engine.buildCube(
+    engine.buildCube(
         portfolio_,
         [&baseCcy]() -> std::vector<boost::shared_ptr<ValuationCalculator>> {
             return {boost::make_shared<NPVCalculator>(baseCcy)};
         },
-        true, dryRun_);
+        {}, true, dryRun_);
     std::vector<boost::shared_ptr<NPVSensiCube>> miniCubes;
-    for (auto const& c : tmp) {
+    for (auto const& c : engine.outputCubes()) {
         miniCubes.push_back(boost::dynamic_pointer_cast<NPVSensiCube>(c));
         QL_REQUIRE(miniCubes.back() != nullptr,
                    "SensitivityAnalysis::generateSensitivities(): internal error, could not cast to NPVSensiCube.");

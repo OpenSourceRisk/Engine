@@ -18,6 +18,8 @@
 
 #include <orea/aggregation/nettedexposurecalculator.hpp>
 
+#include <ored/portfolio/trade.hpp>
+
 #include <ql/time/date.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 
@@ -413,13 +415,13 @@ NettedExposureCalculator::collateralPaths(
     for (Size j = 0; j < cube_->dates().size(); ++j) {
         for (Size k = 0; k < cube_->samples(); ++k) {
 	  if (netting->csaDetails()->csaCurrency() != baseCurrency_)
-                csaScenFxRates[j][k] = cubeInterpretation_->getDefaultAggrionScenarioData(
-                    scenarioData_, AggregationScenarioDataType::FXSpot, j, k, netting->csaDetails()->csaCurrency());
+              csaScenFxRates[j][k] = cubeInterpretation_->getDefaultAggregationScenarioData(
+                  AggregationScenarioDataType::FXSpot, j, k, netting->csaDetails()->csaCurrency());
             else
                 csaScenFxRates[j][k] = 1.0;
             if (csaIndexName != "") {
-                csaScenRates[j][k] = cubeInterpretation_->getDefaultAggrionScenarioData(
-                    scenarioData_, AggregationScenarioDataType::IndexFixing, j, k, csaIndexName);
+                csaScenRates[j][k] = cubeInterpretation_->getDefaultAggregationScenarioData(
+                    AggregationScenarioDataType::IndexFixing, j, k, csaIndexName);
             }
         }
     }

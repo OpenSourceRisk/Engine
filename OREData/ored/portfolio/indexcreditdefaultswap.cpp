@@ -36,6 +36,9 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
+TradeBuilderRegister<TradeBuilder<IndexCreditDefaultSwap>>
+    IndexCreditDefaultSwap::reg_("IndexCreditDefaultSwap");
+
 void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("IndexCreditDefaultSwap::build() called for trade " << id());
 
@@ -129,10 +132,11 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
         // get data from ReferenceDatum
         string id = ore::data::splitCurveIdWithTenor(swap_.creditCurveId()).first;
         DLOG("Getting CreditIndexReferenceDatum for id " << id);
-        QL_REQUIRE(refDataManager_, "No BasketData or ReferenceDataManager");
-        QL_REQUIRE(refDataManager_->hasData(CreditIndexReferenceDatum::TYPE, id),
+        QL_REQUIRE(engineFactory->referenceData(), "No BasketData or ReferenceDataManager");
+        QL_REQUIRE(engineFactory->referenceData()->hasData(CreditIndexReferenceDatum::TYPE, id),
                    "No CreditIndex reference data for " << id);
-        boost::shared_ptr<ReferenceDatum> refData = refDataManager_->getData(CreditIndexReferenceDatum::TYPE, id);
+        boost::shared_ptr<ReferenceDatum> refData =
+            engineFactory->referenceData()->getData(CreditIndexReferenceDatum::TYPE, id);
         boost::shared_ptr<CreditIndexReferenceDatum> creditRefData =
             boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refData);
         DLOG("Got CreditIndexReferenceDatum for id " << id);
@@ -211,6 +215,15 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
         additionalData_["startDate"] = to_string(schedule.dates().front());
 
     sensitivityDecomposition_ = cdsBuilder->sensitivityDecomposition();
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Index");
+    // Deferring the mapping of creditCurveId to CDX, LCDX, MCDX, iTraxx, ABX, CMBX, IOS, MBX, PO, PrimeX, TRX, SP
+    additionalData_["isdaSubProduct"] = swap_.creditCurveId(); 
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");  
+
 }
 
 const std::map<std::string, boost::any>& IndexCreditDefaultSwap::additionalData() const {
@@ -222,8 +235,11 @@ const std::map<std::string, boost::any>& IndexCreditDefaultSwap::additionalData(
     additionalData_["isPayer[1]"] = !swap_.leg().isPayer();
     additionalData_["isPayer[2]"] = swap_.leg().isPayer();
     additionalData_["legType[2]"] = swap_.leg().legType();
+    additionalData_["legType[1]"] = std::string("Protection");
     additionalData_["currentNotional[1]"] = additionalData_["currentNotional[2]"];
     additionalData_["originalNotional[1]"] = additionalData_["originalNotional[2]"];
+    additionalData_["notionalCurrency[1]"] = notionalCurrency_;
+    additionalData_["notionalCurrency[2]"] = notionalCurrency_;
     return additionalData_;
 }
 

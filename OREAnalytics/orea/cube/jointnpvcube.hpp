@@ -38,22 +38,26 @@ using QuantLib::Size;
 class JointNPVCube : public NPVCube {
 public:
     /*! ctor for two input cubes */
-    JointNPVCube(const boost::shared_ptr<NPVCube>& cube1, const boost::shared_ptr<NPVCube>& cube2,
-                 const std::set<std::string>& ids = {}, const bool requireUniqueIds = true);
+    JointNPVCube(
+        const boost::shared_ptr<NPVCube>& cube1, const boost::shared_ptr<NPVCube>& cube2,
+        const std::set<std::string>& ids = {}, const bool requireUniqueIds = true,
+        const std::function<Real(Real a, Real x)>& accumulator = [](Real a, Real x) { return a + x; },
+        const Real accumulatorInit = 0.0);
 
     /*! ctor for n input cubes
-        - If no ids are given, the order of the ids in the input cubes define the order in the resulting cube. If ids
-          are given they define the order of the ids in the output cube. The ids vector must contain unique ids in this
-          case.
+        - If no ids are given, the ids in the input cubes define the ids in the resulting cube. The order is
+       lexicographic. If ids are given they define the ids in the output cube.
         - If requireUniqueIds is true, there must be no duplicate ids in the input cubes. If requireUniqueIds is false,
-          they may be duplicate ids in which case get() will return the sum of the entries in the input cubes over the
-          matching ids. In this case the first id among several possible duplicate ids in the input cubes defines the
-          order of the ids in the output cube, i.e. the output cube has unique ids in this case, too.
+          they may be duplicate ids in which case get() will return an aggregate of the entries in the input cubes over
+       the matching ids using the accumulator function and accumulator initialization.
         - If one id in the result cube corresponds to several input cubes, it is not allowed to call set on this id,
           this will result in an exception.
      */
-    JointNPVCube(const std::vector<boost::shared_ptr<NPVCube>>& cubes, const std::set<std::string>& ids = {},
-                 const bool requireUniqueIds = true);
+    JointNPVCube(
+        const std::vector<boost::shared_ptr<NPVCube>>& cubes, const std::set<std::string>& ids = {},
+        const bool requireUniqueIds = true,
+        const std::function<Real(Real a, Real x)>& accumulator = [](Real a, Real x) { return a + x; },
+        const Real accumulatorInit = 0.0);
 
     //! Return the length of each dimension
     Size numIds() const override;
@@ -71,14 +75,15 @@ public:
     Real get(Size id, Size date, Size sample, Size depth = 0) const override;
     void set(Real value, Size id, Size date, Size sample, Size depth = 0) override;
 
-    void load(const std::string& fileName) override { QL_FAIL("JointNPVCube::load() not implemented"); }
-    void save(const std::string& fileName) const override { QL_FAIL("JointNPVCube::save() not implemented"); }
-
 private:
     std::set<std::pair<boost::shared_ptr<NPVCube>, Size>> cubeAndId(Size id) const;
+
+    const std::vector<boost::shared_ptr<NPVCube>> cubes_;
+    const std::function<Real(Real a, Real x)> accumulator_;
+    const Real accumulatorInit_;
+
     std::map<std::string, Size> idIdx_;
     std::vector<std::set<std::pair<boost::shared_ptr<NPVCube>, Size>>> cubeAndId_;
-    const std::vector<boost::shared_ptr<NPVCube>> cubes_;
 };
 
 } // namespace analytics

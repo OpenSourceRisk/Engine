@@ -1,4 +1,5 @@
 include(CheckCXXCompilerFlag)
+include(CheckLinkerFlag)
 
 option(MSVC_LINK_DYNAMIC_RUNTIME "Link against dynamic runtime" ON)
 option(MSVC_PARALLELBUILD "Use flag /MP" ON)
@@ -9,9 +10,19 @@ set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-
 # add compiler flag, if not already present
 macro(add_compiler_flag flag supportsFlag)
     check_cxx_compiler_flag(${flag} ${supportsFlag})
-
     if(${supportsFlag} AND NOT "${CMAKE_CXX_FLAGS}" MATCHES "${flag}")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}")
+    endif()
+endmacro()
+
+# add linker flag for shared libs and exe, if not already present
+macro(add_linker_flag flag supportsFlag)
+    check_linker_flag(CXX ${flag} ${supportsFlag})
+    if(${supportsFlag} AND NOT "${CMAKE_SHARED_LINKER_FLAGS}" MATCHES "${flag}")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${flag}")
+    endif()
+    if(${supportsFlag} AND NOT "${CMAKE_EXE_LINKER_FLAGS}" MATCHES "${flag}")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${flag}")
     endif()
 endmacro()
 
@@ -95,6 +106,9 @@ else()
     # build shared libs always
     set(BUILD_SHARED_LIBS ON)
 
+    # do not optimize away seemingly unused libs, they might contain dynamic registration of builders
+    add_linker_flag("-Wl,--no-as-needed" supportsNoAsNeeded)
+
     # link against dynamic boost libraries
     add_definitions(-DBOOST_ALL_DYN_LINK)
     add_definitions(-DBOOST_TEST_DYN_LINK)
@@ -142,6 +156,8 @@ else()
     include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
 endif()
 
+# workaround when building with boost 1.81, see https://github.com/boostorg/phoenix/issues/111
+add_definitions(-DBOOST_PHOENIX_STL_TUPLE_H_)
 
 # set library locations
 get_filename_component(QUANTLIB_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../QuantLib" ABSOLUTE)
