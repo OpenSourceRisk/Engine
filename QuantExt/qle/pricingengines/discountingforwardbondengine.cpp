@@ -331,7 +331,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
                                           bondSettlementDate, 1E-10, 100, 0.05, Bond::Price::Dirty);
         Real dv01;
         if (arguments_.dv01 != Null<Real>()) {
-
+            
             dv01 = arguments_.dv01;
 
         } else {
@@ -346,10 +346,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
         Real multiplier = (*arguments_.longInForward) ? 1.0 : -1.0;
         forwardContractForwardValue = multiplier * (yield - arguments_.lockRate) * dv01 * arguments_.bondNotional *
                                       bd->notional(bondSettlementDate);
-        // Effective PayOff doesn't take negative DV01 therefore we flip it if needed
-        if (dv01 < 0) {
-            dv01 = - dv01;
-        }
+
         effectivePayoff = boost::make_shared<ForwardBondTypePayoff>(
             (*arguments_.longInForward) ? Position::Long : Position::Short,
             arguments_.lockRate * dv01 * arguments_.bondNotional * bd->notional(bondSettlementDate));
