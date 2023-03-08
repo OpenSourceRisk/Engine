@@ -185,11 +185,14 @@ class EngineBuilderFactory : public QuantLib::Singleton<EngineBuilderFactory, st
     mutable boost::shared_mutex mutex_;
 
 public:
-    void addEngineBuilder(const std::function<boost::shared_ptr<EngineBuilder>()>& builder);
+    void addEngineBuilder(const std::function<boost::shared_ptr<EngineBuilder>()>& builder,
+                          const bool allowOverwrite = false);
     void addAmcEngineBuilder(
         const std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                                                             const std::vector<Date>& grid)>& builder);
-    void addLegBuilder(const std::function<boost::shared_ptr<LegBuilder>()>& builder);
+                                                             const std::vector<Date>& grid)>& builder,
+        const bool allowOverwrite = false);
+    void addLegBuilder(const std::function<boost::shared_ptr<LegBuilder>()>& builder,
+                       const bool allowOverwrite = false);
 
     std::vector<boost::shared_ptr<EngineBuilder>> generateEngineBuilders() const;
     std::vector<boost::shared_ptr<EngineBuilder>>
