@@ -138,8 +138,6 @@ protected:
 /*! \ingroup portfolio
  */
 class CamAmcSwapEngineBuilder : public SwapEngineBuilderBase {
-    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcSwapEngineBuilder)
-
 public:
     CamAmcSwapEngineBuilder(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
                             const std::vector<Date>& simulationDates)

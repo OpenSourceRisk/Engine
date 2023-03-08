@@ -39,8 +39,6 @@
 
 #define ORE_REGISTER_ENGINE_BUILDER(CLASSNAME) static ore::data::EngineBuilderRegister<CLASSNAME> reg_eb_;
 #define ORE_REGISTER_ENGINE_BUILDER_IMPL(CLASSNAME) ore::data::EngineBuilderRegister<CLASSNAME> CLASSNAME::reg_eb_; 
-#define ORE_REGISTER_AMC_ENGINE_BUILDER(CLASSNAME) static ore::data::AmcEngineBuilderRegister<CLASSNAME> reg_amceb_;
-#define ORE_REGISTER_AMC_ENGINE_BUILDER_IMPL(CLASSNAME) ore::data::AmcEngineBuilderRegister<CLASSNAME> CLASSNAME::reg_amceb_; 
 
 namespace ore {
 namespace data {

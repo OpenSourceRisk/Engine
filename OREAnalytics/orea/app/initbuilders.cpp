@@ -29,6 +29,67 @@
 #include <ored/portfolio/bondoption.hpp>
 #include <ored/portfolio/bondrepo.hpp>
 #include <ored/portfolio/bondtotalreturnswap.hpp>
+#include <ored/portfolio/builders/asianoption.hpp>
+#include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/builders/bondoption.hpp>
+#include <ored/portfolio/builders/bondrepo.hpp>
+#include <ored/portfolio/builders/bondtotalreturnswap.hpp>
+#include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
+#include <ored/portfolio/builders/capflooredcpileg.hpp>
+#include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/capfloorednonstandardyoyleg.hpp>
+#include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
+#include <ored/portfolio/builders/capflooredyoyleg.hpp>
+#include <ored/portfolio/builders/cdo.hpp>
+#include <ored/portfolio/builders/cliquetoption.hpp>
+#include <ored/portfolio/builders/cms.hpp>
+#include <ored/portfolio/builders/cmsspread.hpp>
+#include <ored/portfolio/builders/commodityapo.hpp>
+#include <ored/portfolio/builders/commodityapomodelbuilder.hpp>
+#include <ored/portfolio/builders/commodityasianoption.hpp>
+#include <ored/portfolio/builders/commodityforward.hpp>
+#include <ored/portfolio/builders/commodityoption.hpp>
+#include <ored/portfolio/builders/commodityspreadoption.hpp>
+#include <ored/portfolio/builders/commodityswap.hpp>
+#include <ored/portfolio/builders/commodityswaption.hpp>
+#include <ored/portfolio/builders/cpicapfloor.hpp>
+#include <ored/portfolio/builders/creditdefaultswap.hpp>
+#include <ored/portfolio/builders/creditdefaultswapoption.hpp>
+#include <ored/portfolio/builders/creditlinkedswap.hpp>
+#include <ored/portfolio/builders/currencyswap.hpp>
+#include <ored/portfolio/builders/durationadjustedcms.hpp>
+#include <ored/portfolio/builders/equityasianoption.hpp>
+#include <ored/portfolio/builders/equitybarrieroption.hpp>
+#include <ored/portfolio/builders/equitycompositeoption.hpp>
+#include <ored/portfolio/builders/equitydigitaloption.hpp>
+#include <ored/portfolio/builders/equitydoublebarrieroption.hpp>
+#include <ored/portfolio/builders/equitydoubletouchoption.hpp>
+#include <ored/portfolio/builders/equityforward.hpp>
+#include <ored/portfolio/builders/equityfuturesoption.hpp>
+#include <ored/portfolio/builders/equityoption.hpp>
+#include <ored/portfolio/builders/equitytouchoption.hpp>
+#include <ored/portfolio/builders/forwardbond.hpp>
+#include <ored/portfolio/builders/fxasianoption.hpp>
+#include <ored/portfolio/builders/fxbarrieroption.hpp>
+#include <ored/portfolio/builders/fxdigitalbarrieroption.hpp>
+#include <ored/portfolio/builders/fxdigitaloption.hpp>
+#include <ored/portfolio/builders/fxdoublebarrieroption.hpp>
+#include <ored/portfolio/builders/fxdoubletouchoption.hpp>
+#include <ored/portfolio/builders/fxforward.hpp>
+#include <ored/portfolio/builders/fxoption.hpp>
+#include <ored/portfolio/builders/fxtouchoption.hpp>
+#include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
+#include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
+#include <ored/portfolio/builders/multilegoption.hpp>
+#include <ored/portfolio/builders/quantoequityoption.hpp>
+#include <ored/portfolio/builders/quantovanillaoption.hpp>
+#include <ored/portfolio/builders/swap.hpp>
+#include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/builders/vanillaoption.hpp>
+#include <ored/portfolio/builders/varianceswap.hpp>
+#include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/cliquetoption.hpp>
@@ -119,6 +180,12 @@
 
 #define REG_LEGBUILDER(NAME, CLASS)                                                                                    \
     ore::data::EngineBuilderFactory::instance().addLegBuilder([]() { return boost::make_shared<CLASS>(); });
+
+#define REG_AMC_ENGINE_BUILDER(CLASS)                                                                                  \
+    ore::data::EngineBuilderFactory::instance().addAmcEngineBuilder(                                                   \
+        [](const boost::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<ore::data::Date>& grid) {        \
+            return boost::make_shared<CLASS>(cam, grid);                                                               \
+        });
 
 namespace ore::analytics {
 
@@ -241,6 +308,11 @@ void initBuilders() {
     REG_LEGBUILDER("DigitalCMSSpreadLegBuilder", ore::data::DigitalCMSSpreadLegBuilder)
     REG_LEGBUILDER("EquityLegBuilder", ore::data::EquityLegBuilder)
     REG_LEGBUILDER("EquityMarginLegBuilder", ore::data::EquityMarginLegBuilder)
+
+    REG_AMC_ENGINE_BUILDER(ore::data::CamAmcCurrencySwapEngineBuilder)
+    REG_AMC_ENGINE_BUILDER(ore::data::LgmAmcBermudanSwaptionEngineBuilder)
+    REG_AMC_ENGINE_BUILDER(ore::data::CamAmcSwapEngineBuilder)
+    REG_AMC_ENGINE_BUILDER(ore::data::CamAmcFxOptionEngineBuilder)
 }
 
 } // namespace ore::analytics
