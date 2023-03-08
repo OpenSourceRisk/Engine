@@ -87,6 +87,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE((amount == Null<Real>() && lockRate != Null<Real>()) ||
                    (amount != Null<Real>() && lockRate == Null<Real>()),
                "ForwardBond: exactly one of Amount of LockRate must be given");
+    QL_REQUIRE(dv01 >= 0.0, "negative DV01 given");
     QL_REQUIRE(compensationPaymentDate <= fwdMaturityDate, "Premium cannot be paid after forward contract maturity");
 
     if (lockRate != Null<Real>())
