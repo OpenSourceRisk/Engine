@@ -175,7 +175,10 @@ target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${Boost_LIBRARIES})
-target_link_libraries(${OREA_LIB_NAME} ZLIB::ZLIB)
+if(ZLIB_FOUND)
+    target_link_libraries(${OREA_LIB_NAME} ZLIB::ZLIB)
+    add_definitions(-DORE_USE_ZLIB)
+endif()
 
 install(DIRECTORY . DESTINATION include/orea
         FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
