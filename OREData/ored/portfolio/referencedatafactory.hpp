@@ -71,12 +71,5 @@ template <class T> boost::shared_ptr<AbstractReferenceDatumBuilder> createRefere
     return boost::make_shared<T>();
 }
 
-template <class T> struct ReferenceDatumRegister {
-public:
-    ReferenceDatumRegister(const std::string& refDatumType) {
-        ReferenceDatumFactory::instance().addBuilder(refDatumType, &createReferenceDatumBuilder<T>);
-    }
-};
-
 } // namespace data
 } // namespace ore

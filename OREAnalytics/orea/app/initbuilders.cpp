@@ -23,10 +23,13 @@
 #include <ored/model/calibrationinstruments/yoycapfloor.hpp>
 #include <ored/model/calibrationinstruments/yoyswap.hpp>
 #include <ored/portfolio/commoditylegdata.hpp>
+#include <ored/portfolio/convertiblebondreferencedata.hpp>
 #include <ored/portfolio/durationadjustedcmslegdata.hpp>
 #include <ored/portfolio/equityfxlegdata.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
+#include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/referencedatafactory.hpp>
 
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/shared_mutex.hpp>
@@ -37,6 +40,12 @@
 #define REG_CALIBRATION_INSTR(NAME, CLASS)                                                                             \
     ore::data::CalibrationInstrumentFactory::instance().addBuilder(NAME,                                               \
                                                                    &ore::data::createCalibrationInstrument<CLASS>);
+
+#define REG_REFDATUM(NAME, CLASS)                                                                                      \
+    ore::data::ReferenceDatumFactory::instance().addBuilder(                                                           \
+        NAME, &ore::data::createReferenceDatumBuilder<ore::data::ReferenceDatumBuilder<CLASS>>);
+
+#define REG_BONDBUILDER(NAME, CLASS) ore::data::BondFactory::instance().addBuilder(NAME, boost::make_shared<CLASS>());
 
 namespace ore::analytics {
 
@@ -69,9 +78,20 @@ void initBuilders() {
     REG_LEGDATA("DurationAdjustedCMS", ore::data::DurationAdjustedCmsLegData)
     REG_LEGDATA("EquityMargin", ore::data::EquityMarginLegData)
 
-    REG_CALIBRATION_INSTR("CpiCapFloor", ore::data::CpiCapFloor);
-    REG_CALIBRATION_INSTR("YoYCapFloor", ore::data::YoYCapFloor);
-    REG_CALIBRATION_INSTR("YoYSwap", ore::data::YoYSwap);
+    REG_CALIBRATION_INSTR("CpiCapFloor", ore::data::CpiCapFloor)
+    REG_CALIBRATION_INSTR("YoYCapFloor", ore::data::YoYCapFloor)
+    REG_CALIBRATION_INSTR("YoYSwap", ore::data::YoYSwap)
+
+    REG_REFDATUM("Bond", ore::data::BondReferenceDatum)
+    REG_REFDATUM("CreditIndex", ore::data::CreditIndexReferenceDatum)
+    REG_REFDATUM("EquityIndex", ore::data::EquityIndexReferenceDatum)
+    REG_REFDATUM("CurrencyHedgedEquityIndex", ore::data::CurrencyHedgedEquityIndexReferenceDatum)
+    REG_REFDATUM("Credit", ore::data::CreditReferenceDatum)
+    REG_REFDATUM("Equity", ore::data::EquityReferenceDatum)
+    REG_REFDATUM("BondBasket", ore::data::BondBasketReferenceDatum)
+    REG_REFDATUM("ConvertibleBond", ore::data::BondBasketReferenceDatum)
+
+    REG_BONDBUILDER("Bond", ore::data::VanillaBondBuilder)
 }
 
 } // namespace ore::analytics
