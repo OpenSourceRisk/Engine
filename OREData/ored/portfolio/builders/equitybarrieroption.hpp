@@ -71,7 +71,6 @@ protected:
 
 class EquityBarrierOptionAnalyticEngineBuilder
     : public EquityBarrierOptionEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(EquityBarrierOptionAnalyticEngineBuilder)
 public:
     EquityBarrierOptionAnalyticEngineBuilder()
         : EquityBarrierOptionEngineBuilder("BlackScholesMerton", "AnalyticBarrierEngine") {}
@@ -87,7 +86,6 @@ protected:
 
 class EquityBarrierOptionFDEngineBuilder
     : public EquityBarrierOptionEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(EquityBarrierOptionFDEngineBuilder)
 public:
     EquityBarrierOptionFDEngineBuilder()
         : EquityBarrierOptionEngineBuilder("BlackScholesMerton", "FdBlackScholesBarrierEngine") {}

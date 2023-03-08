@@ -23,9 +23,6 @@
 namespace ore {
 namespace data {
 
-ORE_REGISTER_ENGINE_BUILDER_IMPL(DiscountingBondRepoEngineBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(AccrualBondRepoEngineBuilder)
-
 boost::shared_ptr<QuantLib::PricingEngine>
 DiscountingBondRepoEngineBuilder::engineImpl(const std::string& repoCurveId) {
     bool includeSecurityLeg = parseBool(modelParameter("IncludeSecurityLeg"));

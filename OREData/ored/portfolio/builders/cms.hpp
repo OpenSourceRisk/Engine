@@ -39,7 +39,6 @@ using namespace ore::data;
  \ingroup builders
  */
 class CmsCouponPricerBuilder : public CachingCouponPricerBuilder<string, const string&> {
-    ORE_REGISTER_ENGINE_BUILDER(CmsCouponPricerBuilder)
 public:
     CmsCouponPricerBuilder(const string& model, const string& engine) : CachingEngineBuilder(model, engine, {"CMS"}) {}
 
@@ -48,7 +47,6 @@ protected:
 };
 
 class AnalyticHaganCmsCouponPricerBuilder : public CmsCouponPricerBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(AnalyticHaganCmsCouponPricerBuilder)
 public:
     AnalyticHaganCmsCouponPricerBuilder() : CmsCouponPricerBuilder("Hagan", "Analytic") {}
 
@@ -57,7 +55,6 @@ protected:
 };
 
 class NumericalHaganCmsCouponPricerBuilder : public CmsCouponPricerBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(NumericalHaganCmsCouponPricerBuilder)
 public:
     NumericalHaganCmsCouponPricerBuilder() : CmsCouponPricerBuilder("Hagan", "Numerical") {}
 
@@ -66,7 +63,6 @@ protected:
 };
 
 class LinearTSRCmsCouponPricerBuilder : public CmsCouponPricerBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(LinearTSRCmsCouponPricerBuilder)
 public:
     LinearTSRCmsCouponPricerBuilder() : CmsCouponPricerBuilder("LinearTSR", "LinearTSRPricer") {}
 

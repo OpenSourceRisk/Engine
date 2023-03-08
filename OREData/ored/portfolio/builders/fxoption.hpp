@@ -35,8 +35,6 @@ namespace data {
     \ingroup builders
  */
 class FxEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(FxEuropeanOptionEngineBuilder)
-
 public:
     FxEuropeanOptionEngineBuilder() : EuropeanOptionEngineBuilder("GarmanKohlhagen", {"FxOption"}, AssetClass::FX) {}
 };
@@ -45,8 +43,6 @@ public:
     \ingroup builders
  */
 class FxEuropeanCSOptionEngineBuilder : public EuropeanCSOptionEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(FxEuropeanCSOptionEngineBuilder)
-
 public:
     FxEuropeanCSOptionEngineBuilder()
         : EuropeanCSOptionEngineBuilder("GarmanKohlhagen", {"FxOptionEuropeanCS"}, AssetClass::FX) {}
@@ -58,8 +54,6 @@ public:
     \ingroup builders
  */
 class FxAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(FxAmericanOptionFDEngineBuilder)
-
 public:
     FxAmericanOptionFDEngineBuilder()
         : AmericanOptionFDEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX, expiryDate_) {}
@@ -71,8 +65,6 @@ public:
     \ingroup builders
  */
 class FxAmericanOptionBAWEngineBuilder : public AmericanOptionBAWEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(FxAmericanOptionBAWEngineBuilder)
-
 public:
     FxAmericanOptionBAWEngineBuilder()
         : AmericanOptionBAWEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX) {}

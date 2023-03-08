@@ -44,7 +44,6 @@ namespace data {
  */
 class EquityEuropeanCompositeEngineBuilder
     : public CachingPricingEngineBuilder<string, const string&, const Currency&, const Currency&, const Date&> {
-    ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanCompositeEngineBuilder)
 public:
     EquityEuropeanCompositeEngineBuilder()
         : CachingEngineBuilder("BlackScholes", "AnalyticEuropeanEngine", {"EquityEuropeanCompositeOption"}) {}

@@ -26,8 +26,6 @@
 namespace ore {
 namespace data {
 
-ORE_REGISTER_ENGINE_BUILDER_IMPL(YoYCapFloorEngineBuilder)
-
 boost::shared_ptr<PricingEngine> YoYCapFloorEngineBuilder::engineImpl(const string& indexName) {
     Handle<YoYInflationIndex> yoyTs = market_->yoyInflationIndex(indexName, configuration(MarketContext::pricing));
     Handle<YieldTermStructure> discount =

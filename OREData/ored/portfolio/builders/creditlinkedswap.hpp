@@ -27,7 +27,6 @@ namespace data {
 
 class CreditLinkedSwapEngineBuilder
     : public CachingPricingEngineBuilder<string, const std::string&, const std::string&> {
-    ORE_REGISTER_ENGINE_BUILDER(CreditLinkedSwapEngineBuilder)
 public:
     CreditLinkedSwapEngineBuilder()
         : CachingEngineBuilder("DiscountedCashflows", "DiscountingCreditLinkedSwapEngine", {"CreditLinkedSwap"}) {}

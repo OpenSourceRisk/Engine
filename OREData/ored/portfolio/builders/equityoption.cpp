@@ -20,11 +20,5 @@
 
 namespace ore {
 namespace data {
-
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EquityEuropeanOptionEngineBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EquityEuropeanCSOptionEngineBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EquityAmericanOptionFDEngineBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EquityAmericanOptionBAWEngineBuilder)
-
 } // namespace data
 } // namespace ore

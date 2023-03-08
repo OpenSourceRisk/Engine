@@ -41,7 +41,6 @@ using std::string;
  */
 class FxDigitalOptionEngineBuilder
     : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&, const bool> {
-    ORE_REGISTER_ENGINE_BUILDER(FxDigitalOptionEngineBuilder)
 public:
     FxDigitalOptionEngineBuilder()
         : CachingEngineBuilder("GarmanKohlhagen", "AnalyticEuropeanEngine", {"FxDigitalOption"}) {}
@@ -68,7 +67,6 @@ protected:
 //! Engine Builder for European cash-settled FX Digital Options
 class FxDigitalCSOptionEngineBuilder
     : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
-    ORE_REGISTER_ENGINE_BUILDER(FxDigitalCSOptionEngineBuilder)
 public:
     FxDigitalCSOptionEngineBuilder()
         : CachingEngineBuilder("GarmanKohlhagen", "AnalyticCashSettledEuropeanEngine", {"FxDigitalOptionEuropeanCS"}) {}

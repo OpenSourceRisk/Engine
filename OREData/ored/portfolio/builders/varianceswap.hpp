@@ -53,7 +53,6 @@ using namespace QuantLib;
  */
 class VarSwapEngineBuilder : public ore::data::CachingPricingEngineBuilder<string, const string&, const Currency&,
                                                                            const AssetClass&, const MomentType&> {
-    ORE_REGISTER_ENGINE_BUILDER(VarSwapEngineBuilder)
 public:
     VarSwapEngineBuilder()
         : CachingEngineBuilder("BlackScholesMerton", "ReplicatingVarianceSwapEngine",

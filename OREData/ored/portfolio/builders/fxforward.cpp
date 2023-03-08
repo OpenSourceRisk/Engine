@@ -20,8 +20,5 @@
 
 namespace ore {
 namespace data {
-
-ORE_REGISTER_ENGINE_BUILDER_IMPL(FxForwardEngineBuilder)
-
 } // namespace data
 } // namespace ore

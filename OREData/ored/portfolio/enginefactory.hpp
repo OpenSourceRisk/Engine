@@ -37,9 +37,6 @@
 #include <set>
 #include <vector>
 
-#define ORE_REGISTER_ENGINE_BUILDER(CLASSNAME) static ore::data::EngineBuilderRegister<CLASSNAME> reg_eb_;
-#define ORE_REGISTER_ENGINE_BUILDER_IMPL(CLASSNAME) ore::data::EngineBuilderRegister<CLASSNAME> CLASSNAME::reg_eb_; 
-
 namespace ore {
 namespace data {
 using ore::data::Market;
@@ -195,21 +192,6 @@ public:
     generateAmcEngineBuilders(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
                               const std::vector<Date>& grid) const;
     std::vector<boost::shared_ptr<LegBuilder>> generateLegBuilders() const;
-};
-
-template <typename T> struct EngineBuilderRegister {
-    EngineBuilderRegister<T>() {
-        EngineBuilderFactory::instance().addEngineBuilder([]() { return boost::make_shared<T>(); });
-    }
-};
-
-template <typename T> struct AmcEngineBuilderRegister {
-    AmcEngineBuilderRegister<T>() {
-        EngineBuilderFactory::instance().addAmcEngineBuilder(
-            [](const boost::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& grid) {
-                return boost::make_shared<T>(cam, grid);
-            });
-    }
 };
 
 //! Pricing Engine Factory class

@@ -36,7 +36,6 @@ namespace data {
  \ingroup builders
  */
 class CapFlooredIborLegEngineBuilder : public CachingCouponPricerBuilder<string, const string&> {
-    ORE_REGISTER_ENGINE_BUILDER(CapFlooredIborLegEngineBuilder)
 public:
     CapFlooredIborLegEngineBuilder()
         : CachingEngineBuilder("BlackOrBachelier", "BlackIborCouponPricer", {"CapFlooredIborLeg"}) {}

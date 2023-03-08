@@ -25,9 +25,5 @@
 
 namespace ore {
 namespace data {
-
-ORE_REGISTER_ENGINE_BUILDER_IMPL(CommoditySwaptionAnalyticalEngineBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(CommoditySwaptionMonteCarloEngineBuilder)
-
 } // namespace data
 } // namespace ore

@@ -61,7 +61,6 @@ protected:
 \ingroup builders
 */
 class CommodityApoAnalyticalEngineBuilder : public CommodityApoBaseEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(CommodityApoAnalyticalEngineBuilder)
 public:
     CommodityApoAnalyticalEngineBuilder()
         : CommodityApoBaseEngineBuilder("Black", "AnalyticalApproximation", {"CommodityAveragePriceOption"}) {}
@@ -103,7 +102,6 @@ protected:
 \ingroup builders
 */
 class CommodityApoMonteCarloEngineBuilder : public CommodityApoBaseEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(CommodityApoMonteCarloEngineBuilder)
 public:
     CommodityApoMonteCarloEngineBuilder()
         : CommodityApoBaseEngineBuilder("Black", "MonteCarlo",

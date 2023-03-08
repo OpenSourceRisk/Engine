@@ -42,7 +42,6 @@ using namespace QuantLib;
  */
 class EquityTouchOptionEngineBuilder
     : public ore::data::CachingPricingEngineBuilder<string, const string&, const Currency&, const string&> {
-    ORE_REGISTER_ENGINE_BUILDER(EquityTouchOptionEngineBuilder)
 public:
     EquityTouchOptionEngineBuilder()
         : CachingEngineBuilder("BlackScholesMerton", "AnalyticDigitalAmericanEngine", {"EquityTouchOption"}) {}

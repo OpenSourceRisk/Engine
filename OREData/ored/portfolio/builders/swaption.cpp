@@ -59,10 +59,6 @@ boost::shared_ptr<PricingEngine> buildMcEngine(const std::function<string(string
 namespace ore {
 namespace data {
 
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EuropeanSwaptionEngineBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(LGMGridBermudanSwaptionEngineBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(LgmMcBermudanSwaptionEngineBuilder)
-
 boost::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineImpl(const string& key) {
     boost::shared_ptr<IborIndex> index;
     string ccyCode = tryParseIborIndex(key, index) ? index->currency().code() : key;
