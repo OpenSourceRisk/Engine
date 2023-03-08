@@ -66,7 +66,6 @@ private:
     vector<double> rates_;
     vector<string> rateDates_;
     double initialMarginFactor_;
-    static ore::data::LegDataRegister<EquityMarginLegData> reg_;
     double multiplier_;
 
 };
