@@ -44,7 +44,7 @@ A Forward Bond is set up using a {\tt ForwardBondData} block as shown below and 
          must be set to Cash. If Settlement is not given, it defaults to Cash in this case. \\
          Allowable values: Any non-negative real number.
        \item dv01 [Optional]: When the LockRate is given, it is possible to implement a contractual DV01 instead of deriving it from the bond price. \\
-         Allowable values: Any real number. E.G If the dPdY = 8000 then dv01=-0.8.
+         Allowable values: Any positive real number. E.G If the dPdY = 8000 then dv01=0.8.
        \item LockRateDayCounter [Optional]: The day counter w.r.t. which the lock rate is expressed. Optional, defaults to A360. \\
          Allowable values: see table \ref{tab:daycount}
        \item SettlementDirty [Optional]: A flag that determines whether the settlement amount {({\tt Amount})} reflects
@@ -122,7 +122,7 @@ A Forward Bond is set up using a {\tt ForwardBondData} block as shown below and 
 		  <ForwardMaturityDate>20160808</ForwardMaturityDate>
 		  <ForwardSettlementDate>20160810</ForwardSettlementDate>
 		  <LockRate>0.02365</LockRate>
-		  <dv01>-0.8</dv01>
+		  <dv01>0.8</dv01>
 		</SettlementData>
 		<LongInForward>true</LongInForward>
 		</ForwardBondData>
