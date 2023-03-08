@@ -106,9 +106,6 @@ else()
     # build shared libs always
     set(BUILD_SHARED_LIBS ON)
 
-    # do not optimize away seemingly unused libs, they might contain dynamic registration of builders
-    add_linker_flag("-Wl,--no-as-needed" supportsNoAsNeeded)
-
     # link against dynamic boost libraries
     add_definitions(-DBOOST_ALL_DYN_LINK)
     add_definitions(-DBOOST_TEST_DYN_LINK)
