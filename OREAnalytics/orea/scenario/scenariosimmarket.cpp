@@ -26,6 +26,7 @@
 #include <orea/scenario/simplescenario.hpp>
 #include <qle/termstructures/credit/basecorrelationstructure.hpp>
 #include <qle/termstructures/proxyoptionletvolatility.hpp>
+#include <qle/termstructures/proxyswaptionvolatility.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
@@ -809,11 +810,24 @@ ScenarioSimMarket::ScenarioSimMarket(
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
                             DLOG("Dynamic (" << wrapper->volatilityType() << ") yield vols (" << decayModeString
                                             << ") for qualifier " << name);
+
+                            QL_REQUIRE(!boost::dynamic_pointer_cast<ProxySwaptionVolatility>(*wrapper),
+                                "DynamicSwaptionVolatilityMatrix does not support ProxySwaptionVolatility surface");
+
+                            boost::shared_ptr<SwaptionVolatilityStructure> atmSlice;
+                            if (isAtm)
+                                atmSlice = *wrapper;
+                            else {
+                                auto c = boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*wrapper);
+                                QL_REQUIRE(c, "internal error - expected swaption cube to be SwaptionVolCubeWithATM.");
+                                atmSlice = *c->cube()->atmVol();
+                            }
+
                             if (isCube)
                                 WLOG("Only ATM slice is considered from init market's cube");
                             boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svolp =
                                 boost::make_shared<QuantExt::DynamicSwaptionVolatilityMatrix>(
-                                    *wrapper, 0, NullCalendar(), decayMode);
+                                    atmSlice, 0, NullCalendar(), decayMode);
                             svp = Handle<SwaptionVolatilityStructure>(svolp);
                         }
 
