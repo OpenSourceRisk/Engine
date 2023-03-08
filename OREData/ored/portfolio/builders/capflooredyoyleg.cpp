@@ -20,6 +20,5 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 namespace ore {
 namespace data {
-    ORE_REGISTER_ENGINE_BUILDER_IMPL(CapFlooredYoYLegEngineBuilder)
 } // namespace data
 } // namespace ore

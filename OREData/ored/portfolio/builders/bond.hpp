@@ -60,7 +60,6 @@ protected:
 */
 
 class BondDiscountingEngineBuilder : public BondEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(BondDiscountingEngineBuilder)
 public:
     BondDiscountingEngineBuilder() : BondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
 

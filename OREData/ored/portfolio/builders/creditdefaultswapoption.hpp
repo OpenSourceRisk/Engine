@@ -54,7 +54,6 @@ protected:
 */
 
 class BlackCdsOptionEngineBuilder : public CreditDefaultSwapOptionEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(BlackCdsOptionEngineBuilder)
 public:
     BlackCdsOptionEngineBuilder()
         : CreditDefaultSwapOptionEngineBuilder("Black", "BlackCdsOptionEngine") {}

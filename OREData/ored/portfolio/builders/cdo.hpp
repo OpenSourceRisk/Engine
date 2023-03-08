@@ -108,7 +108,6 @@ protected:
 };
 
 class GaussCopulaBucketingCdoEngineBuilder : public CdoEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(GaussCopulaBucketingCdoEngineBuilder)
 public:
     GaussCopulaBucketingCdoEngineBuilder() : CdoEngineBuilder("GaussCopula", "Bucketing") {}
 

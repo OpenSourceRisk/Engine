@@ -41,7 +41,6 @@ using namespace ore::data;
 class CmsSpreadCouponPricerBuilder
     : public CachingCouponPricerBuilder<string, const Currency&, const string&, const string&,
                                         const boost::shared_ptr<QuantLib::CmsCouponPricer>&> {
-    ORE_REGISTER_ENGINE_BUILDER(CmsSpreadCouponPricerBuilder)
 public:
     CmsSpreadCouponPricerBuilder() : CachingEngineBuilder("BrigoMercurio", "Analytic", {"CMSSpread"}) {}
 

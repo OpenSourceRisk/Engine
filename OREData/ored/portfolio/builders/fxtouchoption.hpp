@@ -44,7 +44,6 @@ using namespace QuantLib;
 class FxTouchOptionEngineBuilder
     : public ore::data::CachingPricingEngineBuilder<string, const Currency&, const Currency&, const string&,
                                                     const Date&, const bool> {
-    ORE_REGISTER_ENGINE_BUILDER(FxTouchOptionEngineBuilder)
 public:
     FxTouchOptionEngineBuilder()
         : CachingEngineBuilder("GarmanKohlhagen", "AnalyticDigitalAmericanEngine", {"FxTouchOption"}) {}
