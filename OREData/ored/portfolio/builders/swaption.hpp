@@ -139,7 +139,6 @@ protected:
 
 // Implementation of BermudanSwaptionEngineBuilder for external cam, with additional simulation dates (AMC)
 class LgmAmcBermudanSwaptionEngineBuilder : public BermudanSwaptionEngineBuilder {
-    ORE_REGISTER_AMC_ENGINE_BUILDER(LgmAmcBermudanSwaptionEngineBuilder)
 public:
     LgmAmcBermudanSwaptionEngineBuilder(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                         const std::vector<Date>& simulationDates)
