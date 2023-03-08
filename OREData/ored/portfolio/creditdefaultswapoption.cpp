@@ -30,9 +30,6 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<CreditDefaultSwapOption>>
-    CreditDefaultSwapOption::reg_("CreditDefaultSwapOption");
-
 CreditDefaultSwapOption::AuctionSettlementInformation::AuctionSettlementInformation()
     : auctionFinalPrice_(Null<Real>()) {}
 

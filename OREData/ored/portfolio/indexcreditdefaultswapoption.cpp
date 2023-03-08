@@ -42,9 +42,6 @@ using std::string;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<IndexCreditDefaultSwapOption>>
-    IndexCreditDefaultSwapOption::reg_("IndexCreditDefaultSwapOption");
-
 IndexCreditDefaultSwapOption::IndexCreditDefaultSwapOption()
     : Trade("IndexCreditDefaultSwapOption"), strike_(Null<Real>()), knockOut_(false) {}
 

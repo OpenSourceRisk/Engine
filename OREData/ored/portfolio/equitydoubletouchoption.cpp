@@ -37,9 +37,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<EquityDoubleTouchOption>>
-    EquityDoubleTouchOption::reg_("EquityDoubleTouchOption");
-
 EquityDoubleTouchOption::EquityDoubleTouchOption(Envelope& env, OptionData option, BarrierData barrier,
                                                  const EquityUnderlying& equityUnderlying, string payoffCurrency,
                                                  double payoffAmount, string startDate, string calendar)

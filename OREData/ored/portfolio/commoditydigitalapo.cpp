@@ -34,9 +34,6 @@ using std::string;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<CommodityDigitalAveragePriceOption>>
-    CommodityDigitalAveragePriceOption::reg_("CommodityDigitalAveragePriceOption");
-
 CommodityDigitalAveragePriceOption::CommodityDigitalAveragePriceOption(
     const Envelope& envelope, const OptionData& optionData, Real strike, Real digitalCashPayoff, const string& currency,
     const string& name, CommodityPriceType priceType, const string& startDate, const string& endDate,

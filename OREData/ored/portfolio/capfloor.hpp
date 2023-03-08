@@ -35,8 +35,6 @@ namespace data {
 /*! \ingroup tradedata
  */
 class CapFloor : public Trade {
-    static TradeBuilderRegister<TradeBuilder<CapFloor>> reg_;
-
 public:
     CapFloor() : Trade("CapFloor") {}
     CapFloor(const Envelope& env, const string& longShort, const LegData& leg, const vector<double>& caps,

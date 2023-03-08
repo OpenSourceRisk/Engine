@@ -38,8 +38,6 @@ namespace data {
 
 
 class SyntheticCDO : public Trade {
-    static TradeBuilderRegister<TradeBuilder<SyntheticCDO>> reg_;
-
 public:
   SyntheticCDO() : Trade("SyntheticCDO"),
 		   attachmentPoint_(Null<Real>()), detachmentPoint_(Null<Real>()), settlesAccrual_(true),

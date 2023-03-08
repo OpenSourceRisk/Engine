@@ -33,8 +33,6 @@ namespace ore {
 namespace data {
 
 class BondTRS : public Trade {
-    static TradeBuilderRegister<TradeBuilder<BondTRS>> reg_;
-
 public:
     //! Default Constructor
     BondTRS() : Trade("BondTRS") {}

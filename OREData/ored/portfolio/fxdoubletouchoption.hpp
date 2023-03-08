@@ -35,8 +35,6 @@ using std::string;
   \ingroup tradedata
 */
 class FxDoubleTouchOption : public FxSingleAssetDerivative {
-    static TradeBuilderRegister<TradeBuilder<FxDoubleTouchOption>> reg_;
-
 public:
     //! Default constructor
     FxDoubleTouchOption()
