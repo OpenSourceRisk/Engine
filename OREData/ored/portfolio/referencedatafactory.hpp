@@ -59,7 +59,8 @@ public:
     boost::shared_ptr<ReferenceDatum> build(const std::string& refDatumType);
 
     void addBuilder(const std::string& refDatumType,
-                    std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder);
+                    std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder,
+                    const bool allowOverwrite = false);
 
 private:
     boost::shared_mutex mutex_;

@@ -87,7 +87,8 @@ public:
     /*! Add a builder function \p builder for a given \p instrumentType
      */
     void addBuilder(const std::string& instrumentType,
-                    std::function<boost::shared_ptr<CalibrationInstrument>()> builder);
+                    std::function<boost::shared_ptr<CalibrationInstrument>()> builder,
+                    const bool allowOverwrite = false);
 
 private:
     boost::shared_mutex mutex_;

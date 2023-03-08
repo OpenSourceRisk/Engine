@@ -33,10 +33,11 @@ boost::shared_ptr<CalibrationInstrument> CalibrationInstrumentFactory::build(con
 }
 
 void CalibrationInstrumentFactory::addBuilder(const string& instrumentType,
-    function<boost::shared_ptr<CalibrationInstrument>()> builder) {
+                                              function<boost::shared_ptr<CalibrationInstrument>()> builder,
+                                              const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    map_[instrumentType] = builder;
+    QL_REQUIRE(map_.insert(std::make_pair(instrumentType, builder)).second,
+               "CalibrationInstrumentFactory::addBuilder(" << instrumentType << "): builder for key already exists.");
 }
-
 }
 }
