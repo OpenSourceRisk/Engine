@@ -289,48 +289,41 @@ public:
     };
 
     CurrencyHedgedEquityIndexReferenceDatum()
-        : underlyingIndexName_(""), hedgeCurrency_(""), rebalancingStrategy_(RebalancingDate::Strategy::EndOfMonth),
+        : underlyingIndexName_(""), rebalancingStrategy_(RebalancingDate::Strategy::EndOfMonth),
           referenceDateOffset_(0), hedgeAdjustmentRule_(HedgeAdjustment::Rule::None), hedgeCalendar_(WeekendsOnly()) {
         setType(TYPE);
     }
 
     CurrencyHedgedEquityIndexReferenceDatum(const string& name)
-        : ReferenceDatum(TYPE, name), underlyingIndexName_(""), hedgeCurrency_(""),
+        : ReferenceDatum(TYPE, name), underlyingIndexName_(""),
           rebalancingStrategy_(RebalancingDate::Strategy::EndOfMonth), referenceDateOffset_(0),
           hedgeAdjustmentRule_(HedgeAdjustment::Rule::None), hedgeCalendar_(WeekendsOnly()) {}
 
     CurrencyHedgedEquityIndexReferenceDatum(const string& name, const QuantLib::Date& validFrom)
-        : ReferenceDatum(TYPE, name, validFrom), underlyingIndexName_(""), hedgeCurrency_(""),
+        : ReferenceDatum(TYPE, name, validFrom), underlyingIndexName_(""), 
           rebalancingStrategy_(RebalancingDate::Strategy::EndOfMonth), referenceDateOffset_(0),
           hedgeAdjustmentRule_(HedgeAdjustment::Rule::None), hedgeCalendar_(WeekendsOnly()) {}
 
     const std::string& underlyingIndexName() const { return underlyingIndexName_; }
-    const std::string& hedgeCurrency() const { return hedgeCurrency_; }
     int referenceDateOffset() const { return referenceDateOffset_; }
     RebalancingDate::Strategy rebalancingStrategy() const { return rebalancingStrategy_; }
     HedgeAdjustment::Rule hedgeAdjustmentRule() const { return hedgeAdjustmentRule_; }
     QuantLib::Calendar hedgeCalendar() const { return hedgeCalendar_; }
-    const std::map<std::string, std::string>& fxIndexes() const { return fxIndexes_; }
-
     //! Returns the currency weights at the last rebalancing date
     const vector<pair<string, double>>& currencyWeights() const { return data_; }
 
     Date referenceDate(const Date& asof);
     Date rebalancingDate(const Date& asof);
-    
-    Date nextHedgeAdjustmentDate(const Date& asof);
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) override;
 
 private:
     std::string underlyingIndexName_;
-    std::string hedgeCurrency_;
     RebalancingDate::Strategy rebalancingStrategy_;
     int referenceDateOffset_;
     HedgeAdjustment::Rule hedgeAdjustmentRule_;
     QuantLib::Calendar hedgeCalendar_;
-    std::map<std::string, std::string> fxIndexes_;
     vector<pair<string, double>> data_;
     static ReferenceDatumRegister<ReferenceDatumBuilder<CurrencyHedgedEquityIndexReferenceDatum>> reg_;
 };
