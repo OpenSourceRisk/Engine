@@ -31,8 +31,6 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<FxSwap>> FxSwap::reg_("FxSwap");
-
 void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency nearBoughtCcy = data::parseCurrency(nearBoughtCurrency_);
     Currency nearSoldCcy = data::parseCurrency(nearSoldCurrency_);

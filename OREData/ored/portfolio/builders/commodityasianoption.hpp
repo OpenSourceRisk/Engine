@@ -32,7 +32,6 @@
      \ingroup builders
   */
  class CommodityEuropeanAsianOptionMCDAAPEngineBuilder : public EuropeanAsianOptionMCDAAPEngineBuilder {
-     ORE_REGISTER_ENGINE_BUILDER(CommodityEuropeanAsianOptionMCDAAPEngineBuilder)
  public:
      CommodityEuropeanAsianOptionMCDAAPEngineBuilder()
          : EuropeanAsianOptionMCDAAPEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionArithmeticPrice"},
@@ -45,7 +44,6 @@
      \ingroup builders
   */
  class CommodityEuropeanAsianOptionMCDAASEngineBuilder : public EuropeanAsianOptionMCDAASEngineBuilder {
-     ORE_REGISTER_ENGINE_BUILDER(CommodityEuropeanAsianOptionMCDAASEngineBuilder)
  public:
      CommodityEuropeanAsianOptionMCDAASEngineBuilder()
          : EuropeanAsianOptionMCDAASEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionArithmeticStrike"},
@@ -58,7 +56,6 @@
      \ingroup builders
   */
  class CommodityEuropeanAsianOptionMCDGAPEngineBuilder : public EuropeanAsianOptionMCDGAPEngineBuilder {
-     ORE_REGISTER_ENGINE_BUILDER(CommodityEuropeanAsianOptionMCDGAPEngineBuilder)
  public:
      CommodityEuropeanAsianOptionMCDGAPEngineBuilder()
          : EuropeanAsianOptionMCDGAPEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionGeometricPrice"},
@@ -70,7 +67,6 @@
      \ingroup builders
   */
  class CommodityEuropeanAsianOptionADGAPEngineBuilder : public EuropeanAsianOptionADGAPEngineBuilder {
-     ORE_REGISTER_ENGINE_BUILDER(CommodityEuropeanAsianOptionADGAPEngineBuilder)
  public:
      CommodityEuropeanAsianOptionADGAPEngineBuilder()
          : EuropeanAsianOptionADGAPEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionGeometricPrice"},
@@ -82,7 +78,6 @@
      \ingroup builders
   */
  class CommodityEuropeanAsianOptionADGASEngineBuilder : public EuropeanAsianOptionADGASEngineBuilder {
-     ORE_REGISTER_ENGINE_BUILDER(CommodityEuropeanAsianOptionADGASEngineBuilder)
  public:
      CommodityEuropeanAsianOptionADGASEngineBuilder()
          : EuropeanAsianOptionADGASEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionGeometricStrike"},
@@ -94,7 +89,6 @@
      \ingroup builders
   */
  class CommodityEuropeanAsianOptionACGAPEngineBuilder : public EuropeanAsianOptionACGAPEngineBuilder {
-     ORE_REGISTER_ENGINE_BUILDER(CommodityEuropeanAsianOptionACGAPEngineBuilder)
  public:
      CommodityEuropeanAsianOptionACGAPEngineBuilder()
          : EuropeanAsianOptionACGAPEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionGeometricPrice"},
@@ -106,7 +100,6 @@
      \ingroup builders
   */
  class CommodityEuropeanAsianOptionTWEngineBuilder : public EuropeanAsianOptionTWEngineBuilder {
-     ORE_REGISTER_ENGINE_BUILDER(CommodityEuropeanAsianOptionTWEngineBuilder)
  public:
      CommodityEuropeanAsianOptionTWEngineBuilder()
          : EuropeanAsianOptionTWEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionArithmeticPrice"},

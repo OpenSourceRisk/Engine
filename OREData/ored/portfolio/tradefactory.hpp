@@ -73,11 +73,5 @@ public:
     boost::shared_ptr<Trade> build(const std::string& className) const;
 };
 
-template <typename T> struct TradeBuilderRegister {
-    TradeBuilderRegister<T>(const std::string& className) {
-        TradeFactory::instance().addBuilder(className, boost::make_shared<T>());
-    }
-};
-
 } // namespace data
 } // namespace ore

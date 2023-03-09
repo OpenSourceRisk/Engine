@@ -52,7 +52,6 @@ protected:
 
 */
 class CommoditySpreadOptionEngineBuilder : public CommoditySpreadOptionBaseEngineBuilder{
-    ORE_REGISTER_ENGINE_BUILDER(CommoditySpreadOptionEngineBuilder)
 public:
     CommoditySpreadOptionEngineBuilder()
         : CommoditySpreadOptionBaseEngineBuilder("BlackScholes", "CommoditySpreadOptionEngine", {"CommoditySpreadOption"}){}

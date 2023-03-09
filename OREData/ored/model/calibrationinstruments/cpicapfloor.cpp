@@ -27,8 +27,6 @@ using QuantLib::Period;
 namespace ore {
 namespace data {
 
-CalibrationInstrumentRegister<CpiCapFloor> CpiCapFloor::reg_("CpiCapFloor");
-
 CpiCapFloor::CpiCapFloor() : CalibrationInstrument("CpiCapFloor"), type_(CapFloor::Floor) {}
 
 CpiCapFloor::CpiCapFloor(CapFloor::Type type,

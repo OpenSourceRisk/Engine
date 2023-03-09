@@ -28,8 +28,6 @@ namespace ore {
 namespace data {
 
 class IndexCreditDefaultSwapOption : public Trade {
-    static TradeBuilderRegister<TradeBuilder<IndexCreditDefaultSwapOption>> reg_;
-
 public:
     //! Default constructor
     IndexCreditDefaultSwapOption();

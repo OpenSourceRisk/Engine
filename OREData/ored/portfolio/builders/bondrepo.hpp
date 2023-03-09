@@ -43,7 +43,6 @@ protected:
 
 //! Discounting Bond Repo Engine Builder
 class DiscountingBondRepoEngineBuilder : public BondRepoEngineBuilderBase {
-    ORE_REGISTER_ENGINE_BUILDER(DiscountingBondRepoEngineBuilder)
 public:
     DiscountingBondRepoEngineBuilder() : BondRepoEngineBuilderBase("DiscountedCashflows", "DiscountingRepoEngine") {}
 
@@ -53,7 +52,6 @@ protected:
 
 //! Accrual Bond Repo Engine Builder
 class AccrualBondRepoEngineBuilder : public BondRepoEngineBuilderBase {
-    ORE_REGISTER_ENGINE_BUILDER(AccrualBondRepoEngineBuilder)
 public:
     AccrualBondRepoEngineBuilder() : BondRepoEngineBuilderBase("Accrual", "AccrualRepoEngine") {}
 

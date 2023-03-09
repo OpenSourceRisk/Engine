@@ -100,24 +100,18 @@ protected:
 };
 
 class EquityAsianOption : public AsianOption {
-    static TradeBuilderRegister<TradeBuilder<EquityAsianOption>> reg_;
-
 public:
     EquityAsianOption() : AsianOption("EquityAsianOption") {}
     using AsianOption::AsianOption;
 };
 
 class FxAsianOption : public AsianOption {
-    static TradeBuilderRegister<TradeBuilder<FxAsianOption>> reg_;
-
 public:
     FxAsianOption() : AsianOption("FxAsianOption") {}
     using AsianOption::AsianOption;
 };
 
 class CommodityAsianOption : public AsianOption {
-    static TradeBuilderRegister<TradeBuilder<CommodityAsianOption>> reg_;
-
 public:
     CommodityAsianOption() : AsianOption("CommodityAsianOption") {}
     using AsianOption::AsianOption;

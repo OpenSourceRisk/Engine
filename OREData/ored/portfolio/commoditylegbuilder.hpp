@@ -31,7 +31,6 @@ namespace ore {
 namespace data {
 
 class CommodityFixedLegBuilder : public ore::data::LegBuilder {
-    ORE_REGISTER_LEG_BUILDER(CommodityFixedLegBuilder)
 public:
     CommodityFixedLegBuilder() : LegBuilder("CommodityFixed") {}
 
@@ -43,7 +42,6 @@ public:
 };
 
 class CommodityFloatingLegBuilder : public ore::data::LegBuilder {
-    ORE_REGISTER_LEG_BUILDER(CommodityFloatingLegBuilder)
 public:
     CommodityFloatingLegBuilder()
         : LegBuilder("CommodityFloating"), allAveraging_(false) {}

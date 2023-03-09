@@ -33,8 +33,6 @@ namespace data {
 
 using namespace QuantLib;
 
-ORE_REGISTER_ENGINE_BUILDER_IMPL(BlackIndexCdsOptionEngineBuilder)
-
 CreditPortfolioSensitivityDecomposition IndexCreditDefaultSwapOptionEngineBuilder::sensitivityDecomposition() {
     return parseCreditPortfolioSensitivityDecomposition(
         engineParameter("SensitivityDecomposition", {}, false, "Underlying"));
