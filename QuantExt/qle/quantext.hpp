@@ -343,7 +343,7 @@
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
-#include <qle/pricingengines/indexcdsoptiobasenengine.hpp>
+#include <qle/pricingengines/indexcdsoptionbaseengine.hpp>
 #include <qle/pricingengines/indexcdstrancheengine.hpp>
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/pricingengines/lgmconvolutionsolver.hpp>

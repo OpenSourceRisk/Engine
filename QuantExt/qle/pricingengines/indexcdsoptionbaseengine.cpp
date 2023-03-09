@@ -35,7 +35,7 @@ using std::vector;
 
 namespace QuantExt {
 
-BlackIndexCdsOptionEngine::BlackIndexCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>& probability,
+IndexCdsOptionBaseEngine::IndexCdsOptionBaseEngine(const Handle<DefaultProbabilityTermStructure>& probability,
                                                      Real recovery, const Handle<YieldTermStructure>& discount,
                                                      const Handle<QuantExt::CreditVolCurve>& volatility)
     : probabilities_({probability}), recoveries_({recovery}), discount_(discount), volatility_(volatility),
@@ -43,14 +43,14 @@ BlackIndexCdsOptionEngine::BlackIndexCdsOptionEngine(const Handle<DefaultProbabi
     registerWithMarket();
 }
 
-BlackIndexCdsOptionEngine::BlackIndexCdsOptionEngine(
+IndexCdsOptionBaseEngine::IndexCdsOptionBaseEngine(
     const vector<Handle<DefaultProbabilityTermStructure>>& probabilities, const vector<Real>& recoveries,
     const Handle<YieldTermStructure>& discount, const Handle<QuantExt::CreditVolCurve>& volatility, Real indexRecovery)
     : probabilities_(probabilities), recoveries_(recoveries), discount_(discount), volatility_(volatility),
       indexRecovery_(indexRecovery) {
 
-    QL_REQUIRE(!probabilities_.empty(), "BlackIndexCdsOptionEngine: need at least one probability curve.");
-    QL_REQUIRE(probabilities_.size() == recoveries_.size(), "BlackIndexCdsOptionEngine: mismatch between size"
+    QL_REQUIRE(!probabilities_.empty(), "IndexCdsOptionBaseEngine: need at least one probability curve.");
+    QL_REQUIRE(probabilities_.size() == recoveries_.size(), "IndexCdsOptionBaseEngine: mismatch between size"
                                                                 << " of probabilities (" << probabilities_.size()
                                                                 << ") and recoveries (" << recoveries_.size() << ").");
 
@@ -61,17 +61,17 @@ BlackIndexCdsOptionEngine::BlackIndexCdsOptionEngine(
         indexRecovery_ = accumulate(recoveries_.begin(), recoveries_.end(), 0.0) / recoveries_.size();
 }
 
-const vector<Handle<DefaultProbabilityTermStructure>>& BlackIndexCdsOptionEngine::probabilities() const {
+const vector<Handle<DefaultProbabilityTermStructure>>& IndexCdsOptionBaseEngine::probabilities() const {
     return probabilities_;
 }
 
-const vector<Real>& BlackIndexCdsOptionEngine::recoveries() const { return recoveries_; }
+const vector<Real>& IndexCdsOptionBaseEngine::recoveries() const { return recoveries_; }
 
-const Handle<YieldTermStructure> BlackIndexCdsOptionEngine::discount() const { return discount_; }
+const Handle<YieldTermStructure> IndexCdsOptionBaseEngine::discount() const { return discount_; }
 
-const Handle<QuantExt::CreditVolCurve> BlackIndexCdsOptionEngine::volatility() const { return volatility_; }
+const Handle<QuantExt::CreditVolCurve> IndexCdsOptionBaseEngine::volatility() const { return volatility_; }
 
-void BlackIndexCdsOptionEngine::calculate() const {
+void IndexCdsOptionBaseEngine::calculate() const {
 
     // Underlying index CDS
     const auto& cds = *arguments_.swap;
@@ -79,7 +79,7 @@ void BlackIndexCdsOptionEngine::calculate() const {
     // If given constituent curves, store constituent notionals. Otherwise, store top level notional.
     if (probabilities_.size() > 1) {
         notionals_ = cds.underlyingNotionals();
-        QL_REQUIRE(probabilities_.size() == notionals_.size(), "BlackIndexCdsOptionEngine: mismatch between size"
+        QL_REQUIRE(probabilities_.size() == notionals_.size(), "IndexCdsOptionBaseEngine: mismatch between size"
                                                                    << " of probabilities (" << probabilities_.size()
                                                                    << ") and notionals (" << notionals_.size() << ").");
     } else {
