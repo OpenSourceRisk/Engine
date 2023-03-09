@@ -64,7 +64,6 @@ protected:
     //! Calculation for instrument with strike quoted as price.
     virtual void priceStrikeCalculate(QuantLib::Real fep) const = 0;
 
-private:
     //! Register with market data
     void registerWithMarket();
 
