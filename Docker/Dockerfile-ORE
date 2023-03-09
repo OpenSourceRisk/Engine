@@ -24,7 +24,7 @@ RUN cd /ore \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && cp Docker/CMakeLists_ORE.txt CMakeLists.txt \
   && mkdir -p build.ore && cd build.ore \
-  && cmake .. -DBUILD_DOC=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-mavx2" -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON
+  && cmake .. -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-mavx2" -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON
 
 WORKDIR /ore/build.ore
 RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
