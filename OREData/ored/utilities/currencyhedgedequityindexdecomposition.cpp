@@ -191,10 +191,17 @@ loadCurrencyHedgedIndexDecomposition(const std::string& name, const boost::share
         
         std::vector<std::pair<std::string, double>> underlyingIndexWeightsAtRebalancing;
 
-        if (indexRefData->currencyWeights().empty() && refDataMgr->hasData("EquityIndex", underlyingIndexName, refDate)) {
-            auto undIndexRefDataAtRefDate = refDataMgr->getData("EquityIndex", underlyingIndexName, refDate);
-            underlyingIndexWeightsAtRebalancing =
-                boost::dynamic_pointer_cast<EquityIndexReferenceDatum>(undIndexRefDataAtRefDate)->underlyings();
+        if (indexRefData->currencyWeights().empty()) {
+            boost::shared_ptr<ReferenceDatum> undIndexRefDataAtRefDate;
+            try {
+                undIndexRefDataAtRefDate = refDataMgr->getData("EquityIndex", underlyingIndexName, refDate);
+            } catch (...) {
+                // Try to load ref data, but don't throw on error
+            }
+            if (undIndexRefDataAtRefDate) {
+                underlyingIndexWeightsAtRebalancing =
+                    boost::dynamic_pointer_cast<EquityIndexReferenceDatum>(undIndexRefDataAtRefDate)->underlyings();
+            }
         } else {
             underlyingIndexWeightsAtRebalancing = indexRefData->currencyWeights();
         }

@@ -502,10 +502,16 @@ boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::addFromXMLNode(XMLN
     }
 
     string id = inputId.empty() ? XMLUtils::getAttribute(node, "id") : inputId;
-    QuantLib::Date validFrom = inputValidFrom == QuantLib::Null<QuantLib::Date>()
-                                   ? ore::data::parseDate(XMLUtils::getAttribute(node, "validFrom"))
-                                   : inputValidFrom;
+    
+    string validFromStr = XMLUtils::getAttribute(node, "validFrom");
+    QuantLib::Date validFrom;
+    if (validFromStr.empty()) {
+        validFrom = QuantLib::Date::minDate();
+    } else {
+        validFrom = ore::data::parseDate(validFromStr);
+    }
 
+    validFrom = inputValidFrom == QuantLib::Null<QuantLib::Date>() ? validFrom : inputValidFrom;
 
     if (id.empty()) {
         ALOG("Found referenceDatum without id - skipping");
@@ -558,15 +564,10 @@ XMLNode* BasicReferenceDataManager::toXML(XMLDocument& doc) {
 }
 
 std::tuple<QuantLib::Date, boost::shared_ptr<ReferenceDatum>> BasicReferenceDataManager::latestValidFrom(const string& type, const string& id,
-                                                          const QuantLib::Date& asof) const {
-    Date queryDate = asof;
-    if (queryDate == Null<Date>()) {
-        queryDate = QuantLib::Settings::instance().evaluationDate();
-    }
-    
+                                                          const QuantLib::Date& asof) const {   
     auto it = data_.find(make_pair(type, id));
     if (it != data_.end() && !it->second.empty()){
-        auto uB = it->second.upper_bound(queryDate);
+        auto uB = it->second.upper_bound(asof);
         if (uB != it->second.begin()) {
             return *(--uB);
         } else if (uB == it->second.end()) {
@@ -592,15 +593,22 @@ void BasicReferenceDataManager::check(const string& type, const string& id, cons
 }
 
 bool BasicReferenceDataManager::hasData(const string& type, const string& id, const QuantLib::Date& asof) const {
-    
-    auto& [validFrom, refData] = latestValidFrom(type, id, asof);
+    Date asofDate = asof;
+    if (asofDate == QuantLib::Null<QuantLib::Date>()) {
+        asofDate = Settings::instance().evaluationDate();
+    }
+    auto& [validFrom, refData] = latestValidFrom(type, id, asofDate);
     check(type, id, validFrom);
     return refData != nullptr;
 }
 
 boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id,
                                                                      const QuantLib::Date& asof) {
-    auto& [validFrom, refData] = latestValidFrom(type, id, asof);
+    Date asofDate = asof;
+    if (asofDate == QuantLib::Null<QuantLib::Date>()) {
+        asofDate = Settings::instance().evaluationDate();
+    }
+    auto& [validFrom, refData] = latestValidFrom(type, id, asofDate);
     check(type, id, validFrom);
     QL_REQUIRE(refData != nullptr, "BasicReferenceDataManager::getData(): No Reference data for type='"
                                        << type << "', id='" << id << "', asof='" << asof << "'");
