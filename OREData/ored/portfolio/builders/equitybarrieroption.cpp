@@ -18,7 +18,5 @@
 
 namespace ore {
 namespace data {
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EquityBarrierOptionAnalyticEngineBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EquityBarrierOptionFDEngineBuilder)
 } // namespace data
 } // namespace ore

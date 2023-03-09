@@ -45,8 +45,6 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<ForwardBond>> ForwardBond::reg_("ForwardBond");
-
 void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("ForwardBond::build() called for trade " << id());
 

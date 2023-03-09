@@ -30,8 +30,6 @@ namespace ore {
 namespace data {
 using QuantExt::MultiCcyCompositeInstrument;
 
-TradeBuilderRegister<TradeBuilder<CompositeTrade>> CompositeTrade::reg_("CompositeTrade");
-
 void CompositeTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Building Composite Trade: " << id());
     npvCurrency_ = currency_;

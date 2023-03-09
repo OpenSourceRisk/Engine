@@ -28,8 +28,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-ORE_REGISTER_ENGINE_BUILDER_IMPL(CmsSpreadCouponPricerBuilder)
-
 boost::shared_ptr<FloatingRateCouponPricer>
 CmsSpreadCouponPricerBuilder::engineImpl(const Currency& ccy, const string& index1, const string& index2,
                                          const boost::shared_ptr<CmsCouponPricer>& cmsPricer) {

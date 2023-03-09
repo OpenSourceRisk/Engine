@@ -38,8 +38,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<FxBarrierOption>> FxBarrierOption::reg_("FxBarrierOption");
-
 void FxBarrierOption::checkBarriers() {
     QL_REQUIRE(barrier().levels().size() == 1, "Invalid number of barrier levels");
     QL_REQUIRE(barrier().style().empty() || barrier().style() == "American", "Only american barrier style suppported");

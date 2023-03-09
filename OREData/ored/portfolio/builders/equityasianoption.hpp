@@ -32,7 +32,6 @@
      \ingroup builders
   */
  class EquityEuropeanAsianOptionMCDAAPEngineBuilder : public EuropeanAsianOptionMCDAAPEngineBuilder {
-     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanAsianOptionMCDAAPEngineBuilder)
  public:
      EquityEuropeanAsianOptionMCDAAPEngineBuilder()
          : EuropeanAsianOptionMCDAAPEngineBuilder("BlackScholesMerton", {"EquityAsianOptionArithmeticPrice"},
@@ -45,7 +44,6 @@
      \ingroup builders
   */
  class EquityEuropeanAsianOptionMCDAASEngineBuilder : public EuropeanAsianOptionMCDAASEngineBuilder {
-     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanAsianOptionMCDAASEngineBuilder)
  public:
      EquityEuropeanAsianOptionMCDAASEngineBuilder()
          : EuropeanAsianOptionMCDAASEngineBuilder("BlackScholesMerton", {"EquityAsianOptionArithmeticStrike"},
@@ -58,7 +56,6 @@
      \ingroup builders
   */
  class EquityEuropeanAsianOptionMCDGAPEngineBuilder : public EuropeanAsianOptionMCDGAPEngineBuilder {
-     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanAsianOptionMCDGAPEngineBuilder)
  public:
      EquityEuropeanAsianOptionMCDGAPEngineBuilder()
          : EuropeanAsianOptionMCDGAPEngineBuilder("BlackScholesMerton", {"EquityAsianOptionGeometricPrice"},
@@ -70,7 +67,6 @@
      \ingroup builders
   */
  class EquityEuropeanAsianOptionADGAPEngineBuilder : public EuropeanAsianOptionADGAPEngineBuilder {
-     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanAsianOptionADGAPEngineBuilder)
  public:
      EquityEuropeanAsianOptionADGAPEngineBuilder()
          : EuropeanAsianOptionADGAPEngineBuilder("BlackScholesMerton", {"EquityAsianOptionGeometricPrice"},
@@ -82,7 +78,6 @@
      \ingroup builders
   */
  class EquityEuropeanAsianOptionADGASEngineBuilder : public EuropeanAsianOptionADGASEngineBuilder {
-     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanAsianOptionADGASEngineBuilder)
  public:
      EquityEuropeanAsianOptionADGASEngineBuilder()
          : EuropeanAsianOptionADGASEngineBuilder("BlackScholesMerton", {"EquityAsianOptionGeometricStrike"},
@@ -94,7 +89,6 @@
      \ingroup builders
   */
  class EquityEuropeanAsianOptionACGAPEngineBuilder : public EuropeanAsianOptionACGAPEngineBuilder {
-     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanAsianOptionACGAPEngineBuilder)
  public:
      EquityEuropeanAsianOptionACGAPEngineBuilder()
          : EuropeanAsianOptionACGAPEngineBuilder("BlackScholesMerton", {"EquityAsianOptionGeometricPrice"},
@@ -106,7 +100,6 @@
      \ingroup builders
   */
  class EquityEuropeanAsianOptionTWEngineBuilder : public EuropeanAsianOptionTWEngineBuilder {
-     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanAsianOptionTWEngineBuilder)
  public:
      EquityEuropeanAsianOptionTWEngineBuilder()
          : EuropeanAsianOptionTWEngineBuilder("BlackScholesMerton", {"EquityAsianOptionArithmeticPrice"},

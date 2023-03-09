@@ -20,7 +20,6 @@ configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
 configuration/onedimsolverconfig.cpp
 configuration/reportconfig.cpp
-configuration/smiledynamicsconfig.cpp
 configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
 marketdata/basecorrelationcurve.cpp
@@ -265,6 +264,7 @@ utilities/flowanalysis.cpp
 utilities/indexnametranslator.cpp
 utilities/indexparser.cpp
 utilities/inflationstartdate.cpp
+utilities/initbuilders.cpp
 utilities/log.cpp
 utilities/marketdata.cpp
 utilities/osutils.cpp
@@ -300,7 +300,6 @@ configuration/inflationcurveconfig.hpp
 configuration/onedimsolverconfig.hpp
 configuration/reportconfig.hpp
 configuration/securityconfig.hpp
-configuration/smiledynamicsconfig.hpp
 configuration/swaptionvolcurveconfig.hpp
 configuration/volatilityconfig.hpp
 configuration/yieldcurveconfig.hpp
@@ -568,6 +567,7 @@ utilities/flowanalysis.hpp
 utilities/indexnametranslator.hpp
 utilities/indexparser.hpp
 utilities/inflationstartdate.hpp
+utilities/initbuilders.hpp
 utilities/log.hpp
 utilities/marketdata.hpp
 utilities/osutils.hpp

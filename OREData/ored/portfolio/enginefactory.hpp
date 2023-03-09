@@ -37,13 +37,6 @@
 #include <set>
 #include <vector>
 
-#define ORE_REGISTER_ENGINE_BUILDER(CLASSNAME) static ore::data::EngineBuilderRegister<CLASSNAME> reg_eb_;
-#define ORE_REGISTER_ENGINE_BUILDER_IMPL(CLASSNAME) ore::data::EngineBuilderRegister<CLASSNAME> CLASSNAME::reg_eb_; 
-#define ORE_REGISTER_AMC_ENGINE_BUILDER(CLASSNAME) static ore::data::AmcEngineBuilderRegister<CLASSNAME> reg_amceb_;
-#define ORE_REGISTER_AMC_ENGINE_BUILDER_IMPL(CLASSNAME) ore::data::AmcEngineBuilderRegister<CLASSNAME> CLASSNAME::reg_amceb_; 
-#define ORE_REGISTER_LEG_BUILDER(CLASSNAME) static ore::data::LegBuilderRegister<CLASSNAME> reg_lb_;
-#define ORE_REGISTER_LEG_BUILDER_IMPL(CLASSNAME) ore::data::LegBuilderRegister<CLASSNAME> CLASSNAME::reg_lb_; 
-
 namespace ore {
 namespace data {
 using ore::data::Market;
@@ -185,38 +178,20 @@ class EngineBuilderFactory : public QuantLib::Singleton<EngineBuilderFactory, st
     mutable boost::shared_mutex mutex_;
 
 public:
-    void addEngineBuilder(const std::function<boost::shared_ptr<EngineBuilder>()>& builder);
+    void addEngineBuilder(const std::function<boost::shared_ptr<EngineBuilder>()>& builder,
+                          const bool allowOverwrite = false);
     void addAmcEngineBuilder(
         const std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                                                             const std::vector<Date>& grid)>& builder);
-    void addLegBuilder(const std::function<boost::shared_ptr<LegBuilder>()>& builder);
+                                                             const std::vector<Date>& grid)>& builder,
+        const bool allowOverwrite = false);
+    void addLegBuilder(const std::function<boost::shared_ptr<LegBuilder>()>& builder,
+                       const bool allowOverwrite = false);
 
     std::vector<boost::shared_ptr<EngineBuilder>> generateEngineBuilders() const;
     std::vector<boost::shared_ptr<EngineBuilder>>
     generateAmcEngineBuilders(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
                               const std::vector<Date>& grid) const;
     std::vector<boost::shared_ptr<LegBuilder>> generateLegBuilders() const;
-};
-
-template <typename T> struct EngineBuilderRegister {
-    EngineBuilderRegister<T>() {
-        EngineBuilderFactory::instance().addEngineBuilder([]() { return boost::make_shared<T>(); });
-    }
-};
-
-template <typename T> struct AmcEngineBuilderRegister {
-    AmcEngineBuilderRegister<T>() {
-        EngineBuilderFactory::instance().addAmcEngineBuilder(
-            [](const boost::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& grid) {
-                return boost::make_shared<T>(cam, grid);
-            });
-    }
-};
-
-template <typename T> struct LegBuilderRegister {
-    LegBuilderRegister<T>() {
-        EngineBuilderFactory::instance().addLegBuilder([]() { return boost::make_shared<T>(); });
-    }
 };
 
 //! Pricing Engine Factory class

@@ -37,8 +37,6 @@ using std::string;
   \ingroup tradedata
 */
 class EquityEuropeanBarrierOption : public ore::data::EquityOption {
-    static TradeBuilderRegister<TradeBuilder<EquityEuropeanBarrierOption>> reg_;
-
 public:
     //! Default constructor
     EquityEuropeanBarrierOption() : EquityOption() {}

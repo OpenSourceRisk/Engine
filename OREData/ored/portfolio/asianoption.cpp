@@ -32,10 +32,6 @@
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<FxAsianOption>> FxAsianOption::reg_("FxAsianOption");
-TradeBuilderRegister<TradeBuilder<EquityAsianOption>> EquityAsianOption::reg_("EquityAsianOption");
-TradeBuilderRegister<TradeBuilder<CommodityAsianOption>> CommodityAsianOption::reg_("CommodityAsianOption");
-
 void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Currency payCcy = parseCurrency(currency_);

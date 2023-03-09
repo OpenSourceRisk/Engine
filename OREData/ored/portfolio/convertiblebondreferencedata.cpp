@@ -64,7 +64,5 @@ XMLNode* ConvertibleBondReferenceDatum::toXML(ore::data::XMLDocument& doc) {
     return node0;
 }
 
-ReferenceDatumRegister<ReferenceDatumBuilder<ConvertibleBondReferenceDatum>> ConvertibleBondReferenceDatum::reg_(TYPE);
-
 } // namespace data
 } // namespace ore

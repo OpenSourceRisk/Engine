@@ -34,8 +34,6 @@ using std::string;
   \ingroup tradedata
 */
 class EquityTouchOption : public EquitySingleAssetDerivative {
-    static TradeBuilderRegister<TradeBuilder<EquityTouchOption>> reg_;
-
 public:
     //! Default constructor
     EquityTouchOption()

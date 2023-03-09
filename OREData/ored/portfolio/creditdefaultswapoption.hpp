@@ -34,8 +34,6 @@ namespace ore {
 namespace data {
 
 class CreditDefaultSwapOption : public Trade {
-    static TradeBuilderRegister<TradeBuilder<CreditDefaultSwapOption>> reg_;
-
 public:
     /*! Hold information on a default that has occurred and for which an auction has been held.
 

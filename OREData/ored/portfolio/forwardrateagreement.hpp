@@ -33,8 +33,6 @@ namespace data {
   \ingroup tradedata
 */
 class ForwardRateAgreement : public Trade {
-    static TradeBuilderRegister<TradeBuilder<ForwardRateAgreement>> reg_;
-
 public:
     ForwardRateAgreement() : Trade("ForwardRateAgreement") {}
     ForwardRateAgreement(Envelope& env, string longShort, string currency, string startDate, string endDate,

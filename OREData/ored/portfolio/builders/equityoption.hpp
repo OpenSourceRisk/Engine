@@ -34,8 +34,6 @@ namespace data {
     \ingroup builders
  */
 class EquityEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanOptionEngineBuilder)
-
 public:
     EquityEuropeanOptionEngineBuilder()
         : EuropeanOptionEngineBuilder("BlackScholesMerton", {"EquityOption"}, AssetClass::EQ) {}
@@ -45,7 +43,6 @@ public:
     \ingroup builders
  */
 class EquityEuropeanCSOptionEngineBuilder : public EuropeanCSOptionEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanCSOptionEngineBuilder)
 public:
     EquityEuropeanCSOptionEngineBuilder()
         : EuropeanCSOptionEngineBuilder("BlackScholesMerton", {"EquityOptionEuropeanCS"}, AssetClass::EQ) {}
@@ -57,7 +54,6 @@ public:
     \ingroup builders
  */
 class EquityAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(EquityAmericanOptionFDEngineBuilder)
 public:
     EquityAmericanOptionFDEngineBuilder()
         : AmericanOptionFDEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ, expiryDate_) {}
@@ -69,7 +65,6 @@ public:
     \ingroup builders
  */
 class EquityAmericanOptionBAWEngineBuilder : public AmericanOptionBAWEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(EquityAmericanOptionBAWEngineBuilder)
 public:
     EquityAmericanOptionBAWEngineBuilder()
         : AmericanOptionBAWEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}

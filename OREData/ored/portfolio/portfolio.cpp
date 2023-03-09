@@ -97,7 +97,6 @@ void Portfolio::fromXML(XMLNode* node) {
 
 XMLNode* Portfolio::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Portfolio");
-    doc.appendNode(node);
     for (auto& t : trades_)
         XMLUtils::appendNode(node, t.second->toXML(doc));
     return node;

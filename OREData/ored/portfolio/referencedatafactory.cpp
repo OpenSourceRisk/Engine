@@ -18,6 +18,8 @@
 
 #include <ored/portfolio/referencedatafactory.hpp>
 
+#include <ql/errors.hpp>
+
 using std::string;
 
 namespace ore {
@@ -32,9 +34,11 @@ boost::shared_ptr<ReferenceDatum> ReferenceDatumFactory::build(const string& ref
 }
 
 void ReferenceDatumFactory::addBuilder(const string& refDatumType,
-                                       std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder) {
+                                       std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder,
+                                       const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    map_[refDatumType] = builder;
+    QL_REQUIRE(map_.insert(std::make_pair(refDatumType, builder)).second,
+               "ReferenceDatumFactory::addBuilder(" << refDatumType << "): builder for key already exists.");
 }
 
 } // namespace data

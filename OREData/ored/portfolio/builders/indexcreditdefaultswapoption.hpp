@@ -65,7 +65,6 @@ protected:
 */
 
 class BlackIndexCdsOptionEngineBuilder : public IndexCreditDefaultSwapOptionEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(BlackIndexCdsOptionEngineBuilder)
 public:
     BlackIndexCdsOptionEngineBuilder()
         : IndexCreditDefaultSwapOptionEngineBuilder("Black", "BlackIndexCdsOptionEngine") {}

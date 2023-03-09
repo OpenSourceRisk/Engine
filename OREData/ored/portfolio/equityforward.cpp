@@ -36,8 +36,6 @@ using namespace std;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<EquityForward>> EquityForward::reg_("EquityForward");
-
 void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency ccy = parseCurrencyWithMinors(currency_);
 

@@ -36,8 +36,6 @@ namespace data {
     \ingroup tradedata
 */
 class CommoditySwap : public ore::data::Trade {
-    static TradeBuilderRegister<TradeBuilder<CommoditySwap>> reg_;
-
 public:
     CommoditySwap() : ore::data::Trade("CommoditySwap") {}
 

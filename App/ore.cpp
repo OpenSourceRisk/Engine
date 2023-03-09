@@ -27,6 +27,7 @@
 #include <iostream>
 
 #include <orea/app/oreapp.hpp>
+#include <ored/utilities/initbuilders.hpp>
 
 #ifdef BOOST_MSVC
 #include <orea/auto_link.hpp>
@@ -65,6 +66,8 @@ int main(int argc, char** argv) {
         std::cout << endl << "usage: ORE path/to/ore.xml" << endl << endl;
         return -1;
     }
+
+    ore::data::initBuilders();
 
     string inputFile(argv[1]);
 

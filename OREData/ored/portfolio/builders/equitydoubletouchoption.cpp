@@ -20,6 +20,5 @@
 
 namespace ore {
 namespace data {
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EquityDoubleTouchOptionAnalyticEngineBuilder)
 } // namespace data
 } // namespace ore

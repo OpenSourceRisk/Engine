@@ -72,8 +72,6 @@ void validateWeightRec(Real value, const string& name, const string& varName) {
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<SyntheticCDO>> SyntheticCDO::reg_("SyntheticCDO");
-
 void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("SyntheticCDO::build() called for trade " << id());

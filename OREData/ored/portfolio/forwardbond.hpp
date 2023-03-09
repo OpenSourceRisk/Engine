@@ -29,8 +29,6 @@ namespace ore {
 namespace data {
 
 class ForwardBond : public Trade {
-    static TradeBuilderRegister<TradeBuilder<ForwardBond>> reg_;
-
 public:
     //! Default constructor
     ForwardBond() : Trade("ForwardBond") {}

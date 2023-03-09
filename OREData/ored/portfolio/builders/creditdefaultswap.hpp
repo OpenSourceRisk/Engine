@@ -138,7 +138,6 @@ protected:
     \ingroup builders
 */
 class MidPointCdsEngineBuilder : public CreditDefaultSwapEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(MidPointCdsEngineBuilder)
 public:
     MidPointCdsEngineBuilder() : CreditDefaultSwapEngineBuilder("DiscountedCashflows", "MidPointCdsEngine") {}
 

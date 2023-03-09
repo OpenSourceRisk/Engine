@@ -27,8 +27,6 @@
 namespace ore {
 namespace data {
 
-ORE_REGISTER_ENGINE_BUILDER_IMPL(CpiCapFloorEngineBuilder)
-
 boost::shared_ptr<PricingEngine> CpiCapFloorEngineBuilder::engineImpl(const string& indexName) {
     Handle<ZeroInflationIndex> cpiIndex = market_->zeroInflationIndex(indexName, configuration(MarketContext::pricing));
     // QL_REQUIRE(!cpiIndex.empty(), "engineFactory error, cpi index " << indexName << " not found");
