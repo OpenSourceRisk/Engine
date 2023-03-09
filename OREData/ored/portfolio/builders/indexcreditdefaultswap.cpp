@@ -28,8 +28,6 @@
 namespace ore {
 namespace data {
 
-ORE_REGISTER_ENGINE_BUILDER_IMPL(MidPointIndexCdsEngineBuilder)
-
 CreditPortfolioSensitivityDecomposition IndexCreditDefaultSwapEngineBuilder::sensitivityDecomposition() {
     return parseCreditPortfolioSensitivityDecomposition(
         engineParameter("SensitivityDecomposition", {}, false, "Underlying"));

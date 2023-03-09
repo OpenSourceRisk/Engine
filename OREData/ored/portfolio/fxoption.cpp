@@ -33,8 +33,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<FxOption>> FxOption::reg_("FxOption");
-
 void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     const boost::shared_ptr<Market>& market = engineFactory->market();

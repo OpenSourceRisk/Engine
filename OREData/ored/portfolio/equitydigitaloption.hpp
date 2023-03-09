@@ -33,8 +33,6 @@ using std::string;
   \ingroup tradedata
 */
 class EquityDigitalOption : public EquitySingleAssetDerivative {
-    static TradeBuilderRegister<TradeBuilder<EquityDigitalOption>> reg_;
-
 public:
     //! Default constructor
     EquityDigitalOption()

@@ -30,8 +30,6 @@
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<FxAverageForward>> FxAverageForward::reg_("FxAverageForward");
-
 void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     LOG("FxAverageForward::build() called");
     QL_REQUIRE(!settlementCurrency_.empty(), "settlement currency must not be blank");

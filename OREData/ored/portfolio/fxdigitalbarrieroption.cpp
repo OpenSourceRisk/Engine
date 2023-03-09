@@ -37,8 +37,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<FxDigitalBarrierOption>> FxDigitalBarrierOption::reg_("FxDigitalBarrierOption");
-    
 bool checkBarrier(Real spot, Barrier::Type type, Real barrier);
 
 void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {

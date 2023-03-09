@@ -288,8 +288,6 @@ protected:
 
 private:
     virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }
-    // to be removed again once we have resolved the auto-registering problem on windows
-    void dummyRegisterBuildersForWindows();
 };
 
 } // namespace analytics

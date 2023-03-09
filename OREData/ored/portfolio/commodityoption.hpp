@@ -33,8 +33,6 @@ namespace data {
 /*! \ingroup tradedata
  */
 class CommodityOption : public VanillaOptionTrade {
-    static TradeBuilderRegister<TradeBuilder<CommodityOption>> reg_;
-
 public:
     //! Default constructor
     CommodityOption();

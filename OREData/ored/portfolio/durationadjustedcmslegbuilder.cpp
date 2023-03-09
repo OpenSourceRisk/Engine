@@ -34,8 +34,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-ORE_REGISTER_LEG_BUILDER_IMPL(DurationAdjustedCmsLegBuilder)
-
 Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                                             RequiredFixings& requiredFixings, const string& configuration,
                                             const QuantLib::Date& openEndDateReplacement,

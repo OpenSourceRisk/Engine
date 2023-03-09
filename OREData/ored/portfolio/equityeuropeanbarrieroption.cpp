@@ -35,9 +35,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<EquityEuropeanBarrierOption>>
-    EquityEuropeanBarrierOption::reg_("EquityEuropeanBarrierOption");
-
 void EquityEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     const boost::shared_ptr<Market> market = engineFactory->market();

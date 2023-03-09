@@ -41,7 +41,6 @@ using std::string;
  */
 class EquityDigitalOptionEngineBuilder
     : public ore::data::CachingPricingEngineBuilder<string, const string&, const Currency&> {
-    ORE_REGISTER_ENGINE_BUILDER(EquityDigitalOptionEngineBuilder)
 public:
     EquityDigitalOptionEngineBuilder()
         : CachingEngineBuilder("BlackScholesMerton", "AnalyticEuropeanEngine", {"EquityDigitalOption"}) {}

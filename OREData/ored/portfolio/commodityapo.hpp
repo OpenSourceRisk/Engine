@@ -38,8 +38,6 @@ namespace data {
     \ingroup tradedata
 */
 class CommodityAveragePriceOption : public ore::data::Trade {
-    static TradeBuilderRegister<TradeBuilder<CommodityAveragePriceOption>> reg_;
-
 public:
     CommodityAveragePriceOption() : ore::data::Trade("CommodityAveragePriceOption") {}
 

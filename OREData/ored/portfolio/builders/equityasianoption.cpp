@@ -18,14 +18,5 @@
 
 namespace ore {
 namespace data {
-
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EquityEuropeanAsianOptionMCDAAPEngineBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EquityEuropeanAsianOptionMCDAASEngineBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EquityEuropeanAsianOptionMCDGAPEngineBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EquityEuropeanAsianOptionADGAPEngineBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EquityEuropeanAsianOptionADGASEngineBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EquityEuropeanAsianOptionACGAPEngineBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(EquityEuropeanAsianOptionTWEngineBuilder)
-
 } // namespace data
 } // namespace ore
