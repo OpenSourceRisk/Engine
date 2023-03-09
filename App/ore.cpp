@@ -27,7 +27,7 @@
 #include <iostream>
 
 #include <orea/app/oreapp.hpp>
-#include <orea/app/initbuilders.hpp>
+#include <ored/utilities/initbuilders.hpp>
 
 #ifdef BOOST_MSVC
 #include <orea/auto_link.hpp>
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    ore::analytics::initBuilders();
+    ore::data::initBuilders();
 
     string inputFile(argv[1]);
 

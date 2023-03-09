@@ -14,7 +14,6 @@ aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
 app/analytic.cpp
 app/analyticsmanager.cpp
-app/initbuilders.cpp
 app/inputparameters.cpp
 app/marketcalibrationreport.cpp
 app/marketdatacsvloader.cpp
@@ -93,7 +92,6 @@ aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
 app/analytic.hpp
 app/analyticsmanager.hpp
-app/initbuilders.hpp
 app/inputparameters.hpp
 app/marketcalibrationreport.hpp
 app/marketdatacsvloader.hpp
