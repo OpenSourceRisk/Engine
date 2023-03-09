@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <qle/pricingengines/blackindexcdsoptionbaseengine.hpp>
+#include <qle/pricingengines/indexcdsoptionbaseengine.hpp>
 
 namespace QuantExt {
 
