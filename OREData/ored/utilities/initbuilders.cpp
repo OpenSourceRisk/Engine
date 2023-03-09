@@ -250,7 +250,7 @@ void initBuilders() {
     ORE_REGISTER_TRADE_BUILDER("IndexCreditDefaultSwapOption", IndexCreditDefaultSwapOption, false)
     ORE_REGISTER_TRADE_BUILDER("CommodityAveragePriceOption", CommodityAveragePriceOption, false)
     ORE_REGISTER_TRADE_BUILDER("CreditDefaultSwapOption", CreditDefaultSwapOption, false)
-    ORE_REGISTER_TRADE_BUILDER("FailedTrade", FailedTrade, false)
+    ORE_REGISTER_TRADE_BUILDER("Failed", FailedTrade, false)
     ORE_REGISTER_TRADE_BUILDER("ForwardBond", ForwardBond, false)
     ORE_REGISTER_TRADE_BUILDER("EquityDoubleTouchOption", EquityDoubleTouchOption, false)
     ORE_REGISTER_TRADE_BUILDER("CommodityOptionStrip", CommodityOptionStrip, false)
