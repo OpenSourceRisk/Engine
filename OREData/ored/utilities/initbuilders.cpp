@@ -204,7 +204,7 @@ void initBuilders() {
     ORE_REGISTER_REFERENCE_DATUM("Credit", CreditReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("Equity", EquityReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("BondBasket", BondBasketReferenceDatum, false)
-    ORE_REGISTER_REFERENCE_DATUM("ConvertibleBond", BondBasketReferenceDatum, false)
+    ORE_REGISTER_REFERENCE_DATUM("ConvertibleBond", ConvertibleBondReferenceDatum, false)
 
     ORE_REGISTER_BOND_BUILDER("Bond", VanillaBondBuilder, false)
 
