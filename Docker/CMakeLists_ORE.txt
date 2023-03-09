@@ -1,6 +1,12 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.15)
 
 project(ORE CXX)
+
+option(ORE_BUILD_DOC "Build documentation" ON)
+option(ORE_BUILD_EXAMPLES "Build examples" ON)
+option(ORE_BUILD_TESTS "Build test suite" ON)
+option(ORE_BUILD_APP "Build app" ON)
+option(ORE_USE_ZLIB "Use compression for boost::iostreams" ON)
 
 include(CTest)
 
@@ -12,9 +18,3 @@ add_subdirectory("QuantExt")
 add_subdirectory("OREData")
 add_subdirectory("OREAnalytics")
 add_subdirectory("App")
-
-# add integration tests
-add_test(NAME integrationtest_bootstrap COMMAND nosetests WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/IntegrationTests/Bootstrap)
-
-# add regression tests
-add_test(NAME regressiontest_pricer WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/RegressionTests/Pricer COMMAND nosetests regression.py)
