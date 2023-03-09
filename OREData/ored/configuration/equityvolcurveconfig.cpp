@@ -30,11 +30,10 @@ namespace data {
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const string& currency,
     const vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig, const string& dayCounter,
-    const string& calendar, const OneDimSolverConfig& solverConfig, const boost::optional<bool>& preferOutOfTheMoney,
-    const string& smileDynamics)
+    const string& calendar, const OneDimSolverConfig& solverConfig, const boost::optional<bool>& preferOutOfTheMoney)
     : CurveConfig(curveID, curveDescription), ccy_(currency), volatilityConfig_(volatilityConfig),
       dayCounter_(dayCounter), calendar_(calendar), solverConfig_(solverConfig),
-      preferOutOfTheMoney_(preferOutOfTheMoney), smileDynamics_(smileDynamics) {
+      preferOutOfTheMoney_(preferOutOfTheMoney) {
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -44,11 +43,10 @@ EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, 
                                                          const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
                                                          const string& dayCounter, const string& calendar,
                                                          const OneDimSolverConfig& solverConfig,
-                                                         const boost::optional<bool>& preferOutOfTheMoney,
-							 const string& smileDynamics)
+                                                         const boost::optional<bool>& preferOutOfTheMoney)
     : EquityVolatilityCurveConfig(curveID, curveDescription, currency,
                                   std::vector<boost::shared_ptr<VolatilityConfig>>{volatilityConfig}, dayCounter,
-                                  calendar, solverConfig, preferOutOfTheMoney, smileDynamics) {}
+                                  calendar, solverConfig, preferOutOfTheMoney) {}
 
 const string EquityVolatilityCurveConfig::quoteStem(const string& volType) const {
     return "EQUITY_OPTION/" + volType + "/" + curveID_ + "/" + ccy_ + "/";
@@ -166,8 +164,6 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         QL_FAIL("Only ATM and Smile dimensions, or Volatility Config supported for EquityVolatility " << curveID_);
     }
 
-    smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
-
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
     }
@@ -200,8 +196,6 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
 
     if (preferOutOfTheMoney_)
         XMLUtils::addChild(doc, node, "PreferOutOfTheMoney", *preferOutOfTheMoney_);
-
-    XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
 
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
 
