@@ -52,8 +52,8 @@ public:
     ForwardBond(const boost::shared_ptr<QuantLib::Bond>& underlying, const Real lockRate,
                 const DayCounter& lockRateDayCounter, const bool longInForward, const Date& fwdMaturityDate,
                 const Date& fwdSettlementDate, const bool isPhysicallySettled, const bool settlementDirty,
-                const Real compensationPayment, const Date compensationPaymentDate,
-                const Real dv01, const Real bondNotional = 1.0);
+                const Real compensationPayment, const Date compensationPaymentDate, const Real bondNotional = 1.0,
+                const Real dv01 = Null<Real>());
 
     //! \name Instrument interface
     //@{

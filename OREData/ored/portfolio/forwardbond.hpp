@@ -36,7 +36,7 @@ public:
     //! Constructor taking an envelope and bond data
     ForwardBond(Envelope env, const BondData& bondData, string fwdMaturityDate, string fwdSettlementDate,
                 string settlement, string amount, string lockRate, string lockRateDayCounter, string settlementDirty,
-                string compensationPayment, string compensationPaymentDate, string longInForward, string dv01)
+                string compensationPayment, string compensationPaymentDate, string longInForward, string dv01 = string())
         : Trade("ForwardBond", env), originalBondData_(bondData), bondData_(bondData),
           fwdMaturityDate_(fwdMaturityDate), fwdSettlementDate_(fwdSettlementDate), settlement_(settlement),
           amount_(amount), lockRate_(lockRate), lockRateDayCounter_(lockRateDayCounter),
