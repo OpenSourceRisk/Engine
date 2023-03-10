@@ -309,6 +309,7 @@ public:
     RebalancingDate::Strategy rebalancingStrategy() const { return rebalancingStrategy_; }
     HedgeAdjustment::Rule hedgeAdjustmentRule() const { return hedgeAdjustmentRule_; }
     QuantLib::Calendar hedgeCalendar() const { return hedgeCalendar_; }
+    const std::map<std::string, std::string>& fxIndexes() const { return fxIndexes_; }
     //! Returns the currency weights at the last rebalancing date
     const vector<pair<string, double>>& currencyWeights() const { return data_; }
 
@@ -324,6 +325,7 @@ private:
     int referenceDateOffset_;
     HedgeAdjustment::Rule hedgeAdjustmentRule_;
     QuantLib::Calendar hedgeCalendar_;
+    std::map<std::string, std::string> fxIndexes_;
     vector<pair<string, double>> data_;
     static ReferenceDatumRegister<ReferenceDatumBuilder<CurrencyHedgedEquityIndexReferenceDatum>> reg_;
 };
