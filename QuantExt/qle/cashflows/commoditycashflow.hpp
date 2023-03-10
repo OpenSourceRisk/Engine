@@ -23,12 +23,12 @@
 #ifndef quantext_commodity_cash_flow_hpp
 #define quantext_commodity_cash_flow_hpp
 
-#include <qle/indexes/commodityindex.hpp>
-
 #include <ql/cashflow.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
+#include <qle/indexes/commodityindex.hpp>
+#include <qle/indexes/fxindex.hpp>
 
 #include <set>
 
@@ -79,13 +79,15 @@ bool isPricingDate(const QuantLib::Date& d, const QuantLib::Calendar& pricingCal
 class CommodityCashFlow : public QuantLib::LazyObject, public QuantLib::CashFlow {
 public:
     CommodityCashFlow(QuantLib::Real quantity, QuantLib::Real spread, QuantLib::Real gearing, bool useFuturePrice,
-                      const ext::shared_ptr<CommodityIndex>& index);
+                      const ext::shared_ptr<CommodityIndex>& index, const ext::shared_ptr<FxIndex>& fxIndex);
     QuantLib::Real quantity() const { return quantity_; }
     QuantLib::Real spread() const { return spread_; }
     QuantLib::Real gearing() const { return gearing_; }
     bool useFuturePrice() const { return useFuturePrice_; }
 
-    ext::shared_ptr<CommodityIndex> index() { return index_; };
+    ext::shared_ptr<CommodityIndex> index() const { return index_; };
+    ext::shared_ptr<FxIndex> fxIndex() const { return fxIndex_; }
+
     virtual QuantLib::Date lastPricingDate() const = 0;
     virtual QuantLib::Real periodQuantity() const = 0;
 
@@ -95,7 +97,7 @@ protected:
     QuantLib::Real gearing_;
     bool useFuturePrice_;
     ext::shared_ptr<CommodityIndex> index_;
-
+    ext::shared_ptr<FxIndex> fxIndex_;
     mutable QuantLib::Real amount_;
 };
 } // namespace QuantExt

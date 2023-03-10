@@ -94,7 +94,6 @@ public:
     const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData() const {
         return offPeakPowerData_;
     }
-    ext::shared_ptr<FxIndex> fxIndex() const { return fxIndex_; }
 
     /*! Return the index used to get the price for each pricing date in the period. The map keys are the pricing dates.
         For a given key date, the map value holds the commodity index used to give the price on that date. If the
@@ -157,7 +156,6 @@ private:
     bool unrealisedQuantity_;
     QuantLib::Real periodQuantity_;
     boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>> offPeakPowerData_;
-    ext::shared_ptr<FxIndex> fxIndex_;
 
     // Populated only when offPeakPowerData_ is provided.
     std::map<QuantLib::Date, QuantLib::Real> weights_;
