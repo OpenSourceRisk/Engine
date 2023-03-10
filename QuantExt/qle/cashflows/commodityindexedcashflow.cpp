@@ -73,7 +73,8 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
 }
 
 void CommodityIndexedCashFlow::performCalculations() const {
-    amount_ = periodQuantity_ * gearing_ * (index_->fixing(pricingDate_) + spread_);
+    double fxRate = (fxIndex_) ? this->fxIndex()->fixing(pricingDate_) : 1.0;
+    amount_ = periodQuantity_ * gearing_ * (fxRate * index_->fixing(pricingDate_) + spread_);
 }
 
 Real CommodityIndexedCashFlow::amount() const {
@@ -245,6 +246,11 @@ CommodityIndexedLeg& CommodityIndexedLeg::withDailyExpiryOffset(Natural dailyExp
     return *this;
 }
 
+CommodityIndexedLeg& CommodityIndexedLeg::withFxIndex(const ext::shared_ptr<FxIndex>& fxIndex) {
+    fxIndex_ = fxIndex;
+    return *this;
+}
+
 CommodityIndexedLeg::operator Leg() const {
 
     // Number of commodity indexed cashflows
@@ -296,7 +302,7 @@ CommodityIndexedLeg::operator Leg() const {
         leg.push_back(ext::make_shared<CommodityIndexedCashFlow>(
             quantity, start, end, index_, paymentLag_, paymentCalendar_, paymentConvention_, pricingLag_,
             pricingLagCalendar_, spread, gearing, paymentTiming_, inArrears_, useFuturePrice_, useFutureExpiryDate_,
-            futureMonthOffset_, calc_, paymentDate, pricingDate, dailyExpiryOffset_));
+            futureMonthOffset_, calc_, paymentDate, pricingDate, dailyExpiryOffset_, fxIndex_));
     }
 
     return leg;

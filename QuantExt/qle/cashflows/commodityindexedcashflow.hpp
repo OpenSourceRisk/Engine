@@ -142,6 +142,7 @@ public:
     CommodityIndexedLeg& withPricingDates(const std::vector<QuantLib::Date>& pricingDates);
     CommodityIndexedLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
     CommodityIndexedLeg& withDailyExpiryOffset(QuantLib::Natural dailyExpiryOffset);
+    CommodityIndexedLeg& withFxIndex(const ext::shared_ptr<FxIndex>& fxIndex);
 
     operator Leg() const;
 
@@ -166,6 +167,7 @@ private:
     std::vector<QuantLib::Date> pricingDates_;
     std::vector<QuantLib::Date> paymentDates_;
     QuantLib::Natural dailyExpiryOffset_;
+    ext::shared_ptr<FxIndex> fxIndex_;
 };
 
 } // namespace QuantExt
