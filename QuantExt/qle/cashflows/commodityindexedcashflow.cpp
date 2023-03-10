@@ -99,6 +99,8 @@ void CommodityIndexedCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator
 
     pricingDate_ = index_->fixingCalendar().adjust(pricingDate_, Preceding);
 
+    indices_[pricingDate_] = index_;
+
     // If we are using the future settlement price as the reference price, then we need to create the
     // relevant "future index" here and update the cashflow's index with it.
     Date expiry;
