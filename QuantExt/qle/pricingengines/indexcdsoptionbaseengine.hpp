@@ -58,11 +58,8 @@ public:
     //@}
 
 protected:
-    //! Calculation for instrument with strike quoted as spread.
-    virtual void spreadStrikeCalculate(QuantLib::Real fep) const = 0;
-
-    //! Calculation for instrument with strike quoted as price.
-    virtual void priceStrikeCalculate(QuantLib::Real fep) const = 0;
+    //! Engine specific calculation
+    virtual void doCalc() const = 0;
 
     //! Register with market data
     void registerWithMarket();

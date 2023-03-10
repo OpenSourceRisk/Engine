@@ -90,11 +90,8 @@ void IndexCdsOptionBaseEngine::calculate() const {
     cds.NPV();
     results_.additionalResults = cds.additionalResults();
 
-    // Calculate option value depending on strike type.
-    if (arguments_.strikeType == CdsOption::Spread)
-        spreadStrikeCalculate(fep());
-    else
-        priceStrikeCalculate(fep());
+    // call engine-specific calculation
+    doCalc();
 }
 
 Real IndexCdsOptionBaseEngine::fep() const {
