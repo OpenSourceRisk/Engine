@@ -50,8 +50,10 @@ public:
     using IndexCdsOptionBaseEngine::IndexCdsOptionBaseEngine;
 
 private:
-    void spreadStrikeCalculate(QuantLib::Real fep) const override;
-    void priceStrikeCalculate(QuantLib::Real fep) const override;
+    void doCalc() const override;
+
+    void spreadStrikeCalculate(QuantLib::Real fep) const;
+    void priceStrikeCalculate(QuantLib::Real fep) const;
 
     Real forwardRiskyAnnuityStrike() const;
 };

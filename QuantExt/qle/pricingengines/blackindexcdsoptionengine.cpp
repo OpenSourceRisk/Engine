@@ -35,6 +35,14 @@ using std::vector;
 
 namespace QuantExt {
 
+void BlackIndexCdsOptionEngine::doCalc() const {
+    // Calculate option value depending on strike type.
+    if (arguments_.strikeType == CdsOption::Spread)
+        spreadStrikeCalculate(fep());
+    else
+        priceStrikeCalculate(fep());
+}
+
 void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
 
     // Underlying index CDS.
