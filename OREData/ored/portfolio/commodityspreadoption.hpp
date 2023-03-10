@@ -24,7 +24,6 @@
 namespace ore::data {
 
 class CommoditySpreadOption : public ore::data::Trade {
-
 public:
     CommoditySpreadOption() : ore::data::Trade("CommoditySpreadOption"){}
 

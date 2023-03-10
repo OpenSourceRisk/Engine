@@ -18,6 +18,8 @@
 
 #include <orea/aggregation/nettedexposurecalculator.hpp>
 
+#include <ored/portfolio/trade.hpp>
+
 #include <ql/time/date.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 

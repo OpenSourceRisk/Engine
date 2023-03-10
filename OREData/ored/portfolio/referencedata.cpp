@@ -49,8 +49,6 @@ XMLNode* ReferenceDatum::toXML(XMLDocument& doc) {
     return node;
 }
 
-ReferenceDatumRegister<ReferenceDatumBuilder<BondReferenceDatum>> BondReferenceDatum::reg_(TYPE);
-
 void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
     QL_REQUIRE(node, "BondReferenceDatum::BondData::fromXML(): no node given");
     issuerId = XMLUtils::getChildValue(node, "IssuerId", true);
@@ -196,8 +194,6 @@ const Date& CreditIndexConstituent::eventDeterminationDate() const { return even
 
 bool operator<(const CreditIndexConstituent& lhs, const CreditIndexConstituent& rhs) { return lhs.name() < rhs.name(); }
 
-ReferenceDatumRegister<ReferenceDatumBuilder<CreditIndexReferenceDatum>> CreditIndexReferenceDatum::reg_(TYPE);
-
 CreditIndexReferenceDatum::CreditIndexReferenceDatum() {}
 
 CreditIndexReferenceDatum::CreditIndexReferenceDatum(const string& name) : ReferenceDatum(TYPE, name) {}
@@ -246,8 +242,6 @@ void CreditIndexReferenceDatum::add(const CreditIndexConstituent& c) {
 }
 
 const set<CreditIndexConstituent>& CreditIndexReferenceDatum::constituents() const { return constituents_; }
-
-ReferenceDatumRegister<ReferenceDatumBuilder<EquityIndexReferenceDatum>> EquityIndexReferenceDatum::reg_(TYPE);
 
 // Index
 void IndexReferenceDatum::fromXML(XMLNode* node) {
@@ -302,8 +296,6 @@ XMLNode* IndexReferenceDatum::toXML(XMLDocument& doc) {
   </CurrencyHedgedEquityIndexReferenceDatum>
 </ReferenceDatum>
 */
-ReferenceDatumRegister<ReferenceDatumBuilder<CurrencyHedgedEquityIndexReferenceDatum>>
-    CurrencyHedgedEquityIndexReferenceDatum::reg_(TYPE);
 
 void CurrencyHedgedEquityIndexReferenceDatum::fromXML(XMLNode* node) {
     ReferenceDatum::fromXML(node);
@@ -429,8 +421,6 @@ XMLNode* CreditReferenceDatum::toXML(XMLDocument& doc) {
     return node;
 }
 
-ReferenceDatumRegister<ReferenceDatumBuilder<CreditReferenceDatum>> CreditReferenceDatum::reg_(TYPE);
-
 // Equity
 void EquityReferenceDatum::fromXML(XMLNode* node) {
     ReferenceDatum::fromXML(node);
@@ -468,8 +458,6 @@ XMLNode* EquityReferenceDatum::toXML(ore::data::XMLDocument& doc) {
     return node;
 }
 
-ReferenceDatumRegister<ReferenceDatumBuilder<EquityReferenceDatum>> EquityReferenceDatum::reg_(TYPE);
-
 // Bond Basket
 void BondBasketReferenceDatum::fromXML(XMLNode* node) {
     ReferenceDatum::fromXML(node);
@@ -493,8 +481,6 @@ XMLNode* BondBasketReferenceDatum::toXML(ore::data::XMLDocument& doc) {
     return res;
 }
 
-ReferenceDatumRegister<ReferenceDatumBuilder<BondBasketReferenceDatum>> BondBasketReferenceDatum::reg_(TYPE);
-    
 // BasicReferenceDataManager
 
 void BasicReferenceDataManager::fromXML(XMLNode* node) {

@@ -49,7 +49,7 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
     const vector<string>& underlyingTenors, const DayCounter& dayCounter, const Calendar& calendar,
     const BusinessDayConvention& businessDayConvention, const string& shortSwapIndexBase, const string& swapIndexBase,
     const vector<string>& smileOptionTenors, const vector<string>& smileUnderlyingTenors,
-    const vector<string>& smileSpreads, const string& smileDynamics)
+    const vector<string>& smileSpreads)
     : CurveConfig(curveID, curveDescription), underlyingLabel_(underlyingLabel), rootNodeLabel_(rootNodeLabel),
       marketDatumInstrumentLabel_(marketDatumInstrumentLabel), qualifierLabel_(qualifierLabel), allowSmile_(true),
       requireSwapIndexBases_(false), qualifier_(qualifier), dimension_(dimension), volatilityType_(volatilityType),
@@ -57,7 +57,7 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
       underlyingTenors_(underlyingTenors), dayCounter_(dayCounter), calendar_(calendar),
       businessDayConvention_(businessDayConvention), shortSwapIndexBase_(shortSwapIndexBase),
       swapIndexBase_(swapIndexBase), smileOptionTenors_(smileOptionTenors),
-      smileUnderlyingTenors_(smileUnderlyingTenors), smileSpreads_(smileSpreads), smileDynamics_(smileDynamics) {
+      smileUnderlyingTenors_(smileUnderlyingTenors), smileSpreads_(smileSpreads) {
 
     QL_REQUIRE(dimension == Dimension::ATM || dimension == Dimension::Smile, "Invalid dimension");
 
@@ -76,10 +76,10 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const string& qualifier,
     const std::string& proxySourceCurveId, const std::string& proxySourceShortSwapIndexBase,
     const std::string& proxySourceSwapIndexBase, const std::string& proxyTargetShortSwapIndexBase,
-    const std::string& proxyTargetSwapIndexBase, const string& smileDynamics)
+    const std::string& proxyTargetSwapIndexBase)
     : CurveConfig(curveID, curveDescription), underlyingLabel_(underlyingLabel), rootNodeLabel_(rootNodeLabel),
       qualifierLabel_(qualifierLabel), allowSmile_(true), requireSwapIndexBases_(false),
-      smileDynamics_(smileDynamics), proxySourceShortSwapIndexBase_(proxySourceShortSwapIndexBase),
+      proxySourceShortSwapIndexBase_(proxySourceShortSwapIndexBase),
       proxySourceSwapIndexBase_(proxySourceSwapIndexBase),
       proxyTargetShortSwapIndexBase_(proxyTargetShortSwapIndexBase),
       proxyTargetSwapIndexBase_(proxyTargetSwapIndexBase) {
@@ -252,8 +252,6 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     }
 
-    smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
-
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
     }
@@ -324,7 +322,6 @@ XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) {
         }
     }
 
-    XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
 
     return node;

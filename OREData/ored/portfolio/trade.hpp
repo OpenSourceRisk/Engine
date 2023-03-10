@@ -29,6 +29,8 @@
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/premiumdata.hpp>
 #include <ored/portfolio/tradeactions.hpp>
+#include <ored/portfolio/tradefactory.hpp> // just convenience so that client code needs to include trade.hpp only
+
 #include <ored/utilities/parsers.hpp>
 
 #include <ql/cashflow.hpp>

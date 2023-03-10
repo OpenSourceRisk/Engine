@@ -91,8 +91,6 @@ private:
     std::vector<std::string> priceDates_;
     CommodityPayRelativeTo commodityPayRelativeTo_;
     std::string tag_;
-
-    static ore::data::LegDataRegister<CommodityFixedLegData> reg_;
 };
 
 class CommodityFloatingLegData : public ore::data::LegAdditionalData {
@@ -184,8 +182,6 @@ private:
     bool unrealisedQuantity_;
     QuantLib::Natural lastNDays_;
     std::string fxIndex_;
-
-    static ore::data::LegDataRegister<CommodityFloatingLegData> reg_;
 };
 
 } // namespace data

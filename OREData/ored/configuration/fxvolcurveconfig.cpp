@@ -33,22 +33,19 @@ FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const st
                                                  const string& fxForeignCurveID, const string& fxDomesticCurveID,
                                                  const DayCounter& dayCounter, const Calendar& calendar,
                                                  const SmileInterpolation& interp, const string& conventionsID,
-                                                 const std::vector<Size>& smileDelta,
-						 const string& smileDynamics)
-
+                                                 const std::vector<Size>& smileDelta)
     : CurveConfig(curveID, curveDescription), dimension_(dimension), expiries_(expiries), dayCounter_(dayCounter),
       calendar_(calendar), fxSpotID_(fxSpotID), fxForeignYieldCurveID_(fxForeignCurveID),
       fxDomesticYieldCurveID_(fxDomesticCurveID), conventionsID_(conventionsID), smileDelta_(smileDelta),
-      smileInterpolation_(interp), smileDynamics_(smileDynamics) {
+      smileInterpolation_(interp) {
     populateRequiredCurveIds();
 }
 
 FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                  const Dimension& dimension, const string& baseVolatility1,
-                                                 const string& baseVolatility2, const string& fxIndexTag,
-						 const string& smileDynamics)
+                                                 const string& baseVolatility2, const string& fxIndexTag)
     : CurveConfig(curveID, curveDescription), dimension_(dimension), baseVolatility1_(baseVolatility1),
-      baseVolatility2_(baseVolatility2), fxIndexTag_(fxIndexTag), smileDynamics_(smileDynamics) {
+      baseVolatility2_(baseVolatility2), fxIndexTag_(fxIndexTag) {
     populateRequiredCurveIds();
 }
 
@@ -183,8 +180,6 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", curvesRequired);
     }
 
-    smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
-
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
     }
@@ -257,7 +252,6 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
-    XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
     
     return node;
 }

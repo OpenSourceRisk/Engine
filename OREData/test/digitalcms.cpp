@@ -272,7 +272,6 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
     engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
 
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<AnalyticHaganCmsCouponPricerBuilder>());
 
     // test edge cases
     // If strike >> rate then NPV(digital call option) == NPV(option with spread = 0)

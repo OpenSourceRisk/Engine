@@ -23,15 +23,21 @@
 
 #pragma once
 
+#include <ql/patterns/singleton.hpp>
+
 #include <boost/make_shared.hpp>
-#include <ored/portfolio/trade.hpp>
-#include <ored/portfolio/referencedata.hpp>
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 namespace ore {
 namespace data {
 
+class Trade;
+
 //! TradeBuilder base class
-/*!
+/*! All derived classes have to be stateless. It should not be necessary to derive classes
+  other than TradeBuilder from this class anyway.
+
   \ingroup portfolio
 */
 class AbstractTradeBuilder {
@@ -49,37 +55,23 @@ public:
     virtual boost::shared_ptr<Trade> build() const override { return boost::make_shared<T>(); }
 };
 
-//! Template TradeBuilder class that takes 1 parameter
-template <class T, class U> class TradeBuilder1 : public AbstractTradeBuilder {
-public:
-    TradeBuilder1(const U& param1) : param1_(param1) {}
-    virtual boost::shared_ptr<Trade> build() const override { return boost::make_shared<T>(param1_); }
-
-private:
-    U param1_;
-};
-
-//! TradeFactory (todo)
+//! TradeFactory
 /*!
   \ingroup tradedata
 */
-class TradeFactory {
+class TradeFactory : public QuantLib::Singleton<TradeFactory, std::integral_constant<bool, true>> {
+    std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> builders_;
+    mutable boost::shared_mutex mutex_;
+
 public:
-    //! Construct a factory with the default builders
-    TradeFactory(const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                 std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders = {});
+    std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> getBuilders() const;
+    boost::shared_ptr<AbstractTradeBuilder> getBuilder(const std::string& tradeType) const;
+    void addBuilder(const std::string& tradeType, const boost::shared_ptr<AbstractTradeBuilder>& builder,
+                    const bool allowOverwrite = false);
 
-    //! Add a new custom builder
-    void addBuilder(const string& className, const boost::shared_ptr<AbstractTradeBuilder>&);
-    //! Add extra trade builders
-    void addExtraBuilders(std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders);
-
-    //! Build, if className is unknown, an empty pointer is returned
-    boost::shared_ptr<Trade> build(const string& className) const;
-
-private:
-    boost::shared_ptr<ReferenceDataManager> referenceData_;
-    map<string, boost::shared_ptr<AbstractTradeBuilder>> builders_;
+    //! Build, throws for unknown className
+    boost::shared_ptr<Trade> build(const std::string& className) const;
 };
+
 } // namespace data
 } // namespace ore

@@ -19,11 +19,13 @@
 // clang-format off
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
+// clang-format on
 
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
+#include <ored/portfolio/trade.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/portfolio/enginefactory.hpp>
@@ -110,18 +112,16 @@ BOOST_AUTO_TEST_CASE(testFxVolWildCards) {
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
         boost::shared_ptr<EngineFactory> engineFactory_full = boost::make_shared<EngineFactory>(engineData, market_full);
-        engineFactory_full->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
         boost::shared_ptr<EngineFactory> engineFactory_wc = boost::make_shared<EngineFactory>(engineData, market_wc);
-        engineFactory_wc->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
         
         
         string portfolioFile = "portfolio.xml";
         boost::shared_ptr<Portfolio> portfolio_full = boost::make_shared<Portfolio>();
-        portfolio_full->load(TEST_INPUT_FILE(portfolioFile));
+        portfolio_full->fromFile(TEST_INPUT_FILE(portfolioFile));
         portfolio_full->build(engineFactory_full);
         
         boost::shared_ptr<Portfolio> portfolio_wc = boost::make_shared<Portfolio>();
-        portfolio_wc->load(TEST_INPUT_FILE(portfolioFile));
+        portfolio_wc->fromFile(TEST_INPUT_FILE(portfolioFile));
         portfolio_wc->build(engineFactory_wc);
 
         BOOST_CHECK_EQUAL(portfolio_full->size(), portfolio_wc->size());
@@ -140,5 +140,3 @@ BOOST_AUTO_TEST_CASE(testFxVolWildCards) {
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
-
-// clang-format on

@@ -50,7 +50,8 @@ protected:
 -
 \ingroup builders
 
-*/class CommoditySpreadOptionEngineBuilder : public CommoditySpreadOptionBaseEngineBuilder{
+*/
+class CommoditySpreadOptionEngineBuilder : public CommoditySpreadOptionBaseEngineBuilder{
 public:
     CommoditySpreadOptionEngineBuilder()
         : CommoditySpreadOptionBaseEngineBuilder("BlackScholes", "CommoditySpreadOptionEngine", {"CommoditySpreadOption"}){}

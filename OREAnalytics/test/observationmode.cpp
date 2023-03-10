@@ -299,7 +299,6 @@ void simulation(string dateGridString, bool checkFixings) {
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
-    factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
 
     boost::shared_ptr<Portfolio> portfolio = buildPortfolio(factory);
 

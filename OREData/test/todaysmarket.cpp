@@ -1021,10 +1021,6 @@ BOOST_AUTO_TEST_CASE(testCorrelationCurve) {
     engineData->engine("Swap") = "DiscountingSwapEngine";
 
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
-    engineFactory->registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
-    engineFactory->registerLegBuilder(boost::make_shared<CMSSpreadLegBuilder>());
-    engineFactory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
 
     cmsSpread1YCap.build(engineFactory);
     cmsSpread2YCap.build(engineFactory);

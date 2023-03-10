@@ -36,7 +36,6 @@ namespace data {
     \ingroup tradedata
 */
 class CommodityDigitalAveragePriceOption : public ore::data::Trade {
-
 public:
     CommodityDigitalAveragePriceOption() : ore::data::Trade("CommodityDigitalAveragePriceOption") {}
 

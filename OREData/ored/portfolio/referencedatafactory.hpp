@@ -59,7 +59,8 @@ public:
     boost::shared_ptr<ReferenceDatum> build(const std::string& refDatumType);
 
     void addBuilder(const std::string& refDatumType,
-                    std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder);
+                    std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder,
+                    const bool allowOverwrite = false);
 
 private:
     boost::shared_mutex mutex_;
@@ -69,13 +70,6 @@ private:
 template <class T> boost::shared_ptr<AbstractReferenceDatumBuilder> createReferenceDatumBuilder() {
     return boost::make_shared<T>();
 }
-
-template <class T> struct ReferenceDatumRegister {
-public:
-    ReferenceDatumRegister(const std::string& refDatumType) {
-        ReferenceDatumFactory::instance().addBuilder(refDatumType, &createReferenceDatumBuilder<T>);
-    }
-};
 
 } // namespace data
 } // namespace ore

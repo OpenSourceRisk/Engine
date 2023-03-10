@@ -82,40 +82,12 @@ public:
 
     /*! Add a builder function \p builder for a given \p legType
      */
-    void addBuilder(const std::string& legType, std::function<boost::shared_ptr<LegAdditionalData>()> builder);
+    void addBuilder(const std::string& legType, std::function<boost::shared_ptr<LegAdditionalData>()> builder,
+                    const bool allowOverwrite = false);
 
 private:
     boost::shared_mutex mutex_;
     map_type map_;
-};
-
-/*! Leg data registration class
-
-    This class is used in any class derived from \c LegAdditionalData to register itself with the \c LegDataFactory so
-    that it can be built via a call to <code>LegDataFactory::instance().build(const std::string& legType)</code>
-
-    As a concrete example, a \c FixedLegData class derived from \c LegAdditionalData should have the following form
-    in order to register it with the \c LegDataFactory:
-
-    In fixedlegdata.hpp
-    \code{.cpp}
-    class FixedLegData : public LegAdditionalData {
-    public:
-    private:
-        static LegDataRegister<FixedLegData> reg_;
-    }
-    \endcode
-
-    In fixedlegdata.cpp
-    \code{.cpp}
-    LegDataRegister<FixedLegData> FixedLegData::reg_("Fixed");
-    \endcode
-
-    \ingroup portfolio
-*/
-template <class T> struct LegDataRegister {
-public:
-    LegDataRegister(const std::string& legType) { LegDataFactory::instance().addBuilder(legType, &createLegData<T>); }
 };
 
 } // namespace data

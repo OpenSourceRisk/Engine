@@ -60,18 +60,15 @@ SensitivityAnalysis::SensitivityAnalysis(
     const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, const bool recalibrateModels,
     const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
-    const bool nonShiftedBaseCurrencyConversion,
-    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
-    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
-    const boost::shared_ptr<ReferenceDataManager>& referenceData, const IborFallbackConfig& iborFallbackConfig,
-    const bool continueOnError, bool analyticFxSensis, bool dryRun)
+    const bool nonShiftedBaseCurrencyConversion, const boost::shared_ptr<ReferenceDataManager>& referenceData,
+    const IborFallbackConfig& iborFallbackConfig, const bool continueOnError, bool analyticFxSensis, bool dryRun)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market ? market->asofDate() : Date()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels),
       curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
-      nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), extraEngineBuilders_(extraEngineBuilders),
-      extraLegBuilders_(extraLegBuilders), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
-      continueOnError_(continueOnError), engineData_(engineData), portfolio_(portfolio),
-      analyticFxSensis_(analyticFxSensis), dryRun_(dryRun), initialized_(false), computed_(false) {}
+      nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), referenceData_(referenceData),
+      iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError), engineData_(engineData),
+      portfolio_(portfolio), analyticFxSensis_(analyticFxSensis), dryRun_(dryRun), initialized_(false),
+      computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -87,7 +84,7 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVSensiCube>& cube) {
     initializeSimMarket();
 
     LOG("Build Engine Factory and rebuild portfolio");
-    boost::shared_ptr<EngineFactory> factory = buildFactory(extraEngineBuilders_, extraLegBuilders_);
+    boost::shared_ptr<EngineFactory> factory = buildFactory();
     resetPortfolio(factory);
     if (recalibrateModels_)
         modelBuilders_ = factory->modelBuilders();
@@ -156,16 +153,14 @@ void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory>
     simMarket_->scenarioGenerator() = scenarioGenerator_;
 }
 
-boost::shared_ptr<EngineFactory>
-SensitivityAnalysis::buildFactory(const std::vector<boost::shared_ptr<EngineBuilder>> extraBuilders,
-                                  const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders) const {
+boost::shared_ptr<EngineFactory> SensitivityAnalysis::buildFactory() const {
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = marketConfiguration_;
     auto ed = boost::make_shared<EngineData>(*engineData_);
     ed->globalParameters()["RunType"] =
         std::string("Sensitivity") + (sensitivityData_->computeGamma() ? "DeltaGamma" : "Delta");
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
-        ed, simMarket_, configurations, extraBuilders, extraLegBuilders, referenceData_, iborFallbackConfig_);
+    boost::shared_ptr<EngineFactory> factory =
+        boost::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
     return factory;
 }
 
