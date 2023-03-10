@@ -77,6 +77,9 @@ public:
     //@}
     //! \name CommodityCashFlow interface
     //@{
+    const std::map<QuantLib::Date, ext::shared_ptr<CommodityIndex>>& indices() const override { return indices_; }
+    
+  
     QuantLib::Date lastPricingDate() const override { return pricingDate(); }
     //@}
     
@@ -107,6 +110,7 @@ private:
     QuantLib::Natural futureMonthOffset_;
     QuantLib::Real periodQuantity_;
     QuantLib::Natural dailyExpiryOffset_;
+    std::map<QuantLib::Date, ext::shared_ptr<CommodityIndex>> indices_;
 
     //! Shared initialisation
     void init(const ext::shared_ptr<FutureExpiryCalculator>& calc,
