@@ -602,7 +602,7 @@ bool BasicReferenceDataManager::hasData(const string& type, const string& id, co
     if (asofDate == QuantLib::Null<QuantLib::Date>()) {
         asofDate = Settings::instance().evaluationDate();
     }
-    auto& [validFrom, refData] = latestValidFrom(type, id, asofDate);
+    auto [validFrom, refData] = latestValidFrom(type, id, asofDate);
     check(type, id, validFrom);
     return refData != nullptr;
 }
@@ -613,7 +613,7 @@ boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const strin
     if (asofDate == QuantLib::Null<QuantLib::Date>()) {
         asofDate = Settings::instance().evaluationDate();
     }
-    auto& [validFrom, refData] = latestValidFrom(type, id, asofDate);
+    auto [validFrom, refData] = latestValidFrom(type, id, asofDate);
     check(type, id, validFrom);
     QL_REQUIRE(refData != nullptr, "BasicReferenceDataManager::getData(): No Reference data for type='"
                                        << type << "', id='" << id << "', asof='" << asof << "'");
