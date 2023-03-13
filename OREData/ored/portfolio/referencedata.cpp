@@ -575,9 +575,7 @@ std::tuple<QuantLib::Date, boost::shared_ptr<ReferenceDatum>> BasicReferenceData
         auto uB = it->second.upper_bound(asof);
         if (uB != it->second.begin()) {
             return *(--uB);
-        } else if (uB == it->second.end()) {
-            return *(it->second.rbegin());
-        }
+        } 
     }
     return {QuantLib::Date(), nullptr};
 }
