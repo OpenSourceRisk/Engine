@@ -176,7 +176,6 @@ target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${Boost_LIBRARIES})
 if(ZLIB_FOUND)
-    target_link_libraries(${OREA_LIB_NAME} ZLIB::ZLIB)
     add_definitions(-DORE_USE_ZLIB)
 endif()
 
