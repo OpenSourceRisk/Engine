@@ -130,8 +130,8 @@ std::vector<std::string> OREApp::getErrors() {
     return errors;
 }
     
-int OREApp::run(const std::vector<std::string>& marketData,
-                const std::vector<std::string>& fixingData) {
+void OREApp::run(const std::vector<std::string>& marketData,
+                 const std::vector<std::string>& fixingData) {
     try {
         LOG("ORE analytics starting");
 
@@ -169,12 +169,10 @@ int OREApp::run(const std::vector<std::string>& marketData,
         ALOG(oss.str());
         CONSOLE(oss.str());
         QL_FAIL(oss.str());
-        return 1;
+        return;
     }
     
     LOG("ORE analytics done");
-
-    return 0;
 }
 
 vector<string> OREApp::getFileNames(const string& fileString, const string& path) {
@@ -335,6 +333,9 @@ OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::stri
         ConsoleLog::instance().switchOn();
     }
 
+    // Close any open loggers
+    closeLog();
+
     // Initialise file logger and buffered logger
     string logFilePath = (inputs_->resultsPath() / logFile).string();
     boost::filesystem::path p{inputs_->resultsPath()};
@@ -355,7 +356,7 @@ OREApp::~OREApp() {
     closeLog();
 }
 
-int OREApp::run(bool useAnalytics) {
+void OREApp::run(bool useAnalytics) {
 
     cpu_timer timer;
     
@@ -363,7 +364,7 @@ int OREApp::run(bool useAnalytics) {
 
         if (useAnalytics) {
             analytics();
-            return 0;
+            return;
         }
 
         CONSOLE("=====================================");
@@ -564,7 +565,7 @@ int OREApp::run(bool useAnalytics) {
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
         CONSOLE("Error: " << e.what());
-        return 1;
+        return;
     }
 
     timer.stop();
@@ -572,8 +573,6 @@ int OREApp::run(bool useAnalytics) {
     CONSOLE("ORE done.");
 
     LOG("ORE done.");
-
-    return 0;
 }
 
 void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
@@ -1428,6 +1427,8 @@ void OREApp::readSetup() {
 }
 
 void OREApp::setupLog() {
+    closeLog();
+
     string outputPath = params_->get("setup", "outputPath");
     string logFile = outputPath + "/" + params_->get("setup", "logFile");
     Size logMask = 15; // Default level
