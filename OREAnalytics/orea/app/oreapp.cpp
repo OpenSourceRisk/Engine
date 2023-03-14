@@ -229,18 +229,9 @@ void OREApp::analytics() {
         LOG("ORE analytics starting");
 
         QL_REQUIRE(params_, "ORE input parameters not set");
-        
-        // Read all inputs from params and files referenced in params
-        CONSOLEW("Loading inputs");
-        inputs_ = boost::make_shared<InputParameters>();
-        buildInputParameters(inputs_, params_);
-        auto outputs = boost::make_shared<OutputParameters>(params_);
-        CONSOLE("OK");
-        
-        // Set global evaluation date, though already set in the OREAppInputParameters c'tor
+                
         Settings::instance().evaluationDate() = inputs_->asof();
 
-        // FIXME
         GlobalPseudoCurrencyMarketParameters::instance().set(inputs_->pricingEngine()->globalParameters());
 
         // Initialize the global conventions 
@@ -263,7 +254,7 @@ void OREApp::analytics() {
         // Write reports to files in the results path
         Analytic::analytic_reports reports = analyticsManager_->reports();
         analyticsManager_->toFile(reports,
-                                  inputs_->resultsPath().string(), outputs->fileNameMap(),
+                                  inputs_->resultsPath().string(), outputs_->fileNameMap(),
                                   inputs_->csvSeparator(), inputs_->csvCommentCharacter(),
                                   inputs_->csvQuoteChar(), inputs_->reportNaString());
 
@@ -272,7 +263,7 @@ void OREApp::analytics() {
             for (auto b : a.second) {
                 LOG("write npv cube " << b.first);
                 string reportName = b.first;
-                std::string fileName = inputs_->resultsPath().string() + "/" + outputs->outputFileName(reportName, "dat");
+                std::string fileName = inputs_->resultsPath().string() + "/" + outputs_->outputFileName(reportName, "dat");
                 LOG("write npv cube " << reportName << " to file " << fileName);
                 saveCube(fileName, *b.second);
             }
@@ -282,7 +273,7 @@ void OREApp::analytics() {
         for (auto a : analyticsManager_->mktCubes()) {
             for (auto b : a.second) {
                 string reportName = b.first;
-                std::string fileName = inputs_->resultsPath().string() + "/" + outputs->outputFileName(reportName, "dat");
+                std::string fileName = inputs_->resultsPath().string() + "/" + outputs_->outputFileName(reportName, "dat");
                 LOG("write market cube " << reportName << " to file " << fileName);
                 saveAggregationScenarioData(fileName, *b.second);
             }
@@ -300,9 +291,17 @@ void OREApp::analytics() {
 }
 
 OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console)
-    : params_(params), inputs_(nullptr), asof_(parseDate(params_->get("setup", "asofDate"))), cubeDepth_(0) {
+    : params_(params), inputs_(nullptr), cubeDepth_(0) {
 
+    // Read all inputs from params and files referenced in params
+    CONSOLEW("Loading inputs");
+    inputs_ = boost::make_shared<InputParameters>();
+    buildInputParameters(inputs_, params_);
+    outputs_ = boost::make_shared<OutputParameters>(params_);
+    CONSOLE("OK");
+    
     // Set global evaluation date
+    asof_ = inputs_->asof();
     Settings::instance().evaluationDate() = asof_;
 
     // initialise some pointers
