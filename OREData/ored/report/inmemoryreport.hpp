@@ -129,14 +129,14 @@ public:
     std::string header(Size i) const { return imReport_->header(i); }
     // returns: 0 Size, 1 Real, 2 string, 3 Date, 4 Period
     Size columnType(Size i) const { return imReport_->columnType(i).which(); }
-    vector<Size> dataAsSize(Size i) const { return data_T<Size>(i, 0); }
+    vector<int> dataAsSize(Size i) const { return sizeToInt(data_T<Size>(i, 0)); }
     vector<Real> dataAsReal(Size i) const { return data_T<Real>(i, 1); }
     vector<string> dataAsString(Size i) const { return data_T<string>(i, 2); }
     vector<Date> dataAsDate(Size i) const { return data_T<Date>(i, 3); }
     vector<Period> dataAsPeriod(Size i) const { return data_T<Period>(i, 4); }
     // for convenience, access by row j and column i
     Size rows() const { return columns() == 0 ? 0 : imReport_->data(0).size(); }
-    Size dataAsSize(Size j, Size i) const { return boost::get<Size>(imReport_->data(i).at(j)); }
+    int dataAsSize(Size j, Size i) const { return int(boost::get<Size>(imReport_->data(i).at(j))); }
     Real dataAsReal(Size j, Size i) const { return boost::get<Real>(imReport_->data(i).at(j)); }
     string dataAsString(Size j, Size i) const { return boost::get<string>(imReport_->data(i).at(j)); }
     Date dataAsDate(Size j, Size i) const { return boost::get<Date>(imReport_->data(i).at(j)); }
@@ -151,6 +151,9 @@ private:
         for(auto const& d: imReport_->data(i))
             tmp.push_back(boost::get<T>(d));
         return tmp;
+    }
+    vector<int> sizeToInt(const vector<Size>& v) const {
+        return std::vector<int>(std::begin(v), std::end(v));
     }
     boost::shared_ptr<InMemoryReport> imReport_;
 };
