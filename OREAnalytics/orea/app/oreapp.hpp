@@ -237,6 +237,7 @@ protected:
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
     boost::shared_ptr<InputParameters> inputs_;
+    boost::shared_ptr<OutputParameters> outputs_;
     Date asof_;
     bool writeInitialReports_;
     bool simulate_;
