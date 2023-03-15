@@ -484,7 +484,7 @@ class ConsoleLog : public QuantLib::Singleton<ConsoleLog, std::integral_constant
     friend class QuantLib::Singleton<ConsoleLog, std::integral_constant<bool, true>>;
 private:
     // may be empty but never uninitialised
-    ConsoleLog() : enabled_(false), width_(50), progressBarWidth_(72 - std::min<QuantLib::Size>(width_, 67)) {}
+    ConsoleLog() : enabled_(false), width_(50), progressBarWidth_(0) {}
 
     bool enabled_;
     QuantLib::Size width_;

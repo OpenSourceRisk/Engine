@@ -128,7 +128,7 @@
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Acadia Inc.}
-\date{3 March 2023}
+\date{13 March 2023}
 \maketitle
 
 \newpage
@@ -149,7 +149,7 @@ Date & Author & Comment \\
 30 June 2021 & Acadia & updates for release 6\\
 16 September 2022 & Acadia & updates for release 7\\
 6 December 2022 & Acadia & updates for release 8\\
-3 March 2023 & Acadia & updates for release 9\\
+13 March 2023 & Acadia & updates for release 9\\
 \hline
 \end{supertabular}
 \end{center}
@@ -865,7 +865,7 @@ To build the wrappers on Windows, Linux, mac OS
 \hspace{1cm} {\tt -D ORE=<ORE Root Directory> $\backslash$} \\
 \hspace{1cm} {\tt -D BOOST\_ROOT=<Top level boost include directory> $\backslash$}\\
 \hspace{1cm} {\tt -D BOOST\_LIBRARYDIR=<Location of the compiled boost libraries> $\backslash$}\\
-\hspace{1cm} {\tt -D PYTHON\_LIBRARY=<Full name including path to the 'libpython*' library> $\backslash$} \\
+\hspace{1cm} {\tt -D PYTHON\_LIBRARY=<Full name including path to the 'libpython*' library>$\backslash$} \\
 \hspace{1cm} {\tt -D PYTHON\_INCLUDE\_DIR=<Directory that contains Python.h> $\backslash$} \\
 \hspace{1cm} {\tt ..} \\
 {\tt ninja} \\
@@ -888,7 +888,7 @@ this from the top-level oreswig directory
 \hspace{1cm} {\tt -D BOOST\_ROOT=C:$\backslash$dev$\backslash$boost $\backslash$}\\
 \hspace{1cm} {\tt -S OREAnalytics-SWIG/Python $\backslash$}\\
 \hspace{1cm} {\tt -B build $\backslash$}\\
-{\tt cmake --build build -v}
+{\tt cmake -{}-build build -v}
 }
 
 \medskip
@@ -917,6 +917,185 @@ is uncommented in the top-level CMakeLists.txt file when building; change to dir
 \hspace{1cm} {\tt Input/ore.xml}
 
 \end{enumerate}
+
+\subsection{How to build ORE Python Wheels on Windows}
+
+This section is a stand-alone HOWTO for building ore and oreswig, including Python wrappers and wheels, at the DOS command line using cmake and VS 2022.  
+
+\subsubsection*{Prerequisites}
+ 
+\begin{itemize}
+\item python: The following tools need to be up to date: \\
+ {\tt python -m ensurepip } \\
+ {\tt pip install build }
+\item boost: Download the binaries from the link below.  This release was tested against boost version 1.72.  It is important to download these precompiled binaries (rather than compiling yourself from source code) because the binaries include ZLIB support which this build requires. \\
+\url{https://sourceforge.net/projects/boost/files/boost-binaries}
+\item  swig: You need to either install the binaries, or install the source code and build yourself
+ \item ore and oreswig: You need to install the source code. Instructions for building with cmake are provided below.
+ \end{itemize}
+ 
+\subsubsection*{Environment variables}
+ 
+Set the following environment variables to the paths where the above items live on your machine, e.g:
+ 
+{\tt set DEMO\_BOOST\_ROOT=C:{\bs}repos{\bs}boost{\bs}boost\_1\_81\_0} \\
+{\tt set DEMO\_BOOST\_LIB=C:{\bs}repos{\bs}boost{\bs}boost\_1\_81\_0{\bs}lib{\bs}x64{\bs}lib} \\
+{\tt set DEMO\_SWIG\_DIR=C:{\bs}repos{\bs}swigwin-4.1.1} \\
+{\tt set DEMO\_ORE\_DIR=C:{\bs}repos{\bs}ore } \\
+{\tt set DEMO\_ORE\_SWIG\_DIR=C:{\bs}repos{\bs}oreswig}
+ 
+\subsubsection*{Build ORE}
+ 
+Generate the project files:
+ 
+\medskip
+{\tt cd \%DEMO\_ORE\_DIR\%} \\
+{\tt mkdir build }\\
+{\tt cd \%DEMO\_ORE\_DIR\%{\bs}build} \\
+{\tt set BOOST\_INCLUDEDIR=\%DEMO\_BOOST\_ROOT\%} \\
+{\tt set BOOST\_LIBRARYDIR=\%DEMO\_BOOST\_LIB\%} \\
+%{\tt "C:{\bs}Program Files{\bs}CMake{\bs}bin{\bs}cmake.exe" .. $\backslash$\\
+{\tt cmake .. $\backslash$\\
+\hspace{1cm} -DBoost\_NO\_WARN\_NEW\_VERSIONS=1 $\backslash$\\
+\hspace{1cm} -Wno-dev -G "Visual Studio 17 2022" $\backslash$ \\
+\hspace{1cm} -A x64 $\backslash$\\
+\hspace{1cm} -DMSVC\_LINK\_DYNAMIC\_RUNTIME=OFF}
+
+\medskip
+This will create \%DEMO\_ORE\_DIR\%{\bs}build{\bs}ORE.sln
+ 
+\medskip
+Build:
+ 
+\medskip
+{\tt cd \%DEMO\_ORE\_DIR\%{\bs}build} \\
+%{\tt "C:{\bs}Program Files{\bs}CMake{\bs}bin{\bs}cmake.exe" -{}-build . -{}-config Release}
+{\tt cmake -{}-build . -{}-config Release}
+
+\medskip
+This will create  \%DEMO\_ORE\_DIR\%{\bs}build{\bs}OREAnalytics{\bs}orea{\bs}Release{\bs}OREAnalytics-x64-mt.lib
+ 
+\subsubsection*{Build ORE-SWIG Wrapper and Wheel}
+ 
+In contrast to the generic cmake-based SWIG build in section \ref{sec:oreswig}, we are now resorting to python's setup.py.
+ 
+\medskip
+{\tt cd \%DEMO\_ORE\_SWIG\_DIR\%{\bs}OREAnalytics-SWIG{\bs}Python} \\
+{\tt set BOOST\_ROOT=\%DEMO\_BOOST\_ROOT\%} \\
+{\tt set BOOST\_LIB=\%DEMO\_BOOST\_LIB\%} \\
+{\tt set ORE\_DIR=\%DEMO\_ORE\_DIR\%} \\
+{\tt set PATH=\%PATH\%;\%DEMO\_SWIG\_DIR\%} \\
+{\tt set ORE\_STATIC\_RUNTIME=1} \\
+{\tt python setup.py wrap} \\
+{\tt python setup.py build} \\
+{\tt python setup.py test} \\
+{\tt python -m build -{}-wheel} 
+ 
+\medskip
+This will create 
+\begin{itemize}
+\item the Python module and static library in folder {\tt <PATH>{\bs}build{\bs}lib.win-amd64-cpython-310} (the directory name depends on the machine and python version)
+\item the wheel file (filename.whl) in folder {\tt <PATH>{\bs}dist}
+\end{itemize}
+where {\tt <PATH>} stands for {\tt \%DEMO\_ORE\_SWIG\_DIR\%{\bs}OREAnalytics-SWIG{\bs}Python}.
+
+\medskip
+To use the wrapper directly: \\
+\medskip
+{\tt cd <PATH>{\bs}Examples} \\
+{\tt set PYTHONPATH=<PATH>{\bs}build{\bs}lib.win-amd64-cpython-310} \\
+{\tt python commodityforward.py}
+
+\medskip
+To use the wheel:
+ 
+{\tt cd <PATH>{\bs}Examples} \\
+{\tt python -m venv env1} \\
+{\tt .{\bs}env1{\bs}Scripts{\bs}activate.bat} \\
+{\tt pip install <PATH>{\bs}dist{\bs}filename.whl} \\
+{\tt python commodityforward.py} \\
+{\tt deactivate} \\
+{\tt rmdir /s /q env1} \\
+
+\subsection{How to build ORE Python Wheels on Linux and macOS}
+
+This section is a stand-alone HOWTO for building and using a python wheel for OREAnalytics on Linux or macOS.
+
+\subsubsection*{Prerequisites}
+
+\begin{itemize}
+\item python: Ensure that python3, pip and virtualenv are installed and up to date\\ 
+{\tt pip install build}
+\item boost and swig: You need to either install the binaries,  or install the source code and build yourself
+\item ore and oreswig: You need to install the source code. Instructions for building with cmake are provided below.
+\end{itemize}
+
+\subsubsection*{Environment variables}
+
+Set the following environment variables to the paths where the above items live on your machine, e.g:
+
+\medskip
+{\tt export DEMO\_BOOST\_DIR=/home/username/quaternion/boost\_1\_81\_0} \\
+{\tt export DEMO\_ORE\_DIR=/home/username/quaternion/ore} \\
+{\tt export DEMO\_ORE\_SWIG\_DIR=/home/username/quaternion/oreswig}
+
+\subsubsection*{Build ORE}
+
+Use cmake to generate the project Makefiles
+
+\medskip
+{\tt cd \$DEMO\_ORE\_DIR} \\
+{\tt mkdir build} \\
+{\tt cd \$DEMO\_ORE\_DIR/build} \\
+{\tt cmake .. \\
+\hspace{1cm} -DCMAKE\_POSITION\_INDEPENDENT\_CODE=ON $\backslash$\\
+\hspace{1cm} -DORE\_BUILD\_DOC=OFF $\backslash$ \\
+\hspace{1cm} -DORE\_BUILD\_EXAMPLES=OFF $\backslash$ \\
+\hspace{1cm} -DORE\_BUILD\_TESTS=OFF $\backslash$\\
+\hspace{1cm} -DORE\_BUILD\_APP=OFF $\backslash$\\
+\hspace{1cm} -DBoost\_NO\_WARN\_NEW\_VERSIONS=1 $\backslash$\\
+\hspace{1cm} -DBoost\_NO\_SYSTEM\_PATHS=1 $\backslash$\\
+\hspace{1cm} -DBOOST\_ROOT=\$DEMO\_BOOST\_DIR }
+
+\medskip
+This will generate \$DEMO\_ORE\_DIR/build/Makefile
+
+\medskip
+Execute the following to kick off the build:
+
+\medskip
+{\tt cd \$DEMO\_ORE\_DIR/build} \\
+{\tt cmake -{}-build} . 
+
+\medskip
+This will generate \$DEMO\_ORE\_DIR/build/OREAnalytics/orea/libOREAnalytics.so
+
+\subsubsection*{Build ORE-SWIG Wrapper and Wheel}
+
+In contrast to the generic cmake-based SWIG build in section \ref{sec:oreswig}, we are now resorting to python's setup.py. 
+
+\medskip
+{\tt cd \$DEMO\_ORE\_SWIG\_DIR/OREAnalytics-SWIG/Python} \\
+{\tt export ORE=\$DEMO\_ORE\_DIR} \\
+{\tt export BOOST=\$DEMO\_BOOST\_DIR} \\
+{\tt python setup.py wrap} \\
+{\tt python setup.py build} \\
+{\tt python3 -m build -{}-wheel}
+
+\medskip
+will then generate the wheel file (filename.whl) in folder \$DEMO\_ORE\_SWIG\_DIR/OREAnalytics-SWIG/Python/dist.
+
+\medskip
+To use the wheel:
+
+\medskip
+{\tt cd \$DEMO\_ORE\_SWIG\_DIR/OREAnalytics-SWIG/Python/Examples} \\
+{\tt python -m venv env1} \\
+{\tt . ./env1/bin/activate} \\
+{\tt pip install \$DEMO\_ORE\_SWIG\_DIR/OREAnalytics-SWIG/Python/dist/filename.whl} \\
+{\tt python3 commodityforward.py} \\
+{\tt deactivate} \\
+{\tt rm -rf env1}
 
 %========================================================
 \section{Examples}\label{sec:examples}
