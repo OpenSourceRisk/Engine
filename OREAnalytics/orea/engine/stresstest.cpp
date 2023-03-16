@@ -23,7 +23,6 @@
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
-#include <ql/instruments/forwardrateagreement.hpp>
 #include <ql/instruments/makeois.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
 #include <ql/math/solvers1d/newtonsafe.hpp>
@@ -33,6 +32,7 @@
 #include <ql/termstructures/yield/oisratehelper.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
 #include <qle/instruments/deposit.hpp>
+#include <qle/instruments/forwardrateagreement.hpp>
 #include <qle/instruments/fxforward.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
