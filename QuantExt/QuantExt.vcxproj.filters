@@ -1408,6 +1408,111 @@
     <ClInclude Include="qle\pricingengines\analyticdigitalamericanengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\hullwhitebucketing.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\accrualbondrepoengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\blackbondoptionengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\blackindexcdsoptionengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingbondrepoengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingbondtrsengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingcreditlinkedswapengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\indexcdstrancheengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\midpointcdoengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\midpointindexcdsengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\bondoption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\bondrepo.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\bondtotalreturnswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\creditlinkedswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\indexcdsoption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\indexcreditdefaultswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\riskparticipationagreement.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\riskparticipationagreement_tlock.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\syntheticcdo.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\basket.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\constantlosslatentmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\defaultlossmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\defaultprobabilitylatentmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\extendedconstantlosslatentmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\gaussianlhplossmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\homogeneouspooldef.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\hwconstantparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\inhomogeneouspooldef.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\poollossmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\implieddefaulttermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\bondtrscashflow.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\cashflows.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\cashflowtable.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\compositeindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\blockmatrixinverse.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -2413,6 +2518,84 @@
     </ClCompile>
     <ClCompile Include="qle\processes\irhwstateprocess.cpp">
       <Filter>processes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\hullwhitebucketing.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\accrualbondrepoengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\blackbondoptionengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\blackindexcdsoptionengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\discountingbondrepoengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\discountingbondtrsengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\discountingcreditlinkedswapengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\indexcdstrancheengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\midpointcdoengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\midpointindexcdsengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\bondoption.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\bondrepo.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\bondtotalreturnswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\creditlinkedswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\indexcdsoption.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\indexcreditdefaultswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\riskparticipationagreement.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\riskparticipationagreement_tlock.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\syntheticcdo.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\basket.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\gaussianlhplossmodel.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\bondtrscashflow.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\cashflows.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\cashflowtable.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\compositeindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\math\blockmatrixinverse.cpp">
+      <Filter>math</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

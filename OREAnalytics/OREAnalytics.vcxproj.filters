@@ -225,6 +225,69 @@
     <ClInclude Include="orea\engine\amcvaluationengine.hpp">
       <Filter>engine</Filter>
     </ClInclude>
+    <ClInclude Include="orea\cube\cube_io.hpp">
+      <Filter>cube</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\cube\cubecsvreader.hpp">
+      <Filter>cube</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\cube\jaggedcube.hpp">
+      <Filter>cube</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\cube\jointnpvcube.hpp">
+      <Filter>cube</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\cube\jointnpvsensicube.hpp">
+      <Filter>cube</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\cube\sparsenpvcube.hpp">
+      <Filter>cube</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\app\analytic.hpp">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\app\analyticsmanager.hpp">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\app\inputparameters.hpp">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\app\marketcalibrationreport.hpp">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\app\marketdatacsvloader.hpp">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\app\marketdatainmemoryloader.hpp">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\app\marketdataloader.hpp">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\deltascenario.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\deltascenariofactory.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\scenariosimmarketplus.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\multithreadedvaluationengine.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\parsensitivityanalysis.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\parsensitivitycubestream.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\sensitivityanalysisplus.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\zerotoparcube.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -390,6 +453,66 @@
       <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="orea\engine\amcvaluationengine.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\cube\cube_io.cpp">
+      <Filter>cube</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\cube\cubecsvreader.cpp">
+      <Filter>cube</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\cube\jointnpvcube.cpp">
+      <Filter>cube</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\cube\jointnpvsensicube.cpp">
+      <Filter>cube</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\cube\sparsenpvcube.cpp">
+      <Filter>cube</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\app\analytic.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\app\analyticsmanager.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\app\inputparameters.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\app\marketcalibrationreport.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\app\marketdatacsvloader.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\app\marketdatainmemoryloader.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\app\marketdataloader.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\deltascenario.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\deltascenariofactory.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\scenariosimmarketplus.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\multithreadedvaluationengine.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\parsensitivityanalysis.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\parsensitivitycubestream.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\sensitivityanalysisplus.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\zerotoparcube.cpp">
       <Filter>engine</Filter>
     </ClCompile>
   </ItemGroup>

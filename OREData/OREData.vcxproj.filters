@@ -663,9 +663,6 @@
     <ClInclude Include="ored\configuration\reportconfig.hpp">
       <Filter>configuration</Filter>
     </ClInclude>
-    <ClInclude Include="ored\configuration\smiledynamicsconfig.hpp">
-      <Filter>configuration</Filter>
-    </ClInclude>
     <ClInclude Include="ored\model\marketobserver.hpp">
       <Filter>model</Filter>
     </ClInclude>
@@ -875,6 +872,93 @@
     </ClInclude>
     <ClInclude Include="ored\portfolio\multilegoption.hpp">
       <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\fxtouchoption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\fxtouchoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\fxbarrieroption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\utilities\initbuilders.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\commoditydigitalapo.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\bondoption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\bondrepo.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\bondtotalreturnswap.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\indexcreditdefaultswap.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\indexcreditdefaultswapoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\bondoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\bondrepo.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\bondtotalreturnswap.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\cdo.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\capfloorednonstandardyoyleg.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\creditlinkedswap.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\basketdata.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\cdo.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\convertiblebonddata.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\convertiblebondreferencedata.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\creditlinkedswap.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\equityderivative.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\fxderivative.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\indexcreditdefaultswap.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\indexcreditdefaultswapdata.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\indexcreditdefaultswapoption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\tranche.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\utilities\currencyhedgedequityindexdecomposition.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\utilities\filteredbufferedlogger.hpp">
+      <Filter>utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1379,9 +1463,6 @@
     <ClCompile Include="ored\configuration\reportconfig.cpp">
       <Filter>configuration</Filter>
     </ClCompile>
-    <ClCompile Include="ored\configuration\smiledynamicsconfig.cpp">
-      <Filter>configuration</Filter>
-    </ClCompile>
     <ClCompile Include="ored\configuration\iborfallbackconfig.cpp">
       <Filter>configuration</Filter>
     </ClCompile>
@@ -1526,6 +1607,180 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\multilegoption.cpp">
       <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\commodityapomodelbuilder.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\utilities\initbuilders.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\commoditydigitalapo.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\bondoption.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\bondrepo.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\bondtotalreturnswap.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\indexcreditdefaultswap.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\indexcreditdefaultswapoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\bondoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\bondrepo.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\bondtotalreturnswap.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\cdo.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\commodityapo.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\creditdefaultswap.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\creditdefaultswapoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\bond.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\capflooredcpileg.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\capfloorednonstandardyoyleg.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\capflooredyoyleg.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\commodityasianoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\commodityforward.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\commodityoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\commodityspreadoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\commodityswap.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\commodityswaption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\creditlinkedswap.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\equityasianoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\equitybarrieroption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\equitycompositeoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\equitydigitaloption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\equitydoublebarrieroption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\equitydoubletouchoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\equityforward.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\equityfuturesoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\equityoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\equitytouchoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\forwardbond.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\fxasianoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\fxbarrieroption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\fxdigitalbarrieroption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\fxdigitaloption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\fxdoublebarrieroption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\fxdoubletouchoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\fxforward.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\fxtouchoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\quantoequityoption.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\varianceswap.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\basketdata.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\cdo.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\convertiblebonddata.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\convertiblebondreferencedata.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\creditlinkedswap.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\indexcreditdefaultswap.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\indexcreditdefaultswapdata.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\indexcreditdefaultswapoption.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\tranche.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\utilities\currencyhedgedequityindexdecomposition.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\utilities\filteredbufferedlogger.cpp">
+      <Filter>utilities</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
