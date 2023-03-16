@@ -111,6 +111,7 @@ instruments/deposit.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/forwardbond.cpp
+instruments/forwardrateagreement.cpp
 instruments/fxforward.cpp
 instruments/genericswaption.cpp
 instruments/impliedbondspread.cpp
@@ -238,6 +239,7 @@ pricingengines/inflationcapfloorengines.cpp
 pricingengines/lgmconvolutionsolver.cpp
 pricingengines/mccamcurrencyswapengine.cpp
 pricingengines/mccamfxoptionengine.cpp
+pricingengines/mclgmfraengine.cpp
 pricingengines/mclgmswapengine.cpp
 pricingengines/mclgmswaptionengine.cpp
 pricingengines/mcmultilegbaseengine.cpp
@@ -518,6 +520,7 @@ instruments/deposit.hpp
 instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
 instruments/forwardbond.hpp
+instruments/forwardrateagreement.hpp
 instruments/fxforward.hpp
 instruments/genericswaption.hpp
 instruments/impliedbondspread.hpp
@@ -690,6 +693,7 @@ pricingengines/inflationcapfloorengines.hpp
 pricingengines/lgmconvolutionsolver.hpp
 pricingengines/mccamcurrencyswapengine.hpp
 pricingengines/mccamfxoptionengine.hpp
+pricingengines/mclgmfraengine.hpp
 pricingengines/mclgmswapengine.hpp
 pricingengines/mclgmswaptionengine.hpp
 pricingengines/mcmultilegbaseengine.hpp
