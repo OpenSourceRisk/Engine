@@ -846,7 +846,7 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseCommodityIndex(s);
+            ret_idx = parseCommodityIndex(s, true, QuantLib::Handle<QuantExt::PriceTermStructure>(), QuantLib::NullCalendar(), false);
         } catch (...) {
         }
     }

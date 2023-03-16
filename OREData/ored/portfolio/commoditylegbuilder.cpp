@@ -424,6 +424,7 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<CommodityFutureConvention> commFutureConv;
     boost::optional<pair<Calendar, Real>> offPeakPowerData;
+    bool balanceOfTheMonth = false;
     if (conventions->has(commName)) {
         boost::shared_ptr<Convention> commConv = conventions->get(commName);
 
@@ -437,6 +438,7 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
         // If commodity future convention
         commFutureConv = boost::dynamic_pointer_cast<CommodityFutureConvention>(commConv);
         if (commFutureConv) {
+            balanceOfTheMonth = commFutureConv->balanceOfTheMonth();
             commCal = commFutureConv->calendar();
             if (const auto& oppid = commFutureConv->offPeakPowerIndexData()) {
                 offPeakPowerData = make_pair(oppid->peakCalendar(), oppid->offPeakHours());
@@ -629,7 +631,11 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
                   .withPricingDates(pricingDates)
                   .withPaymentDates(paymentDates)
                   .withDailyExpiryOffset(dailyExpOffset)
-                  .withFxIndex(fxIndex);
+                  .withFxIndex(fxIndex)
+                  .withIsAveraging(floatingLegData->isAveraged() && balanceOfTheMonth)
+                  .withPricingCalendar(pricingCalendar)
+                  .includeEndDate(floatingLegData->includePeriodEnd())
+                  .excludeStartDate(floatingLegData->excludePeriodStart());
 
         // Possibly update the leg's quantities.
         updateQuantities(leg, allAveraging_, floatingLegData->commodityQuantityFrequency(), schedule,
