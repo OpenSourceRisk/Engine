@@ -303,6 +303,8 @@ boost::shared_ptr<FloatingRateCoupon> flrcpn(const boost::shared_ptr<CashFlow>& 
 
 // is coupon fixed coupon (throws if coupon type not recognised)
 bool isFixedCoupon(const boost::shared_ptr<CashFlow>& c, const Date& today) {
+    if (auto bma = boost::dynamic_pointer_cast<AverageBMACoupon>(c))
+        return bma->fixingDates().front() <= today;
     auto flc = flrcpn(c);
     if (flc != nullptr)
         return flc->fixingDate() <= today;
@@ -315,6 +317,12 @@ bool isFixedCoupon(const boost::shared_ptr<CashFlow>& c, const Date& today) {
 
 // return future fixing date or pay date
 Date eventDate(const boost::shared_ptr<CashFlow>& c, const Date& today) {
+    if (auto bma = boost::dynamic_pointer_cast<AverageBMACoupon>(c)) {
+        if (bma->fixingDates().front() <= today)
+            return c->date();
+        else
+            return bma->fixingDates().front();
+    }
     auto flc = flrcpn(c);
     if (flc == nullptr || flc->fixingDate() <= today)
         return c->date();
@@ -563,30 +571,30 @@ void McMultiLegBaseEngine::calculate() const {
                     flr = boost::make_shared<IborCoupon>(
                         on->date(), on->nominal(), on->accrualStartDate(), on->accrualEndDate(), on->fixingDays(),
                         boost::make_shared<IborIndex>(
-                            "proxy-ibor", (on->accrualEndDate() - on->accrualStartDate()) * Days, on->fixingDays(),
+                            on->overnightIndex()->familyName(), 1 * Days, on->overnightIndex()->fixingDays(),
                             on->overnightIndex()->currency(), on->overnightIndex()->fixingCalendar(),
                             on->overnightIndex()->businessDayConvention(), on->overnightIndex()->endOfMonth(),
-                            on->dayCounter(), on->overnightIndex()->forwardingTermStructure()),
+                            on->overnightIndex()->dayCounter(), on->overnightIndex()->forwardingTermStructure()),
                         on->gearing(), on->spread(), on->referencePeriodStart(), on->referencePeriodEnd(),
-                        on->dayCounter(), false, Date());
+                        on->dayCounter(), true, Date());
                 } else if (auto on = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(cpn)) {
                     flr = boost::make_shared<IborCoupon>(
                         on->date(), on->nominal(), on->accrualStartDate(), on->accrualEndDate(), on->fixingDays(),
                         boost::make_shared<IborIndex>(
-                            "proxy-ibor", (on->accrualEndDate() - on->accrualStartDate()) * Days, on->fixingDays(),
+                            on->overnightIndex()->familyName(), 1 * Days, on->overnightIndex()->fixingDays(),
                             on->overnightIndex()->currency(), on->overnightIndex()->fixingCalendar(),
                             on->overnightIndex()->businessDayConvention(), on->overnightIndex()->endOfMonth(),
-                            on->dayCounter(), on->overnightIndex()->forwardingTermStructure()),
+                            on->overnightIndex()->dayCounter(), on->overnightIndex()->forwardingTermStructure()),
                         on->gearing(), on->spread(), on->referencePeriodStart(), on->referencePeriodEnd(),
-                        on->dayCounter(), false, Date());
+                        on->dayCounter(), true, Date());
                 } else if (auto bma = boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(cpn)) {
                     auto bmaIndex = boost::dynamic_pointer_cast<BMAIndex>(bma->index());
                     QL_REQUIRE(bmaIndex, "McMultiLegBaseEngine: could not cast to BMAIndex, internal error.");
                     flr = boost::make_shared<IborCoupon>(
                         bma->date(), bma->nominal(), bma->accrualStartDate(), bma->accrualEndDate(), bma->fixingDays(),
                         boost::make_shared<IborIndex>(
-                            "proxy-ibor", (bma->accrualEndDate() - bma->accrualStartDate()) * Days, bma->fixingDays(),
-                            bmaIndex->currency(), bmaIndex->fixingCalendar(), Following, false, bma->dayCounter(),
+                            bmaIndex->familyName(), bmaIndex->tenor(), bmaIndex->fixingDays(),
+                            bmaIndex->currency(), bmaIndex->fixingCalendar(), Following, false, bmaIndex->dayCounter(),
                             bmaIndex->forwardingTermStructure()),
                         bma->gearing(), bma->spread(), bma->referencePeriodStart(), bma->referencePeriodEnd(),
                         bma->dayCounter(), false, Date());
