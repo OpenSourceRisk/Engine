@@ -56,6 +56,7 @@ public:
     const QuantLib::Date& asof() { return asof_; }
     const boost::filesystem::path& resultsPath() const { return resultsPath_; }
     const std::string& baseCurrency() { return baseCurrency_; }
+    const std::string& resultCurrency() { return resultCurrency_; }
     bool continueOnError() { return continueOnError_; }
     bool lazyMarketBuilding() { return lazyMarketBuilding_; }
     bool buildFailedTrades() { return buildFailedTrades_; }
@@ -272,6 +273,7 @@ protected:
     QuantLib::Date asof_;
     boost::filesystem::path resultsPath_;
     std::string baseCurrency_;
+    std::string resultCurrency_;
     bool continueOnError_ = true;
     bool lazyMarketBuilding_ = true;
     bool buildFailedTrades_ = true;

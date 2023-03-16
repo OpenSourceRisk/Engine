@@ -229,18 +229,21 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
         if (runTypes.find(analytic) == runTypes.end())
             continue;
 
+        std::string effectiveResultCurrency =
+            inputs_->resultCurrency().empty() ? inputs_->baseCurrency() : inputs_->resultCurrency();
+
         if (analytic == "NPV" ||
             analytic == "NPV_LAGGED") {
             out_ << setw(tab_) << left << "Pricing: NPV Report " << flush;
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeNpv(*report, inputs_->baseCurrency(), market_, "", portfolio_);
+                .writeNpv(*report, effectiveResultCurrency, market_, "", portfolio_);
             reports_[analytic]["npv"] = report;
             out_ << "OK" << endl;
             if (inputs_->outputAdditionalResults()) {
                 out_ << setw(tab_) << left << "Pricing: Additional Results " << flush;
                 boost::shared_ptr<InMemoryReport> addReport = boost::make_shared<InMemoryReport>();;
                 ore::analytics::ReportWriter(inputs_->reportNaString())
-                    .writeAdditionalResultsReport(*addReport, portfolio_, market_, inputs_->baseCurrency());
+                    .writeAdditionalResultsReport(*addReport, portfolio_, market_, effectiveResultCurrency);
                 reports_[analytic]["additional_results"] = addReport;
                 out_ << "OK" << endl;
             }
@@ -273,7 +276,7 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             out_ << setw(tab_) << left << "Pricing: Cashflow Report " << flush;
             string marketConfig = inputs_->marketConfig("pricing");
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeCashflow(*report, inputs_->baseCurrency(), portfolio_, market_, marketConfig,
+                .writeCashflow(*report, effectiveResultCurrency, portfolio_, market_, marketConfig,
                                inputs_->includePastCashflows());
             reports_[analytic]["cashflow"] = report;
             out_ << "OK" << endl;
@@ -282,10 +285,11 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             out_ << setw(tab_) << left << "Pricing: Cashflow NPV report " << flush;
             string marketConfig = inputs_->marketConfig("pricing");
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeCashflow(tmpReport, inputs_->baseCurrency(), portfolio_, market_, marketConfig,
+                .writeCashflow(tmpReport, effectiveResultCurrency, portfolio_, market_, marketConfig,
                                inputs_->includePastCashflows());
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeCashflowNpv(*report, tmpReport, market_, marketConfig, inputs_->baseCurrency(), inputs_->cashflowHorizon());
+                .writeCashflowNpv(*report, tmpReport, market_, marketConfig, effectiveResultCurrency,
+                                  inputs_->cashflowHorizon());
             reports_[analytic]["cashflownpv"] = report;
             out_ << "OK" << endl;
         }

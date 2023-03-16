@@ -88,7 +88,7 @@ void OREAppInputParameters::loadParameters() {
 
     resultsPath_ = outputPath;
 
-    baseCurrency_ = params_->get("npv", "baseCurrency");
+    baseCurrency_ = resultCurrency_ = params_->get("npv", "baseCurrency");
 
     tmp = params_->get("setup", "useMarketDataFixings", false);
     if (tmp != "")
