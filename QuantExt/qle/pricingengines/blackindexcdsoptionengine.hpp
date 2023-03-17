@@ -54,8 +54,6 @@ private:
 
     void spreadStrikeCalculate(QuantLib::Real fep) const;
     void priceStrikeCalculate(QuantLib::Real fep) const;
-
-    Real forwardRiskyAnnuityStrike() const;
 };
 
 } // namespace QuantExt

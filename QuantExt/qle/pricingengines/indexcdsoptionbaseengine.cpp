@@ -128,4 +128,68 @@ void IndexCdsOptionBaseEngine::registerWithMarket() {
     registerWith(volatility_);
 }
 
+Real IndexCdsOptionBaseEngine::forwardRiskyAnnuityStrike() const {
+
+    // Underlying index CDS.
+    const auto& cds = *arguments_.swap;
+
+    // This method returns RPV01(0; t_e, T, K) / SP(t_e; K). This is the quantity in formula 11.9 of O'Kane 2008.
+    // There is a slight modification in that we divide by the survival probability to t_E using the flat curve at
+    // the strike spread that we create here.
+
+    // Standard index CDS schedule.
+    Schedule schedule = MakeSchedule()
+                            .from(cds.protectionStartDate())
+                            .to(cds.maturity())
+                            .withCalendar(WeekendsOnly())
+                            .withFrequency(Quarterly)
+                            .withConvention(Following)
+                            .withTerminationDateConvention(Unadjusted)
+                            .withRule(DateGeneration::CDS2015);
+
+    // Derive hazard rate curve from a single forward starting CDS matching the characteristics of underlying index
+    // CDS with a running spread equal to the strike.
+    const Real& strike = arguments_.strike;
+    Real accuracy = 1e-8;
+
+    auto strikeCds = boost::make_shared<CreditDefaultSwap>(
+        Protection::Buyer, 1 / accuracy, strike, schedule, Following, Actual360(), cds.settlesAccrual(),
+        cds.protectionPaymentTime(), cds.protectionStartDate(), boost::shared_ptr<Claim>(), Actual360(true), true,
+        cds.tradeDate(), cds.cashSettlementDays());
+    // dummy engine
+    strikeCds->setPricingEngine(boost::make_shared<MidPointCdsEngine>(
+        Handle<DefaultProbabilityTermStructure>(
+            boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0, Actual365Fixed())),
+        0.0, Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()))));
+
+    Real hazardRate;
+    try {
+        hazardRate = strikeCds->impliedHazardRate(0.0, discount_, Actual365Fixed(), indexRecovery_, accuracy);
+    } catch (const std::exception& e) {
+        QL_FAIL("can not imply fair hazard rate for CDS at option strike "
+                << strike << ". Is the strike correct? Exception: " << e.what());
+    }
+
+    Handle<DefaultProbabilityTermStructure> dph(
+        boost::make_shared<FlatHazardRate>(discount_->referenceDate(), hazardRate, Actual365Fixed()));
+
+    // Calculate the forward risky strike annuity.
+    strikeCds->setPricingEngine(boost::make_shared<QuantExt::MidPointCdsEngine>(dph, indexRecovery_, discount_));
+    Real rpv01_K = std::abs(strikeCds->couponLegNPV() + strikeCds->accrualRebateNPV()) /
+                   (strikeCds->notional() * strikeCds->runningSpread());
+    results_.additionalResults["riskyAnnuityStrike"] = rpv01_K;
+    QL_REQUIRE(rpv01_K > 0.0, "BlackIndexCdsOptionEngine: strike based risky annuity must be positive.");
+
+    // Survival to exercise
+    const Date& exerciseDate = arguments_.exercise->dates().front();
+    Probability spToExercise = dph->survivalProbability(exerciseDate);
+    results_.additionalResults["strikeBasedSurvivalToExercise"] = spToExercise;
+
+    // Forward risky annuity strike (still has discount but divides out the survival probability)
+    Real rpv01_K_fwd = rpv01_K / spToExercise;
+    results_.additionalResults["forwardRiskyAnnuityStrike"] = rpv01_K_fwd;
+
+    return rpv01_K_fwd;
+}
+
 } // namespace QuantExt
