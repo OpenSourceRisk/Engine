@@ -27,11 +27,16 @@ CrossCurrencySwap::CrossCurrencySwap(const Envelope& env, const LegData& leg0, c
     : Swap(env, leg0, leg1, "CrossCurrencySwap") {}
 
 void CrossCurrencySwap::checkCrossCurrencySwap() {
-    // A Cross Currency Swap must have 2 legs (either Fixed or Floating)
+    // First 2 legs of Cross Currency Swap must be either Fixed or Floating - additional legs are allowed, but only of type Cashflow
     QL_REQUIRE(legData_.size() >= 2, "A Cross Currency Swap must have at least 2 legs - Trade: " + id());
-    for (Size i = 0; i < legData_.size(); i++)
-        QL_REQUIRE(legData_[i].legType() == "Fixed" || legData_[i].legType() == "Floating",
-                   "CrossCurrencySwap leg #" << i << " must be either Fixed or Floating");
+    for (Size i = 0; i < legData_.size(); i++) {
+        if (i < 2)
+            QL_REQUIRE(legData_[i].legType() == "Fixed" || legData_[i].legType() == "Floating",
+                       "CrossCurrencySwap leg #" << i << " must be either Fixed or Floating");
+        else
+            QL_REQUIRE(legData_[i].legType() == "Cashflow",
+                       "CrossCurrencySwap leg #" << i << " can only be Cashflow");
+    }
 
     // Check leg currencies
     Currency legCcy0 = parseCurrencyWithMinors(legData_[0].currency());
