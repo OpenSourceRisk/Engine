@@ -46,6 +46,11 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
     QL_REQUIRE(volatility_->type() == CreditVolCurve::Type::Spread,
                "NumericalIntegrationIndexCdsOptionEngine::doCalc(): implemented for spread vols only at the moment!");
 
+    // checks
+
+    QL_REQUIRE(indexRecovery_ != Null<Real>(),
+               "NumericalIntegrationIndexCdsOptionEngine::doCalc(): index recovery is not given.");
+
     // set some variables for later use
 
     Date exerciseDate = arguments_.exercise->dates().front();
