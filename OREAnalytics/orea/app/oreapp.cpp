@@ -130,8 +130,8 @@ std::vector<std::string> OREApp::getErrors() {
     return errors;
 }
     
-int OREApp::run(const std::vector<std::string>& marketData,
-                const std::vector<std::string>& fixingData) {
+void OREApp::run(const std::vector<std::string>& marketData,
+                 const std::vector<std::string>& fixingData) {
     try {
         LOG("ORE analytics starting");
 
@@ -169,12 +169,10 @@ int OREApp::run(const std::vector<std::string>& marketData,
         ALOG(oss.str());
         CONSOLE(oss.str());
         QL_FAIL(oss.str());
-        return 1;
+        return;
     }
     
     LOG("ORE analytics done");
-
-    return 0;
 }
 
 vector<string> OREApp::getFileNames(const string& fileString, const string& path) {
@@ -231,50 +229,41 @@ void OREApp::analytics() {
         LOG("ORE analytics starting");
 
         QL_REQUIRE(params_, "ORE input parameters not set");
-        
-        // Read all inputs from params and files referenced in params
-        CONSOLEW("Loading inputs");
-        auto inputs = boost::make_shared<InputParameters>();
-        buildInputParameters(inputs, params_);
-        auto outputs = boost::make_shared<OutputParameters>(params_);
-        CONSOLE("OK");
-        
-        // Set global evaluation date, though already set in the OREAppInputParameters c'tor
-        Settings::instance().evaluationDate() = inputs->asof();
+                
+        Settings::instance().evaluationDate() = inputs_->asof();
 
-        // FIXME
-        GlobalPseudoCurrencyMarketParameters::instance().set(inputs->pricingEngine()->globalParameters());
+        GlobalPseudoCurrencyMarketParameters::instance().set(inputs_->pricingEngine()->globalParameters());
 
         // Initialize the global conventions 
-        InstrumentConventions::instance().setConventions(inputs->conventions());
+        InstrumentConventions::instance().setConventions(inputs_->conventions());
 
         // Create a market data loader that reads market data, fixings, dividends from csv files
         auto csvLoader = buildCsvLoader(params_);
-        auto loader = boost::make_shared<MarketDataCsvLoader>(inputs, csvLoader);
+        auto loader = boost::make_shared<MarketDataCsvLoader>(inputs_, csvLoader);
 
         // Create the analytics manager
-        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs, loader);
+        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs_, loader);
         LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
         CONSOLEW("Requested analytics");
-        CONSOLE(to_string(inputs->analytics()));
-        LOG("Requested analytics: " << to_string(inputs->analytics()));
+        CONSOLE(to_string(inputs_->analytics()));
+        LOG("Requested analytics: " << to_string(inputs_->analytics()));
 
         // Run the requested analytics
-        analyticsManager_->runAnalytics(inputs->analytics());
+        analyticsManager_->runAnalytics(inputs_->analytics());
 
         // Write reports to files in the results path
         Analytic::analytic_reports reports = analyticsManager_->reports();
         analyticsManager_->toFile(reports,
-                                  inputs->resultsPath().string(), outputs->fileNameMap(),
-                                  inputs->csvSeparator(), inputs->csvCommentCharacter(),
-                                  inputs->csvQuoteChar(), inputs->reportNaString());
+                                  inputs_->resultsPath().string(), outputs_->fileNameMap(),
+                                  inputs_->csvSeparator(), inputs_->csvCommentCharacter(),
+                                  inputs_->csvQuoteChar(), inputs_->reportNaString());
 
         // Write npv cube(s)
         for (auto a : analyticsManager_->npvCubes()) {
             for (auto b : a.second) {
                 LOG("write npv cube " << b.first);
                 string reportName = b.first;
-                std::string fileName = inputs->resultsPath().string() + "/" + outputs->outputFileName(reportName, "dat");
+                std::string fileName = inputs_->resultsPath().string() + "/" + outputs_->outputFileName(reportName, "dat");
                 LOG("write npv cube " << reportName << " to file " << fileName);
                 saveCube(fileName, *b.second);
             }
@@ -284,7 +273,7 @@ void OREApp::analytics() {
         for (auto a : analyticsManager_->mktCubes()) {
             for (auto b : a.second) {
                 string reportName = b.first;
-                std::string fileName = inputs->resultsPath().string() + "/" + outputs->outputFileName(reportName, "dat");
+                std::string fileName = inputs_->resultsPath().string() + "/" + outputs_->outputFileName(reportName, "dat");
                 LOG("write market cube " << reportName << " to file " << fileName);
                 saveAggregationScenarioData(fileName, *b.second);
             }
@@ -302,9 +291,17 @@ void OREApp::analytics() {
 }
 
 OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console)
-    : params_(params), inputs_(nullptr), asof_(parseDate(params_->get("setup", "asofDate"))), cubeDepth_(0) {
+    : params_(params), inputs_(nullptr), cubeDepth_(0) {
 
+    // Read all inputs from params and files referenced in params
+    CONSOLEW("Loading inputs");
+    inputs_ = boost::make_shared<InputParameters>();
+    buildInputParameters(inputs_, params_);
+    outputs_ = boost::make_shared<OutputParameters>(params_);
+    CONSOLE("OK");
+    
     // Set global evaluation date
+    asof_ = inputs_->asof();
     Settings::instance().evaluationDate() = asof_;
 
     // initialise some pointers
@@ -335,6 +332,9 @@ OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::stri
         ConsoleLog::instance().switchOn();
     }
 
+    // Close any open loggers
+    closeLog();
+
     // Initialise file logger and buffered logger
     string logFilePath = (inputs_->resultsPath() / logFile).string();
     boost::filesystem::path p{inputs_->resultsPath()};
@@ -355,7 +355,7 @@ OREApp::~OREApp() {
     closeLog();
 }
 
-int OREApp::run(bool useAnalytics) {
+void OREApp::run(bool useAnalytics) {
 
     cpu_timer timer;
     
@@ -363,7 +363,7 @@ int OREApp::run(bool useAnalytics) {
 
         if (useAnalytics) {
             analytics();
-            return 0;
+            return;
         }
 
         CONSOLE("=====================================");
@@ -564,7 +564,7 @@ int OREApp::run(bool useAnalytics) {
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
         CONSOLE("Error: " << e.what());
-        return 1;
+        return;
     }
 
     timer.stop();
@@ -572,8 +572,6 @@ int OREApp::run(bool useAnalytics) {
     CONSOLE("ORE done.");
 
     LOG("ORE done.");
-
-    return 0;
 }
 
 void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
@@ -1428,6 +1426,8 @@ void OREApp::readSetup() {
 }
 
 void OREApp::setupLog() {
+    closeLog();
+
     string outputPath = params_->get("setup", "outputPath");
     string logFile = outputPath + "/" + params_->get("setup", "logFile");
     Size logMask = 15; // Default level
