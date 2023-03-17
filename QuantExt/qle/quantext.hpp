@@ -355,6 +355,7 @@
 #include <qle/pricingengines/mcmultilegoptionengine.hpp>
 #include <qle/pricingengines/midpointcdoengine.hpp>
 #include <qle/pricingengines/midpointindexcdsengine.hpp>
+#include <qle/pricingengines/numericalintegrationindexcdsoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
