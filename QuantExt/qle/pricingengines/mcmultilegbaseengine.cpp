@@ -27,6 +27,7 @@
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/indexes/swapindex.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
 #include <ql/math/matrixutilities/qrdecomposition.hpp>
@@ -113,8 +114,12 @@ void McMultiLegBaseEngine::computePath(const MultiPath& p) const {
                 indexDscCurve_[i][j]->move(pathDates_[pathIndex], p[indexCcyIndex_[i][j]][pathIndex]);
             // compute payoff and add to underlying pvs
             Real fixing = modelIndex_[i][j] != nullptr ? modelIndex_[i][j]->fixing(fixingDate_[i][j]) : 0.0;
-            Real rate =
-                std::min(std::max(gearing_[i][j] * fixing + spread_[i][j], flooredRate_[i][j]), cappedRate_[i][j]);
+            Real underlying_rate = gearing_[i][j] * fixing + spread_[i][j];
+            Real rate = std::max(underlying_rate, flooredRate_[i][j]);
+            if (isNakedOption_[i][j])
+                rate -= std::min(underlying_rate, cappedRate_[i][j]);
+            else
+                rate = std::min(rate, cappedRate_[i][j]);
             Real amount = rate * accrualTime_[i][j] * nominal_[i][j];
             Size payCcyNum = payCcyNum_[i][j];
             Real dsc = model_->discountBond(payCcyNum, t, payTime_[i][j], p[payCcyIndex_[i][j]][pathIndex],
@@ -297,8 +302,10 @@ boost::shared_ptr<FloatingRateCoupon> flrcpn(const boost::shared_ptr<CashFlow>& 
     auto cfc = boost::dynamic_pointer_cast<CappedFlooredCoupon>(c);
     if (cfc)
         return cfc->underlying();
-    else
-        return boost::dynamic_pointer_cast<FloatingRateCoupon>(c);
+    auto scfc = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(c);
+    if (scfc && scfc->underlying())
+        return scfc->underlying()->underlying();
+    return boost::dynamic_pointer_cast<FloatingRateCoupon>(c);
 }
 
 // is coupon fixed coupon (throws if coupon type not recognised)
@@ -446,6 +453,7 @@ void McMultiLegBaseEngine::calculate() const {
     payTime_.clear();
     cappedRate_.clear();
     flooredRate_.clear();
+    isNakedOption_.clear();
     //
     indexCcyIndex_.resize(times_.size());
     payCcyNum_.resize(times_.size());
@@ -465,6 +473,7 @@ void McMultiLegBaseEngine::calculate() const {
     payTime_.resize(times_.size());
     cappedRate_.resize(times_.size());
     flooredRate_.resize(times_.size());
+    isNakedOption_.resize(times_.size());
     //
     trappedCoupons_.clear();
     trappedCoupons_.resize(times_.size());
@@ -560,6 +569,7 @@ void McMultiLegBaseEngine::calculate() const {
                 nominal_[index].push_back(multiplier * (cpn != nullptr ? cpn->nominal() : leg_[i][j]->amount()));
                 cappedRate_[index].push_back(QL_MAX_REAL);
                 flooredRate_[index].push_back(-QL_MAX_REAL);
+                isNakedOption_[index].push_back(false);
             } else {
                 auto flr = flrcpn(leg_[i][j]);
                 QL_REQUIRE(flr != nullptr,
@@ -578,6 +588,28 @@ void McMultiLegBaseEngine::calculate() const {
                         on->gearing(), on->spread(), on->referencePeriodStart(), on->referencePeriodEnd(),
                         on->dayCounter(), true, Date());
                 } else if (auto on = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(cpn)) {
+                    flr = boost::make_shared<IborCoupon>(
+                        on->date(), on->nominal(), on->accrualStartDate(), on->accrualEndDate(), on->fixingDays(),
+                        boost::make_shared<IborIndex>(
+                            on->overnightIndex()->familyName(), 1 * Days, on->overnightIndex()->fixingDays(),
+                            on->overnightIndex()->currency(), on->overnightIndex()->fixingCalendar(),
+                            on->overnightIndex()->businessDayConvention(), on->overnightIndex()->endOfMonth(),
+                            on->overnightIndex()->dayCounter(), on->overnightIndex()->forwardingTermStructure()),
+                        on->gearing(), on->spread(), on->referencePeriodStart(), on->referencePeriodEnd(),
+                        on->dayCounter(), true, Date());
+                } else if (auto aon = boost::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(cpn)) {
+                    auto on = aon->underlying();
+                    flr = boost::make_shared<IborCoupon>(
+                        on->date(), on->nominal(), on->accrualStartDate(), on->accrualEndDate(), on->fixingDays(),
+                        boost::make_shared<IborIndex>(
+                            on->overnightIndex()->familyName(), 1 * Days, on->overnightIndex()->fixingDays(),
+                            on->overnightIndex()->currency(), on->overnightIndex()->fixingCalendar(),
+                            on->overnightIndex()->businessDayConvention(), on->overnightIndex()->endOfMonth(),
+                            on->overnightIndex()->dayCounter(), on->overnightIndex()->forwardingTermStructure()),
+                        on->gearing(), on->spread(), on->referencePeriodStart(), on->referencePeriodEnd(),
+                        on->dayCounter(), true, Date());
+                } else if (auto aon = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(cpn)) {
+                    auto on = aon->underlying();
                     flr = boost::make_shared<IborCoupon>(
                         on->date(), on->nominal(), on->accrualStartDate(), on->accrualEndDate(), on->fixingDays(),
                         boost::make_shared<IborIndex>(
@@ -608,18 +640,38 @@ void McMultiLegBaseEngine::calculate() const {
                 // cap / floors
 
                 Real cappedRate = QL_MAX_REAL, flooredRate = -QL_MAX_REAL;
-                auto cfc = boost::dynamic_pointer_cast<CappedFlooredCoupon>(leg_[i][j]);
-                if (cfc != nullptr && cfc->isCapped()) {
-                    cappedRate = cfc->cap();
+                bool isNakedOption = false;
+                if (auto cfc = boost::dynamic_pointer_cast<CappedFlooredCoupon>(leg_[i][j])) {
                     allowsVanillaValuation = false;
-                }
-                if (cfc != nullptr && cfc->isFloored()) {
-                    flooredRate = cfc->floor();
+                    if (cfc->isCapped())
+                        cappedRate = cfc->cap();
+                    if (cfc->isFloored())
+                        flooredRate = cfc->floor();
+                } else if (auto scfc = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(leg_[i][j])) {
                     allowsVanillaValuation = false;
+                    isNakedOption = true;
+                    if (scfc->isCap())
+                        cappedRate = scfc->cap();
+                    if (scfc->isFloor())
+                        flooredRate = scfc->floor();
+                } else if (auto cfonc = boost::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(leg_[i][j])) {
+                    allowsVanillaValuation = false;
+                    isNakedOption = cfonc->nakedOption();
+                    if (cfonc->isCapped())
+                        cappedRate = cfonc->cap();
+                    if (cfonc->isFloored())
+                        flooredRate = cfonc->floor();
+                } else if (auto cfaonc = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(leg_[i][j])) {
+                    allowsVanillaValuation = false;
+                    isNakedOption = cfaonc->nakedOption();
+                    if (cfaonc->isCapped())
+                        cappedRate = cfaonc->cap();
+                    if (cfaonc->isFloored())
+                        flooredRate = cfaonc->floor();
                 }
                 cappedRate_[index].push_back(cappedRate);
                 flooredRate_[index].push_back(flooredRate);
-                // TODO add support for stripped capped floored coupon
+                isNakedOption_[index].push_back(isNakedOption);
 
                 // handle the floating rate coupon types
 
