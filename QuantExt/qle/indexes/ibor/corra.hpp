@@ -41,6 +41,13 @@ public:
     explicit CORRA(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : OvernightIndex("CORRA", 0, CADCurrency(), Canada(), Actual365Fixed(), h) {}
 };
+
+class CORRATerm : public TermRateIndex {
+public:
+    CORRATerm(const Period& tenor, const Handle<YieldTermStructure>& h)
+        : TermRateIndex("CORRA-TERM", tenor, 2, CADCurrency(), Canada(), ModifiedFollowing, false, Actual365Fixed(), h,
+                        boost::make_shared<CORRA>(h)) {}
+};
 } // namespace QuantExt
 
 #endif
