@@ -29,6 +29,8 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
+#include <boost/math/constants/constants.hpp>
+
 #include <numeric>
 
 using namespace QuantLib;
@@ -90,22 +92,24 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
         if (std::abs(w) < 1.0E-6)
             a *= 1.0 - 0.5 * w + 1.0 / 6.0 * w * w - 1.0 / 24.0 * w * w * w;
         else
-            a *= (1.0 - std::exp(w)) / w;
+            a *= (1.0 - std::exp(-w)) / w;
         return (s - c) * a;
     };
 
     // calibrate the default-adjusted forward spread m to the forward price
-
-    Brent brent;
 
     struct target_function_m {
         Real t, T, r, recovery, runningSpread, stdDev, forwardPrice;
         std::function<Real(Real, Real, Real, Real, Real, Real, Real, Real)>& Vc;
         SimpsonIntegral simpson = SimpsonIntegral(1.0E-7, 100);
         Real operator()(Real m) const {
-            return simpson([this, m](Real x) { return Vc(t, T, r, recovery, runningSpread, stdDev, m, x); }, -10.0,
-                           10.0) -
-                   forwardPrice;
+            return simpson(
+                       [this, m](Real x) {
+                           return Vc(t, T, r, recovery, runningSpread, stdDev, m, x) * std::exp(-0.5 * x * x) /
+                                  boost::math::constants::root_two_pi<Real>();
+                       },
+                       -10.0, 10.0) -
+                   (1.0 - forwardPrice);
         }
     };
 
@@ -119,6 +123,8 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
                              Vc};
 
     Real m;
+    Brent brent;
+    brent.setLowerBound(0.0);
     try {
         m = brent.solve(target, 1.0E-7, arguments_.swap->fairSpreadClean(), 0.01);
     } catch (const std::exception e) {
@@ -141,7 +147,8 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
                 [exerciseTime, maturityTime, averageInterestRate, this, stdDev, m, omega, H, &Vc](Real x) {
                     return std::max(0.0, omega * Vc(exerciseTime, maturityTime, averageInterestRate, indexRecovery_,
                                                     arguments_.swap->runningSpread(), stdDev, m, x) +
-                                             H + arguments_.realisedFep);
+                                             H + arguments_.realisedFep / arguments_.swap->notional()) *
+                           std::exp(-0.5 * x * x) / boost::math::constants::root_two_pi<Real>();
                 },
                 -10.0, 10.0);
     } catch (const std::exception e) {
