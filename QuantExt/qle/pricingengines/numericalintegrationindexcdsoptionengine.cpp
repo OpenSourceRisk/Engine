@@ -74,10 +74,12 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
     results_.additionalResults["volatility"] = volatility;
     results_.additionalResults["standardDeviation"] = stdDev;
     results_.additionalResults["upfront"] = underlyingNpv;
+    results_.additionalResults["valuationDateNotional"] = arguments_.swap->notional();
+    results_.additionalResults["tradeDateNotional"] = arguments_.tradeDateNtl;
 
     // calculate the default-adjusted forward price
 
-    Real forwardPrice = 1.0 - (underlyingNpv - fep()) / arguments_.swap->notional() / discToExercise;
+    Real forwardPrice = 1.0 - (underlyingNpv + fep()) / arguments_.swap->notional() / discToExercise;
 
     results_.additionalResults["fepAdjustedForwardPrice"] = forwardPrice;
     results_.additionalResults["forwardPrice"] = 1.0 - underlyingNpv / arguments_.swap->notional() / discToExercise;
@@ -133,24 +135,63 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
     results_.additionalResults["fepAdjustedForwardSpread"] = m;
     results_.additionalResults["forwardSpread"] = arguments_.swap->fairSpreadClean();
 
-    // compute the strike adjustment
+    // compute the strike adjustment, notice that the strike adjustment has to be paid on the trade date notional by
+    // convention
 
-    Real H = forwardRiskyAnnuityStrike() * (arguments_.swap->runningSpread() - arguments_.strike);
+    Real H = arguments_.tradeDateNtl / arguments_.swap->notional() * forwardRiskyAnnuityStrike() *
+             (arguments_.swap->runningSpread() - arguments_.strike);
 
-    // price the option
+    // find the exercise boundary
+
+    struct option_payoff {
+        Real t, T, r, recovery, runningSpread, stdDev, forwardSpread, H, realisedFep;
+        std::function<Real(Real, Real, Real, Real, Real, Real, Real, Real)>& Vc;
+        Real operator()(Real x) const {
+            return (Vc(t, T, r, recovery, runningSpread, stdDev, forwardSpread, x) + H + realisedFep) *
+                   std::exp(-0.5 * x * x) / boost::math::constants::root_two_pi<Real>();
+        }
+    };
+
+    option_payoff payoff{exerciseTime,
+                         maturityTime,
+                         averageInterestRate,
+                         indexRecovery_,
+                         arguments_.swap->runningSpread(),
+                         stdDev,
+                         m,
+                         H,
+                         arguments_.realisedFep / arguments_.swap->notional(),
+                         Vc};
+
+    Real exerciseBoundary;
+    Brent brent2;
+    try {
+        exerciseBoundary = brent2.solve(payoff, 1.0E-7, 0.0, 0.01);
+    } catch (const std::exception e) {
+        QL_FAIL("NumericalIntegrationIndexCdsOptionEngine::doCalc(): failed to find exercise boundary: " << e.what());
+    }
+
+    // compute the option value
+
+    Real lowerIntegrationBound = -10.0, upperIntegrationBound = 10.0;
+    if (arguments_.swap->side() == Protection::Buyer) {
+        lowerIntegrationBound = exerciseBoundary;
+    } else {
+        upperIntegrationBound = exerciseBoundary;
+    }
 
     SimpsonIntegral simpson(1.0E-7, 100);
     try {
-        results_.value =
-            arguments_.swap->notional() * discToExercise *
-            simpson(
-                [exerciseTime, maturityTime, averageInterestRate, this, stdDev, m, omega, H, &Vc](Real x) {
-                    return std::max(0.0, omega * Vc(exerciseTime, maturityTime, averageInterestRate, indexRecovery_,
-                                                    arguments_.swap->runningSpread(), stdDev, m, x) +
-                                             H + arguments_.realisedFep / arguments_.swap->notional()) *
-                           std::exp(-0.5 * x * x) / boost::math::constants::root_two_pi<Real>();
-                },
-                -10.0, 10.0);
+        results_.value = arguments_.swap->notional() * discToExercise *
+                         simpson(
+                             [exerciseTime, maturityTime, averageInterestRate, this, stdDev, m, omega, H, &Vc](Real x) {
+                                 return omega *
+                                        (Vc(exerciseTime, maturityTime, averageInterestRate, indexRecovery_,
+                                            arguments_.swap->runningSpread(), stdDev, m, x) +
+                                         H + arguments_.realisedFep / arguments_.swap->notional()) *
+                                        std::exp(-0.5 * x * x) / boost::math::constants::root_two_pi<Real>();
+                             },
+                             lowerIntegrationBound, upperIntegrationBound);
     } catch (const std::exception e) {
         QL_FAIL("NumericalIntegrationIndexCdsOptionEngine::doCalc(): failed to compute option payoff: " << e.what());
     }
