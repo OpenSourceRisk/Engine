@@ -76,6 +76,9 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
     results_.additionalResults["upfront"] = underlyingNpv;
     results_.additionalResults["valuationDateNotional"] = arguments_.swap->notional();
     results_.additionalResults["tradeDateNotional"] = arguments_.tradeDateNtl;
+    results_.additionalResults["strikeSpread"] = arguments_.strike;
+    results_.additionalResults["callPut"] =
+        arguments_.swap->side() == Protection::Buyer ? std::string("Call") : std::string("Put");
 
     // calculate the default-adjusted forward price
 
@@ -86,8 +89,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
     // the default-adjusted index value Vc using a continuous annuity
 
-    std::function<Real(Real, Real, Real, Real, Real, Real, Real, Real)> Vc = [](Real t, Real T, Real r, Real R, Real c,
-                                                                                Real stdDev, Real m, Real x) {
+    auto Vc = [](Real t, Real T, Real r, Real R, Real c, Real stdDev, Real m, Real x) {
         Real s = m * std::exp(-0.5 * stdDev * stdDev + stdDev * x);
         Real w = (s / (1.0 - R) + r) * (T - t);
         Real a = (T - t);
@@ -100,68 +102,46 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
     // calibrate the default-adjusted forward spread m to the forward price
 
-    struct target_function_m {
-        Real t, T, r, recovery, runningSpread, stdDev, forwardPrice;
-        std::function<Real(Real, Real, Real, Real, Real, Real, Real, Real)>& Vc;
-        SimpsonIntegral simpson = SimpsonIntegral(1.0E-7, 100);
-        Real operator()(Real m) const {
-            return simpson(
-                       [this, m](Real x) {
-                           return Vc(t, T, r, recovery, runningSpread, stdDev, m, x) * std::exp(-0.5 * x * x) /
-                                  boost::math::constants::root_two_pi<Real>();
-                       },
-                       -10.0, 10.0) -
-                   (1.0 - forwardPrice);
-        }
+    SimpsonIntegral simpson = SimpsonIntegral(1.0E-7, 100);
+
+    auto target = [this, &Vc, &simpson, exerciseTime, maturityTime, averageInterestRate, stdDev, forwardPrice](Real m) {
+        return simpson(
+                   [this, &Vc, exerciseTime, maturityTime, averageInterestRate, stdDev, m](Real x) {
+                       return Vc(exerciseTime, maturityTime, averageInterestRate, indexRecovery_,
+                                 arguments_.swap->runningSpread(), stdDev, m, x) *
+                              std::exp(-0.5 * x * x) / boost::math::constants::root_two_pi<Real>();
+                   },
+                   -10.0, 10.0) -
+               (1.0 - forwardPrice);
     };
 
-    target_function_m target{exerciseTime,
-                             maturityTime,
-                             averageInterestRate,
-                             indexRecovery_,
-                             arguments_.swap->runningSpread(),
-                             stdDev,
-                             forwardPrice,
-                             Vc};
-
-    Real m;
+    Real fepAdjustedForwardSpread;
     Brent brent;
     brent.setLowerBound(0.0);
     try {
-        m = brent.solve(target, 1.0E-7, arguments_.swap->fairSpreadClean(), 0.01);
+        fepAdjustedForwardSpread = brent.solve(target, 1.0E-7, arguments_.swap->fairSpreadClean(), 0.01);
     } catch (const std::exception e) {
         QL_FAIL("NumericalIntegrationIndexCdsOptionEngine::doCalc(): failed to calibrate forward spread: " << e.what());
     }
-    results_.additionalResults["fepAdjustedForwardSpread"] = m;
+    results_.additionalResults["fepAdjustedForwardSpread"] = fepAdjustedForwardSpread;
     results_.additionalResults["forwardSpread"] = arguments_.swap->fairSpreadClean();
 
-    // compute the strike adjustment, notice that the strike adjustment has to be paid on the trade date notional by
-    // convention
+    // compute the strike adjustment, notice that the strike adjustment is scaled by trade date notional
 
-    Real H = arguments_.tradeDateNtl / arguments_.swap->notional() * forwardRiskyAnnuityStrike() *
-             (arguments_.swap->runningSpread() - arguments_.strike);
+    Real strikeAdjustment = arguments_.tradeDateNtl / arguments_.swap->notional() * forwardRiskyAnnuityStrike() *
+                            (arguments_.swap->runningSpread() - arguments_.strike);
+
+    results_.additionalResults["strikeAdjustment"] = strikeAdjustment;
 
     // find the exercise boundary
 
-    struct option_payoff {
-        Real t, T, r, recovery, runningSpread, stdDev, forwardSpread, H, realisedFep;
-        std::function<Real(Real, Real, Real, Real, Real, Real, Real, Real)>& Vc;
-        Real operator()(Real x) const {
-            return (Vc(t, T, r, recovery, runningSpread, stdDev, forwardSpread, x) + H + realisedFep) *
-                   std::exp(-0.5 * x * x) / boost::math::constants::root_two_pi<Real>();
-        }
+    auto payoff = [this, &Vc, exerciseTime, maturityTime, averageInterestRate, stdDev, fepAdjustedForwardSpread,
+                   strikeAdjustment](Real x) {
+        return (Vc(exerciseTime, maturityTime, averageInterestRate, indexRecovery_, arguments_.swap->runningSpread(),
+                   stdDev, fepAdjustedForwardSpread, x) +
+                strikeAdjustment + arguments_.realisedFep / arguments_.swap->notional()) *
+               std::exp(-0.5 * x * x) / boost::math::constants::root_two_pi<Real>();
     };
-
-    option_payoff payoff{exerciseTime,
-                         maturityTime,
-                         averageInterestRate,
-                         indexRecovery_,
-                         arguments_.swap->runningSpread(),
-                         stdDev,
-                         m,
-                         H,
-                         arguments_.realisedFep / arguments_.swap->notional(),
-                         Vc};
 
     Real exerciseBoundary;
     Brent brent2;
@@ -170,6 +150,8 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
     } catch (const std::exception e) {
         QL_FAIL("NumericalIntegrationIndexCdsOptionEngine::doCalc(): failed to find exercise boundary: " << e.what());
     }
+    results_.additionalResults["exerciseBoundary"] =
+        fepAdjustedForwardSpread * std::exp(-0.5 * stdDev * stdDev + stdDev * exerciseBoundary);
 
     // compute the option value
 
@@ -180,15 +162,15 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
         upperIntegrationBound = exerciseBoundary;
     }
 
-    SimpsonIntegral simpson(1.0E-7, 100);
     try {
         results_.value = arguments_.swap->notional() * discToExercise *
                          simpson(
-                             [exerciseTime, maturityTime, averageInterestRate, this, stdDev, m, omega, H, &Vc](Real x) {
+                             [exerciseTime, maturityTime, averageInterestRate, this, stdDev, fepAdjustedForwardSpread,
+                              omega, strikeAdjustment, &Vc](Real x) {
                                  return omega *
                                         (Vc(exerciseTime, maturityTime, averageInterestRate, indexRecovery_,
-                                            arguments_.swap->runningSpread(), stdDev, m, x) +
-                                         H + arguments_.realisedFep / arguments_.swap->notional()) *
+                                            arguments_.swap->runningSpread(), stdDev, fepAdjustedForwardSpread, x) +
+                                         strikeAdjustment + arguments_.realisedFep / arguments_.swap->notional()) *
                                         std::exp(-0.5 * x * x) / boost::math::constants::root_two_pi<Real>();
                              },
                              lowerIntegrationBound, upperIntegrationBound);
