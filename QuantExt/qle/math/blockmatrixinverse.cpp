@@ -34,7 +34,7 @@ bool isNull(const Matrix& A) {
     return true;
 } // isNull
 
-bool isNull(const SparseMatrix& A) {
+bool isNull(const QuantLib::SparseMatrix& A) {
     for (auto i1 = A.begin1(); i1 != A.end1(); ++i1) {
         for (auto i2 = i1.begin(); i2 != i1.end(); ++i2) {
             if (std::abs(*i2) > QL_EPSILON)
@@ -46,13 +46,13 @@ bool isNull(const SparseMatrix& A) {
 
 } // namespace
 
-SparseMatrix inverse(SparseMatrix m) {
+QuantLib::SparseMatrix inverse(QuantLib::SparseMatrix m) {
     QL_REQUIRE(m.size1() == m.size2(), "matrix is not square");
     boost::numeric::ublas::permutation_matrix<Size> pert(m.size1());
     // lu decomposition
     const Size singular = lu_factorize(m, pert);
     QL_REQUIRE(singular == 0, "singular matrix given");
-    SparseMatrix inverse = boost::numeric::ublas::identity_matrix<Real>(m.size1());
+    QuantLib::SparseMatrix inverse = boost::numeric::ublas::identity_matrix<Real>(m.size1());
     // backsubstitution
     boost::numeric::ublas::lu_substitute(m, pert, inverse);
     return inverse;
@@ -134,7 +134,7 @@ Matrix blockMatrixInverse(const Matrix& A, const std::vector<Size>& blockIndices
     return res;
 } // blockMatrixInverse(Matrix)
 
-SparseMatrix blockMatrixInverse(const SparseMatrix& A, const std::vector<Size>& blockIndices) {
+QuantLib::SparseMatrix blockMatrixInverse(const QuantLib::SparseMatrix& A, const std::vector<Size>& blockIndices) {
 
     QL_REQUIRE(blockIndices.size() > 0, "blockMatrixInverse: at least one entry in blockIndices required");
     Size n = blockIndices.back();
@@ -143,7 +143,7 @@ SparseMatrix blockMatrixInverse(const SparseMatrix& A, const std::vector<Size>& 
                                               << "x" << n << ", n>0");
 
     if (blockIndices.size() == 1) {
-        SparseMatrix res = inverse(A);
+        QuantLib::SparseMatrix res = inverse(A);
         return res;
     }
 
@@ -159,13 +159,13 @@ SparseMatrix blockMatrixInverse(const SparseMatrix& A, const std::vector<Size>& 
     QL_REQUIRE(leftIndices.size() > 0, "blockMatrixInverse: expected left indices to be non-empty");
     QL_REQUIRE(rightIndices.size() > 0, "blockMatrixInverse: expected right indices to be non-empty");
 
-    SparseMatrix a = project(A, range(0, m), range(0, m));
-    SparseMatrix b = project(A, range(0, m), range(m, n));
-    SparseMatrix c = project(A, range(m, n), range(0, m));
-    SparseMatrix d = project(A, range(m, n), range(m, n));
+    QuantLib::SparseMatrix a = project(A, range(0, m), range(0, m));
+    QuantLib::SparseMatrix b = project(A, range(0, m), range(m, n));
+    QuantLib::SparseMatrix c = project(A, range(m, n), range(0, m));
+    QuantLib::SparseMatrix d = project(A, range(m, n), range(m, n));
 
-    SparseMatrix aInv = blockMatrixInverse(a, leftIndices);
-    SparseMatrix tmp(n - m, m), schurCompInv, p(m, n - m), p1(n - m, n - m), p2(m, m), b2(m, n - m), c2(n - m, m);
+    QuantLib::SparseMatrix aInv = blockMatrixInverse(a, leftIndices);
+    QuantLib::SparseMatrix tmp(n - m, m), schurCompInv, p(m, n - m), p1(n - m, n - m), p2(m, m), b2(m, n - m), c2(n - m, m);
     axpy_prod(c, aInv, tmp, true);
     if (isNull(c) || isNull(b))
         schurCompInv = blockMatrixInverse(d, rightIndices);
@@ -176,10 +176,10 @@ SparseMatrix blockMatrixInverse(const SparseMatrix& A, const std::vector<Size>& 
     axpy_prod(aInv, b, p, true);
     axpy_prod(-p, schurCompInv, b2);
     axpy_prod(b2, tmp, p2);
-    SparseMatrix a2 = aInv - p2;
+    QuantLib::SparseMatrix a2 = aInv - p2;
     axpy_prod(-schurCompInv, tmp, c2);
 
-    SparseMatrix res(n, n);
+    QuantLib::SparseMatrix res(n, n);
 
     for (auto i1 = a2.begin1(); i1 != a2.end1(); ++i1) {
         for (auto i2 = i1.begin(); i2 != i1.end(); ++i2) {
@@ -205,7 +205,7 @@ SparseMatrix blockMatrixInverse(const SparseMatrix& A, const std::vector<Size>& 
     return res;
 } // blockMatrixInverse(SparseMatrix)
 
-Real modifiedMaxNorm(const SparseMatrix& A) {
+Real modifiedMaxNorm(const QuantLib::SparseMatrix& A) {
     Real r = 0.0;
     for (auto i1 = A.begin1(); i1 != A.end1(); ++i1) {
         for (auto i2 = i1.begin(); i2 != i1.end(); ++i2) {
