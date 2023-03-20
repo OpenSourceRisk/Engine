@@ -160,11 +160,11 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
         ls_ << " (" << filepath << ':' << lineNo << ')';
     } else {
         if (len <= maxLen_) {
-        // pad out spaces
+            // pad out spaces
             ls_ << string(maxLen_ - len, ' ');
             ls_ << " (" << filepath << ':' << lineNo << ')';
-    } else {
-        // need to trim the filename to fit into maxLen chars
+        } else {
+            // need to trim the filename to fit into maxLen chars
             // need to remove (len - maxLen_) chars + 3 for the "..."
             ls_ << " (..." << string(filepath).substr(3 + len - maxLen_) << ':' << lineNo << ')';
         }
@@ -312,6 +312,43 @@ string EventMessage::jsonify(const string& s) const {
     boost::replace_all(str, "\r", "\\r");
     boost::replace_all(str, "\n", "\\n");
     return str;
+}
+
+
+std::ostream& operator<<(std::ostream& out, const StructuredMessage::Category& category) {
+    if (category == StructuredMessage::Category::Error)
+        out << "Error";
+    else if (category == StructuredMessage::Category::Warning)
+        out << "Warning";
+    else if (category == StructuredMessage::Category::Unknown)
+        out << "UnknownType";
+    else
+        QL_FAIL("operator<<: Unsupported enum value for StructuredMessage::Category");
+
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const StructuredMessage::Group& group) {
+    if (group == StructuredMessage::Group::Analytics)
+        out << "Analytics";
+    else if (group == StructuredMessage::Group::Configuration)
+        out << "Configuration";
+    else if (group == StructuredMessage::Group::Model)
+        out << "Model";
+    else if (group == StructuredMessage::Group::Curve)
+        out << "Curve";
+    else if (group == StructuredMessage::Group::Trade)
+        out << "Trade";
+    else if (group == StructuredMessage::Group::Fixing)
+        out << "Fixing";
+    else if (group == StructuredMessage::Group::ReferenceData)
+        out << "Reference Data";
+    else if (group == StructuredMessage::Group::Unknown)
+        out << "UnknownType";
+    else
+        QL_FAIL("operator<<: Unsupported enum value for StructuredMessage::Group");
+
+    return out;
 }
 
 } // namespace data

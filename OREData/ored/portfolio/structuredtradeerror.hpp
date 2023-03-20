@@ -33,16 +33,16 @@ namespace data {
 //! Utility class for Structured Trade errors, contains the Trade ID and Type
 class StructuredTradeErrorMessage : public StructuredMessage {
 public:
-    StructuredTradeErrorMessage(const boost::shared_ptr<Trade>& trade, const std::string& exceptionType,
+    StructuredTradeErrorMessage(const boost::shared_ptr<ore::data::Trade>& trade, const std::string& exceptionType,
                                 const std::string& exceptionWhat)
         : StructuredMessage(
-              "Error", "Trade", exceptionWhat,
+              Category::Error, Group::Trade, exceptionWhat,
               std::map<std::string, std::string>(
                   {{"exceptionType", exceptionType}, {"tradeId", trade->id()}, {"tradeType", trade->tradeType()}})) {}
 
     StructuredTradeErrorMessage(const std::string& tradeId, const std::string& tradeType,
                                 const std::string& exceptionType, const std::string& exceptionWhat = "")
-        : StructuredMessage("Error", "Trade", exceptionWhat,
+        : StructuredMessage(Category::Error, Group::Trade, exceptionWhat,
                             std::map<std::string, std::string>(
                                 {{"exceptionType", exceptionType}, {"tradeId", tradeId}, {"tradeType", tradeType}})) {}
 };
