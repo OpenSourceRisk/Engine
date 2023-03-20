@@ -230,7 +230,7 @@ LoggerStream::~LoggerStream() {
 }
 
 string StructuredMessage::json() const {
-    string msg = "{ \"category\":\"" + category_ + "\", \"group\":\"" + group_ + "\"," + " \"message\":\"" +
+    string msg = "{ \"category\":\"" + ore::data::to_string(category_) + "\", \"group\":\"" + ore::data::to_string(group_) + "\"," + " \"message\":\"" +
                  jsonify(message_) + "\"";
 
     if (!subFields_.empty()) {
@@ -289,8 +289,9 @@ string EventMessage::json() const {
             } else if (p.second.type() == typeid(bool)) {
                 value = to_string(boost::any_cast<bool>(p.second));
             } else {
-                WLOG(StructuredMessage("Error", "Event Message Logging", "Unrecognised value type for key '" + p.first + "'",
-                                       std::pair<string, string>()));
+                WLOG(StructuredMessage(StructuredMessage::Category::Error, StructuredMessage::Group::Logging,
+                                       "Unrecognised value type for key '" + p.first + "'",
+                                       std::pair<string, string>({"exceptionType", "Event Message Logging"})));
             }
 
             if (i > 0)
@@ -340,6 +341,8 @@ std::ostream& operator<<(std::ostream& out, const StructuredMessage::Group& grou
         out << "Trade";
     else if (group == StructuredMessage::Group::Fixing)
         out << "Fixing";
+    else if (group == StructuredMessage::Group::Logging)
+        out << "Logging";
     else if (group == StructuredMessage::Group::ReferenceData)
         out << "Reference Data";
     else if (group == StructuredMessage::Group::Unknown)
