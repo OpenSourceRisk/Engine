@@ -471,11 +471,15 @@ private:
 //}
 class StructuredMessage {
 public:
-    StructuredMessage(const string& category, const string& group, const string& message,
+    enum class Category { Error, Warning, Unknown };
+
+    enum class Group { Analytics, Configuration, Model, Curve, Trade, Fixing, ReferenceData, Unknown };
+
+    StructuredMessage(const Category& category, const Group& group, const string& message,
                       const std::map<string, string>& subFields = std::map<string, string>())
         : category_(category), group_(group), message_(message), subFields_(subFields) {}
 
-    StructuredMessage(const string& category, const string& group, const string& message,
+    StructuredMessage(const Category& category, const Group& group, const string& message,
                       const std::pair<string, string>& subField = std::pair<string, string>())
         : StructuredMessage(category, group, message, std::map<string, string>({subField})) {}
 
@@ -492,9 +496,15 @@ private:
     // utility function to delimit string for json, handles \" and \\ and control characters
     string jsonify(const string& s) const;
 
-    string category_, group_, message_;
+    Category category_;
+    Group group_;
+    string message_;
     std::map<string, string> subFields_;
 };
+
+std::ostream& operator<<(std::ostream& out, const StructuredMessage::Category&);
+
+std::ostream& operator<<(std::ostream& out, const StructuredMessage::Group&);
 
 inline std::ostream& operator<<(std::ostream& out, const StructuredMessage& sm) { return out << sm.msg(); }
 
