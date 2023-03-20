@@ -32,6 +32,7 @@ public:
 
 private:
     void doCalc() const override;
+    Real forwardRiskyAnnuityStrike(const Real strike) const;
 };
 
 } // namespace QuantExt
