@@ -473,7 +473,7 @@ class StructuredMessage {
 public:
     enum class Category { Error, Warning, Unknown };
 
-    enum class Group { Analytics, Configuration, Model, Curve, Trade, Fixing, ReferenceData, Unknown };
+    enum class Group { Analytics, Configuration, Model, Curve, Trade, Fixing, Logging, ReferenceData, Unknown };
 
     StructuredMessage(const Category& category, const Group& group, const string& message,
                       const std::map<string, string>& subFields = std::map<string, string>())
