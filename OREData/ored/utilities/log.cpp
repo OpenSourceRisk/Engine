@@ -22,11 +22,13 @@
 */
 
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem.hpp>
 #include <iomanip>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
+using namespace boost::filesystem;
 using namespace boost::posix_time;
 using namespace std;
 
@@ -145,18 +147,27 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
 
     // Filename & line no
     // format is " (file:line)"
+    const char* filepath;
+    if (rootPath_.empty()) {
+        filepath = filename;
+    } else {
+        filepath = relative(path(filename), rootPath_).string().c_str();
+    }
     int lineNoLen = (int)log10((double)lineNo) + 1;     // Length of the int as a string
-    int len = 2 + strlen(filename) + 1 + lineNoLen + 1; // " (" + file + ':' + line + ')'
+    int len = 2 + strlen(filepath) + 1 + lineNoLen + 1; // " (" + file + ':' + line + ')'
 
-    int maxLen = 30; // gives about 23 chars for the filename
-    if (len <= maxLen) {
-        ls_ << " (" << filename << ':' << lineNo << ')';
+    if (maxLen_ == 0) {
+        ls_ << " (" << filepath << ':' << lineNo << ')';
+    } else {
+        if (len <= maxLen_) {
         // pad out spaces
-        ls_ << string(maxLen - len, ' ');
+            ls_ << string(maxLen_ - len, ' ');
+            ls_ << " (" << filepath << ':' << lineNo << ')';
     } else {
         // need to trim the filename to fit into maxLen chars
-        // need to remove (len - maxLen) chars + 3 for the "..."
-        ls_ << " (..." << string(filename).substr(3 + len - maxLen) << ':' << lineNo << ')';
+            // need to remove (len - maxLen_) chars + 3 for the "..."
+            ls_ << " (..." << string(filepath).substr(3 + len - maxLen_) << ':' << lineNo << ')';
+        }
     }
 
     ls_ << " : ";
@@ -166,10 +177,10 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
         ls_ << " [" << pid_ << "] ";
 
     // update statistics
-    if(lastLineNo_ == lineNo && lastFileName_ == filename) {
+    if (lastLineNo_ == lineNo && lastFileName_ == filepath) {
         ++sameSourceLocationSince_;
     } else {
-        lastFileName_ = filename;
+        lastFileName_ = filepath;
         lastLineNo_ = lineNo;
         sameSourceLocationSince_ = 0;
         writeSuppressedMessagesHint_ = true;
