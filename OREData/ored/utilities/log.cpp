@@ -161,8 +161,7 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
     } else {
         if (len <= maxLen_) {
             // pad out spaces
-            ls_ << string(maxLen_ - len, ' ');
-            ls_ << " (" << filepath << ':' << lineNo << ')';
+            ls_ << string(maxLen_ - len, ' ') << " (" << filepath << ':' << lineNo << ')';
         } else {
             // need to trim the filename to fit into maxLen chars
             // need to remove (len - maxLen_) chars + 3 for the "..."
