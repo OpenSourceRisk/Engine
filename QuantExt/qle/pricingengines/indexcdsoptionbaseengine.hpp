@@ -61,9 +61,6 @@ protected:
     //! Engine specific calculation
     virtual void doCalc() const = 0;
 
-    //! compute the strike-based risky annuity
-    Real forwardRiskyAnnuityStrike() const;
-
     //! Register with market data
     void registerWithMarket();
 
