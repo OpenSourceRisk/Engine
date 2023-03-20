@@ -39,6 +39,7 @@
 #include <time.h>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <ql/qldefines.hpp>
@@ -284,6 +285,22 @@ public:
         boost::unique_lock<boost::shared_mutex> lock(mutex());
         mask_ = mask;
     }
+    const boost::filesystem::path& rootPath() {
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
+        return rootPath_;
+    }
+    void setRootPath(const boost::filesystem::path& pth) {
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
+        rootPath_ = pth;
+    }
+    int maxLen() {
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
+        return maxLen_;
+    }
+    void setMaxLen(const int n) {
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
+        maxLen_ = n;
+    }
 
     bool enabled() {
         boost::shared_lock<boost::shared_mutex> lock(mutex());
@@ -307,8 +324,10 @@ private:
     std::map<string, boost::shared_ptr<Logger>> loggers_;
     bool enabled_;
     unsigned mask_;
+    boost::filesystem::path rootPath_;
     std::ostringstream ls_;
 
+    int maxLen_ = 45;
     std::size_t sameSourceLocationSince_ = 0;
     bool writeSuppressedMessagesHint_ = true;
     std::size_t sameSourceLocationCutoff_ = 1000;
@@ -470,7 +489,7 @@ public:
     string json() const;
 
 private:
-    // utility function to delimate string for json, handles \" and \\ and control characters
+    // utility function to delimit string for json, handles \" and \\ and control characters
     string jsonify(const string& s) const;
 
     string category_, group_, message_;
