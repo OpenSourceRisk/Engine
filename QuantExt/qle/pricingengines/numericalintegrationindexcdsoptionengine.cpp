@@ -69,7 +69,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         // 1 price vol type model
 
-        results_.additionalResults["Model"] = "LognormalPriceVolatility";
+        results_.additionalResults["Model"] = std::string("LognormalPriceVolatility");
 
         // convert spread to strike if necessary
 
@@ -107,7 +107,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         // 2 spread vol type model
 
-        results_.additionalResults["Model"] = "LognormalSpreadVolatility";
+        results_.additionalResults["Model"] = std::string("LognormalSpreadVolatility");
 
         // compute average interest rate for underlying swap time interval
 
