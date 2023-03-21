@@ -271,9 +271,22 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                     flowType = "BMAaverage";
                             } else if (ptrFloat) {
                                 fixingDate = ptrFloat->fixingDate();
-                                fixingValue = ptrFloat->index()->fixing(fixingDate);
+                                fixingValue = ptrFloat-> index()->fixing(fixingDate);
                                 if (fixingDate > asof)
                                     flowType = "InterestProjected";
+                                if (auto c = boost::dynamic_pointer_cast<QuantLib::IborCoupon>(ptrFloat)) {
+                                    fixingValue = (c->rate() - c->spread()) / c->gearing();
+                                }
+                                if (auto c = boost::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(ptrFloat)) {
+                                    fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
+                                                   c->underlying()->gearing();
+                                }
+                                if (auto sc = boost::dynamic_pointer_cast<QuantLib::StrippedCappedFlooredCoupon>(ptrFloat)) {
+                                    if (auto c = boost::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(sc->underlying())) {
+                                        fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
+                                                       c->underlying()->gearing();
+                                    }
+                                }
                                 // for ON coupons the fixing value is the compounded / averaged rate, not the last
                                 // single ON fixing
                                 if (auto on = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(ptrFloat)) {

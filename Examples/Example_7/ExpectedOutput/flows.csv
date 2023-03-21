@@ -1,3 +1,3 @@
 #TradeId,Type,CashflowNo,LegNo,PayDate,FlowType,Amount,Currency,Coupon,Accrual,AccrualStartDate,AccrualEndDate,AccruedAmount,fixingDate,fixingValue,Notional,DiscountFactor,PresentValue,FXRate(Local-Base),PresentValue(Base),BaseCurrency,FloorStrike,CapStrike,FloorVolatility,CapVolatility
 FXFWD_EURUSD_10Y,FxForward,1,0,2026-03-01,Notional,1000000.0000,EUR,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,0.9599864296,959986.4295885050,1.0000000000,959986.4295885050,EUR,#N/A,#N/A,#N/A,#N/A
-FXFWD_EURUSD_10Y,FxForward,1,1,2026-03-01,Notional,-1100000.0000,USD,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,0.8035576701,-883913.4370770191,0.8831293157,-780609.8688614954,EUR,#N/A,#N/A,#N/A,#N/A
+FXFWD_EURUSD_10Y,FxForward,1,1,2026-03-01,Notional,-1100000.0000,USD,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,0.8035576701,-883913.4370770195,0.8831293157,-780609.8688614958,EUR,#N/A,#N/A,#N/A,#N/A
