@@ -345,9 +345,9 @@ private:
 #define MLOG(mask, text)                                                                                               \
     {                                                                                                                  \
         if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(mask)) {                         \
-            boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                          \
             std::ostringstream __ore_mlog_tmp_stringstream__;                                                          \
             __ore_mlog_tmp_stringstream__ << text;                                                                     \
+            boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                          \
             ore::data::Log::instance().header(mask, __FILE__, __LINE__);                                               \
             ore::data::Log::instance().logStream() << __ore_mlog_tmp_stringstream__.str();                             \
             ore::data::Log::instance().log(mask);                                                                      \
