@@ -20,6 +20,9 @@ def get_list_of_examples():
                    if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
 #                   if e == 'Example_39'], key=lambda e: int(e.split('_')[1]))
 
+def get_list_ore_academy():
+    return sorted([e for e in os.listdir(os.getcwd()) if e[:11] == 'OREAcademy_'])
+
 
 def print_on_console(line):
     print(line)
@@ -284,5 +287,5 @@ def run_example(example):
 
 
 if __name__ == "__main__":
-    for example in get_list_of_examples():
+    for example in (get_list_of_examples(), get_list_ore_academy()):
         run_example(example)
