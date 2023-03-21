@@ -291,7 +291,7 @@ void OREApp::analytics() {
 }
 
 OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, const boost::filesystem::path& logRootPath)
-    : params_(params), inputs_(nullptr), asof_(parseDate(params_->get("setup", "asofDate"))), cubeDepth_(0) {
+    : params_(params), inputs_(nullptr), cubeDepth_(0) {
 
     // Read all inputs from params and files referenced in params
     CONSOLEW("Loading inputs");
