@@ -508,6 +508,13 @@ std::ostream& operator<<(std::ostream& out, const StructuredMessage::Group&);
 
 inline std::ostream& operator<<(std::ostream& out, const StructuredMessage& sm) { return out << sm.msg(); }
 
+class StructuredLoggingErrorMessage : public StructuredMessage {
+public:
+    StructuredLoggingErrorMessage(const string& exceptionType, const string& exceptionWhat = "")
+        : StructuredMessage(Category::Error, Group::Logging, exceptionWhat,
+                            std::pair<std::string, std::string>({"exceptionType", exceptionType})){};
+};
+
 class EventMessage {
 public:
     EventMessage(const string& msg, const std::map<string, boost::any> data = {}) : message_(msg), data_(data) {}

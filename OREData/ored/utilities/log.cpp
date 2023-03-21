@@ -289,9 +289,8 @@ string EventMessage::json() const {
             } else if (p.second.type() == typeid(bool)) {
                 value = to_string(boost::any_cast<bool>(p.second));
             } else {
-                WLOG(StructuredMessage(StructuredMessage::Category::Error, StructuredMessage::Group::Logging,
-                                       "Unrecognised value type for key '" + p.first + "'",
-                                       std::pair<string, string>({"exceptionType", "Event Message Logging"})));
+                WLOG(StructuredLoggingErrorMessage("Event Message Logging",
+                                                   "Unrecognised value type for key '" + p.first + "'"));
             }
 
             if (i > 0)
