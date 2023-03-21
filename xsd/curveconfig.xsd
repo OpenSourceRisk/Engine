@@ -292,13 +292,13 @@
     <xs:sequence>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element name="Terms" minOccurs="0">
       <xs:choice>
         <xs:element type="xs:string" name="Expiries"/>
         <xs:element type="constantVolatilityConfig" name="Constant"/>
         <xs:element type="volatilityCurveConfig" name="Curve"/>
         <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
       </xs:choice>
-      <xs:element name="Terms" minOccurs="0">
     <xs:complexType>
       <xs:sequence>
         <xs:element name="Term" maxOccurs="unbounded">
