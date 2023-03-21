@@ -119,7 +119,8 @@ boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates,
                                                                      CubicInterpolation::FirstDerivative)));
         break;
     case YieldCurve::InterpolationMethod::ConvexMonotone:
-        yieldts.reset(new CurveType<QuantLib::ConvexMonotone>(dates, rates, dayCounter));
+        yieldts.reset(
+            new CurveType<QuantLib::ConvexMonotone>(dates, rates, dayCounter, Calendar(), {}, {}, QuantLib::ConvexMonotone()));
         break;
     case YieldCurve::InterpolationMethod::Quadratic:
          yieldts.reset(new CurveType<QuantExt::Quadratic>(dates, rates, dayCounter, QuantExt::Quadratic(1, 0, 1, 0, 1)));
