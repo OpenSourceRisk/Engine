@@ -287,5 +287,5 @@ def run_example(example):
 
 
 if __name__ == "__main__":
-    for example in (get_list_of_examples(), get_list_ore_academy()):
+    for example in (get_list_of_examples() + get_list_ore_academy()):
         run_example(example)
