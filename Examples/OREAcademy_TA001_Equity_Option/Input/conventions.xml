@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<Conventions>
+  <Zero>
+    <Id>EUR-ZERO-TENOR-BASED</Id>
+    <TenorBased>true</TenorBased>
+    <DayCounter>A365</DayCounter>
+    <Compounding>Continuous</Compounding>
+    <CompoundingFrequency>Daily</CompoundingFrequency>
+    <TenorCalendar>TARGET</TenorCalendar>
+    <SpotLag>2</SpotLag>
+    <SpotCalendar>TARGET</SpotCalendar>
+    <RollConvention>Following</RollConvention>
+    <EOM>false</EOM>
+  </Zero>
+  <Deposit>
+    <Id>EUR-ON-DEPOSIT-ESTER</Id>
+    <IndexBased>true</IndexBased>
+    <Index>EUR-ESTER</Index> 
+  </Deposit>
+  <OIS>
+    <Id>EUR-ESTER-OIS</Id>
+    <SpotLag>1</SpotLag>
+    <Index>EUR-ESTER</Index>
+    <FixedDayCounter>A360</FixedDayCounter>
+    <PaymentLag>1</PaymentLag>
+    <EOM>false</EOM>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedPaymentConvention>MF</FixedPaymentConvention>
+    <Rule>Backward</Rule>
+  </OIS>
+</Conventions>
