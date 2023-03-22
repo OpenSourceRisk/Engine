@@ -65,12 +65,12 @@ public:
     //! Destructor
     virtual ~OREApp();
     //! Runs analytics and generates reports after using the first OREApp c'tor
-    virtual int run(bool useAnalytics = true);
+    virtual void run(bool useAnalytics = true);
     void analytics();
 
     //! Runs analytics and generates reports after using the second OREApp c'tor
-    int run(const std::vector<std::string>& marketData,
-            const std::vector<std::string>& fixingData);
+    void run(const std::vector<std::string>& marketData,
+             const std::vector<std::string>& fixingData);
     
     //! Load curve configurations from xml file, build t0 market using market data provided.
     //! If any of the passed vectors are empty fall back on OREApp::buildMarket() and use market/fixing data files
@@ -87,6 +87,8 @@ public:
     boost::shared_ptr<ore::data::EngineFactory>
     buildEngineFactoryFromXMLString(const boost::shared_ptr<ore::data::Market>& market,
                                     const std::string& pricingEngineXML, const bool generateAdditionalResults = false);
+
+    boost::shared_ptr<InputParameters> getInputs() { return inputs_; }
 
     std::set<std::string> getAnalyticTypes();
     std::set<std::string> getSupportedAnalyticTypes();
@@ -235,6 +237,7 @@ protected:
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
     boost::shared_ptr<InputParameters> inputs_;
+    boost::shared_ptr<OutputParameters> outputs_;
     Date asof_;
     bool writeInitialReports_;
     bool simulate_;

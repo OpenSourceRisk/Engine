@@ -53,6 +53,7 @@
 #include <ql/patterns/singleton.hpp>
 #include <sstream>
 
+#include <boost/any.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/lock_types.hpp>
 
@@ -478,13 +479,37 @@ private:
 
 inline std::ostream& operator<<(std::ostream& out, const StructuredMessage& sm) { return out << sm.msg(); }
 
+class EventMessage {
+public:
+    EventMessage(const string& msg, const std::map<string, boost::any> data = {}) : message_(msg), data_(data) {}
+
+
+    virtual ~EventMessage() {}
+
+    static constexpr const char* name = "EventMessage";
+
+    //! return a string for the log file
+    std::string msg() const { return string(name) + string(" ") + json(); }
+    void set(const std::string& key, const boost::any& value) { data_[key] = value; }
+
+private:
+    // utility function to delimate string for json, handles \" and \\ and control characters
+    string jsonify(const string& s) const;
+    string json() const;
+
+    string message_;
+    std::map<string, boost::any> data_;
+};
+
+inline std::ostream& operator<<(std::ostream& out, const EventMessage& em) { return out << em.msg(); }
+
 //! Singleton to control console logging
 //
 class ConsoleLog : public QuantLib::Singleton<ConsoleLog, std::integral_constant<bool, true>> {
     friend class QuantLib::Singleton<ConsoleLog, std::integral_constant<bool, true>>;
 private:
     // may be empty but never uninitialised
-    ConsoleLog() : enabled_(false), width_(50), progressBarWidth_(72 - std::min<QuantLib::Size>(width_, 67)) {}
+    ConsoleLog() : enabled_(false), width_(50), progressBarWidth_(0) {}
 
     bool enabled_;
     QuantLib::Size width_;

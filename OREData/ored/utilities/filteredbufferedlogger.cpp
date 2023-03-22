@@ -41,8 +41,8 @@ void FilteredBufferedLogger::log(unsigned lvl, const std::string& log) {
     if (n != string::npos) {
         // Strip it out
         string log_message = log.substr(n + strlen(ore::data::StructuredMessage::name));
-	// check if we have already logged the mssage
-	std::size_t message_hash = std::hash<std::string>{}(log_message);
+        // check if we have already logged the mssage
+        std::size_t message_hash = std::hash<std::string>{}(log_message);
         if (message_hash_history_.insert(message_hash).second) {
             // log it
             BufferLogger::log(lvl, log_message);

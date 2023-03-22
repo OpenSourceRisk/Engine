@@ -52,7 +52,8 @@ public:
     ForwardBond(const boost::shared_ptr<QuantLib::Bond>& underlying, const Real lockRate,
                 const DayCounter& lockRateDayCounter, const bool longInForward, const Date& fwdMaturityDate,
                 const Date& fwdSettlementDate, const bool isPhysicallySettled, const bool settlementDirty,
-                const Real compensationPayment, const Date compensationPaymentDate, const Real bondNotional = 1.0);
+                const Real compensationPayment, const Date compensationPaymentDate, const Real bondNotional = 1.0,
+                const Real dv01 = Null<Real>());
 
     //! \name Instrument interface
     //@{
@@ -79,6 +80,7 @@ private:
     Real compensationPayment_;
     Date compensationPaymentDate_;
     Real bondNotional_;
+    Real dv01_;
     mutable Real underlyingIncome_;
     mutable Real underlyingSpotValue_;
     mutable Real forwardValue_;
@@ -99,6 +101,7 @@ public:
     Real compensationPayment;
     Date compensationPaymentDate;
     Real bondNotional;
+    Real dv01;
     void validate() const override;
 };
 

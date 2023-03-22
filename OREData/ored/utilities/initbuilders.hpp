@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/initbuilders.hpp
+/*! \file ored/utilities/initbuilders.hpp
     \brief add builders to factories
 */
 

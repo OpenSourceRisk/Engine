@@ -29,7 +29,7 @@
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-
+#include <map>
 #include <tuple>
 
 namespace QuantExt {
