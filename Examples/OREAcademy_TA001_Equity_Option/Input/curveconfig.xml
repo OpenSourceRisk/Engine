@@ -144,7 +144,6 @@
 				</StrikeSurface>
 			</VolatilityConfig>
 			<Calendar/>
-			<SmileDynamics/>
 			<Report/>
 		</EquityVolatility>
 	</EquityVolatilities>
