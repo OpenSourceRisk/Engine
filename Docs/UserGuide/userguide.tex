@@ -75,7 +75,10 @@
 \restylefloat{table}
 
 \usepackage{siunitx}
-
+\usepackage{tablefootnote}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{footmisc}
 \newenvironment{longlisting}{\captionsetup{type=listing}}{}
 %\usepackage[colorlinks=true]{hyperref}
 
@@ -3564,13 +3567,41 @@ FX rates)
 \item {\tt quantile} Confidence level for Potential Future Exposure (PFE) reporting
 \item {\tt calculationType} Determines the settlement of margin calls, choices are: \\
 	\begin{itemize}
-	\item {\em Symmetric} - margin for both counterparties settled after the margin period of risk; 
+	\item {\em Symmetric} - margin for both counterparties settled after the margin period of risk;
 	\item {\em AsymmetricCVA} - margin requested from the counterparty settles with delay,
 	margin requested from us settles immediately; 
-	\item {\em AsymmetricDVA} - vice versa 
-	\item {\em NoLag} - used to disable any delayed settlement of the margin; this option is applied in combination with a ``close-out'' grid, see section \ref{sec:simulation}. 
+	\item {\em AsymmetricDVA} - vice versa; 
+	\item {\em NoLag} - used to disable any delayed settlement of the margin;  
 	\end{itemize}
 	\todo[inline]{Move calculationType into the {\tt csaFile}?}
+%
+\begin{table}[!h]
+\centering
+\arrayrulecolor{black}
+\begin{tabular}{!{\color{black}\vrule}c!{\color{black}\vrule}c!{\color{black}\vrule}l!{\color{black}\vrule}} 
+\hline
+\multicolumn{1}{!{\color{black}\vrule}l!{\color{black}\vrule}}{Grid Type} & \multicolumn{1}{l!{\color{black}\vrule}}{{\tt calculationType}} & Comment                                                                                                                                                                                           \\ 
+\hline
+\multirow{4}{*}{without closeout grid}                                    & {\em NoLag}                                                      & Not Supported                                                                                                                                                                                     \\ 
+\cline{2-3}
+                                                                          & {\em Symmetric}                                                  & Supported\tablefootnote{\label{note1} This option is applied, if there is not a ``close-out'' grid, see section \ref{sec:simulation}. The Calculations are correct only if the simulation grid (see section \ref{sec:simulation}) is equally-spaced with time steps that match the MPoR defined in netting-set definition (see section \ref{sec:CollNettingSet}). See section \ref{sec:mpor} for further explanation.}  \\ 
+\cline{2-3}
+                                                                          & {\em AsymmetricCVA}                                              & Supported \footref{note1} \\ 
+\cline{2-3}
+                                                                          & {\em AsymmetricDVA}                                              & Supported \footref{note1}\\ 
+\hline
+\multirow{4}{*}{with closeout grid}                                       & {\em NoLag}                                                      & Supported\tablefootnote{This option is applied in combination with a ``close-out'' grid, see section \ref{sec:simulation}. Close-out lag (see section \ref{sec:simulation}) must be equal to MPoR defined in netting-set definition (see section \ref{sec:CollNettingSet}). Otherwise, an error will be thrown.}                                           \\ 
+\cline{2-3}
+                                                                          & {\em Symmetric}                                                  & Not Supported                                                                                                                                                                                     \\ 
+\cline{2-3}
+                                                                          & {\em AsymmetricCVA}                                              & Not Supported                                                                                                                                                                                     \\ 
+\cline{2-3}
+                                                                          & {\em AsymmetricDVA}                                              & Not Supported                                                                                                                                                                                     \\
+\hline
+\end{tabular}
+\arrayrulecolor{black}
+\end{table}
+%
 \item {\tt allocationMethod:} XVA allocation method, choices are {\em None, Marginal, RelativeXVA, RelativeFairValueGross, RelativeFairValueNet}
 \item {\tt marginalAllocationLimit:} The marginal allocation method a la Pykhtin/Rosen breaks down when the netting set
 value vanishes while the exposure does not. This parameter acts as a cutoff for the marginal allocation when the
@@ -7877,14 +7908,48 @@ D(t_m) &=
 \end{align}
 where $MTA$ is the minimum transfer amount.
 
-\medskip Finally, the {\em Delivery Amount } is settled with a delay specified by the {\em Margin Period of Risk}
-(MPoR) which leads to residual exposure and XVA even for daily margining, zero thresholds and minimum transfer amounts,
-see for example \cite{Pykhtin2010}. A more detailed framework for collateralised exposure modelling is introduced in the
+\subsubsection{Margin Period of Risk} \label{sec:mpor}
+After a counterparty defaults, it takes time to close out the portfolio. During this time period the portfolio value will change upon market conditions, therefore the portfolio's close-out value is subject to market risk, which is defined as the close-out risk and the corresponding close-out period is called as the {\em Margin Period of Risk}
+(MPoR).  
+
+Therefore, when a loss on the defaulted counterparty is realised at time $t_d$, the last time the collateral could have been received is $t_d-\tau$, where $\tau$ denotes the MPoR. Thus, the collateral at time $t_d$ is determined by the collateral value at $t_d-\tau$, namely $CSA(t_d-\tau)$, see equation \ref{eq:CSA}.
+
+In ORE, we have two approaches to model the MPoR:
+\begin{itemize}
+ \item {\em Close-out Approach}: Simulating on an auxiliary close-out grid additional to the default time grid.
+ \item {\em Lagged Approach}: Simulating only on a default time grid.
+\end{itemize}
+
+\medskip In the {\em Close-out Approach}, we use an auxiliary ``close-out'' grid in the simulation (see section \ref{sec:simulation}). The portfolio values and collateral values are simulated at close-out and default times respectively, leading to residual exposure and XVA even for daily margining, zero thresholds and minimum transfer amounts, see for example \cite{Pykhtin2010}. The close-out valuation approach allows a detailed modelling of what happens in the close-out period; currently ORE supports two options, with and without portfolio ``ageing'' over the close-out period. The option ``without ageing'' is more aggressive in that it avoids any exposure evolution spikes due to contractual cashflows that occur in the close-out period after default, the only exposure effect is due to market evolution over the period. The ``with ageing'' option is more conservative in that it includes the effect of all contractual cash flows in the close-out period, in particular outgoing cashflows at any time in the period which cause an exposure jump upwards. A more detailed framework for collateralised exposure modelling is introduced in the
 2016 article \cite{Andersen2016}, indicating a potential route for extending ORE.
 
-\medskip
-In case we use an auxiliary ``close-out'' grid in the simulation (see section \ref{sec:simulation}), we do {\em not} settle the delivery amount with the delay mentioned above. With a close-out grid the portfolio value is rather evolved relative to the collateral balance, also leading to residual exposure. However, the close-out valuation approach allows more detailed modelling of what happens in the close-out period; currently ORE supports two options, with and without portfolio ``ageing'' over the close-out period. The option ``without ageing'' is more aggressive in that it avoids any exposure evolution spikes due to contractual cashflows that occur in the close-out period after default, the only exposure effect is due to market evolution over the period. The ``with ageing'' option is more conservative in that it includes the effect of all contractual cash flows in the close-out period, in particular outgoing cashflows at any time in the period which cause an exposure jump upwards. 
+\medskip On the other hand, in the {\em Lagged Approach} the simulation is conducted only on a default time grid. The collateral values are calculated, by delaying the delivery amounts between default times, specified by the {\em Margin Period of Risk} (MPoR) which leads to residual exposure. 
 
+In table \ref{table:lagged}, we present a toy example to illustrate how the delayed margin calls lead to residual exposures. In this example, we assume that the default time grid is equally-spaced with time steps that match the MPoR (which is 1M). Further, we assume zero threshold and MTA. At the initial time, the delivery amount is $2.00$, which is the difference between the initial value of the portfolio and the default value at 1M. If this amount were settled immediately, then the collateral value would have been $10$ and hence the residual exposure would habe been zero at 1M. The delay of the delivery amount by MPoR implies a collateral value of $8.00$ at 1M and hence a residual exposure of $2$. 
+%
+\begin{table}[!ht]
+    \centering
+    \begin{tabular}{|p{1cm}|p{1.4cm}|p{1.5cm}|p{1.5cm}|p{1.6cm}|p{1.cm}|}
+    \hline
+        Time Grid & Default Value & Delivery Amount & Delivery Amount Delayed  & Collateral Value   & NPV  \\ \hline
+         0 & 8.00 & 2.00 &   True &~ &  ~   \\ \hline
+        1M & 10.00 & 5.00& True & 8.00&  10.00   \\ \hline
+        2M & 15.00 & -3.00 & True & 10.00 & 15.00 \\ \hline
+        3M & 12.00 & -3.00 & True & 15.00 & 12.00  \\ \hline
+        4M & 9.00 & 5.00 & True & 12.00 & 9.00   \\ \hline
+        5M & 14.00 & 6.00 & True & 9.00 & 14.00  \\ \hline
+        6M & 20.00 &  ~  & ~ & 14.00 & 20.00  \\ \hline
+    \end{tabular}
+    \caption{Toy example for delayed margin calls.}\label{table:lagged}
+\end{table}
+%
+
+Some remarks and observations:
+\begin{itemize}
+ \item {\em Lagged Approach}  has the disadvantage that we need to use equally-spaced time grids with time steps that match the MPoR. In the above example, let us assume that the MPoR is 2W. Then, delaying the first delivery amount by 2W would still imply a collateral value of $10.00$ at 1M and hence a zero residual exposure.
+  \item In {\em Lagged Approach} approach, we support three calculation (settlement) types where the delay of the {\em Delivery Amount } depends on its sign. The above example corresponds to a ``symmetric'' calculation type where both positive and negative delivery amounts are settled with delay, see section \ref{sec:analytics} for other calculation types.
+   \item In ORE, the {\em Close-out Approach} is the preferred method -and the {\em Lagged Approach} is the legacy method- to incorporate MPoR in the collateral model. 
+\end{itemize}
 \subsection{Exposure Allocation}\label{sec:app_allocation}
 
 XVAs and exposures are typically computed at netting set level. For accounting purposes it is typically required to {\em

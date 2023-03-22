@@ -336,8 +336,9 @@ public:
     void setEquityVolSmileDynamics(const string& name, const string& smileDynamics);
 
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
+    void setAdditionalScenarioDataIndices(const vector<string>& asdi) { additionalScenarioDataIndices_ = asdi; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
-
+    void setAdditionalScenarioDataCcys(const vector<string>& ccys) { additionalScenarioDataCcys_ = ccys; }
     void setSecuritySpreadsSimulate(bool simulate);
     void setSecurities(vector<string> names);
     void setRecoveryRates(vector<string> names);

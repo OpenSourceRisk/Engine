@@ -679,6 +679,26 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
     LOG("XVA::buildCube");
 
     // set up valuation calculator factory
+    string calculationType = inputs_->collateralCalculationType();
+    if (inputs_->scenarioGeneratorData()->withCloseOutLag())
+        QL_REQUIRE(calculationType == "NoLag", "Calculation type "<<calculationType<<" must be set to NoLag, since a close-out grid is available");
+    else
+        QL_REQUIRE(calculationType == "Symmetric"  || calculationType == "AsymmetricCVA"  || calculationType == "ASymmetricDVA"
+                   ,"Calculation type " <<calculationType<<" is not supported unless there is a close-out grid" );
+    
+    std::map<std::string, std::string> nettingSetMap =  portfolio->nettingSetMap();
+    std::vector<std::string> nettingSetKeys;
+    for(std::map<std::string, std::string>::iterator it = nettingSetMap.begin(); it != nettingSetMap.end(); ++it)
+        nettingSetKeys.push_back(it->second);
+    sort(nettingSetKeys.begin(), nettingSetKeys.end());
+    nettingSetKeys.erase(unique( nettingSetKeys.begin(), nettingSetKeys.end() ), nettingSetKeys.end());
+    if (inputs_->scenarioGeneratorData()->withCloseOutLag()){
+        Period mpor_simulation = inputs_->scenarioGeneratorData()->closeOutLag();
+        for(auto const& key : nettingSetKeys){//inputs_->nettingSetManager()->uniqueKeys()){
+            Period mpor_netting = inputs_->nettingSetManager()->get(key)->csaDetails()->marginPeriodOfRisk();
+            QL_REQUIRE(mpor_simulation == mpor_netting, "For netting set "<<key<<", close-out lag "<< mpor_simulation << " is not equal to the netting-set's mpor "<< mpor_netting);
+        }
+    }
 
     auto calculators = [this]() {
         vector<boost::shared_ptr<ValuationCalculator>> calculators;
