@@ -147,14 +147,14 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
 
     // Filename & line no
     // format is " (file:line)"
-    const char* filepath;
+    string filepath;
     if (rootPath_.empty()) {
         filepath = filename;
     } else {
-        filepath = relative(path(filename), rootPath_).string().c_str();
+        filepath = relative(path(filename), rootPath_).string();
     }
     int lineNoLen = (int)log10((double)lineNo) + 1;     // Length of the int as a string
-    int len = 2 + strlen(filepath) + 1 + lineNoLen + 1; // " (" + file + ':' + line + ')'
+    int len = 2 + filepath.length() + 1 + lineNoLen + 1; // " (" + file + ':' + line + ')'
 
     if (maxLen_ == 0) {
         ls_ << " (" << filepath << ':' << lineNo << ')';
@@ -165,7 +165,7 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
         } else {
             // need to trim the filename to fit into maxLen chars
             // need to remove (len - maxLen_) chars + 3 for the "..."
-            ls_ << " (..." << string(filepath).substr(3 + len - maxLen_) << ':' << lineNo << ')';
+            ls_ << " (..." << filepath.substr(3 + len - maxLen_) << ':' << lineNo << ')';
         }
     }
 
