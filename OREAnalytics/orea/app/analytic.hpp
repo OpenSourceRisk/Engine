@@ -166,8 +166,9 @@ protected:
 
 class Analytic::Impl {
 public:    
-    Analytic::Impl() {};
-    Analytic::Impl(const boost::shared_ptr<InputParameters>& inputs) : inputs_(inputs) {};
+    Impl() {}
+    Impl(const boost::shared_ptr<InputParameters>& inputs) : inputs_(inputs) {}
+    ~Impl(){}
     
     virtual void runAnalytic(
         const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
