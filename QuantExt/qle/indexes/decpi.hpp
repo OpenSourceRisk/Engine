@@ -31,10 +31,19 @@ namespace QuantExt {
 //! German CPI index
 class DECPI : public QuantLib::ZeroInflationIndex {
 public:
-    DECPI(bool interpolated, const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts =
+    DECPI(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts =
                                  QuantLib::Handle<QuantLib::ZeroInflationTermStructure>())
-        : QuantLib::ZeroInflationIndex("CPI", QuantExt::GermanyRegion(), false, interpolated, QuantLib::Monthly,
+        : QuantLib::ZeroInflationIndex("CPI", QuantExt::GermanyRegion(), false, QuantLib::Monthly,
                                        QuantLib::Period(1, QuantLib::Months), QuantLib::EURCurrency(), ts) {}
+
+    QL_DEPRECATED DECPI(bool interpolated,
+                        const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts =
+                            QuantLib::Handle<QuantLib::ZeroInflationTermStructure>()) 
+        QL_DEPRECATED_DISABLE_WARNING
+        : QuantLib::ZeroInflationIndex("CPI", QuantExt::GermanyRegion(), false, interpolated, QuantLib::Monthly,
+                                       QuantLib::Period(1, QuantLib::Months), QuantLib::EURCurrency(),
+                                       ts) 
+        QL_DEPRECATED_ENABLE_WARNING {}
 };
 
 } // namespace QuantExt

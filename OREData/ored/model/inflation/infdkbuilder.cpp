@@ -301,7 +301,7 @@ void InfDkBuilder::buildCapFloorBasket() const {
     Period lag = infVol_->observationLag();
     Handle<ZeroInflationIndex> hIndex(inflationIndex_);
     Date startDate = Settings::instance().evaluationDate();
-
+    bool useInterpolatedCPIFixings = infVol_->indexIsInterpolated();
     Real nominal = 1.0;
     vector<Time> expiryTimes;
     optionBasket_.clear();
@@ -322,7 +322,7 @@ void InfDkBuilder::buildCapFloorBasket() const {
                 boost::make_shared<CPICapFloor>(capfloor, nominal, startDate, baseCPI, expiryDate, fixCalendar, bdc,
                                                 fixCalendar, bdc, strikeValue, inflationIndex_, lag);
             cf->setPricingEngine(engine);
-            Real tte = inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
+            Real tte = inflationYearFraction(inflationIndex_->frequency(), useInterpolatedCPIFixings,
                                              inflationIndex_->zeroInflationTermStructure()->dayCounter(), baseDate,
                                              cf->fixingDate());
 

@@ -137,6 +137,10 @@ parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = H
  \ingroup utilities
  */
 boost::shared_ptr<ZeroInflationIndex>
+parseZeroInflationIndex(const string& s, const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
+
+QL_DEPRECATED
+boost::shared_ptr<ZeroInflationIndex>
 parseZeroInflationIndex(const string& s, bool isInterpolated = false,
                         const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
 

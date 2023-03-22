@@ -22,11 +22,18 @@
 
 namespace QuantExt {
 
+ZeroInflationIndexWrapper::ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source)
+    : ZeroInflationIndex(source->familyName(), source->region(), source->revised(), source->frequency(), source->availabilityLag(), source->currency(),
+                         source->zeroInflationTermStructure()),
+      source_(source), interpolation_(QuantLib::CPI::InterpolationType::Flat) {}
+
 ZeroInflationIndexWrapper::ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source,
                                                      const CPI::InterpolationType interpolation)
+    QL_DEPRECATED_DISABLE_WARNING
     : ZeroInflationIndex(source->familyName(), source->region(), source->revised(), source->interpolated(),
                          source->frequency(), source->availabilityLag(), source->currency(),
                          source->zeroInflationTermStructure()),
+    QL_DEPRECATED_ENABLE_WARNING
       source_(source), interpolation_(interpolation) {}
 
 Rate ZeroInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTodaysFixing*/) const {
@@ -34,6 +41,7 @@ Rate ZeroInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTo
     // duplicated logic from CPICashFlow::amount()
 
     // what interpolation do we use? Index / flat / linear
+    QL_DEPRECATED_DISABLE_WARNING
     if (interpolation_ == CPI::AsIndex) {
         return source_->fixing(fixingDate);
     } else {
@@ -50,6 +58,7 @@ Rate ZeroInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTo
             return indexStart;
         }
     }
+    QL_DEPRECATED_ENABLE_WARNING
 }
 
 YoYInflationIndexWrapper::YoYInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> zeroIndex,

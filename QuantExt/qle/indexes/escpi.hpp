@@ -32,9 +32,16 @@ namespace QuantExt {
 //! Spain CPI index
 class ESCPI : public ZeroInflationIndex {
 public:
-    ESCPI(bool interpolated, const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>())
-        : ZeroInflationIndex("CPI", SpainRegion(), false, interpolated, Monthly, Period(1, Months), // availability
+    ESCPI(const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>())
+        : ZeroInflationIndex("CPI", SpainRegion(), false, Monthly, Period(1, Months), // availability
                              EURCurrency(), ts) {}
+    
+    QL_DEPRECATED
+    ESCPI(bool interpolated, const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>())
+    QL_DEPRECATED_DISABLE_WARNING 
+       : ZeroInflationIndex("CPI", SpainRegion(), false, interpolated, Monthly, Period(1, Months), // availability
+                             EURCurrency(), ts) 
+    QL_DEPRECATED_ENABLE_WARNING {}
 };
 
 } // namespace QuantExt

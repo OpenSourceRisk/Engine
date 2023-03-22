@@ -41,9 +41,16 @@ namespace QuantExt {
  */
 class DKCPI : public ZeroInflationIndex {
 public:
-    DKCPI(bool interpolated, const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>())
-        : ZeroInflationIndex("CPI", DenmarkRegion(), false, interpolated, Monthly, Period(1, Months), // availability
+    DKCPI(const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>())
+        : ZeroInflationIndex("CPI", DenmarkRegion(), false, Monthly, Period(1, Months), // availability
                              DKKCurrency(), ts) {}
+
+    QL_DEPRECATED DKCPI(bool interpolated,
+                         const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>()) 
+        QL_DEPRECATED_DISABLE_WARNING
+        : ZeroInflationIndex("CPI", DenmarkRegion(), false, interpolated, Monthly, Period(1, Months), // availability
+                             DKKCurrency(), ts) 
+        QL_DEPRECATED_ENABLE_WARNING {}
 };
 
 } // namespace QuantExt

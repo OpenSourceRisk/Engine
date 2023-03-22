@@ -1598,7 +1598,10 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
             }
         }
     } else {
-
+        QuantLib::CPI::InterpolationType interpolation = QuantLib::CPI::Flat;
+        if (cpiSwapConvention && cpiSwapConvention->interpolated()) {
+            interpolation = QuantLib::CPI::Linear;
+        }
         auto zcIndex = boost::dynamic_pointer_cast<ZeroInflationIndex>(index);
         QL_REQUIRE(zcIndex, "Need a Zero Coupon Inflation Index");
         QuantExt::NonStandardYoYInflationLeg yoyLeg =
@@ -1611,7 +1614,8 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
                 .withSpreads(spreads)
                 .withRateCurve(engineFactory->market()->discountCurve(
                     data.currency(), engineFactory->configuration(MarketContext::pricing)))
-                .withInflationNotional(addInflationNotional);
+                .withInflationNotional(addInflationNotional)
+                .withObservationInterpolation(interpolation);
 
         if (couponCap)
             yoyLeg.withCaps(buildScheduledVector(yoyLegData->caps(), yoyLegData->capDates(), schedule));

@@ -692,7 +692,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
     if (data.calibrationType() == CalibrationType::Bootstrap) {
         if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
             TLOGGERSTREAM("Calibration details:");
-            TLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, zInfIndex->interpolated()));
+            TLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
             TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             string exceptionMessage = "INF (DK) " + std::to_string(modelIdx) + " calibration error " +
@@ -700,7 +700,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
                                       std::to_string(config_->bootstrapTolerance());
             WLOG(StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage));
             WLOGGERSTREAM("Calibration details:");
-            WLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, zInfIndex->interpolated()));
+            WLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
             WLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
             if (!continueOnError_)
                 QL_FAIL(exceptionMessage);
@@ -733,8 +733,8 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     auto idxBasket = jyBuilder->indexBasket();
 
     // Attach engines to the helpers.
-    setJyPricingEngine(modelIdx, rrBasket, zInfIndex->interpolated());
-    setJyPricingEngine(modelIdx, idxBasket, zInfIndex->interpolated());
+    setJyPricingEngine(modelIdx, rrBasket, false);
+    setJyPricingEngine(modelIdx, idxBasket, false);
 
     if (dontCalibrate_)
         return;

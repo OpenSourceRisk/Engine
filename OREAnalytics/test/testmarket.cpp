@@ -405,8 +405,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
     boost::shared_ptr<YoYInflationIndex> yi = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(ii, false);
 
     RelinkableHandle<ZeroInflationTermStructure> hcpi;
-    bool interp = false;
-    ii = boost::shared_ptr<UKRPI>(new UKRPI(interp, hcpi));
+    ii = boost::shared_ptr<UKRPI>(new UKRPI(hcpi));
     for (Size i = 0; i < fixingDatesUKRPI.size(); i++) {
         // std::cout << i << ", " << fixingDatesUKRPI[i] << ", " << fixingRatesUKRPI[i] << std::endl;
         ii->addFixing(fixingDatesUKRPI[i], fixingRatesUKRPI[i], true);
@@ -422,8 +421,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
     boost::shared_ptr<YoYInflationIndex> euyi = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(euii, false);
 
     RelinkableHandle<ZeroInflationTermStructure> euhcpi;
-    interp = false;
-    euii = boost::shared_ptr<EUHICPXT>(new EUHICPXT(interp, euhcpi));
+    euii = boost::shared_ptr<EUHICPXT>(new EUHICPXT(euhcpi));
     for (Size i = 0; i < fixingDatesEUHICPXT.size(); i++) {
         euii->addFixing(fixingDatesEUHICPXT[i], fixingRatesEUHICPXT[i], true);
     };
