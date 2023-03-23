@@ -350,6 +350,7 @@
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/pricingengines/lgmconvolutionsolver.hpp>
 #include <qle/pricingengines/mccamcurrencyswapengine.hpp>
+#include <qle/pricingengines/mccamfxforwardengine.hpp>
 #include <qle/pricingengines/mccamfxoptionengine.hpp>
 #include <qle/pricingengines/mclgmfraengine.hpp>
 #include <qle/pricingengines/mclgmswapengine.hpp>
