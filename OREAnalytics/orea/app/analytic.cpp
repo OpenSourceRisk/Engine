@@ -138,7 +138,7 @@ boost::shared_ptr<EngineFactory> Analytic::Impl::engineFactory() {
     // Note: Calling the constructor here with empty extry builders
     // Override this function in case you have got extra ones
     boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->pricingEngine());
-    edCopy->globalParameters()["GenerateAdditionalResults"] = generateAdditionalResults();
+    edCopy->globalParameters()["GenerateAdditionalResults"] = to_string(generateAdditionalResults());
     edCopy->globalParameters()["RunType"] = "NPV";
     map<MarketContext, string> configurations;
     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");    
