@@ -299,7 +299,9 @@ public:
 template <class T> inline const boost::shared_ptr<T>& Analytic::dependentAnalytic(const std::string& key) const {
     DLOG("looking up dependent analytic " << key << " for analytic " << label());
     auto it = dependentAnalytics_.find(key);
+    DLOG("dependentAnalytics_ contains " << dependentAnalytics_.size() << " analytics");
     QL_REQUIRE(it != dependentAnalytics_.end(), "Could not find dependent Analytic " << key);
+    DLOG("dependentAnalytics_ found anlytic " << key);
     boost::shared_ptr<T> analytic = boost::dynamic_pointer_cast<T>(it->second);
     QL_REQUIRE(analytic, "Could not cast analytic for key " << key);
     return analytic;
