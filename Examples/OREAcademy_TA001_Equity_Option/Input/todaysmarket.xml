@@ -1,0 +1,16 @@
+<TodaysMarket>
+	<DiscountingCurves id="default">
+		<DiscountingCurve currency="EUR">Yield/EUR/EUR-EONIA</DiscountingCurve>
+	</DiscountingCurves>
+	<IndexForwardingCurves id="default">
+		<Index name="EUR-EONIA">Yield/EUR/EUR-EONIA</Index>
+		<Index name="EUR-ESTER">Yield/EUR/EUR-ESTER</Index>
+	</IndexForwardingCurves>
+	<EquityCurves id="default">
+		<EquityCurve name="RIC:.STOXX50E">Equity/EUR/RIC:.STOXX50E</EquityCurve>
+	</EquityCurves>
+	<EquityVolatilities id="default">
+		<EquityVolatility name="RIC:.STOXX50E">EquityVolatility/EUR/RIC:.STOXX50E</EquityVolatility>
+	</EquityVolatilities>
+</TodaysMarket>
+

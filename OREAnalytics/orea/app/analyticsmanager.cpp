@@ -42,13 +42,12 @@ Size matches(const std::set<std::string>& requested, const std::set<std::string>
 }
     
 AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inputs, 
-                                   const boost::shared_ptr<MarketDataLoader>& marketDataLoader,
-                                   std::ostream& out)
-    : inputs_(inputs), marketDataLoader_(marketDataLoader), out_(out) {    
+                                   const boost::shared_ptr<MarketDataLoader>& marketDataLoader)
+    : inputs_(inputs), marketDataLoader_(marketDataLoader) {    
     
-    addAnalytic("PRICING", boost::make_shared<PricingAnalytic>(inputs_, out_));
-    addAnalytic("VAR", boost::make_shared<VarAnalytic>(inputs_, out_));
-    addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_, out_));
+    addAnalytic("PRICING", boost::make_shared<PricingAnalytic>(inputs));
+    addAnalytic("VAR", boost::make_shared<VarAnalytic>(inputs_));
+    addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_));
 }
 
 void AnalyticsManager::clear() {
@@ -70,7 +69,7 @@ void AnalyticsManager::addAnalytic(const std::string& label, const boost::shared
     // This forces an update of valid analytics vector with the next call to validAnalytics()
     validAnalytics_.clear();
 }
-    
+
 const std::set<std::string>& AnalyticsManager::validAnalytics() {
     if (validAnalytics_.size() == 0) {
         for (auto a : analytics_) {
@@ -81,20 +80,29 @@ const std::set<std::string>& AnalyticsManager::validAnalytics() {
     return validAnalytics_;
 }
 
+const std::set<std::string>& AnalyticsManager::requestedAnalytics() {
+    return requestedAnalytics_;
+}
+    
 bool AnalyticsManager::hasAnalytic(const std::string& type) {
     const std::set<std::string>& va = validAnalytics();
     return va.find(type) != va.end();
 }
 
 const boost::shared_ptr<Analytic>& AnalyticsManager::getAnalytic(const std::string& type) const {
-    auto it = analytics_.find(type);
-    QL_REQUIRE(it != analytics_.end(), "Analytic type " << type << " not found");
-    return it->second;
+    for (const auto& a : analytics_) {
+        const std::set<std::string>& types = a.second->analyticTypes();
+        if (types.find(type) != types.end())
+            return a.second;
+    }
+    QL_FAIL("analytic type " << type << " not found, check validAnalytics()");
 }
 
 void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
                                     const boost::shared_ptr<MarketCalibrationReport>& marketCalibrationReport) {
 
+    requestedAnalytics_ = analyticTypes;
+    
     if (analytics_.size() == 0)
         return;
 

@@ -26,8 +26,6 @@ using QuantLib::YoYInflationCapFloor;
 namespace ore {
 namespace data {
 
-CalibrationInstrumentRegister<YoYCapFloor> YoYCapFloor::reg_("YoYCapFloor");
-
 YoYCapFloor::YoYCapFloor() 
  : CalibrationInstrument("YoYCapFloor"), type_(YoYInflationCapFloor::Floor) {}
 

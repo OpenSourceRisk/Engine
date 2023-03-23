@@ -30,10 +30,6 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-// Could use this to make code below more succinct but VS then gives intellisense warnings that the ctors and methods 
-// are not defined.
-// using ASI = CreditDefaultSwapOption::AuctionSettlementInformation;
-
 CreditDefaultSwapOption::AuctionSettlementInformation::AuctionSettlementInformation()
     : auctionFinalPrice_(Null<Real>()) {}
 

@@ -35,11 +35,10 @@ CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(const string& curveId, const 
                                                    const string& dayCounter, const string& calendar,
                                                    const string& strikeType, const string& quoteName, Real strikeFactor,
                                                    const std::vector<QuantLib::Period>& terms,
-                                                   const std::vector<std::string>& termCurves,
-						   const string& smileDynamics)
+                                                   const std::vector<std::string>& termCurves)
     : CurveConfig(curveId, curveDescription), volatilityConfig_(volatilityConfig), dayCounter_(dayCounter),
       calendar_(calendar), strikeType_(strikeType), quoteName_(quoteName), strikeFactor_(strikeFactor), terms_(terms),
-      termCurves_(termCurves), smileDynamics_(smileDynamics) {
+      termCurves_(termCurves) {
 
     QL_REQUIRE(terms_.size() == termCurves_.size(),
                "CDSVolatilityCurveConfig: " << curveId
@@ -156,8 +155,6 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
     if (auto n = XMLUtils::getChildNode(node, "StrikeFactor"))
         strikeFactor_ = parseReal(XMLUtils::getNodeValue(n));
 
-    smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
-
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -191,7 +188,6 @@ XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {
     if (!quoteName_.empty())
         XMLUtils::addChild(doc, node, "QuoteName", quoteName_);
     XMLUtils::addChild(doc, node, "StrikeFactor", strikeFactor_);
-    XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
 
     return node;
 }

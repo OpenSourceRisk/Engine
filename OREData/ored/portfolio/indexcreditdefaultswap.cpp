@@ -129,10 +129,11 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
         // get data from ReferenceDatum
         string id = ore::data::splitCurveIdWithTenor(swap_.creditCurveId()).first;
         DLOG("Getting CreditIndexReferenceDatum for id " << id);
-        QL_REQUIRE(refDataManager_, "No BasketData or ReferenceDataManager");
-        QL_REQUIRE(refDataManager_->hasData(CreditIndexReferenceDatum::TYPE, id),
+        QL_REQUIRE(engineFactory->referenceData(), "No BasketData or ReferenceDataManager");
+        QL_REQUIRE(engineFactory->referenceData()->hasData(CreditIndexReferenceDatum::TYPE, id),
                    "No CreditIndex reference data for " << id);
-        boost::shared_ptr<ReferenceDatum> refData = refDataManager_->getData(CreditIndexReferenceDatum::TYPE, id);
+        boost::shared_ptr<ReferenceDatum> refData =
+            engineFactory->referenceData()->getData(CreditIndexReferenceDatum::TYPE, id);
         boost::shared_ptr<CreditIndexReferenceDatum> creditRefData =
             boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refData);
         DLOG("Got CreditIndexReferenceDatum for id " << id);

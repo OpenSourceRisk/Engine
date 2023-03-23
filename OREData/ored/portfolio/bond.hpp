@@ -25,6 +25,8 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/tradefactory.hpp>
+
 #include <utility>
 
 namespace ore {
@@ -203,17 +205,11 @@ public:
     BondBuilder::Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
                               const boost::shared_ptr<ReferenceDataManager>& referenceData,
                               const std::string& securityId) const;
-    void addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder);
-};
-
-template <typename T> struct BondBuilderRegister {
-    BondBuilderRegister<T>(const std::string& referenceDataType) {
-        BondFactory::instance().addBuilder(referenceDataType, boost::make_shared<T>());
-    }
+    void addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder,
+                    const bool allowOverwrite = false);
 };
 
 struct VanillaBondBuilder : public BondBuilder {
-    static BondBuilderRegister<VanillaBondBuilder> reg_;
     virtual Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
                          const boost::shared_ptr<ReferenceDataManager>& referenceData,
                          const std::string& securityId) const override;

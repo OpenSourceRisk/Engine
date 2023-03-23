@@ -53,6 +53,8 @@ SimpleProgressBar::SimpleProgressBar(const std::string& message, const QuantLib:
 }
 
 void SimpleProgressBar::updateProgress(const unsigned long progress, const unsigned long total) {
+    if (!ConsoleLog::instance().enabled())
+        return; 
     if (finalized_)
         return;
     if (progress >= total) {
@@ -68,7 +70,9 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
     if (updateCounter_ > 0 && progress * numberOfScreenUpdates_ < updateCounter_ * total) {
         return;
     }
-    std::cout << "\r" << std::setw(messageWidth_) << std::left << message_ << "[";
+    std::cout << "\r" << std::setw(messageWidth_) << std::left << message_;
+    if (barWidth_ > 0)
+        std::cout << "[";
     double ratio = static_cast<double>(progress) / static_cast<double>(total);
     unsigned int pos = static_cast<unsigned int>(static_cast<double>(barWidth_) * ratio);
     for (unsigned int i = 0; i < barWidth_; ++i) {
@@ -79,7 +83,9 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
         else
             std::cout << " ";
     }
-    std::cout << "] " << static_cast<int>(ratio * 100.0) << " %\r";
+    if (barWidth_ > 0)
+        std::cout << "] ";
+    std::cout << static_cast<int>(ratio * 100.0) << " %\r";
     std::cout.flush();
     updateCounter_++;
 }

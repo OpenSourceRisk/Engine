@@ -31,8 +31,6 @@ class IndexCreditDefaultSwap : public Trade {
 public:
     //! Default constructor
     IndexCreditDefaultSwap() : Trade("IndexCreditDefaultSwap") {}
-    IndexCreditDefaultSwap(const boost::shared_ptr<ReferenceDataManager>& refDataManager)
-        : Trade("IndexCreditDefaultSwap"), refDataManager_(refDataManager) {}
 
     //! Constructor
     IndexCreditDefaultSwap(const Envelope& env, const IndexCreditDefaultSwapData& swap, const BasketData& basket)
@@ -53,7 +51,6 @@ public:
     const std::map<std::string,boost::any>& additionalData() const override;
 
 private:
-    boost::shared_ptr<ReferenceDataManager> refDataManager_;
     IndexCreditDefaultSwapData swap_;
     BasketData basket_;
     //! map of all the constituents to notionals

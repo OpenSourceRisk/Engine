@@ -24,6 +24,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <iomanip>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
 using namespace boost::posix_time;
@@ -219,11 +220,11 @@ LoggerStream::~LoggerStream() {
 }
 
 string StructuredMessage::json() const {
-    string msg =
-        "{ \"category\":\"" + category_ + "\", \"group\":\"" + group_ + "\"," + " \"message\":\"" + jsonify(message_);
+    string msg = "{ \"category\":\"" + category_ + "\", \"group\":\"" + group_ + "\"," + " \"message\":\"" +
+                 jsonify(message_) + "\"";
 
     if (!subFields_.empty()) {
-        msg += "\", \"sub_fields\": [ ";
+        msg += ", \"sub_fields\": [ ";
         QuantLib::Size i = 0;
         for (const auto& p : subFields_) {
             // Only include subFields that are non-empty.
@@ -249,5 +250,58 @@ string StructuredMessage::jsonify(const string& s) const {
     boost::replace_all(str, "\n", "\\n");
     return str;
 }
+
+string EventMessage::json() const {
+    string msg = "{ \"exception_message\":\"" + jsonify(message_) + "\"";
+
+    if (!data_.empty()) {
+        msg += ", ";
+        QuantLib::Size i = 0;
+        for (const auto& p : data_) {
+            string value;
+            if (p.second.type() == typeid(string)) {
+                value = "\"" + boost::any_cast<string>(p.second) + "\"";
+            } else if (p.second.type() == typeid(boost::posix_time::ptime)) {
+                auto time = boost::any_cast<boost::posix_time::ptime>(p.second);
+                value = boost::posix_time::to_iso_extended_string(time);
+            } else if (p.second.type() == typeid(int)) {
+                value = to_string(boost::any_cast<int>(p.second));
+            } else if (p.second.type() == typeid(unsigned int)) {
+                value = to_string(boost::any_cast<unsigned int>(p.second));
+            } else if (p.second.type() == typeid(unsigned short)) {
+                value = to_string(boost::any_cast<unsigned short>(p.second));
+            } else if (p.second.type() == typeid(float)) {
+                value = to_string(boost::any_cast<float>(p.second));
+            } else if (p.second.type() == typeid(QuantLib::Size)) {
+                value = to_string(boost::any_cast<QuantLib::Size>(p.second));
+            } else if (p.second.type() == typeid(QuantLib::Real)) {
+                value = to_string(boost::any_cast<QuantLib::Real>(p.second));
+            } else if (p.second.type() == typeid(bool)) {
+                value = to_string(boost::any_cast<bool>(p.second));
+            } else {
+                WLOG(StructuredMessage("Error", "Event Message Logging", "Unrecognised value type for key '" + p.first + "'",
+                                       std::pair<string, string>()));
+            }
+
+            if (i > 0)
+                msg += ", ";
+            msg += "\"" + p.first + "\": " + value;
+            i++;
+        }
+    }
+    msg += " }";
+
+    return msg;
+}
+
+string EventMessage::jsonify(const string& s) const {
+    string str = s;
+    boost::replace_all(str, "\\", "\\\\"); // do this before the below otherwise we get \\"
+    boost::replace_all(str, "\"", "\\\"");
+    boost::replace_all(str, "\r", "\\r");
+    boost::replace_all(str, "\n", "\\n");
+    return str;
+}
+
 } // namespace data
 } // namespace ore

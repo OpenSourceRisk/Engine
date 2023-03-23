@@ -47,7 +47,9 @@ Date DynamicOptionletVolatilityStructure::maxDate() const {
     QL_FAIL("unexpected decay mode (" << decayMode_ << ")");
 }
 
-void DynamicOptionletVolatilityStructure::update() { TermStructure::update(); }
+void DynamicOptionletVolatilityStructure::update() {
+    TermStructure::update(); 
+}
 
 boost::shared_ptr<SmileSection> DynamicOptionletVolatilityStructure::smileSectionImpl(Time optionTime) const {
     // Again, what strikes do we chose? Should not need this in any case.

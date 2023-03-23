@@ -36,7 +36,6 @@ namespace data {
     \ingroup tradedata
 */
 class CommodityOptionStrip : public ore::data::Trade {
-
 public:
     CommodityOptionStrip() : ore::data::Trade("CommodityOptionStrip") {}
 

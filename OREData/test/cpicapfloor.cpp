@@ -115,7 +115,7 @@ BOOST_DATA_TEST_CASE_F(F, testCapConsistency, bdata::make(testCases), testCase) 
     BOOST_TEST_MESSAGE("Testing " << testCase);
 
     Portfolio p;
-    p.load(TEST_INPUT_FILE(testCase));
+    p.fromFile(TEST_INPUT_FILE(testCase));
     Size n = p.size();
 
     // Build the portfolio

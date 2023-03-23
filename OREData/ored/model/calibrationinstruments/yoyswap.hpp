@@ -53,8 +53,6 @@ public:
 
 private:
     QuantLib::Period tenor_;
-
-    static CalibrationInstrumentRegister<YoYSwap> reg_;
 };
 
 }

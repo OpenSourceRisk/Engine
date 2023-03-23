@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<ORE>
+
+  <!--> 1. Setup Node <-->
+  <Setup>
+	<!--> 1.A Valuation Date <-->
+    <Parameter name="asofDate">2016-02-05</Parameter>
+	
+	<!--> 1.B Input/Ouptut Folders Name <-->
+    <Parameter name="inputPath">Input</Parameter>
+    <Parameter name="outputPath">Output</Parameter>
+	
+	<!--> 1.C Path of the 7 mandatory input files <-->
+    <Parameter name="marketDataFile">market.txt</Parameter>
+    <Parameter name="fixingDataFile">fixings.txt</Parameter>
+    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">irswap.xml</Parameter>
+	
+	<!--> 1.D Other Pricing Parameters <-->
+	<Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">255</Parameter>
+	<Parameter name="implyTodaysFixings">N</Parameter>
+  </Setup>
+  
+  <!--> 2. Markets Node <-->
+  <Markets>
+    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="eqcalibration">default</Parameter>
+    <Parameter name="pricing">default</Parameter>
+    <Parameter name="simulation">default</Parameter>
+  </Markets>
+  
+  <!--> 3. Analytics Node <-->
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+    </Analytic>
+	 <Analytic type="cashflow">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">flows.csv</Parameter>
+    </Analytic>
+    <Analytic type="curves">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="configuration">default</Parameter>
+      <Parameter name="grid">240,1M</Parameter>
+      <Parameter name="outputFileName">curves.csv</Parameter>
+    </Analytic>
+  </Analytics>
+  
+</ORE>

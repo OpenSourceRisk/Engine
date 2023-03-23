@@ -10,6 +10,7 @@ import nose
 script_dir = Path(__file__).parents[0]
 sys.path.append(os.path.join(script_dir, '../'))
 from Examples.ore_examples_helper import get_list_of_examples  # noqa
+from Examples.ore_examples_helper import get_list_ore_academy  # noqa
 from Examples.ore_examples_helper import run_example  # noqa
 from Tools.PythonTools.compare_files import compare_files  # noqa
 from Tools.PythonTools.setup_logging import setup_logging  # noqa
@@ -93,7 +94,7 @@ def add_utest(name):
 # https://stackoverflow.com/questions/2798956/python-unittest-generate-multiple-tests-programmatically
 def regress_all_utests():
     i = 1
-    for name in get_list_of_examples():
+    for name in (get_list_of_examples() + get_list_ore_academy()):
         testable_name = 'test_{0}'.format(name)
         testable = add_utest(name)
         testable.__name__ = testable_name

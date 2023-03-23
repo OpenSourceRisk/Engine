@@ -56,13 +56,6 @@ namespace {
 boost::shared_ptr<EngineFactory> registerBuilders(boost::shared_ptr<EngineData> engineData,
                                                   boost::shared_ptr<Market> market) {
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market);
-    factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<GaussCopulaBucketingCdoEngineBuilder>());
     return factory;
 }
 
@@ -403,9 +396,8 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
                         "Some trades not built correctly," << portfolio->size() << " vs. " << tradeCount);
     // build the sensitivity analysis object
     boost::shared_ptr<SensitivityAnalysis> zeroAnalysis =
-        boost::make_shared<SensitivityAnalysisPlus>(portfolio, initMarket, "default", engineData,
-                                                    simMarketData, sensiData, false, nullptr, nullptr,
-                                                    false, builders);
+        boost::make_shared<SensitivityAnalysisPlus>(portfolio, initMarket, "default", engineData, simMarketData,
+                                                    sensiData, false, nullptr, nullptr, false, nullptr);
     ParSensitivityAnalysis parAnalysis(today, simMarketData, *sensiData, "default");
     parAnalysis.alignPillars();
     zeroAnalysis->overrideTenors(true);

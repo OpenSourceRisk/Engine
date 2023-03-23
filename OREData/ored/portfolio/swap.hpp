@@ -84,5 +84,6 @@ private:
     bool isResetting_;
     Size notionalTakenFromLeg_;
 };
+
 } // namespace data
 } // namespace ore

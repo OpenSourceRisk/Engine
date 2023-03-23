@@ -25,6 +25,7 @@
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/trade.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/toplevelfixture.hpp>
 
@@ -73,7 +74,7 @@ BOOST_AUTO_TEST_CASE(testSingleCurrencyYieldCurveBootstrap) {
     engineData->fromFile(TEST_INPUT_FILE("pricingengine_01.xml"));
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market);
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    portfolio->load(TEST_INPUT_FILE("mxn_ir_swap.xml"));
+    portfolio->fromFile(TEST_INPUT_FILE("mxn_ir_swap.xml"));
     portfolio->build(factory);
 
     // The single trade in the portfolio is a MXN 10Y swap, i.e. 10 x 13 28D coupons, with nominal 100 million. The
@@ -108,7 +109,7 @@ BOOST_AUTO_TEST_CASE(testCrossCurrencyYieldCurveBootstrap) {
     engineData->fromFile(TEST_INPUT_FILE("pricingengine_02.xml"));
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market);
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    portfolio->load(TEST_INPUT_FILE("mxn_usd_xccy_swap.xml"));
+    portfolio->fromFile(TEST_INPUT_FILE("mxn_usd_xccy_swap.xml"));
     portfolio->build(factory);
 
     // The single trade in the portfolio is a USD/MXN 10Y cross currency basis swap, i.e. 10 x 13 28D coupons, with
@@ -144,7 +145,7 @@ BOOST_AUTO_TEST_CASE(testCapFloorStrip) {
     engineData->fromFile(TEST_INPUT_FILE("pricingengine_03.xml"));
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market);
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    portfolio->load(TEST_INPUT_FILE("mxn_ir_cap.xml"));
+    portfolio->fromFile(TEST_INPUT_FILE("mxn_ir_cap.xml"));
     portfolio->build(factory);
 
     // The single trade in the portfolio is a MXN 10Y cap, i.e. 10 x 13 28D coupons (without first caplet), with

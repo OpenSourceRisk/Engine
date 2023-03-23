@@ -27,6 +27,7 @@
 #include <iostream>
 
 #include <orea/app/oreapp.hpp>
+#include <ored/utilities/initbuilders.hpp>
 
 #ifdef BOOST_MSVC
 #include <orea/auto_link.hpp>
@@ -66,6 +67,8 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    ore::data::initBuilders();
+
     string inputFile(argv[1]);
 
     boost::shared_ptr<Parameters> params = boost::make_shared<Parameters>();
@@ -79,7 +82,8 @@ int main(int argc, char** argv) {
         string tmp = params->get("setup", "useAnalytics", false);
         if (tmp != "")
             useAnalytics = parseBool(tmp);
-        return ore.run(useAnalytics);
+        ore.run(useAnalytics);
+        return 0;
     } catch (const exception& e) {
         cout << endl << "an error occurred: " << e.what() << endl;
         return -1;

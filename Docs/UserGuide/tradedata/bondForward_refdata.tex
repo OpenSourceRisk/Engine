@@ -30,6 +30,8 @@ A Forward Bond is set up using a {\tt ForwardBondData} block as shown below and 
    \begin{itemize}
        \item ForwardMaturityDate: The date of maturity of the forward contract. \\
          Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+       \item ForwardSettlementDate [Optional]: Settlement date for forward bond or cash settlement payment date.  \\
+         Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
        \item Settlement [Optional]: Cash or Physical. Option, defaults to Physcial, except in case the settlement is
          defined by LockRate, in which case it defaults to Cash. \\
          Allowable values: Cash, Physical
@@ -38,11 +40,13 @@ A Forward Bond is set up using a {\tt ForwardBondData} block as shown below and 
          transferred from the party that is long to the party that is short (determined by \lstinline!LongInForward!)
          and cannot be a negative amount. It is assumed to be in the same currency as the underlying bond. Exactly one
          of the fields Amount, LockRate must be given. \\
-         Allowable values: Any non-negative real number. The LockRate is expressed in decimal form, eg 0.05 is a rate of 5\%
+         Allowable values: Any non-negative real number. 
        \item LockRate [Optional]: The payoff is given by (yield at forward maturity - LockRate) x DV01 (LongInForward =
          true). Exactly one of the fields Amount, LockRate must be given. In case the LockRate is given, the Settlement
          must be set to Cash. If Settlement is not given, it defaults to Cash in this case. \\
-         Allowable values: Any non-negative real number.
+         Allowable values: Any non-negative real number. The LockRate is expressed in decimal form, eg 0.05 is a rate of 5\%
+       \item dv01 [Optional]: When the LockRate is given, it is possible to implement a contractual DV01 instead of deriving it from the bond price. \\
+         Allowable values: Any positive real number. E.G If the dPdY is given then dv01=10000*dPdY/N.
        \item LockRateDayCounter [Optional]: The day counter w.r.t. which the lock rate is expressed. Optional, defaults to A360. \\
          Allowable values: see table \ref{tab:daycount}
        \item SettlementDirty [Optional]: A flag that determines whether the settlement amount {({\tt Amount})} reflects
@@ -107,4 +111,24 @@ A Forward Bond is set up using a {\tt ForwardBondData} block as shown below and 
 \end{minted}
 \caption{Forward Bond Date (T-Lock)}
 \label{lst:forward_bond_refdata_tlock}
+\end{listing}
+
+\begin{listing}[H]
+	\begin{minted}[fontsize=\small]{xml}
+		<ForwardBondData>
+		<BondData>
+		  <SecurityId>ISIN:XS1234567890</SecurityId>
+		  <BondNotional>100000</BondNotional>
+		</BondData>
+		<SettlementData>
+		  <ForwardMaturityDate>20160808</ForwardMaturityDate>
+		  <ForwardSettlementDate>20160810</ForwardSettlementDate>
+		  <LockRate>0.02365</LockRate>
+		  <dv01>0.8</dv01>
+		</SettlementData>
+		<LongInForward>true</LongInForward>
+		</ForwardBondData>
+	\end{minted}
+	\caption{Forward Bond Date (T-Lock) with DV01}
+	\label{lst:forward_bond_refdata_tlock_dv01}
 \end{listing}

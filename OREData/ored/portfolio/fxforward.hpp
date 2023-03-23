@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/tradefactory.hpp>
 
 namespace ore {
 namespace data {
