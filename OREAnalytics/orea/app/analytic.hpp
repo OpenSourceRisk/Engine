@@ -133,7 +133,7 @@ public:
         return impl_;
     }
 
-    template <class T> const boost::shared_ptr<T>& dependentAnalytic(const std::string& key) const;
+    template <class T> boost::shared_ptr<T> dependentAnalytic(const std::string& key) const;
 
 private:
     std::unique_ptr<Impl> impl_;
@@ -296,7 +296,7 @@ public:
         : Analytic(std::make_unique<XvaAnalyticImpl>(inputs), {"XVA", "EXPOSURE"}, inputs, false, false, false, false) {}
 };
 
-template <class T> inline const boost::shared_ptr<T>& Analytic::dependentAnalytic(const std::string& key) const {
+template <class T> inline boost::shared_ptr<T> Analytic::dependentAnalytic(const std::string& key) const {
     DLOG("looking up dependent analytic " << key << " for analytic " << label());
     auto it = dependentAnalytics_.find(key);
     DLOG("dependentAnalytics_ contains " << dependentAnalytics_.size() << " analytics");
