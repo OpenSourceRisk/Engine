@@ -133,6 +133,7 @@ public:
         return impl_;
     }
 
+    bool hasDependentAnalytic(const std::string& key) {  return dependentAnalytics_.find(key) != dependentAnalytics_.end(); }
     template <class T> boost::shared_ptr<T> dependentAnalytic(const std::string& key) const;
 
 private:
