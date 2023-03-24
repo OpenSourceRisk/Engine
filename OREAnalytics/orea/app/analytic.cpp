@@ -676,14 +676,8 @@ boost::shared_ptr<Portfolio> XvaAnalytic::classicRun(const boost::shared_ptr<Por
 
 void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio) {
 
-    LOG("XVA::buildCube");
-
-    string calculationType = inputs_->collateralCalculationType();
-    if (configurations_.scenarioGeneratorData->withCloseOutLag())
-        QL_REQUIRE(calculationType == "NoLag", "Calculation type "<<calculationType<<" must be set to NoLag, since a close-out grid is available");
-    else
-        QL_REQUIRE(calculationType != "NoLag", "Calculation type " <<calculationType<<" is not supported unless there is a close-out grid" );
-    //find the nettingset keys in portfolio
+    LOG("XVA::buildCube"); 
+    //find the unique nettingset keys in portfolio
     std::map<std::string, std::string> nettingSetMap =  portfolio->nettingSetMap();
     std::vector<std::string> nettingSetKeys;
     for(std::map<std::string, std::string>::iterator it = nettingSetMap.begin(); it != nettingSetMap.end(); ++it)
@@ -691,17 +685,23 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
     //unique nettingset keys
     sort(nettingSetKeys.begin(), nettingSetKeys.end());
     nettingSetKeys.erase(unique( nettingSetKeys.begin(), nettingSetKeys.end() ), nettingSetKeys.end());
-    // check for active nettingset keys whether CSA mpor is equal to close-out lag
-    if (configurations_.scenarioGeneratorData->withCloseOutLag()){
-        Period mpor_simulation = configurations_.scenarioGeneratorData->closeOutLag();    
-        for(auto const& key : nettingSetKeys){
-            if (inputs_->nettingSetManager()->get(key)->activeCsaFlag()){
+    //controls on calcType and grid type, if netting-set has an active CSA in place
+    for(auto const& key : nettingSetKeys){
+        if (inputs_->nettingSetManager()->get(key)->activeCsaFlag()){
+            string calculationType = inputs_->collateralCalculationType();
+            if (configurations_.scenarioGeneratorData->withCloseOutLag())
+                QL_REQUIRE(calculationType == "NoLag", "For nettingSetID "<<key<< " CSA is active and a close-out grid is configured in the simulation.xml. Therefore, calculation type "<<calculationType<<" is not admissable. It must be set to NoLag!");
+            else
+                QL_REQUIRE(calculationType != "NoLag", "For nettingSetID "<<key<< " CSA is active and a close-out grid is not configured in the simulation.xml. Therefore, calculation type " <<calculationType<<" is not admissable. It must be set to either Symmetric or AsymmerticCVA or AsymmetricDVA!" );
+            // check whether CSA mpor is equal to close-out lag
+            if (configurations_.scenarioGeneratorData->withCloseOutLag()){
+                Period mpor_simulation = configurations_.scenarioGeneratorData->closeOutLag();                   
                 Period mpor_netting = inputs_->nettingSetManager()->get(key)->csaDetails()->marginPeriodOfRisk();
-                QL_REQUIRE(mpor_simulation == mpor_netting, "For netting set "<<key<<", close-out lag "<< mpor_simulation << " is not equal to the netting-set's mpor "<< mpor_netting);
+                QL_REQUIRE(mpor_simulation == mpor_netting, "For netting set "<<key<<", close-out lag "<< mpor_simulation << " is not equal to the netting-set's mpor "<< mpor_netting);    
             }
         }
     }
-    
+
     // set up valuation calculator factory
     auto calculators = [this]() {
         vector<boost::shared_ptr<ValuationCalculator>> calculators;
