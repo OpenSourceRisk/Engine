@@ -132,7 +132,7 @@ void NettedExposureCalculator::build() {
 
     vector<vector<Real>> averagePositiveAllocation(portfolio_->size(), vector<Real>(cube_->dates().size(), 0.0));
     vector<vector<Real>> averageNegativeAllocation(portfolio_->size(), vector<Real>(cube_->dates().size(), 0.0));
-    
+
     Size nettingSetCount = 0;
     for (auto n : nettingSetDefaultValue_) {
         string nettingSetId = n.first;
