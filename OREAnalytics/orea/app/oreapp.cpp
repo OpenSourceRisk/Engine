@@ -296,7 +296,7 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, const boost::
     if (console)
         ConsoleLog::instance().switchOn();
 
-    setupLog();
+    setupLog(logRootPath);
 
     conventions_ = boost::make_shared<Conventions>();
     InstrumentConventions::instance().setConventions(conventions_);
