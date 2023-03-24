@@ -57,10 +57,10 @@ class SensitivityAnalysis;
 class OREApp {
 public:
     //! Constructor that uses ORE parameters and input data from files
-    OREApp(boost::shared_ptr<Parameters> params, bool console = true);
+    OREApp(boost::shared_ptr<Parameters> params, bool console = true, const boost::filesystem::path& = boost::filesystem::path());
     //! Constructor that assumes we have already assembled input parameters via API
     OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel = 31,
-           bool console = false);
+           bool console = false, const boost::filesystem::path& = boost::filesystem::path());
 
     //! Destructor
     virtual ~OREApp();
@@ -113,7 +113,7 @@ protected:
     //! read setup from params_
     virtual void readSetup();
     //! set up logging
-    void setupLog();
+    void setupLog(const boost::filesystem::path&);
     //! remove logs
     void closeLog();
     //! load market conventions
