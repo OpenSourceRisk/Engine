@@ -222,6 +222,9 @@ public:
     void setFvaLendingCurve(const std::string& s) { fvaLendingCurve_ = s; }
     void setFlipViewBorrowingCurvePostfix(const std::string& s) { flipViewBorrowingCurvePostfix_ = s; }
     void setFlipViewLendingCurvePostfix(const std::string& s) { flipViewLendingCurvePostfix_ = s; }
+    // deterministic initial margin input by netting set
+    void setDeterministicInitialMargin(const std::string& n, TimeSeries<Real> v) { deterministicInitialMargin_[n] = v; }
+    void setDeterministicInitialMarginFromFile(const std::string& fileName);
     // dynamic initial margin details
     void setDimQuantile(Real r) { dimQuantile_ = r; }
     void setDimHorizonCalendarDays(Size s) { dimHorizonCalendarDays_ = s; }
@@ -407,6 +410,13 @@ public:
     const std::string& fvaLendingCurve() { return fvaLendingCurve_; }
     const std::string& flipViewBorrowingCurvePostfix() { return flipViewBorrowingCurvePostfix_; }
     const std::string& flipViewLendingCurvePostfix() { return flipViewLendingCurvePostfix_; }
+    // deterministic initial margin input by nettingset
+    TimeSeries<Real> deterministicInitialMargin(const std::string& n) {
+        if (deterministicInitialMargin_.find(n) != deterministicInitialMargin_.end())
+            return deterministicInitialMargin_.at(n);
+        else
+            return TimeSeries<Real>();
+    }
     // dynamic initial margin details
     Real dimQuantile() { return dimQuantile_; }
     Size dimHorizonCalendarDays() { return dimHorizonCalendarDays_; }
@@ -604,6 +614,8 @@ protected:
     std::string fvaLendingCurve_ = "";    
     std::string flipViewBorrowingCurvePostfix_ = "_BORROW";
     std::string flipViewLendingCurvePostfix_ = "_LEND";
+    // deterministic initial margin by netting set
+    std::map<std::string,TimeSeries<Real>> deterministicInitialMargin_;
     // dynamic initial margin details
     Real dimQuantile_ = 0.99;
     Size dimHorizonCalendarDays_ = 14;

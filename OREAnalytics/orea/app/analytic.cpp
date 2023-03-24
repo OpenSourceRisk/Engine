@@ -1011,7 +1011,7 @@ void XvaAnalyticImpl::runPostProcessor() {
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
         ALOG("dim calculator not set, create RegressionDynamicInitialMarginCalculator");
         dimCalculator_ = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
-            analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
+            inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
             dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
     }
 

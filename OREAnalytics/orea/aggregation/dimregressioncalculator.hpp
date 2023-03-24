@@ -40,6 +40,8 @@ using namespace std;
 class RegressionDynamicInitialMarginCalculator : public DynamicInitialMarginCalculator {
 public:
     RegressionDynamicInitialMarginCalculator(
+        //! Global input parameters
+        const boost::shared_ptr<InputParameters>& inputs,
         //! Driving portfolio consistent with the cube below
         const boost::shared_ptr<Portfolio>& portfolio,
         //! NPV cube resulting from the Monte Carlo simulation loop

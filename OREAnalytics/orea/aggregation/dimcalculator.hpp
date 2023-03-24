@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <orea/app/inputparameters.hpp>
 #include <orea/aggregation/collatexposurehelper.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/cube/inmemorycube.hpp>
@@ -52,6 +53,8 @@ using namespace std;
 class DynamicInitialMarginCalculator {
 public:
     DynamicInitialMarginCalculator(
+        //! Global input parameters
+        const boost::shared_ptr<InputParameters>& inputs,
         //! Driving portfolio consistent with the cube below
         const boost::shared_ptr<Portfolio>& portfolio,
         //! NPV cube resulting from the Monte Carlo simulation loop
@@ -97,6 +100,7 @@ public:
     const std::map<std::string, Real>& getInitialMarginScaling() { return nettingSetScaling_; }
 
 protected:
+    boost::shared_ptr<InputParameters> inputs_;
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<NPVCube> cube_, dimCube_;
     boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
@@ -119,8 +123,6 @@ protected:
 
     // For each netting set: vector of values by date, aggregated over trades and samples
     map<string, vector<Real>> nettingSetExpectedDIM_;
-
-    
 };
 
 } // namespace analytics
