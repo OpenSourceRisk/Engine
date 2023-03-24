@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <map>
 #include <ql/patterns/singleton.hpp>
 
 #include <boost/make_shared.hpp>

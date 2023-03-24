@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <map>
 #include <ql/currency.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/time/calendar.hpp>
