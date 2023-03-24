@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <map>
 #include <functional>
 #include <ql/patterns/singleton.hpp>
 #include <string>
