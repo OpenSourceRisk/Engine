@@ -290,7 +290,7 @@ void OREApp::analytics() {
     LOG("ORE analytics done");
 }
 
-OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console)
+OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, const boost::filesystem::path& logRootPath)
     : params_(params), inputs_(nullptr), cubeDepth_(0) {
 
     // Read all inputs from params and files referenced in params
@@ -315,14 +315,14 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console)
     curveConfigs_ = boost::make_shared<CurveConfigurations>();
 
     // Set up logging
-    setupLog();
+    setupLog(logRootPath);
 
     // Read setup
     readSetup();
 }
 
 OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel,
-               bool console)
+               bool console, const boost::filesystem::path& logRootPath)
     : params_(nullptr), inputs_(inputs), asof_(inputs->asof()), cubeDepth_(0) {
 
     // Initialise Singletons
@@ -346,6 +346,10 @@ OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::stri
     // Report StructuredErrorMessages with level WARNING, ERROR, CRITICAL, ALERT
     fbLogger_ = boost::make_shared<FilteredBufferedLoggerGuard>();
     Log::instance().registerLogger(boost::make_shared<FileLogger>(logFilePath));
+    boost::filesystem::path oreRootPath =
+        logRootPath.empty() ? boost::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path()
+                            : logRootPath;
+    Log::instance().setRootPath(oreRootPath);
     Log::instance().setMask(logLevel);
     Log::instance().switchOn();
 }
@@ -1425,9 +1429,9 @@ void OREApp::readSetup() {
 
 }
 
-void OREApp::setupLog() {
+void OREApp::setupLog(const boost::filesystem::path& logRootPath) {
     closeLog();
-
+    
     string outputPath = params_->get("setup", "outputPath");
     string logFile = outputPath + "/" + params_->get("setup", "logFile");
     Size logMask = 15; // Default level
@@ -1444,6 +1448,10 @@ void OREApp::setupLog() {
     QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << outputPath << "' is not a directory.");
 
     Log::instance().registerLogger(boost::make_shared<FileLogger>(logFile));
+    boost::filesystem::path oreRootPath =
+        logRootPath.empty() ? boost::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path()
+                            : logRootPath;
+    Log::instance().setRootPath(oreRootPath);
     Log::instance().setMask(logMask);
     Log::instance().switchOn();
 }
