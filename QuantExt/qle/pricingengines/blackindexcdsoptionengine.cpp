@@ -137,7 +137,7 @@ void BlackIndexCdsOptionEngine::priceStrikeCalculate(Real fep) const {
     // option. Generally, this is the notional of the version that was on the run on that date. Note that the strike
     // price is in terms of this notional also. Markit quotes different reference prices, forward prices and price
     // volatilities for different versions (option trade date determines version traded) of the same index series.
-    Real forwardPrice = (1 - npv / tradeDateNtl) / discToExercise;
+    Real forwardPrice = 1 - npv / tradeDateNtl / discToExercise;
     results_.additionalResults["forwardPrice"] = forwardPrice;
 
     // Front end protection adjusted forward price.
