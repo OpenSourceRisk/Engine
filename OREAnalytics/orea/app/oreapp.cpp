@@ -570,11 +570,11 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
      * Curves
      *************/
 
-    inputs->insertAnalytic("MARKETDATA");
-    
     tmp = params_->get("curves", "active", false);
-    if (tmp != "") 
-        inputs->setOutputCurves(parseBool(tmp));
+    if (tmp != "") {
+        bool mkt = parseBool(tmp);
+        inputs->setOutputCurves(mkt);
+    }
     
     tmp = params_->get("curves", "grid", false);
     if (tmp != "") 
@@ -1098,6 +1098,9 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     tmp = params_->get("cashflow", "portfolioFilterDate", false);
     if (tmp != "")
         inputs->setPortfolioFilterDate(tmp);
+    
+    if (inputs->analytics().size() == 0)
+        inputs->insertAnalytic("MARKETDATA");
 
     LOG("buildInputParameters done");
 }
