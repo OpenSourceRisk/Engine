@@ -45,6 +45,7 @@ AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inp
                                    const boost::shared_ptr<MarketDataLoader>& marketDataLoader)
     : inputs_(inputs), marketDataLoader_(marketDataLoader) {    
     
+    addAnalytic("MARKETDATA", boost::make_shared<MarketDataAnalytic>(inputs));
     addAnalytic("PRICING", boost::make_shared<PricingAnalytic>(inputs));
     addAnalytic("VAR", boost::make_shared<VarAnalytic>(inputs_));
     addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_));
