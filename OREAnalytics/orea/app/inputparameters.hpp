@@ -376,10 +376,10 @@ public:
      *****************/
     const std::string& xvaBaseCurrency() { return xvaBaseCurrency_; }
     bool loadCube() { return loadCube_; }
-    boost::shared_ptr<NPVCube> cube() { return cube_; }
-    boost::shared_ptr<NPVCube> nettingSetCube() { return nettingSetCube_; }
-    boost::shared_ptr<NPVCube> cptyCube() { return cptyCube_; }
-    boost::shared_ptr<AggregationScenarioData> mktCube() { return mktCube_; }
+    const boost::shared_ptr<NPVCube>& cube() { return cube_; }
+    const boost::shared_ptr<NPVCube>& nettingSetCube() { return nettingSetCube_; }
+    const boost::shared_ptr<NPVCube>& cptyCube() { return cptyCube_; }
+    const boost::shared_ptr<AggregationScenarioData>& mktCube() { return mktCube_; }
     bool flipViewXVA() { return flipViewXVA_; }
     bool fullInitialCollateralisation() { return fullInitialCollateralisation_; }
     bool exposureProfiles() { return exposureProfiles_; }
