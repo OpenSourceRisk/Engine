@@ -362,6 +362,8 @@ CommodityIndexedLeg::operator Leg() const {
         Real spread = detail::get(spreads_, i, 0.0);
         Real gearing = detail::get(gearings_, i, 1.0);
         Date pricingDate = detail::get(pricingDates_, i, Date());
+        bool excludeStart = i == 0 ? false : excludeStartDate_;
+        bool includeEnd = i == numberCashflows - 1 ? true : includeEndDate_;
 
         // If explicit payment dates provided, use them.
         if (!paymentDates_.empty()) {
@@ -372,7 +374,7 @@ CommodityIndexedLeg::operator Leg() const {
             quantity, start, end, index_, paymentLag_, paymentCalendar_, paymentConvention_, pricingLag_,
             pricingLagCalendar_, spread, gearing, paymentTiming_, inArrears_, useFuturePrice_, useFutureExpiryDate_,
             futureMonthOffset_, calc_, paymentDate, pricingDate, dailyExpiryOffset_, fxIndex_, isAveraging_,
-            pricingCalendar_, includeEndDate_, excludeStartDate_));
+            pricingCalendar_, includeEnd, excludeStart));
     }
 
     return leg;
