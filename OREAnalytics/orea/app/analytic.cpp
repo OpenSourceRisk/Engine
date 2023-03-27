@@ -234,7 +234,7 @@ void MarketDataAnalyticImpl::runAnalytic(
     CONSOLEW("Build Market");
     analytic()->buildMarket(loader);
     CONSOLE("OK");
-
+    /*
     if (inputs_->outputTodaysMarketCalibration()) {
         CONSOLEW("Market Calibration");
         LOG("Write todays market calibration report");
@@ -259,6 +259,7 @@ void MarketDataAnalyticImpl::runAnalytic(
         analytic()->reports()["MARKET"]["curves"] = curvesReport;
         CONSOLE("OK");
     }
+    */
 }
 
 /*******************************************************************
