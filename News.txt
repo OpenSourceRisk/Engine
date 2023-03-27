@@ -40,6 +40,7 @@ DOCUMENTATION
   migration of Credit derivative instruments into ORE, as well as new examples
 
 LANGUAGE BINDINGS
+- Upgrade to QuantLib-SWIG-1.29
 - The SWIG wrapper has been extended to provide access to ORE input
   construction in memory and to query in-memory results (reports etc), in line
   with the refactoring mentioned below.
@@ -50,6 +51,7 @@ LANGUAGE BINDINGS
   See the ORE-SWIG repository for how to install the ORE module.
 
 OTHER
+- Upgrade to QuantLib-1.29
 - Refactor the serialization of NPV cube and market cube (aggregation scenario data)
 - Refactor OREAnalytics/orea/app by separating input construction from processing
   and persisting results. This is to faciliate re-using the processing element

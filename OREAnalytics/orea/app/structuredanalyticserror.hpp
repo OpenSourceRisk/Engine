@@ -31,7 +31,7 @@ namespace analytics {
 class StructuredAnalyticsErrorMessage : public ore::data::StructuredMessage {
 public:
     StructuredAnalyticsErrorMessage(const std::string& exceptionType, const std::string& exceptionWhat)
-        : StructuredMessage("Error", "Analytics", exceptionWhat,
+        : StructuredMessage(Category::Error, Group::Analytics, exceptionWhat,
                             std::map<std::string, std::string>({{"exceptionType", exceptionType}})) {}
 };
 
