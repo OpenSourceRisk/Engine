@@ -123,9 +123,9 @@ void InMemoryLoader::addFixing(QuantLib::Date date, const string& name, QuantLib
     }
 }
 
-void InMemoryLoader::addDividend(Date date, const string& name, Real value) {
-    if (!dividends_.insert(Fixing(date, name, value)).second) {
-        WLOG("Skipped Dividend " << name << "@" << QuantLib::io::iso_date(date) << " - this is already present.");
+void InMemoryLoader::addDividend(const QuantExt::Dividend& dividend) {
+    if (!dividends_.insert(dividend).second) {
+        WLOG("Skipped Dividend " << dividend.name << "@" << QuantLib::io::iso_date(dividend.exDate) << " - this is already present.");
     }
 }
 

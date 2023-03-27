@@ -26,7 +26,6 @@
 #include <ql/patterns/singleton.hpp>
 #include <ql/timeseries.hpp>
 #include <ql/utilities/observablevalue.hpp>
-#include
 
 namespace QuantExt {
 
@@ -34,7 +33,7 @@ struct Dividend {
     //! Ex dividend date
     QuantLib::Date exDate = QuantLib::Date();
     //! Index name
-    std::string name = string();
+    std::string name = std::string();
     //! Dividend rate
     QuantLib::Real rate = QuantLib::Null<QuantLib::Real>();
     //! Dividend Payment date
@@ -52,9 +51,17 @@ struct Dividend {
 
 //! Compare dividends
 bool operator<(const Dividend& f1, const Dividend& f2);
+bool operator==(const Dividend& f1, const Dividend& f2);
 
 //! Utility to write a vector of dividends in the QuantLib index manager's fixing history
 void applyDividends(const std::set<Dividend>& fixings);
+
+class DividendSeries {
+
+
+private:
+    std::set<Dividend> dividends_;
+};
 
 //! global repository for past dividends
 /*! \note index names are case insensitive */
@@ -68,23 +75,17 @@ public:
     //! returns whether historical fixings were stored for the index
     bool hasHistory(const std::string& name) const;
     //! returns the (possibly empty) history of the index fixings
-    const std::vector<Dividend>& getHistory(const std::string& name) const;
+    const std::set<Dividend>& getHistory(const std::string& name) const;
     //! stores the historical fixings of the index
-    void setHistory(const std::string& name, const std::vector<Dividend>&);
+    void setHistory(const std::string& name, const std::set<Dividend>&);
     //! observer notifying of changes in the index fixings
-    ext::shared_ptr<QuantLib::Observable> notifier(const std::string& name) const;
-    //! returns all names of the indexes for which fixings were stored
-    std::vector<std::string> histories() const;
-    //! clears the historical fixings of the index
-    void clearHistory(const std::string& name);
-    //! clears all stored fixings
-    void clearHistories();
-    //! returns whether a specific historical fixing was stored for the index and date
-    bool hasHistoricalDividend(const std::string& name, const Dividend& dividend) const;
+    boost::shared_ptr<QuantLib::Observable> notifier(const std::string& name) const;
 
 private:
-    typedef std::map<std::string, QuantLib::ObservableValue<std::vector<Dividend>>> history_map;
+    typedef std::map<std::string, QuantLib::ObservableValue<std::set<Dividend>>> history_map;
     mutable history_map data_;
 };
 
-}
+} // namespace QuantExt
+
+#endif

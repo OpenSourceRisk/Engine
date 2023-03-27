@@ -30,7 +30,7 @@ void MarketDataCsvLoaderImpl::loadCorporateActionData(boost::shared_ptr<ore::dat
     for (const auto& div : csvLoader_->loadDividends()) {
         for (const auto& it : equities) {
             if (div.name == it.second)
-                loader->addDividend(div.date, div.name, div.fixing);
+                loader->addDividend(div);
         }
     }
 }

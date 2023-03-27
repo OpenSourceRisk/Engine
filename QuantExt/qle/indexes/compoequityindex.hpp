@@ -41,8 +41,8 @@ public:
 
     boost::shared_ptr<EquityIndex> source() const;
 
-    void addDividend(const Date& fixingDate, Real fixing, bool forceOverwrite = false) override;
-    const TimeSeries<Real>& dividendFixings() const override;
+    void addDividend(const Dividend& dividend, bool forceOverwrite = false) override;
+    const std::set<Dividend>& dividendFixings() const override;
     Real pastFixing(const Date& fixingDate) const override;
     boost::shared_ptr<EquityIndex> clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
                                          const Handle<YieldTermStructure>& dividend) const override;
@@ -54,7 +54,7 @@ private:
     boost::shared_ptr<FxIndex> fxIndex_;
     Date dividendCutoffDate_;
 
-    mutable TimeSeries<Real> dividendFixings_;
+    mutable std::set<Dividend> dividendFixings_;
 };
 
 } // namespace QuantExt

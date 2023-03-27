@@ -18,9 +18,12 @@
 
 #include <qle/indexes/dividendmanager.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 
 using namespace::std;
 using namespace::QuantLib;
+using boost::algorithm::to_upper_copy;
 
 namespace QuantExt {
 
@@ -29,23 +32,39 @@ void applyDividends(const set<Dividend>& dividends) {
     map<string, boost::shared_ptr<EquityIndex>> cache;
     boost::shared_ptr<EquityIndex> index;
     std::string lastIndexName;
-    for (auto& f : dividends) {
+    for (auto& d: dividends) {
         try {
-            if (lastIndexName != f.name) {
-                index = boost::make_shared<EquityIndex>(f.name, NullCalendar(), Currency());
-                lastIndexName = f.name;
+            if (lastIndexName != d.name) {
+                index = boost::make_shared<EquityIndex>(d.name, NullCalendar(), Currency());
+                lastIndexName = d.name;
             }
-            index->addDividend(f.date, f.fixing, true);
+            index->addDividend(d, true);
             count++;
         } catch (const std::exception& e) {
         }
     }
 }
 
-bool operator<(const Dividend& f1, const Dividend& f2) {
-    if (f1.name != f2.name)
-        return f1.name < f2.name;
-    return f1.date < f2.date;
+bool operator<(const Dividend& d1, const Dividend& d2) {
+    if (d1.name != d2.name)
+        return d1.name < d2.name;
+    return d1.exDate < d2.exDate;
 }
+
+bool operator==(const Dividend& d1, const Dividend& d2) {
+    return d1.exDate == d2.exDate && d1.name == d2.name;
+}
+
+bool DividendManager::hasHistory(const string& name) const { return data_.find(to_upper_copy(name)) != data_.end(); }
+
+const set<Dividend>& DividendManager::getHistory(const string& name) const {
+    return data_[to_upper_copy(name)].value();
+}
+
+void DividendManager::setHistory(const string& name, const std::set<Dividend>& history) {
+    data_[to_upper_copy(name)] = history;
+}
+
+boost::shared_ptr<Observable> DividendManager::notifier(const string& name) const { return data_[to_upper_copy(name)]; }
 
 }

@@ -30,6 +30,7 @@
 #include <ql/time/calendar.hpp>
 #include <ql/currency.hpp>
 #include <qle/indexes/eqfxindexbase.hpp>
+#include <qle/indexes/dividendmanager.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -46,8 +47,6 @@ public:
     //! \name Index interface
     //@{
     std::string name() const override;
-    void resetName() { name_ = familyName(); }
-    std::string dividendName() const { return name() + "_div"; }
     Currency currency() const { return currency_; }
     Calendar fixingCalendar() const override;
     bool isValidFixingDate(const Date& fixingDate) const override;
@@ -55,13 +54,13 @@ public:
     // Forecasted price can include dividend returns by setting incDividend = true
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDividend) const;
-    // Dividend Fixings
-    //! stores the historical dividend fixing at the given date
+    // Dividends
+    //! stores the historical dividend at the given date
     /*! the date passed as arguments must be the actual calendar
-        date of the fixing; no settlement days must be used.
+        date of the dividend.
     */
-    virtual void addDividend(const Date& fixingDate, Real fixing, bool forceOverwrite = false);
-    virtual const TimeSeries<Real>& dividendFixings() const { return IndexManager::instance().getHistory(dividendName()); }
+    virtual void addDividend(const Dividend& fixing, bool forceOverwrite = false);
+    virtual const std::set<Dividend>& dividendFixings() const { return DividendManager::instance().getHistory(name()); }
     Real dividendsBetweenDates(const Date& startDate, const Date& endDate) const;
     //@}
     //! \name Observer interface
