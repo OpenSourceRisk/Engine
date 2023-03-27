@@ -49,9 +49,11 @@ struct Dividend {
     }
 };
 
+bool operator==(const Dividend& d1, const Dividend& d);
+bool operator<(const Dividend& d1, const Dividend& d2);
+std::ostream& operator<<(std::ostream&, Dividend);
+
 //! Compare dividends
-bool operator<(const Dividend& f1, const Dividend& f2);
-bool operator==(const Dividend& f1, const Dividend& f2);
 
 //! Utility to write a vector of dividends in the QuantLib index manager's fixing history
 void applyDividends(const std::set<Dividend>& fixings);

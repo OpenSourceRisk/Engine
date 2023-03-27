@@ -51,8 +51,12 @@ bool operator<(const Dividend& d1, const Dividend& d2) {
     return d1.exDate < d2.exDate;
 }
 
-bool operator==(const Dividend& d1, const Dividend& d2) {
-    return d1.exDate == d2.exDate && d1.name == d2.name;
+bool operator==(const Dividend& d1, const Dividend& d2) { 
+    return d1.exDate == d2.exDate && d1.name == d2.name; 
+}
+
+std::ostream& operator<<(std::ostream& out, Dividend dividend) {
+    return out << dividend.name << "," << dividend.exDate;
 }
 
 bool DividendManager::hasHistory(const string& name) const { return data_.find(to_upper_copy(name)) != data_.end(); }
