@@ -1623,7 +1623,8 @@ CommodityFutureConvention::CommodityFutureConvention()
       optionExpiryOffset_(0),
       optionNth_(1), 
       optionWeekday_(Mon),
-      optionExpiryDay_(Null<Natural>()) {}
+      optionExpiryDay_(Null<Natural>()), 
+      balanceOfTheMonth_(false) {}
 
 CommodityFutureConvention::CommodityFutureConvention(const string& id, const DayOfMonth& dayOfMonth,
                                                      const string& contractFrequency, const string& calendar,
@@ -1650,7 +1651,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
       averagingData_(averagingData), hoursPerDay_(hoursPerDay), offPeakPowerIndexData_(offPeakPowerIndexData),
       indexName_(indexName), strOptionContractFrequency_(optionFrequency), optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_),
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_),
-      strOptionWeekday_(optionExpiryDateRule.weekday_) {
+      strOptionWeekday_(optionExpiryDateRule.weekday_), balanceOfTheMonth_(false) {
     build();
 }
 
@@ -1680,7 +1681,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
       indexName_(indexName), strOptionContractFrequency_(optionFrequency),
       optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_),
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_),
-      strOptionWeekday_(optionExpiryDateRule.weekday_) {
+      strOptionWeekday_(optionExpiryDateRule.weekday_), balanceOfTheMonth_(false) {
     build();
 }
 
@@ -1711,7 +1712,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
       indexName_(indexName), strOptionContractFrequency_(optionFrequency),
       optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_), 
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_), 
-      strOptionWeekday_(optionExpiryDateRule.weekday_) {
+      strOptionWeekday_(optionExpiryDateRule.weekday_), balanceOfTheMonth_(false) {
     build();
 }
 
@@ -1742,7 +1743,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Bus
       indexName_(indexName), strOptionContractFrequency_(optionFrequency),
       optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_), 
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_), 
-      strOptionWeekday_(optionExpiryDateRule.weekday_) {
+      strOptionWeekday_(optionExpiryDateRule.weekday_), balanceOfTheMonth_(false) {
     build();
 }
 
@@ -1949,6 +1950,8 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
 
     savingsTime_ = XMLUtils::getChildValue(node, "SavingsTime", false, "US");
 
+    balanceOfTheMonth_ = XMLUtils::getChildValueAsBool(node, "BalanceOfTheMonth", false, false);
+
     build();
 }
 
@@ -2069,6 +2072,10 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(node, validContractMonthNode);
     }
 
+    if (balanceOfTheMonth_) {
+        XMLUtils::addChild(doc, node, "BalanceOfTheMonth", balanceOfTheMonth_);
+    }
+
     return node;
 }
 
@@ -2141,6 +2148,9 @@ void CommodityFutureConvention::build() {
         QL_REQUIRE(id_ != pIdx, "The peak index (" << pIdx << ") cannot equal the index for which" <<
             " we are providing conventions (" << id_ << ").");
     }
+
+    QL_REQUIRE(!balanceOfTheMonth_ || isAveraging(), "Balance of the month make only sense for averaging futures");
+
 }
 
 Frequency CommodityFutureConvention::parseAndValidateFrequency(const std::string & strFrequency) {

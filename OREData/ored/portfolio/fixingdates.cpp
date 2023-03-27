@@ -510,17 +510,19 @@ void FixingDateGetter::visit(EquityMarginCoupon& c) {
 }
 
 void FixingDateGetter::visit(CommodityIndexedCashFlow& c) {
-    // the ql index name is identical to the ORE index name, i.e. we do not need to call the
-    // mapping function IndexNameTranslator::instance().oreName() here
-    requiredFixings_.addFixingDate(c.pricingDate(), c.index()->name(), c.date());
-    // if the pricing date is > future expiry, add the future expiry itself as well
-    if (auto d = c.index()->expiryDate(); d != Date() && d < c.pricingDate()) {
-        requiredFixings_.addFixingDate(d, c.index()->name(), d);
+    auto indices = c.indices();
+    for (const auto& kv : indices) {
+        // see above, the ql and ORE index names are identical
+        requiredFixings_.addFixingDate(kv.first, kv.second->name(), c.date());
+        // if the pricing date is > future expiry, add the future expiry itself as well
+        if (auto d = kv.second->expiryDate(); d != Date() && d < kv.first) {
+            requiredFixings_.addFixingDate(d, kv.second->name(), d);
+        }
     }
 }
 
 void FixingDateGetter::visit(CommodityIndexedAverageCashFlow& c) {
-    map<Date, boost::shared_ptr<CommodityIndex>> indices = c.indices();
+    auto indices = c.indices();
     for (const auto& kv : indices) {
         // see above, the ql and ORE index names are identical
         requiredFixings_.addFixingDate(kv.first, kv.second->name(), c.date());

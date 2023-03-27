@@ -270,6 +270,8 @@ void PricingAnalyticImpl::runAnalytic(
         if (runTypes.find(type) == runTypes.end())
             continue;
 
+        std::string effectiveResultCurrency =
+            inputs_->resultCurrency().empty() ? inputs_->baseCurrency() : inputs_->resultCurrency();
         if (type == "NPV" || type == "NPV_LAGGED") {
             CONSOLEW("Pricing: NPV Report");
             ore::analytics::ReportWriter(inputs_->reportNaString())
