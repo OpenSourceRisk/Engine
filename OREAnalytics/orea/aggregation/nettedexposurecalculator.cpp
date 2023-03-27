@@ -133,14 +133,24 @@ void NettedExposureCalculator::build() {
     vector<vector<Real>> averagePositiveAllocation(portfolio_->size(), vector<Real>(cube_->dates().size(), 0.0));
     vector<vector<Real>> averageNegativeAllocation(portfolio_->size(), vector<Real>(cube_->dates().size(), 0.0));
 
+    bool hasCloseOutGrid = false;
+    if (boost::dynamic_pointer_cast<MporGridCubeInterpretation>(cubeInterpretation_))
+        hasCloseOutGrid = true;
     Size nettingSetCount = 0;
     for (auto n : nettingSetDefaultValue_) {
         string nettingSetId = n.first;
         vector<vector<Real>> data = n.second;
         boost::shared_ptr<NettingSetDefinition> netting = nettingSetManager_->get(nettingSetId);
         //only for active CSA and calcType == NoLag close-out value is relevant
-        if (netting->activeCsaFlag() && calcType_ == CollateralExposureHelper::CalculationType::NoLag) 
-            data = nettingSetCloseOutValue_[nettingSetId];
+        if (netting->activeCsaFlag()){
+            if (hasCloseOutGrid){
+                QL_REQUIRE(calcType_ == CollateralExposureHelper::CalculationType::NoLag, "For nettingSetID "<<nettingSetId<< " CSA is active and a close-out grid is configured in the simulation.xml. Calculation type must be set to NoLag!");
+                data = nettingSetCloseOutValue_[nettingSetId];
+            }
+            else
+                QL_REQUIRE(calcType_ != CollateralExposureHelper::CalculationType::NoLag, "For nettingSetID "<<nettingSetId<< " CSA is active and a close-out grid is not configured in the simulation.xml. Calculation type must be set to either Symmetric or AsymmerticCVA or AsymmetricDVA!" );
+            // TODO:check whether CSA mpor is equal to close-out lag
+        }
 
         LOG("Aggregate exposure for netting set " << nettingSetId);
         // Get the collateral account balance paths for the netting set.
