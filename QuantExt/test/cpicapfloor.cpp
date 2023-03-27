@@ -489,10 +489,6 @@ BOOST_AUTO_TEST_CASE(testPutCallParity) {
             // build CPI leg price manually
             Date fixingDate = maturityDate - common.observationLag;
             Date effectiveMaturity = fixingDate;
-            if (!common.ii->interpolated()) {
-                std::pair<Date, Date> ipm = inflationPeriod(effectiveMaturity, common.ii->frequency());
-                effectiveMaturity = ipm.first;
-            }
             Real timeFromStart =
                 common.ii->zeroInflationTermStructure()->dayCounter().yearFraction(effectiveStart, effectiveMaturity);
             Real K = pow(1.0 + strike[i], timeFromStart);

@@ -581,7 +581,7 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
     cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
     cpiTS->enableExtrapolation(true);
     cpiTS->unregisterWith(Settings::instance().evaluationDate());
-    return Handle<ZeroInflationIndex>(parseZeroInflationIndex(index, false, Handle<ZeroInflationTermStructure>(cpiTS)));
+    return Handle<ZeroInflationIndex>(parseZeroInflationIndex(index, Handle<ZeroInflationTermStructure>(cpiTS)));
 }
 
 Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector<Date> dates, vector<Rate> rates,
@@ -606,7 +606,7 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
     pYoYts->recalculate();
     yoyTS = boost::dynamic_pointer_cast<YoYInflationTermStructure>(pYoYts);
     return Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-        parseZeroInflationIndex(index, false), false, Handle<YoYInflationTermStructure>(pYoYts)));
+        parseZeroInflationIndex(index), false, Handle<YoYInflationTermStructure>(pYoYts)));
 }
 
 Handle<ZeroInflationTermStructure> TestMarket::flatZeroInflationCurve(Real inflationRate, Rate nominalRate) {
@@ -846,8 +846,7 @@ TestMarketParCurves::TestMarketParCurves(const Date& asof) : MarketImpl(false) {
                                258.8, 260.0, 261.1, 261.4, 262.1, -264.3, -265.2};
 
     RelinkableHandle<ZeroInflationTermStructure> hcpi;
-    bool interp = false;
-    boost::shared_ptr<ZeroInflationIndex> ii = boost::shared_ptr<UKRPI>(new UKRPI(interp, hcpi));
+    boost::shared_ptr<ZeroInflationIndex> ii = boost::shared_ptr<UKRPI>(new UKRPI(hcpi));
     for (Size i = 0; i < fixingDatesUKRPI.size(); i++) {
         ii->addFixing(fixingDatesUKRPI[i], fixingRatesUKRPI[i], true);
     };
@@ -1110,7 +1109,7 @@ void TestMarketParCurves::createZeroInflationIndex(const string& idxName, const 
     Handle<ZeroInflationTermStructure> its(zeroCurve);
     its->enableExtrapolation();
     boost::shared_ptr<ZeroInflationIndex> i =
-        ore::data::parseZeroInflationIndex(idxName, false, Handle<ZeroInflationTermStructure>(its));
+        ore::data::parseZeroInflationIndex(idxName, Handle<ZeroInflationTermStructure>(its));
     Handle<ZeroInflationIndex> zh(i);
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, idxName)] = zh;
 }

@@ -200,7 +200,7 @@ private:
     mutable boost::shared_ptr<QuantExt::OptionInterpolator2d<InterpolatorStrike, InterpolatorTime>> volSurface_;
 };
 
-QL_DEPRECATED_DISABLE_WARNING
+
 
 template <class InterpolatorStrike, class InterpolatorTime>
 CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::CPIPriceVolatilitySurface(
@@ -230,8 +230,8 @@ CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::CPIPriceVolatil
     registerWith(index_);
     registerWith(yts_);
 }
-QL_DEPRECATED_ENABLE_WARNING
 
+QL_DEPRECATED_DISABLE_WARNING
 template <class InterpolatorStrike, class InterpolatorTime>
 CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::CPIPriceVolatilitySurface(
     PriceQuotePreference type, 
@@ -263,6 +263,7 @@ CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::CPIPriceVolatil
     registerWith(index_);
     registerWith(yts_);
 }
+QL_DEPRECATED_ENABLE_WARNING
 
 template <class InterpolatorStrike, class InterpolatorTime>
 void CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::performCalculations() const {

@@ -83,8 +83,9 @@ Rate YoYInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTod
 Real YoYInflationIndexWrapper::forecastFixing(const Date& fixingDate) const {
     if (!yoyInflationTermStructure().empty())
         return YoYInflationIndex::fixing(fixingDate);
-    Real f1 = zeroIndex_->fixing(fixingDate);
-    Real f0 = zeroIndex_->fixing(fixingDate - 1 * Years); // FIXME convention ?
+    auto interpolation = YoYInflationIndex::interpolated() ? CPI::Linear : CPI::Flat;
+    Real f1 = CPI::laggedFixing(zeroIndex_, fixingDate, 0 * Days, interpolation);
+    Real f0 = CPI::laggedFixing(zeroIndex_, fixingDate - 1 * Years, 0 * Days, interpolation);
     return (f1 - f0) / f0;
 }
 

@@ -141,7 +141,7 @@ parseZeroInflationIndex(const string& s, const Handle<ZeroInflationTermStructure
 
 QL_DEPRECATED
 boost::shared_ptr<ZeroInflationIndex>
-parseZeroInflationIndex(const string& s, bool isInterpolated = false,
+parseZeroInflationIndex(const string& s, bool isInterpolated,
                         const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
 
 //! Convert std::string to QuantExt::BondIndex

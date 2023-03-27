@@ -446,7 +446,7 @@ pair<bool, boost::shared_ptr<ZeroInflationIndex>> isInflationIndex(const string&
     boost::shared_ptr<ZeroInflationIndex> index;
     try {
         // Currently, only way to have an inflation index is to have a ZeroInflationIndex
-        index = parseZeroInflationIndex(indexName, false, Handle<ZeroInflationTermStructure>());
+        index = parseZeroInflationIndex(indexName, Handle<ZeroInflationTermStructure>());
     } catch (...) {
         return make_pair(false, nullptr);
     }
@@ -715,7 +715,9 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s,
 
     auto it = m.find(s);
     if (it != m.end()) {
+        QL_DEPRECATED_DISABLE_WARNING
         auto index = it->second->build(isInterpolated, h);
+        QL_DEPRECATED_ENABLE_WARNING
         IndexNameTranslator::instance().add(index->name(), s);
         return index;
     } else {
@@ -945,7 +947,7 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseZeroInflationIndex(s, false, Handle<ZeroInflationTermStructure>());
+            ret_idx = parseZeroInflationIndex(s, Handle<ZeroInflationTermStructure>());
         } catch (...) {
         }
     }
