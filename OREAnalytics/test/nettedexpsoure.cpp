@@ -20,18 +20,7 @@
 #include <boost/timer/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
-#include <orea/engine/filteredsensitivitystream.hpp>
-#include <orea/engine/observationmode.hpp>
-#include <orea/engine/parametricvar.hpp>
-#include <orea/engine/riskfilter.hpp>
-#include <orea/engine/sensitivityaggregator.hpp>
-#include <orea/engine/sensitivityanalysis.hpp>
-#include <orea/engine/sensitivitycubestream.hpp>
-#include <orea/engine/sensitivityfilestream.hpp>
-#include <orea/engine/sensitivityinmemorystream.hpp>
-#include <orea/engine/sensitivityrecord.hpp>
-#include <orea/engine/sensitivitystream.hpp>
-#include <orea/engine/stresstest.hpp>
+
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
@@ -376,14 +365,14 @@ boost::shared_ptr<NPVCube> buildNPVCube(boost::shared_ptr<DateGrid> dateGrid,
     double elapsed = t.elapsed().wall * 1e-9;
     
     if (withCloseOutGrid){
-        std::string fileName = "/Users/sarp.acar/dev/oreplus/build/ore/OREAnalytics/scenarioData_closeout.csv";
+        std::string fileName = "scenarioData_closeout.csv";
         saveAggregationScenarioData(fileName, *simMarket->aggregationScenarioData());
-        fileName = "/Users/sarp.acar/dev/oreplus/build/ore/OREAnalytics/cube_closeout.csv";
+        fileName = "cube_closeout.csv";
         saveCube(fileName, *cube);
     }else{
-        std::string fileName = "/Users/sarp.acar/dev/oreplus/build/ore/OREAnalytics/scenarioData.csv";
+        std::string fileName = "scenarioData.csv";
         saveAggregationScenarioData(fileName, *simMarket->aggregationScenarioData());
-        fileName = "/Users/sarp.acar/dev/oreplus/build/ore/OREAnalytics/cube.csv";
+        fileName = "cube.csv";
         saveCube(fileName, *cube);
     }
 
@@ -602,11 +591,11 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         boost::shared_ptr<AggregationScenarioData> asd;
         boost::shared_ptr<CubeInterpretation> cubeInterpreter;
         if (withCloseOutGrid[k]){
-            fileName = "/Users/sarp.acar/dev/oreplus/build/ore/OREAnalytics/scenarioData_closeout.csv";
+            fileName = "scenarioData_closeout.csv";
             asd = loadAggregationScenarioData(fileName);
             cubeInterpreter = boost::make_shared<MporGridCubeInterpretation>(asd, dateGrid);
         }else{ 
-            fileName = "/Users/sarp.acar/dev/oreplus/build/ore/OREAnalytics/scenarioData.csv";
+            fileName = "scenarioData.csv";
             asd = loadAggregationScenarioData(fileName);
             cubeInterpreter = boost::make_shared<RegularCubeInterpretation>(asd);
         }
@@ -618,7 +607,8 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         }
 
         vector<string> regressors = {"EUR-EURIBOR-6M"};
-        boost::shared_ptr<RegressionDynamicInitialMarginCalculator> dimCalculator = boost::make_shared<RegressionDynamicInitialMarginCalculator>(portfolio, cube, cubeInterpreter, asd, 0.99, 14, 2, regressors);
+        boost::shared_ptr<InputParameters> inputs = boost::make_shared<InputParameters>();
+        boost::shared_ptr<RegressionDynamicInitialMarginCalculator> dimCalculator = boost::make_shared<RegressionDynamicInitialMarginCalculator>(inputs, portfolio, cube, cubeInterpreter, asd, 0.99, 14, 2, regressors);
         
         BOOST_TEST_MESSAGE("initial NPV at "<< QuantLib::io::iso_date(referenceDate)<<": "<<cube->getT0(0));
         for (Size i = 0; i<cube->dates().size(); i++)     
