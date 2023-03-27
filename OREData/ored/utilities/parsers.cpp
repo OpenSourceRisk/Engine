@@ -242,6 +242,7 @@ DayCounter parseDayCounter(const string& s) {
                                         {"Actual/Actual (ISDA)", ActualActual(ActualActual::ISDA)},
                                         {"ActualActual (ISDA)", ActualActual(ActualActual::ISDA)},
                                         {"ACT/ACT", ActualActual(ActualActual::ISDA)},
+                                        {"Act/Act", ActualActual(ActualActual::ISDA)},
                                         {"ACT29", ActualActual(ActualActual::AFB)},
                                         {"ACT", ActualActual(ActualActual::ISDA)},
                                         {"ActActISMA", ActualActual(ActualActual::ISMA)},
