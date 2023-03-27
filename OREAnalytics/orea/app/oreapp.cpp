@@ -293,29 +293,26 @@ void OREApp::analytics() {
 OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, const boost::filesystem::path& logRootPath)
     : params_(params), inputs_(nullptr), cubeDepth_(0) {
 
+    if (console)
+        ConsoleLog::instance().switchOn();
+
+    setupLog(logRootPath);
+
+    conventions_ = boost::make_shared<Conventions>();
+    InstrumentConventions::instance().setConventions(conventions_);
+
     // Read all inputs from params and files referenced in params
     CONSOLEW("Loading inputs");
     inputs_ = boost::make_shared<InputParameters>();
     buildInputParameters(inputs_, params_);
     outputs_ = boost::make_shared<OutputParameters>(params_);
     CONSOLE("OK");
-    
-    // Set global evaluation date
+        
     asof_ = inputs_->asof();
     Settings::instance().evaluationDate() = asof_;
 
-    // initialise some pointers
-    conventions_ = boost::make_shared<Conventions>();
-    InstrumentConventions::instance().setConventions(conventions_);
-    if (console) {
-        ConsoleLog::instance().switchOn();
-    }
-    
     marketParameters_ = boost::make_shared<TodaysMarketParameters>();
     curveConfigs_ = boost::make_shared<CurveConfigurations>();
-
-    // Set up logging
-    setupLog(logRootPath);
 
     // Read setup
     readSetup();
@@ -1213,6 +1210,13 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
     // DIM
 
+    tmp = params_->get("xva", "deterministicInitialMarginFile", false);
+    if (tmp != "") {
+        string imFile = inputPath + "/" + tmp;
+        LOG("Load initial margin evolution from file " << tmp);
+        inputs->setDeterministicInitialMarginFromFile(imFile);
+    }
+    
     tmp = params_->get("xva", "dimQuantile", false);
     if (tmp != "")
         inputs->setDimQuantile(parseReal(tmp));
@@ -1359,7 +1363,7 @@ boost::shared_ptr<XvaRunner> OREApp::getXvaRunner() {
     }
 
     boost::shared_ptr<XvaRunner> xva = boost::make_shared<XvaRunner>(
-        asof_, baseCcy, portfolio_, nettingSetManager, engineData, curveConfigs_, marketParameters, simMarketParameters,
+        inputs_, asof_, baseCcy, portfolio_, nettingSetManager, engineData, curveConfigs_, marketParameters, simMarketParameters,
         scenarioGeneratorData, modelData, referenceData, iborFallbackConfig_, dimQuantile, dimHorizonCalendarDays,
         analytics, calculationType, dvaName, fvaBorrowingCurve, fvaLendingCurve, fullInitialCollateralisation,
         storeFlows);
@@ -2252,7 +2256,7 @@ void OREApp::runPostProcessor() {
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
         ALOG("dim calculator not set, create RegressionDynamicInitialMarginCalculator");
         dimCalculator_ = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
-            portfolio_, cube_, cubeInterpreter_, scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
+            inputs_, portfolio_, cube_, cubeInterpreter_, scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
             dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
     }
 
