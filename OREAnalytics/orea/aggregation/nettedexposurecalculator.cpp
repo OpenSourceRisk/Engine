@@ -144,11 +144,11 @@ void NettedExposureCalculator::build() {
         //only for active CSA and calcType == NoLag close-out value is relevant
         if (netting->activeCsaFlag()){
             if (hasCloseOutGrid){
-                QL_REQUIRE(calcType_ == CollateralExposureHelper::CalculationType::NoLag, "For nettingSetID "<<nettingSetId<< " CSA is active and a close-out grid is configured in the simulation.xml. Calculation type must be set to NoLag!");
+                QL_REQUIRE(calcType_ == CollateralExposureHelper::CalculationType::NoLag, "For nettingSetID "<<nettingSetId<< ", CSA is active and a close-out grid is configured in the simulation.xml. Calculation type must be set to NoLag!");
                 data = nettingSetCloseOutValue_[nettingSetId];
             }
             else
-                QL_REQUIRE(calcType_ != CollateralExposureHelper::CalculationType::NoLag, "For nettingSetID "<<nettingSetId<< " CSA is active and a close-out grid is not configured in the simulation.xml. Calculation type must be set to either Symmetric or AsymmerticCVA or AsymmetricDVA!" );
+                QL_REQUIRE(calcType_ != CollateralExposureHelper::CalculationType::NoLag, "For nettingSetID "<<nettingSetId<< ", CSA is active and a close-out grid is not configured in the simulation.xml. Calculation type must be set to either Symmetric or AsymmerticCVA or AsymmetricDVA!" );
             // TODO:check whether CSA mpor is equal to close-out lag
         }
 
