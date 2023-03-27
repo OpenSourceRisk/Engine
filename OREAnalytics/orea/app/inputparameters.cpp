@@ -307,6 +307,40 @@ void InputParameters::setCvaSensiGrid(const std::string& s) {
     cvaSensiGrid_ = parseListOfValues<Period>(s, &parsePeriod);
 }
     
+void InputParameters::setDeterministicInitialMarginFromFile(const std::string& fileName) {
+    // Minimum requirement: The file has a header line and contains at least
+    // columns "Date", "NettingSet" and "InitialMargin".
+    // We don't assume that data is sorted by netting set or date.
+    ore::data::CSVFileReader reader(fileName, true);
+    std::map<std::string, std::map<Date, Real>> data;
+    while (reader.next()) {
+        Date date = parseDate(reader.get("Date"));
+        std::string nettingSet = reader.get("NettingSet");
+        Real initialMargin = parseReal(reader.get("InitialMargin"));        
+        // LOG("IM Evolution NettingSet " << nettingSet << ": "
+        //     << io::iso_date(date) << " " << initialMargin);
+        if (data.find(nettingSet) == data.end())
+            data[nettingSet] = std::map<Date,Real>();
+        std::map<Date,Real>& evolution = data[nettingSet];
+        evolution[date] = initialMargin;
+    }
+    for (auto d : data) {
+        std::string n = d.first;
+        LOG("Loading IM evolution for netting set " << n << ", size " << d.second.size());
+        vector<Real> im;
+        vector<Date> date;
+        for (auto row : d.second) {
+            im.push_back(row.second);
+            date.push_back(row.first);
+        }
+        TimeSeries<Real> ts(date.begin(), date.end(), im.begin());
+        // for (auto d : ts.dates())
+        //     LOG("TimeSeries " << io::iso_date(d) << " " << ts[d]);
+        setDeterministicInitialMargin(n, ts);
+        WLOG("External IM evolution for NettingSet " << n << " loaded");
+    }
+}
+
 void InputParameters::setDimRegressors(const std::string& s) {
     // parse to vector<string>
     dimRegressors_ = parseListOfValues(s);

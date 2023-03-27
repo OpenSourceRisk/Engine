@@ -290,8 +290,16 @@ void OREApp::analytics() {
     LOG("ORE analytics done");
 }
 
-OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console)
+OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, const boost::filesystem::path& logRootPath)
     : params_(params), inputs_(nullptr), cubeDepth_(0) {
+
+    if (console)
+        ConsoleLog::instance().switchOn();
+
+    setupLog(logRootPath);
+
+    conventions_ = boost::make_shared<Conventions>();
+    InstrumentConventions::instance().setConventions(conventions_);
 
     // Read all inputs from params and files referenced in params
     CONSOLEW("Loading inputs");
@@ -299,30 +307,19 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console)
     buildInputParameters(inputs_, params_);
     outputs_ = boost::make_shared<OutputParameters>(params_);
     CONSOLE("OK");
-    
-    // Set global evaluation date
+        
     asof_ = inputs_->asof();
     Settings::instance().evaluationDate() = asof_;
 
-    // initialise some pointers
-    conventions_ = boost::make_shared<Conventions>();
-    InstrumentConventions::instance().setConventions(conventions_);
-    if (console) {
-        ConsoleLog::instance().switchOn();
-    }
-    
     marketParameters_ = boost::make_shared<TodaysMarketParameters>();
     curveConfigs_ = boost::make_shared<CurveConfigurations>();
-
-    // Set up logging
-    setupLog();
 
     // Read setup
     readSetup();
 }
 
 OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel,
-               bool console)
+               bool console, const boost::filesystem::path& logRootPath)
     : params_(nullptr), inputs_(inputs), asof_(inputs->asof()), cubeDepth_(0) {
 
     // Initialise Singletons
@@ -346,6 +343,10 @@ OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::stri
     // Report StructuredErrorMessages with level WARNING, ERROR, CRITICAL, ALERT
     fbLogger_ = boost::make_shared<FilteredBufferedLoggerGuard>();
     Log::instance().registerLogger(boost::make_shared<FileLogger>(logFilePath));
+    boost::filesystem::path oreRootPath =
+        logRootPath.empty() ? boost::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path()
+                            : logRootPath;
+    Log::instance().setRootPath(oreRootPath);
     Log::instance().setMask(logLevel);
     Log::instance().switchOn();
 }
@@ -1209,6 +1210,13 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
     // DIM
 
+    tmp = params_->get("xva", "deterministicInitialMarginFile", false);
+    if (tmp != "") {
+        string imFile = inputPath + "/" + tmp;
+        LOG("Load initial margin evolution from file " << tmp);
+        inputs->setDeterministicInitialMarginFromFile(imFile);
+    }
+    
     tmp = params_->get("xva", "dimQuantile", false);
     if (tmp != "")
         inputs->setDimQuantile(parseReal(tmp));
@@ -1355,7 +1363,7 @@ boost::shared_ptr<XvaRunner> OREApp::getXvaRunner() {
     }
 
     boost::shared_ptr<XvaRunner> xva = boost::make_shared<XvaRunner>(
-        asof_, baseCcy, portfolio_, nettingSetManager, engineData, curveConfigs_, marketParameters, simMarketParameters,
+        inputs_, asof_, baseCcy, portfolio_, nettingSetManager, engineData, curveConfigs_, marketParameters, simMarketParameters,
         scenarioGeneratorData, modelData, referenceData, iborFallbackConfig_, dimQuantile, dimHorizonCalendarDays,
         analytics, calculationType, dvaName, fvaBorrowingCurve, fvaLendingCurve, fullInitialCollateralisation,
         storeFlows);
@@ -1425,9 +1433,9 @@ void OREApp::readSetup() {
 
 }
 
-void OREApp::setupLog() {
+void OREApp::setupLog(const boost::filesystem::path& logRootPath) {
     closeLog();
-
+    
     string outputPath = params_->get("setup", "outputPath");
     string logFile = outputPath + "/" + params_->get("setup", "logFile");
     Size logMask = 15; // Default level
@@ -1444,6 +1452,10 @@ void OREApp::setupLog() {
     QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << outputPath << "' is not a directory.");
 
     Log::instance().registerLogger(boost::make_shared<FileLogger>(logFile));
+    boost::filesystem::path oreRootPath =
+        logRootPath.empty() ? boost::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path()
+                            : logRootPath;
+    Log::instance().setRootPath(oreRootPath);
     Log::instance().setMask(logMask);
     Log::instance().switchOn();
 }
@@ -2244,7 +2256,7 @@ void OREApp::runPostProcessor() {
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
         ALOG("dim calculator not set, create RegressionDynamicInitialMarginCalculator");
         dimCalculator_ = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
-            portfolio_, cube_, cubeInterpreter_, scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
+            inputs_, portfolio_, cube_, cubeInterpreter_, scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
             dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
     }
 

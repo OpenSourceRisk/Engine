@@ -22,6 +22,7 @@
 */
 #pragma once
 
+#include <orea/app/inputparameters.hpp>
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/scenario/scenariogeneratordata.hpp>
@@ -39,7 +40,8 @@ class XvaRunner {
 public:
     virtual ~XvaRunner() {}
 
-    XvaRunner(QuantLib::Date asof, const std::string& baseCurrency,
+    XvaRunner(const boost::shared_ptr<InputParameters>& inputs,
+              QuantLib::Date asof, const std::string& baseCurrency,
               const boost::shared_ptr<ore::data::Portfolio>& portfolio,
               const boost::shared_ptr<ore::data::NettingSetManager>& netting,
               const boost::shared_ptr<ore::data::EngineData>& engineData,
@@ -123,6 +125,7 @@ protected:
         const boost::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
         const boost::shared_ptr<ScenarioFactory>& scenarioFactory, const bool continueOnErr) const;
     
+    boost::shared_ptr<InputParameters> inputs_;
     QuantLib::Date asof_;
     std::string baseCurrency_;
     boost::shared_ptr<ore::data::Portfolio> portfolio_;

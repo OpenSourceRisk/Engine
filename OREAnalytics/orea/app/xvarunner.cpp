@@ -31,7 +31,8 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_ptr<Portfolio>& portfolio,
+XvaRunner::XvaRunner(const boost::shared_ptr<InputParameters>& inputs,
+                     Date asof, const string& baseCurrency, const boost::shared_ptr<Portfolio>& portfolio,
                      const boost::shared_ptr<NettingSetManager>& netting,
                      const boost::shared_ptr<EngineData>& engineData,
                      const boost::shared_ptr<CurveConfigurations>& curveConfigs,
@@ -43,7 +44,7 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
                      const IborFallbackConfig& iborFallbackConfig, Real dimQuantile, Size dimHorizonCalendarDays,
                      map<string, bool> analytics, string calculationType, string dvaName, string fvaBorrowingCurve,
                      string fvaLendingCurve, bool fullInitialCollateralisation, bool storeFlows)
-    : asof_(asof), baseCurrency_(baseCurrency), portfolio_(portfolio), netting_(netting), engineData_(engineData),
+    : inputs_(inputs), asof_(asof), baseCurrency_(baseCurrency), portfolio_(portfolio), netting_(netting), engineData_(engineData),
       curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), simMarketData_(simMarketData),
       scenarioGeneratorData_(scenarioGeneratorData), crossAssetModelData_(crossAssetModelData),
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), dimQuantile_(dimQuantile),
@@ -265,7 +266,7 @@ boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(
     Real dimLocalRegressionBandwidth = 0.25;
 
     dimCalculator = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
-        portfolio_, cube, cubeInterpreter, scenarioData, dimQuantile_, dimHorizonCalendarDays_, dimRegressionOrder,
+        inputs_, portfolio_, cube, cubeInterpreter, scenarioData, dimQuantile_, dimHorizonCalendarDays_, dimRegressionOrder,
         dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, currentIM);
 
     return dimCalculator;
