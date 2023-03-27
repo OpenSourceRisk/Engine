@@ -17,6 +17,7 @@
 */
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 
@@ -121,6 +122,10 @@ void McMultiLegBaseEngine::computePath(const MultiPath& p) const {
             else
                 rate = std::min(rate, cappedRate_[i][j]);
             Real amount = rate * accrualTime_[i][j] * nominal_[i][j];
+
+            if (couponIndex_[i][j])
+                amount *= couponIndexQuantity_[i][j] * couponIndex_[i][j]->fixing(couponIndexFixingDate_[i][j]);
+
             Size payCcyNum = payCcyNum_[i][j];
             Real dsc = model_->discountBond(payCcyNum, t, payTime_[i][j], p[payCcyIndex_[i][j]][pathIndex],
                                             discountCurves_[payCcyNum]);
@@ -301,10 +306,13 @@ namespace {
 boost::shared_ptr<FloatingRateCoupon> flrcpn(const boost::shared_ptr<CashFlow>& c) {
     auto cfc = boost::dynamic_pointer_cast<CappedFlooredCoupon>(c);
     if (cfc)
-        return cfc->underlying();
+        return flrcpn(cfc->underlying());
     auto scfc = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(c);
-    if (scfc && scfc->underlying())
-        return scfc->underlying()->underlying();
+    if (scfc)
+        return flrcpn(scfc->underlying());
+    auto ic = boost::dynamic_pointer_cast<IndexedCoupon>(c);
+    if (ic)
+        return flrcpn(ic->underlying());
     return boost::dynamic_pointer_cast<FloatingRateCoupon>(c);
 }
 
@@ -318,6 +326,8 @@ bool isFixedCoupon(const boost::shared_ptr<CashFlow>& c, const Date& today) {
     else if (boost::dynamic_pointer_cast<FixedRateCoupon>(c) != nullptr ||
              boost::dynamic_pointer_cast<SimpleCashFlow>(c) != nullptr)
         return true;
+    else if (auto indexed = boost::dynamic_pointer_cast<IndexedCoupon>(c))
+        return isFixedCoupon(indexed->underlying(), today);
     else
         QL_FAIL("McMultiLegBaseEngine: unrecognised coupon type");
 }
@@ -454,6 +464,9 @@ void McMultiLegBaseEngine::calculate() const {
     cappedRate_.clear();
     flooredRate_.clear();
     isNakedOption_.clear();
+    couponIndex_.clear();
+    couponIndexFixingDate_.clear();
+    couponIndexQuantity_.clear();
     //
     indexCcyIndex_.resize(times_.size());
     payCcyNum_.resize(times_.size());
@@ -474,6 +487,9 @@ void McMultiLegBaseEngine::calculate() const {
     cappedRate_.resize(times_.size());
     flooredRate_.resize(times_.size());
     isNakedOption_.resize(times_.size());
+    couponIndex_.resize(times_.size());
+    couponIndexFixingDate_.resize(times_.size());
+    couponIndexQuantity_.resize(times_.size());
     //
     trappedCoupons_.clear();
     trappedCoupons_.resize(times_.size());
@@ -709,6 +725,21 @@ void McMultiLegBaseEngine::calculate() const {
                 QL_REQUIRE(cpnrec, "McMultiLegBaseEngine: floating rate coupon type in leg " << i << ", coupon " << j
                                                                                              << " not supported.");
             }
+
+            // indexed coupon
+            boost::shared_ptr<Index> couponIndex = nullptr;
+            Date couponIndexFixingDate = Null<Date>();
+            Real couponIndexQuantity = Null<Real>();
+            if (auto ic = boost::dynamic_pointer_cast<IndexedCoupon>(leg_[i][j])) {
+                couponIndex = ic->index();
+                couponIndexFixingDate = ic->fixingDate();
+                couponIndexQuantity = ic->quantity();
+                if (!QuantLib::close_enough(ic->multiplier(), 0.0))
+                    nominal_[index][nominal_[index].size()-1] /= ic->multiplier();
+            }
+            couponIndex_[index].push_back(couponIndex);
+            couponIndexFixingDate_[index].push_back(couponIndexFixingDate);
+            couponIndexQuantity_[index].push_back(couponIndexQuantity);
 
             // other data
             payCcyNum_[index].push_back(model_->ccyIndex(currency_[i]));
