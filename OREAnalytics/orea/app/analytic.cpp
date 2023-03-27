@@ -275,7 +275,7 @@ void PricingAnalyticImpl::runAnalytic(
         if (type == "NPV" || type == "NPV_LAGGED") {
             CONSOLEW("Pricing: NPV Report");
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeNpv(*report, inputs_->baseCurrency(), analytic()->market(), "",
+                .writeNpv(*report, effectiveResultCurrency, analytic()->market(), "",
                           analytic()->portfolio());
             analytic()->reports()[type]["npv"] = report;
             CONSOLE("OK");
@@ -284,7 +284,7 @@ void PricingAnalyticImpl::runAnalytic(
                 boost::shared_ptr<InMemoryReport> addReport = boost::make_shared<InMemoryReport>();;
                 ore::analytics::ReportWriter(inputs_->reportNaString())
                     .writeAdditionalResultsReport(*addReport, analytic()->portfolio(), analytic()->market(),
-                                                  inputs_->baseCurrency());
+                                                  effectiveResultCurrency);
                 analytic()->reports()[type]["additional_results"] = addReport;
                 CONSOLE("OK");
             }
@@ -317,7 +317,7 @@ void PricingAnalyticImpl::runAnalytic(
             CONSOLEW("Pricing: Cashflow Report");
             string marketConfig = inputs_->marketConfig("pricing");
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeCashflow(*report, inputs_->baseCurrency(), analytic()->portfolio(),
+                .writeCashflow(*report, effectiveResultCurrency, analytic()->portfolio(),
                                analytic()->market(),
                                marketConfig, inputs_->includePastCashflows());
             analytic()->reports()[type]["cashflow"] = report;
@@ -327,12 +327,12 @@ void PricingAnalyticImpl::runAnalytic(
             CONSOLEW("Pricing: Cashflow NPV report");
             string marketConfig = inputs_->marketConfig("pricing");
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeCashflow(tmpReport, inputs_->baseCurrency(), analytic()->portfolio(),
+                .writeCashflow(tmpReport, effectiveResultCurrency, analytic()->portfolio(),
                                analytic()->market(),
                                marketConfig, inputs_->includePastCashflows());
             ore::analytics::ReportWriter(inputs_->reportNaString())
                 .writeCashflowNpv(*report, tmpReport, analytic()->market(), marketConfig,
-                                  inputs_->baseCurrency(), inputs_->cashflowHorizon());
+                                  effectiveResultCurrency, inputs_->cashflowHorizon());
             analytic()->reports()[type]["cashflownpv"] = report;
             CONSOLE("OK");
         }
