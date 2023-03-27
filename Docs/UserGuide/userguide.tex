@@ -3564,14 +3564,20 @@ FX rates)
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures
 \item {\tt exposureProfiles:} Flag to enable/disable exposure output for each netting set
 \item {\tt exposureProfilesByTrade:} Flag to enable/disable stand-alone exposure output for each trade
-\item {\tt quantile} Confidence level for Potential Future Exposure (PFE) reporting
-\item {\tt calculationType} Determines the settlement of margin calls, choices are: \\
+\item {\tt quantile:} Confidence level for Potential Future Exposure (PFE) reporting
+\item {\tt calculationType:} Determines the settlement of margin calls. The admissible choices depend on having a close-out grid, see table \ref{tab:calcTypes}; \\
 	\begin{itemize}
-	\item {\em Symmetric} - margin for both counterparties settled after the margin period of risk;
-	\item {\em AsymmetricCVA} - margin requested from the counterparty settles with delay,
-	margin requested from us settles immediately; 
-	\item {\em AsymmetricDVA} - vice versa; 
-	\item {\em NoLag} - used to disable any delayed settlement of the margin;  
+		\item if there isn't any ``close-out'' grid -see section \ref{sec:simulation}-, the choices are:
+		\begin{itemize}
+			\item {\em Symmetric} - margin for both counterparties settled after the margin period of risk;
+			\item {\em AsymmetricCVA} - margin requested from the counterparty settles with delay,
+			margin requested from us settles immediately;
+			\item {\em AsymmetricDVA} - vice versa.
+		\end{itemize}
+		\item If there is a ``close-out'' grid -see section \ref{sec:simulation}-, only choice is:
+		\begin{itemize}
+			\item {\em NoLag} - used to disable any delayed settlement of the margin.
+		\end{itemize}
 	\end{itemize}
 	\todo[inline]{Move calculationType into the {\tt csaFile}?}
 %
@@ -3582,15 +3588,15 @@ FX rates)
 \hline
 \multicolumn{1}{!{\color{black}\vrule}l!{\color{black}\vrule}}{Grid Type} & \multicolumn{1}{l!{\color{black}\vrule}}{{\tt calculationType}} & Comment                                                                                                                                                                                           \\ 
 \hline
-\multirow{4}{*}{without closeout grid}                                    & {\em NoLag}                                                      & Not Supported                                                                                                                                                                                     \\ 
+\multirow{4}{*}{without close-out grid}                                    & {\em NoLag}                                                      & Not Supported                                                                                                                                                                                     \\ 
 \cline{2-3}
-                                                                          & {\em Symmetric}                                                  & Supported\tablefootnote{\label{note1} This option is applied, if there is not a ``close-out'' grid, see section \ref{sec:simulation}. The Calculations are correct only if the simulation grid (see section \ref{sec:simulation}) is equally-spaced with time steps that match the MPoR defined in netting-set definition (see section \ref{sec:CollNettingSet}). See section \ref{sec:mpor} for further explanation.}  \\ 
+                                                                          & {\em Symmetric}                                                  & Supported\tablefootnote{\label{note1} The calculations are correct only if the simulation grid (see section \ref{sec:simulation}) is equally-spaced with time steps that match the MPoR defined in netting-set definition (see section \ref{sec:CollNettingSet}). See section \ref{sec:mpor} for further explanation.}  \\ 
 \cline{2-3}
                                                                           & {\em AsymmetricCVA}                                              & Supported \footref{note1} \\ 
 \cline{2-3}
                                                                           & {\em AsymmetricDVA}                                              & Supported \footref{note1}\\ 
 \hline
-\multirow{4}{*}{with closeout grid}                                       & {\em NoLag}                                                      & Supported\tablefootnote{This option is applied in combination with a ``close-out'' grid, see section \ref{sec:simulation}. Close-out lag (see section \ref{sec:simulation}) must be equal to MPoR defined in netting-set definition (see section \ref{sec:CollNettingSet}). Otherwise, an error will be thrown.}                                           \\ 
+\multirow{4}{*}{with close-out grid}                                       & {\em NoLag}                                                      & Supported\tablefootnote{Close-out lag (see section \ref{sec:simulation}) must be equal to MPoR defined in netting-set definition (see section \ref{sec:CollNettingSet}). Otherwise, an error will be thrown.}                                           \\ 
 \cline{2-3}
                                                                           & {\em Symmetric}                                                  & Not Supported                                                                                                                                                                                     \\ 
 \cline{2-3}
@@ -3600,6 +3606,7 @@ FX rates)
 \hline
 \end{tabular}
 \arrayrulecolor{black}
+\caption{Overview of admissible calculation types with combination of grid types.} \label{tab:calcTypes}
 \end{table}
 %
 \item {\tt allocationMethod:} XVA allocation method, choices are {\em None, Marginal, RelativeXVA, RelativeFairValueGross, RelativeFairValueNet}
@@ -7909,15 +7916,14 @@ D(t_m) &=
 where $MTA$ is the minimum transfer amount.
 
 \subsubsection{Margin Period of Risk} \label{sec:mpor}
-After a counterparty defaults, it takes time to close out the portfolio. During this time period the portfolio value will change upon market conditions, therefore the portfolio's close-out value is subject to market risk, which is defined as the close-out risk and the corresponding close-out period is called as the {\em Margin Period of Risk}
-(MPoR).  
+After a counterparty defaults, it takes time to close out the portfolio. During this time period the portfolio value will change upon market conditions, therefore the portfolio's close-out value is subject to market risk, which is referred also as the close-out risk and the corresponding close-out period is called as the {\em Margin Period of Risk} (MPoR).  
 
-Therefore, when a loss on the defaulted counterparty is realised at time $t_d$, the last time the collateral could have been received is $t_d-\tau$, where $\tau$ denotes the MPoR. Thus, the collateral at time $t_d$ is determined by the collateral value at $t_d-\tau$, namely $CSA(t_d-\tau)$, see equation \ref{eq:CSA}.
+Therefore, when a loss on the defaulted counterparty is realised at time $t_d$, the last time the collateral could be received is $t_d-\tau$, where $\tau$ denotes the MPoR. That is, the collateral at time $t_d$ is determined by the collateral value at $t_d-\tau$, namely $CSA(t_d-\tau)$, see equation \ref{eq:CSA}.
 
-In ORE, we have two approaches to model the MPoR:
+In ORE, we have two approaches to incorporate MPoR in the exposure simulations:
 \begin{itemize}
  \item {\em Close-out Approach}: Simulating on an auxiliary close-out grid additional to the default time grid.
- \item {\em Lagged Approach}: Simulating only on a default time grid.
+ \item {\em Lagged Approach}: Simulating only on a default time grid and delaying the margin calls on the grid.
 \end{itemize}
 
 \medskip In the {\em Close-out Approach}, we use an auxiliary ``close-out'' grid in the simulation (see section \ref{sec:simulation}). The portfolio values and collateral values are simulated at close-out and default times respectively, leading to residual exposure and XVA even for daily margining, zero thresholds and minimum transfer amounts, see for example \cite{Pykhtin2010}. The close-out valuation approach allows a detailed modelling of what happens in the close-out period; currently ORE supports two options, with and without portfolio ``ageing'' over the close-out period. The option ``without ageing'' is more aggressive in that it avoids any exposure evolution spikes due to contractual cashflows that occur in the close-out period after default, the only exposure effect is due to market evolution over the period. The ``with ageing'' option is more conservative in that it includes the effect of all contractual cash flows in the close-out period, in particular outgoing cashflows at any time in the period which cause an exposure jump upwards. A more detailed framework for collateralised exposure modelling is introduced in the
@@ -7925,7 +7931,7 @@ In ORE, we have two approaches to model the MPoR:
 
 \medskip On the other hand, in the {\em Lagged Approach} the simulation is conducted only on a default time grid. The collateral values are calculated, by delaying the delivery amounts between default times, specified by the {\em Margin Period of Risk} (MPoR) which leads to residual exposure. 
 
-In table \ref{table:lagged}, we present a toy example to illustrate how the delayed margin calls lead to residual exposures. In this example, we assume that the default time grid is equally-spaced with time steps that match the MPoR (which is 1M). Further, we assume zero threshold and MTA. At the initial time, the delivery amount is $2.00$, which is the difference between the initial value of the portfolio and the default value at 1M. If this amount were settled immediately, then the collateral value would have been $10$ and hence the residual exposure would habe been zero at 1M. The delay of the delivery amount by MPoR implies a collateral value of $8.00$ at 1M and hence a residual exposure of $2$. 
+In table \ref{table:lagged}, we present a toy example to illustrate how the delayed margin calls lead to residual exposures. In this example, we assume that the default time grid is equally-spaced with time steps that match the MPoR (which is 1M). Further, we assume zero threshold and MTA. At the initial time, the delivery amount is $2.00$, which is the difference between the initial value of the portfolio and the default value at 1M. If this amount were settled immediately, then the collateral value would have been $10$ and hence the residual exposure would habe been zero at 1M. The delay of the delivery amount by MPoR implies a collateral value of $8.00$ until 1M and hence a residual exposure of $2$. 
 %
 \begin{table}[!ht]
     \centering
