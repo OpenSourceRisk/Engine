@@ -581,7 +581,7 @@ void McMultiLegBaseEngine::calculate() const {
                     flr = boost::make_shared<IborCoupon>(
                         on->date(), on->nominal(), on->accrualStartDate(), on->accrualEndDate(), on->fixingDays(),
                         boost::make_shared<IborIndex>(
-                            on->overnightIndex()->familyName(), 1 * Days, on->overnightIndex()->fixingDays(),
+                            "proxy-ibor", (on->accrualEndDate() - on->accrualStartDate()) * Days, on->overnightIndex()->fixingDays(),
                             on->overnightIndex()->currency(), on->overnightIndex()->fixingCalendar(),
                             on->overnightIndex()->businessDayConvention(), on->overnightIndex()->endOfMonth(),
                             on->overnightIndex()->dayCounter(), on->overnightIndex()->forwardingTermStructure()),
@@ -591,7 +591,7 @@ void McMultiLegBaseEngine::calculate() const {
                     flr = boost::make_shared<IborCoupon>(
                         on->date(), on->nominal(), on->accrualStartDate(), on->accrualEndDate(), on->fixingDays(),
                         boost::make_shared<IborIndex>(
-                            on->overnightIndex()->familyName(), 1 * Days, on->overnightIndex()->fixingDays(),
+                            "proxy-ibor", (on->accrualEndDate() - on->accrualStartDate()) * Days, on->overnightIndex()->fixingDays(),
                             on->overnightIndex()->currency(), on->overnightIndex()->fixingCalendar(),
                             on->overnightIndex()->businessDayConvention(), on->overnightIndex()->endOfMonth(),
                             on->overnightIndex()->dayCounter(), on->overnightIndex()->forwardingTermStructure()),
@@ -602,7 +602,7 @@ void McMultiLegBaseEngine::calculate() const {
                     flr = boost::make_shared<IborCoupon>(
                         on->date(), on->nominal(), on->accrualStartDate(), on->accrualEndDate(), on->fixingDays(),
                         boost::make_shared<IborIndex>(
-                            on->overnightIndex()->familyName(), 1 * Days, on->overnightIndex()->fixingDays(),
+                            "proxy-ibor", (on->accrualEndDate() - on->accrualStartDate()) * Days, on->overnightIndex()->fixingDays(),
                             on->overnightIndex()->currency(), on->overnightIndex()->fixingCalendar(),
                             on->overnightIndex()->businessDayConvention(), on->overnightIndex()->endOfMonth(),
                             on->overnightIndex()->dayCounter(), on->overnightIndex()->forwardingTermStructure()),
@@ -613,7 +613,7 @@ void McMultiLegBaseEngine::calculate() const {
                     flr = boost::make_shared<IborCoupon>(
                         on->date(), on->nominal(), on->accrualStartDate(), on->accrualEndDate(), on->fixingDays(),
                         boost::make_shared<IborIndex>(
-                            on->overnightIndex()->familyName(), 1 * Days, on->overnightIndex()->fixingDays(),
+                            "proxy-ibor", (on->accrualEndDate() - on->accrualStartDate()) * Days, on->overnightIndex()->fixingDays(),
                             on->overnightIndex()->currency(), on->overnightIndex()->fixingCalendar(),
                             on->overnightIndex()->businessDayConvention(), on->overnightIndex()->endOfMonth(),
                             on->overnightIndex()->dayCounter(), on->overnightIndex()->forwardingTermStructure()),
@@ -625,7 +625,7 @@ void McMultiLegBaseEngine::calculate() const {
                     flr = boost::make_shared<IborCoupon>(
                         bma->date(), bma->nominal(), bma->accrualStartDate(), bma->accrualEndDate(), bma->fixingDays(),
                         boost::make_shared<IborIndex>(
-                            bmaIndex->familyName(), bmaIndex->tenor(), bmaIndex->fixingDays(),
+                            "proxy-ibor", (bma->accrualEndDate() - bma->accrualStartDate()) * Days, bmaIndex->fixingDays(),
                             bmaIndex->currency(), bmaIndex->fixingCalendar(), Following, false, bmaIndex->dayCounter(),
                             bmaIndex->forwardingTermStructure()),
                         bma->gearing(), bma->spread(), bma->referencePeriodStart(), bma->referencePeriodEnd(),
