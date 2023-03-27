@@ -100,7 +100,7 @@ Fixing Loader::getFixing(const string& name, const QuantLib::Date& d) const {
     return fixing;
 }
 
-std::set<Fixing> Loader::loadDividends() const { return {}; }
+std::set<QuantExt::Dividend> Loader::loadDividends() const { return {}; }
 
 } // namespace data
 } // namespace ore

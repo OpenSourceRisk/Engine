@@ -1561,7 +1561,7 @@ void ReportWriter::writeDividends(Report& report, const boost::shared_ptr<Loader
         .addColumn("dividendPaymentDate", Date());
 
     for (const auto& f : loader->loadDividends()) {
-        report.next().add(f.date).add(f.name).add(f.fixing);
+        report.next().add(f.exDate).add(f.name).add(f.rate).add(f.payDate);
     }
 
     report.end();

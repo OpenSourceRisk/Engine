@@ -74,13 +74,13 @@ Real CompositeIndex::dividendsBetweenDates(const Date& startDate, const Date& en
     for (Size i = 0; i < indices_.size(); ++i) {
         if (auto ei = boost::dynamic_pointer_cast<EquityIndex>(indices_[i])) {
             for (auto const& d : ei->dividendFixings()) {
-                if (d.first >= startDate && d.first <= std::min(endDate, today)) {
+                if (d.exDate >= startDate && d.exDate <= std::min(endDate, today)) {
                     // if the fixing date is not a valid fx fixing date, adjust the latter to the preceding valid date
                     dividends +=
-                        d.second * weights_[i] *
+                        d.rate * weights_[i] *
                         (fxConversion_.empty() || fxConversion_[i] == nullptr
                              ? 1.0
-                             : fxConversion_[i]->fixing(fxConversion_[i]->fixingCalendar().adjust(d.first, Preceding)));
+                             : fxConversion_[i]->fixing(fxConversion_[i]->fixingCalendar().adjust(d.exDate, Preceding)));
                 }
             }
         }
