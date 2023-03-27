@@ -209,6 +209,7 @@
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/math/flatextrapolation2d.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
+#include <qle/math/matrixfunctions.hpp>
 #include <qle/math/method_mt.hpp>
 #include <qle/math/nadarayawatson.hpp>
 #include <qle/math/problem_mt.hpp>
@@ -300,6 +301,7 @@
 #include <qle/models/poollossmodel.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/models/pseudoparameter.hpp>
+#include <qle/models/transitionmatrix.hpp>
 #include <qle/models/yoycapfloorhelper.hpp>
 #include <qle/models/yoyinflationmodeltermstructure.hpp>
 #include <qle/models/yoyswaphelper.hpp>
