@@ -370,7 +370,7 @@ CommodityIndexedLeg::operator Leg() const {
 
         leg.push_back(ext::make_shared<CommodityIndexedCashFlow>(
             quantity, start, end, index_, paymentLag_, paymentCalendar_, paymentConvention_, pricingLag_,
-            pricingLagCalendar_, spread, gearing, paymentTiming_, inArrears_, useFuturePrice_, useFutureExpiryDate_,<<<<<<< HEAD
+            pricingLagCalendar_, spread, gearing, paymentTiming_, inArrears_, useFuturePrice_, useFutureExpiryDate_,
             futureMonthOffset_, calc_, paymentDate, pricingDate, dailyExpiryOffset_, fxIndex_, isAveraging_,
             pricingCalendar_, includeEndDate_, excludeStartDate_));
     }
