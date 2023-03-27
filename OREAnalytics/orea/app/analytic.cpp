@@ -391,20 +391,20 @@ void PricingAnalyticImpl::runAnalytic(
             // FIXME: Why are these disabled?
             set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
             boost::shared_ptr<ParSensitivityAnalysis> parAnalysis = nullptr;
-            if (inputs_->parSensi()) {
+            if (inputs_->parSensi() || inputs_->alignPillars()) {
                 parAnalysis= boost::make_shared<ParSensitivityAnalysis>(
                     inputs_->asof(), analytic()->configurations().simMarketParams,
                     *analytic()->configurations().sensiScenarioData, "",
                     true, typesDisabled);
                 if (inputs_->alignPillars()) {
-                    LOG("Sensi analysis - align pillars for the par conversion");
+                    LOG("Sensi analysis - align pillars (for the par conversion or because alignPillars is enabled)");
                     parAnalysis->alignPillars();
                     sensiAnalysis->overrideTenors(true);
                 } else {
                     LOG("Sensi analysis - skip aligning pillars");
                 }
             }
-            
+
             LOG("Sensi analysis - generate");
             sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities"));
             sensiAnalysis->generateSensitivities();
