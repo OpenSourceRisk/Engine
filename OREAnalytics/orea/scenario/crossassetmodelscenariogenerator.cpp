@@ -257,9 +257,9 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
         if (mt == CrossAssetModel::ModelType::DK) {
             ts = boost::make_shared<DkImpliedZeroInflationTermStructure>(
-                model_, idx, false);
+                model_, idx);
         } else {
-            ts = boost::make_shared<JyImpliedZeroInflationTermStructure>(model_, idx, false);
+            ts = boost::make_shared<JyImpliedZeroInflationTermStructure>(model_, idx);
             QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                        "Simulation of INF JY model is only supported for LGM1F ir model type.");
         }
