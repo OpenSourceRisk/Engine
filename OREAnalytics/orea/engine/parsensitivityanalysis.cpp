@@ -1962,7 +1962,7 @@ ParSensitivityAnalysis::makeYoyInflationSwap(const boost::shared_ptr<Market>& ma
         // Get the inflation index
         if (fromZero) {
             zeroIndex = *market->zeroInflationIndex(name, marketConfiguration_);
-            index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, zeroIndex->interpolated());
+            index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, false);
         } else {
             index = *market->yoyInflationIndex(name, marketConfiguration_);
         }
@@ -2039,7 +2039,7 @@ ParSensitivityAnalysis::makeYoYCapFloor(const boost::shared_ptr<Market>& market,
         // Get the inflation index
         if (fromZero) {
             zeroIndex = *market->zeroInflationIndex(name, marketConfiguration_);
-            index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, zeroIndex->interpolated());
+            index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, conv->interpolated());
         } else {
             index = *market->yoyInflationIndex(name, marketConfiguration_);
         }
