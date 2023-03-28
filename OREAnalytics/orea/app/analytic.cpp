@@ -217,6 +217,52 @@ void Analytic::buildPortfolio() {
 }
 
 /*******************************************************************
+ * MARKET Analytic
+ *******************************************************************/
+
+void MarketDataAnalyticImpl::setUpConfigurations() {    
+    analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
+}
+
+void MarketDataAnalyticImpl::runAnalytic( 
+    const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    const std::set<std::string>& runTypes) {
+
+    Settings::instance().evaluationDate() = inputs_->asof();
+    ObservationMode::instance().setMode(inputs_->observationModel());
+
+    CONSOLEW("Build Market");
+    analytic()->buildMarket(loader);
+    CONSOLE("OK");
+    /*
+    if (inputs_->outputTodaysMarketCalibration()) {
+        CONSOLEW("Market Calibration");
+        LOG("Write todays market calibration report");
+        auto t = boost::dynamic_pointer_cast<TodaysMarket>(analytic()->market());
+        QL_REQUIRE(t != nullptr, "expected todays market instance");
+        boost::shared_ptr<InMemoryReport> mktReport = boost::make_shared<InMemoryReport>();
+        ore::analytics::ReportWriter(inputs_->reportNaString())
+            .writeTodaysMarketCalibrationReport(*mktReport, t->calibrationInfo());
+        analytic()->reports()["MARKET"]["todaysmarketcalibration"] = mktReport;
+        CONSOLE("OK");
+    }
+
+    if (inputs_->outputCurves()) {
+        CONSOLEW("Curves Report");
+        LOG("Write curves report");
+        boost::shared_ptr<InMemoryReport> curvesReport = boost::make_shared<InMemoryReport>();
+        DateGrid grid(inputs_->curvesGrid());
+        std::string config = inputs_->curvesMarketConfig();
+        ore::analytics::ReportWriter(inputs_->reportNaString())
+            .writeCurves(*curvesReport, config, grid, *inputs_->todaysMarketParams(),
+                         analytic()->market(), inputs_->continueOnError());
+        analytic()->reports()["MARKET"]["curves"] = curvesReport;
+        CONSOLE("OK");
+    }
+    */
+}
+
+/*******************************************************************
  * PRICING Analytic: NPV, CASHFLOW, CASHFLOWNPV, SENSITIVITY, STRESS
  *******************************************************************/
 
@@ -391,20 +437,20 @@ void PricingAnalyticImpl::runAnalytic(
             // FIXME: Why are these disabled?
             set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
             boost::shared_ptr<ParSensitivityAnalysis> parAnalysis = nullptr;
-            if (inputs_->parSensi()) {
+            if (inputs_->parSensi() || inputs_->alignPillars()) {
                 parAnalysis= boost::make_shared<ParSensitivityAnalysis>(
                     inputs_->asof(), analytic()->configurations().simMarketParams,
                     *analytic()->configurations().sensiScenarioData, "",
                     true, typesDisabled);
                 if (inputs_->alignPillars()) {
-                    LOG("Sensi analysis - align pillars for the par conversion");
+                    LOG("Sensi analysis - align pillars (for the par conversion or because alignPillars is enabled)");
                     parAnalysis->alignPillars();
                     sensiAnalysis->overrideTenors(true);
                 } else {
                     LOG("Sensi analysis - skip aligning pillars");
                 }
             }
-            
+
             LOG("Sensi analysis - generate");
             sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities"));
             sensiAnalysis->generateSensitivities();

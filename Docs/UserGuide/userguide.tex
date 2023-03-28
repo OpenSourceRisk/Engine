@@ -6318,6 +6318,12 @@ The optional boolean parameter \lstinline!EnforceMontoneVariance! should be set 
 <CDSVolatility>
   <CurveId>..<CurveId>
   <CurveDescription>...</CurveDescription>
+  <Terms>
+    <Term>
+      <Label>...</Label>
+      <Curve>...</Curve>
+    </Term>
+  </Terms>
   <Curve>
     <Quotes>
       <Quote>quote_id_1</Quote>
@@ -6328,12 +6334,6 @@ The optional boolean parameter \lstinline!EnforceMontoneVariance! should be set 
     <Extrapolation>...</Extrapolation>
     <EnforceMontoneVariance></EnforceMontoneVariance>
   </Curve>
-  <Terms>
-    <Term>
-      <Label>...</Label>
-      <Curve>...</Curve>
-    </Term>
-  </Terms>
   <DayCounter>...</DayCounter>
   <Calendar>...</Calendar>
 </CDSVolatility>
@@ -6365,16 +6365,16 @@ If only one expiry is provided in the list, there is only one quote and a consta
 <CDSVolatility>
   <CurveId>..<CurveId>
   <CurveDescription>...</CurveDescription>
-  <Expiries>...</Expiries>
-  <DayCounter>...</DayCounter>
-  <Calendar>...</Calendar>
-  <QuoteName>...</QuoteName>
   <Terms>
     <Term>
       <Label>...</Label>
       <Curve>...</Curve>
     </Term>
   </Terms>
+  <Expiries>...</Expiries>
+  <DayCounter>...</DayCounter>
+  <Calendar>...</Calendar>
+  <QuoteName>...</QuoteName>
 </CDSVolatility>
 \end{minted}
 \caption{Legacy deprecated CDS volatility curve configuration}
@@ -6428,6 +6428,12 @@ When the CDS volatility surface is configured as in Listing \ref{lst:cdsvol_surf
 <CDSVolatility>
   <CurveId/>
   <CurveDescription/>
+  <Terms>
+    <Term>
+      <Label>...</Label>
+      <Curve>...</Curve>
+    </Term>
+  </Terms>
   <StrikeSurface>
     <Strikes>...</Strikes>
     <Expiries>...</Expiries>
@@ -6437,12 +6443,6 @@ When the CDS volatility surface is configured as in Listing \ref{lst:cdsvol_surf
     <TimeExtrapolation>...</TimeExtrapolation>
     <StrikeExtrapolation>...</StrikeExtrapolation>
   </StrikeSurface>
-  <Terms>
-    <Term>
-      <Label>...</Label>
-      <Curve>...</Curve>
-    </Term>
-  </Terms>
   <DayCounter>...</DayCounter>
   <Calendar>...</Calendar>
   <StrikeType>...</StrikeType>

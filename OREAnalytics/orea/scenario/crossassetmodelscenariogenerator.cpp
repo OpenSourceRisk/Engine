@@ -253,12 +253,13 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         QL_REQUIRE(mt == CrossAssetModel::ModelType::DK || mt == CrossAssetModel::ModelType::JY,
                    "CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
         boost::shared_ptr<ZeroInflationModelTermStructure> ts;
+
+
         if (mt == CrossAssetModel::ModelType::DK) {
             ts = boost::make_shared<DkImpliedZeroInflationTermStructure>(
-                model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
+                model_, idx);
         } else {
-            ts = boost::make_shared<JyImpliedZeroInflationTermStructure>(
-                model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
+            ts = boost::make_shared<JyImpliedZeroInflationTermStructure>(model_, idx);
             QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                        "Simulation of INF JY model is only supported for LGM1F ir model type.");
         }
@@ -275,10 +276,10 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         boost::shared_ptr<YoYInflationModelTermStructure> ts;
         if (mt == CrossAssetModel::ModelType::DK) {
             ts = boost::make_shared<DkImpliedYoYInflationTermStructure>(
-                model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
+                model_, idx, false);
         } else {
             ts = boost::make_shared<JyImpliedYoYInflationTermStructure>(
-                model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
+                model_, idx, false);
         }
         QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                    "Simulation of INF DK or JY model for YoY curves is only supported for LGM1F ir model type.");
@@ -440,7 +441,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                 auto index = *initMarket_->zeroInflationIndex(model_->inf(j)->name());
                 Date baseDate = index->zeroInflationTermStructure()->baseDate();
                 auto zts = index->zeroInflationTermStructure();
-                Time relativeTime = inflationYearFraction(zts->frequency(), index->interpolated(), zts->dayCounter(),
+                Time relativeTime = inflationYearFraction(zts->frequency(), false, zts->dayCounter(),
                                                           baseDate, dates_[i] - zts->observationLag());
                 std::tie(cpi, std::ignore) = model_->infdkI(j, relativeTime, relativeTime, z, y);
                 cpi *= index->fixing(baseDate);
