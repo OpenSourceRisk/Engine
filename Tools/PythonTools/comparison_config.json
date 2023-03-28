@@ -1196,7 +1196,7 @@
         "column_settings": [
           {
             "names": [
-              "dividendRate"
+              "dividendRate",
               "dividendPaymentDate"
             ],
             "abs_tol": 1e-6,
