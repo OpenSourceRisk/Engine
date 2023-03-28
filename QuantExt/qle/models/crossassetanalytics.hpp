@@ -413,7 +413,7 @@ Cov \left[\Delta Y_i, \Delta Y_j] \right] &=&
 */
 Real com_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
 
-/*! TODO: COM covariance with all other risk factors */    
+/*! TODO: COM covariance with all other risk factors */
 Real ir_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
 Real fx_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
 Real infz_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
@@ -421,6 +421,15 @@ Real infy_com_covariance(const CrossAssetModel* model, const Size i, const Size 
 Real cry_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
 Real crz_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
 Real eq_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+
+/*! IR_CrState Covariance */
+Real ir_crstate_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+
+/*! FX_CrState Covariance */
+Real fx_crstate_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+
+#/*! CrState_CrState Covariance */
+Real crstate_crstate_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! IR H component */
 struct Hz {
@@ -750,6 +759,33 @@ struct HTtz {
     Real eval(const CrossAssetModel* x, const Real t) const { return x->irlgm1f(i_)->H(T_ + t) - x->irlgm1f(i_)->H(t); }
     const Size i_;
     const Real T_;
+};
+
+/*! IR-CrState correlation component */
+struct rzcrs {
+    rzcrs(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel* x, const Real) const {
+        return x->correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::CrState, j_, 0, 0);
+    }
+    const Size i_, j_;
+};
+
+/*! FX-CrState correlation component */
+struct rxcrs {
+    rxcrs(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel* x, const Real) const {
+        return x->correlation(CrossAssetModel::AssetType::FX, i_, CrossAssetModel::AssetType::CrState, j_, 0, 0);
+    }
+    const Size i_, j_;
+};
+
+/*! CrState-CrState correlation component */
+struct rccrs {
+    rccrs(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel* x, const Real) const {
+        return x->correlation(CrossAssetModel::AssetType::CrState, i_, CrossAssetModel::AssetType::CrState, j_, 0, 0);
+    }
+    const Size i_, j_;
 };
 /*! @} */
 
