@@ -35,12 +35,13 @@ public:
     SECPI(const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>())
         : ZeroInflationIndex("CPI", SwedenRegion(), false, Monthly, Period(1, Months), // availability
                              SEKCurrency(), ts) {}
-    
-    QL_DEPRECATED SECPI(bool interpolated, const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>())
-        QL_DEPRECATED_DISABLE_WARNING
+
+    QL_DEPRECATED_DISABLE_WARNING
+    QL_DEPRECATED SECPI(bool interpolated,
+                        const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>())
         : ZeroInflationIndex("CPI", SwedenRegion(), false, interpolated, Monthly, Period(1, Months), // availability
                              SEKCurrency(), ts) {}
-        QL_DEPRECATED_ENABLE_WARNING
+    QL_DEPRECATED_ENABLE_WARNING
 };
 
 } // namespace QuantExt

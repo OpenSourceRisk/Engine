@@ -130,7 +130,7 @@ InterpolatedCPIVolatilitySurface<Interpolator2D>::InterpolatedCPIVolatilitySurfa
 }
 
 
-
+QL_DEPRECATED_DISABLE_WARNING
 template <class Interpolator2D>
 InterpolatedCPIVolatilitySurface<Interpolator2D>::InterpolatedCPIVolatilitySurface(
     const std::vector<Period>& optionTenors, const std::vector<Real>& strikes,
@@ -138,18 +138,16 @@ InterpolatedCPIVolatilitySurface<Interpolator2D>::InterpolatedCPIVolatilitySurfa
     const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
     const Period& observationLag, const Date& capFloorStartDate, const Interpolator2D& interpolator2d,
     const QuantLib::VolatilityType volType, const double displacement)
-    QL_DEPRECATED_DISABLE_WARNING
     : CPIVolatilitySurface(settlementDays, cal, bdc, dc, observationLag, index->frequency(), index->interpolated(),
                            capFloorStartDate, volType, displacement),
-    QL_DEPRECATED_ENABLE_WARNING
-      optionTenors_(optionTenors), strikes_(strikes), quotes_(quotes), index_(index),
-      interpolator2d_(interpolator2d) {
+      optionTenors_(optionTenors), strikes_(strikes), quotes_(quotes), index_(index), interpolator2d_(interpolator2d) {
     for (Size i = 0; i < optionTenors_.size(); ++i) {
         QL_REQUIRE(quotes_[i].size() == strikes_.size(), "quotes row " << i << " length does not match strikes size");
         for (Size j = 0; j < strikes_.size(); ++j)
             registerWith(quotes_[i][j]);
     }
 }
+QL_DEPRECATED_ENABLE_WARNING   
 
 template <class Interpolator2D> void InterpolatedCPIVolatilitySurface<Interpolator2D>::performCalculations() const {
     volData_ = QuantLib::Matrix(strikes_.size(), optionTenors_.size(), QuantLib::Null<QuantLib::Real>());
