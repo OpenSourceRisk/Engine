@@ -42,16 +42,14 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
         new QuantExt::ForwardRateAgreement(startDate, endDate, positionType, strike_, amount_, *index, discountTS));
 
     Currency npvCcy = parseCurrency(currency_);
-    try {
+    if (engineFactory->engineData()->hasProduct("ForwardRateAgreement")) {
         // engine is optional for FRA instrument
         boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("ForwardRateAgreement");
-            boost::shared_ptr<FraEngineBuilderBase> fraBuilder =
-        boost::dynamic_pointer_cast<FraEngineBuilderBase>(builder);
-        if(fraBuilder) {
-            fra->setPricingEngine(fraBuilder->engine(npvCcy));
-        }
+        boost::shared_ptr<FraEngineBuilderBase> fraBuilder =
+            boost::dynamic_pointer_cast<FraEngineBuilderBase>(builder);
+        QL_REQUIRE(fraBuilder, "No Builder found for ForwardRateAgreement " << id());
+        fra->setPricingEngine(fraBuilder->engine(npvCcy));
     }
-    catch (...) {}
 
     instrument_.reset(new VanillaInstrument(fra));
     npvCurrency_ = currency_;
