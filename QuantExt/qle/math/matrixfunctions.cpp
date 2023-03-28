@@ -20,7 +20,16 @@
 
 #ifdef ORE_USE_EIGEN
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+#endif
+
 #include <unsupported/Eigen/MatrixFunctions>
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 namespace QuantExt {
 
