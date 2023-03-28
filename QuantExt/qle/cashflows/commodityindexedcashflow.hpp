@@ -63,7 +63,11 @@ public:
                              const QuantLib::Date& paymentDateOverride = Date(),
                              const QuantLib::Date& pricingDateOverride = Date(),
                              QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(),
-                             const ext::shared_ptr<FxIndex>& fxIndex = nullptr);
+                             const ext::shared_ptr<FxIndex>& fxIndex = nullptr,
+                             const bool spotAveragingFrontCoupon = false,
+                             const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(), 
+                             bool includeEndDate = true,
+                             bool excludeStartDate = true);
 
     //! \name Inspectors
     //@{
@@ -77,10 +81,19 @@ public:
     //@}
     //! \name CommodityCashFlow interface
     //@{
-    const std::map<QuantLib::Date, ext::shared_ptr<CommodityIndex>>& indices() const override { return indices_; }
+    const std::vector<std::pair<QuantLib::Date, ext::shared_ptr<CommodityIndex>>>& indices() const override { return indices_; }
     
+    // Index used to compute the accrued average price from historical spot fixing
+    const ext::shared_ptr<CommodityIndex>& spotIndex() const { return spotIndex_;}
+
+    const std::set<QuantLib::Date>& spotAveragingPricingDates() const { return spotAveragingPricingDates_;}
   
+    // Return true if its averaging front cashflow with a balance of a month
+    bool isAveragingFrontMonthCashflow(const QuantLib::Date& asof) const;
+
     QuantLib::Date lastPricingDate() const override { return pricingDate(); }
+
+    QuantLib::Real fixing() const override;
     //@}
     
     //! \name Event interface
@@ -103,15 +116,20 @@ public:
 
 private:
     void performCalculations() const override;
-
+    
     QuantLib::Date pricingDate_;
     QuantLib::Date paymentDate_;
     bool useFutureExpiryDate_;
     QuantLib::Natural futureMonthOffset_;
     QuantLib::Real periodQuantity_;
     QuantLib::Natural dailyExpiryOffset_;
-    std::map<QuantLib::Date, ext::shared_ptr<CommodityIndex>> indices_;
-
+    std::vector<std::pair<QuantLib::Date, ext::shared_ptr<CommodityIndex>>> indices_;
+    // Flag used to identify averaging coupons with averaging underlyings who uses spot fixings
+    // for the historical fixings instead of the averaging future fixing
+    bool isAveraging_;
+    std::set<QuantLib::Date> spotAveragingPricingDates_;
+    ext::shared_ptr<CommodityIndex> spotIndex_;
+    mutable QuantLib::Real price_;
     //! Shared initialisation
     void init(const ext::shared_ptr<FutureExpiryCalculator>& calc,
               const QuantLib::Date& contractDate = QuantLib::Date(),
@@ -119,7 +137,9 @@ private:
               const QuantLib::Date& startDate = QuantLib::Date(), const QuantLib::Date& endDate = QuantLib::Date(),
               const QuantLib::Natural paymentLag = 0,
               const QuantLib::BusinessDayConvention paymentConvention = QuantLib::Unadjusted,
-              const QuantLib::Calendar& paymentCalendar = QuantLib::NullCalendar());
+              const QuantLib::Calendar& paymentCalendar = QuantLib::NullCalendar(),
+              const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(), bool includeEndDate = true,
+              bool excludeStartDate = true);
 };
 
 //! Helper class building a sequence of commodity indexed cashflows
@@ -149,6 +169,10 @@ public:
     CommodityIndexedLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
     CommodityIndexedLeg& withDailyExpiryOffset(QuantLib::Natural dailyExpiryOffset);
     CommodityIndexedLeg& withFxIndex(const ext::shared_ptr<FxIndex>& fxIndex);
+    CommodityIndexedLeg& withIsAveraging(const bool isAveraging);
+    CommodityIndexedLeg& withPricingCalendar(const QuantLib::Calendar& pricingCalendar);
+    CommodityIndexedLeg& includeEndDate(bool flag = true);
+    CommodityIndexedLeg& excludeStartDate(bool flag = true);
 
     operator Leg() const;
 
@@ -174,6 +198,10 @@ private:
     std::vector<QuantLib::Date> paymentDates_;
     QuantLib::Natural dailyExpiryOffset_;
     ext::shared_ptr<FxIndex> fxIndex_;
+    bool isAveraging_;
+    QuantLib::Calendar pricingCalendar_;
+    bool includeEndDate_;
+    bool excludeStartDate_;
 };
 
 } // namespace QuantExt
