@@ -47,6 +47,8 @@ std::ostream& operator<<(std::ostream& out, const CrossAssetModel::AssetType& ty
         return out << "EQ";
     case CrossAssetModel::AssetType::COM:
         return out << "COM";
+    case CrossAssetModel::AssetType::CrState:
+        return out << "CrState";
     default:
         QL_FAIL("Did not recognise cross asset model type " << static_cast<int>(type) << ".");
     }
@@ -309,6 +311,8 @@ CrossAssetModel::getComponentType(const Size i) const {
         return std::make_pair(CrossAssetModel::AssetType::EQ, CrossAssetModel::ModelType::BS);
     if (boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]))
         return std::make_pair(CrossAssetModel::AssetType::COM, CrossAssetModel::ModelType::BS);
+    if (boost::dynamic_pointer_cast<CrStateParametrization>(p_[i]))
+        return std::make_pair(CrossAssetModel::AssetType::CrState, CrossAssetModel::ModelType::GENERIC);
     QL_FAIL("parametrization " << i << " has unknown type");
 }
 
@@ -335,6 +339,8 @@ Size CrossAssetModel::getNumberOfBrownians(const Size i) const {
         return 1;
     if (boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]))
         return 1;
+    if (boost::dynamic_pointer_cast<CrStateParametrization>(p_[i]))
+        return 1;
     QL_FAIL("parametrization " << i << " has unknown type");
 }
 
@@ -358,6 +364,8 @@ Size CrossAssetModel::getNumberOfAuxBrownians(const Size i) const {
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return 0;
     if (boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]))
+        return 0;
+    if (boost::dynamic_pointer_cast<CrStateParametrization>(p_[i]))
         return 0;
     QL_FAIL("parametrization " << i << " has unknown type");
 }
@@ -384,6 +392,8 @@ Size CrossAssetModel::getNumberOfStateVariables(const Size i) const {
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return 1;
     if (boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]))
+        return 1;
+    if (boost::dynamic_pointer_cast<CrStateParametrization>(p_[i]))
         return 1;
     QL_FAIL("parametrization " << i << " has unknown type");
 }
@@ -596,6 +606,19 @@ void CrossAssetModel::initializeParametrizations() {
         ++i;
     }
     components_[(Size)CrossAssetModel::AssetType::COM] = j;
+
+    // CrState parametrizations
+
+    j = 0;
+    while (i < p_.size() && getComponentType(i).first == CrossAssetModel::AssetType::CrState) {
+        updateIndices(CrossAssetModel::AssetType::CrState, i, cIdxTmp, wIdxTmp, pIdxTmp, aIdxTmp);
+        cIdxTmp += getNumberOfBrownians(i);
+        wIdxTmp += getNumberOfBrownians(i) + getNumberOfAuxBrownians(i);
+        pIdxTmp += getNumberOfStateVariables(i);
+        aIdxTmp += getNumberOfParameters(i);
+        ++j;
+        ++i;
+    }
 
     // check the equity currencies to ensure they are covered by CrossAssetModel
     for (Size i = 0; i < components(CrossAssetModel::AssetType::COM); ++i) {

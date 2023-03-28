@@ -249,6 +249,7 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
 #include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
+#include <qle/models/crstateparametrization.hpp>
 #include <qle/models/defaultlossmodel.hpp>
 #include <qle/models/defaultprobabilitylatentmodel.hpp>
 #include <qle/models/dkimpliedyoyinflationtermstructure.hpp>

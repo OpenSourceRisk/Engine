@@ -589,6 +589,7 @@ models/crossassetanalyticsbase.hpp
 models/crossassetmodel.hpp
 models/crossassetmodelimpliedeqvoltermstructure.hpp
 models/crossassetmodelimpliedfxvoltermstructure.hpp
+models/crstateparametrization.hpp
 models/defaultlossmodel.hpp
 models/defaultprobabilitylatentmodel.hpp
 models/dkimpliedyoyinflationtermstructure.hpp
