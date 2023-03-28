@@ -309,6 +309,9 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
 
     // Add calibration instruments to the helpers vector.
     const auto& ci = cb.instruments();
+
+    auto observationInterpolation = cpiVolatility_->indexIsInterpolated() ? CPI::Linear : CPI::Flat;
+
     for (Size i = 0; i < ci.size(); ++i) {
 
         auto cpiCapFloor = boost::dynamic_pointer_cast<CpiCapFloor>(ci[i]);
@@ -332,19 +335,20 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
         Real strikeValue =
             cpiCapFloorStrikeValue(cpiCapFloor->strike(), *zeroInflationIndex_->zeroInflationTermStructure(), maturity);
         Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
-        auto inst = boost::make_shared<CPICapFloor>(capfloor, nominal, today, baseCpi, maturity, calendar, bdc,
-                                                    calendar, bdc, strikeValue, zeroInflationIndex_, obsLag);
+        auto inst = boost::make_shared<CPICapFloor>(capfloor, nominal, today, baseCpi, maturity, calendar, bdc, calendar, bdc,
+                                            strikeValue, zeroInflationIndex_, obsLag, observationInterpolation);
         inst->setPricingEngine(engine);
 
         // Build the helper using the NPV as the premium.
         auto premium = inst->NPV();
         auto helper = boost::make_shared<CpiCapFloorHelper>(capfloor, baseCpi, maturity, calendar, bdc, calendar, bdc,
-                                                            strikeValue, inflationIndex, obsLag, premium);
+                                                            strikeValue, inflationIndex, obsLag, premium,
+                                                            observationInterpolation);
 
 
         // Add the helper's time to expiry.
         auto fixingDate = helper->instrument()->fixingDate();
-        auto t = inflationTime(fixingDate, *zts, zeroInflationIndex_->interpolated());
+        auto t = inflationTime(fixingDate, *zts, false);
         auto p = expiryTimes.insert(t);
         QL_REQUIRE(data_->ignoreDuplicateCalibrationExpiryTimes() || p.second,
                    "InfJyBuilder: a CPI cap floor calibration "

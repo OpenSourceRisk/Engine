@@ -38,7 +38,10 @@ using namespace QuantLib;
  */
 class ZeroInflationIndexWrapper : public ZeroInflationIndex {
 public:
-    ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source,
+
+    ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source);
+
+    QL_DEPRECATED ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source,
                               const CPI::InterpolationType interpolation);
     /*! \warning the forecastTodaysFixing parameter (required by the Index interface) is currently ignored. */
     Rate fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
@@ -46,7 +49,7 @@ public:
 private:
     Rate forecastFixing(const Date& fixingDate) const;
     const boost::shared_ptr<ZeroInflationIndex> source_;
-    const CPI::InterpolationType interpolation_;
+    QL_DEPRECATED const CPI::InterpolationType interpolation_;
 };
 
 //! Wrapper that creates a yoy from a zc index

@@ -54,10 +54,11 @@ void NonStandardYoYInflationCoupon::setFixingDates(const Date& denumatorDate, co
 NonStandardYoYInflationCoupon::NonStandardYoYInflationCoupon(
     const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
     const ext::shared_ptr<ZeroInflationIndex>& index, const Period& observationLag, const DayCounter& dayCounter,
-    Real gearing, Spread spread, const Date& refPeriodStart, const Date& refPeriodEnd, bool addInflationNotional)
+    Real gearing, Spread spread, const Date& refPeriodStart, const Date& refPeriodEnd, bool addInflationNotional, QuantLib::CPI::InterpolationType interpolation)
     : QuantLib::InflationCoupon(paymentDate, nominal, startDate, endDate, fixingDays, index, observationLag, dayCounter,
                                 refPeriodStart, refPeriodEnd),
-      gearing_(gearing), spread_(spread), addInflationNotional_(addInflationNotional) {
+      gearing_(gearing), spread_(spread), addInflationNotional_(addInflationNotional),
+      interpolationType_(interpolation) {
     setFixingDates(refPeriodStart, refPeriodEnd, observationLag);
 }
 
@@ -77,8 +78,9 @@ Date NonStandardYoYInflationCoupon::fixingDateNumerator() const { return fixingD
 Date NonStandardYoYInflationCoupon::fixingDateDenumerator() const { return fixingDateDenumerator_; }
 
 Rate NonStandardYoYInflationCoupon::indexFixing() const {
-    Real I_t = index_->fixing(fixingDateNumerator());
-    Real I_s = index_->fixing(fixingDateDenumerator());
+    auto zii = boost::dynamic_pointer_cast<QuantLib::ZeroInflationIndex>(index_);
+    Real I_t = CPI::laggedFixing(zii, fixingDateNumerator() + observationLag_, observationLag_, interpolationType_);
+    Real I_s = CPI::laggedFixing(zii, fixingDateDenumerator() + observationLag_, observationLag_, interpolationType_);
     return I_t / I_s - 1.0;
 }
 

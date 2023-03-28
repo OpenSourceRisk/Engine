@@ -61,7 +61,7 @@ template <class Interpolator2D> class StrippedCPIVolatilitySurface : public Quan
 public:
     
      
-    StrippedCPIVolatilitySurface(PriceQuotePreference type,
+    QL_DEPRECATED StrippedCPIVolatilitySurface(PriceQuotePreference type,
                                  const QuantLib::Handle<QuantLib::CPICapFloorTermPriceSurface>& priceSurface,
                                  const boost::shared_ptr<QuantLib::ZeroInflationIndex>& zeroIndex,
                                  const boost::shared_ptr<QuantExt::CPICapFloorEngine>& engine,
@@ -72,6 +72,17 @@ public:
                                  const Interpolator2D& interpolator2d = Interpolator2D(),
                                  const QuantLib::VolatilityType& volType = QuantLib::ShiftedLognormal, 
                                  const double displacement = 0.0);
+
+    StrippedCPIVolatilitySurface(
+        PriceQuotePreference type, const QuantLib::Handle<QuantLib::CPICapFloorTermPriceSurface>& priceSurface,
+        const boost::shared_ptr<QuantLib::ZeroInflationIndex>& zeroIndex,
+        const bool quotedPricesUseInterpolatedCPIFixings,
+        const boost::shared_ptr<QuantExt::CPICapFloorEngine>& engine, const QuantLib::Date& capFloorStartDate = Date(),
+        const QuantLib::Real& upperVolBound = StrippedCPIVolSurfaceDefaultValues::upperVolBound,
+        const QuantLib::Real& lowerVolBound = StrippedCPIVolSurfaceDefaultValues::lowerVolBound,
+        const QuantLib::Real& solverTolerance = StrippedCPIVolSurfaceDefaultValues::solverTolerance,
+        const Interpolator2D& interpolator2d = Interpolator2D(),
+        const QuantLib::VolatilityType& volType = QuantLib::ShiftedLognormal, const double displacement = 0.0);
 
     //! \name LazyObject interface
     //@{
@@ -146,12 +157,32 @@ private:
 template <class Interpolator2D>
 StrippedCPIVolatilitySurface<Interpolator2D>::StrippedCPIVolatilitySurface(
     PriceQuotePreference type, const QuantLib::Handle<QuantLib::CPICapFloorTermPriceSurface>& priceSurface,
-    const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
+    const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index, const bool quotedPriceUseInterpolatedCPIFixing,
     const boost::shared_ptr<QuantExt::CPICapFloorEngine>& engine, // const QuantLib::Real& baseCPI,
     const QuantLib::Date& capFloorStartDate, const QuantLib::Real& upperVolBound, const QuantLib::Real& lowerVolBound,
     const QuantLib::Real& solverTolerance,
     const Interpolator2D& interpolator2d, const QuantLib::VolatilityType& volType,
     const double displacement)
+    : QuantExt::CPIVolatilitySurface(priceSurface->settlementDays(), priceSurface->calendar(),
+                                     priceSurface->businessDayConvention(), priceSurface->dayCounter(),
+                                     priceSurface->observationLag(), index->frequency(),
+                                     quotedPriceUseInterpolatedCPIFixing,
+                                     capFloorStartDate, volType, displacement),
+      preference_(type), priceSurface_(priceSurface), index_(index), engine_(engine), upperVolBound_(upperVolBound),
+      lowerVolBound_(lowerVolBound), solverTolerance_(solverTolerance), interpolator2d_(interpolator2d) {
+
+    performCalculations();
+}
+
+QL_DEPRECATED_DISABLE_WARNING
+template <class Interpolator2D>
+StrippedCPIVolatilitySurface<Interpolator2D>::StrippedCPIVolatilitySurface(
+    PriceQuotePreference type, const QuantLib::Handle<QuantLib::CPICapFloorTermPriceSurface>& priceSurface,
+    const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
+    const boost::shared_ptr<QuantExt::CPICapFloorEngine>& engine, // const QuantLib::Real& baseCPI,
+    const QuantLib::Date& capFloorStartDate, const QuantLib::Real& upperVolBound, const QuantLib::Real& lowerVolBound,
+    const QuantLib::Real& solverTolerance, const Interpolator2D& interpolator2d,
+    const QuantLib::VolatilityType& volType, const double displacement)
     : QuantExt::CPIVolatilitySurface(priceSurface->settlementDays(), priceSurface->calendar(),
                                      priceSurface->businessDayConvention(), priceSurface->dayCounter(),
                                      priceSurface->observationLag(), index->frequency(), index->interpolated(),
@@ -161,6 +192,7 @@ StrippedCPIVolatilitySurface<Interpolator2D>::StrippedCPIVolatilitySurface(
 
     performCalculations();
 }
+QL_DEPRECATED_ENABLE_WARNING
 
 template <class Interpolator2D> void StrippedCPIVolatilitySurface<Interpolator2D>::performCalculations() const {
     strikes_ = priceSurface_->strikes();

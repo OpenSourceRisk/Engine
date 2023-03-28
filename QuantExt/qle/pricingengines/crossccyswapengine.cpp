@@ -110,8 +110,9 @@ void CrossCcySwapEngine::calculate() const {
             results_.npvDateDiscounts[legNo] = legDiscountCurve->discount(results_.valuationDate);
 
             // Calculate the NPV and BPS of each leg in its currency.
-            CashFlows::npvbps(arguments_.legs[legNo], **legDiscountCurve, includeReferenceDateFlows, settlementDate,
-                              results_.valuationDate, results_.inCcyLegNPV[legNo], results_.inCcyLegBPS[legNo]);
+            std::tie(results_.inCcyLegNPV[legNo], results_.inCcyLegBPS[legNo]) =
+                CashFlows::npvbps(arguments_.legs[legNo], **legDiscountCurve, includeReferenceDateFlows, settlementDate,
+                                  results_.valuationDate);
             results_.inCcyLegNPV[legNo] *= arguments_.payer[legNo];
             results_.inCcyLegBPS[legNo] *= arguments_.payer[legNo];
 

@@ -1146,11 +1146,11 @@ InflationSwapConvention::InflationSwapConvention(const string& id, const string&
 
 void InflationSwapConvention::build() {
     interpolated_ = parseBool(strInterpolated_);
-    parseZeroInflationIndex(strIndex_, interpolated_, Handle<ZeroInflationTermStructure>());
+    parseZeroInflationIndex(strIndex_, Handle<ZeroInflationTermStructure>());
     fixCalendar_ = parseCalendar(strFixCalendar_);
     fixConvention_ = parseBusinessDayConvention(strFixConvention_);
     dayCounter_ = parseDayCounter(strDayCounter_);
-    index_ = parseZeroInflationIndex(strIndex_, interpolated_, Handle<ZeroInflationTermStructure>());
+    index_ = parseZeroInflationIndex(strIndex_, Handle<ZeroInflationTermStructure>());
     observationLag_ = parsePeriod(strObservationLag_);
     adjustInfObsDates_ = parseBool(strAdjustInfObsDates_);
     infCalendar_ = parseCalendar(strInfCalendar_);
@@ -1224,7 +1224,7 @@ XMLNode* InflationSwapConvention::toXML(XMLDocument& doc) {
 }
 
 boost::shared_ptr<ZeroInflationIndex> InflationSwapConvention::index() const {
-    return parseZeroInflationIndex(strIndex_, interpolated_, Handle<ZeroInflationTermStructure>());
+    return parseZeroInflationIndex(strIndex_, Handle<ZeroInflationTermStructure>());
 }
 
 SecuritySpreadConvention::SecuritySpreadConvention(const string& id, const string& dayCounter,
