@@ -184,6 +184,8 @@ public:
         const std::vector<boost::shared_ptr<CrCirData>>& crCirConfigs,
         //! Vector of COM Schwartz model specifications
         const std::vector<boost::shared_ptr<CommoditySchwartzData>>& comConfigs,
+        //! Number of credit states
+        const Size numberOfCreditStates,
         //! Correlation map
         const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& c,
         //! Bootstrap tolerance used in model calibration
@@ -225,6 +227,7 @@ public:
     const vector<boost::shared_ptr<CrLgmData>>& crLgmConfigs() const { return crLgmConfigs_; }
     const vector<boost::shared_ptr<CrCirData>>& crCirConfigs() const { return crCirConfigs_; }
     const vector<boost::shared_ptr<CommoditySchwartzData>>& comConfigs() const { return comConfigs_; }
+    Size numberOfCreditStates() const { return numberOfCreditStates_; }
     const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& correlations() const {
         return correlations_->correlations();
     }
@@ -303,6 +306,8 @@ private:
     vector<boost::shared_ptr<CrLgmData>> crLgmConfigs_;
     vector<boost::shared_ptr<CrCirData>> crCirConfigs_;
     vector<boost::shared_ptr<CommoditySchwartzData>> comConfigs_;
+    Size numberOfCreditStates_;
+
     boost::shared_ptr<InstantaneousCorrelations> correlations_;
     Real bootstrapTolerance_;
     std::string measure_;
