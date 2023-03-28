@@ -22,6 +22,7 @@
 
 namespace QuantExt {
 
+QL_DEPRECATED_DISABLE_WARNING
 ZeroInflationIndexWrapper::ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source)
     : ZeroInflationIndex(source->familyName(), source->region(), source->revised(), source->frequency(), source->availabilityLag(), source->currency(),
                          source->zeroInflationTermStructure()),
@@ -29,12 +30,11 @@ ZeroInflationIndexWrapper::ZeroInflationIndexWrapper(const boost::shared_ptr<Zer
 
 ZeroInflationIndexWrapper::ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source,
                                                      const CPI::InterpolationType interpolation)
-    QL_DEPRECATED_DISABLE_WARNING
     : ZeroInflationIndex(source->familyName(), source->region(), source->revised(), source->interpolated(),
                          source->frequency(), source->availabilityLag(), source->currency(),
                          source->zeroInflationTermStructure()),
-    QL_DEPRECATED_ENABLE_WARNING
       source_(source), interpolation_(interpolation) {}
+QL_DEPRECATED_ENABLE_WARNING
 
 Rate ZeroInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTodaysFixing*/) const {
 
