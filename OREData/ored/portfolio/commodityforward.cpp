@@ -116,7 +116,7 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     }
 
     // add required commodity fixing
-    LOG("paymentDate is " << paymentDate);
+    DLOG("commodity forward " << id() << " paymentDate is " << paymentDate);
     requiredFixings_.addFixingDate(maturity_, index->name(),
                                    paymentDate == Date() ? maturity_ : paymentDate);
 
