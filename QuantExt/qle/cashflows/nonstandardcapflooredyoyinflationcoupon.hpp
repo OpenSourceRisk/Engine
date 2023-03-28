@@ -83,8 +83,9 @@ public:
                                                const ext::shared_ptr<ZeroInflationIndex>& index,
                                                const Period& observationLag, const DayCounter& dayCounter,
                                                Real gearing = 1.0, Spread spread = 0.0, const Rate cap = Null<Rate>(),
-                                               const Rate floor = Null<Rate>(), const Date& refPeriodStart = Date(),
-                                               const Date& refPeriodEnd = Date(), bool addInflationNotional = false);
+                                               const Rate floor = Null<Rate>(), const Date& refPeriodStart = Date(), 
+                                               const Date& refPeriodEnd = Date(), bool addInflationNotional = false,
+                                               QuantLib::CPI::InterpolationType interpolation = QuantLib::CPI::InterpolationType::Flat);
 
     //! \name augmented Coupon interface
     //@{
@@ -145,6 +146,7 @@ public:
     NonStandardYoYInflationLeg& withFloors(const std::vector<Rate>& floors);
     NonStandardYoYInflationLeg& withRateCurve(const Handle<YieldTermStructure>& rateCurve);
     NonStandardYoYInflationLeg& withInflationNotional(bool addInflationNotional_);
+    NonStandardYoYInflationLeg& withObservationInterpolation(QuantLib::CPI::InterpolationType interpolation);
     operator Leg() const;
 
 private:
@@ -161,6 +163,7 @@ private:
     std::vector<Rate> caps_, floors_;
     Handle<YieldTermStructure> rateCurve_;
     bool addInflationNotional_;
+    QuantLib::CPI::InterpolationType interpolation_;
 };
 
 } // namespace QuantExt

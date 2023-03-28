@@ -175,13 +175,46 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                 boost::shared_ptr<CommodityIndexedCashFlow> indexedFlow =
                     boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(unpackIndexWrappedCashFlow(flow));
                 if (indexedFlow) {
-                    additionalData_["index[" + label + "]"] = indexedFlow->index()->name();
-                    additionalData_["indexExpiry[" + label + "]"] = indexedFlow->index()->expiryDate();
                     additionalData_["quantity[" + label + "]"] = indexedFlow->quantity();
                     additionalData_["periodQuantity[" + label + "]"] = indexedFlow->periodQuantity();
                     additionalData_["gearing[" + label + "]"] = indexedFlow->gearing();
+                    if (indexedFlow->isAveragingFrontMonthCashflow(asof)) {
+                        std::vector<Real> priceVec;
+                        std::vector<std::string> indexVec;
+                        std::vector<Date> indexExpiryVec, pricingDateVec;
+                        double averagePrice = 0;
+                        for (const auto& pd : indexedFlow->spotAveragingPricingDates()) {
+                            if (pd > asof) {
+                                auto index = indexedFlow->index();
+                                auto pricingDate = indexedFlow->lastPricingDate();
+                                indexVec.push_back(index->name());
+                                indexExpiryVec.push_back(index->expiryDate());
+                                pricingDateVec.push_back(pd);
+                                priceVec.push_back(index->fixing(pricingDate));
+                                averagePrice += priceVec.back();
+                            }
+                            else {
+                                auto index = indexedFlow->spotIndex();
+                                indexVec.push_back(index->name());
+                                indexExpiryVec.push_back(index->expiryDate());
+                                pricingDateVec.push_back(pd);
+                                priceVec.push_back(index->fixing(pd));
+                                averagePrice += priceVec.back();
+                            }
+                        }
+                        averagePrice /= indexedFlow->spotAveragingPricingDates().size();
+                        additionalData_["index[" + label + "]"] = indexVec;
+                        additionalData_["indexExpiry[" + label + "]"] = indexExpiryVec;
+                        additionalData_["price[" + label + "]"] = priceVec;
+                        additionalData_["averagePrice[" + label + "]"] = averagePrice;
+                        additionalData_["pricingDate[" + label + "]"] = pricingDateVec;
+                    }
+                    else {
+                    additionalData_["index[" + label + "]"] = indexedFlow->index()->name();
+                    additionalData_["indexExpiry[" + label + "]"] = indexedFlow->index()->expiryDate();
                     additionalData_["price[" + label + "]"] = indexedFlow->index()->fixing(indexedFlow->pricingDate());
                     additionalData_["pricingDate[" + label + "]"] = to_string(indexedFlow->pricingDate());
+                    }
                     additionalData_["paymentDate[" + label + "]"] = to_string(indexedFlow->date());
                 }
                 boost::shared_ptr<CommodityIndexedAverageCashFlow> indexedAvgFlow =

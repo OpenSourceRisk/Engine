@@ -218,14 +218,10 @@ bool endsWith(const std::string& name, const std::string& suffix) {
         return std::equal(suffix.rbegin(), suffix.rend(), name.rbegin());
 }
 
-void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& rpts,
-                               const std::string& outputPath,
-                               const std::map<std::string,std::string>& reportNames,
-                               const char sep,
-                               const bool commentCharacter,
-                               char quoteChar,
-                               const string& nullString,
-                               bool lowerHeader) {
+void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& rpts, const std::string& outputPath,
+                              const std::map<std::string, std::string>& reportNames, const char sep,
+                              const bool commentCharacter, char quoteChar, const string& nullString,
+                              const std::set<std::string>& lowerHeaderReportNames) {
     std::map<std::string, Size> hits = checkReportNames(rpts);    
     for (const auto& rep : rpts) {
         string analytic = rep.first;
@@ -251,11 +247,11 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
                 suffix = ".csv";
             std::string fullFileName = outputPath + "/" + fileName + suffix;
 
-            report->toFile(fullFileName, sep, commentCharacter, quoteChar, nullString, lowerHeader);
+            report->toFile(fullFileName, sep, commentCharacter, quoteChar, nullString,
+                           lowerHeaderReportNames.find(reportName) != lowerHeaderReportNames.end());
             LOG("report " << reportName << " written to " << fullFileName); 
         }
     }
 }
-
 }
 }
