@@ -20,7 +20,7 @@
 
 #ifdef ORE_USE_EIGEN
 
-#include <eigen3/unsupported/Eigen/MatrixFunctions>
+#include <unsupported/Eigen/MatrixFunctions>
 
 namespace QuantExt {
 
