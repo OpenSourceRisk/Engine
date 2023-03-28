@@ -37,14 +37,13 @@ public:
     AnalyticsManager(//! Container for the inputs required by the standard analytics
                      const boost::shared_ptr<InputParameters>& inputs,
                      //! A market data loader object that can retrieve required data from a large repository
-                     const boost::shared_ptr<MarketDataLoader>& marketDataLoader,
-                     //! Stream for optional output
-                     std::ostream& out = std::cout);
+                     const boost::shared_ptr<MarketDataLoader>& marketDataLoader);
     virtual ~AnalyticsManager() {};
 
     //! Valid analytics in the analytics manager are the union of analytics types provided by analytics_ map
     bool hasAnalytic(const std::string& type);
     const std::set<std::string>& validAnalytics();
+    const std::set<std::string>& requestedAnalytics();
     const boost::shared_ptr<Analytic>& getAnalytic(const std::string& type) const;
     Size numberOfAnalytics() { return analytics_.size(); }
     const boost::shared_ptr<InputParameters>& inputs() { return inputs_; }
@@ -57,28 +56,23 @@ public:
     Analytic::analytic_npvcubes const npvCubes();
     Analytic::analytic_mktcubes const mktCubes();
 
-    std::ostream& stream() { return out_; }
-
     void setLaggedMarket() { laggedMarket_ = true; }
     void unsetLaggedMarket() { laggedMarket_ = false; }
 
     // Write all reports to files, reportNames map can be used to replace standard report names
     // with custom names
-    void toFile(const Analytic::analytic_reports& reports,
-                const std::string& outputPath,
-                const std::map<std::string,std::string>& reportNames = {},
-                const char sep = ',',
-                const bool commentCharacter = false,
-                char quoteChar = '\0',
-                const string& nullString = "#N/A",
-                bool lowerHeader = false);
+    void toFile(const Analytic::analytic_reports& reports, const std::string& outputPath,
+                const std::map<std::string, std::string>& reportNames = {}, const char sep = ',',
+                const bool commentCharacter = false, char quoteChar = '\0', const string& nullString = "#N/A",
+                const std::set<std::string>& lowerHeaderReportNames = {});
+
 private:
     std::map<std::string, boost::shared_ptr<Analytic>> analytics_;
     boost::shared_ptr<InputParameters> inputs_;
     boost::shared_ptr<MarketDataLoader> marketDataLoader_;
     Analytic::analytic_reports marketDataReports_;
     std::set<std::string> validAnalytics_;
-    std::ostream& out_;
+    std::set<std::string> requestedAnalytics_;
     bool laggedMarket_ = false;
 };
 

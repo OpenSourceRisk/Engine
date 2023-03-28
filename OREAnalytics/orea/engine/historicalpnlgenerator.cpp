@@ -82,19 +82,12 @@ HistoricalPnlGenerator::HistoricalPnlGenerator(
     const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams, const std::string& configuration,
     const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
-    const std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
-        const boost::shared_ptr<ore::data::ReferenceDataManager>&, const boost::shared_ptr<ore::data::TradeFactory>&)>&
-        extraTradeBuildersGenerator,
-    const std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()>& extraLegBuildersGenerator,
-    const std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()>& extraEngineBuildersGenerator,
     const boost::shared_ptr<ReferenceDataManager>& referenceData, const IborFallbackConfig& iborFallbackConfig,
     bool dryRun, const std::string& context)
     : useSingleThreadedEngine_(false), portfolio_(portfolio), hisScenGen_(hisScenGen), engineData_(engineData),
       nThreads_(nThreads), today_(today), loader_(loader), curveConfigs_(curveConfigs),
       todaysMarketParams_(todaysMarketParams), configuration_(configuration), simMarketData_(simMarketData),
-      extraTradeBuildersGenerator_(extraTradeBuildersGenerator), extraLegBuildersGenerator_(extraLegBuildersGenerator),
-      extraEngineBuildersGenerator_(extraEngineBuildersGenerator), referenceData_(referenceData),
-      iborFallbackConfig_(iborFallbackConfig), dryRun_(dryRun), context_(context),
+      referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), dryRun_(dryRun), context_(context),
       npvCalculator_([&baseCurrency]() -> std::vector<boost::shared_ptr<ValuationCalculator>> {
           return {boost::make_shared<NPVCalculator>(baseCurrency)};
       }) {}
@@ -123,8 +116,7 @@ void HistoricalPnlGenerator::generateCube(const boost::shared_ptr<ScenarioFilter
         MultiThreadedValuationEngine engine(
             nThreads_, today_, boost::make_shared<ore::analytics::DateGrid>(), hisScenGen_->numScenarios(), loader_,
             hisScenGen_, engineData_, curveConfigs_, todaysMarketParams_, configuration_, simMarketData_, false, false,
-            filter, extraTradeBuildersGenerator_, extraEngineBuildersGenerator_, extraLegBuildersGenerator_,
-            referenceData_, iborFallbackConfig_, true, true, {}, {}, {}, context_);
+            filter, referenceData_, iborFallbackConfig_, true, true, {}, {}, {}, context_);
         for (auto const& i : this->progressIndicators()) {
             i->reset();
             engine.registerProgressIndicator(i);

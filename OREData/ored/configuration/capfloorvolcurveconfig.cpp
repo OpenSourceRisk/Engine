@@ -58,16 +58,14 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const BusinessDayConvention& businessDayConvention, const std::string& index,
     const QuantLib::Period& rateComputationPeriod, const Size onCapSettlementDays, const string& discountCurve,
     const string& interpolationMethod, const string& interpolateOn, const string& timeInterpolation,
-    const string& strikeInterpolation, const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig,
-    const string& smileDynamics)
+    const string& strikeInterpolation, const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig)
     : CurveConfig(curveID, curveDescription), volatilityType_(volatilityType), extrapolate_(extrapolate),
       flatExtrapolation_(flatExtrapolation), includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes),
       dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index_(index), rateComputationPeriod_(rateComputationPeriod),
       onCapSettlementDays_(onCapSettlementDays), discountCurve_(discountCurve),
       interpolationMethod_(interpolationMethod), interpolateOn_(interpolateOn), timeInterpolation_(timeInterpolation),
-      strikeInterpolation_(strikeInterpolation), atmTenors_(atmTenors), bootstrapConfig_(bootstrapConfig),
-      smileDynamics_(smileDynamics) {
+      strikeInterpolation_(strikeInterpolation), atmTenors_(atmTenors), bootstrapConfig_(bootstrapConfig) {
 
     // Set extrapolation string. "Linear" just means extrapolation allowed and non-flat.
     extrapolation_ = !extrapolate_ ? "None" : (flatExtrapolation_ ? "Flat" : "Linear");
@@ -230,8 +228,6 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         populateRequiredCurveIds();
     }
 
-    smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
-
     // Optional report config
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
@@ -285,7 +281,6 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
     }
 
-    XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     return node;
 }

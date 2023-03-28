@@ -95,9 +95,7 @@ public:
         //! optional adjustment factors for stock splits etc
         const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors = nullptr,
         //! string prepended to label of all scenarios generated
-        const std::string& labelPrefix = "", 
-        //! exclude CPI Index shifts
-        const bool excludeCPIIndexShifts = false);
+        const std::string& labelPrefix = "");
 
     //! Set base scenario, this also defines the asof date
     boost::shared_ptr<Scenario>& baseScenario() { return baseScenario_; }
@@ -157,8 +155,6 @@ public:
     //! Get the scenario label prefix
     const std::string& labelPrefix() const { return labelPrefix_; }
 
-    bool excludeCpiIndexShifts() const { return excludeCPIIndexShifts_; }
-
 protected:
     // to be managed in derived classes, if next is overwritten
     Size i_;
@@ -185,7 +181,6 @@ private:
     ReturnConfiguration returnConfiguration_;
     boost::shared_ptr<ore::data::AdjustmentFactors> adjFactors_;
     std::string labelPrefix_;
-    bool excludeCPIIndexShifts_;
 };
 
 //! Historical scenario generator generating random scenarios, for testing purposes

@@ -26,6 +26,7 @@
 #include <map>
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/currencyparser.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -241,6 +242,7 @@ DayCounter parseDayCounter(const string& s) {
                                         {"Actual/Actual (ISDA)", ActualActual(ActualActual::ISDA)},
                                         {"ActualActual (ISDA)", ActualActual(ActualActual::ISDA)},
                                         {"ACT/ACT", ActualActual(ActualActual::ISDA)},
+                                        {"Act/Act", ActualActual(ActualActual::ISDA)},
                                         {"ACT29", ActualActual(ActualActual::AFB)},
                                         {"ACT", ActualActual(ActualActual::ISDA)},
                                         {"ActActISMA", ActualActual(ActualActual::ISMA)},
@@ -780,18 +782,17 @@ YoYInflationCapFloor::Type parseYoYInflationCapFloorType(const string& s) {
     }
 }
 
-QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const string& s) {
-    namespace CT = QuantExt::CrossAssetModelTypes;
+QuantExt::CrossAssetModel::AssetType parseCamAssetType(const string& s) {
     if (s == "IR") {
-        return CT::IR;
+        return QuantExt::CrossAssetModel::AssetType::IR;
     } else if (s == "FX") {
-        return CT::FX;
+        return QuantExt::CrossAssetModel::AssetType::FX;
     } else if (s == "INF") {
-        return CT::INF;
+        return QuantExt::CrossAssetModel::AssetType::INF;
     } else if (s == "CR") {
-        return CT::CR;
+        return QuantExt::CrossAssetModel::AssetType::CR;
     } else if (s == "EQ") {
-        return CT::EQ;
+        return QuantExt::CrossAssetModel::AssetType::EQ;
     } else {
         QL_FAIL("Unknown cross asset model type " << s);
     }
@@ -1054,11 +1055,11 @@ std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t) {
     }
 }
 
-std::ostream& operator<<(std::ostream& out, QuantExt::CrossAssetStateProcess::discretization dis) {
+std::ostream& operator<<(std::ostream& out, QuantExt::CrossAssetModel::Discretization dis) {
     switch (dis) {
-    case QuantExt::CrossAssetStateProcess::exact:
+    case QuantExt::CrossAssetModel::Discretization::Exact:
         return out << "Exact";
-    case QuantExt::CrossAssetStateProcess::euler:
+    case QuantExt::CrossAssetModel::Discretization::Euler:
         return out << "Euler";
     default:
         return out << "?";
@@ -1224,6 +1225,113 @@ std::vector<std::string> getCorrelationTokens(const std::string& name) {
     QL_REQUIRE(tokens.size() == 2,
                "invalid correlation name '" << name << "', expected Index2:Index1 or Index2/Index1 or Index2&Index1");
     return tokens;
+}
+
+string fxDominance(const string& s1, const string& s2) {
+
+    // short cut for trivial inputs EUR,EUR => EUREUR
+
+    if (s1 == s2)
+        return s1 + s2;
+
+    // This should run even if we don't have s1 or s2 in our table, it should not throw
+    // It will also work if s1 == s2
+
+    static vector<string> dominance = {// Precious Metals (always are before currencies, Metal crosses are not
+                                       // common so the ordering of the actual 4 here is just the standard order we see
+                                       "XAU", "XAG", "XPT", "XPD",
+                                       // The majors (except JPY)
+                                       "EUR", "GBP", "AUD", "NZD", "USD", "CAD", "CHF", "ZAR",
+                                       // The rest - not really sure about some of these (MXNSEK anyone)
+                                       "MYR", "SGD",               // not sure of order here
+                                       "DKK", "NOK", "SEK",        // order here is correct
+                                       "HKD", "THB", "TWD", "MXN", // not sure of order here
+                                       "CNY", "CNH",
+
+                                       // JPY at the end (of majors)
+                                       "JPY",
+                                       // JPYIDR and JPYKRW - who knew!
+                                       "IDR", "KRW" };
+
+    auto p1 = std::find(dominance.begin(), dominance.end(), s1);
+    auto p2 = std::find(dominance.begin(), dominance.end(), s2);
+
+    // if both on the list - we return the first one first
+    if (p1 != dominance.end() && p2 != dominance.end()) {
+        if (p1 > p2)
+            return s2 + s1;
+        else
+            return s1 + s2;
+    }
+    // if nether on the list - we return s1+s2
+    if (p1 == dominance.end() && p2 == dominance.end()) {
+        WLOG("No dominance for either " << s1 << " or " << s2 << " assuming " << s1 + s2);
+        return s1 + s2;
+    }
+
+    // if one on the list - we return that first (unless it's JPY - in which case it's last)
+    if (s1 == "JPY")
+        return s2 + s1;
+    else if (s2 == "JPY")
+        return s1 + s2;
+    else {
+        if (p1 != dominance.end())
+            return s1 + s2;
+        else
+            return s2 + s1;
+    }
+}
+
+string normaliseFxIndex(const std::string& indexName) {
+    auto fx = ore::data::parseFxIndex(indexName);
+    std::string ccy1 = fx->sourceCurrency().code();
+    std::string ccy2 = fx->targetCurrency().code();
+    if (ore::data::fxDominance(ccy1, ccy2) != ccy1 + ccy2)
+        return ore::data::inverseFxIndex(indexName);
+    else
+        return indexName;
+}
+
+MomentType parseMomentType(const std::string& s) {
+    static map<string, MomentType> momentTypes = {
+        {"Variance", MomentType::Variance},
+        {"Volatility", MomentType::Volatility},
+    };
+    auto it = momentTypes.find(s);
+    if (it != momentTypes.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("momentTypes \"" << s << "\" not recognized");
+    }
+}
+
+CreditPortfolioSensitivityDecomposition parseCreditPortfolioSensitivityDecomposition(const std::string& s) {
+    if (s == "Underlying") {
+        return CreditPortfolioSensitivityDecomposition::Underlying;
+    } else if (s == "NotionalWeighted") {
+        return CreditPortfolioSensitivityDecomposition::NotionalWeighted;
+    } else if (s == "LossWeighted") {
+        return CreditPortfolioSensitivityDecomposition::LossWeighted;
+    } else if (s == "DeltaWeighted") {
+        return CreditPortfolioSensitivityDecomposition::DeltaWeighted;
+    } else {
+        QL_FAIL("CreditPortfolioSensitivityDecomposition '"
+                << s << "' invalid, expected Underlying, NotionalWeighted, LossWeighted, DeltaWeighted");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, const CreditPortfolioSensitivityDecomposition d) {
+    if (d == CreditPortfolioSensitivityDecomposition::Underlying) {
+        return os << "Underlying";
+    } else if (d == CreditPortfolioSensitivityDecomposition::NotionalWeighted) {
+        return os << "NotionalWeighted";
+    } else if (d == CreditPortfolioSensitivityDecomposition::LossWeighted) {
+        return os << "LossWeighted";
+    } else if (d == CreditPortfolioSensitivityDecomposition::DeltaWeighted) {
+        return os << "DeltaWeighted";
+    } else {
+        QL_FAIL("Unknonw CreditPortfolioSensitivitiyDecomposition value " << static_cast<std::size_t>(d));
+    }
 }
 
 } // namespace data

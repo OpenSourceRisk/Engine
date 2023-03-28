@@ -61,6 +61,49 @@ using boost::timer::default_places;
 namespace ore {
 namespace analytics {
 
+Analytic::Analytic(std::unique_ptr<Impl> impl,
+         const std::set<std::string>& analyticTypes,
+         const boost::shared_ptr<InputParameters>& inputs,
+         bool simulationConfig,
+         bool sensitivityConfig,
+         bool scenarioGeneratorConfig,
+         bool crossAssetModelConfig)
+    : impl_(std::move(impl)), types_(analyticTypes), inputs_(inputs) {
+    
+    // set these here, can be overwritten in setUpConfigurations
+    if (inputs->curveConfigs().size() > 0)
+        configurations().curveConfig = inputs->curveConfigs()[0];
+    if (inputs->pricingEngine())
+        configurations().engineData = inputs->pricingEngine();
+
+    configurations().simulationConfigRequired = simulationConfig;
+    configurations().sensitivityConfigRequired = sensitivityConfig;
+    configurations().scenarioGeneratorConfigRequired = scenarioGeneratorConfig;
+    configurations().crossAssetModelConfigRequired = crossAssetModelConfig;
+
+    if (impl_) {
+        impl_->setAnalytic(this);
+        impl_->setGenerateAdditionalResults(inputs_->outputAdditionalResults());
+    }
+
+    setUpConfigurations();
+}
+
+void Analytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+                         const std::set<std::string>& runTypes) {
+    if (impl_)
+        impl_->runAnalytic(loader, runTypes);
+}
+
+void Analytic::setUpConfigurations() {
+    if (impl_)
+        impl_->setUpConfigurations();
+}
+
+const std::string Analytic::label() const { 
+    return impl_ ? impl_->label() : string(); 
+}
+
 // Analytic
 bool Analytic::match(const std::set<std::string>& runTypes) {
     if (runTypes.size() == 0)
@@ -68,78 +111,66 @@ bool Analytic::match(const std::set<std::string>& runTypes) {
     
     for (const auto& rt : runTypes) {
         if (types_.find(rt) != types_.end()) {
-            LOG("Requested analytics " <<  to_string(runTypes) << " match analytic class " << label_);
+            LOG("Requested analytics " <<  to_string(runTypes) << " match analytic class " << label());
             return true;
         }
     }
-    WLOG("None of the requested analytics " << to_string(runTypes) << " are covered by the analytic class " << label_);
+    WLOG("None of the requested analytics " << to_string(runTypes) << " are covered by the analytic class " << label());
     return false;
 }
 
 std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::todaysMarketParams() {
     buildConfigurations();
     std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
-    if (configurations_.todaysMarketParams)
-        tmps.push_back(configurations_.todaysMarketParams);
+    if (configurations().todaysMarketParams)
+        tmps.push_back(configurations().todaysMarketParams);
+
+    for (const auto& a : dependentAnalytics_) {
+        auto ctmps = a.second->todaysMarketParams();
+        tmps.insert(end(tmps), begin(ctmps), end(ctmps));
+    }
+
     return tmps;
 }
 
-
-boost::shared_ptr<EngineFactory> Analytic::engineFactory() {
+boost::shared_ptr<EngineFactory> Analytic::Impl::engineFactory() {
     LOG("Analytic::engineFactory() called");
     // Note: Calling the constructor here with empty extry builders
     // Override this function in case you have got extra ones
     boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->pricingEngine());
-    std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders; 
-    std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders; 
-    edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
+    edCopy->globalParameters()["GenerateAdditionalResults"] = to_string(generateAdditionalResults());
     edCopy->globalParameters()["RunType"] = "NPV";
     map<MarketContext, string> configurations;
     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");    
     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
     configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
     LOG("MarketContext::pricing = " << inputs_->marketConfig("pricing"));
-    //configurations[MarketContext::simulation] = inputs_->marketConfig("simulation");
-    return boost::make_shared<EngineFactory>(edCopy, market_, configurations, extraEngineBuilders, extraLegBuilders,
-                                             inputs_->refDataManager(), *inputs_->iborFallbackConfig());
-}
-
-boost::shared_ptr<ore::data::EngineFactory> PricingAnalytic::engineFactory() {
-    LOG("PricingAnalytic::engineFactory() called");
-    boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->pricingEngine());
-    edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
-    edCopy->globalParameters()["RunType"] = "NPV";
-    map<MarketContext, string> configurations;
-    configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");    
-    configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
-    configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
-    LOG("MarketContext::pricing = " << inputs_->marketConfig("pricing"));
-    //configurations[MarketContext::simulation] = inputs_->marketConfig("simulation");
-    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraBuilders;
-    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
-    return boost::make_shared<EngineFactory>(edCopy, market_, configurations, extraBuilders, extraLegBuilders,
-                                             inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+    return boost::make_shared<EngineFactory>(edCopy, analytic()->market(), configurations,
+                                             inputs_->refDataManager(),
+                                             *inputs_->iborFallbackConfig());
 }
 
 void Analytic::buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                           const boost::shared_ptr<CurveConfigurations>& curveConfig, 
                            const bool marketRequired) {
     LOG("Analytic::buildMarket called");    
     cpu_timer mtimer;
+
+    QL_REQUIRE(loader, "market data loader not set");
+    QL_REQUIRE(configurations().curveConfig, "curve configurations not set");
     
     // first build the market if we have a todaysMarketParams
-    if (configurations_.todaysMarketParams) {
+    if (configurations().todaysMarketParams) {
         try {
             // Note: we usually update the loader with implied data, but we simply use the provided loader here
-            loader_ = loader;
+             loader_ = loader;
             // Check that the loader has quotes
-            QL_REQUIRE(loader_->hasQuotes(inputs_->asof()),
-                       "There are no quotes available for date " << inputs_->asof());
+            QL_REQUIRE( loader_->hasQuotes(inputs()->asof()),
+                       "There are no quotes available for date " << inputs()->asof());
             // Build the market
-            market_ = boost::make_shared<TodaysMarket>(inputs_->asof(), configurations_.todaysMarketParams, loader_,
-                                                       curveConfig, inputs_->continueOnError(),
-                                                       true, inputs_->lazyMarketBuilding(), inputs_->refDataManager(),
-                                                       false, *inputs_->iborFallbackConfig());
+            market_ = boost::make_shared<TodaysMarket>(inputs()->asof(), configurations().todaysMarketParams, loader_,
+                                                       configurations().curveConfig, inputs()->continueOnError(),
+                                                       true, inputs()->lazyMarketBuilding(), inputs()->refDataManager(),
+                                                       false, *inputs()->iborFallbackConfig());
             // Note: we usually wrap the market into a PC market, but skip this step here
         } catch (const std::exception& e) {
             if (marketRequired)
@@ -156,155 +187,220 @@ void Analytic::buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& l
 
 void Analytic::marketCalibration(const boost::shared_ptr<MarketCalibrationReport>& mcr) {
     if (mcr)
-        mcr->populateReport(market_, configurations_.todaysMarketParams);
+        mcr->populateReport(market_, configurations().todaysMarketParams);
 }
 
 void Analytic::buildPortfolio() {
     // create a new empty portfolio
-    portfolio_ = boost::make_shared<Portfolio>(inputs_->buildFailedTrades());
+    portfolio_ = boost::make_shared<Portfolio>(inputs()->buildFailedTrades());
 
-    inputs_->portfolio()->reset();
+    inputs()->portfolio()->reset();
     // populate with trades
-    for (const auto& [tradeId, trade] : inputs_->portfolio()->trades())
-        portfolio_->add(trade);
+    for (const auto& [tradeId, trade] : inputs()->portfolio()->trades())
+        portfolio()->add(trade);
     
     if (market_) {
         LOG("Build the portfolio");
-        boost::shared_ptr<EngineFactory> factory = engineFactory();
-        portfolio_->build(factory, "analytic/" + label_);
+        boost::shared_ptr<EngineFactory> factory = impl()->engineFactory();
+        portfolio()->build(factory, "analytic/" + label());
 
         // remove dates that will have matured
-        Date maturityDate = inputs_->asof();
-        if (inputs_->portfolioFilterDate() != Null<Date>())
-            maturityDate = inputs_->portfolioFilterDate();
+        Date maturityDate = inputs()->asof();
+        if (inputs()->portfolioFilterDate() != Null<Date>())
+            maturityDate = inputs()->portfolioFilterDate();
 
         LOG("Filter trades that expire before " << maturityDate);
-        portfolio_->removeMatured(maturityDate);
+        portfolio()->removeMatured(maturityDate);
     } else {
         ALOG("Skip building the portfolio, because market not set");
     }
 }
 
 /*******************************************************************
+ * MARKET Analytic
+ *******************************************************************/
+
+void MarketDataAnalyticImpl::setUpConfigurations() {    
+    analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
+}
+
+void MarketDataAnalyticImpl::runAnalytic( 
+    const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    const std::set<std::string>& runTypes) {
+
+    Settings::instance().evaluationDate() = inputs_->asof();
+    ObservationMode::instance().setMode(inputs_->observationModel());
+
+    CONSOLEW("Build Market");
+    analytic()->buildMarket(loader);
+    CONSOLE("OK");
+    /*
+    if (inputs_->outputTodaysMarketCalibration()) {
+        CONSOLEW("Market Calibration");
+        LOG("Write todays market calibration report");
+        auto t = boost::dynamic_pointer_cast<TodaysMarket>(analytic()->market());
+        QL_REQUIRE(t != nullptr, "expected todays market instance");
+        boost::shared_ptr<InMemoryReport> mktReport = boost::make_shared<InMemoryReport>();
+        ore::analytics::ReportWriter(inputs_->reportNaString())
+            .writeTodaysMarketCalibrationReport(*mktReport, t->calibrationInfo());
+        analytic()->reports()["MARKET"]["todaysmarketcalibration"] = mktReport;
+        CONSOLE("OK");
+    }
+
+    if (inputs_->outputCurves()) {
+        CONSOLEW("Curves Report");
+        LOG("Write curves report");
+        boost::shared_ptr<InMemoryReport> curvesReport = boost::make_shared<InMemoryReport>();
+        DateGrid grid(inputs_->curvesGrid());
+        std::string config = inputs_->curvesMarketConfig();
+        ore::analytics::ReportWriter(inputs_->reportNaString())
+            .writeCurves(*curvesReport, config, grid, *inputs_->todaysMarketParams(),
+                         analytic()->market(), inputs_->continueOnError());
+        analytic()->reports()["MARKET"]["curves"] = curvesReport;
+        CONSOLE("OK");
+    }
+    */
+}
+
+/*******************************************************************
  * PRICING Analytic: NPV, CASHFLOW, CASHFLOWNPV, SENSITIVITY, STRESS
  *******************************************************************/
 
-void PricingAnalytic::setUpConfigurations() {
-    configurations_.todaysMarketParams = inputs_->todaysMarketParams();
-    configurations_.simMarketParams = inputs_->sensiSimMarketParams();
-    configurations_.sensiScenarioData = inputs_->sensiScenarioData();
+void PricingAnalyticImpl::setUpConfigurations() {    
+    if (find(begin(analytic()->analyticTypes()), end(analytic()->analyticTypes()), "SENSITIVITY") !=
+        end(analytic()->analyticTypes())) {
+        analytic()->configurations().simulationConfigRequired = true;
+        analytic()->configurations().sensitivityConfigRequired = true;
+    }  
+
+    analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
+    analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
+    analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
+
+    setGenerateAdditionalResults(true);
 }
 
-void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                                  const std::set<std::string>& runTypes) {
+void PricingAnalyticImpl::runAnalytic( 
+    const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    const std::set<std::string>& runTypes) {
 
     Settings::instance().evaluationDate() = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());
 
     QL_REQUIRE(inputs_->portfolio(), "PricingAnalytic::run: No portfolio loaded.");
 
-    out_ << setw(tab_) << left << "Pricing: Build Market " << flush;
-    buildMarket(loader, inputs_->curveConfigs()[0]);
-    out_ << "OK" << std::endl;
+    CONSOLEW("Pricing: Build Market");
+    analytic()->buildMarket(loader);
+    CONSOLE("OK");
 
-    out_ << setw(tab_) << left << "Pricing: Build Portfolio " << flush;
-    buildPortfolio();
-    out_ << "OK" << std::endl;
+    CONSOLEW("Pricing: Build Portfolio");
+    analytic()->buildPortfolio();
+    CONSOLE("OK");
 
     // Check coverage
     for (const auto& rt : runTypes) {
-        if (std::find(types_.begin(), types_.end(), rt) == types_.end()) {
+        if (std::find(analytic()->analyticTypes().begin(), analytic()->analyticTypes().end(), rt) ==
+            analytic()->analyticTypes().end()) {
             WLOG("requested analytic " << rt << " not covered by the PricingAnalytic");
         }
     }
 
     // This hook allows modifying the portfolio in derived classes before running the analytics below,
     // e.g. to apply SIMM exemptions.
-    modifyPortfolio();
+    analytic()->modifyPortfolio();
 
-    for (const auto& analytic : types_) {
+    for (const auto& type : analytic()->analyticTypes()) {
         boost::shared_ptr<InMemoryReport> report = boost::make_shared<InMemoryReport>();
         InMemoryReport tmpReport;
         // skip analytics not requested
-        if (runTypes.find(analytic) == runTypes.end())
+        if (runTypes.find(type) == runTypes.end())
             continue;
 
-        if (analytic == "NPV" ||
-            analytic == "NPV_LAGGED") {
-            out_ << setw(tab_) << left << "Pricing: NPV Report " << flush;
+        std::string effectiveResultCurrency =
+            inputs_->resultCurrency().empty() ? inputs_->baseCurrency() : inputs_->resultCurrency();
+        if (type == "NPV" || type == "NPV_LAGGED") {
+            CONSOLEW("Pricing: NPV Report");
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeNpv(*report, inputs_->baseCurrency(), market_, "", portfolio_);
-            reports_[analytic]["npv"] = report;
-            out_ << "OK" << endl;
+                .writeNpv(*report, effectiveResultCurrency, analytic()->market(), "",
+                          analytic()->portfolio());
+            analytic()->reports()[type]["npv"] = report;
+            CONSOLE("OK");
             if (inputs_->outputAdditionalResults()) {
-                out_ << setw(tab_) << left << "Pricing: Additional Results " << flush;
+                CONSOLEW("Pricing: Additional Results");
                 boost::shared_ptr<InMemoryReport> addReport = boost::make_shared<InMemoryReport>();;
                 ore::analytics::ReportWriter(inputs_->reportNaString())
-                    .writeAdditionalResultsReport(*addReport, portfolio_, market_, inputs_->baseCurrency());
-                reports_[analytic]["additional_results"] = addReport;
-                out_ << "OK" << endl;
+                    .writeAdditionalResultsReport(*addReport, analytic()->portfolio(), analytic()->market(),
+                                                  effectiveResultCurrency);
+                analytic()->reports()[type]["additional_results"] = addReport;
+                CONSOLE("OK");
             }
             // FIXME: Leave this here as additional output within the NPV analytic, or store report as separate analytic?
             if (inputs_->outputTodaysMarketCalibration()) {
-                out_ << setw(tab_) << left << "Pricing: Market Calibration " << flush;
+                CONSOLEW("Pricing: Market Calibration");
                 LOG("Write todays market calibration report");
-                auto t = boost::dynamic_pointer_cast<TodaysMarket>(market_);
+                auto t = boost::dynamic_pointer_cast<TodaysMarket>(analytic()->market());
                 QL_REQUIRE(t != nullptr, "expected todays market instance");
                 boost::shared_ptr<InMemoryReport> mktReport = boost::make_shared<InMemoryReport>();
                 ore::analytics::ReportWriter(inputs_->reportNaString())
                     .writeTodaysMarketCalibrationReport(*mktReport, t->calibrationInfo());
-                reports_[analytic]["todaysmarketcalibration"] = mktReport;
-                out_ << "OK" << endl;
+                analytic()->reports()[type]["todaysmarketcalibration"] = mktReport;
+                CONSOLE("OK");
             }
             if (inputs_->outputCurves()) {
-                out_ << setw(tab_) << left << "Pricing: Curves Report " << flush;
+                CONSOLEW("Pricing: Curves Report");
                 LOG("Write curves report");
                 boost::shared_ptr<InMemoryReport> curvesReport = boost::make_shared<InMemoryReport>();
                 DateGrid grid(inputs_->curvesGrid());
                 std::string config = inputs_->curvesMarketConfig();
                 ore::analytics::ReportWriter(inputs_->reportNaString())
                     .writeCurves(*curvesReport, config, grid, *inputs_->todaysMarketParams(),
-                                 market_, inputs_->continueOnError());
-                reports_[analytic]["curves"] = curvesReport;
-                out_ << "OK" << endl;
+                                 analytic()->market(), inputs_->continueOnError());
+                analytic()->reports()[type]["curves"] = curvesReport;
+                CONSOLE("OK");
             }
         }
-        else if (analytic == "CASHFLOW") {
-            out_ << setw(tab_) << left << "Pricing: Cashflow Report " << flush;
+        else if (type == "CASHFLOW") {
+            CONSOLEW("Pricing: Cashflow Report");
             string marketConfig = inputs_->marketConfig("pricing");
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeCashflow(*report, portfolio_, market_, marketConfig, inputs_->includePastCashflows());
-            reports_[analytic]["cashflow"] = report;
-            out_ << "OK" << endl;
+                .writeCashflow(*report, effectiveResultCurrency, analytic()->portfolio(),
+                               analytic()->market(),
+                               marketConfig, inputs_->includePastCashflows());
+            analytic()->reports()[type]["cashflow"] = report;
+            CONSOLE("OK");
         }
-        else if (analytic == "CASHFLOWNPV") {
-            out_ << setw(tab_) << left << "Pricing: Cashflow NPV report " << flush;
+        else if (type == "CASHFLOWNPV") {
+            CONSOLEW("Pricing: Cashflow NPV report");
             string marketConfig = inputs_->marketConfig("pricing");
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeCashflow(tmpReport, portfolio_, market_, marketConfig, inputs_->includePastCashflows());
+                .writeCashflow(tmpReport, effectiveResultCurrency, analytic()->portfolio(),
+                               analytic()->market(),
+                               marketConfig, inputs_->includePastCashflows());
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeCashflowNpv(*report, tmpReport, market_, marketConfig, inputs_->baseCurrency(), inputs_->cashflowHorizon());
-            reports_[analytic]["cashflownpv"] = report;
-            out_ << "OK" << endl;
+                .writeCashflowNpv(*report, tmpReport, analytic()->market(), marketConfig,
+                                  effectiveResultCurrency, inputs_->cashflowHorizon());
+            analytic()->reports()[type]["cashflownpv"] = report;
+            CONSOLE("OK");
         }
-        else if (analytic == "STRESS") {
-            out_ << setw(tab_) << left << "Risk: Stress Test Report" << flush;
+        else if (type == "STRESS") {
+            CONSOLEW("Risk: Stress Test Report");
             LOG("Stress Test Analysis called");
             Settings::instance().evaluationDate() = inputs_->asof();
             std::string marketConfig = inputs_->marketConfig("pricing");
             std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
             std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
-	    boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
-                 portfolio_, market_, marketConfig, inputs_->pricingEngine(), inputs_->stressSimMarketParams(),
-                 inputs_->stressScenarioData(), *inputs_->curveConfigs().at(0),
-                 *configurations_.todaysMarketParams, nullptr, extraEngineBuilders, extraLegBuilders,
-                 inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError());
+            boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
+                analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
+                inputs_->stressSimMarketParams(), inputs_->stressScenarioData(),
+                *inputs_->curveConfigs().at(0), *analytic()->configurations().todaysMarketParams, nullptr,
+                inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
+                inputs_->continueOnError());
             stressTest->writeReport(report, inputs_->stressThreshold());
-            reports_[analytic]["stress"] = report;
-            out_ << "OK" << endl;
+            analytic()->reports()[type]["stress"] = report;
+            CONSOLE("OK");
         }
-        else if (analytic == "SENSITIVITY") {
-            out_ << setw(tab_) << left << "Risk: Sensitivity Report " << flush;
+        else if (type == "SENSITIVITY") {
+            CONSOLEW("Risk: Sensitivity Report");
             LOG("Sensi Analysis - Initialise");
             bool recalibrateModels = true;
             bool ccyConv = false;
@@ -315,11 +411,11 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                 std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
                 std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
                 sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
-                    portfolio_, market_, configuration, inputs_->pricingEngine(),
-                    configurations_.simMarketParams, configurations_.sensiScenarioData, recalibrateModels,
-                    inputs_->curveConfigs().at(0), configurations_.todaysMarketParams, ccyConv, extraEngineBuilders,
-                    extraLegBuilders, inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, false,
-                    inputs_->dryRun());
+                    analytic()->portfolio(), analytic()->market(), configuration, inputs_->pricingEngine(),
+                    analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
+                    recalibrateModels, inputs_->curveConfigs().at(0),
+                    analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
+                    *inputs_->iborFallbackConfig(), true, false, inputs_->dryRun());
                 LOG("Single-threaded sensi analysis created");
             }
             else {
@@ -330,29 +426,31 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                 std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuilders = {};
                 std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuilders = {};
                 sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
-                    inputs_->nThreads(), inputs_->asof(), loader, portfolio_, Market::defaultConfiguration,
-                    inputs_->pricingEngine(), configurations_.simMarketParams, configurations_.sensiScenarioData,
-                    recalibrateModels, inputs_->curveConfigs().at(0), configurations_.todaysMarketParams, ccyConv,
-                    extraTradeBuilders, extraEngineBuilders, extraLegBuilders, inputs_->refDataManager(),
+                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(),
+                    Market::defaultConfiguration, inputs_->pricingEngine(),
+                    analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
+                    recalibrateModels, inputs_->curveConfigs().at(0),
+                    analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
                     *inputs_->iborFallbackConfig(), true, false, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
             // FIXME: Why are these disabled?
             set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
             boost::shared_ptr<ParSensitivityAnalysis> parAnalysis = nullptr;
-            if (inputs_->parSensi()) {
+            if (inputs_->parSensi() || inputs_->alignPillars()) {
                 parAnalysis= boost::make_shared<ParSensitivityAnalysis>(
-                    inputs_->asof(), configurations_.simMarketParams, *configurations_.sensiScenarioData, "",
+                    inputs_->asof(), analytic()->configurations().simMarketParams,
+                    *analytic()->configurations().sensiScenarioData, "",
                     true, typesDisabled);
                 if (inputs_->alignPillars()) {
-                    LOG("Sensi analysis - align pillars for the par conversion");
+                    LOG("Sensi analysis - align pillars (for the par conversion or because alignPillars is enabled)");
                     parAnalysis->alignPillars();
                     sensiAnalysis->overrideTenors(true);
                 } else {
                     LOG("Sensi analysis - skip aligning pillars");
                 }
             }
-            
+
             LOG("Sensi analysis - generate");
             sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities"));
             sensiAnalysis->generateSensitivities();
@@ -360,15 +458,16 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             LOG("Sensi analysis - write sensitivity report in memory");
             auto baseCurrency = sensiAnalysis->simMarketData()->baseCcy();
             auto ss = boost::make_shared<SensitivityCubeStream>(sensiAnalysis->sensiCube(), baseCurrency);
-            ore::analytics::ReportWriter(inputs_->reportNaString())
+            ReportWriter(inputs_->reportNaString())
                 .writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
-            reports_[analytic]["sensitivity"] = report;
+            analytic()->reports()[type]["sensitivity"] = report;
 
             LOG("Sensi analysis - write sensitivity scenario report in memory");
             boost::shared_ptr<InMemoryReport> scenarioReport = boost::make_shared<InMemoryReport>();
-            ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeScenarioReport(*scenarioReport, sensiAnalysis->sensiCube(), inputs_->sensiThreshold());
-            reports_[analytic]["sensitivity_scenario"] = scenarioReport;
+            ReportWriter(inputs_->reportNaString())
+                .writeScenarioReport(*scenarioReport, sensiAnalysis->sensiCube(),
+                                     inputs_->sensiThreshold());
+            analytic()->reports()[type]["sensitivity_scenario"] = scenarioReport;
 
             if (inputs_->parSensi()) {
                 LOG("Sensi analysis - par conversion");
@@ -382,18 +481,18 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                 // performance. The cost for this is the memory footpring of the buffer.
                 // ss = boost::make_shared<ore::analytics::BufferedSensitivityStream>(ss);
                 boost::shared_ptr<InMemoryReport> parSensiReport = boost::make_shared<InMemoryReport>();
-                ore::analytics::ReportWriter(inputs_->reportNaString())
+                ReportWriter(inputs_->reportNaString())
                     .writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold());
-                reports_[analytic]["par_sensitivity"] = parSensiReport;
+                analytic()->reports()[type]["par_sensitivity"] = parSensiReport;
 
                 if (inputs_->outputJacobi()) {
                     boost::shared_ptr<InMemoryReport> jacobiReport = boost::make_shared<InMemoryReport>();
                     writeParConversionMatrix(parAnalysis->parSensitivities(), *jacobiReport);
-                    reports_[analytic]["jacobi"] = jacobiReport;
+                    analytic()->reports()[type]["jacobi"] = jacobiReport;
                     
                     boost::shared_ptr<InMemoryReport> jacobiInverseReport = boost::make_shared<InMemoryReport>();
                     parConverter->writeConversionMatrix(*jacobiInverseReport);
-                    reports_[analytic]["jacobi_inverse"] = jacobiInverseReport;
+                    analytic()->reports()[type]["jacobi_inverse"] = jacobiInverseReport;
                 }
             }
             else {
@@ -401,10 +500,10 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             }
         
             LOG("Sensi Analysis - Completed");
-            out_ << "OK" << endl;
+            CONSOLE("OK");
         }
         else {
-            QL_FAIL("PricingAnalytic type " << analytic << " invalid");
+            QL_FAIL("PricingAnalytic type " << type << " invalid");
         }
     }
 }
@@ -413,31 +512,11 @@ void PricingAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
  * VAR Analytic: DELTA-VAR, DELTA-GAMMA-NORMAL-VAR, MONTE-CARLO-VAR
  ***********************************************************************************/
 
-void VarAnalytic::setUpConfigurations() {
-    configurations_.todaysMarketParams = inputs_->todaysMarketParams();
+void VarAnalyticImpl::setUpConfigurations() {
+    analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
 }
 
-/*
-boost::shared_ptr<EngineFactory> VarAnalytic::engineFactory() {
-     LOG("CarAnalytic::engineFactory() called");
-     boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->pricingEngine());
-     edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
-     edCopy->globalParameters()["RunType"] = "NPV";
-     map<MarketContext, string> configurations;
-     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");    
-     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
-     configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
-     std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders; 
-     std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders;
-     auto factory = boost::make_shared<EngineFactory>(edCopy, market_, configurations,
-                                                      extraEngineBuilders, extraLegBuilders,
-                                                      inputs_->refDataManager(),
-                                                      *inputs_->iborFallbackConfig());        
-     return factory;
-}
-*/
-
-void VarAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void VarAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                               const std::set<std::string>& runTypes) {
     MEM_LOG;
     LOG("Running parametric VaR");
@@ -446,32 +525,33 @@ void VarAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
     ObservationMode::instance().setMode(inputs_->observationModel());
 
     LOG("VAR: Build Market");
-    out_ << setw(tab_) << left << "Risk: Build Market for VaR " << flush;
-    buildMarket(loader, inputs_->curveConfigs()[0]);
-    out_ << "OK" << std::endl;
+    CONSOLEW("Risk: Build Market for VaR");
+    analytic()->buildMarket(loader);
+    CONSOLE("OK");
 
-    out_ << setw(tab_) << left << "Risk: Build Portfolio for VaR" << flush;
-    buildPortfolio();
-    out_ << "OK" << std::endl;
+    CONSOLEW("Risk: Build Portfolio for VaR");
+    analytic()->buildPortfolio();
+    CONSOLE("OK");
 
     LOG("Build trade to portfolio id mapping");
     map<string, set<string>> tradePortfolio;
-    for (auto const& [tradeId, trade] : portfolio_->trades()) {
+    for (auto const& [tradeId, trade] : analytic()->portfolio()->trades()) {
         tradePortfolio[tradeId].insert(trade->portfolioIds().begin(), trade->portfolioIds().end());
     }
 
     LOG("Build VaR calculator");
-    auto calc = boost::make_shared<ParametricVarCalculator>(tradePortfolio, inputs_->portfolioFilter(),
-            inputs_->sensitivityStream(), inputs_->covarianceData(), inputs_->varQuantiles(), inputs_->varMethod(),
-            inputs_->mcVarSamples(), inputs_->mcVarSeed(), inputs_->varBreakDown(), inputs_->salvageCovariance());
+    auto calc = boost::make_shared<ParametricVarCalculator>(tradePortfolio, inputs_->portfolioFilter(), 
+        inputs_->sensitivityStream(), inputs_->covarianceData(), inputs_->varQuantiles(), 
+        inputs_->varMethod(), inputs_->mcVarSamples(), inputs_->mcVarSeed(), 
+        inputs_->varBreakDown(), inputs_->salvageCovariance());
 
     boost::shared_ptr<InMemoryReport> report = boost::make_shared<InMemoryReport>();
-    reports_["VAR"]["var"] = report;
+    analytic()->reports()["VAR"]["var"] = report;
 
     LOG("Call VaR calculation");
-    out_ << setw(tab_) << left << "Risk: VaR Calculation " << flush;
+    CONSOLEW("Risk: VaR Calculation");
     calc->calculate(*report);
-    out_ << "OK" << endl;
+    CONSOLE("OK");
 
     LOG("Parametric VaR completed");
     MEM_LOG;
@@ -482,15 +562,15 @@ void VarAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
  * XVA Analytic: EXPOSURE, CVA, DVA, FVA, KVA, COLVA, COLLATERALFLOOR, DIM, MVA
  ******************************************************************************/
 
-void XvaAnalytic::setUpConfigurations() {
+void XvaAnalyticImpl::setUpConfigurations() {
     LOG("XvaAnalytic::setUpConfigurations() called");
-    configurations_.todaysMarketParams = inputs_->todaysMarketParams();
-    configurations_.simMarketParams = inputs_->exposureSimMarketParams();
-    configurations_.scenarioGeneratorData = inputs_->scenarioGeneratorData();
-    configurations_.crossAssetModelData = inputs_->crossAssetModelData();
+    analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
+    analytic()->configurations().simMarketParams = inputs_->exposureSimMarketParams();
+    analytic()->configurations().scenarioGeneratorData = inputs_->scenarioGeneratorData();
+    analytic()->configurations().crossAssetModelData = inputs_->crossAssetModelData();
 }
 
-boost::shared_ptr<EngineFactory> XvaAnalytic::engineFactory() {
+boost::shared_ptr<EngineFactory> XvaAnalyticImpl::engineFactory() {
     LOG("XvaAnalytic::engineFactory() called");
     boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->simulationPricingEngine());
     edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
@@ -507,44 +587,42 @@ boost::shared_ptr<EngineFactory> XvaAnalytic::engineFactory() {
         // link to the sim market here
         QL_REQUIRE(simMarket_, "Simulaton market not set");
         engineFactory_ = boost::make_shared<EngineFactory>(edCopy, simMarket_, configurations,
-                                                 extraEngineBuilders, extraLegBuilders, inputs_->refDataManager(),
-                                                 *inputs_->iborFallbackConfig());
+                                                           inputs_->refDataManager(), *inputs_->iborFallbackConfig());
     } else {
         // we just link to today's market if simulation is not required
-        engineFactory_ = boost::make_shared<EngineFactory>(edCopy, market_, configurations,
-                                                 extraEngineBuilders, extraLegBuilders, inputs_->refDataManager(),
-                                                 *inputs_->iborFallbackConfig());        
+        engineFactory_ = boost::make_shared<EngineFactory>(edCopy, analytic()->market(), configurations, inputs_->refDataManager(),
+                                                           *inputs_->iborFallbackConfig());
     }
     return engineFactory_;
 }
 
 
-void XvaAnalytic::buildScenarioSimMarket() {
+void XvaAnalyticImpl::buildScenarioSimMarket() {
     
     std::string configuration = inputs_->marketConfig("simulation");
     simMarket_ = boost::make_shared<ScenarioSimMarket>(
-            market_,
-            configurations_.simMarketParams,
+            analytic()->market(),
+            analytic()->configurations().simMarketParams,
             boost::make_shared<FixingManager>(inputs_->asof()),
             configuration,
             *inputs_->curveConfigs()[0],
-            *configurations_.todaysMarketParams,
+            *analytic()->configurations().todaysMarketParams,
             inputs_->continueOnError(), 
             false, true, false,
             *inputs_->iborFallbackConfig(),
             false);
 }
 
-void XvaAnalytic::buildScenarioGenerator(const bool continueOnCalibrationError) {
+void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError) {
     if (!model_)
         buildCrossAssetModel(continueOnCalibrationError);
-    ScenarioGeneratorBuilder sgb(configurations_.scenarioGeneratorData);
+    ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
     string config = inputs_->marketConfig("simulation");
-    scenarioGenerator_ = sgb.build(model_, sf, configurations_.simMarketParams, inputs_->asof(), market_, config); 
+    scenarioGenerator_ = sgb.build(model_, sf, analytic()->configurations().simMarketParams, inputs_->asof(), analytic()->market(), config); 
     QL_REQUIRE(scenarioGenerator_, "failed to build the scenario generator"); 
-    grid_ = configurations_.scenarioGeneratorData->getGrid();
-    samples_ = configurations_.scenarioGeneratorData->samples();
+    grid_ = analytic()->configurations().scenarioGeneratorData->getGrid();
+    samples_ = analytic()->configurations().scenarioGeneratorData->samples();
     LOG("simulation grid size " << grid_->size());
     LOG("simulation grid valuation dates " << grid_->valuationDates().size());
     LOG("simulation grid close-out dates " << grid_->closeOutDates().size());
@@ -553,15 +631,16 @@ void XvaAnalytic::buildScenarioGenerator(const bool continueOnCalibrationError) 
 
     if (inputs_->writeScenarios()) {
         auto report = boost::make_shared<InMemoryReport>();
-        reports_["XVA"]["scenario"] = report;
+        analytic()->reports()["XVA"]["scenario"] = report;
         scenarioGenerator_ = boost::make_shared<ScenarioWriter>(scenarioGenerator_, report);
     }
 }
 
-void XvaAnalytic::buildCrossAssetModel(const bool continueOnCalibrationError) {
+void XvaAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError) {
     LOG("XVA: Build Simulation Model (continueOnCalibrationError = "
         << std::boolalpha << continueOnCalibrationError << ")");
-    CrossAssetModelBuilder modelBuilder(market_, configurations_.crossAssetModelData,
+    CrossAssetModelBuilder modelBuilder(
+        analytic()->market(), analytic()->configurations().crossAssetModelData,
                                         inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
                                         inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
                                         inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"),
@@ -569,7 +648,7 @@ void XvaAnalytic::buildCrossAssetModel(const bool continueOnCalibrationError) {
     model_ = *modelBuilder.model();
 }
 
-void XvaAnalytic::initCubeDepth() {
+void XvaAnalyticImpl::initCubeDepth() {
 
     if (cubeDepth_ == 0) {
         LOG("XVA: Set cube depth");
@@ -579,7 +658,7 @@ void XvaAnalytic::initCubeDepth() {
         // - If we build an auxiliary close-out grid then we store default values at depth 0 and close-out at depth 1
         // - If we want to store cash flows that occur during the mpor, then we store them at depth 2
         cubeDepth_ = 1;
-        if (configurations_.scenarioGeneratorData->withCloseOutLag())
+        if (analytic()->configurations().scenarioGeneratorData->withCloseOutLag())
             cubeDepth_++;
         if (inputs_->storeFlows())
             cubeDepth_++;
@@ -589,7 +668,7 @@ void XvaAnalytic::initCubeDepth() {
 }
 
 
-void XvaAnalytic::initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth) {
+void XvaAnalyticImpl::initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth) {
 
     LOG("Init cube with depth " << cubeDepth);
 
@@ -605,7 +684,7 @@ void XvaAnalytic::initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std:
 }
 
 
-void XvaAnalytic::initClassicRun(const boost::shared_ptr<Portfolio>& portfolio) {
+void XvaAnalyticImpl::initClassicRun(const boost::shared_ptr<Portfolio>& portfolio) {
         
     LOG("XVA: initClassicRun");
 
@@ -639,7 +718,7 @@ void XvaAnalytic::initClassicRun(const boost::shared_ptr<Portfolio>& portfolio) 
 }
 
 
-boost::shared_ptr<Portfolio> XvaAnalytic::classicRun(const boost::shared_ptr<Portfolio>& portfolio) {
+boost::shared_ptr<Portfolio> XvaAnalyticImpl::classicRun(const boost::shared_ptr<Portfolio>& portfolio) {
     LOG("XVA: classicRun");
    
     Size n = portfolio->size();
@@ -647,20 +726,20 @@ boost::shared_ptr<Portfolio> XvaAnalytic::classicRun(const boost::shared_ptr<Por
     // Create a new empty portfolio, fill it and link it to the simulation market
     // We don't use Analytic::buildPortfolio() here because we are possibly dealing with a sub-portfolio only.
     LOG("XVA: Build classic portfolio of size " << n << " linked to the simulation market");
-    out_ << setw(tab_) << left << "XVA: Build Portfolio " << flush;
+    CONSOLEW("XVA: Build Portfolio");
     classicPortfolio_ = boost::make_shared<Portfolio>(inputs_->buildFailedTrades());
     portfolio->reset();
     for (const auto& [tradeId, trade] : portfolio->trades())
         classicPortfolio_->add(trade);    
-    QL_REQUIRE(market_, "today's market not set");
+    QL_REQUIRE(analytic()->market(), "today's market not set");
     boost::shared_ptr<EngineFactory> factory = engineFactory();
-    classicPortfolio_->build(factory, "analytic/" + label_);
+    classicPortfolio_->build(factory, "analytic/" + label());
     Date maturityDate = inputs_->asof();
     if (inputs_->portfolioFilterDate() != Null<Date>())
         maturityDate = inputs_->portfolioFilterDate();
     LOG("Filter trades that expire before " << maturityDate);
     classicPortfolio_->removeMatured(maturityDate);
-    out_ << "OK" << std::endl;
+    CONSOLE("OK");
 
     // Allocate cubes for the sub-portfolio we are processing here
     initClassicRun(classicPortfolio_);
@@ -674,7 +753,7 @@ boost::shared_ptr<Portfolio> XvaAnalytic::classicRun(const boost::shared_ptr<Por
 }
 
 
-void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio) {
+void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio) {
 
     LOG("XVA::buildCube");
 
@@ -682,7 +761,7 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
 
     auto calculators = [this]() {
         vector<boost::shared_ptr<ValuationCalculator>> calculators;
-        if (configurations_.scenarioGeneratorData->withCloseOutLag()) {
+        if (analytic()->configurations().scenarioGeneratorData->withCloseOutLag()) {
             boost::shared_ptr<NPVCalculator> npvCalc =
                 boost::make_shared<NPVCalculator>(inputs_->exposureBaseCurrency());
             calculators.push_back(boost::make_shared<MPORCalculator>(npvCalc, 0, 1));
@@ -710,7 +789,7 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
 
     // set cube interpretation depending on close-out lag
 
-    if (configurations_.scenarioGeneratorData->withCloseOutLag())
+    if (analytic()->configurations().scenarioGeneratorData->withCloseOutLag())
         cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(scenarioData_, grid_, inputs_->flipViewXVA());
     else
         cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_, inputs_->flipViewXVA());
@@ -719,12 +798,12 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
 
     ostringstream o;
     o << "XVA: Build Cube " << portfolio->size() << " x " << grid_->valuationDates().size() << " x " << samples_;
-    out_ << setw(tab_) << o.str() << flush;
+    CONSOLEW(o.str());
     LOG(o.str());
 
     // set up progress indicators
 
-    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab_, progressBarWidth_);
+    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), ConsoleLog::instance().width(), ConsoleLog::instance().progressBarWidth());
     auto progressLog = boost::make_shared<ProgressLog>("Building cube");
 
     if(inputs_->nThreads() == 1) {
@@ -732,9 +811,10 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
         // single-threaded engine run
 
         ValuationEngine engine(inputs_->asof(), grid_, simMarket_);
-        engine.registerProgressIndicator(progressBar);
+        if (ConsoleLog::instance().enabled())
+            engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
-        engine.buildCube(portfolio, cube_, calculators(), configurations_.scenarioGeneratorData->withMporStickyDate(),
+        engine.buildCube(portfolio, cube_, calculators(), analytic()->configurations().scenarioGeneratorData->withMporStickyDate(),
                          nettingSetCube_, cptyCube_, cptyCalculators());
     } else {
 
@@ -770,17 +850,18 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
         }
 
         MultiThreadedValuationEngine engine(
-            inputs_->nThreads(), inputs_->asof(), grid_, samples_, loader_, scenarioGenerator_,
-            inputs_->simulationPricingEngine(), inputs_->curveConfigs()[0], configurations_.todaysMarketParams,
-            inputs_->marketConfig("simulation"), configurations_.simMarketParams, false, false,
-            boost::make_shared<ore::analytics::ScenarioFilter>(), {}, {}, {}, inputs_->refDataManager(),
+            inputs_->nThreads(), inputs_->asof(), grid_, samples_,  analytic()->loader(), scenarioGenerator_,
+            inputs_->simulationPricingEngine(), inputs_->curveConfigs()[0], analytic()->configurations().todaysMarketParams,
+            inputs_->marketConfig("simulation"), analytic()->configurations().simMarketParams, false, false,
+            boost::make_shared<ore::analytics::ScenarioFilter>(), inputs_->refDataManager(),
             *inputs_->iborFallbackConfig(), true, false, cubeFactory, {}, cptyCubeFactory, "xva-simulation");
 
-        engine.registerProgressIndicator(progressBar);
+        if (ConsoleLog::instance().enabled())
+            engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
 
         engine.buildCube(portfolio, calculators, cptyCalculators,
-                         configurations_.scenarioGeneratorData->withMporStickyDate());
+                         analytic()->configurations().scenarioGeneratorData->withMporStickyDate());
 
         cube_ = boost::make_shared<JointNPVCube>(engine.outputCubes(), portfolio->ids());
 
@@ -790,29 +871,16 @@ void XvaAnalytic::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio
                 [](Real a, Real x) { return std::max(a, x); }, 0.0);
     }
 
-    out_ << "OK" << endl;
+    CONSOLE("OK");
 
     LOG("XVA::buildCube done");
 
     Settings::instance().evaluationDate() = inputs_->asof();
 }
 
-
-std::vector<boost::shared_ptr<EngineBuilder>>
-getAmcEngineBuilders(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& grid) {
-    std::vector<boost::shared_ptr<EngineBuilder>> eb;
-    eb.push_back(boost::make_shared<data::CamAmcCurrencySwapEngineBuilder>(cam, grid));
-    eb.push_back(boost::make_shared<data::CamAmcFxOptionEngineBuilder>(cam, grid));
-    eb.push_back(boost::make_shared<data::CamAmcMultiLegOptionEngineBuilder>(cam, grid));
-    eb.push_back(boost::make_shared<data::CamAmcSwapEngineBuilder>(cam, grid));
-    eb.push_back(boost::make_shared<data::LgmAmcBermudanSwaptionEngineBuilder>(cam, grid));
-    // FIXME: Uncomment for release 10
-    // eb.push_back(boost::make_shared<data::ScriptedTradeEngineBuilder>(ScriptLibraryStorage::scriptLibrary, cam, grid));
-    return eb;
-}
-
-
-boost::shared_ptr<EngineFactory> XvaAnalytic::amcEngineFactory() {
+boost::shared_ptr<EngineFactory>
+XvaAnalyticImpl::amcEngineFactory(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                                               const std::vector<Date>& grid) {
     LOG("XvaAnalytic::engineFactory() called");
     boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->amcPricingEngine());
     edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
@@ -823,30 +891,23 @@ boost::shared_ptr<EngineFactory> XvaAnalytic::amcEngineFactory() {
     configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
     std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders; 
     std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders;
-    auto factory = boost::make_shared<EngineFactory>(edCopy, market_, configurations,
-                                                     extraEngineBuilders, extraLegBuilders,
-                                                     inputs_->refDataManager(),
-                                                     *inputs_->iborFallbackConfig());
+    auto factory = boost::make_shared<EngineFactory>(
+        edCopy, analytic()->market(), configurations, inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
+        EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, grid), true);
     return factory;
 }
 
-
-void XvaAnalytic::buildAmcPortfolio() {
+void XvaAnalyticImpl::buildAmcPortfolio() {
     LOG("XVA: buildAmcPortfolio");
-    out_ << setw(tab_) << "XVA: Build AMC portfolio " << flush;
+    CONSOLEW("XVA: Build AMC portfolio");
 
     LOG("buildAmcPortfolio: Check sim dates");
     std::vector<Date> simDates =
-        configurations_.scenarioGeneratorData->withCloseOutLag() && !configurations_.scenarioGeneratorData->withMporStickyDate() ?
-        configurations_.scenarioGeneratorData->getGrid()->dates() : configurations_.scenarioGeneratorData->getGrid()->valuationDates();
-
-    LOG("buildAmcPortfolio: Get engine builders");
-    auto eb = getAmcEngineBuilders(model_, simDates);
+        analytic()->configurations().scenarioGeneratorData->withCloseOutLag() && !analytic()->configurations().scenarioGeneratorData->withMporStickyDate() ?
+        analytic()->configurations().scenarioGeneratorData->getGrid()->dates() : analytic()->configurations().scenarioGeneratorData->getGrid()->valuationDates();
     
     LOG("buildAmcPortfolio: Register additional engine builders");
-    auto factory = amcEngineFactory();
-    for(auto const& b : eb)
-        factory->registerBuilder(b);
+    auto factory = amcEngineFactory(model_, simDates);
 
     LOG("buildAmcPortfolio: Load Portfolio");
     boost::shared_ptr<Portfolio> portfolio = inputs_->portfolio();
@@ -870,12 +931,12 @@ void XvaAnalytic::buildAmcPortfolio() {
     }
     LOG("AMC portfolio built, size is " << amcPortfolio_->size());
 
-    out_ << "OK" << endl;
+    CONSOLE("OK");
 
     LOG("XVA: buildAmcPortfolio completed");
 }
 
-void XvaAnalytic::amcRun(bool doClassicRun) {
+void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
     LOG("XVA: amcRun");
 
@@ -889,15 +950,16 @@ void XvaAnalytic::amcRun(bool doClassicRun) {
 
     std::string message = "XVA: Build AMC Cube " + std::to_string(amcPortfolio_->size()) + " x " +
                           std::to_string(grid_->valuationDates().size()) + " x " + std::to_string(samples_) + "... ";
-    auto progressBar = boost::make_shared<SimpleProgressBar>(message, tab_, progressBarWidth_);
+    auto progressBar = boost::make_shared<SimpleProgressBar>(message, ConsoleLog::instance().width(), ConsoleLog::instance().progressBarWidth());
     auto progressLog = boost::make_shared<ProgressLog>("Building AMC Cube...");
 
     if (inputs_->nThreads() == 1) {
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
-        AMCValuationEngine amcEngine(model_, inputs_->scenarioGeneratorData(), market_,
+        AMCValuationEngine amcEngine(model_, inputs_->scenarioGeneratorData(), analytic()->market(),
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataCcys());
-        amcEngine.registerProgressIndicator(progressBar);
+        if (ConsoleLog::instance().enabled())
+            amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);
         // We only need to generate asd, if this does not happen in the classic run
         if (!doClassicRun)
@@ -914,15 +976,16 @@ void XvaAnalytic::amcRun(bool doClassicRun) {
                                                                                         cubeDepth_, 0.0f);
         };
         AMCValuationEngine amcEngine(
-            inputs_->nThreads(), inputs_->asof(), samples_, loader_, inputs_->scenarioGeneratorData(),
+            inputs_->nThreads(), inputs_->asof(), samples_,  analytic()->loader(), inputs_->scenarioGeneratorData(),
             inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
             inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(), inputs_->crossAssetModelData(),
-            inputs_->amcPricingEngine(), inputs_->curveConfigs()[0], configurations_.todaysMarketParams,
+            inputs_->amcPricingEngine(), inputs_->curveConfigs()[0], analytic()->configurations().todaysMarketParams,
             inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
             inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
-            inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"), getAmcEngineBuilders, {}, {},
-            inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory);
-        amcEngine.registerProgressIndicator(progressBar);
+            inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"), inputs_->refDataManager(),
+            *inputs_->iborFallbackConfig(), true, cubeFactory);
+        if (ConsoleLog::instance().enabled())
+            amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);
         // as for the single-threaded case, we only need to generate asd, if this does not happen in the classic run
         if (!doClassicRun)
@@ -931,12 +994,12 @@ void XvaAnalytic::amcRun(bool doClassicRun) {
         amcCube_ = boost::make_shared<JointNPVCube>(amcEngine.outputCubes());
     }
 
-    out_ << "OK" << endl;
+    CONSOLE("OK");
 
     LOG("XVA: amcRun completed");
 }
 
-void XvaAnalytic::runPostProcessor() {
+void XvaAnalyticImpl::runPostProcessor() {
     boost::shared_ptr<NettingSetManager> netting = inputs_->nettingSetManager();
     map<string, bool> analytics;
     analytics["exerciseNextBreak"] = inputs_->exerciseNextBreak();
@@ -983,8 +1046,8 @@ void XvaAnalytic::runPostProcessor() {
 
     if (!cubeInterpreter_) {
         // FIXME: Can we get the grid from the cube instead?
-        QL_REQUIRE(configurations_.scenarioGeneratorData, "scenario generator data not set");
-        boost::shared_ptr<ScenarioGeneratorData> sgd = configurations_.scenarioGeneratorData;
+        QL_REQUIRE(analytic()->configurations().scenarioGeneratorData, "scenario generator data not set");
+        boost::shared_ptr<ScenarioGeneratorData> sgd = analytic()->configurations().scenarioGeneratorData;
         LOG("withCloseOutLag=" << (sgd->withCloseOutLag() ? "Y" : "N"));
         if (sgd->withCloseOutLag())
             cubeInterpreter_ =
@@ -996,7 +1059,7 @@ void XvaAnalytic::runPostProcessor() {
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
         ALOG("dim calculator not set, create RegressionDynamicInitialMarginCalculator");
         dimCalculator_ = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
-            portfolio_, cube_, cubeInterpreter_, scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
+            inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
             dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
     }
 
@@ -1009,7 +1072,8 @@ void XvaAnalytic::runPostProcessor() {
     LOG("baseCurrency " << baseCurrency);
 
     postProcess_ = boost::make_shared<PostProcess>(
-        portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
+        analytic()->portfolio(), netting, analytic()->market(), marketConfiguration, cube_, scenarioData_, analytics,
+        baseCurrency,
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid,
         cvaSensiShiftSize, kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor,
@@ -1018,7 +1082,7 @@ void XvaAnalytic::runPostProcessor() {
     LOG("post done");
 }
 
-void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                               const std::set<std::string>& runTypes) {
     
     LOG("XVA analytic called with asof " << io::iso_date(inputs_->asof()));
@@ -1033,9 +1097,9 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
     ObservationMode::instance().setMode(inputs_->exposureObservationModel());
 
     LOG("XVA: Build Today's Market");
-    out_ << setw(tab_) << left << "XVA: Build Market " << flush;
-    buildMarket(loader, inputs_->curveConfigs()[0]);
-    out_ << "OK" << endl;
+    CONSOLEW("XVA: Build Market");
+    analytic()->buildMarket(loader);
+    CONSOLE("OK");
     
     if (runSimulation_) {
     
@@ -1115,25 +1179,26 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
 
         LOG("Classic portfolio size " << classicPortfolio_->size());
         LOG("AMC portfolio size " << amcPortfolio_->size());
-        portfolio_ = boost::make_shared<Portfolio>();
+        auto newPortfolio = boost::make_shared<Portfolio>();
         for (const auto& [tradeId, trade] : classicPortfolio_->trades())
-            portfolio_->add(trade);
+            newPortfolio->add(trade);
         for (const auto& [tradeId, trade] : amcPortfolio_->trades())
-            portfolio_->add(trade);
-        LOG("Total portfolio size " << portfolio_->size());
-        if (portfolio_->size() < inputs_->portfolio()->size()) {
-            ALOG("input portfolio size is " << inputs_->portfolio()->size()
-                 << ", but we have built only " << portfolio_->size() << " trades");
+            newPortfolio->add(trade);
+        LOG("Total portfolio size " << newPortfolio->size());
+        if (newPortfolio->size() < inputs_->portfolio()->size()) {
+            ALOG("input portfolio size is " << inputs_->portfolio()->size() << 
+                ", but we have built only " << newPortfolio->size() << " trades");
         }
+        analytic()->setPortfolio(newPortfolio);
     } else { // runSimulation_
 
         // build the portfolio linked to today's market
-        buildPortfolio();
+        analytic()->buildPortfolio();
 
         // ... and load a pre-built cube for post-processing
 
         LOG("Skip cube generation, load input cubes for XVA");
-        out_ << setw(tab_) << left << "XVA: Load Cubes " << flush;
+        CONSOLEW("XVA: Load Cubes");
         QL_REQUIRE(inputs_->cube(), "XVA without EXPOSURE requires an NPV cube as input");
         cube_= inputs_->cube();
         QL_REQUIRE(inputs_->mktCube(), "XVA without EXPOSURE requires a market cube as input"); 
@@ -1142,29 +1207,29 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
             nettingSetCube_= inputs_->nettingSetCube();
         if (inputs_->cptyCube())
             cptyCube_ = inputs_->cptyCube();
-        out_ << "OK" << std::endl;
+        CONSOLE("OK");
     }
 
     MEM_LOG;
 
     // Return the cubes to serialalize
     if (inputs_->writeCube()) {
-        npvCubes_["XVA"]["cube"] = cube_;
-        mktCubes_["XVA"]["scenariodata"] = scenarioData_;
+        analytic()->npvCubes()["XVA"]["cube"] = cube_;
+        analytic()->mktCubes()["XVA"]["scenariodata"] = scenarioData_;
         if (nettingSetCube_) {
-            npvCubes_["XVA"]["nettingsetcube"] = nettingSetCube_;
+            analytic()->npvCubes()["XVA"]["nettingsetcube"] = nettingSetCube_;
         }
         if (cptyCube_) {
-            npvCubes_["XVA"]["cptycube"] = cptyCube_;
+            analytic()->npvCubes()["XVA"]["cptycube"] = cptyCube_;
         }
     }
 
     // Generate cube reports to inspect
     if (inputs_->rawCubeOutput()) {
-        map<string, string> nettingSetMap = portfolio_->nettingSetMap();
+        map<string, string> nettingSetMap = analytic()->portfolio()->nettingSetMap();
         auto report = boost::make_shared<InMemoryReport>();
         ore::analytics::ReportWriter(inputs_->reportNaString()).writeCube(*report, cube_, nettingSetMap);
-        reports_["XVA"]["rawcube"] = report;
+        analytic()->reports()["XVA"]["rawcube"] = report;
     }
 
     if (runXva_) {
@@ -1173,15 +1238,15 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
          * This is where the aggregation work is done: call the post-processor
          *********************************************************************/
 
-        out_ << setw(tab_) << left << "XVA: Aggregation " << flush;
+        CONSOLEW("XVA: Aggregation");
         runPostProcessor();
-        out_ << "OK" << std::endl;
+        CONSOLE("OK");
 
         /******************************************************
          * Finally generate various (in-memory) reports/outputs
          ******************************************************/
 
-        out_ << setw(tab_) << left << "XVA: Reports " << flush;
+        CONSOLEW("XVA: Reports");
         LOG("Generating XVA reports and cube outputs");
 
         if (inputs_->exposureProfilesByTrade()) {
@@ -1189,7 +1254,7 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
                 auto report = boost::make_shared<InMemoryReport>();
                 ore::analytics::ReportWriter(inputs_->reportNaString())
                     .writeTradeExposures(*report, postProcess_, tradeId);
-                reports_["XVA"]["exposure_trade_" + tradeId] = report;
+                analytic()->reports()["XVA"]["exposure_trade_" + tradeId] = report;
             }
         }
 
@@ -1198,49 +1263,49 @@ void XvaAnalytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>
                 auto exposureReport = boost::make_shared<InMemoryReport>();
                 ore::analytics::ReportWriter(inputs_->reportNaString())
                     .writeNettingSetExposures(*exposureReport, postProcess_, nettingSet);
-                reports_["XVA"]["exposure_nettingset_" + nettingSet] = exposureReport;
+                analytic()->reports()["XVA"]["exposure_nettingset_" + nettingSet] = exposureReport;
 
                 auto colvaReport = boost::make_shared<InMemoryReport>();
                 ore::analytics::ReportWriter(inputs_->reportNaString())
                     .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
-                reports_["XVA"]["colva_nettingset_" + nettingSet] = colvaReport;
+                analytic()->reports()["XVA"]["colva_nettingset_" + nettingSet] = colvaReport;
 
                 auto cvaSensiReport = boost::make_shared<InMemoryReport>();
                 ore::analytics::ReportWriter(inputs_->reportNaString())
                     .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
-                reports_["XVA"]["cva_sensitivity_nettingset_" + nettingSet] = cvaSensiReport;
+                analytic()->reports()["XVA"]["cva_sensitivity_nettingset_" + nettingSet] = cvaSensiReport;
             }
         }
 
         auto xvaReport = boost::make_shared<InMemoryReport>();
         ore::analytics::ReportWriter(inputs_->reportNaString())
-            .writeXVA(*xvaReport, inputs_->exposureAllocationMethod(), portfolio_, postProcess_);
-        reports_["XVA"]["xva"] = xvaReport;
+            .writeXVA(*xvaReport, inputs_->exposureAllocationMethod(), analytic()->portfolio(), postProcess_);
+        analytic()->reports()["XVA"]["xva"] = xvaReport;
 
         if (inputs_->netCubeOutput()) {
             auto report = boost::make_shared<InMemoryReport>();
             ore::analytics::ReportWriter(inputs_->reportNaString()).writeCube(*report, postProcess_->netCube());
-            reports_["XVA"]["netcube"] = report;
+            analytic()->reports()["XVA"]["netcube"] = report;
         }
 
         if (inputs_->dimAnalytic() || inputs_->mvaAnalytic()) {
             // Generate DIM evolution report
             auto dimEvolutionReport = boost::make_shared<InMemoryReport>();
             postProcess_->exportDimEvolution(*dimEvolutionReport);
-            reports_["XVA"]["dim_evolution"] = dimEvolutionReport;
+            analytic()->reports()["XVA"]["dim_evolution"] = dimEvolutionReport;
 
             // Generate DIM regression reports
             vector<boost::shared_ptr<ore::data::Report>> dimRegReports;
             for (Size i = 0; i < inputs_->dimOutputGridPoints().size(); ++i) {
                 auto rep = boost::make_shared<InMemoryReport>();
                 dimRegReports.push_back(rep);
-                reports_["XVA"]["dim_regression_" + to_string(i)] = rep;
+                analytic()->reports()["XVA"]["dim_regression_" + to_string(i)] = rep;
             }
             postProcess_->exportDimRegression(inputs_->dimOutputNettingSet(), inputs_->dimOutputGridPoints(),
                                               dimRegReports);
         }
 
-        out_ << "OK" << std::endl;
+        CONSOLE("OK");
     }
 
     // reset that mode

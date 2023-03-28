@@ -44,12 +44,6 @@ public:
 		   protectionPaymentTime_(QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault),
 		   upfrontFee_(Null<Real>()), rebatesAccrual_(true), recoveryRate_(Null<Real>()),
 		   useSensitivitySimplification_(false) {}
-    explicit SyntheticCDO(const boost::shared_ptr<ReferenceDataManager>& refDataManager)
-        : Trade("SyntheticCDO"), refDataManager_(refDataManager), attachmentPoint_(Null<Real>()),
-          detachmentPoint_(Null<Real>()), settlesAccrual_(true),
-          protectionPaymentTime_(QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault),
-          upfrontFee_(Null<Real>()), rebatesAccrual_(true), recoveryRate_(Null<Real>()),
-	  useSensitivitySimplification_(false) {}
     SyntheticCDO(
         const Envelope& env, const LegData& leg, const string& qualifier, const BasketData& basketData,
         double attachmentPoint, double detachmentPoint, const bool settlesAccrual = true,
@@ -108,7 +102,6 @@ private:
 
     bool isIndexTranche() const { return qualifier_.size() == 13 && qualifier_.substr(0, 3) == "RED"; }
 
-    boost::shared_ptr<ReferenceDataManager> refDataManager_;
     string qualifier_;
     LegData legData_;
     BasketData basketData_;

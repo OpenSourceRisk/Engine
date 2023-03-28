@@ -23,7 +23,9 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
+#ifdef ORE_USE_ZLIB
 #include <boost/iostreams/filter/gzip.hpp>
+#endif
 #include <boost/iostreams/filtering_stream.hpp>
 
 #include <iomanip>
@@ -34,11 +36,14 @@ namespace analytics {
 namespace {
 
 bool use_compression(const std::string& filename) {
-
+#ifdef ORE_USE_ZLIB
     // assume compression for all filenames that do not end with csv or txt
 
     std::string extension = boost::filesystem::path(filename).extension().string();
     return extension != ".csv" && extension != ".txt";
+#else
+    return false;
+#endif
 }
 
 std::string getMetaData(const std::string& line, const std::string& tag) {
@@ -61,8 +66,10 @@ boost::shared_ptr<NPVCube> loadCube(const std::string& filename, const bool doub
     bool gzip = use_compression(filename);
     std::ifstream in1(filename, gzip ? (std::ios::binary | std::ios::in) : std::ios::in);
     boost::iostreams::filtering_stream<boost::iostreams::input> in;
+#ifdef ORE_USE_ZLIB
     if (gzip)
         in.push(boost::iostreams::gzip_decompressor());
+#endif
     in.push(in1);
 
     // read meta data
@@ -142,8 +149,10 @@ void saveCube(const std::string& filename, const NPVCube& cube, const bool doubl
     bool gzip = use_compression(filename);
     std::ofstream out1(filename, gzip ? (std::ios::binary | std::ios::out) : std::ios::out);
     boost::iostreams::filtering_stream<boost::iostreams::output> out;
+#ifdef ORE_USE_ZLIB
     if (gzip)
         out.push(boost::iostreams::gzip_compressor(/*boost::iostreams::gzip_params(9)*/));
+#endif
     out.push(out1);
 
     // write meta data (tag width is hardcoded and used in getMetaData())
@@ -195,8 +204,10 @@ boost::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std
     bool gzip = use_compression(filename);
     std::ifstream in1(filename, gzip ? (std::ios::binary | std::ios::in) : std::ios::in);
     boost::iostreams::filtering_stream<boost::iostreams::input> in;
+#ifdef ORE_USE_ZLIB
     if (gzip)
         in.push(boost::iostreams::gzip_decompressor());
+#endif
     in.push(in1);
 
     // read meta data
@@ -261,8 +272,10 @@ void saveAggregationScenarioData(const std::string& filename, const AggregationS
     bool gzip = use_compression(filename);
     std::ofstream out1(filename, gzip ? (std::ios::binary | std::ios::out) : std::ios::out);
     boost::iostreams::filtering_stream<boost::iostreams::output> out;
+#ifdef ORE_USE_ZLIB
     if (gzip)
         out.push(boost::iostreams::gzip_compressor(/*boost::iostreams::gzip_params(9)*/));
+#endif
     out.push(out1);
 
     // write meta data (tag width is hardcoded and used in getMetaData())

@@ -173,7 +173,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 
         LOG("Get equity vol stress parameters");
         XMLNode* equityVols = XMLUtils::getChildNode(testCase, "EquityVolatilities");
-        QL_REQUIRE(equityVols, "FxVols node not found");
+        QL_REQUIRE(equityVols, "EquityVolatilities node not found");
         test.equityVolShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(equityVols, "EquityVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {

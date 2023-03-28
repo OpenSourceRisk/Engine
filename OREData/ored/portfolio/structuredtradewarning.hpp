@@ -33,16 +33,16 @@ namespace data {
 //! Utility classes for Structured warnings, contains the Trade ID and Type
 class StructuredTradeWarningMessage : public StructuredMessage {
 public:
-    StructuredTradeWarningMessage(const boost::shared_ptr<Trade>& trade, const std::string& warningType,
+    StructuredTradeWarningMessage(const boost::shared_ptr<ore::data::Trade>& trade, const std::string& warningType,
                                   const std::string& warningWhat)
         : StructuredMessage(
-              "Warning", "Trade", warningWhat,
+              Category::Warning, Group::Trade, warningWhat,
               std::map<std::string, std::string>(
                   {{"warningType", warningType}, {"tradeId", trade->id()}, {"tradeType", trade->tradeType()}})) {}
 
     StructuredTradeWarningMessage(const std::string& tradeId, const std::string& tradeType,
                                   const std::string& warningType, const std::string& warningWhat)
-        : StructuredMessage("Warning", "Trade", warningWhat,
+        : StructuredMessage(Category::Warning, Group::Trade, warningWhat,
                             std::map<std::string, std::string>(
                                 {{"warningType", warningType}, {"tradeId", tradeId}, {"tradeType", tradeType}})) {}
 };

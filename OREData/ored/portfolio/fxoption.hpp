@@ -25,6 +25,8 @@
 
 #include <ored/portfolio/vanillaoption.hpp>
 
+#include <ored/portfolio/tradefactory.hpp>
+
 namespace ore {
 namespace data {
 using std::string;

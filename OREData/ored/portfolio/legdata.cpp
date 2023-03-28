@@ -84,8 +84,6 @@ namespace data {
 
 bool lessThan(const string& s1, const string& s2) { return s1 < s2; }
 
-LegDataRegister<CashflowData> CashflowData::reg_("Cashflow");
-
 void CashflowData::fromXML(XMLNode* node) {
     // allow for empty Cashflow legs without any payments
     if(node == nullptr)
@@ -105,8 +103,6 @@ XMLNode* CashflowData::toXML(XMLDocument& doc) {
     return node;
 }
 
-LegDataRegister<FixedLegData> FixedLegData::reg_("Fixed");
-
 void FixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     rates_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Rates", "Rate", "startDate", rateDates_, parseReal,
@@ -118,8 +114,6 @@ XMLNode* FixedLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
     return node;
 }
-
-LegDataRegister<ZeroCouponFixedLegData> ZeroCouponFixedLegData::reg_("ZeroCouponFixed");
 
 void ZeroCouponFixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -146,8 +140,6 @@ XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "SubtractNotional", subtractNotional_);
     return node;
 }
-
-LegDataRegister<FloatingLegData> FloatingLegData::reg_("Floating");
 
 void FloatingLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -226,8 +218,6 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "LocalCapFloor", localCapFloor_);
     return node;
 }
-
-LegDataRegister<CPILegData> CPILegData::reg_("CPI");
 
 void CPILegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -309,8 +299,6 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     return node;
 }
 
-LegDataRegister<YoYLegData> YoYLegData::reg_("YY");
-
 void YoYLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     index_ = XMLUtils::getChildValue(node, "Index", true);
@@ -371,8 +359,6 @@ XMLNode* CMSLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
-LegDataRegister<CMSLegData> CMSLegData::reg_("CMS");
-
 void CMSLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     swapIndex_ = XMLUtils::getChildValue(node, "Index", true);
@@ -414,8 +400,6 @@ XMLNode* CMBLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CreditRisk", hasCreditRisk_);
     return node;
 }
-
-LegDataRegister<CMBLegData> CMBLegData::reg_("CMB");
 
 void CMBLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -467,8 +451,6 @@ XMLNode* DigitalCMSLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
-LegDataRegister<DigitalCMSLegData> DigitalCMSLegData::reg_("DigitalCMS");
-
 void DigitalCMSLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
 
@@ -513,8 +495,6 @@ XMLNode* CMSSpreadLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
-
-LegDataRegister<CMSSpreadLegData> CMSSpreadLegData::reg_("CMSSpread");
 
 void CMSSpreadLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -566,8 +546,6 @@ XMLNode* DigitalCMSSpreadLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
-LegDataRegister<DigitalCMSSpreadLegData> DigitalCMSSpreadLegData::reg_("DigitalCMSSpread");
-
 void DigitalCMSSpreadLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
 
@@ -596,8 +574,6 @@ void DigitalCMSSpreadLegData::fromXML(XMLNode* node) {
                                                                       putPayoffDates_, &parseReal);
     }
 }
-
-LegDataRegister<EquityLegData> EquityLegData::reg_("Equity");
 
 void EquityLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -1622,7 +1598,10 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
             }
         }
     } else {
-
+        QuantLib::CPI::InterpolationType interpolation = QuantLib::CPI::Flat;
+        if (cpiSwapConvention && cpiSwapConvention->interpolated()) {
+            interpolation = QuantLib::CPI::Linear;
+        }
         auto zcIndex = boost::dynamic_pointer_cast<ZeroInflationIndex>(index);
         QL_REQUIRE(zcIndex, "Need a Zero Coupon Inflation Index");
         QuantExt::NonStandardYoYInflationLeg yoyLeg =
@@ -1635,7 +1614,8 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
                 .withSpreads(spreads)
                 .withRateCurve(engineFactory->market()->discountCurve(
                     data.currency(), engineFactory->configuration(MarketContext::pricing)))
-                .withInflationNotional(addInflationNotional);
+                .withInflationNotional(addInflationNotional)
+                .withObservationInterpolation(interpolation);
 
         if (couponCap)
             yoyLeg.withCaps(buildScheduledVector(yoyLegData->caps(), yoyLegData->capDates(), schedule));

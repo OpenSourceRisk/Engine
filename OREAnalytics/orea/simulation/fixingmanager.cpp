@@ -21,6 +21,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/portfolio/trade.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/equitycoupon.hpp>

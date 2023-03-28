@@ -22,6 +22,7 @@
 */
 #pragma once
 
+#include <orea/app/inputparameters.hpp>
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/scenario/scenariogeneratordata.hpp>
@@ -39,7 +40,8 @@ class XvaRunner {
 public:
     virtual ~XvaRunner() {}
 
-    XvaRunner(QuantLib::Date asof, const std::string& baseCurrency,
+    XvaRunner(const boost::shared_ptr<InputParameters>& inputs,
+              QuantLib::Date asof, const std::string& baseCurrency,
               const boost::shared_ptr<ore::data::Portfolio>& portfolio,
               const boost::shared_ptr<ore::data::NettingSetManager>& netting,
               const boost::shared_ptr<ore::data::EngineData>& engineData,
@@ -48,8 +50,6 @@ public:
               const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
               const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
               const boost::shared_ptr<ore::data::CrossAssetModelData>& crossAssetModelData,
-              std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
-              std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
               const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
               const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
               QuantLib::Real dimQuantile = 0.99, QuantLib::Size dimHorizonCalendarDays = 14,
@@ -125,6 +125,7 @@ protected:
         const boost::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
         const boost::shared_ptr<ScenarioFactory>& scenarioFactory, const bool continueOnErr) const;
     
+    boost::shared_ptr<InputParameters> inputs_;
     QuantLib::Date asof_;
     std::string baseCurrency_;
     boost::shared_ptr<ore::data::Portfolio> portfolio_;
@@ -135,8 +136,6 @@ protected:
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
     boost::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData_;
-    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
-    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
     boost::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
     QuantLib::Real dimQuantile_;

@@ -125,7 +125,8 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
     LOG("NPV file written");
 }
 
-void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
+void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& baseCurrency,
+                                 boost::shared_ptr<ore::data::Portfolio> portfolio,
                                  boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
                                  const bool includePastCashflows) {
 
@@ -150,6 +151,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         .addColumn("Notional", double(), 4)
         .addColumn("DiscountFactor", double(), 10)
         .addColumn("PresentValue", double(), 10)
+        .addColumn("FXRate(Local-Base)", double(), 10)
+        .addColumn("PresentValue(Base)", double(), 10)
+        .addColumn("BaseCurrency", string())
         .addColumn("FloorStrike", double(), 6)
         .addColumn("CapStrike", double(), 6)
         .addColumn("FloorVolatility", double(), 6)
@@ -303,7 +307,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 fixingValue = ptrEqCp->equityCurve()->fixing(fixingDate);
                             } else if (ptrCommCf) {
                                 fixingDate = ptrCommCf->date();
-                                fixingValue = ptrCommCf->index()->fixing(ptrCommCf->pricingDate());
+                                fixingValue = ptrCommCf->fixing();
                             } else {
                                 fixingDate = Null<Date>();
                                 fixingValue = Null<Real>();
@@ -312,6 +316,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             Real effectiveAmount = Null<Real>();
                             Real discountFactor = Null<Real>();
                             Real presentValue = Null<Real>();
+                            Real presentValueBase = Null<Real>();
+                            Real fxRateLocalBase = Null<Real>();
                             Real floorStrike = Null<Real>();
                             Real capStrike = Null<Real>();
                             Real floorVolatility = Null<Real>();
@@ -324,6 +330,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 discountFactor = ptrFlow->hasOccurred(asof) ? 0.0 : discountCurve->discount(payDate);
 				if(effectiveAmount != Null<Real>())
 				    presentValue = discountFactor * effectiveAmount;
+                                try {
+                                    fxRateLocalBase = market->fxRate(ccy + baseCurrency)->value();
+                                    presentValueBase = presentValue * fxRateLocalBase;
+                                } catch (...) {
+                                }
 
                                 // scan for known capped / floored coupons and extract cap / floor strike and fixing
                                 // date
@@ -422,6 +433,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 .add(notional * (notional == Null<Real>() ? 1.0 : multiplier))
                                 .add(discountFactor)
                                 .add(presentValue)
+                                .add(fxRateLocalBase)
+                                .add(presentValueBase)
+                                .add(baseCurrency)
                                 .add(floorStrike)
                                 .add(capStrike)
                                 .add(floorVolatility)
@@ -455,6 +469,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                     Real effectiveAmount = Null<Real>();
                     Real discountFactor = Null<Real>();
                     Real presentValue = Null<Real>();
+                    Real presentValueBase = Null<Real>();
+                    Real fxRateLocalBase = Null<Real>();
                     Real floorStrike = Null<Real>();
                     Real capStrike = Null<Real>();
                     Real floorVolatility = Null<Real>();
@@ -472,6 +488,19 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                         presentValue = cf.presentValue * multiplier;
                     } else if (effectiveAmount != Null<Real>() && discountFactor != Null<Real>()) {
                         presentValue = effectiveAmount * discountFactor;
+                    }
+                    if (cf.fxRateLocalBase != Null<Real>()) {
+                        fxRateLocalBase = cf.fxRateLocalBase;
+                    } else if (market) {
+                        try {
+                            fxRateLocalBase = market->fxRate(ccy + baseCurrency)->value();
+                        } catch (...) {
+                        }
+                    }
+                    if (cf.presentValueBase != Null<Real>()) {
+                        presentValueBase = cf.presentValueBase;
+                    } else if (presentValue != Null<Real>() && fxRateLocalBase != Null<Real>()) {
+                        presentValueBase = presentValue * fxRateLocalBase;
                     }
                     if (cf.floorStrike != Null<Real>())
                         floorStrike = cf.floorStrike;
@@ -501,6 +530,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                         .add(cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier))
                         .add(discountFactor)
                         .add(presentValue)
+                        .add(fxRateLocalBase)
+                        .add(presentValueBase)
+                        .add(baseCurrency)
                         .add(floorStrike)
                         .add(capStrike)
                         .add(floorVolatility)

@@ -19,10 +19,11 @@
 #include <orea/aggregation/dimcalculator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/vectorutils.hpp>
+#include <ored/portfolio/trade.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/version.hpp>
-
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
 #include <ql/math/kernelfunctions.hpp>
@@ -46,11 +47,12 @@ namespace ore {
 namespace analytics {
 
 DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
+    const boost::shared_ptr<InputParameters>& inputs,
     const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<NPVCube>& cube,
     const boost::shared_ptr<CubeInterpretation>& cubeInterpretation,
     const boost::shared_ptr<AggregationScenarioData>& scenarioData, Real quantile, Size horizonCalendarDays,
     const std::map<std::string, Real>& currentIM)
-    : portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation), scenarioData_(scenarioData),
+    : inputs_(inputs), portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation), scenarioData_(scenarioData),
       quantile_(quantile), horizonCalendarDays_(horizonCalendarDays), currentIM_(currentIM) {
 
     QL_REQUIRE(portfolio_, "portfolio is null");

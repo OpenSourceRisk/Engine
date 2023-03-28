@@ -284,6 +284,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                                                        << " was not recognised");
             }
             built = true;
+            break;
         } catch (exception& e) {
             std::ostringstream message;
             message << "build attempt failed for " << configs->curveID() << " using config with priority "

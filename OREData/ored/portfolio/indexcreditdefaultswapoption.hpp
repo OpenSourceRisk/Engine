@@ -32,9 +32,6 @@ public:
     //! Default constructor
     IndexCreditDefaultSwapOption();
 
-    //! Default constructor taking reference data manager
-    IndexCreditDefaultSwapOption(const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager);
-
     //! Detailed constructor
     IndexCreditDefaultSwapOption(const ore::data::Envelope& env, const IndexCreditDefaultSwapData& swap,
                                  const ore::data::OptionData& option, QuantLib::Real strike, bool knockOut = false,
@@ -74,7 +71,6 @@ public:
     //@}
 
 private:
-    boost::shared_ptr<ore::data::ReferenceDataManager> refDataManager_;
     IndexCreditDefaultSwapData swap_;
     ore::data::OptionData option_;
     QuantLib::Real strike_;
@@ -112,7 +108,8 @@ private:
     void fromBasket(const QuantLib::Date& asof, std::map<std::string, QuantLib::Real>& constituents);
 
     //! Populate constituent notionals and curve IDs from reference data
-    void fromReferenceData(const QuantLib::Date& asof, std::map<std::string, QuantLib::Real>& constituents);
+    void fromReferenceData(const QuantLib::Date& asof, std::map<std::string, QuantLib::Real>& constituents,
+                           const boost::shared_ptr<ReferenceDataManager>& refData);
 };
 
 } // namespace data

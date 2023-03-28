@@ -39,8 +39,6 @@ XMLNode* DurationAdjustedCmsLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
-LegDataRegister<DurationAdjustedCmsLegData> DurationAdjustedCmsLegData::reg_("DurationAdjustedCMS");
-
 void DurationAdjustedCmsLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     swapIndex_ = XMLUtils::getChildValue(node, "Index", true);

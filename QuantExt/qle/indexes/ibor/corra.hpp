@@ -25,9 +25,9 @@
 #define quantext_corra_hpp
 
 #include <ql/currencies/america.hpp>
-#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/canada.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <qle/indexes/ibor/termrateindex.hpp>
 
 namespace QuantExt {
 //! %CORRA rate
@@ -40,6 +40,13 @@ class CORRA : public OvernightIndex {
 public:
     explicit CORRA(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : OvernightIndex("CORRA", 0, CADCurrency(), Canada(), Actual365Fixed(), h) {}
+};
+
+class CORRATerm : public TermRateIndex {
+public:
+    CORRATerm(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : TermRateIndex("CORRA-TERM", tenor, 2, CADCurrency(), Canada(), ModifiedFollowing, false, Actual365Fixed(), h,
+                        boost::make_shared<CORRA>(h)) {}
 };
 } // namespace QuantExt
 

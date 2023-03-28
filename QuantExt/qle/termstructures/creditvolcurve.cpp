@@ -102,6 +102,8 @@ Real CreditVolCurve::minStrike() const { return -QL_MAX_REAL; }
 Real CreditVolCurve::maxStrike() const { return QL_MAX_REAL; }
 
 Real CreditVolCurve::moneyness(const Real strike, const Real atmStrike) const {
+    if (strike == Null<Real>())
+        return 0.0;
     if (type() == Type::Spread) {
         return strike - atmStrike;
     } else if (type() == Type::Price) {
@@ -134,7 +136,7 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
     if (v != atmStrikeCache_.end())
         return v->second;
 
-    /* we need at least on term curve to compute the atm strike properly - we set it to 0 / 1 (spread, price) if
+    /* we need at least one term curve to compute the atm strike properly - we set it to 0 / 1 (spread, price) if
        we don't have a term, so that we can build strike-independent curves without curves. It is the user's
        responsibility to provide terms for strike-dependent curves. */
     if (terms().empty())
@@ -160,8 +162,9 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
 
     /* Use index maturity date based on index start date. If no start date is given, assume this is a single name option
        running from today. */
-    Date mat = cdsMaturity(refData.startDate != Null<Date>() ? refData.startDate : referenceDate(), terms_[termIndex_m],
-                           refData.rule);
+    Date mat = std::max(cdsMaturity(refData.startDate != Null<Date>() ? refData.startDate : referenceDate(),
+                                    terms_[termIndex_m], refData.rule),
+                        referenceDate() + 1);
     Date effExp = std::min(mat - 1, expiry);
     Schedule schedule(effExp, mat, refData.tenor, refData.calendar, refData.convention, refData.termConvention,
                       refData.rule, refData.endOfMonth);
@@ -205,7 +208,7 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
         atmStrike = adjFairSpread1;
     } else if (type() == Type::Price) {
         discToExercise = termCurves_[termIndex_m]->rateCurve()->discount(effExp);
-        forwardPrice1 = (1.0 - underlyings[terms_[termIndex_m]]->NPV()) / discToExercise;
+        forwardPrice1 = 1.0 - underlyings[terms_[termIndex_m]]->NPV() / discToExercise;
         adjForwardPrice1 = forwardPrice1 - fep1 / discToExercise;
         atmStrike = adjForwardPrice1;
     } else {
@@ -213,7 +216,9 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
     }
 
     if (!close_enough(term_alpha, 1.0)) {
-        Date mat = cdsMaturity(refData.startDate, terms_[termIndex_p], refData.rule);
+        Date mat = std::max(cdsMaturity(refData.startDate != Null<Date>() ? refData.startDate : referenceDate(),
+                                        terms_[termIndex_p], refData.rule),
+                            referenceDate() + 1);
         Date effExp = std::min(mat - 1, expiry);
         Schedule schedule(effExp, mat, refData.tenor, refData.calendar, refData.convention, refData.termConvention,
                           refData.rule, refData.endOfMonth);
@@ -239,7 +244,7 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
             adjFairSpread2 = fairSpread2 + fep2 / rpv01_2;
             atmStrike = term_alpha * adjFairSpread1 + (1.0 - term_alpha * adjFairSpread2);
         } else if (type() == Type::Price) {
-            forwardPrice2 = (1.0 - underlyings[terms_[termIndex_p]]->NPV()) / discToExercise;
+            forwardPrice2 = 1.0 - underlyings[terms_[termIndex_p]]->NPV() / discToExercise;
             adjForwardPrice2 = forwardPrice2 - fep2 / discToExercise;
             atmStrike = term_alpha * adjForwardPrice1 + (1.0 - term_alpha) * adjForwardPrice2;
         } else {
@@ -529,6 +534,33 @@ void InterpolatingCreditVolCurve::createSmile(const Date& expiry, const Period& 
     }
 }
 
+ProxyCreditVolCurve::ProxyCreditVolCurve(const QuantLib::Handle<CreditVolCurve>& source,
+                                         const std::vector<QuantLib::Period>& terms,
+                                         const std::vector<QuantLib::Handle<CreditCurve>>& termCurves)
+    : CreditVolCurve(source->businessDayConvention(), source->dayCounter(), terms.empty() ? source->terms() : terms,
+                     termCurves.empty() ? source->termCurves() : termCurves, source->type()),
+      source_(source) {
+    // check inputs to ctor for consistency
+    QL_REQUIRE(terms.size() == termCurves.size(), "ProxyCreditVolCurve: given terms (" << terms.size()
+                                                                                       << ") do not match term curves ("
+                                                                                       << termCurves.size() << ")");
+    registerWith(source);
+}
+
+QuantLib::Real ProxyCreditVolCurve::volatility(const QuantLib::Date& exerciseDate,
+                                               const QuantLib::Real underlyingLength, const QuantLib::Real strike,
+                                               const Type& targetType) const {
+
+    // we read the vol from the source surface keeping the moneyness constant (if meaningful)
+
+    Real effectiveStrike = strike;
+    if(!this->terms().empty() && !source_->terms().empty()) {
+        effectiveStrike = this->strike(this->moneyness(strike, this->atmStrike(exerciseDate, underlyingLength)),
+                                       source_->atmStrike(exerciseDate, underlyingLength));
+    }
+    return source_->volatility(exerciseDate, underlyingLength, effectiveStrike, type());
+}
+
 SpreadedCreditVolCurve::SpreadedCreditVolCurve(const Handle<CreditVolCurve> baseCurve, const std::vector<Date> expiries,
                                                const std::vector<Handle<Quote>> spreads, const bool stickyMoneyness,
                                                const std::vector<Period>& terms,
@@ -559,11 +591,12 @@ void SpreadedCreditVolCurve::performCalculations() const {
 Real SpreadedCreditVolCurve::volatility(const Date& exerciseDate, const Real underlyingLength, const Real strike,
                                         const Type& targetType) const {
     calculate();
-    Real thisAtm =
-        (strike == Null<Real>() || stickyMoneyness_) ? this->atmStrike(exerciseDate, underlyingLength) : Null<Real>();
-    Real effStrike = strike == Null<Real>() ? thisAtm : strike;
-    Real adj = stickyMoneyness_ ? baseCurve_->atmStrike(exerciseDate, underlyingLength) - thisAtm : 0.0;
-    Real base = baseCurve_->volatility(exerciseDate, underlyingLength, effStrike + adj, targetType);
+    Real effectiveStrike = strike;
+    if (stickyMoneyness_ && !baseCurve_->terms().empty() && !this->terms().empty()) {
+        effectiveStrike = this->strike(this->moneyness(strike, this->atmStrike(exerciseDate, underlyingLength)),
+                                       baseCurve_->atmStrike(exerciseDate, underlyingLength));
+    }
+    Real base = baseCurve_->volatility(exerciseDate, underlyingLength, effectiveStrike, targetType);
     Real spread = interpolatedSpreads_->operator()(timeFromReference(exerciseDate));
     return base + spread;
 }

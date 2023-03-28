@@ -67,24 +67,17 @@ public:
                            bool dryRun = false);
 
     /*! Constructor to use a multi-threaded valuation engine */
-    HistoricalPnlGenerator(
-        const string& baseCurrency, const boost::shared_ptr<Portfolio>& portfolio,
-        const boost::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
-        const boost::shared_ptr<EngineData>& engineData, const Size nThreads, const Date& today,
-        const boost::shared_ptr<ore::data::Loader>& loader,
-        const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-        const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
-        const std::string& configuration,
-        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-        const std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
-            const boost::shared_ptr<ore::data::ReferenceDataManager>&,
-            const boost::shared_ptr<ore::data::TradeFactory>&)>& extraTradeBuildersGenerator = {},
-        const std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()>& extraLegBuildersGenerator = {},
-        const std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()>& extraEngineBuildersGenerator =
-            {},
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(), bool dryRun = false,
-        const std::string& context = "historical pnl generation");
+    HistoricalPnlGenerator(const string& baseCurrency, const boost::shared_ptr<Portfolio>& portfolio,
+                           const boost::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
+                           const boost::shared_ptr<EngineData>& engineData, const Size nThreads, const Date& today,
+                           const boost::shared_ptr<ore::data::Loader>& loader,
+                           const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+                           const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+                           const std::string& configuration,
+                           const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                           const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                           const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                           bool dryRun = false, const std::string& context = "historical pnl generation");
 
     /*! Generate a "cube" of P&L values for the trades in the portfolio on each of
         the scenarios provided by the historical scenario generator. The historical
@@ -170,11 +163,6 @@ private:
     boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     std::string configuration_;
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
-    std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
-        const boost::shared_ptr<ore::data::ReferenceDataManager>&, const boost::shared_ptr<ore::data::TradeFactory>&)>
-        extraTradeBuildersGenerator_;
-    std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuildersGenerator_;
-    std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuildersGenerator_;
     boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
     ore::data::IborFallbackConfig iborFallbackConfig_;
 

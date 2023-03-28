@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<TodaysMarket>
+
+  <!-- discounting curve definition -->
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
+  </DiscountingCurves>
+  
+  <!-- index forwarding curve definition -->
+  <IndexForwardingCurves id="default">
+    <Index name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</Index>
+   </IndexForwardingCurves>
+   
+</TodaysMarket>

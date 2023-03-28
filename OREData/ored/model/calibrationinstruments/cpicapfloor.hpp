@@ -64,8 +64,6 @@ private:
     QuantLib::CapFloor::Type type_;
     boost::variant<QuantLib::Date, QuantLib::Period> maturity_;
     boost::shared_ptr<BaseStrike> strike_;
-
-    static CalibrationInstrumentRegister<CpiCapFloor> reg_;
 };
 
 } // namespace data

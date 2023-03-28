@@ -27,7 +27,6 @@
 #include <ored/configuration/onedimsolverconfig.hpp>
 #include <ored/configuration/reportconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
-#include <ored/configuration/smiledynamicsconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/volatilityconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
@@ -186,6 +185,7 @@
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/cliquetoption.hpp>
 #include <ored/portfolio/commodityapo.hpp>
+#include <ored/portfolio/commoditydigitalapo.hpp>
 #include <ored/portfolio/commoditydigitaloption.hpp>
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commoditylegbuilder.hpp>
@@ -287,12 +287,16 @@
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/currencyconfig.hpp>
+#include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/fileio.hpp>
+#include <ored/utilities/filteredbufferedlogger.hpp>
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/inflationstartdate.hpp>
+#include <ored/utilities/initbuilders.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/osutils.hpp>

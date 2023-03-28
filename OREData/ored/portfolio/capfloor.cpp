@@ -377,7 +377,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             QL_REQUIRE(!zeroIndex.empty(), "Could not find inflation index (of type either zero or yoy) "
                                                << underlyingIndex << " in market.");
             yoyIndex = Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                zeroIndex.currentLink(), zeroIndex->interpolated()));
+                zeroIndex.currentLink(), false));
         }
 
         legs_.push_back(makeYoYLeg(legData_, yoyIndex.currentLink(), engineFactory));

@@ -67,8 +67,8 @@ void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market,
 
     boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
         sensiPortfolio, market, marketConfiguration, engineData, simMarketData, sensiData_, recalibrateModels,
-        curveConfigs, todaysMarketParams, false, extraEngineBuilders_, extraLegBuilders_, referenceData_,
-        iborFallbackConfig_, continueOnError_, analyticFxSensis);
+        curveConfigs, todaysMarketParams, false, referenceData_, iborFallbackConfig_, continueOnError_,
+        analyticFxSensis);
     sensiAnalysis->generateSensitivities();
 
     simMarket_ = sensiAnalysis->simMarket();
@@ -104,7 +104,7 @@ void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarket
     vector<string> portfolioFiles = getFilenames(portfoliosString, inputPath);
     // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
     for (auto portfolioFile : portfolioFiles) {
-        sensiPortfolio->load(portfolioFile, tradeFactory_);
+        sensiPortfolio->fromFile(portfolioFile);
     }
 
     DLOG("sensiInputInitialize done");

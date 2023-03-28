@@ -58,7 +58,7 @@ Rate JyYoYInflationCouponPricer::adjustedFixing(Rate) const {
     // If everything has been published in order to determine I(S), return model independent value read off curve.
     // Logic to determine last available fixing and where forecasting is needed copied from YoYInflationIndex::fixing.
     Date today = Settings::instance().evaluationDate();
-    const auto& index = coupon_->index();
+    const auto& index = coupon_->yoyIndex();
     auto freq = index->frequency();
     auto ip = inflationPeriod(today - index->availabilityLag(), freq);
     bool isInterp = index->interpolated();

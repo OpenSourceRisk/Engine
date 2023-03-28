@@ -264,7 +264,6 @@ BOOST_AUTO_TEST_CASE(testCMSAnalyticHagan) {
     engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
 
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<AnalyticHaganCmsCouponPricerBuilder>());
 
     cmsSwap->build(engineFactory);
 
@@ -303,7 +302,6 @@ BOOST_AUTO_TEST_CASE(testCMSNumericalHagan) {
     engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
 
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<NumericalHaganCmsCouponPricerBuilder>());
 
     cmsSwap->build(engineFactory);
 
@@ -341,7 +339,6 @@ BOOST_AUTO_TEST_CASE(testCMSLinearTsr) {
     engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
 
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
 
     cmsSwap->build(engineFactory);
 
@@ -374,7 +371,6 @@ BOOST_AUTO_TEST_CASE(cmsCapFloor) {
     engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
 
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<AnalyticHaganCmsCouponPricerBuilder>());
 
     BOOST_TEST_MESSAGE(
         "Comparing CMS Cap price to replication by a Single Legged CMS Swap and a Single Leg Capped CMS Swap...");

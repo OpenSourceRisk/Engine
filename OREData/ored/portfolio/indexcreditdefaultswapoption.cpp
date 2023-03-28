@@ -45,10 +45,6 @@ namespace data {
 IndexCreditDefaultSwapOption::IndexCreditDefaultSwapOption()
     : Trade("IndexCreditDefaultSwapOption"), strike_(Null<Real>()), knockOut_(false) {}
 
-IndexCreditDefaultSwapOption::IndexCreditDefaultSwapOption(
-    const boost::shared_ptr<ReferenceDataManager>& refDataManager)
-    : Trade("IndexCreditDefaultSwapOption"), refDataManager_(refDataManager), strike_(Null<Real>()), knockOut_(false) {}
-
 IndexCreditDefaultSwapOption::IndexCreditDefaultSwapOption(const Envelope& env, const IndexCreditDefaultSwapData& swap,
                                                            const OptionData& option, Real strike, bool knockOut,
                                                            const string& indexTerm, const string& strikeType,
@@ -97,7 +93,7 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     if (swap_.basket().constituents().size() > 1) {
         fromBasket(asof, constituents_);
     } else {
-        fromReferenceData(asof, constituents_);
+        fromReferenceData(asof, constituents_, engineFactory->referenceData());
     }
 
     // Transfer to vectors for ctors below
@@ -538,16 +534,17 @@ void IndexCreditDefaultSwapOption::fromBasket(const Date& asof, map<string, Real
     DLOG("Finished building constituents using basket data.");
 }
 
-void IndexCreditDefaultSwapOption::fromReferenceData(const Date& asof, map<string, Real>& outConstituents) {
+void IndexCreditDefaultSwapOption::fromReferenceData(const Date& asof, map<string, Real>& outConstituents,
+                                                     const boost::shared_ptr<ReferenceDataManager>& refData) {
 
     const string& iCdsId = swap_.creditCurveId();
     DLOG("Start building constituents using credit reference data for " << iCdsId << ".");
 
-    QL_REQUIRE(refDataManager_, "Building index CDS option " << id() << " ReferenceDataManager is null.");
-    QL_REQUIRE(refDataManager_->hasData(CreditIndexReferenceDatum::TYPE, iCdsId),
+    QL_REQUIRE(refData, "Building index CDS option " << id() << " ReferenceDataManager is null.");
+    QL_REQUIRE(refData->hasData(CreditIndexReferenceDatum::TYPE, iCdsId),
                "No CreditIndex reference data for " << iCdsId);
     auto referenceData = boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(
-        refDataManager_->getData(CreditIndexReferenceDatum::TYPE, iCdsId));
+        refData->getData(CreditIndexReferenceDatum::TYPE, iCdsId));
     DLOG("Got CreditIndexReferenceDatum for id " << iCdsId);
 
     Real fullNtl = notionals_.full;

@@ -149,11 +149,10 @@ HistoricalScenarioGenerator::HistoricalScenarioGenerator(
     const boost::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
     const boost::shared_ptr<ScenarioFactory>& scenarioFactory, const QuantLib::Calendar& cal, const Size mporDays,
     const bool overlapping, const ReturnConfiguration& returnConfiguration,
-    const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const std::string& labelPrefix,
-    const bool excludeCPIIndexShifts)
+    const boost::shared_ptr<oreplus::data::AdjustmentFactors>& adjFactors, const std::string& labelPrefix)
     : i_(0), historicalScenarioLoader_(historicalScenarioLoader), scenarioFactory_(scenarioFactory), cal_(cal),
       mporDays_(mporDays), overlapping_(overlapping), returnConfiguration_(returnConfiguration),
-      adjFactors_(adjFactors), labelPrefix_(labelPrefix), excludeCPIIndexShifts_(excludeCPIIndexShifts) {
+      adjFactors_(adjFactors), labelPrefix_(labelPrefix) {
 
     QL_REQUIRE(mporDays > 0, "Invalid mpor days of 0");
 
@@ -240,10 +239,6 @@ boost::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date& d) {
         // Adjust return for any scaling
         returnVal = returnVal * scaling(key, returnVal);
         // Calculate the shifted value
-        // Dont shift the baseCPI during a historical simulation
-        if (key.keytype == RiskFactorKey::KeyType::CPIIndex && excludeCPIIndexShifts_) {
-            returnVal = 0.0;
-        }
         value = returnConfiguration_.applyReturn(key, base, returnVal);
         if (std::isinf(value)) {
             ALOG("Value is inf for " << key << " from date " << s1->asof() << " to " << s2->asof());

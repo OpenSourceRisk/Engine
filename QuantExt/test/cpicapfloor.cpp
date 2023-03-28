@@ -161,9 +161,7 @@ struct CommonVars {
                            -999 };
 
         // link from cpi index to cpi TS
-        bool interp = false; // this MUST be false because the observation lag is only 2 months
-                             // for ZCIIS; but not for contract if the contract uses a bigger lag.
-        ii = boost::make_shared<UKRPI>(interp, hcpi);
+        ii = boost::make_shared<UKRPI>(hcpi);
         for (Size i = 0; i < rpiSchedule.size(); i++) {
             ii->addFixing(rpiSchedule[i], fixData[i], true); // force overwrite in case multiple use
         };
@@ -467,11 +465,9 @@ BOOST_AUTO_TEST_CASE(testPutCallParity) {
     CPI::InterpolationType observationInterpolation = CPI::AsIndex;
 
     Date effectiveStart = startDate - common.observationLag;
-    if (!common.ii->interpolated()) {
-        std::pair<Date, Date> ips = inflationPeriod(effectiveStart, common.ii->frequency());
-        effectiveStart = ips.first;
-    }
-
+    std::pair<Date, Date> ips = inflationPeriod(effectiveStart, common.ii->frequency());
+    effectiveStart = ips.first;
+    
     for (Size i = 0; i < nStrike; ++i) {
 
         for (Size j = 0; j < nMat; ++j) {
@@ -493,10 +489,6 @@ BOOST_AUTO_TEST_CASE(testPutCallParity) {
             // build CPI leg price manually
             Date fixingDate = maturityDate - common.observationLag;
             Date effectiveMaturity = fixingDate;
-            if (!common.ii->interpolated()) {
-                std::pair<Date, Date> ipm = inflationPeriod(effectiveMaturity, common.ii->frequency());
-                effectiveMaturity = ipm.first;
-            }
             Real timeFromStart =
                 common.ii->zeroInflationTermStructure()->dayCounter().yearFraction(effectiveStart, effectiveMaturity);
             Real K = pow(1.0 + strike[i], timeFromStart);
@@ -572,21 +564,21 @@ BOOST_AUTO_TEST_CASE(testSimpleCapFloor) {
     Period observationLag = 3 * Months; // EUHICPXT Caps/Swaps
     Handle<YieldTermStructure> discountCurve(boost::make_shared<FlatForward>(common.evaluationDate, rate, dc));
     RelinkableHandle<ZeroInflationTermStructure> inflationCurve;
-    Handle<ZeroInflationIndex> index(boost::make_shared<EUHICPXT>(false, inflationCurve));
+    Handle<ZeroInflationIndex> index(boost::make_shared<EUHICPXT>(inflationCurve));
     // Make sure we use the correct index publication frequency and interpolation, consistent with the index we want to
     // project. We therefore create the index first, then the term structure, then relink the curve. Otherwise time
     // calculations will be inconsistent, and ATM strikes do not generate equal put/call or cap/floor prices.
     boost::shared_ptr<ZeroInflationTermStructure> inflationCurvePtr =
         boost::make_shared<FlatZeroInflationTermStructure>(common.evaluationDate, index->fixingCalendar(), dc,
                                                            inflationRate, observationLag, index->frequency(),
-                                                           index->interpolated(), discountCurve);
+                                                           false, discountCurve);
     inflationCurve.linkTo(inflationCurvePtr);
     // Make sure we use the same observation lag as in the inflation curve, and same index publication frequency and
     // interpolation. The vol surface observation lag is used in the engine for lag difference calculations compared to
     // the instrument's lag.
     Handle<CPIVolatilitySurface> inflationVol(boost::make_shared<ConstantCPIVolatility>(
         inflationBlackVol, 0, inflationCurve->calendar(), bdc, dc, inflationCurve->observationLag(),
-        inflationCurve->frequency(), index->interpolated()));
+        inflationCurve->frequency(), false));
 
     boost::shared_ptr<PricingEngine> engine =
         boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, inflationVol);

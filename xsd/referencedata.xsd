@@ -10,6 +10,7 @@
               <xs:group ref="referenceDataTypes"/>
             </xs:sequence>
             <xs:attribute type="xs:string" name="id" use="required"/>
+            <xs:attribute type="xs:string" name="validFrom"/>
           </xs:complexType>
         </xs:element>
       </xs:sequence>
@@ -18,6 +19,7 @@
 
   <xs:group name="referenceDataTypes">
     <xs:choice>
+      <xs:element type="currencyHedgedIndexReferenceDatum" name="CurrencyHedgedEquityIndexReferenceData"/>
       <xs:element type="indexReferenceDatum" name="EquityIndexReferenceData"/>
       <xs:element type="creditIndexReferenceDatum" name="CreditIndexReferenceData"/>
       <xs:element type="bondReferenceDatum" name="BondReferenceData"/>
@@ -110,5 +112,45 @@
       <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
   </xs:complexType>
+
+  <xs:complexType name="currencyHedgedIndexReferenceDatum">
+    <xs:sequence>
+    <xs:element type="xs:string" name="UnderlyingIndex" minOccurs="1"/>
+    <xs:element type="currencyCode" name="HedgeCurrency" minOccurs="1"/>
+    <xs:element type="CurrencyHedgedIndexRebalancingStrategy" name="RebalancingStrategy" minOccurs="1"/>
+    <xs:element type="xs:string" name="ReferenceDateOffset" minOccurs="1"/>
+    <xs:element type="CurrencyHedgedIndexRehedgingStrategy" name="HedgeAdjustment" minOccurs="1"/>
+    <xs:element type="xs:string" name="HedgeCalendar" minOccurs="1"/>
+    <xs:element name="FxIndexes" maxOccurs="unbounded" minOccurs="1">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element name="FxIndex" maxOccurs="unbounded" minOccurs="0">
+            <xs:complexType>
+              <xs:all>
+                <xs:element type="xs:string" name="Currency" minOccurs="1" maxOccurs="1"/>
+                <xs:element type="xs:string" name="IndexName" minOccurs="1" maxOccurs="1"/>
+              </xs:all>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:element>
+    <xs:element name="IndexWeightsAtLastRebalancingDate" maxOccurs="unbounded" minOccurs="0">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element name="Underlying" maxOccurs="unbounded" minOccurs="0">
+            <xs:complexType>
+              <xs:all>
+                <xs:element type="xs:string" name="Name" minOccurs="1" maxOccurs="1"/>
+                <xs:element type="xs:float" name="Weight" minOccurs="1" maxOccurs="1"/>
+              </xs:all>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
 
 </xs:schema>

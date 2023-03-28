@@ -153,8 +153,8 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     }
     LOG("Total number of trades = " << portfolio->size());
 
-    if (dates.size() > 1) {
-        // only need to init the fixing manager if there is more than one sim date
+    if (!dates.empty() && dates.front() > simMarket_->asofDate()) {
+        // the fixing manager is only required if sim dates contain future dates
         simMarket_->fixingManager()->initialise(portfolio, simMarket_);
     }
 

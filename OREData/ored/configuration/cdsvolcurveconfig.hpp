@@ -45,8 +45,7 @@ public:
                              const std::string& dayCounter = "A365", const std::string& calendar = "NullCalendar",
                              const std::string& strikeType = "", const std::string& quoteName = "",
                              QuantLib::Real strikeFactor = 1.0, const std::vector<QuantLib::Period>& terms = {},
-                             const std::vector<std::string>& termCurves = {},
-			     const std::string& smileDynamics = "");
+                             const std::vector<std::string>& termCurves = {});
 
     //! \name Inspectors
     //@{
@@ -58,7 +57,6 @@ public:
     QuantLib::Real strikeFactor() const;
     const std::vector<QuantLib::Period>& terms() const;
     const std::vector<std::string>& termCurves() const;
-    const std::string& smileDynamics() const { return smileDynamics_; }
     //@}
 
     //! \name Serialisation
@@ -76,7 +74,6 @@ private:
     QuantLib::Real strikeFactor_;
     std::vector<QuantLib::Period> terms_;
     std::vector<std::string> termCurves_;
-    std::string smileDynamics_;
 
     //! Populate CurveConfig::quotes_ with the required quotes.
     void populateQuotes();

@@ -42,7 +42,6 @@ public:
 };
 
 class CommodityFloatingLegBuilder : public ore::data::LegBuilder {
-
 public:
     CommodityFloatingLegBuilder()
         : LegBuilder("CommodityFloating"), allAveraging_(false) {}
