@@ -496,9 +496,18 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
         data.paymentConvention().empty() ? Following : parseBusinessDayConvention(data.paymentConvention());
     Calendar paymentCalendar =
         data.paymentCalendar().empty() ? schedule.calendar() : parseCalendar(data.paymentCalendar());
-    Calendar pricingCalendar =
-        floatingLegData->pricingCalendar().empty() ? commCal : parseCalendar(floatingLegData->pricingCalendar());
+    Calendar pricingCalendar;
 
+    // Override missing pricing calendar with calendar from convention
+    if (floatingLegData->pricingCalendar().empty() && floatingLegData->isAveraged() && balanceOfTheMonth &&
+        commFutureConv) {
+        pricingCalendar = commFutureConv->balanceOfTheMonthPricingCalendar();
+    } else if (floatingLegData->pricingCalendar().empty()) {
+        pricingCalendar = commCal;
+    } else {
+        pricingCalendar = parseCalendar(floatingLegData->pricingCalendar());
+    }
+         
     // Get explicit payment dates which in most cases should be empty
     vector<Date> paymentDates;
     if (!data.paymentDates().empty()) {
