@@ -2593,6 +2593,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                 }
                 break;
 
+            case RiskFactorKey::KeyType::SurvivalWeight:
+                // nothing to do, these are written to asd
+                break;
+
+            case RiskFactorKey::KeyType::CreditState:
+                // nothing to do, these are written to asd
+                break;
+
             case RiskFactorKey::KeyType::None:
                 WLOG("RiskFactorKey None not yet implemented");
                 break;
@@ -2678,6 +2686,8 @@ void ScenarioSimMarket::reset() {
 }
 
 void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenario) {
+
+    currentScenario_ = scenario;
 
     // apply scenario based on cached indices for simData_ for a SimpleScenario
     // this assumes that all scenarios have an identical key structure in their data map
@@ -2780,8 +2790,9 @@ void ScenarioSimMarket::updateDate(const Date& d) {
 
 void ScenarioSimMarket::updateScenario(const Date& d) {
     QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
-    boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
-    QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
+    auto scenario = scenarioGenerator_->next(d);
+    QL_REQUIRE(scenario->asof() == d,
+               "Invalid Scenario date " << scenario->asof() << ", expected " << d);
     numeraire_ = scenario->getNumeraire();
     label_ = scenario->label();
     applyScenario(scenario);
@@ -2827,6 +2838,21 @@ void ScenarioSimMarket::updateAsd(const Date& d) {
         for (auto c : parameters_->additionalScenarioDataCcys()) {
             if (c != parameters_->baseCcy())
                 asd_->set(fxSpot(c + parameters_->baseCcy())->value(), AggregationScenarioDataType::FXSpot, c);
+        }
+
+        for (Size i = 0; i < parameters_->additionalScenarioDataNumberOfCreditStates(); ++i) {
+            RiskFactorKey key(RiskFactorKey::KeyType::CreditState, std::to_string(i));
+            QL_REQUIRE(currentScenario_->has(key), "scenario does not have key " << key);
+            asd_->set(currentScenario_->get(key), AggregationScenarioDataType::CreditState, std::to_string(i));
+        }
+
+        for (const auto& n : parameters_->additionalScenarioDataSurvivalWeights()) {
+            RiskFactorKey key(RiskFactorKey::KeyType::SurvivalWeight, n);
+            QL_REQUIRE(currentScenario_->has(key), "scenario does not have key " << key);
+            asd_->set(currentScenario_->get(key), AggregationScenarioDataType::SurvivalWeight, n);
+            RiskFactorKey rrKey(RiskFactorKey::KeyType::RecoveryRate, n);
+            QL_REQUIRE(currentScenario_->has(rrKey), "scenario does not have key " << key);
+            asd_->set(currentScenario_->get(rrKey), AggregationScenarioDataType::RecoveryRate, n);
         }
 
         asd_->set(numeraire_, AggregationScenarioDataType::Numeraire);

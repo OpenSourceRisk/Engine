@@ -52,6 +52,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     n_inf_ = model_->components(CrossAssetModel::AssetType::INF);
     n_cr_ = model_->components(CrossAssetModel::AssetType::CR);
     n_com_ = model_->components(CrossAssetModel::AssetType::COM);
+    n_crstates_ = model_->components(CrossAssetModel::AssetType::CrState);
+    n_survivalweights_ = simMarketConfig_->additionalScenarioDataSurvivalWeights().size();
     n_indices_ = simMarketConfig_->indices().size();
     n_curves_ = simMarketConfig_->yieldCurveNames().size();
 
@@ -201,6 +203,23 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         for (Size k = 0; k < n_ten; k++) {
             defaultCurveKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, cr_name, k); // j * n_ten + k
         }
+    }
+
+    // Cache CrState keys
+    Size n_crstates = simMarketConfig_->numberOfCreditStates();
+    crStateKeys_.reserve(n_crstates);
+    for (Size j = 0; j < n_crstates; ++j) {
+        ostringstream numStr;
+        numStr << j;
+        crStateKeys_.emplace_back(RiskFactorKey::KeyType::CreditState, numStr.str());
+    }
+
+    survivalWeightKeys_.reserve(n_survivalweights_);
+    for (Size j = 0; j < n_survivalweights_; ++j) {
+        string name = simMarketConfig_->additionalScenarioDataSurvivalWeights()[j];
+        survivalWeightKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalWeight, name);
+        recoveryRateKeys_.emplace_back(RiskFactorKey::KeyType::RecoveryRate, name);
+        survivalWeightsDefaultCurves_.push_back(*initMarket_->defaultCurve(name, configuration_));
     }
 
     // cache curves
@@ -542,6 +561,20 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                 Real price = std::max(comCurves_[j]->price(T), 0.00001);
                 scenarios[i]->add(commodityCurveKeys_[j * ten_com_[j].size() + k], price);
             }
+        }
+
+        // Credit States
+        for (Size k = 0; k < n_crstates_; ++k) {
+            Real z = sample.value[model_->pIdx(CrossAssetModel::AssetType::CrState, k)][i + 1];
+            scenarios[i]->add(crStateKeys_[k], z);
+        }
+
+        // Survival Weights, stochastic cumulative survival probability, Recovery Rates
+        for (Size k = 0; k < n_survivalweights_; ++k) {
+            string name = simMarketConfig_->additionalScenarioDataSurvivalWeights()[k];
+            scenarios[i]->add(survivalWeightKeys_[k],
+                              survivalWeightsDefaultCurves_[k]->curve()->survivalProbability(dates_[i]));
+            scenarios[i]->add(recoveryRateKeys_[k], survivalWeightsDefaultCurves_[k]->recovery()->value());
         }
     }
     return scenarios;
