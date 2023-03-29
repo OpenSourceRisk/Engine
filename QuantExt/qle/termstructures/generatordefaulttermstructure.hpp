@@ -46,11 +46,11 @@ public:
     GeneratorDefaultProbabilityTermStructure(MatrixType matrixType, Matrix matrix, Size initialState,
                                              const Date& referenceDate, const Calendar& cal = NullCalendar(),
                                              const DayCounter& dc = Actual365Fixed());
+    Date maxDate() const override { return QuantLib::Date::maxDate(); }
 
     //! return the underlying annualised transition matrix
     const Matrix& transitionMatrix() const { return transitionMatrix_; }
     const Matrix& generator() const { return generator_; }
-    Date maxDate() const override { return QuantLib::Date::maxDate(); }
 
 protected:
     Probability survivalProbabilityImpl(Time) const override;

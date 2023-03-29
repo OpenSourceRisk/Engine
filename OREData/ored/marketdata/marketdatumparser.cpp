@@ -773,6 +773,15 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         return boost::make_shared<CPRQuote>(value, asof, datumName, securityID);
     }
 
+    case MarketDatum::InstrumentType::RATING: {
+        QL_REQUIRE(tokens.size() == 5, "3 tokens expected in " << datumName);
+        const string& name = tokens[2];
+        const string& fromRating = tokens[3];
+        const string& toRating = tokens[4];
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::TRANSITION_PROBABILITY, "Invalid quote type for " << datumName);
+        return boost::make_shared<TransitionProbabilityQuote>(value, asof, datumName, name, fromRating, toRating);
+    }
+
     default:
         QL_FAIL("Cannot convert \"" << datumName << "\" to MarketDatum");
     } // switch instrument type
