@@ -412,6 +412,7 @@ void CrossAssetModelBuilder::buildModel() const {
     for (Size i = 0; i < config_->numberOfCreditStates(); i++) {
         DLOG("CrState Parametrization " << i);
         crStateParametrizations.push_back(boost::make_shared<QuantExt::CrStateParametrization>(i));
+        processInfo[CrossAssetModel::AssetType::CrState].emplace_back(std::to_string(i), 1);
     }
 
     std::vector<boost::shared_ptr<QuantExt::Parametrization>> parametrizations;
