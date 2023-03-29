@@ -514,11 +514,13 @@ void  XvaAnalytic::checkConfigurations(const boost::shared_ptr<Portfolio>& portf
                 QL_REQUIRE(calculationType != "NoLag", "For nettingSetID "<<key<< ", CSA is active and a close-out grid is not configured in the simulation.xml. Therefore, calculation type " <<calculationType<<" is not admissable. It must be set to either Symmetric or AsymmerticCVA or AsymmetricDVA!" );
                 LOG("For netting-set "<<key<<", calculation type is "<<calculationType);
             }
-            // check whether CSA mpor is equal to close-out lag
-            if (configurations_.scenarioGeneratorData->withCloseOutLag()){
+            if (configurations_.scenarioGeneratorData->withCloseOutLag() && configurations_.scenarioGeneratorData->closeOutLag() != 0*Days){
                 Period mpor_simulation = configurations_.scenarioGeneratorData->closeOutLag();                   
                 Period mpor_netting = inputs_->nettingSetManager()->get(key)->csaDetails()->marginPeriodOfRisk();
-                QL_REQUIRE(mpor_simulation == mpor_netting, "For netting set "<<key<<", close-out lag "<< mpor_simulation << " is not equal to the netting-set's mpor "<< mpor_netting);    
+                if (mpor_simulation != mpor_netting)
+                    WLOG(ore::analytics::StructuredAnalyticsWarningMessage(
+                        "XvaAnalytic", "Inconsistent MPoR period",
+                        "For netting set " + key +", close-out lag is not consistent with the netting-set's mpor "));
             }
         }
     }
@@ -695,8 +697,6 @@ boost::shared_ptr<Portfolio> XvaAnalytic::classicRun(const boost::shared_ptr<Por
 
     // Allocate cubes for the sub-portfolio we are processing here
     initClassicRun(classicPortfolio_);
-
-    checkConfigurations(classicPortfolio_);
 
     // This is where the valuation work is done
     buildClassicCube(classicPortfolio_);
@@ -892,8 +892,6 @@ void XvaAnalytic::amcRun(bool doClassicRun) {
 
     LOG("XVA: amcRun");
     
-    checkConfigurations(amcPortfolio_);
-
     if (!scenarioData_) {
         LOG("XVA: Create asd " << grid_->valuationDates().size() << " x " << samples_);
         scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_);
@@ -997,6 +995,8 @@ void XvaAnalytic::runPostProcessor() {
     string marketConfiguration = inputs_->marketConfig("simulation");
 
     bool fullInitialCollateralisation = inputs_->fullInitialCollateralisation();
+
+    checkConfigurations(portfolio_);
 
     if (!cubeInterpreter_) {
         // FIXME: Can we get the grid from the cube instead?

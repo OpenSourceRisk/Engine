@@ -3506,7 +3506,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="exposureProfiles">Y</Parameter>
     <Parameter name="exposureProfilesByTrade">Y</Parameter>
     <Parameter name="quantile">0.95</Parameter>
-    <Parameter name="calculationType">Symmetric</Parameter>      
+    <Parameter name="calculationType">NoLag</Parameter>      
     <Parameter name="allocationMethod">None</Parameter>    
     <Parameter name="marginalAllocationLimit">1.0</Parameter>
     <Parameter name="exerciseNextBreak">N</Parameter>
@@ -3576,10 +3576,12 @@ FX rates)
 		\end{itemize}
 		\item If there is a ``close-out'' grid -see section \ref{sec:simulation}-, only choice is:
 		\begin{itemize}
-			\item {\em NoLag} - used to disable any delayed settlement of the margin.
+			\item {\em NoLag} - used to disable any delayed settlement of the margin. 
 		\end{itemize}
 	\end{itemize}
 	\todo[inline]{Move calculationType into the {\tt csaFile}?}
+%
+NoLag is the default configuration.
 %
 \begin{table}[!h]
 \centering
@@ -7926,8 +7928,14 @@ In ORE, we have two approaches to incorporate MPoR in the exposure simulations:
  \item {\em Lagged Approach}: Simulating only on a default time grid and delaying the margin calls on the grid.
 \end{itemize}
 
-\medskip In the {\em Close-out Approach}, we use an auxiliary ``close-out'' grid in the simulation (see section \ref{sec:simulation}). The portfolio values and collateral values are simulated at close-out and default times respectively, leading to residual exposure and XVA even for daily margining, zero thresholds and minimum transfer amounts, see for example \cite{Pykhtin2010}. The close-out valuation approach allows a detailed modelling of what happens in the close-out period; currently ORE supports two options, with and without portfolio ``ageing'' over the close-out period. The option ``without ageing'' is more aggressive in that it avoids any exposure evolution spikes due to contractual cashflows that occur in the close-out period after default, the only exposure effect is due to market evolution over the period. The ``with ageing'' option is more conservative in that it includes the effect of all contractual cash flows in the close-out period, in particular outgoing cashflows at any time in the period which cause an exposure jump upwards. A more detailed framework for collateralised exposure modelling is introduced in the
-2016 article \cite{Andersen2016}, indicating a potential route for extending ORE.
+\medskip In the {\em Close-out Approach}, we use an auxiliary ``close-out'' grid in addition to the main simulation grid (see section \ref{sec:simulation}). The main simulation grid is used to compute “default values” which feed into the collateral balance $C(t$) filtered by MTA and Threshold etc. The auxiliary “close-out” grid, offset from the main grid by the MPoR, is used to compute the delayed close-out values $V(t)$ associated with default time $t$\footnote{We note that in ORE when the exposure of an uncollateralised netting-set or a single trade without considering the netting-set is calculated, then the default value is calculated at the main simulation grid, not on the close-out grid.}. The difference between $V(t)$ and $C(t)$ causes a residual exposure $[V (t)-C(t)]^+$ even if minimum transfer amounts and thresholds are zero, see for example \cite{Pykhtin2010}. This approach allows a detailed modelling of what happens in the close-out period by calculating the close-out values in different ways. ORE currently supports two options: 
+%
+\begin{itemize}
+\item the close-out value can be computed as of default date, by just evolving the market from default date to close-out date (“sticky date”), or
+\item the close-out value can be computed as of close-out date, by evolving both valuation date and market over the close-out period (“actual date”), i.e., the portfolio ages and cash flows might occur in the close-out period causing spikes in the evolution of exposures.
+\end{itemize}
+
+The option ``sticky date'' is more aggressive in that it avoids any exposure evolution spikes due to contractual cashflows that occur in the close-out period after default, the only exposure effect is due to market evolution over the period. The ``actual date'' option is more conservative in that it includes the effect of all contractual cash flows in the close-out period, in particular outgoing cashflows at any time in the period which cause an exposure jump upwards. A more detailed framework for collateralised exposure modelling is introduced in the article \cite{Andersen2016}, indicating a potential route for extending ORE.
 
 \medskip On the other hand, in the {\em Lagged Approach} the simulation is conducted only on a default time grid. The collateral values are calculated, by delaying the delivery amounts between default times, specified by the {\em Margin Period of Risk} (MPoR) which leads to residual exposure. 
 
