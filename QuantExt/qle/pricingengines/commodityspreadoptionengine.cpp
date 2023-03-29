@@ -93,7 +93,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     double w2 = arguments_.shortAssetFlow->gearing();
     // Adjust strike for past fixings
     double effectiveStrike = arguments_.effectiveStrike - w1 * accruals1 + w2 * accruals2;
-    double correlation = 0.0;
+    Real correlation = QuantLib::Null<Real>();
 
     if (exerciseDate <= today && paymentDate <= today) {
         results_.value = 0;
