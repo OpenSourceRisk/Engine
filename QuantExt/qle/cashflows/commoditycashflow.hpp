@@ -88,9 +88,11 @@ public:
     ext::shared_ptr<CommodityIndex> index() const { return index_; };
     ext::shared_ptr<FxIndex> fxIndex() const { return fxIndex_; }
     //! Return a map of pricing date and corresponding commodity index
-    virtual const std::map<QuantLib::Date, ext::shared_ptr<CommodityIndex>>& indices() const = 0;
+    virtual const std::vector<std::pair<QuantLib::Date, ext::shared_ptr<CommodityIndex>>>& indices() const = 0;
     virtual QuantLib::Date lastPricingDate() const = 0;
     virtual QuantLib::Real periodQuantity() const = 0;
+    // Return the price fixing
+    virtual QuantLib::Real fixing() const = 0;
 
 protected:
     QuantLib::Real quantity_;

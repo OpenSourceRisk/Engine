@@ -356,6 +356,7 @@ void initBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(LinearTSRCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityForwardEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BlackIndexCdsOptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(NumericalIntegrationIndexCdsOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CommodityApoAnalyticalEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CommodityApoMonteCarloEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BlackCdsOptionEngineBuilder, false)

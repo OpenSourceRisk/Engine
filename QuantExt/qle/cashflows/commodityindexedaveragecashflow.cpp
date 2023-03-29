@@ -84,30 +84,35 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
 void CommodityIndexedAverageCashFlow::performCalculations() const {
 
     // Calculate the average price
-    Real averagePrice = 0.0;
+    averagePrice_ = 0.0;
     Real fxRate = 0.0;
     if (weights_.empty()) {
         for (const auto& kv : indices_) {
             fxRate = (fxIndex_)? this->fxIndex()->fixing(kv.first):1.0;
-            averagePrice += fxRate * kv.second->fixing(kv.first);
+            averagePrice_ += fxRate * kv.second->fixing(kv.first);
         }
-        averagePrice /= indices_.size();
+        averagePrice_ /= indices_.size();
     } else {
         // weights_ will be populated when offPeakPowerData_ is provided.
         for (const auto& kv : indices_) {
             fxRate = (fxIndex_)? this->fxIndex()->fixing(kv.first):1.0;
-            averagePrice += fxRate * kv.second->fixing(kv.first) * weights_.at(kv.first);
+            averagePrice_ += fxRate * kv.second->fixing(kv.first) * weights_.at(kv.first);
         }
     }
 
     // Amount is just average price times quantity
     // In case of Foreign currency settlement, the spread must be expressed in Foreign currency units
-    amount_ = periodQuantity_ * (gearing_ * averagePrice + spread_);
+    amount_ = periodQuantity_ * (gearing_ * averagePrice_ + spread_);
 }
 
 Real CommodityIndexedAverageCashFlow::amount() const {
     calculate();
     return amount_;
+}
+
+Real CommodityIndexedAverageCashFlow::fixing() const {
+    calculate();
+    return averagePrice_;
 }
 
 void CommodityIndexedAverageCashFlow::accept(AcyclicVisitor& v) {
@@ -141,7 +146,7 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
 
         // If not using future prices, just observe spot on every pricing date.
         for (const Date& pd : pds) {
-            indices_[pd] = index_;
+            indices_.push_back({pd,index_});
         }
 
     } else {
@@ -155,7 +160,7 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
                 expiry = index_->fixingCalendar().advance(expiry, dailyExpiryOffset_ * Days);
             }
 
-            indices_[pd] = index_->clone(expiry);
+            indices_.push_back({pd, index_->clone(expiry)});
         }
 
         // Update indices_ where necessary if delivery date roll is greater than 0.

@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     std::vector<Real> fixingRatesEUHICPXT(15, 100);
 
     Handle<ZeroInflationIndex> hEUHICPXT;
-    boost::shared_ptr<EUHICPXT> ii = boost::shared_ptr<EUHICPXT>(new EUHICPXT(false));
+    boost::shared_ptr<EUHICPXT> ii = boost::shared_ptr<EUHICPXT>(new EUHICPXT());
     boost::shared_ptr<ZeroInflationTermStructure> cpiTS;
     for (Size i = 0; i < fixingDatesEUHICPXT.size(); i++) {
         ii->addFixing(fixingDatesEUHICPXT[i], fixingRatesEUHICPXT[i], true);
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     pCPIts->recalculate();
     cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
 
-    boost::shared_ptr<EUHICPXT> zii(new EUHICPXT(false, Handle<ZeroInflationTermStructure>(pCPIts)));
+    boost::shared_ptr<EUHICPXT> zii(new EUHICPXT(Handle<ZeroInflationTermStructure>(pCPIts)));
     boost::shared_ptr<ZeroInflationIndex> zeroIndex = boost::dynamic_pointer_cast<ZeroInflationIndex>(zii);
 
     boost::shared_ptr<YoYInflationIndex> yoyIndex;

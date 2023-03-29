@@ -120,22 +120,17 @@ void NonStandardYoYInflationCouponPricer::initialize(const InflationCoupon& coup
     gearing_ = coupon_->gearing();
     spread_ = coupon_->spread();
     paymentDate_ = coupon_->date();
-    // rateCurve_ = !nominalTermStructure_.empty() ? nominalTermStructure_
-    //                                             : ext::dynamic_pointer_cast<ZeroInflationIndex>(coupon.index())
-    //                                                   ->zeroInflationTermStructure()
-    //                                                   ->nominalTermStructure();
-    rateCurve_ = nominalTermStructure_;
     
     // past or future fixing is managed in YoYInflationIndex::fixing()
     // use yield curve from index (which sets discount)
 
     discount_ = 1.0;
-    if (paymentDate_ > rateCurve_->referenceDate()) {
-        if (rateCurve_.empty()) {
+    if (paymentDate_ > nominalTermStructure_->referenceDate()) {
+        if (nominalTermStructure_.empty()) {
             // allow to extract rates, but mark the discount as invalid for prices
             discount_ = Null<Real>();
         } else {
-            discount_ = rateCurve_->discount(paymentDate_);
+            discount_ = nominalTermStructure_->discount(paymentDate_);
         }
     }
 }

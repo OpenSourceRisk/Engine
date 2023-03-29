@@ -30,9 +30,12 @@ AnalyticDkCpiCapFloorEngine::AnalyticDkCpiCapFloorEngine(const boost::shared_ptr
     : model_(model), index_(index), baseCPI_(baseCPI) {}
 
 void AnalyticDkCpiCapFloorEngine::calculate() const {
-
+    
+    QL_DEPRECATED_DISABLE_WARNING
     bool interpolate = arguments_.observationInterpolation == CPI::Linear ||
                        (arguments_.observationInterpolation == CPI::AsIndex && arguments_.index->interpolated());
+    QL_DEPRECATED_ENABLE_WARNING
+
     Real t = inflationYearFraction(arguments_.index->frequency(), interpolate,
                                    model_->infdk(index_)->termStructure()->dayCounter(),
                                    model_->infdk(index_)->termStructure()->baseDate(), arguments_.fixDate);
