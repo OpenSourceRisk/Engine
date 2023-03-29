@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
     try {
         auto params = boost::make_shared<Parameters>();
         params->fromFile(inputFile);
-        OREApp ore(params);
+        OREApp ore(params, true, true);
         ore.run();
         return 0;
     } catch (const exception& e) {
