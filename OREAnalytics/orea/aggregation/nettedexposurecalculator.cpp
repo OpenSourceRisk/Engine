@@ -133,9 +133,6 @@ void NettedExposureCalculator::build() {
     vector<vector<Real>> averagePositiveAllocation(portfolio_->size(), vector<Real>(cube_->dates().size(), 0.0));
     vector<vector<Real>> averageNegativeAllocation(portfolio_->size(), vector<Real>(cube_->dates().size(), 0.0));
 
-    bool hasCloseOutGrid = false;
-    if (boost::dynamic_pointer_cast<MporGridCubeInterpretation>(cubeInterpretation_))
-        hasCloseOutGrid = true;
     Size nettingSetCount = 0;
     for (auto n : nettingSetDefaultValue_) {
         string nettingSetId = n.first;
