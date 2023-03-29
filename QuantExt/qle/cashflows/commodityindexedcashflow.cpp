@@ -143,13 +143,19 @@ void CommodityIndexedCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator
         index_ = index_->clone(expiry);
         isAveraging_ = isAveraging_ && startDate != Date() && endDate != Date();
         if (isAveraging_) {
+            // If pricing calendar is not set, use the index fixing calendar
+            Calendar cal = pricingCalendar;
+            if (pricingCalendar == Calendar()) {
+                cal = index_->fixingCalendar();
+            }
+
             // Create Spot Index
-            spotIndex_ = ext::make_shared<CommoditySpotIndex>(index_->underlyingName(), index_->fixingCalendar(),
+            spotIndex_ = ext::make_shared<CommoditySpotIndex>(index_->underlyingName(), cal,
                                                               index_->priceCurve());
             if (spotIndex_) {
                 registerWith(spotIndex_);
                 spotAveragingPricingDates_ =
-                    pricingDates(startDate, endDate, pricingCalendar, excludeStartDate, includeEndDate);
+                    pricingDates(startDate, endDate, cal, excludeStartDate, includeEndDate);
                 for (const auto& d : spotAveragingPricingDates_) {
                     indices_.push_back({d, spotIndex_});
                 }
