@@ -233,6 +233,7 @@ pricingengines/discountingforwardbondengine.cpp
 pricingengines/discountingfxforwardengine.cpp
 pricingengines/discountingriskybondengine.cpp
 pricingengines/discountingswapenginemulticurve.cpp
+pricingengines/indexcdsoptionbaseengine.cpp
 pricingengines/indexcdstrancheengine.cpp
 pricingengines/inflationcapfloorengines.cpp
 pricingengines/lgmconvolutionsolver.cpp
@@ -244,6 +245,7 @@ pricingengines/mcmultilegbaseengine.cpp
 pricingengines/mcmultilegoptionengine.cpp
 pricingengines/midpointcdoengine.cpp
 pricingengines/midpointindexcdsengine.cpp
+pricingengines/numericalintegrationindexcdsoptionengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
@@ -686,6 +688,7 @@ pricingengines/discountingforwardbondengine.hpp
 pricingengines/discountingfxforwardengine.hpp
 pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingswapenginemulticurve.hpp
+pricingengines/indexcdsoptionbaseengine.hpp
 pricingengines/indexcdstrancheengine.hpp
 pricingengines/inflationcapfloorengines.hpp
 pricingengines/lgmconvolutionsolver.hpp
@@ -697,6 +700,7 @@ pricingengines/mcmultilegbaseengine.hpp
 pricingengines/mcmultilegoptionengine.hpp
 pricingengines/midpointcdoengine.hpp
 pricingengines/midpointindexcdsengine.hpp
+pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp

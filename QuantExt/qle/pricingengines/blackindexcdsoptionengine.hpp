@@ -22,9 +22,7 @@
 
 #pragma once
 
-#include <qle/instruments/indexcdsoption.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
-#include <qle/termstructures/creditvolcurve.hpp>
+#include <qle/pricingengines/indexcdsoptionbaseengine.hpp>
 
 namespace QuantExt {
 
@@ -47,61 +45,16 @@ namespace QuantExt {
     Single-name and Multi-name Credit Derivatives, Dominic O'Kane, 2008, Section 11.7</em>. This is also the approach
     outlined in <em>Credit Index Option, ICE, 2018</em>.
 */
-class BlackIndexCdsOptionEngine : public QuantExt::IndexCdsOption::engine {
+class BlackIndexCdsOptionEngine : public QuantExt::IndexCdsOptionBaseEngine {
 public:
-    //! Constructor taking a default probability term structure bootstrapped from the index spreads.
-    BlackIndexCdsOptionEngine(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability,
-                              QuantLib::Real recovery, const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-                              const QuantLib::Handle<QuantExt::CreditVolCurve>& volatility);
-
-    /*! Constructor taking a vector of default probability term structures bootstrapped from the index constituent
-        spread curves and a vector of associated recovery rates.
-    */
-    BlackIndexCdsOptionEngine(
-        const std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>>& probabilities,
-        const std::vector<QuantLib::Real>& recoveries, const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-        const QuantLib::Handle<QuantExt::CreditVolCurve>& volatility,
-        QuantLib::Real indexRecovery = QuantLib::Null<QuantLib::Real>());
-
-    //! \name Inspectors
-    //@{
-    const std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>>& probabilities() const;
-    const std::vector<QuantLib::Real>& recoveries() const;
-    const QuantLib::Handle<QuantLib::YieldTermStructure> discount() const;
-    const QuantLib::Handle<QuantExt::CreditVolCurve> volatility() const;
-    //@}
-
-    //! \name Instrument interface
-    //@{
-    void calculate() const override;
-    //@}
+    using IndexCdsOptionBaseEngine::IndexCdsOptionBaseEngine;
 
 private:
-    std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>> probabilities_;
-    std::vector<QuantLib::Real> recoveries_;
-    QuantLib::Handle<QuantLib::YieldTermStructure> discount_;
-    QuantLib::Handle<QuantExt::CreditVolCurve> volatility_;
+    void doCalc() const override;
 
-    //! Assumed index recovery used in the flat strike spread curve calculation if provided.
-    QuantLib::Real indexRecovery_;
-
-    //! Store the underlying index CDS notional(s) during calculation.
-    mutable std::vector<QuantLib::Real> notionals_;
-
-    //! Calculate the discounted value of the front end protection.
-    QuantLib::Real fep() const;
-
-    //! Calculation for instrument with strike quoted as spread.
     void spreadStrikeCalculate(QuantLib::Real fep) const;
-
-    //! Calculation for instrument with strike quoted as price.
     void priceStrikeCalculate(QuantLib::Real fep) const;
-
-    //! Calculate the forward risky annuity based on the strike spread.
     QuantLib::Real forwardRiskyAnnuityStrike() const;
-
-    //! Register with the market data
-    void registerWithMarket();
 };
 
 } // namespace QuantExt

@@ -30,10 +30,17 @@ namespace QuantExt {
 //! French CPI index
 class FRCPI : public QuantLib::ZeroInflationIndex {
 public:
-    FRCPI(bool interpolated, const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts =
-                                 QuantLib::Handle<QuantLib::ZeroInflationTermStructure>())
+    FRCPI(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts =
+              QuantLib::Handle<QuantLib::ZeroInflationTermStructure>())
+        : QuantLib::ZeroInflationIndex("CPI", QuantLib::FranceRegion(), false, QuantLib::Monthly,
+                                       QuantLib::Period(1, QuantLib::Months), QuantLib::EURCurrency(), ts) {}
+
+    QL_DEPRECATED_DISABLE_WARNING
+    QL_DEPRECATED FRCPI(bool interpolated, const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts =
+                                               QuantLib::Handle<QuantLib::ZeroInflationTermStructure>())
         : QuantLib::ZeroInflationIndex("CPI", QuantLib::FranceRegion(), false, interpolated, QuantLib::Monthly,
                                        QuantLib::Period(1, QuantLib::Months), QuantLib::EURCurrency(), ts) {}
+    QL_DEPRECATED_ENABLE_WARNING
 };
 
 } // namespace QuantExt

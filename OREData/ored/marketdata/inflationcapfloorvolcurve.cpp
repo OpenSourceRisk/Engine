@@ -240,7 +240,7 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
                 boost::dynamic_pointer_cast<YoYInflationTermStructure>(ts);
             QL_REQUIRE(yyTs, "YoY Inflation curve required for vol surface " << index->name());
             index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                parseZeroInflationIndex(config->index(), true, Handle<ZeroInflationTermStructure>()),
+                parseZeroInflationIndex(config->index(), Handle<ZeroInflationTermStructure>()),
                 true, Handle<YoYInflationTermStructure>(yyTs));
         }
 
@@ -272,22 +272,24 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
                 boost::dynamic_pointer_cast<ZeroInflationTermStructure>(it2->second->inflationTermStructure());
             QL_REQUIRE(ts,
                        "inflation term structure " << config->indexCurve() << " was expected to be zero, but is not");
-            index = parseZeroInflationIndex(config->index(), it2->second->interpolatedIndex(),
-                                            Handle<ZeroInflationTermStructure>(ts));
+            index = parseZeroInflationIndex(config->index(), Handle<ZeroInflationTermStructure>(ts));
         }
         
         DLOG("Building surface");
         Date startDate = Date();
         const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+        bool interpolated = false;
         if (!config->conventions().empty() && conventions->has(config->conventions())) {
             boost::shared_ptr<InflationSwapConvention> conv =
                 boost::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(config->conventions()));
             startDate = getStartAndLag(asof, *conv).first;
+            interpolated = conv->interpolated();
         }
 
         cpiVolSurface_ = boost::make_shared<InterpolatedCPIVolatilitySurface<Bilinear>>(
-            tenors, strikes, quotes, index, config->settleDays(), config->calendar(), config->businessDayConvention(),
-            config->dayCounter(), config->observationLag(), startDate, Bilinear(), quoteVolatilityType, 0.0);
+            tenors, strikes, quotes, index, interpolated, config->settleDays(), config->calendar(),
+            config->businessDayConvention(), config->dayCounter(), config->observationLag(), startDate, Bilinear(),
+            quoteVolatilityType, 0.0);
         if (config->extrapolate())
             cpiVolSurface_->enableExtrapolation();
         DLOG("Building surface done");
@@ -409,8 +411,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                 boost::dynamic_pointer_cast<ZeroInflationTermStructure>(it2->second->inflationTermStructure());
             QL_REQUIRE(ts,
                        "inflation term structure " << config->indexCurve() << " was expected to be zero, but is not");
-            index = parseZeroInflationIndex(config->index(), it2->second->interpolatedIndex(),
-                                            Handle<ZeroInflationTermStructure>(ts));
+            index = parseZeroInflationIndex(config->index(), Handle<ZeroInflationTermStructure>(ts));
         }
         boost::shared_ptr<QuantExt::CPICapFloorEngine> engine;
 
@@ -429,10 +430,12 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         try {
             const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
             Date startDate = Date();
+            bool interpolated = false;
             if (!config->conventions().empty() && conventions->has(config->conventions())) {
                 boost::shared_ptr<InflationSwapConvention> conv =
                     boost::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(config->conventions()));
                 startDate = getStartAndLag(asof, *conv).first;
+                interpolated = conv->interpolated();
             }
             boost::shared_ptr<QuantExt::CPIPriceVolatilitySurface<Linear, Linear>> cpiCapFloorVolSurface;
             
@@ -443,8 +446,8 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
             cpiCapFloorVolSurface = boost::make_shared<QuantExt::CPIPriceVolatilitySurface<Linear, Linear>>(
                 QuantExt::PriceQuotePreference::CapFloor, config->observationLag(), config->calendar(),
                 config->businessDayConvention(), config->dayCounter(), index, discountCurve_, capStrikes, floorStrikes,
-                terms, cPrice, fPrice, engine, startDate, ignoreMissingPrices, true, true, quoteVolatilityType, 0.0,
-                CPIPriceVolatilitySurfaceDefaultValues::upperVolBound,
+                terms, cPrice, fPrice, engine, interpolated, startDate, ignoreMissingPrices, true, true,
+                quoteVolatilityType, 0.0, CPIPriceVolatilitySurfaceDefaultValues::upperVolBound,
                 CPIPriceVolatilitySurfaceDefaultValues::lowerVolBound,
                 CPIPriceVolatilitySurfaceDefaultValues::solverTolerance);
 
@@ -552,7 +555,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
             if (yyTs) {
                 useMarketYoyCurve_ = true;
                 index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                    parseZeroInflationIndex(config->index(), true, Handle<ZeroInflationTermStructure>()),
+                    parseZeroInflationIndex(config->index(), Handle<ZeroInflationTermStructure>()),
                     true, Handle<YoYInflationTermStructure>(yyTs));
             } else {
                 useMarketYoyCurve_ = false;
@@ -561,7 +564,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                 QL_REQUIRE(zeroTs,
                            "Inflation term structure " << config->indexCurve() << "must be of type YoY or Zero");
                 index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                    parseZeroInflationIndex(config->index(), true, Handle<ZeroInflationTermStructure>(zeroTs)),
+                    parseZeroInflationIndex(config->index(), Handle<ZeroInflationTermStructure>(zeroTs)),
                     true, Handle<YoYInflationTermStructure>());
             }
         }

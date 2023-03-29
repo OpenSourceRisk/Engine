@@ -44,7 +44,8 @@ public:
                                   Natural fixingDays, const ext::shared_ptr<ZeroInflationIndex>& index,
                                   const Period& observationLag, const DayCounter& dayCounter, Real gearing = 1.0,
                                   Spread spread = 0.0, const Date& refPeriodStart = Date(),
-                                  const Date& refPeriodEnd = Date(), bool addInflationNotional = false);
+                                  const Date& refPeriodEnd = Date(), bool addInflationNotional = false, 
+                                  QuantLib::CPI::InterpolationType interpolation = QuantLib::CPI::InterpolationType::Flat);
 
     //! \name Inspectors
     //@{
@@ -70,6 +71,8 @@ public:
     virtual Rate rate() const override;
 
     bool addInflationNotional() const;
+    bool isInterpolated() const { return interpolationType() == CPI::Linear; }
+    QuantLib::CPI::InterpolationType interpolationType() const { return interpolationType_; }
 
 protected:
     Date fixingDateNumerator_;
@@ -77,6 +80,7 @@ protected:
     Real gearing_;
     Spread spread_;
     bool addInflationNotional_;
+    QuantLib::CPI::InterpolationType interpolationType_;
     bool checkPricerImpl(const ext::shared_ptr<InflationCouponPricer>&) const override;
 
 private:

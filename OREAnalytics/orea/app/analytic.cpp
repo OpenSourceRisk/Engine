@@ -217,6 +217,52 @@ void Analytic::buildPortfolio() {
 }
 
 /*******************************************************************
+ * MARKET Analytic
+ *******************************************************************/
+
+void MarketDataAnalyticImpl::setUpConfigurations() {    
+    analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
+}
+
+void MarketDataAnalyticImpl::runAnalytic( 
+    const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    const std::set<std::string>& runTypes) {
+
+    Settings::instance().evaluationDate() = inputs_->asof();
+    ObservationMode::instance().setMode(inputs_->observationModel());
+
+    CONSOLEW("Build Market");
+    analytic()->buildMarket(loader);
+    CONSOLE("OK");
+    /*
+    if (inputs_->outputTodaysMarketCalibration()) {
+        CONSOLEW("Market Calibration");
+        LOG("Write todays market calibration report");
+        auto t = boost::dynamic_pointer_cast<TodaysMarket>(analytic()->market());
+        QL_REQUIRE(t != nullptr, "expected todays market instance");
+        boost::shared_ptr<InMemoryReport> mktReport = boost::make_shared<InMemoryReport>();
+        ore::analytics::ReportWriter(inputs_->reportNaString())
+            .writeTodaysMarketCalibrationReport(*mktReport, t->calibrationInfo());
+        analytic()->reports()["MARKET"]["todaysmarketcalibration"] = mktReport;
+        CONSOLE("OK");
+    }
+
+    if (inputs_->outputCurves()) {
+        CONSOLEW("Curves Report");
+        LOG("Write curves report");
+        boost::shared_ptr<InMemoryReport> curvesReport = boost::make_shared<InMemoryReport>();
+        DateGrid grid(inputs_->curvesGrid());
+        std::string config = inputs_->curvesMarketConfig();
+        ore::analytics::ReportWriter(inputs_->reportNaString())
+            .writeCurves(*curvesReport, config, grid, *inputs_->todaysMarketParams(),
+                         analytic()->market(), inputs_->continueOnError());
+        analytic()->reports()["MARKET"]["curves"] = curvesReport;
+        CONSOLE("OK");
+    }
+    */
+}
+
+/*******************************************************************
  * PRICING Analytic: NPV, CASHFLOW, CASHFLOWNPV, SENSITIVITY, STRESS
  *******************************************************************/
 
@@ -270,10 +316,12 @@ void PricingAnalyticImpl::runAnalytic(
         if (runTypes.find(type) == runTypes.end())
             continue;
 
+        std::string effectiveResultCurrency =
+            inputs_->resultCurrency().empty() ? inputs_->baseCurrency() : inputs_->resultCurrency();
         if (type == "NPV" || type == "NPV_LAGGED") {
             CONSOLEW("Pricing: NPV Report");
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeNpv(*report, inputs_->baseCurrency(), analytic()->market(), "",
+                .writeNpv(*report, effectiveResultCurrency, analytic()->market(), "",
                           analytic()->portfolio());
             analytic()->reports()[type]["npv"] = report;
             CONSOLE("OK");
@@ -282,7 +330,7 @@ void PricingAnalyticImpl::runAnalytic(
                 boost::shared_ptr<InMemoryReport> addReport = boost::make_shared<InMemoryReport>();;
                 ore::analytics::ReportWriter(inputs_->reportNaString())
                     .writeAdditionalResultsReport(*addReport, analytic()->portfolio(), analytic()->market(),
-                                                  inputs_->baseCurrency());
+                                                  effectiveResultCurrency);
                 analytic()->reports()[type]["additional_results"] = addReport;
                 CONSOLE("OK");
             }
@@ -315,7 +363,7 @@ void PricingAnalyticImpl::runAnalytic(
             CONSOLEW("Pricing: Cashflow Report");
             string marketConfig = inputs_->marketConfig("pricing");
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeCashflow(*report, inputs_->baseCurrency(), analytic()->portfolio(),
+                .writeCashflow(*report, effectiveResultCurrency, analytic()->portfolio(),
                                analytic()->market(),
                                marketConfig, inputs_->includePastCashflows());
             analytic()->reports()[type]["cashflow"] = report;
@@ -325,12 +373,12 @@ void PricingAnalyticImpl::runAnalytic(
             CONSOLEW("Pricing: Cashflow NPV report");
             string marketConfig = inputs_->marketConfig("pricing");
             ore::analytics::ReportWriter(inputs_->reportNaString())
-                .writeCashflow(tmpReport, inputs_->baseCurrency(), analytic()->portfolio(),
+                .writeCashflow(tmpReport, effectiveResultCurrency, analytic()->portfolio(),
                                analytic()->market(),
                                marketConfig, inputs_->includePastCashflows());
             ore::analytics::ReportWriter(inputs_->reportNaString())
                 .writeCashflowNpv(*report, tmpReport, analytic()->market(), marketConfig,
-                                  inputs_->baseCurrency(), inputs_->cashflowHorizon());
+                                  effectiveResultCurrency, inputs_->cashflowHorizon());
             analytic()->reports()[type]["cashflownpv"] = report;
             CONSOLE("OK");
         }
@@ -389,20 +437,20 @@ void PricingAnalyticImpl::runAnalytic(
             // FIXME: Why are these disabled?
             set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
             boost::shared_ptr<ParSensitivityAnalysis> parAnalysis = nullptr;
-            if (inputs_->parSensi()) {
+            if (inputs_->parSensi() || inputs_->alignPillars()) {
                 parAnalysis= boost::make_shared<ParSensitivityAnalysis>(
                     inputs_->asof(), analytic()->configurations().simMarketParams,
                     *analytic()->configurations().sensiScenarioData, "",
                     true, typesDisabled);
                 if (inputs_->alignPillars()) {
-                    LOG("Sensi analysis - align pillars for the par conversion");
+                    LOG("Sensi analysis - align pillars (for the par conversion or because alignPillars is enabled)");
                     parAnalysis->alignPillars();
                     sensiAnalysis->overrideTenors(true);
                 } else {
                     LOG("Sensi analysis - skip aligning pillars");
                 }
             }
-            
+
             LOG("Sensi analysis - generate");
             sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities"));
             sensiAnalysis->generateSensitivities();

@@ -201,10 +201,30 @@ private:
     bool generateAdditionalResults_ = false;
 };
 
+/*! Market analytics
+  Does not need a portfolio
+  Builds the market
+  Reports market calibration and curves
+*/
+class MarketDataAnalyticImpl : public Analytic::Impl {
+public:
+    static constexpr const char* LABEL = "MARKETDATA";
+
+    MarketDataAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
+    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
+        const std::set<std::string>& runTypes = {}) override;
+
+    void setUpConfigurations() override;
+};
+
+class MarketDataAnalytic : public Analytic {
+public:
+    MarketDataAnalytic(const boost::shared_ptr<InputParameters>& inputs)
+        : Analytic(std::make_unique<MarketDataAnalyticImpl>(inputs), {"MARKETDATA"}, inputs) {}
+};
+
 /*! Pricing-type analytics
-  \todo integrate multe-threaded sensi analysis
   \todo align pillars for par sensitivity analysis
-  \todo add par sensi analysis
 */
 class PricingAnalyticImpl : public Analytic::Impl {
 public:
@@ -224,7 +244,7 @@ public:
             {"NPV", "NPV_LAGGED", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"},
                    inputs) {}
 };
-
+    
 class VarAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "VAR";
@@ -237,7 +257,6 @@ public:
 
 class VarAnalytic : public Analytic {
 public:
-    // FIXME: Add DELTA-GAMMA-VAR (Saddlepoint method)
     VarAnalytic(const boost::shared_ptr<InputParameters>& inputs)
         : Analytic(std::make_unique<VarAnalyticImpl>(inputs), {"VAR"}, inputs, false, false, false, false) {}
 };
@@ -292,7 +311,6 @@ protected:
 
 class XvaAnalytic : public Analytic {
 public:
-    // FIXME: Add DELTA-GAMMA-VAR (Saddlepoint method)
     XvaAnalytic(const boost::shared_ptr<InputParameters>& inputs)
         : Analytic(std::make_unique<XvaAnalyticImpl>(inputs), {"XVA", "EXPOSURE"}, inputs, false, false, false, false) {}
 };

@@ -22,18 +22,26 @@
 
 namespace QuantExt {
 
+QL_DEPRECATED_DISABLE_WARNING
+ZeroInflationIndexWrapper::ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source)
+    : ZeroInflationIndex(source->familyName(), source->region(), source->revised(), source->frequency(), source->availabilityLag(), source->currency(),
+                         source->zeroInflationTermStructure()),
+      source_(source), interpolation_(QuantLib::CPI::InterpolationType::Flat) {}
+
 ZeroInflationIndexWrapper::ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source,
                                                      const CPI::InterpolationType interpolation)
     : ZeroInflationIndex(source->familyName(), source->region(), source->revised(), source->interpolated(),
                          source->frequency(), source->availabilityLag(), source->currency(),
                          source->zeroInflationTermStructure()),
       source_(source), interpolation_(interpolation) {}
+QL_DEPRECATED_ENABLE_WARNING
 
 Rate ZeroInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTodaysFixing*/) const {
 
     // duplicated logic from CPICashFlow::amount()
 
     // what interpolation do we use? Index / flat / linear
+    QL_DEPRECATED_DISABLE_WARNING
     if (interpolation_ == CPI::AsIndex) {
         return source_->fixing(fixingDate);
     } else {
@@ -50,6 +58,7 @@ Rate ZeroInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTo
             return indexStart;
         }
     }
+    QL_DEPRECATED_ENABLE_WARNING
 }
 
 YoYInflationIndexWrapper::YoYInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> zeroIndex,
@@ -74,8 +83,9 @@ Rate YoYInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTod
 Real YoYInflationIndexWrapper::forecastFixing(const Date& fixingDate) const {
     if (!yoyInflationTermStructure().empty())
         return YoYInflationIndex::fixing(fixingDate);
-    Real f1 = zeroIndex_->fixing(fixingDate);
-    Real f0 = zeroIndex_->fixing(fixingDate - 1 * Years); // FIXME convention ?
+    auto interpolation = YoYInflationIndex::interpolated() ? CPI::Linear : CPI::Flat;
+    Real f1 = CPI::laggedFixing(zeroIndex_, fixingDate, 0 * Days, interpolation);
+    Real f0 = CPI::laggedFixing(zeroIndex_, fixingDate - 1 * Years, 0 * Days, interpolation);
     return (f1 - f0) / f0;
 }
 

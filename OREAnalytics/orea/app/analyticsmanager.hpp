@@ -61,14 +61,11 @@ public:
 
     // Write all reports to files, reportNames map can be used to replace standard report names
     // with custom names
-    void toFile(const Analytic::analytic_reports& reports,
-                const std::string& outputPath,
-                const std::map<std::string,std::string>& reportNames = {},
-                const char sep = ',',
-                const bool commentCharacter = false,
-                char quoteChar = '\0',
-                const string& nullString = "#N/A",
-                bool lowerHeader = false);
+    void toFile(const Analytic::analytic_reports& reports, const std::string& outputPath,
+                const std::map<std::string, std::string>& reportNames = {}, const char sep = ',',
+                const bool commentCharacter = false, char quoteChar = '\0', const string& nullString = "#N/A",
+                const std::set<std::string>& lowerHeaderReportNames = {});
+
 private:
     std::map<std::string, boost::shared_ptr<Analytic>> analytics_;
     boost::shared_ptr<InputParameters> inputs_;

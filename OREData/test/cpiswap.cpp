@@ -131,8 +131,7 @@ public:
         boost::shared_ptr<UKRPI> ii;
         boost::shared_ptr<ZeroInflationTermStructure> cpiTS;
         RelinkableHandle<ZeroInflationTermStructure> hcpi;
-        bool interp = false;
-        ii = boost::shared_ptr<UKRPI>(new UKRPI(interp, hcpi));
+        ii = boost::shared_ptr<UKRPI>(new UKRPI(hcpi));
         for (Size i = 0; i < fixingDatesUKRPI.size(); i++) {
             // std::cout << i << ", " << fixingDatesUKRPI[i] << ", " << fixingRatesUKRPI[i] << std::endl;
             ii->addFixing(fixingDatesUKRPI[i], fixingRatesUKRPI[i], true);
@@ -157,7 +156,7 @@ public:
         pCPIts->recalculate();
         cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
         hUKRPI = Handle<ZeroInflationIndex>(
-            parseZeroInflationIndex("UKRPI", interp, Handle<ZeroInflationTermStructure>(cpiTS)));
+            parseZeroInflationIndex("UKRPI", Handle<ZeroInflationTermStructure>(cpiTS)));
         zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = hUKRPI;
     }
 

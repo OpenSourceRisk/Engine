@@ -307,7 +307,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                 fixingValue = ptrEqCp->equityCurve()->fixing(fixingDate);
                             } else if (ptrCommCf) {
                                 fixingDate = ptrCommCf->date();
-                                fixingValue = ptrCommCf->index()->fixing(ptrCommCf->pricingDate());
+                                fixingValue = ptrCommCf->fixing();
                             } else {
                                 fixingDate = Null<Date>();
                                 fixingValue = Null<Real>();
