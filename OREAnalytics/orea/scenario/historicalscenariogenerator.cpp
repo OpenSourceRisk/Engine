@@ -149,7 +149,7 @@ HistoricalScenarioGenerator::HistoricalScenarioGenerator(
     const boost::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
     const boost::shared_ptr<ScenarioFactory>& scenarioFactory, const QuantLib::Calendar& cal, const Size mporDays,
     const bool overlapping, const ReturnConfiguration& returnConfiguration,
-    const boost::shared_ptr<oreplus::data::AdjustmentFactors>& adjFactors, const std::string& labelPrefix)
+    const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const std::string& labelPrefix)
     : i_(0), historicalScenarioLoader_(historicalScenarioLoader), scenarioFactory_(scenarioFactory), cal_(cal),
       mporDays_(mporDays), overlapping_(overlapping), returnConfiguration_(returnConfiguration),
       adjFactors_(adjFactors), labelPrefix_(labelPrefix) {
