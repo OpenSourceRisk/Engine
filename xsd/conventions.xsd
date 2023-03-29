@@ -442,6 +442,7 @@
       <xs:element type="xs:string" name="IndexName" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="SavingsTime" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="BalanceOfTheMonth" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="BalanceOfTheMonthPricingCalendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
