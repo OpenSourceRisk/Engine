@@ -356,10 +356,25 @@ OREApp::~OREApp() {
     closeLog();
 }
 
+bool OREApp::busy() const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    return busy_;
+}
+
 void OREApp::run() {
 
+    struct BusySetter {
+        explicit BusySetter(bool& flag, boost::shared_mutex& mutex) : flag_(flag), mutex_(mutex) {
+            boost::unique_lock<boost::shared_mutex> lock(mutex_);
+            flag_ = true;
+        }
+        ~BusySetter() { flag_ = false; }
+        bool& flag_;
+        boost::shared_mutex& mutex_;
+    } busySetter(busy_, mutex_);
+
     cpu_timer timer;
-    
+
     try {
         analytics();
     } catch (std::exception& e) {
