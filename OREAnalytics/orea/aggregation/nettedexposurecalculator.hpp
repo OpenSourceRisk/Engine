@@ -92,7 +92,8 @@ public:
 
     const string& counterparty(const string nettingSetId);
     const map<string, string>& counterpartyMap() { return counterpartyMap_; }
-
+    map<string, vector<vector<Real>>> nettingSetCloseOutValue() { return nettingSetCloseOutValue_; }
+    map<string, vector<vector<Real>>> nettingSetDefaultValue() { return nettingSetDefaultValue_; }
 protected:
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<Market> market_;

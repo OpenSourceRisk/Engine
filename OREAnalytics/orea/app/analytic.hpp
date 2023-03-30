@@ -269,6 +269,8 @@ public:
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+
+    void checkConfigurations(const boost::shared_ptr<Portfolio>& portfolio);
     
 protected:
     boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;

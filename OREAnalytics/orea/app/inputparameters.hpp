@@ -580,7 +580,7 @@ protected:
     bool exposureProfilesByTrade_ = true;
     Real pfeQuantile_ = 0.95;
     bool fullInitialCollateralisation_ = false;
-    std::string collateralCalculationType_ = "Symmetric";
+    std::string collateralCalculationType_ = "NoLag";
     std::string exposureAllocationMethod_ = "None";
     Real marginalAllocationLimit_ = 1.0;
     // intermediate results of the exposure simulation, before aggregation
