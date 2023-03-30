@@ -1009,7 +1009,7 @@ To use the wrapper directly: \\
 \medskip
 {\tt cd <PATH>{\bs}Examples} \\
 {\tt set PYTHONPATH=<PATH>{\bs}build{\bs}lib.win-amd64-cpython-310} \\
-{\tt python commodityforward.py}
+{\tt python swap.py}
 
 \medskip
 To use the wheel:
@@ -1018,7 +1018,7 @@ To use the wheel:
 {\tt python -m venv env1} \\
 {\tt .{\bs}env1{\bs}Scripts{\bs}activate.bat} \\
 {\tt pip install <PATH>{\bs}dist{\bs}filename.whl} \\
-{\tt python commodityforward.py} \\
+{\tt python swap.py} \\
 {\tt deactivate} \\
 {\tt rmdir /s /q env1} \\
 
@@ -1029,9 +1029,13 @@ This section is a stand-alone HOWTO for building and using a python wheel for OR
 \subsubsection*{Prerequisites}
 
 \begin{itemize}
-\item python: Ensure that python3, pip and virtualenv are installed and up to date\\ 
-{\tt pip install build}
-\item boost and swig: You need to either install the binaries,  or install the source code and build yourself
+\item python: Ensure that python3, pip, build, and virtualenv are installed and up to date, e.g. on ubuntu:\\
+{\tt sudo apt install python3-pip} \\
+{\tt sudo apt install python3.10-venv} \\
+{\tt pip3 install -{}-upgrade build}
+\item python3-dev: You need to install the python header files and libs. On some platforms these come already installed with python.  On ubuntu they do not and the command to install them is: \\
+{\tt sudo apt install python3-dev }
+\item boost and swig: You need to either install the binaries, or install the source code and build yourself.
 \item ore and oreswig: You need to install the source code. Instructions for building with cmake are provided below.
 \end{itemize}
 
@@ -1040,7 +1044,7 @@ This section is a stand-alone HOWTO for building and using a python wheel for OR
 Set the following environment variables to the paths where the above items live on your machine, e.g:
 
 \medskip
-{\tt export DEMO\_BOOST\_DIR=/home/username/quaternion/boost\_1\_81\_0} \\
+{\tt export DEMO\_BOOST\_DIR=/home/username/quaternion/boost/install} \\
 {\tt export DEMO\_ORE\_DIR=/home/username/quaternion/ore} \\
 {\tt export DEMO\_ORE\_SWIG\_DIR=/home/username/quaternion/oreswig}
 
@@ -1058,6 +1062,9 @@ Use cmake to generate the project Makefiles
 \hspace{1cm} -DORE\_BUILD\_EXAMPLES=OFF $\backslash$ \\
 \hspace{1cm} -DORE\_BUILD\_TESTS=OFF $\backslash$\\
 \hspace{1cm} -DORE\_BUILD\_APP=OFF $\backslash$\\
+\hspace{1cm} -DQL\_BUILD\_BENCHMARK=OFF $\backslash$\\
+\hspace{1cm} -DQL\_BUILD\_EXAMPLES=OFF $\backslash$\\
+\hspace{1cm} -DQL\_BUILD\_TEST\_SUITE=OFF $\backslash$\\
 \hspace{1cm} -DBoost\_NO\_WARN\_NEW\_VERSIONS=1 $\backslash$\\
 \hspace{1cm} -DBoost\_NO\_SYSTEM\_PATHS=1 $\backslash$\\
 \hspace{1cm} -DBOOST\_ROOT=\$DEMO\_BOOST\_DIR }
@@ -1079,12 +1086,17 @@ This will generate \$DEMO\_ORE\_DIR/build/OREAnalytics/orea/libOREAnalytics.so
 
 In contrast to the generic cmake-based SWIG build in section \ref{sec:oreswig}, we are now resorting to python's setup.py. 
 
+The commands below will try to link to boost library boost\_thread.  On some platforms this lib has a different name and if that is the case for you then you can override it, e.g:
+
+{\tt export BOOST\_THREAD=boost\_thread-mt} \\
+
 \medskip
 {\tt cd \$DEMO\_ORE\_SWIG\_DIR/OREAnalytics-SWIG/Python} \\
 {\tt export ORE=\$DEMO\_ORE\_DIR} \\
-{\tt export BOOST=\$DEMO\_BOOST\_DIR} \\
-{\tt python setup.py wrap} \\
-{\tt python setup.py build} \\
+{\tt export BOOST\_INC=\$DEMO\_BOOST\_DIR}/include} \\
+{\tt export BOOST\_LIB=\$DEMO\_BOOST\_DIR}/lib} \\
+{\tt python3 setup.py wrap} \\
+{\tt python3 setup.py build} \\
 {\tt python3 -m build -{}-wheel}
 
 \medskip
@@ -1095,10 +1107,10 @@ To use the wheel:
 
 \medskip
 {\tt cd \$DEMO\_ORE\_SWIG\_DIR/OREAnalytics-SWIG/Python/Examples} \\
-{\tt python -m venv env1} \\
+{\tt python3 -m venv env1} \\
 {\tt . ./env1/bin/activate} \\
 {\tt pip install \$DEMO\_ORE\_SWIG\_DIR/OREAnalytics-SWIG/Python/dist/filename.whl} \\
-{\tt python3 commodityforward.py} \\
+{\tt python3 swap.py} \\
 {\tt deactivate} \\
 {\tt rm -rf env1}
 
