@@ -104,8 +104,7 @@ Real EquityIndex::forecastFixing(const Time& fixingTime, bool incDividend) const
 
 void EquityIndex::addDividend(const Dividend& dividend, bool forceOverwrite) {
     std::string tag = name();
-    auto h = DividendManager::instance().getHistory(tag);
-    std::set<Dividend> divs(h);
+    std::set<Dividend> divs = DividendManager::instance().getHistory(tag);
     if (!forceOverwrite) {
         bool duplicateFixing = false;
         for (const auto& d : divs) {
