@@ -206,8 +206,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                             std::string ccy = trade->legCurrencies()[i];
                             boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
                                 boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
-                            boost::shared_ptr<QuantExt::CommodityIndexedCashFlow> ptrCommCf =
-                                boost::dynamic_pointer_cast<QuantExt::CommodityIndexedCashFlow>(ptrFlow);
+                            boost::shared_ptr<QuantExt::CommodityCashFlow> ptrCommCf =
+                                boost::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(ptrFlow);
                             Real coupon;
                             Real accrual;
                             Real notional;
@@ -226,7 +226,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                             } else if (ptrCommCf) {
                                 coupon = Null<Real>();
                                 accrual = Null<Real>();
-                                notional = ptrCommCf->quantity(); // this is measured in units, e.g. barrels for oil
+                                notional = ptrCommCf->periodQuantity(); // this is measured in units, e.g. barrels for oil
                                 accrualStartDate = accrualEndDate = Null<Date>();
                                 accruedAmount = Null<Real>();
                                 flowType = "Notional (units)";
@@ -306,7 +306,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                 fixingDate = ptrEqCp->fixingEndDate();
                                 fixingValue = ptrEqCp->equityCurve()->fixing(fixingDate);
                             } else if (ptrCommCf) {
-                                fixingDate = ptrCommCf->date();
+                                fixingDate = ptrCommCf->lastPricingDate();
                                 fixingValue = ptrCommCf->fixing();
                             } else {
                                 fixingDate = Null<Date>();
