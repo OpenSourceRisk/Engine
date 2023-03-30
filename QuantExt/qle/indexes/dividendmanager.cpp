@@ -61,7 +61,7 @@ std::ostream& operator<<(std::ostream& out, Dividend dividend) {
 
 bool DividendManager::hasHistory(const string& name) const { return data_.find(to_upper_copy(name)) != data_.end(); }
 
-const set<Dividend>& DividendManager::getHistory(const string& name) const {
+const set<Dividend>& DividendManager::getHistory(const string& name) {
     return data_[to_upper_copy(name)].value();
 }
 
@@ -69,6 +69,6 @@ void DividendManager::setHistory(const string& name, const std::set<Dividend>& h
     data_[to_upper_copy(name)] = history;
 }
 
-boost::shared_ptr<Observable> DividendManager::notifier(const string& name) const { return data_[to_upper_copy(name)]; }
+boost::shared_ptr<Observable> DividendManager::notifier(const string& name) { return data_[to_upper_copy(name)]; }
 
 }

@@ -49,21 +49,13 @@ struct Dividend {
     }
 };
 
+//! Compare dividends
 bool operator==(const Dividend& d1, const Dividend& d);
 bool operator<(const Dividend& d1, const Dividend& d2);
 std::ostream& operator<<(std::ostream&, Dividend);
 
-//! Compare dividends
-
-//! Utility to write a vector of dividends in the QuantLib index manager's fixing history
-void applyDividends(const std::set<Dividend>& fixings);
-
-class DividendSeries {
-
-
-private:
-    std::set<Dividend> dividends_;
-};
+//! Utility to write a set of dividends in the dividend manager's history
+void applyDividends(const std::set<Dividend>& dividends);
 
 //! global repository for past dividends
 /*! \note index names are case insensitive */
@@ -77,15 +69,15 @@ public:
     //! returns whether historical fixings were stored for the index
     bool hasHistory(const std::string& name) const;
     //! returns the (possibly empty) history of the index fixings
-    const std::set<Dividend>& getHistory(const std::string& name) const;
+    const std::set<Dividend>& getHistory(const std::string& name);
     //! stores the historical fixings of the index
     void setHistory(const std::string& name, const std::set<Dividend>&);
     //! observer notifying of changes in the index fixings
-    boost::shared_ptr<QuantLib::Observable> notifier(const std::string& name) const;
+    boost::shared_ptr<QuantLib::Observable> notifier(const std::string& name);
 
 private:
     typedef std::map<std::string, QuantLib::ObservableValue<std::set<Dividend>>> history_map;
-    mutable history_map data_;
+    history_map data_;
 };
 
 } // namespace QuantExt
