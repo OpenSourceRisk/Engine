@@ -1597,6 +1597,7 @@ public:
     const std::string& savingsTime() const { return savingsTime_; }
     const std::set<QuantLib::Month>& validContractMonths() const { return validContractMonths_; }
     bool balanceOfTheMonth() const { return balanceOfTheMonth_; }
+    Calendar balanceOfTheMonthPricingCalendar() const { return balanceOfTheMonthPricingCalendar_; }
     //@}
 
     //! Serialisation
@@ -1669,6 +1670,8 @@ private:
     // balance of the month price is the average price of the remaining 
     // future days in contract
     bool balanceOfTheMonth_;
+    std::string balanceOfTheMonthPricingCalendarStr_;
+    Calendar balanceOfTheMonthPricingCalendar_;
     //! Populate and check frequency.
     Frequency parseAndValidateFrequency(const std::string& strFrequency);
 

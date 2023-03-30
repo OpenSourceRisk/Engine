@@ -308,9 +308,22 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
 
     if (cashSettlement) {
         forwardBondValue = spotValue / (incomeCurve_->discount(bondSettlementDate));
+        results_.additionalResults["incomeCompoundingDate"] = bondSettlementDate;
     } else {
         forwardBondValue = spotValue / (incomeCurve_->discount(settlementDate));
+        results_.additionalResults["incomeCompoundingDate"] = settlementDate;
     }
+
+    results_.additionalResults["spotForwardBondValue"] = spotValue;
+    results_.additionalResults["forwardForwardBondValue"] = forwardBondValue;
+    results_.additionalResults["incomeCompounding"] = 1.0 / incomeCurve_->discount(bondSettlementDate);
+
+    results_.additionalResults["bondSettlementDate"] = bondSettlementDate;
+    results_.additionalResults["forwardSettlementDate"] = settlementDate;
+
+    results_.additionalResults["bondNotionalSettlementDate"] =
+        bd->notional(bondSettlementDate) * arguments_.bondNotional;
+    results_.additionalResults["accruedAmount"] = accruedAmount;
 
     // Subtract strike at maturity. Regarding accrual (i.e. strike is given clean vs dirty) there are two
     // cases: long or short.
@@ -329,16 +342,13 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
         Real price = forwardBondValue / arguments_.bondNotional / bd->notional(bondSettlementDate) * 100.0;
         Real yield = BondFunctions::yield(*bd, price, arguments_.lockRateDayCounter, Compounded, Semiannual,
                                           bondSettlementDate, 1E-10, 100, 0.05, Bond::Price::Dirty);
-        Real dv01;
+        Real dv01, modDur = Null<Real>();
         if (arguments_.dv01 != Null<Real>()) {
-            
             dv01 = arguments_.dv01;
-
         } else {
-
-            dv01 = price / 100.0 *
-                        BondFunctions::duration(*bd, yield, arguments_.lockRateDayCounter, Compounded, Semiannual,
-                                                Duration::Modified, bondSettlementDate);
+            modDur = BondFunctions::duration(*bd, yield, arguments_.lockRateDayCounter, Compounded, Semiannual,
+                                             Duration::Modified, bondSettlementDate);
+            dv01 = price / 100.0 * modDur;
         }
 
         QL_REQUIRE(arguments_.longInForward, "DiscountingForwardBondEngine: internal error, longInForward must be "
@@ -351,7 +361,11 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
             (*arguments_.longInForward) ? Position::Long : Position::Short,
             arguments_.lockRate * dv01 * arguments_.bondNotional * bd->notional(bondSettlementDate));
         
-
+        results_.additionalResults["dv01"] = dv01;
+        results_.additionalResults["modifiedDuration"] = modDur;
+        results_.additionalResults["yield"] = yield;
+        results_.additionalResults["price"] = price;
+        results_.additionalResults["lockRate"] = arguments_.lockRate;
     } else {
         QL_FAIL("DiscountingForwardBondEngine: internal error, no payoff and no lock rate given, expected exactly one "
                 "of them to be populated.");
@@ -364,6 +378,13 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
         cmpPayment *
             (discountCurve_->discount(cmpPaymentDate)); // The forward is a derivative. We use "OIS curve" to discount.
                                                         // We subtract the potential payment due to Premium.
+
+    results_.additionalResults["forwardContractForwardValue"] = forwardContractForwardValue;
+    results_.additionalResults["forwardContractDiscountFactor"] = discountCurve_->discount(settlementDate);
+    results_.additionalResults["forwardContractSurvivalProbability"] = creditCurvePtr->survivalProbability(computeDate);
+    results_.additionalResults["compensationPayment"] = cmpPayment;
+    results_.additionalResults["compensationPaymentDate"] = cmpPaymentDate;
+    results_.additionalResults["compensationPaymentDiscount"] = discountCurve_->discount(cmpPaymentDate);
 
     fwdBondCashflows.push_back(forwardContractForwardValue);
     fwdBondCashflowPayDates.push_back(computeDate);

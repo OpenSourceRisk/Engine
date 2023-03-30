@@ -93,6 +93,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     double w2 = arguments_.shortAssetFlow->gearing();
     // Adjust strike for past fixings
     double effectiveStrike = arguments_.effectiveStrike - w1 * accruals1 + w2 * accruals2;
+    Real correlation = QuantLib::Null<Real>();
 
     if (exerciseDate <= today && paymentDate <= today) {
         results_.value = 0;
@@ -114,13 +115,13 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     } else {
         sigma1 = sigma1 * std::min(1.0, std::sqrt(obsTime1 / tte));
         sigma2 = sigma2 * std::min(1.0, std::sqrt(obsTime2 / tte));
-
+        correlation = rho();
         // KirkFormula
         Y = (F2 * w2 + effectiveStrike);
         Z = w1 * F1 / Y;
         sigmaY = sigma2 * F2 * w2 / Y;
 
-        sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaY, 2.0) - 2 * sigma1 * sigmaY * rho());
+        sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaY, 2.0) - 2 * sigma1 * sigmaY * correlation);
 
         stdDev = sigma * sqrt(tte);
 
@@ -150,7 +151,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     mp["paymentDate"] = paymentDate;
     mp["w1"] = w1;
     mp["w2"] = w2;
-    mp["rho"] = rho();
+    mp["rho"] = correlation;
 }
 
 CommoditySpreadOptionAnalyticalEngine::PricingParameter
