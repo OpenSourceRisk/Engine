@@ -369,7 +369,9 @@ Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_
             pmtDate = paymentCalendar.advance(paymentDates[i], paymentLagPeriod, paymentConvention);
         } else {
             // Gather the payment conventions.
-            BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+            BusinessDayConvention bdc =
+                data.paymentConvention().empty() ? Following : parseBusinessDayConvention(data.paymentConvention());
+
             Calendar paymentCalendar =
                 data.paymentCalendar().empty() ? schedule.calendar() : parseCalendar(data.paymentCalendar());
 
