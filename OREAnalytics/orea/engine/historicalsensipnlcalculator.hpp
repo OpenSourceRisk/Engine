@@ -68,6 +68,7 @@ public:
     void initialise(const std::set<std::pair<RiskFactorKey, QuantLib::Size>>& keys);
     void updateAccumulators(const QuantLib::ext::shared_ptr<NPVCube>& shiftCube, QuantLib::Date startDate, QuantLib::Date endDate, QuantLib::Size index);
     void populateCovariance(const std::set<std::pair<RiskFactorKey, QuantLib::Size>>& keys);
+    const Matrix& covariance() const { return covariance_; }
 
 private:
     typedef boost::accumulators::accumulator_set<
