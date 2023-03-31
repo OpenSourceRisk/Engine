@@ -863,15 +863,14 @@ To build the wrappers on Windows, Linux, mac OS
 {\tt git submodule init} \\
 {\tt git submodule update}
 %\item Edit the top-level {\tt oreswig/CMakeLists.txt} and uncomment e.g. the line {\tt add\_subdirectory(OREAnalytics-SWIG/Python)} to build the OREAnalytics Python wrappers
-\item Create a subdirectrory {\tt build}, change into that directory and configure cmake and then build using Ninja as follows \\
+\item Create a subdirectory {\tt build}, change into that directory and configure cmake and then build using Ninja as follows \\
 \medskip
 {\footnotesize
 {\tt cmake -G Ninja $\backslash$} \\
 \hspace{1cm} {\tt -D ORE=<ORE Root Directory> $\backslash$} \\
 \hspace{1cm} {\tt -D BOOST\_ROOT=<Top level boost include directory> $\backslash$}\\
 \hspace{1cm} {\tt -D BOOST\_LIBRARYDIR=<Location of the compiled boost libraries> $\backslash$}\\
-\hspace{1cm} {\tt -D PYTHON\_LIBRARY=<Full name including path to the 'libpython*' library>$\backslash$} \\
-\hspace{1cm} {\tt -D PYTHON\_INCLUDE\_DIR=<Directory that contains Python.h> $\backslash$} \\
+\hspace{1cm} {\tt -D Python\_ROOT\_DIR=<Root directory of the python installation>$\backslash$} \\
 \hspace{1cm} {\tt ..} \\
 {\tt ninja} \\
 }
