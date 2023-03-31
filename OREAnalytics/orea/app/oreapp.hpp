@@ -40,7 +40,7 @@ using namespace ore::data;
 class OREApp {
 public:
     //! Constructor that uses ORE parameters and input data from files
-    OREApp(boost::shared_ptr<Parameters> params, bool console = true, bool allowSpecialCharacters = false,
+    OREApp(boost::shared_ptr<Parameters> params, bool console = false, bool allowSpecialCharacters = false,
            const boost::filesystem::path& = boost::filesystem::path());
     //! Constructor that assumes we have already assembled input parameters via API
     OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel = 31,
