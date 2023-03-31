@@ -40,7 +40,7 @@ namespace analytics {
 class PNLCalculator {
 public:
     PNLCalculator(ore::data::TimePeriod pnlPeriod) : pnlPeriod_(pnlPeriod) {}
-    ~PNLCalculator() {}
+    virtual ~PNLCalculator() {}
     virtual void writePNL(QuantLib::Size scenarioIdx, bool isCall,
                           const RiskFactorKey& key_1, QuantLib::Real shift_1, QuantLib::Real delta,
                           QuantLib::Real gamma, QuantLib::Real deltaPnl, Real gammaPnl,
