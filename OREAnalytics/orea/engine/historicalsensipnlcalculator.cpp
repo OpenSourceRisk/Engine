@@ -114,6 +114,7 @@ void CovarianceCalculator::updateAccumulators(const QuantLib::ext::shared_ptr<NP
 
 void CovarianceCalculator::populateCovariance(const std::set<std::pair<RiskFactorKey, QuantLib::Size>>& keys) {
     LOG("Populate the covariance matrix with the calculated covariances");
+    covariance_ = Matrix(keys.size(), keys.size());
     Size i = 0;
     for (auto ito = keys.begin(); ito != keys.end(); ito++) {
         covariance_[i][i] = boost::accumulators::covariance(accCov_.at(make_pair(ito->second, ito->second)));
