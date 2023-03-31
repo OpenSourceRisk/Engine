@@ -423,7 +423,7 @@ indexes/commodityindex.hpp
 indexes/compoequityindex.hpp
 indexes/compositeindex.hpp
 indexes/decpi.hpp
-indexes/dividendmanager.cpp
+indexes/dividendmanager.hpp
 indexes/dkcpi.hpp
 indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp
