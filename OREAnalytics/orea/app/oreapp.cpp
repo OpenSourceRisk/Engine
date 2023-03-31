@@ -305,11 +305,6 @@ OREApp::~OREApp() {
     closeLog();
 }
 
-bool OREApp::busy() const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
-    return busy_;
-}
-
 void OREApp::run() {
 
     runTimer_.start();

@@ -600,11 +600,14 @@ public:
             Size w = ore::data::ConsoleLog::instance().width();                                                        \
             std::ostringstream oss;                                                                                    \
             oss << text;                                                                                               \
+            bool allowSpecialCharacters = ore::data::ConsoleLog::instance().allowSpecialCharacters();                  \
             boost::unique_lock<boost::shared_mutex> lock(ore::data::ConsoleLog::instance().mutex());                   \
-            if (ore::data::ConsoleLog::instance().allowSpecialCharacters())                                            \
+            if (allowSpecialCharacters)                                                                                \
                 std::cout << setw(w) << left;                                                                          \
+            else                                                                                                       \
+                std::cout << " ";                                                                                      \
             std::cout << oss.str();                                                                                    \
-            if (ore::data::ConsoleLog::instance().allowSpecialCharacters())                                            \
+            if (allowSpecialCharacters)                                                                                \
                 std::cout << std::flush;                                                                               \
         }                                                                                                              \
     }
@@ -614,9 +617,10 @@ public:
         if (ore::data::ConsoleLog::instance().enabled()) {                                                             \
             std::ostringstream oss;                                                                                    \
             oss << text;                                                                                               \
+            bool allowSpecialCharacters = ore::data::ConsoleLog::instance().allowSpecialCharacters();                  \
             boost::unique_lock<boost::shared_mutex> lock(ore::data::ConsoleLog::instance().mutex());                   \
             std::cout << oss.str() << "\n";                                                                            \
-            if (ore::data::ConsoleLog::instance().allowSpecialCharacters())                                            \
+            if (allowSpecialCharacters)                                                                                \
                 std::cout << std::flush;                                                                               \
         }                                                                                                              \
     }
