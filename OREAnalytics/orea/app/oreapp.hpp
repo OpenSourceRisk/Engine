@@ -90,9 +90,6 @@ protected:
 
     boost::shared_ptr<AnalyticsManager> analyticsManager_;
     boost::shared_ptr<FilteredBufferedLoggerGuard> fbLogger_;
-
-    mutable boost::shared_mutex mutex_;
-    bool busy_ = false;
 };
 
 } // namespace analytics
