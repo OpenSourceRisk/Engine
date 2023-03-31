@@ -83,7 +83,7 @@
 #include <qle/indexes/compoequityindex.hpp>
 #include <qle/indexes/compositeindex.hpp>
 #include <qle/indexes/decpi.hpp>
-#include <qle/indexes/dividendmanager.cpp>
+#include <qle/indexes/dividendmanager.hpp>
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/equityindex.hpp>
