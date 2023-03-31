@@ -250,11 +250,14 @@ void OREApp::analytics() {
     LOG("ORE analytics done");
 }
 
-OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, const boost::filesystem::path& logRootPath)
+OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, bool allowSpecialCharacters,
+               const boost::filesystem::path& logRootPath)
     : params_(params), inputs_(nullptr) {
 
-    if (console)
+    if (console) {
         ConsoleLog::instance().switchOn();
+        ConsoleLog::instance().setAllowSpecialCharacters(allowSpecialCharacters);
+    }
 
     string outputPath = params_->get("setup", "outputPath");
     string logFile = outputPath + "/" + params_->get("setup", "logFile");
@@ -283,7 +286,7 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, const boost::
 }
 
 OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel,
-               bool console, const boost::filesystem::path& logRootPath)
+               bool console, bool allowSpecialCharacters, const boost::filesystem::path& logRootPath)
     : params_(nullptr), inputs_(inputs) {
 
     // Initialise Singletons
@@ -291,6 +294,7 @@ OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::stri
     InstrumentConventions::instance().setConventions(inputs_->conventions());
     if (console) {
         ConsoleLog::instance().switchOn();
+        ConsoleLog::instance().setAllowSpecialCharacters(allowSpecialCharacters);
     }
 
     setupLog(inputs_->resultsPath().string(), logFile, logLevel, logRootPath);

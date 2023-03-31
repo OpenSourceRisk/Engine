@@ -545,9 +545,10 @@ class ConsoleLog : public QuantLib::Singleton<ConsoleLog, std::integral_constant
     friend class QuantLib::Singleton<ConsoleLog, std::integral_constant<bool, true>>;
 private:
     // may be empty but never uninitialised
-    ConsoleLog() : enabled_(false), width_(50), progressBarWidth_(0) {}
+    ConsoleLog() : enabled_(false), allowSpecialCharacters_(false), width_(50), progressBarWidth_(40) {}
 
     bool enabled_;
+    bool allowSpecialCharacters_;
     QuantLib::Size width_;
     QuantLib::Size progressBarWidth_;
     mutable boost::shared_mutex mutex_;
@@ -556,6 +557,10 @@ public:
     bool enabled() {
         boost::shared_lock<boost::shared_mutex> lock(mutex());
         return enabled_;
+    }
+    bool allowSpecialCharacters() {
+        boost::shared_lock<boost::shared_mutex> lock(mutex());
+        return allowSpecialCharacters_;
     }
     QuantLib::Size width() {
         boost::shared_lock<boost::shared_mutex> lock(mutex_);
@@ -573,6 +578,10 @@ public:
         boost::unique_lock<boost::shared_mutex> lock(mutex_);
         enabled_ = false;
     }
+    void setAllowSpecialCharacters(bool allowSpecialCharacters) {
+        boost::unique_lock<boost::shared_mutex> lock(mutex_);
+        allowSpecialCharacters_ = allowSpecialCharacters;
+    }
     void setWidth(QuantLib::Size w) {
         boost::unique_lock<boost::shared_mutex> lock(mutex_);
         width_ = w;
@@ -585,29 +594,36 @@ public:
     boost::shared_mutex& mutex() { return mutex_; }
 };
 
-
 #define CONSOLEW(text)                                                                                                 \
     {                                                                                                                  \
         if (ore::data::ConsoleLog::instance().enabled()) {                                                             \
             Size w = ore::data::ConsoleLog::instance().width();                                                        \
             std::ostringstream oss;                                                                                    \
             oss << text;                                                                                               \
+            bool allowSpecialCharacters = ore::data::ConsoleLog::instance().allowSpecialCharacters();                  \
             boost::unique_lock<boost::shared_mutex> lock(ore::data::ConsoleLog::instance().mutex());                   \
-            std::cout << setw(w) << left << oss.str() << std::flush;                                                   \
+            if (allowSpecialCharacters)                                                                                \
+                std::cout << setw(w) << left;                                                                          \
+            else                                                                                                       \
+                std::cout << " ";                                                                                      \
+            std::cout << oss.str();                                                                                    \
+            if (allowSpecialCharacters)                                                                                \
+                std::cout << std::flush;                                                                               \
         }                                                                                                              \
     }
 
- 
 #define CONSOLE(text)                                                                                                  \
     {                                                                                                                  \
         if (ore::data::ConsoleLog::instance().enabled()) {                                                             \
             std::ostringstream oss;                                                                                    \
             oss << text;                                                                                               \
+            bool allowSpecialCharacters = ore::data::ConsoleLog::instance().allowSpecialCharacters();                  \
             boost::unique_lock<boost::shared_mutex> lock(ore::data::ConsoleLog::instance().mutex());                   \
-            std::cout << oss.str() << std::endl;                                                                       \
+            std::cout << oss.str() << "\n";                                                                            \
+            if (allowSpecialCharacters)                                                                                \
+                std::cout << std::flush;                                                                               \
         }                                                                                                              \
     }
-    
 
 } // namespace data
 } // namespace ore
