@@ -69,7 +69,6 @@ public:
     boost::shared_ptr<NPVCube> getCube(std::string cubeName);
 
     std::vector<std::string> getErrors();
-    bool busy() const;
 
 protected:
     virtual void analytics();
