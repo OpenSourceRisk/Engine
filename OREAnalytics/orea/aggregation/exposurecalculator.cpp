@@ -149,7 +149,8 @@ void ExposureCalculator::build() {
                     closeOutValue = d > nextBreakDate && exerciseNextBreak_
                                         ? 0.0
                                         : cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
-                Real npv = calcType_ == CollateralExposureHelper::CalculationType::NoLag ? closeOutValue : defaultValue;
+                //for single trade exposures, always default value is relevant
+                Real npv = defaultValue;
                 epe[j + 1] += max(npv, 0.0) / cube_->samples();
                 ene[j + 1] += max(-npv, 0.0) / cube_->samples();
                 nettingSetDefaultValue_[nettingSetId][j][k] += defaultValue;

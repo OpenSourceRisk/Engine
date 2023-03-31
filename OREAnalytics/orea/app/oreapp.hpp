@@ -28,6 +28,7 @@
 #include <orea/app/parameters.hpp>
 #include <orea/app/analyticsmanager.hpp>
 #include <ored/ored.hpp>
+#include <boost/timer/timer.hpp>
 
 namespace ore {
 namespace analytics {
@@ -69,8 +70,10 @@ public:
     boost::shared_ptr<NPVCube> getCube(std::string cubeName);
 
     std::vector<std::string> getErrors();
-    bool busy() const;
 
+    //! time for executing run(...) in seconds
+    Real getRunTime();
+    
 protected:
     virtual void analytics();
 
@@ -80,7 +83,8 @@ protected:
     vector<string> getFileNames(const string& fileString, const string& path);
     boost::shared_ptr<CSVLoader> buildCsvLoader(const boost::shared_ptr<Parameters>& params);
     //! set up logging
-    void setupLog(const boost::filesystem::path&);
+    void setupLog(const std::string& path, const std::string& file, Size mask,
+                  const boost::filesystem::path& logRootPath);
     //! remove logs
     void closeLog();
 
@@ -91,9 +95,7 @@ protected:
 
     boost::shared_ptr<AnalyticsManager> analyticsManager_;
     boost::shared_ptr<FilteredBufferedLoggerGuard> fbLogger_;
-
-    mutable boost::shared_mutex mutex_;
-    bool busy_ = false;
+    boost::timer::cpu_timer runTimer_;
 };
 
 } // namespace analytics

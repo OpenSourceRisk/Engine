@@ -37,6 +37,7 @@ engine/bufferedsensitivitystream.cpp
 engine/cptycalculator.cpp
 engine/filteredsensitivitystream.cpp
 engine/historicalpnlgenerator.cpp
+engine/historicalsensipnlcalculator.cpp
 engine/mporcalculator.cpp
 engine/multithreadedvaluationengine.cpp
 engine/npvrecord.cpp
@@ -129,6 +130,7 @@ engine/bufferedsensitivitystream.hpp
 engine/cptycalculator.hpp
 engine/filteredsensitivitystream.hpp
 engine/historicalpnlgenerator.hpp
+engine/historicalsensipnlcalculator.hpp
 engine/mporcalculator.hpp
 engine/multithreadedvaluationengine.hpp
 engine/npvrecord.hpp

@@ -100,12 +100,12 @@ public:
         return fixings;
     }
 
-    std::set<Fixing> loadDividends() const override {
+    std::set<QuantExt::Dividend> loadDividends() const override {
         if (!b_)
             return a_->loadDividends();
         if (!a_)
             return b_->loadDividends();
-        std::set<Fixing> dividends;
+        std::set<QuantExt::Dividend> dividends;
         auto tmp1 = a_->loadDividends();
         auto tmp2 = b_->loadDividends();
         dividends.insert(tmp1.begin(), tmp1.end());

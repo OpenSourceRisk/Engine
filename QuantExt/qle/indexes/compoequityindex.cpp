@@ -41,25 +41,27 @@ CompoEquityIndex::CompoEquityIndex(const boost::shared_ptr<EquityIndex>& source,
 
 boost::shared_ptr<EquityIndex> CompoEquityIndex::source() const { return source_; }
 
-void CompoEquityIndex::addDividend(const Date& fixingDate, Real fixing, bool forceOverwrite) {
-    if (dividendCutoffDate_ == Date() || fixingDate >= dividendCutoffDate_) {
-        source_->addDividend(fixingDate, fixing / fxIndex_->fixing(fixingDate), forceOverwrite);
+void CompoEquityIndex::addDividend(const Dividend& dividend, bool forceOverwrite) {
+    if (dividendCutoffDate_ == Date() || dividend.exDate >= dividendCutoffDate_) {
+        Dividend newDiv(dividend.exDate, dividend.name, dividend.rate / fxIndex_->fixing(dividend.exDate),
+                        dividend.payDate);
+        source_->addDividend(newDiv, forceOverwrite);
         LazyObject::update();
     }
 }
 
 void CompoEquityIndex::performCalculations() const {
-    dividendFixings_ = TimeSeries<Real>();
+    dividendFixings_ = std::set<Dividend>();
     auto const& ts = source_->dividendFixings();
     for (auto const& d : ts) {
-        if (dividendCutoffDate_ == Date() || d.first >= dividendCutoffDate_) {
-            dividendFixings_[d.first] =
-                d.second * fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(d.first, Preceding));
+        if (dividendCutoffDate_ == Date() || d.exDate >= dividendCutoffDate_) {
+            Dividend div(d.exDate, d.name, d.rate * fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(d.exDate, Preceding)), d.payDate);
+            dividendFixings_.insert(div);
         }
     }
 }
 
-const TimeSeries<Real>& CompoEquityIndex::dividendFixings() const {
+const std::set<Dividend>& CompoEquityIndex::dividendFixings() const {
     calculate();
     return dividendFixings_;
 }
