@@ -133,16 +133,16 @@ void NettedExposureCalculator::build() {
     vector<vector<Real>> averagePositiveAllocation(portfolio_->size(), vector<Real>(cube_->dates().size(), 0.0));
     vector<vector<Real>> averageNegativeAllocation(portfolio_->size(), vector<Real>(cube_->dates().size(), 0.0));
 
-    map<string, vector<vector<Real>>> nettingSetValue = (calcType_ == CollateralExposureHelper::CalculationType::NoLag
-							 ? nettingSetCloseOutValue_
-							 : nettingSetDefaultValue_);
     Size nettingSetCount = 0;
-    for (auto n : nettingSetValue) {
+    for (auto n : nettingSetDefaultValue_) {
         string nettingSetId = n.first;
+        vector<vector<Real>> data = n.second;
+        boost::shared_ptr<NettingSetDefinition> netting = nettingSetManager_->get(nettingSetId);
+        //only for active CSA and calcType == NoLag close-out value is relevant
+        if (netting->activeCsaFlag() && calcType_ == CollateralExposureHelper::CalculationType::NoLag) 
+            data = nettingSetCloseOutValue_[nettingSetId];
 
         LOG("Aggregate exposure for netting set " << nettingSetId);
-        vector<vector<Real>> data = n.second;
-
         // Get the collateral account balance paths for the netting set.
         // The pointer may remain empty if there is no CSA or if it is inactive.
         boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>> collateral =
@@ -154,7 +154,6 @@ void NettedExposureCalculator::build() {
 	// Get the CSA index for Eonia Floor calculation below
         colva_[nettingSetId] = 0.0;
         collateralFloor_[nettingSetId] = 0.0;
-        boost::shared_ptr<NettingSetDefinition> netting = nettingSetManager_->get(nettingSetId);
         string csaIndexName;
         Handle<IborIndex> csaIndex;
         bool applyInitialMargin = false;

@@ -20,6 +20,7 @@ shiftscenariogenerator.cpp
 simulationmeasures.cpp
 stresstest.cpp
 swapperformance.cpp
+nettedexpsoure.cpp
 testmarket.cpp
 testportfolio.cpp
 testsuite.cpp)

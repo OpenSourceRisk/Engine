@@ -75,7 +75,10 @@
 \restylefloat{table}
 
 \usepackage{siunitx}
-
+\usepackage{tablefootnote}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{footmisc}
 \newenvironment{longlisting}{\captionsetup{type=listing}}{}
 %\usepackage[colorlinks=true]{hyperref}
 
@@ -1006,7 +1009,7 @@ To use the wrapper directly: \\
 \medskip
 {\tt cd <PATH>{\bs}Examples} \\
 {\tt set PYTHONPATH=<PATH>{\bs}build{\bs}lib.win-amd64-cpython-310} \\
-{\tt python commodityforward.py}
+{\tt python swap.py}
 
 \medskip
 To use the wheel:
@@ -1015,7 +1018,7 @@ To use the wheel:
 {\tt python -m venv env1} \\
 {\tt .{\bs}env1{\bs}Scripts{\bs}activate.bat} \\
 {\tt pip install <PATH>{\bs}dist{\bs}filename.whl} \\
-{\tt python commodityforward.py} \\
+{\tt python swap.py} \\
 {\tt deactivate} \\
 {\tt rmdir /s /q env1} \\
 
@@ -1026,9 +1029,13 @@ This section is a stand-alone HOWTO for building and using a python wheel for OR
 \subsubsection*{Prerequisites}
 
 \begin{itemize}
-\item python: Ensure that python3, pip and virtualenv are installed and up to date\\ 
-{\tt pip install build}
-\item boost and swig: You need to either install the binaries,  or install the source code and build yourself
+\item python: Ensure that python3, pip, build, and virtualenv are installed and up to date, e.g. on ubuntu:\\
+{\tt sudo apt install python3-pip} \\
+{\tt sudo apt install python3.10-venv} \\
+{\tt pip3 install -{}-upgrade build}
+\item python3-dev: You need to install the python header files and libs. On some platforms these come already installed with python.  On ubuntu they do not and the command to install them is: \\
+{\tt sudo apt install python3-dev }
+\item boost and swig: You need to either install the binaries, or install the source code and build yourself.
 \item ore and oreswig: You need to install the source code. Instructions for building with cmake are provided below.
 \end{itemize}
 
@@ -1037,7 +1044,7 @@ This section is a stand-alone HOWTO for building and using a python wheel for OR
 Set the following environment variables to the paths where the above items live on your machine, e.g:
 
 \medskip
-{\tt export DEMO\_BOOST\_DIR=/home/username/quaternion/boost\_1\_81\_0} \\
+{\tt export DEMO\_BOOST\_DIR=/home/username/quaternion/boost/install} \\
 {\tt export DEMO\_ORE\_DIR=/home/username/quaternion/ore} \\
 {\tt export DEMO\_ORE\_SWIG\_DIR=/home/username/quaternion/oreswig}
 
@@ -1055,6 +1062,9 @@ Use cmake to generate the project Makefiles
 \hspace{1cm} -DORE\_BUILD\_EXAMPLES=OFF $\backslash$ \\
 \hspace{1cm} -DORE\_BUILD\_TESTS=OFF $\backslash$\\
 \hspace{1cm} -DORE\_BUILD\_APP=OFF $\backslash$\\
+\hspace{1cm} -DQL\_BUILD\_BENCHMARK=OFF $\backslash$\\
+\hspace{1cm} -DQL\_BUILD\_EXAMPLES=OFF $\backslash$\\
+\hspace{1cm} -DQL\_BUILD\_TEST\_SUITE=OFF $\backslash$\\
 \hspace{1cm} -DBoost\_NO\_WARN\_NEW\_VERSIONS=1 $\backslash$\\
 \hspace{1cm} -DBoost\_NO\_SYSTEM\_PATHS=1 $\backslash$\\
 \hspace{1cm} -DBOOST\_ROOT=\$DEMO\_BOOST\_DIR }
@@ -1076,12 +1086,17 @@ This will generate \$DEMO\_ORE\_DIR/build/OREAnalytics/orea/libOREAnalytics.so
 
 In contrast to the generic cmake-based SWIG build in section \ref{sec:oreswig}, we are now resorting to python's setup.py. 
 
+The commands below will try to link to boost library boost\_thread.  On some platforms this lib has a different name and if that is the case for you then you can override it, e.g:
+
+{\tt export BOOST\_THREAD=boost\_thread-mt} \\
+
 \medskip
 {\tt cd \$DEMO\_ORE\_SWIG\_DIR/OREAnalytics-SWIG/Python} \\
 {\tt export ORE=\$DEMO\_ORE\_DIR} \\
-{\tt export BOOST=\$DEMO\_BOOST\_DIR} \\
-{\tt python setup.py wrap} \\
-{\tt python setup.py build} \\
+{\tt export BOOST\_INC=\$DEMO\_BOOST\_DIR}/include} \\
+{\tt export BOOST\_LIB=\$DEMO\_BOOST\_DIR}/lib} \\
+{\tt python3 setup.py wrap} \\
+{\tt python3 setup.py build} \\
 {\tt python3 -m build -{}-wheel}
 
 \medskip
@@ -1092,10 +1107,10 @@ To use the wheel:
 
 \medskip
 {\tt cd \$DEMO\_ORE\_SWIG\_DIR/OREAnalytics-SWIG/Python/Examples} \\
-{\tt python -m venv env1} \\
+{\tt python3 -m venv env1} \\
 {\tt . ./env1/bin/activate} \\
 {\tt pip install \$DEMO\_ORE\_SWIG\_DIR/OREAnalytics-SWIG/Python/dist/filename.whl} \\
-{\tt python3 commodityforward.py} \\
+{\tt python3 swap.py} \\
 {\tt deactivate} \\
 {\tt rm -rf env1}
 
@@ -3503,7 +3518,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="exposureProfiles">Y</Parameter>
     <Parameter name="exposureProfilesByTrade">Y</Parameter>
     <Parameter name="quantile">0.95</Parameter>
-    <Parameter name="calculationType">Symmetric</Parameter>      
+    <Parameter name="calculationType">NoLag</Parameter>      
     <Parameter name="allocationMethod">None</Parameter>    
     <Parameter name="marginalAllocationLimit">1.0</Parameter>
     <Parameter name="exerciseNextBreak">N</Parameter>
@@ -3561,16 +3576,53 @@ FX rates)
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures
 \item {\tt exposureProfiles:} Flag to enable/disable exposure output for each netting set
 \item {\tt exposureProfilesByTrade:} Flag to enable/disable stand-alone exposure output for each trade
-\item {\tt quantile} Confidence level for Potential Future Exposure (PFE) reporting
-\item {\tt calculationType} Determines the settlement of margin calls, choices are: \\
+\item {\tt quantile:} Confidence level for Potential Future Exposure (PFE) reporting
+\item {\tt calculationType:} Determines the settlement of margin calls. The admissible choices depend on having a close-out grid, see table \ref{tab:calcTypes}; \\
 	\begin{itemize}
-	\item {\em Symmetric} - margin for both counterparties settled after the margin period of risk; 
-	\item {\em AsymmetricCVA} - margin requested from the counterparty settles with delay,
-	margin requested from us settles immediately; 
-	\item {\em AsymmetricDVA} - vice versa 
-	\item {\em NoLag} - used to disable any delayed settlement of the margin; this option is applied in combination with a ``close-out'' grid, see section \ref{sec:simulation}. 
+		\item if there isn't any ``close-out'' grid -see section \ref{sec:simulation}-, the choices are:
+		\begin{itemize}
+			\item {\em Symmetric} - margin for both counterparties settled after the margin period of risk;
+			\item {\em AsymmetricCVA} - margin requested from the counterparty settles with delay,
+			margin requested from us settles immediately;
+			\item {\em AsymmetricDVA} - vice versa.
+		\end{itemize}
+		\item If there is a ``close-out'' grid -see section \ref{sec:simulation}-, only choice is:
+		\begin{itemize}
+			\item {\em NoLag} - used to disable any delayed settlement of the margin. 
+		\end{itemize}
 	\end{itemize}
 	\todo[inline]{Move calculationType into the {\tt csaFile}?}
+%
+NoLag is the default configuration.
+%
+\begin{table}[!h]
+\centering
+\arrayrulecolor{black}
+\begin{tabular}{!{\color{black}\vrule}c!{\color{black}\vrule}c!{\color{black}\vrule}l!{\color{black}\vrule}} 
+\hline
+\multicolumn{1}{!{\color{black}\vrule}l!{\color{black}\vrule}}{Grid Type} & \multicolumn{1}{l!{\color{black}\vrule}}{{\tt calculationType}} & Comment                                                                                                                                                                                           \\ 
+\hline
+\multirow{4}{*}{without close-out grid}                                    & {\em NoLag}                                                      & Not Supported                                                                                                                                                                                     \\ 
+\cline{2-3}
+                                                                          & {\em Symmetric}                                                  & Supported\tablefootnote{\label{note1} The calculations are correct only if the simulation grid (see section \ref{sec:simulation}) is equally-spaced with time steps that match the MPoR defined in netting-set definition (see section \ref{sec:CollNettingSet}). See section \ref{sec:mpor} for further explanation.}  \\ 
+\cline{2-3}
+                                                                          & {\em AsymmetricCVA}                                              & Supported \footref{note1} \\ 
+\cline{2-3}
+                                                                          & {\em AsymmetricDVA}                                              & Supported \footref{note1}\\ 
+\hline
+\multirow{4}{*}{with close-out grid}                                       & {\em NoLag}                                                      & Supported\tablefootnote{Close-out lag (see section \ref{sec:simulation}) must be equal to MPoR defined in netting-set definition (see section \ref{sec:CollNettingSet}). Otherwise, an error will be thrown.}                                           \\ 
+\cline{2-3}
+                                                                          & {\em Symmetric}                                                  & Not Supported                                                                                                                                                                                     \\ 
+\cline{2-3}
+                                                                          & {\em AsymmetricCVA}                                              & Not Supported                                                                                                                                                                                     \\ 
+\cline{2-3}
+                                                                          & {\em AsymmetricDVA}                                              & Not Supported                                                                                                                                                                                     \\
+\hline
+\end{tabular}
+\arrayrulecolor{black}
+\caption{Overview of admissible calculation types with combination of grid types.} \label{tab:calcTypes}
+\end{table}
+%
 \item {\tt allocationMethod:} XVA allocation method, choices are {\em None, Marginal, RelativeXVA, RelativeFairValueGross, RelativeFairValueNet}
 \item {\tt marginalAllocationLimit:} The marginal allocation method a la Pykhtin/Rosen breaks down when the netting set
 value vanishes while the exposure does not. This parameter acts as a cutoff for the marginal allocation when the
@@ -6802,14 +6854,53 @@ D(t_m) &=
 \end{align}
 where $MTA$ is the minimum transfer amount.
 
-\medskip Finally, the {\em Delivery Amount } is settled with a delay specified by the {\em Margin Period of Risk}
-(MPoR) which leads to residual exposure and XVA even for daily margining, zero thresholds and minimum transfer amounts,
-see for example \cite{Pykhtin2010}. A more detailed framework for collateralised exposure modelling is introduced in the
-2016 article \cite{Andersen2016}, indicating a potential route for extending ORE.
+\subsubsection{Margin Period of Risk} \label{sec:mpor}
+After a counterparty defaults, it takes time to close out the portfolio. During this time period the portfolio value will change upon market conditions, therefore the portfolio's close-out value is subject to market risk, which is referred also as the close-out risk and the corresponding close-out period is called as the {\em Margin Period of Risk} (MPoR).  
 
-\medskip
-In case we use an auxiliary ``close-out'' grid in the simulation (see section \ref{sec:simulation}), we do {\em not} settle the delivery amount with the delay mentioned above. With a close-out grid the portfolio value is rather evolved relative to the collateral balance, also leading to residual exposure. However, the close-out valuation approach allows more detailed modelling of what happens in the close-out period; currently ORE supports two options, with and without portfolio ``ageing'' over the close-out period. The option ``without ageing'' is more aggressive in that it avoids any exposure evolution spikes due to contractual cashflows that occur in the close-out period after default, the only exposure effect is due to market evolution over the period. The ``with ageing'' option is more conservative in that it includes the effect of all contractual cash flows in the close-out period, in particular outgoing cashflows at any time in the period which cause an exposure jump upwards. 
+Therefore, when a loss on the defaulted counterparty is realised at time $t_d$, the last time the collateral could be received is $t_d-\tau$, where $\tau$ denotes the MPoR. That is, the collateral at time $t_d$ is determined by the collateral value at $t_d-\tau$, namely $CSA(t_d-\tau)$, see equation \ref{eq:CSA}.
 
+In ORE, we have two approaches to incorporate MPoR in the exposure simulations:
+\begin{itemize}
+ \item {\em Close-out Approach}: Simulating on an auxiliary close-out grid additional to the default time grid.
+ \item {\em Lagged Approach}: Simulating only on a default time grid and delaying the margin calls on the grid.
+\end{itemize}
+
+\medskip In the {\em Close-out Approach}, we use an auxiliary ``close-out'' grid in addition to the main simulation grid (see section \ref{sec:simulation}). The main simulation grid is used to compute “default values” which feed into the collateral balance $C(t$) filtered by MTA and Threshold etc. The auxiliary “close-out” grid, offset from the main grid by the MPoR, is used to compute the delayed close-out values $V(t)$ associated with default time $t$\footnote{We note that in ORE when the exposure of an uncollateralised netting-set or a single trade without considering the netting-set is calculated, then the default value is calculated at the main simulation grid, not on the close-out grid.}. The difference between $V(t)$ and $C(t)$ causes a residual exposure $[V (t)-C(t)]^+$ even if minimum transfer amounts and thresholds are zero, see for example \cite{Pykhtin2010}. This approach allows a detailed modelling of what happens in the close-out period by calculating the close-out values in different ways. ORE currently supports two options: 
+%
+\begin{itemize}
+\item the close-out value can be computed as of default date, by just evolving the market from default date to close-out date (“sticky date”), or
+\item the close-out value can be computed as of close-out date, by evolving both valuation date and market over the close-out period (“actual date”), i.e., the portfolio ages and cash flows might occur in the close-out period causing spikes in the evolution of exposures.
+\end{itemize}
+
+The option ``sticky date'' is more aggressive in that it avoids any exposure evolution spikes due to contractual cashflows that occur in the close-out period after default, the only exposure effect is due to market evolution over the period. The ``actual date'' option is more conservative in that it includes the effect of all contractual cash flows in the close-out period, in particular outgoing cashflows at any time in the period which cause an exposure jump upwards. A more detailed framework for collateralised exposure modelling is introduced in the article \cite{Andersen2016}, indicating a potential route for extending ORE.
+
+\medskip On the other hand, in the {\em Lagged Approach} the simulation is conducted only on a default time grid. The collateral values are calculated, by delaying the delivery amounts between default times, specified by the {\em Margin Period of Risk} (MPoR) which leads to residual exposure. 
+
+In table \ref{table:lagged}, we present a toy example to illustrate how the delayed margin calls lead to residual exposures. In this example, we assume that the default time grid is equally-spaced with time steps that match the MPoR (which is 1M). Further, we assume zero threshold and MTA. At the initial time, the delivery amount is $2.00$, which is the difference between the initial value of the portfolio and the default value at 1M. If this amount were settled immediately, then the collateral value would have been $10$ and hence the residual exposure would habe been zero at 1M. The delay of the delivery amount by MPoR implies a collateral value of $8.00$ until 1M and hence a residual exposure of $2$. 
+%
+\begin{table}[!ht]
+    \centering
+    \begin{tabular}{|p{1cm}|p{1.4cm}|p{1.5cm}|p{1.5cm}|p{1.6cm}|p{1.cm}|}
+    \hline
+        Time Grid & Default Value & Delivery Amount & Delivery Amount Delayed  & Collateral Value   & NPV  \\ \hline
+         0 & 8.00 & 2.00 &   True &~ &  ~   \\ \hline
+        1M & 10.00 & 5.00& True & 8.00&  10.00   \\ \hline
+        2M & 15.00 & -3.00 & True & 10.00 & 15.00 \\ \hline
+        3M & 12.00 & -3.00 & True & 15.00 & 12.00  \\ \hline
+        4M & 9.00 & 5.00 & True & 12.00 & 9.00   \\ \hline
+        5M & 14.00 & 6.00 & True & 9.00 & 14.00  \\ \hline
+        6M & 20.00 &  ~  & ~ & 14.00 & 20.00  \\ \hline
+    \end{tabular}
+    \caption{Toy example for delayed margin calls.}\label{table:lagged}
+\end{table}
+%
+
+Some remarks and observations:
+\begin{itemize}
+ \item {\em Lagged Approach}  has the disadvantage that we need to use equally-spaced time grids with time steps that match the MPoR. In the above example, let us assume that the MPoR is 2W. Then, delaying the first delivery amount by 2W would still imply a collateral value of $10.00$ at 1M and hence a zero residual exposure.
+  \item In {\em Lagged Approach} approach, we support three calculation (settlement) types where the delay of the {\em Delivery Amount } depends on its sign. The above example corresponds to a ``symmetric'' calculation type where both positive and negative delivery amounts are settled with delay, see section \ref{sec:analytics} for other calculation types.
+   \item In ORE, the {\em Close-out Approach} is the preferred method -and the {\em Lagged Approach} is the legacy method- to incorporate MPoR in the collateral model. 
+\end{itemize}
 \subsection{Exposure Allocation}\label{sec:app_allocation}
 
 XVAs and exposures are typically computed at netting set level. For accounting purposes it is typically required to {\em
