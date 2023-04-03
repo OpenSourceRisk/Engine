@@ -929,7 +929,7 @@ is uncommented in the top-level CMakeLists.txt file when building; change to dir
 
 \end{enumerate}
 
-\subsection{How to build ORE Python Wheels on Windows}
+\subsection{How to build ORE Python Wheels on Windows}\label{sec:win_wheel}
 
 This section is a stand-alone HOWTO for building ore and oreswig, including Python wrappers and wheels, at the DOS command line using cmake and VS 2022.  
 
@@ -1028,7 +1028,7 @@ To use the wheel:
 {\tt deactivate} \\
 {\tt rmdir /s /q env1} \\
 
-\subsection{How to build ORE Python Wheels on Linux and macOS}
+\subsection{How to build ORE Python Wheels on Linux and macOS}\label{sec:nix_wheel}
 
 This section is a stand-alone HOWTO for building and using a python wheel for OREAnalytics on Linux or macOS.
 
@@ -1240,6 +1240,8 @@ Example & Description \\
 40 & Par Sensitivity Analysis \\
 \hline
 41 & Multi-threaded Exposure Simulation \\
+\hline
+42 & ORE Python Module \\
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -3123,6 +3125,40 @@ See also section \ref{sec:sensitivity}.
 The example in folder {\tt Examples/Example\_41} demonstrates the multithreaded valuation engine to generate the exposure for a
 portfolio of 8 copies of the vanilla swap in {\tt Example\_1}.
 
+%--------------------------------------------------------------------
+\subsection{ORE Python Module}% Example 42
+\label{example:42}
+%--------------------------------------------------------------------
+
+Since release 9 (March 2023) we provide easy access to ORE via a pre-compiled Python module. Some example scripts using this ORE module are provided in this example, so change to this directory first
+
+\medskip
+{\tt cd Example\_42} 
+
+\medskip
+The examples require Python 3, the actual ORE Python module is then installed with a one-liner, see below. However, to separate ORE from any other Python environments on your machine, we recommend creating a virtual environment first. In that case the steps are as follows:
+
+\begin{itemize}
+\item To create a virtual environment: {\tt python -m venv env1} 
+\item To activate this environment on Windows: {\tt .{\bs}env1{\bs}Scripts{\bs}activate.bat}  \\
+or on macOS/Linux: {\tt ./env1/bin/activate }  
+\item Then install ORE:\\
+{\tt pip install open-source-risk-engine } 
+\item And try examples:\\
+	\begin{itemize} 
+	\item {\tt python ore.py} \\
+	This demonstrates the Python-wrapped version of the ORE application that is also used in the command line application {\tt ore.exe}. We use it here to re-run the Swap exposure of {\tt Example\_1}. 
+	\item {\tt python commodityforward.py} \\
+	The ORE Python module also allows lower-level access to the QuantLib and QuantExt libraries, demonstrated here for a CommodityForward instrument defined QuantExt. 
+	\end{itemize}
+	More use cases of the ORE Python module, including Jupyter notebooks, can be found in the ORE SWIG repository, in particular in folder OREAnalytics-SWIG/Python/Examples. 
+\item Finally you can deactivate the environment:
+{\tt deactivate} \\
+or even fully remove the environment again by removing the {\tt env1} folder.
+\end{itemize}
+
+You can build the Python module and installable packages yourself following the instructions in sections \ref{sec:oreswig}, \ref{sec:win_wheel}, \ref{sec:nix_wheel}
+based on your local ORE code. {\tt pip install open-source-risk-engine } will always provide the latest release.
 
 \clearpage
 %========================================================
