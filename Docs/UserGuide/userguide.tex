@@ -730,12 +730,13 @@ With the 5th release we have discontinued automake support so that ORE can only 
   {\tt export BOOST\_LIB=path/to/boost/lib}\\
   {\tt export BOOST\_INC=path/to/boost/include}
 \medskip
-\Item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
+\item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
 \item Configure CMake by invoking \\
 \medskip
 {\tt cmake -DBOOST\_ROOT=\${BOOST\_INC} -DBOOST\_LIBRARYDIR=\${BOOST\_LIB} -DQL\_ENABLE\_SESSIONS=ON ..} \\
 \medskip
 where the {\tt QL\_ENABLE\_SESSIONS} variable is set to ON in order to enable some multi-threading applications in ORE.
+
 Alternatively, set environment variables {\tt BOOST\_ROOT} and {\tt BOOST\_LIBRARYDIR} directly and run \\
 \medskip
 {\tt cmake ..} \\
@@ -968,8 +969,8 @@ Generate the project files:
 \hspace{1cm} -A x64 $\backslash$\\
 \hspace{1cm} -DMSVC\_LINK\_DYNAMIC\_RUNTIME=OFF $\backslash$ \\
 \hspace{1cm} -DBOOST\_ROOT=\$BOOST\_INC $\backslash$\\
-\hspace{1cm} -DBOOST\_LIBRARYDIR=\$BOOST\_LIB $\backslash$
-\hspace{2cm} -DQL\_ENABLE\_SESSIONS=ON} 
+\hspace{1cm} -DBOOST\_LIBRARYDIR=\$BOOST\_LIB $\backslash$ \\
+\hspace{1cm} -DQL\_ENABLE\_SESSIONS=ON} 
 
 \medskip
 This will create \%ORE\%{\bs}build{\bs}ORE.sln
@@ -1034,12 +1035,30 @@ This section is a stand-alone HOWTO for building and using a python wheel for OR
 \subsubsection*{Prerequisites}
 
 \begin{itemize}
-\item python: Ensure that python3, pip, build, and virtualenv are installed and up to date, e.g. on ubuntu:\\
+\item python: Ensure that python3, pip, build, and virtualenv are installed and up to date. \\
+
+\medskip
+For example, on ubuntu:\\
 {\tt sudo apt install python3-pip} \\
 {\tt sudo apt install python3.10-venv} \\
-{\tt pip3 install -{}-upgrade build}
-\item python3-dev: You need to install the python header files and libs. On some platforms these come already installed with python.  On ubuntu they do not and the command to install them is: \\
-{\tt sudo apt install python3-dev }
+{\tt pip3 install -{}-upgrade build} \\
+
+\medskip
+On macOS it is recommended to install jupyterlab (which contains python and pip) with \\
+{\tt brew install jupyterlab} \\
+followed by\\
+{\tt pip install -{}-upgrade build} \\
+{\tt pip install virtualenv} 
+
+\item python3-dev: You need to install the python header files and libs. On some platforms these come already installed with python.  
+
+\medskip
+On ubuntu they do not and the command to install them is: \\
+{\tt sudo apt install python3-dev }\\
+
+\medskip
+On macOS they come with the recommended installation of jupyterlab
+
 \item boost and swig: You need to either install the binaries, or install the source code and build yourself.
 \item ore and oreswig: You need to install the source code. Instructions for building with cmake are provided below.
 \end{itemize}
@@ -1049,8 +1068,8 @@ This section is a stand-alone HOWTO for building and using a python wheel for OR
 Set the following environment variables to the paths where the ore and ore swig repos, as well as boost live on your machine, e.g:
 
 \medskip
-{\tt export ORE=$HOME/dev/ore} \\
-{\tt export ORESWIG=$HOME/dev/oreswig}\\
+{\tt export ORE=\$HOME/dev/ore} \\
+{\tt export ORESWIG=\$HOME/dev/oreswig}\\
 {\tt export BOOST\_INC=/opt/homebrew/include} \\
 {\tt export BOOST\_LIB=/opt/homebrew/lib} 
 
