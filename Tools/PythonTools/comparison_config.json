@@ -1190,13 +1190,14 @@
       },
 	  "dividends.csv": {
         "keys": [
-          "dividendDate",
+          "dividendExDate",
           "equityId"
         ],
         "column_settings": [
           {
             "names": [
-              "dividendRate"
+              "dividendRate",
+              "dividendPaymentDate"
             ],
             "abs_tol": 1e-6,
             "rel_tol": 1e-6

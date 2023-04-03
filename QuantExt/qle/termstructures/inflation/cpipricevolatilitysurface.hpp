@@ -544,7 +544,7 @@ double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::implyVol
     bool interpolated = indexIsInterpolated();
     capFloor.setPricingEngine(engine);
 
-    auto targetFunction = [&engine, &cal, &dc, &bdc, &startDate,  & index, &obsLag, &freq, &price,
+    auto targetFunction = [&engine, &cal, &dc, &bdc, &startDate, &obsLag, &freq, &price,
                            &capFloor, &interpolated](const double& guess) {
         boost::shared_ptr<QuantExt::ConstantCPIVolatility> vol = boost::make_shared<QuantExt::ConstantCPIVolatility>(
             guess, 0, cal, bdc, dc, obsLag, freq, interpolated, startDate);

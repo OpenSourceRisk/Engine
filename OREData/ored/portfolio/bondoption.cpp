@@ -119,9 +119,9 @@ void BondOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, multiplier, optionData_.premiumData(), -multiplier,
-                    currency, engineFactory, bondOptionBuilder->configuration(MarketContext::pricing));
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, multiplier,
+                                       optionData_.premiumData(), multiplier > 0.0 ? -1.0 : 1.0, currency,
+                                       engineFactory, bondOptionBuilder->configuration(MarketContext::pricing));
 
     instrument_.reset(new VanillaInstrument(bondoption, multiplier, additionalInstruments, additionalMultipliers));
 

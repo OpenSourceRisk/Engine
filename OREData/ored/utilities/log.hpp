@@ -545,7 +545,7 @@ class ConsoleLog : public QuantLib::Singleton<ConsoleLog, std::integral_constant
     friend class QuantLib::Singleton<ConsoleLog, std::integral_constant<bool, true>>;
 private:
     // may be empty but never uninitialised
-    ConsoleLog() : enabled_(false), width_(50), progressBarWidth_(0) {}
+    ConsoleLog() : enabled_(false), width_(50), progressBarWidth_(40) {}
 
     bool enabled_;
     QuantLib::Size width_;
@@ -585,29 +585,31 @@ public:
     boost::shared_mutex& mutex() { return mutex_; }
 };
 
-
 #define CONSOLEW(text)                                                                                                 \
     {                                                                                                                  \
         if (ore::data::ConsoleLog::instance().enabled()) {                                                             \
             Size w = ore::data::ConsoleLog::instance().width();                                                        \
             std::ostringstream oss;                                                                                    \
             oss << text;                                                                                               \
+            Size len = oss.str().length();                                                                             \
+            Size wsLen = w > len ? w - len : 1;                                                                        \
+            oss << std::string(wsLen, ' ');                                                                            \
             boost::unique_lock<boost::shared_mutex> lock(ore::data::ConsoleLog::instance().mutex());                   \
-            std::cout << setw(w) << left << oss.str() << std::flush;                                                   \
+            std::cout << oss.str();                                                                                    \
+            std::cout << std::flush;                                                                                   \
         }                                                                                                              \
     }
 
- 
 #define CONSOLE(text)                                                                                                  \
     {                                                                                                                  \
         if (ore::data::ConsoleLog::instance().enabled()) {                                                             \
             std::ostringstream oss;                                                                                    \
             oss << text;                                                                                               \
             boost::unique_lock<boost::shared_mutex> lock(ore::data::ConsoleLog::instance().mutex());                   \
-            std::cout << oss.str() << std::endl;                                                                       \
+            std::cout << oss.str() << "\n";                                                                            \
+            std::cout << std::flush;                                                                                   \
         }                                                                                                              \
     }
-    
 
 } // namespace data
 } // namespace ore

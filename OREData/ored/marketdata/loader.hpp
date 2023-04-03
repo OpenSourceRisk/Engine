@@ -31,6 +31,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/wildcard.hpp>
 
+#include <qle/indexes/dividendmanager.hpp>
 #include <ql/time/date.hpp>
 
 #include <boost/shared_ptr.hpp>
@@ -88,7 +89,7 @@ public:
     //@}
 
     //! Optional load dividends method
-    virtual std::set<Fixing> loadDividends() const;
+    virtual std::set<QuantExt::Dividend> loadDividends() const;
 
     void setActualDate(const QuantLib::Date& d) { actualDate_ = d; }
     const Date& actualDate() const { return actualDate_; }
