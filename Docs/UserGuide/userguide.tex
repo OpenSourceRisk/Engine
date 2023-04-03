@@ -131,7 +131,7 @@
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Acadia Inc.}
-\date{13 March 2023}
+\date{31 March 2023}
 \maketitle
 
 \newpage
@@ -152,7 +152,7 @@ Date & Author & Comment \\
 30 June 2021 & Acadia & updates for release 6\\
 16 September 2022 & Acadia & updates for release 7\\
 6 December 2022 & Acadia & updates for release 8\\
-13 March 2023 & Acadia & updates for release 9\\
+31 March 2023 & Acadia & updates for release 9\\
 \hline
 \end{supertabular}
 \end{center}
@@ -709,9 +709,9 @@ C++ support under the Programming Languages features (disabled by default).
 \item Run CMake command:
 \begin{itemize}
 \item 32-bit: \\
-{\tt cmake -G "Visual Studio 17 2022" -A x64 -DBOOST\_INCLUDEDIR=\%BOOST\% -DBOOST\_LIBRARYDIR=\%BOOST\_LIB64\% -DMSVC\_LINK\_DYNAMIC\_RUNTIME=true -B build}
+{\tt cmake -G "Visual Studio 17 2022" -A x64 -DBOOST\_INCLUDEDIR=\%BOOST\% -DBOOST\_LIBRARYDIR=\%BOOST\_LIB64\% -DQL\_ENABLE\_SESSIONS=ON -DMSVC\_LINK\_DYNAMIC\_RUNTIME=true -B build}
 \item 64-bit: \\
-{\tt cmake -G "Visual Studio 17 2022" -A x32 -DBOOST\_INCLUDEDIR=\%BOOST\% -DBOOST\_LIBRARYDIR=\%BOOST\_LIB32\% -DMSVC\_LINK\_DYNAMIC\_RUNTIME=true -B build}
+{\tt cmake -G "Visual Studio 17 2022" -A x32 -DBOOST\_INCLUDEDIR=\%BOOST\% -DBOOST\_LIBRARYDIR=\%BOOST\_LIB32\% -DQL\_ENABLE\_SESSIONS=ON -DMSVC\_LINK\_DYNAMIC\_RUNTIME=true -B build}
 \end{itemize}
 Replace the generator "Visual Studio 17 2022" with the actual installed version.
 The solution and project files will be generated in the {\tt $\langle$ORE\_ROOT$\rangle${\bs}build} subdirectory.
@@ -725,13 +725,18 @@ The solution and project files will be generated in the {\tt $\langle$ORE\_ROOT$
 With the 5th release we have discontinued automake support so that ORE can only be built with CMake on Unix systems, as follows.
 
 \begin{enumerate}
-\item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
+\item set environment variable to locate the boost include and boost library directories\\
+\medskip
+  {\tt export BOOST\_LIB=path/to/boost/lib}\\
+  {\tt export BOOST\_INC=path/to/boost/include}
+\medskip
+\Item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
 \item Configure CMake by invoking \\
 \medskip
-{\tt cmake -DBOOST\_ROOT=\${BOOST} -DBOOST\_LIBRARYDIR=\${BOOST}/stage/lib ..} \\
+{\tt cmake -DBOOST\_ROOT=\${BOOST\_INC} -DBOOST\_LIBRARYDIR=\${BOOST\_LIB} -DQL\_ENABLE\_SESSIONS=ON ..} \\
 \medskip
-
-Alternatively, set environment variables {\tt BOOST\_ROOT} and {\tt BOOST\_LIBRARYDIR} and run \\
+where the {\tt QL\_ENABLE\_SESSIONS} variable is set to ON in order to enable some multi-threading applications in ORE.
+Alternatively, set environment variables {\tt BOOST\_ROOT} and {\tt BOOST\_LIBRARYDIR} directly and run \\
 \medskip
 {\tt cmake ..} \\
 \medskip
@@ -796,6 +801,7 @@ to initialize the compiler-related environment.
 {\tt \hspace{2cm} -D BOOST\_LIBRARYDIR=\%BOOST\_LIB64\% }\textbackslash\\
 {\tt \hspace{2cm} -D CMAKE\_BUILD\_TYPE=Release }\textbackslash\\
 {\tt \hspace{2cm} -D MSVC\_LINK\_DYNAMIC\_RUNTIME=true} \textbackslash\\
+{\tt \hspace{2cm} -D QL\_ENABLE\_SESSIONS=ON}  \textbackslash\\
 {\tt \hspace{2cm} -G Ninja ..} \\
 \medskip
 where the -G option allows choosing the desired build system generator.
@@ -942,53 +948,53 @@ This section is a stand-alone HOWTO for building ore and oreswig, including Pyth
  
 Set the following environment variables to the paths where the above items live on your machine, e.g:
  
-{\tt set DEMO\_BOOST\_ROOT=C:{\bs}repos{\bs}boost{\bs}boost\_1\_81\_0} \\
-{\tt set DEMO\_BOOST\_LIB=C:{\bs}repos{\bs}boost{\bs}boost\_1\_81\_0{\bs}lib{\bs}x64{\bs}lib} \\
-{\tt set DEMO\_SWIG\_DIR=C:{\bs}repos{\bs}swigwin-4.1.1} \\
-{\tt set DEMO\_ORE\_DIR=C:{\bs}repos{\bs}ore } \\
-{\tt set DEMO\_ORE\_SWIG\_DIR=C:{\bs}repos{\bs}oreswig}
+{\tt set BOOST\_INC=C:{\bs}repos{\bs}boost{\bs}boost\_1\_81\_0} \\
+{\tt set BOOST\_LIB=C:{\bs}repos{\bs}boost{\bs}boost\_1\_81\_0{\bs}lib{\bs}x64{\bs}lib} \\
+{\tt set SWIG=C:{\bs}repos{\bs}swigwin-4.1.1} \\
+{\tt set ORE=C:{\bs}repos{\bs}ore } \\
+{\tt set ORESWIG=C:{\bs}repos{\bs}oreswig}
  
 \subsubsection*{Build ORE}
  
 Generate the project files:
  
 \medskip
-{\tt cd \%DEMO\_ORE\_DIR\%} \\
+{\tt cd \%ORE\%} \\
 {\tt mkdir build }\\
-{\tt cd \%DEMO\_ORE\_DIR\%{\bs}build} \\
-{\tt set BOOST\_INCLUDEDIR=\%DEMO\_BOOST\_ROOT\%} \\
-{\tt set BOOST\_LIBRARYDIR=\%DEMO\_BOOST\_LIB\%} \\
-%{\tt "C:{\bs}Program Files{\bs}CMake{\bs}bin{\bs}cmake.exe" .. $\backslash$\\
+{\tt cd \%ORE\%{\bs}build} \\
 {\tt cmake .. $\backslash$\\
 \hspace{1cm} -DBoost\_NO\_WARN\_NEW\_VERSIONS=1 $\backslash$\\
 \hspace{1cm} -Wno-dev -G "Visual Studio 17 2022" $\backslash$ \\
 \hspace{1cm} -A x64 $\backslash$\\
-\hspace{1cm} -DMSVC\_LINK\_DYNAMIC\_RUNTIME=OFF}
+\hspace{1cm} -DMSVC\_LINK\_DYNAMIC\_RUNTIME=OFF $\backslash$ \\
+\hspace{1cm} -DBOOST\_ROOT=\$BOOST\_INC $\backslash$\\
+\hspace{1cm} -DBOOST\_LIBRARYDIR=\$BOOST\_LIB $\backslash$
+\hspace{2cm} -DQL\_ENABLE\_SESSIONS=ON} 
 
 \medskip
-This will create \%DEMO\_ORE\_DIR\%{\bs}build{\bs}ORE.sln
+This will create \%ORE\%{\bs}build{\bs}ORE.sln
  
 \medskip
 Build:
  
 \medskip
-{\tt cd \%DEMO\_ORE\_DIR\%{\bs}build} \\
+{\tt cd \%ORE\%{\bs}build} \\
 %{\tt "C:{\bs}Program Files{\bs}CMake{\bs}bin{\bs}cmake.exe" -{}-build . -{}-config Release}
 {\tt cmake -{}-build . -{}-config Release}
 
 \medskip
-This will create  \%DEMO\_ORE\_DIR\%{\bs}build{\bs}OREAnalytics{\bs}orea{\bs}Release{\bs}OREAnalytics-x64-mt.lib
+This will create  \%ORE\%{\bs}build{\bs}OREAnalytics{\bs}orea{\bs}Release{\bs}OREAnalytics-x64-mt.lib
  
 \subsubsection*{Build ORE-SWIG Wrapper and Wheel}
  
 In contrast to the generic cmake-based SWIG build in section \ref{sec:oreswig}, we are now resorting to python's setup.py.
  
 \medskip
-{\tt cd \%DEMO\_ORE\_SWIG\_DIR\%{\bs}OREAnalytics-SWIG{\bs}Python} \\
-{\tt set BOOST\_ROOT=\%DEMO\_BOOST\_ROOT\%} \\
-{\tt set BOOST\_LIB=\%DEMO\_BOOST\_LIB\%} \\
-{\tt set ORE\_DIR=\%DEMO\_ORE\_DIR\%} \\
-{\tt set PATH=\%PATH\%;\%DEMO\_SWIG\_DIR\%} \\
+{\tt cd \%ORESWIG\%{\bs}OREAnalytics-SWIG{\bs}Python} \\
+{\tt set BOOST\_ROOT=\%BOOST\_INC\%} \\
+% set BOOST_LIB is needed but already done above
+% set ORE needed but already done above
+{\tt set PATH=\%PATH\%;\%SWIG\%} \\
 {\tt set ORE\_STATIC\_RUNTIME=1} \\
 {\tt python setup.py wrap} \\
 {\tt python setup.py build} \\
@@ -1001,7 +1007,7 @@ This will create
 \item the Python module and static library in folder {\tt <PATH>{\bs}build{\bs}lib.win-amd64-cpython-310} (the directory name depends on the machine and python version)
 \item the wheel file (filename.whl) in folder {\tt <PATH>{\bs}dist}
 \end{itemize}
-where {\tt <PATH>} stands for {\tt \%DEMO\_ORE\_SWIG\_DIR\%{\bs}OREAnalytics-SWIG{\bs}Python}.
+where {\tt <PATH>} stands for {\tt \%ORESWIG\%{\bs}OREAnalytics-SWIG{\bs}Python}.
 
 \medskip
 To use the wrapper directly: \\
@@ -1040,22 +1046,24 @@ This section is a stand-alone HOWTO for building and using a python wheel for OR
 
 \subsubsection*{Environment variables}
 
-Set the following environment variables to the paths where the above items live on your machine, e.g:
+Set the following environment variables to the paths where the ore and ore swig repos, as well as boost live on your machine, e.g:
 
 \medskip
-{\tt export DEMO\_BOOST\_DIR=/home/username/quaternion/boost/install} \\
-{\tt export DEMO\_ORE\_DIR=/home/username/quaternion/ore} \\
-{\tt export DEMO\_ORE\_SWIG\_DIR=/home/username/quaternion/oreswig}
+{\tt export ORE=$HOME/dev/ore} \\
+{\tt export ORESWIG=$HOME/dev/oreswig}\\
+{\tt export BOOST\_INC=/opt/homebrew/include} \\
+{\tt export BOOST\_LIB=/opt/homebrew/lib} 
 
 \subsubsection*{Build ORE}
 
 Use cmake to generate the project Makefiles
 
 \medskip
-{\tt cd \$DEMO\_ORE\_DIR} \\
+{\tt cd \$ORE} \\
 {\tt mkdir build} \\
-{\tt cd \$DEMO\_ORE\_DIR/build} \\
+{\tt cd \$ORE/build} \\
 {\tt cmake .. \\
+\hspace{1cm} -DQL\_ENABLE\_SESSIONS=ON $\backslash$\\
 \hspace{1cm} -DCMAKE\_POSITION\_INDEPENDENT\_CODE=ON $\backslash$\\
 \hspace{1cm} -DORE\_BUILD\_DOC=OFF $\backslash$ \\
 \hspace{1cm} -DORE\_BUILD\_EXAMPLES=OFF $\backslash$ \\
@@ -1066,20 +1074,19 @@ Use cmake to generate the project Makefiles
 \hspace{1cm} -DQL\_BUILD\_TEST\_SUITE=OFF $\backslash$\\
 \hspace{1cm} -DBoost\_NO\_WARN\_NEW\_VERSIONS=1 $\backslash$\\
 \hspace{1cm} -DBoost\_NO\_SYSTEM\_PATHS=1 $\backslash$\\
-\hspace{1cm} -DBOOST\_ROOT=\$DEMO\_BOOST\_DIR }
-
-\medskip
-This will generate \$DEMO\_ORE\_DIR/build/Makefile
+\hspace{1cm} -DBOOST\_ROOT=\$BOOST\_INC $\backslash$\\
+\hspace{1cm} -DBOOST\_LIBRARYDIR=\$BOOST\_LIB}
+}
 
 \medskip
 Execute the following to kick off the build:
 
 \medskip
-{\tt cd \$DEMO\_ORE\_DIR/build} \\
+{\tt cd \$ORE/build} \\
 {\tt cmake -{}-build} . 
 
 \medskip
-This will generate \$DEMO\_ORE\_DIR/build/OREAnalytics/orea/libOREAnalytics.so
+This will generate \$ORE/build/OREAnalytics/orea/libOREAnalytics.so or .dylib
 
 \subsubsection*{Build ORE-SWIG Wrapper and Wheel}
 
@@ -1090,26 +1097,28 @@ The commands below will try to link to boost library boost\_thread.  On some pla
 {\tt export BOOST\_THREAD=boost\_thread-mt} \\
 
 \medskip
-{\tt cd \$DEMO\_ORE\_SWIG\_DIR/OREAnalytics-SWIG/Python} \\
-{\tt export ORE=\$DEMO\_ORE\_DIR} \\
-{\tt export BOOST\_INC=\$DEMO\_BOOST\_DIR}/include} \\
-{\tt export BOOST\_LIB=\$DEMO\_BOOST\_DIR}/lib} \\
-{\tt python3 setup.py wrap} \\
-{\tt python3 setup.py build} \\
-{\tt python3 -m build -{}-wheel}
+
+Ensure that environent variables ORE, BOOST\_INC and BOOST\_LIB are set (see above), then
 
 \medskip
-will then generate the wheel file (filename.whl) in folder \$DEMO\_ORE\_SWIG\_DIR/OREAnalytics-SWIG/Python/dist.
+{\tt cd \$ORESWIG/OREAnalytics-SWIG/Python} \\
+{\tt python setup.py wrap} \\
+{\tt python setup.py build} \\
+{\tt python -m build -{}-wheel}
+
+\medskip
+will then generate the wheel file (filename.whl) in folder \$ORESWIG/OREAnalytics-SWIG/Python/dist.
+For the second step above you may need to modify the \$ORESWIG/OREAnalytics-SWIG/oreanalytics-config script to return the appropriate cflags and libs on your machine.
 
 \medskip
 To use the wheel:
 
 \medskip
-{\tt cd \$DEMO\_ORE\_SWIG\_DIR/OREAnalytics-SWIG/Python/Examples} \\
-{\tt python3 -m venv env1} \\
+{\tt cd \$ORESWIG/OREAnalytics-SWIG/Python/Examples} \\
+{\tt python -m venv env1} \\
 {\tt . ./env1/bin/activate} \\
-{\tt pip install \$DEMO\_ORE\_SWIG\_DIR/OREAnalytics-SWIG/Python/dist/filename.whl} \\
-{\tt python3 swap.py} \\
+{\tt pip install \$ORESWIG/OREAnalytics-SWIG/Python/dist/filename.whl} \\
+{\tt python commodityforward.py} \\
 {\tt deactivate} \\
 {\tt rm -rf env1}
 

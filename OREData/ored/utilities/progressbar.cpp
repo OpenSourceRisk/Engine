@@ -58,10 +58,6 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
     if (finalized_)
         return;
     double ratio = static_cast<double>(progress) / static_cast<double>(total);
-    if (!ConsoleLog::instance().allowSpecialCharacters()) {
-        std::cout << static_cast<int>(ratio * 100.0) << "\n";
-        return;
-    }
     if (progress >= total) {
         std::cout << "\r" << std::setw(messageWidth_) << std::left << message_;
         for (unsigned int i = 0; i < barWidth_; ++i)

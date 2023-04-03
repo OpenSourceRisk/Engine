@@ -73,7 +73,8 @@ public:
 
     //! Constructors
     Analytic(){};
-    Analytic(std::unique_ptr<Impl> impl,
+    Analytic(//! Concrete implementation of the analytic
+             std::unique_ptr<Impl> impl,
              //! The types of all (sub) analytics covered by this Analytic object
              //! e.g. NPV, CASHFLOW, CASHFLOWNPV, etc., covered by the PricingAnalytic
              const std::set<std::string>& analyticTypes,
