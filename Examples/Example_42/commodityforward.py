@@ -2,7 +2,7 @@
 # Copyright (C) 2018 Quaternion Risk Manaement Ltd
 # All rights reserved.
 
-from OREAnalytics import *
+from ORE import *
 
 today = Settings.instance().evaluationDate 
 print ("\ntoday's date is %s" % today.ISO())

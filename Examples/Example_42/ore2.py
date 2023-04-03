@@ -14,7 +14,7 @@
 '''
 
 import sys, time
-from OREAnalyticsPython import *
+from ORE import *
 
 #############################################
 # Read inputs from files and kick off ORE run
