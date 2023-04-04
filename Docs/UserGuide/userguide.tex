@@ -390,23 +390,24 @@ TESTS
 DOCUMENTATION
 
 \begin{itemize}
-\item The user guide has grown from 440 to 480 pages, mainly due to the
-  migration of Credit derivative instruments into ORE, as well as new examples
+\item The user guide has grown from 440 to 486 pages, mainly due to the
+  migration of Credit derivative instruments into ORE, as well as new examples 39 - 42.
 \end{itemize}
 
 \bigskip
-LANGUAGE BINDUNGS
+LANGUAGE BINDINGS
 
 \begin{itemize}
 \item Upgrade to QuantLib-SWIG-1.29
 \item The SWIG wrapper has been extended to provide access to ORE input
   construction in memory and to query in-memory results (reports etc), in line
-  with the refactoring mentioned below.
-  See the {\bf new Python example} OREAnalytics-SWIG/Python/Examples/ore3.py
+  with the refactoring mentioned below. See the new {\bf Example 42}. 
 \item To facilitate access to ORE Python, we are providing Python wheels for various
   OS types and Python versions starting with this release, thanks to Eric Ehlers's
   effort and Luigi Ballabio's support to get in up and running using github actions.
-  See the \href{https://github.com/OpenSourceRisk/ORE-SWIG#readme}{ORE-SWIG repository} for {\bf how to install the ORE module}.
+  Build instructions for the Python wheels are included in this user guide, see sections  
+  \ref{sec:oreswig}, \ref{sec:win_wheel}, \ref{sec:nix_wheel}. 
+  See the new {\bf Example 42} on how to use the published wheels.
 \end{itemize}
 
 \bigskip
