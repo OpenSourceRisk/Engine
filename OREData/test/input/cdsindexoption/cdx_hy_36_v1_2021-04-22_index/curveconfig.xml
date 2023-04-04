@@ -3,6 +3,12 @@
     <CDSVolatility>
       <CurveId>RED:2I65BRYP9</CurveId>
       <CurveDescription/>
+      <Terms>
+	<Term>
+	  <Label>5Y</Label>
+	  <Curve>Default/USD/RED:2I65BRYP9_5Y</Curve>
+	</Term>
+      </Terms>
       <StrikeSurface>
         <QuoteType>ImpliedVolatility</QuoteType>
         <VolatilityType>Lognormal</VolatilityType>
@@ -14,12 +20,6 @@
         <TimeExtrapolation>Flat</TimeExtrapolation>
         <StrikeExtrapolation>Flat</StrikeExtrapolation>
       </StrikeSurface>
-      <Terms>
-	<Term>
-	  <Label>5Y</Label>
-	  <Curve>Default/USD/RED:2I65BRYP9_5Y</Curve>
-	</Term>
-      </Terms>
       <DayCounter>A365</DayCounter>
       <Calendar>NullCalendar</Calendar>
       <StrikeType>Price</StrikeType>

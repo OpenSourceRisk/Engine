@@ -36,6 +36,8 @@ engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
 engine/cptycalculator.cpp
 engine/filteredsensitivitystream.cpp
+engine/historicalpnlgenerator.cpp
+engine/historicalsensipnlcalculator.cpp
 engine/mporcalculator.cpp
 engine/multithreadedvaluationengine.cpp
 engine/npvrecord.cpp
@@ -57,12 +59,17 @@ engine/zerotoparcube.cpp
 scenario/clonedscenariogenerator.cpp
 scenario/clonescenariofactory.cpp
 scenario/crossassetmodelscenariogenerator.cpp
+scenario/csvscenariogenerator.cpp
 scenario/deltascenario.cpp
 scenario/deltascenariofactory.cpp
+scenario/historicalscenariofilereader.cpp
+scenario/historicalscenariogenerator.cpp
+scenario/historicalscenarioloader.cpp
 scenario/lgmscenariogenerator.cpp
 scenario/scenario.cpp
 scenario/scenariogeneratorbuilder.cpp
 scenario/scenariogeneratordata.cpp
+scenario/scenarioshiftcalculator.cpp
 scenario/scenariosimmarket.cpp
 scenario/scenariosimmarketparameters.cpp
 scenario/scenariosimmarketplus.cpp
@@ -122,6 +129,8 @@ engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cptycalculator.hpp
 engine/filteredsensitivitystream.hpp
+engine/historicalpnlgenerator.hpp
+engine/historicalsensipnlcalculator.hpp
 engine/mporcalculator.hpp
 engine/multithreadedvaluationengine.hpp
 engine/npvrecord.hpp
@@ -146,14 +155,21 @@ scenario/aggregationscenariodata.hpp
 scenario/clonedscenariogenerator.hpp
 scenario/clonescenariofactory.hpp
 scenario/crossassetmodelscenariogenerator.hpp
+scenario/csvscenariogenerator.hpp
 scenario/deltascenario.hpp
 scenario/deltascenariofactory.hpp
+scenario/historicalscenariofilereader.hpp
+scenario/historicalscenariogenerator.hpp
+scenario/historicalscenarioloader.hpp
+scenario/historicalscenarioreader.hpp
 scenario/lgmscenariogenerator.hpp
 scenario/scenario.hpp
 scenario/scenariofactory.hpp
+scenario/scenariofilter.hpp
 scenario/scenariogenerator.hpp
 scenario/scenariogeneratorbuilder.hpp
 scenario/scenariogeneratordata.hpp
+scenario/scenarioshiftcalculator.hpp
 scenario/scenariosimmarket.hpp
 scenario/scenariosimmarketparameters.hpp
 scenario/scenariosimmarketplus.hpp
@@ -175,7 +191,8 @@ target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${Boost_LIBRARIES})
-if(ZLIB_FOUND)
+if(ORE_USE_ZLIB)
+    target_link_libraries(${OREA_LIB_NAME} ${ZLIB_LIBRARIES})
     add_definitions(-DORE_USE_ZLIB)
 endif()
 

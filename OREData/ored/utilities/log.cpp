@@ -22,11 +22,13 @@
 */
 
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem.hpp>
 #include <iomanip>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
+using namespace boost::filesystem;
 using namespace boost::posix_time;
 using namespace std;
 
@@ -145,18 +147,26 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
 
     // Filename & line no
     // format is " (file:line)"
-    int lineNoLen = (int)log10((double)lineNo) + 1;     // Length of the int as a string
-    int len = 2 + strlen(filename) + 1 + lineNoLen + 1; // " (" + file + ':' + line + ')'
-
-    int maxLen = 30; // gives about 23 chars for the filename
-    if (len <= maxLen) {
-        ls_ << " (" << filename << ':' << lineNo << ')';
-        // pad out spaces
-        ls_ << string(maxLen - len, ' ');
+    string filepath;
+    if (rootPath_.empty()) {
+        filepath = filename;
     } else {
-        // need to trim the filename to fit into maxLen chars
-        // need to remove (len - maxLen) chars + 3 for the "..."
-        ls_ << " (..." << string(filename).substr(3 + len - maxLen) << ':' << lineNo << ')';
+        filepath = relative(path(filename), rootPath_).string();
+    }
+    int lineNoLen = (int)log10((double)lineNo) + 1;     // Length of the int as a string
+    int len = 2 + filepath.length() + 1 + lineNoLen + 1; // " (" + file + ':' + line + ')'
+
+    if (maxLen_ == 0) {
+        ls_ << " (" << filepath << ':' << lineNo << ')';
+    } else {
+        if (len <= maxLen_) {
+            // pad out spaces
+            ls_ << string(maxLen_ - len, ' ') << " (" << filepath << ':' << lineNo << ')';
+        } else {
+            // need to trim the filename to fit into maxLen chars
+            // need to remove (len - maxLen_) chars + 3 for the "..."
+            ls_ << " (..." << filepath.substr(3 + len - maxLen_) << ':' << lineNo << ')';
+        }
     }
 
     ls_ << " : ";
@@ -166,10 +176,10 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
         ls_ << " [" << pid_ << "] ";
 
     // update statistics
-    if(lastLineNo_ == lineNo && lastFileName_ == filename) {
+    if (lastLineNo_ == lineNo && lastFileName_ == filepath) {
         ++sameSourceLocationSince_;
     } else {
-        lastFileName_ = filename;
+        lastFileName_ = filepath;
         lastLineNo_ = lineNo;
         sameSourceLocationSince_ = 0;
         writeSuppressedMessagesHint_ = true;
@@ -220,7 +230,7 @@ LoggerStream::~LoggerStream() {
 }
 
 string StructuredMessage::json() const {
-    string msg = "{ \"category\":\"" + category_ + "\", \"group\":\"" + group_ + "\"," + " \"message\":\"" +
+    string msg = "{ \"category\":\"" + ore::data::to_string(category_) + "\", \"group\":\"" + ore::data::to_string(group_) + "\"," + " \"message\":\"" +
                  jsonify(message_) + "\"";
 
     if (!subFields_.empty()) {
@@ -279,8 +289,8 @@ string EventMessage::json() const {
             } else if (p.second.type() == typeid(bool)) {
                 value = to_string(boost::any_cast<bool>(p.second));
             } else {
-                WLOG(StructuredMessage("Error", "Event Message Logging", "Unrecognised value type for key '" + p.first + "'",
-                                       std::pair<string, string>()));
+                WLOG(StructuredLoggingErrorMessage("Event Message Logging",
+                                                   "Unrecognised value type for key '" + p.first + "'"));
             }
 
             if (i > 0)
@@ -301,6 +311,45 @@ string EventMessage::jsonify(const string& s) const {
     boost::replace_all(str, "\r", "\\r");
     boost::replace_all(str, "\n", "\\n");
     return str;
+}
+
+
+std::ostream& operator<<(std::ostream& out, const StructuredMessage::Category& category) {
+    if (category == StructuredMessage::Category::Error)
+        out << "Error";
+    else if (category == StructuredMessage::Category::Warning)
+        out << "Warning";
+    else if (category == StructuredMessage::Category::Unknown)
+        out << "UnknownType";
+    else
+        QL_FAIL("operator<<: Unsupported enum value for StructuredMessage::Category");
+
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const StructuredMessage::Group& group) {
+    if (group == StructuredMessage::Group::Analytics)
+        out << "Analytics";
+    else if (group == StructuredMessage::Group::Configuration)
+        out << "Configuration";
+    else if (group == StructuredMessage::Group::Model)
+        out << "Model";
+    else if (group == StructuredMessage::Group::Curve)
+        out << "Curve";
+    else if (group == StructuredMessage::Group::Trade)
+        out << "Trade";
+    else if (group == StructuredMessage::Group::Fixing)
+        out << "Fixing";
+    else if (group == StructuredMessage::Group::Logging)
+        out << "Logging";
+    else if (group == StructuredMessage::Group::ReferenceData)
+        out << "Reference Data";
+    else if (group == StructuredMessage::Group::Unknown)
+        out << "UnknownType";
+    else
+        QL_FAIL("operator<<: Unsupported enum value for StructuredMessage::Group");
+
+    return out;
 }
 
 } // namespace data

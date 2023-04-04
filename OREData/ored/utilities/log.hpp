@@ -39,6 +39,7 @@
 #include <time.h>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <ql/qldefines.hpp>
@@ -284,6 +285,22 @@ public:
         boost::unique_lock<boost::shared_mutex> lock(mutex());
         mask_ = mask;
     }
+    const boost::filesystem::path& rootPath() {
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
+        return rootPath_;
+    }
+    void setRootPath(const boost::filesystem::path& pth) {
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
+        rootPath_ = pth;
+    }
+    int maxLen() {
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
+        return maxLen_;
+    }
+    void setMaxLen(const int n) {
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
+        maxLen_ = n;
+    }
 
     bool enabled() {
         boost::shared_lock<boost::shared_mutex> lock(mutex());
@@ -307,8 +324,10 @@ private:
     std::map<string, boost::shared_ptr<Logger>> loggers_;
     bool enabled_;
     unsigned mask_;
+    boost::filesystem::path rootPath_;
     std::ostringstream ls_;
 
+    int maxLen_ = 45;
     std::size_t sameSourceLocationSince_ = 0;
     bool writeSuppressedMessagesHint_ = true;
     std::size_t sameSourceLocationCutoff_ = 1000;
@@ -452,11 +471,15 @@ private:
 //}
 class StructuredMessage {
 public:
-    StructuredMessage(const string& category, const string& group, const string& message,
+    enum class Category { Error, Warning, Unknown };
+
+    enum class Group { Analytics, Configuration, Model, Curve, Trade, Fixing, Logging, ReferenceData, Unknown };
+
+    StructuredMessage(const Category& category, const Group& group, const string& message,
                       const std::map<string, string>& subFields = std::map<string, string>())
         : category_(category), group_(group), message_(message), subFields_(subFields) {}
 
-    StructuredMessage(const string& category, const string& group, const string& message,
+    StructuredMessage(const Category& category, const Group& group, const string& message,
                       const std::pair<string, string>& subField = std::pair<string, string>())
         : StructuredMessage(category, group, message, std::map<string, string>({subField})) {}
 
@@ -470,14 +493,27 @@ public:
     string json() const;
 
 private:
-    // utility function to delimate string for json, handles \" and \\ and control characters
+    // utility function to delimit string for json, handles \" and \\ and control characters
     string jsonify(const string& s) const;
 
-    string category_, group_, message_;
+    Category category_;
+    Group group_;
+    string message_;
     std::map<string, string> subFields_;
 };
 
+std::ostream& operator<<(std::ostream& out, const StructuredMessage::Category&);
+
+std::ostream& operator<<(std::ostream& out, const StructuredMessage::Group&);
+
 inline std::ostream& operator<<(std::ostream& out, const StructuredMessage& sm) { return out << sm.msg(); }
+
+class StructuredLoggingErrorMessage : public StructuredMessage {
+public:
+    StructuredLoggingErrorMessage(const string& exceptionType, const string& exceptionWhat = "")
+        : StructuredMessage(Category::Error, Group::Logging, exceptionWhat,
+                            std::pair<std::string, std::string>({"exceptionType", exceptionType})){};
+};
 
 class EventMessage {
 public:
@@ -509,7 +545,7 @@ class ConsoleLog : public QuantLib::Singleton<ConsoleLog, std::integral_constant
     friend class QuantLib::Singleton<ConsoleLog, std::integral_constant<bool, true>>;
 private:
     // may be empty but never uninitialised
-    ConsoleLog() : enabled_(false), width_(50), progressBarWidth_(0) {}
+    ConsoleLog() : enabled_(false), width_(50), progressBarWidth_(40) {}
 
     bool enabled_;
     QuantLib::Size width_;
@@ -549,29 +585,31 @@ public:
     boost::shared_mutex& mutex() { return mutex_; }
 };
 
-
 #define CONSOLEW(text)                                                                                                 \
     {                                                                                                                  \
         if (ore::data::ConsoleLog::instance().enabled()) {                                                             \
             Size w = ore::data::ConsoleLog::instance().width();                                                        \
             std::ostringstream oss;                                                                                    \
             oss << text;                                                                                               \
+            Size len = oss.str().length();                                                                             \
+            Size wsLen = w > len ? w - len : 1;                                                                        \
+            oss << std::string(wsLen, ' ');                                                                            \
             boost::unique_lock<boost::shared_mutex> lock(ore::data::ConsoleLog::instance().mutex());                   \
-            std::cout << setw(w) << left << oss.str() << std::flush;                                                   \
+            std::cout << oss.str();                                                                                    \
+            std::cout << std::flush;                                                                                   \
         }                                                                                                              \
     }
 
- 
 #define CONSOLE(text)                                                                                                  \
     {                                                                                                                  \
         if (ore::data::ConsoleLog::instance().enabled()) {                                                             \
             std::ostringstream oss;                                                                                    \
             oss << text;                                                                                               \
             boost::unique_lock<boost::shared_mutex> lock(ore::data::ConsoleLog::instance().mutex());                   \
-            std::cout << oss.str() << std::endl;                                                                       \
+            std::cout << oss.str() << "\n";                                                                            \
+            std::cout << std::flush;                                                                                   \
         }                                                                                                              \
     }
-    
 
 } // namespace data
 } // namespace ore

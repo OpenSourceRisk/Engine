@@ -169,7 +169,7 @@ void MarketDataLoader::populateFixings(
         LOG("Asking portfolio for its required fixings");
         FixingMap portfolioFixings;
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap;
-                
+        
         // portfolio fixings will warn if missinbg
         if (inputs_->portfolio()) {
             portfolioFixings = inputs_->portfolio()->fixings();
@@ -194,11 +194,22 @@ void MarketDataLoader::populateFixings(
 
         if (fixings_.size() > 0)
             impl()->retrieveFixings(loader_, fixings_, lastAvailableFixingLookupMap);
+        
+        // apply all fixings now
+        applyFixings(loader_->loadFixings());
 
         // check and warn any missing fixings - only warn for portfolio fixings
         for (const auto& f : portfolioFixings_) {
             for (const auto& d : f.second) {
                 if (!loader_->hasFixing(f.first, d)) {
+                    if (isFxIndex(f.first)) {
+                        auto fxInd = parseFxIndex(f.first);
+                        try { 
+                            fxInd->pastFixing(d);
+                            break;
+                        }
+                        catch (...) {}                        
+                    }
                     WLOG(StructuredFixingWarningMessage(f.first, d, "Missing fixing",
                         "Could not find required fixing id " + f.first +
                         " for date " + ore::data::to_string(d)));
@@ -240,6 +251,9 @@ void MarketDataLoader::populateLoader(
     }
     if (equities.size() > 0)
         impl()->loadCorporateActionData(loader_, equities);
+
+    // apply dividends now
+    applyDividends(loader_->loadDividends());
 
     populateFixings(todaysMarketParameters);
 

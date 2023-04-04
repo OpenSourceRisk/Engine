@@ -71,18 +71,11 @@ int main(int argc, char** argv) {
 
     string inputFile(argv[1]);
 
-    boost::shared_ptr<Parameters> params = boost::make_shared<Parameters>();
     try {
+        auto params = boost::make_shared<Parameters>();
         params->fromFile(inputFile);
-        OREApp ore(params);
-
-        // By default we use the refactored version of ORE
-        bool useAnalytics = true;
-        // But we can actively switch this off and enable the old behaviour
-        string tmp = params->get("setup", "useAnalytics", false);
-        if (tmp != "")
-            useAnalytics = parseBool(tmp);
-        ore.run(useAnalytics);
+        OREApp ore(params, true);
+        ore.run();
         return 0;
     } catch (const exception& e) {
         cout << endl << "an error occurred: " << e.what() << endl;

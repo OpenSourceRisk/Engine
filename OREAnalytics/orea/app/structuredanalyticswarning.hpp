@@ -33,7 +33,7 @@ public:
     StructuredAnalyticsWarningMessage(const std::string& analyticType, const std::string& warningType,
                                       const std::string& warningWhat)
         : StructuredMessage(
-              "Warning", "Analytics", warningWhat,
+              Category::Warning, Group::Analytics, warningWhat,
               std::map<std::string, std::string>({{"warningType", warningType}, {"analyticType", analyticType}})) {}
 };
 

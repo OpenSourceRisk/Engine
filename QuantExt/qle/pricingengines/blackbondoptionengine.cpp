@@ -93,6 +93,7 @@ void BlackBondOptionEngine::calculate() const {
 
     // compute price vol from yield vol
     Volatility fwdPriceVol;
+    Real shift = 0.0;
     if (volatility_->volatilityType() == VolatilityType::Normal)
         fwdPriceVol = yieldVol * fwdDur;
     else {
@@ -101,7 +102,7 @@ void BlackBondOptionEngine::calculate() const {
                                        << fwdYtm << ")");
             fwdPriceVol = yieldVol * fwdDur * fwdYtm;
         } else {
-            Real shift = volatility_->shift(exerciseDate, underlyingLength);
+            shift = volatility_->shift(exerciseDate, underlyingLength);
             QL_REQUIRE(fwdYtm > -shift, "BlackBondOptionEngine: input yield vols are shifted lognormal "
                                             << shift << ", but yield (" << fwdYtm << ") is not greater than -shift ("
                                             << -shift);
@@ -154,6 +155,13 @@ void BlackBondOptionEngine::calculate() const {
     results_.additionalResults["CashStrike"] = cashStrike;
     results_.additionalResults["FwdCashPrice"] = fwdNpv;
     results_.additionalResults["PriceVol"] = fwdPriceVol;
+    results_.additionalResults["timeToExpiry"] = volatility_->timeFromReference(exerciseDate);
+    results_.additionalResults["optionValue"] = optionValue;
+    results_.additionalResults["yieldVol"] = yieldVol;
+    results_.additionalResults["yieldVolShift"] = shift;
+    results_.additionalResults["fwdDuration"] = fwdDur;
+    results_.additionalResults["fwdYieldToMaturity"] = fwdYtm;
+
     results_.additionalResults["AccruedAtExercise"] = arguments_.underlying->accruedAmount(exerciseDate)/100;
     // results_.additionalResults["CleanBondPrice"] = arguments_.underlying->cleanPrice();
     // results_.additionalResults["DirtyBondPrice"] = arguments_.underlying->dirtyPrice();

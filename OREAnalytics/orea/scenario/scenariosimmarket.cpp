@@ -1963,14 +1963,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                         } else {
                             zeroCurve = boost::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
                                 0, inflationIndex->fixingCalendar(), dc, inflationTs->observationLag(),
-                                inflationTs->frequency(), inflationIndex->interpolated(), zeroCurveTimes, quotes,
+                                inflationTs->frequency(), false, zeroCurveTimes, quotes,
                                 inflationTs->seasonality());
                         }
 
                         Handle<ZeroInflationTermStructure> its(zeroCurve);
                         its->enableExtrapolation();
                         boost::shared_ptr<ZeroInflationIndex> i =
-                            parseZeroInflationIndex(name, false, Handle<ZeroInflationTermStructure>(its));
+                            parseZeroInflationIndex(name, Handle<ZeroInflationTermStructure>(its));
                         Handle<ZeroInflationIndex> zh(i);
                         zeroInflationIndices_.insert(pair<pair<string, string>, Handle<ZeroInflationIndex>>(
                             make_pair(Market::defaultConfiguration, name), zh));

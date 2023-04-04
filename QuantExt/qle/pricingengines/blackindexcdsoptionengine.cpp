@@ -16,16 +16,18 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <numeric>
 #include <qle/pricingengines/blackindexcdsoptionengine.hpp>
+
 #include <ql/exercise.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/pricingengines/credit/isdacdsengine.hpp>
+#include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actual360.hpp>
-#include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <qle/utilities/time.hpp>
+
+#include <numeric>
 
 using namespace QuantLib;
 using std::string;
@@ -33,93 +35,12 @@ using std::vector;
 
 namespace QuantExt {
 
-BlackIndexCdsOptionEngine::BlackIndexCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>& probability,
-                                                     Real recovery, const Handle<YieldTermStructure>& discount,
-                                                     const Handle<QuantExt::CreditVolCurve>& volatility)
-    : probabilities_({probability}), recoveries_({recovery}), discount_(discount), volatility_(volatility),
-      indexRecovery_(recovery) {
-    registerWithMarket();
-}
-
-BlackIndexCdsOptionEngine::BlackIndexCdsOptionEngine(
-    const vector<Handle<DefaultProbabilityTermStructure>>& probabilities, const vector<Real>& recoveries,
-    const Handle<YieldTermStructure>& discount, const Handle<QuantExt::CreditVolCurve>& volatility, Real indexRecovery)
-    : probabilities_(probabilities), recoveries_(recoveries), discount_(discount), volatility_(volatility),
-      indexRecovery_(indexRecovery) {
-
-    QL_REQUIRE(!probabilities_.empty(), "BlackIndexCdsOptionEngine: need at least one probability curve.");
-    QL_REQUIRE(probabilities_.size() == recoveries_.size(), "BlackIndexCdsOptionEngine: mismatch between size"
-                                                                << " of probabilities (" << probabilities_.size()
-                                                                << ") and recoveries (" << recoveries_.size() << ").");
-
-    registerWithMarket();
-
-    // If the index recovery is not populated, use the average recovery.
-    if (indexRecovery_ == Null<Real>())
-        indexRecovery_ = accumulate(recoveries_.begin(), recoveries_.end(), 0.0) / recoveries_.size();
-}
-
-const vector<Handle<DefaultProbabilityTermStructure>>& BlackIndexCdsOptionEngine::probabilities() const {
-    return probabilities_;
-}
-
-const vector<Real>& BlackIndexCdsOptionEngine::recoveries() const { return recoveries_; }
-
-const Handle<YieldTermStructure> BlackIndexCdsOptionEngine::discount() const { return discount_; }
-
-const Handle<QuantExt::CreditVolCurve> BlackIndexCdsOptionEngine::volatility() const { return volatility_; }
-
-void BlackIndexCdsOptionEngine::calculate() const {
-
-    // Underlying index CDS
-    const auto& cds = *arguments_.swap;
-
-    // If given constituent curves, store constituent notionals. Otherwise, store top level notional.
-    if (probabilities_.size() > 1) {
-        notionals_ = cds.underlyingNotionals();
-        QL_REQUIRE(probabilities_.size() == notionals_.size(), "BlackIndexCdsOptionEngine: mismatch between size"
-                                                                   << " of probabilities (" << probabilities_.size()
-                                                                   << ") and notionals (" << notionals_.size() << ").");
-    } else {
-        notionals_ = {cds.notional()};
-    }
-
-    // Get additional results of underlying index CDS.
-    cds.NPV();
-    results_.additionalResults = cds.additionalResults();
-
+void BlackIndexCdsOptionEngine::doCalc() const {
     // Calculate option value depending on strike type.
     if (arguments_.strikeType == CdsOption::Spread)
         spreadStrikeCalculate(fep());
     else
         priceStrikeCalculate(fep());
-}
-
-Real BlackIndexCdsOptionEngine::fep() const {
-
-    // Exercise date
-    const Date& exerciseDate = arguments_.exercise->dates().front();
-
-    // Realised FEP
-    results_.additionalResults["realisedFEP"] = arguments_.realisedFep;
-
-    // Unrealised FEP
-    Real fep = 0.0;
-    for (Size i = 0; i < probabilities_.size(); ++i) {
-        fep += (1 - recoveries_[i]) * probabilities_[i]->defaultProbability(exerciseDate) * notionals_[i];
-    }
-    results_.additionalResults["UnrealisedFEP"] = fep;
-
-    // Total FEP
-    fep += arguments_.realisedFep;
-    results_.additionalResults["FEP"] = fep;
-
-    // Discounted FEP
-    Real discount = discount_->discount(exerciseDate);
-    fep *= discount;
-    results_.additionalResults["discountedFEP"] = fep;
-
-    return fep;
 }
 
 void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
@@ -216,7 +137,7 @@ void BlackIndexCdsOptionEngine::priceStrikeCalculate(Real fep) const {
     // option. Generally, this is the notional of the version that was on the run on that date. Note that the strike
     // price is in terms of this notional also. Markit quotes different reference prices, forward prices and price
     // volatilities for different versions (option trade date determines version traded) of the same index series.
-    Real forwardPrice = (1 - npv / tradeDateNtl) / discToExercise;
+    Real forwardPrice = 1 - npv / tradeDateNtl / discToExercise;
     results_.additionalResults["forwardPrice"] = forwardPrice;
 
     // Front end protection adjusted forward price.
@@ -308,13 +229,6 @@ Real BlackIndexCdsOptionEngine::forwardRiskyAnnuityStrike() const {
     results_.additionalResults["forwardRiskyAnnuityStrike"] = rpv01_K_fwd;
 
     return rpv01_K_fwd;
-}
-
-void BlackIndexCdsOptionEngine::registerWithMarket() {
-    for (const auto& p : probabilities_)
-        registerWith(p);
-    registerWith(discount_);
-    registerWith(volatility_);
 }
 
 } // namespace QuantExt

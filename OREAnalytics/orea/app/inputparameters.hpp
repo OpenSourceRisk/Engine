@@ -222,6 +222,9 @@ public:
     void setFvaLendingCurve(const std::string& s) { fvaLendingCurve_ = s; }
     void setFlipViewBorrowingCurvePostfix(const std::string& s) { flipViewBorrowingCurvePostfix_ = s; }
     void setFlipViewLendingCurvePostfix(const std::string& s) { flipViewLendingCurvePostfix_ = s; }
+    // deterministic initial margin input by netting set
+    void setDeterministicInitialMargin(const std::string& n, TimeSeries<Real> v) { deterministicInitialMargin_[n] = v; }
+    void setDeterministicInitialMarginFromFile(const std::string& fileName);
     // dynamic initial margin details
     void setDimQuantile(Real r) { dimQuantile_ = r; }
     void setDimHorizonCalendarDays(Size s) { dimHorizonCalendarDays_ = s; }
@@ -253,6 +256,7 @@ public:
     const QuantLib::Date& asof() { return asof_; }
     const boost::filesystem::path& resultsPath() const { return resultsPath_; }
     const std::string& baseCurrency() { return baseCurrency_; }
+    const std::string& resultCurrency() { return resultCurrency_; }
     bool continueOnError() { return continueOnError_; }
     bool lazyMarketBuilding() { return lazyMarketBuilding_; }
     bool buildFailedTrades() { return buildFailedTrades_; }
@@ -372,10 +376,10 @@ public:
      *****************/
     const std::string& xvaBaseCurrency() { return xvaBaseCurrency_; }
     bool loadCube() { return loadCube_; }
-    boost::shared_ptr<NPVCube> cube() { return cube_; }
-    boost::shared_ptr<NPVCube> nettingSetCube() { return nettingSetCube_; }
-    boost::shared_ptr<NPVCube> cptyCube() { return cptyCube_; }
-    boost::shared_ptr<AggregationScenarioData> mktCube() { return mktCube_; }
+    const boost::shared_ptr<NPVCube>& cube() { return cube_; }
+    const boost::shared_ptr<NPVCube>& nettingSetCube() { return nettingSetCube_; }
+    const boost::shared_ptr<NPVCube>& cptyCube() { return cptyCube_; }
+    const boost::shared_ptr<AggregationScenarioData>& mktCube() { return mktCube_; }
     bool flipViewXVA() { return flipViewXVA_; }
     bool fullInitialCollateralisation() { return fullInitialCollateralisation_; }
     bool exposureProfiles() { return exposureProfiles_; }
@@ -407,6 +411,13 @@ public:
     const std::string& fvaLendingCurve() { return fvaLendingCurve_; }
     const std::string& flipViewBorrowingCurvePostfix() { return flipViewBorrowingCurvePostfix_; }
     const std::string& flipViewLendingCurvePostfix() { return flipViewLendingCurvePostfix_; }
+    // deterministic initial margin input by nettingset
+    TimeSeries<Real> deterministicInitialMargin(const std::string& n) {
+        if (deterministicInitialMargin_.find(n) != deterministicInitialMargin_.end())
+            return deterministicInitialMargin_.at(n);
+        else
+            return TimeSeries<Real>();
+    }
     // dynamic initial margin details
     Real dimQuantile() { return dimQuantile_; }
     Size dimHorizonCalendarDays() { return dimHorizonCalendarDays_; }
@@ -460,6 +471,7 @@ protected:
     QuantLib::Date asof_;
     boost::filesystem::path resultsPath_;
     std::string baseCurrency_;
+    std::string resultCurrency_;
     bool continueOnError_ = true;
     bool lazyMarketBuilding_ = true;
     bool buildFailedTrades_ = true;
@@ -568,7 +580,7 @@ protected:
     bool exposureProfilesByTrade_ = true;
     Real pfeQuantile_ = 0.95;
     bool fullInitialCollateralisation_ = false;
-    std::string collateralCalculationType_ = "Symmetric";
+    std::string collateralCalculationType_ = "NoLag";
     std::string exposureAllocationMethod_ = "None";
     Real marginalAllocationLimit_ = 1.0;
     // intermediate results of the exposure simulation, before aggregation
@@ -604,6 +616,8 @@ protected:
     std::string fvaLendingCurve_ = "";    
     std::string flipViewBorrowingCurvePostfix_ = "_BORROW";
     std::string flipViewLendingCurvePostfix_ = "_LEND";
+    // deterministic initial margin by netting set
+    std::map<std::string,TimeSeries<Real>> deterministicInitialMargin_;
     // dynamic initial margin details
     Real dimQuantile_ = 0.99;
     Size dimHorizonCalendarDays_ = 14;

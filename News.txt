@@ -36,20 +36,22 @@ TEST
 - OREAnalytics: 68 test functions (vs. 66 in the previous release)
 
 DOCUMENTATION
-- The user guide has grown from 440 to 480 pages, mainly due to the
-  migration of Credit derivative instruments into ORE, as well as new examples
+- The user guide has grown from 440 to 486 pages, mainly due to the
+  migration of Credit derivative instruments into ORE, as well as new examples 39 - 42.
 
 LANGUAGE BINDINGS
+- Upgrade to QuantLib-SWIG-1.29
 - The SWIG wrapper has been extended to provide access to ORE input
   construction in memory and to query in-memory results (reports etc), in line
-  with the refactoring mentioned below.
-  See the new Python example OREAnalytics-SWIG/Python/Examples/ore3.py
+  with the refactoring mentioned below. See the new Example 42.
 - To facilitate access to ORE Python, we are providing Python wheels for various
   OS types and Python versions starting with this release, thanks to Eric Ehlers's
   effort and Luigi Ballabio's support to get in up and running using github actions.
-  See the ORE-SWIG repository for how to install the ORE module.
+  Build instructions for the Python wheels are included in the user guide's section 4.
+  See the new Example 42 on how to use the published wheels.
 
 OTHER
+- Upgrade to QuantLib-1.29
 - Refactor the serialization of NPV cube and market cube (aggregation scenario data)
 - Refactor OREAnalytics/orea/app by separating input construction from processing
   and persisting results. This is to faciliate re-using the processing element

@@ -34,7 +34,7 @@ class StructuredConfigurationWarningMessage : public StructuredMessage {
 public:
     StructuredConfigurationWarningMessage(const std::string& configurationType, const std::string& configurationId,
                                           const std::string& warningWhat)
-        : StructuredMessage("Warning", "Configuration", warningWhat,
+        : StructuredMessage(Category::Warning, Group::Configuration, warningWhat,
                             std::map<std::string, std::string>(
                                 {{"configurationType", configurationType}, {"configurationId", configurationId}})) {}
 };

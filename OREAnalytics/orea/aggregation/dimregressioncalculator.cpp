@@ -46,13 +46,14 @@ namespace ore {
 namespace analytics {
 
 RegressionDynamicInitialMarginCalculator::RegressionDynamicInitialMarginCalculator(
+    const boost::shared_ptr<InputParameters>& inputs,
     const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<NPVCube>& cube,
     const boost::shared_ptr<CubeInterpretation>& cubeInterpretation,
     const boost::shared_ptr<AggregationScenarioData>& scenarioData, Real quantile, Size horizonCalendarDays,
     Size regressionOrder, std::vector<std::string> regressors, Size localRegressionEvaluations,
     Real localRegressionBandWidth, const std::map<std::string, Real>& currentIM)
-    : DynamicInitialMarginCalculator(portfolio, cube, cubeInterpretation, scenarioData, quantile, horizonCalendarDays,
-                                     currentIM),
+: DynamicInitialMarginCalculator(inputs, portfolio, cube, cubeInterpretation, scenarioData, quantile, horizonCalendarDays,
+                                 currentIM),
       regressionOrder_(regressionOrder), regressors_(regressors),
       localRegressionEvaluations_(localRegressionEvaluations), localRegressionBandWidth_(localRegressionBandWidth) {
     Size dates = cube_->dates().size();
@@ -125,6 +126,42 @@ void RegressionDynamicInitialMarginCalculator::build() {
     for (auto n : nettingSetIds_) {
         LOG("Process netting set " << n);
 
+        if (inputs_) {
+            // Check whether a deterministic IM evolution was provided for this netting set
+            // If found then we use this external data to overwrite the following
+            // - nettingSetExpectedDIM_  by nettingSet and date
+            // - nettingSetZeroOrderDIM_ by nettingSet and date
+            // - nettingSetSimpleDIMh_   by nettingSet and date
+            // - nettingSetSimpleDIMp_   by nettingSet and date
+            // - nettingSetDIM_          by nettingSet, date and sample
+            // - dimCube_                by nettingSet, date and sample
+            TimeSeries<Real> im = inputs_->deterministicInitialMargin(n);
+            LOG("External IM evolution for netting set " << n << " has size " << im.size());
+            if (im.size() > 0) {
+                WLOG("Try overriding DIM with externally provided IM evolution for netting set " << n);
+                for (Size j = 0; j < stopDatesLoop; ++j) {
+                    Date d = cube_->dates()[j];
+                    try {
+                        Real value = im[d];
+                        nettingSetExpectedDIM_[n][j] = value;
+                        nettingSetZeroOrderDIM_[n][j] = value;
+                        nettingSetSimpleDIMh_[n][j] = value;
+                        nettingSetSimpleDIMp_[n][j] = value;
+                        for (Size k = 0; k < samples; ++k) {
+                            dimCube_->set(value, nettingSetCount, j, k);
+                            nettingSetDIM_[n][j][k] = value;
+                        }
+                    } catch(std::exception& e) {
+                        QL_FAIL("Failed to lookup external IM for netting set " << n
+                                << " at date " << io::iso_date(d));
+                    }
+                }
+                WLOG("Overriding DIM for netting set " << n << " succeeded");
+                // continue to the next netting set
+                continue;
+            }
+        }
+        
         if (currentIM_.find(n) != currentIM_.end()) {
             Real t0im = currentIM_[n];
             QL_REQUIRE(currentDim.find(n) != currentDim.end(), "current DIM not found for netting set " << n);
@@ -140,8 +177,8 @@ void RegressionDynamicInitialMarginCalculator::build() {
         LOG("Netting set DIM scaling factor: " << nettingSetDimScaling);
 
         for (Size j = 0; j < stopDatesLoop; ++j) {
-            accumulator_set<double, stats<tag::mean, tag::variance>> accDiff;
-            accumulator_set<double, stats<tag::mean>> accOneOverNumeraire;
+            accumulator_set<double, stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance>> accDiff;
+            accumulator_set<double, stats<boost::accumulators::tag::mean>> accOneOverNumeraire;
             for (Size k = 0; k < samples; ++k) {
                 Real numDefault =
                     cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::Numeraire, j, k);
@@ -341,8 +378,8 @@ map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM()
         Real mean_t0_dist = std::accumulate(t0_dist.begin(), t0_dist.end(), 0.0);
         mean_t0_dist /= dist_size;
         vector<Real> t0_delMtM_dist(dist_size, 0.0);
-        accumulator_set<double, stats<tag::mean, tag::variance>> acc_delMtm;
-        accumulator_set<double, stats<tag::mean>> acc_OneOverNum;
+        accumulator_set<double, stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance>> acc_delMtm;
+        accumulator_set<double, stats<boost::accumulators::tag::mean>> acc_OneOverNum;
         for (Size i = 0; i < dist_size; ++i) {
             Real numeraire = scenarioData_->get(relevantDateIdx, i, AggregationScenarioDataType::Numeraire);
             Real deltaMtmFromMean = numeraire * (t0_dist[i] - mean_t0_dist) * sqrtTimeScaling;

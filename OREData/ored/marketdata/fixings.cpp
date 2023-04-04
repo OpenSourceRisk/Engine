@@ -68,30 +68,6 @@ void applyFixings(const set<Fixing>& fixings) {
                  << " seconds");
 }
 
-void applyDividends(const set<Fixing>& dividends) {
-    Size count = 0;
-    map<string, boost::shared_ptr<EquityIndex>> cache;
-    cpu_timer timer;
-    boost::shared_ptr<EquityIndex> index;
-    std::string lastIndexName;
-    for (auto& f : dividends) {
-        try {
-            if (lastIndexName != f.name) {
-                index = boost::make_shared<EquityIndex>(f.name, NullCalendar(), Currency());
-                lastIndexName = f.name;
-            }
-            index->addDividend(f.date, f.fixing, true);
-            TLOG("Added dividend for " << f.name << " (" << io::iso_date(f.date) << ") value:" << f.fixing);
-            count++;
-        } catch (const std::exception& e) {
-            WLOG("Error during adding dividend for " << f.name << ": " << e.what());
-        }
-    }
-    timer.stop();
-    DLOG("Added " << count << " of " << dividends.size() << " dividends in " << timer.format(default_places, "%w")
-                  << " seconds");
-}
-
 bool operator<(const Fixing& f1, const Fixing& f2) {
     if (f1.name != f2.name)
         return f1.name < f2.name;
