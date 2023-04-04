@@ -10,7 +10,7 @@ option(ORE_BUILD_DOC "Build documentation" ON)
 option(ORE_BUILD_EXAMPLES "Build examples" ON)
 option(ORE_BUILD_TESTS "Build test suite" ON)
 option(ORE_BUILD_APP "Build app" ON)
-option(ORE_USE_ZLIB "Use compression for boost::iostreams" ON)
+option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
 
 include(CTest)
 

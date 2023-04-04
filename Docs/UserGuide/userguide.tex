@@ -718,7 +718,9 @@ Replace the generator "Visual Studio 17 2022" with the actual installed version.
 The solution and project files will be generated in the {\tt $\langle$ORE\_ROOT$\rangle${\bs}build} subdirectory.
 \end{itemize}
 
-\item Open the {\tt build{\bs}ORE.sln} and build the entire solution (again, make sure to select the correct platform in the configuration manager first).
+\item build the cmake project with the command {\tt cmake --build build -v --config Release}, 
+
+\item or open the MSVC solution file {\tt build{\bs}ORE.sln} and build the entire solution with Visual Studio (again, make sure to select the correct platform in the configuration manager first).
 \end{enumerate}
 
 \subsubsection*{Unix}
@@ -1009,7 +1011,7 @@ This will create
 \item the Python module and static library in folder {\tt <PATH>{\bs}build{\bs}lib.win-amd64-cpython-310} (the directory name depends on the machine and python version)
 \item the wheel file (filename.whl) in folder {\tt <PATH>{\bs}dist}
 \end{itemize}
-where {\tt <PATH>} stands for {\tt \%ORESWIG\%{\bs}OREAnalytics-SWIG{\bs}Python}.
+where {\tt <PATH>} stands for {\tt \%ORESWIG\%{\bs}OREAnalytics-SWIG{\bs}Python}.
 
 \medskip
 To use the wrapper directly: \\
