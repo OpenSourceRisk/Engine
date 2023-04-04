@@ -709,9 +709,9 @@ C++ support under the Programming Languages features (disabled by default).
 \item Navigate to the ORE root directory
 \item Run CMake command:
 \begin{itemize}
-\item 32-bit: \\
-{\tt cmake -G "Visual Studio 17 2022" -A x64 -DBOOST\_INCLUDEDIR=\%BOOST\% -DBOOST\_LIBRARYDIR=\%BOOST\_LIB64\% -DQL\_ENABLE\_SESSIONS=ON -DMSVC\_LINK\_DYNAMIC\_RUNTIME=true -B build}
 \item 64-bit: \\
+{\tt cmake -G "Visual Studio 17 2022" -A x64 -DBOOST\_INCLUDEDIR=\%BOOST\% -DBOOST\_LIBRARYDIR=\%BOOST\_LIB64\% -DQL\_ENABLE\_SESSIONS=ON -DMSVC\_LINK\_DYNAMIC\_RUNTIME=true -B build}
+\item 32-bit: \\
 {\tt cmake -G "Visual Studio 17 2022" -A x32 -DBOOST\_INCLUDEDIR=\%BOOST\% -DBOOST\_LIBRARYDIR=\%BOOST\_LIB32\% -DQL\_ENABLE\_SESSIONS=ON -DMSVC\_LINK\_DYNAMIC\_RUNTIME=true -B build}
 \end{itemize}
 Replace the generator "Visual Studio 17 2022" with the actual installed version.
@@ -806,18 +806,33 @@ to initialize the compiler-related environment.
 {\tt \hspace{2cm} -D CMAKE\_BUILD\_TYPE=Release }\textbackslash\\
 {\tt \hspace{2cm} -D MSVC\_LINK\_DYNAMIC\_RUNTIME=true} \textbackslash\\
 {\tt \hspace{2cm} -D QL\_ENABLE\_SESSIONS=ON}  \textbackslash\\
-{\tt \hspace{2cm} -G Ninja ..} \\
+{\tt \hspace{2cm} -G "Visual Studio 17 2022" ..} \\
 \medskip
 where the -G option allows choosing the desired build system generator.
 \item Build all ORE libraries including QuantLib by invoking \\
 \medskip
-  {\tt ninja} \\
+  {\tt cmake --build build -v --config Release} \\
 \medskip
-Ninja automatically utilizes all available threads, unless specified with the -j option.
 
 \item Run all test suites by invoking \\
   \medskip {\tt ctest -j4}
 \end{enumerate}
+
+\subsubsection*{ZLIB support}
+
+To enable zlib support configure CMake with the flag {\tt -DORE\_USE\_ZLIB=ON}. 
+
+If zlib is not installed on the system, it can be installed with the package manager VCPKG:
+
+\begin{itemize}
+\item Install vcpkg: https://vcpkg.io/en/getting-started.html
+\item Install dependencies with invoking the command \\
+\medskip
+{\tt vcpkg install --triplet x64-windows zlib} \\
+\medskip
+\end{itemize}
+
+To make VCPKG visible to CMAKE in Visual studio, create an environment variable {\tt VCPKG\_ROOT} pointing to the root of the vcpkg directory and configure ORE with the flag {\tt -DCMAKE\_TOOLCHAIN\_FILE=\%VCPKG\_ROOT\%/scripts/buildsystems/vcpkg.cmake}.
 
 \subsection{Python and Jupyter}\label{sec:python}
 
