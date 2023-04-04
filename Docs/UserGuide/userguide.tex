@@ -3136,29 +3136,31 @@ Since release 9 (March 2023) we provide easy access to ORE via a pre-compiled Py
 {\tt cd Example\_42} 
 
 \medskip
-The examples require Python 3, the actual ORE Python module is then installed with a one-liner, see below. However, to separate ORE from any other Python environments on your machine, we recommend creating a virtual environment first. In that case the steps are as follows:
+The examples require Python 3. The ORE Python module is then installed with a one-liner, see step 3 below. However, to separate ORE from any other Python environments on your machine, we recommend creating a virtual environment first. In that case the steps are as follows. 
 
-\begin{itemize}
+\begin{enumerate}
 \item To create a virtual environment: {\tt python -m venv env1} 
 \item To activate this environment on Windows: {\tt .{\bs}env1{\bs}Scripts{\bs}activate.bat}  \\
 or on macOS/Linux: {\tt ./env1/bin/activate }  
-\item Then install ORE:\\
+\item Then install the latest release of ORE:\\
 {\tt pip install open-source-risk-engine } 
-\item And try examples:\\
+\item Try examples:\\
 	\begin{itemize} 
 	\item {\tt python ore.py} \\
 	This demonstrates the Python-wrapped version of the ORE application that is also used in the command line application {\tt ore.exe}. We use it here to re-run the Swap exposure of {\tt Example\_1}. 
+	\item {\tt python ore2.py} \\
+	This extends the previous example and shows how to access and post-process ORE in-memory results in the Python framework without reading files. 
 	\item {\tt python commodityforward.py} \\
-	The ORE Python module also allows lower-level access to the QuantLib and QuantExt libraries, demonstrated here for a CommodityForward instrument defined QuantExt. 
+	The ORE Python module also allows lower-level access to the QuantLib and QuantExt libraries, demonstrated here for a CommodityForward instrument defined in QuantExt. 
+	Note that the ORE Python module contains the entire QuantLib Python functionality.
 	\end{itemize}
-	More use cases of the ORE Python module, including Jupyter notebooks, can be found in the ORE SWIG repository, in particular in folder OREAnalytics-SWIG/Python/Examples. 
-\item Finally you can deactivate the environment:
-{\tt deactivate} \\
+	More use cases of the ORE Python module including Jupyter notebooks can be found in the ORE SWIG repository, in particular in folder OREAnalytics-SWIG/Python/Examples. 
+\item You can deactivate the environment with {\tt deactivate} \\
 or even fully remove the environment again by removing the {\tt env1} folder.
-\end{itemize}
+\end{enumerate}
 
-You can build the Python module and installable packages yourself following the instructions in sections \ref{sec:oreswig}, \ref{sec:win_wheel}, \ref{sec:nix_wheel}
-based on your local ORE code. {\tt pip install open-source-risk-engine } will always provide the latest release.
+Finally, you can build the Python module and installable packages yourself following the instructions in sections \ref{sec:oreswig}, \ref{sec:win_wheel}, \ref{sec:nix_wheel}
+based on your local ORE code. 
 
 \clearpage
 %========================================================
