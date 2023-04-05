@@ -1952,6 +1952,8 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
 
     balanceOfTheMonth_ = XMLUtils::getChildValueAsBool(node, "BalanceOfTheMonth", false, false);
 
+    balanceOfTheMonthPricingCalendarStr_ = XMLUtils::getChildValue(node, "BalanceOfTheMonthPricingCalendar", false, "");
+
     build();
 }
 
@@ -2076,6 +2078,10 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "BalanceOfTheMonth", balanceOfTheMonth_);
     }
 
+    if (balanceOfTheMonthPricingCalendar_ != Calendar()) {
+            XMLUtils::addChild(doc, node, "BalanceOfTheMonthPricingCalendar", to_string(balanceOfTheMonthPricingCalendar_));
+    }
+
     return node;
 }
 
@@ -2147,6 +2153,12 @@ void CommodityFutureConvention::build() {
         const string& pIdx = offPeakPowerIndexData_->peakIndex();
         QL_REQUIRE(id_ != pIdx, "The peak index (" << pIdx << ") cannot equal the index for which" <<
             " we are providing conventions (" << id_ << ").");
+    }
+
+    if (balanceOfTheMonthPricingCalendarStr_.empty()) {
+        balanceOfTheMonthPricingCalendar_ = Calendar();
+    } else {
+        balanceOfTheMonthPricingCalendar_ = parseCalendar(balanceOfTheMonthPricingCalendarStr_);
     }
 
     QL_REQUIRE(!balanceOfTheMonth_ || isAveraging(), "Balance of the month make only sense for averaging futures");

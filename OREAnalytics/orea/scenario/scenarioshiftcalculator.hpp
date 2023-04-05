@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orepmr/orea/scenario/scenarioshiftcalculator.hpp
+/*! \file orea/scenario/scenarioshiftcalculator.hpp
     \brief Class for calculating the shift multiple between two scenarios for a given key
 */
 
@@ -45,6 +45,7 @@ public:
                                  returned by the shift method
         \param simMarketConfig   simulation market configuration for the scenarios that will
                                  be fed to the shift method
+        \param simMarket         simulation market that will be used if provided
     */
     ScenarioShiftCalculator(const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityConfig,
                             const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketConfig,

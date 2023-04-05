@@ -73,6 +73,7 @@ indexes/commodityindex.cpp
 indexes/compoequityindex.cpp
 indexes/compositeindex.cpp
 indexes/equityindex.cpp
+indexes/dividendmanager.cpp
 indexes/fallbackiborindex.cpp
 indexes/fallbackovernightindex.cpp
 indexes/fxindex.cpp
@@ -422,6 +423,7 @@ indexes/commodityindex.hpp
 indexes/compoequityindex.hpp
 indexes/compositeindex.hpp
 indexes/decpi.hpp
+indexes/dividendmanager.hpp
 indexes/dkcpi.hpp
 indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp

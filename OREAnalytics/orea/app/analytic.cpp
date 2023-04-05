@@ -452,7 +452,7 @@ void PricingAnalyticImpl::runAnalytic(
             }
 
             LOG("Sensi analysis - generate");
-            sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities"));
+            sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities", 100, ORE_NOTICE));
             sensiAnalysis->generateSensitivities();
 
             LOG("Sensi analysis - write sensitivity report in memory");
@@ -568,6 +568,40 @@ void XvaAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simMarketParams = inputs_->exposureSimMarketParams();
     analytic()->configurations().scenarioGeneratorData = inputs_->scenarioGeneratorData();
     analytic()->configurations().crossAssetModelData = inputs_->crossAssetModelData();
+}
+
+void  XvaAnalyticImpl::checkConfigurations(const boost::shared_ptr<Portfolio>& portfolio) {
+    //find the unique nettingset keys in portfolio
+    std::map<std::string, std::string> nettingSetMap =  portfolio->nettingSetMap();
+    std::vector<std::string> nettingSetKeys;
+    for(std::map<std::string, std::string>::iterator it = nettingSetMap.begin(); it != nettingSetMap.end(); ++it)
+        nettingSetKeys.push_back(it->second);
+    //unique nettingset keys
+    sort(nettingSetKeys.begin(), nettingSetKeys.end());
+    nettingSetKeys.erase(unique( nettingSetKeys.begin(), nettingSetKeys.end() ), nettingSetKeys.end());
+    //controls on calcType and grid type, if netting-set has an active CSA in place
+    for(auto const& key : nettingSetKeys){
+        LOG("For netting-set "<<key<<"CSA flag is "<<inputs_->nettingSetManager()->get(key)->activeCsaFlag());
+        if (inputs_->nettingSetManager()->get(key)->activeCsaFlag()){
+            string calculationType = inputs_->collateralCalculationType();
+            if (analytic()->configurations().scenarioGeneratorData->withCloseOutLag()){
+                QL_REQUIRE(calculationType == "NoLag", "For nettingSetID "<<key<< ", CSA is active and a close-out grid is configured in the simulation.xml. Therefore, calculation type "<<calculationType<<" is not admissable. It must be set to NoLag!");
+                LOG("For netting-set "<<key<<", calculation type is "<<calculationType);
+            }
+            else{
+                QL_REQUIRE(calculationType != "NoLag", "For nettingSetID "<<key<< ", CSA is active and a close-out grid is not configured in the simulation.xml. Therefore, calculation type " <<calculationType<<" is not admissable. It must be set to either Symmetric or AsymmerticCVA or AsymmetricDVA!" );
+                LOG("For netting-set "<<key<<", calculation type is "<<calculationType);
+            }
+            if (analytic()->configurations().scenarioGeneratorData->withCloseOutLag() && analytic()->configurations().scenarioGeneratorData->closeOutLag() != 0*Days){
+                Period mpor_simulation = analytic()->configurations().scenarioGeneratorData->closeOutLag();                   
+                Period mpor_netting = inputs_->nettingSetManager()->get(key)->csaDetails()->marginPeriodOfRisk();
+                if (mpor_simulation != mpor_netting)
+                    WLOG(ore::analytics::StructuredAnalyticsWarningMessage(
+                        "XvaAnalytic", "Inconsistent MPoR period",
+                        "For netting set " + key +", close-out lag is not consistent with the netting-set's mpor "));
+            }
+        }
+    }
 }
 
 boost::shared_ptr<EngineFactory> XvaAnalyticImpl::engineFactory() {
@@ -720,9 +754,9 @@ void XvaAnalyticImpl::initClassicRun(const boost::shared_ptr<Portfolio>& portfol
 
 boost::shared_ptr<Portfolio> XvaAnalyticImpl::classicRun(const boost::shared_ptr<Portfolio>& portfolio) {
     LOG("XVA: classicRun");
-   
-    Size n = portfolio->size();
 
+
+    Size n = portfolio->size();
     // Create a new empty portfolio, fill it and link it to the simulation market
     // We don't use Analytic::buildPortfolio() here because we are possibly dealing with a sub-portfolio only.
     LOG("XVA: Build classic portfolio of size " << n << " linked to the simulation market");
@@ -755,10 +789,9 @@ boost::shared_ptr<Portfolio> XvaAnalyticImpl::classicRun(const boost::shared_ptr
 
 void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio) {
 
-    LOG("XVA::buildCube");
-
+    LOG("XVA::buildCube"); 
+    
     // set up valuation calculator factory
-
     auto calculators = [this]() {
         vector<boost::shared_ptr<ValuationCalculator>> calculators;
         if (analytic()->configurations().scenarioGeneratorData->withCloseOutLag()) {
@@ -804,15 +837,14 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
     // set up progress indicators
 
     auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), ConsoleLog::instance().width(), ConsoleLog::instance().progressBarWidth());
-    auto progressLog = boost::make_shared<ProgressLog>("Building cube");
+    auto progressLog = boost::make_shared<ProgressLog>("Building cube", 100, ORE_NOTICE);
 
     if(inputs_->nThreads() == 1) {
 
         // single-threaded engine run
 
         ValuationEngine engine(inputs_->asof(), grid_, simMarket_);
-        if (ConsoleLog::instance().enabled())
-            engine.registerProgressIndicator(progressBar);
+        engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
         engine.buildCube(portfolio, cube_, calculators(), analytic()->configurations().scenarioGeneratorData->withMporStickyDate(),
                          nettingSetCube_, cptyCube_, cptyCalculators());
@@ -856,8 +888,7 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
             boost::make_shared<ore::analytics::ScenarioFilter>(), inputs_->refDataManager(),
             *inputs_->iborFallbackConfig(), true, false, cubeFactory, {}, cptyCubeFactory, "xva-simulation");
 
-        if (ConsoleLog::instance().enabled())
-            engine.registerProgressIndicator(progressBar);
+        engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
 
         engine.buildCube(portfolio, calculators, cptyCalculators,
@@ -939,7 +970,7 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
 void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
     LOG("XVA: amcRun");
-
+    
     if (!scenarioData_) {
         LOG("XVA: Create asd " << grid_->valuationDates().size() << " x " << samples_);
         scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_);
@@ -951,15 +982,14 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
     std::string message = "XVA: Build AMC Cube " + std::to_string(amcPortfolio_->size()) + " x " +
                           std::to_string(grid_->valuationDates().size()) + " x " + std::to_string(samples_) + "... ";
     auto progressBar = boost::make_shared<SimpleProgressBar>(message, ConsoleLog::instance().width(), ConsoleLog::instance().progressBarWidth());
-    auto progressLog = boost::make_shared<ProgressLog>("Building AMC Cube...");
+    auto progressLog = boost::make_shared<ProgressLog>("Building AMC Cube...", 100, ORE_NOTICE);
 
     if (inputs_->nThreads() == 1) {
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
         AMCValuationEngine amcEngine(model_, inputs_->scenarioGeneratorData(), analytic()->market(),
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataCcys());
-        if (ConsoleLog::instance().enabled())
-            amcEngine.registerProgressIndicator(progressBar);
+        amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);
         // We only need to generate asd, if this does not happen in the classic run
         if (!doClassicRun)
@@ -984,8 +1014,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
             inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
             inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"), inputs_->refDataManager(),
             *inputs_->iborFallbackConfig(), true, cubeFactory);
-        if (ConsoleLog::instance().enabled())
-            amcEngine.registerProgressIndicator(progressBar);
+
+        amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);
         // as for the single-threaded case, we only need to generate asd, if this does not happen in the classic run
         if (!doClassicRun)
@@ -1043,6 +1073,8 @@ void XvaAnalyticImpl::runPostProcessor() {
     string marketConfiguration = inputs_->marketConfig("simulation");
 
     bool fullInitialCollateralisation = inputs_->fullInitialCollateralisation();
+
+    checkConfigurations(analytic()->portfolio());
 
     if (!cubeInterpreter_) {
         // FIXME: Can we get the grid from the cube instead?

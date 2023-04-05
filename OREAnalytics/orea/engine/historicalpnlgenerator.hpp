@@ -58,6 +58,7 @@ public:
         \param hisScenGen        historical scenario generator
         \param cube              an NPV cube that will be populated by each call to generateCube
         \param modelBuilders     model builders to update during a val engine run
+        \param dryRun            for testing - limit the number of scenarios to one and fill the cube with random data
     */
     HistoricalPnlGenerator(const std::string& baseCurrency, const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                            const boost::shared_ptr<ScenarioSimMarket>& simMarket,

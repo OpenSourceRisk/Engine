@@ -24,9 +24,9 @@ configuration determines the composition of
 This file also contains other market objects such as FXSpots, Security Spreads and Security Rates which are necessary
 for the construction of a market.
 
-\include{curve_configurations/yieldcurves}
-\include{curve_configurations/default_curves_from_cds}
-\include{curve_configurations/default_curves_other}
+\input{curve_configurations/yieldcurves}
+\input{curve_configurations/default_curves_from_cds}
+\input{curve_configurations/default_curves_other}
 
 \subsubsection{Swaption Volatility Structures}
 
@@ -68,7 +68,7 @@ The meaning of each of the elements in Listing \ref{lst:swaptionvol_configuratio
 
 \begin{itemize}
 \item CurveId: Unique identifier of the swaption volatility structure
-\item CurveDescription: A description of the volatility structure, may be left blank.
+\item CurveDescription [Optional]: A description of the volatility structure, may be left blank.
 \item Dimension: Distinguishes at-the-money matrices and full volatility cubes. \\ Allowable values: {\tt ATM, Smile}
 \item VolatilityType: Specifies the type of market volatility inputs. \\ 
 Allowable values: {\tt Normal, Lognormal, ShiftedLognormal} \\
@@ -78,25 +78,25 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
 \item Calendar: The term structure's calendar used in option tenor to date conversions
 \item BusinessDayConvention: The term structure's business day convention used in option tenor to date conversion
 \item ATM Matrix specification, required for both Dimension choices:
-	\begin{itemize}
-	\item OptionTenors: Option expiry in period form
-	\item SwapTenors: Underlying Swap term in period form
-	\item ShortSwapIndexBase: Swap index (ORE naming convention, e.g. EUR-CMS-1Y) used to compute ATM strikes for tenors up to and including the tenor given in the index (1Y in this example)
-	\item SwapIndexBase: Swap index used to compute ATM strikes for tenors longer than the one defined by the short index 
-	\end{itemize}
+  \begin{itemize}
+  \item OptionTenors: Option expiry in period form
+  \item SwapTenors: Underlying Swap term in period form
+  \item ShortSwapIndexBase: Swap index (ORE naming convention, e.g. EUR-CMS-1Y) used to compute ATM strikes for tenors up to and including the tenor given in the index (1Y in this example)
+  \item SwapIndexBase: Swap index used to compute ATM strikes for tenors longer than the one defined by the short index 
+  \end{itemize}
 \item Smile section specification, this part is required when Dimension is set to {\tt Smile}, otherwise it can be omitted:
-	\begin{itemize}
-	\item SmileOptionTenors: Option expiries, in period form, where smile section data is to be taken into account
-	\item SmileSwapTenors: Underlying Swap term, in period form, where smile section data is to be taken into account
-	\item SmileSpreads: Strikes in smile direction expressed as strike spreads, relative to the ATM strike at the expiry/term point of the ATM matrix
-	\end{itemize}
+  \begin{itemize}
+  \item SmileOptionTenors: Option expiries, in period form, where smile section data is to be taken into account
+  \item SmileSwapTenors: Underlying Swap term, in period form, where smile section data is to be taken into account
+  \item SmileSpreads: Strikes in smile direction expressed as strike spreads, relative to the ATM strike at the expiry/term point of the ATM matrix
+  \end{itemize}
 \item QuoteTag [Optional]: If non-empty, a tag will be included in the market datum labels. This can be used to set up
   underlying specific volatility date. For example, if the quote tag is set to EUR-EURIBOR-3M, the market datum labels
   will be \verb+SWAPTION/RATE\_LNVOL/EUR/EUR-EURIBOR-3M/5Y/10Y/ATM+ instead of
   \verb+SWAPTION/RATE\_LNVOL/EUR/5Y/10Y/ATM+.
 \end{itemize}
 
-\include{curve_configurations/capfloorvolatility}
+\input{curve_configurations/capfloorvolatility}
 
 \subsubsection{FX Volatility Structures}
 
@@ -212,7 +212,7 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
 
 \begin{itemize}
 \item CurveId: Unique identifier of the FX volatility structure
-\item CurveDescription: A description of the volatility structure, may be left blank.
+\item CurveDescription [Optional]: A description of the volatility structure, may be left blank.
 \item Dimension: Distinguishes at-the-money volatility curves from volatility surfaces. An `ATMTriangulated' value
   denotes a curve triangulated from two other surfaces.\\ Allowable values: {\tt ATM, Smile, ATMTriangulated}
 \item SmileType [Optional]: Required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\ Allowable
@@ -300,6 +300,23 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
 \label{lst:eqcurve_configuration}
 \end{longlisting}
 
+The meaning of each of the elements is given below. 
+
+\begin{itemize}
+\item CurveId: Unique identifier of the equity curve structure.
+\item CurveDescription [Optional]: A description of the equity curve structure, may be left blank.
+\item Currency: Currency of the equity.
+\item Calendar [Optional]: The term structure's calendar used in tenor to date conversions. Defaults to the calendar corresponding to \lstinline!Currency!.
+\item ForecastingCurve: CurveId of the curve used for discounting equity fixing forecasts.
+\item Type: The quote types in \lstinline!Quote! (e.g.\ option premium, forward equity price) and whether dividends are taken into account. Allowable values: {\tt DividendYield, ForwardPrice, ForwardDividendPrice, OptionPremium, NoDividends}
+\item ExerciseStyle [Optional]: Exercise type of the underlying option quotes. Only required if \lstinline!Type! is \emph{OptionPremium}. Allowable values: {\tt American, European}
+\item SpotQuote: Market datum ID/name of the current spot rate for the equity underlying.
+\item Quotes [Optional]: Market datum IDs/names to be used in building the curve structure.
+\item DayCounter [Optional]: The term structure's day counter used in date to time conversions. Defaults to {\tt A365F}.
+\item DividendInterpolation [Optional]: This node contains an \lstinline!InterpolationVariable! and \lstinline!InterpolationMethod! sub-node, which define the variable on which the interpolation is performed and the interpolation method for the dividend curve, respectively. The allowable values are found in Table \ref{tab:allow_interp_variables} and Table \ref{tab:allow_interp_methods}, respectively. This should not be provided if \lstinline!Type! is {\tt NoDividends}.
+\item Extrapolation [Optional]: Boolean flag indicating whether extrapolation is allowed. Defaults to {\tt True}.
+\end{itemize}
+
 The equity curves here consists of a spot equity price, as well as a set of either forward prices or else dividend 
 yields. If the index is a dividend futures index then curve type should be entered as ForwardDividendPrice. In this case the curve will be built from forward prices as normal, but excluded from the SIMM calculations as required by the SIMM methodology.
 Upon construction, ORE stores internally an equity spot price quote, a forecasting curve and a dividend yield 
@@ -318,7 +335,7 @@ When configuring volatility structures for equities, there are four options:
 There are a number of fields common to all configurations:
 \begin{itemize}
 \item CurveId: Unique identifier for the curve.
-\item CurveDescription: A description of the curve. This field may be left blank.
+\item CurveDescription [Optional]: A description of the curve. This field may be left blank.
 \item Currency: Currency of the equity.
 \item Calendar [Optional]: allowable value is any valid calendar. Defaults to \lstinline!NullCalendar!.
 \item DayCounter [Optional]: allowable value is any valid day counter. Defaults to \lstinline!A365!.
@@ -702,6 +719,12 @@ The optional boolean parameter \lstinline!EnforceMontoneVariance! should be set 
 <CDSVolatility>
   <CurveId>..<CurveId>
   <CurveDescription>...</CurveDescription>
+  <Terms>
+    <Term>
+      <Label>...</Label>
+      <Curve>...</Curve>
+    </Term>
+  </Terms>
   <Curve>
     <Quotes>
       <Quote>quote_id_1</Quote>
@@ -712,12 +735,6 @@ The optional boolean parameter \lstinline!EnforceMontoneVariance! should be set 
     <Extrapolation>...</Extrapolation>
     <EnforceMontoneVariance></EnforceMontoneVariance>
   </Curve>
-  <Terms>
-    <Term>
-      <Label>...</Label>
-      <Curve>...</Curve>
-    </Term>
-  </Terms>
   <DayCounter>...</DayCounter>
   <Calendar>...</Calendar>
 </CDSVolatility>
@@ -749,16 +766,16 @@ If only one expiry is provided in the list, there is only one quote and a consta
 <CDSVolatility>
   <CurveId>..<CurveId>
   <CurveDescription>...</CurveDescription>
-  <Expiries>...</Expiries>
-  <DayCounter>...</DayCounter>
-  <Calendar>...</Calendar>
-  <QuoteName>...</QuoteName>
   <Terms>
     <Term>
       <Label>...</Label>
       <Curve>...</Curve>
     </Term>
   </Terms>
+  <Expiries>...</Expiries>
+  <DayCounter>...</DayCounter>
+  <Calendar>...</Calendar>
+  <QuoteName>...</QuoteName>
 </CDSVolatility>
 \end{minted}
 \caption{Legacy deprecated CDS volatility curve configuration}
@@ -812,6 +829,12 @@ When the CDS volatility surface is configured as in Listing \ref{lst:cdsvol_surf
 <CDSVolatility>
   <CurveId/>
   <CurveDescription/>
+  <Terms>
+    <Term>
+      <Label>...</Label>
+      <Curve>...</Curve>
+    </Term>
+  </Terms>
   <StrikeSurface>
     <Strikes>...</Strikes>
     <Expiries>...</Expiries>
@@ -821,12 +844,6 @@ When the CDS volatility surface is configured as in Listing \ref{lst:cdsvol_surf
     <TimeExtrapolation>...</TimeExtrapolation>
     <StrikeExtrapolation>...</StrikeExtrapolation>
   </StrikeSurface>
-  <Terms>
-    <Term>
-      <Label>...</Label>
-      <Curve>...</Curve>
-    </Term>
-  </Terms>
   <DayCounter>...</DayCounter>
   <Calendar>...</Calendar>
   <StrikeType>...</StrikeType>
@@ -868,7 +885,7 @@ The meaning of each of the elements in Listing \ref{lst:basecorr_configuration} 
 
 \begin{itemize}
 \item CurveId: Unique identifier of the base correlation structure
-\item CurveDescription: A description of the base correlation structure, may be left blank.
+\item CurveDescription [Optional]: A description of the base correlation structure, may be left blank.
 \item Terms: Comma-separated list of tenors, sorted in increasing order, possibly a single term to represent a flat term structure in time-direction
 \item DetachmentPoints: Comma-separated list of equity tranche detachment points, sorted in increasing order\\
 Allowable values: Any positive number less than one
@@ -977,9 +994,9 @@ Listing \ref{lst:correlation_configuration} shows the configuration of the Corre
 \label{lst:correlation_configuration}
 \end{longlisting}
 
-\include{curve_configurations/commodity_curves}
+\input{curve_configurations/commodity_curves}
 
-\include{curve_configurations/commodity_volatilities}
+\input{curve_configurations/commodity_volatilities}
 
 \subsubsection{Bootstrap Configuration}
 \label{sec:bootstrap_config}
