@@ -619,7 +619,10 @@ CapFloorVolCurve::capSurface(const Date& asof, CapFloorVolatilityCurveConfig& co
     vector<Period> configTenors = parseVectorOfValues<Period>(config.tenors(), &parsePeriod);
 
     std::ostringstream ss;
-    ss << MarketDatum::InstrumentType::CAPFLOOR << "/" << config.quoteType() << "/" << currency << "/*";
+    ss << MarketDatum::InstrumentType::CAPFLOOR << "/" << config.quoteType() << "/" << currency << "/";
+    if (config.quoteIncludesIndexName())
+        ss << config.index() << "/";
+    ss << "*";
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
         QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
@@ -650,8 +653,12 @@ CapFloorVolCurve::capSurface(const Date& asof, CapFloorVolatilityCurveConfig& co
                 }
                 auto key = make_pair(cfq->term(), cfq->strike());
                 auto r = volQuotes.insert(make_pair(key, cfq->quote()->value()));
-                QL_REQUIRE(r.second, "Duplicate cap floor quote in config " << config.curveID() << ", with underlying tenor " << tenor <<
-                    " and currency " << currency << ", for tenor " << key.first << " and strike " << key.second);
+                if (config.quoteIncludesIndexName())
+                    QL_REQUIRE(r.second, "Duplicate cap floor quote in config " << config.curveID() << ", with underlying tenor " << tenor <<
+                        " ,currency " << currency << " and index " << config.index() << ", for tenor " << key.first << " and strike " << key.second);
+                else
+                    QL_REQUIRE(r.second, "Duplicate cap floor quote in config " << config.curveID() << ", with underlying tenor " << tenor <<
+                        " and currency " << currency << ", for tenor " << key.first << " and strike " << key.second);
             }
         }
     }
