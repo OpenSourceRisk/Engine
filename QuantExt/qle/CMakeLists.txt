@@ -72,8 +72,8 @@ indexes/bondindex.cpp
 indexes/commodityindex.cpp
 indexes/compoequityindex.cpp
 indexes/compositeindex.cpp
-indexes/equityindex.cpp
 indexes/dividendmanager.cpp
+indexes/equityindex.cpp
 indexes/fallbackiborindex.cpp
 indexes/fallbackovernightindex.cpp
 indexes/fxindex.cpp
@@ -233,6 +233,7 @@ pricingengines/discountingequityforwardengine.cpp
 pricingengines/discountingforwardbondengine.cpp
 pricingengines/discountingfxforwardengine.cpp
 pricingengines/discountingriskybondengine.cpp
+pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginemulticurve.cpp
 pricingengines/indexcdsoptionbaseengine.cpp
 pricingengines/indexcdstrancheengine.cpp
@@ -245,6 +246,7 @@ pricingengines/mclgmswaptionengine.cpp
 pricingengines/mcmultilegbaseengine.cpp
 pricingengines/mcmultilegoptionengine.cpp
 pricingengines/midpointcdoengine.cpp
+pricingengines/midpointcdsenginemultistate.cpp
 pricingengines/midpointindexcdsengine.cpp
 pricingengines/numericalintegrationindexcdsoptionengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
@@ -689,6 +691,7 @@ pricingengines/discountingequityforwardengine.hpp
 pricingengines/discountingforwardbondengine.hpp
 pricingengines/discountingfxforwardengine.hpp
 pricingengines/discountingriskybondengine.hpp
+pricingengines/discountingriskybondenginemultistate.hpp
 pricingengines/discountingswapenginemulticurve.hpp
 pricingengines/indexcdsoptionbaseengine.hpp
 pricingengines/indexcdstrancheengine.hpp
@@ -701,6 +704,7 @@ pricingengines/mclgmswaptionengine.hpp
 pricingengines/mcmultilegbaseengine.hpp
 pricingengines/mcmultilegoptionengine.hpp
 pricingengines/midpointcdoengine.hpp
+pricingengines/midpointcdsenginemultistate.hpp
 pricingengines/midpointindexcdsengine.hpp
 pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
