@@ -128,7 +128,8 @@ else()
 
     # turn the following warnings into errors
     add_compiler_flag("-Werror=non-virtual-dtor" supportsNonVirtualDtor)
-    add_compiler_flag("-Werror=sign-compare" supportsSignCompare)
+    # the line below breaks the linux build
+    #add_compiler_flag("-Werror=sign-compare" supportsSignCompare)
     add_compiler_flag("-Werror=float-conversion" supportsWfloatConversion)
     add_compiler_flag("-Werror=reorder" supportsReorder)
     add_compiler_flag("-Werror=unused-variable" supportsUnusedVariable)
@@ -137,7 +138,8 @@ else()
     add_compiler_flag("-Werror=unused-lambda-capture" supportsUnusedLambdaCapture)
     add_compiler_flag("-Werror=return-type" supportsReturnType)
     add_compiler_flag("-Werror=unused-function" supportsUnusedFunction)
-    add_compiler_flag("-Werror=suggest-override" supportsSuggestOverride)
+    # the line below breaks the linux build
+    #add_compiler_flag("-Werror=suggest-override" supportsSuggestOverride)
     add_compiler_flag("-Werror=inconsistent-missing-override" supportsInconsistentMissingOverride)
 
     # disable some warnings

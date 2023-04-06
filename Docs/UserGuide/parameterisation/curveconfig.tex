@@ -25,8 +25,8 @@ This file also contains other market objects such as FXSpots, Security Spreads a
 for the construction of a market.
 
 \input{curve_configurations/yieldcurves}
-\include{curve_configurations/default_curves_from_cds}
-\include{curve_configurations/default_curves_other}
+\input{curve_configurations/default_curves_from_cds}
+\input{curve_configurations/default_curves_other}
 
 \subsubsection{Swaption Volatility Structures}
 
@@ -96,7 +96,7 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
   \verb+SWAPTION/RATE\_LNVOL/EUR/5Y/10Y/ATM+.
 \end{itemize}
 
-\include{curve_configurations/capfloorvolatility}
+\input{curve_configurations/capfloorvolatility}
 
 \subsubsection{FX Volatility Structures}
 
@@ -315,6 +315,7 @@ The meaning of each of the elements is given below.
 \item DayCounter [Optional]: The term structure's day counter used in date to time conversions. Defaults to {\tt A365F}.
 \item DividendInterpolation [Optional]: This node contains an \lstinline!InterpolationVariable! and \lstinline!InterpolationMethod! sub-node, which define the variable on which the interpolation is performed and the interpolation method for the dividend curve, respectively. The allowable values are found in Table \ref{tab:allow_interp_variables} and Table \ref{tab:allow_interp_methods}, respectively. This should not be provided if \lstinline!Type! is {\tt NoDividends}.
 \item Extrapolation [Optional]: Boolean flag indicating whether extrapolation is allowed. Defaults to {\tt True}.
+\end{itemize}
 
 The equity curves here consists of a spot equity price, as well as a set of either forward prices or else dividend 
 yields. If the index is a dividend futures index then curve type should be entered as ForwardDividendPrice. In this case the curve will be built from forward prices as normal, but excluded from the SIMM calculations as required by the SIMM methodology.
@@ -993,9 +994,9 @@ Listing \ref{lst:correlation_configuration} shows the configuration of the Corre
 \label{lst:correlation_configuration}
 \end{longlisting}
 
-\include{curve_configurations/commodity_curves}
+\input{curve_configurations/commodity_curves}
 
-\include{curve_configurations/commodity_volatilities}
+\input{curve_configurations/commodity_volatilities}
 
 \subsubsection{Bootstrap Configuration}
 \label{sec:bootstrap_config}

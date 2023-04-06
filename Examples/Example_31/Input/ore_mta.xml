@@ -55,7 +55,7 @@
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="exposureProfilesByTrade">Y</Parameter>
       <Parameter name="quantile">0.95</Parameter>
-      <Parameter name="calculationType">Symmetric</Parameter>
+      <Parameter name="calculationType">NoLag</Parameter>
       <Parameter name="allocationMethod">RelativeXVA</Parameter>
       <Parameter name="marginalAllocationLimit">1.0</Parameter>
       <Parameter name="exerciseNextBreak">N</Parameter>

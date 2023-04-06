@@ -73,7 +73,8 @@ public:
 
     //! Constructors
     Analytic(){};
-    Analytic(std::unique_ptr<Impl> impl,
+    Analytic(//! Concrete implementation of the analytic
+             std::unique_ptr<Impl> impl,
              //! The types of all (sub) analytics covered by this Analytic object
              //! e.g. NPV, CASHFLOW, CASHFLOWNPV, etc., covered by the PricingAnalytic
              const std::set<std::string>& analyticTypes,
@@ -269,6 +270,8 @@ public:
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+
+    void checkConfigurations(const boost::shared_ptr<Portfolio>& portfolio);
     
 protected:
     boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;

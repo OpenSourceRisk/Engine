@@ -17,6 +17,9 @@
 */
 
 #include <ored/portfolio/crosscurrencyswap.hpp>
+#include <ored/portfolio/structuredtradewarning.hpp>
+#include <ored/utilities/indexparser.hpp>
+
 
 namespace ore {
 namespace data {
@@ -27,6 +30,37 @@ CrossCurrencySwap::CrossCurrencySwap(const Envelope& env, const LegData& leg0, c
     : Swap(env, leg0, leg1, "CrossCurrencySwap") {}
 
 void CrossCurrencySwap::checkCrossCurrencySwap() {
+    // This function will attempt to set legIndexCcy to the other ccy from the first Indexing index.
+    auto getIndexingCurrency = [this](const LegData& legData, const Currency& legCcy, Currency& legIndexCcy) {
+        vector<Indexing> indexings = legData.indexing();
+        if (!indexings.empty() && indexings.front().hasData()) {
+            Indexing indexing = indexings.front();
+            if (!boost::starts_with(indexing.index(), "FX-")) {
+                WLOG(StructuredTradeWarningMessage(
+                    tradeType(), id(), "Trade validation (checkCrossCurrencySwap)",
+                    "Could not set fixed leg currency to Indexing currency for trade validation. Index (" +
+                        indexing.index() + ") should start with 'FX-'"));
+                return;
+            }
+
+            auto index = parseFxIndex(indexing.index());
+            Currency srcCurrency = index->sourceCurrency();
+            Currency tgtCurrency = index->targetCurrency();
+
+            if (legCcy != srcCurrency && legCcy != tgtCurrency) {
+                WLOG(StructuredTradeWarningMessage(tradeType(), id(), "Trade validation (checkCrossCurrencySwap)",
+                                                   "Could not set fixed leg currency to Indexing currency for trade "
+                                                   "validation. Expected the leg currency (" +
+                                                       legCcy.code() +
+                                                       ") be equal to either of the currencies in the index (" +
+                                                       indexing.index() + ")"));
+                return;
+            }
+
+            legIndexCcy = legCcy == srcCurrency ? tgtCurrency : srcCurrency;
+        }
+    };
+
     // Cross Currency Swap legs must be either Fixed, Floating or Cashflow and exactly two of Fixed and/or Floating
     vector<Size> legDataIdx;
     for (Size i = 0; i < legData_.size(); i++) {
@@ -40,28 +74,37 @@ void CrossCurrencySwap::checkCrossCurrencySwap() {
     QL_REQUIRE(legDataIdx.size() == 2,
                "A Cross Currency Swap must have 2 legs that are either Fixed or Floating: " + id());
 
-    // Check leg currencies
-    Currency legCcy0 = parseCurrencyWithMinors(legData_[legDataIdx[0]].currency());
-    Currency legIndexCcy0;
-    if (legData_[legDataIdx[0]].legType() == "Fixed") {
-        legIndexCcy0 = legCcy0;
-    } else if (legData_[legDataIdx[0]].legType() == "Floating") {
-        auto floatingLeg = boost::dynamic_pointer_cast<FloatingLegData>(legData_[legDataIdx[0]].concreteLegData());
-        legIndexCcy0 = parseIborIndex(floatingLeg->index())->currency();
-    }
+    const LegData& legData0 = legData_[legDataIdx[0]];
+    const LegData& legData1 = legData_[legDataIdx[1]];
 
-    Currency legCcy1;
-    legCcy1 = parseCurrencyWithMinors(legData_[legDataIdx[1]].currency());
-    // Require leg currencies to be different. If they are the same, we do a further check of FloatingLeg
-    // underlying currencies, in which case we still call this a cross currency swap.
+    // Check leg currencies
+    const Currency legCcy0 = parseCurrencyWithMinors(legData0.currency());
+    const Currency legCcy1 = parseCurrencyWithMinors(legData1.currency());
+
+    // Require leg currencies to be different. If they are the same, we do a further check of the underlying currencies
+    // (Indexings for Fixed leg; Floating leg index for Floating leg) and compare these.
     if (legCcy0 == legCcy1) {
-        Currency legIndexCcy1;
-        if (legData_[legDataIdx[1]].legType() == "Fixed") {
-            legIndexCcy1 = legCcy1;
-        } else if (legData_[legDataIdx[1]].legType() == "Floating") {
-            auto floatingLeg = boost::dynamic_pointer_cast<FloatingLegData>(legData_[legDataIdx[1]].concreteLegData());
-            legIndexCcy1 = parseIborIndex(floatingLeg->index()) ->currency();
+
+        // Get relevant index currency for the first leg - defaults to the leg ccy
+        Currency legIndexCcy0 = legCcy0;
+        if (legData0.legType() == "Fixed") {
+            getIndexingCurrency(legData0, legCcy0, legIndexCcy0);
+        } else if (legData0.legType() == "Floating") {
+            auto floatingLeg = boost::dynamic_pointer_cast<FloatingLegData>(legData0.concreteLegData());
+            if (floatingLeg)
+                legIndexCcy0 = parseIborIndex(floatingLeg->index())->currency();
         }
+
+        // Get relevant index currency for the second leg - defaults to the leg ccy
+        Currency legIndexCcy1 = legCcy1;
+        if (legData1.legType() == "Fixed") {
+            getIndexingCurrency(legData1, legCcy1, legIndexCcy1);
+        } else if (legData1.legType() == "Floating") {
+            auto floatingLeg = boost::dynamic_pointer_cast<FloatingLegData>(legData1.concreteLegData());
+            if (floatingLeg)
+                legIndexCcy1 = parseIborIndex(floatingLeg->index()) ->currency();
+        }
+
         QL_REQUIRE(legIndexCcy0 != legIndexCcy1, "Cross currency swap legs must have different currencies.");
     }
 }

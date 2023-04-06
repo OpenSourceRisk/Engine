@@ -129,52 +129,12 @@ std::vector<std::string> OREApp::getErrors() {
         errors.push_back(fbLogger_->logger->next());
     return errors;
 }
-    
-void OREApp::run(const std::vector<std::string>& marketData,
-                 const std::vector<std::string>& fixingData) {
-    try {
-        LOG("ORE analytics starting");
 
-        QL_REQUIRE(inputs_, "ORE input parameters not set");
-        
-        // Set global evaluation date, though already set in the OREAppInputParameters c'tor
-        Settings::instance().evaluationDate() = inputs_->asof();
-
-        // FIXME
-        QL_REQUIRE(inputs_->pricingEngine(), "pricingEngine not set");
-        GlobalPseudoCurrencyMarketParameters::instance().set(inputs_->pricingEngine()->globalParameters());
-
-        // Initialize the global conventions 
-        QL_REQUIRE(inputs_->conventions(), "conventions not set");
-        InstrumentConventions::instance().setConventions(inputs_->conventions());
-
-        // Create a market data loader that takes input from the provided vectors
-        auto loader = boost::make_shared<MarketDataInMemoryLoader>(inputs_, marketData, fixingData);
-
-        // Create the analytics manager
-        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs_, loader);
-        LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
-        CONSOLEW("Requested analytics:");
-        CONSOLE(to_string(inputs_->analytics()));
-        LOG("Requested analytics: " << to_string(inputs_->analytics()));
-
-        // Run the requested analytics
-        analyticsManager_->runAnalytics(inputs_->analytics());
-
-        // Leave any report writing to the calling aplication
-    }
-    catch (std::exception& e) {
-        ostringstream oss;
-        oss << "Error in ORE analytics: " << e.what();
-        ALOG(oss.str());
-        CONSOLE(oss.str());
-        QL_FAIL(oss.str());
-        return;
-    }
-    
-    LOG("ORE analytics done");
+Real OREApp::getRunTime() {
+    boost::chrono::duration<double> seconds = boost::chrono::nanoseconds(runTimer_.elapsed().wall);
+    return seconds.count();
 }
-
+    
 vector<string> OREApp::getFileNames(const string& fileString, const string& path) {
     vector<string> fileNames;
     boost::split(fileNames, fileString, boost::is_any_of(",;"), boost::token_compress_on);
@@ -290,13 +250,23 @@ void OREApp::analytics() {
     LOG("ORE analytics done");
 }
 
-OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, const boost::filesystem::path& logRootPath)
+OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, 
+               const boost::filesystem::path& logRootPath)
     : params_(params), inputs_(nullptr) {
 
-    if (console)
+    if (console) {
         ConsoleLog::instance().switchOn();
+    }
 
-    setupLog(logRootPath);
+    string outputPath = params_->get("setup", "outputPath");
+    string logFile = outputPath + "/" + params_->get("setup", "logFile");
+    Size logMask = 15;
+    // Get log mask if available
+    if (params_->has("setup", "logMask")) {
+        logMask = static_cast<Size>(parseInteger(params_->get("setup", "logMask")));
+    }
+    
+    setupLog(outputPath, logFile, logMask, logRootPath);
 
     auto conventions = boost::make_shared<Conventions>();
     InstrumentConventions::instance().setConventions(conventions);
@@ -325,26 +295,7 @@ OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::stri
         ConsoleLog::instance().switchOn();
     }
 
-    // Close any open loggers
-    closeLog();
-
-    // Initialise file logger and buffered logger
-    string logFilePath = (inputs_->resultsPath() / logFile).string();
-    boost::filesystem::path p{inputs_->resultsPath()};
-    if (!boost::filesystem::exists(p))
-        boost::filesystem::create_directories(p);
-    QL_REQUIRE(boost::filesystem::is_directory(p),
-               "output path '" << inputs_->resultsPath() << "' is not a directory.");
-
-    // Report StructuredErrorMessages with level WARNING, ERROR, CRITICAL, ALERT
-    fbLogger_ = boost::make_shared<FilteredBufferedLoggerGuard>();
-    Log::instance().registerLogger(boost::make_shared<FileLogger>(logFilePath));
-    boost::filesystem::path oreRootPath =
-        logRootPath.empty() ? boost::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path()
-                            : logRootPath;
-    Log::instance().setRootPath(oreRootPath);
-    Log::instance().setMask(logLevel);
-    Log::instance().switchOn();
+    setupLog(inputs_->resultsPath().string(), logFile, logLevel, logRootPath);
 }
 
 OREApp::~OREApp() {
@@ -354,21 +305,70 @@ OREApp::~OREApp() {
 
 void OREApp::run() {
 
-    cpu_timer timer;
+    runTimer_.start();
     
     try {
         analytics();
     } catch (std::exception& e) {
-        ALOG("Error: " << e.what());
+        ALOG(StructuredAnalyticsWarningMessage("OREApp::run()", "Error", e.what()));
         CONSOLE("Error: " << e.what());
         return;
     }
 
-    timer.stop();
+    runTimer_.stop();
 
-    CONSOLE("run time: " << setprecision(2) << timer.format(default_places, "%w") << " sec");
+    CONSOLE("run time: " << runTimer_.format(default_places, "%w") << " sec");
     CONSOLE("ORE done.");
     LOG("ORE done.");
+}
+
+void OREApp::run(const std::vector<std::string>& marketData,
+                 const std::vector<std::string>& fixingData) {
+    runTimer_.start();
+
+    try {
+        LOG("ORE analytics starting");
+
+        QL_REQUIRE(inputs_, "ORE input parameters not set");
+        
+        // Set global evaluation date, though already set in the OREAppInputParameters c'tor
+        Settings::instance().evaluationDate() = inputs_->asof();
+
+        // FIXME
+        QL_REQUIRE(inputs_->pricingEngine(), "pricingEngine not set");
+        GlobalPseudoCurrencyMarketParameters::instance().set(inputs_->pricingEngine()->globalParameters());
+
+        // Initialize the global conventions 
+        QL_REQUIRE(inputs_->conventions(), "conventions not set");
+        InstrumentConventions::instance().setConventions(inputs_->conventions());
+
+        // Create a market data loader that takes input from the provided vectors
+        auto loader = boost::make_shared<MarketDataInMemoryLoader>(inputs_, marketData, fixingData);
+
+        // Create the analytics manager
+        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs_, loader);
+        LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
+        CONSOLEW("Requested analytics:");
+        CONSOLE(to_string(inputs_->analytics()));
+        LOG("Requested analytics: " << to_string(inputs_->analytics()));
+
+        // Run the requested analytics
+        analyticsManager_->runAnalytics(inputs_->analytics());
+
+        // Leave any report writing to the calling aplication
+    }
+    catch (std::exception& e) {
+        ostringstream oss;
+        oss << "Error in ORE analytics: " << e.what();
+        ALOG(StructuredAnalyticsWarningMessage("OREApp::run()", oss.str(), e.what()));
+        CONSOLE(oss.str());
+        QL_FAIL(oss.str());
+        return;
+    }
+
+    runTimer_.stop();
+    
+    LOG("ORE analytics done");
 }
 
 void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
@@ -1105,30 +1105,24 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     LOG("buildInputParameters done");
 }
 
-void OREApp::setupLog(const boost::filesystem::path& logRootPath) {
+void OREApp::setupLog(const std::string& path, const std::string& file, Size mask,
+                      const boost::filesystem::path& logRootPath) {
     closeLog();
     
-    string outputPath = params_->get("setup", "outputPath");
-    string logFile = outputPath + "/" + params_->get("setup", "logFile");
-    Size logMask = 15; // Default level
-
-    // Get log mask if available
-    if (params_->has("setup", "logMask")) {
-        logMask = static_cast<Size>(parseInteger(params_->get("setup", "logMask")));
-    }
-
-    boost::filesystem::path p{outputPath};
+    boost::filesystem::path p{path};
     if (!boost::filesystem::exists(p)) {
         boost::filesystem::create_directories(p);
     }
-    QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << outputPath << "' is not a directory.");
+    QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << path << "' is not a directory.");
 
-    Log::instance().registerLogger(boost::make_shared<FileLogger>(logFile));
+    Log::instance().registerLogger(boost::make_shared<FileLogger>(file));
+    // Report StructuredErrorMessages with level WARNING, ERROR, CRITICAL, ALERT
+    fbLogger_ = boost::make_shared<FilteredBufferedLoggerGuard>();
     boost::filesystem::path oreRootPath =
         logRootPath.empty() ? boost::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path()
                             : logRootPath;
     Log::instance().setRootPath(oreRootPath);
-    Log::instance().setMask(logMask);
+    Log::instance().setMask(mask);
     Log::instance().switchOn();
 }
 
