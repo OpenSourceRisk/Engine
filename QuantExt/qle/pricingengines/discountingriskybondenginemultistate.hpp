@@ -51,6 +51,7 @@ public:
     Handle<Quote> securitySpread() const { return securitySpread_; };
 
 private:
+    void linkCurves(Size i) const;
     const std::vector<Handle<DefaultProbabilityTermStructure>> defaultCurves_;
     const std::vector<Handle<Quote>> recoveryRates_;
     const Size mainResultState_;

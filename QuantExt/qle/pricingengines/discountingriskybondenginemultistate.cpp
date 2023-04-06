@@ -68,7 +68,7 @@ void DiscountingRiskyBondEngineMultiState::calculate() const {
     // calculate the main state last to keep the results from this calculation
 
     linkCurves(mainResultState_);
-    DiscountingRiskBondEngine::calculate();
+    DiscountingRiskyBondEngine::calculate();
     values[mainResultState_] = results_.value;
 
     // calculate the default state
