@@ -29,12 +29,12 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-/*! The engine will compute a price w.r.t. each given default curve and
-  store them as a vector in an additional result "stateNpv". In addition
-  the engine computes a default value w.r.t. the given recovery, which
-  is the last element of the stateNpv result. The usual NPV (i.e. results.value)
-  is computed w.r.t. the default curve marked by the mainResultState. */
-class MidPointCdsEngineMultiState : public QuantLib::CreditDefaultSwap::engine {
+/*! The engine takes a vector of default curves and recovery rates. For the given
+    main result state it will produce the same results as the MidPointCdsEngine.
+    In addition a result with label "stateNPV" is produced containing the NPV
+    for each given default curve / recovery rate and an additional entry with
+    a default value w.r.t. the last given recovery rate in the vector. */
+class MidPointCdsEngineMultiState : public QuantLib::MidPointCdsEngine {
 public:
     MidPointCdsEngineMultiState(const std::vector<Handle<DefaultProbabilityTermStructure>>& defaultCurves,
                                 const std::vector<Handle<Quote>> recoveryRates,
@@ -42,18 +42,17 @@ public:
                                 const boost::optional<bool> includeSettlementDateFlows = boost::none);
 
     void calculate() const;
-    Real calculateNpv(const Size state) const;
-    Real calculateDefaultValue() const;
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; };
     const std::vector<Handle<DefaultProbabilityTermStructure>>& defaultCurves() const { return defaultCurves_; };
     const std::vector<Handle<Quote>>& recoveryRates() const { return recoveryRates_; };
 
 private:
-    const Handle<YieldTermStructure> discountCurve_;
-    const std::vector<Handle<DefaultProbabilityTermStructure>> defaultCurves_;
-    const Size mainResultState_;
-    const std::vector<Handle<Quote>> recoveryRates_;
-    const boost::optional<bool> includeSettlementDateFlows_;
+    void linkCurves(Size i) const;
+    Real calculateDefaultValue() const;
+
+    std::vector<Handle<DefaultProbabilityTermStructure>> defaultCurves_;
+    std::vector<Handle<Quote>> recoveryRates_;
+    Size mainResultState_;
 };
 
 } // namespace QuantExt
