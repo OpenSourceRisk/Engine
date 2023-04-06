@@ -111,9 +111,10 @@ protected:
     \ingroup portfolio
 */
 
-class BondMultiStateEngineBuilder : public BondEngineBuilder {
+class BondMultiStateDiscountingEngineBuilder : public BondEngineBuilder {
 public:
-    BondMultiStateEngineBuilder() : BondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngineMultiState") {}
+    BondMultiStateDiscountingEngineBuilder()
+        : BondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngineMultiState") {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,

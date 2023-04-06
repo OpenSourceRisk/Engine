@@ -168,9 +168,9 @@ protected:
     \ingroup portfolio
 */
 
-class CreditDefaultSwapMultiStateEngineBuilder : public CreditDefaultSwapEngineBuilder {
+class MidPointCdsMultiStateEngineBuilder : public CreditDefaultSwapEngineBuilder {
 public:
-    CreditDefaultSwapMultiStateEngineBuilder()
+    MidPointCdsMultiStateEngineBuilder()
         : CreditDefaultSwapEngineBuilder("DiscountedCashflows", "MidPointCdsEngineMultiState") {}
 
 protected:
