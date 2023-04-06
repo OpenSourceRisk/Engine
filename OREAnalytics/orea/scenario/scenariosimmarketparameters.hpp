@@ -475,7 +475,7 @@ private:
 
     vector<string> additionalScenarioDataIndices_;
     vector<string> additionalScenarioDataCcys_;
-    Size additionalScenarioDataNumberOfCreditStates_;
+    Size additionalScenarioDataNumberOfCreditStates_ = 0;
     vector<string> additionalScenarioDataSurvivalWeights_;
 
     bool cprSimulate_;
@@ -499,7 +499,7 @@ private:
     bool correlationIsSurface_;
     vector<Period> correlationExpiries_;
     vector<Real> correlationStrikes_;
-    Size numberOfCreditStates_;
+    Size numberOfCreditStates_ = 0;
 
     // Store sim market params as a map from RiskFactorKey::KeyType to a pair,
     // boolean of whether to simulate and a set of curve names

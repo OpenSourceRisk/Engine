@@ -196,7 +196,8 @@ public:
         const CrossAssetModel::Discretization discretization = CrossAssetModel::Discretization::Exact)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs), infConfigs_(infConfigs),
           crLgmConfigs_(crLgmConfigs), crCirConfigs_(crCirConfigs), comConfigs_(comConfigs),
-          bootstrapTolerance_(tolerance), measure_(measure), discretization_(discretization) {
+          numberOfCreditStates_(numberOfCreditStates), bootstrapTolerance_(tolerance), measure_(measure),
+          discretization_(discretization) {
         correlations_ = boost::make_shared<InstantaneousCorrelations>(c);
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
@@ -306,7 +307,7 @@ private:
     vector<boost::shared_ptr<CrLgmData>> crLgmConfigs_;
     vector<boost::shared_ptr<CrCirData>> crCirConfigs_;
     vector<boost::shared_ptr<CommoditySchwartzData>> comConfigs_;
-    Size numberOfCreditStates_;
+    Size numberOfCreditStates_ = 0;
 
     boost::shared_ptr<InstantaneousCorrelations> correlations_;
     Real bootstrapTolerance_;
