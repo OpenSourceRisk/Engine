@@ -29,67 +29,55 @@ namespace QuantExt {
 
 DiscountingRiskyBondEngineMultiState::DiscountingRiskyBondEngineMultiState(
     const Handle<YieldTermStructure>& discountCurve,
-    const std::vector<Handle<DefaultProbabilityTermStructure>>& defaultCurves, const Size mainResultState,
-    const std::vector<Handle<Quote>>& recoveryRates, const Handle<Quote>& securitySpread,
-    boost::optional<bool> includeSettlementDateFlows)
-    : discountCurve_(boost::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread)),
-      defaultCurves_(defaultCurves), mainResultState_(mainResultState), recoveryRates_(recoveryRates),
-      securitySpread_(securitySpread), includeSettlementDateFlows_(includeSettlementDateFlows) {
-    registerWith(discountCurve_);
+    const std::vector<Handle<DefaultProbabilityTermStructure>>& defaultCurves,
+    const std::vector<Handle<Quote>>& recoveryRates, const Size mainResultState, const Handle<Quote>& securitySpread,
+    Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows)
+    : DiscountingRiskyBondEngineMultiState(discountCurve, Handle<DefaultProbabilityTermStructure>(), Handle<Quote>(),
+                                           securitySpread, timestepPeriod, includeSettlementDateFlows),
+      defaultCurves_(defaultCurves), mainResultState_(mainResultState), recoveryRates_(recoveryRates) {
+    QL_REQUIRE(!defaultCurves.empty(), "DiscountingRiskBondEngineMultiState: no default curves / recovery rates given");
     for (auto const& h : defaultCurves_) {
-        QL_REQUIRE(!h.empty(), "DiscountingRiskyBondEngineMultiState: empty default curve handle");
         registerWith(h);
     }
     for (auto const& r : recoveryRates_) {
-        QL_REQUIRE(!r.empty(), "DiscountingRiskyBondEngineMultiState: empty recovery handle");
         registerWith(r);
     }
-    registerWith(securitySpread_);
-    QL_REQUIRE(mainResultState_ < defaultCurves_.size(),
-               "main result state (" << mainResultState_ << ") inconsistent with default curves size "
-                                     << defaultCurves_.size());
+    QL_REQUIRE(mainResultState < defaultCurves.size(), "DiscountingRiskBondEngineMultiState: mainResultState ("
+                                                           << mainResultState << ") out of range 0..."
+                                                           << defaultCurves.size() - 1);
+}
+
+void DiscountingRiskyBondEngineMultiState::linkCurves(Size i) const {
+    defaultCurve_ = defaultCurves_[i];
+    recoveryRate_ = recoveryRates_[i];
 }
 
 void DiscountingRiskyBondEngineMultiState::calculate() const {
-    // FIXME this is bascially a copy of DiscountingRiskyBondEngine, factor out the common computation
-    QL_REQUIRE(!discountCurve_.empty(), "discounting term structure handle is empty");
-    results_.valuationDate = discountCurve_->referenceDate();
+
+    // calculate all states except the main states
+
     std::vector<Real> values(defaultCurves_.size() + 1);
     for (Size i = 0; i < defaultCurves_.size(); ++i) {
-        values[i] = calculateNpv(i);
-    }
-    // FIXME settlement value is set to value here for simplicity
-    results_.value = results_.settlementValue = values[mainResultState_];
-    // calculate default state
-    values.back() = calculateDefaultValue();
-    results_.additionalResults["stateNpv"] = values;
-}
-
-Real DiscountingRiskyBondEngineMultiState::calculateNpv(const Size state) const {
-    Real npvValue = 0.0;
-    Date npvDate = discountCurve_->referenceDate();
-
-    for (auto& cf : arguments_.cashflows) {
-        if (cf->hasOccurred(npvDate, includeSettlementDateFlows_))
+        if (i == mainResultState_)
             continue;
-
-        Probability S = defaultCurves_[state]->survivalProbability(cf->date());
-        npvValue += cf->amount() * S * discountCurve_->discount(cf->date());
-
-        // Add recovery value contributions using the coupon schedule dates as time discretisation
-        // and coupon period mid points as default dates (consistent with CDS mid point engine).
-        // FIXME: This works for fixed and floating coupon bonds, does not for zero bonds.
-        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(cf);
-        if (coupon) {
-            Date startDate = coupon->accrualStartDate();
-            Date endDate = coupon->accrualEndDate();
-            Date effectiveStartDate = (startDate <= npvDate && npvDate <= endDate) ? npvDate : startDate;
-            Date defaultDate = effectiveStartDate + (endDate - effectiveStartDate) / 2;
-            Probability P = defaultCurves_[state]->defaultProbability(effectiveStartDate, endDate);
-            npvValue += coupon->nominal() * recoveryRates_[state]->value() * P * discountCurve_->discount(defaultDate);
-        }
+        linkCurves(i);
+        DiscountingRiskyBondEngineMultiState::calculate();
+        values[i] = results_.value;
     }
-    return npvValue;
+
+    // calculate the main state last to keep the results from this calculation
+
+    linkCurves(mainResultState_);
+    DiscountingRiskBondEngine::calculate();
+    values[mainResultState_] = results_.value;
+
+    // calculate the default state
+
+    values.back() = calculateDefaultValue();
+
+    // set additional result
+
+    results_.additionalResults["stateNpv"] = values;
 }
 
 Real DiscountingRiskyBondEngineMultiState::calculateDefaultValue() const {

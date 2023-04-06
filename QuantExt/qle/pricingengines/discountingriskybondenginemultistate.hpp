@@ -29,17 +29,17 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-/*! The engine will compute a price w.r.t. each given default curve and
-  store them as a vector in an additional result "stateNpv". In addition
-  the engine computes a default value w.r.t. the given recovery, which
-  is the last element of the stateNpv result. The usual NPV (i.e. results.value)
-  is computed w.r.t. the default curve marked by the mainResultState. */
-class DiscountingRiskyBondEngineMultiState : public QuantLib::Bond::engine {
+/*! The engine takes a vector of default curves and recovery rates. For the given
+    main result state it will produce the same results as the MidPointCdsEngine.
+    In addition a result with label "stateNPV" is produced containing the NPV
+    for each given default curve / recovery rate and an additional entry with
+    a default value w.r.t. the last given recovery rate in the vector. */
+class DiscountingRiskyBondEngineMultiState : public QuantExt::DiscountingRiskyBondEngine {
 public:
     DiscountingRiskyBondEngineMultiState(const Handle<YieldTermStructure>& discountCurve,
                                          const std::vector<Handle<DefaultProbabilityTermStructure>>& defaultCurves,
-                                         const Size mainResultState, const std::vector<Handle<Quote>>& recoveryRates,
-                                         const Handle<Quote>& securitySpread,
+                                         const std::vector<Handle<Quote>>& recoveryRates, const Size mainResultState,
+                                         const Handle<Quote>& securitySpread, Period timestepPeriod,
                                          const boost::optional<bool> includeSettlementDateFlows = boost::none);
 
     void calculate() const;
@@ -51,12 +51,9 @@ public:
     Handle<Quote> securitySpread() const { return securitySpread_; };
 
 private:
-    const Handle<YieldTermStructure> discountCurve_;
     const std::vector<Handle<DefaultProbabilityTermStructure>> defaultCurves_;
-    const Size mainResultState_;
     const std::vector<Handle<Quote>> recoveryRates_;
-    const Handle<Quote> securitySpread_;
-    const boost::optional<bool> includeSettlementDateFlows_;
+    const Size mainResultState_;
 };
 
 } // namespace QuantExt
