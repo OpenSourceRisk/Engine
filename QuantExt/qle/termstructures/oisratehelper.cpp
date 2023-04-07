@@ -30,15 +30,15 @@ void no_deletion(YieldTermStructure*) {}
 
 OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, const Handle<Quote>& fixedRate,
                              const boost::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
-                             Natural paymentLag, bool endOfMonth, Frequency paymentFrequency,
-                             BusinessDayConvention fixedConvention, BusinessDayConvention paymentAdjustment,
-                             DateGeneration::Rule rule, const Handle<YieldTermStructure>& discountingCurve,
-                             bool telescopicValueDates)
+                             const Calendar& fixedCalendar, Natural paymentLag, bool endOfMonth,
+                             Frequency paymentFrequency, BusinessDayConvention fixedConvention,
+                             BusinessDayConvention paymentAdjustment, DateGeneration::Rule rule,
+                             const Handle<YieldTermStructure>& discountingCurve, bool telescopicValueDates)
     : RelativeDateRateHelper(fixedRate), settlementDays_(settlementDays), swapTenor_(swapTenor),
-      overnightIndex_(overnightIndex), fixedDayCounter_(fixedDayCounter), paymentLag_(paymentLag),
-      endOfMonth_(endOfMonth), paymentFrequency_(paymentFrequency), fixedConvention_(fixedConvention),
-      paymentAdjustment_(paymentAdjustment), rule_(rule), discountHandle_(discountingCurve),
-      telescopicValueDates_(telescopicValueDates) {
+      overnightIndex_(overnightIndex), fixedDayCounter_(fixedDayCounter), fixedCalendar_(fixedCalendar),
+      paymentLag_(paymentLag), endOfMonth_(endOfMonth), paymentFrequency_(paymentFrequency),
+      fixedConvention_(fixedConvention), paymentAdjustment_(paymentAdjustment), rule_(rule),
+      discountHandle_(discountingCurve), telescopicValueDates_(telescopicValueDates) {
 
     bool onIndexHasCurve = !overnightIndex_->forwardingTermStructure().empty();
     bool haveDiscountCurve = !discountHandle_.empty();
@@ -72,6 +72,7 @@ void OISRateHelper::initializeDates() {
                 .withTelescopicValueDates(telescopicValueDates_);
     // TODO: patch QL?
     //.withFixedAccrualConvention(fixedConvention_)
+    //..withFixedCalendar(fixedCalendar_)
 
     earliestDate_ = swap_->startDate();
     latestDate_ = swap_->maturityDate();
@@ -117,14 +118,15 @@ void OISRateHelper::accept(AcyclicVisitor& v) {
 
 DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDate, const Handle<Quote>& fixedRate,
                                        const boost::shared_ptr<OvernightIndex>& overnightIndex,
-                                       const DayCounter& fixedDayCounter, Natural paymentLag,
-                                       Frequency paymentFrequency, BusinessDayConvention fixedConvention,
-                                       BusinessDayConvention paymentAdjustment, DateGeneration::Rule rule,
-                                       const Handle<YieldTermStructure>& discountingCurve, bool telescopicValueDates)
+                                       const DayCounter& fixedDayCounter, const Calendar& fixedCalendar,
+                                       Natural paymentLag, Frequency paymentFrequency,
+                                       BusinessDayConvention fixedConvention, BusinessDayConvention paymentAdjustment,
+                                       DateGeneration::Rule rule, const Handle<YieldTermStructure>& discountingCurve,
+                                       bool telescopicValueDates)
     : RateHelper(fixedRate), overnightIndex_(overnightIndex), fixedDayCounter_(fixedDayCounter),
-      paymentLag_(paymentLag), paymentFrequency_(paymentFrequency), fixedConvention_(fixedConvention),
-      paymentAdjustment_(paymentAdjustment), rule_(rule), discountHandle_(discountingCurve),
-      telescopicValueDates_(telescopicValueDates) {
+      fixedCalendar_(fixedCalendar), paymentLag_(paymentLag), paymentFrequency_(paymentFrequency),
+      fixedConvention_(fixedConvention), paymentAdjustment_(paymentAdjustment), rule_(rule),
+      discountHandle_(discountingCurve), telescopicValueDates_(telescopicValueDates) {
 
     bool onIndexHasCurve = !overnightIndex_->forwardingTermStructure().empty();
     bool haveDiscountCurve = !discountHandle_.empty();
@@ -147,6 +149,7 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
                 .withRule(rule_)
                 // TODO: patch QL
                 //.withFixedAccrualConvention(fixedConvention_)
+                // .withFixedCalendar(fixedCalendar_)
                 .withPaymentCalendar(overnightIndex_->fixingCalendar())
                 .withPaymentAdjustment(paymentAdjustment_)
                 .withPaymentLag(paymentLag_)

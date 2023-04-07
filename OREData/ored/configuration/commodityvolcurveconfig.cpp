@@ -31,22 +31,16 @@ namespace data {
 CommodityVolatilityConfig::CommodityVolatilityConfig()
     : optionExpiryRollDays_(0) {}
 
-CommodityVolatilityConfig::CommodityVolatilityConfig(const string& curveId, const string& curveDescription,
-                                                     const std::string& currency,
-                                                     const vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig,
-                                                     const string& dayCounter, const string& calendar,
-                                                     const std::string& futureConventionsId,
-                                                     QuantLib::Natural optionExpiryRollDays,
-                                                     const std::string& priceCurveId, const std::string& yieldCurveId,
-                                                     const std::string& quoteSuffix,
-                                                     const OneDimSolverConfig& solverConfig,
-                                                     const boost::optional<bool>& preferOutOfTheMoney,
-						     const string& smileDynamics)
+CommodityVolatilityConfig::CommodityVolatilityConfig(
+    const string& curveId, const string& curveDescription, const std::string& currency,
+    const vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig, const string& dayCounter,
+    const string& calendar, const std::string& futureConventionsId, QuantLib::Natural optionExpiryRollDays,
+    const std::string& priceCurveId, const std::string& yieldCurveId, const std::string& quoteSuffix,
+    const OneDimSolverConfig& solverConfig, const boost::optional<bool>& preferOutOfTheMoney)
     : CurveConfig(curveId, curveDescription), currency_(currency), volatilityConfig_(volatilityConfig),
       dayCounter_(dayCounter), calendar_(calendar), futureConventionsId_(futureConventionsId),
       optionExpiryRollDays_(optionExpiryRollDays), priceCurveId_(priceCurveId), yieldCurveId_(yieldCurveId),
-      quoteSuffix_(quoteSuffix), solverConfig_(solverConfig), preferOutOfTheMoney_(preferOutOfTheMoney),
-      smileDynamics_(smileDynamics) {
+      quoteSuffix_(quoteSuffix), solverConfig_(solverConfig), preferOutOfTheMoney_(preferOutOfTheMoney) {
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -150,8 +144,9 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
         preferOutOfTheMoney_ = parseBool(XMLUtils::getNodeValue(n));
     }
 
-    smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
-
+    if(auto tmp = XMLUtils::getChildNode(node, "Report")){
+        reportConfig_.fromXML(tmp);
+    }
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -186,8 +181,7 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(node, solverConfig_.toXML(doc));
     if (preferOutOfTheMoney_)
         XMLUtils::addChild(doc, node, "PreferOutOfTheMoney", *preferOutOfTheMoney_);
-    XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
-	
+    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     return node;
 }
 

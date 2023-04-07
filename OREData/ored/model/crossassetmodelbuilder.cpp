@@ -79,15 +79,14 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
     const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<CrossAssetModelData>& config,
     const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
     const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
-    const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
-    const DayCounter& dayCounter, const bool dontCalibrate, const bool continueOnError,
-    const std::string& referenceCalibrationGrid, const SalvagingAlgorithm::Type salvaging)
+    const std::string& configurationCrCalibration, const std::string& configurationFinalModel, const bool dontCalibrate,
+    const bool continueOnError, const std::string& referenceCalibrationGrid, const SalvagingAlgorithm::Type salvaging)
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
-      configurationCrCalibration_(configurationCrCalibration), configurationComCalibration_(Market::defaultConfiguration),
-      configurationFinalModel_(configurationFinalModel),
-      dayCounter_(dayCounter), dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
+      configurationCrCalibration_(configurationCrCalibration),
+      configurationComCalibration_(Market::defaultConfiguration), configurationFinalModel_(configurationFinalModel),
+      dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
       referenceCalibrationGrid_(referenceCalibrationGrid), salvaging_(salvaging),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
@@ -693,7 +692,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
     if (data.calibrationType() == CalibrationType::Bootstrap) {
         if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
             TLOGGERSTREAM("Calibration details:");
-            TLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, zInfIndex->interpolated()));
+            TLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
             TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             string exceptionMessage = "INF (DK) " + std::to_string(modelIdx) + " calibration error " +
@@ -701,7 +700,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
                                       std::to_string(config_->bootstrapTolerance());
             WLOG(StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage));
             WLOGGERSTREAM("Calibration details:");
-            WLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, zInfIndex->interpolated()));
+            WLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
             WLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
             if (!continueOnError_)
                 QL_FAIL(exceptionMessage);
@@ -734,8 +733,8 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     auto idxBasket = jyBuilder->indexBasket();
 
     // Attach engines to the helpers.
-    setJyPricingEngine(modelIdx, rrBasket, zInfIndex->interpolated());
-    setJyPricingEngine(modelIdx, idxBasket, zInfIndex->interpolated());
+    setJyPricingEngine(modelIdx, rrBasket, false);
+    setJyPricingEngine(modelIdx, idxBasket, false);
 
     if (dontCalibrate_)
         return;

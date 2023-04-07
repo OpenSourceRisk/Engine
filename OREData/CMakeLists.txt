@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.15)
 
 project(OREData CXX)
 
@@ -11,7 +11,12 @@ get_library_name("OREData" ORED_LIB_NAME)
 get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
 
-find_package (Boost REQUIRED COMPONENTS unit_test_framework regex system date_time serialization filesystem timer OPTIONAL_COMPONENTS chrono)
+if (ORE_BUILD_TESTS)
+    SET(COMPONENTS_CONDITIONAL "unit_test_framework")
+else()
+    SET(COMPONENTS_CONDITIONAL "")
+endif()
+find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} regex system date_time serialization filesystem timer OPTIONAL_COMPONENTS chrono)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${QUANTLIB_SOURCE_DIR})
@@ -26,5 +31,9 @@ add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib/ql")
 add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantExt/qle")
 
 add_subdirectory("ored")
-add_subdirectory("doc")
-add_subdirectory("test")
+if (ORE_BUILD_DOC)
+    add_subdirectory("doc")
+endif()
+if (ORE_BUILD_TESTS)
+    add_subdirectory("test")
+endif()

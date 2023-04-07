@@ -75,7 +75,7 @@ protected:
                 vol->enableExtrapolation();
             }
             return boost::make_shared<QuantLib::GeneralizedBlackScholesProcess>(
-                this->market_->fxRate(ccyPairCode, config), this->market_->discountCurve(assetName, config),
+                this->market_->fxSpot(ccyPairCode, config), this->market_->discountCurve(assetName, config),
                 this->market_->discountCurve(ccy.code(), config), vol);
 
         } else if (assetClassUnderlying == AssetClass::COM) {

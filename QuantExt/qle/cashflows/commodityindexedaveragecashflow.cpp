@@ -1,6 +1,19 @@
 /*
  Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
@@ -33,12 +46,13 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     bool useBusinessDays, CommodityQuantityFrequency quantityFrequency, Natural hoursPerDay, Natural dailyExpiryOffset,
     bool unrealisedQuantity, const boost::optional<pair<Calendar, Real>>& offPeakPowerData,
     const ext::shared_ptr<FxIndex>& fxIndex)
-    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index), startDate_(startDate), endDate_(endDate),
+    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index, fxIndex), startDate_(startDate),
+      endDate_(endDate),
       paymentDate_(paymentDate), pricingCalendar_(pricingCalendar), deliveryDateRoll_(deliveryDateRoll),
       futureMonthOffset_(futureMonthOffset), includeEndDate_(includeEndDate), excludeStartDate_(excludeStartDate),
       useBusinessDays_(useBusinessDays), quantityFrequency_(quantityFrequency), hoursPerDay_(hoursPerDay),
       dailyExpiryOffset_(dailyExpiryOffset), unrealisedQuantity_(unrealisedQuantity),
-      offPeakPowerData_(offPeakPowerData), fxIndex_(fxIndex) {
+      offPeakPowerData_(offPeakPowerData) {
     init(calc);
 }
 
@@ -51,12 +65,12 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     const QuantLib::Date& paymentDateOverride, bool useBusinessDays, CommodityQuantityFrequency quantityFrequency,
     Natural hoursPerDay, Natural dailyExpiryOffset, bool unrealisedQuantity,
     const boost::optional<pair<Calendar, Real>>& offPeakPowerData, const ext::shared_ptr<FxIndex>& fxIndex)
-    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index), startDate_(startDate), endDate_(endDate),
+    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index, fxIndex), startDate_(startDate), endDate_(endDate),
       paymentDate_(paymentDateOverride), pricingCalendar_(pricingCalendar),
       deliveryDateRoll_(deliveryDateRoll), futureMonthOffset_(futureMonthOffset), includeEndDate_(includeEndDate),
       excludeStartDate_(excludeStartDate), useBusinessDays_(useBusinessDays), quantityFrequency_(quantityFrequency),
       hoursPerDay_(hoursPerDay), dailyExpiryOffset_(dailyExpiryOffset), unrealisedQuantity_(unrealisedQuantity),
-      offPeakPowerData_(offPeakPowerData), fxIndex_(fxIndex) {
+      offPeakPowerData_(offPeakPowerData) {
 
     // Derive the payment date
     if (paymentDate_ == Date()) {
@@ -67,28 +81,38 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     init(calc);
 }
 
-Real CommodityIndexedAverageCashFlow::amount() const {
+void CommodityIndexedAverageCashFlow::performCalculations() const {
 
     // Calculate the average price
-    Real averagePrice = 0.0;
+    averagePrice_ = 0.0;
     Real fxRate = 0.0;
     if (weights_.empty()) {
         for (const auto& kv : indices_) {
             fxRate = (fxIndex_)? this->fxIndex()->fixing(kv.first):1.0;
-            averagePrice += fxRate * kv.second->fixing(kv.first);
+            averagePrice_ += fxRate * kv.second->fixing(kv.first);
         }
-        averagePrice /= indices_.size();
+        averagePrice_ /= indices_.size();
     } else {
         // weights_ will be populated when offPeakPowerData_ is provided.
         for (const auto& kv : indices_) {
             fxRate = (fxIndex_)? this->fxIndex()->fixing(kv.first):1.0;
-            averagePrice += fxRate * kv.second->fixing(kv.first) * weights_.at(kv.first);
+            averagePrice_ += fxRate * kv.second->fixing(kv.first) * weights_.at(kv.first);
         }
     }
 
     // Amount is just average price times quantity
     // In case of Foreign currency settlement, the spread must be expressed in Foreign currency units
-    return periodQuantity_ * (gearing_ * averagePrice + spread_);
+    amount_ = periodQuantity_ * (gearing_ * averagePrice_ + spread_);
+}
+
+Real CommodityIndexedAverageCashFlow::amount() const {
+    calculate();
+    return amount_;
+}
+
+Real CommodityIndexedAverageCashFlow::fixing() const {
+    calculate();
+    return averagePrice_;
 }
 
 void CommodityIndexedAverageCashFlow::accept(AcyclicVisitor& v) {
@@ -96,10 +120,6 @@ void CommodityIndexedAverageCashFlow::accept(AcyclicVisitor& v) {
         v1->visit(*this);
     else
         CashFlow::accept(v);
-}
-
-void CommodityIndexedAverageCashFlow::update() {
-    notifyObservers();
 }
 
 void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator>& calc) {
@@ -126,7 +146,7 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
 
         // If not using future prices, just observe spot on every pricing date.
         for (const Date& pd : pds) {
-            indices_[pd] = index_;
+            indices_.push_back({pd,index_});
         }
 
     } else {
@@ -140,7 +160,7 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
                 expiry = index_->fixingCalendar().advance(expiry, dailyExpiryOffset_ * Days);
             }
 
-            indices_[pd] = index_->clone(expiry);
+            indices_.push_back({pd, index_->clone(expiry)});
         }
 
         // Update indices_ where necessary if delivery date roll is greater than 0.

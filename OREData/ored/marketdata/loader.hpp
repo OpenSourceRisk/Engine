@@ -31,6 +31,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/wildcard.hpp>
 
+#include <qle/indexes/dividendmanager.hpp>
 #include <ql/time/date.hpp>
 
 #include <boost/shared_ptr.hpp>
@@ -53,7 +54,7 @@ public:
     //! get all quotes, TODO change the return value to std::set
     virtual std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const = 0;
 
-    //! get quote by its unique name, throws if not existent
+    //! get quote by its unique name, throws if not existent, override in derived classes for performance
     virtual boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date& d) const;
 
     //! get quotes matching a set of names, this should be overridden in derived classes for performance
@@ -81,17 +82,28 @@ public:
 
     virtual std::set<Fixing> loadFixings() const = 0;
 
+    virtual bool hasFixing(const string& name, const QuantLib::Date& d) const;
+
     //! Default implementation for getFixing
     virtual Fixing getFixing(const string& name, const QuantLib::Date& d) const;
     //@}
 
     //! Optional load dividends method
-    virtual std::set<Fixing> loadDividends() const;
+    virtual std::set<QuantExt::Dividend> loadDividends() const;
+
+    void setActualDate(const QuantLib::Date& d) { actualDate_ = d; }
+    const Date& actualDate() const { return actualDate_; }
 
 private:
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version) {}
+
+protected:
+    /*! For lagged market data, where we need to take data from a different date but want to treat it as belonging to
+       the valuation date.
+     */
+    Date actualDate_ = Date();
 };
 } // namespace data
 } // namespace ore

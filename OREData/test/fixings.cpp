@@ -30,15 +30,18 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/trade.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <qle/indexes/dividendmanager.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <tuple>
 
 using namespace QuantLib;
+using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
@@ -197,7 +200,7 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
     // Read in the trade
     Portfolio p;
     string portfolioFile = "trades/" + tradeType + "/" + tradeCase + ".xml";
-    p.load(TEST_INPUT_FILE(portfolioFile));
+    p.fromFile(TEST_INPUT_FILE(portfolioFile));
     BOOST_REQUIRE_MESSAGE(p.size() == 1, "Expected portfolio to contain a single trade");
 
     // Ask for fixings before trades are built should return empty set
@@ -220,7 +223,7 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
                                            << "] but got a map containing " << m.size() << " indices");
 
         // Trade should not throw if we ask for NPV
-        BOOST_CHECK_NO_THROW(p.trades()[0]->instrument()->NPV());
+        BOOST_CHECK_NO_THROW(p.trades().begin()->second->instrument()->NPV());
 
     } else {
         // Check the retrieved fixings against the expected fixings
@@ -235,14 +238,14 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
         // Trade should throw if we ask for NPV and have not added the fixings
         // If it is the zciis trade, it won't throw because the fixings were added for the bootstrap
         if (tradeType != "zciis_with_interp" && tradeType != "cpi_swap_with_interp") {
-            BOOST_CHECK_THROW(p.trades()[0]->instrument()->NPV(), Error);
+            BOOST_CHECK_THROW(p.trades().begin()->second->instrument()->NPV(), Error);
         }
 
         // Add the fixings
         loadFixings(m);
 
         // Trade should now not throw when we try to price it
-        BOOST_CHECK_NO_THROW(p.trades()[0]->instrument()->NPV());
+        BOOST_CHECK_NO_THROW(p.trades().begin()->second->instrument()->NPV());
     }
 }
 
@@ -348,7 +351,7 @@ BOOST_FIXTURE_TEST_CASE(testFxNotionalResettingSwapFirstCoupon, F) {
     // Read in the trade
     Portfolio p;
     string portfolioFile = "trades/xccy_resetting_swap/simple_case_in_first_coupon.xml";
-    p.load(TEST_INPUT_FILE(portfolioFile));
+    p.fromFile(TEST_INPUT_FILE(portfolioFile));
     BOOST_REQUIRE_MESSAGE(p.size() == 1, "Expected portfolio to contain a single trade");
 
     // Ask for fixings before trades are built should return empty set
@@ -373,13 +376,13 @@ BOOST_FIXTURE_TEST_CASE(testFxNotionalResettingSwapFirstCoupon, F) {
     }
 
     // Trade should throw if we ask for NPV and have not added the fixings
-    BOOST_CHECK_THROW(p.trades()[0]->instrument()->NPV(), Error);
+    BOOST_CHECK_THROW(p.trades().begin()->second->instrument()->NPV(), Error);
 
     // Add the fixings
     loadFixings(m);
 
     // Trade should now not throw when we try to price it
-    BOOST_CHECK_NO_THROW(p.trades()[0]->instrument()->NPV());
+    BOOST_CHECK_NO_THROW(p.trades().begin()->second->instrument()->NPV());
 }
 
 BOOST_FIXTURE_TEST_CASE(testDividends, F) {
@@ -389,16 +392,19 @@ BOOST_FIXTURE_TEST_CASE(testDividends, F) {
     auto eq = parseEquityIndex("EQ-" + equityName);
     BOOST_REQUIRE_MESSAGE(eq, "Could not parse equity index EQ-" + equityName);
 
-    BOOST_REQUIRE_MESSAGE(IndexManager::instance().hasHistory(eq->dividendName()),
-                          "Could not find index " << eq->dividendName() << " in IndexManager");
-    const TimeSeries<Real>& dividends = eq->dividendFixings();
+    BOOST_REQUIRE_MESSAGE(DividendManager::instance().hasHistory(eq->name()),
+                          "Could not find index " << eq->name() << " in DividendManager");
+    map<Date, Dividend> divMap;
+    const set<Dividend>& dividends = eq->dividendFixings();
+    for (const auto& d : dividends)
+        divMap[d.exDate] = d;
 
     // Expected results
     map<Date, Real> exp = {{Date(1, Nov, 2018), 25.313}, {Date(1, Dec, 2018), 15.957}};
 
     BOOST_CHECK_EQUAL(dividends.size(), exp.size());
     for (const auto& kv : exp) {
-        BOOST_CHECK_EQUAL(dividends[kv.first], kv.second);
+        BOOST_CHECK_EQUAL(divMap[kv.first].rate, kv.second);
     }
 }
 

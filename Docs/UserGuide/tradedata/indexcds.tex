@@ -1,0 +1,101 @@
+\subsubsection{Index Credit Default Swap}
+\label{ss:indexcds}
+
+An index credit default swap (trade type \emph{IndexCreditDefaultSwap}) is set up using an {\tt IndexCreditDefaultSwapData} block as shown in listing \ref{lst:indexcdsdata} and includes {\tt LegData} and {\tt BasketData} trade component sub-nodes. 
+
+The {\tt LegData} sub-node must be a fixed leg, and  represents the recurring premium payments. The direction of the fixed leg payments define if the Index CDS is for bought (\lstinline!Payer!: \emph{true}) or sold (\lstinline!Payer!: \emph{false}) protection. The notional on the fixed leg is the ``unfactored notional'', i.e. the notional excluding any defaults. This is opposed to the ``trade date notional'' which is reduced by defaults since the series inception until the trade date and the ``current notional'' or ``factored notional'' which is reduced by defaults between the series inception and the current evaluation date of the trade.
+
+The {\tt BasketData} sub-node (see section \ref{ss:basket_data}) is optional and specifies the constituent reference entities of the index. This sub-node is intended for non-standard indices, that require a bespoke basket. When {\tt BasketData} is omitted, the index constituents are derived from the {\tt CreditCurveId} element in the  {\tt IndexCreditDefaultSwapData} block.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <IndexCreditDefaultSwapData>
+      <CreditCurveId>RED:2I65BRHH6</CreditCurveId>
+      <SettlesAccrual>Y</SettlesAccrual>
+      <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
+      <ProtectionStart>20160206</ProtectionStart>
+      <UpfrontDate>20160208</UpfrontDate>
+      <UpfrontFee>0.0</UpfrontFee>
+      <LegData>
+            <LegType>Fixed</LegType>
+            <Payer>false</Payer>
+            ...
+      </LegData>
+       <BasketData>
+        <Name>
+          <IssuerId>CPTY_1</IssuerId>
+          <CreditCurveId>RED:</CreditCurveId>
+          <Notional>100000.0</Notional>
+          <Currency>USD</Currency>
+        </Name>
+        <Name>
+          <IssuerId>CPTY_2</IssuerId>
+          <CreditCurveId>RED:</CreditCurveId>
+          <Notional>100000.0</Notional>
+          <Currency>USD</Currency>
+        </Name>
+        <Name>
+          <IssuerId>CPTY_3</IssuerId>
+          <CreditCurveId>RED:</CreditCurveId>
+          <Notional>100000.0</Notional>
+          <Currency>USD</Currency>
+        </Name>
+        <!-- ... -->
+      </BasketData>
+    </IndexCreditDefaultSwapData>
+\end{minted}
+\caption{Index CreditDefaultSwap Data}
+\label{lst:indexcdsdata}
+\end{listing}
+
+The meanings of the elements of the {\tt IndexCreditDefaultSwapData}  node follow below:
+
+\begin{itemize}
+\item CreditCurveId: The identifier of the index defining the default curve used for pricing. The pricing can be set up to either use the index curve id, or use the curve id:s of the individual index components defined in {\tt BasketData}.
+
+Allowable values: See \lstinline!CreditCurveId! for credit trades - index in Table \ref{tab:equity_credit_data}. \\
+
+\item SettlesAccrual [Optional]: Whether or not the accrued coupon is due in the event of a default. This defaults to \lstinline!true! if not provided.
+
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+
+\item ProtectionPaymentTime [Optional]: Controls the payment time of protection and premium accrual payments in case of
+  a default event. Defaults to \lstinline!atDefault!. 
+  
+  Allowable values: \lstinline!atDefault!, \lstinline!atPeriodEnd!, \lstinline!atMaturity!. Overrides the \lstinline!PaysAtDefaultTime! node
+
+\item PaysAtDefaultTime [Deprecated]: \lstinline!true! is equivalent to ProtectionPaymentTime = atDefault,
+  \lstinline!false! to ProtectionPaymentTime = atPeriodEnd. Overridden by the \lstinline!ProtectionPaymentTime! node if set
+  
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+
+\item ProtectionStart [Optional]: The first date where a credit event will trigger the contract. This defaults to the first date in the schedule if it is not provided. Must be set to a date before or on the first date in the schedule if the \lstinline!LegData! has a rule that is not one of \lstinline!CDS! or \lstinline!CDS2015!. In general, for standard index CDS, the protection start date is equal to the trade date. Therefore, typically the \lstinline!ProtectionStart! should be set to the trade date of the index CDS.
+
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item UpfrontDate [Optional]: Settlement date for the UpfrontFee if an UpfrontFee is provided. If an UpfrontFee is provided and it is non-zero, UpfrontDate is required. 
+
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. The UpfrontDate, if provided, must be on or after the ProtectionStart
+date.
+
+\item UpfrontFee [Optional]: The upfront payment, expressed in decimal form as a percentage of the notional. If an UpfrontDate is provided, an UpfrontFee must also be provided. The UpfrontFee can be omitted but cannot be left blank.
+The UpfrontFee can be negative. The UpfrontFee is treated as an amount payable by the protection buyer to the protection seller. A negative value for the UpfrontFee indicates that the UpfrontFee is being paid by the protection seller to the protection buyer.
+
+Allowable values: Any real number, expressed in decimal form as a percentage of the notional.  E.g. an UpfrontFee of \emph{0.045} and a notional of 10M, would imply an upfront fee amount of 450K.
+
+\item TradeDate [Optional]: The index CDS trade date. If omitted, the trade date is deduced from the protection start date. If the schedule provided in the \lstinline!LegData! has a rule that is either \lstinline!CDS! or \lstinline!CDS2015!, the trade date is set equal to the protection start date. Otherwise, the trade date is set equal to the protection start date minus 1 day.
+
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item CashSettlementDays [Optional]: The number of business days between the trade date and the cash settlement date. For standard index CDS, this is generally 3 business days. If omitted, this defaults to 3.
+
+Allowable values: Any non-negative integer.
+
+\item RebatesAccrual [Optional]: The protection seller pays the accrued scheduled current coupon at the start of the contract. The rebate date is not provided but computed to be two days after protection start. This defaults to \lstinline!true! if not provided.
+
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+
+\end{itemize}
+
+The \lstinline!LegData! block then defines the Index CDS premium leg structure. This premium leg must be be of type \lstinline!Fixed! as described in Section \ref{ss:fixedleg_data}.

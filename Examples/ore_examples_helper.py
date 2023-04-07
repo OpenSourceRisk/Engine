@@ -18,6 +18,10 @@ from math import log
 def get_list_of_examples():
     return sorted([e for e in os.listdir(os.getcwd())
                    if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
+#                   if e == 'Example_39'], key=lambda e: int(e.split('_')[1]))
+
+def get_list_ore_academy():
+    return sorted([e for e in os.listdir(os.getcwd()) if e[:11] == 'OREAcademy_'])
 
 
 def print_on_console(line):
@@ -65,6 +69,7 @@ class OreExample(object):
                 self.ore_exe = "../../App/ore"
             elif os.path.isfile("../../../build/ore/App/ore"):
                 self.ore_exe = "../../../build/ore/App/ore"
+                self.ore_plus_exe = "../../../build/AppPlus/ore_plus"
             else:
                 print_on_console("ORE executable not found.")
                 quit()
@@ -258,6 +263,10 @@ class OreExample(object):
             if subprocess.call([self.ore_exe, xml]) != 0:
                 raise Exception("Return Code was not Null.")
 
+    def run_plus(self, xml):
+        if not self.dry:
+            if subprocess.call([self.ore_plus_exe, xml]) != 0:
+                raise Exception("Return Code was not Null.")
 
 def run_example(example):
     current_dir = os.getcwd()
@@ -278,5 +287,5 @@ def run_example(example):
 
 
 if __name__ == "__main__":
-    for example in get_list_of_examples():
+    for example in (get_list_of_examples() + get_list_ore_academy()):
         run_example(example)

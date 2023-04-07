@@ -75,8 +75,9 @@ Index CDS Option &  \emph{Call/Put} values are ignored, and the OptionType field
 Asian FX Options &  \emph{Call}: The right to buy/receive the underlying currency at the strike price.  \newline \emph{Put}: The right to sell/pay  the underlying currency at the strike price.   \\ \hline
 Digital FX Options &  \emph{Call}: The digital payout will occur if the fx rate at the expiry date is above the given
 strike, \newline \emph{Put}: The digital payout will occur if the fx rate at the expiry date is below the given strike.   \\ \hline
-FX Single Touch Options &  The OptionType should be \emph{Call} for Up and \emph{Put} for Down barrier types - this is used to check whether the barrier has been hit in the past.   \\ \hline
-FX Double Touch Options &  \emph{Call/Put} values are ignored, and the OptionType field is optional.  \\ \hline
+FX Single Touch Options &  \emph{Call/Put} values are ignored, and are instead inferred from the BarrierData type, and the OptionType field is optional.   \\ \hline
+FX Double Touch Options &  \emph{Call/Put} values are ignored, and and the OptionType field is optional.  \\ \hline
+Ascot &  \emph{Call} has payout: $$ \max(0, convertiblePrice - Strike) $$ \emph{Put} has payout: $$ \max(0, Strike - convertiblePrice) $$  \\ \hline
 
   \end{tabular}
   \caption{Specification of Option Type Call / Put}
@@ -113,6 +114,8 @@ FX Double Touch Options &  \emph{Call/Put} values are ignored, and the OptionTyp
   Commodity Swaption and Commodity Average Price Options must have style \emph{European}. 
   
   Index CDS Options must have style  \emph{European}. 
+  
+  Ascots must have style  \emph{American}. 
 
 \item PayoffType2 [Optional]: Subtype for payoff of exotic options. Only applicable to specific trade types as indicated in parantheses:
 
@@ -212,7 +215,7 @@ Allowable values: A boolean value given in Table \ref{tab:boolean_allowable}. If
 
 Allowable values: The \lstinline!Date! node should be a valid date as outlined in Table \ref{tab:allow_stand_data} and the \lstinline!Price! node should be a valid price as a real number.
 
-\item PaymentData [Optional]: Currently, this node is only used for vanilla European cash settled FX, equity and commodity options. It is used to supply the date on which the option is cash settled if it is exercised. There are two methods in which this data may be supplied:
+\item PaymentData [Optional]:  This node is used to supply the date on which the option is cash settled if it is exercised. There are two methods in which this data may be supplied:
 
 \begin{enumerate}
 \item

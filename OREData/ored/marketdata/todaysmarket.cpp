@@ -44,6 +44,7 @@
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <qle/indexes/dividendmanager.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/fallbackovernightindex.hpp>
@@ -65,6 +66,7 @@ using QuantExt::EquityIndex;
 using QuantExt::FxIndex;
 using QuantExt::PriceTermStructure;
 using QuantExt::PriceTermStructureAdapter;
+using QuantExt::applyDividends;
 
 namespace ore {
 namespace data {
@@ -232,7 +234,7 @@ void TodaysMarket::initialise(const Date& asof) {
     for (auto const& t : timings) {
         std::size_t c = counts[t.first].count == 0 ? 1 : counts[t.first].count;
         double timing = static_cast<double>(t.second) / 1.0E6;
-        LOG(std::left << std::setw(30) << t.first << ": " << std::right << std::setprecision(3) << std::setw(15)
+        LOG(std::left << std::setw(34) << t.first << ": " << std::right << std::setprecision(3) << std::setw(15)
                       << timing << " ms" << std::setw(10) << c << std::setw(15) << timing / c << " ms");
         sum += t.second;
     }
@@ -582,7 +584,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 QL_REQUIRE(ts,
                            "expected zero inflation term structure for index " << node.name << ", but could not cast");
                 // index is not interpolated
-                auto tmp = parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>(ts));
+                auto tmp = parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>(ts));
                 zeroInflationIndices_[make_pair(configuration, node.name)] = Handle<ZeroInflationIndex>(tmp);
             }
 
@@ -595,7 +597,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                            "expected yoy inflation term structure for index " << node.name << ", but could not cast");
                 yoyInflationIndices_[make_pair(configuration, node.name)] =
                     Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                        parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>()), false,
+                        parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>()), false,
                         Handle<YoYInflationTermStructure>(ts)));
             }
             break;
@@ -755,8 +757,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Building commodity volatility for asof " << asof_);
                 boost::shared_ptr<CommodityVolCurve> commodityVolCurve = boost::make_shared<CommodityVolCurve>(
                     asof_, *commodityVolSpec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredCommodityCurves_,
-                    requiredCommodityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, this);
+                    requiredCommodityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, this, buildCalibrationInfo_);
                 itr = requiredCommodityVolCurves_.insert(make_pair(commodityVolSpec->name(), commodityVolCurve)).first;
+                calibrationInfo_->commVolCalibrationInfo[commodityVolSpec->name()] = commodityVolCurve->calibrationInfo();
             }
 
             string commodityName = node.name;

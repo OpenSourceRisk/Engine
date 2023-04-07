@@ -23,8 +23,10 @@
 
 #include <ored/portfolio/optiondata.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/tradefactory.hpp>
 #include <ored/portfolio/tradestrike.hpp>
 #include <ored/utilities/parsers.hpp>
+
 #include <ql/instruments/averagetype.hpp>
 
 namespace ore {

@@ -66,13 +66,21 @@ std::set<boost::shared_ptr<MarketDatum>> InMemoryLoader::get(const std::set<std:
 
 std::set<boost::shared_ptr<MarketDatum>> InMemoryLoader::get(const Wildcard& wildcard,
                                                              const QuantLib::Date& asof) const {
+    if (!wildcard.hasWildcard()) {
+        // no wildcard => use get by name function
+        try {
+            return {get(wildcard.pattern(), asof)};
+        } catch (...) {
+        }
+        return {};
+    }
     auto it = data_.find(asof);
     if (it == data_.end())
         return {};
     std::set<boost::shared_ptr<MarketDatum>> result;
     std::set<boost::shared_ptr<MarketDatum>>::iterator it1, it2;
-    if (wildcard.wildcardPos() == std::string::npos || wildcard.wildcardPos() == 0) {
-        // no wildcard => we have to search all of the data
+    if (wildcard.wildcardPos() == 0) {
+        // wildcard at first position => we have to search all of the data
         it1 = it->second.begin();
         it2 = it->second.end();
     } else {
@@ -115,9 +123,9 @@ void InMemoryLoader::addFixing(QuantLib::Date date, const string& name, QuantLib
     }
 }
 
-void InMemoryLoader::addDividend(Date date, const string& name, Real value) {
-    if (!dividends_.insert(Fixing(date, name, value)).second) {
-        WLOG("Skipped Dividend " << name << "@" << QuantLib::io::iso_date(date) << " - this is already present.");
+void InMemoryLoader::addDividend(const QuantExt::Dividend& dividend) {
+    if (!dividends_.insert(dividend).second) {
+        WLOG("Skipped Dividend " << dividend.name << "@" << QuantLib::io::iso_date(dividend.exDate) << " - this is already present.");
     }
 }
 
@@ -125,6 +133,7 @@ void InMemoryLoader::reset() {
     data_.clear();
     fixings_.clear();
     dividends_.clear();
+    actualDate_ = Date();
 }
 
 void load(InMemoryLoader& loader, const vector<string>& data, bool isMarket, bool implyTodaysFixings) {

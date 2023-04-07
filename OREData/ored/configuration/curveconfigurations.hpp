@@ -40,7 +40,6 @@
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/configuration/yieldvolcurveconfig.hpp>
-#include <ored/configuration/smiledynamicsconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/utilities/xmlutils.hpp>
@@ -66,107 +65,61 @@ public:
     //@{
     const ReportConfig& reportConfigEqVols() const { return reportConfigEqVols_; }
     const ReportConfig& reportConfigFxVols() const { return reportConfigFxVols_; }
+    const ReportConfig& reportConfigCommVols() const { return reportConfigCommVols_; }
     const ReportConfig& reportConfigIrCapFloorVols() const { return reportConfigIrCapFloorVols_; }
     const ReportConfig& reportConfigIrSwaptionVols() const { return reportConfigIrSwaptionVols_; }
 
-    const SmileDynamicsConfig& smileDynamicsConfig() const { return smileDynamicsConfig_; }
-
     bool hasYieldCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<YieldCurveConfig>& yieldCurveConfig(const string& curveID) { return yieldCurveConfigs_[curveID]; }
-    const boost::shared_ptr<YieldCurveConfig>& yieldCurveConfig(const string& curveID) const;
+    boost::shared_ptr<YieldCurveConfig> yieldCurveConfig(const string& curveID) const;
 
     bool hasFxVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<FXVolatilityCurveConfig>& fxVolCurveConfig(const string& curveID) {
-        return fxVolCurveConfigs_[curveID];
-    }
-    const boost::shared_ptr<FXVolatilityCurveConfig>& fxVolCurveConfig(const string& curveID) const;
+    boost::shared_ptr<FXVolatilityCurveConfig> fxVolCurveConfig(const string& curveID) const;
 
     bool hasSwaptionVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<SwaptionVolatilityCurveConfig>& swaptionVolCurveConfig(const string& curveID) {
-        return swaptionVolCurveConfigs_[curveID];
-    }
-    const boost::shared_ptr<SwaptionVolatilityCurveConfig>& swaptionVolCurveConfig(const string& curveID) const;
+    boost::shared_ptr<SwaptionVolatilityCurveConfig> swaptionVolCurveConfig(const string& curveID) const;
 
     bool hasYieldVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<YieldVolatilityCurveConfig>& yieldVolCurveConfig(const string& curveID) {
-        return yieldVolCurveConfigs_[curveID];
-    }
-    const boost::shared_ptr<YieldVolatilityCurveConfig>& yieldVolCurveConfig(const string& curveID) const;
+    boost::shared_ptr<YieldVolatilityCurveConfig> yieldVolCurveConfig(const string& curveID) const;
 
     bool hasCapFloorVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<CapFloorVolatilityCurveConfig>& capFloorVolCurveConfig(const string& curveID) {
-        return capFloorVolCurveConfigs_[curveID];
-    }
-    const boost::shared_ptr<CapFloorVolatilityCurveConfig>& capFloorVolCurveConfig(const string& curveID) const;
+    boost::shared_ptr<CapFloorVolatilityCurveConfig> capFloorVolCurveConfig(const string& curveID) const;
 
     bool hasDefaultCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<DefaultCurveConfig>& defaultCurveConfig(const string& curveID) {
-        return defaultCurveConfigs_[curveID];
-    }
-    const boost::shared_ptr<DefaultCurveConfig>& defaultCurveConfig(const string& curveID) const;
+    boost::shared_ptr<DefaultCurveConfig> defaultCurveConfig(const string& curveID) const;
 
     bool hasCdsVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<CDSVolatilityCurveConfig>& cdsVolCurveConfig(const string& curveID) {
-        return cdsVolCurveConfigs_[curveID];
-    }
-    const boost::shared_ptr<CDSVolatilityCurveConfig>& cdsVolCurveConfig(const string& curveID) const;
+    boost::shared_ptr<CDSVolatilityCurveConfig> cdsVolCurveConfig(const string& curveID) const;
 
     bool hasBaseCorrelationCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<BaseCorrelationCurveConfig>& baseCorrelationCurveConfig(const string& curveID) {
-        return baseCorrelationCurveConfigs_[curveID];
-    }
-    const boost::shared_ptr<BaseCorrelationCurveConfig>& baseCorrelationCurveConfig(const string& curveID) const;
+    boost::shared_ptr<BaseCorrelationCurveConfig> baseCorrelationCurveConfig(const string& curveID) const;
 
     bool hasInflationCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) {
-        return inflationCurveConfigs_[curveID];
-    };
-    const boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) const;
+    boost::shared_ptr<InflationCurveConfig> inflationCurveConfig(const string& curveID) const;
 
     bool hasInflationCapFloorVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>& inflationCapFloorVolCurveConfig(const string& curveID) {
-        return inflationCapFloorVolCurveConfigs_[curveID];
-    };
-    const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>&
+    boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>
     inflationCapFloorVolCurveConfig(const string& curveID) const;
 
     bool hasEquityCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<EquityCurveConfig>& equityCurveConfig(const string& curveID) {
-        return equityCurveConfigs_[curveID];
-    };
-    const boost::shared_ptr<EquityCurveConfig>& equityCurveConfig(const string& curveID) const;
+    boost::shared_ptr<EquityCurveConfig> equityCurveConfig(const string& curveID) const;
 
     bool hasEquityVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<EquityVolatilityCurveConfig>& equityVolCurveConfig(const string& curveID) {
-        return equityVolCurveConfigs_[curveID];
-    };
-    const boost::shared_ptr<EquityVolatilityCurveConfig>& equityVolCurveConfig(const string& curveID) const;
+    boost::shared_ptr<EquityVolatilityCurveConfig> equityVolCurveConfig(const string& curveID) const;
 
     bool hasSecurityConfig(const std::string& curveID) const;
-    boost::shared_ptr<SecurityConfig>& securityConfig(const string& curveID) { return securityConfigs_[curveID]; };
-    const boost::shared_ptr<SecurityConfig>& securityConfig(const string& curveID) const;
+    boost::shared_ptr<SecurityConfig> securityConfig(const string& curveID) const;
 
     bool hasFxSpotConfig(const std::string& curveID) const;
-    boost::shared_ptr<FXSpotConfig>& fxSpotConfig(const string& curveID) { return fxSpotConfigs_[curveID]; };
-    const boost::shared_ptr<FXSpotConfig>& fxSpotConfig(const string& curveID) const;
+    boost::shared_ptr<FXSpotConfig> fxSpotConfig(const string& curveID) const;
 
     bool hasCommodityCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<CommodityCurveConfig>& commodityCurveConfig(const std::string& curveID) {
-        return commodityCurveConfigs_[curveID];
-    };
-    const boost::shared_ptr<CommodityCurveConfig>& commodityCurveConfig(const std::string& curveID) const;
+    boost::shared_ptr<CommodityCurveConfig> commodityCurveConfig(const std::string& curveID) const;
 
     bool hasCommodityVolatilityConfig(const std::string& curveID) const;
-    boost::shared_ptr<CommodityVolatilityConfig>& commodityVolatilityConfig(const std::string& curveID) {
-        return commodityVolatilityConfigs_[curveID];
-    };
-    const boost::shared_ptr<CommodityVolatilityConfig>& commodityVolatilityConfig(const std::string& curveID) const;
+    boost::shared_ptr<CommodityVolatilityConfig> commodityVolatilityConfig(const std::string& curveID) const;
 
     bool hasCorrelationCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<CorrelationCurveConfig>& correlationCurveConfig(const std::string& curveID) {
-        return correlationCurveConfigs_[curveID];
-    };
-    const boost::shared_ptr<CorrelationCurveConfig>& correlationCurveConfig(const std::string& curveID) const;
+    boost::shared_ptr<CorrelationCurveConfig> correlationCurveConfig(const std::string& curveID) const;
 
     boost::shared_ptr<CurveConfigurations>
     minimalCurveConfig(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
@@ -193,47 +146,35 @@ public:
                                                                       const std::string& curveId) const;
     //@}
 
+    void add(const CurveSpec::CurveType& type, const string& curveId, const boost::shared_ptr<CurveConfig>& config);    
+    bool has(const CurveSpec::CurveType& type, const string& curveId) const;
+    const boost::shared_ptr<CurveConfig>& get(const CurveSpec::CurveType& type, const string& curveId) const;
+    void parseAll();
+
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
     //@}
-private:
+
+ private:
     ReportConfig reportConfigEqVols_;
     ReportConfig reportConfigFxVols_;
+    ReportConfig reportConfigCommVols_;
     ReportConfig reportConfigIrCapFloorVols_;
     ReportConfig reportConfigIrSwaptionVols_;
 
-    SmileDynamicsConfig smileDynamicsConfig_;
-  
-    std::map<std::string, boost::shared_ptr<YieldCurveConfig>> yieldCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<FXVolatilityCurveConfig>> fxVolCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<SwaptionVolatilityCurveConfig>> swaptionVolCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<YieldVolatilityCurveConfig>> yieldVolCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<CapFloorVolatilityCurveConfig>> capFloorVolCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<DefaultCurveConfig>> defaultCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<CDSVolatilityCurveConfig>> cdsVolCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<BaseCorrelationCurveConfig>> baseCorrelationCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<InflationCurveConfig>> inflationCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>> inflationCapFloorVolCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<EquityCurveConfig>> equityCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<EquityVolatilityCurveConfig>> equityVolCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<SecurityConfig>> securityConfigs_;
-    std::map<std::string, boost::shared_ptr<FXSpotConfig>> fxSpotConfigs_;
-    std::map<std::string, boost::shared_ptr<CommodityCurveConfig>> commodityCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<CommodityVolatilityConfig>> commodityVolatilityConfigs_;
-    std::map<std::string, boost::shared_ptr<CorrelationCurveConfig>> correlationCurveConfigs_;
+    mutable std::map<CurveSpec::CurveType, std::map<std::string, boost::shared_ptr<CurveConfig>>> configs_;
+    mutable std::map<CurveSpec::CurveType, std::map<std::string, std::string>> unparsed_;
 
     // utility function for parsing a node of name "parentName" and storing the result in the map
-    template <class T>
-    void parseNode(XMLNode* node, const char* parentName, const char* childName, map<string, boost::shared_ptr<T>>& m);
+    void parseNode(const CurveSpec::CurveType& type, const string& curveId) const;
+    
+    // utility function for getting a child curve config node
+    void getNode(XMLNode* node, const char* parentName, const char* childName);
 
-    // utility function for getting a value from the map storing the configs, throwing if it is not present
-    template <class T>
-    const boost::shared_ptr<T>& get(const string& id, const map<string, boost::shared_ptr<T>>& m) const;
-
-    // stores errors (parentName, msg) during parsing for keys (T, curveId), T = YieldCurveConfig etc.
-    std::map<std::pair<std::type_index, std::string>, std::pair<std::string, std::string>> parseErrors_;
+    // add to XML doc
+    void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName);
 };
 
 } // namespace data

@@ -32,6 +32,8 @@ void ProgressReporter::unregisterProgressIndicator(const boost::shared_ptr<Progr
     indicators_.erase(indicator);
 }
 
+void ProgressReporter::unregisterAllProgressIndicators() { indicators_.clear(); }
+
 void ProgressReporter::updateProgress(const unsigned long progress, const unsigned long total) {
     for (const auto& i : indicators_)
         i->updateProgress(progress, total);
@@ -51,8 +53,11 @@ SimpleProgressBar::SimpleProgressBar(const std::string& message, const QuantLib:
 }
 
 void SimpleProgressBar::updateProgress(const unsigned long progress, const unsigned long total) {
+    if (!ConsoleLog::instance().enabled())
+        return; 
     if (finalized_)
         return;
+    double ratio = static_cast<double>(progress) / static_cast<double>(total);
     if (progress >= total) {
         std::cout << "\r" << std::setw(messageWidth_) << std::left << message_;
         for (unsigned int i = 0; i < barWidth_; ++i)
@@ -66,8 +71,9 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
     if (updateCounter_ > 0 && progress * numberOfScreenUpdates_ < updateCounter_ * total) {
         return;
     }
-    std::cout << "\r" << std::setw(messageWidth_) << std::left << message_ << "[";
-    double ratio = static_cast<double>(progress) / static_cast<double>(total);
+    std::cout << "\r" << std::setw(messageWidth_) << std::left << message_;
+    if (barWidth_ > 0)
+        std::cout << "[";
     unsigned int pos = static_cast<unsigned int>(static_cast<double>(barWidth_) * ratio);
     for (unsigned int i = 0; i < barWidth_; ++i) {
         if (i < pos)
@@ -77,7 +83,9 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
         else
             std::cout << " ";
     }
-    std::cout << "] " << static_cast<int>(ratio * 100.0) << " %\r";
+    if (barWidth_ > 0)
+        std::cout << "] ";
+    std::cout << static_cast<int>(ratio * 100.0) << " %\r";
     std::cout.flush();
     updateCounter_++;
 }
@@ -87,20 +95,44 @@ void SimpleProgressBar::reset() {
     finalized_ = false;
 }
 
-ProgressLog::ProgressLog(const std::string& message, const unsigned int numberOfMessages)
-    : message_(message), numberOfMessages_(numberOfMessages), messageCounter_(0) {}
+ProgressLog::ProgressLog(const std::string& message, const unsigned int numberOfMessages, const int logLevel)
+    : message_(message), numberOfMessages_(numberOfMessages), logLevel_(logLevel), messageCounter_(0) {}
 
 void ProgressLog::updateProgress(const unsigned long progress, const unsigned long total) {
     if (messageCounter_ > 0 && progress * numberOfMessages_ < (messageCounter_ * total)) {
         return;
     }
-    DLOG(message_ << " " << progress << " out of " << total << " steps ("
-                 << static_cast<int>(static_cast<double>(progress) / static_cast<double>(total) * 100.0)
-                 << "%) completed");
+    MLOG(logLevel_, message_ << " " << progress << " out of " << total << " steps ("
+                             << static_cast<int>(static_cast<double>(progress) / static_cast<double>(total) * 100.0)
+                             << "%) completed");
     messageCounter_++;
 }
 
 void ProgressLog::reset() { messageCounter_ = 0; }
+
+MultiThreadedProgressIndicator::MultiThreadedProgressIndicator(
+    const std::set<boost::shared_ptr<ProgressIndicator>>& indicators)
+    : indicators_(indicators) {}
+
+void MultiThreadedProgressIndicator::updateProgress(const unsigned long progress, const unsigned long total) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    threadData_[std::this_thread::get_id()] = std::make_pair(progress, total);
+    unsigned long progressTmp = 0;
+    unsigned long totalTmp = 0;
+    for (auto const& d : threadData_) {
+        progressTmp += d.second.first;
+        totalTmp += d.second.second;
+    }
+    for (auto& i : indicators_)
+        i->updateProgress(progressTmp, totalTmp);
+}
+
+void MultiThreadedProgressIndicator::reset() {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    for (auto& i : indicators_)
+        i->reset();
+    threadData_.clear();
+}
 
 NoProgressBar::NoProgressBar(const std::string& message, const unsigned int messageWidth) {
     std::cout << std::setw(messageWidth) << message << std::flush;

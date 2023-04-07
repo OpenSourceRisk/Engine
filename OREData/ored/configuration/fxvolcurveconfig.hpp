@@ -72,13 +72,11 @@ public:
                             const DayCounter& dayCounter = QuantLib::Actual365Fixed(),
                             const Calendar& calendar = QuantLib::TARGET(),
                             const SmileInterpolation& interp = SmileInterpolation::VannaVolga2,
-                            const string& conventionsID = "", const std::vector<Size>& smileDelta = {25},
-			    const std::string& smileDynamics = "");
+                            const string& conventionsID = "", const std::vector<Size>& smileDelta = {25});
 
     FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
                             const string& baseVolatility1, const string& baseVolatility2,
-                            const string& fxIndexTag = "GENERIC",
-			    const std::string& smileDynamics = "");
+                            const string& fxIndexTag = "GENERIC");
 
     //@}
 
@@ -106,7 +104,6 @@ public:
     const string& baseVolatility1() const { return baseVolatility1_; }
     const string& baseVolatility2() const { return baseVolatility2_; }
     const string& fxIndexTag() const { return fxIndexTag_; }
-    const std::string& smileDynamics() const { return smileDynamics_; }
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
@@ -126,8 +123,8 @@ public:
     string& baseVolatility1() { return baseVolatility1_; }
     string& baseVolatility2() { return baseVolatility2_; }
     string& fxIndexTag() { return fxIndexTag_; }
-    string& smileDynamics() { return smileDynamics_; }
     //@}
+
 private:
     void populateRequiredCurveIds();
 
@@ -146,7 +143,6 @@ private:
     string baseVolatility1_;
     string baseVolatility2_;
     string fxIndexTag_;
-    std::string smileDynamics_;
     ReportConfig reportConfig_;
 };
 } // namespace data

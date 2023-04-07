@@ -254,6 +254,7 @@ void OptionInterpolator2d<IS, IE>::initialise(const std::vector<QuantLib::Date>&
             interpolations_[i] =
                 interpolatorStrike_.interpolate(strikes_[i].begin(), strikes_[i].end(), values_[i].begin());
         }
+        interpolations_[i].enableExtrapolation();
     }
     initialised_ = true;
 }

@@ -363,6 +363,7 @@
       <xs:enumeration value="Actual/Actual (ISDA)"/>
       <xs:enumeration value="ActualActual (ISDA)"/>
       <xs:enumeration value="ACT/ACT"/>
+      <xs:enumeration value="Act/Act"/>
       <xs:enumeration value="ACT29"/>
       <xs:enumeration value="ACT"/>
       <xs:enumeration value="ActActISMA"/>
@@ -895,4 +896,17 @@
     </xs:all>
   </xs:complexType>
 
+  <xs:simpleType name="CurrencyHedgedIndexRebalancingStrategy">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="EndOfMonth"/>
+    </xs:restriction>
+   </xs:simpleType>
+    
+  <xs:simpleType name="CurrencyHedgedIndexRehedgingStrategy">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="None"/>
+      <xs:enumeration value="Daily"/>
+    </xs:restriction>
+  </xs:simpleType>
+    
 </xs:schema>

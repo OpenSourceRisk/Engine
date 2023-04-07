@@ -115,25 +115,25 @@ BOOST_DATA_TEST_CASE_F(F, testCapConsistency, bdata::make(testCases), testCase) 
     BOOST_TEST_MESSAGE("Testing " << testCase);
 
     Portfolio p;
-    p.load(TEST_INPUT_FILE(testCase));
+    p.fromFile(TEST_INPUT_FILE(testCase));
     Size n = p.size();
 
     // Build the portfolio
     p.build(engineFactory);
     BOOST_CHECK_MESSAGE(p.size() == n, n << " trades expected after build, found " << p.size());
-    for (Size i = 0; i < p.size(); ++i) {
-        BOOST_TEST_MESSAGE("trade " << p.trades()[i]->id());
+    for (const auto& [tradeId, trade] : p.trades()) {
+        BOOST_TEST_MESSAGE("trade " << tradeId);
     }
 
     // Portfolios are designed such that trade NPVs should add up to zero
     Real sum = 0.0;
     Real minimumNPV = QL_MAX_REAL;
-    for (Size i = 0; i < p.size(); ++i) {
-        BOOST_CHECK_NO_THROW(p.trades()[i]->instrument()->NPV());
-        BOOST_TEST_MESSAGE("trade " << p.trades()[i]->id() << " npv " << p.trades()[i]->instrument()->NPV());
-        sum += p.trades()[i]->instrument()->NPV();
-        minimumNPV = std::min(minimumNPV, fabs(p.trades()[i]->instrument()->NPV()));
-        auto cf = boost::dynamic_pointer_cast<ore::data::CapFloor>(p.trades()[i]);
+    for (const auto& [tradeId, trade] : p.trades()) {
+        BOOST_CHECK_NO_THROW(trade->instrument()->NPV());
+        BOOST_TEST_MESSAGE("trade " << tradeId << " npv " << trade->instrument()->NPV());
+        sum += trade->instrument()->NPV();
+        minimumNPV = std::min(minimumNPV, fabs(trade->instrument()->NPV()));
+        auto cf = boost::dynamic_pointer_cast<ore::data::CapFloor>(trade);
         if (cf)
             BOOST_CHECK_NO_THROW(cf->additionalData());
     }

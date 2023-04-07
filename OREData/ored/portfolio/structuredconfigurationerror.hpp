@@ -34,7 +34,7 @@ class StructuredConfigurationErrorMessage : public StructuredMessage {
 public:
     StructuredConfigurationErrorMessage(const std::string& configurationType, const std::string& configurationId,
                                         const std::string& exceptionType, const std::string& exceptionWhat)
-        : StructuredMessage("Error", "Configuration", exceptionWhat,
+        : StructuredMessage(Category::Error, Group::Configuration, exceptionWhat,
                             std::map<string, string>({{"exceptionType", exceptionType},
                                                       {"configurationType", configurationType},
                                                       {"configurationId", configurationId}})) {}

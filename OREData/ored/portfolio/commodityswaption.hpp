@@ -33,7 +33,6 @@ namespace data {
     \ingroup tradedata
 */
 class CommoditySwaption : public ore::data::Trade {
-
 public:
     CommoditySwaption() : ore::data::Trade("CommoditySwaption") {}
 

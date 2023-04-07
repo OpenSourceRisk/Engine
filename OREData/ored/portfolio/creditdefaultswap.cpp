@@ -128,6 +128,32 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
         additionalData_["startDate"] = to_string(swap_.protectionStart());
     else
         additionalData_["startDate"] = to_string(schedule.dates().front());
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Single Name");
+    // Leaving the mapping of creditCurveId to ABS, Corporate, Loans, Muni, Recovery CDS, Sovereign
+    // to a subsequent process, e.g. to be picked up from extended curve configurations 
+    additionalData_["isdaSubProduct"] = swap_.creditCurveId(); 
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");  
+}
+
+const std::map<std::string, boost::any>& CreditDefaultSwap::additionalData() const {
+    setLegBasedAdditionalData(0, 2);
+    additionalData_["legNPV[1]"] = instrument_->qlInstrument()->result<Real>("protectionLegNPV");
+    additionalData_["legNPV[2]"] = instrument_->qlInstrument()->result<Real>("premiumLegNPVDirty") +
+                                   instrument_->qlInstrument()->result<Real>("upfrontPremiumNPV") +
+                                   instrument_->qlInstrument()->result<Real>("accrualRebateNPV");
+    additionalData_["isPayer[1]"] = !swap_.leg().isPayer();
+    additionalData_["isPayer[2]"] = swap_.leg().isPayer();
+    additionalData_["legType[2]"] = swap_.leg().legType();
+    additionalData_["legType[1]"] = std::string("Protection");
+    additionalData_["currentNotional[1]"] = additionalData_["currentNotional[2]"];
+    additionalData_["originalNotional[1]"] = additionalData_["originalNotional[2]"];
+    additionalData_["notionalCurrency[1]"] = notionalCurrency_;
+    additionalData_["notionalCurrency[2]"] = notionalCurrency_;
+    return additionalData_;
 }
 
 QuantLib::Real CreditDefaultSwap::notional() const {

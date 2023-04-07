@@ -36,6 +36,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
+#include <qle/indexes/dividendmanager.hpp>
 #include <qle/termstructures/aposurface.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
@@ -59,16 +60,16 @@ public:
     MockLoader();
     vector<boost::shared_ptr<MarketDatum>> loadQuotes(const Date&) const override { return data_; }
     set<Fixing> loadFixings() const override { return dummyFixings_; }
-    set<Fixing> loadDividends() const override { return dummyDividends_; }
+    set<Dividend> loadDividends() const override { return dummyDividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
     void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
-    void addDividend(Date date, const string& name, Real value) {}
+    void addDividend(const Dividend& dividend) {}
 
 private:
     vector<boost::shared_ptr<MarketDatum>> data_;
     boost::shared_ptr<MarketDatum> dummyDatum_;
     set<Fixing> dummyFixings_;
-    set<Fixing> dummyDividends_;
+    set<Dividend> dummyDividends_;
 };
 
 MockLoader::MockLoader() {
@@ -181,7 +182,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeConstant) {
 
     // Curve configurations
     CurveConfigurations curveConfigs;
-    curveConfigs.commodityVolatilityConfig("GOLD_USD_VOLS") = curveConfig;
+    curveConfigs.add(CurveSpec::CurveType::CommodityVolatility, "GOLD_USD_VOLS", curveConfig);
 
     // Commodity curve spec
     CommodityVolatilityCurveSpec curveSpec("USD", "GOLD_USD_VOLS");
@@ -231,7 +232,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeCurve) {
 
     // Curve configurations
     CurveConfigurations curveConfigs;
-    curveConfigs.commodityVolatilityConfig("GOLD_USD_VOLS") = curveConfig;
+    curveConfigs.add(CurveSpec::CurveType::CommodityVolatility,"GOLD_USD_VOLS", curveConfig);
 
     // Commodity curve spec
     CommodityVolatilityCurveSpec curveSpec("USD", "GOLD_USD_VOLS");
@@ -301,7 +302,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeSurface) {
 
     // Curve configurations
     CurveConfigurations curveConfigs;
-    curveConfigs.commodityVolatilityConfig("GOLD_USD_VOLS") = curveConfig;
+    curveConfigs.add(CurveSpec::CurveType::CommodityVolatility, "GOLD_USD_VOLS", curveConfig);
 
     // Commodity curve spec
     CommodityVolatilityCurveSpec curveSpec("USD", "GOLD_USD_VOLS");

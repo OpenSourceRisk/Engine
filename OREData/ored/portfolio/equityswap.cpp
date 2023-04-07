@@ -84,7 +84,7 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(eqLegData->quantity() != Null<Real>(),
                    "indexing can only be added to funding leg, if quantity is given on equity leg");
         Indexing eqIndexing("EQ-" + eqLegData->eqName(), "", false, false, false, eqLegData->quantity(),
-                            eqLegData->initialPrice(), valuationSchedule, 0, "", "U", false);
+                            eqLegData->initialPrice(), Null<Real>(), valuationSchedule, 0, "", "U", false);
         legData_[irLegIndex_].indexing().push_back(eqIndexing);
 
         // add fx indexing, if applicable
@@ -96,8 +96,8 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 eqLegData->initialPriceCurrency() == legData_[equityLegIndex_].currency() &&
                 eqLegData->initialPrice() != Null<Real>())
                 initialFxFixing = 1.0;
-            Indexing fxIndexing(eqLegData->fxIndex(), "", false, false, false, 1.0, initialFxFixing, 
-                valuationSchedule, 0, "", "U", false);
+            Indexing fxIndexing(eqLegData->fxIndex(), "", false, false, false, 1.0, initialFxFixing, Null<Real>(),
+                                valuationSchedule, 0, "", "U", false);
             legData_[irLegIndex_].indexing().push_back(fxIndexing);
         }
 
@@ -117,6 +117,13 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // just underlying security, notionals and currencies are covered by the Swap class already
     additionalData_["underlyingSecurityId"] = eqLegData->eqName();
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Swap");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
 }
 
 QuantLib::Real EquitySwap::notional() const {

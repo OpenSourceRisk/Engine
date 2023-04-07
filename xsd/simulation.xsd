@@ -784,7 +784,15 @@
           <xs:sequence>
             <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
-            <xs:element name="Currencies">
+            <xs:element name="Keys" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="xs:string" name="Key" maxOccurs="unbounded" minOccurs="0"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+	    <!-- deprecated -->
+            <xs:element name="Currencies" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
                   <xs:element type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="0"/>
@@ -838,6 +846,15 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
+            <xs:element name="SmileDynamics" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="key" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -878,6 +895,15 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
+            <xs:element name="SmileDynamics" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="key" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
           </xs:all>
         </xs:complexType>
       </xs:element>
@@ -889,7 +915,7 @@
             <xs:element name="Keys" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
-                  <xs:element type="xs:string" name="Key" maxOccurs="unbounded" minOccurs="1"/>
+                  <xs:element type="xs:string" name="Key" maxOccurs="unbounded" minOccurs="0"/>
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
@@ -897,7 +923,7 @@
             <xs:element name="Currencies" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
-                  <xs:element type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="1"/>
+                  <xs:element type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="0"/>
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
@@ -938,6 +964,15 @@
             </xs:element>
             <xs:element type="bool" name="AdjustOptionletPillars" maxOccurs="1" minOccurs="0"/>
             <xs:element type="bool" name="UseCapAtm" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="SmileDynamics" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="key" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -954,6 +989,15 @@
               </xs:complexType>
             </xs:element>
             <xs:element type="xs:string" name="Expiries"/>
+            <xs:element name="SmileDynamics" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="key" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
           </xs:all>
         </xs:complexType>
       </xs:element>
@@ -1015,6 +1059,15 @@
                     </xs:complexType>
                   </xs:element>
                 </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="SmileDynamics" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="key" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
               </xs:complexType>
             </xs:element>
           </xs:sequence>
@@ -1079,6 +1132,15 @@
                     </xs:complexType>
                   </xs:element>
                 </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="SmileDynamics" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="key" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
               </xs:complexType>
             </xs:element>
           </xs:sequence>
@@ -1205,6 +1267,15 @@
             </xs:element>
             <xs:element type="xs:string" name="Expiries"/>
             <xs:element type="xs:string" name="Strikes"/>
+            <xs:element name="SmileDynamics" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="key" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
           </xs:all>
         </xs:complexType>
       </xs:element>
@@ -1222,6 +1293,15 @@
             </xs:element>
             <xs:element type="xs:string" name="Expiries"/>
             <xs:element type="xs:string" name="Strikes"/>
+            <xs:element name="SmileDynamics" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="key" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
           </xs:all>
         </xs:complexType>
       </xs:element>
@@ -1284,6 +1364,15 @@
               </xs:complexType>
             </xs:element>
             <xs:element type="xs:string" name="DayCounter" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="SmileDynamics" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="key" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
           </xs:all>
         </xs:complexType>
       </xs:element>

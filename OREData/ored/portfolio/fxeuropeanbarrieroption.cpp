@@ -309,6 +309,13 @@ void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engi
     additionalData_["soldAmount"] = soldAmount_;
     if (!fxIndex_.empty())
         additionalData_["FXIndex"] = fxIndex_;
+
+    // ISDA taxonomy
+   // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Barrier");  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 void FxEuropeanBarrierOption::fromXML(XMLNode* node) {

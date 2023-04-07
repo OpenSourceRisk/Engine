@@ -102,23 +102,33 @@ Real EquityIndex::forecastFixing(const Time& fixingTime, bool incDividend) const
     return forward;
 }
 
-void EquityIndex::addDividend(const Date& fixingDate, Real fixing, bool forceOverwrite) {
-    name_ = dividendName();
-    Index::addFixing(fixingDate, fixing, forceOverwrite);
-    resetName();
+void EquityIndex::addDividend(const Dividend& dividend, bool forceOverwrite) {
+    std::string tag = name();
+    std::set<Dividend> divs = DividendManager::instance().getHistory(tag);
+    if (!forceOverwrite) {
+        bool duplicateFixing = false;
+        for (const auto& d : divs) {
+            if (d == dividend)
+                duplicateFixing = true;
+        }
+        QL_REQUIRE(!duplicateFixing, "At least one duplicated fixing provided: ("
+            << dividend.name << ", " << dividend.exDate << ", " << dividend.rate << ")");
+    }
+    divs.insert(dividend);
+    DividendManager::instance().setHistory(tag, divs);
 }
 
 Real EquityIndex::dividendsBetweenDates(const Date& startDate, const Date& endDate) const {
     const Date& today = Settings::instance().evaluationDate();
 
-    const TimeSeries<Real>& history = dividendFixings();
+    const std::set<Dividend>& history = dividendFixings();
     Real dividends = 0.0;
 
-    if (!history.empty() && history.firstDate() <= endDate && history.lastDate() >= startDate) {
-        for (TimeSeries<Real>::const_iterator fd = history.begin();
-             fd != history.end() && fd->first <= std::min(endDate, today); ++fd) {
-            if (fd->first >= startDate)
-                dividends += fd->second;
+    if (!history.empty()) {
+        for (std::set<Dividend>::const_iterator fd = history.begin();
+             fd != history.end() && fd->exDate <= std::min(endDate, today); ++fd) {
+            if (fd->exDate >= startDate)
+                dividends += fd->rate;
         }
     }
     return dividends;

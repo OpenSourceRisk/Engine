@@ -1,0 +1,141 @@
+<TodaysMarket>
+	<Configuration id="default">
+		<YieldCurvesId>default</YieldCurvesId>
+		<DiscountingCurvesId>default</DiscountingCurvesId>
+		<IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+		<SwapIndexCurvesId>default</SwapIndexCurvesId>
+		<ZeroInflationIndexCurvesId>default</ZeroInflationIndexCurvesId>
+		<ZeroInflationCapFloorVolatilitiesId>default</ZeroInflationCapFloorVolatilitiesId>
+		<YYInflationIndexCurvesId>default</YYInflationIndexCurvesId>
+		<FxSpotsId>default</FxSpotsId>
+		<BaseCorrelationsId>default</BaseCorrelationsId>
+		<FxVolatilitiesId>default</FxVolatilitiesId>
+		<SwaptionVolatilitiesId>default</SwaptionVolatilitiesId>
+		<YieldVolatilitiesId>default</YieldVolatilitiesId>
+		<CapFloorVolatilitiesId>default</CapFloorVolatilitiesId>
+		<CDSVolatilitiesId>default</CDSVolatilitiesId>
+		<DefaultCurvesId>default</DefaultCurvesId>
+		<YYInflationCapFloorVolatilitiesId>default</YYInflationCapFloorVolatilitiesId>
+		<EquityCurvesId>default</EquityCurvesId>
+		<EquityVolatilitiesId>default</EquityVolatilitiesId>
+		<SecuritiesId>default</SecuritiesId>
+		<CommodityCurvesId>default</CommodityCurvesId>
+		<CommodityVolatilitiesId>default</CommodityVolatilitiesId>
+		<CorrelationsId>default</CorrelationsId>
+	</Configuration>
+	<YieldCurves id="default"/>
+	<DiscountingCurves id="default">
+		<DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>
+	</DiscountingCurves>
+	<IndexForwardingCurves id="default">
+		<Index name="USD-FedFunds">Yield/USD/USD-FedFunds</Index>
+	</IndexForwardingCurves>
+	<FxSpots id="default"/>
+	<CDSVolatilities id="default">
+		<CDSVolatility name="RED:2I65BRYP9">CDSVolatility/RED:2I65BRYP9</CDSVolatility>
+	</CDSVolatilities>
+	<DefaultCurves id="default">
+		<DefaultCurve name="RED:2I65BRYP9_5Y">Default/USD/RED:2I65BRYP9_5Y</DefaultCurve>
+		<DefaultCurve name="RED:025ADX|SNRFOR|USD|XR14">Default/USD/RED:025ADX|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:039DB1|SNRFOR|USD|XR14">Default/USD/RED:039DB1|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:03AB52|SNRFOR|USD|XR14">Default/USD/RED:03AB52|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:03BD7I|SNRFOR|USD|XR14">Default/USD/RED:03BD7I|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:058AEB|SNRFOR|USD|XR14">Default/USD/RED:058AEB|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:05DCDH|SNRFOR|USD|XR14">Default/USD/RED:05DCDH|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:07CABW|SNRFOR|USD|XR14">Default/USD/RED:07CABW|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:09GECK|SNRFOR|USD|XR14">Default/USD/RED:09GECK|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:0A119O|SNRFOR|USD|XR14">Default/USD/RED:0A119O|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:0D47B7|SNRFOR|USD|XR14">Default/USD/RED:0D47B7|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:0E876I|SNRFOR|USD|XR14">Default/USD/RED:0E876I|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:0F89E3|SNRFOR|USD|XR14">Default/USD/RED:0F89E3|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:0F9733|SNRFOR|USD|XR14">Default/USD/RED:0F9733|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:0H88A7|SNRFOR|USD|XR14">Default/USD/RED:0H88A7|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:137AD9|SNRFOR|USD|XR14">Default/USD/RED:137AD9|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:15DHEM|SNRFOR|USD|XR14">Default/USD/RED:15DHEM|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:19DDHI|SNRFOR|USD|XR14">Default/USD/RED:19DDHI|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:1B3634|SUBLT2|USD|XR14">Default/USD/RED:1B3634|SUBLT2|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:1E447B|SNRFOR|USD|XR14">Default/USD/RED:1E447B|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:1F79BD|SNRFOR|USD|XR14">Default/USD/RED:1F79BD|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:24BD6E|SNRFOR|USD|XR14">Default/USD/RED:24BD6E|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:25CA94|SNRFOR|USD|XR14">Default/USD/RED:25CA94|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:26B72T|SNRFOR|USD|XR14">Default/USD/RED:26B72T|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:26BA97|SNRFOR|USD|XR14">Default/USD/RED:26BA97|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:279AFU|SNRFOR|USD|XR14">Default/USD/RED:279AFU|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:27CFED|SNRFOR|USD|XR14">Default/USD/RED:27CFED|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:2C39CC|SNRFOR|USD|XR14">Default/USD/RED:2C39CC|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:2H79EM|SECDOM|USD|XR14">Default/USD/RED:2H79EM|SECDOM|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:36AGC5|SNRFOR|USD|XR14">Default/USD/RED:36AGC5|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:38BD8L|SNRFOR|USD|XR14">Default/USD/RED:38BD8L|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:39ABD6|SNRFOR|USD|XR14">Default/USD/RED:39ABD6|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:3A978M|SNRFOR|USD|XR14">Default/USD/RED:3A978M|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:3BA7A5|SNRFOR|USD|XR14">Default/USD/RED:3BA7A5|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:3H98A7|SNRFOR|USD|XR14">Default/USD/RED:3H98A7|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:4A8ACZ|SNRFOR|USD|XR14">Default/USD/RED:4A8ACZ|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:4AB73H|SNRFOR|USD|XR14">Default/USD/RED:4AB73H|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:4CECCQ|SNRFOR|USD|XR14">Default/USD/RED:4CECCQ|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:4E452A|SNRFOR|USD|XR14">Default/USD/RED:4E452A|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:4I66CG|SNRFOR|USD|XR14">Default/USD/RED:4I66CG|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:4I7521|SNRFOR|USD|XR14">Default/USD/RED:4I7521|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:59A97B|SNRFOR|USD|XR14">Default/USD/RED:59A97B|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:5A5265|SNRFOR|USD|XR14">Default/USD/RED:5A5265|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:5A788E|SNRFOR|USD|XR14">Default/USD/RED:5A788E|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:5A78DD|SNRFOR|USD|XR14">Default/USD/RED:5A78DD|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:5A7AC9|SNRFOR|USD|XR14">Default/USD/RED:5A7AC9|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:5A831E|SNRFOR|USD|XR14">Default/USD/RED:5A831E|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:5AB77V|SNRFOR|USD|XR14">Default/USD/RED:5AB77V|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:5E901L|SNRFOR|USD|XR14">Default/USD/RED:5E901L|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:5F07CP|SNRFOR|USD|XR14">Default/USD/RED:5F07CP|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:5F78AG|SNRFOR|USD|XR14">Default/USD/RED:5F78AG|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:5G4599|SNRFOR|USD|XR14">Default/USD/RED:5G4599|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:5I366F|SNRFOR|USD|XR14">Default/USD/RED:5I366F|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:688D88|SNRFOR|USD|XR14">Default/USD/RED:688D88|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:68BCAE|SNRFOR|USD|XR14">Default/USD/RED:68BCAE|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:68BEBE|SNRFOR|USD|XR14">Default/USD/RED:68BEBE|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:69CCBK|SNRFOR|USD|XR14">Default/USD/RED:69CCBK|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:6A521L|SNRFOR|USD|XR14">Default/USD/RED:6A521L|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:6A59CO|SNRFOR|USD|XR14">Default/USD/RED:6A59CO|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:6B632H|SNRFOR|USD|XR14">Default/USD/RED:6B632H|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:6BA9CX|SECDOM|USD|XR14">Default/USD/RED:6BA9CX|SECDOM|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:6CFGE3|SNRFOR|USD|XR14">Default/USD/RED:6CFGE3|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:6DB9EI|SNRFOR|USD|XR14">Default/USD/RED:6DB9EI|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:6E86CB|SNRFOR|USD|XR14">Default/USD/RED:6E86CB|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:6EA8DM|SNRFOR|USD|XR14">Default/USD/RED:6EA8DM|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:6F94BX|SNRFOR|USD|XR14">Default/USD/RED:6F94BX|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:6FC64D|SECDOM|USD|XR14">Default/USD/RED:6FC64D|SECDOM|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:6FE77J|SNRFOR|USD|XR14">Default/USD/RED:6FE77J|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:7AAB8A|SNRFOR|USD|XR14">Default/USD/RED:7AAB8A|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:7C5259|SNRFOR|USD|XR14">Default/USD/RED:7C5259|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:7CB65K|SNRFOR|USD|XR14">Default/USD/RED:7CB65K|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:7DDEC9|SNRFOR|USD|XR14">Default/USD/RED:7DDEC9|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:7F8168|SNRFOR|USD|XR14">Default/USD/RED:7F8168|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:7FDE95|SECDOM|USD|XR14">Default/USD/RED:7FDE95|SECDOM|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:7FEB65|SNRFOR|USD|XR14">Default/USD/RED:7FEB65|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:7J68BG|SNRFOR|USD|XR14">Default/USD/RED:7J68BG|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:8ABFDU|SNRFOR|USD|XR14">Default/USD/RED:8ABFDU|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:8DA533|SNRFOR|USD|XR14">Default/USD/RED:8DA533|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:8F97DO|SNRFOR|USD|XR14">Default/USD/RED:8F97DO|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:8FB64I|SNRFOR|USD|XR14">Default/USD/RED:8FB64I|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:8FD72Y|SNRFOR|USD|XR14">Default/USD/RED:8FD72Y|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:8FG91K|SNRFOR|USD|XR14">Default/USD/RED:8FG91K|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:8G836J|SNRFOR|USD|XR14">Default/USD/RED:8G836J|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:8G9786|SNRFOR|USD|XR14">Default/USD/RED:8G9786|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:8GHDBF|SNRFOR|USD|XR14">Default/USD/RED:8GHDBF|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:8HC9AB|SUBLT2|USD|XR14">Default/USD/RED:8HC9AB|SUBLT2|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:8HCBB3|SNRFOR|USD|XR14">Default/USD/RED:8HCBB3|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:8J332L|SNRFOR|USD|XR14">Default/USD/RED:8J332L|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:999B35|SNRFOR|USD|XR14">Default/USD/RED:999B35|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:999C5H|SNRFOR|USD|XR14">Default/USD/RED:999C5H|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:9A249M|SNRFOR|USD|XR14">Default/USD/RED:9A249M|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:9A389S|SNRFOR|USD|XR14">Default/USD/RED:9A389S|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:9A4570|SNRFOR|USD|XR14">Default/USD/RED:9A4570|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:9A4C93|SECDOM|USD|XR14">Default/USD/RED:9A4C93|SECDOM|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:9A5D96|SNRFOR|USD|XR14">Default/USD/RED:9A5D96|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:9BAC4V|SNRFOR|USD|XR14">Default/USD/RED:9BAC4V|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:9HC533|SNRFOR|USD|XR14">Default/USD/RED:9HC533|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:9HGCDH|SNRFOR|USD|XR14">Default/USD/RED:9HGCDH|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:U2G91L|SNRFOR|USD|XR14">Default/USD/RED:U2G91L|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:UU2679|SNRFOR|USD|XR14">Default/USD/RED:UU2679|SNRFOR|USD|XR14</DefaultCurve>
+		<DefaultCurve name="RED:UW8EGE|SNRFOR|USD|XR14">Default/USD/RED:UW8EGE|SNRFOR|USD|XR14</DefaultCurve>
+	</DefaultCurves>
+</TodaysMarket>
+

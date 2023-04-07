@@ -55,15 +55,14 @@ namespace analytics {
 class StressTest {
 public:
     //! Constructor
-    StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio, const boost::shared_ptr<ore::data::Market>& market,
-               const string& marketConfiguration, const boost::shared_ptr<ore::data::EngineData>& engineData,
-               boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+    StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
+               const boost::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
+               const boost::shared_ptr<ore::data::EngineData>& engineData,
+               const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                const boost::shared_ptr<StressTestScenarioData>& stressData,
                const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                boost::shared_ptr<ScenarioFactory> scenarioFactory = {},
-               std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
-               std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
                const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                bool continueOnError = false);

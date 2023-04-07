@@ -149,8 +149,8 @@ void DiscountingCurrencySwapEngine::calculate() const {
             Currency ccy = arguments_.currency[i];
             Handle<YieldTermStructure> yts = fetchTS(ccy);
 
-            QuantLib::CashFlows::npvbps(arguments_.legs[i], **yts, includeRefDateFlows, settlementDate,
-                                        results_.valuationDate, results_.inCcyLegNPV[i], results_.inCcyLegBPS[i]);
+            std::tie(results_.inCcyLegNPV[i], results_.inCcyLegBPS[i]) = QuantLib::CashFlows::npvbps(
+                arguments_.legs[i], **yts, includeRefDateFlows, settlementDate, results_.valuationDate);
 
             results_.inCcyLegNPV[i] *= arguments_.payer[i];
             if (results_.inCcyLegBPS[i] != Null<Real>()) {

@@ -44,35 +44,36 @@ public:
                          QuantLib::VolatilityType volType = QuantLib::ShiftedLognormal, double displacement = 0.0);
 
     //! Computes the expiry date from the capFloorStartDate()
-    virtual QuantLib::Date optionMaturityFromTenor(const QuantLib::Period& tenor) const;
+    QuantLib::Date optionDateFromTenor(const QuantLib::Period& tenor) const override;
 
     //! base date will be in the past
-    virtual QuantLib::Date baseDate() const override;
+    QuantLib::Date baseDate() const override;
 
     //! Returns the volatility type
-    virtual QuantLib::VolatilityType volatilityType() const { return volType_; }
+    QuantLib::VolatilityType volatilityType() const { return volType_; }
     //! Returns the displacement for lognormal volatilities
-    virtual double displacement() const { return displacement_; }
+    double displacement() const { return displacement_; }
 
-    virtual bool isLogNormal() const { return volatilityType() == QuantLib::ShiftedLognormal; }
+    bool isLogNormal() const { return volatilityType() == QuantLib::ShiftedLognormal; }
 
     using QuantLib::CPIVolatilitySurface::volatility;
+    QuantLib::Volatility volatility(const QuantLib::Date& maturityDate, QuantLib::Rate strike,
+                                  const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days),
+                                  bool extrapolate = false) const override;
 
-    virtual QuantLib::Volatility volatility(const QuantLib::Period& optionTenor, QuantLib::Rate strike,
-                                            const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days),
-                                            bool extrapolate = false) const override;
+    virtual QuantLib::Real atmStrike(const QuantLib::Date& maturity,
+                                     const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days)) const = 0;
 
-    using QuantLib::CPIVolatilitySurface::totalVariance;
-
-    virtual QuantLib::Volatility totalVariance(const QuantLib::Period& tenor, QuantLib::Rate strike,
-                                               const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days),
-                                               bool extrapolate = false) const override;
+    QuantLib::Date capFloorStartDate() const;
 
 protected:
     //! Computes the expiry time from the capFloorStartDate()
     //  time from reference till relevant fixing Date for a capFloor expiriy at maturityDate
+
+
     virtual double fixingTime(const QuantLib::Date& maturityDate) const;
-    QuantLib::Date capFloorStartDate() const;
+    
+    
     QuantLib::VolatilityType volType_;
     double displacement_;
 

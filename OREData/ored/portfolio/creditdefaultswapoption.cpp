@@ -30,10 +30,6 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-// Could use this to make code below more succinct but VS then gives intellisense warnings that the ctors and methods 
-// are not defined.
-// using ASI = CreditDefaultSwapOption::AuctionSettlementInformation;
-
 CreditDefaultSwapOption::AuctionSettlementInformation::AuctionSettlementInformation()
     : auctionFinalPrice_(Null<Real>()) {}
 
@@ -94,6 +90,13 @@ void CreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>& engi
         buildNoDefault(engineFactory);
     }
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Swaptions");
+    // Deferring the mapping creditCurveId to Corporate, Muni, Sovereign
+    additionalData_["isdaSubProduct"] = swap_.creditCurveId(); 
+    // Skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
 }
 
 const OptionData& CreditDefaultSwapOption::option() const {

@@ -62,10 +62,10 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
 
     Date today = Settings::instance().evaluationDate();
     if (expiryDate <= today) {
-
         // If expiry has occurred, we attempt to establish the payoff amount, if any, and discount it.
         Real payoffAmount = 0.0;
         Real priceAtExercise = 0.0;
+        bool deterministicPayoff = true;
         if (arguments_.automaticExercise) {
             // If we have automatic exercise, we base the payoff on the value of the index on the expiry date.
             QL_REQUIRE(arguments_.underlying, "Expect a valid underlying index when exercise is automatic.");
@@ -81,6 +81,16 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
             // Expiry date is today, not automatic exercise and hasn't been manually exercised - use spot.
             priceAtExercise = bsp_->x0();
             payoffAmount = (*arguments_.payoff)(priceAtExercise);
+            deterministicPayoff = false;
+        }
+
+        if(deterministicPayoff) {
+            results_.delta = 0.0;
+            results_.deltaForward = 0.0;
+            results_.elasticity = 0.0;
+            results_.gamma = 0.0;
+            results_.dividendRho = 0.0;
+            results_.vega = 0.0;
         }
 
         // Discount factor to payment date.
@@ -95,16 +105,6 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
             results_.theta = -std::log(df_tp) / delta_tp * results_.value;
         }
         results_.thetaPerDay = results_.theta / 365.0;
-
-        // Remaining results are set to 0. Possibly not necessary but then they are Null<Real>().
-        results_.delta = 0.0;
-        results_.deltaForward = 0.0;
-        results_.elasticity = 0.0;
-        results_.gamma = 0.0;
-        results_.dividendRho = 0.0;
-        results_.vega = 0.0;
-        results_.strikeSensitivity = 0.0;
-        results_.itmCashProbability = 0.0;
 
         // Populate some additional results.
         results_.additionalResults["spot"] = bsp_->x0();

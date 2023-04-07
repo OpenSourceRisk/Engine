@@ -199,7 +199,6 @@ BOOST_AUTO_TEST_CASE(testEquitySwapPriceReturn) {
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
 
     // build swaps and portfolio
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
@@ -238,7 +237,6 @@ BOOST_AUTO_TEST_CASE(testEquitySwapTotalReturn) {
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
 
     // build swaps and portfolio
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
@@ -278,7 +276,6 @@ BOOST_AUTO_TEST_CASE(testEquitySwapNotionalReset) {
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
 
     // build swaps and portfolio
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());

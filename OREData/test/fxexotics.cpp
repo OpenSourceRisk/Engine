@@ -159,7 +159,6 @@ BOOST_AUTO_TEST_CASE(testFXDigitalOptionPrice) {
         engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<ore::data::FxDigitalOptionEngineBuilder>());
 
         fxOption.build(engineFactory);
 
@@ -343,7 +342,6 @@ BOOST_AUTO_TEST_CASE(testFXBarrierOptionPrice) {
             engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
             boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-            engineFactory->registerBuilder(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
 
             fxBarrierOption.build(engineFactory);
             fxBarrierOptionNotional.build(engineFactory);
@@ -418,9 +416,7 @@ BOOST_AUTO_TEST_CASE(testFXBarrierOptionSymmetry) {
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
         boost::shared_ptr<EngineFactory> engineFactoryCall = boost::make_shared<EngineFactory>(engineData, marketCall);
-        engineFactoryCall->registerBuilder(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
         boost::shared_ptr<EngineFactory> engineFactoryPut = boost::make_shared<EngineFactory>(engineData, marketPut);
-        engineFactoryPut->registerBuilder(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
 
         fxCallOption.build(engineFactoryCall);
         fxPutOption.build(engineFactoryPut);
@@ -499,7 +495,6 @@ BOOST_AUTO_TEST_CASE(testFXBarrierOptionParity) {
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
 
         fxOption.build(engineFactory);
         downInOption.build(engineFactory);
@@ -596,7 +591,6 @@ BOOST_AUTO_TEST_CASE(testFXBarrierOptionTouched) {
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
 
         fxOption.build(engineFactory);
         fxBarrierOption.build(engineFactory);
@@ -688,10 +682,6 @@ BOOST_AUTO_TEST_CASE(testFXDigitalBarrierOptionPrice) {
         engineData->model("FxDigitalOption") = "GarmanKohlhagen";
         engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(
-            boost::make_shared<FxDigitalBarrierOptionEngineBuilder>("GarmanKohlhagen", "FdBlackScholesBarrierEngine"));
-        engineFactory->registerBuilder(boost::make_shared<FxDigitalOptionEngineBuilder>());
-
         barrierOption.build(engineFactory);
 
         Real npv = barrierOption.instrument()->NPV() / f.cash;
@@ -777,9 +767,6 @@ BOOST_AUTO_TEST_CASE(testFXDigitalBarrierOptionParity) {
             engineData->model("FxDigitalOption") = "GarmanKohlhagen";
             engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
             boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-            engineFactory->registerBuilder(boost::make_shared<FxDigitalBarrierOptionEngineBuilder>(
-                "GarmanKohlhagen", "FdBlackScholesBarrierEngine"));
-            engineFactory->registerBuilder(boost::make_shared<FxDigitalOptionEngineBuilder>());
 
             fxOption.build(engineFactory);
             downInOption.build(engineFactory);
@@ -869,9 +856,6 @@ BOOST_AUTO_TEST_CASE(testFXDigitalBarrierOptionTouched) {
                 engineData->model("FxDigitalOption") = "GarmanKohlhagen";
                 engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
                 boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-                engineFactory->registerBuilder(boost::make_shared<FxDigitalBarrierOptionEngineBuilder>(
-                    "GarmanKohlhagen", "FdBlackScholesBarrierEngine"));
-                engineFactory->registerBuilder(boost::make_shared<FxDigitalOptionEngineBuilder>());
 
                 fxOption.build(engineFactory);
                 downInOption.build(engineFactory);
@@ -965,7 +949,6 @@ BOOST_AUTO_TEST_CASE(testFXTouchOptionPrice) {
 
         // Build and price
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<FxTouchOptionEngineBuilder>());
 
         fxTouchOption.build(engineFactory);
 
@@ -1039,8 +1022,6 @@ BOOST_AUTO_TEST_CASE(testFXTouchOptionParity) {
         engineData->engine("Swap") = "DiscountingSwapEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<FxTouchOptionEngineBuilder>());
-        engineFactory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
 
         swap.build(engineFactory);
         downInOption.build(engineFactory);
@@ -1152,8 +1133,6 @@ BOOST_AUTO_TEST_CASE(testFXTouchOptionTouched) {
                 engineData->engine("Swap") = "DiscountingSwapEngine";
 
                 boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-                engineFactory->registerBuilder(boost::make_shared<FxTouchOptionEngineBuilder>());
-                engineFactory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
 
                 touchOption.build(engineFactory);
                 swap.build(engineFactory);
@@ -1303,7 +1282,6 @@ BOOST_AUTO_TEST_CASE(testFXDoubleBarrierOptionPrice) {
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<FxDoubleBarrierOptionAnalyticEngineBuilder>());
 
         fxDoubleBarrierOption.build(engineFactory);
 
@@ -1364,7 +1342,6 @@ BOOST_AUTO_TEST_CASE(testFXDoubleBarrierOptionParity) {
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<FxDoubleBarrierOptionAnalyticEngineBuilder>());
 
         fxDoubleBarrierInOption.build(engineFactory);
         fxDoubleBarrierOutOption.build(engineFactory);
@@ -1506,7 +1483,6 @@ BOOST_AUTO_TEST_CASE(testFXDoubleBarrierOptionTouched) {
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<FxDoubleBarrierOptionAnalyticEngineBuilder>());
 
         doubleBarrierOption.build(engineFactory);
         doubleBarrierOptionInverted.build(engineFactory);
@@ -1557,7 +1533,6 @@ BOOST_AUTO_TEST_CASE(testFXDoubleTouchOptionPrice) {
 
         // Build and price
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<FxDoubleTouchOptionAnalyticEngineBuilder>());
 
         fxDoubleTouchOption.build(engineFactory);
 
@@ -1614,8 +1589,6 @@ BOOST_AUTO_TEST_CASE(testFXDoubleTouchOptionParity) {
         engineData->engine("Swap") = "DiscountingSwapEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<FxDoubleTouchOptionAnalyticEngineBuilder>());
-        engineFactory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
 
         swap.build(engineFactory);
         knockOutOption.build(engineFactory);
@@ -1722,8 +1695,6 @@ BOOST_AUTO_TEST_CASE(testFXDoubleTouchOptionTouched) {
                 engineData->engine("Swap") = "DiscountingSwapEngine";
 
                 boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-                engineFactory->registerBuilder(boost::make_shared<FxDoubleTouchOptionAnalyticEngineBuilder>());
-                engineFactory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
 
                 doubleTouchOption.build(engineFactory);
                 swap.build(engineFactory);
@@ -1794,11 +1765,7 @@ BOOST_AUTO_TEST_CASE(testFXEuropeanBarrierOptionSymmetry) {
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
         boost::shared_ptr<EngineFactory> engineFactoryCall = boost::make_shared<EngineFactory>(engineData, marketCall);
-        engineFactoryCall->registerBuilder(boost::make_shared<FxDigitalOptionEngineBuilder>());
-        engineFactoryCall->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
         boost::shared_ptr<EngineFactory> engineFactoryPut = boost::make_shared<EngineFactory>(engineData, marketPut);
-        engineFactoryPut->registerBuilder(boost::make_shared<FxDigitalOptionEngineBuilder>());
-        engineFactoryPut->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
 
         fxCallOption.build(engineFactoryCall);
         fxPutOption.build(engineFactoryPut);
@@ -1888,9 +1855,6 @@ BOOST_AUTO_TEST_CASE(testFXEuropeanBarrierOptionParity) {
             engineData->engine("Swap") = "DiscountingSwapEngine";
 
             boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-            engineFactory->registerBuilder(boost::make_shared<FxDigitalOptionEngineBuilder>());
-            engineFactory->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
-            engineFactory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
 
             fxOption.build(engineFactory);
             downInOption.build(engineFactory);
@@ -1978,8 +1942,6 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<FxDoubleBarrierOptionAnalyticEngineBuilder>());
-        engineFactory->registerBuilder(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
 
         // knocked in npv = knockOut npv
         TimeSeries<Real> pastFixings;
@@ -2050,8 +2012,6 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<FxDoubleBarrierOptionAnalyticEngineBuilder>());
-        engineFactory->registerBuilder(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
 
         kikoBarrierOption.build(engineFactory);
         koBarrierOption.build(engineFactory);
@@ -2104,8 +2064,6 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<FxDoubleBarrierOptionAnalyticEngineBuilder>());
-        engineFactory->registerBuilder(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
 
         // knocked out npv = 0
         kikoBarrierOption.build(engineFactory);
@@ -2175,8 +2133,6 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<FxDoubleBarrierOptionAnalyticEngineBuilder>());
-        engineFactory->registerBuilder(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
 
         TimeSeries<Real> pastFixings;
         IndexManager::instance().setHistory("Reuters EUR/JPY", pastFixings);
@@ -2286,8 +2242,6 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<FxDoubleBarrierOptionAnalyticEngineBuilder>());
-        engineFactory->registerBuilder(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
 
         TimeSeries<Real> pastFixings;
         IndexManager::instance().setHistory("Reuters EUR/JPY", pastFixings);

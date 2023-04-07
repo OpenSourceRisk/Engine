@@ -1,0 +1,156 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="ReferenceData">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="ReferenceDatum" maxOccurs="unbounded" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="Type" minOccurs="1" maxOccurs="1" />
+              <xs:group ref="referenceDataTypes"/>
+            </xs:sequence>
+            <xs:attribute type="xs:string" name="id" use="required"/>
+            <xs:attribute type="xs:string" name="validFrom"/>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:group name="referenceDataTypes">
+    <xs:choice>
+      <xs:element type="currencyHedgedIndexReferenceDatum" name="CurrencyHedgedEquityIndexReferenceData"/>
+      <xs:element type="indexReferenceDatum" name="EquityIndexReferenceData"/>
+      <xs:element type="creditIndexReferenceDatum" name="CreditIndexReferenceData"/>
+      <xs:element type="bondReferenceDatum" name="BondReferenceData"/>
+      <xs:element type="cboReferenceDatum" name="CboReferenceData"/>
+      <xs:element type="convertibleBondReferenceDatum" name="ConvertibleBondReferenceData"/>
+      <xs:element type="bondBasketData" name="BondBasketData"/>
+      <xs:element type="referenceDatum" name="CreditReferenceData"/>
+      <xs:element type="referenceDatum" name="EquityReferenceData"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:complexType name="indexReferenceDatum">
+    <xs:sequence>
+      <xs:element name="Underlying" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="Name" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="xs:float" name="Weight" minOccurs="1" maxOccurs="1"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="creditIndexReferenceDatum">
+    <xs:sequence>
+      <xs:element name="Underlying" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="Name" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="weightType" name="Weight" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="weightType" name="PriorWeight" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="recoveryRate" name="RecoveryRate" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="date" name="AuctionDate" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="date" name="AuctionSettlementDate" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="date" name="DefaultDate" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="date" name="EventDeterminationDate" minOccurs="0" maxOccurs="1"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="bondReferenceDatum">
+    <xs:sequence>
+      <xs:element type="xs:string" name="IssuerId"/>
+      <xs:element type="xs:string" name="CreditCurveId" minOccurs="0"/>
+      <xs:element type="xs:string" name="CreditGroup" minOccurs="0"/>
+      <xs:element type="xs:string" name="ReferenceCurveId" minOccurs="0"/>
+      <xs:element type="xs:string" name="IncomeCurveId" minOccurs="0"/>
+      <xs:element type="xs:string" name="VolatilityCurveId" minOccurs="0"/>
+      <xs:element type="xs:string" name="SettlementDays"/>
+      <xs:element type="xs:string" name="Calendar"/>
+      <xs:element type="xs:string" name="IssueDate"/>
+      <xs:element type="xs:string" name="PriceQuoteMethod" minOccurs="0"/>
+      <xs:element type="xs:string" name="PriceQuoteBaseValue" minOccurs="0"/>
+      <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="cboReferenceDatum">
+    <xs:all>
+      <xs:element type="xs:string" name="DayCounter"/>
+      <xs:element type="xs:string" name="PaymentConvention"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:string" name="ReinvestmentEndDate" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:float" name="SeniorFee"/>
+      <xs:element type="xs:string" name="FeeDayCounter"/>
+      <xs:element type="xs:float" name="SubordinatedFee"/>
+      <xs:element type="xs:float" name="EquityKicker"/>
+      <xs:element type="cboBondBasketData" name="BondBasketData" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="cbotranches" name="CBOTranches" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="scheduleData" name="ScheduleData"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="convertibleBondReferenceDatum">
+    <xs:all>
+      <xs:element type="bondReferenceDatum" name="BondData"/>
+      <xs:element type="cbCallData" name="CallData" minOccurs="0"/>
+      <xs:element type="cbCallData" name="PutData" minOccurs="0"/>
+      <xs:element type="cbConversionData" name="ConversionData"/>
+      <xs:element type="cbDividendProtectionData" name="DividendProtectionData" minOccurs="0"/>
+      <xs:element type="bool" name="Detachable" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="referenceDatum">
+    <xs:sequence>
+      <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="currencyHedgedIndexReferenceDatum">
+    <xs:sequence>
+    <xs:element type="xs:string" name="UnderlyingIndex" minOccurs="1"/>
+    <xs:element type="currencyCode" name="HedgeCurrency" minOccurs="1"/>
+    <xs:element type="CurrencyHedgedIndexRebalancingStrategy" name="RebalancingStrategy" minOccurs="1"/>
+    <xs:element type="xs:string" name="ReferenceDateOffset" minOccurs="1"/>
+    <xs:element type="CurrencyHedgedIndexRehedgingStrategy" name="HedgeAdjustment" minOccurs="1"/>
+    <xs:element type="xs:string" name="HedgeCalendar" minOccurs="1"/>
+    <xs:element name="FxIndexes" maxOccurs="unbounded" minOccurs="1">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element name="FxIndex" maxOccurs="unbounded" minOccurs="0">
+            <xs:complexType>
+              <xs:all>
+                <xs:element type="xs:string" name="Currency" minOccurs="1" maxOccurs="1"/>
+                <xs:element type="xs:string" name="IndexName" minOccurs="1" maxOccurs="1"/>
+              </xs:all>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:element>
+    <xs:element name="IndexWeightsAtLastRebalancingDate" maxOccurs="unbounded" minOccurs="0">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element name="Underlying" maxOccurs="unbounded" minOccurs="0">
+            <xs:complexType>
+              <xs:all>
+                <xs:element type="xs:string" name="Name" minOccurs="1" maxOccurs="1"/>
+                <xs:element type="xs:float" name="Weight" minOccurs="1" maxOccurs="1"/>
+              </xs:all>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+
+</xs:schema>

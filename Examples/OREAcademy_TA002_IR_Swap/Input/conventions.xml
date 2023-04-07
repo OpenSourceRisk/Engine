@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Conventions>
+
+  <!-- Deposits -->
+  <Deposit>
+    <Id>EUR-EONIA-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>EUR-EONIA</Index>
+  </Deposit>
+  <Deposit>
+    <Id>EUR-EURIBOR-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>EUR-EURIBOR</Index>
+  </Deposit>
+  
+  <!-- Overnight Index linked Swap Legs -->
+  <OIS>
+    <Id>EUR-OIS-CONVENTIONS</Id>
+    <SpotLag>2</SpotLag>
+    <Index>EUR-EONIA</Index>
+    <FixedDayCounter>A360</FixedDayCounter>
+    <PaymentLag>1</PaymentLag>
+    <EOM>false</EOM>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>Following</FixedConvention>
+    <FixedPaymentConvention>Following</FixedPaymentConvention>
+    <Rule>Backward</Rule>
+  </OIS>
+
+  <!-- Interest Rate Swaps -->
+  <Swap>
+    <Id>EUR-6M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>EUR-EURIBOR-6M</Index>
+  </Swap>
+
+</Conventions>

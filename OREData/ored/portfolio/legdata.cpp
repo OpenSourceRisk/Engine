@@ -84,8 +84,6 @@ namespace data {
 
 bool lessThan(const string& s1, const string& s2) { return s1 < s2; }
 
-LegDataRegister<CashflowData> CashflowData::reg_("Cashflow");
-
 void CashflowData::fromXML(XMLNode* node) {
     // allow for empty Cashflow legs without any payments
     if(node == nullptr)
@@ -105,8 +103,6 @@ XMLNode* CashflowData::toXML(XMLDocument& doc) {
     return node;
 }
 
-LegDataRegister<FixedLegData> FixedLegData::reg_("Fixed");
-
 void FixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     rates_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Rates", "Rate", "startDate", rateDates_, parseReal,
@@ -118,8 +114,6 @@ XMLNode* FixedLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
     return node;
 }
-
-LegDataRegister<ZeroCouponFixedLegData> ZeroCouponFixedLegData::reg_("ZeroCouponFixed");
 
 void ZeroCouponFixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -146,8 +140,6 @@ XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "SubtractNotional", subtractNotional_);
     return node;
 }
-
-LegDataRegister<FloatingLegData> FloatingLegData::reg_("Floating");
 
 void FloatingLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -206,7 +198,7 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     if (lastRecentPeriod_)
         XMLUtils::addChild(doc, node, "LastRecentPeriod", *lastRecentPeriod_);
     if (!lastRecentPeriodCalendar_.empty())
-        XMLUtils::addChild(doc, node, "LastRecentPeriod", lastRecentPeriodCalendar_);
+        XMLUtils::addChild(doc, node, "LastRecentPeriodCalendar", lastRecentPeriodCalendar_);
     XMLUtils::addChild(doc, node, "IsAveraged", isAveraged_);
     XMLUtils::addChild(doc, node, "HasSubPeriods", hasSubPeriods_);
     XMLUtils::addChild(doc, node, "IncludeSpread", includeSpread_);
@@ -226,8 +218,6 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "LocalCapFloor", localCapFloor_);
     return node;
 }
-
-LegDataRegister<CPILegData> CPILegData::reg_("CPI");
 
 void CPILegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -309,8 +299,6 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     return node;
 }
 
-LegDataRegister<YoYLegData> YoYLegData::reg_("YY");
-
 void YoYLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     index_ = XMLUtils::getChildValue(node, "Index", true);
@@ -371,8 +359,6 @@ XMLNode* CMSLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
-LegDataRegister<CMSLegData> CMSLegData::reg_("CMS");
-
 void CMSLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     swapIndex_ = XMLUtils::getChildValue(node, "Index", true);
@@ -414,8 +400,6 @@ XMLNode* CMBLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CreditRisk", hasCreditRisk_);
     return node;
 }
-
-LegDataRegister<CMBLegData> CMBLegData::reg_("CMB");
 
 void CMBLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -467,8 +451,6 @@ XMLNode* DigitalCMSLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
-LegDataRegister<DigitalCMSLegData> DigitalCMSLegData::reg_("DigitalCMS");
-
 void DigitalCMSLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
 
@@ -513,8 +495,6 @@ XMLNode* CMSSpreadLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
-
-LegDataRegister<CMSSpreadLegData> CMSSpreadLegData::reg_("CMSSpread");
 
 void CMSSpreadLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -566,8 +546,6 @@ XMLNode* DigitalCMSSpreadLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
-LegDataRegister<DigitalCMSSpreadLegData> DigitalCMSSpreadLegData::reg_("DigitalCMSSpread");
-
 void DigitalCMSSpreadLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
 
@@ -596,8 +574,6 @@ void DigitalCMSSpreadLegData::fromXML(XMLNode* node) {
                                                                       putPayoffDates_, &parseReal);
     }
 }
-
-LegDataRegister<EquityLegData> EquityLegData::reg_("Equity");
 
 void EquityLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -1310,7 +1286,8 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
 }
 
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,
-                    const BusinessDayConvention paymentConvention, const Calendar paymentCalendar) {
+                    const BusinessDayConvention paymentConvention, const Calendar paymentCalendar,
+                    const bool excludeIndexing) {
 
     // Assumption - Cashflows on Input Leg are all coupons
     // This is the Leg to be populated
@@ -1320,7 +1297,7 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
     if (initNomFlow) {
         auto coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[0]);
         QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
-        double initFlowAmt = coupon->nominal();
+        double initFlowAmt = (excludeIndexing ? unpackIndexedCoupon(coupon) : coupon)->nominal();
         Date initDate = coupon->accrualStartDate();
         initDate = paymentCalendar.adjust(initDate, paymentConvention);
         if (initFlowAmt != 0)
@@ -1336,8 +1313,8 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
             QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
             Date flowDate = coupon->accrualStartDate();
             flowDate = paymentCalendar.adjust(flowDate, paymentConvention);
-            Real initNom = coupon2->nominal();
-            Real newNom = coupon->nominal();
+            Real initNom = (excludeIndexing ? unpackIndexedCoupon(coupon2) : coupon2)->nominal();
+            Real newNom = (excludeIndexing ? unpackIndexedCoupon(coupon) : coupon)->nominal();
             Real flow = initNom - newNom;
             if (flow != 0)
                 leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(flow, flowDate)));
@@ -1357,7 +1334,7 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
         // }
         auto coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back());
         QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
-        double finalNomFlow = coupon->nominal();
+        double finalNomFlow = (excludeIndexing ? unpackIndexedCoupon(coupon) : coupon)->nominal();
         Date finalDate = coupon->accrualEndDate();
         finalDate = paymentCalendar.adjust(finalDate, paymentConvention);
         if (finalNomFlow != 0)
@@ -1621,7 +1598,10 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
             }
         }
     } else {
-
+        QuantLib::CPI::InterpolationType interpolation = QuantLib::CPI::Flat;
+        if (cpiSwapConvention && cpiSwapConvention->interpolated()) {
+            interpolation = QuantLib::CPI::Linear;
+        }
         auto zcIndex = boost::dynamic_pointer_cast<ZeroInflationIndex>(index);
         QL_REQUIRE(zcIndex, "Need a Zero Coupon Inflation Index");
         QuantExt::NonStandardYoYInflationLeg yoyLeg =
@@ -1634,7 +1614,8 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
                 .withSpreads(spreads)
                 .withRateCurve(engineFactory->market()->discountCurve(
                     data.currency(), engineFactory->configuration(MarketContext::pricing)))
-                .withInflationNotional(addInflationNotional);
+                .withInflationNotional(addInflationNotional)
+                .withObservationInterpolation(interpolation);
 
         if (couponCap)
             yoyLeg.withCaps(buildScheduledVector(yoyLegData->caps(), yoyLegData->capDates(), schedule));
@@ -2415,7 +2396,8 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 }
 
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                   RequiredFixings& requiredFixings, const QuantLib::Date& openEndDateReplacement) {
+                   RequiredFixings& requiredFixings, const QuantLib::Date& openEndDateReplacement,
+                   const bool useXbsCurves) {
     for (auto const& indexing : data.indexing()) {
         if (indexing.hasData()) {
             DLOG("apply indexing (index='" << indexing.index() << "') to leg of type " << data.legType());
@@ -2438,7 +2420,7 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                 std::string domestic = data.currency();
                 std::string foreign = ccy1.code() == domestic ? ccy2.code() : ccy1.code();
                 index = buildFxIndex(indexing.index(), domestic, foreign, engineFactory->market(),
-                                     engineFactory->configuration(MarketContext::pricing));
+                                     engineFactory->configuration(MarketContext::pricing), useXbsCurves);
 
             } else if (boost::starts_with(indexing.index(), "COMM-")) {
                 auto tmp = parseCommodityIndex(indexing.index());
@@ -2464,6 +2446,10 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             // apply the indexing
             IndexedCouponLeg indLeg(leg, indexing.quantity(), index);
             indLeg.withInitialFixing(indexing.initialFixing());
+            // we set the initial notional fixing only if we have an initial exchange, otherwise this is applied to the
+            // first notional payment appearing in the leg
+            if (data.notionalInitialExchange())
+                indLeg.withInitialNotionalFixing(indexing.initialNotionalFixing());
             indLeg.withFixingDays(indexing.fixingDays());
             indLeg.inArrearsFixing(indexing.inArrearsFixing());
             if (indexing.valuationSchedule().hasData())
@@ -2656,7 +2642,7 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
 
         return makeNotionalLeg(leg, data.notionalInitialExchange(), data.notionalFinalExchange(),
                                data.notionalAmortizingExchange(), parseBusinessDayConvention(data.paymentConvention()),
-                               parseCalendar(data.paymentCalendar()));
+                               parseCalendar(data.paymentCalendar()), true);
     } else {
         return Leg();
     }

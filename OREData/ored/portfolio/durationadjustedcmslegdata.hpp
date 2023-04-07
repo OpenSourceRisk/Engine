@@ -99,8 +99,6 @@ private:
     std::vector<double> gearings_;
     std::vector<std::string> gearingDates_;
     bool nakedOption_;
-
-    static LegDataRegister<DurationAdjustedCmsLegData> reg_;
 };
 
 } // namespace data

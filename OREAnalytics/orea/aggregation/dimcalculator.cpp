@@ -19,10 +19,11 @@
 #include <orea/aggregation/dimcalculator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/vectorutils.hpp>
+#include <ored/portfolio/trade.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/version.hpp>
-
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
 #include <ql/math/kernelfunctions.hpp>
@@ -46,11 +47,12 @@ namespace ore {
 namespace analytics {
 
 DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
+    const boost::shared_ptr<InputParameters>& inputs,
     const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<NPVCube>& cube,
     const boost::shared_ptr<CubeInterpretation>& cubeInterpretation,
     const boost::shared_ptr<AggregationScenarioData>& scenarioData, Real quantile, Size horizonCalendarDays,
     const std::map<std::string, Real>& currentIM)
-    : portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation), scenarioData_(scenarioData),
+    : inputs_(inputs), portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation), scenarioData_(scenarioData),
       quantile_(quantile), horizonCalendarDays_(horizonCalendarDays), currentIM_(currentIM) {
 
     QL_REQUIRE(portfolio_, "portfolio is null");
@@ -72,9 +74,11 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
 
     // initialise aggregate NPV and Flow by date and scenario
     set<string> nettingSets;
-    for (Size i = 0; i < portfolio_->size(); ++i) {
-        string tradeId = portfolio_->trades()[i]->id();
-        string nettingSetId = portfolio_->trades()[i]->envelope().nettingSetId();
+    size_t i = 0;
+    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++i) {
+        auto trade = tradeIt->second;
+        string tradeId = tradeIt->first;
+        string nettingSetId = trade->envelope().nettingSetId();
         if (nettingSets.find(nettingSetId) == nettingSets.end()) {
             nettingSets.insert(nettingSetId);
             nettingSetNPV_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
@@ -97,8 +101,8 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
         }
     }
 
-    for (auto n : nettingSets)
-        nettingSetIds_.push_back(n);
+    
+    nettingSetIds_ = std::move(nettingSets);
 
     dimCube_ = boost::make_shared<SinglePrecisionInMemoryCube>(cube_->asof(), nettingSetIds_, cube_->dates(),
                                                                cube_->samples());
@@ -139,7 +143,7 @@ void DynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEv
         .addColumn("NettingSet", string())
         .addColumn("Time", Real(), 6);
 
-    for (auto nettingSet : dimCube_->ids()) {
+    for (auto [nettingSet, _] : dimCube_->idsAndIndexes()) {
 
         LOG("Export DIM evolution for netting set " << nettingSet);
         for (Size i = 0; i < stopDatesLoop; ++i) {

@@ -1,4 +1,19 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ Copyright (C) 2021 Quaternion Risk Management Ltd
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
 
 /*
  Copyright (C) 2009 Chris Kenyon
@@ -59,9 +74,9 @@ NonStandardCappedFlooredYoYInflationCoupon::NonStandardCappedFlooredYoYInflation
                                     underlying->accrualEndDate(), underlying->fixingDays(), underlying->cpiIndex(),
                                     underlying->observationLag(), underlying->dayCounter(), underlying->gearing(),
                                     underlying->spread(), underlying->referencePeriodStart(),
-                                    underlying->referencePeriodEnd(), underlying->addInflationNotional()),
-      underlying_(underlying), isFloored_(false), isCapped_(false) {
-
+                                    underlying->referencePeriodEnd(), underlying->addInflationNotional(), 
+                                    underlying->interpolationType()), 
+    underlying_(underlying), isFloored_(false), isCapped_(false) {
     setCommon(cap, floor);
     registerWith(underlying);
 }
@@ -70,11 +85,11 @@ NonStandardCappedFlooredYoYInflationCoupon::NonStandardCappedFlooredYoYInflation
     const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
     const ext::shared_ptr<ZeroInflationIndex>& index, const Period& observationLag, const DayCounter& dayCounter,
     Real gearing, Spread spread, const Rate cap, const Rate floor, const Date& refPeriodStart, const Date& refPeriodEnd,
-    bool addInflationNotional)
+    bool addInflationNotional, QuantLib::CPI::InterpolationType interpolation)
     : NonStandardYoYInflationCoupon(paymentDate, nominal, startDate, endDate, fixingDays, index, observationLag,
-                                    dayCounter, gearing, spread, refPeriodStart, refPeriodEnd, addInflationNotional),
+                                    dayCounter, gearing, spread, refPeriodStart, refPeriodEnd, addInflationNotional,
+                                    interpolation),
       isFloored_(false), isCapped_(false) {
-
     setCommon(cap, floor);
 }
 
@@ -151,7 +166,7 @@ NonStandardYoYInflationLeg::NonStandardYoYInflationLeg(const Schedule& schedule,
                                                        const ext::shared_ptr<ZeroInflationIndex>& index,
                                                        const Period& observationLag)
     : schedule_(schedule), index_(index), observationLag_(observationLag), paymentAdjustment_(ModifiedFollowing),
-      paymentCalendar_(paymentCalendar), addInflationNotional_(false) {}
+      paymentCalendar_(paymentCalendar), addInflationNotional_(false), interpolation_(QuantLib::CPI::Flat) {}
 
 NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withNotionals(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -233,6 +248,11 @@ NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withInflationNotional(bo
     return *this;
 }
 
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withObservationInterpolation(QuantLib::CPI::InterpolationType interpolation) {
+    interpolation_ = interpolation;
+    return *this;
+}
+
 NonStandardYoYInflationLeg::operator Leg() const {
 
     Size n = schedule_.size() - 1;
@@ -271,7 +291,7 @@ NonStandardYoYInflationLeg::operator Leg() const {
                 ext::shared_ptr<NonStandardYoYInflationCoupon> coup(new NonStandardYoYInflationCoupon(
                     paymentDate, detail::get(notionals_, i, 1.0), start, end, detail::get(fixingDays_, i, 0), index_,
                     observationLag_, paymentDayCounter_, detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0),
-                    refStart, refEnd, addInflationNotional_));
+                    refStart, refEnd, addInflationNotional_, interpolation_));
 
                 // in this case you can set a pricer
                 // straight away because it only provides computation - not data
@@ -285,7 +305,7 @@ NonStandardYoYInflationLeg::operator Leg() const {
                     paymentDate, detail::get(notionals_, i, 1.0), start, end, detail::get(fixingDays_, i, 0), index_,
                     observationLag_, paymentDayCounter_, detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0),
                     detail::get(caps_, i, Null<Rate>()), detail::get(floors_, i, Null<Rate>()), refStart, refEnd,
-                    addInflationNotional_)));
+                    addInflationNotional_, interpolation_)));
             }
         }
     }

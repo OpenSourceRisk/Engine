@@ -5,6 +5,7 @@
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205_flat.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">Y</Parameter>
@@ -20,12 +21,13 @@
     <Parameter name="fxcalibration">libor</Parameter>
     <Parameter name="pricing">libor</Parameter>
     <Parameter name="simulation">libor</Parameter>
-  </Markets>
+    </Markets>
   <Analytics>
     <Analytic type="npv">
       <Parameter name="active">Y</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="additionalResults">Y</Parameter>
     </Analytic>
     <Analytic type="cashflow">
       <Parameter name="active">Y</Parameter>
@@ -36,6 +38,7 @@
       <Parameter name="configuration">default</Parameter>
       <Parameter name="grid">240,1W</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
+      <Parameter name="outputTodaysMarketCalibration">Y</Parameter>
     </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
@@ -43,14 +46,14 @@
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
-      <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
-      <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="scenarioFile">scenariodata.dat</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="exposureProfilesByTrade">Y</Parameter>

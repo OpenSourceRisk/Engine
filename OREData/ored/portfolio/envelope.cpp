@@ -43,11 +43,30 @@ void Envelope::fromXML(XMLNode* node) {
             portfolioIds_.insert(XMLUtils::getNodeValue(c));
     }
 
+    std::function<boost::any(XMLNode*)> getValue;
+    getValue = [&getValue](XMLNode* node) {
+        boost::any value;
+        vector<XMLNode*> children = XMLUtils::getChildrenNodes(node, "");
+        // If node is a single-value node
+        if (children.size() == 1 && XMLUtils::getNodeName(children[0]) == "") {
+            value = XMLUtils::getNodeValue(node);
+        } else {
+            std::multimap<string, boost::any> subAddFields;
+            for (XMLNode* child : children) {
+                const string& name = XMLUtils::getNodeName(child);
+                boost::any childValue = getValue(child);
+                subAddFields.insert({name, childValue});
+            }
+            value = subAddFields;
+        }
+        return value;
+    };
+
     additionalFields_.clear();
     XMLNode* additionalNode = XMLUtils::getChildNode(node, "AdditionalFields");
     if (additionalNode) {
         for (XMLNode* child = XMLUtils::getChildNode(additionalNode); child; child = XMLUtils::getNextSibling(child)) {
-            additionalFields_[XMLUtils::getNodeName(child)] = XMLUtils::getNodeValue(child);
+            additionalFields_[XMLUtils::getNodeName(child)] = getValue(child);
         }
     }
 }
@@ -66,8 +85,24 @@ XMLNode* Envelope::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, portfolioNode, "PortfolioId", p);
     XMLNode* additionalNode = doc.allocNode("AdditionalFields");
     XMLUtils::appendNode(node, additionalNode);
+
+    std::function<void(XMLNode*, const string&, const boost::any&)> addChild;
+    addChild = [&addChild, &doc](XMLNode* node, const string& name, const boost::any& val) {
+        if (val.type() == typeid(string)) {
+            XMLUtils::addChild(doc, node, name, boost::any_cast<string>(val));
+        } else {
+            QL_REQUIRE(val.type() == typeid(std::multimap<string, boost::any>),
+                       "Additional field type must be either string or map<string, boost::any>");
+            XMLNode* childNode = doc.allocNode(name);
+            XMLUtils::appendNode(node, childNode);
+            for (const auto& kv : boost::any_cast<std::multimap<string, boost::any>>(val)) {
+                addChild(childNode, kv.first, kv.second);
+            }
+        }
+    };
+
     for (const auto& it : additionalFields_)
-        XMLUtils::addChild(doc, additionalNode, it.first, it.second);
+        addChild(additionalNode, it.first, it.second);
     return node;
 }
 

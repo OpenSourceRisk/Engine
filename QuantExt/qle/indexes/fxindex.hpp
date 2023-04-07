@@ -50,6 +50,7 @@ using namespace QuantLib;
 
 class FxRateQuote : public Quote, public Observer {
 public:
+    //! if sourceYts, targetYts are not given, the non-discounted spot quote will be returned as a fallback
     FxRateQuote(Handle<Quote> spotQuote, const Handle<YieldTermStructure>& sourceYts,
                 const Handle<YieldTermStructure>& targetYts, Natural fixingDays, const Calendar& fixingCalendar);
     //! \name Quote interface

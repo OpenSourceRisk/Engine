@@ -21,16 +21,18 @@
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/flatextrapolation2d.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
+#include <qle/utilities/inflation.hpp>
 
 namespace QuantExt {
 
-SpreadedCPIVolatilitySurface::SpreadedCPIVolatilitySurface(const Handle<CPIVolatilitySurface>& baseVol,
+SpreadedCPIVolatilitySurface::SpreadedCPIVolatilitySurface(const Handle<QuantExt::CPIVolatilitySurface>& baseVol,
                                                            const std::vector<Date>& optionDates,
                                                            const std::vector<Real>& strikes,
                                                            const std::vector<std::vector<Handle<Quote>>>& volSpreads)
-    : CPIVolatilitySurface(baseVol->settlementDays(), baseVol->calendar(), baseVol->businessDayConvention(),
-                           baseVol->dayCounter(), baseVol->observationLag(), baseVol->frequency(),
-                           baseVol->indexIsInterpolated()),
+    : QuantExt::CPIVolatilitySurface(baseVol->settlementDays(), baseVol->calendar(), baseVol->businessDayConvention(),
+                                     baseVol->dayCounter(), baseVol->observationLag(), baseVol->frequency(),
+                                     baseVol->indexIsInterpolated(), baseVol->capFloorStartDate(),
+                                     baseVol->volatilityType(), baseVol->displacement()),
       baseVol_(baseVol), optionDates_(optionDates), strikes_(strikes), volSpreads_(volSpreads) {
     registerWith(baseVol_);
     optionTimes_.resize(optionDates_.size());
@@ -53,11 +55,7 @@ Volatility SpreadedCPIVolatilitySurface::volatilityImpl(Time length, Rate strike
 
 void SpreadedCPIVolatilitySurface::performCalculations() const {
     for (Size i = 0; i < optionDates_.size(); ++i) {
-        // we can not support a custom obsLag here
-        if (indexIsInterpolated())
-            optionTimes_[i] = timeFromReference(optionDates_[i] - observationLag());
-        else
-            optionTimes_[i] = timeFromReference(inflationPeriod(optionDates_[i] - observationLag(), frequency()).first);
+        optionTimes_[i] = fixingTime(optionDates_[i]);
     }
     for (Size k = 0; k < strikes_.size(); ++k) {
         for (Size i = 0; i < optionDates_.size(); ++i) {
@@ -78,5 +76,11 @@ void SpreadedCPIVolatilitySurface::deepUpdate() {
     baseVol_->update();
     update();
 }
+
+QuantLib::Real SpreadedCPIVolatilitySurface::atmStrike(const QuantLib::Date& maturity,
+                                                       const QuantLib::Period& obsLag) const {
+    // Not relevant for constantCPIVolatiltiy;
+    return baseVol_->atmStrike(maturity, obsLag);
+};
 
 } // namespace QuantExt

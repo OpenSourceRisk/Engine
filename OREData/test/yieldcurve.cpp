@@ -63,15 +63,15 @@ public:
     MarketDataLoader(vector<string> data);
     vector<boost::shared_ptr<MarketDatum>> loadQuotes(const Date&) const override;
     set<Fixing> loadFixings() const override { return fixings_; }
-    set<Fixing> loadDividends() const override { return dividends_; }
+    set<Dividend> loadDividends() const override { return dividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
     void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
-    void addDividend(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addDividend(const Dividend& div) {}
 
 private:
     map<Date, vector<boost::shared_ptr<MarketDatum>>> data_;
     set<Fixing> fixings_;
-    set<Fixing> dividends_;
+    set<Dividend> dividends_;
 };
 
 vector<boost::shared_ptr<MarketDatum>> MarketDataLoader::loadQuotes(const Date& d) const {
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(testBootstrapAndFixings) {
         "Swap", "JPY-SWAP-CONVENTIONS", vector<string>(1, "IR_SWAP/RATE/JPY/2D/6M/2Y"))};
     boost::shared_ptr<YieldCurveConfig> jpyYieldConfig =
         boost::make_shared<YieldCurveConfig>("JPY6M", "JPY 6M curve", "JPY", "", segments);
-    curveConfigs.yieldCurveConfig("JPY6M") = jpyYieldConfig;
+    curveConfigs.add(CurveSpec::CurveType::Yield, "JPY6M", jpyYieldConfig);
 
     MarketDataLoader loader;
 
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
         boost::make_shared<YieldCurveConfig>("CHF-OIS", "CHF OIS curve", "CHF",
                                              "", segments,
                                              "Discount", "LogQuadratic");
-    curveConfigs.yieldCurveConfig("CHF-OIS") = chfYieldConfig;
+    curveConfigs.add(CurveSpec::CurveType::Yield, "CHF-OIS", chfYieldConfig);
     
     boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();;
     InstrumentConventions::instance().setConventions(conventions);

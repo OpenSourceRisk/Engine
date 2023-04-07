@@ -34,6 +34,8 @@ namespace data {
   Data is loaded with the call to the constructor.
   Inspectors can be called to then retrieve quotes and fixings.
 
+  TODO implementation has large overlap with inmemoryloader.?pp, factor this out
+
   \ingroup marketdata
  */
 class CSVLoader : public Loader {
@@ -73,21 +75,18 @@ public:
         //! Enable/disable implying today's fixings
         bool implyTodaysFixings = false);
 
-    //! \name Inspectors
-    //@{
-    //! Load market quotes
     std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
 
-    //! Get a particular quote by its unique name
-    using Loader::get;
-
+    boost::shared_ptr<MarketDatum> get(const string& name, const QuantLib::Date& d) const override;
+    std::set<boost::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
+                                                 const QuantLib::Date& asof) const override;
     //! get quotes matching a wildcard
     std::set<boost::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const override;
 
     //! Load fixings
     std::set<Fixing> loadFixings() const override { return fixings_; }
     //! Load dividends
-    std::set<Fixing> loadDividends() const override { return dividends_; }
+    std::set<QuantExt::Dividend> loadDividends() const override { return dividends_; }
     //@}
 
 private:
@@ -97,7 +96,7 @@ private:
     bool implyTodaysFixings_;
     std::map<QuantLib::Date, std::set<boost::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>> data_;
     std::set<Fixing> fixings_;
-    std::set<Fixing> dividends_;
+    std::set<QuantExt::Dividend> dividends_;
 };
 } // namespace data
 } // namespace ore

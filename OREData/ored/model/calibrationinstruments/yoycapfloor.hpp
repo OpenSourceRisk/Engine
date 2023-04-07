@@ -61,8 +61,6 @@ private:
     QuantLib::YoYInflationCapFloor::Type type_;
     QuantLib::Period tenor_;
     boost::shared_ptr<BaseStrike> strike_;
-
-    static CalibrationInstrumentRegister<YoYCapFloor> reg_;
 };
 
 }

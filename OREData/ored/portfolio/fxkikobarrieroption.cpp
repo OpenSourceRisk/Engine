@@ -117,7 +117,7 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     // Check if the barrier has been triggered already
     bool knockedIn = false;
     bool knockedOut = false;
-    Handle<Quote> spot = market->fxRate(boughtCurrency_ + soldCurrency_);
+    Handle<Quote> spot = market->fxSpot(boughtCurrency_ + soldCurrency_);
     
     boost::shared_ptr<QuantExt::FxIndex> fxIndex;
     if (!fxIndex_.empty())
@@ -273,6 +273,13 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     additionalData_["boughtCurrency"] = boughtCurrency_;
     additionalData_["soldAmount"] = soldAmount_;
     additionalData_["soldCurrency"] = soldCurrency_;
+
+    // ISDA taxonomy
+   // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Barrier");  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 bool FxKIKOBarrierOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {

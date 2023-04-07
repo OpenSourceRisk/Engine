@@ -70,6 +70,15 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (currencies[i] != currency)
             isXCCY_ = true;
         isResetting_ = isResetting_ || (!legData_[i].isNotResetXCCY());
+        if (legTypeCount_.find(legData_[i].legType()) == legTypeCount_.end()) 
+            legTypeCount_[legData_[i].legType()] = 0;
+        legTypeCount_[legData_[i].legType()] ++;
+    }
+
+    static std::set<std::string> eligibleForXbs = {"Fixed", "Floating"};
+    bool useXbsCurves = true;
+    for(Size i=0;i<numLegs;++i) {
+        useXbsCurves = useXbsCurves && (eligibleForXbs.find(legData_[i].legType()) != eligibleForXbs.end());
     }
 
     boost::shared_ptr<EngineBuilder> builder =
@@ -79,11 +88,13 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     for (Size i = 0; i < numLegs; ++i) {
         legPayers_[i] = legData_[i].isPayer();
         auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
-        legs_[i] = legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration);
+        legs_[i] =
+            legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration, Null<Date>(), useXbsCurves);
         DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
         
         // add notional leg, if applicable
         auto leg = buildNotionalLeg(legData_[i], legs_[i], requiredFixings_, engineFactory->market(), configuration);
+        applyIndexing(leg, legData_[i], engineFactory, requiredFixings_, Null<Date>(), useXbsCurves);
         if (!leg.empty()) {
             legs_.push_back(leg);
             legPayers_.push_back(legPayers_[i]);
@@ -176,12 +187,28 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     additionalData_["startDate"] = to_string(startDate);
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string(isXCCY_ ? "Cross Currency" : "IR Swap");
+    Size nfixed = 0;
+    auto it1 = legTypeCount_.find("Fixed");
+    auto it2 = legTypeCount_.find("ZeroCouponFixed");
+    nfixed += (it1 == legTypeCount_.end() ? 0 : it1->second);
+    nfixed += (it2 == legTypeCount_.end() ? 0 : it2->second);    
+    if (nfixed == 0)
+        additionalData_["isdaSubProduct"] = string("Basis");  
+    else if (nfixed == 1)
+        additionalData_["isdaSubProduct"] = string("Fixed Float");  
+    else
+        additionalData_["isdaSubProduct"] = string("Fixed Fixed");
+    // skip transaction level for now
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 const std::map<std::string,boost::any>& Swap::additionalData() const {
     Size numLegs = legData_.size();
     // use the build time as of date to determine current notionals
-    Date asof = Settings::instance().evaluationDate();
     boost::shared_ptr<QuantLib::Swap> swap = boost::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
     boost::shared_ptr<QuantExt::CurrencySwap> cswap = boost::dynamic_pointer_cast<QuantExt::CurrencySwap>(instrument_->qlInstrument());
     std::map<std::string, Real> legNpv; // by currency
@@ -213,78 +240,7 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
             else 
                 ALOG("cross currency swap underlying instrument not set, skip leg npv reporting");
         }
-        for (Size j = 0; j < legs_[i].size(); ++j) {
-            boost::shared_ptr<CashFlow> flow = legs_[i][j];
-            // pick flow with earliest future payment date on this leg
-            if (flow->date() > asof) {
-                Real flowAmount = 0.0;
-                try { flowAmount = flow->amount(); }
-                catch(std::exception& e) {
-                    ALOG("flow amount could not be determined for trade " << id() << ", set to zero: " << e.what());
-                }
-                additionalData_["amount[" + legID + "]"] = flowAmount;
-                additionalData_["paymentDate[" + legID + "]"] = to_string(flow->date());
-                boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
-                string couponId = to_string(j);
-                if (coupon) {
-                    Real currentNotional = 0;
-                    try { currentNotional = coupon->nominal(); }
-                    catch(std::exception& e) {
-                        ALOG("current notional could not be determined for trade " << id() << ", set to zero: " << e.what());
-                    }
-                    additionalData_["currentNotional[" + legID + "]"] = currentNotional;
-
-                    Real rate = 0;
-                    try { rate = coupon->rate(); }
-                    catch(std::exception& e) {
-                        ALOG("coupon rate could not be determined for trade " << id() << ", set to zero: " << e.what());
-                    }
-                    additionalData_["rate[" + legID + "][" + couponId + "]"] = rate;
-
-                    boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
-                    if (frc) {
-                        additionalData_["index[" + legID + "]"] = frc->index()->name();
-                        additionalData_["spread[" + legID + "]"] = frc->spread();                        
-                    }
-
-                    boost::shared_ptr<EquityCoupon> eqc = boost::dynamic_pointer_cast<EquityCoupon>(flow);
-                    if (eqc) {
-                        EquityCouponPricer::AdditionalResultCache arc = eqc->pricer()->additionalResultCache();
-                        additionalData_["initialPrice[" + legID + "][" + couponId + "]"] = arc.initialPrice;
-                        additionalData_["endEquityFixing[" + legID + "][" + couponId + "]"] = arc.endFixing;
-                        if (arc.startFixing != Null<Real>())
-                            additionalData_["startEquityFixing[" + legID + "][" + couponId + "]"] = arc.startFixing;
-                        if (arc.startFixingTotal != Null<Real>())
-                            additionalData_["startEquityFixingTotal[" + legID + "][" + couponId + "]"] =
-                                arc.startFixingTotal;
-                        if (arc.endFixingTotal != Null<Real>())
-                            additionalData_["endEquityFixingTotal[" + legID + "][" + couponId + "]"] =
-                                arc.endFixingTotal;
-                        if (arc.startFxFixing != Null<Real>())
-                            additionalData_["startFxFixing[" + legID + "][" + couponId + "]"] = arc.startFxFixing;
-                        if (arc.endFxFixing != Null<Real>())
-                            additionalData_["endFxFixing[" + legID + "][" + couponId + "]"] = arc.endFxFixing;
-                        if (arc.pastDividends != Null<Real>())
-                            additionalData_["pastDividends[" + legID + "][" + couponId + "]"] = arc.pastDividends;
-                        if (arc.forecastDividends != Null<Real>())
-                            additionalData_["forecastDividends[" + legID + "][" + couponId + "]"] =
-                                arc.forecastDividends;
-                    }
-                }
-                break;
-            }
-        }
-        if (legs_[i].size() > 0) {
-            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[i][0]);
-            if (coupon) {
-                Real originalNotional = 0.0;
-                try { originalNotional = coupon->nominal(); }
-                catch(std::exception& e) {
-                    ALOG("original nominal could not be determined for trade " << id() << ", set to zero: " << e.what());
-                }
-                additionalData_["originalNotional[" + legID + "]"] = originalNotional;
-            }
-        }
+        setLegBasedAdditionalData(i);
     }
     return additionalData_;
 }
@@ -378,5 +334,6 @@ XMLNode* Swap::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));
     return node;
 }
+
 } // namespace data
 } // namespace ore

@@ -33,7 +33,6 @@ using namespace QuantExt;
 using namespace QuantLib;
 
 using boost::iequals;
-using ore::data::LegDataRegister;
 using ore::data::parseBool;
 using ore::data::parseReal;
 using ore::data::to_string;
@@ -49,8 +48,6 @@ using QuantExt::Leg;
 
 namespace ore {
 namespace data {
-
-LegDataRegister<EquityMarginLegData> EquityMarginLegData::reg_("EquityMargin");
 
 void EquityMarginLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());

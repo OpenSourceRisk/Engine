@@ -1,4 +1,19 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ Copyright (C) 2021 Quaternion Risk Management Ltd
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
 
 /*
  Copyright (C) 2009 Chris Kenyon
@@ -105,22 +120,17 @@ void NonStandardYoYInflationCouponPricer::initialize(const InflationCoupon& coup
     gearing_ = coupon_->gearing();
     spread_ = coupon_->spread();
     paymentDate_ = coupon_->date();
-    // rateCurve_ = !nominalTermStructure_.empty() ? nominalTermStructure_
-    //                                             : ext::dynamic_pointer_cast<ZeroInflationIndex>(coupon.index())
-    //                                                   ->zeroInflationTermStructure()
-    //                                                   ->nominalTermStructure();
-    rateCurve_ = nominalTermStructure_;
     
     // past or future fixing is managed in YoYInflationIndex::fixing()
     // use yield curve from index (which sets discount)
 
     discount_ = 1.0;
-    if (paymentDate_ > rateCurve_->referenceDate()) {
-        if (rateCurve_.empty()) {
+    if (paymentDate_ > nominalTermStructure_->referenceDate()) {
+        if (nominalTermStructure_.empty()) {
             // allow to extract rates, but mark the discount as invalid for prices
             discount_ = Null<Real>();
         } else {
-            discount_ = rateCurve_->discount(paymentDate_);
+            discount_ = nominalTermStructure_->discount(paymentDate_);
         }
     }
 }

@@ -180,6 +180,27 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     npvCurrency_ = currency_;
     notional_ = tradeStrike_.value() * quantity_;
     notionalCurrency_ = currency_;
+
+    // ISDA taxonomy
+    if (underlying_->type() == "EQ") {
+        additionalData_["isdaAssetClass"] = string("Equity");
+        additionalData_["isdaBaseProduct"] = string("Option");
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
+    } else if (underlying_->type() == "FX") {
+        additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+        additionalData_["isdaBaseProduct"] = string("Vanilla Option");
+        additionalData_["isdaSubProduct"] = string("");
+        
+    } else if (underlying_->type() == "COM") {
+        // guessing that Commodities are treated like Equity
+        additionalData_["isdaAssetClass"] = string("Commodity");
+        additionalData_["isdaBaseProduct"] = string("Option");
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
+    }
+    else {
+        WLOG("ISDA taxonomy not set for trade " << id());
+    }
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 void AsianOption::fromXML(XMLNode* node) {

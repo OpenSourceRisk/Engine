@@ -119,7 +119,8 @@ boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates,
                                                                      CubicInterpolation::FirstDerivative)));
         break;
     case YieldCurve::InterpolationMethod::ConvexMonotone:
-        yieldts.reset(new CurveType<QuantLib::ConvexMonotone>(dates, rates, dayCounter));
+        yieldts.reset(
+            new CurveType<QuantLib::ConvexMonotone>(dates, rates, dayCounter, Calendar(), {}, {}, QuantLib::ConvexMonotone()));
         break;
     case YieldCurve::InterpolationMethod::Quadratic:
          yieldts.reset(new CurveType<QuantExt::Quadratic>(dates, rates, dayCounter, QuantExt::Quadratic(1, 0, 1, 0, 1)));
@@ -1098,10 +1099,9 @@ void YieldCurve::buildFittedBondCurve() {
         iborCurveMapping[c.first] = y->second->handle();
     }
 
-    auto engineFactory = boost::make_shared<EngineFactory>(
-        engineData, boost::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping),
-        std::map<MarketContext, string>(), std::vector<boost::shared_ptr<EngineBuilder>>(),
-        std::vector<boost::shared_ptr<LegBuilder>>(), referenceData_, iborFallbackConfig_);
+    auto engineFactory =
+        boost::make_shared<EngineFactory>(engineData, boost::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping),
+                                          std::map<MarketContext, string>(), referenceData_, iborFallbackConfig_);
 
     for (Size i = 0; i < quoteIDs.size(); ++i) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(quoteIDs[i], asofDate_);
@@ -1583,8 +1583,9 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
             } else {
                 oisHelper = boost::make_shared<QuantExt::OISRateHelper>(
                     oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
-                    oisConvention->paymentLag(), oisConvention->eom(), oisConvention->fixedFrequency(),
-                    oisConvention->fixedConvention(), oisConvention->fixedPaymentConvention(), oisConvention->rule(),
+                    oisConvention->fixedCalendar(), oisConvention->paymentLag(), oisConvention->eom(),
+                    oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
+                    oisConvention->fixedPaymentConvention(), oisConvention->rule(),
                     discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
             }
 

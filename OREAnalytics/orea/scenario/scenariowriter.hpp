@@ -25,6 +25,7 @@
 
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 namespace ore {
 namespace analytics {
@@ -38,6 +39,9 @@ public:
 
     //! Constructor to write single scenarios
     ScenarioWriter(const std::string& filename, const char sep = ',', const string& filemode = "w+");
+
+    //! Constructor to write into an in-memory report for later io
+    ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, boost::shared_ptr<ore::data::InMemoryReport> report);
 
     //! Destructor
     virtual ~ScenarioWriter();
@@ -59,10 +63,11 @@ private:
 
     boost::shared_ptr<ScenarioGenerator> src_;
     std::vector<RiskFactorKey> keys_;
+    boost::shared_ptr<ore::data::InMemoryReport> report_;
     FILE* fp_;
     Date firstDate_;
     Size i_;
-    const char sep_;
+    const char sep_ = ',';
 };
 } // namespace analytics
 } // namespace ore

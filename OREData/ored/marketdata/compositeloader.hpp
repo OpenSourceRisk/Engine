@@ -1,6 +1,19 @@
 /*
  Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 /*! \file ored/marketdata/compositeloader.hpp
@@ -87,12 +100,12 @@ public:
         return fixings;
     }
 
-    std::set<Fixing> loadDividends() const override {
+    std::set<QuantExt::Dividend> loadDividends() const override {
         if (!b_)
             return a_->loadDividends();
         if (!a_)
             return b_->loadDividends();
-        std::set<Fixing> dividends;
+        std::set<QuantExt::Dividend> dividends;
         auto tmp1 = a_->loadDividends();
         auto tmp2 = b_->loadDividends();
         dividends.insert(tmp1.begin(), tmp1.end());

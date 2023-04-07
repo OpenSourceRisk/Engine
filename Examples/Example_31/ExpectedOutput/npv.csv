@@ -1,0 +1,2 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+Swap_1,Swap,2026-02-10,10.013961,11683.891842,GBP,14390.128115,EUR,40000000.00,GBP,49264845.35,CPTY_A,CPTY_A

@@ -24,10 +24,14 @@
 #pragma once
 
 #include <ored/portfolio/referencedatafactory.hpp>
+#include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/underlying.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/time/date.hpp>
+#include <ql/time/period.hpp>
 #include <set>
+#include <tuple>
 
 namespace ore {
 namespace data {
@@ -42,17 +46,23 @@ namespace data {
 class ReferenceDatum : public XMLSerializable {
 public:
     //! Default Constructor
-    ReferenceDatum() {}
+    ReferenceDatum() : validFrom_(QuantLib::Date::minDate()) {}
     //! Base class constructor
-    ReferenceDatum(const std::string& type, const std::string& id) : type_(type), id_(id) {}
+    ReferenceDatum(const std::string& type, const std::string& id)
+        : type_(type), id_(id), validFrom_(QuantLib::Date::minDate()) {}
+    //! Base class constructor
+    ReferenceDatum(const std::string& type, const std::string& id, const QuantLib::Date& validFrom)
+        : type_(type), id_(id), validFrom_(validFrom) {}
 
     //! setters
     void setType(const string& type) { type_ = type; }
     void setId(const string& id) { id_ = id; }
+    void setValidFrom(const QuantLib::Date& validFrom) { validFrom_ = validFrom; }
 
     //! getters
     const std::string& type() const { return type_; }
     const std::string& id() const { return id_; }
+    const QuantLib::Date& validFrom() const { return validFrom_; }
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) override;
@@ -60,6 +70,7 @@ public:
 private:
     std::string type_;
     std::string id_;
+    QuantLib::Date validFrom_;
 };
 
 /*
@@ -103,7 +114,12 @@ public:
 
     BondReferenceDatum(const string& id) : ReferenceDatum(TYPE, id) {}
 
+    BondReferenceDatum(const string& id, const QuantLib::Date& validFrom) : ReferenceDatum(TYPE, id, validFrom) {}
+
     BondReferenceDatum(const string& id, const BondData& bondData) : ReferenceDatum(TYPE, id), bondData_(bondData) {}
+
+    BondReferenceDatum(const string& id, const QuantLib::Date& validFrom, const BondData& bondData)
+        : ReferenceDatum(TYPE, id, validFrom), bondData_(bondData) {}
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) override;
@@ -113,7 +129,6 @@ public:
 
 private:
     BondData bondData_;
-    static ReferenceDatumRegister<ReferenceDatumBuilder<BondReferenceDatum>> reg_;
 };
 
 /*! Hold reference data on a constituent of a credit index.
@@ -172,6 +187,8 @@ public:
 
     CreditIndexReferenceDatum(const std::string& name);
 
+    CreditIndexReferenceDatum(const string& id, const QuantLib::Date& validFrom);
+
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) override;
 
@@ -183,10 +200,234 @@ public:
 
 private:
     std::set<CreditIndexConstituent> constituents_;
-
-    static ReferenceDatumRegister<ReferenceDatumBuilder<CreditIndexReferenceDatum>> reg_;
 };
 
+
+/*
+<ReferenceDatum id="SP500">
+  <Type>EquityIndex</Type>
+  <EquityIndexReferenceData>
+      <Underlying>
+        <Name>Apple</Name>
+        <Weight>0.03</Weight>
+      </Underlying>
+      ...
+  </EquityIndexReferenceData>
+</ReferenceDatum>
+*/
+//! Base class for indices - lets see if we can keep this, they might diverge too much...
+class IndexReferenceDatum : public ReferenceDatum {
+protected:
+    IndexReferenceDatum() {}
+    IndexReferenceDatum(const string& type, const string& id) : ReferenceDatum(type, id) {}
+    IndexReferenceDatum(const string& type, const string& id, const QuantLib::Date& validFrom)
+        : ReferenceDatum(type, id, validFrom) {}
+
+public:
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+    // Get all underlyings (names and weights)
+    const vector<pair<string, double>> underlyings() const { return data_; }
+    // Set all underlying (or reset)
+    void setUnderlyings(const vector<pair<string, double>>& data) { data_ = data; }
+    // add a new underlying
+    void addUnderlying(const string& name, double weight) { data_.push_back(make_pair(name, weight)); }
+
+private:
+    vector<pair<string, double>> data_;
+};
+
+//! EquityIndex Reference data, contains the names and weights of an equity index
+class EquityIndexReferenceDatum : public IndexReferenceDatum {
+public:
+    static constexpr const char* TYPE = "EquityIndex";
+
+    EquityIndexReferenceDatum() {}
+    EquityIndexReferenceDatum(const string& name) : IndexReferenceDatum(TYPE, name) {}
+    EquityIndexReferenceDatum(const string& name, const QuantLib::Date& validFrom)
+        : IndexReferenceDatum(TYPE, name, validFrom) {}
+};
+
+/*
+<ReferenceDatum id="RIC:.SPXEURHedgedMonthly">
+  <Type>CurrencyHedgedEquityIndex</Type>
+  <CurrencyHedgedEquityIndexReferenceDatum>
+      <UnderlyingIndex>RIC:.SPX</UnderlyingIndex>
+      <HedgeCurrency>EUR</HedgeCurrency>
+      <RebalancingStrategy>EndOfMonth</RebalancingStrategy>
+      <ReferenceDateOffset>1</ReferenceDateOffset>
+      <HedgeAdjustment>None|Daily</HedgeAdjustment>
+      <HedgeCalendar>EUR,USD</HedgeCalendar>
+      <FxIndex>ECB-EUR-USD</FxIndex>
+      <IndexWeightsAtLastRebalancingDate>
+        <Underlying>
+            <Name>Apple</Name>
+            <Weight>0.1</Weight>
+        </Underlying>
+        ...
+      </IndexWeightsAtLastRebalancingDate>
+  </CurrencyHedgedEquityIndexReferenceDatum>
+</ReferenceDatum>
+*/
+class CurrencyHedgedEquityIndexReferenceDatum : public ReferenceDatum {
+public:
+    static constexpr const char* TYPE = "CurrencyHedgedEquityIndex";
+
+    struct RebalancingDate {
+        enum Strategy { EndOfMonth };
+    };
+
+    struct HedgeAdjustment {
+        enum Rule { None, Daily };
+    };
+
+    CurrencyHedgedEquityIndexReferenceDatum()
+        : underlyingIndexName_(""), rebalancingStrategy_(RebalancingDate::Strategy::EndOfMonth),
+          referenceDateOffset_(0), hedgeAdjustmentRule_(HedgeAdjustment::Rule::None), hedgeCalendar_(WeekendsOnly()) {
+        setType(TYPE);
+    }
+
+    CurrencyHedgedEquityIndexReferenceDatum(const string& name)
+        : ReferenceDatum(TYPE, name), underlyingIndexName_(""),
+          rebalancingStrategy_(RebalancingDate::Strategy::EndOfMonth), referenceDateOffset_(0),
+          hedgeAdjustmentRule_(HedgeAdjustment::Rule::None), hedgeCalendar_(WeekendsOnly()) {}
+
+    CurrencyHedgedEquityIndexReferenceDatum(const string& name, const QuantLib::Date& validFrom)
+        : ReferenceDatum(TYPE, name, validFrom), underlyingIndexName_(""), 
+          rebalancingStrategy_(RebalancingDate::Strategy::EndOfMonth), referenceDateOffset_(0),
+          hedgeAdjustmentRule_(HedgeAdjustment::Rule::None), hedgeCalendar_(WeekendsOnly()) {}
+
+    const std::string& underlyingIndexName() const { return underlyingIndexName_; }
+    int referenceDateOffset() const { return referenceDateOffset_; }
+    RebalancingDate::Strategy rebalancingStrategy() const { return rebalancingStrategy_; }
+    HedgeAdjustment::Rule hedgeAdjustmentRule() const { return hedgeAdjustmentRule_; }
+    QuantLib::Calendar hedgeCalendar() const { return hedgeCalendar_; }
+    const std::map<std::string, std::string>& fxIndexes() const { return fxIndexes_; }
+    //! Returns the currency weights at the last rebalancing date
+    const vector<pair<string, double>>& currencyWeights() const { return data_; }
+
+    Date referenceDate(const Date& asof);
+    Date rebalancingDate(const Date& asof);
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+private:
+    std::string underlyingIndexName_;
+    RebalancingDate::Strategy rebalancingStrategy_;
+    int referenceDateOffset_;
+    HedgeAdjustment::Rule hedgeAdjustmentRule_;
+    QuantLib::Calendar hedgeCalendar_;
+    std::map<std::string, std::string> fxIndexes_;
+    vector<pair<string, double>> data_;
+};
+
+//! CreditIndex Reference data, contains the names and weights of a credit index
+class CreditReferenceDatum : public ReferenceDatum {
+public:
+    static constexpr const char* TYPE = "Credit";
+
+    struct CreditData {
+        string name;
+        string group;
+        string successor;
+        string predecessor;
+        QuantLib::Date successorImplementationDate;
+        QuantLib::Date predecessorImplementationDate;
+    };
+    CreditReferenceDatum() {}
+
+    CreditReferenceDatum(const string& id) : ReferenceDatum(TYPE, id) {}
+
+    CreditReferenceDatum(const string& id, const QuantLib::Date& validFrom) : ReferenceDatum(TYPE, id, validFrom) {}
+
+    CreditReferenceDatum(const string& id, const CreditData& creditData)
+        : ReferenceDatum(TYPE, id), creditData_(creditData) {}
+
+    CreditReferenceDatum(const string& id, const QuantLib::Date& validFrom, const CreditData& creditData)
+        : ReferenceDatum(TYPE, id, validFrom), creditData_(creditData) {}
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+    const CreditData& creditData() const { return creditData_; }
+    void setCreditData(const CreditData& creditData) { creditData_ = creditData; }
+
+private:
+    CreditData creditData_;
+};
+
+
+//! Equity Reference data
+class EquityReferenceDatum : public ReferenceDatum {
+public:
+    static constexpr const char* TYPE = "Equity";
+
+    struct EquityData {
+        std::string equityId;
+        std::string equityName;
+        std::string currency;
+        QuantLib::Size scalingFactor;
+        std::string exchangeCode;
+        bool isIndex;
+        QuantLib::Date equityStartDate;
+        std::string proxyIdentifier;
+        std::string simmBucket;
+        std::string crifQualifier;
+        std::string proxyVolatilityId;
+    };
+
+    EquityReferenceDatum() { setType(TYPE); }
+
+    EquityReferenceDatum(const std::string& id) : ore::data::ReferenceDatum(TYPE, id) {}
+
+    EquityReferenceDatum(const std::string& id, const QuantLib::Date& validFrom)
+        : ore::data::ReferenceDatum(TYPE, id, validFrom) {}
+
+    EquityReferenceDatum(const std::string& id, const EquityData& equityData) : ReferenceDatum(TYPE, id), equityData_(equityData) {}
+
+    EquityReferenceDatum(const std::string& id, const QuantLib::Date& validFrom, const EquityData& equityData)
+        : ReferenceDatum(TYPE, id, validFrom), equityData_(equityData) {}
+
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+   
+    const EquityData& equityData() const { return equityData_; }
+    void setEquityData(const EquityData& equityData) { equityData_ = equityData; }
+
+protected:
+    EquityData equityData_;
+};
+
+//! Bond Basket Reference Data
+class BondBasketReferenceDatum : public ReferenceDatum {
+public:
+    static constexpr const char* TYPE = "BondBasket";
+
+    BondBasketReferenceDatum() { setType(TYPE); }
+
+    BondBasketReferenceDatum(const std::string& id) : ore::data::ReferenceDatum(TYPE, id) {}
+
+    BondBasketReferenceDatum(const std::string& id, const QuantLib::Date& validFrom) : ore::data::ReferenceDatum(TYPE, id, validFrom) {}
+
+    BondBasketReferenceDatum(const std::string& id, const std::vector<BondUnderlying>& underlyingData)
+        : ReferenceDatum(TYPE, id), underlyingData_(underlyingData) {}
+    
+    BondBasketReferenceDatum(const std::string& id,
+                             const QuantLib::Date& validFrom, const std::vector<BondUnderlying>& underlyingData)
+        : ReferenceDatum(TYPE, id, validFrom), underlyingData_(underlyingData) {}
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+    const std::vector<BondUnderlying>& underlyingData() const { return underlyingData_; }
+
+private:
+    std::vector<BondUnderlying> underlyingData_;
+};
+    
 //! Interface for Reference Data lookups
 /*! The ReferenceDataManager is a repository of ReferenceDatum objects.
  *
@@ -208,8 +449,10 @@ private:
 class ReferenceDataManager {
 public:
     virtual ~ReferenceDataManager() {}
-    virtual bool hasData(const string& type, const string& id) const = 0;
-    virtual boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id) = 0;
+    virtual bool hasData(const string& type, const string& id,
+                         const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) const = 0;
+    virtual boost::shared_ptr<ReferenceDatum>
+    getData(const string& type, const string& id, const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) = 0;
     virtual void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
 };
 
@@ -230,17 +473,22 @@ public:
     // clear this ReferenceData manager, note that we can load multiple files
     void clear() { data_.clear(); }
 
-    bool hasData(const string& type, const string& id) const override;
-    boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id) override;
+    bool hasData(const string& type, const string& id,
+                 const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) const override;
+    boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id,
+                                              const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) override;
     void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum) override;
     // adds a datum from an xml node and returns it (or nullptr if nothing was added due to an error)
-    boost::shared_ptr<ReferenceDatum> addFromXMLNode(XMLNode* node, const std::string& id = std::string());
+    boost::shared_ptr<ReferenceDatum> addFromXMLNode(XMLNode* node, const std::string& id = std::string(),
+                                                     const QuantLib::Date& validFrom = QuantLib::Null<QuantLib::Date>());
 
 protected:
-    void check(const string& type, const string& id) const;
-    map<pair<string, string>, boost::shared_ptr<ReferenceDatum>> data_;
-    std::set<pair<string, string>> duplicates_;
-    map<pair<string, string>, string> buildErrors_;
+    std::tuple<QuantLib::Date, boost::shared_ptr<ReferenceDatum>> latestValidFrom(const string& type, const string& id,
+                                                                                  const QuantLib::Date& asof) const;
+    void check(const string& type, const string& id, const QuantLib::Date& asof) const;
+    map<std::pair<string, string>, std::map<QuantLib::Date, boost::shared_ptr<ReferenceDatum>>> data_;
+    std::set<std::tuple<string, string, QuantLib::Date>> duplicates_;
+    map<std::pair<string, string>, std::map<QuantLib::Date, string>> buildErrors_;
 };
 
 } // namespace data

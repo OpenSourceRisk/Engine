@@ -160,7 +160,7 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
                                        option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_),
                                        engineFactory, builder->configuration(MarketContext::pricing));
 
-    Handle<Quote> spot = market->fxRate(fgnCcy.code() + domCcy.code());
+    Handle<Quote> spot = market->fxSpot(fgnCcy.code() + domCcy.code());
     instrument_ = boost::make_shared<DoubleBarrierOptionWrapper>(
         doubleTouch, isLong, expiryDate, false, underlying, barrierType, spot, levelLow, levelHigh, 0, domCcy,
         start, fxIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
@@ -177,6 +177,12 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Barrier");  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 bool FxDoubleTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {

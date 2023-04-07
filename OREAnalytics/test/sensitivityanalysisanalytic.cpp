@@ -953,11 +953,11 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
     sa->generateSensitivities();
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
-    for (auto p : portfolio->trades()) {
+    for (auto [pid,p] : portfolio->trades()) {
         for (const auto& f : sa->sensiCube()->factors()) {
             auto des = sa->sensiCube()->factorDescription(f);
-            deltaMap[make_pair(p->id(), des)] = sa->sensiCube()->delta(p->id(), f);
-            gammaMap[make_pair(p->id(), des)] = sa->sensiCube()->gamma(p->id(), f);
+            deltaMap[make_pair(pid, des)] = sa->sensiCube()->delta(pid, f);
+            gammaMap[make_pair(pid, des)] = sa->sensiCube()->gamma(pid, f);
         }
     }
     std::vector<ore::analytics::SensitivityScenarioGenerator::ScenarioDescription> scenDesc =
@@ -1019,12 +1019,11 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
     // check cross gammas
     BOOST_TEST_MESSAGE("Checking cross-gammas...");
     Size foundCrossGammas = 0, zeroCrossGammas = 0;
-    for (Size i = 0; i < portfolio->size(); i++) {
-        string id = portfolio->trades()[i]->id();
+    for (const auto& [tradeId, _] : portfolio->trades()) {
         for (auto const& s : scenDesc) {
             if (s.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
-                string key = id + " " + s.factor1() + " " + s.factor2();
-                Real crossGamma = sa->sensiCube()->crossGamma(id, make_pair(s.key1(), s.key2()));
+                string key = tradeId + " " + s.factor1() + " " + s.factor2();
+                Real crossGamma = sa->sensiCube()->crossGamma(tradeId, make_pair(s.key1(), s.key2()));
                 Real scaledResult = crossGamma / (shiftSize * shiftSize);
                 // BOOST_TEST_MESSAGE(key << " " << scaledResult); // debug
                 if (analyticalResultsCrossGamma.count(key) > 0) {

@@ -27,6 +27,7 @@
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/onedimsolverconfig.hpp>
 #include <ored/configuration/volatilityconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 
 namespace ore {
 namespace data {
@@ -42,14 +43,13 @@ public:
     //! Explicit constructor
     CommodityVolatilityConfig(const std::string& curveId, const std::string& curveDescription,
                               const std::string& currency,
-                              const std::vector<boost::shared_ptr<VolatilityConfig>> & volatilityConfig,
+                              const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig,
                               const std::string& dayCounter = "A365", const std::string& calendar = "NullCalendar",
                               const std::string& futureConventionsId = "", QuantLib::Natural optionExpiryRollDays = 0,
                               const std::string& priceCurveId = "", const std::string& yieldCurveId = "",
                               const std::string& quoteSuffix = "",
                               const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                              const boost::optional<bool>& preferOutOfTheMoney = boost::none,
-			      const std::string& smileDynamics = "");
+                              const boost::optional<bool>& preferOutOfTheMoney = boost::none);
 
     //! \name Inspectors
     //@{
@@ -64,7 +64,7 @@ public:
     const std::string& quoteSuffix() const;
     OneDimSolverConfig solverConfig() const;
     const boost::optional<bool>& preferOutOfTheMoney() const;
-    const std::string& smileDynamics() const { return smileDynamics_; }
+    const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
     //! \name Serialisation
@@ -87,7 +87,7 @@ private:
     std::string quoteSuffix_;
     OneDimSolverConfig solverConfig_;
     boost::optional<bool> preferOutOfTheMoney_;
-    std::string smileDynamics_;
+    ReportConfig reportConfig_;
 
     //! Populate CurveConfig::quotes_ with the required quotes.
     void populateQuotes();

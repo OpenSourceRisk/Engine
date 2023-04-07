@@ -33,10 +33,11 @@ namespace data {
 class EquityMarginLegBuilder : public ore::data::LegBuilder {
 public:
     EquityMarginLegBuilder() : LegBuilder("EquityMargin") {}
-    QuantLib::Leg
-    buildLeg(const ore::data::LegData& data, const boost::shared_ptr<ore::data::EngineFactory>& engineFactory,
-             ore::data::RequiredFixings& requiredFixings, const std::string& configuration,
-             const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>()) const override;
+    QuantLib::Leg buildLeg(const ore::data::LegData& data,
+                           const boost::shared_ptr<ore::data::EngineFactory>& engineFactory,
+                           ore::data::RequiredFixings& requiredFixings, const std::string& configuration,
+                           const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>(),
+                           const bool useXbsCurves = false) const override;
 };
 
 } // namespace data

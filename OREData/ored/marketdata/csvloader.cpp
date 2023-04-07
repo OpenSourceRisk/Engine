@@ -111,7 +111,9 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
             boost::split(tokens, line, boost::is_any_of(",;\t "), boost::token_compress_on);
 
             // TODO: should we try, catch and log any invalid lines?
-            QL_REQUIRE(tokens.size() == 3, "Invalid CSVLoader line, 3 tokens expected " << line);
+            QL_REQUIRE(tokens.size() == 3 || tokens.size() == 4, "Invalid CSVLoader line, 3 tokens expected " << line);
+            if (tokens.size() == 4)
+                QL_REQUIRE(dataType == DataType::Dividend, "CSVLoader, dataType must be of type Dividend");
             Date date = parseDate(tokens[0]);
             const string& key = tokens[1];
             Real value = parseReal(tokens[2]);
@@ -145,9 +147,12 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                     }
                 }
             } else if (dataType == DataType::Dividend) {
+                Date payDate = date;
+                if (tokens.size() == 4)
+                    payDate = parseDate(tokens[3]);
                 // process dividends
                 if (date <= today) {
-                    if(!dividends_.insert(Fixing(date, key, value)).second) {
+                    if (!dividends_.insert(QuantExt::Dividend(date, key, value, payDate)).second) {
                         WLOG("Skipped Dividend " << key << "@" << QuantLib::io::iso_date(date)
                                                  << " - this is already present.");
                     }
@@ -172,15 +177,47 @@ boost::shared_ptr<MarketDatum> makeDummyMarketDatum(const Date& d, const std::st
     return boost::make_shared<MarketDatum>(0.0, d, name, MarketDatum::QuoteType::NONE,
                                            MarketDatum::InstrumentType::NONE);
 }
+
+
+boost::shared_ptr<MarketDatum> CSVLoader::get(const string& name, const QuantLib::Date& d) const {
+    auto it = data_.find(d);
+    QL_REQUIRE(it != data_.end(), "No datum for " << name << " on date " << d);
+    auto it2 = it->second.find(makeDummyMarketDatum(d, name));
+    QL_REQUIRE(it2 != it->second.end(), "No datum for " << name << " on date " << d);
+    return *it2;
+}
+
+std::set<boost::shared_ptr<MarketDatum>> CSVLoader::get(const std::set<std::string>& names,
+                                                             const QuantLib::Date& asof) const {
+    auto it = data_.find(asof);
+    if(it == data_.end())
+        return {};
+    std::set<boost::shared_ptr<MarketDatum>> result;
+    for (auto const& n : names) {
+        auto it2 = it->second.find(makeDummyMarketDatum(asof, n));
+        if (it2 != it->second.end())
+            result.insert(*it2);
+    }
+    return result;
+}
+
 std::set<boost::shared_ptr<MarketDatum>> CSVLoader::get(const Wildcard& wildcard,
                                                              const QuantLib::Date& asof) const {
+    if (!wildcard.hasWildcard()) {
+        // no wildcard => use get by name function
+        try {
+            return {get(wildcard.pattern(), asof)};
+        } catch (...) {
+        }
+        return {};
+    }
     auto it = data_.find(asof);
     if (it == data_.end())
         return {};
     std::set<boost::shared_ptr<MarketDatum>> result;
     std::set<boost::shared_ptr<MarketDatum>>::iterator it1, it2;
-    if (wildcard.wildcardPos() == std::string::npos || wildcard.wildcardPos() == 0) {
-        // no wildcard => we have to search all of the data
+    if (wildcard.wildcardPos() == 0) {
+        // wildcard at first position => we have to search all of the data
         it1 = it->second.begin();
         it2 = it->second.end();
     } else {

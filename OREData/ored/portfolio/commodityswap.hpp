@@ -26,6 +26,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/tradefactory.hpp>
 #include <ored/portfolio/commoditylegdata.hpp>
 
 namespace ore {

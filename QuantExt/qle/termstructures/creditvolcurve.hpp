@@ -29,7 +29,7 @@
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-
+#include <map>
 #include <tuple>
 
 namespace QuantExt {
@@ -125,10 +125,22 @@ private:
     mutable std::map<Key, Smile> smiles_;
 };
 
+class ProxyCreditVolCurve : public CreditVolCurve {
+public:
+    // if no terms / termCurves are given, the source terms / termCurves are used for this surface
+    ProxyCreditVolCurve(const QuantLib::Handle<CreditVolCurve>& source, const std::vector<QuantLib::Period>& terms = {},
+                        const std::vector<QuantLib::Handle<CreditCurve>>& termCurves = {});
+    QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
+                              const QuantLib::Real strike, const Type& targetType) const override;
+
+private:
+    QuantLib::Handle<CreditVolCurve> source_;
+};
+
 class SpreadedCreditVolCurve : public CreditVolCurve {
 public:
-    /* for stickyMoneyness = true the terms and termCurves should represent the moving spread while the baseCurve
-       does not react to spread movements. */
+    /* for stickyMoneyness = true and a base curve that is strike dependent, both the base curve and this curve must have
+       terms and termCurves defined where the former do not react to spread movements while the latter represent the moving ATM level */
     SpreadedCreditVolCurve(const QuantLib::Handle<CreditVolCurve> baseCurve, const std::vector<QuantLib::Date> expiries,
                            const std::vector<QuantLib::Handle<QuantLib::Quote>> spreads, const bool stickyMoneyness,
                            const std::vector<QuantLib::Period>& terms = {},

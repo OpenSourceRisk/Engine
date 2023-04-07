@@ -55,7 +55,7 @@ protected:
         string pair = forCcy.code() + domCcy.code();
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
-            market_->fxRate(pair, configuration(ore::data::MarketContext::pricing)),
+            market_->fxSpot(pair, configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(forCcy.code(),
                                    configuration(ore::data::MarketContext::pricing)), // dividend yield ~ foreign yield
             market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)),
@@ -80,7 +80,7 @@ protected:
         string pair = forCcy.code() + domCcy.code();
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
-            market_->fxRate(pair, configuration(ore::data::MarketContext::pricing)),
+            market_->fxSpot(pair, configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(forCcy.code(),
                                    configuration(ore::data::MarketContext::pricing)), // dividend yield ~ foreign yield
             market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)),

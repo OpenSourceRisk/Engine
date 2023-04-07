@@ -44,17 +44,15 @@
       <Parameter name="baseCurrency">EUR</Parameter>
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
       <Parameter name="storeFlows">Y</Parameter>
-      <Parameter name="cubeFile">cube_A.dat</Parameter>
-      <Parameter name="aggregationScenarioDataFileName">scenariodata_A.dat</Parameter>
+      <Parameter name="cubeFile">cube_A.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata_A.csv.gz</Parameter>
       <Parameter name="scenariodump">scenariodump.csv</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
-      <Parameter name="cubeFile">cube_A.dat</Parameter>
-      <!-- is the cube file of depth 1 (N) or higher (Y) -->
-      <Parameter name="hyperCube">Y</Parameter>
-      <Parameter name="scenarioFile">scenariodata_A.dat</Parameter>
+      <Parameter name="cubeFile">cube_A.csv.gz</Parameter>
+      <Parameter name="scenarioFile">scenariodata_A.csv.gz</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="exposureProfilesByTrade">Y</Parameter>
@@ -81,8 +79,8 @@
       <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
       <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
       <Parameter name="dimScaling">1.0</Parameter>
-      <Parameter name="dimEvolutionFile">dim_evolution_2.txt</Parameter>
-      <Parameter name="dimRegressionFiles">dim_regression_2.txt</Parameter>
+      <Parameter name="dimEvolutionFile">dim_evolution_2.csv</Parameter>
+      <Parameter name="dimRegressionFiles">dim_regression_2.csv</Parameter>
       <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>
       <Parameter name="dimOutputGridPoints">100</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>

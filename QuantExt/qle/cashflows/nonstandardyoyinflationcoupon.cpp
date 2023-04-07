@@ -1,4 +1,19 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ Copyright (C) 2021 Quaternion Risk Management Ltd
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
 
 /*
  Copyright (C) 2009 Chris Kenyon
@@ -39,10 +54,11 @@ void NonStandardYoYInflationCoupon::setFixingDates(const Date& denumatorDate, co
 NonStandardYoYInflationCoupon::NonStandardYoYInflationCoupon(
     const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
     const ext::shared_ptr<ZeroInflationIndex>& index, const Period& observationLag, const DayCounter& dayCounter,
-    Real gearing, Spread spread, const Date& refPeriodStart, const Date& refPeriodEnd, bool addInflationNotional)
+    Real gearing, Spread spread, const Date& refPeriodStart, const Date& refPeriodEnd, bool addInflationNotional, QuantLib::CPI::InterpolationType interpolation)
     : QuantLib::InflationCoupon(paymentDate, nominal, startDate, endDate, fixingDays, index, observationLag, dayCounter,
                                 refPeriodStart, refPeriodEnd),
-      gearing_(gearing), spread_(spread), addInflationNotional_(addInflationNotional) {
+      gearing_(gearing), spread_(spread), addInflationNotional_(addInflationNotional),
+      interpolationType_(interpolation) {
     setFixingDates(refPeriodStart, refPeriodEnd, observationLag);
 }
 
@@ -62,8 +78,9 @@ Date NonStandardYoYInflationCoupon::fixingDateNumerator() const { return fixingD
 Date NonStandardYoYInflationCoupon::fixingDateDenumerator() const { return fixingDateDenumerator_; }
 
 Rate NonStandardYoYInflationCoupon::indexFixing() const {
-    Real I_t = index_->fixing(fixingDateNumerator());
-    Real I_s = index_->fixing(fixingDateDenumerator());
+    auto zii = boost::dynamic_pointer_cast<QuantLib::ZeroInflationIndex>(index_);
+    Real I_t = CPI::laggedFixing(zii, fixingDateNumerator() + observationLag_, observationLag_, interpolationType_);
+    Real I_s = CPI::laggedFixing(zii, fixingDateDenumerator() + observationLag_, observationLag_, interpolationType_);
     return I_t / I_s - 1.0;
 }
 

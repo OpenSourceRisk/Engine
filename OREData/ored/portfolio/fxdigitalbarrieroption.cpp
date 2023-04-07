@@ -147,7 +147,7 @@ void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engin
 
     Settlement::Type settleType = parseSettlementType(option_.settlement());
 
-    Handle<Quote> spot = market->fxRate(boughtCcy.code() + soldCcy.code());
+    Handle<Quote> spot = market->fxSpot(boughtCcy.code() + soldCcy.code());
     instrument_ = boost::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
         barrier, positionType == Position::Long ? true : false, expiryDate,
         settleType == Settlement::Physical ? true : false, vanilla, barrierType, spot, level, rebate, soldCcy,
@@ -168,6 +168,12 @@ void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engin
     additionalData_["payoffCurrency"] = payoffCurrency_;
     additionalData_["effectiveForeignCurrency"] = boughtCcy.code();
     additionalData_["effectiveDomesticCurrency"] = soldCcy.code();
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Digital");  
+    additionalData_["isdaTransaction"] = string("");  
 }
 
 bool checkBarrier(Real spot, Barrier::Type type, Real barrier) {

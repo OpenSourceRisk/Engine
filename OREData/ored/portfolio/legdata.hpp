@@ -105,8 +105,6 @@ public:
 private:
     vector<double> amounts_;
     vector<string> dates_;
-
-    static LegDataRegister<CashflowData> reg_;
 };
 
 //! Serializable Fixed Leg Data
@@ -135,8 +133,6 @@ public:
 private:
     vector<double> rates_;
     vector<string> rateDates_;
-
-    static LegDataRegister<FixedLegData> reg_;
 };
 
 //! Serializable Fixed Leg Data
@@ -171,8 +167,6 @@ private:
     vector<string> rateDates_;
     string compounding_;
     bool subtractNotional_;
-
-    static LegDataRegister<ZeroCouponFixedLegData> reg_;
 };
 
 //! Serializable Floating Leg Data
@@ -269,7 +263,6 @@ private:
     boost::optional<Period> lastRecentPeriod_;
     std::string lastRecentPeriodCalendar_;
     bool telescopicValueDates_;
-    static LegDataRegister<FloatingLegData> reg_;
 };
 
 //! Serializable CPI Leg Data
@@ -339,8 +332,6 @@ private:
     double finalFlowFloor_;
     bool nakedOption_;
     bool subtractInflationNominalCoupons_;
-
-    static LegDataRegister<CPILegData> reg_;
 };
 
 //! Serializable YoY Leg Data
@@ -406,8 +397,6 @@ private:
     bool nakedOption_;
     bool addInflationNotional_;
     bool irregularYoY_;
-
-    static LegDataRegister<YoYLegData> reg_;
 };
 
 //! Serializable CMS Leg Data
@@ -473,8 +462,6 @@ private:
     vector<double> gearings_;
     vector<string> gearingDates_;
     bool nakedOption_;
-
-    static LegDataRegister<CMSLegData> reg_;
 };
 
 //! Serializable Digital CMS Leg Data
@@ -544,8 +531,6 @@ private:
     vector<string> putStrikeDates_;
     vector<double> putPayoffs_;
     vector<string> putPayoffDates_;
-
-    static LegDataRegister<DigitalCMSLegData> reg_;
 };
 
 //! Serializable CMS Spread Leg Data
@@ -618,8 +603,6 @@ private:
     vector<double> gearings_;
     vector<string> gearingDates_;
     bool nakedOption_;
-
-    static LegDataRegister<CMSSpreadLegData> reg_;
 };
 
 //! Serializable Digital CMS Spread Leg Data
@@ -687,8 +670,6 @@ private:
     vector<string> putStrikeDates_;
     vector<double> putPayoffs_;
     vector<string> putPayoffDates_;
-
-    static LegDataRegister<DigitalCMSSpreadLegData> reg_;
 };
 
 //! Serializable Constant Maturity Bond Yield Leg Data
@@ -756,8 +737,6 @@ private:
     vector<double> gearings_;
     vector<string> gearingDates_;
     bool nakedOption_;
-
-    static LegDataRegister<CMBLegData> reg_;
 };
 
 //! Serializable Fixed Leg Data
@@ -812,8 +791,6 @@ private:
     string fxIndex_ = "";
     Real quantity_;
     string initialPriceCurrency_;
-
-    static LegDataRegister<EquityLegData> reg_;
 };
 
 //! Serializable object holding amortization rules
@@ -978,7 +955,8 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeSimpleLeg(const LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,
-                    const BusinessDayConvention paymentConvention, const Calendar paymentCalendar);
+                    const BusinessDayConvention paymentConvention, const Calendar paymentCalendar,
+                    const bool excludeIndexing = true);
 Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>& index,
                const boost::shared_ptr<EngineFactory>& engineFactory,
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
@@ -1056,7 +1034,8 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 
 // apply indexing (if given in LegData) to existing leg
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                   RequiredFixings& requiredFixings, const QuantLib::Date& openEndDateReplacement = Null<Date>());
+                   RequiredFixings& requiredFixings, const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                   const bool useXbsCurves = false);
 
 // template implementations
 

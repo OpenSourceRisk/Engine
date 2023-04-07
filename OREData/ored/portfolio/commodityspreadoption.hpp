@@ -15,17 +15,15 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-#ifndef ORE_COMMODITYSPREADOPTION_HPP
-#define ORE_COMMODITYSPREADOPTION_HPP
+#pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/commoditylegdata.hpp>
+#include <ored/portfolio/optiondata.hpp>
+#include <ored/portfolio/trade.hpp>
 
 namespace ore::data {
-using namespace QuantExt;
 
 class CommoditySpreadOption : public ore::data::Trade {
-
 public:
     CommoditySpreadOption() : ore::data::Trade("CommoditySpreadOption"){}
 
@@ -40,32 +38,22 @@ public:
 
     //! \name Inspectors
     //@{
-    std::string const& exerciseDate() const { return exerciseDate_; }
-    std::vector<boost::shared_ptr<CommodityFloatingLegData>> const& commodityLegData() const { return commLegData_; }
     std::vector<std::string> const& fxIndex() const {return fxIndex_; }
-    QuantLib::Real quantity() const { return quantity_; }
-    QuantLib::Real strike() const { return spreadStrike_; }
-    std::string const& callPut() const { return callPut_; }
-    std::string const& settlementDate() const { return settlementDate_; }
-    std::string const& settlementCcy() const { return settlementCcy_; }
+    const ore::data::OptionData& option() const { return optionData_; }
+    QuantLib::Real strike() const { return strike_; }
+
     //@}
 
 private:
 
     std::vector<ore::data::LegData> legData_;
-    std::vector<boost::shared_ptr<CommodityFloatingLegData>> commLegData_;
-    std::string exerciseDate_;
     boost::shared_ptr<QuantExt::CommodityCashFlow> longAssetCashFlow_;
     boost::shared_ptr<QuantExt::CommodityCashFlow> shortAssetCashFlow_;
     std::vector<std::string> fxIndex_;
-    QuantLib::Real quantity_;
-    QuantLib::Spread spreadStrike_;
-    std::string callPut_;
-    std::string settlementDate_;
-    std::string settlementCcy_;
-
+    ore::data::OptionData optionData_;
+    QuantLib::Date expiryDate_;
+    QuantLib::Real strike_;
     boost::shared_ptr<ore::data::LegData> createLegData() const { return boost::make_shared<ore::data::LegData>(); }
 
 };
 }
-#endif // ORE_COMMODITYSPREADOPTION_HPP

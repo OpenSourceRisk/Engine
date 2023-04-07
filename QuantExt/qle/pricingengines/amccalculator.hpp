@@ -31,25 +31,14 @@
 
 namespace QuantExt {
 
-/*! base class for amc interfaces */
+/*! amc interface */
 class AmcCalculator {
 public:
     virtual ~AmcCalculator() {}
 
     /*! currency of simulated npvs */
     virtual QuantLib::Currency npvCurrency() = 0;
-};
 
-/*! interface 1: takes a single path and returns the npvs for this path */
-class AmcCalculatorSinglePath : public AmcCalculator {
-public:
-    /*! simulate a path and get back the simulated npvs */
-    virtual QuantLib::Array simulatePath(const QuantLib::MultiPath& path, const bool reuseLastEvents) = 0;
-};
-
-/*! interface 2: takes paths as an array, returns all npvs */
-class AmcCalculatorMultiVariates : public AmcCalculator {
-public:
     /*! - simulate paths on given times and return simulated npvs for all paths
         - isRelevantTime marks the entries in paths that should be simulated in the end
         - if stickyCloseOutRun is true, the simulation times should be taken from the previous index

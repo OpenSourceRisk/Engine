@@ -457,6 +457,41 @@ vector<XMLNode*> XMLUtils::getChildrenNodes(XMLNode* node, const string& name) {
     return res;
 }
 
+vector<XMLNode*> XMLUtils::getChildrenNodesWithAttributes(XMLNode* parent, const string& names, const string& name,
+                                                          const string& attrName, vector<string>& attrs,
+                                                          bool mandatory) {
+    std::vector<std::reference_wrapper<vector<string>>> attrs_v;
+    attrs_v.push_back(attrs);
+    return getChildrenNodesWithAttributes(parent, names, name, {attrName}, attrs_v, mandatory);
+}
+
+vector<XMLNode*> XMLUtils::getChildrenNodesWithAttributes(XMLNode* parent, const string& names, const string& name,
+                                                          const vector<string>& attrNames,
+                                                          const vector<std::reference_wrapper<vector<string>>>& attrs,
+                                                          bool mandatory) {
+    QL_REQUIRE(attrNames.size() == attrs.size(),
+               "attrNames size (" << attrNames.size() << ") must match attrs size (" << attrs.size() << ")");
+    vector<XMLNode*> vec;
+    rapidxml::xml_node<>* node = parent->first_node(names.c_str());
+    if (mandatory) {
+        QL_REQUIRE(node, "Error: No XML Node " << names << " found.");
+    }
+    if (node) {
+        for (rapidxml::xml_node<>* child = node->first_node(name.c_str()); child;
+             child = child->next_sibling(name.c_str())) {
+            vec.push_back(child);
+            for (Size i = 0; i < attrNames.size(); ++i) {
+                xml_attribute<>* attr = child->first_attribute(attrNames[i].c_str());
+                if (attr && attr->value())
+                    ((vector<string>&)attrs[i]).push_back(attr->value());
+                else
+                    ((vector<string>&)attrs[i]).push_back("");
+            }
+        }
+    }
+    return vec;
+}
+
 string XMLUtils::getNodeName(XMLNode* node) {
     QL_REQUIRE(node, "XMLUtils::getNodeName(): XML Node is NULL");
     return node->name();
@@ -683,6 +718,13 @@ template vector<bool> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent,
                                                                 const string& name, const string& attrName,
                                                                 vector<string>& attrs,
                                                                 std::function<bool(string)> parser, bool mandatory);
+
+
+string XMLUtils::toString(XMLNode* node) {
+    string xml_as_string;
+    rapidxml::print(std::back_inserter(xml_as_string), *node);
+    return xml_as_string;
+}
 
 } // namespace data
 } // namespace ore

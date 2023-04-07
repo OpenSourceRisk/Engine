@@ -118,13 +118,19 @@ void IndexWrappedCashFlow::accept(AcyclicVisitor& v) {
 }
 
 IndexedCouponLeg::IndexedCouponLeg(const Leg& underlyingLeg, const Real qty, const boost::shared_ptr<Index>& index)
-    : underlyingLeg_(underlyingLeg), qty_(qty), index_(index), initialFixing_(Null<Real>()), fixingDays_(0),
-      fixingCalendar_(NullCalendar()), fixingConvention_(Preceding) {
+    : underlyingLeg_(underlyingLeg), qty_(qty), index_(index), initialFixing_(Null<Real>()),
+      initialNotionalFixing_(Null<Real>()), fixingDays_(0), fixingCalendar_(NullCalendar()),
+      fixingConvention_(Preceding), inArrearsFixing_(true) {
     QL_REQUIRE(index, "IndexedCouponLeg: index required");
 }
 
 IndexedCouponLeg& IndexedCouponLeg::withInitialFixing(const Real initialFixing) {
     initialFixing_ = initialFixing;
+    return *this;
+}
+
+IndexedCouponLeg& IndexedCouponLeg::withInitialNotionalFixing(const Real initialNotionalFixing) {
+    initialNotionalFixing_ = initialNotionalFixing;
     return *this;
 }
 
@@ -196,11 +202,15 @@ IndexedCouponLeg::operator Leg() const {
             }
         } else if (auto csf = boost::dynamic_pointer_cast<CashFlow>(underlyingLeg_[i])) {
             fixingDate = fixingCalendar_.advance(csf->date(), -static_cast<int>(fixingDays_), Days, fixingConvention_);
-            // use the initial fixing if the cashflow date equals the first date in the schedule
-            if (!valuationSchedule_.empty() && valuationSchedule_.dates().size() > 0 &&
-                valuationSchedule_.date(0) == csf->date() && initialFixing_ != Null<Real>()) {
+            if (firstValuationDate && initialNotionalFixing_ != Null<Real>()) {
+                // use firstNotionalFixing if the first flow is a cashflow (not a coupon)
+                resultLeg.push_back(boost::make_shared<IndexWrappedCashFlow>(csf, qty_, initialNotionalFixing_));
+            } else if (!valuationSchedule_.empty() && valuationSchedule_.dates().size() > 0 &&
+                       valuationSchedule_.date(0) == csf->date() && initialFixing_ != Null<Real>()) {
+                // use the initial fixing if the cashflow date equals the first date in the val schedule
                 resultLeg.push_back(boost::make_shared<IndexWrappedCashFlow>(csf, qty_, initialFixing_));
             } else {
+                // use a flow with free fixing otherwise
                 resultLeg.push_back(boost::make_shared<IndexWrappedCashFlow>(csf, qty_, index_, fixingDate));
             }
         } else {

@@ -56,6 +56,25 @@ template <class InterpolatorStrike, class InterpolatorTime>
 class CPIPriceVolatilitySurface : public QuantExt::CPIVolatilitySurface, public QuantLib::LazyObject {
 public:
     CPIPriceVolatilitySurface(
+        PriceQuotePreference type, const QuantLib::Period& observationLag,
+        const QuantLib::Calendar& cal, // calendar in index may not be useful
+        const QuantLib::BusinessDayConvention& bdc, const QuantLib::DayCounter& dc,
+        const boost::shared_ptr<QuantLib::ZeroInflationIndex> index, 
+        QuantLib::Handle<QuantLib::YieldTermStructure> yts,
+        const std::vector<QuantLib::Rate>& cStrikes, const std::vector<QuantLib::Rate>& fStrikes,
+        const std::vector<QuantLib::Period>& cfMaturities, const QuantLib::Matrix& cPrice,
+        const QuantLib::Matrix& fPrice, const boost::shared_ptr<QuantExt::CPICapFloorEngine>& engine,
+        const bool quotedInstrumentsAreInterpolated = false,
+        const QuantLib::Date& capFloorStartDate = QuantLib::Date(), 
+        bool ignoreMissingPrices = false, // if true, it allows prices to be Null and work as long there is one
+        bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
+        const QuantLib::VolatilityType& volType = QuantLib::ShiftedLognormal, const double displacement = 0.0,
+        const QuantLib::Real& upperVolBound = CPIPriceVolatilitySurfaceDefaultValues::upperVolBound,
+        const QuantLib::Real& lowerVolBound = CPIPriceVolatilitySurfaceDefaultValues::lowerVolBound,
+        const QuantLib::Real& solverTolerance = CPIPriceVolatilitySurfaceDefaultValues::solverTolerance);
+
+
+    QL_DEPRECATED CPIPriceVolatilitySurface(
         PriceQuotePreference type,
         const QuantLib::Period& observationLag,
         const QuantLib::Calendar& cal, // calendar in index may not be useful
@@ -128,6 +147,9 @@ protected:
 
     double atmGrowth(const QuantLib::Date& date) const;
 
+    QuantLib::Real atmStrike(const QuantLib::Date& maturity,
+                             const QuantLib::Period& obsLag = QuantLib::Period(-1, QuantLib::Days)) const override;
+
 private:
     virtual void validateInputParameters() const;
 
@@ -178,6 +200,38 @@ private:
     mutable boost::shared_ptr<QuantExt::OptionInterpolator2d<InterpolatorStrike, InterpolatorTime>> volSurface_;
 };
 
+
+
+template <class InterpolatorStrike, class InterpolatorTime>
+CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::CPIPriceVolatilitySurface(
+    PriceQuotePreference type, const QuantLib::Period& observationLag,
+    const QuantLib::Calendar& cal, // calendar in index may not be useful
+    const QuantLib::BusinessDayConvention& bdc, const QuantLib::DayCounter& dc,
+    const boost::shared_ptr<QuantLib::ZeroInflationIndex> index, QuantLib::Handle<QuantLib::YieldTermStructure> yts,
+    const std::vector<QuantLib::Rate>& cStrikes, const std::vector<QuantLib::Rate>& fStrikes,
+    const std::vector<QuantLib::Period>& cfMaturities, const QuantLib::Matrix& cPrice, const QuantLib::Matrix& fPrice,
+    const boost::shared_ptr<QuantExt::CPICapFloorEngine>& engine, const bool quotedInstrumentsAreInterpolated,
+    const QuantLib::Date& capFloorStartDate,
+    bool ignoreMissingPrices, // if true, it allows prices to be Null and work as long there is one
+    bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap, const QuantLib::VolatilityType& volType,
+    const double displacement, const QuantLib::Real& upperVolBound, const QuantLib::Real& lowerVolBound,
+    const QuantLib::Real& solverTolerance)
+    : QuantExt::CPIVolatilitySurface(0, cal, bdc, dc, observationLag, index->frequency(), quotedInstrumentsAreInterpolated,
+                                     capFloorStartDate, volType, displacement),
+      preference_(type), index_(index), yts_(yts), capStrikes_(cStrikes), floorStrikes_(fStrikes), engine_(engine),
+      ignoreMissingPrices_(ignoreMissingPrices), lowerStrikeConstExtrap_(lowerStrikeConstExtrap),
+      upperStrikeConstExtrap_(upperStrikeConstExtrap), upperVolBound_(upperVolBound), lowerVolBound_(lowerVolBound),
+      solverTolerance_(solverTolerance), expiries_(cfMaturities), capPrices_(cPrice), floorPrices_(fPrice) {
+    validateInputParameters();
+    initializeStrikes();
+    QL_REQUIRE(!yts.empty(), "DiscountCurve not provided");
+    QL_REQUIRE(engine, "PricingEngine not provided");
+    QL_REQUIRE(index, "PricingEngine not provided");
+    registerWith(index_);
+    registerWith(yts_);
+}
+
+QL_DEPRECATED_DISABLE_WARNING
 template <class InterpolatorStrike, class InterpolatorTime>
 CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::CPIPriceVolatilitySurface(
     PriceQuotePreference type, 
@@ -209,6 +263,7 @@ CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::CPIPriceVolatil
     registerWith(index_);
     registerWith(yts_);
 }
+QL_DEPRECATED_ENABLE_WARNING
 
 template <class InterpolatorStrike, class InterpolatorTime>
 void CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::performCalculations() const {
@@ -222,7 +277,7 @@ void CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::performCal
     std::vector<double> vols;
 
     for (QuantLib::Size tenorIdx = 0; tenorIdx < expiries_.size(); tenorIdx++) {
-        QuantLib::Date maturityDate = optionMaturityFromTenor(expiries_[tenorIdx]);
+        QuantLib::Date maturityDate = optionDateFromTenor(expiries_[tenorIdx]);
         QuantLib::Date fixingDate =
             ZeroInflation::fixingDate(maturityDate, observationLag(), frequency(), indexIsInterpolated());
         double atm = atmGrowth(maturityDate);
@@ -339,7 +394,7 @@ QuantLib::Real CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::
 
 template <class InterpolatorStrike, class InterpolatorTime>
 QuantLib::Date CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::maxDate() const {
-    return optionMaturityFromTenor(expiries_.back());
+    return optionDateFromTenor(expiries_.back());
 }
 
 template <class InterpolatorStrike, class InterpolatorTime>
@@ -357,7 +412,7 @@ double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::baseCPI(
 
 template <class InterpolatorStrike, class InterpolatorTime>
 double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::atmGrowth(QuantLib::Period& tenor) const {
-    return atmGrowth(optionMaturityFromTenor(tenor));
+    return atmGrowth(optionDateFromTenor(tenor));
 }
 
 template <class InterpolatorStrike, class InterpolatorTime>
@@ -486,12 +541,13 @@ double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::implyVol
 
     boost::shared_ptr<QuantExt::CPICapFloorEngine> engine = engine_;
 
+    bool interpolated = indexIsInterpolated();
     capFloor.setPricingEngine(engine);
 
-    auto targetFunction = [&engine, &cal, &dc, &bdc, &startDate,  & index, &obsLag, &freq, &price,
-                           &capFloor](const double& guess) {
+    auto targetFunction = [&engine, &cal, &dc, &bdc, &startDate, &obsLag, &freq, &price,
+                           &capFloor, &interpolated](const double& guess) {
         boost::shared_ptr<QuantExt::ConstantCPIVolatility> vol = boost::make_shared<QuantExt::ConstantCPIVolatility>(
-            guess, 0, cal, bdc, dc, obsLag, freq, index->interpolated(), startDate);
+            guess, 0, cal, bdc, dc, obsLag, freq, interpolated, startDate);
 
         engine->setVolatility(QuantLib::Handle<QuantLib::CPIVolatilitySurface>(vol));
 
@@ -501,5 +557,18 @@ double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::implyVol
     QuantLib::Brent solver;
     QuantLib::Real guess = (upperVolBound_ + lowerVolBound_) / 2.0;
     return solver.solve(targetFunction, solverTolerance_, guess, lowerVolBound_, upperVolBound_);
+}
+
+template <class InterpolatorStrike, class InterpolatorTime>
+QuantLib::Real
+CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::atmStrike(const QuantLib::Date& maturity,
+                                                                           const QuantLib::Period& obsLag) const {
+    QuantLib::Period lag = obsLag == -1 * QuantLib::Days ? observationLag() : obsLag;
+    QuantLib::Date fixingDate = ZeroInflation::fixingDate(maturity, lag, frequency(), indexIsInterpolated());
+    double forwardCPI = ZeroInflation::cpiFixing(index_, maturity, lag, indexIsInterpolated());
+    double atm = forwardCPI / baseCPI();
+    double ttm =
+        QuantLib::inflationYearFraction(frequency(), indexIsInterpolated(), dayCounter(), baseDate(), fixingDate);
+    return std::pow(atm, 1.0 / ttm) - 1.0;
 }
 } // namespace QuantExt

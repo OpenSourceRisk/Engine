@@ -243,10 +243,10 @@
 
      // Load portfolio from XML string
      Portfolio portfolio;
-     portfolio.loadFromXMLString(tradeXml);
+     portfolio.fromXMLString(tradeXml);
 
      // Extract FxAsianOption trade from portfolio
-     boost::shared_ptr<Trade> trade = portfolio.trades()[0];
+     boost::shared_ptr<Trade> trade = portfolio.trades().begin()->second;
      boost::shared_ptr<FxAsianOption> option = boost::dynamic_pointer_cast<ore::data::FxAsianOption>(trade);
      BOOST_CHECK(option != nullptr);
 

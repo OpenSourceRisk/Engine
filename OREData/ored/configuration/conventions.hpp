@@ -378,9 +378,10 @@ public:
     OisConvention() {}
     //! Detailed constructor
     OisConvention(const string& id, const string& spotLag, const string& index, const string& fixedDayCounter,
-                  const string& paymentLag = "", const string& eom = "", const string& fixedFrequency = "",
-                  const string& fixedConvention = "", const string& fixedPaymentConvention = "",
-                  const string& rule = "", const std::string& paymentCalendar = "");
+                  const string& fixedCalendar, const string& paymentLag = "", const string& eom = "",
+                  const string& fixedFrequency = "", const string& fixedConvention = "",
+                  const string& fixedPaymentConvention = "", const string& rule = "",
+                  const std::string& paymentCalendar = "");
     //@}
 
     //! \name Inspectors
@@ -389,6 +390,8 @@ public:
     const string& indexName() const { return strIndex_; }
     boost::shared_ptr<OvernightIndex> index() const;
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
+    // might be empty to retain bwd compatibility
+    const Calendar& fixedCalendar() const { return fixedCalendar_; }
     Natural paymentLag() const { return paymentLag_; }
     bool eom() { return eom_; }
     Frequency fixedFrequency() const { return fixedFrequency_; }
@@ -408,6 +411,7 @@ public:
 private:
     Natural spotLag_;
     DayCounter fixedDayCounter_;
+    Calendar fixedCalendar_;
     Natural paymentLag_;
     bool eom_;
     Frequency fixedFrequency_;
@@ -420,6 +424,7 @@ private:
     string strSpotLag_;
     string strIndex_;
     string strFixedDayCounter_;
+    string strFixedCalendar_;
     string strPaymentLag_;
     string strEom_;
     string strFixedFrequency_;
@@ -1591,6 +1596,8 @@ public:
     QuantLib::Weekday optionWeekday() const { return optionWeekday_; }
     const std::string& savingsTime() const { return savingsTime_; }
     const std::set<QuantLib::Month>& validContractMonths() const { return validContractMonths_; }
+    bool balanceOfTheMonth() const { return balanceOfTheMonth_; }
+    Calendar balanceOfTheMonthPricingCalendar() const { return balanceOfTheMonthPricingCalendar_; }
     //@}
 
     //! Serialisation
@@ -1659,7 +1666,12 @@ private:
 
     std::set<QuantLib::Month> validContractMonths_;
     std::string savingsTime_;
-
+    // If its averaging Future but the front month is spot averaged and 
+    // balance of the month price is the average price of the remaining 
+    // future days in contract
+    bool balanceOfTheMonth_;
+    std::string balanceOfTheMonthPricingCalendarStr_;
+    Calendar balanceOfTheMonthPricingCalendar_;
     //! Populate and check frequency.
     Frequency parseAndValidateFrequency(const std::string& strFrequency);
 
