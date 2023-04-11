@@ -74,8 +74,7 @@
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": true,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
-        "ENABLE_SESSIONS": true,
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "ENABLE_SESSIONS": true
       },
       "architecture": {
         "value": "x64",
@@ -102,8 +101,7 @@
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": false,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
-        "ENABLE_SESSIONS": true,
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "ENABLE_SESSIONS": true
       },
       "architecture": {
         "value": "x64",
