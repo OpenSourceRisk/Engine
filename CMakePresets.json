@@ -2,21 +2,21 @@
   "version": 2,
   "configurePresets": [
     {
-      "name": "windows-ninja-x64-relWithDebInfo",
+      "name": "windows-ninja-x64-debug",
       "binaryDir": "${sourceDir}/build",
-      "generator": "Ninja",
+      "generator": "Ninja Multi-Config",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_BUILD_TYPE": "Debug",
         "BOOST_INCLUDEDIR": "$env{BOOST}",
         "BOOST_LIBRARYDIR": "$env{BOOST_LIB64}",
         "QL_BUILD_EXAMPLES": false,
         "QL_BUILD_TEST_SUITE": false,
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": true,
-        "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
+        "MSVC_WHOLE_PROGRAM_OPTIMIZATION": false,
         "ENABLE_SESSIONS": true,
+        "ORE_BUILD_DOC": false
       },
       "architecture": {
         "value": "x64",
@@ -32,22 +32,21 @@
       }
     },
     {
-      "name": "windows-ninja-x64-debug",
+      "name": "windows-ninja-x64-relWithDebInfo",
       "binaryDir": "${sourceDir}/build",
-      "generator": "Ninja",
+      "generator": "Ninja Multi-Config",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
-        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "BOOST_INCLUDEDIR": "$env{BOOST}",
         "BOOST_LIBRARYDIR": "$env{BOOST_LIB64}",
         "QL_BUILD_EXAMPLES": false,
         "QL_BUILD_TEST_SUITE": false,
         "QL_BUILD_BENCHMARK": false,
-        "MSVC_LINK_DYNAMIC_RUNTIME": false,
-        "MSVC_WHOLE_PROGRAM_OPTIMIZATION": false,
+        "MSVC_LINK_DYNAMIC_RUNTIME": true,
+        "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
         "ENABLE_SESSIONS": true,
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "ORE_BUILD_DOC": false
       },
       "architecture": {
         "value": "x64",
@@ -73,9 +72,9 @@
         "QL_BUILD_TEST_SUITE": false,
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": true,
-        "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
+        "MSVC_WHOLE_PROGRAM_OPTIMIZATION": false,
         "ENABLE_SESSIONS": true,
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "ORE_BUILD_DOC": false
       },
       "architecture": {
         "value": "x64",
@@ -103,7 +102,7 @@
         "MSVC_LINK_DYNAMIC_RUNTIME": false,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
         "ENABLE_SESSIONS": true,
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "ORE_BUILD_DOC": false
       },
       "architecture": {
         "value": "x64",
