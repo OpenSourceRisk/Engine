@@ -106,6 +106,8 @@ public:
     const boost::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
     const map<string, vector<vector<Real>>>& nettingSetDefaultValue() { return nettingSetDefaultValue_; }
     const map<string, vector<vector<Real>>>& nettingSetCloseOutValue() { return nettingSetCloseOutValue_; }
+    const map<string, vector<vector<Real>>>& nettingSetMporPositiveFlow() { return nettingSetMporPositiveFlow_; }
+    const map<string, vector<vector<Real>>>& nettingSetMporNegativeFlow() { return nettingSetMporNegativeFlow_; }
 
     vector<Real> epe(const string& tid) { return getMeanExposure(tid, ExposureIndex::EPE); }
     vector<Real> ene(const string& tid) { return getMeanExposure(tid, ExposureIndex::ENE); }
@@ -140,6 +142,7 @@ protected:
 
     boost::shared_ptr<NPVCube> exposureCube_;
     map<string, vector<vector<Real>>> nettingSetDefaultValue_, nettingSetCloseOutValue_;
+    map<string, vector<vector<Real>>> nettingSetMporPositiveFlow_, nettingSetMporNegativeFlow_;
 
     map<string, std::vector<Real>> ee_b_;
     map<string, std::vector<Real>> eee_b_;

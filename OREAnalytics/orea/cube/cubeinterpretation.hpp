@@ -76,6 +76,13 @@ public:
     //! Retrieve the close-out date NPV from the Cube
     Real getCloseOutNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
 
+    //! Retrieve the aggregate value of Margin Period of Risk positive cashflows from the Cube
+    Real getMporPositiveFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+                              Size sampleIdx) const;
+
+    //! Retrieve the aggregate value of Margin Period of Risk negative cashflows from the Cube
+    Real getMporNegativeFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, 
+                              Size sampleIdx) const;
     //! Retrieve the aggregate value of Margin Period of Risk cashflows from the Cube
     Real getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
 
