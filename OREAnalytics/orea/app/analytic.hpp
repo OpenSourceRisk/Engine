@@ -299,7 +299,7 @@ protected:
     boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     boost::shared_ptr<Portfolio> amcPortfolio_, classicPortfolio_;
     boost::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_, amcCube_;
-    boost::shared_ptr<AggregationScenarioData> scenarioData_;
+    QuantLib::RelinkableHandle<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
     boost::shared_ptr<PostProcess> postProcess_;
