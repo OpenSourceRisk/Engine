@@ -98,7 +98,9 @@ void SensitivityCubeStream::updateForNewTrade() {
         // add delta keys
 
         for (auto const& [idx, _] : cube_->npvCube()->getTradeNPVs(tradeIdx_->second)) {
-            if (auto k = cube_->upDownFactor(idx); k.keytype != RiskFactorKey::KeyType::None)
+            if (auto k = cube_->upFactor(idx); k.keytype != RiskFactorKey::KeyType::None)
+                currentDeltaKeys_.insert(k);
+            else if (auto k = cube_->downFactor(idx); k.keytype != RiskFactorKey::KeyType::None)
                 currentDeltaKeys_.insert(k);
         }
 

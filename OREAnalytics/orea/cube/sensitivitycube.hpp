@@ -76,20 +76,13 @@ public:
     //! Return the map of up trade id's to index in cube
     const std::map<std::string, QuantLib::Size>& tradeIdx() const { return cube_->idsAndIndexes(); };
 
-    /*! Return factor for given up/down scenario index or None if given index
-      is not an up/down scenario (to be reviewed) */
-    RiskFactorKey upFactor(const Size upDownIndex) const;
+    /*! Return factor for given up scenario index or None if given index is not an up scenario (to be reviewed) */
+    RiskFactorKey upFactor(const Size upIndex) const;
 
-    /*! Return factor for given up/down scenario index or None if given index
-      is not an up/down scenario (to be reviewed) */
-    RiskFactorKey downFactor(const Size upDownIndex) const;
+    /*! Return factor for given down scenario index or None if given index is not an down scenario (to be reviewed) */
+    RiskFactorKey downFactor(const Size downIndex) const;
 
-    /*! Return factor for given up/down scenario index or None if given index
-      is not an up/down scenario (to be reviewed) */
-    RiskFactorKey upDownFactor(const Size upDownIndex) const;
-
-    /*! Return factor for given cross scenario index or None if given index
-      is not a cross scenario (to be reviewed) */
+    /*! Return factor for given cross scenario index or None if given index is not a cross scenario (to be reviewed) */
     crossPair crossFactor(const Size crossIndex) const;
 
     //! Check if the cube has scenario NPVs for scenario with description \p scenarioDescription
@@ -181,10 +174,9 @@ private:
     // Set of risk factor key types where we want a two-sided delta calculation.
     std::set<RiskFactorKey::KeyType> twoSidedDeltas_;
 
-    // map of up / down / up-or-down / cross factor index to risk factor key
+    // map of up / down / cross factor index to risk factor key
     std::map<QuantLib::Size, RiskFactorKey> upIndexToKey_;
     std::map<QuantLib::Size, RiskFactorKey> downIndexToKey_;
-    std::map<QuantLib::Size, RiskFactorKey> upDownIndexToKey_;
     std::map<QuantLib::Size, crossPair> crossIndexToKey_;
 
 };
