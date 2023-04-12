@@ -80,6 +80,10 @@ public:
       is not an up/down scenario (to be reviewed) */
     RiskFactorKey upDownFactor(const Size upDownIndex) const;
 
+    /*! Return factor for given cross scenario index or None if given index
+      is not a cross scenario (to be reviewed) */
+    crossPair crossFactor(const Size crossIndex) const;
+
     //! Check if the cube has scenario NPVs for scenario with description \p scenarioDescription
     bool hasScenario(const ShiftScenarioDescription& scenarioDescription) const;
 
@@ -90,10 +94,10 @@ public:
     //! Returns the set of risk factor keys for which a delta and gamma can be calculated
     const std::set<RiskFactorKey>& factors() const;
 
-    //! Return the map of up risk factors to it's factor data
-    const boost::bimap<RiskFactorKey, SensitivityCube::FactorData>& upFactors() const { return upFactors_; };
+    //! Return the map of up risk factors to its factor data
+    const std::map<RiskFactorKey, SensitivityCube::FactorData>& upFactors() const { return upFactors_; };
 
-    //! Return the map of down risk factors to it's factor data
+    //! Return the map of down risk factors to its factor data
     const std::map<RiskFactorKey, SensitivityCube::FactorData>& downFactors() const { return downFactors_; };
 
     //! Returns the set of pairs of risk factor keys for which a cross gamma is available
@@ -161,23 +165,24 @@ private:
     std::map<std::string, QuantLib::Size> tradeIdx_;
     std::map<ShiftScenarioDescription, QuantLib::Size> scenarioIdx_;
 
-    // Suppress warnings from Boost concept_check.hpp (VS 16.9.0, Boost 1.72.0).
-    // warning C4834: discarding return value of function with 'nodiscard' attribute
-#pragma warning( push )
-#pragma warning( disable : 4834 )
-    boost::bimap<RiskFactorKey, FactorData> upFactors_;
-#pragma warning( pop )
-
-    std::map<RiskFactorKey, FactorData> downFactors_;
+    std::map<RiskFactorKey, FactorData> upFactors_, downFactors_;
     // map of crossPair to tuple of (data of first \p RiskFactorKey, data of second \p RiskFactorKey, index of
     // crossFactor)
     std::map<crossPair, std::tuple<FactorData, FactorData, QuantLib::Size>> crossFactors_;
 
     // Set of risk factor key types where we want a two-sided delta calculation.
     std::set<RiskFactorKey::KeyType> twoSidedDeltas_;
+
+    // map of up / down factor index to risk factor key
+    std::map<QuantLib::Size, RiskFactorKey> upDownIndexToKey_;
+
+    // map of cross factor index to risk factor pair
+    std::map<QuantLib::Size, crossPair> crossIndexToKey_;
+
 };
 
 std::ostream& operator<<(std::ostream& out, const SensitivityCube::crossPair& cp);
 
 } // namespace analytics
 } // namespace ore
+#
