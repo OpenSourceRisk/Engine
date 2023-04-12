@@ -319,7 +319,7 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
             }
 
             // Overwrite the sensitivity cube entries.
-            auto upFactors = sensiCube_->upFactors().left;
+            auto upFactors = sensiCube_->upFactors();
             auto downFactors = sensiCube_->downFactors();
             auto baseNpv = sensiCube_->npvCube()->getT0(tradeIdx);
 

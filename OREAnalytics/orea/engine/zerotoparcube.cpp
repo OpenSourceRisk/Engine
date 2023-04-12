@@ -92,7 +92,7 @@ map<RiskFactorKey, Real> ZeroToParCube::parDeltas(QuantLib::Size tradeIdx) const
     }
 
     // Add non-zero deltas that do not need to be converted from underlying zero cube
-    for (const auto& key : zeroCube_->upFactors().left) {
+    for (const auto& key : zeroCube_->upFactors()) {
         if (!ParSensitivityAnalysis::isParType(key.first.keytype) || typesDisabled_.count(key.first.keytype) == 1) {
             Real delta = 0.0;
             if (!zeroCube_->twoSidedDelta(key.first.keytype)) {
