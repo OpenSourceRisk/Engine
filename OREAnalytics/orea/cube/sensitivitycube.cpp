@@ -104,6 +104,7 @@ void SensitivityCube::initialise() {
                                                               << des.key1() << "]");
             factors_.insert(des.key1());
             upFactors_[des.key1()] = fd;
+            upIndexToKey_[fd.index] = des.key1();
             upDownIndexToKey_[fd.index] = des.key1();
             break;
         case ShiftScenarioDescription::Type::Down:
@@ -111,6 +112,7 @@ void SensitivityCube::initialise() {
                                                             "the same risk factor key ["
                                                                 << des.key1() << "]");
             downFactors_[des.key1()] = fd;
+            downIndexToKey_[fd.index] = des.key1();
             upDownIndexToKey_[fd.index] = des.key1();
             break;
         case ShiftScenarioDescription::Type::Cross:
@@ -152,6 +154,22 @@ void SensitivityCube::initialise() {
 }
 
 bool SensitivityCube::hasTrade(const string& tradeId) const { return tradeIdx_.count(tradeId) > 0; }
+
+RiskFactorKey SensitivityCube::upFactor(const Size upDownIndex) const {
+    if (auto k = upIndexToKey_.find(upDownIndex); k != upIndexToKey_.end()) {
+        return k->second;
+    } else {
+        return RiskFactorKey();
+    }
+}
+
+RiskFactorKey SensitivityCube::downFactor(const Size upDownIndex) const {
+    if (auto k = downIndexToKey_.find(upDownIndex); k != downIndexToKey_.end()) {
+        return k->second;
+    } else {
+        return RiskFactorKey();
+    }
+}
 
 RiskFactorKey SensitivityCube::upDownFactor(const Size upDownIndex) const {
     if (auto k = upDownIndexToKey_.find(upDownIndex); k != upDownIndexToKey_.end()) {
