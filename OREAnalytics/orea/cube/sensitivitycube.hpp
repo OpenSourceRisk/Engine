@@ -78,6 +78,14 @@ public:
 
     /*! Return factor for given up/down scenario index or None if given index
       is not an up/down scenario (to be reviewed) */
+    RiskFactorKey upFactor(const Size upDownIndex) const;
+
+    /*! Return factor for given up/down scenario index or None if given index
+      is not an up/down scenario (to be reviewed) */
+    RiskFactorKey downFactor(const Size upDownIndex) const;
+
+    /*! Return factor for given up/down scenario index or None if given index
+      is not an up/down scenario (to be reviewed) */
     RiskFactorKey upDownFactor(const Size upDownIndex) const;
 
     /*! Return factor for given cross scenario index or None if given index
@@ -173,10 +181,10 @@ private:
     // Set of risk factor key types where we want a two-sided delta calculation.
     std::set<RiskFactorKey::KeyType> twoSidedDeltas_;
 
-    // map of up / down factor index to risk factor key
+    // map of up / down / up-or-down / cross factor index to risk factor key
+    std::map<QuantLib::Size, RiskFactorKey> upIndexToKey_;
+    std::map<QuantLib::Size, RiskFactorKey> downIndexToKey_;
     std::map<QuantLib::Size, RiskFactorKey> upDownIndexToKey_;
-
-    // map of cross factor index to risk factor pair
     std::map<QuantLib::Size, crossPair> crossIndexToKey_;
 
 };
