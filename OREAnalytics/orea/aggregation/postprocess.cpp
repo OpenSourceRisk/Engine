@@ -67,7 +67,8 @@ PostProcess::PostProcess(
     const string& flipViewLendingCurvePostfix,
     const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters,
     const std::vector<Real>& creditMigrationDistributionGrid, const std::vector<Size>& creditMigrationTimeSteps,
-    const Matrix& creditStateCorrelationMatrix)
+    const Matrix& creditStateCorrelationMatrix,
+    bool withMporStickyDate, ScenarioGeneratorData::MporCashFlowMode mporCashFlowMode)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), configuration_(configuration),
       cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency),
       quantile_(quantile), calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
@@ -79,7 +80,8 @@ PostProcess::PostProcess(
       kvaOurCvaRiskWeight_(kvaOurCvaRiskWeight), kvaTheirCvaRiskWeight_(kvaTheirCvaRiskWeight),
       creditSimulationParameters_(creditSimulationParameters),
       creditMigrationDistributionGrid_(creditMigrationDistributionGrid),
-      creditMigrationTimeSteps_(creditMigrationTimeSteps), creditStateCorrelationMatrix_(creditStateCorrelationMatrix) {
+      creditMigrationTimeSteps_(creditMigrationTimeSteps), creditStateCorrelationMatrix_(creditStateCorrelationMatrix),
+      withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode) {
 
     QL_REQUIRE(cubeInterpretation_ != nullptr, "PostProcess: cubeInterpretation is not given.");
     bool isRegularCubeStorage = !cubeInterpretation_->withCloseOutLag();
@@ -184,11 +186,13 @@ PostProcess::PostProcess(
             calcType_, analytics_["dynamicCredit"], nettingSetManager_,
 	        exposureCalculator_->nettingSetDefaultValue(),
 	        exposureCalculator_->nettingSetCloseOutValue(),
+            exposureCalculator_->nettingSetMporPositiveFlow(),
+	        exposureCalculator_->nettingSetMporNegativeFlow(),
             scenarioData_, cubeInterpretation_, analytics_["dim"],
             dimCalculator_, fullInitialCollateralisation_,
             allocationMethod == ExposureAllocator::AllocationMethod::Marginal, marginalAllocationLimit,
             exposureCalculator_->exposureCube(), ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
-            analytics_["flipViewXVA"]
+            analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_
         );
     nettedExposureCalculator_->build();
 
