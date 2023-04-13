@@ -25,6 +25,7 @@
 
 #include <ql/errors.hpp>
 #include <ql/types.hpp>
+#include <ql/patterns/observable.hpp>
 
 #include <fstream>
 #include <map>
@@ -54,7 +55,7 @@ enum class AggregationScenarioDataType : unsigned int {
 
         \ingroup scenario
 */
-class AggregationScenarioData {
+class AggregationScenarioData : public QuantLib::Observable {
 public:
     //! default ctor
     AggregationScenarioData() : dIndex_(0), sIndex_(0) {}

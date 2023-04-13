@@ -655,7 +655,6 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
     string config = inputs_->marketConfig("simulation");
     scenarioGenerator_ = sgb.build(model_, sf, analytic()->configurations().simMarketParams, inputs_->asof(), analytic()->market(), config); 
     QL_REQUIRE(scenarioGenerator_, "failed to build the scenario generator"); 
-    grid_ = analytic()->configurations().scenarioGeneratorData->getGrid();
     samples_ = analytic()->configurations().scenarioGeneratorData->samples();
     LOG("simulation grid size " << grid_->size());
     LOG("simulation grid valuation dates " << grid_->valuationDates().size());
@@ -683,24 +682,12 @@ void XvaAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError
 }
 
 void XvaAnalyticImpl::initCubeDepth() {
-
     if (cubeDepth_ == 0) {
         LOG("XVA: Set cube depth");
-        // Determine the required cube depth:
-        // - Without close-out grid and without storing flows we have a 3d cube (trades * dates * scenarios),
-        //   otherwise we need a 4d "hypercube" with additonal dimension "depth"
-        // - If we build an auxiliary close-out grid then we store default values at depth 0 and close-out at depth 1
-        // - If we want to store cash flows that occur during the mpor, then we store them at depth 2
-        cubeDepth_ = 1;
-        if (analytic()->configurations().scenarioGeneratorData->withCloseOutLag())
-            cubeDepth_++;
-        if (inputs_->storeFlows())
-            cubeDepth_++;
-
+        cubeDepth_ = cubeInterpreter_->requiredNpvCubeDepth();
         LOG("XVA: Cube depth set to: " << cubeDepth_);
     }
 }
-
 
 void XvaAnalyticImpl::initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth) {
 
@@ -725,10 +712,11 @@ void XvaAnalyticImpl::initClassicRun(const boost::shared_ptr<Portfolio>& portfol
     initCubeDepth();
 
     // May have been set already
-    if (!scenarioData_) {
+    if (scenarioData_.empty()) {
         LOG("XVA: Create asd " << grid_->valuationDates().size() << " x " << samples_);
-        scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_);
-        simMarket_->aggregationScenarioData() = scenarioData_;
+        scenarioData_.linkTo(
+            boost::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_));
+        simMarket_->aggregationScenarioData() = *scenarioData_;
     }
 
     // We can skip the cube initialization if the mt val engine is used, since it builds its own cubes
@@ -797,14 +785,15 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
         if (analytic()->configurations().scenarioGeneratorData->withCloseOutLag()) {
             boost::shared_ptr<NPVCalculator> npvCalc =
                 boost::make_shared<NPVCalculator>(inputs_->exposureBaseCurrency());
-            calculators.push_back(boost::make_shared<MPORCalculator>(npvCalc, 0, 1));
+            calculators.push_back(boost::make_shared<MPORCalculator>(npvCalc, cubeInterpreter_->defaultDateNpvIndex(),
+                                                                     cubeInterpreter_->closeOutDateNpvIndex()));
         } else {
             calculators.push_back(boost::make_shared<NPVCalculator>(inputs_->exposureBaseCurrency()));
         }
         if (inputs_->storeFlows()) {
             // cash flow stored at index 1 (no close-out lag) or 2 (have close-out lag)
-            calculators.push_back(boost::make_shared<CashflowCalculator>(inputs_->exposureBaseCurrency(),
-                                                                         inputs_->asof(), grid_, cubeDepth_ - 1));
+            calculators.push_back(boost::make_shared<CashflowCalculator>(
+                inputs_->exposureBaseCurrency(), inputs_->asof(), grid_, cubeInterpreter_->mporFlowsIndex()));
         }
         return calculators;
     };
@@ -819,13 +808,6 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
         }
         return cptyCalculators;
     };
-
-    // set cube interpretation depending on close-out lag
-
-    if (analytic()->configurations().scenarioGeneratorData->withCloseOutLag())
-        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(scenarioData_, grid_, inputs_->flipViewXVA());
-    else
-        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_, inputs_->flipViewXVA());
 
     // log message
 
@@ -970,11 +952,12 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
 void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
     LOG("XVA: amcRun");
-    
-    if (!scenarioData_) {
+
+    if (scenarioData_.empty()) {
         LOG("XVA: Create asd " << grid_->valuationDates().size() << " x " << samples_);
-        scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_);
-        simMarket_->aggregationScenarioData() = scenarioData_;
+        scenarioData_.linkTo(
+            boost::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_));
+        simMarket_->aggregationScenarioData() = *scenarioData_;
     }
 
     initCubeDepth();
@@ -993,7 +976,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
         amcEngine.registerProgressIndicator(progressLog);
         // We only need to generate asd, if this does not happen in the classic run
         if (!doClassicRun)
-            amcEngine.aggregationScenarioData() = scenarioData_;
+            amcEngine.aggregationScenarioData() = *scenarioData_;
         amcEngine.buildCube(amcPortfolio_, amcCube_);
     } else {
         auto cubeFactory = [this](const QuantLib::Date& asof, const std::set<std::string>& ids,
@@ -1019,7 +1002,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
         amcEngine.registerProgressIndicator(progressLog);
         // as for the single-threaded case, we only need to generate asd, if this does not happen in the classic run
         if (!doClassicRun)
-            amcEngine.aggregationScenarioData() = scenarioData_;
+            amcEngine.aggregationScenarioData() = *scenarioData_;
         amcEngine.buildCube(amcPortfolio_);
         amcCube_ = boost::make_shared<JointNPVCube>(amcEngine.outputCubes());
     }
@@ -1076,22 +1059,10 @@ void XvaAnalyticImpl::runPostProcessor() {
 
     checkConfigurations(analytic()->portfolio());
 
-    if (!cubeInterpreter_) {
-        // FIXME: Can we get the grid from the cube instead?
-        QL_REQUIRE(analytic()->configurations().scenarioGeneratorData, "scenario generator data not set");
-        boost::shared_ptr<ScenarioGeneratorData> sgd = analytic()->configurations().scenarioGeneratorData;
-        LOG("withCloseOutLag=" << (sgd->withCloseOutLag() ? "Y" : "N"));
-        if (sgd->withCloseOutLag())
-            cubeInterpreter_ =
-                boost::make_shared<MporGridCubeInterpretation>(scenarioData_, sgd->getGrid(), analytics["flipViewXVA"]);
-        else
-            cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_, analytics["flipViewXVA"]);
-    }
-
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
         ALOG("dim calculator not set, create RegressionDynamicInitialMarginCalculator");
         dimCalculator_ = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
-            inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
+            inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
             dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
     }
 
@@ -1104,7 +1075,7 @@ void XvaAnalyticImpl::runPostProcessor() {
     LOG("baseCurrency " << baseCurrency);
 
     postProcess_ = boost::make_shared<PostProcess>(
-        analytic()->portfolio(), netting, analytic()->market(), marketConfiguration, cube_, scenarioData_, analytics,
+        analytic()->portfolio(), netting, analytic()->market(), marketConfiguration, cube_, *scenarioData_, analytics,
         baseCurrency,
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid,
@@ -1132,7 +1103,12 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
     CONSOLEW("XVA: Build Market");
     analytic()->buildMarket(loader);
     CONSOLE("OK");
-    
+
+    grid_ = analytic()->configurations().scenarioGeneratorData->getGrid();
+    cubeInterpreter_ = boost::make_shared<CubeInterpretation>(
+        inputs_->storeFlows(), analytic()->configurations().scenarioGeneratorData->withCloseOutLag(), scenarioData_,
+        grid_, inputs_->flipViewXVA());
+
     if (runSimulation_) {
     
         LOG("XVA: Build simulation market");
@@ -1233,8 +1209,8 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
         CONSOLEW("XVA: Load Cubes");
         QL_REQUIRE(inputs_->cube(), "XVA without EXPOSURE requires an NPV cube as input");
         cube_= inputs_->cube();
-        QL_REQUIRE(inputs_->mktCube(), "XVA without EXPOSURE requires a market cube as input"); 
-        scenarioData_ = inputs_->mktCube();
+        QL_REQUIRE(inputs_->mktCube(), "XVA without EXPOSURE requires a market cube as input");
+        scenarioData_.linkTo(inputs_->mktCube());
         if (inputs_->nettingSetCube())
             nettingSetCube_= inputs_->nettingSetCube();
         if (inputs_->cptyCube())
@@ -1247,7 +1223,7 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
     // Return the cubes to serialalize
     if (inputs_->writeCube()) {
         analytic()->npvCubes()["XVA"]["cube"] = cube_;
-        analytic()->mktCubes()["XVA"]["scenariodata"] = scenarioData_;
+        analytic()->mktCubes()["XVA"]["scenariodata"] = *scenarioData_;
         if (nettingSetCube_) {
             analytic()->npvCubes()["XVA"]["nettingsetcube"] = nettingSetCube_;
         }

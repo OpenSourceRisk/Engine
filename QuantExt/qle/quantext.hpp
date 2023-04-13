@@ -178,6 +178,7 @@
 #include <qle/instruments/equityforward.hpp>
 #include <qle/instruments/fixedbmaswap.hpp>
 #include <qle/instruments/forwardbond.hpp>
+#include <qle/instruments/forwardrateagreement.hpp>
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/genericswaption.hpp>
 #include <qle/instruments/impliedbondspread.hpp>
@@ -353,7 +354,9 @@
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/pricingengines/lgmconvolutionsolver.hpp>
 #include <qle/pricingengines/mccamcurrencyswapengine.hpp>
+#include <qle/pricingengines/mccamfxforwardengine.hpp>
 #include <qle/pricingengines/mccamfxoptionengine.hpp>
+#include <qle/pricingengines/mclgmfraengine.hpp>
 #include <qle/pricingengines/mclgmswapengine.hpp>
 #include <qle/pricingengines/mclgmswaptionengine.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>

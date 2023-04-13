@@ -152,6 +152,14 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     mp["w1"] = w1;
     mp["w2"] = w2;
     mp["rho"] = correlation;
+    mp["index1_pricingDates"] = parameterFlow1.pricingDates;
+    mp["index1_index"] = parameterFlow1.indexNames;
+    mp["index1_index_expiry"] = parameterFlow1.expiries;
+    mp["index1_fixing"] = parameterFlow1.fixings;
+    mp["index2_pricingDates"] = parameterFlow2.pricingDates;
+    mp["index2_index"] = parameterFlow2.indexNames;
+    mp["index2_index_expiry"] = parameterFlow2.expiries;
+    mp["index2_fixing"] = parameterFlow2.fixings;
 }
 
 CommoditySpreadOptionAnalyticalEngine::PricingParameter
@@ -171,6 +179,10 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         res.sigma = res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)
                         ? vol->blackVol(res.tn, atmUnderlyingCurrency, true)
                         : 0.0;
+        res.indexNames.push_back(cf->index()->name());
+        res.expiries.push_back(cf->index()->expiryDate());
+        res.fixings.push_back(atmUnderlyingCurrency);
+        res.pricingDates.push_back(cf->pricingDate());
     } else if (auto avgCf = ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(flow)) {
         auto parameter = CommodityAveragePriceOptionMomementMatching::matchFirstTwoMomentsTurnbullWakeman(
             avgCf, vol,
@@ -180,6 +192,10 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         res.atm = parameter.forward;
         res.accruals = parameter.accruals;
         res.sigma = parameter.sigma;
+        res.indexNames = parameter.indexNames;
+        res.expiries = parameter.indexExpiries;
+        res.fixings = parameter.fixings;
+        res.pricingDates = parameter.pricingDates;
     } else {
         QL_FAIL("SpreadOptionEngine supports only CommodityIndexedCashFlow or CommodityIndexedAverageCashFlow");
     }
