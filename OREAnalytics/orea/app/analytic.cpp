@@ -1104,9 +1104,10 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
     analytic()->buildMarket(loader);
     CONSOLE("OK");
 
+    grid_ = analytic()->configurations().scenarioGeneratorData->getGrid();
     cubeInterpreter_ = boost::make_shared<CubeInterpretation>(
         inputs_->storeFlows(), analytic()->configurations().scenarioGeneratorData->withCloseOutLag(), scenarioData_,
-        analytic()->configurations().scenarioGeneratorData->getGrid(), inputs_->flipViewXVA());
+        grid_, inputs_->flipViewXVA());
 
     if (runSimulation_) {
     
