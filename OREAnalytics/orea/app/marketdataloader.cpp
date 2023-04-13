@@ -205,7 +205,7 @@ void MarketDataLoader::populateFixings(
                     if (isFxIndex(f.first)) {
                         auto fxInd = parseFxIndex(f.first);
                         try { 
-                            fxInd->pastFixing(d);
+                            fxInd->fixing(d);
                             break;
                         }
                         catch (...) {}                        
