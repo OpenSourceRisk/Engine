@@ -224,100 +224,6 @@ public:
         : Analytic(std::make_unique<MarketDataAnalyticImpl>(inputs), {"MARKETDATA"}, inputs) {}
 };
 
-/*! Pricing-type analytics
-  \todo align pillars for par sensitivity analysis
-*/
-class PricingAnalyticImpl : public Analytic::Impl {
-public:
-    static constexpr const char* LABEL = "PRICING";
-
-    PricingAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
-        const std::set<std::string>& runTypes = {}) override;
-
-    void setUpConfigurations() override;
-};
-
-class PricingAnalytic : public Analytic {
-public:
-    PricingAnalytic(const boost::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs),
-            {"NPV", "NPV_LAGGED", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"},
-                   inputs) {}
-};
-    
-class VarAnalyticImpl : public Analytic::Impl {
-public:
-    static constexpr const char* LABEL = "VAR";
-
-    VarAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                     const std::set<std::string>& runTypes = {}) override;
-    void setUpConfigurations() override;
-};
-
-class VarAnalytic : public Analytic {
-public:
-    VarAnalytic(const boost::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<VarAnalyticImpl>(inputs), {"VAR"}, inputs, false, false, false, false) {}
-};
-
-class XvaAnalyticImpl : public Analytic::Impl {
-public:
-    static constexpr const char* LABEL = "XVA";
-
-    XvaAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
-    virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                             const std::set<std::string>& runTypes = {}) override;
-    void setUpConfigurations() override;
-
-    void checkConfigurations(const boost::shared_ptr<Portfolio>& portfolio);
-    
-protected:
-    boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;
-    void buildScenarioSimMarket();
-    void buildCrossAssetModel(bool continueOnError);
-    void buildScenarioGenerator(bool continueOnError);
-
-    void initCubeDepth();
-    void initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth);    
-
-    void initClassicRun(const boost::shared_ptr<Portfolio>& portfolio);
-    void buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio);
-    boost::shared_ptr<Portfolio> classicRun(const boost::shared_ptr<Portfolio>& portfolio);
-
-    boost::shared_ptr<EngineFactory> amcEngineFactory(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                                                      const std::vector<Date>& grid);
-    void buildAmcPortfolio();
-    void amcRun(bool doClassicRun);
-
-    void runPostProcessor();
-    
-    boost::shared_ptr<ScenarioSimMarket> simMarket_;
-    boost::shared_ptr<EngineFactory> engineFactory_;
-    boost::shared_ptr<CrossAssetModel> model_;
-    boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
-    boost::shared_ptr<Portfolio> amcPortfolio_, classicPortfolio_;
-    boost::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_, amcCube_;
-    boost::shared_ptr<AggregationScenarioData> scenarioData_;
-    boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
-    boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
-    boost::shared_ptr<PostProcess> postProcess_;
-    
-    Size cubeDepth_ = 0;
-    boost::shared_ptr<DateGrid> grid_;
-    Size samples_ = 0;
-
-    bool runSimulation_ = false;
-    bool runXva_ = false;
-};
-
-class XvaAnalytic : public Analytic {
-public:
-    XvaAnalytic(const boost::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<XvaAnalyticImpl>(inputs), {"XVA", "EXPOSURE"}, inputs, false, false, false, false) {}
-};
-
 template <class T> inline boost::shared_ptr<T> Analytic::dependentAnalytic(const std::string& key) const {
     auto it = dependentAnalytics_.find(key);
     QL_REQUIRE(it != dependentAnalytics_.end(), "Could not find dependent Analytic " << key);
@@ -325,7 +231,6 @@ template <class T> inline boost::shared_ptr<T> Analytic::dependentAnalytic(const
     QL_REQUIRE(analytic, "Could not cast analytic for key " << key);
     return analytic;
 }
-
 
 } // namespace analytics
 } // namespace oreplus

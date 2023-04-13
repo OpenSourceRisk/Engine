@@ -24,6 +24,7 @@
 
 #include <orea/cube/npvcube.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
+#include <orea/scenario/scenarioshiftcalculator.hpp>
 #include <orea/engine/sensitivityrecord.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/scenario/scenario.hpp>
@@ -83,23 +84,25 @@ private:
 
 class HistoricalSensiPnlCalculator {
 public:
-    HistoricalSensiPnlCalculator(const boost::shared_ptr<HistoricalScenarioGenerator>& hisScenGen) : 
-        hisScenGen_(hisScenGen) {}
+    HistoricalSensiPnlCalculator(const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen)
+        : hisScenGen_(hisScenGen) {}
     
+    void populateSensiShifts(QuantLib::ext::shared_ptr<NPVCube>& cube, const vector<RiskFactorKey>& keys,
+                             QuantLib::ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator);
+
     void calculateSensiPnl(const std::set<SensitivityRecord>& srs,
-        const std::set<std::pair<RiskFactorKey, QuantLib::Size>>& keys,
+        const std::vector<RiskFactorKey>& rfKeys,
         QuantLib::ext::shared_ptr<NPVCube>& shiftCube,
-        const std::vector<std::pair<QuantLib::Size, QuantLib::Size>>& srsIndex,
-        const std::vector<std::string>& tradeIds,
         const std::vector<QuantLib::ext::shared_ptr<PNLCalculator>>& pnlCalculators,
         const QuantLib::ext::shared_ptr<CovarianceCalculator>& covarianceCalculator,
+        const std::vector<std::string>& tradeIds = {},
         const bool includeGammaMargin = true, const bool includeDeltaMargin = true, 
         const bool tradeLevel = false);
 
 private:
-    boost::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
+    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
     //! Stream of sensitivity records used for the sensitivity based backtest
-    boost::shared_ptr<SensitivityStream> sensitivityStream_;
+    QuantLib::ext::shared_ptr<SensitivityStream> sensitivityStream_;
 };
 
 } // namespace analytics
