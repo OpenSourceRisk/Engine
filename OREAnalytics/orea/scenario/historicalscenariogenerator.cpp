@@ -56,7 +56,7 @@ ReturnConfiguration::ReturnConfiguration()
                    {RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, ReturnConfiguration::ReturnType::Relative},
                    {RiskFactorKey::KeyType::CommodityCurve, ReturnConfiguration::ReturnType::Relative},
                    {RiskFactorKey::KeyType::CommodityVolatility, ReturnConfiguration::ReturnType::Relative},
-                   {RiskFactorKey::KeyType::SecuritySpread, ReturnConfiguration::ReturnType::Relative},
+                   {RiskFactorKey::KeyType::SecuritySpread, ReturnConfiguration::ReturnType::Absolute},
                    {RiskFactorKey::KeyType::Correlation, ReturnConfiguration::ReturnType::Absolute}}) {}
 
 ReturnConfiguration::ReturnConfiguration(const std::map<RiskFactorKey::KeyType, ReturnType>& returnType)
