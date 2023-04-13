@@ -64,9 +64,9 @@ public:
         ParametricVarParams() {};
         ParametricVarParams(const std::string& m, QuantLib::Size samples, QuantLib::Size seed);
 
-        Method method;
-        QuantLib::Size samples;
-        QuantLib::Size seed;
+        Method method = Method::Delta;
+        QuantLib::Size samples = QuantLib::Null<QuantLib::Size>();
+        QuantLib::Size seed = QuantLib::Null<QuantLib::Size>();
     };
 
     virtual ~ParametricVarCalculator() {}
