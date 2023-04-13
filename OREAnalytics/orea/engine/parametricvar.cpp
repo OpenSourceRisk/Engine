@@ -112,19 +112,31 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
     for (Size i = 0; i < p_.size(); ++i)
         report.addColumn("Quantile_" + std::to_string(p_[i]), double(), 6);
 
+    // build portfolio filter, if given
+    bool hasFilter = false;
+    boost::regex filter;
+    if (portfolioFilter_ != "") {
+        hasFilter = true;
+        filter = boost::regex(portfolioFilter_);
+        LOG("Portfolio filter: " << portfolioFilter_);
+    }
+
     vector<string> portfolioIds;
     for (const auto& [portfolioId, portfolio] : tradePortfolios_)
         portfolioIds.push_back(portfolioId);
 
+    string allStr = "(all)";
     if (breakdown_ && tradePortfolios_.size() > 1) {
         // Create a summary portfolio
-        portfolioIds.insert(portfolioIds.begin(), "(all)");
+        portfolioIds.insert(portfolioIds.begin(), allStr);
         set<pair<string, Size>> allTradeIds;
         for (const auto& [portfolioId, portfolio] : tradePortfolios_) {
-            for (const auto& trade : portfolio)
-                allTradeIds.insert(make_pair(trade.first, Null<Size>()));
+            if (!hasFilter || boost::regex_match(portfolioId, filter)) {
+                for (const auto& trade : portfolio)
+                    allTradeIds.insert(make_pair(trade.first, Null<Size>()));
+            }
         } 
-        tradePortfolios_["(all)"] = allTradeIds;
+        tradePortfolios_[allStr] = allTradeIds;
     }
 
     SensitivityAggregator sensiAgg(tradePortfolios_);
@@ -136,91 +148,93 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
             sensiAgg.aggregate(*sensitivities_, rf);
                         
             for (const auto& portfolioId : portfolioIds) {
-                map<RiskFactorKey, Real> deltas;
-                map<pair<RiskFactorKey, RiskFactorKey>, Real> gammas;
+                if (!hasFilter || portfolioId == allStr || boost::regex_match(portfolioId, filter)) {
+                    map<RiskFactorKey, Real> deltas;
+                    map<pair<RiskFactorKey, RiskFactorKey>, Real> gammas;
 
-                set<SensitivityRecord> srs = sensiAgg.sensitivities(portfolioId);
-                
-                // Populate the deltas and gammas for a parametric VAR benchmark calculation
-                sensiAgg.generateDeltaGamma(portfolioId, deltas, gammas);
-                Matrix covariance;
+                    set<SensitivityRecord> srs = sensiAgg.sensitivities(portfolioId);
 
-                std::vector<Real> var;
-                if (deltas.size() > 0) {
-                    vector<RiskFactorKey> keys;
-                    transform(deltas.begin(), deltas.end(), back_inserter(keys),
-                              [](const pair<RiskFactorKey, Real>& kv) { return kv.first; });
+                    // Populate the deltas and gammas for a parametric VAR benchmark calculation
+                    sensiAgg.generateDeltaGamma(portfolioId, deltas, gammas);
+                    Matrix covariance;
 
-                    // If covariance is provided use it, otherwise generate
-                    if (covariance_.size() > 0) {
-                        std::vector<bool> sensiKeyHasNonZeroVariance(keys.size(), false);
+                    std::vector<Real> var;
+                    if (deltas.size() > 0) {
+                        vector<RiskFactorKey> keys;
+                        transform(deltas.begin(), deltas.end(), back_inserter(keys),
+                                  [](const pair<RiskFactorKey, Real>& kv) { return kv.first; });
 
-                        // build global covariance matrix
-                        covariance = Matrix(keys.size(), keys.size(), 0.0);
-                        Size unusedCovariance = 0;
-                        for (const auto& c : covariance_) {
-                            auto k1 = std::find(keys.begin(), keys.end(), c.first.first);
-                            auto k2 = std::find(keys.begin(), keys.end(), c.first.second);
-                            if (k1 != keys.end() && k2 != keys.end()) {
-                                covariance(k1 - keys.begin(), k2 - keys.begin()) = c.second;
-                                if (k1 == k2)
-                                    sensiKeyHasNonZeroVariance[k1 - keys.begin()] = true;
-                            } else
-                                ++unusedCovariance;
+                        // If covariance is provided use it, otherwise generate
+                        if (covariance_.size() > 0) {
+                            std::vector<bool> sensiKeyHasNonZeroVariance(keys.size(), false);
+
+                            // build global covariance matrix
+                            covariance = Matrix(keys.size(), keys.size(), 0.0);
+                            Size unusedCovariance = 0;
+                            for (const auto& c : covariance_) {
+                                auto k1 = std::find(keys.begin(), keys.end(), c.first.first);
+                                auto k2 = std::find(keys.begin(), keys.end(), c.first.second);
+                                if (k1 != keys.end() && k2 != keys.end()) {
+                                    covariance(k1 - keys.begin(), k2 - keys.begin()) = c.second;
+                                    if (k1 == k2)
+                                        sensiKeyHasNonZeroVariance[k1 - keys.begin()] = true;
+                                } else
+                                    ++unusedCovariance;
+                            }
+                            DLOG("Found " << covariance_.size() << " covariance matrix entries, " << unusedCovariance
+                                          << " do not match a portfolio sensitivity and will not be used.");
+                            for (Size i = 0; i < sensiKeyHasNonZeroVariance.size(); ++i) {
+                                if (!sensiKeyHasNonZeroVariance[i])
+                                    WLOG("Zero variance assigned to sensitivity key " << keys[i]);
+                            }
+                        } else {
+                            QL_REQUIRE(benchmarkPeriod_, "No benchmark period provided to generate covariance matrix");
+                            ext::shared_ptr<CovarianceCalculator> covCalculator =
+                                QuantLib::ext::make_shared<CovarianceCalculator>(benchmarkPeriod_.value());
+                            ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator =
+                                ext::make_shared<ScenarioShiftCalculator>(sensitivityConfig_, simMarketConfig_);
+                            ext::shared_ptr<HistoricalSensiPnlCalculator> sensiPnlCalculator =
+                                ext::make_shared<HistoricalSensiPnlCalculator>(hisScenGen_);
+
+                            ext::shared_ptr<NPVCube> npvCube;
+
+                            sensiPnlCalculator->populateSensiShifts(npvCube, keys, shiftCalculator);
+                            sensiPnlCalculator->calculateSensiPnl(srs, keys, npvCube, {}, covCalculator);
+
+                            covariance = covCalculator->covariance();
                         }
-                        DLOG("Found " << covariance_.size() << " covariance matrix entries, " << unusedCovariance
-                                      << " do not match a portfolio sensitivity and will not be used.");
-                        for (Size i = 0; i < sensiKeyHasNonZeroVariance.size(); ++i) {
-                            if (!sensiKeyHasNonZeroVariance[i])
-                                WLOG("Zero variance assigned to sensitivity key " << keys[i]);
+
+                        // make covariance matrix positive semi-definite
+                        boost::shared_ptr<QuantExt::CovarianceSalvage> covarianceSalvage;
+                        DLOG("Covariance matrix has dimension " << keys.size() << " x " << keys.size());
+                        if (salvageCovarianceMatrix_) {
+                            DLOG("Make covariance matrix positive semi-definite using spectral method");
+                            covarianceSalvage = boost::make_shared<QuantExt::SpectralCovarianceSalvage>();
+                        } else {
+                            LOG("Covariance matrix is no salvaged, check for positive semi-definiteness");
+                            SymmetricSchurDecomposition ssd(covariance);
+                            Real evMin = ssd.eigenvalues().back();
+                            QL_REQUIRE(evMin > 0.0 || close_enough(evMin, 0.0),
+                                       "ParametricVar: input covariance matrix is not positive semi-definite, smallest "
+                                       "eigenvalue is "
+                                           << evMin);
+                            DLOG("Smallest eigenvalue is " << evMin);
+                            covarianceSalvage = boost::make_shared<QuantExt::NoCovarianceSalvage>();
                         }
-                    } else {
-                        QL_REQUIRE(benchmarkPeriod_, "No benchmark period provided to generate covariance matrix");
-                        ext::shared_ptr<CovarianceCalculator> covCalculator =
-                            QuantLib::ext::make_shared<CovarianceCalculator>(benchmarkPeriod_.value());
-                        ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator =
-                            ext::make_shared<ScenarioShiftCalculator>(sensitivityConfig_, simMarketConfig_);
-                        ext::shared_ptr<HistoricalSensiPnlCalculator> sensiPnlCalculator =
-                            ext::make_shared<HistoricalSensiPnlCalculator>(hisScenGen_);
+                        DLOG("Covariance matrix salvage complete.");
+                        // compute var and write to report
+                        var = computeVar(covariance, deltas, gammas, *covarianceSalvage);
+                    } else
+                        var = std::vector<Real>(p_.size(), 0.0);
 
-                        ext::shared_ptr<NPVCube> npvCube;
-
-                        sensiPnlCalculator->populateSensiShifts(npvCube, keys, shiftCalculator);
-                        sensiPnlCalculator->calculateSensiPnl(srs, keys, npvCube, {}, covCalculator);
-
-                        covariance = covCalculator->covariance();
+                    if (!close_enough(QuantExt::detail::absMax(var), 0.0)) {
+                        report.next();
+                        report.add(portfolioId);
+                        report.add(rf->riskClassLabel());
+                        report.add(rf->riskTypeLabel());
+                        for (auto const& v : var)
+                            report.add(v);
                     }
-
-                    // make covariance matrix positive semi-definite
-                    boost::shared_ptr<QuantExt::CovarianceSalvage> covarianceSalvage;
-                    DLOG("Covariance matrix has dimension " << keys.size() << " x " << keys.size());
-                    if (salvageCovarianceMatrix_) {
-                        DLOG("Make covariance matrix positive semi-definite using spectral method");
-                        covarianceSalvage = boost::make_shared<QuantExt::SpectralCovarianceSalvage>();
-                    } else {
-                        LOG("Covariance matrix is no salvaged, check for positive semi-definiteness");
-                        SymmetricSchurDecomposition ssd(covariance);
-                        Real evMin = ssd.eigenvalues().back();
-                        QL_REQUIRE(evMin > 0.0 || close_enough(evMin, 0.0),
-                                   "ParametricVar: input covariance matrix is not positive semi-definite, smallest "
-                                   "eigenvalue is "
-                                       << evMin);
-                        DLOG("Smallest eigenvalue is " << evMin);
-                        covarianceSalvage = boost::make_shared<QuantExt::NoCovarianceSalvage>();
-                    }
-                    DLOG("Covariance matrix salvage complete.");
-                    // compute var and write to report
-                    var = computeVar(covariance, deltas, gammas, *covarianceSalvage);
-                } else
-                    var = std::vector<Real>(p_.size(), 0.0);
-
-                if (!close_enough(QuantExt::detail::absMax(var), 0.0)) {
-                    report.next();
-                    report.add(portfolioId);
-                    report.add(rf->riskClassLabel());
-                    report.add(rf->riskTypeLabel());
-                    for (auto const& v : var)
-                        report.add(v);
                 }
             }
             sensiAgg.reset();
