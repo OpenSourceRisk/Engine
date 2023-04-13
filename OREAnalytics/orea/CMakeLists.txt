@@ -39,6 +39,7 @@ engine/filteredsensitivitystream.cpp
 engine/historicalpnlgenerator.cpp
 engine/historicalsensipnlcalculator.cpp
 engine/mporcalculator.cpp
+engine/multistatenpvcalculator.cpp
 engine/multithreadedvaluationengine.cpp
 engine/npvrecord.cpp
 engine/parametricvar.cpp
@@ -132,6 +133,7 @@ engine/filteredsensitivitystream.hpp
 engine/historicalpnlgenerator.hpp
 engine/historicalsensipnlcalculator.hpp
 engine/mporcalculator.hpp
+engine/multistatenpvcalculator.hpp
 engine/multithreadedvaluationengine.hpp
 engine/npvrecord.hpp
 engine/observationmode.hpp
