@@ -202,17 +202,19 @@ void MarketDataLoader::populateFixings(
         for (const auto& f : portfolioFixings_) {
             for (const auto& d : f.second) {
                 if (!loader_->hasFixing(f.first, d)) {
+                    string fixingErr = "";
                     if (isFxIndex(f.first)) {
                         auto fxInd = parseFxIndex(f.first);
                         try { 
                             fxInd->fixing(d);
                             break;
+                        } catch (const std::exception& e) {
+                            fixingErr = ", error: " + ore::data::to_string(e.what());
                         }
-                        catch (...) {}                        
                     }
                     WLOG(StructuredFixingWarningMessage(f.first, d, "Missing fixing",
                         "Could not find required fixing id " + f.first +
-                        " for date " + ore::data::to_string(d)));
+                        " for date " + ore::data::to_string(d) + fixingErr));
                 }
             }
         }
