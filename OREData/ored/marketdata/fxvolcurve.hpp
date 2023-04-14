@@ -109,6 +109,10 @@ private:
                                    boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
                                    const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
 
+    void buildSmileAbsoluteCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
+                                 boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
+                                 const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+
 };
 } // namespace data
 } // namespace ore
