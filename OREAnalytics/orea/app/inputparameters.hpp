@@ -155,6 +155,7 @@ public:
     void setNettingSetId(const std::string& s) { nettingSetId_ = s; }
     void setScenarioGenType(const std::string& s) { scenarioGenType_ = s; }
     void setStoreFlows(bool b) { storeFlows_ = b; }
+    void setStoreCreditStateNPVs(Size states) { storeCreditStateNPVs_ = states; }
     void setStoreSurvivalProbabilities(bool b) { storeSurvivalProbabilities_ = b; }
     void setWriteCube(bool b) { writeCube_ = b; }
     void setWriteScenarios(bool b) { writeScenarios_ = b; }
@@ -359,6 +360,7 @@ public:
     const std::string& nettingSetId() { return nettingSetId_; }
     const std::string& scenarioGenType() { return scenarioGenType_; }
     bool storeFlows() { return storeFlows_; }
+    Size storeCreditStateNPVs() { return storeCreditStateNPVs_; }
     bool storeSurvivalProbabilities() { return storeSurvivalProbabilities_; }
     bool writeCube() { return writeCube_; }
     bool writeScenarios() { return writeScenarios_; }
@@ -567,6 +569,7 @@ protected:
     std::string nettingSetId_ = "";
     std::string scenarioGenType_ = "";
     bool storeFlows_ = false;
+    Size storeCreditStateNPVs_ = 0;
     bool storeSurvivalProbabilities_ = false;
     bool writeCube_ = false;
     bool writeScenarios_ = false;

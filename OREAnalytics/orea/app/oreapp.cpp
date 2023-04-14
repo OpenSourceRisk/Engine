@@ -812,7 +812,11 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("simulation", "storeFlows", false);
         if (tmp == "Y")
             inputs->setStoreFlows(true);
-        
+
+        tmp = params_->get("simulation", "storeCreditStateNPVs", false);
+        if (!tmp.empty())
+            inputs->setStoreCreditStateNPVs(parseInteger(tmp));
+
         tmp = params_->get("simulation", "storeSurvivalProbabilities", false);
         if (tmp == "Y")
             inputs->setStoreSurvivalProbabilities(true);

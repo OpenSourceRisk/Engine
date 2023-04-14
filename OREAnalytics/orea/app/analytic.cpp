@@ -36,6 +36,7 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/engine/valuationengine.hpp>
+#include <orea/engine/multistatenpvcalculator.hpp>
 #include <orea/engine/amcvaluationengine.hpp>
 #include <orea/engine/mporcalculator.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
@@ -791,9 +792,13 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
             calculators.push_back(boost::make_shared<NPVCalculator>(inputs_->exposureBaseCurrency()));
         }
         if (inputs_->storeFlows()) {
-            // cash flow stored at index 1 (no close-out lag) or 2 (have close-out lag)
             calculators.push_back(boost::make_shared<CashflowCalculator>(
                 inputs_->exposureBaseCurrency(), inputs_->asof(), grid_, cubeInterpreter_->mporFlowsIndex()));
+        }
+        if(inputs_->storeCreditStateNPVs() > 0) {
+            calculators.push_back(boost::make_shared<MultiStateNPVCalculator>(
+                inputs_->exposureBaseCurrency(), inputs_->storeCreditStateNPVs(),
+                cubeInterpreter_->creditStateNPVsIndex()));
         }
         return calculators;
     };
@@ -1107,7 +1112,7 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
     grid_ = analytic()->configurations().scenarioGeneratorData->getGrid();
     cubeInterpreter_ = boost::make_shared<CubeInterpretation>(
         inputs_->storeFlows(), analytic()->configurations().scenarioGeneratorData->withCloseOutLag(), scenarioData_,
-        grid_, inputs_->flipViewXVA());
+        grid_, inputs_->storeCreditStateNPVs(), inputs_->flipViewXVA());
 
     if (runSimulation_) {
     
