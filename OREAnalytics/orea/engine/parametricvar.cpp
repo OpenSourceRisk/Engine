@@ -194,7 +194,7 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
                             ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator =
                                 ext::make_shared<ScenarioShiftCalculator>(sensitivityConfig_, simMarketConfig_);
                             ext::shared_ptr<HistoricalSensiPnlCalculator> sensiPnlCalculator =
-                                ext::make_shared<HistoricalSensiPnlCalculator>(hisScenGen_);
+                                ext::make_shared<HistoricalSensiPnlCalculator>(hisScenGen_, sensitivities_);
 
                             ext::shared_ptr<NPVCube> npvCube;
 
