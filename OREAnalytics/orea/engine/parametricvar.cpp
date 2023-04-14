@@ -199,7 +199,7 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
                             ext::shared_ptr<NPVCube> npvCube;
 
                             sensiPnlCalculator->populateSensiShifts(npvCube, keys, shiftCalculator);
-                            sensiPnlCalculator->calculateSensiPnl(srs, keys, npvCube, {}, covCalculator);
+                            sensiPnlCalculator->calculateSensiPnl(srs, keys, npvCube, keys, {}, covCalculator);
 
                             covariance = covCalculator->covariance();
                         }
@@ -249,7 +249,7 @@ std::vector<Real> ParametricVarCalculator::computeVar(const Matrix& omega, const
     Array delta(deltas.size(), 0.0);
     Matrix gamma(deltas.size(), deltas.size(), 0.0);
 
-    if (includeDeltaMargin) {
+     if (includeDeltaMargin) {
         Size counter = 0;
         for (auto it = deltas.begin(); it != deltas.end(); it++)
             delta[counter++] = factor * it->second;
@@ -275,15 +275,13 @@ std::vector<Real> ParametricVarCalculator::computeVar(const Matrix& omega, const
 
     if (parametricVarParams_.method == ParametricVarParams::Method::Delta) {
         std::vector<Real> res(p_.size());
-        for (Size i = 0; i < p_.size(); ++i) {
+        for (Size i = 0; i < p_.size(); ++i)
             res[i] = QuantExt::deltaVar(omega, delta, p_[i], covarianceSalvage);
-        }
         return res;
     } else if (parametricVarParams_.method == ParametricVarParams::Method::DeltaGammaNormal) {
         std::vector<Real> res(p_.size());
-        for (Size i = 0; i < p_.size(); ++i) {
+        for (Size i = 0; i < p_.size(); ++i) 
             res[i] = QuantExt::deltaGammaVarNormal(omega, delta, gamma, p_[i], covarianceSalvage);
-        }
         return res;
     } else if (parametricVarParams_.method == ParametricVarParams::Method::MonteCarlo) {
         QL_REQUIRE(parametricVarParams_.samples != Null<Size>(),
@@ -294,19 +292,24 @@ std::vector<Real> ParametricVarCalculator::computeVar(const Matrix& omega, const
                                                        parametricVarParams_.seed, covarianceSalvage);
     } else if (parametricVarParams_.method == ParametricVarParams::Method::CornishFisher) {
         std::vector<Real> res(p_.size());
-        for (Size i = 0; i < p_.size(); ++i) {
-            res[i] = QuantExt::deltaGammaVarCornishFisher(omega, delta, gamma, p_[i], covarianceSalvage);
-        }
+        for (Size i = 0; i < p_.size(); ++i)
+            res[i] = QuantExt::deltaGammaVarCornishFisher(omega, delta, gamma, p_[i], covarianceSalvage);        
         return res;
     } else if (parametricVarParams_.method == ParametricVarParams::Method::Saddlepoint) {
         std::vector<Real> res(p_.size());
         for (Size i = 0; i < p_.size(); ++i) {
-            res[i] = QuantExt::deltaGammaVarSaddlepoint(omega, delta, gamma, p_[i], covarianceSalvage);
+            try {            
+                res[i] = QuantExt::deltaGammaVarSaddlepoint(omega, delta, gamma, p_[i], covarianceSalvage);
+            } catch (const std::exception& e) {
+                ALOG("Saddlepoint VaR computation exited with an error: " << e.what()
+                                                                          << ", falling back on Monte-Carlo");
+                res[i] = QuantExt::deltaGammaVarMc<PseudoRandom>(omega, delta, gamma, p_[i], 
+                    parametricVarParams_.samples, parametricVarParams_.seed, covarianceSalvage);
+            }
         }
         return res;
-    } else {
+    } else
         QL_FAIL("ParametricVarCalculator::computeVar(): method " << parametricVarParams_.method << " not known.");
-    }
 }
 
 } // namespace analytics

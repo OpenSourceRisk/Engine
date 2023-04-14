@@ -182,8 +182,8 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(boost::shared_ptr<NPVCube
 }
 
 void HistoricalSensiPnlCalculator::calculateSensiPnl(
-    const set<SensitivityRecord>& srs, const vector<RiskFactorKey>& rfKeys,
-    ext::shared_ptr<NPVCube>& shiftCube, const vector<ext::shared_ptr<PNLCalculator>>& pnlCalculators,
+    const set<SensitivityRecord>& srs, const vector<RiskFactorKey>& rfKeys, ext::shared_ptr<NPVCube>& shiftCube,
+    const vector<RiskFactorKey>& shiftCubeKeys, const vector<ext::shared_ptr<PNLCalculator>>& pnlCalculators,
     const ext::shared_ptr<CovarianceCalculator>& covarianceCalculator,
     const vector<string>& tradeIds, const bool includeGammaMargin, 
     const bool includeDeltaMargin, const bool tradeLevel) {    
@@ -191,24 +191,27 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
     // Set of relevant keys from sensitivity records, needed for covariance matrix
     // Add the index of the key location in sensi shift cube
     set<pair<RiskFactorKey, Size>> keys;
-    for (auto it = rfKeys.begin(); it != rfKeys.end(); it++)
-        keys.insert(make_pair(*it, distance(rfKeys.begin(), it)));
-
+    for (auto it = rfKeys.begin(); it != rfKeys.end(); it++) {
+        auto it1 = std::find(shiftCubeKeys.begin(), shiftCubeKeys.end(), *it);
+        QL_REQUIRE(it1 != shiftCubeKeys.end(),
+                   "Could not find key " << *it << " in sensi shift cube keys");
+        keys.insert(make_pair(*it, distance(shiftCubeKeys.begin(), it1)));
+    }
     // Create an index pair for each sensitivity record. The first element holds the index position
     // in the sensi shift cube of key_1. The second element holds the index of key_2 for cross
     // gamma record.
     vector<pair<Size, Size>> srsIndex;
     for (auto it = srs.begin(); it != srs.end(); it++) {
-        auto it1 = std::find(rfKeys.begin(), rfKeys.end(), it->key_1);
-        QL_REQUIRE(it1 != rfKeys.end(),
+        auto it1 = std::find(shiftCubeKeys.begin(), shiftCubeKeys.end(), it->key_1);
+        QL_REQUIRE(it1 != shiftCubeKeys.end(),
                    "Could not find key " << it->key_1 << " in sensi shift cube keys");
-        Size ind_1 = distance(rfKeys.begin(), it1);
+        Size ind_1 = distance(shiftCubeKeys.begin(), it1);
         Size ind_2 = Size();
         if (it->isCrossGamma()) {
-            auto it2 = std::find(rfKeys.begin(), rfKeys.end(), it->key_2);
-            QL_REQUIRE(it2 != rfKeys.end(),
+            auto it2 = std::find(shiftCubeKeys.begin(), shiftCubeKeys.end(), it->key_2);
+            QL_REQUIRE(it2 != shiftCubeKeys.end(),
                        "Could not find key " << it->key_2 << " in sensi shift cube keys");
-            ind_2 = distance(rfKeys.begin(), it2);
+            ind_2 = distance(shiftCubeKeys.begin(), it2);
         }
         srsIndex.push_back(make_pair(ind_1, ind_2));
     }
