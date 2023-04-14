@@ -71,6 +71,7 @@
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/equitytouchoption.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
+#include <ored/portfolio/builders/forwardrateagreement.hpp>
 #include <ored/portfolio/builders/fxasianoption.hpp>
 #include <ored/portfolio/builders/fxbarrieroption.hpp>
 #include <ored/portfolio/builders/fxdigitalbarrieroption.hpp>
@@ -288,6 +289,8 @@ void initBuilders() {
     ORE_REGISTER_AMC_ENGINE_BUILDER(LgmAmcBermudanSwaptionEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcSwapEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxOptionEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(LgmAmcFraEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxForwardEngineBuilder, false)
 
     ORE_REGISTER_ENGINE_BUILDER(CommoditySpreadOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CpiCapFloorEngineBuilder, false)

@@ -111,8 +111,16 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // and a short cap while we have documented a collar to be a short floor and long cap
             qlInstrument =
                 boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
-            qlInstrument->setPricingEngine(
-                boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+            if (engineFactory->engineData()->hasProduct("Swap")) {
+                builder = engineFactory->builder("Swap");
+                boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+                    boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+                QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
+                qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency())));
+            } else {
+                qlInstrument->setPricingEngine(
+                    boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+            }
             maturity_ = CashFlows::maturityDate(legs_.front());
         } else {
             // For the cases where we don't have regular cap / floor support we treat the index approximately as an Ibor

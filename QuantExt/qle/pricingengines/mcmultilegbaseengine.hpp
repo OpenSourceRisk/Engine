@@ -100,6 +100,10 @@ protected:
     mutable std::vector<std::vector<Date>> fixingDate_;
     mutable std::vector<std::vector<Real>> gearing_, spread_, accrualTime_, nominal_, payTime_, cappedRate_,
         flooredRate_;
+    mutable std::vector<std::vector<bool>> isNakedOption_;
+    mutable std::vector<std::vector<boost::shared_ptr<Index>>> couponIndex_;
+    mutable std::vector<std::vector<Date>> couponIndexFixingDate_;
+    mutable std::vector<std::vector<Real>> couponIndexQuantity_;
     mutable Size maxUndValDirtyIdx_;
     mutable std::vector<Date> pathDates_; // dates coresponding to path times
 
