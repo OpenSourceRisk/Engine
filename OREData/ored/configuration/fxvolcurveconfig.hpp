@@ -52,7 +52,7 @@ public:
      *  as per  Castagna& Mercurio(2006), to use. The second approximation is more accurate
      *  but can ask for the square root of a negative number under unusual circumstances.
      */
-    enum class Dimension { ATM, SmileVannaVolga, SmileDelta, SmileBFRR, ATMTriangulated };
+    enum class Dimension { ATM, SmileVannaVolga, SmileDelta, SmileBFRR, SmileAbsolute, ATMTriangulated };
     enum class SmileInterpolation {
         VannaVolga1,
         VannaVolga2,
