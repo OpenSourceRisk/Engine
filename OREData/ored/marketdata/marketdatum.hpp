@@ -1188,7 +1188,7 @@ public:
 
         Strike s = parseStrike(strike);
         QL_REQUIRE(s.type == Strike::Type::DeltaCall || s.type == Strike::Type::DeltaPut ||
-                       s.type == Strike::Type::ATM || s.type == Strike::Type::BF || s.type == Strike::Type::RR,
+                       s.type == Strike::Type::ATM || s.type == Strike::Type::BF || s.type == Strike::Type::RR || s.type == Strike::Type::Absolute,
                    "Unsupported FXOptionQuote strike (" << strike << ")");
     }
 
