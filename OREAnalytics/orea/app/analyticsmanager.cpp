@@ -17,6 +17,9 @@
 */
 
 #include <orea/app/analyticsmanager.hpp>
+#include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/analytics/varanalytic.hpp>
+#include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 

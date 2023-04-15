@@ -24,8 +24,13 @@
 #pragma once
 
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/engine/sensitivityaggregator.hpp>
+#include <orea/scenario/historicalscenariogenerator.hpp>
+#include <orea/scenario/sensitivityscenariodata.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
 
 #include <ored/report/report.hpp>
+#include <ored/utilities/timeperiod.hpp>
 
 #include <qle/math/covariancesalvage.hpp>
 
@@ -45,31 +50,78 @@ using QuantLib::Matrix;
  * output can be broken down by portfolios, risk classes (IR, FX, EQ, ...) and risk types (delta-gamma, vega, ...). */
 class ParametricVarCalculator {
 public:
+
+    //! A container for holding the parametric VAR parameters
+    struct ParametricVarParams {
+        enum class Method {
+            Delta,
+            DeltaGammaNormal,
+            MonteCarlo,
+            CornishFisher,
+            Saddlepoint,
+        };
+
+        ParametricVarParams() {};
+        ParametricVarParams(const std::string& m, QuantLib::Size samples, QuantLib::Size seed);
+
+        Method method = Method::Delta;
+        QuantLib::Size samples = QuantLib::Null<QuantLib::Size>();
+        QuantLib::Size seed = QuantLib::Null<QuantLib::Size>();
+    };
+
     virtual ~ParametricVarCalculator() {}
-    ParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
-                            const std::string& portfolioFilter,
-                            const boost::shared_ptr<SensitivityStream>& sensitivities,
-                            const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
-                            const std::vector<Real>& p, const std::string& method, const Size mcSamples,
-                            const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix);
+    ParametricVarCalculator(
+        const std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>>& tradePortfolio, 
+        const std::string& portfolioFilter, const QuantLib::ext::shared_ptr<SensitivityStream>& sensitivities,
+        const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance, const std::vector<Real>& p,
+        const ParametricVarParams& parametricVarParams, const bool breakdown, const bool salvageCovarianceMatrix);
+    
+    ParametricVarCalculator(
+        const std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>>& tradePortfolios,
+        const std::string& portfolioFilter, const QuantLib::ext::shared_ptr<SensitivityStream>& sensitivities,
+        const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
+        const ore::data::TimePeriod& benchmarkPeriod,
+        const QuantLib::ext::shared_ptr<SensitivityScenarioData>& sensitivityConfig,
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketConfig, 
+        const std::vector<QuantLib::Real>& p,
+        const ParametricVarParams& parametricVarParams, const bool breakdown,
+        const bool salvageCovarianceMatrix);
+
+    ParametricVarCalculator(const std::vector<QuantLib::Real>& p, const ParametricVarParams& parametricVarParams);
+
     void calculate(ore::data::Report& report);
+    
+    typedef std::pair<RiskFactorKey, RiskFactorKey> CrossPair;
+    virtual std::vector<Real> computeVar(const Matrix& omega, const map<RiskFactorKey, Real>& deltas,
+        const map<CrossPair, Real>& gammas,
+        const QuantExt::CovarianceSalvage& covarianceSalvage, Real factor = 1.0,
+        const bool includeGammaMargin = true, const bool includeDeltaMargin = true);
 
 protected:
-    virtual std::vector<Real> computeVar(const Matrix& omega, const Array& delta, const Matrix& gamma,
-                                         const std::vector<Real>& p,
-                                         const QuantExt::CovarianceSalvage& covarianceSalvage);
-    const std::map<std::string, std::set<std::string>> tradePortfolios_;
+    std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>> tradePortfolios_;
     const std::string portfolioFilter_;
-    const boost::shared_ptr<SensitivityStream> sensitivities_;
+    const QuantLib::ext::shared_ptr<SensitivityStream> sensitivities_;
     const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance_;
+
+    
+    //! Historical scenario generator
+    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
+    boost::optional<ore::data::TimePeriod> benchmarkPeriod_;
+    const QuantLib::ext::shared_ptr<SensitivityScenarioData> sensitivityConfig_;
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
+
+    Matrix cov_;
+
     const std::vector<Real> p_;
-    const std::string method_;
-    const Size mcSamples_, mcSeed_;
-    const bool breakdown_, salvageCovarianceMatrix_;
+
+    //! The parameters to use for calculating the parametric VAR benchmark
+    ParametricVarParams parametricVarParams_;
+    bool breakdown_ = false;
+    bool salvageCovarianceMatrix_ = true;
 };
 
-void loadCovarianceDataFromCsv(std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& data,
-                               const std::string& fileName, const char delim = '\n');
+ParametricVarCalculator::ParametricVarParams::Method parseParametricVarMethod(const string& method);
+std::ostream& operator<<(std::ostream& out, const ParametricVarCalculator::ParametricVarParams::Method& method);
 
 } // namespace analytics
 } // namespace ore
