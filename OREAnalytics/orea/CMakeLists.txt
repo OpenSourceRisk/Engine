@@ -12,6 +12,9 @@ aggregation/nettedexposurecalculator.cpp
 aggregation/postprocess.cpp
 aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
+app/analytics/pricinganalytic.cpp
+app/analytics/varanalytic.cpp
+app/analytics/xvaanalytic.cpp
 app/analytic.cpp
 app/analyticsmanager.cpp
 app/inputparameters.cpp
@@ -97,6 +100,9 @@ aggregation/nettedexposurecalculator.hpp
 aggregation/postprocess.hpp
 aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
+app/analytics/pricinganalytic.hpp
+app/analytics/varanalytic.hpp
+app/analytics/xvaanalytic.hpp
 app/analytic.hpp
 app/analyticsmanager.hpp
 app/inputparameters.hpp

@@ -23,6 +23,7 @@
 #pragma once
 
 #include <orea/scenario/scenario.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
 
 #include <ql/types.hpp>
 
@@ -38,12 +39,12 @@ using QuantLib::Size;
 /*! The risk filter class groups risk factor keys w.r.t. a risk class (IR, FX, EQ...) and a risk type (delta-gamma,
  * vega, ...). It can e.g. be used to break down a var report.
  */
-class RiskFilter {
+class RiskFilter : public ScenarioFilter {
 public:
     //! for both risk class and risk type, index 0 stands for "all"
     RiskFilter(const Size riskClassIndex, const Size riskTypeIndex);
 
-    bool allowed(const RiskFactorKey::KeyType& t) const;
+    bool allow(const RiskFactorKey& t) const override;
     const std::string& riskClassLabel() const { return riskClassLabel_[riskClassIndex_]; }
     const std::string& riskTypeLabel() const { return riskTypeLabel_[riskTypeIndex_]; }
 
