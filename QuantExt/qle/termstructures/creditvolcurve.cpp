@@ -561,6 +561,8 @@ QuantLib::Real ProxyCreditVolCurve::volatility(const QuantLib::Date& exerciseDat
     return source_->volatility(exerciseDate, underlyingLength, effectiveStrike, type());
 }
 
+const Date& ProxyCreditVolCurve::referenceDate() const { return source_->referenceDate(); }
+
 SpreadedCreditVolCurve::SpreadedCreditVolCurve(const Handle<CreditVolCurve> baseCurve, const std::vector<Date> expiries,
                                                const std::vector<Handle<Quote>> spreads, const bool stickyMoneyness,
                                                const std::vector<Period>& terms,
