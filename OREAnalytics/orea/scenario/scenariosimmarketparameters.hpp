@@ -151,6 +151,7 @@ public:
     const string& defaultCurveExtrapolation() const { return defaultCurveExtrapolation_; }
 
     bool simulateCdsVols() const { return paramsSimulate(RiskFactorKey::KeyType::CDSVolatility); }
+    bool simulateCdsVolATMOnly() const { return cdsVolSimulateATMOnly_; }    
     const vector<Period>& cdsVolExpiries() const { return cdsVolExpiries_; }
     vector<string> cdsVolNames() const { return paramsLookup(RiskFactorKey::KeyType::CDSVolatility); }
     const string& cdsVolDecayMode() const { return cdsVolDecayMode_; }
@@ -301,6 +302,7 @@ public:
     void setDefaultCurveExtrapolation(const std::string& e) { defaultCurveExtrapolation_ = e; }
 
     void setSimulateCdsVols(bool simulate);
+    void setSimulateCdsVolsATMOnly(bool simulateATMOnly) { cdsVolSimulateATMOnly_ = simulateATMOnly; }
     vector<Period>& cdsVolExpiries() { return cdsVolExpiries_; }
     void setCdsVolNames(vector<string> names);
     string& cdsVolDecayMode() { return cdsVolDecayMode_; }
@@ -445,6 +447,7 @@ private:
     map<string, vector<Period>> defaultTenors_;
     string defaultCurveExtrapolation_;
 
+    bool cdsVolSimulateATMOnly_ = false;
     vector<Period> cdsVolExpiries_;
     string cdsVolDecayMode_;
     map<string, string> cdsVolSmileDynamics_;
