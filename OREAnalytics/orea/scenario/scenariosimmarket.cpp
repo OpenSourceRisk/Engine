@@ -1196,6 +1196,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (param.second.first) {
                             LOG("Simulating CDS Vols for " << name);
                             vector<Handle<Quote>> quotes;
+                            vector<Volatility> vols;
                             vector<Time> times;
                             vector<Date> expiryDates;
                             DayCounter dc = wrapper->dayCounter();
@@ -1204,6 +1205,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 expiryDates.push_back(date);
                                 // hardcoded, single term 5y
                                 Volatility vol = wrapper->volatility(date, 5.0, Null<Real>(), wrapper->type());
+                                vols.push_back(vol);
                                 times.push_back(dc.yearFraction(asof_, date));
                                 boost::shared_ptr<SimpleQuote> q =
                                     boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : vol);
@@ -1221,7 +1223,20 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
-                            if (useSpreadedTermStructures_) {
+                            if (useSpreadedTermStructures_ ||
+                                (!useSpreadedTermStructures_ && parameters->simulateFxVolATMOnly())) {
+                                std::vector<Handle<Quote>> spreads;
+                                if (parameters_->simulateCdsVolATMOnly()) {
+                                    for (size_t i = 0; i < quotes.size(); i++) {
+                                        Handle<Quote> atmVol(boost::make_shared<SimpleQuote>(quotes[i]->value()));
+                                        Handle<Quote> quote(boost::make_shared <
+                                                            CompositeQuote<std::minus<double>>>(quotes[i], atmVol,
+                                                                                               std::minus<double>()));
+                                        spreads.push_back(quote);
+                                    }
+                                } else {
+                                    spreads = quotes;
+                                }
                                 std::vector<QuantLib::Period> simTerms;
                                 std::vector<Handle<CreditCurve>> simTermCurves;
                                 if (curveConfigs.hasCdsVolCurveConfig(name)) {

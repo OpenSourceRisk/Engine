@@ -1246,6 +1246,17 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         cdsVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
         setCdsVolNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
         cdsVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        
+        XMLNode* cdsSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
+        if (cdsSurfaceNode) {
+            XMLNode* atmOnlyNode = XMLUtils::getChildNode(cdsSurfaceNode, "SimulateATMOnly");
+            // if set to true we will simulate ATM only for any surfaces without an explicit surface defined
+            // adding a default surface of moneyness or standard deviations below will supersede this
+            if (atmOnlyNode) {
+                cdsVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(cdsSurfaceNode, "SimulateATMOnly", true);
+            }
+        }
+
         // Get smile dynamics
         vector<XMLNode*> smileDynamicsNodes = XMLUtils::getChildrenNodes(nodeChild, "SmileDynamics");
         for (XMLNode* smileDynamicsNode : smileDynamicsNodes) {
@@ -1729,6 +1740,10 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, cdsVolatilitiesNode, "ReactionToTimeDecay", cdsVolDecayMode_);
         XMLUtils::addChildren(doc, cdsVolatilitiesNode, "Names", "Name", cdsVolNames());
         XMLUtils::addGenericChildAsList(doc, cdsVolatilitiesNode, "Expiries", cdsVolExpiries_);
+        if (cdsVolSimulateATMOnly_) {
+            XMLNode* cdsSurfaceNode = XMLUtils::addChild(doc, cdsVolatilitiesNode, "Surface");
+            XMLUtils::addChild(doc, cdsSurfaceNode, "SimulateATMOnly", cdsVolSimulateATMOnly_);
+        }
         for (auto it = cdsVolSmileDynamics_.begin(); it != cdsVolSmileDynamics_.end(); it++) {
             XMLUtils::addChild(doc, cdsVolatilitiesNode, "SmileDynamics", it->second, "key", it->first);
         }
