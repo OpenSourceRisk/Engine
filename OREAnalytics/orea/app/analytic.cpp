@@ -221,6 +221,17 @@ void MarketDataAnalyticImpl::runAnalytic(
     analytic()->buildMarket(loader);
     CONSOLE("OK");
 
+    if (inputs_->outputTodaysMarketCalibration()) {
+        CONSOLEW("Market Calibration");
+        LOG("Write todays market calibration report");
+        auto t = boost::dynamic_pointer_cast<TodaysMarket>(analytic()->market());
+        QL_REQUIRE(t != nullptr, "expected todays market instance");
+        boost::shared_ptr<InMemoryReport> mktReport = boost::make_shared<InMemoryReport>();
+        ore::analytics::ReportWriter(inputs_->reportNaString())
+            .writeTodaysMarketCalibrationReport(*mktReport, t->calibrationInfo());
+        analytic()->reports()["MARKET"]["todaysmarketcalibration"] = mktReport;
+        CONSOLE("OK");
+    }
 }
 
 } // namespace analytics
