@@ -33,7 +33,15 @@
 #include <ql/shared_ptr.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics.hpp>
+//#include <boost/accumulators/statistics.hpp>
+// Including <boost/accumulators/statistics.hpp> causes the following swig wrapper compiler errors
+//   explicit specialization of 'boost::accumulators::feature_of<boost::accumulators::tag::weighted_skewness>'
+//   explicit specialization of 'boost::accumulators::feature_of<boost::accumulators::tag::weighted_kurtosis>'
+// The following subset of includes is sufficient here and circumvents the swig errors
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/statistics/covariance.hpp>
+#include <boost/accumulators/statistics/variates/covariate.hpp>
 
 namespace ore {
 namespace analytics {
