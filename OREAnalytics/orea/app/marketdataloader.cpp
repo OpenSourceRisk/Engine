@@ -206,7 +206,8 @@ void MarketDataLoader::populateFixings(
                     if (isFxIndex(f.first)) {
                         auto fxInd = parseFxIndex(f.first);
                         try { 
-                            fxInd->fixing(d);
+                            if(fxInd->fixingCalendar().isBusinessDay(d))
+                                fxInd->fixing(d);
                             break;
                         } catch (const std::exception& e) {
                             fixingErr = ", error: " + ore::data::to_string(e.what());
