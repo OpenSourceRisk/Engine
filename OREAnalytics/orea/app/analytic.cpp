@@ -27,9 +27,6 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/engine/valuationengine.hpp>
-#include <orea/engine/multistatenpvcalculator.hpp>
-#include <orea/engine/amcvaluationengine.hpp>
-#include <orea/engine/mporcalculator.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
 
 #include <ored/marketdata/todaysmarket.hpp>
