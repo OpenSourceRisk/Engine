@@ -60,15 +60,13 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
     QL_REQUIRE(cubeInterpretation_, "cube interpretation is null");
     QL_REQUIRE(scenarioData_, "aggregation scenario data is null");
 
-    boost::shared_ptr<RegularCubeInterpretation> regCubeInt =
-        boost::dynamic_pointer_cast<RegularCubeInterpretation>(cubeInterpretation_);
-    cubeIsRegular_ = (regCubeInt != NULL);
+    cubeIsRegular_ = !cubeInterpretation_->withCloseOutLag();
     datesLoopSize_ = cubeIsRegular_ ? cube_->dates().size() - 1 : cube_->dates().size();
 
     Size dates = cube_->dates().size();
     Size samples = cube_->samples();
 
-    if (!cubeInterpretation_->hasMporFlows(cube_)) {
+    if (!cubeInterpretation_->storeFlows()) {
         WLOG("cube holds no mpor flows, will assume no flows in the dim calculation");
     }
 
@@ -93,7 +91,7 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
                 Real defaultNpv = cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
                 Real closeOutNpv = cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
                 Real mporFlow =
-                    cubeInterpretation_->hasMporFlows(cube_) ? cubeInterpretation_->getMporFlows(cube_, i, j, k) : 0.0;
+                    cubeInterpretation_->storeFlows() ? cubeInterpretation_->getMporFlows(cube_, i, j, k) : 0.0;
                 nettingSetNPV_[nettingSetId][j][k] += defaultNpv;
                 nettingSetCloseOutNPV_[nettingSetId][j][k] += closeOutNpv;
                 nettingSetFLOW_[nettingSetId][j][k] += mporFlow;

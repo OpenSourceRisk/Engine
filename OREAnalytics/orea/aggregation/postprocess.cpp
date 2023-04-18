@@ -75,14 +75,8 @@ PostProcess::PostProcess(
       kvaCapitalHurdle_(kvaCapitalHurdle), kvaOurPdFloor_(kvaOurPdFloor), kvaTheirPdFloor_(kvaTheirPdFloor),
       kvaOurCvaRiskWeight_(kvaOurCvaRiskWeight), kvaTheirCvaRiskWeight_(kvaTheirCvaRiskWeight) {
 
-    // set a default value for the cube interpretation object if it is NULL
-    if (!cubeInterpretation_) {
-        WLOG("cube interpretation is not set, use regular");
-        cubeInterpretation_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_);
-    }
-    boost::shared_ptr<RegularCubeInterpretation> regularCubeInterpretation =
-        boost::dynamic_pointer_cast<RegularCubeInterpretation>(cubeInterpretation_);
-    bool isRegularCubeStorage = (regularCubeInterpretation != NULL);
+    QL_REQUIRE(cubeInterpretation_ != nullptr, "PostProcess: cubeInterpretation is not given.");
+    bool isRegularCubeStorage = !cubeInterpretation_->withCloseOutLag();
 
     LOG("cube storage is regular: " << isRegularCubeStorage);
     LOG("cube dates: " << cube->dates().size());

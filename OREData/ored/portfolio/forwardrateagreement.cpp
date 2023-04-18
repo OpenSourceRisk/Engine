@@ -17,10 +17,10 @@
 */
 
 #include <ored/portfolio/forwardrateagreement.hpp>
+#include <ored/portfolio/builders/forwardrateagreement.hpp>
 
 #include <qle/indexes/fallbackiborindex.hpp>
-
-#include <ql/instruments/forwardrateagreement.hpp>
+#include <qle/instruments/forwardrateagreement.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -38,8 +38,19 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     Handle<YieldTermStructure> discountTS = market->discountCurve(currency_);
     Handle<QuantLib::IborIndex> index = market->iborIndex(index_);
 
-    boost::shared_ptr<QuantLib::ForwardRateAgreement> fra(
-        new QuantLib::ForwardRateAgreement(startDate, endDate, positionType, strike_, amount_, *index, discountTS));
+    boost::shared_ptr<QuantExt::ForwardRateAgreement> fra(
+        new QuantExt::ForwardRateAgreement(startDate, endDate, positionType, strike_, amount_, *index, discountTS));
+
+    Currency npvCcy = parseCurrency(currency_);
+    if (engineFactory->engineData()->hasProduct("ForwardRateAgreement")) {
+        // engine is optional for FRA instrument
+        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("ForwardRateAgreement");
+        boost::shared_ptr<FraEngineBuilderBase> fraBuilder =
+            boost::dynamic_pointer_cast<FraEngineBuilderBase>(builder);
+        QL_REQUIRE(fraBuilder, "No Builder found for ForwardRateAgreement " << id());
+        fra->setPricingEngine(fraBuilder->engine(npvCcy));
+    }
+
     instrument_.reset(new VanillaInstrument(fra));
     npvCurrency_ = currency_;
     maturity_ = endDate;

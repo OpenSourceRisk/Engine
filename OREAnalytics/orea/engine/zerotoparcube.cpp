@@ -58,7 +58,7 @@ map<RiskFactorKey, Real> ZeroToParCube::parDeltas(QuantLib::Size tradeIdx) const
     const boost::shared_ptr<NPVSensiCube>& sensiCube = zeroCube_->npvCube();
 
     for (auto const& kv : sensiCube->getTradeNPVs(tradeIdx)) {
-        auto factor = zeroCube_->upDownFactor(kv.first);
+        auto factor = zeroCube_->upFactor(kv.first);
         // index might not belong to an up/down scenario
         if (factor.keytype != RiskFactorKey::KeyType::None) {
             auto it = factorToIndex_.find(factor);
@@ -92,7 +92,7 @@ map<RiskFactorKey, Real> ZeroToParCube::parDeltas(QuantLib::Size tradeIdx) const
     }
 
     // Add non-zero deltas that do not need to be converted from underlying zero cube
-    for (const auto& key : zeroCube_->upFactors().left) {
+    for (const auto& key : zeroCube_->upFactors()) {
         if (!ParSensitivityAnalysis::isParType(key.first.keytype) || typesDisabled_.count(key.first.keytype) == 1) {
             Real delta = 0.0;
             if (!zeroCube_->twoSidedDelta(key.first.keytype)) {

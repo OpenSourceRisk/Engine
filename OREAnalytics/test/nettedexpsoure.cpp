@@ -588,16 +588,16 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         vector<vector<Real>> defaultValue;
         
         std::string fileName;
-        boost::shared_ptr<AggregationScenarioData> asd;
+        Handle<AggregationScenarioData> asd;
         boost::shared_ptr<CubeInterpretation> cubeInterpreter;
-        if (withCloseOutGrid[k]){
+        if (withCloseOutGrid[k]) {
             fileName = "scenarioData_closeout.csv";
-            asd = loadAggregationScenarioData(fileName);
-            cubeInterpreter = boost::make_shared<MporGridCubeInterpretation>(asd, dateGrid);
-        }else{ 
+            asd = Handle<AggregationScenarioData>(loadAggregationScenarioData(fileName));
+            cubeInterpreter = boost::make_shared<CubeInterpretation>(true, true, asd, dateGrid);
+        } else {
             fileName = "scenarioData.csv";
-            asd = loadAggregationScenarioData(fileName);
-            cubeInterpreter = boost::make_shared<RegularCubeInterpretation>(asd);
+            asd = Handle<AggregationScenarioData>(loadAggregationScenarioData(fileName));
+            cubeInterpreter = boost::make_shared<CubeInterpretation>(true, false, asd);
         }
 
         if (!withCompounding){
@@ -608,8 +608,10 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
 
         vector<string> regressors = {"EUR-EURIBOR-6M"};
         boost::shared_ptr<InputParameters> inputs = boost::make_shared<InputParameters>();
-        boost::shared_ptr<RegressionDynamicInitialMarginCalculator> dimCalculator = boost::make_shared<RegressionDynamicInitialMarginCalculator>(inputs, portfolio, cube, cubeInterpreter, asd, 0.99, 14, 2, regressors);
-        
+        boost::shared_ptr<RegressionDynamicInitialMarginCalculator> dimCalculator =
+            boost::make_shared<RegressionDynamicInitialMarginCalculator>(inputs, portfolio, cube, cubeInterpreter, *asd,
+                                                                         0.99, 14, 2, regressors);
+
         BOOST_TEST_MESSAGE("initial NPV at "<< QuantLib::io::iso_date(referenceDate)<<": "<<cube->getT0(0));
         for (Size i = 0; i<cube->dates().size(); i++)     
             BOOST_TEST_MESSAGE("defaultValue at "<< QuantLib::io::iso_date(dateGrid->valuationDates()[i])<<": "<<cubeInterpreter->getDefaultNpv(cube, 0, i, 0));      
@@ -645,11 +647,11 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
             exposureCalculator->build();
             nettingSetDefaultValue = exposureCalculator->nettingSetDefaultValue();
             nettingSetCloseOutValue = exposureCalculator->nettingSetCloseOutValue();
-            boost::shared_ptr<NettedExposureCalculator> nettedExposureCalculator = boost::make_shared<NettedExposureCalculator>(portfolio, initMarket, cube, "EUR", "Market",
-                                                                                                                    0.99, calcType, false, nettingSetManager, nettingSetDefaultValue,
-                                                                                                                    nettingSetCloseOutValue, asd, cubeInterpreter,
-                                                                                                                    false, dimCalculator, false, false, 0.1, exposureCalculator->exposureCube(),
-                                                                                                                    0, 0, false);
+            boost::shared_ptr<NettedExposureCalculator> nettedExposureCalculator =
+                boost::make_shared<NettedExposureCalculator>(
+                    portfolio, initMarket, cube, "EUR", "Market", 0.99, calcType, false, nettingSetManager,
+                    nettingSetDefaultValue, nettingSetCloseOutValue, *asd, cubeInterpreter, false, dimCalculator, false,
+                    false, 0.1, exposureCalculator->exposureCube(), 0, 0, false);
             nettedExposureCalculator->build();
             nettingSetValue = (calcType == CollateralExposureHelper::CalculationType::NoLag
                                 ? nettedExposureCalculator->nettingSetCloseOutValue()

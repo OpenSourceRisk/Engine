@@ -24,6 +24,7 @@
 
 #include <orea/cube/npvcube.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
+#include <orea/scenario/scenarioshiftcalculator.hpp>
 #include <orea/engine/sensitivityrecord.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/scenario/scenario.hpp>
@@ -32,10 +33,10 @@
 #include <ql/shared_ptr.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
-//#include <boost/accumulators/statistics.hpp>
 // Including <boost/accumulators/statistics.hpp> causes the following swig wrapper compiler errors
 //   explicit specialization of 'boost::accumulators::feature_of<boost::accumulators::tag::weighted_skewness>'
 //   explicit specialization of 'boost::accumulators::feature_of<boost::accumulators::tag::weighted_kurtosis>'
+// see https://github.com/boostorg/accumulators/issues/20
 // The following subset of includes is sufficient here and circumvents the swig errors
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
@@ -91,23 +92,27 @@ private:
 
 class HistoricalSensiPnlCalculator {
 public:
-    HistoricalSensiPnlCalculator(const boost::shared_ptr<HistoricalScenarioGenerator>& hisScenGen) : 
-        hisScenGen_(hisScenGen) {}
+    HistoricalSensiPnlCalculator(const boost::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
+                                 const boost::shared_ptr<SensitivityStream>& ss)
+        : hisScenGen_(hisScenGen), sensitivityStream_(ss) {}
     
+    void populateSensiShifts(QuantLib::ext::shared_ptr<NPVCube>& cube, const vector<RiskFactorKey>& keys,
+                             QuantLib::ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator);
+
     void calculateSensiPnl(const std::set<SensitivityRecord>& srs,
-        const std::set<std::pair<RiskFactorKey, QuantLib::Size>>& keys,
+        const std::vector<RiskFactorKey>& rfKeys,
         QuantLib::ext::shared_ptr<NPVCube>& shiftCube,
-        const std::vector<std::pair<QuantLib::Size, QuantLib::Size>>& srsIndex,
-        const std::vector<std::string>& tradeIds,
+        const vector<RiskFactorKey>& shiftCubeKeys,
         const std::vector<QuantLib::ext::shared_ptr<PNLCalculator>>& pnlCalculators,
         const QuantLib::ext::shared_ptr<CovarianceCalculator>& covarianceCalculator,
+        const std::vector<std::string>& tradeIds = {},
         const bool includeGammaMargin = true, const bool includeDeltaMargin = true, 
         const bool tradeLevel = false);
 
 private:
-    boost::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
+    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
     //! Stream of sensitivity records used for the sensitivity based backtest
-    boost::shared_ptr<SensitivityStream> sensitivityStream_;
+    QuantLib::ext::shared_ptr<SensitivityStream> sensitivityStream_;
 };
 
 } // namespace analytics
