@@ -68,6 +68,9 @@ public:
     std::set<std::string> getCubeNames();
     boost::shared_ptr<NPVCube> getCube(std::string cubeName);
 
+    std::set<std::string> getMarketCubeNames();
+    boost::shared_ptr<AggregationScenarioData> getMarketCube(std::string cubeName);
+
     std::vector<std::string> getErrors();
 
     //! time for executing run(...) in seconds
