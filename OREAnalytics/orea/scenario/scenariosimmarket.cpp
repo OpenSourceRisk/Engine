@@ -1224,7 +1224,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
                             if (useSpreadedTermStructures_ ||
-                                (!useSpreadedTermStructures_ && parameters->simulateFxVolATMOnly())) {
+                                (!useSpreadedTermStructures_ && parameters->simulateCdsVolATMOnly())) {
                                 std::vector<Handle<Quote>> spreads;
                                 if (parameters_->simulateCdsVolATMOnly()) {
                                     for (size_t i = 0; i < quotes.size(); i++) {
@@ -1253,7 +1253,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     }
                                 }
                                 cvh = Handle<CreditVolCurve>(boost::make_shared<SpreadedCreditVolCurve>(
-                                    wrapper, expiryDates, quotes, !stickyStrike, simTerms, simTermCurves));
+                                    wrapper, expiryDates, spreads, !stickyStrike, simTerms, simTermCurves));
                             } else {
                                 // TODO support strike and term dependence
                                 cvh = Handle<CreditVolCurve>(boost::make_shared<CreditVolCurveWrapper>(
