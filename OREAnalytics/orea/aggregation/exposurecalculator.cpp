@@ -65,9 +65,7 @@ ExposureCalculator::ExposureCalculator(
     for (Size i = 0; i < dates_.size(); i++)
         times_[i] = dc_.yearFraction(today_, cube_->dates()[i]);
 
-    boost::shared_ptr<RegularCubeInterpretation> regularCubeInterpretation =
-        boost::dynamic_pointer_cast<RegularCubeInterpretation>(cubeInterpretation_);
-    isRegularCubeStorage_ = (regularCubeInterpretation != NULL);
+    isRegularCubeStorage_ = !cubeInterpretation_->withCloseOutLag();
 }
 
 void ExposureCalculator::build() {

@@ -85,7 +85,7 @@ public:
     boost::shared_ptr<NPVCube> nettingCube() const { return nettingCube_; }
 
     // get aggregation scenario data from step 5
-    boost::shared_ptr<AggregationScenarioData> aggregationScenarioData() { return scenarioData_; }
+    QuantLib::Handle<AggregationScenarioData> aggregationScenarioData() { return scenarioData_; }
 
     // partial step 3: build post processor on given cubes / agg scen data (requires runXva() or buildCamModel() call)
     void generatePostProcessor(
@@ -152,7 +152,7 @@ protected:
     boost::shared_ptr<QuantExt::CrossAssetModel> model_;
     boost::shared_ptr<ScenarioSimMarket> simMarket_;
     boost::shared_ptr<EngineFactory> simFactory_;
-    boost::shared_ptr<AggregationScenarioData> scenarioData_;
+    QuantLib::RelinkableHandle<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<NPVCube> cube_, nettingCube_;
     boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
     std::string calculationType_;

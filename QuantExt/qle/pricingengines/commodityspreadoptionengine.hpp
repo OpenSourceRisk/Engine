@@ -54,6 +54,10 @@ private:
         Real atm;
         Real sigma;
         Real accruals;
+        std::vector<QuantLib::Date> pricingDates;
+        std::vector<std::string> indexNames;
+        std::vector<Real> fixings;
+        std::vector<QuantLib::Date> expiries;
     };
 
     PricingParameter derivePricingParameterFromFlow(const ext::shared_ptr<CommodityCashFlow>& flow,
