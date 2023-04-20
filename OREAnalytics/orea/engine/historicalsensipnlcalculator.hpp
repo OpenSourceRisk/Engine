@@ -102,7 +102,6 @@ public:
     void calculateSensiPnl(const std::set<SensitivityRecord>& srs,
         const std::vector<RiskFactorKey>& rfKeys,
         QuantLib::ext::shared_ptr<NPVCube>& shiftCube,
-        const vector<RiskFactorKey>& shiftCubeKeys,
         const std::vector<QuantLib::ext::shared_ptr<PNLCalculator>>& pnlCalculators,
         const QuantLib::ext::shared_ptr<CovarianceCalculator>& covarianceCalculator,
         const std::vector<std::string>& tradeIds = {},
