@@ -271,6 +271,7 @@ termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvariancesurfacesparse.cpp
 termstructures/blackvariancesurfacestddevs.cpp
 termstructures/blackvolconstantspread.cpp
+termstructures/blackvolsurfaceabsolute.cpp
 termstructures/blackvolsurfacebfrr.cpp
 termstructures/blackvolsurfacedelta.cpp
 termstructures/blackvolsurfaceproxy.cpp
@@ -734,6 +735,7 @@ termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvariancesurfacesparse.hpp
 termstructures/blackvariancesurfacestddevs.hpp
 termstructures/blackvolconstantspread.hpp
+termstructures/blackvolsurfaceabsolute.hpp
 termstructures/blackvolsurfacebfrr.hpp
 termstructures/blackvolsurfacedelta.hpp
 termstructures/blackvolsurfaceproxy.hpp

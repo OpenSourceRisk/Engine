@@ -516,6 +516,7 @@
       <xs:enumeration value="VannaVolga"/>
       <xs:enumeration value="Delta"/>
       <xs:enumeration value="BFRR"/>
+      <xs:enumeration value="Absolute"/>
     </xs:restriction>
   </xs:simpleType>
 

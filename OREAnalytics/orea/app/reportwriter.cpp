@@ -1042,12 +1042,9 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
     for (const auto& [tradeId, i] : tradeIds) {
 
         Real baseNpv = npvCube->getT0(i);
-        for (Size j = 0; j < scenarioDescriptions.size(); j++) {
+        for (const auto& [j, scenarioNpv] : npvCube->getTradeNPVs(i)) {
             auto scenarioDescription = scenarioDescriptions[j];
-
-            Real scenarioNpv = npvCube->get(i, j);
             Real difference = scenarioNpv - baseNpv;
-
             if (fabs(difference) > outputThreshold) {
                 report.next();
                 report.add(tradeId);

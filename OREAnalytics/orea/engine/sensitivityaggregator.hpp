@@ -60,8 +60,8 @@ public:
         \warning No checks are performed for duplicate records from the stream. It is the stream's
                  responsibility to guard against duplicates if it needs to.
     */
-    void aggregate(SensitivityStream& ss, const boost::shared_ptr<ore::analytics::ScenarioFilter>& filter =
-                                              boost::make_shared<ore::analytics::ScenarioFilter>());
+    void aggregate(SensitivityStream& ss, const boost::shared_ptr<ScenarioFilter>& filter =
+                                              boost::make_shared<ScenarioFilter>());
 
     //! Reset the aggregator to it's initial state by clearing all aggregations
     void reset();
@@ -69,6 +69,12 @@ public:
     /*! Return the set of aggregated sensitivities for the given \p category
      */
     const std::set<SensitivityRecord>& sensitivities(const std::string& category) const;
+
+    /*! Return the deltas and gammas for the given \p category
+     */
+    typedef std::pair<RiskFactorKey, RiskFactorKey> CrossPair;
+    void generateDeltaGamma(const std::string& category, std::map<RiskFactorKey, QuantLib::Real>& deltas,
+                             std::map<CrossPair, QuantLib::Real>& gammas);
 
 private:
     /*! Container for category names and their definition via sets. This will be

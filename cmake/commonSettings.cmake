@@ -93,8 +93,6 @@ if(MSVC)
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/GF>")
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Gy>")
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/GT>")
-
-    add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Ob2>")
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Oi>")
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Ot>")
 

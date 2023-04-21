@@ -26,9 +26,8 @@ using namespace std;
 
 using std::make_pair;
 
-// Ease the notation below
-using bm_type = boost::bimap<ore::analytics::RiskFactorKey, ore::analytics::SensitivityCube::FactorData>;
-typedef bm_type::left_map left_map_type;
+namespace ore {
+namespace analytics {
 
 namespace {
 
@@ -40,7 +39,9 @@ template <class KeyType, class ValueType> ValueType index(const KeyType& k, cons
     return it->second;
 }
 
-ore::analytics::SensitivityCube::FactorData index(const ore::analytics::RiskFactorKey& k, const left_map_type& m) {
+ore::analytics::SensitivityCube::FactorData
+index(const ore::analytics::RiskFactorKey& k,
+      const std::map<ore::analytics::RiskFactorKey, SensitivityCube::FactorData>& m) {
 
     auto it = m.find(k);
     QL_REQUIRE(it != m.end(), "Key, " << k << ", was not found in the sensitivity cube.");
@@ -48,11 +49,6 @@ ore::analytics::SensitivityCube::FactorData index(const ore::analytics::RiskFact
 }
 
 } // namespace
-
-namespace ore {
-namespace analytics {
-
-typedef SensitivityCube::crossPair crossPair;
 
 std::ostream& operator<<(std::ostream& out, const SensitivityCube::crossPair& cp) {
     return out << cp.first << "-" << cp.second;
@@ -103,17 +99,19 @@ void SensitivityCube::initialise() {
         // Populate factors_ = list of factors for which we can calculate a delta/gamma
         switch (des.type()) {
         case ShiftScenarioDescription::Type::Up:
-            QL_REQUIRE(upFactors_.left.count(des.key1()) == 0, "Cannot have multiple up factors with "
-                                                               "the same risk factor key["
-                                                                   << des.key1() << "]");
+            QL_REQUIRE(upFactors_.count(des.key1()) == 0, "Cannot have multiple up factors with "
+                                                          "the same risk factor key["
+                                                              << des.key1() << "]");
             factors_.insert(des.key1());
-            upFactors_.insert(bm_type::value_type(des.key1(), fd));
+            upFactors_[des.key1()] = fd;
+            upIndexToKey_[fd.index] = des.key1();
             break;
         case ShiftScenarioDescription::Type::Down:
             QL_REQUIRE(downFactors_.count(des.key1()) == 0, "Cannot have multiple down factors with "
                                                             "the same risk factor key ["
                                                                 << des.key1() << "]");
             downFactors_[des.key1()] = fd;
+            downIndexToKey_[fd.index] = des.key1();
             break;
         case ShiftScenarioDescription::Type::Cross:
             factorPair = make_pair(des.key1(), des.key2());
@@ -121,6 +119,7 @@ void SensitivityCube::initialise() {
                                                             "the same risk factor key pair ["
                                                                 << des.key1() << ", " << des.key2() << "]");
             crossFactors[factorPair] = i;
+            crossIndexToKey_[i] = factorPair;
             break;
         default:
             // Do nothing
@@ -130,8 +129,8 @@ void SensitivityCube::initialise() {
 
     // Add each cross factor to crossFactors with index of the two contributing factors
     for (auto cf : crossFactors) {
-        FactorData id_1 = index(cf.first.first, upFactors_.left);
-        FactorData id_2 = index(cf.first.second, upFactors_.left);
+        FactorData id_1 = index(cf.first.first, upFactors_);
+        FactorData id_2 = index(cf.first.second, upFactors_);
         crossFactors_[cf.first] = make_tuple(id_1, id_2, cf.second);
     }
 
@@ -141,7 +140,7 @@ void SensitivityCube::initialise() {
                                            << "the number of shift sizes (" << shiftSizes_.size() << ") supplied");
     }
 
-    for (auto const& kv : upFactors_.left) {
+    for (auto const& kv : upFactors_) {
         auto it = shiftSizes_.find(kv.first);
         if (it == shiftSizes_.end()) {
             WLOG("No entry for risk factor " << kv.first << " in shift sizes.");
@@ -154,14 +153,28 @@ void SensitivityCube::initialise() {
 
 bool SensitivityCube::hasTrade(const string& tradeId) const { return tradeIdx_.count(tradeId) > 0; }
 
-RiskFactorKey SensitivityCube::upDownFactor(const Size upDownIndex) const {
-    FactorData fd;
-    fd.index = upDownIndex;
-    auto it = upFactors_.right.find(fd);
-    if (it == upFactors_.right.end())
+RiskFactorKey SensitivityCube::upFactor(const Size upIndex) const {
+    if (auto k = upIndexToKey_.find(upIndex); k != upIndexToKey_.end()) {
+        return k->second;
+    } else {
         return RiskFactorKey();
-    else
-        return it->second;
+    }
+}
+
+RiskFactorKey SensitivityCube::downFactor(const Size downIndex) const {
+    if (auto k = downIndexToKey_.find(downIndex); k != downIndexToKey_.end()) {
+        return k->second;
+    } else {
+        return RiskFactorKey();
+    }
+}
+
+SensitivityCube::crossPair SensitivityCube::crossFactor(const Size crossIndex) const {
+    if (auto k = crossIndexToKey_.find(crossIndex); k != crossIndexToKey_.end()) {
+        return k->second;
+    } else {
+        return std::make_pair(RiskFactorKey(), RiskFactorKey());
+    }
 }
 
 bool SensitivityCube::hasScenario(const ShiftScenarioDescription& scenarioDescription) const {
@@ -169,13 +182,13 @@ bool SensitivityCube::hasScenario(const ShiftScenarioDescription& scenarioDescri
 }
 
 std::string SensitivityCube::factorDescription(const RiskFactorKey& riskFactorKey) const {
-    Size scenarioIdx = index(riskFactorKey, upFactors_.left).index;
+    Size scenarioIdx = index(riskFactorKey, upFactors_).index;
     return scenarioDescriptions_[scenarioIdx].factor1();
 }
 
 const set<RiskFactorKey>& SensitivityCube::factors() const { return factors_; }
 
-const std::map<crossPair, tuple<SensitivityCube::FactorData, SensitivityCube::FactorData, Size>>&
+const std::map<SensitivityCube::crossPair, tuple<SensitivityCube::FactorData, SensitivityCube::FactorData, Size>>&
 SensitivityCube::crossFactors() const {
     return crossFactors_;
 }
@@ -207,7 +220,7 @@ Real SensitivityCube::delta(Size id, Size upIdx, Size downIdx) const {
 }
 
 Real SensitivityCube::delta(const string& tradeId, const RiskFactorKey& riskFactorKey) const {
-    Size scenarioIdx = index(riskFactorKey, upFactors_.left).index;
+    Size scenarioIdx = index(riskFactorKey, upFactors_).index;
     Size tradeIdx = cube_->getTradeIndex(tradeId);
     if (!twoSidedDelta(riskFactorKey.keytype)) {
         return delta(tradeIdx, scenarioIdx);
@@ -227,7 +240,7 @@ Real SensitivityCube::gamma(Size id, Size upScenarioIdx, Size downScenarioIdx) c
 }
 
 Real SensitivityCube::gamma(const std::string& tradeId, const RiskFactorKey& riskFactorKey) const {
-    Size upIdx = index(riskFactorKey, upFactors_.left).index;
+    Size upIdx = index(riskFactorKey, upFactors_).index;
     Size downIdx = index(riskFactorKey, downFactors_).index;
     Size tradeIdx = cube_->getTradeIndex(tradeId);
 

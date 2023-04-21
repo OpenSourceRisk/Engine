@@ -63,7 +63,7 @@ const vector<string>& FXVolatilityCurveConfig::quotes() {
                     quotes_.push_back(base + e + "/" + to_string(d) + "RR");
                     quotes_.push_back(base + e + "/" + to_string(d) + "BF");
                 }
-            } else if (dimension_ == Dimension::SmileDelta) {
+            } else if (dimension_ == Dimension::SmileDelta || dimension_ == Dimension::SmileAbsolute) {
                 for (auto d : deltas_) {
                     quotes_.push_back(base + e + "/" + d);
                 }
@@ -166,6 +166,15 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
                     smileDelta_ = {10, 25};
                 else
                     smileDelta_ = parseListOfValues<Size>(sDelta, &parseInteger);
+            } else if (smileType == "Absolute") {
+                dimension_ = Dimension::SmileAbsolute;
+                if (smileInterp == "" || smileInterp == "Cubic") {
+                    smileInterpolation_ = SmileInterpolation::Cubic;
+                } else if (smileInterp == "Linear") {
+                    smileInterpolation_ = SmileInterpolation::Linear;
+                } else {
+                    QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
+                }
             } else {
                 QL_FAIL("SmileType '" << smileType << "' not supported, expected VannaVolga, Delta, BFRR");
             }
@@ -239,6 +248,17 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
             QL_FAIL("Unknown SmileInterpolation in FXVolatilityCurveConfig::toXML()");
         }
         XMLUtils::addGenericChildAsList(doc, node, "SmileDelta", smileDelta_);
+        XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_));
+    } else if (dimension_ == Dimension::SmileAbsolute) {
+        XMLUtils::addChild(doc, node, "Dimension", "Smile");
+        XMLUtils::addChild(doc, node, "SmileType", "Absolute");
+        if (smileInterpolation_ == SmileInterpolation::Linear) {
+            XMLUtils::addChild(doc, node, "SmileInterpolation", "Linear");
+        } else if (smileInterpolation_ == SmileInterpolation::Cubic) {
+            XMLUtils::addChild(doc, node, "SmileInterpolation", "Cubic");
+        } else {
+            QL_FAIL("Unknown SmileInterpolation in FXVolatilityCurveConfig::toXML()");
+        }
         XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_));
     } else {
         QL_FAIL("Unknown Dimension in FXVolatilityCurveConfig::toXML()");

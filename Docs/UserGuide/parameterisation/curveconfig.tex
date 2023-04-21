@@ -101,7 +101,7 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
 \subsubsection{FX Volatility Structures}
 
 Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configuration_smile_vv},
-\ref{lst:fxoptionvol_configuration_smile_delta}, \ref{lst:fxoptionvol_configuration_smile_bfrr},
+\ref{lst:fxoptionvol_configuration_smile_delta}, \ref{lst:fxoptionvol_configuration_smile_bfrr}, \ref{lst:fxoptionvol_configuration_smile_absolute},
 \ref{lst:fxoptionvol_configuration_atm_triangulated} shows examples of FX volatility structure configurations.
 
 \begin{longlisting}
@@ -192,6 +192,27 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
   <FXVolatility>
+    <CurveId>USDJPY</CurveId>
+    <CurveDescription />
+    <Dimension>Smile</Dimension> 
+    <SmileType>Absolute</SmileType> 
+    <SmileInterpolation>Cubic</SmileInterpolation>
+    <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
+    <FXSpotID>FX/USD/JPY</FXSpotID>
+    <FXForeignCurveID>Yield/USD/USD1D</FXForeignCurveID>
+    <FXDomesticCurveID>Yield/JPY/JPY-IN-USD</FXDomesticCurveID>
+    <DayCounter>A365</DayCounter>
+    <Calendar>US,JP</Calendar>
+    <Conventions>USD-JPY-FXOPTION</Conventions>
+  </FXVolatility>
+\end{minted}
+\caption{FX option volatility configuration Smile / Absolute vols}
+\label{lst:fxoptionvol_configuration_smile_absolute}
+\end{longlisting}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <FXVolatility>
     <CurveId>EURJPY</CurveId>
     <CurveDescription />
     <Dimension>ATMTriangulated</Dimension> 
@@ -208,7 +229,7 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
 
 The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configuration_atm},
 \ref{lst:fxoptionvol_configuration_smile_vv}, \ref{lst:fxoptionvol_configuration_smile_delta},
-\ref{lst:fxoptionvol_configuration_smile_bfrr}, \ref{lst:fxoptionvol_configuration_atm_triangulated} is given below.
+\ref{lst:fxoptionvol_configuration_smile_bfrr}, \ref{lst:fxoptionvol_configuration_smile_absolute}, \ref{lst:fxoptionvol_configuration_atm_triangulated} is given below.
 
 \begin{itemize}
 \item CurveId: Unique identifier of the FX volatility structure
@@ -216,7 +237,7 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
 \item Dimension: Distinguishes at-the-money volatility curves from volatility surfaces. An `ATMTriangulated' value
   denotes a curve triangulated from two other surfaces.\\ Allowable values: {\tt ATM, Smile, ATMTriangulated}
 \item SmileType [Optional]: Required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\ Allowable
-  values: {\tt VannaVolga} as per (Castagna \& Mercurio - 2006), {\tt Delta}, {\tt BFRR}, with default value {\tt
+  values: {\tt VannaVolga} as per (Castagna \& Mercurio - 2006), {\tt Delta}, {\tt BFRR}, {\tt Absolute}, with default value {\tt
     VannaVolga} if left blank.
 \item SmileInterpolation [Optional]: Smile interpolation method applied, required field in case of Dimension {\tt
   Smile}, otherwise it can be omitted. \\ Allowable values:
@@ -225,11 +246,11 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
   blank.  VannaVolga1/VannaVolga2 refer to the first/second approximation in (eq. 13) and (eq. 14) of the reference
   above.
 \item {\tt Linear} or {\tt Cubic} in case of SmileType {\tt Delta} or {\tt BFRR} with default {\tt Linear} for SmileType
-  Delta and {\tt Cubic} for SmileType BFRR if left blank
+  Delta and {\tt Cubic} for SmileType BFRR and Absolute if left blank
 \end{itemize}
 \item Expiries: Option expiries in period form. A wildcard may also be used. In the wildcard case, it will look for any
   matching quotes provided in the loader, and construct the curve from these. This is currently only supported for {\tt
-    ATM} or {\tt Delta} or {\tt BFRR} curves.
+    ATM} or {\tt Delta} or {\tt BFRR} or {\tt Absolute} curves.
 \item Deltas [Optional]: Strike grid, required in case of SmileType {\tt Delta} \\ Allowable values: {\tt ATM, *P, *C},
   see example in Listing \ref{lst:fxoptionvol_configuration_smile_delta}
 \item SmileDelta [Optional]: Strike grid for SmileType {\tt VannaVolga} and {\tt BFRR}, defaults to 25 for VannaVolga

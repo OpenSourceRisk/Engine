@@ -120,7 +120,35 @@ boost::shared_ptr<NPVCube> OREApp::getCube(std::string cubeName) {
                 return b.second;
         }
     }
-    QL_FAIL("report " << cubeName << " not found in results");
+    QL_FAIL("npv cube " << cubeName << " not found in results");
+}
+
+std::set<std::string> OREApp::getMarketCubeNames() {
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
+    std::set<std::string> names;
+    for (const auto& c : analyticsManager_->mktCubes()) {
+        for (auto b : c.second) {
+            string cubeName = b.first;
+            if (names.find(cubeName) == names.end())
+                names.insert(cubeName);
+            else {
+                ALOG("market cube name " << cubeName
+                     << " occurs more than once, will retrieve the first cube with that name only");
+            }
+        }
+    }
+    return names;
+}
+    
+boost::shared_ptr<AggregationScenarioData> OREApp::getMarketCube(std::string cubeName) {
+    QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
+    for (const auto& c : analyticsManager_->mktCubes()) {
+        for (auto b : c.second) {
+            if (cubeName == b.first)
+                return b.second;
+        }
+    }
+    QL_FAIL("market cube " << cubeName << " not found in results");
 }
 
 std::vector<std::string> OREApp::getErrors() {
@@ -1099,8 +1127,13 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     if (tmp != "")
         inputs->setPortfolioFilterDate(tmp);
     
-    if (inputs->analytics().size() == 0)
+    if (inputs->analytics().size() == 0) {
         inputs->insertAnalytic("MARKETDATA");
+        inputs->setOutputTodaysMarketCalibration(true);
+        if (inputs->lazyMarketBuilding())
+            LOG("Lazy market build being overridden to \"false\" for MARKETDATA analytic.")
+            inputs->setLazyMarketBuilding(false);
+    }
 
     LOG("buildInputParameters done");
 }
