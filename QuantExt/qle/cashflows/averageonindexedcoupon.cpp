@@ -166,6 +166,11 @@ void CappedFlooredAverageONIndexedCoupon::performCalculations() const {
     if (cap_ != Null<Real>())
         capletRate = (nakedOption_ && floor_ == Null<Real>() ? -1.0 : 1.0) * pricer()->capletRate(effectiveCap());
     rate_ = swapletRate + floorletRate - capletRate;
+    auto p = boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponPricer>(pricer());
+    QL_REQUIRE(p, "CapFlooredAverageONIndexedCoupon::performCalculations(): internal error, could not cast to "
+                  "CapFlooredAverageONIndexedCouponPricer");
+    effectiveCapletVolatility_ = p->effectiveCapletVolatility();
+    effectiveFloorletVolatility_ = p->effectiveFloorletVolatility();
 }
 
 Rate CappedFlooredAverageONIndexedCoupon::cap() const { return gearing_ > 0.0 ? cap_ : floor_; }
@@ -229,6 +234,16 @@ Rate CappedFlooredAverageONIndexedCoupon::effectiveFloor() const {
     }
 }
 
+Real CappedFlooredAverageONIndexedCoupon::effectiveCapletVolatility() const {
+    calculate();
+    return effectiveCapletVolatility_;
+}
+
+Real CappedFlooredAverageONIndexedCoupon::effectiveFloorletVolatility() const {
+    calculate();
+    return effectiveFloorletVolatility_;
+}
+
 void CappedFlooredAverageONIndexedCoupon::accept(AcyclicVisitor& v) {
     Visitor<CappedFlooredAverageONIndexedCoupon>* v1 = dynamic_cast<Visitor<CappedFlooredAverageONIndexedCoupon>*>(&v);
     if (v1 != 0)
@@ -257,9 +272,17 @@ CappedFlooredAverageONIndexedCoupon::CappedFlooredAverageONIndexedCoupon(
 // capped floored average on coupon pricer base class implementation
 
 CapFlooredAverageONIndexedCouponPricer::CapFlooredAverageONIndexedCouponPricer(
-    const Handle<OptionletVolatilityStructure>& v)
-    : capletVol_(v) {
+    const Handle<OptionletVolatilityStructure>& v, const bool effectiveVolatilityInput)
+    : capletVol_(v), effectiveVolatilityInput_(effectiveVolatilityInput) {
     registerWith(capletVol_);
+}
+
+bool CapFlooredAverageONIndexedCouponPricer::effectiveVolatilityInput() const { return effectiveVolatilityInput_; }
+
+Real CapFlooredAverageONIndexedCouponPricer::effectiveCapletVolatility() const { return effectiveCapletVolatility_; }
+
+Real CapFlooredAverageONIndexedCouponPricer::effectiveFloorletVolatility() const {
+    return effectiveFloorletVolatility_;
 }
 
 Handle<OptionletVolatilityStructure> CapFlooredAverageONIndexedCouponPricer::capletVolatility() const {
