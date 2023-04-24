@@ -129,6 +129,10 @@ public:
     Rate effectiveCap() const;
     //! effective floor of fixing
     Rate effectiveFloor() const;
+    //! effective caplet volatility
+    Real effectiveCapletVolatility() const;
+    //! effective floorlet volatility
+    Real effectiveFloorletVolatility() const;
     //@}
     //! \name Visitability
     //@{
@@ -148,16 +152,25 @@ protected:
     bool nakedOption_;
     bool localCapFloor_;
     bool includeSpread_;
+    mutable Real effectiveCapletVolatility_;
+    mutable Real effectiveFloorletVolatility_;
 };
 
 //! capped floored averaged indexed coupon pricer base class
 class CapFlooredAverageONIndexedCouponPricer : public FloatingRateCouponPricer {
 public:
-    CapFlooredAverageONIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
+    CapFlooredAverageONIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v,
+                                           const bool effectiveVolatilityInput = false);
     Handle<OptionletVolatilityStructure> capletVolatility() const;
+    bool effectiveVolatilityInput() const;
+    Real effectiveCapletVolatility() const;   // only available after capletRate() was called
+    Real effectiveFloorletVolatility() const; // only available after floorletRate() was called
 
-private:
+protected:
     Handle<OptionletVolatilityStructure> capletVol_;
+    bool effectiveVolatilityInput_;
+    mutable Real effectiveCapletVolatility_;
+    mutable Real effectiveFloorletVolatility_;
 };
 
 //! helper class building a sequence of overnight coupons
