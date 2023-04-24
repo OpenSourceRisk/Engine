@@ -51,10 +51,6 @@ void cacheTradeSensitivities(TradeSensiCache& cache, ore::analytics::Sensitivity
         auto itSr = find_if(srs.begin(), srs.end(), [&sr](const SensitivityRecord& other) {
             return sr.key_1 == other.key_1 && sr.key_2 == other.key_2;
         });
-        if (itSr == srs.end()) {
-            WLOG("Sensitivity record " << sr << " not in aggregate sensitivity records.");
-            continue;
-        }
 
         // Positions for the cache keys.
         auto posTrade = distance(tradeIds.begin(), itTrade);
