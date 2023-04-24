@@ -1652,6 +1652,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
       indexName_(indexName), strOptionContractFrequency_(optionFrequency), optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_),
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_),
       strOptionWeekday_(optionExpiryDateRule.weekday_), balanceOfTheMonth_(false) {
+    
     build();
 }
 
@@ -1750,7 +1751,9 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Bus
 
 void CommodityFutureConvention::fromXML(XMLNode* node) {
 
-    XMLUtils::checkNode(node, "CommodityFuture");
+    std::string parentNodeName = type_ == Type::CommodityBasisFuture ? "CommodityBasisFuture" : "CommodityFuture";
+
+    XMLUtils::checkNode(node, parentNodeName);
     type_ = Type::CommodityFuture;
     id_ = XMLUtils::getChildValue(node, "Id", true);
 
@@ -1959,7 +1962,9 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
 
 XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
 
-    XMLNode* node = doc.allocNode("CommodityFuture");
+    std::string parentNodeName = type_ == Type::CommodityBasisFuture ? "CommodityBasisFuture" : "CommodityFuture";
+
+    XMLNode* node = doc.allocNode(parentNodeName);
     XMLUtils::addChild(doc, node, "Id", id_);
 
     if (contractFrequency_ != Daily || optionContractFrequency_ != Daily) {
@@ -2426,6 +2431,8 @@ void Conventions::fromXML(XMLNode* node) {
             convention = boost::make_shared<CommodityForwardConvention>();
         } else if (childName == "CommodityFuture") {
             convention = boost::make_shared<CommodityFutureConvention>();
+        } else if (childName == "CommodityBasisFuture") {
+            convention = boost::make_shared<CommodityBasisFutureConvention>();
         } else if (childName == "FxOption") {
             convention = boost::make_shared<FxOptionConvention>();
         } else if (childName == "IborIndex") {

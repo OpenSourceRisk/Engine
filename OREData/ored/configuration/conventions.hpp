@@ -79,6 +79,7 @@ public:
         CMSSpreadOption,
         CommodityForward,
         CommodityFuture,
+        CommodityBasisFuture,
         FxOption,
 	BondYield
     };
@@ -1682,6 +1683,129 @@ private:
 //! Compare two prohibited expiries.
 bool operator<(const CommodityFutureConvention::ProhibitedExpiry& lhs,
     const CommodityFutureConvention::ProhibitedExpiry& rhs);
+
+class CommodityBasisFutureConvention : public CommodityFutureConvention {
+public:
+    CommodityBasisFutureConvention() : CommodityFutureConvention() { type_ = Type::CommodityBasisFuture; }
+
+    //! Day of month based constructor
+    CommodityBasisFutureConvention(
+        const std::string& id, const std::string& baseConvention, const DayOfMonth& dayOfMonth,
+        const std::string& contractFrequency, const std::string& calendar, const std::string& expiryCalendar = "",
+        QuantLib::Size expiryMonthLag = 0, const std::string& oneContractMonth = "", const std::string& offsetDays = "",
+        const std::string& bdc = "", bool adjustBeforeOffset = true, bool isAveraging = false,
+        const OptionExpiryAnchorDateRule& optionExpiryDateRule = OptionExpiryAnchorDateRule(),
+        const std::set<ProhibitedExpiry>& prohibitedExpiries = {}, QuantLib::Size optionExpiryMonthLag = 0,
+        const std::string& optionBdc = "",
+        const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
+        const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
+        const AveragingData& averagingData = AveragingData(),
+        QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
+        const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+        const std::string& indexName = "", const std::string& optionFrequency = "")
+        : CommodityFutureConvention(id, dayOfMonth, contractFrequency, calendar, expiryCalendar, expiryMonthLag,
+                                    oneContractMonth, offsetDays, bdc, adjustBeforeOffset, isAveraging,
+                                    optionExpiryDateRule, prohibitedExpiries, optionExpiryMonthLag, optionBdc,
+                                    futureContinuationMappings, optionContinuationMappings, averagingData, hoursPerDay,
+                                    offPeakPowerIndexData, indexName, optionFrequency),
+          baseConvention_(baseConvention) {
+        type_ = Type::CommodityBasisFuture;
+    }
+
+    //! N-th weekday based constructor
+    CommodityBasisFutureConvention(
+        const std::string& id, const std::string& baseConvention,const std::string& nth,
+        const std::string& weekday, const std::string& contractFrequency, const std::string& calendar,
+        const std::string& expiryCalendar = "", QuantLib::Size expiryMonthLag = 0,
+        const std::string& oneContractMonth = "", const std::string& offsetDays = "", const std::string& bdc = "",
+        bool adjustBeforeOffset = true, bool isAveraging = false,
+        const OptionExpiryAnchorDateRule& optionExpiryDateRule = OptionExpiryAnchorDateRule(),
+        const std::set<ProhibitedExpiry>& prohibitedExpiries = {}, QuantLib::Size optionExpiryMonthLag = 0,
+        const std::string& optionBdc = "",
+        const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
+        const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
+        const AveragingData& averagingData = AveragingData(),
+        QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
+        const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+        const std::string& indexName = "", const std::string& optionFrequency = "")
+        : CommodityFutureConvention(id, nth, weekday, contractFrequency, calendar, expiryCalendar, expiryMonthLag,
+                                    oneContractMonth, offsetDays, bdc, adjustBeforeOffset, isAveraging,
+                                    optionExpiryDateRule, prohibitedExpiries, optionExpiryMonthLag, optionBdc,
+                                    futureContinuationMappings, optionContinuationMappings, averagingData, hoursPerDay,
+                                    offPeakPowerIndexData, indexName, optionFrequency),
+          baseConvention_(baseConvention) {
+        type_ = Type::CommodityBasisFuture;
+    }
+
+    //! Calendar days before based constructor
+    CommodityBasisFutureConvention(
+        const std::string& id, const std::string& baseConvention,
+        const CalendarDaysBefore& calendarDaysBefore, const std::string& contractFrequency, const std::string& calendar,
+        const std::string& expiryCalendar = "", QuantLib::Size expiryMonthLag = 0,
+        const std::string& oneContractMonth = "", const std::string& offsetDays = "", const std::string& bdc = "",
+        bool adjustBeforeOffset = true, bool isAveraging = false,
+        const OptionExpiryAnchorDateRule& optionExpiryDateRule = OptionExpiryAnchorDateRule(),
+        const std::set<ProhibitedExpiry>& prohibitedExpiries = {}, QuantLib::Size optionExpiryMonthLag = 0,
+        const std::string& optionBdc = "",
+        const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
+        const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
+        const AveragingData& averagingData = AveragingData(),
+        QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
+        const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+        const std::string& indexName = "", const std::string& optionFrequency = "")
+        : CommodityFutureConvention(id, calendarDaysBefore, contractFrequency, calendar, expiryCalendar, expiryMonthLag,
+                                    oneContractMonth, offsetDays, bdc, adjustBeforeOffset, isAveraging,
+                                    optionExpiryDateRule, prohibitedExpiries, optionExpiryMonthLag, optionBdc,
+                                    futureContinuationMappings, optionContinuationMappings, averagingData, hoursPerDay,
+                                    offPeakPowerIndexData, indexName, optionFrequency),
+          baseConvention_(baseConvention) {
+        type_ = Type::CommodityBasisFuture;
+    }
+
+    //! Business days before based constructor
+    CommodityBasisFutureConvention(
+        const std::string& id, const std::string& baseConvention,
+        const BusinessDaysAfter& businessDaysAfter, const std::string& contractFrequency, const std::string& calendar,
+        const std::string& expiryCalendar = "", QuantLib::Size expiryMonthLag = 0,
+        const std::string& oneContractMonth = "", const std::string& offsetDays = "", const std::string& bdc = "",
+        bool adjustBeforeOffset = true, bool isAveraging = false,
+        const OptionExpiryAnchorDateRule& optionExpiryDateRule = OptionExpiryAnchorDateRule(),
+        const std::set<ProhibitedExpiry>& prohibitedExpiries = {}, QuantLib::Size optionExpiryMonthLag = 0,
+        const std::string& optionBdc = "",
+        const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
+        const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
+        const AveragingData& averagingData = AveragingData(),
+        QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
+        const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+        const std::string& indexName = "", const std::string& optionFrequency = "")
+        : CommodityFutureConvention(id, businessDaysAfter, contractFrequency, calendar, expiryCalendar, expiryMonthLag,
+                                    oneContractMonth, offsetDays, bdc, adjustBeforeOffset, isAveraging,
+                                    optionExpiryDateRule, prohibitedExpiries, optionExpiryMonthLag, optionBdc,
+                                    futureContinuationMappings, optionContinuationMappings, averagingData, hoursPerDay,
+                                    offPeakPowerIndexData, indexName, optionFrequency),
+          baseConvention_(baseConvention) {
+        type_ = Type::CommodityBasisFuture;
+    }
+
+    //! Serialisation
+    //@{
+    void fromXML(XMLNode* node) override {
+        CommodityFutureConvention::fromXML(node);
+        baseConvention_ = XMLUtils::getChildValue(node, "BaseConvention", true);
+        type_ = Type::CommodityBasisFuture;
+    }
+    XMLNode* toXML(XMLDocument& doc) override {
+        auto node = CommodityFutureConvention::toXML(doc);
+        XMLUtils::addChild(doc, node, "BaseConvention", baseConvention_);
+        return node;
+    }
+    //@}
+
+    const std::string& baseConvention() const { return baseConvention_; }
+
+protected:
+    std::string baseConvention_;
+};
 
 //! Container for storing FX Option conventions
 /*! Defining a switchTenor is optional. It is set to 0 * Days if no switch tenor is defined. In this case
