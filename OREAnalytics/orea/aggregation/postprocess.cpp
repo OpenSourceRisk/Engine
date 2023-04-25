@@ -66,7 +66,8 @@ PostProcess::PostProcess(
     Real kvaTheirCvaRiskWeight, const boost::shared_ptr<NPVCube>& cptyCube, const string& flipViewBorrowingCurvePostfix,
     const string& flipViewLendingCurvePostfix,
     const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters,
-    const std::vector<Real>& creditMigrationDistributionGrid, const Matrix& creditStateCorrelationMatrix)
+    const std::vector<Real>& creditMigrationDistributionGrid, const std::vector<Size>& creditMigrationTimeSteps,
+    const Matrix& creditStateCorrelationMatrix)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), configuration_(configuration),
       cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency),
       quantile_(quantile), calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
@@ -78,7 +79,7 @@ PostProcess::PostProcess(
       kvaOurCvaRiskWeight_(kvaOurCvaRiskWeight), kvaTheirCvaRiskWeight_(kvaTheirCvaRiskWeight),
       creditSimulationParameters_(creditSimulationParameters),
       creditMigrationDistributionGrid_(creditMigrationDistributionGrid),
-      creditStateCorrelationMatrix_(creditStateCorrelationMatrix) {
+      creditMigrationTimeSteps_(creditMigrationTimeSteps), creditStateCorrelationMatrix_(creditStateCorrelationMatrix) {
 
     QL_REQUIRE(cubeInterpretation_ != nullptr, "PostProcess: cubeInterpretation is not given.");
     bool isRegularCubeStorage = !cubeInterpretation_->withCloseOutLag();
@@ -312,7 +313,7 @@ PostProcess::PostProcess(
         creditMigrationCalculator_ = boost::make_shared<CreditMigrationCalculator>(
             portfolio_, creditSimulationParameters_, cube_, cubeInterpretation_,
             nettedExposureCalculator_->nettedCube(), scenarioData_, creditMigrationDistributionGrid_,
-            creditStateCorrelationMatrix_, baseCurrency_);
+            creditMigrationTimeSteps_, creditStateCorrelationMatrix_, baseCurrency_);
         creditMigrationCalculator_->build();
         creditMigrationUpperBucketBounds_ = creditMigrationCalculator_->upperBucketBounds();
         creditMigrationCdf_ = creditMigrationCalculator_->cdf();

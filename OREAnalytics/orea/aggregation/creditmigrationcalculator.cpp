@@ -27,27 +27,49 @@ CreditMigrationCalculator::CreditMigrationCalculator(
     const boost::shared_ptr<NPVCube>& cube, const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
     const boost::shared_ptr<NPVCube>& nettedCube,
     const boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData,
-    const std::vector<Real>& creditMigrationDistributionGrid, const Matrix& creditStateCorrelationMatrix,
-    const std::string baseCurrency)
+    const std::vector<Real>& creditMigrationDistributionGrid, const std::vector<Size>& creditMigrationTimeSteps,
+    const Matrix& creditStateCorrelationMatrix, const std::string baseCurrency)
     : portfolio_(portfolio), creditSimulationParameters_(creditSimulationParameters),
       cubeInterpretation_(cubeInterpretation), nettedCube_(nettedCube),
       aggregationScenarioData_(aggregationScenarioData),
       creditMigrationDistributionGrid_(creditMigrationDistributionGrid),
-      creditStateCorrelationMatrix_(creditStateCorrelationMatrix), baseCurrency_(baseCurrency) {}
+      creditMigrationTimeSteps_(creditMigrationTimeSteps), creditStateCorrelationMatrix_(creditStateCorrelationMatrix),
+      baseCurrency_(baseCurrency) {}
 
 void CreditMigrationCalculator::build() {
 
     // checks
+    
+    QL_REQUIRE(portfolio_ != nullptr, "CreditMigrationCalculator::build(): portfolio is null");
+    QL_REQUIRE(creditSimulationParameters_ != nullptr, "CreditMigrationCalculator::build(): creditSimulationParameters is null");
+    QL_REQUIRE(cube_ != nullptr, "CreditMigrationCalculator::build(): cube is null");
+    QL_REQUIRE(cubeInterpretation_ != nullptr, "CreditMigrationCalculator::build(): cube interpretation is null");
+    QL_REQUIRE(nettedCube_ != nullptr, "CreditMigrationCalculator::build(): netted cube is null");
+    QL_REQUIRE(aggregationScenarioData_ != nullptr, "CreditMigrationCalculator::build(): aggregation scenario data is null");
+    QL_REQUIRE(!baseCurrency_.empty(), "CreditMigrationCalculator::build(): base currency is empty");
 
-    QL_REQUIRE(creditStateCorrelationMatrix_.rows() == creditStateCorrelationMatrix.columns(),
+    QL_REQUIRE(creditStateCorrelationMatrix_.rows() == creditStateCorrelationMatrix_.columns(),
                "CreditMigrationCalculator::build(): credit state correlation matrix is not square ("
                    << creditStateCorrelationMatrix_.rows() << " x " << creditStateCorrelationMatrix_.columns() << ")");
 
-    QL_REQUIRE(creditStateCorrelationMatrix_.rows() == cubeInterpretation->storeCreditStateNPVs(),
+    QL_REQUIRE(creditStateCorrelationMatrix_.rows() == cubeInterpretation_->storeCreditStateNPVs(),
                "CreditMigrationCalculator::build(): credit state correlation matrix dimension ("
                    << creditStateCorrelationMatrix_.rows() << " x " << creditStateCorrelationMatrix_.columns()
                    << ") is inconsistent with the number of credit states stored in the npv cube ("
-                   << cubeInterpretation->storeCreditStateNPVs());
+                   << cubeInterpretation_->storeCreditStateNPVs());
+
+    // create helper
+
+    
+    
+
+    // set output 
+
+    std::vector<Real> upperBucketBounds_;
+    std::vector<std::vector<Real>> cdf_;
+    std::vector<std::vector<Real>> pdf_;
+
+
 }
 
 } // namespace analytics

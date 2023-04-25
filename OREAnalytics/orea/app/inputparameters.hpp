@@ -248,7 +248,7 @@ public:
     // credit simulation
     void setCreditMigrationAnalytic(bool b) { creditMigrationAnalytic_ = b; }
     void setCreditMigrationDistributionGrid(const std::vector<Real>& grid) { creditMigrationDistributionGrid_ = grid; }
-    void setCreditMigrationTimeSteps(Size n) { creditMigrationTimeSteps_ = n; }
+    void setCreditMigrationTimeSteps(const std::vector<Size>& ts) { creditMigrationTimeSteps_ = ts; }
     void setCreditSimulationParameters(const boost::shared_ptr<CreditSimulationParameters>& c) {
         creditSimulationParameters_ = c;
     }
@@ -451,7 +451,7 @@ public:
     // credit simulation details
     bool creditMigrationAnalytic() const { return creditMigrationAnalytic_; }
     const std::vector<Real>& creditMigrationDistributionGrid() const { return creditMigrationDistributionGrid_; }
-    Size creditMigrationTimeSteps() const { return creditMigrationTimeSteps_; }
+    std::vector<Size> creditMigrationTimeSteps() const { return creditMigrationTimeSteps_; }
     const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters() const { return creditSimulationParameters_; }
     const std::string& creditMigrationOutputFiles() const { return creditMigrationOutputFiles_; }
     
@@ -658,7 +658,7 @@ protected:
     // credit simulation details
     bool creditMigrationAnalytic_ = false;
     std::vector<Real> creditMigrationDistributionGrid_;
-    Size creditMigrationTimeSteps_ = 0;
+    std::vector<Size> creditMigrationTimeSteps_;
     boost::shared_ptr<CreditSimulationParameters> creditSimulationParameters_;
     std::string creditMigrationOutputFiles_;
 };

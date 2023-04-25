@@ -160,6 +160,8 @@ public:
         const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters = nullptr,
         //! Credit simulation distribution grid
         const std::vector<Real>& creditMigrationDistributionGrid = {},
+        //! Credit simulation time steps
+        const std::vector<Size>& creditMigrationTimeSteps = {},
         //! Credit State correlation matrix
         const Matrix& creditStateCorrelationMatrix = Matrix());
 
@@ -364,6 +366,7 @@ protected:
 
     boost::shared_ptr<CreditSimulationParameters> creditSimulationParameters_;
     std::vector<Real> creditMigrationDistributionGrid_;
+    std::vector<Size> creditMigrationTimeSteps_;
     Matrix creditStateCorrelationMatrix_;
     boost::shared_ptr<CreditMigrationCalculator> creditMigrationCalculator_;
     std::vector<Real> creditMigrationUpperBucketBounds_;
