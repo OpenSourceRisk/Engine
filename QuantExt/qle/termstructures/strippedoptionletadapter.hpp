@@ -25,7 +25,7 @@
 #define quantext_stripped_optionlet_adapter_h
 
 #include <algorithm>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <ql/math/interpolation.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
@@ -279,7 +279,8 @@ StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::smileSectionImpl(
     const vector<Rate>& strikes = optionletBase_->optionletStrikes(0);
     for (Size i = 1; i < optionletBase_->optionletMaturities(); ++i) {
         const vector<Rate>& compStrikes = optionletBase_->optionletStrikes(i);
-        QL_REQUIRE(equal(strikes.begin(), strikes.end(), compStrikes.begin(), boost::bind(close, _1, _2)),
+        QL_REQUIRE(equal(strikes.begin(), strikes.end(), compStrikes.begin(),
+                         boost::bind(close, boost::placeholders::_1, boost::placeholders::_2)),
                    "The strikes at the " << ordinal(i)
                                          << " optionlet date do not equal those at the first optionlet date");
     }
