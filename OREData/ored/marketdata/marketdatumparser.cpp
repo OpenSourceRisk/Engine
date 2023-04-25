@@ -77,7 +77,8 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"COMMODITY_FWD", MarketDatum::InstrumentType::COMMODITY_FWD},
         {"CORRELATION", MarketDatum::InstrumentType::CORRELATION},
         {"COMMODITY_OPTION", MarketDatum::InstrumentType::COMMODITY_OPTION},
-        {"CPR", MarketDatum::InstrumentType::CPR}};
+        {"CPR", MarketDatum::InstrumentType::CPR},
+        {"RATING", MarketDatum::InstrumentType::RATING}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -102,8 +103,8 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
         {"BASE_CORRELATION", MarketDatum::QuoteType::BASE_CORRELATION},
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
-        {"NULL", MarketDatum::QuoteType::NONE}
-    };
+        {"NULL", MarketDatum::QuoteType::NONE},
+        {"TRANSITION_PROBABILITY", MarketDatum::QuoteType::TRANSITION_PROBABILITY}};
 
     if (s == "RATE_GVOL")
         LOG("Use of deprecated quote type RATE_GVOL");
@@ -774,7 +775,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::RATING: {
-        QL_REQUIRE(tokens.size() == 5, "3 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
         const string& name = tokens[2];
         const string& fromRating = tokens[3];
         const string& toRating = tokens[4];
