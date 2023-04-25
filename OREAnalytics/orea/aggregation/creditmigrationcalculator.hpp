@@ -47,7 +47,8 @@ public:
                               const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
                               const boost::shared_ptr<NPVCube>& nettedcube,
                               const boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData,
-                              const std::vector<Real>& creditMigrationDistributionGrid, const std::string baseCurrency);
+                              const std::vector<Real>& creditMigrationDistributionGrid,
+                              const Matrix& creditStateCorrelationMatrix, const std::string baseCurrency);
 
     void build();
 
@@ -63,6 +64,7 @@ private:
     boost::shared_ptr<NPVCube> nettedCube_;
     boost::shared_ptr<AggregationScenarioData> aggregationScenarioData_;
     std::vector<Real> creditMigrationDistributionGrid_;
+    Matrix creditStateCorrelationMatrix_;
     std::string baseCurrency_;
 
     std::vector<Real> upperBucketBounds_;

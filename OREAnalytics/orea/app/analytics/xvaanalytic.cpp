@@ -564,7 +564,8 @@ void XvaAnalyticImpl::runPostProcessor() {
         fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid,
         cvaSensiShiftSize, kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor,
         kvaTheirPdFloor, kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight, cptyCube_, flipViewBorrowingCurvePostfix,
-        flipViewLendingCurvePostfix, inputs_->creditSimulationParameters(), inputs_->creditMigrationDistributionGrid());
+        flipViewLendingCurvePostfix, inputs_->creditSimulationParameters(), inputs_->creditMigrationDistributionGrid(),
+        creditStateCorrelationMatrix());
     LOG("post done");
 }
 
@@ -819,6 +820,20 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
 
     // reset that mode
     ObservationMode::instance().setMode(inputs_->observationModel());
+}
+
+void XvaAnalyticImpl::creditStateCorrelationMatrix() const {
+
+    CorrelationMatrixBuilder cmb;
+    for (auto const& [pair, corr] : analytic()->configurations().crossAssetModelData->correlations()) {
+        cmb.addCorrelation(it->first.first, it->first.second, it->second);
+    }
+
+    CorrelationMatrixBuilder::ProcessInfo processInfo;
+    processInfo[CrossAssetModel::AssetType::CrState] = {
+        {CrState, analytic()->configuration().simMarketParams->numberOfCreditStates()}};
+
+    return cmb.correlationMatrix(processInfo);
 }
 
 } // namespace analytics

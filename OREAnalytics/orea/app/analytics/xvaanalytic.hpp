@@ -58,6 +58,8 @@ protected:
 
     void runPostProcessor();
 
+    Matrix creditStateCorrelationMatrix() const;
+
     boost::shared_ptr<ScenarioSimMarket> simMarket_;
     boost::shared_ptr<EngineFactory> engineFactory_;
     boost::shared_ptr<CrossAssetModel> model_;

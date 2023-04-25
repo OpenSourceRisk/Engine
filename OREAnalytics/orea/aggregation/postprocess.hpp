@@ -159,7 +159,9 @@ public:
         //! Credit simulation parameters
         const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters = nullptr,
         //! Credit simulation distribution grid
-        const std::vector<Real>& creditMigrationDistributionGrid = {});
+        const std::vector<Real>& creditMigrationDistributionGrid = {},
+        //! Credit State correlation matrix
+        const Matrix& creditStateCorrelationMatrix = Matrix());
 
     void setDimCalculator(boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
@@ -362,6 +364,7 @@ protected:
 
     boost::shared_ptr<CreditSimulationParameters> creditSimulationParameters_;
     std::vector<Real> creditMigrationDistributionGrid_;
+    Matrix creditStateCorrelationMatrix_;
     boost::shared_ptr<CreditMigrationCalculator> creditMigrationCalculator_;
     std::vector<Real> creditMigrationUpperBucketBounds_;
     std::vector<std::vector<Real>> creditMigrationCdf_;

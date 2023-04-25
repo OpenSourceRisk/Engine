@@ -27,13 +27,28 @@ CreditMigrationCalculator::CreditMigrationCalculator(
     const boost::shared_ptr<NPVCube>& cube, const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
     const boost::shared_ptr<NPVCube>& nettedCube,
     const boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData,
-    const std::vector<Real>& creditMigrationDistributionGrid, const std::string baseCurrency)
+    const std::vector<Real>& creditMigrationDistributionGrid, const Matrix& creditStateCorrelationMatrix,
+    const std::string baseCurrency)
     : portfolio_(portfolio), creditSimulationParameters_(creditSimulationParameters),
       cubeInterpretation_(cubeInterpretation), nettedCube_(nettedCube),
       aggregationScenarioData_(aggregationScenarioData),
-      creditMigrationDistributionGrid_(creditMigrationDistributionGrid), baseCurrency_(baseCurrency) {}
+      creditMigrationDistributionGrid_(creditMigrationDistributionGrid),
+      creditStateCorrelationMatrix_(creditStateCorrelationMatrix), baseCurrency_(baseCurrency) {}
 
-void CreditMigrationCalculator::build() {}
+void CreditMigrationCalculator::build() {
+
+    // checks
+
+    QL_REQUIRE(creditStateCorrelationMatrix_.rows() == creditStateCorrelationMatrix.columns(),
+               "CreditMigrationCalculator::build(): credit state correlation matrix is not square ("
+                   << creditStateCorrelationMatrix_.rows() << " x " << creditStateCorrelationMatrix_.columns() << ")");
+
+    QL_REQUIRE(creditStateCorrelationMatrix_.rows() == cubeInterpretation->storeCreditStateNPVs(),
+               "CreditMigrationCalculator::build(): credit state correlation matrix dimension ("
+                   << creditStateCorrelationMatrix_.rows() << " x " << creditStateCorrelationMatrix_.columns()
+                   << ") is inconsistent with the number of credit states stored in the npv cube ("
+                   << cubeInterpretation->storeCreditStateNPVs());
+}
 
 } // namespace analytics
 } // namespace ore
