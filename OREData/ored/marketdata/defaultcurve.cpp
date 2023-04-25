@@ -707,7 +707,6 @@ void DefaultCurve::buildTransitionMatrixCurve(const std::string& curveID, const 
                                               const Date& asof, const DefaultCurveSpec& spec, const Loader& loader,
                                               map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves) {
     LOG("Start building default curve of type TransitionMatrix for curve " << curveID);
-    QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve::buildTransitionMatrixCurve(): recovery quote required.");
     Size dim = config.states().size();
     QL_REQUIRE(dim >= 2,
                "DefaultCurve::buildTransitionMatrixCurve(): transition matrix dimension >= 2 required, found " << dim);
@@ -716,9 +715,20 @@ void DefaultCurve::buildTransitionMatrixCurve(const std::string& curveID, const 
     for (Size i = 0; i < config.states().size(); ++i)
         stateIndex[config.states()[i]] = i;
     QL_REQUIRE(!config.cdsQuotes().empty(), "DefaultCurve::buildTransitionMatrixCurve(): not quotes given.");
-    string quoteStub = config.cdsQuotes().front().first;
-    for (const auto& quote : config.cdsQuotes()) {
-        auto md = loader.get(quote.first, asof);
+    std::vector<std::string> tmp;
+    std::transform(config.cdsQuotes().begin(), config.cdsQuotes().end(), std::back_inserter(tmp),
+                   [](const std::pair<std::string, bool>& p) { return p.first; });
+    auto wildcard = getUniqueWildcard(tmp);
+    std::set<boost::shared_ptr<MarketDatum>> mdData;
+    if (wildcard) {
+        mdData = loader.get(*wildcard, asof);
+    } else {
+        for (auto const& q : config.cdsQuotes()) {
+            if (auto m = loader.get(q, asof))
+                mdData.insert(m);
+        }
+    }
+    for (const auto& md : mdData) {
         QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::RATING,
                    "DefaultCurve::buildTransitionMatrixCurve(): quote instrument type must be RATING.");
         boost::shared_ptr<TransitionProbabilityQuote> q = boost::dynamic_pointer_cast<TransitionProbabilityQuote>(md);
