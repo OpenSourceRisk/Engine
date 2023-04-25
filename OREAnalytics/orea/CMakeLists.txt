@@ -2,6 +2,7 @@
 
 set(OREAnalytics_SRC aggregation/collateralaccount.cpp
 aggregation/collatexposurehelper.cpp
+aggregation/creditmigrationcalculator.cpp
 aggregation/creditmigrationhelper.cpp
 aggregation/creditsimulationparameters.cpp
 aggregation/cvaspreadsensitivitycalculator.cpp
@@ -93,6 +94,7 @@ simulation/simmarket.cpp)
 
 set(OREAnalytics_HDR aggregation/collateralaccount.hpp
 aggregation/collatexposurehelper.hpp
+aggregation/creditmigrationcalculator.hpp
 aggregation/creditmigrationhelper.hpp
 aggregation/creditsimulationparameters.hpp
 aggregation/cvaspreadsensitivitycalculator.hpp

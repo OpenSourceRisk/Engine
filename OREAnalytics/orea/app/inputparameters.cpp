@@ -425,7 +425,14 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
                << "and file names size (" << dimRegressionFileNames_.size() << ") do not match");
     for (Size i = 0; i < dimRegressionFileNames_.size(); ++i)
         fileNameMap_["dim_regression_" + to_string(i)] = dimRegressionFileNames_[i];
-    
+
+    tmp = params->get("xva", "crediMigrationTimeSteps", false);
+    if (tmp != "") {
+        for (Size i = 0; i < parseInteger(tmp); ++i)
+            fileNameMap_["credit_migration_" + to_string(i)] =
+                params->get("xva", "creditMigrationOutputFiles") + "_" + std::to_string(i);
+    }
+
     LOG("OutputFileNameMap complete");
 }
     

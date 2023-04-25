@@ -7,6 +7,7 @@
 
 #include <orea/aggregation/collateralaccount.hpp>
 #include <orea/aggregation/collatexposurehelper.hpp>
+#include <orea/aggregation/creditmigrationcalculator.hpp>
 #include <orea/aggregation/creditmigrationhelper.hpp>
 #include <orea/aggregation/creditsimulationparameters.hpp>
 #include <orea/aggregation/cvaspreadsensitivitycalculator.hpp>

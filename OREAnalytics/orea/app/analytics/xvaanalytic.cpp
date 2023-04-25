@@ -510,6 +510,7 @@ void XvaAnalyticImpl::runPostProcessor() {
     analytics["dynamicCredit"] = inputs_->dynamicCredit();
     analytics["cvaSensi"] = inputs_->cvaSensi();
     analytics["flipViewXVA"] = inputs_->flipViewXVA();
+    analytics["creditMigration"] = inputs_->creditMigrationAnalytic();
 
     string baseCurrency = inputs_->xvaBaseCurrency();
     string calculationType = inputs_->collateralCalculationType();
@@ -559,12 +560,11 @@ void XvaAnalyticImpl::runPostProcessor() {
 
     postProcess_ = boost::make_shared<PostProcess>(
         analytic()->portfolio(), netting, analytic()->market(), marketConfiguration, cube_, *scenarioData_, analytics,
-        baseCurrency,
-        allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
+        baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid,
         cvaSensiShiftSize, kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor,
         kvaTheirPdFloor, kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight, cptyCube_, flipViewBorrowingCurvePostfix,
-        flipViewLendingCurvePostfix);
+        flipViewLendingCurvePostfix, inputs_->creditSimulationParameters(), inputs_->creditMigrationDistributionGrid());
     LOG("post done");
 }
 
@@ -794,6 +794,24 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             }
             postProcess_->exportDimRegression(inputs_->dimOutputNettingSet(), inputs_->dimOutputGridPoints(),
                                               dimRegReports);
+        }
+
+        if (inputs_->creditMigrationAnalytic()) {
+            for (Size i = 0; i < postProcess_->creditMigrationUpperBucketBounds().size(); ++i) {
+                auto rep = boost::make_shared<InMemoryReport>();
+                analytic()->reports()["XVA"]["credit_migration_" + to_string(i)] = rep;
+                (*rep)
+                    .addColumn("upperBucketBound", double(), 16)
+                    .addColumn("cdf", double(), 16)
+                    .addColumn("pdf", double(), 16);
+                for (Size j = 0; j < postProcess_->creditMigrationPdf()[i].size(); ++j) {
+                    (*rep)
+                        .add(postProcess_->creditMigrationUpperBucketBounds()[i])
+                        .add(postProcess_->creditMigrationPdf()[i][j])
+                        .add(postProcess_->creditMigrationCdf()[i][j]);
+                }
+                rep->end();
+            }
         }
 
         CONSOLE("OK");
