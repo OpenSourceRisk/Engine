@@ -3404,7 +3404,7 @@
       <InitialState>AAA</InitialState>
       <States>AAA,AA,A,BBB,BB,B,C,D</States>
       <Quotes>
-        <Quote>RATING/TRANSITION_PROBABILITY/PROVIDER_1/0D/1Y</Quote>
+        <Quote>RATING/TRANSITION_PROBABILITY/PROVIDER_1/*</Quote>
       </Quotes>
       <DiscountCurve/>
       <Conventions/>
@@ -3419,7 +3419,7 @@
       <InitialState>AA</InitialState>
       <States>AAA,AA,A,BBB,BB,B,C,D</States>
       <Quotes>
-        <Quote>RATING/TRANSITION_PROBABILITY/PROVIDER_1/0D/1Y</Quote>
+        <Quote>RATING/TRANSITION_PROBABILITY/PROVIDER_1/*</Quote>
       </Quotes>
       <DiscountCurve/>
       <Conventions/>
@@ -3434,7 +3434,7 @@
       <InitialState>A</InitialState>
       <States>AAA,AA,A,BBB,BB,B,C,D</States>
       <Quotes>
-        <Quote>RATING/TRANSITION_PROBABILITY/PROVIDER_1/0D/1Y</Quote>
+        <Quote>RATING/TRANSITION_PROBABILITY/PROVIDER_1/*</Quote>
       </Quotes>
       <DiscountCurve/>
       <Conventions/>
@@ -3449,7 +3449,7 @@
       <InitialState>BBB</InitialState>
       <States>AAA,AA,A,BBB,BB,B,C,D</States>
       <Quotes>
-        <Quote>RATING/TRANSITION_PROBABILITY/PROVIDER_1/0D/1Y</Quote>
+        <Quote>RATING/TRANSITION_PROBABILITY/PROVIDER_1/*</Quote>
       </Quotes>
       <DiscountCurve/>
       <Conventions/>
@@ -3464,7 +3464,7 @@
       <InitialState>BB</InitialState>
       <States>AAA,AA,A,BBB,BB,B,C,D</States>
       <Quotes>
-        <Quote>RATING/TRANSITION_PROBABILITY/PROVIDER_1/0D/1Y</Quote>
+        <Quote>RATING/TRANSITION_PROBABILITY/PROVIDER_1/*</Quote>
       </Quotes>
       <DiscountCurve/>
       <Conventions/>
@@ -3479,7 +3479,7 @@
       <InitialState>B</InitialState>
       <States>AAA,AA,A,BBB,BB,B,C,D</States>
       <Quotes>
-        <Quote>RATING/TRANSITION_PROBABILITY/PROVIDER_1/0D/1Y</Quote>
+        <Quote>RATING/TRANSITION_PROBABILITY/PROVIDER_1/*</Quote>
       </Quotes>
       <DiscountCurve/>
       <Conventions/>
@@ -3494,7 +3494,7 @@
       <InitialState>C</InitialState>
       <States>AAA,AA,A,BBB,BB,B,C,D</States>
       <Quotes>
-        <Quote>RATING/TRANSITION_PROBABILITY/PROVIDER_1/0D/1Y</Quote>
+        <Quote>RATING/TRANSITION_PROBABILITY/PROVIDER_1/*</Quote>
       </Quotes>
       <DiscountCurve/>
       <Conventions/>
