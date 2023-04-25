@@ -221,6 +221,8 @@ void CorrelationMatrixBuilder::checkFactor(const CorrelationFactor& f) const {
     case CrossAssetModel::AssetType::INF:
     case CrossAssetModel::AssetType::CR:
     case CrossAssetModel::AssetType::EQ:
+    case CrossAssetModel::AssetType::COM:
+    case CrossAssetModel::AssetType::CrState:
         QL_REQUIRE(!f.name.empty(), "Expected non-empty factor name for factor type " << f.type);
         break;
     default:
