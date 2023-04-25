@@ -715,14 +715,14 @@ void CreditMigrationHelper::stateCorrelations(const Size date, Size entity1, Siz
     }
 }
 
-void CreditMigrationHelper::build(const std::vector<boost::shared_ptr<Trade>>& trades) {
+void CreditMigrationHelper::build(const std::map<std::string, boost::shared_ptr<Trade>>& trades) {
     LOG("CreditMigrationHelper: Build trade ID map");
     issuerTradeIds_.resize(parameters_->entities().size());
     cptyNettingSetIds_.resize(parameters_->entities().size());
     for (Size i = 0; i < parameters_->entities().size(); ++i) {
         string entity = parameters_->entities()[i];
         std::set<string> tmp, tmp2;
-        for (auto& t : trades) {
+        for (const auto& [_, t] : trades) {
             if (t->issuer() == entity) {
                 tmp.insert(t->id());
             }

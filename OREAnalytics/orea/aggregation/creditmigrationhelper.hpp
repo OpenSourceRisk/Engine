@@ -55,7 +55,7 @@ public:
                           const std::string& baseCurrency);
 
     //! builds the helper for a specific subset of trades stored in the cube
-    void build(const std::vector<boost::shared_ptr<Trade>>& trades);
+    void build(const std::map<std::string, boost::shared_ptr<Trade>>& trades);
 
     const std::vector<Real>& upperBucketBound() const { return bucketing_.upperBucketBound(); }
     Array pnlDistribution(const Size date);
