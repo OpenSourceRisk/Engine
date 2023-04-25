@@ -1093,6 +1093,31 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     if (tmp != "")
         inputs->setKvaTheirCvaRiskWeight(parseReal(tmp));
 
+    // credit simulation
+
+    tmp = params_->get("xva", "creditMigration", false);
+    if (tmp != "")
+        inputs->setCreditMigrationAnalytic(parseBool(tmp));
+
+    tmp = params_->get("xva", "creditMigrationDistributionGrid", false);
+    if (tmp != "")
+        inputs->setCreditMigrationDistributionGrid(parseListOfValues<Real>(tmp, &parseReal));
+
+    tmp = params_->get("xva", "crediMigrationTimeSteps", false);
+    if (tmp != "")
+        inputs->setCreditMigrationTimeSteps(parseInteger(tmp));
+
+    tmp = params_->get("xva", "creditMigrationConfig", false);
+    if (tmp != "") {
+        string file = inputPath + "/" + tmp;
+        LOG("Loading credit migration config from file" << file);
+        inputs->setCreditSimulationParametersFromFile(file);
+    }
+
+    tmp = params_->get("xva", "creditMigrationOutputFiles", false);
+    if (tmp != "")
+        inputs->setCreditMigrationOutputFiles(tmp);
+
     // cashflow npv and dynamic backtesting
 
     tmp = params_->get("cashflow", "cashFlowHorizon", false);

@@ -360,7 +360,12 @@ void InputParameters::setPortfolioFilterDate(const std::string& s) {
     // parse to Date
     portfolioFilterDate_ = parseDate(s);
 }
-    
+
+void InputParameters::setCreditSimulationParametersFromFile(const std::string& fileName) {
+    creditSimulationParameters_ = boost::make_shared<CreditSimulationParameters>();
+    creditSimulationParameters_->fromFile(fileName);
+}
+
 void InputParameters::setAnalytics(const std::string& s) {
     // parse to set<string>
     auto v = parseListOfValues(s);
