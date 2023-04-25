@@ -132,7 +132,7 @@
     <SwaptionVolatility currency="USD">SwaptionVolatility/USD/USD_SW_N</SwaptionVolatility>
     <SwaptionVolatility currency="GBP">SwaptionVolatility/GBP/GBP_SW_N</SwaptionVolatility>
     <SwaptionVolatility currency="CHF">SwaptionVolatility/CHF/CHF_SW_N</SwaptionVolatility>
-    <SwaptionVolatility currency="JPY">SwaptionVolatility/CHF/JPY_SW_N</SwaptionVolatility>
+    <SwaptionVolatility currency="JPY">SwaptionVolatility/CHF/CHF_SW_N</SwaptionVolatility>
   </SwaptionVolatilities>
   <!-- cap volatility definition -->
   <CapFloorVolatilities id="default">
