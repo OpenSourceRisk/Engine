@@ -1206,7 +1206,7 @@
       },
       "credit_migration.*\\.csv": {
         "keys": [
-          "upperBucketBound",
+          "upperBucketBound"
         ],
         "column_settings": [
           {
