@@ -65,7 +65,12 @@ std::vector<Real> MultiStateNPVCalculator::multiStateNpv(Size tradeIndex, const 
 
         // we have a stateNpv result
 
-        auto stateNpv = boost::any_cast<std::vector<Real>>(tmp);
+        std::vector<Real> stateNpv;
+        try {
+            stateNpv = boost::any_cast<std::vector<Real>>(tmp->second);
+        } catch(const std::exception& e) {
+            QL_FAIL("unexpected type of result stateNpv: " << e.what());
+        }
         for (auto& n : stateNpv) {
             if (!close_enough(n, 0.0)) {
                 n *= trade->instrument()->multiplier() * trade->instrument()->multiplier2();
