@@ -357,6 +357,11 @@ void CappedFlooredOvernightIndexedCoupon::performCalculations() const {
     if (cap_ != Null<Real>())
         capletRate = (nakedOption_ && floor_ == Null<Real>() ? -1.0 : 1.0) * pricer()->capletRate(effectiveCap());
     rate_ = swapletRate + floorletRate - capletRate;
+    auto p = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCouponPricer>(pricer());
+    QL_REQUIRE(p, "CappedFlooredOvernightIndexedCoupon::performCalculations(): internal error, could not cast to "
+                  "CappedFlooredOvernightIndexedCouponPricer");
+    effectiveCapletVolatility_ = p->effectiveCapletVolatility();
+    effectiveFloorletVolatility_ = p->effectiveFloorletVolatility();
 }
 
 Rate CappedFlooredOvernightIndexedCoupon::cap() const { return gearing_ > 0.0 ? cap_ : floor_; }
@@ -420,6 +425,16 @@ Rate CappedFlooredOvernightIndexedCoupon::effectiveFloor() const {
     }
 }
 
+Real CappedFlooredOvernightIndexedCoupon::effectiveCapletVolatility() const {
+    calculate();
+    return effectiveCapletVolatility_;
+}
+
+Real CappedFlooredOvernightIndexedCoupon::effectiveFloorletVolatility() const {
+    calculate();
+    return effectiveFloorletVolatility_;
+}
+
 void CappedFlooredOvernightIndexedCoupon::accept(AcyclicVisitor& v) {
     Visitor<CappedFlooredOvernightIndexedCoupon>* v1 = dynamic_cast<Visitor<CappedFlooredOvernightIndexedCoupon>*>(&v);
     if (v1 != 0)
@@ -431,9 +446,17 @@ void CappedFlooredOvernightIndexedCoupon::accept(AcyclicVisitor& v) {
 // CappedFlooredOvernightIndexedCouponPricer implementation (this is the base class only)
 
 CappedFlooredOvernightIndexedCouponPricer::CappedFlooredOvernightIndexedCouponPricer(
-    const Handle<OptionletVolatilityStructure>& v)
-    : capletVol_(v) {
+    const Handle<OptionletVolatilityStructure>& v, const bool effectiveVolatilityInput)
+    : capletVol_(v), effectiveVolatilityInput_(effectiveVolatilityInput) {
     registerWith(capletVol_);
+}
+
+bool CappedFlooredOvernightIndexedCouponPricer::effectiveVolatilityInput() const { return effectiveVolatilityInput_; }
+
+Real CappedFlooredOvernightIndexedCouponPricer::effectiveCapletVolatility() const { return effectiveCapletVolatility_; }
+
+Real CappedFlooredOvernightIndexedCouponPricer::effectiveFloorletVolatility() const {
+    return effectiveFloorletVolatility_;
 }
 
 Handle<OptionletVolatilityStructure> CappedFlooredOvernightIndexedCouponPricer::capletVolatility() const {

@@ -548,7 +548,7 @@ protected:
     bool outputJacobi_ = false;
     bool alignPillars_ = false;
     bool useSensiSpreadedTermStructures_ = true;
-    QuantLib::Real sensiThreshold_ = 0.0;
+    QuantLib::Real sensiThreshold_ = 1e-6;
     boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensiSimMarketParams_;
     boost::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     boost::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
