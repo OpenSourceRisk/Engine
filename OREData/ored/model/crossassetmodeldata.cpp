@@ -828,7 +828,7 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(comModelsNode, crossAssetComNode);
     }
 
-    XMLNode* creditStateNode = XMLUtils::addChild(doc, crossAssetModelNode, "CommodityModels");
+    XMLNode* creditStateNode = XMLUtils::addChild(doc, crossAssetModelNode, "CreditStates");
     XMLUtils::addChild(doc, creditStateNode, "NumberOfFactors", static_cast<int>(numberOfCreditStates_));
 
     XMLNode* instantaneousCorrelationsNode = correlations_->toXML(doc);

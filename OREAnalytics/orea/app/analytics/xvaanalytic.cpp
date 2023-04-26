@@ -798,7 +798,7 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
         }
 
         if (inputs_->creditMigrationAnalytic()) {
-            for (Size i = 0; i < postProcess_->creditMigrationUpperBucketBounds().size(); ++i) {
+            for (Size i = 0; i < postProcess_->creditMigrationPdf().size(); ++i) {
                 auto rep = boost::make_shared<InMemoryReport>();
                 analytic()->reports()["XVA"]["credit_migration_" + to_string(i)] = rep;
                 (*rep)
@@ -807,7 +807,7 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                     .addColumn("pdf", double(), 16);
                 for (Size j = 0; j < postProcess_->creditMigrationPdf()[i].size(); ++j) {
                     (*rep)
-                        .add(postProcess_->creditMigrationUpperBucketBounds()[i])
+                        .add(postProcess_->creditMigrationUpperBucketBounds()[j])
                         .add(postProcess_->creditMigrationPdf()[i][j])
                         .add(postProcess_->creditMigrationCdf()[i][j]);
                 }

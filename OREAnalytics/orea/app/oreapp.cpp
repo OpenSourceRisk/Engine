@@ -1107,7 +1107,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     if (tmp != "")
         inputs->setCreditMigrationDistributionGrid(parseListOfValues<Real>(tmp, &parseReal));
 
-    tmp = params_->get("xva", "crediMigrationTimeSteps", false);
+    tmp = params_->get("xva", "creditMigrationTimeSteps", false);
     if (tmp != "")
         inputs->setCreditMigrationTimeSteps(parseListOfValues<Size>(tmp, &parseInteger));
 

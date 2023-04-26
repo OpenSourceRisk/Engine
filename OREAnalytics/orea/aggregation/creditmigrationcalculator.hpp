@@ -55,7 +55,7 @@ public:
 
     const std::vector<Real> upperBucketBounds() const { return upperBucketBounds_; }
     const std::vector<std::vector<Real>> cdf() const { return cdf_; }
-    const std::vector<std::vector<Real>> pdf() const { return cdf_; }
+    const std::vector<std::vector<Real>> pdf() const { return pdf_; }
 
 private:
     boost::shared_ptr<Portfolio> portfolio_;
