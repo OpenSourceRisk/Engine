@@ -798,9 +798,15 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
         }
 
         if (inputs_->creditMigrationAnalytic()) {
+            QL_REQUIRE(
+                postProcess_->creditMigrationPdf().size() == inputs_->creditMigrationTimeSteps().size(),
+                "XvaAnalyticImpl::runAnalytic(): inconsistent post process results for credit migration pdf / cdf ("
+                    << postProcess_->creditMigrationPdf().size() << ") and input credit migration time steps ("
+                    << inputs_->creditMigrationTimeSteps().size() << ")");
             for (Size i = 0; i < postProcess_->creditMigrationPdf().size(); ++i) {
                 auto rep = boost::make_shared<InMemoryReport>();
-                analytic()->reports()["XVA"]["credit_migration_" + to_string(i)] = rep;
+                analytic()->reports()["XVA"]["credit_migration_" + to_string(inputs_->creditMigrationTimeSteps()[i])] =
+                    rep;
                 (*rep)
                     .addColumn("upperBucketBound", double(), 6)
                     .addColumn("pdf", double(), 8)

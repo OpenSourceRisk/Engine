@@ -428,9 +428,10 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
 
     tmp = params->get("xva", "crediMigrationTimeSteps", false);
     if (tmp != "") {
-        for (Size i = 0; i < parseInteger(tmp); ++i)
-            fileNameMap_["credit_migration_" + to_string(i)] =
-                params->get("xva", "creditMigrationOutputFiles") + "_" + std::to_string(i);
+        auto ts = parseListOfValues<Size>(tmp, &parseInteger);
+        for (auto const& t : ts)
+            fileNameMap_["credit_migration_" + to_string(t)] =
+                params->get("xva", "creditMigrationOutputFiles") + "_" + std::to_string(t);
     }
 
     LOG("OutputFileNameMap complete");
