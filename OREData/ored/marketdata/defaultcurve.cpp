@@ -748,6 +748,8 @@ void DefaultCurve::buildTransitionMatrixCurve(const std::string& curveID, const 
         Handle<DefaultProbabilityTermStructure>(boost::make_shared<QuantExt::GeneratorDefaultProbabilityTermStructure>(
             QuantExt::GeneratorDefaultProbabilityTermStructure::MatrixType::Transition, transitionMatrix,
             initialStateIndex, asof)));
+    if (recoveryRate_ == Null<Real>())
+        recoveryRate_ = 0.0;
     LOG("Finished building default curve of type TransitionMatrix for curve " << curveID);
 }
 
