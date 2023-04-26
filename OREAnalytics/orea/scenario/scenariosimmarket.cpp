@@ -2702,7 +2702,7 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
                 for (auto const& d : s->data()) {
                     auto it = simData_.find(d.first);
                     if (it == simData_.end()) {
-                        ALOG("simulation data point missing for key " << d.first);
+                        WLOG("simulation data point missing for key " << d.first);
                         cachedSimData_.push_back(boost::shared_ptr<SimpleQuote>());
                         cachedSimDataActive_.push_back(false);
                     } else {
@@ -2745,7 +2745,7 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
         // scenario
         auto it = simData_.find(key);
         if (it == simData_.end()) {
-            ALOG("simulation data point missing for key " << key);
+            WLOG("simulation data point missing for key " << key);
         } else {
             if (filter_->allow(key)) {
                 it->second->setValue(scenario->get(key));

@@ -89,7 +89,6 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // Cache commodity curve keys
-    LOG("Cache commodity curve keys");
     if (n_com_ > 0) {
         commodityCurveKeys_.reserve(n_com_ * simMarketConfig_->commodityCurveTenors("").size());
         for (Size j = 0; j < n_com_; j++) {
@@ -111,13 +110,13 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
     // set up CrossAssetModelImpliedFxVolTermStructures
     if (simMarketConfig_->simulateFXVols()) {
-        LOG("CrossAssetModel is simulating FX vols");
+        DLOG("CrossAssetModel is simulating FX vols");
         QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                    "Simulation of FX vols is only supported for LGM1F ir model type.");
         for (Size k = 0; k < simMarketConfig_->fxVolCcyPairs().size(); k++) {
             // Calculating the index is messy
             const string pair = simMarketConfig_->fxVolCcyPairs()[k];
-            LOG("Set up CrossAssetModelImpliedFxVolTermStructures for " << pair);
+            DLOG("Set up CrossAssetModelImpliedFxVolTermStructures for " << pair);
             QL_REQUIRE(pair.size() == 6, "Invalid ccypair " << pair);
             const string& domestic = pair.substr(0, 3);
             const string& foreign = pair.substr(3);
@@ -125,10 +124,10 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             Size index = model->ccyIndex(parseCurrency(foreign)); // will throw if foreign not there
             QL_REQUIRE(index > 0, "Invalid index for ccy " << foreign << " should be > 0");
             // fxVols_ are indexed by ccyPairs
-            LOG("Pair " << pair << " index " << index);
+            DLOG("Pair " << pair << " index " << index);
             // index - 1 to convert "IR" index into an "FX" index
             fxVols_.push_back(boost::make_shared<CrossAssetModelImpliedFxVolTermStructure>(model_, index - 1));
-            LOG("Set up CrossAssetModelImpliedFxVolTermStructures for " << pair << " done");
+            DLOG("Set up CrossAssetModelImpliedFxVolTermStructures for " << pair << " done");
         }
     }
 
@@ -142,19 +141,19 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
     // equity vols
     if (simMarketConfig_->equityVolNames().size() > 0 && simMarketConfig_->simulateEquityVols()) {
-        LOG("CrossAssetModel is simulating EQ vols");
+        DLOG("CrossAssetModel is simulating EQ vols");
         QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                    "Simulation of EQ vols is only supported for LGM1F ir model type.");
         for (Size k = 0; k < simMarketConfig_->equityVolNames().size(); k++) {
             // Calculating the index is messy
             const string equityName = simMarketConfig_->equityVolNames()[k];
-            LOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName);
+            DLOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName);
             Size eqIndex = model->eqIndex(equityName);
             // eqVols_ are indexed by ccyPairs
-            LOG("EQ Vol Name = " << equityName << ", index = " << eqIndex);
+            DLOG("EQ Vol Name = " << equityName << ", index = " << eqIndex);
             // index - 1 to convert "IR" index into an "FX" index
             eqVols_.push_back(boost::make_shared<CrossAssetModelImpliedEqVolTermStructure>(model_, eqIndex));
-            LOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName << " done");
+            DLOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName << " done");
         }
     }
 
@@ -248,15 +247,10 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         yieldCurveCurrency_.push_back(ccy);
     }
 
-    LOG("Cache commodity curves");
     for (Size j = 0; j < n_com_; ++j) {
-        LOG("COM curve " << j);
         boost::shared_ptr<CommodityModel> cm = model_->comModel(j);
-        LOG("COM curve " << j << ", model set");
         auto pts = boost::make_shared<QuantExt::ModelImpliedPriceTermStructure>(model_->comModel(j), dc, true);
-        LOG("COM curve " << j << ", pts set");
         comCurves_.push_back(pts);
-        LOG("COM curve " << j << ", curve added");
     }
 
     // Cache data regarding the zero inflation curves to avoid repeating in date loop below.
@@ -572,9 +566,12 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         // Survival Weights, stochastic cumulative survival probability, Recovery Rates
         for (Size k = 0; k < n_survivalweights_; ++k) {
             string name = simMarketConfig_->additionalScenarioDataSurvivalWeights()[k];
+            Real rr = survivalWeightsDefaultCurves_[k]->recovery().empty()
+                          ? 0.0
+                          : survivalWeightsDefaultCurves_[k]->recovery()->value();
             scenarios[i]->add(survivalWeightKeys_[k],
                               survivalWeightsDefaultCurves_[k]->curve()->survivalProbability(dates_[i]));
-            scenarios[i]->add(recoveryRateKeys_[k], survivalWeightsDefaultCurves_[k]->recovery()->value());
+            scenarios[i]->add(recoveryRateKeys_[k], rr);
         }
     }
     return scenarios;
