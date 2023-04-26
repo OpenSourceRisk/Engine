@@ -61,7 +61,7 @@ void DiscountingRiskyBondEngineMultiState::calculate() const {
         if (i == mainResultState_)
             continue;
         linkCurves(i);
-        DiscountingRiskyBondEngineMultiState::calculate();
+        DiscountingRiskyBondEngine::calculate();
         values[i] = results_.value;
     }
 
