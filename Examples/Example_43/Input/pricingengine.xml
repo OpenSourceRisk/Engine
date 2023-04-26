@@ -66,13 +66,16 @@
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
     <Engine>DiscountingRiskyBondEngine</Engine>
-    <EngineParameters/>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
   </Product>
   <Product type="Bond">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
     <Engine>DiscountingRiskyBondEngineMultiState</Engine>
     <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
       <Parameter name="Rule_0">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_AAA</Parameter>
       <Parameter name="Rule_1">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_AA</Parameter>
       <Parameter name="Rule_2">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_A</Parameter>

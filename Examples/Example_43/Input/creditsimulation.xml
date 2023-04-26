@@ -118,7 +118,7 @@
   <!-- Netting Sets, Risk and PnL         -->
   <!-- ================================== -->
   <NettingSetIds>
-    CPTY_A,CPTY_B,CPTY_C
+    CPTY_B,CPTY_C
   </NettingSetIds>
   <Risk>
     <Market>N</Market>
