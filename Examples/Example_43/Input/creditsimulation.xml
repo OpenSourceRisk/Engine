@@ -6,7 +6,8 @@
   <TransitionMatrices>
     <TransitionMatrix>
       <Name>TransitionMatrix_1</Name>
-      <Data t0="0.0" t1="1.0"><!--   Aaa     Aa      A       Baa     Ba      B       C    Default  -->
+      <Data t0="0.0" t1="1.0">
+    <!--   Aaa     Aa      A       Baa     Ba      B       C    Default  -->
 	0.8588, 0.0976, 0.0048, 0.0000, 0.0003, 0.0000, 0.0000, 0.0000, 
 	0.0092, 0.8487, 0.0964, 0.0036, 0.0015, 0.0002, 0.0000, 0.0004, 
 	0.0008, 0.0224, 0.8624, 0.0609, 0.0077, 0.0021, 0.0000, 0.0002, 
@@ -131,9 +132,9 @@
     <DoubleDefault>Y</DoubleDefault>
     <Seed>42</Seed>
     <Paths>1000</Paths>
-    <CreditMode>Migration</CreditMode>
     <!-- Migration, Default -->
-    <LoanExposureMode>Value</LoanExposureMode>
+    <CreditMode>Migration</CreditMode>
     <!-- Notional, Value -->
+    <LoanExposureMode>Value</LoanExposureMode>
   </Risk>
 </CreditSimulation>

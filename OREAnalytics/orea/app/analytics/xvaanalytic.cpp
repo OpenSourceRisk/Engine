@@ -153,11 +153,11 @@ void XvaAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError
     LOG("XVA: Build Simulation Model (continueOnCalibrationError = "
         << std::boolalpha << continueOnCalibrationError << ")");
     CrossAssetModelBuilder modelBuilder(
-        analytic()->market(), analytic()->configurations().crossAssetModelData,
-                                        inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
-                                        inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
-                                        inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"),
-                                        false, continueOnCalibrationError);
+        analytic()->market(), analytic()->configurations().crossAssetModelData, inputs_->marketConfig("lgmcalibration"),
+        inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
+        inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
+        inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "",
+        inputs_->salvageCorrelationMatrix() ? SalvagingAlgorithm::Spectral : SalvagingAlgorithm::None);
     model_ = *modelBuilder.model();
 }
 

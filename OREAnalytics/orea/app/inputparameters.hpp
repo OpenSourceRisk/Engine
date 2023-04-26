@@ -148,7 +148,8 @@ public:
     void setCovarianceDataFromFile(const std::string& fileName);
     void setSensitivityStreamFromFile(const std::string& fileName);
 
-    // Setters for exposure simulation 
+    // Setters for exposure simulation
+    void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
     void setAmc(bool b) { amc_ = b; }
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
     void setExposureBaseCurrency(const std::string& s) { exposureBaseCurrency_ = s; } 
@@ -362,7 +363,8 @@ public:
     
     /*********************************
      * Getters for exposure simulation 
-     *********************************/    
+     *********************************/
+    bool salvageCorrelationMatrix() { return salvageCorrelationMatrix_; }
     bool amc() { return amc_; }
     const std::set<std::string>& amcTradeTypes() { return amcTradeTypes_; }
     const std::string& exposureBaseCurrency() { return exposureBaseCurrency_; }
@@ -577,7 +579,7 @@ protected:
     /*******************
      * EXPOSURE analytic
      *******************/
-    // bool simulation_ = false;
+    bool salvageCorrelationMatrix_ = false;
     bool amc_ = false;
     std::set<std::string> amcTradeTypes_;
     std::string exposureBaseCurrency_ = "";

@@ -50,17 +50,18 @@
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="computeCube">Y</Parameter>
-      <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="additionalScenarioDataFileName">scenariodata.csv.gz</Parameter>
       <Parameter name="storeFlows">Y</Parameter>
       <Parameter name="storeCreditStateNPVs">8</Parameter>
+      <Parameter name="salvageCorrelationMatrix">true</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
-      <Parameter name="cubeFile">cube.dat</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
       <Parameter name="hyperCube">Y</Parameter>
-      <Parameter name="scenarioFile">scenariodata.dat</Parameter>
+      <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="quantile">0.95</Parameter>
@@ -86,10 +87,6 @@
       <!-- end of credit risk configuration -->
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
-    </Analytic>
-    <Analytic type="initialMargin">
-      <Parameter name="active">N</Parameter>
-      <Parameter name="method"/>
     </Analytic>
     <Analytic type="sensitivity">
       <Parameter name="active">N</Parameter>

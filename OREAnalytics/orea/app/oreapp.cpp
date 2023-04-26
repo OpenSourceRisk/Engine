@@ -749,7 +749,11 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     tmp = params_->get("xva", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         inputs->insertAnalytic("XVA");
-    
+
+    tmp = params_->get("simulation", "salvageCorrelationMatrix", false);
+    if (tmp != "")
+        inputs->setSalvageCorrelationMatrix(parseBool(tmp));
+
     tmp = params_->get("simulation", "amc", false);
     if (tmp != "")
         inputs->setAmc(parseBool(tmp));
