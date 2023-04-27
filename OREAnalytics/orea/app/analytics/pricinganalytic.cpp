@@ -87,7 +87,7 @@ void PricingAnalyticImpl::runAnalytic(
 
         std::string effectiveResultCurrency =
             inputs_->resultCurrency().empty() ? inputs_->baseCurrency() : inputs_->resultCurrency();
-        if (type == "NPV" || type == "NPV_LAGGED") {
+        if (type == "NPV") {
             CONSOLEW("Pricing: NPV Report");
             ReportWriter(inputs_->reportNaString())
                 .writeNpv(*report, effectiveResultCurrency, analytic()->market(), "",
@@ -174,7 +174,7 @@ void PricingAnalyticImpl::runAnalytic(
             bool recalibrateModels = true;
             bool ccyConv = false;
             std::string configuration = inputs_->marketConfig("pricing");
-	    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis;
+            boost::shared_ptr<SensitivityAnalysis> sensiAnalysis;
             if (inputs_->nThreads() == 1) {
                 LOG("Single-threaded sensi analysis");
                 std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
