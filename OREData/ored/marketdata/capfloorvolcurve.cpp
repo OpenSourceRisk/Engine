@@ -832,12 +832,17 @@ boost::shared_ptr<StrippedOptionlet> CapFloorVolCurve::transform(const QuantExt:
         }
     }
 
+    vector<vector<Real>> optionletStrikes;
+    for (Size i = 0; i < os.optionletFixingDates().size(); i++) {
+        optionletStrikes.push_back(os.optionletStrikes(i));
+    }
+
     // FIXME StrippedOptionlet::atmOptionletRates() is the only method depending on whether index is Ibor or OIS
     // these are not used above in optSurface() though, so we do not need to extend StrippedOptionlet to handle OIS
     // at the moment
     boost::shared_ptr<StrippedOptionlet> res = boost::make_shared<StrippedOptionlet>(
         os.settlementDays(), os.calendar(), os.businessDayConvention(), os.index(), os.optionletFixingDates(),
-        os.optionletStrikes(0), vols, os.dayCounter(), os.volatilityType(), os.displacement());
+        optionletStrikes, vols, os.dayCounter(), os.volatilityType(), os.displacement());
 
     res->unregisterWithAll();
 
