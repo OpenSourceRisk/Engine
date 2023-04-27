@@ -51,7 +51,7 @@
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="computeCube">Y</Parameter>
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
-      <Parameter name="additionalScenarioDataFileName">scenariodata.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
       <Parameter name="storeFlows">Y</Parameter>
       <!-- credit risk configuration -->
       <Parameter name="storeCreditStateNPVs">8</Parameter>
