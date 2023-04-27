@@ -32,7 +32,7 @@ cashflows/brlcdicouponpricer.cpp
 cashflows/cashflows.cpp
 cashflows/cashflowtable.cpp
 cashflows/cmbcoupon.cpp
-cashflows/commoditybasiscashflow.cpp
+
 cashflows/commoditycashflow.cpp
 cashflows/commodityindexedaveragecashflow.cpp
 cashflows/commodityindexedcashflow.cpp

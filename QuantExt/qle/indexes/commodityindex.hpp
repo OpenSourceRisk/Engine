@@ -30,6 +30,8 @@
 #include <ql/time/calendar.hpp>
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
+#include <qle/time/futureexpirycalculator.hpp>
+#include <ql/cashflow.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -140,6 +142,77 @@ public:
     boost::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
         const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
 };
+
+
+//! Commodity Index
+/*! This index can represent futures prices derived from basis future index and a base future index
+    
+    If it is a futures index and \c keepDays_ is \c false, we set the name() to
+    "COMM-" + underlyingName + "-" + "yyyy-mm", where "yyyy" is the expiry date's year and "mm" is the expiry date's
+    month. The index forecast for fixing Date yields the price curve's forecast to the futures expiry instead which
+    is beyond the fixing date. If \c keepDays_ is \c true, the date suffix in the name is "yyyy-mm-dd" i.e. we keep
+    the full date. This is useful for commodities whose expiry cycle is less than one month e.g. daily.
+
+    \ingroup indexes
+*/
+class CommodityBasisFutureIndex : public CommodityFuturesIndex {
+public:
+    CommodityBasisFutureIndex(
+        const std::string& underlyingName, const Date& expiryDate, const Calendar& fixingCalendar,
+        const Handle<QuantExt::CommodityFuturesIndex>& baseIndex,
+        const boost::shared_ptr<FutureExpiryCalculator>& expiryCalcBasis,
+        const boost::shared_ptr<FutureExpiryCalculator>& expiryCalcBase,
+        const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>(),
+        const bool addSpread = true);
+
+    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
+   
+
+    //! Implement the base clone. Ajust the base future to match the same contract month
+    boost::shared_ptr<CommodityIndex>
+    clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
+          const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
+
+private:
+    Handle<QuantExt::CommodityFuturesIndex> baseIndex_;
+    boost::shared_ptr<FutureExpiryCalculator> expiryCalcBasis_;
+    boost::shared_ptr<FutureExpiryCalculator> expiryCalcBase_;
+    mutable boost::shared_ptr<CashFlow> cashflow_;
+    bool addSpread_;
+
+
+    QuantLib::Date getContractDate(const Date& expiry) const {
+
+        using QuantLib::Date;
+        using QuantLib::io::iso_date;
+
+        // Try the expiry date's associated contract month and year. Start with the expiry month and year itself.
+        // Assume that expiry is within 12 months of the contract month and year.
+        Date result(1, expiry.month(), expiry.year());
+        Date calcExpiry = expiryCalcBasis_->expiryDate(result, 0);
+        Size maxIncrement = 12;
+        while (calcExpiry != expiry && maxIncrement > 0) {
+            if (calcExpiry < expiry)
+                result += 1 * Months;
+            else
+                result -= 1 * Months;
+            calcExpiry = expiryCalcBasis_->expiryDate(result, 0);
+            maxIncrement--;
+        }
+
+        QL_REQUIRE(calcExpiry == expiry, "Expected the calculated expiry, "
+                                             << iso_date(calcExpiry) << ", to equal the expiry, " << iso_date(expiry)
+                                             << ".");
+
+        return result;
+    }
+
+    boost::shared_ptr<CashFlow>
+        makeCashflow(const QuantLib::Date& start, const QuantLib::Date& end) const;
+
+
+};
+
 
 } // namespace QuantExt
 
