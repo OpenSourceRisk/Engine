@@ -199,7 +199,8 @@ QuantLib::Date CommodityBasisFutureIndex::getContractDate(const Date& expiry) co
 boost::shared_ptr<QuantLib::CashFlow> CommodityBasisFutureIndex::makeCashflow(const QuantLib::Date& start,
     const QuantLib::Date& end) const {
     return boost::make_shared<CommodityIndexedCashFlow>(
-        1.0, start, end, baseIndex_, 0, QuantLib::NullCalendar(), QuantLib::Unadjusted, 0, QuantLib::NullCalendar(), 0.0,
+        1.0, start, end, baseIndex_.currentLink(), 0, QuantLib::NullCalendar(), QuantLib::Unadjusted, 0,
+        QuantLib::NullCalendar(), 0.0,
         1.0, CommodityIndexedCashFlow::PaymentTiming::InArrears, true, true, true, 0, expiryCalcBase_);
 }
 
