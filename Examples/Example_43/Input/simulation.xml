@@ -156,9 +156,11 @@
         </CalibrationOptions>
       </CrossCcyLGM>
     </ForeignExchangeModels>
+    <!-- credit risk configuration -->
     <CreditStates>
       <NumberOfFactors>1</NumberOfFactors>
     </CreditStates>
+    <!-- end of credit risk configuration -->
     <InstantaneousCorrelations>
       <Correlation factor1="IR:EUR" factor2="IR:USD">0.5</Correlation>
       <Correlation factor1="IR:EUR" factor2="IR:GBP">0.3</Correlation>
@@ -309,9 +311,11 @@
         <Name>SECURITY_1</Name>
       </Names>
     </Securities>
+    <!-- credit risk configuration -->
     <CreditStates>
       <NumberOfFactors>1</NumberOfFactors>
     </CreditStates>
+    <!-- end of credit risk configuration -->
     <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->
     <AggregationScenarioDataCurrencies>
@@ -325,6 +329,7 @@
       <Index>EUR-EONIA</Index>
       <Index>USD-LIBOR-3M</Index>
     </AggregationScenarioDataIndices>
+    <!-- credit risk configuration -->
     <AggregationScenarioDataCreditStates>
       <NumberOfFactors>1</NumberOfFactors>
     </AggregationScenarioDataCreditStates>
@@ -344,5 +349,6 @@
       <Name>BOND_B</Name>
       <Name>BOND_C</Name>
     </AggregationScenarioDataSurvivalWeights>
+    <!-- end of credit risk configuration -->
   </Market>
 </Simulation>

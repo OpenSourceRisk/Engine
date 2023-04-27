@@ -53,7 +53,9 @@
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.csv.gz</Parameter>
       <Parameter name="storeFlows">Y</Parameter>
+      <!-- credit risk configuration -->
       <Parameter name="storeCreditStateNPVs">8</Parameter>
+      <!-- end of credit risk configuration -->
       <Parameter name="salvageCorrelationMatrix">true</Parameter>
     </Analytic>
     <Analytic type="xva">
