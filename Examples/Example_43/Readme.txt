@@ -3,7 +3,7 @@
 +
 +1) Portfolio
 +
-+   Test pPortfolios of varying size and compistion
++   Test Portfolios of varying size and compostion
 +   - single bond
 +   - bond and swap
 +   - 3 bonds

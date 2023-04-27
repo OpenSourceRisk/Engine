@@ -83,7 +83,7 @@
       <!-- credit risk configuration -->
       <Parameter name="creditMigration">Y</Parameter>
       <Parameter name="creditMigrationDistributionGrid">-2E7,1E7,300</Parameter>
-      <Parameter name="creditMigrationTimeSteps">11</Parameter>
+      <Parameter name="creditMigrationTimeSteps">3,11</Parameter>
       <Parameter name="creditMigrationConfig">creditsimulation.xml</Parameter>
       <Parameter name="creditMigrationOutputFiles">c_</Parameter>
       <!-- end of credit risk configuration -->

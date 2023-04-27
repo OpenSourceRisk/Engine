@@ -43,7 +43,7 @@
       <!-- no sqrt is taken, these are the actual loadings -->
       <FactorLoadings>0.4898979485566356</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
-      <InitialState>4</InitialState>
+      <InitialState>3</InitialState>
     </Entity>
     <!--
     <Entity>

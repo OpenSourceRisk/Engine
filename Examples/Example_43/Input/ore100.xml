@@ -45,7 +45,7 @@
       <Parameter name="outputFileName">creditcurves.csv</Parameter>
     </Analytic>
     <Analytic type="simulation">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
@@ -54,6 +54,7 @@
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
       <Parameter name="storeFlows">Y</Parameter>
       <Parameter name="storeCreditStateNPVs">8</Parameter>
+      <Parameter name="salvageCorrelationMatrix">true</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
@@ -63,6 +64,7 @@
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
+      <Parameter name="exposureProfilesByTrade">N</Parameter>
       <Parameter name="quantile">0.95</Parameter>
       <Parameter name="calculationType">Symmetric</Parameter>
       <Parameter name="allocationMethod">None</Parameter>

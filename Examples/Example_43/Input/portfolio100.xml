@@ -4,7 +4,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -50,7 +50,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -96,7 +96,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -142,7 +142,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -188,7 +188,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -234,7 +234,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -280,7 +280,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -326,7 +326,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -372,7 +372,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -418,7 +418,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -464,7 +464,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -510,7 +510,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -556,7 +556,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -602,7 +602,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -648,7 +648,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -694,7 +694,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -740,7 +740,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -786,7 +786,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -832,7 +832,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -878,7 +878,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -924,7 +924,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -970,7 +970,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1016,7 +1016,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1062,7 +1062,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1108,7 +1108,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1154,7 +1154,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1200,7 +1200,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1246,7 +1246,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1292,7 +1292,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1338,7 +1338,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1384,7 +1384,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1430,7 +1430,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1476,7 +1476,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1522,7 +1522,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1568,7 +1568,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1614,7 +1614,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1660,7 +1660,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1706,7 +1706,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1752,7 +1752,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1798,7 +1798,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1844,7 +1844,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1890,7 +1890,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1936,7 +1936,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -1982,7 +1982,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2028,7 +2028,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2074,7 +2074,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2120,7 +2120,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2166,7 +2166,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2212,7 +2212,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2258,7 +2258,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2304,7 +2304,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2350,7 +2350,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2396,7 +2396,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2442,7 +2442,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2488,7 +2488,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2534,7 +2534,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2580,7 +2580,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2626,7 +2626,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2672,7 +2672,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2718,7 +2718,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2764,7 +2764,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2810,7 +2810,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2856,7 +2856,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2902,7 +2902,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2948,7 +2948,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -2994,7 +2994,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3040,7 +3040,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3086,7 +3086,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3132,7 +3132,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3178,7 +3178,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3224,7 +3224,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3270,7 +3270,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3316,7 +3316,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3362,7 +3362,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3408,7 +3408,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3454,7 +3454,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3500,7 +3500,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3546,7 +3546,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3592,7 +3592,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3638,7 +3638,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3684,7 +3684,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3730,7 +3730,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3776,7 +3776,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3822,7 +3822,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3868,7 +3868,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3914,7 +3914,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -3960,7 +3960,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -4006,7 +4006,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -4052,7 +4052,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -4098,7 +4098,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -4144,7 +4144,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -4190,7 +4190,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -4236,7 +4236,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -4282,7 +4282,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -4328,7 +4328,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -4374,7 +4374,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -4420,7 +4420,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -4466,7 +4466,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -4512,7 +4512,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -4558,7 +4558,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
