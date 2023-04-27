@@ -973,12 +973,12 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
                             if ((strikes[j] > -shift || close_enough(strikes[j], -shift)) &&
                                 (forwards[i][u] > -shift || close_enough(forwards[i][u], -shift))) {
                                 stddev =
-                                    std::sqrt(capletVol_->blackVariance(expiries[i], strikes[j]));
+                                    std::sqrt(capletVol_->blackVariance(t, strikes[j]));
                                 callPricesStrike[i][u][j] =
                                     blackFormula(Option::Type::Call, strikes[j], forwards[i][u], stddev);
                             }
                         } else {
-                            stddev = std::sqrt(capletVol_->blackVariance(expiries[i], strikes[j]));
+                            stddev = std::sqrt(capletVol_->blackVariance(t, strikes[j]));
                             callPricesStrike[i][u][j] =
                                 bachelierBlackFormula(Option::Type::Call, strikes[j], forwards[i][u], stddev);
                         }
@@ -1044,12 +1044,12 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
                         if (capletVol_->volatilityType() == ShiftedLognormal) {
                             if ((strike > -shift || close_enough(strike, -shift)) &&
                                 (forwards[i][u] > -shift || close_enough(forwards[i][u], -shift))) {
-                                stddev = std::sqrt(capletVol_->blackVariance(expiries[i], strike));
+                                stddev = std::sqrt(capletVol_->blackVariance(t, strike));
                                 callPricesStrikeSpread[i][u][j] =
                                     blackFormula(Option::Type::Call, strike, forwards[i][u], stddev);
                             }
                         } else {
-                            stddev = std::sqrt(capletVol_->blackVariance(expiries[i], strike));
+                            stddev = std::sqrt(capletVol_->blackVariance(t, strike));
                             callPricesStrikeSpread[i][u][j] =
                                 bachelierBlackFormula(Option::Type::Call, strike, forwards[i][u], stddev);
                         }
