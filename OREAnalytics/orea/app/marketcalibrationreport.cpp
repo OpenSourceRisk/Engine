@@ -48,7 +48,7 @@ void MarketCalibrationReport::populateReport(const boost::shared_ptr<ore::data::
         return;
     auto t = boost::dynamic_pointer_cast<TodaysMarket>(market);
     if (!t) {
-        DLOG(t, "MarketCalibrationReport::populateReport() expected TodaysMarket");
+        DLOG("MarketCalibrationReport::populateReport() expected TodaysMarket");
         return;
     }
 
