@@ -92,7 +92,6 @@ public:
     void setMporDays(Size s) { mporDays_ = s; }
     void setMporCalendar(const std::string& s); 
     void setMporForward(bool b) { mporForward_ = b; }
-    void setIncludeMporExpired(bool b) { includeMporExpired_ = b; }
 
     // Setters for npv analytics
     void setOutputAdditionalResults(bool b) { outputAdditionalResults_ = b; }
@@ -293,7 +292,6 @@ public:
             return mporCalendar_;
     }
     bool mporForward() { return mporForward_; }
-    bool includeMporExpired() const { return includeMporExpired_; };
 
     /***************************
      * Getters for npv analytics
@@ -501,7 +499,6 @@ protected:
     QuantLib::Size mporDays_ = 10;
     QuantLib::Calendar mporCalendar_;
     bool mporForward_ = true;
-    bool includeMporExpired_ = true;
 
     /**************
      * NPV analytic
