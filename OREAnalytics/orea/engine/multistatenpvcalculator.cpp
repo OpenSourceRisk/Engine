@@ -53,12 +53,11 @@ void MultiStateNPVCalculator::calculateT0(const boost::shared_ptr<Trade>& trade,
 
 std::vector<Real> MultiStateNPVCalculator::multiStateNpv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
                                                          const boost::shared_ptr<SimMarket>& simMarket) {
-    std::vector<Real> npv(states_, 0.0);
-
     // handle expired trades
 
-    if (trade->instrument()->qlInstrument()->isExpired())
-        return npv;
+    if (trade->instrument()->qlInstrument()->isExpired()) {
+        return std::vector<Real>(states_, 0.0);
+    }
 
     if (auto tmp = trade->instrument()->qlInstrument()->additionalResults().find("stateNpv");
         tmp != trade->instrument()->qlInstrument()->additionalResults().end()) {
@@ -68,7 +67,7 @@ std::vector<Real> MultiStateNPVCalculator::multiStateNpv(Size tradeIndex, const 
         std::vector<Real> stateNpv;
         try {
             stateNpv = boost::any_cast<std::vector<Real>>(tmp->second);
-        } catch(const std::exception& e) {
+        } catch (const std::exception& e) {
             QL_FAIL("unexpected type of result stateNpv: " << e.what());
         }
         for (auto& n : stateNpv) {
@@ -79,14 +78,16 @@ std::vector<Real> MultiStateNPVCalculator::multiStateNpv(Size tradeIndex, const 
                 n *= fx / numeraire;
             }
         }
+
+        return stateNpv;
+
     } else {
 
         // we do not have a stateNpv result and use the usual npv for all states
 
-        std::fill(npv.begin(), npv.end(), NPVCalculator::npv(tradeIndex, trade, simMarket));
+        std::vector<Real> npv(states_, NPVCalculator::npv(tradeIndex, trade, simMarket));
+        return npv;
     }
-
-    return npv;
 }
 
 } // namespace analytics

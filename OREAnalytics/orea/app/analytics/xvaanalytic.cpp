@@ -274,9 +274,9 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
             calculators.push_back(boost::make_shared<CashflowCalculator>(
                 inputs_->exposureBaseCurrency(), inputs_->asof(), grid_, cubeInterpreter_->mporFlowsIndex()));
         if(inputs_->storeCreditStateNPVs() > 0) {
-            calculators.push_back(boost::make_shared<MultiStateNPVCalculator>(
-                inputs_->exposureBaseCurrency(), inputs_->storeCreditStateNPVs(),
-                cubeInterpreter_->creditStateNPVsIndex()));
+            calculators.push_back(boost::make_shared<MultiStateNPVCalculator>(inputs_->exposureBaseCurrency(),
+                                                                              cubeInterpreter_->creditStateNPVsIndex(),
+                                                                              inputs_->storeCreditStateNPVs()));
         }
         return calculators;
     };
