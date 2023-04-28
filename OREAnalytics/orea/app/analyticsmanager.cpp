@@ -111,14 +111,13 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
         return;
 
     std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
+    std::set<Date> marketDates;
     for (const auto& a : analytics_) {
         std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> atmps = a.second->todaysMarketParams();
         tmps.insert(end(tmps), begin(atmps), end(atmps));
+        auto mdates = a.second->marketDates();
+        marketDates.insert(mdates.begin(), mdates.end());
     }
-
-    QuantExt::Date mporDate = QuantExt::Date();
-    if (laggedMarket_)
-        mporDate = inputs_->mporCalendar().advance(inputs_->asof(), inputs_->mporDays(), QuantExt::Days);
 
     // Do we need market data
     bool requireMarketData = false;
@@ -133,7 +132,7 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
         // load the market data
         if (tmps.size() > 0) {
             LOG("AnalyticsManager::runAnalytics: populate loader");
-            marketDataLoader_->populateLoader(tmps, laggedMarket_, mporDate, inputs_->includeMporExpired());
+            marketDataLoader_->populateLoader(tmps, marketDates);
         }
         
         boost::shared_ptr<InMemoryReport> mdReport = boost::make_shared<InMemoryReport>();

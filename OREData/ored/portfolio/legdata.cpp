@@ -893,6 +893,18 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     QL_REQUIRE(schedule.size() > 1, "FixedLeg:Schedule must have at least 2 dates.");
 
+    // Get explicit payment dates which in most cases should be empty
+    vector<Date> paymentDates;
+    if (!data.paymentDates().empty()) {
+        BusinessDayConvention paymentDatesConvention =
+            data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
+        Calendar paymentDatesCalendar =
+            data.paymentCalendar().empty() ? NullCalendar() : parseCalendar(data.paymentCalendar());
+        paymentDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
+        for (Size i = 0; i < paymentDates.size(); i++)
+            paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
+    }
+
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
@@ -912,9 +924,9 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
                   .withPaymentAdjustment(bdc)
                   .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
                   .withPaymentCalendar(paymentCalendar)
-                  .withLastPeriodDayCounter(data.lastPeriodDayCounter().empty()
-                                                ? DayCounter()
-                                                : parseDayCounter(data.lastPeriodDayCounter()));
+                  .withLastPeriodDayCounter(
+                      data.lastPeriodDayCounter().empty() ? DayCounter() : parseDayCounter(data.lastPeriodDayCounter()))
+                  .withPaymentDates(paymentDates);
     return leg;
 
 }
@@ -977,6 +989,19 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << data.legType());
 
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
+
+    // Get explicit payment dates which in most cases should be empty
+    vector<Date> paymentDates;
+    if (!data.paymentDates().empty()) {
+        BusinessDayConvention paymentDatesConvention =
+            data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
+        Calendar paymentDatesCalendar =
+            data.paymentCalendar().empty() ? NullCalendar() : parseCalendar(data.paymentCalendar());
+        paymentDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
+        for (Size i = 0; i < paymentDates.size(); i++)
+            paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
+    }
+
     Calendar paymentCalendar;
     if (data.paymentCalendar().empty())
         paymentCalendar = schedule.calendar();
@@ -1079,7 +1104,8 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                           .withFixingDays(fixingDays)
                           .inArrears(isInArrears)
                           .withGearings(gearings)
-                          .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag));
+                          .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                          .withPaymentDates(paymentDates);
 
     // If no caps or floors or in arrears fixing, return the leg
     if (!hasCapsFloors && !isInArrears)
@@ -1137,7 +1163,18 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
-    Calendar paymentCalendar;
+
+    // Get explicit payment dates which in most cases should be empty
+    vector<Date> paymentDates;
+    if (!data.paymentDates().empty()) {
+        BusinessDayConvention paymentDatesConvention =
+            data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
+        Calendar paymentDatesCalendar =
+            data.paymentCalendar().empty() ? NullCalendar() : parseCalendar(data.paymentCalendar());
+        paymentDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
+        for (Size i = 0; i < paymentDates.size(); i++)
+            paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
+    }
 
     // try to set the rate computation period based on the schedule tenor
     Period rateComputationPeriod = 0 * Days;
@@ -1146,6 +1183,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     else if (!tmp.dates().empty() && !tmp.dates().front().tenor().empty())
         rateComputationPeriod = parsePeriod(tmp.dates().front().tenor());
 
+    Calendar paymentCalendar;
     if (data.paymentCalendar().empty())
         paymentCalendar = index->fixingCalendar();
     else
@@ -1201,10 +1239,25 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                 .withLocalCapFloor(floatData->localCapFloor())
                 .withAverageONIndexedCouponPricer(couponPricer)
                 .withCapFlooredAverageONIndexedCouponPricer(cfCouponPricer)
-                .withTelescopicValueDates(floatData->telescopicValueDates());
+                .withTelescopicValueDates(floatData->telescopicValueDates())
+                .withPaymentDates(paymentDates);
         return leg;
 
     } else {
+
+        boost::shared_ptr<QuantExt::OvernightIndexedCouponPricer> couponPricer =
+            boost::make_shared<QuantExt::OvernightIndexedCouponPricer>();
+
+        boost::shared_ptr<QuantExt::CappedFlooredOvernightIndexedCouponPricer> cfCouponPricer;
+        if (attachPricer && (floatData->caps().size() > 0 || floatData->floors().size() > 0)) {
+            auto builder = boost::dynamic_pointer_cast<CapFlooredOvernightIndexedCouponLegEngineBuilder>(
+                engineFactory->builder("CapFlooredOvernightIndexedCouponLeg"));
+            QL_REQUIRE(builder, "No builder found for CapFlooredOvernightIndexedCouponLeg");
+            cfCouponPricer = boost::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCouponPricer>(
+                builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod));
+            QL_REQUIRE(cfCouponPricer, "internal error, could not cast to CapFlooredAverageONIndexedCouponPricer");
+        }
+
         Leg leg = QuantExt::OvernightLeg(schedule, index)
                       .withNotionals(notionals)
                       .withSpreads(spreads)
@@ -1228,22 +1281,15 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                                                                        schedule, Null<Real>()))
                       .withNakedOption(floatData->nakedOption())
                       .withLocalCapFloor(floatData->localCapFloor())
-                      .withTelescopicValueDates(floatData->telescopicValueDates());
+                      .withOvernightIndexedCouponPricer(couponPricer)
+                      .withCapFlooredOvernightIndexedCouponPricer(cfCouponPricer)
+                      .withTelescopicValueDates(floatData->telescopicValueDates())
+                      .withPaymentDates(paymentDates);
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(index);
         if (brlCdiIndex)
             QuantExt::setCouponPricer(leg, boost::make_shared<BRLCdiCouponPricer>());
-
-        // if we have caps / floors, we need a pricer for that
-        if (attachPricer && (floatData->caps().size() > 0 || floatData->floors().size() > 0)) {
-            auto builder = boost::dynamic_pointer_cast<CapFlooredOvernightIndexedCouponLegEngineBuilder>(
-                engineFactory->builder("CapFlooredOvernightIndexedCouponLeg"));
-            QL_REQUIRE(builder, "No builder found for CapFlooredOvernightIndexedCouponLeg");
-            auto pricer =
-                builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod);
-            QuantExt::setCouponPricer(leg, pricer);
-        }
 
         return leg;
     }

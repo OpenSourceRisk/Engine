@@ -56,9 +56,6 @@ public:
     Analytic::analytic_npvcubes const npvCubes();
     Analytic::analytic_mktcubes const mktCubes();
 
-    void setLaggedMarket() { laggedMarket_ = true; }
-    void unsetLaggedMarket() { laggedMarket_ = false; }
-
     // Write all reports to files, reportNames map can be used to replace standard report names
     // with custom names
     void toFile(const Analytic::analytic_reports& reports, const std::string& outputPath,
@@ -73,7 +70,6 @@ private:
     Analytic::analytic_reports marketDataReports_;
     std::set<std::string> validAnalytics_;
     std::set<std::string> requestedAnalytics_;
-    bool laggedMarket_ = false;
 };
 
 boost::shared_ptr<AnalyticsManager> parseAnalytics(const std::string& s,

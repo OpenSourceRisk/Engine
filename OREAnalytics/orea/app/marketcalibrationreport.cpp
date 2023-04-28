@@ -47,7 +47,11 @@ void MarketCalibrationReport::populateReport(const boost::shared_ptr<ore::data::
     if (market == nullptr)
         return;
     auto t = boost::dynamic_pointer_cast<TodaysMarket>(market);
-    QL_REQUIRE(t, "MarketCalibrationReport::populateReport(): expected TodaysMarket (internal error)");
+    if (!t) {
+        DLOG("MarketCalibrationReport::populateReport() expected TodaysMarket");
+        return;
+    }
+
     auto calibrationInfo = t->calibrationInfo();
     if (calibrationFilters_.mdFilterCurves) {
         // First cut at adding curves
