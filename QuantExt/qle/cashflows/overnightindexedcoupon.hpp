@@ -253,6 +253,10 @@ public:
     OvernightLeg& withInArrears(const bool inArrears);
     OvernightLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
     OvernightLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
+    OvernightLeg& withOvernightIndexedCouponPricer(const boost::shared_ptr<OvernightIndexedCouponPricer>& couponPricer);
+    OvernightLeg& withPaymentDates(const std::vector<Date>& paymentDates);
+    OvernightLeg& withCapFlooredOvernightIndexedCouponPricer(
+        const boost::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer);
     operator Leg() const;
 
 private:
@@ -276,6 +280,9 @@ private:
     bool inArrears_;
     boost::optional<Period> lastRecentPeriod_;
     Calendar lastRecentPeriodCalendar_;
+    std::vector<QuantLib::Date> paymentDates_;
+    boost::shared_ptr<OvernightIndexedCouponPricer> couponPricer_;
+    boost::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> capFlooredCouponPricer_;
 };
 
 } // namespace QuantExt
