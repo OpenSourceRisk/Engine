@@ -3,8 +3,8 @@
   <Trade id="Bond_1">
     <TradeType>Bond</TradeType>
     <Envelope>
-      <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId>CPTY_A</NettingSetId>
+      <CounterParty>CPTY_D</CounterParty>
+      <NettingSetId>CPTY_D</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -46,6 +46,7 @@
       </LegData>
     </BondData>
   </Trade>
+<!--
   <Trade id="CDS_1">
     <TradeType>CreditDefaultSwap</TradeType>
     <Envelope>
@@ -55,7 +56,7 @@
     </Envelope>
     <CreditDefaultSwapData>
       <IssuerId>CPTY_A</IssuerId>
-      <CreditCurveId>BOND_B</CreditCurveId>
+      <CreditCurveId>BOND_BB</CreditCurveId>
       <SettlesAccrual>Y</SettlesAccrual>
       <PaysAtDefaultTime>Y</PaysAtDefaultTime>
       <ProtectionStart/>
@@ -92,4 +93,5 @@
       </LegData>
     </CreditDefaultSwapData>
   </Trade>
+-->
 </Portfolio>
