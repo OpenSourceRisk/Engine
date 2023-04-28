@@ -893,6 +893,18 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     QL_REQUIRE(schedule.size() > 1, "FixedLeg:Schedule must have at least 2 dates.");
 
+    // Get explicit payment dates which in most cases should be empty
+    vector<Date> paymentDates;
+    if (!data.paymentDates().empty()) {
+        BusinessDayConvention paymentDatesConvention =
+            data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
+        Calendar paymentDatesCalendar =
+            data.paymentCalendar().empty() ? NullCalendar() : parseCalendar(data.paymentCalendar());
+        paymentDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
+        for (Size i = 0; i < paymentDates.size(); i++)
+            paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
+    }
+
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
@@ -912,9 +924,9 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
                   .withPaymentAdjustment(bdc)
                   .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
                   .withPaymentCalendar(paymentCalendar)
-                  .withLastPeriodDayCounter(data.lastPeriodDayCounter().empty()
-                                                ? DayCounter()
-                                                : parseDayCounter(data.lastPeriodDayCounter()));
+                  .withLastPeriodDayCounter(
+                      data.lastPeriodDayCounter().empty() ? DayCounter() : parseDayCounter(data.lastPeriodDayCounter()))
+                  .withPaymentDates(paymentDates);
     return leg;
 
 }
