@@ -360,7 +360,12 @@ void InputParameters::setPortfolioFilterDate(const std::string& s) {
     // parse to Date
     portfolioFilterDate_ = parseDate(s);
 }
-    
+
+void InputParameters::setCreditSimulationParametersFromFile(const std::string& fileName) {
+    creditSimulationParameters_ = boost::make_shared<CreditSimulationParameters>();
+    creditSimulationParameters_->fromFile(fileName);
+}
+
 void InputParameters::setAnalytics(const std::string& s) {
     // parse to set<string>
     auto v = parseListOfValues(s);
@@ -420,7 +425,16 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
                << "and file names size (" << dimRegressionFileNames_.size() << ") do not match");
     for (Size i = 0; i < dimRegressionFileNames_.size(); ++i)
         fileNameMap_["dim_regression_" + to_string(i)] = dimRegressionFileNames_[i];
-    
+
+    tmp = params->get("xva", "creditMigrationTimeSteps", false);
+    if (tmp != "") {
+        auto ts = parseListOfValues<Size>(tmp, &parseInteger);
+        for (auto const& t : ts) {
+            fileNameMap_["credit_migration_" + to_string(t)] =
+                params->get("xva", "creditMigrationOutputFiles") + "_" + std::to_string(t);
+        }
+    }
+
     LOG("OutputFileNameMap complete");
 }
     

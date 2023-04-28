@@ -478,6 +478,8 @@
               </xs:sequence>
             </xs:complexType>
           </xs:element>
+          <xs:element type="xs:string" name="InitialState" minOccurs="0"/>
+          <xs:element type="xs:string" name="States" minOccurs="0"/>
           <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
           <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
           <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>

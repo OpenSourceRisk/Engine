@@ -131,6 +131,7 @@ void Trade::reset() {
     notional_ = Null<Real>();
     notionalCurrency_ = "";
     maturity_ = Date();
+    issuer_ = "";
     requiredFixings_.clear();
 }
     

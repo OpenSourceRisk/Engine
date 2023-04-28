@@ -46,13 +46,15 @@ public:
     CubeInterpretation(const bool storeFlows, const bool withCloseOutLag,
                        const QuantLib::Handle<AggregationScenarioData>& aggregationScenarioData =
                            QuantLib::Handle<AggregationScenarioData>(),
-                       const boost::shared_ptr<DateGrid>& dateGrid = nullptr, const bool flipViewXVA = false);
+                       const boost::shared_ptr<DateGrid>& dateGrid = nullptr, const Size storeCreditStateNPVs = 0,
+                       const bool flipViewXVA = false);
 
     //! inspectors
     bool storeFlows() const;
     bool withCloseOutLag() const;
     const QuantLib::Handle<AggregationScenarioData>& aggregationScenarioData() const; // might be empty handle
     const boost::shared_ptr<DateGrid>& dateGrid() const;                              // might be nullptr
+    Size storeCreditStateNPVs() const;
     bool flipViewXVA() const;
 
     //! npv cube depth that is at least required to work with this interpretation
@@ -62,6 +64,7 @@ public:
     Size defaultDateNpvIndex() const;
     Size closeOutDateNpvIndex() const;
     Size mporFlowsIndex() const;
+    Size creditStateNPVsIndex() const;
 
     //! Retrieve an arbitrary value from the Cube (user needs to know the precise location within depth axis)
     Real getGenericValue(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx,
@@ -92,12 +95,14 @@ private:
     bool withCloseOutLag_;
     QuantLib::Handle<AggregationScenarioData> aggregationScenarioData_;
     boost::shared_ptr<DateGrid> dateGrid_;
+    Size storeCreditStateNPVs_;
     bool flipViewXVA_;
 
     Size requiredCubeDepth_;
     Size defaultDateNpvIndex_ = QuantLib::Null<Size>();
     Size closeOutDateNpvIndex_ = QuantLib::Null<Size>();
     Size mporFlowsIndex_ = QuantLib::Null<Size>();
+    Size creditStateNPVsIndex_ = QuantLib::Null<Size>();
 };
 
 } // namespace analytics

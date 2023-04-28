@@ -114,6 +114,8 @@ template <class I1, class I2> void HullWhiteBucketing::computeMultiState(I1 pBeg
         std::fill(A2.begin(), A2.end(), 0.0);
         std::fill(p2.begin(), p2.end(), 0.0);
         for (Size k = 0; k < buckets_.size(); ++k) {
+            if (QuantLib::close_enough(p_[k], 0.0))
+                continue;
             Real q = 0.0;
             auto it2_i = (*it2).begin();
             for (auto it_i = (*it).begin(), itend = (*it).end(); it_i != itend; ++it_i, ++it2_i) {

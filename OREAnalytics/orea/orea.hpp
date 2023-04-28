@@ -7,6 +7,9 @@
 
 #include <orea/aggregation/collateralaccount.hpp>
 #include <orea/aggregation/collatexposurehelper.hpp>
+#include <orea/aggregation/creditmigrationcalculator.hpp>
+#include <orea/aggregation/creditmigrationhelper.hpp>
+#include <orea/aggregation/creditsimulationparameters.hpp>
 #include <orea/aggregation/cvaspreadsensitivitycalculator.hpp>
 #include <orea/aggregation/dimcalculator.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
@@ -54,6 +57,7 @@
 #include <orea/engine/historicalpnlgenerator.hpp>
 #include <orea/engine/historicalsensipnlcalculator.hpp>
 #include <orea/engine/mporcalculator.hpp>
+#include <orea/engine/multistatenpvcalculator.hpp>
 #include <orea/engine/multithreadedvaluationengine.hpp>
 #include <orea/engine/npvrecord.hpp>
 #include <orea/engine/observationmode.hpp>

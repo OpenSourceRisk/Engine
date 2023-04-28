@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified">
+  <xs:element type="creditsimulation" name="CreditSimulation"/>
+  <xs:complexType name="creditsimulation">
+    <xs:all>
+      <xs:element type="transitionmatrices" name="TransitionMatrices"/>
+      <xs:element type="entities" name="Entities"/>
+      <xs:element type="xs:string" name="NettingSetIds"/>
+      <xs:element type="risk" name="Risk"/>
+    </xs:all>
+  </xs:complexType>
+  <xs:complexType name="transitionmatrices">
+    <xs:sequence>
+      <xs:element type="transitionmatrix" name="TransitionMatrix" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="transitionmatrix">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Name"/>
+      <xs:element name="Data">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute name="t0" type="xs:string"/>
+              <xs:attribute name="t1" type="xs:string"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="entities">
+    <xs:sequence>
+      <xs:element type="entity" name="Entity" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="entity">
+    <xs:all>
+      <xs:element type="xs:string" name="Name"/>
+      <xs:element type="xs:string" name="FactorLoadings"/>
+      <xs:element type="xs:string" name="TransitionMatrix"/>
+      <xs:element type="xs:integer" name="InitialState"/>
+    </xs:all>
+  </xs:complexType>
+  <xs:complexType name="risk">
+    <xs:all>
+      <xs:element type="bool" name="Market"/>
+      <xs:element type="bool" name="Credit"/>
+      <xs:element type="bool" name="ZeroMarketPnl"/>
+      <xs:element type="xs:string" name="Evaluation"/>
+      <xs:element type="bool" name="DoubleDefault"/>
+      <xs:element type="xs:integer" name="Seed"/>
+      <xs:element type="xs:integer" name="Paths"/>
+      <xs:element type="xs:string" name="CreditMode"/>
+      <xs:element type="xs:string" name="LoanExposureMode"/>
+    </xs:all>
+  </xs:complexType>
+</xs:schema>
