@@ -832,12 +832,17 @@ boost::shared_ptr<StrippedOptionlet> CapFloorVolCurve::transform(const QuantExt:
         }
     }
 
+    vector<vector<Real>> optionletStrikes;
+    for (Size i = 0; i < os.optionletFixingDates().size(); i++) {
+        optionletStrikes.push_back(os.optionletStrikes(i));
+    }
+
     // FIXME StrippedOptionlet::atmOptionletRates() is the only method depending on whether index is Ibor or OIS
     // these are not used above in optSurface() though, so we do not need to extend StrippedOptionlet to handle OIS
     // at the moment
     boost::shared_ptr<StrippedOptionlet> res = boost::make_shared<StrippedOptionlet>(
         os.settlementDays(), os.calendar(), os.businessDayConvention(), os.index(), os.optionletFixingDates(),
-        os.optionletStrikes(0), vols, os.dayCounter(), os.volatilityType(), os.displacement());
+        optionletStrikes, vols, os.dayCounter(), os.volatilityType(), os.displacement());
 
     res->unregisterWithAll();
 
@@ -973,12 +978,12 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
                             if ((strikes[j] > -shift || close_enough(strikes[j], -shift)) &&
                                 (forwards[i][u] > -shift || close_enough(forwards[i][u], -shift))) {
                                 stddev =
-                                    std::sqrt(capletVol_->blackVariance(expiries[i], strikes[j]));
+                                    std::sqrt(capletVol_->blackVariance(t, strikes[j]));
                                 callPricesStrike[i][u][j] =
                                     blackFormula(Option::Type::Call, strikes[j], forwards[i][u], stddev);
                             }
                         } else {
-                            stddev = std::sqrt(capletVol_->blackVariance(expiries[i], strikes[j]));
+                            stddev = std::sqrt(capletVol_->blackVariance(t, strikes[j]));
                             callPricesStrike[i][u][j] =
                                 bachelierBlackFormula(Option::Type::Call, strikes[j], forwards[i][u], stddev);
                         }
@@ -1044,12 +1049,12 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
                         if (capletVol_->volatilityType() == ShiftedLognormal) {
                             if ((strike > -shift || close_enough(strike, -shift)) &&
                                 (forwards[i][u] > -shift || close_enough(forwards[i][u], -shift))) {
-                                stddev = std::sqrt(capletVol_->blackVariance(expiries[i], strike));
+                                stddev = std::sqrt(capletVol_->blackVariance(t, strike));
                                 callPricesStrikeSpread[i][u][j] =
                                     blackFormula(Option::Type::Call, strike, forwards[i][u], stddev);
                             }
                         } else {
-                            stddev = std::sqrt(capletVol_->blackVariance(expiries[i], strike));
+                            stddev = std::sqrt(capletVol_->blackVariance(t, strike));
                             callPricesStrikeSpread[i][u][j] =
                                 bachelierBlackFormula(Option::Type::Call, strike, forwards[i][u], stddev);
                         }
