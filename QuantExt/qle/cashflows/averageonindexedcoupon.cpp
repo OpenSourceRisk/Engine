@@ -416,6 +416,11 @@ AverageONLeg& AverageONLeg::withLastRecentPeriodCalendar(const Calendar& lastRec
     return *this;
 }
 
+AverageONLeg& AverageONLeg::withPaymentDates(const std::vector<Date>& paymentDates) {
+    paymentDates_ = paymentDates;
+    return *this;
+}
+
 AverageONLeg&
 AverageONLeg::withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer) {
     couponPricer_ = couponPricer;
@@ -448,10 +453,25 @@ AverageONLeg::operator Leg() const {
     Date paymentDate;
 
     Size n = schedule_.size() - 1;
+
+    // Initial consistency checks
+    if (!paymentDates_.empty()) {
+        QL_REQUIRE(paymentDates_.size() == n, "Expected the number of explicit payment dates ("
+                                                  << paymentDates_.size()
+                                                  << ") to equal the number of calculation periods ("
+                                                  << n << ")");
+    }
+
     for (Size i = 0; i < n; ++i) {
         refStart = start = schedule_.date(i);
         refEnd = end = schedule_.date(i + 1);
-        paymentDate = paymentCalendar.advance(end, paymentLag_, Days, paymentAdjustment_);
+
+        // If explicit payment dates provided, use them.
+        if (!paymentDates_.empty()) {
+            paymentDate = paymentDates_[i];
+        } else {
+            paymentDate = paymentCalendar.advance(end, paymentLag_, Days, paymentAdjustment_);
+        }
 
         // determine refStart and refEnd
 

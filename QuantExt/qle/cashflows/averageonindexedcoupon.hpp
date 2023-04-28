@@ -203,6 +203,7 @@ public:
     AverageONLeg& withInArrears(const bool inArrears);
     AverageONLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
     AverageONLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
+    AverageONLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
     AverageONLeg& withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
     AverageONLeg& withCapFlooredAverageONIndexedCouponPricer(
         const boost::shared_ptr<CapFlooredAverageONIndexedCouponPricer>& couponPricer);
@@ -229,6 +230,7 @@ private:
     bool inArrears_;
     boost::optional<Period> lastRecentPeriod_;
     Calendar lastRecentPeriodCalendar_;
+    std::vector<QuantLib::Date> paymentDates_;
     boost::shared_ptr<AverageONIndexedCouponPricer> couponPricer_;
     boost::shared_ptr<CapFlooredAverageONIndexedCouponPricer> capFlooredCouponPricer_;
 };
