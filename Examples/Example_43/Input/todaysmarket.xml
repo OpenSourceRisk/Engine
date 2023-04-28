@@ -149,6 +149,7 @@
     <DefaultCurve name="CPTY_A">Default/EUR/CPTY_A_SR_EUR</DefaultCurve>
     <DefaultCurve name="CPTY_B">Default/EUR/CPTY_A_SR_EUR</DefaultCurve>
     <DefaultCurve name="CPTY_C">Default/EUR/CPTY_A_SR_EUR</DefaultCurve>
+    <DefaultCurve name="CPTY_D">Default/EUR/CPTY_A_SR_EUR</DefaultCurve>
     <!-- Rating dependent curves -->
     <DefaultCurve name="CPTY_C_AAA">Default/USD/CPTY_C_SR_EUR_AAA</DefaultCurve>
     <DefaultCurve name="CPTY_C_AA">Default/USD/CPTY_C_SR_EUR_AA</DefaultCurve>

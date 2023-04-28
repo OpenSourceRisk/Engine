@@ -136,7 +136,7 @@
     <DoubleDefault>Y</DoubleDefault>
     <Seed>42</Seed>
     <Paths>1000</Paths>
-    <CreditMode>Migration</CreditMode>
+    <CreditMode>Default</CreditMode>
     <!-- Migration, Default -->
     <LoanExposureMode>Notional</LoanExposureMode>
     <!-- Notional, Value -->
