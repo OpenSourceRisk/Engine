@@ -104,9 +104,6 @@ class OreExample(object):
         for file in files:
             shutil.copy(os.path.join("Output", file), os.path.join("Output", subdir))
 
-    def copy_file(self, fromFile, toFile):
-        shutil.copy(os.path.join("Output", fromFile), os.path.join("Output", toFile))
-
     def plot(self, filename, colIdxTime, colIdxVal, color, label, offset=1, marker='', linestyle='-'):
         self.ax.plot(self.get_output_data_from_column(filename, colIdxTime, offset),
                      self.get_output_data_from_column(filename, colIdxVal, offset),

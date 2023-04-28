@@ -84,7 +84,7 @@
       <Parameter name="creditMigrationDistributionGrid">-70,10,320</Parameter>
       <Parameter name="creditMigrationTimeSteps">11</Parameter>
       <Parameter name="creditMigrationConfig">creditsimulation100.xml</Parameter>
-      <Parameter name="creditMigrationOutputFiles">c_</Parameter>
+      <Parameter name="creditMigrationOutputFiles">credit_migration_bond100</Parameter>
       <!-- end of credit risk configuration -->
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
