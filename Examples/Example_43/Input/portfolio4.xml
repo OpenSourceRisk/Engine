@@ -46,7 +46,6 @@
       </LegData>
     </BondData>
   </Trade>
-<!--
   <Trade id="CDS_1">
     <TradeType>CreditDefaultSwap</TradeType>
     <Envelope>
