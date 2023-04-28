@@ -4,7 +4,7 @@
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId/>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
