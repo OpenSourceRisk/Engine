@@ -155,10 +155,7 @@ CommodityBasisFutureIndex::CommodityBasisFutureIndex(const std::string& underlyi
     cashflow_ = makeCashflow(contractDate, contractDate + 1 * Months - 1 * Days);
 }
 
-Real CommodityBasisFutureIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
-    double lambda = addSpread_ ? 1.0 : -1.0;
-    return cashflow_->amount() + lambda * CommodityFuturesIndex::fixing(fixingDate, forecastTodaysFixing);
-}
+
 
 boost::shared_ptr<CommodityIndex>
 CommodityBasisFutureIndex::clone(const QuantLib::Date& expiry,
@@ -166,7 +163,7 @@ CommodityBasisFutureIndex::clone(const QuantLib::Date& expiry,
     const auto& pts = ts ? *ts : priceCurve();
     const auto& ed = expiry == Date() ? expiryDate() : expiry;
     return boost::make_shared<CommodityBasisFutureIndex>(underlyingName(), ed, fixingCalendar(), baseIndex_,
-                                                         expiryCalcBasis_, expiryCalcBase_, pts);
+                                                         expiryCalcBasis_, expiryCalcBase_, pts, addSpread_);
 }
 
 QuantLib::Date CommodityBasisFutureIndex::getContractDate(const Date& expiry) const {

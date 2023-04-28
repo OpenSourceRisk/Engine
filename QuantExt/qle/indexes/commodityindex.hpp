@@ -164,14 +164,19 @@ public:
         const boost::shared_ptr<FutureExpiryCalculator>& expiryCalcBase,
         const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>(),
         const bool addSpread = true);
-
-    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
-   
+ 
 
     //! Implement the base clone. Ajust the base future to match the same contract month
     boost::shared_ptr<CommodityIndex>
     clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
           const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
+
+    Real pastFixing(const Date& fixingDate) const override { 
+        auto basisFixing = CommodityFuturesIndex::pastFixing(fixingDate);
+        auto lambda = addSpread_ ? 1.0 : -1.0;
+        auto baseValue = cashflow_->amount();
+        return baseValue + lambda * basisFixing;
+    }
 
 private:
     Handle<QuantExt::CommodityFuturesIndex> baseIndex_;

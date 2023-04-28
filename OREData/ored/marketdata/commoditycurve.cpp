@@ -388,7 +388,7 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
     auto baseFec = boost::make_shared<ConventionsBasedFutureExpiry>(*baseConvention);
 
     // Construct the commodity index.
-    auto index = parseCommodityIndex(baseConvention->id(), false, basePts);
+    auto baseIndex = parseCommodityIndex(baseConvention->id(), false, basePts);
 
     // Sort the configured quotes on expiry dates
     // Ignore tenor based quotes i.e. we expect an explicit expiry date and log a warning if the expiry date does not
@@ -412,28 +412,8 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
         }
     }
 
-    if (basisConvention->isAveraging()) {
-        // We are building a curve that will be used to return an average price.
-        if (!baseConvention->isAveraging() && config.averageBase()) {
-            DLOG("Creating a CommodityAverageBasisPriceCurve.");
-            populateCurve<CommodityAverageBasisPriceCurve>(asof, basisData, basisFec, index,
-                basePts, baseFec, config.addBasis());
-        } else {
-            // Either 1) base convention is not averaging and config.averageBase() is false or 2) the base convention 
-            // is averaging. Either way, we build a CommodityBasisPriceCurve.
-            DLOG("Creating a CommodityBasisPriceCurve for an average price curve.");
-            populateCurve<CommodityBasisPriceCurve>(asof, basisData, basisFec, index, basePts,
-                baseFec, config.addBasis(), config.monthOffset());
-        }
-    } else {
-        // We are building a curve that will be used to return a price on a single date.
-        QL_REQUIRE(!baseConvention->isAveraging(), "A commodity basis curve with non-averaging" <<
-            " basis and averaging base is not valid.");
-
-        DLOG("Creating a CommodityBasisPriceCurve.");
-        populateCurve<CommodityBasisPriceCurve>(asof, basisData, basisFec, index, basePts,
-            baseFec, config.addBasis(), config.monthOffset());
-    }
+    populateCurve<CommodityBasisPriceCurve>(asof, basisData, basisFec, baseIndex, basePts, baseFec, config.addBasis(),
+                                            config.monthOffset(), config.averageBase());
 
     LOG("CommodityCurve: finished building commodity basis curve.");
 }
