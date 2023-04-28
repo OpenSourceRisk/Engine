@@ -1244,6 +1244,20 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
         return leg;
 
     } else {
+
+        boost::shared_ptr<QuantExt::OvernightIndexedCouponPricer> couponPricer =
+            boost::make_shared<QuantExt::OvernightIndexedCouponPricer>();
+
+        boost::shared_ptr<QuantExt::CappedFlooredOvernightIndexedCouponPricer> cfCouponPricer;
+        if (attachPricer && (floatData->caps().size() > 0 || floatData->floors().size() > 0)) {
+            auto builder = boost::dynamic_pointer_cast<CapFlooredOvernightIndexedCouponLegEngineBuilder>(
+                engineFactory->builder("CapFlooredOvernightIndexedCouponLeg"));
+            QL_REQUIRE(builder, "No builder found for CapFlooredOvernightIndexedCouponLeg");
+            cfCouponPricer = boost::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCouponPricer>(
+                builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod));
+            QL_REQUIRE(cfCouponPricer, "internal error, could not cast to CapFlooredAverageONIndexedCouponPricer");
+        }
+
         Leg leg = QuantExt::OvernightLeg(schedule, index)
                       .withNotionals(notionals)
                       .withSpreads(spreads)
@@ -1267,24 +1281,15 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                                                                        schedule, Null<Real>()))
                       .withNakedOption(floatData->nakedOption())
                       .withLocalCapFloor(floatData->localCapFloor())
+                      .withOvernightIndexedCouponPricer(couponPricer)
+                      .withCapFlooredOvernightIndexedCouponPricer(cfCouponPricer)
                       .withTelescopicValueDates(floatData->telescopicValueDates())
                       .withPaymentDates(paymentDates);
-        }
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(index);
         if (brlCdiIndex)
             QuantExt::setCouponPricer(leg, boost::make_shared<BRLCdiCouponPricer>());
-
-        // if we have caps / floors, we need a pricer for that
-        if (attachPricer && (floatData->caps().size() > 0 || floatData->floors().size() > 0)) {
-            auto builder = boost::dynamic_pointer_cast<CapFlooredOvernightIndexedCouponLegEngineBuilder>(
-                engineFactory->builder("CapFlooredOvernightIndexedCouponLeg"));
-            QL_REQUIRE(builder, "No builder found for CapFlooredOvernightIndexedCouponLeg");
-            auto pricer =
-                builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod);
-            QuantExt::setCouponPricer(leg, pricer);
-        }
 
         return leg;
     }

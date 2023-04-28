@@ -595,6 +595,18 @@ OvernightLeg& OvernightLeg::withPaymentDates(const std::vector<Date>& paymentDat
     return *this;
 }
 
+OvernightLeg&
+OvernightLeg::withOvernightIndexedCouponPricer(const boost::shared_ptr<OvernightIndexedCouponPricer>& couponPricer) {
+    couponPricer_ = couponPricer;
+    return *this;
+}
+
+OvernightLeg& OvernightLeg::withCapFlooredOvernightIndexedCouponPricer(
+    const boost::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer) {
+    capFlooredCouponPricer_ = couponPricer;
+    return *this;
+}
+
 OvernightLeg::operator Leg() const {
 
     QL_REQUIRE(!notionals_.empty(), "no notional given for compounding overnight leg");
@@ -687,13 +699,20 @@ OvernightLeg::operator Leg() const {
                 detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), refStart, refEnd, paymentDayCounter_,
                 telescopicValueDates_, includeSpread_, lookback_, rateCutoff_, fixingDays_, rateComputationStartDate,
                 rateComputationEndDate);
+            if (couponPricer_) {
+                cpn->setPricer(couponPricer_);
+            }
             Real cap = detail::get(caps_, i, Null<Real>());
             Real floor = detail::get(floors_, i, Null<Real>());
             if (cap == Null<Real>() && floor == Null<Real>()) {
                 cashflows.push_back(cpn);
             } else {
-                cashflows.push_back(ext::make_shared<CappedFlooredOvernightIndexedCoupon>(cpn, cap, floor, nakedOption_,
-                                                                                          localCapFloor_));
+                auto cfCpn = ext::make_shared<CappedFlooredOvernightIndexedCoupon>(cpn, cap, floor, nakedOption_,
+                                                                                   localCapFloor_);
+                if (capFlooredCouponPricer_) {
+                    cfCpn->setPricer(capFlooredCouponPricer_);
+                }
+                cashflows.push_back(cfCpn);
             }
         }
     }
