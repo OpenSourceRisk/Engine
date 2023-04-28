@@ -129,6 +129,8 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     else
         additionalData_["startDate"] = to_string(schedule.dates().front());
 
+    issuer_ = swap_.issuerId();
+
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Credit");
     additionalData_["isdaBaseProduct"] = string("Single Name");
