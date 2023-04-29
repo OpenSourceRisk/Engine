@@ -58,9 +58,6 @@
       <CreditCurveId>BOND_BB</CreditCurveId>
       <SettlesAccrual>Y</SettlesAccrual>
       <PaysAtDefaultTime>Y</PaysAtDefaultTime>
-      <ProtectionStart/>
-      <UpfrontDate/>
-      <UpfrontFee/>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>true</Payer>
@@ -92,5 +89,4 @@
       </LegData>
     </CreditDefaultSwapData>
   </Trade>
--->
 </Portfolio>
