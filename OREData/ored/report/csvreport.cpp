@@ -66,6 +66,8 @@ public:
         fprintString(s);
     }
 
+    void updateFile(FILE* fp) { fp_ = fp; }
+
 private:
     void fprintNull() const { fprintf(fp_, "%s", null_.c_str()); }
 
@@ -105,10 +107,12 @@ void CSVFileReport::open() {
     LOG("Opening CSV file report '" << filename_ << "'");
     fp_ = FileIO::fopen(filename_.c_str(), "w");
     QL_REQUIRE(fp_, "Error opening file '" << filename_ << "'");
+    for (auto& p : printers_)
+        p.updateFile(fp_);
     finalized_ = false;
 }
 
-void CSVFileReport::rollover() { 
+void CSVFileReport::rollover() {
     checkIsOpen("rollover()");
     end();
     version_++;

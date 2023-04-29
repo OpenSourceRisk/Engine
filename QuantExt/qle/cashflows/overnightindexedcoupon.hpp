@@ -183,6 +183,10 @@ public:
     Rate effectiveCap() const;
     //! effective floor of fixing
     Rate effectiveFloor() const;
+    //! effective caplet volatility
+    Real effectiveCapletVolatility() const;
+    //! effective floorlet volatility
+    Real effectiveFloorletVolatility() const;
     //@}
     //! \name Visitability
     //@{
@@ -200,16 +204,25 @@ protected:
     Rate cap_, floor_;
     bool nakedOption_;
     bool localCapFloor_;
+    mutable Real effectiveCapletVolatility_;
+    mutable Real effectiveFloorletVolatility_;
 };
 
 //! capped floored overnight indexed coupon pricer base class
 class CappedFlooredOvernightIndexedCouponPricer : public FloatingRateCouponPricer {
 public:
-    CappedFlooredOvernightIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
+    CappedFlooredOvernightIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v,
+                                              const bool effectiveVolatilityInput = false);
     Handle<OptionletVolatilityStructure> capletVolatility() const;
+    bool effectiveVolatilityInput() const;
+    Real effectiveCapletVolatility() const;   // only available after capletRate() was called
+    Real effectiveFloorletVolatility() const; // only available after floorletRate() was called
 
-private:
+protected:
     Handle<OptionletVolatilityStructure> capletVol_;
+    bool effectiveVolatilityInput_;
+    mutable Real effectiveCapletVolatility_;
+    mutable Real effectiveFloorletVolatility_;
 };
 
 //! helper class building a sequence of overnight coupons
@@ -240,6 +253,10 @@ public:
     OvernightLeg& withInArrears(const bool inArrears);
     OvernightLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
     OvernightLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
+    OvernightLeg& withOvernightIndexedCouponPricer(const boost::shared_ptr<OvernightIndexedCouponPricer>& couponPricer);
+    OvernightLeg& withPaymentDates(const std::vector<Date>& paymentDates);
+    OvernightLeg& withCapFlooredOvernightIndexedCouponPricer(
+        const boost::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer);
     operator Leg() const;
 
 private:
@@ -263,6 +280,9 @@ private:
     bool inArrears_;
     boost::optional<Period> lastRecentPeriod_;
     Calendar lastRecentPeriodCalendar_;
+    std::vector<QuantLib::Date> paymentDates_;
+    boost::shared_ptr<OvernightIndexedCouponPricer> couponPricer_;
+    boost::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> capFlooredCouponPricer_;
 };
 
 } // namespace QuantExt

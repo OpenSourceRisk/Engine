@@ -89,5 +89,20 @@ protected:
     TimeGrid timeGrid_;
     std::vector<boost::shared_ptr<Scenario>> path_;
 };
+
+// A simple scenario generator that contains a single scenario
+class StaticScenarioGenerator : public ScenarioGenerator {
+public:
+    StaticScenarioGenerator() {}
+
+    void reset() override {}
+    boost::shared_ptr<ore::analytics::Scenario> next(const Date&) override { return s_; }
+
+    void setScenario(const boost::shared_ptr<ore::analytics::Scenario>& s) { s_ = s; }
+
+private:
+    boost::shared_ptr<ore::analytics::Scenario> s_;
+};
+
 } // namespace analytics
 } // namespace ore

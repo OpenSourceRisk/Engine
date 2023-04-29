@@ -199,7 +199,7 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
                             ext::shared_ptr<NPVCube> npvCube;
 
                             sensiPnlCalculator->populateSensiShifts(npvCube, keys, shiftCalculator);
-                            sensiPnlCalculator->calculateSensiPnl(srs, keys, npvCube, keys, {}, covCalculator);
+                            sensiPnlCalculator->calculateSensiPnl(srs, keys, npvCube, {}, covCalculator);
 
                             covariance = covCalculator->covariance();
                         }

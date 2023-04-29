@@ -384,6 +384,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                     volFixingDate = tmp->underlying()->fixingDates().front();
                                     qlIndexName = tmp->index()->name();
                                     usesCapVol = true;
+                                    // for now we output the stripped caplet vol, not the effective one
+                                    // capVolatility = tmp->effectiveCapletVolatility();
+                                    // floorVolatility = tmp->effectiveFloorletVolatility();
                                 } else if (auto tmp =
                                                boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
@@ -391,6 +394,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                     volFixingDate = tmp->underlying()->fixingDates().front();
                                     qlIndexName = tmp->index()->name();
                                     usesCapVol = true;
+                                    // capVolatility = tmp->effectiveCapletVolatility();
+                                    // for now we output the stripped caplet vol, not the effective one
+                                    // floorVolatility = tmp->effectiveFloorletVolatility();
                                 }
 
                                 // get market volaility for cap / floor
@@ -404,7 +410,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                                     ->swaptionVol(IndexNameTranslator::instance().oreName(qlIndexName),
                                                                   configuration)
                                                     ->volatility(volFixingDate, swaptionTenor, floorStrike);
-                                        } else if (usesCapVol) {
+                                        } else if (usesCapVol && floorVolatility == Null<Real>()) {
                                             floorVolatility =
                                                 market
                                                     ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
@@ -419,7 +425,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                                     ->swaptionVol(IndexNameTranslator::instance().oreName(qlIndexName),
                                                                   configuration)
                                                     ->volatility(volFixingDate, swaptionTenor, capStrike);
-                                        } else if (usesCapVol) {
+                                        } else if (usesCapVol && capVolatility == Null<Real>()) {
                                             capVolatility =
                                                 market
                                                     ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),

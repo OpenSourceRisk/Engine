@@ -151,6 +151,7 @@ public:
     const string& defaultCurveExtrapolation() const { return defaultCurveExtrapolation_; }
 
     bool simulateCdsVols() const { return paramsSimulate(RiskFactorKey::KeyType::CDSVolatility); }
+    bool simulateCdsVolATMOnly() const { return cdsVolSimulateATMOnly_; }    
     const vector<Period>& cdsVolExpiries() const { return cdsVolExpiries_; }
     vector<string> cdsVolNames() const { return paramsLookup(RiskFactorKey::KeyType::CDSVolatility); }
     const string& cdsVolDecayMode() const { return cdsVolDecayMode_; }
@@ -187,6 +188,8 @@ public:
 
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
+    const Size additionalScenarioDataNumberOfCreditStates() const { return additionalScenarioDataNumberOfCreditStates_; }
+    const vector<string>& additionalScenarioDataSurvivalWeights() const { return additionalScenarioDataSurvivalWeights_; }
 
     bool securitySpreadsSimulate() const { return paramsSimulate(RiskFactorKey::KeyType::SecuritySpread); }
     vector<string> securities() const { return paramsLookup(RiskFactorKey::KeyType::SecuritySpread); }
@@ -225,6 +228,8 @@ public:
     const vector<Period>& correlationExpiries() const { return correlationExpiries_; }
     vector<std::string> correlationPairs() const { return paramsLookup(RiskFactorKey::KeyType::Correlation); }
     const vector<Real>& correlationStrikes() const { return correlationStrikes_; }
+
+    Size numberOfCreditStates() const { return numberOfCreditStates_; }
 
     // Get the parameters
     const std::map<RiskFactorKey::KeyType, std::pair<bool, std::set<std::string>>>& parameters() const {
@@ -301,6 +306,7 @@ public:
     void setDefaultCurveExtrapolation(const std::string& e) { defaultCurveExtrapolation_ = e; }
 
     void setSimulateCdsVols(bool simulate);
+    void setSimulateCdsVolsATMOnly(bool simulateATMOnly) { cdsVolSimulateATMOnly_ = simulateATMOnly; }
     vector<Period>& cdsVolExpiries() { return cdsVolExpiries_; }
     void setCdsVolNames(vector<string> names);
     string& cdsVolDecayMode() { return cdsVolDecayMode_; }
@@ -382,6 +388,7 @@ public:
     vector<Period>& correlationExpiries() { return correlationExpiries_; }
     void setCorrelationPairs(vector<string> names);
     vector<Real>& correlationStrikes() { return correlationStrikes_; }
+    void setNumberOfCreditStates(Size numberOfCreditStates) { numberOfCreditStates_ = numberOfCreditStates; }
     //@}
 
     //! \name Serialisation
@@ -445,6 +452,7 @@ private:
     map<string, vector<Period>> defaultTenors_;
     string defaultCurveExtrapolation_;
 
+    bool cdsVolSimulateATMOnly_ = false;
     vector<Period> cdsVolExpiries_;
     string cdsVolDecayMode_;
     map<string, string> cdsVolSmileDynamics_;
@@ -470,6 +478,8 @@ private:
 
     vector<string> additionalScenarioDataIndices_;
     vector<string> additionalScenarioDataCcys_;
+    Size additionalScenarioDataNumberOfCreditStates_ = 0;
+    vector<string> additionalScenarioDataSurvivalWeights_;
 
     bool cprSimulate_;
     vector<string> cprs_;
@@ -492,6 +502,7 @@ private:
     bool correlationIsSurface_;
     vector<Period> correlationExpiries_;
     vector<Real> correlationStrikes_;
+    Size numberOfCreditStates_ = 0;
 
     // Store sim market params as a map from RiskFactorKey::KeyType to a pair,
     // boolean of whether to simulate and a set of curve names

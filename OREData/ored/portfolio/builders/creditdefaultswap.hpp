@@ -27,9 +27,13 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
 
+#include <qle/pricingengines/midpointcdsenginemultistate.hpp>
+
 #include <ql/pricingengines/credit/midpointcdsengine.hpp>
 
 #include <boost/make_shared.hpp>
+
+#include <regex>
 
 namespace ore {
 namespace data {
@@ -156,6 +160,75 @@ protected:
         }
 
         return boost::make_shared<MidPointCdsEngine>(dpts->curve(), recoveryRate, yts);
+    }
+};
+
+//! Multi State Engine Builder class for CDS
+/*! This creates a CreditDefaultSwapEngineMultiState
+    \ingroup portfolio
+*/
+
+class MidPointCdsMultiStateEngineBuilder : public CreditDefaultSwapEngineBuilder {
+public:
+    MidPointCdsMultiStateEngineBuilder()
+        : CreditDefaultSwapEngineBuilder("DiscountedCashflows", "MidPointCdsEngineMultiState") {}
+
+protected:
+    virtual boost::shared_ptr<PricingEngine>
+    engineImpl(QuantLib::Currency ccy, std::string creditCurveId,
+               QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>()) override {
+        Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+        // build state curves and recovery rates
+        // big overlap with BondMultiStateEngineBuilder
+        std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
+        std::vector<Handle<Quote>> recovery;
+        Size mainResultState = Null<Size>();
+        Size i = 0;
+        for (; true; ++i) {
+            std::ostringstream rule_s;
+            rule_s << "Rule_" << i;
+            if (engineParameters_.count(rule_s.str()) == 0)
+                break;
+            std::vector<std::string> tokens;
+            std::string rule = engineParameters_[rule_s.str()];
+            std::string stateCreditCurveId;
+            // if rule is empty, we use the initial curve for this state
+            // TODO computation should be optimised in this case, so that only different
+            // curves are recomputed in the engine
+            if (rule.empty()) {
+                stateCreditCurveId = creditCurveId;
+                DLOG("Rule " << rule_s.str() << " is empty, use initial curve " << stateCreditCurveId
+                             << " for this state.");
+            } else {
+                boost::split(tokens, rule, boost::is_any_of(","));
+                QL_REQUIRE(tokens.size() == 2, "invalid rule: " << rule);
+                stateCreditCurveId = regex_replace(creditCurveId, std::regex(tokens[0]), tokens[1]);
+                DLOG("Apply " << rule_s.str() << " => " << tokens[0] << " in " << creditCurveId << " yields state #"
+                              << i << " creditCurve id " << stateCreditCurveId);
+            }
+            if (stateCreditCurveId == creditCurveId) {
+                mainResultState = i;
+                DLOG("State #" << i << " is the main result state (overwriting previous choice)");
+            }
+            dpts.push_back(market_->defaultCurve(stateCreditCurveId, configuration(MarketContext::pricing))->curve());
+            recovery.push_back(recoveryRate == Null<Real>()
+                                   ? market_->recoveryRate(stateCreditCurveId, configuration(MarketContext::pricing))
+                                   : Handle<Quote>(boost::make_shared<SimpleQuote>(recoveryRate)));
+        }
+        // If there were no rules at all we take the original creditCurveId as the only state
+        if (i == 0) {
+            dpts.push_back(market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing))->curve());
+            recovery.push_back(recoveryRate == Null<Real>()
+                                   ? market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing))
+                                   : Handle<Quote>(boost::make_shared<SimpleQuote>(recoveryRate)));
+            mainResultState = 0;
+            DLOG("No rules given, only states are " << creditCurveId << " and default");
+        }
+        // check we have a main result state
+        QL_REQUIRE(mainResultState != Null<Size>(),
+                   "CreditDefaultSwapMultiStateEngineBuilder: No main state found for " << creditCurveId);
+        // return engine
+        return boost::make_shared<QuantExt::MidPointCdsEngineMultiState>(dpts, recovery, yts, mainResultState);
     }
 };
 

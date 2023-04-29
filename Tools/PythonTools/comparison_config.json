@@ -1188,7 +1188,7 @@
           }
         ]
       },
-	  "dividends.csv": {
+      "dividends.csv": {
         "keys": [
           "dividendExDate",
           "equityId"
@@ -1203,7 +1203,23 @@
             "rel_tol": 1e-6
           }
         ]
+      },
+      "credit_migration.*\\.csv": {
+        "keys": [
+          "upperBucketBound"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "pdf",
+              "cdf"
+            ],
+            "abs_tol": 1e-6,
+            "rel_tol": 1e-6
+          }
+        ]
       }
+
     }
   }
 }
