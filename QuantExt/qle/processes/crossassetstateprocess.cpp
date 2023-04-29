@@ -931,7 +931,7 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j < u; ++j) {
             setValue(res, ir_crstate_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
-                     CrossAssetModel::AssetType::FX, j, 0, 0);
+                     CrossAssetModel::AssetType::CrState, j, 0, 0);
         }
     }
     for (Size i = 0; i < m; ++i) {
