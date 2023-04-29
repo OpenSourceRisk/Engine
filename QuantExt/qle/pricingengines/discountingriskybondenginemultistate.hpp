@@ -25,9 +25,8 @@
 
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 /*! The engine takes a vector of default curves and recovery rates. For the given
     main result state it will produce the same results as the MidPointCdsEngine.
