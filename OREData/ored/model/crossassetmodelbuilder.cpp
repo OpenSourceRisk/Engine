@@ -405,6 +405,16 @@ void CrossAssetModelBuilder::buildModel() const {
         processInfo[CrossAssetModel::AssetType::COM].emplace_back(comName, 1);
     }
 
+    /*******************************************************
+     * Build the CrState parametrizations
+     */
+    std::vector<boost::shared_ptr<QuantExt::CrStateParametrization>> crStateParametrizations;
+    for (Size i = 0; i < config_->numberOfCreditStates(); i++) {
+        DLOG("CrState Parametrization " << i);
+        crStateParametrizations.push_back(boost::make_shared<QuantExt::CrStateParametrization>(i));
+        processInfo[CrossAssetModel::AssetType::CrState].emplace_back(std::to_string(i), 1);
+    }
+
     std::vector<boost::shared_ptr<QuantExt::Parametrization>> parametrizations;
     for (Size i = 0; i < irParametrizations.size(); i++)
         parametrizations.push_back(irParametrizations[i]);
@@ -419,6 +429,8 @@ void CrossAssetModelBuilder::buildModel() const {
         parametrizations.push_back(crCirParametrizations[i]);
     for (Size i = 0; i < comParametrizations.size(); i++)
         parametrizations.push_back(comParametrizations[i]);
+    for (Size i = 0; i < crStateParametrizations.size(); i++)
+        parametrizations.push_back(crStateParametrizations[i]);
 
     QL_REQUIRE(fxParametrizations.size() == irParametrizations.size() - 1, "mismatch in IR/FX parametrization sizes");
 

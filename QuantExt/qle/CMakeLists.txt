@@ -72,8 +72,8 @@ indexes/bondindex.cpp
 indexes/commodityindex.cpp
 indexes/compoequityindex.cpp
 indexes/compositeindex.cpp
-indexes/equityindex.cpp
 indexes/dividendmanager.cpp
+indexes/equityindex.cpp
 indexes/fallbackiborindex.cpp
 indexes/fallbackovernightindex.cpp
 indexes/fxindex.cpp
@@ -136,6 +136,7 @@ math/blockmatrixinverse.cpp
 math/deltagammavar.cpp
 math/differentialevolution_mt.cpp
 math/fillemptymatrix.cpp
+math/matrixfunctions.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
 methods/brownianbridgepathinterpolator.cpp
@@ -191,6 +192,7 @@ models/normalsabrsmilesection.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
 models/projectedcrossassetmodel.cpp
+models/transitionmatrix.cpp
 models/yoycapfloorhelper.cpp
 models/yoyinflationmodeltermstructure.cpp
 models/yoyswaphelper.cpp
@@ -232,6 +234,7 @@ pricingengines/discountingequityforwardengine.cpp
 pricingengines/discountingforwardbondengine.cpp
 pricingengines/discountingfxforwardengine.cpp
 pricingengines/discountingriskybondengine.cpp
+pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginemulticurve.cpp
 pricingengines/indexcdsoptionbaseengine.cpp
 pricingengines/indexcdstrancheengine.cpp
@@ -246,6 +249,7 @@ pricingengines/mclgmswaptionengine.cpp
 pricingengines/mcmultilegbaseengine.cpp
 pricingengines/mcmultilegoptionengine.cpp
 pricingengines/midpointcdoengine.cpp
+pricingengines/midpointcdsenginemultistate.cpp
 pricingengines/midpointindexcdsengine.cpp
 pricingengines/numericalintegrationindexcdsoptionengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
@@ -302,6 +306,7 @@ termstructures/flatcorrelation.cpp
 termstructures/futurepricehelper.cpp
 termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
+termstructures/generatordefaulttermstructure.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
@@ -555,6 +560,7 @@ math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
 math/flatextrapolation2d.hpp
 math/logquadraticinterpolation.hpp
+math/matrixfunctions.hpp
 math/method_mt.hpp
 math/nadarayawatson.hpp
 math/problem_mt.hpp
@@ -594,6 +600,7 @@ models/crossassetanalyticsbase.hpp
 models/crossassetmodel.hpp
 models/crossassetmodelimpliedeqvoltermstructure.hpp
 models/crossassetmodelimpliedfxvoltermstructure.hpp
+models/crstateparametrization.hpp
 models/defaultlossmodel.hpp
 models/defaultprobabilitylatentmodel.hpp
 models/dkimpliedyoyinflationtermstructure.hpp
@@ -646,6 +653,7 @@ models/piecewiseconstanthelper.hpp
 models/poollossmodel.hpp
 models/projectedcrossassetmodel.hpp
 models/pseudoparameter.hpp
+models/transitionmatrix.hpp
 models/yoycapfloorhelper.hpp
 models/yoyinflationmodeltermstructure.hpp
 models/yoyswaphelper.hpp
@@ -688,6 +696,7 @@ pricingengines/discountingequityforwardengine.hpp
 pricingengines/discountingforwardbondengine.hpp
 pricingengines/discountingfxforwardengine.hpp
 pricingengines/discountingriskybondengine.hpp
+pricingengines/discountingriskybondenginemultistate.hpp
 pricingengines/discountingswapenginemulticurve.hpp
 pricingengines/indexcdsoptionbaseengine.hpp
 pricingengines/indexcdstrancheengine.hpp
@@ -702,6 +711,7 @@ pricingengines/mclgmswaptionengine.hpp
 pricingengines/mcmultilegbaseengine.hpp
 pricingengines/mcmultilegoptionengine.hpp
 pricingengines/midpointcdoengine.hpp
+pricingengines/midpointcdsenginemultistate.hpp
 pricingengines/midpointindexcdsengine.hpp
 pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
@@ -774,6 +784,7 @@ termstructures/futurepricehelper.hpp
 termstructures/fxblackvolsurface.hpp
 termstructures/fxsmilesection.hpp
 termstructures/fxvannavolgasmilesection.hpp
+termstructures/generatordefaulttermstructure.hpp
 termstructures/hazardspreadeddefaulttermstructure.hpp
 termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
@@ -860,7 +871,6 @@ version.hpp)
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
 add_library(${QLE_LIB_NAME} ${QuantExt_SRC})
 target_link_libraries(${QLE_LIB_NAME} ${QL_LIB_NAME} ${Boost_LIBRARIES})
-
 
 install(DIRECTORY . DESTINATION include/qle
         FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")

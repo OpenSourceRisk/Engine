@@ -21,6 +21,13 @@ if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER AND UNIX AND NOT APPLE)
     find_library(RT_LIBRARY rt REQUIRED)
 endif()
 
+find_package (Eigen3 3.3 NO_MODULE)
+if (TARGET Eigen3::Eigen)
+  add_compile_definitions(ORE_USE_EIGEN)
+  get_target_property(Eigen3_include_dir Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
+  include_directories(${Eigen3_include_dir})
+endif()
+
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${QUANTLIB_SOURCE_DIR})
 include_directories(${ORETEST_SOURCE_DIR})

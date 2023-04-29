@@ -548,6 +548,18 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
 
     for (Size i = 0; i < comConfigs_.size(); i++)
         LOG("CrossAssetModelData: COM config name " << i << " = " << comConfigs_[i]->name());
+
+    // Configure credit states
+
+    numberOfCreditStates_ = 0;
+    XMLNode* crStateNode = XMLUtils::getChildNode(modelNode, "CreditStates");
+    if(crStateNode) {
+        numberOfCreditStates_ = XMLUtils::getChildValueAsInt(crStateNode, "NumberOfFactors", true);
+        LOG("Set up " << numberOfCreditStates_ << " credit states.");
+    }
+    else {
+        LOG("No credit states section found");
+    }
     
     // Configure correlation structure
     LOG("CrossAssetModelData: adding correlations.");
@@ -815,6 +827,9 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
         XMLNode* crossAssetComNode = comConfigs_[comConfigs_Iterator]->toXML(doc);
         XMLUtils::appendNode(comModelsNode, crossAssetComNode);
     }
+
+    XMLNode* creditStateNode = XMLUtils::addChild(doc, crossAssetModelNode, "CreditStates");
+    XMLUtils::addChild(doc, creditStateNode, "NumberOfFactors", static_cast<int>(numberOfCreditStates_));
 
     XMLNode* instantaneousCorrelationsNode = correlations_->toXML(doc);
     XMLUtils::appendNode(crossAssetModelNode, instantaneousCorrelationsNode);

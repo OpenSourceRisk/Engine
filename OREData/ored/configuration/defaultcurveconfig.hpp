@@ -51,7 +51,7 @@ public:
     class Config : public XMLSerializable {
     public:
         //! Supported default curve types
-        enum class Type { SpreadCDS, HazardRate, Benchmark, Price, MultiSection, Null };
+        enum class Type { SpreadCDS, HazardRate, Benchmark, Price, MultiSection, TransitionMatrix, Null };
         Config(const Type& type, const string& discountCurveID, const string& recoveryRateQuote,
                const DayCounter& dayCounter, const string& conventionID,
                const std::vector<std::pair<std::string, bool>>& cdsQuotes = {}, bool extrapolation = true,
@@ -93,7 +93,9 @@ public:
         const vector<string>& multiSectionSourceCurveIds() const { return multiSectionSourceCurveIds_; }
         const vector<string>& multiSectionSwitchDates() const { return multiSectionSwitchDates_; }
         const bool allowNegativeRates() const { return allowNegativeRates_; }
-        //@}
+        const string& initialState() const { return initialState_; }
+        const vector<string>& states() const { return states_; }
+       //@}
 
         //! \name Setters
         //@{
@@ -137,6 +139,8 @@ public:
         QuantLib::Period indexTerm_;
         vector<string> multiSectionSourceCurveIds_;
         vector<string> multiSectionSwitchDates_;
+        string initialState_;
+        vector<string> states_;
 
         /*! Indicates if the reference entity's default status should be implied from the market data. If \c true, this
             behaviour is active and if \c false it is not. If not explicitly set, it is assumed to be \c false.

@@ -2,6 +2,9 @@
 
 set(OREAnalytics_SRC aggregation/collateralaccount.cpp
 aggregation/collatexposurehelper.cpp
+aggregation/creditmigrationcalculator.cpp
+aggregation/creditmigrationhelper.cpp
+aggregation/creditsimulationparameters.cpp
 aggregation/cvaspreadsensitivitycalculator.cpp
 aggregation/dimcalculator.cpp
 aggregation/dimregressioncalculator.cpp
@@ -42,6 +45,7 @@ engine/filteredsensitivitystream.cpp
 engine/historicalpnlgenerator.cpp
 engine/historicalsensipnlcalculator.cpp
 engine/mporcalculator.cpp
+engine/multistatenpvcalculator.cpp
 engine/multithreadedvaluationengine.cpp
 engine/npvrecord.cpp
 engine/parametricvar.cpp
@@ -90,6 +94,9 @@ simulation/simmarket.cpp)
 
 set(OREAnalytics_HDR aggregation/collateralaccount.hpp
 aggregation/collatexposurehelper.hpp
+aggregation/creditmigrationcalculator.hpp
+aggregation/creditmigrationhelper.hpp
+aggregation/creditsimulationparameters.hpp
 aggregation/cvaspreadsensitivitycalculator.hpp
 aggregation/dimcalculator.hpp
 aggregation/dimregressioncalculator.hpp
@@ -138,6 +145,7 @@ engine/filteredsensitivitystream.hpp
 engine/historicalpnlgenerator.hpp
 engine/historicalsensipnlcalculator.hpp
 engine/mporcalculator.hpp
+engine/multistatenpvcalculator.hpp
 engine/multithreadedvaluationengine.hpp
 engine/npvrecord.hpp
 engine/observationmode.hpp

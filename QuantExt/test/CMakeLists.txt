@@ -71,7 +71,8 @@ strippedoptionletadapter2.cpp
 survivalprobabilitycurve.cpp
 swaptionvolatilityconverter.cpp
 swaptionvolconstantspread.cpp
-testsuite.cpp)
+testsuite.cpp
+transitionmatrix.cpp)
 
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
 target_link_libraries(quantext-test-suite ${QL_LIB_NAME})

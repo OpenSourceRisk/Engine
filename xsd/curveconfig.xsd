@@ -478,6 +478,8 @@
               </xs:sequence>
             </xs:complexType>
           </xs:element>
+          <xs:element type="xs:string" name="InitialState" minOccurs="0"/>
+          <xs:element type="xs:string" name="States" minOccurs="0"/>
           <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
           <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
           <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
@@ -503,7 +505,6 @@
       <xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Pillars" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="SpotLag" minOccurs="0" maxOccurs="1"/>
-      <!-- SourceCurves and SwitchDates removed by JW, but restored here -->
       <xs:element name="SourceCurves" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
@@ -527,6 +528,8 @@
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
       <!-- AllowNegativeRates removed by JW, but restored here -->
       <xs:element type="bool" name="AllowNegativeRates" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="InitialState" minOccurs="0"/>
+      <xs:element type="xs:string" name="States" minOccurs="0"/>
    </xs:all>
   </xs:complexType>
 
@@ -536,6 +539,7 @@
       <xs:enumeration value="HazardRate"/>
       <xs:enumeration value="Benchmark"/>
       <xs:enumeration value="Price"/>
+      <xs:enumeration value="TransitionMatrix"/>
       <xs:enumeration value="Null"/>
     </xs:restriction>
   </xs:simpleType>
