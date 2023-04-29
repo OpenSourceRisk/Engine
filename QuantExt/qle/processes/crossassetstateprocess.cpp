@@ -727,7 +727,7 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl2(const StochasticPr
 
 Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const StochasticProcess&, Time t0, const Array&,
                                                                    Time dt) const {
-    Matrix res(model_->dimension(), model_->dimension());
+    Matrix res(model_->dimension(), model_->dimension(), 0.0);
     Size n = model_->components(CrossAssetModel::AssetType::IR);
     Size m = model_->components(CrossAssetModel::AssetType::FX);
     Size d = model_->components(CrossAssetModel::AssetType::INF);
