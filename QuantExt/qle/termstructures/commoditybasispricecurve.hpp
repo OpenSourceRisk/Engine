@@ -48,9 +48,34 @@ namespace QuantExt {
 
     \ingroup termstructures
 */
+
+ class CommodityBasisPriceTermStructure : public PriceTermStructure {
+public:
+     CommodityBasisPriceTermStructure(const QuantLib::Date& referenceDate,
+                                      const QuantLib::Calendar& cal = QuantLib::Calendar(),
+                                      const QuantLib::DayCounter& dc = QuantLib::DayCounter())
+         : PriceTermStructure(referenceDate, cal, dc){}
+
+     virtual const boost::shared_ptr<FutureExpiryCalculator>& basisFutureExpiryCalculator() const = 0;
+
+     virtual const boost::shared_ptr<CommodityFuturesIndex>& baseIndex() const = 0;
+     virtual const QuantLib::Handle<PriceTermStructure>& basePriceCurve() const = 0;
+     virtual const boost::shared_ptr<FutureExpiryCalculator>& baseFutureExpiryCalculator() const = 0;
+
+     virtual bool isAveraging() const = 0;
+
+     //! Get the contract date from an expiry date
+     virtual QuantLib::Date getContractDate(const QuantLib::Date& expiry,
+                                            const boost::shared_ptr<FutureExpiryCalculator>& fec) const = 0;
+
+     //! Make a commodity indexed cashflow
+     virtual boost::shared_ptr<CashFlow> makeCashflow(const QuantLib::Date& start, const QuantLib::Date& end) const = 0;
+ };
+
+
 template <class Interpolator>
-class CommodityBasisPriceCurve : public PriceTermStructure,
-                                 public QuantLib::LazyObject,
+ class CommodityBasisPriceCurve : public CommodityBasisPriceTermStructure,
+                                  public QuantLib::LazyObject,
                                  protected QuantLib::InterpolatedCurve<Interpolator> {
 public:
     //! \name Constructors
@@ -59,7 +84,7 @@ public:
     CommodityBasisPriceCurve(const QuantLib::Date& referenceDate, 
                              const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>>& basisData,
                              const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-                             const boost::shared_ptr<CommodityIndex>& baseIndex,
+                             const boost::shared_ptr<CommodityFuturesIndex>& baseIndex,
                              const QuantLib::Handle<PriceTermStructure>& basePts,
                              const boost::shared_ptr<FutureExpiryCalculator>& baseFec, 
                              bool addBasis = true,
@@ -95,13 +120,13 @@ public:
     //@{
     const std::vector<QuantLib::Time>& times() const { return this->times_; }
     const std::vector<QuantLib::Real>& prices() const { return this->data_; }
-    const boost::shared_ptr<FutureExpiryCalculator>& basisFutureExpiryCalculator() const { return basisFec_; }
+    const boost::shared_ptr<FutureExpiryCalculator>& basisFutureExpiryCalculator() const override { return basisFec_; }
 
-    const boost::shared_ptr<CommodityIndex>& baseIndex() const { return baseIndex_; }
-    const QuantLib::Handle<PriceTermStructure>& basePriceCurve() const { return basePts_; }
-    const boost::shared_ptr<FutureExpiryCalculator>& baseFutureExpiryCalculator() const { return baseFec_; }
+    const boost::shared_ptr<CommodityFuturesIndex>& baseIndex() const override { return baseIndex_; }
+    const QuantLib::Handle<PriceTermStructure>& basePriceCurve() const override { return basePts_; }
+    const boost::shared_ptr<FutureExpiryCalculator>& baseFutureExpiryCalculator() const override  { return baseFec_; }
 
-    bool isAveraging() const { return isAveraging_; }
+    bool isAveraging() const override { return baseIsAveraging_; }
 
     //! Get the contract date from an expiry date
     QuantLib::Date getContractDate(const QuantLib::Date& expiry,
@@ -123,7 +148,7 @@ private:
     std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> > basisData_;
     boost::shared_ptr<FutureExpiryCalculator> basisFec_;
     
-    boost::shared_ptr<CommodityIndex> baseIndex_;
+    boost::shared_ptr<CommodityFuturesIndex> baseIndex_;
     QuantLib::Handle<PriceTermStructure> basePts_;
     boost::shared_ptr<FutureExpiryCalculator> baseFec_;
    
@@ -152,10 +177,11 @@ private:
 template <class Interpolator>
 CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     const QuantLib::Date& referenceDate, const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>>& basisData,
-    const boost::shared_ptr<FutureExpiryCalculator>& basisFec, const boost::shared_ptr<CommodityIndex>& baseIndex,
+    const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
+    const boost::shared_ptr<CommodityFuturesIndex>& baseIndex,
     const QuantLib::Handle<PriceTermStructure>& basePts, const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
     bool addBasis, QuantLib::Size monthOffset, bool baseIsAveraging, const Interpolator& interpolator)
-    : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), basePts->dayCounter()),
+    : CommodityBasisPriceTermStructure(referenceDate, QuantLib::NullCalendar(), basePts->dayCounter()),
       QuantLib::InterpolatedCurve<Interpolator>(interpolator), basisData_(basisData), basisFec_(basisFec),
       baseIndex_(baseIndex), basePts_(basePts), baseFec_(baseFec), addBasis_(addBasis), monthOffset_(monthOffset),
       baseIsAveraging_(baseIsAveraging) {

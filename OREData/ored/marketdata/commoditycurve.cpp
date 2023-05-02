@@ -389,6 +389,8 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
 
     // Construct the commodity index.
     auto baseIndex = parseCommodityIndex(baseConvention->id(), false, basePts);
+    
+    auto baseFutureIndex = boost::dynamic_pointer_cast<QuantExt::CommodityFuturesIndex>(baseIndex);
 
     // Sort the configured quotes on expiry dates
     // Ignore tenor based quotes i.e. we expect an explicit expiry date and log a warning if the expiry date does not
@@ -412,7 +414,8 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
         }
     }
 
-    populateCurve<CommodityBasisPriceCurve>(asof, basisData, basisFec, baseIndex, basePts, baseFec, config.addBasis(),
+    populateCurve<CommodityBasisPriceCurve>(asof, basisData, basisFec, baseFutureIndex, basePts, baseFec,
+                                            config.addBasis(),
                                             config.monthOffset(), config.averageBase());
 
     LOG("CommodityCurve: finished building commodity basis curve.");

@@ -136,7 +136,7 @@ boost::shared_ptr<CommodityIndex> CommodityFuturesIndex::clone(const Date& expir
 
 CommodityBasisFutureIndex::CommodityBasisFutureIndex(const std::string& underlyingName, const Date& expiryDate,
                                                      const Calendar& fixingCalendar,
-                                                     const Handle<QuantExt::CommodityFuturesIndex>& baseIndex,
+                                                     const boost::shared_ptr<QuantExt::CommodityFuturesIndex>& baseIndex,
                                                      const boost::shared_ptr<FutureExpiryCalculator>& expiryCalcBasis,
                                                      const boost::shared_ptr<FutureExpiryCalculator>& expiryCalcBase,
                                                      const Handle<QuantExt::PriceTermStructure>& priceCurve,
@@ -144,8 +144,8 @@ CommodityBasisFutureIndex::CommodityBasisFutureIndex(const std::string& underlyi
     : CommodityFuturesIndex(underlyingName, expiryDate, fixingCalendar, priceCurve), baseIndex_(baseIndex),
       expiryCalcBasis_(expiryCalcBasis), expiryCalcBase_(expiryCalcBase), addSpread_(addSpread) {
     QL_REQUIRE(expiryDate_ != Date(), "non-empty expiry date expected CommodityFuturesIndex");
-    QL_REQUIRE(!baseIndex_.empty() && baseIndex_.currentLink() != nullptr,
-               "non-null spreadIndex required for CommodityBasisFutureIndex");
+    QL_REQUIRE(baseIndex_!= nullptr,
+               "non-null baseIndex required for CommodityBasisFutureIndex");
     QL_REQUIRE(expiryCalcBasis != nullptr,
                "non-null future expiry calculator for the basis conventions CommodityBasisFutureIndex");
     QL_REQUIRE(expiryCalcBasis != nullptr,
@@ -195,7 +195,7 @@ QuantLib::Date CommodityBasisFutureIndex::getContractDate(const Date& expiry) co
 boost::shared_ptr<QuantLib::CashFlow> CommodityBasisFutureIndex::makeCashflow(const QuantLib::Date& start,
     const QuantLib::Date& end) const {
     return boost::make_shared<CommodityIndexedCashFlow>(
-        1.0, start, end, baseIndex_.currentLink(), 0, QuantLib::NullCalendar(), QuantLib::Unadjusted, 0,
+        1.0, start, end, baseIndex_, 0, QuantLib::NullCalendar(), QuantLib::Unadjusted, 0,
         QuantLib::NullCalendar(), 0.0,
         1.0, CommodityIndexedCashFlow::PaymentTiming::InArrears, true, true, true, 0, expiryCalcBase_);
 }

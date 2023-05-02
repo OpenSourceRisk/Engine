@@ -107,6 +107,7 @@
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
 #include <qle/indexes/secpi.hpp>
+#include <qle/termstructures/commoditybasispricecurve.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -888,7 +889,19 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
             cdr = convention->calendar();
         }
 
-        index = boost::make_shared<CommodityFuturesIndex>(indexName, expiry, cdr, keepDays, ts);
+        auto basisCurve = ts.empty() ? nullptr :
+            boost::dynamic_pointer_cast<CommodityBasisPriceTermStructure>(*ts);
+
+        if (basisCurve) {
+            index = boost::make_shared<CommodityBasisFutureIndex>(indexName, expiry, cdr, basisCurve->baseIndex(),
+                                                                  basisCurve->basisFutureExpiryCalculator(),
+                                                                  basisCurve->baseFutureExpiryCalculator(), ts, true);
+                    
+        } else {
+            index = boost::make_shared<CommodityFuturesIndex>(indexName, expiry, cdr, keepDays, ts);
+        }
+
+        
 
     } else {
         index = boost::make_shared<CommoditySpotIndex>(commName, cal, ts);
