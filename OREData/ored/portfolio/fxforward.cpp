@@ -113,6 +113,12 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     notionalCurrency_ = "";   // soldCurrency_;
     maturity_ = std::max(payDate, maturityDate);
 
+    // set up legs
+    legs_ = {{boost::make_shared<SimpleCashFlow>(boughtAmount_, payDate)},
+             {boost::make_shared<SimpleCashFlow>(soldAmount_, payDate)}};
+    legCurrencies_ = {boughtCurrency_, soldCurrency_};
+    legPayers_ = {false, true};
+
     // set Pricing engine
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);

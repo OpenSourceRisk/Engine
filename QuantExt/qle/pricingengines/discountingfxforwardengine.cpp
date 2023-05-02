@@ -112,10 +112,8 @@ void DiscountingFxForwardEngine::calculate() const {
         std::vector<CashFlowResults> cashFlowResults;
         CashFlowResults cf1, cf2;
         cf1.payDate = arguments_.payDate;
-        cf1.legNumber = 0;
         cf1.type = "Notional";
         cf2.payDate = arguments_.payDate;
-        cf2.legNumber = 1;
         cf2.type = "Notional";
         if (!arguments_.isPhysicallySettled) {
             if (arguments_.payDate >= arguments_.fixingDate) {
@@ -129,13 +127,22 @@ void DiscountingFxForwardEngine::calculate() const {
             cf1.currency = settleCcy.code();
             cf2.currency = settleCcy.code();
         } else {
-            cf1.amount = tmpNominal1;
-            cf2.amount = -tmpNominal2;
+            cf1.amount = (tmpPayCurrency1 ? -1.0 : 1.0) * tmpNominal1;
+            cf2.amount = (tmpPayCurrency1 ? -1.0 : 1.0) * (-tmpNominal2);
             cf1.currency = ccy1_.code();
             cf2.currency = ccy2_.code();
         }
-        cashFlowResults.push_back(cf1);
-        cashFlowResults.push_back(cf2);
+        if (ccy1_ == arguments_.currency1) {
+            cf1.legNumber = 0;
+            cf2.legNumber = 1;
+            cashFlowResults.push_back(cf1);
+            cashFlowResults.push_back(cf2);
+        } else {
+            cf1.legNumber = 1;
+            cf2.legNumber = 0;
+            cashFlowResults.push_back(cf2);
+            cashFlowResults.push_back(cf1);
+        }
         results_.additionalResults["cashFlowResults"] = cashFlowResults;
 
         results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * discFar / discNear * (tmpNominal1 / fx1 - tmpNominal2 / fx2);
