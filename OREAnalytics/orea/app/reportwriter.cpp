@@ -503,8 +503,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                     if (cf.discountFactor != Null<Real>())
                         discountFactor = cf.discountFactor;
                     else if (!cf.currency.empty() && cf.payDate != Null<Date>() && market) {
-                        discountFactor =
-                            cf.payDate < asof ? 0.0 : market->discountCurve(cf.currency)->discount(cf.payDate);
+                        discountFactor = cf.payDate < asof
+                                             ? 0.0
+                                             : market->discountCurve(cf.currency, configuration)->discount(cf.payDate);
                     }
                     if (cf.presentValue != Null<Real>()) {
                         presentValue = cf.presentValue * multiplier;
