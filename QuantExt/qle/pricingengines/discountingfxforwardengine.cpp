@@ -130,7 +130,7 @@ void DiscountingFxForwardEngine::calculate() const {
             cf2.currency = settleCcy.code();
         } else {
             cf1.amount = tmpNominal1;
-            cf2.amount = tmpNominal2;
+            cf2.amount = -tmpNominal2;
             cf1.currency = ccy1_.code();
             cf2.currency = ccy2_.code();
         }
