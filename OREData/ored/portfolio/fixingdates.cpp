@@ -529,6 +529,9 @@ void FixingDateGetter::visit(CommodityIndexedCashFlow& c) {
         if (auto d = kv.second->expiryDate(); d != Date() && d < kv.first) {
             requiredFixings_.addFixingDate(d, kv.second->name(), d);
         }
+        if (auto baseFutureIndex = boost::dynamic_pointer_cast<CommodityBasisFutureIndex>(kv.second)) {
+            baseFutureIndex->baseCashflow()->accept(*this);
+        }
     }
 }
 
