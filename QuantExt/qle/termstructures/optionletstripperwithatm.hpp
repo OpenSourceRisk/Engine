@@ -317,10 +317,10 @@ inline std::vector<QuantLib::Volatility> OptionletStripperWithAtm<TimeInterpolat
 
     for (Size j = 0; j < nAtmExpiries_; ++j) {
         if (isOis) {
-            ObjectiveFunction f(ovs, caps_[j], atmPrices_[j], discount);
+            ObjectiveFunctionOIS f(ovs, capsOIS_[j], atmPrices_[j], discount);
             result[j] = solver.solve(f, accuracy_, guess, minSpread, maxSpread);
         } else {
-            ObjectiveFunctionOIS f(ovs, capsOIS_[j], atmPrices_[j], discount);
+            ObjectiveFunction f(ovs, caps_[j], atmPrices_[j], discount);
             result[j] = solver.solve(f, accuracy_, guess, minSpread, maxSpread);
         }
     }
