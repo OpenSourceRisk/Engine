@@ -178,6 +178,9 @@ public:
         return baseValue + lambda * basisFixing;
     }
 
+    const boost::shared_ptr<QuantExt::CommodityFuturesIndex>& baseIndex() { return baseIndex_; }
+    boost::shared_ptr<CashFlow> baseCashflow(const QuantLib::Date& paymentDate = QuantLib::Date()) const;
+
 private:
     boost::shared_ptr<QuantExt::CommodityFuturesIndex> baseIndex_;
     boost::shared_ptr<FutureExpiryCalculator> expiryCalcBasis_;
@@ -188,8 +191,10 @@ private:
 
     QuantLib::Date getContractDate(const Date& expiry) const;
 
-    boost::shared_ptr<CashFlow>
-        makeCashflow(const QuantLib::Date& start, const QuantLib::Date& end) const;
+    boost::shared_ptr<CashFlow> makeCashflow(const QuantLib::Date& start, const QuantLib::Date& end,
+                                             const QuantLib::Date& paymentDate = QuantLib::Date()) const;
+
+    
 
 
 };
