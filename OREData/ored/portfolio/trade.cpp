@@ -256,7 +256,8 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                  QuantExt::getIndexedCouponOrCashFlowFixingDetails(flow)) {
                 auto label = "[" + legID + "][" + std::to_string(j) + "][" + std::to_string(k) + "]";
                 additionalData_["indexingFixingDate" + label] = fixingDate;
-                additionalData_["indexingIndex" + label] = IndexNameTranslator::instance().oreName(index->name());
+                additionalData_["indexingIndex" + label] =
+                    index == nullptr ? "na" : IndexNameTranslator::instance().oreName(index->name());
                 additionalData_["indexingMultiplier" + label] = multiplier;
             }
         }
