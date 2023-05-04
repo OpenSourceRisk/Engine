@@ -159,7 +159,7 @@ class CommodityBasisFutureIndex : public CommodityFuturesIndex {
 public:
     CommodityBasisFutureIndex(
         const std::string& underlyingName, const Date& expiryDate, const Calendar& fixingCalendar,
-        const boost::shared_ptr<QuantExt::CommodityFuturesIndex>& baseIndex,
+        const boost::shared_ptr<QuantExt::CommodityIndex>& baseIndex,
         const boost::shared_ptr<FutureExpiryCalculator>& expiryCalcBasis,
         const boost::shared_ptr<FutureExpiryCalculator>& expiryCalcBase,
         const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>(),
@@ -178,11 +178,11 @@ public:
         return baseValue + lambda * basisFixing;
     }
 
-    const boost::shared_ptr<QuantExt::CommodityFuturesIndex>& baseIndex() { return baseIndex_; }
+    const boost::shared_ptr<QuantExt::CommodityIndex>& baseIndex() { return baseIndex_; }
     boost::shared_ptr<CashFlow> baseCashflow(const QuantLib::Date& paymentDate = QuantLib::Date()) const;
 
 private:
-    boost::shared_ptr<QuantExt::CommodityFuturesIndex> baseIndex_;
+    boost::shared_ptr<QuantExt::CommodityIndex> baseIndex_;
     boost::shared_ptr<FutureExpiryCalculator> expiryCalcBasis_;
     boost::shared_ptr<FutureExpiryCalculator> expiryCalcBase_;
     mutable boost::shared_ptr<CashFlow> cashflow_;

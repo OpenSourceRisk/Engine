@@ -136,7 +136,7 @@ boost::shared_ptr<CommodityIndex> CommodityFuturesIndex::clone(const Date& expir
 
 CommodityBasisFutureIndex::CommodityBasisFutureIndex(const std::string& underlyingName, const Date& expiryDate,
                                                      const Calendar& fixingCalendar,
-                                                     const boost::shared_ptr<QuantExt::CommodityFuturesIndex>& baseIndex,
+                                                     const boost::shared_ptr<QuantExt::CommodityIndex>& baseIndex,
                                                      const boost::shared_ptr<FutureExpiryCalculator>& expiryCalcBasis,
                                                      const boost::shared_ptr<FutureExpiryCalculator>& expiryCalcBase,
                                                      const Handle<QuantExt::PriceTermStructure>& priceCurve,
@@ -151,6 +151,7 @@ CommodityBasisFutureIndex::CommodityBasisFutureIndex(const std::string& underlyi
     QL_REQUIRE(expiryCalcBasis != nullptr,
                "non-null future expiry calculator for the base conventions CommodityBasisFutureIndex");
     registerWith(baseIndex);
+    registerWith(baseIndex->priceCurve());
     cashflow_ = baseCashflow();
 }
 

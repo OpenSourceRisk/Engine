@@ -58,7 +58,7 @@ public:
 
      virtual const boost::shared_ptr<FutureExpiryCalculator>& basisFutureExpiryCalculator() const = 0;
 
-     virtual const boost::shared_ptr<CommodityFuturesIndex>& baseIndex() const = 0;
+     virtual const boost::shared_ptr<CommodityIndex>& baseIndex() const = 0;
      virtual const QuantLib::Handle<PriceTermStructure>& basePriceCurve() const = 0;
      virtual const boost::shared_ptr<FutureExpiryCalculator>& baseFutureExpiryCalculator() const = 0;
 
@@ -70,6 +70,9 @@ public:
 
      //! Make a commodity indexed cashflow
      virtual boost::shared_ptr<CashFlow> makeCashflow(const QuantLib::Date& start, const QuantLib::Date& end) const = 0;
+
+     virtual void cloneBaseIndex(const QuantLib::Handle<PriceTermStructure>& newbasePriceCurve) const = 0;
+
  };
 
 
@@ -84,7 +87,7 @@ public:
     CommodityBasisPriceCurve(const QuantLib::Date& referenceDate, 
                              const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>>& basisData,
                              const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-                             const boost::shared_ptr<CommodityFuturesIndex>& baseIndex,
+                             const boost::shared_ptr<CommodityIndex>& baseIndex,
                              const QuantLib::Handle<PriceTermStructure>& basePts,
                              const boost::shared_ptr<FutureExpiryCalculator>& baseFec, 
                              bool addBasis = true,
@@ -122,7 +125,7 @@ public:
     const std::vector<QuantLib::Real>& prices() const { return this->data_; }
     const boost::shared_ptr<FutureExpiryCalculator>& basisFutureExpiryCalculator() const override { return basisFec_; }
 
-    const boost::shared_ptr<CommodityFuturesIndex>& baseIndex() const override { return baseIndex_; }
+    const boost::shared_ptr<CommodityIndex>& baseIndex() const override { return baseIndex_; }
     const QuantLib::Handle<PriceTermStructure>& basePriceCurve() const override { return basePts_; }
     const boost::shared_ptr<FutureExpiryCalculator>& baseFutureExpiryCalculator() const override  { return baseFec_; }
 
@@ -135,7 +138,11 @@ public:
     //! Make a commodity indexed cashflow
     boost::shared_ptr<CashFlow> makeCashflow(const QuantLib::Date& start,
                                                              const QuantLib::Date& end) const;
-
+    
+    void cloneBaseIndex(const QuantLib::Handle<PriceTermStructure>& newbasePriceCurve) const override {
+        baseIndex_ = baseIndex_->clone(baseIndex_->expiryDate(), newbasePriceCurve);
+        basePts_ = newbasePriceCurve;
+    }
     //@}
 
 protected:
@@ -148,8 +155,8 @@ private:
     std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> > basisData_;
     boost::shared_ptr<FutureExpiryCalculator> basisFec_;
     
-    boost::shared_ptr<CommodityFuturesIndex> baseIndex_;
-    QuantLib::Handle<PriceTermStructure> basePts_;
+    mutable boost::shared_ptr<CommodityIndex> baseIndex_;
+    mutable QuantLib::Handle<PriceTermStructure> basePts_;
     boost::shared_ptr<FutureExpiryCalculator> baseFec_;
    
     bool addBasis_;
@@ -177,8 +184,7 @@ private:
 template <class Interpolator>
 CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     const QuantLib::Date& referenceDate, const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>>& basisData,
-    const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-    const boost::shared_ptr<CommodityFuturesIndex>& baseIndex,
+    const boost::shared_ptr<FutureExpiryCalculator>& basisFec, const boost::shared_ptr<CommodityIndex>& baseIndex,
     const QuantLib::Handle<PriceTermStructure>& basePts, const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
     bool addBasis, QuantLib::Size monthOffset, bool baseIsAveraging, const Interpolator& interpolator)
     : CommodityBasisPriceTermStructure(referenceDate, QuantLib::NullCalendar(), basePts->dayCounter()),

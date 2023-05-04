@@ -89,6 +89,7 @@
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
+#include <qle/termstructures/commoditybasispricecurve.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/timer/timer.hpp>
@@ -321,6 +322,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                    parameters_->defaultCurveExtrapolation() == "FlatFwd",
                "ScenarioSimMarket: DefaultCurves / Extrapolation ('" << parameters_->extrapolation()
                                                                      << "') must be set to 'FlatZero' or 'FlatFwd'");
+
+    vector<std::string> commodityBaseCurves;
 
     for (const auto& param : parameters->parameters()) {
         try {
@@ -2301,6 +2304,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (param.second.first && useSpreadedTermStructures_) {
                             // Created spreaded commodity price curve if we simulate commodities and spreads should be
                             // used
+                            if (boost::shared_ptr<CommodityBasisPriceTermStructure> basisCurve =
+                                    boost::dynamic_pointer_cast<QuantExt::CommodityBasisPriceTermStructure>(
+                                        initialCommodityCurve.currentLink())) {
+                                commodityBaseCurves.push_back(name);
+                            }
+
                             vector<Real> simulationTimes;
                             for (auto const& t : simulationTenors) {
                                 simulationTimes.push_back(commodityCurveDayCounter.yearFraction(asof_, asof_ + t));
@@ -2632,6 +2641,20 @@ ScenarioSimMarket::ScenarioSimMarket(
             processException(continueOnError, e);
         }
     }
+
+    for (const auto& curveName : commodityBaseCurves) {
+        auto index = commodityIndices_.find({Market::defaultConfiguration, curveName});
+        auto pts = index->second->priceCurve();
+        auto spreadedPts = boost::dynamic_pointer_cast<SpreadedPriceTermStructure>(*pts);
+        if(spreadedPts != nullptr){
+            auto basisPts = boost::dynamic_pointer_cast<CommodityBasisPriceTermStructure>(*spreadedPts->referenceCurve());
+            auto baseIndex =
+                commodityIndices_.find({Market::defaultConfiguration, basisPts->baseIndex()->underlyingName()});
+            QL_REQUIRE(baseIndex != commodityIndices_.end(), "Couldn't find underlying base curve");
+            basisPts->cloneBaseIndex(baseIndex->second->priceCurve());
+        }
+    }
+
 
     // swap indices
     DLOG("building swap indices...");

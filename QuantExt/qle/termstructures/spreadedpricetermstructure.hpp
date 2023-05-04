@@ -47,6 +47,8 @@ public:
     const QuantLib::Currency& currency() const override;
     std::vector<QuantLib::Date> pillarDates() const override;
 
+    const QuantLib::Handle<PriceTermStructure>& referenceCurve() const { return referenceCurve_; }
+
 private:
     void performCalculations() const override;
     QuantLib::Real priceImpl(QuantLib::Time) const override;

@@ -108,6 +108,7 @@
 #include <qle/indexes/offpeakpowerindex.hpp>
 #include <qle/indexes/secpi.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
+#include <qle/termstructures/spreadedpricetermstructure.hpp>s
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -891,6 +892,15 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
 
         auto basisCurve = ts.empty() ? nullptr :
             boost::dynamic_pointer_cast<CommodityBasisPriceTermStructure>(*ts);
+
+        auto spreadedCurve = ts.empty() ? nullptr : boost::dynamic_pointer_cast<SpreadedPriceTermStructure>(*ts);
+
+        if (spreadedCurve != nullptr) {
+            auto curve = boost::dynamic_pointer_cast<CommodityBasisPriceTermStructure>(*spreadedCurve->referenceCurve());
+            if (curve != nullptr) {
+                basisCurve = curve;
+            }
+        }
 
         if (basisCurve) {
             index = boost::make_shared<CommodityBasisFutureIndex>(indexName, expiry, cdr, basisCurve->baseIndex(),
