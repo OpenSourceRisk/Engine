@@ -60,6 +60,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"RECOVERY_RATE", MarketDatum::InstrumentType::RECOVERY_RATE},
         {"SWAPTION", MarketDatum::InstrumentType::SWAPTION},
         {"CAPFLOOR", MarketDatum::InstrumentType::CAPFLOOR},
+        {"OPTIONLET", MarketDatum::InstrumentType::OPTIONLET},
         {"FX_OPTION", MarketDatum::InstrumentType::FX_OPTION},
         {"EQUITY", MarketDatum::InstrumentType::EQUITY_SPOT},
         {"EQUITY_FWD", MarketDatum::InstrumentType::EQUITY_FWD},

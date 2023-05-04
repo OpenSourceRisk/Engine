@@ -100,6 +100,7 @@ public:
         RECOVERY_RATE,
         SWAPTION,
         CAPFLOOR,
+        OPTIONLET,
         FX_OPTION,
         ZC_INFLATIONSWAP,
         ZC_INFLATIONCAPFLOOR,

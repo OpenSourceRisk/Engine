@@ -111,6 +111,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::InstrumentType& t
         return out << "SWAPTION";
     case MarketDatum::InstrumentType::CAPFLOOR:
         return out << "CAPFLOOR";
+    case MarketDatum::InstrumentType::OPTIONLET:
+        return out << "OPTIONLET";
     case MarketDatum::InstrumentType::FX_OPTION:
         return out << "FX_OPTION";
     case MarketDatum::InstrumentType::ZC_INFLATIONSWAP:
