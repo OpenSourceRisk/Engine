@@ -238,8 +238,8 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
                 MakeOISCapFloor(CapFloor::Cap, atmTenors[j], boost::dynamic_pointer_cast<OvernightIndex>(index_),
                                 osBase_->rateComputationPeriod(), Null<Real>(), discountCurve)
                 .withCouponPricer(pricer);
-            QL_REQUIRE(capsOIS_[j].empty(),
-                       "OptionletStripperWIthAtm: internal error: empty cap for expiry " << atmTenors[j]);
+            QL_REQUIRE(!capsOIS_[j].empty(),
+                       "OptionletStripperWithAtm: internal error: empty cap for expiry " << atmTenors[j]);
             atmStrikes_[j] = getOisCapFloorStrikes(capsOIS_[j]).front().first;
             atmPrices_[j] = CashFlows::npv(capsOIS_[j], **discountCurve, false);
 
