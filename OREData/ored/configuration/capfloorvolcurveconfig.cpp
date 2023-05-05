@@ -385,8 +385,11 @@ void CapFloorVolatilityCurveConfig::validate() const {
     QL_REQUIRE(validInterps.count(strikeInterpolation_) == 1,
                "StrikeInterpolation, " << strikeInterpolation_ << ", not recognised");
     QL_REQUIRE(strikeInterpolation_ != "BackwardFlat", "BackwardFlat StrikeInterpolation is not allowed");
-    if (!tenors_.empty()) {
-        QL_REQUIRE(!strikes_.empty(), "Strikes cannot be empty when configuring a surface");
+    if (!strikes_.empty()) {
+        QL_REQUIRE(!tenors_.empty(), "Tenors must be given for a surface (strikes are given)");
+    } else {
+        QL_REQUIRE(!tenors_.empty() || atmTenors_.empty(),
+                   "Tenors or AtmTenors must be given for a curve (strikes are not given)");
     }
 }
 
