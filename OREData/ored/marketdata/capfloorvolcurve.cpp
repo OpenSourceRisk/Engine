@@ -852,9 +852,6 @@ CapFloorVolCurve::transform(const Date& asof, vector<Date> dates, const vector<V
                             boost::shared_ptr<IborIndex> index, const DayCounter& dc, VolatilityType type,
                             Real displacement) const {
 
-    QL_REQUIRE(boost::dynamic_pointer_cast<OvernightIndex>(index) == nullptr,
-               "CapFloorVolCurve::transform(): OIS index not supported for ATM curve");
-
     vector<vector<Handle<Quote>>> vols(dates.size());
     for (Size i = 0; i < dates.size(); i++) {
         vols[i].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(volatilities[i])));
