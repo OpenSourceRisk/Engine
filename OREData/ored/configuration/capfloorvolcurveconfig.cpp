@@ -205,9 +205,8 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         // Tenors for ATM volatilities.
         atmTenors_ = XMLUtils::getChildrenValuesAsStrings(node, "AtmTenors", false);
         QL_REQUIRE(!tenors_.empty() || !atmTenors_.empty(), "Tenors and AtmTenors cannot both be empty");
-        if (includeAtm_ && atmTenors_.empty()) {
-            // swap so tenors_ is empty
-            atmTenors_.swap(tenors_);
+        if (atmTenors_.empty()) {
+            atmTenors_ = tenors_;
         }
 
         // Optional bootstrap configuration
@@ -375,8 +374,7 @@ void CapFloorVolatilityCurveConfig::configureVolatilityType(const std::string& t
 }
 
 void CapFloorVolatilityCurveConfig::configureType() {
-    type_ = tenors_.empty() ? Type::Atm : (includeAtm_ ? Type::SurfaceWithAtm : Type::Surface);
-    // type_ = strikes_.empty() ? Type::Atm : (includeAtm_ ? Type::SurfaceWithAtm : Type::Surface);
+    type_ = strikes_.empty() ? Type::Atm : (includeAtm_ ? Type::SurfaceWithAtm : Type::Surface);
 }
 
 void CapFloorVolatilityCurveConfig::validate() const {
