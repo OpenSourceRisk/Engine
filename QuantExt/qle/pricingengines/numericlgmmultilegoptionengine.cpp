@@ -341,6 +341,14 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
     additionalResults_ = getAdditionalResultsMap(model()->getCalibrationInfo());
 
+    if (rebatedExercise) {
+        for (Size i = 0; i < rebatedExercise->dates().size(); ++i) {
+            std::ostringstream d;
+            d << QuantLib::io::iso_date(rebatedExercise->dates()[i]);
+            additionalResults_["exerciseFee_" + d.str()] = -rebatedExercise->rebate(i);
+        }
+    }
+
 } // NumericLgmMultiLegOptionEngineBase::calculate()
 
 NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
