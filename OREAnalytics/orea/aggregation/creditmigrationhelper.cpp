@@ -386,7 +386,7 @@ Real CreditMigrationHelper::generateMigrationPnl(const Size date, const Size pat
                                                         << simEntityState << ", assume zero credit migration pnl");
             }
         }
-        // default risk for uncollaterised derivative exposure
+        // default risk for derivative exposure
         // TODO, assuming a zero recovery here...
         for (auto const& nettingSetId : cptyNettingSetIds_[i]) {
             Size nid = nettedCube_->idsAndIndexes().at(nettingSetId);
@@ -489,7 +489,7 @@ void CreditMigrationHelper::generateConditionalMigrationPnl(const Size date, con
                 }
             }
         }
-        // default risk for uncollaterised derivative exposure
+        // default risk for derivative exposure
         // TODO, assuming a zero recovery here...
         for (auto const& nettingSetId : cptyNettingSetIds_[i]) {
             auto nid = nettedCube_->idsAndIndexes().at(nettingSetId);
@@ -732,7 +732,6 @@ void CreditMigrationHelper::build(const std::map<std::string, boost::shared_ptr<
                 tmp2.insert(t->envelope().nettingSetId());
             }
             boost::shared_ptr<Bond> bond = boost::dynamic_pointer_cast<Bond>(t);
-            // FIXME the credit curve is also needed for CDS
             if (bond) {
                 tradeCreditCurves_[t->id()] = bond->bondData().creditCurveId();
                 // FIXME: We actually need the notional schedule here to determine future notionals
