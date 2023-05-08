@@ -109,26 +109,26 @@ implementation details.
 \subsection{Credit-worthiness model and transition matrices}
 
 We model the credit-worthiness $X_i$ of an ``entity'' $i$. Here, an entity represents either a {\em counterparty} in a
-(derivative) trade or an {\em issuer} referenced in a funded position exposed to credit risk (e.g. a bond, loan) or
-credit derivative trade (e.g. cds). The credit-worthiness $X_i$ is modelled as
+(derivative) trade or an {\em issuer} referenced in a funded position exposed to credit risk (e.g. a Bond, Loan) or
+credit derivative trade (e.g. CDS). The credit-worthiness $X_i$ is modelled as
 
 \begin{equation}
-dX_i = dY_i + \sigma_i dW_i := \sum_{j=1}^n \beta_{ij}dZ_j + \sigma_i dW_i
+dX_i = dY_i + dZ_i, \qquad  dY_i = \sum_{j=1}^n \beta_{ij}\,dG_j , \qquad dZ_i = \sigma_i dW_i
 \end{equation}
 
 Here:
 
 \begin{itemize}
-\item $Y_i$ is the systematic part of the credit risk driven by global credit factors $Z_j$ (shared between entities),
-  which are standard Brownian motions with correlation $dZ_kdZ_l = \rho_{kl}dt$. The $\beta_{ij}$ are entity-specifc
+\item $Y_i$ is the systematic part of the credit risk driven by global credit factors $G_j$ (shared between entities),
+  which are standard Brownian motions with correlation $dG_k\,dG_l = \rho_{kl}\,dt$. The $\beta_{ij}$ are entity-specifc
   loadings.
-\item $\int_0^t \sigma_i dW_i$ is the idiosyncratic part of the credit risk of entity $i$, $W_i$ is independent of all
-  $Z_j$
+\item $Z_i$ is the idiosyncratic part of the credit risk of entity $i$, driven by standard Brownian motions $W_i$ which are independent of all
+  global factors $G_j$
 \item $\beta_{ij}$ and $\sigma_i$ are chosen such that $X_i$ is a standard brownian motion, i.e. it generates variance
   $t$ up to time $t$
 \end{itemize}
 
-The systematic factors $Z_i$ are evolved in ORE's standard exposure simulation. Conditional on the systematic factors
+The systemic/global factors $G_i$ are evolved in ORE's standard exposure simulation. Conditional on the systematic factors
 the credit worthiness indices $X_i$ are independent.
 
 Input to the credit migration model is an {\em unconditional} annual transition matrix $M_i$ that can be entity
@@ -145,7 +145,7 @@ Writing
  P_{kf} = \sum_{j=1}^f p_{kj}
 \end{equation}
 
-for the probability to migrate from inital state $k$ to some final state better or equal in quality than $f$, it is
+for the probability to migrate from initial state $k$ to some final state better or equal in quality than $f$, it is
 straightforward to construct the migration matrix $M_i(t)\,|\,Y_i$ conditional on the realisation of the systematic part
 $Y_i$ as
 
@@ -155,71 +155,84 @@ P_{kf}\,|\, Y_i := \Phi\left( \frac{\Phi^{-1}(P_{kf}) - Y_i(t) / \sqrt{t}}{\sigm
 
 \subsection{PnL Distributions}
 
-We generate a PnL distribution for a subset of the exposure simulation simulation time steps. For a fixed time step the
+We generate a PnL distribution for a subset of the exposure simulation time steps. For a fixed time step the
 total PnL is given by the sum of
 
 \begin{itemize}
-\item the market risk pnl (if active in the credit simulation config, see \ref{credit_simulation_config})
-\item the credit migration risk pnl (if active, again see \ref{credit_simulation_config})
+\item the market risk PnL (if active in the credit simulation config, see \ref{credit_simulation_config})
+\item the credit migration risk PnL (if active, again see \ref{credit_simulation_config})
 \end{itemize}
 
 \subsubsection{Market Risk PnL}
 
-The market risk pnl is a single number per exposure simulation path and computed as
+The market risk PnL is a single number per exposure simulation path and computed as
 
 \begin{equation}
 -\nu_0 + \sum_{l=1}^L c(l) + \nu_L
 \end{equation}
 
-where $\nu_0$ is the NPV of the simulated portfolio at the T0 valuation date, $c(l)$ is the pv of the cashflows between
+where $\nu_0$ is the NPV of the simulated portfolio at the T0 valuation date, $c(l)$ is the NPV of the cashflows between
 simulation time step $l-1$ (first future simulation time step has index 0) and $l$ and $\nu_L$ is the NPV of the
 simulated portfolio at the simulation time step for which the PnL distribution is generated.
 
-The market risk pnl is computed for the full simulated portfolio.
+The market risk PnL is computed for the full simulated portfolio.
 
 \subsubsection{Credit Migration PnL}
 
-The credit migration PnL is itself computed as a distribution conditional on a single exposure simulation path. The path-wise distribuitions are averaged over all exposure simulation paths to get the final credit migration pnl distribution.
+The credit migration PnL is itself computed as a distribution conditional on a single exposure simulation path. The path-wise distributions are averaged over all exposure simulation paths to get the final credit migration PnL distribution.
 
 The credit migration PnL splits into
 
 \begin{itemize}
 \item credit migration PnL from counterparty risk for trades that are in a specified netting set (NettingSetIds in \ref{credit_simulation_config})
-\item credit migration PnL from issuer risk for trades that are exposed to issuer risk (bonds, cds etc.\footnote{current
+\item credit migration PnL from issuer risk for trades that are exposed to issuer risk (Bonds, CDS etc.\footnote{current
 coverage: trade types CreditDefaultSwap, Bond}) {\em and} the issuer is specified under Entities in
   \ref{credit_simulation_config}
 \end{itemize}
 
-The latter part of the credit migration PnL is determined as the default risk of the netted exposure (after
-collateralization) from the usual exposure postprocessing. No migration risk is considered here.
+The former part of the credit migration PnL is determined as the default risk of the netted exposure (after
+collateralisation) from the usual exposure post-processing. No migration risk is considered here.
 
-The former part of the credit migration PnL is generated in different ways depending on the evaluation mode (see
+The latter part of the credit migration PnL is generated in different ways depending on the evaluation mode (see
 \ref{credit_simulation_config}) as follows:
 
-{\em Analytic}: We exploit the fact that the credit-worthiness indicators $X_i$ are conditionally independent given the
+{\em Analytic}: In this mode we do not simulate the idiosyncratic factors.  We exploit the fact that the credit-worthiness indicators $X_i$ are conditionally independent given the
 systematic state $Y_i$. We use a multi-state Hull-White bucketing algorithm to generate the distribution. Each entity
-contributes a probability / pnl vector of size $n$ where $n$ is the number of rating states to the bucketing
-algorithm. The pnl vector is based on the conditional transition matrix.
+contributes a probability / PnL vector of size $n$ where $n$ is the number of rating states to the bucketing
+algorithm. The PnL vector is based on the conditional transition matrix.
 
-{\em TerminalSimulation, ForwardSimulationA, ForwardSimulationB}: Based on the conditional transition matrix for an
-outer exposure simulation path we run an inner MC simulation to generate realisations of the idiosyncratic risk for each
-entity. The number of paths for this inner simulation is specified in \ref{credit_simulation_config}. For each inner
-path we get a final migration state for an entity and from that a pnl contribution.
+{\em TerminalSimulation}: Based on the conditional transition matrix for an
+outer exposure simulation path we run an inner Monte Carlo simulation to generate realisations of the idiosyncratic risk for each
+entity at the terminal/horizon date $t_n$ only. The number of paths for this inner simulation is specified in \ref{credit_simulation_config}. For each inner
+path we get a final migration state for an entity and from that a PnL contribution.
 
-The modes TerminalSimulation, ForwardSimulationA, ForwardSimulationB are different w.r.t. whether one large step until
-the simulation horizon is taken, or small steps using all exposure simulation time steps and how the conditioning on the
-systematic credit state is done to produce conditional transition matrices.
+{\em ForwardSimulationB}: Based on the transition matrices $M_i(0,t_j)$ for entity $i$ and horizon date $t_j$ we construct 
+forward transition matrices $M_i(t_{j-1},t_j) = M^{-1}(0,t_{j-1}) \cdot M_i(0,t_j)$ which satisfy
+$$
+M(0,t_1) \cdot M(t_1,t_2)\cdot M(t_2, t_3)\cdot \dots M(t_{n-1},t_n) = M(0,t_n).
+$$
+Conditioning all transition matrices involved on the global state at horizon $t_n$, the same relation holds
+$$
+\widetilde M_{Y_n}(0,t_1) \cdot \widetilde M_{Y_n}(t_1,t_2)\cdot \widetilde M_{Y_n}(t_2, t_3)\cdot \dots \widetilde M_{Y_n}(t_{n-1},t_n) = \widetilde M_{Y_n}(0,t_n).
+$$
+This allows simulating paths of entity states along the grid $(t_1, t_2, \dots, t_n)$, not just the terminal date $t_n$, and the generation of migration PnL distribution at various grid points.
 
+{\em ForwardSimulationA}: Similar to the case above, we simulate entity state paths and generate credit migration PnL distributions at all simulation grid points.
+However, the transition matrices $M(0,t_i)$ involved in the construction of forward transition matrices are conditioned on the global state at the respective grid point, $\widetilde M_{Y_j}(t_j)$,
+so that the product of forward transition matrices thus defined does not match the terminal single-step $\widetilde M_{Y_n}(0,t_n)$ using in the the Analytic and TerminalSimulation modes. 
+The ForwardSimulationA evaluation mode needs to be reviewed/revised.
+
+In summary:
 \begin{itemize}
 \item TerminalSimulation: one large step is used, the systematic state at the simulation horizon is used to condition on the systematic credit state and produce one conditional transition matrix covering the whole time interval from t0 to the simulation horizon
-\item ForwardSimulationA: small simulation steps are used, the systematic state on each time step is used to condition on the systematic credit state and produce conditional forward transition matrices between two simulation times
+\item ForwardSimulationA: small simulation steps are used, the systematic state on each time step is used to condition on the systematic credit state and produce conditional forward transition matrices between two simulation times (to be reviewed/revised)
 \item ForwardSimulationB: small simulation steps are used, the systematic state at the simulation horizon is used to condition on the systematic credit state and produce conditional forward transition matrices between two simulation times
 \end{itemize}
 
-In this sense, Analytic, TerminalSimulation and ForwardSimulationB are all comparable in terms of the underlying
-modelling while ForwardSimulationA uses a different conditioning policy.
+%In this sense, Analytic, TerminalSimulation and ForwardSimulationB are all comparable in terms of the underlying
+%modelling while ForwardSimulationA uses a different conditioning policy.
 
-\section{Parametrization}
+\section{Parametrisation}
 
 \subsection{General settings in ore.xml}\label{general_settings}
 
@@ -235,7 +248,7 @@ the credit-model fail. The following setting is suitable for e.g. rating states 
       ...
 \end{minted}
 
-There are several parameters in the Analytic type {\em xva} relevant for the postprocessing step of the credit-model:
+There are several parameters in the Analytic type {\em XVA} relevant for the post-processing step of the credit-model:
 
 \begin{minted}[fontsize=\footnotesize]{xml}
     <Analytic type="xva">
@@ -250,12 +263,12 @@ There are several parameters in the Analytic type {\em xva} relevant for the pos
 The meaning of the parameters are as follows:
 
 \begin{itemize}
-\item creditMigration: Y to activate the credit-model postprocessing step, N to deactivate this step
-\item creditMigrationDistributionGrid: parameter triple min, max, steps that defines the binning of the pnl distribution
+\item creditMigration: Y to activate the credit-model post-processing step, N to deactivate this step
+\item creditMigrationDistributionGrid: parameter triple min, max, steps that defines the binning of the PnL distribution
 \item creditMigrationTimeSteps: simulation time steps to evaluate, 0 refers to the first future simulation time
 \item creditMigrationConfig: credit simulation config, described in \ref{credit_simulation_config}
-\item creditMigrationOutputFiles: prefix for output pnl distribution files, the time step and file extension csv will be
-  appendend to that name
+\item creditMigrationOutputFiles: prefix for output PnL distribution files, the time step and file extension csv will be
+  appended to that name
 \end{itemize}
 
 \subsection{Simulation settings in simulation.xml}

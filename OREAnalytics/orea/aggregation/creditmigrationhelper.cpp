@@ -378,6 +378,7 @@ Real CreditMigrationHelper::generateMigrationPnl(const Size date, const Size pat
                 if (parameters_->doubleDefault() && simEntityState == n - 1 &&
                     tradeCdsCptyIdx_.find(tradeId) != tradeCdsCptyIdx_.end()) {
                     if (simulatedDefaultOrder(tradeCdsCptyIdx_.at(tradeId), i, date, path, n)) {
+                        // FIXME: Shouldn't we subtract max(stateValue - baseValue, 0.0) ?
                         pnl -= stateValue - baseValue;
                     }
                 }
