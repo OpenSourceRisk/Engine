@@ -127,6 +127,11 @@ void PricingAnalyticImpl::runAnalytic(
                 analytic()->reports()[type]["curves"] = curvesReport;
                 CONSOLE("OK");
             }
+
+            auto pricingStatsReport = boost::make_shared<InMemoryReport>();
+            ReportWriter(inputs_->reportNaString())
+                    .writePricingStats(*pricingStatsReport, analytic()->portfolio());
+            analytic()->reports()[type]["pricingstats"] = pricingStatsReport;
         }
         else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");
