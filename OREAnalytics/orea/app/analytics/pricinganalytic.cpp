@@ -70,7 +70,7 @@ void PricingAnalyticImpl::runAnalytic(
     for (const auto& rt : runTypes) {
         if (std::find(analytic()->analyticTypes().begin(), analytic()->analyticTypes().end(), rt) ==
             analytic()->analyticTypes().end()) {
-            WLOG("requested analytic " << rt << " not covered by the PricingAnalytic");
+            DLOG("requested analytic " << rt << " not covered by the PricingAnalytic");
         }
     }
 
