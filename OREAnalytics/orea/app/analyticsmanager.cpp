@@ -165,10 +165,12 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
         }
     }
 
-    auto pricingStatsReport = boost::make_shared<InMemoryReport>();
-    ReportWriter(inputs_->reportNaString())
-        .writePricingStats(*pricingStatsReport, inputs_->portfolio());
-    reports_["STATS"]["pricingstats"] = pricingStatsReport;
+    if (inputs_->portfolio()) {
+        auto pricingStatsReport = boost::make_shared<InMemoryReport>();
+        ReportWriter(inputs_->reportNaString())
+            .writePricingStats(*pricingStatsReport, inputs_->portfolio());
+        reports_["STATS"]["pricingstats"] = pricingStatsReport;
+    }
 
     if (marketCalibrationReport)
         marketCalibrationReport->outputCalibrationReport();
