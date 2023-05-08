@@ -41,13 +41,13 @@ namespace analytics {
 
 /*! Helper for credit migration risk calculation
    Dynamics of entity i's state X_i:
-     dX_i = dY_i + dZ_i
+     \f$ dX_i = dY_i + dZ_i \f$
    with
-     - systemic part dY_i = \sum_{j=1}^n \beta_{ij} dG_j 
-     - n correlated global factors G_j
-     - entity specific factor loadings \beta_{ij}
-     - idiosyncratic part dZ_i = \sigma_i dW_i 
-     - independent  Wiener processes W, i.e. dW_k dW_l = 0 and dW_k dG_j = 0
+     - systemic part \f$ dY_i = \sum_{j=1}^n \beta_{ij} dG_j \f$
+     - n correlated global factors \f$ G_j \f$
+     - entity specific factor loadings \f$ \beta_{ij} \f$
+     - idiosyncratic part \f$ dZ_i = \sigma_i dW_i \f$
+     - independent  Wiener processes W, i.e. \f$ dW_k dW_l = 0 \f$ and \f$ dW_k dG_j = 0 \f$
 
    \warning Evaluation modes ForwardSimulationA and ForwardSimulationB are untested and need review
 */
