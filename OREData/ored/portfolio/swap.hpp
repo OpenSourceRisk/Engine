@@ -73,6 +73,8 @@ public:
 
     const std::map<std::string,boost::any>& additionalData() const override;
 
+    const std::map<std::string,Size>& legTypeCount() { return legTypeCount_; }
+
 protected:
     virtual boost::shared_ptr<LegData> createLegData() const;
 
