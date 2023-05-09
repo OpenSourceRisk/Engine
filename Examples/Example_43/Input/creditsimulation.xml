@@ -124,12 +124,10 @@
     <Market>N</Market>
     <Credit>Y</Credit>
     <ZeroMarketPnl>N</ZeroMarketPnl>
-    <!-- Analytic           No simulation of idiosyncratic states -->
-    <!-- ForwardSimulationA Pathwise simulation, conditional on current global state-->
-    <!-- ForwardSimulationB Pathwise simulation, conditional on terminal global state-->
-    <!-- TerminalSimulation Terminal Simulation -->
-    <Evaluation>ForwardSimulationB</Evaluation>
     <DoubleDefault>Y</DoubleDefault>
+    <!-- Analytic           No simulation of idiosyncratic states -->
+    <!-- TerminalSimulation Terminal Simulation -->
+    <Evaluation>Analytic</Evaluation>
     <Seed>42</Seed>
     <Paths>1000</Paths>
     <!-- Migration, Default -->
