@@ -132,6 +132,7 @@
     <Market>N</Market>
     <Credit>Y</Credit>
     <ZeroMarketPnl>N</ZeroMarketPnl>
+    <DoubleDefault>Y</DoubleDefault>
     <Evaluation>Analytic</Evaluation>
     <DoubleDefault>Y</DoubleDefault>
     <Seed>42</Seed>
