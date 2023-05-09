@@ -201,36 +201,10 @@ systematic state $Y_i$. We use a multi-state Hull-White bucketing algorithm to g
 contributes a probability / PnL vector of size $n$ where $n$ is the number of rating states to the bucketing
 algorithm. The PnL vector is based on the conditional transition matrix.
 
-{\em TerminalSimulation}: Based on the conditional transition matrix for an
-outer exposure simulation path we run an inner Monte Carlo simulation to generate realisations of the idiosyncratic risk for each
-entity at the terminal/horizon date $t_n$ only. The number of paths for this inner simulation is specified in \ref{credit_simulation_config}. For each inner
+{\em TerminalSimulation}: Based on the conditional transition matrix for an outer exposure simulation path we run an
+inner Monte Carlo simulation to generate realisations of the idiosyncratic risk for each entity at the terminal/horizon
+date $t_n$. The number of paths for this inner simulation is specified in \ref{credit_simulation_config}. For each inner
 path we get a final migration state for an entity and from that a PnL contribution.
-
-{\em ForwardSimulationB}: Based on the transition matrices $M_i(0,t_j)$ for entity $i$ and horizon date $t_j$ we construct 
-forward transition matrices $M_i(t_{j-1},t_j) = M^{-1}(0,t_{j-1}) \cdot M_i(0,t_j)$ which satisfy
-$$
-M(0,t_1) \cdot M(t_1,t_2)\cdot M(t_2, t_3)\cdot \dots M(t_{n-1},t_n) = M(0,t_n).
-$$
-Conditioning all transition matrices involved on the global state at horizon $t_n$, the same relation holds
-$$
-\widetilde M_{Y_n}(0,t_1) \cdot \widetilde M_{Y_n}(t_1,t_2)\cdot \widetilde M_{Y_n}(t_2, t_3)\cdot \dots \widetilde M_{Y_n}(t_{n-1},t_n) = \widetilde M_{Y_n}(0,t_n).
-$$
-This allows simulating paths of entity states along the grid $(t_1, t_2, \dots, t_n)$, not just the terminal date $t_n$, and the generation of migration PnL distribution at various grid points.
-
-{\em ForwardSimulationA}: Similar to the case above, we simulate entity state paths and generate credit migration PnL distributions at all simulation grid points.
-However, the transition matrices $M(0,t_i)$ involved in the construction of forward transition matrices are conditioned on the global state at the respective grid point, $\widetilde M_{Y_j}(t_j)$,
-so that the product of forward transition matrices thus defined does not match the terminal single-step $\widetilde M_{Y_n}(0,t_n)$ using in the the Analytic and TerminalSimulation modes. 
-The ForwardSimulationA evaluation mode needs to be reviewed/revised.
-
-In summary:
-\begin{itemize}
-\item TerminalSimulation: one large step is used, the systematic state at the simulation horizon is used to condition on the systematic credit state and produce one conditional transition matrix covering the whole time interval from t0 to the simulation horizon
-\item ForwardSimulationA: small simulation steps are used, the systematic state on each time step is used to condition on the systematic credit state and produce conditional forward transition matrices between two simulation times (to be reviewed/revised)
-\item ForwardSimulationB: small simulation steps are used, the systematic state at the simulation horizon is used to condition on the systematic credit state and produce conditional forward transition matrices between two simulation times
-\end{itemize}
-
-%In this sense, Analytic, TerminalSimulation and ForwardSimulationB are all comparable in terms of the underlying
-%modelling while ForwardSimulationA uses a different conditioning policy.
 
 \section{Parametrisation}
 
@@ -452,15 +426,11 @@ The meanings of the parameters are:
   \item Analytic: Simulation of systematic credit factors only. Exploit conditional independency of entity defaults and Hull-White bucketing to generate credit risk pnl.
   \item TerminalSimulation: Simulation of systematic credit risk factors using a large step from $t=0$ to the current
     analyzed time step and conditioning on the systematic credit risk factors at the terminal time step
-  \item ForwardSimulationB: Simulation of systematic credit risk factors using the time steps from the main exposure
-    simulation, but (as in TerminalSimulation) conditioning on the systematic credit risk factors at the terminal time
-    step
-  \item ForwardSimulationA: Simulation of systematic credit risk factors using the time steps from the main exposure
-    simulation, now conditioning on the systematic credit risk factors at each time step
   \end{itemize}
 \item CreditMode: Migration or Default, indicating whether to consider all rating migrations or only the migration to default in the credit pnl
 \item LoanExposureMode: Notional or Value, indicating whether to consider the market value or the notional as a substitute for the market value in the credit pnl
-\item DoubleDefault: Consider double default risk for CDS (simultaneous default of both issuer and counterparty)
+\item DoubleDefault: Consider double default risk for CDS (simultaneous default of both issuer and counterparty), this
+  is only supported for Evaluation = Analytic.
 \item Paths: Number of ``inner'' simulation paths for ForwardSimulationA, ForwardSimulationB, TerminalSimulation. For
     each ``outer'' exposure simulation path, this number of inner paths are simulated to get the credit migration pnl
     distribution for the outer path
@@ -529,8 +499,7 @@ The computation of the credit migration pnl in the last step is done as follows:
   \end{itemize}
 \item Evaluation $\neq$ Analytic: generate the credit-risk pnl using calls to
   \begin{itemize}
-  \item \verb+initEntityStateSimulation()+: Compute conditional transition matrices for large step (TerminalSimulation) and
-    conditional forward transition matrices for small step (ForwardSimulationA, ForwardSimulationB) evolution of entity states
+  \item \verb+initEntityStateSimulation()+: Compute conditional transition matrices for large step (TerminalSimulation)
   \item for each ``inner'' simulation path: simulate the entity state using \verb+simulateEntityStates()+
   \item for each ``inner'' simulation path: generate credit-risk pnl using \verb+generateMigrationPnl()+ based on the
     simulated entity state at the terminal time step and for issuer and counterparty risk (this is donw similar to
