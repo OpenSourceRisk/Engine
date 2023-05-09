@@ -56,7 +56,7 @@ CreditMigrationHelper::CreditMigrationHelper(const boost::shared_ptr<CreditSimul
 
     rescaledTransitionMatrices_.resize(cube_->numDates());
     init();
-    if (evaluation_ != Evaluation::Analytic)
+    if (evaluation_ == Evaluation::TerminalSimulation)
         initEntityStateSimulation();
 } // CreditMigrationHelper()
 
@@ -201,135 +201,87 @@ void CreditMigrationHelper::initEntityStateSimulation() {
 
     LOG("Init entity state simulation");
 
-    Size numDates = evaluation_ == Evaluation::TerminalSimulation ? 1 : cube_->numDates();
-    simulatedEntityState_.resize(parameters_->entities().size(),
-                                 std::vector<std::vector<Size>>(numDates, std::vector<Size>(cube_->samples())));
+    simulatedEntityState_ =
+        std::vector<std::vector<Size>>(parameters_->entities().size(), std::vector<Size>(cube_->samples()));
 
     LOG("Init entity state simulation done.");
 
 } // initEntityStatesSimulation
 
-std::vector<std::vector<Matrix>> CreditMigrationHelper::initEntityStateSimulation(const Size date, const Size path) {
-    Size numDates = evaluation_ == Evaluation::TerminalSimulation ? 1 : cube_->numDates();
-    std::vector<std::vector<Matrix>> res(numDates,
-                                         std::vector<Matrix>(parameters_->entities().size(), Matrix(n_, n_, 0.0)));
+std::vector<Matrix> CreditMigrationHelper::initEntityStateSimulation(const Size date, const Size path) {
+    std::vector<Matrix> res = std::vector<Matrix>(parameters_->entities().size(), Matrix(n_, n_, 0.0));
 
     const std::vector<string>& matrixNames = parameters_->transitionMatrices();
 
-    // Variant 1
-
-    // build terminal matrices conditional on global states first ...
+    // build terminal matrices conditional on global states
     Size numWarnings = 0;
-    for (Size d = 0; d < numDates; ++d) {
-        Size condDateIdx = evaluation_ == Evaluation::ForwardSimulationA ? d : date;
-        Size dateIdx = evaluation_ == Evaluation::TerminalSimulation ? date : d;
-        auto transMat = rescaledTransitionMatrices(dateIdx);
-        for (Size i = 0; i < parameters_->entities().size(); ++i) {
-            const Matrix& m = transMat.at(matrixNames[i]);
-            for (Size ii = 0; ii < m.rows(); ++ii) {
-                Real p = 0.0, condProb0 = 0.0;
-                for (Size jj = 0; jj < m.columns(); ++jj) {
-                    p += m[ii][jj];
-                    Real condProb = conditionalProb(p, globalStates_[condDateIdx][i][path], globalVar_[i]);
-                    res[d][i][ii][jj] = condProb - condProb0;
-                    condProb0 = condProb;
-                }
-            }
-            try {
-                checkTransitionMatrix(res[d][i]);
-            } catch (const std::exception& e) {
-                if (++numWarnings <= 10) {
-                    WLOG("Invalid conditional transition matrix (path=" << path << ", date=" << d << ", entity =" << i
-                                                                        << ": " << e.what());
-                } else if (numWarnings == 11) {
-                    WLOG("Suppress further warnings on invalid conditional transition matrices");
-                }
-                sanitiseTransitionMatrix(res[d][i]);
+    auto transMat = rescaledTransitionMatrices(date);
+    for (Size i = 0; i < parameters_->entities().size(); ++i) {
+        const Matrix& m = transMat.at(matrixNames[i]);
+        for (Size ii = 0; ii < m.rows(); ++ii) {
+            Real p = 0.0, condProb0 = 0.0;
+            for (Size jj = 0; jj < m.columns(); ++jj) {
+                p += m[ii][jj];
+                Real condProb = conditionalProb(p, globalStates_[date][i][path], globalVar_[i]);
+                res[i][ii][jj] = condProb - condProb0;
+                condProb0 = condProb;
             }
         }
-    }
-
-    // ... and from them the fwd matrices, in case we want that
-    if (evaluation_ == Evaluation::ForwardSimulationA || evaluation_ == Evaluation::ForwardSimulationB) {
-        numWarnings = 0;
-        for (Size d = numDates - 1; d > 0; --d) {
-            for (Size i = 0; i < parameters_->entities().size(); ++i) {
-                res[d][i] = inverse(res[d - 1][i]) * res[d][i];
-                try {
-                    checkTransitionMatrix(res[d][i]);
-                } catch (const std::exception& e) {
-                    if (++numWarnings <= 10) {
-                        WLOG("Invalid conditional forward transition matrix (path="
-                             << path << ", date=" << d << ", entity =" << i << ": " << e.what());
-                    } else if (numWarnings == 11) {
-                        WLOG("Suppress further warnings on invalid conditional forward transition matrices");
-                    }
-                    sanitiseTransitionMatrix(res[d][i]);
-                }
+        try {
+            checkTransitionMatrix(res[i]);
+        } catch (const std::exception& e) {
+            if (++numWarnings <= 10) {
+                WLOG("Invalid conditional transition matrix (path=" << path << ", date=" << date << ", entity =" << i
+                                                                    << ": " << e.what());
+            } else if (numWarnings == 11) {
+                WLOG("Suppress further warnings on invalid conditional transition matrices");
             }
+            sanitiseTransitionMatrix(res[i]);
         }
     }
 
     // ... and finally build partial sums over columns for the simulation
-    for (Size d = 0; d < numDates; ++d) {
         for (Size i = 0; i < parameters_->entities().size(); ++i) {
-            Matrix& m = res[d][i];
+            Matrix& m = res[i];
             for (Size ii = 0; ii < m.rows(); ++ii) {
                 for (Size jj = 1; jj < m.columns(); ++jj) {
                     m[ii][jj] += m[ii][jj - 1];
                 }
             }
         }
-    }
 
     return res;
 }
 
-void CreditMigrationHelper::simulateEntityStates(const std::vector<std::vector<Matrix>>& cond, const Size path,
-                                                 const MersenneTwisterUniformRng& mt, const Size date) {
+void CreditMigrationHelper::simulateEntityStates(const std::vector<Matrix>& cond, const Size path,
+                                                 const MersenneTwisterUniformRng& mt) {
 
     QL_REQUIRE(evaluation_ != Evaluation::Analytic,
                "CreditMigrationHelper::simulateEntityStates() unexpected call, not in simulation mode");
 
-    Size numDates = evaluation_ == Evaluation::TerminalSimulation ? 1 : cube_->numDates();
     for (Size i = 0; i < parameters_->entities().size(); ++i) {
         Size initialState = parameters_->initialStates()[i];
-        for (Size d = 0; d < numDates; ++d) {
             Real tmp = mt.next().value;
             Size entityState =
-                std::lower_bound(cond[d][i].row_begin(initialState), cond[d][i].row_end(initialState), tmp) -
-                cond[d][i].row_begin(initialState);
-            entityState = std::min(entityState, cond[d][i].columns() - 1); // play safe
-            simulatedEntityState_[i][d][path] = entityState;
+                std::lower_bound(cond[i].row_begin(initialState), cond[i].row_end(initialState), tmp) -
+                cond[i].row_begin(initialState);
+            entityState = std::min(entityState, cond[i].columns() - 1); // play safe
+            simulatedEntityState_[i][path] = entityState;
             initialState = entityState;
-        }
     }
 
 } // simulateEntityStates
 
-Size CreditMigrationHelper::simulatedEntityState(const Size i, const Size date, const Size path) const {
+Size CreditMigrationHelper::simulatedEntityState(const Size i, const Size path) const {
     QL_REQUIRE(evaluation_ != Evaluation::Analytic,
                "CreditMigrationHelper::simulatedEntityState() unexpected call, not in simulation mode");
-    return simulatedEntityState_[i][evaluation_ == Evaluation::TerminalSimulation ? 0 : date][path];
+    return simulatedEntityState_[i][path];
 } // simulatedEntityState
 
-bool CreditMigrationHelper::simulatedDefaultOrder(const Size entityA, const Size entityB, const Size date,
-                                                  const Size path, const Size n) const {
-    QL_REQUIRE(evaluation_ == Evaluation::ForwardSimulationA || evaluation_ == Evaluation::ForwardSimulationB,
-               "CreditMigrationHelper::simulatedDefaultOrder() only available in ForwardSimulation(A/B) mode");
-    bool defA = false, defB = false;
-    for (Size i = 0; i <= date && !defB; ++i) {
-        if (simulatedEntityState(entityA, i, path) == n - 1 && !defB) {
-            defA = true;
-        }
-        if (simulatedEntityState(entityB, i, path) == n - 1) {
-            defB = true;
-        }
-    }
-    return defA && defB;
-} // simulatedDefaultOrder
-
 Real CreditMigrationHelper::generateMigrationPnl(const Size date, const Size path, const Size n) const {
+
+    QL_REQUIRE(!parameters_->doubleDefault(),
+               "CreditMigrationHelper::generateMigrationPnl() does not support double default");
 
     const std::vector<string>& entities = parameters_->entities();
     Real pnl = 0.0;
@@ -337,7 +289,7 @@ Real CreditMigrationHelper::generateMigrationPnl(const Size date, const Size pat
     for (Size i = 0; i < entities.size(); ++i) {
         // compute credit state of entitiy
         // issuer migration risk
-        Size simEntityState = simulatedEntityState(i, date, path);
+        Size simEntityState = simulatedEntityState(i, path);
         for (auto const& tradeId : issuerTradeIds_[i]) {
             try {
                 Size tid = cube_->idsAndIndexes().at(tradeId);
@@ -374,14 +326,6 @@ Real CreditMigrationHelper::generateMigrationPnl(const Size date, const Size pat
                     stateValue = baseValue;
                 }
                 pnl += stateValue - baseValue;
-                // for a CDS we have to consider double default
-                if (parameters_->doubleDefault() && simEntityState == n - 1 &&
-                    tradeCdsCptyIdx_.find(tradeId) != tradeCdsCptyIdx_.end()) {
-                    if (simulatedDefaultOrder(tradeCdsCptyIdx_.at(tradeId), i, date, path, n)) {
-                        // FIXME: Shouldn't we subtract max(stateValue - baseValue, 0.0) ?
-                        pnl -= stateValue - baseValue;
-                    }
-                }
             } catch (const std::exception& e) {
                 ALOG("can not get state npv for trade " << tradeId << " (reason:" << e.what() << "), state "
                                                         << simEntityState << ", assume zero credit migration pnl");
@@ -594,9 +538,9 @@ Array CreditMigrationHelper::pnlDistribution(const Size date) {
             // maybe extend the hw bucketing so that we can feed precomputed distributions and just update
             // these with additional data?
             pnl.resize(1, Array(parameters_->paths(), 0.0));
-            std::vector<std::vector<Matrix>> cond = initEntityStateSimulation(date, path);
+            auto cond = initEntityStateSimulation(date, path);
             for (Size path2 = 0; path2 < parameters_->paths(); ++path2) {
-                simulateEntityStates(cond, path, mt, date);
+                simulateEntityStates(cond, path, mt);
                 pnl[0][path2] = generateMigrationPnl(date, path, n_);
             }
         } else {
@@ -636,85 +580,6 @@ Array CreditMigrationHelper::pnlDistribution(const Size date) {
     DLOG("Expected Market Risk PnL at date " << date << ": " << avgCash);
     return res;
 } // pnlDistribution
-
-void CreditMigrationHelper::stateCorrelations(const Size date, Size entity1, Size entity2, string indexName1,
-                                              Real initialIndexValue1, string indexName2, Real initialIndexValue2) {
-    if (evaluation_ != Evaluation::Analytic) {
-        LOG("Evaluate correlations of moves between entity " << entity1 << ", entity " << entity2 << ", index "
-                                                             << indexName1 << ", index " << indexName2);
-    } else {
-        ALOG("StateCorrelations called but not in simulation mode, skip.");
-        return;
-    }
-
-    QL_REQUIRE(entity1 < parameters_->entities().size(), "entity 1 " << entity1 << " out of range");
-    QL_REQUIRE(entity2 < parameters_->entities().size(), "entity 2 " << entity2 << " out of range");
-
-    // const std::vector<string>& entities = parameters_->entities();
-    MersenneTwisterUniformRng mt(parameters_->seed());
-    // initEntityStateSimulation();
-
-    Size dates = cube_->numDates(); // date + 1;
-    Size numOuter = cube_->samples();
-    Size numInner = parameters_->paths();
-    Size numPaths = numOuter * numInner;
-    vector<vector<Real>> mean(4, vector<Real>(dates, 0.0));
-    vector<vector<Real>> var(4, vector<Real>(dates, 0.0));
-    vector<vector<Real>> cov(6, vector<Real>(dates, 0.0));
-    vector<Real> delta(4);
-
-    Size initialState1 = parameters_->initialStates()[entity1];
-    Size initialState2 = parameters_->initialStates()[entity2];
-
-    LOG("initial states: " << initialState1 << " " << initialState2);
-
-    Size endDate = (evaluation_ == Evaluation::TerminalSimulation ? date : cube_->numDates() - 1);
-
-    // outer systemic paths
-    for (Size path = 0; path < numOuter; ++path) {
-
-        std::vector<std::vector<Matrix>> cond = initEntityStateSimulation(date, path);
-
-        // inner idiosyncratic paths
-        for (Size path2 = 0; path2 < numInner; ++path2) {
-            simulateEntityStates(cond, path, mt, date);
-
-            Size d = (evaluation_ == Evaluation::TerminalSimulation ? date : 0);
-            for (; d <= endDate; ++d) {
-
-                Real index1 = aggData_->get(d, path, AggregationScenarioDataType::IndexFixing, indexName1);
-                Real index2 = aggData_->get(d, path, AggregationScenarioDataType::IndexFixing, indexName2);
-
-                Size currentState1 = simulatedEntityState(entity1, d, path);
-                Size currentState2 = simulatedEntityState(entity2, d, path);
-                delta[0] = Real(currentState1) - Real(initialState1);
-                delta[1] = Real(currentState2) - Real(initialState2);
-                delta[2] = index1 - initialIndexValue1;
-                delta[3] = index2 - initialIndexValue2;
-                Size k = 0;
-                for (Size i = 0; i < delta.size(); ++i) {
-                    mean[i][d] += delta[i] / numPaths;
-                    var[i][d] += delta[i] * delta[i] / numPaths;
-                    for (Size j = 0; j < i; ++j)
-                        cov[k++][d] += delta[i] * delta[j] / numPaths;
-                }
-            }
-        } // inner idiosyncratic paths
-    }     // outer systemic paths
-
-    Size d = (evaluation_ == Evaluation::TerminalSimulation ? date : 0);
-    for (; d <= endDate; ++d) {
-        Size k = 0;
-        for (Size i = 0; i < delta.size(); ++i) {
-            var[i][d] -= mean[i][d] * mean[i][d];
-            for (Size j = 0; j < i; ++j) {
-                cov[k++][d] -= mean[i][d] * mean[j][d];
-                DLOG("State Correlation " << i + 1 << "-" << j + 1 << " date " << d << " "
-                                          << cov[k - 1][d] / sqrt(var[i][d] * var[j][d]));
-            }
-        }
-    }
-}
 
 void CreditMigrationHelper::build(const std::map<std::string, boost::shared_ptr<Trade>>& trades) {
     LOG("CreditMigrationHelper: Build trade ID map");
@@ -795,8 +660,6 @@ CreditMigrationHelper::LoanExposureMode parseLoanExposureMode(const std::string&
 CreditMigrationHelper::Evaluation parseEvaluation(const std::string& s) {
     static map<string, CreditMigrationHelper::Evaluation> m = {
         {"Analytic", CreditMigrationHelper::Evaluation::Analytic},
-        {"ForwardSimulationA", CreditMigrationHelper::Evaluation::ForwardSimulationA},
-        {"ForwardSimulationB", CreditMigrationHelper::Evaluation::ForwardSimulationB},
         {"TerminalSimulation", CreditMigrationHelper::Evaluation::TerminalSimulation}};
 
     auto it = m.find(s);
