@@ -21,10 +21,8 @@
     \ingroup indexes
 */
 
-#include <boost/make_shared.hpp>
-#include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/indexes/commodityindex.hpp>
-#include <qle/utilities/commodity.hpp>
+#include <boost/make_shared.hpp>
 #include <string>
 
 using std::string;

@@ -2359,11 +2359,10 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         pts->enableExtrapolation(allowsExtrapolation);
 
-                        boost::shared_ptr<CommodityIndex> commIdx = parseCommodityIndex(name, false, pts);
-                        
+                        Handle<CommodityIndex> commIdx(parseCommodityIndex(name, false, pts));
                         commodityIndices_.emplace(piecewise_construct,
                                                   forward_as_tuple(Market::defaultConfiguration, name),
-                                                  forward_as_tuple(Handle<CommodityIndex>(commIdx)));
+                                                  forward_as_tuple(commIdx));
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, param.first, simDataWritten);
                     }

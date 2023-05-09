@@ -30,8 +30,6 @@
 #include <ql/time/calendar.hpp>
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
-#include <qle/time/futureexpirycalculator.hpp>
-#include <ql/cashflow.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
