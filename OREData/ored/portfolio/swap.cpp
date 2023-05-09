@@ -60,6 +60,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     isXCCY_ = false;
     isResetting_ = false;
 
+    legTypeCount_.clear();
     for (Size i = 0; i < numLegs; ++i) {
         // allow minor currencies for Equity legs as some exchanges trade in these, e.g LSE in pence - GBX or GBp
         // minor currencies on other legs will fail here
@@ -191,19 +192,24 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Interest Rate");
     additionalData_["isdaBaseProduct"] = string(isXCCY_ ? "Cross Currency" : "IR Swap");
-    Size nfixed = 0;
-    auto it1 = legTypeCount_.find("Fixed");
-    auto it2 = legTypeCount_.find("ZeroCouponFixed");
-    nfixed += (it1 == legTypeCount_.end() ? 0 : it1->second);
-    nfixed += (it2 == legTypeCount_.end() ? 0 : it2->second);    
-    if (nfixed == 0)
+
+    // set nFixed_ and nFloating_ counters
+    countLegTypes();
+
+    // ... and map to the three ISDA sub products
+    if (nFixed_ == 0)
         additionalData_["isdaSubProduct"] = string("Basis");  
-    else if (nfixed == 1)
+    else if (nFloating_ >= 1)
         additionalData_["isdaSubProduct"] = string("Fixed Float");  
     else
         additionalData_["isdaSubProduct"] = string("Fixed Fixed");
+
     // skip transaction level for now
     additionalData_["isdaTransaction"] = string("");  
+
+    for (auto c: legTypeCount_) {
+        LOG("leg type count for trade " << id() << ": " << c.first << " " << c.second);
+    }
 }
 
 const std::map<std::string,boost::any>& Swap::additionalData() const {
@@ -296,6 +302,43 @@ Swap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
     }
 
     return result;
+}
+
+void Swap::countLegTypes() {
+        
+    nFixed_ = 0;
+    nFloating_ = 0;
+
+    // check all fixed variants
+    auto itFixed1 = legTypeCount_.find("Fixed");
+    auto itFixed2 = legTypeCount_.find("ZeroCouponFixed");
+    auto itFixed3 = legTypeCount_.find("Cashflow");
+    nFixed_ += (itFixed1 == legTypeCount_.end() ? 0 : itFixed1->second);
+    nFixed_ += (itFixed2 == legTypeCount_.end() ? 0 : itFixed2->second);    
+    nFixed_ += (itFixed3 == legTypeCount_.end() ? 0 : itFixed3->second);    
+
+    // check all floating variants
+    auto itFloating = legTypeCount_.find("Floating");
+    auto itCPI = legTypeCount_.find("CPI");
+    auto itYY = legTypeCount_.find("YY");
+    auto itCMS = legTypeCount_.find("CMS");
+    auto itDigitalCMS = legTypeCount_.find("DigitalCMS ");
+    auto itCMSSpread = legTypeCount_.find("CMSSpread");
+    auto itDigitalCMSSpread = legTypeCount_.find("DigitalCMSSpread");
+    auto itCMB = legTypeCount_.find("CMB");
+    auto itEquity = legTypeCount_.find("Equity");
+    nFloating_ += (itFloating == legTypeCount_.end() ? 0 : itFloating->second);
+    nFloating_ += (itCPI == legTypeCount_.end() ? 0 : itCPI->second);
+    nFloating_ += (itYY == legTypeCount_.end() ? 0 : itYY->second);
+    nFloating_ += (itCMS == legTypeCount_.end() ? 0 : itCMS->second);
+    nFloating_ += (itDigitalCMS == legTypeCount_.end() ? 0 : itDigitalCMS->second);
+    nFloating_ += (itCMSSpread == legTypeCount_.end() ? 0 : itCMSSpread->second);
+    nFloating_ += (itDigitalCMSSpread == legTypeCount_.end() ? 0 : itDigitalCMSSpread->second);
+    nFloating_ += (itCMB == legTypeCount_.end() ? 0 : itCMB->second);
+    nFloating_ += (itEquity == legTypeCount_.end() ? 0 : itEquity->second);
+
+    if (nFixed_ + nFloating_ != legData_.size())
+        ALOG("Mapping of leg types incomplete for trade " << id());
 }
 
 void Swap::fromXML(XMLNode* node) {
