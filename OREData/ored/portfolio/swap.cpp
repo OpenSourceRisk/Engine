@@ -208,7 +208,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["isdaTransaction"] = string("");  
 
     for (auto const& c: legTypeCount_) {
-        LOG("leg type count for trade " << id() << ": " << c.first << " " << c.second);
+        DLOG("leg type count for trade " << id() << ": " << c.first << " " << c.second);
     }
 }
 
