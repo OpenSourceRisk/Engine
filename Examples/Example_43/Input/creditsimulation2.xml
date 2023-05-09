@@ -134,7 +134,6 @@
     <ZeroMarketPnl>N</ZeroMarketPnl>
     <DoubleDefault>Y</DoubleDefault>
     <Evaluation>Analytic</Evaluation>
-    <DoubleDefault>Y</DoubleDefault>
     <Seed>42</Seed>
     <Paths>1000</Paths>
     <CreditMode>Migration</CreditMode>
