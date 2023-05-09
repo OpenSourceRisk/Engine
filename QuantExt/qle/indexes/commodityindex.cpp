@@ -21,9 +21,10 @@
     \ingroup indexes
 */
 
+#include <boost/make_shared.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/indexes/commodityindex.hpp>
-#include <boost/make_shared.hpp>
+#include <qle/utilities/commodity.hpp>
 #include <string>
 
 using std::string;
@@ -132,81 +133,6 @@ boost::shared_ptr<CommodityIndex> CommodityFuturesIndex::clone(const Date& expir
     const auto& pts = ts ? *ts : priceCurve();
     const auto& ed = expiry == Date() ? expiryDate() : expiry;
     return boost::make_shared<CommodityFuturesIndex>(underlyingName(), ed, fixingCalendar(), keepDays(), pts);
-}
-
-CommodityBasisFutureIndex::CommodityBasisFutureIndex(const std::string& underlyingName, const Date& expiryDate,
-                                                     const Calendar& fixingCalendar,
-                                                     const boost::shared_ptr<QuantExt::CommodityIndex>& baseIndex,
-                                                     const boost::shared_ptr<FutureExpiryCalculator>& expiryCalcBasis,
-                                                     const boost::shared_ptr<FutureExpiryCalculator>& expiryCalcBase,
-                                                     const Handle<QuantExt::PriceTermStructure>& priceCurve,
-                                                     const bool addSpread)
-    : CommodityFuturesIndex(underlyingName, expiryDate, fixingCalendar, priceCurve), baseIndex_(baseIndex),
-      expiryCalcBasis_(expiryCalcBasis), expiryCalcBase_(expiryCalcBase), addSpread_(addSpread) {
-    QL_REQUIRE(expiryDate_ != Date(), "non-empty expiry date expected CommodityFuturesIndex");
-    QL_REQUIRE(baseIndex_!= nullptr,
-               "non-null baseIndex required for CommodityBasisFutureIndex");
-    QL_REQUIRE(expiryCalcBasis != nullptr,
-               "non-null future expiry calculator for the basis conventions CommodityBasisFutureIndex");
-    QL_REQUIRE(expiryCalcBasis != nullptr,
-               "non-null future expiry calculator for the base conventions CommodityBasisFutureIndex");
-    registerWith(baseIndex);
-    registerWith(baseIndex->priceCurve());
-    cashflow_ = baseCashflow();
-}
-
-
-
-boost::shared_ptr<CommodityIndex>
-CommodityBasisFutureIndex::clone(const QuantLib::Date& expiry,
-                                 const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts) const {
-    const auto& pts = ts ? *ts : priceCurve();
-    const auto& ed = expiry == Date() ? expiryDate() : expiry;
-    return boost::make_shared<CommodityBasisFutureIndex>(underlyingName(), ed, fixingCalendar(), baseIndex_,
-                                                         expiryCalcBasis_, expiryCalcBase_, pts, addSpread_);
-}
-
-QuantLib::Date CommodityBasisFutureIndex::getContractDate(const Date& expiry) const {
-
-    using QuantLib::Date;
-    using QuantLib::io::iso_date;
-
-    // Try the expiry date's associated contract month and year. Start with the expiry month and year itself.
-    // Assume that expiry is within 12 months of the contract month and year.
-    Date result(1, expiry.month(), expiry.year());
-    Date calcExpiry = expiryCalcBasis_->expiryDate(result, 0);
-    Size maxIncrement = 12;
-    while (calcExpiry != expiry && maxIncrement > 0) {
-        if (calcExpiry < expiry)
-            result += 1 * Months;
-        else
-            result -= 1 * Months;
-        calcExpiry = expiryCalcBasis_->expiryDate(result, 0);
-        maxIncrement--;
-    }
-
-    QL_REQUIRE(calcExpiry == expiry, "Expected the calculated expiry, " << iso_date(calcExpiry)
-                                                                        << ", to equal the expiry, " << iso_date(expiry)
-                                                                        << ".");
-
-    return result;
-}
-
-boost::shared_ptr<QuantLib::CashFlow> CommodityBasisFutureIndex::makeCashflow(const QuantLib::Date& start,
-    const QuantLib::Date& end, const QuantLib::Date& paymentDate) const {
-    Natural paymentLag = 0;
-    if (paymentDate != Date() && paymentDate >= end) {
-        paymentLag = paymentDate - end;
-    }
-    return boost::make_shared<CommodityIndexedCashFlow>(
-        1.0, start, end, baseIndex_, paymentLag, QuantLib::NullCalendar(), QuantLib::Unadjusted, 0,
-        QuantLib::NullCalendar(), 0.0,
-        1.0, CommodityIndexedCashFlow::PaymentTiming::InArrears, true, true, true, 0, expiryCalcBase_);
-}
-
-boost::shared_ptr<QuantLib::CashFlow> CommodityBasisFutureIndex::baseCashflow(const QuantLib::Date& paymentDate) const { 
-    auto contractDate = getContractDate(expiryDate_);
-    return makeCashflow(contractDate, contractDate + 1 * Months - 1 * Days, paymentDate);
 }
 
 } // namespace QuantExt

@@ -81,6 +81,7 @@
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/bondindex.hpp>
 #include <qle/indexes/cacpi.hpp>
+#include <qle/indexes/commoditybasisfutureindex.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/compoequityindex.hpp>
 #include <qle/indexes/compositeindex.hpp>
@@ -500,6 +501,7 @@
 #include <qle/termstructures/proxyswaptionvolatility.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
+#include <qle/termstructures/spreadedcommoditybasispricecurve.hpp>
 #include <qle/termstructures/spreadedcorrelationcurve.hpp>
 #include <qle/termstructures/spreadedcpivolatilitysurface.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
@@ -535,6 +537,7 @@
 #include <qle/time/dateutilities.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/utilities/commodity.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>

@@ -41,6 +41,7 @@
 #include <qle/indexes/behicp.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/cacpi.hpp>
+#include <qle/indexes/commoditybasisfutureindex.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/decpi.hpp>
 #include <qle/indexes/dkcpi.hpp>
@@ -108,7 +109,7 @@
 #include <qle/indexes/offpeakpowerindex.hpp>
 #include <qle/indexes/secpi.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
-#include <qle/termstructures/spreadedpricetermstructure.hpp>s
+#include <qle/termstructures/spreadedpricetermstructure.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -893,20 +894,8 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
         auto basisCurve = ts.empty() ? nullptr :
             boost::dynamic_pointer_cast<CommodityBasisPriceTermStructure>(*ts);
 
-        auto spreadedCurve = ts.empty() ? nullptr : boost::dynamic_pointer_cast<SpreadedPriceTermStructure>(*ts);
-
-        if (spreadedCurve != nullptr) {
-            auto curve = boost::dynamic_pointer_cast<CommodityBasisPriceTermStructure>(*spreadedCurve->referenceCurve());
-            if (curve != nullptr) {
-                basisCurve = curve;
-            }
-        }
-
         if (basisCurve) {
-            index = boost::make_shared<CommodityBasisFutureIndex>(indexName, expiry, cdr, basisCurve->baseIndex(),
-                                                                  basisCurve->basisFutureExpiryCalculator(),
-                                                                  basisCurve->baseFutureExpiryCalculator(), ts, true);
-                    
+            index = boost::make_shared<CommodityBasisFutureIndex>(indexName, expiry, cdr, basisCurve);       
         } else {
             index = boost::make_shared<CommodityFuturesIndex>(indexName, expiry, cdr, keepDays, ts);
         }

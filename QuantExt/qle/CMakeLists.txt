@@ -70,6 +70,7 @@ currencies/configurablecurrency.cpp
 currencies/europe.cpp
 currencies/metals.cpp
 indexes/bondindex.cpp
+indexes/commoditybasisfutureindex.cpp
 indexes/commodityindex.cpp
 indexes/compoequityindex.cpp
 indexes/compositeindex.cpp
@@ -344,6 +345,7 @@ termstructures/proxyoptionletvolatility.cpp
 termstructures/proxyswaptionvolatility.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.cpp
+termstructures/spreadedcommoditybasispricecurve.cpp
 termstructures/spreadedcorrelationcurve.cpp
 termstructures/spreadedcpivolatilitysurface.cpp
 termstructures/spreadeddiscountcurve.cpp
@@ -366,6 +368,7 @@ termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
 time/dateutilities.cpp
 time/yearcounter.cpp
+utilities/commodity.cpp
 utilities/inflation.cpp
 utilities/time.cpp)
 
@@ -448,6 +451,7 @@ indexes/behicp.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
 indexes/cacpi.hpp
+indexes/commoditybasisfutureindex.hpp
 indexes/commodityindex.hpp
 indexes/compoequityindex.hpp
 indexes/compositeindex.hpp
@@ -867,6 +871,7 @@ termstructures/proxyoptionletvolatility.hpp
 termstructures/proxyswaptionvolatility.hpp
 termstructures/spreadedblackvolatilitycurve.hpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.hpp
+termstructures/spreadedcommoditybasispricecurve.hpp
 termstructures/spreadedcorrelationcurve.hpp
 termstructures/spreadedcpivolatilitysurface.hpp
 termstructures/spreadeddiscountcurve.hpp
@@ -902,6 +907,7 @@ termstructures/zeroinflationcurveobserverstatic.hpp
 time/dateutilities.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
+utilities/commodity.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
 utilities/savedobservablesettings.hpp
