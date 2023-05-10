@@ -73,8 +73,6 @@ public:
 
     const std::map<std::string,boost::any>& additionalData() const override;
 
-    const std::map<std::string,Size>& legTypeCount() { return legTypeCount_; }
-
 protected:
     virtual boost::shared_ptr<LegData> createLegData() const;
 
@@ -85,12 +83,13 @@ protected:
     string settlement_;
     bool isXCCY_;
     std::map<std::string,Size> legTypeCount_;
-    Size nFixed_, nFloating_;
 
 private:
     bool isResetting_;
     Size notionalTakenFromLeg_;
 };
+
+std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>& legData);
 
 } // namespace data
 } // namespace ore

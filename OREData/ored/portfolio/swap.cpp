@@ -192,24 +192,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Interest Rate");
     additionalData_["isdaBaseProduct"] = string(isXCCY_ ? "Cross Currency" : "IR Swap");
-
-    // set nFixed_ and nFloating_ counters
-    countLegTypes();
-
-    // ... and map to the three ISDA sub products
-    if (nFixed_ == 0)
-        additionalData_["isdaSubProduct"] = string("Basis");  
-    else if (nFloating_ >= 1)
-        additionalData_["isdaSubProduct"] = string("Fixed Float");  
-    else
-        additionalData_["isdaSubProduct"] = string("Fixed Fixed");
-
-    // skip transaction level for now
+    additionalData_["isdaSubProduct"] = isdaSubProductSwap(id(), legData_);
     additionalData_["isdaTransaction"] = string("");  
-
-    for (auto const& c: legTypeCount_) {
-        DLOG("leg type count for trade " << id() << ": " << c.first << " " << c.second);
-    }
 }
 
 const std::map<std::string,boost::any>& Swap::additionalData() const {
@@ -304,41 +288,37 @@ Swap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
     return result;
 }
 
-void Swap::countLegTypes() {
-        
-    nFixed_ = 0;
-    nFloating_ = 0;
+std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>& legData) {
 
-    // check all fixed variants
-    auto itFixed1 = legTypeCount_.find("Fixed");
-    auto itFixed2 = legTypeCount_.find("ZeroCouponFixed");
-    auto itFixed3 = legTypeCount_.find("Cashflow");
-    nFixed_ += (itFixed1 == legTypeCount_.end() ? 0 : itFixed1->second);
-    nFixed_ += (itFixed2 == legTypeCount_.end() ? 0 : itFixed2->second);    
-    nFixed_ += (itFixed3 == legTypeCount_.end() ? 0 : itFixed3->second);    
+    Size nFixed = 0;
+    Size nFloating = 0;
+    for (Size i = 0; i < legData.size(); ++i) {
+        std::string type = legData[i].legType();
+        if (type == "Fixed" ||
+            type == "ZeroCouponFixed" ||
+            type == "Cashflow")
+            nFixed++;
+        else if (type == "Floating" ||
+                 type == "CPI" ||
+                 type == "YY" ||
+                 type == "CMS" ||
+                 type == "DigitalCMS" ||
+                 type == "CMSSpread" ||
+                 type == "DigitalCMSSpread" ||
+                 type == "CMB" ||
+                 type == "Equity")
+            nFloating++;
+        else {
+            ALOG("leg type " << type << " not mapped for trade " << tradeId);
+        }
+    }
 
-    // check all floating variants
-    auto itFloating = legTypeCount_.find("Floating");
-    auto itCPI = legTypeCount_.find("CPI");
-    auto itYY = legTypeCount_.find("YY");
-    auto itCMS = legTypeCount_.find("CMS");
-    auto itDigitalCMS = legTypeCount_.find("DigitalCMS ");
-    auto itCMSSpread = legTypeCount_.find("CMSSpread");
-    auto itDigitalCMSSpread = legTypeCount_.find("DigitalCMSSpread");
-    auto itCMB = legTypeCount_.find("CMB");
-    auto itEquity = legTypeCount_.find("Equity");
-    nFloating_ += (itFloating == legTypeCount_.end() ? 0 : itFloating->second);
-    nFloating_ += (itCPI == legTypeCount_.end() ? 0 : itCPI->second);
-    nFloating_ += (itYY == legTypeCount_.end() ? 0 : itYY->second);
-    nFloating_ += (itCMS == legTypeCount_.end() ? 0 : itCMS->second);
-    nFloating_ += (itDigitalCMS == legTypeCount_.end() ? 0 : itDigitalCMS->second);
-    nFloating_ += (itCMSSpread == legTypeCount_.end() ? 0 : itCMSSpread->second);
-    nFloating_ += (itDigitalCMSSpread == legTypeCount_.end() ? 0 : itDigitalCMSSpread->second);
-    nFloating_ += (itCMB == legTypeCount_.end() ? 0 : itCMB->second);
-    nFloating_ += (itEquity == legTypeCount_.end() ? 0 : itEquity->second);
-
-    if (nFixed_ + nFloating_ != legData_.size())
-        ALOG("Mapping of leg types incomplete for trade " << id());
+    if (nFixed == 0)
+        return string("Basis");  
+    else if (nFloating >= 1)
+        return string("Fixed Float");  
+    else
+        return string("Fixed Fixed");
 }
 
 void Swap::fromXML(XMLNode* node) {
