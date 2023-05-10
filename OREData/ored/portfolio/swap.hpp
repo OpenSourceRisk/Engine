@@ -76,9 +76,6 @@ public:
 protected:
     virtual boost::shared_ptr<LegData> createLegData() const;
 
-    // count leg types and map all types to either fixed or floating, store in nFixed_ and nFloating_ 
-    void countLegTypes();
-
     vector<LegData> legData_;
     string settlement_;
     bool isXCCY_;
