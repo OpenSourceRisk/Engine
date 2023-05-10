@@ -30,10 +30,10 @@ CommodityBasisFutureIndex::CommodityBasisFutureIndex(const std::string& underlyi
                                                      const boost::shared_ptr<QuantExt::CommodityIndex>& baseIndex,
                                                      const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
                                                      const QuantLib::Handle<QuantExt::PriceTermStructure>& priceCurve,
-                                                     const bool addBasis, const QuantLib::Size monthsOffset,
+                                                     const bool addBasis, const QuantLib::Size monthOffset,
                                                      const bool baseIsAveraging)
     : CommodityFuturesIndex(underlyingName, expiryDate, fixingCalendar, priceCurve), basisFec_(basisFec),
-      baseIndex_(baseIndex), baseFec_(baseFec), addBasis_(addBasis), monthsOffset_(monthsOffset),
+      baseIndex_(baseIndex), baseFec_(baseFec), addBasis_(addBasis), monthOffset_(monthOffset),
       baseIsAveraging_(baseIsAveraging) {
     QL_REQUIRE(expiryDate_ != Date(), "non-empty expiry date expected CommodityFuturesIndex");
     QL_REQUIRE(baseIndex_ != nullptr, "non-null baseIndex required for CommodityBasisFutureIndex");
@@ -60,13 +60,15 @@ CommodityBasisFutureIndex::clone(const QuantLib::Date& expiry,
     const auto& pts = ts ? *ts : priceCurve();
     const auto& ed = expiry == Date() ? expiryDate() : expiry;
     return boost::make_shared<CommodityBasisFutureIndex>(underlyingName(), ed, fixingCalendar(), basisFec_, baseIndex_,
-                                                         baseFec_, pts, addBasis_, monthsOffset_, baseIsAveraging_);
+                                                         baseFec_, pts, addBasis_, monthOffset_, baseIsAveraging_);
 }
 
 boost::shared_ptr<QuantLib::CashFlow> CommodityBasisFutureIndex::baseCashflow(const QuantLib::Date& paymentDate) const {
     auto contractDate = Commodity::Utilities::getContractDate(expiryDate_, basisFec_);
-    return Commodity::Utilities::makeCommodityCashflowForBasisFuture(
-        contractDate, contractDate + 1 * Months - 1 * Days, baseIndex_, baseFec_, baseIsAveraging_, paymentDate);
+    Date periodStart = contractDate - monthOffset_ * Months;
+    Date periodEnd = (periodStart + 1 * Months) - 1 * Days;
+    return Commodity::Utilities::makeCommodityCashflowForBasisFuture(periodStart, periodEnd, baseIndex_, baseFec_,
+                                                                     baseIsAveraging_, paymentDate);
 }
 
 QuantLib::Real CommodityBasisFutureIndex::pastFixing(const QuantLib::Date& fixingDate) const {

@@ -49,7 +49,7 @@ public:
                               const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
                               const QuantLib::Handle<QuantExt::PriceTermStructure>& priceCurve =
                                   QuantLib::Handle<QuantExt::PriceTermStructure>(),
-                              const bool addBasis = true, const QuantLib::Size monthsOffset = 0,
+                              const bool addBasis = true, const QuantLib::Size monthOffset = 0,
                               const bool baseIsAveraging = false);
 
     CommodityBasisFutureIndex(const std::string& underlyingName, const QuantLib::Date& expiryDate,
@@ -71,7 +71,7 @@ private:
     boost::shared_ptr<QuantExt::CommodityIndex> baseIndex_;
     boost::shared_ptr<FutureExpiryCalculator> baseFec_;
     bool addBasis_;
-    QuantLib::Size monthsOffset_;
+    QuantLib::Size monthOffset_;
     bool baseIsAveraging_;
     boost::shared_ptr<QuantLib::CashFlow> cashflow_;
 };
