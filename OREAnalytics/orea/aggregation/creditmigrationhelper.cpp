@@ -240,6 +240,16 @@ std::vector<Matrix> CreditMigrationHelper::initEntityStateSimulation(const Size 
         }
     }
 
+    // ... and finally build partial sums over columns for the simulation
+    for (Size i = 0; i < parameters_->entities().size(); ++i) {
+        Matrix& m = res[i];
+        for (Size ii = 0; ii < m.rows(); ++ii) {
+            for (Size jj = 1; jj < m.columns(); ++jj) {
+                m[ii][jj] += m[ii][jj - 1];
+            }
+        }
+    }
+
     return res;
 }
 

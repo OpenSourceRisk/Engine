@@ -60,7 +60,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     isXCCY_ = false;
     isResetting_ = false;
 
-    legTypeCount_.clear();
     for (Size i = 0; i < numLegs; ++i) {
         // allow minor currencies for Equity legs as some exchanges trade in these, e.g LSE in pence - GBX or GBp
         // minor currencies on other legs will fail here
@@ -71,9 +70,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (currencies[i] != currency)
             isXCCY_ = true;
         isResetting_ = isResetting_ || (!legData_[i].isNotResetXCCY());
-        if (legTypeCount_.find(legData_[i].legType()) == legTypeCount_.end()) 
-            legTypeCount_[legData_[i].legType()] = 0;
-        legTypeCount_[legData_[i].legType()] ++;
     }
 
     static std::set<std::string> eligibleForXbs = {"Fixed", "Floating"};
