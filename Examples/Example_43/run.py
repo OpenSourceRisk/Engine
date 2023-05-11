@@ -62,6 +62,20 @@ oreex.plot(targetFileName, 0, 1, 'b', label="Loss")
 oreex.decorate_plot(title="Example 43 - Loss distribution", ylabel="PDF", xlabel="Loss", y_format_as_int=False)
 oreex.save_plot_to_file()
 
+oreex.print_headline("Run ORE for 10 bonds (Evaluation = TerminalSimulation)")
+orexml="Input/ore3_ts.xml"
+oreex.run(orexml)
+case="bond10_ts"
+targetFileName = "credit_migration_" + case + "_11.csv"
+oreex.setup_plot("cdf_" + case)
+oreex.plot(targetFileName, 0, 2, 'b', label="Loss")
+oreex.decorate_plot(title="Example 43 - Loss distribution", ylabel="CDF", xlabel="Loss", y_format_as_int=False)
+oreex.save_plot_to_file()
+oreex.setup_plot("pdf_" + case)
+oreex.plot(targetFileName, 0, 1, 'b', label="Loss")
+oreex.decorate_plot(title="Example 43 - Loss distribution", ylabel="PDF", xlabel="Loss", y_format_as_int=False)
+oreex.save_plot_to_file()
+
 oreex.print_headline("Run ORE for Bond and CDS")
 orexml="Input/ore4.xml"
 oreex.run(orexml)
