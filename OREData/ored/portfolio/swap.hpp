@@ -79,7 +79,6 @@ protected:
     vector<LegData> legData_;
     string settlement_;
     bool isXCCY_;
-    std::map<std::string,Size> legTypeCount_;
 
 private:
     bool isResetting_;
