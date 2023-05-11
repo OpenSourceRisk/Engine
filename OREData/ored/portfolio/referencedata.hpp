@@ -106,6 +106,7 @@ public:
 	string priceQuoteMethod;
         string priceQuoteBaseValue;
         std::vector<LegData> legData;
+        string subType;
         void fromXML(XMLNode* node) override;
         XMLNode* toXML(ore::data::XMLDocument& doc) override;
     };
@@ -198,8 +199,11 @@ public:
     //! Get all of the underlying constituents.
     const std::set<CreditIndexConstituent>& constituents() const;
 
+    const std::string& indexFamily() const { return indexFamily_; }
+
 private:
     std::set<CreditIndexConstituent> constituents_;
+    std::string indexFamily_;
 };
 
 
@@ -318,6 +322,7 @@ private:
     RebalancingDate::Strategy rebalancingStrategy_;
     int referenceDateOffset_;
     HedgeAdjustment::Rule hedgeAdjustmentRule_;
+
     QuantLib::Calendar hedgeCalendar_;
     std::map<std::string, std::string> fxIndexes_;
     vector<pair<string, double>> data_;
@@ -335,6 +340,7 @@ public:
         string predecessor;
         QuantLib::Date successorImplementationDate;
         QuantLib::Date predecessorImplementationDate;
+        string entityType;
     };
     CreditReferenceDatum() {}
 

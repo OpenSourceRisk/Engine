@@ -18,6 +18,7 @@
 
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -134,9 +135,19 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Credit");
     additionalData_["isdaBaseProduct"] = string("Single Name");
-    // Leaving the mapping of creditCurveId to ABS, Corporate, Loans, Muni, Recovery CDS, Sovereign
-    // to a subsequent process, e.g. to be picked up from extended curve configurations 
-    additionalData_["isdaSubProduct"] = swap_.creditCurveId(); 
+    // set isdaSubProduct to entityType in credit reference data 
+    additionalData_["isdaSubProduct"] = string("");
+    string entity = swap_.referenceInformation() ?
+        swap_.referenceInformation()->referenceEntityId() :
+        swap_.creditCurveId();        
+    boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
+    if (refData && refData->hasData("Credit", entity)) {
+        auto refDatum = refData->getData("Credit", entity);
+        boost::shared_ptr<CreditReferenceDatum> creditRefDatum = boost::dynamic_pointer_cast<CreditReferenceDatum>(refDatum);
+        additionalData_["isdaSubProduct"] = creditRefDatum->creditData().entityType;
+    } else {
+        ALOG("Credit reference data missing for entity " << entity << ", isdaSubProduct left blank");
+    }
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");  
 }
