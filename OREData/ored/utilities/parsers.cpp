@@ -898,6 +898,10 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         std::ostringstream tmp;
         tmp << std::setprecision(precision) << r;
         oss << std::fixed << std::regex_replace(tmp.str(), pattern, std::string(""));
+    } else if (anyType.type() == typeid(QuantLib::Array)) {
+        resultType = "array";
+        QuantLib::Array r = boost::any_cast<QuantLib::Array>(anyType);
+        oss << std::fixed << std::setprecision(precision) << r;
     } else {
         ALOG("Unsupported Boost::Any type");
         resultType = "unsupported_type";
