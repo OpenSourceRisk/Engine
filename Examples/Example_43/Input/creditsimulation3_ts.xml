@@ -132,7 +132,7 @@
     <Market>N</Market>
     <Credit>Y</Credit>
     <ZeroMarketPnl>N</ZeroMarketPnl>
-    <DoubleDefault>Y</DoubleDefault>
+    <DoubleDefault>N</DoubleDefault>
     <Evaluation>TerminalSimulation</Evaluation>
     <Seed>42</Seed>
     <Paths>1000</Paths>
