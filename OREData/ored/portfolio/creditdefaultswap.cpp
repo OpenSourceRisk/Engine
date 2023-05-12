@@ -145,6 +145,9 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
         auto refDatum = refData->getData("Credit", entity);
         boost::shared_ptr<CreditReferenceDatum> creditRefDatum = boost::dynamic_pointer_cast<CreditReferenceDatum>(refDatum);
         additionalData_["isdaSubProduct"] = creditRefDatum->creditData().entityType;
+        if (creditRefDatum->creditData().entityType == "") {
+            ALOG("EntityType is blank in credit reference data for entity " << entity);
+        }
     } else {
         ALOG("Credit reference data missing for entity " << entity << ", isdaSubProduct left blank");
     }

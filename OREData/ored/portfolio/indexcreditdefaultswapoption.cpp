@@ -336,6 +336,9 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
         auto refDatum = refData->getData("CreditIndex", entity);
         boost::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum = boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
         additionalData_["isdaSubProduct"] = creditIndexRefDatum->indexFamily();
+        if (creditIndexRefDatum->indexFamily() == "") {
+            ALOG("IndexFamily is blank in credit index reference data for entity " << entity);
+        }
     } else {
         ALOG("Credit index reference data missing for entity " << entity << ", isdaSubProduct left blank");
     }
