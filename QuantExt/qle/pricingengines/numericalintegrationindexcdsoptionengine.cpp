@@ -78,7 +78,8 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
             strikePrice = arguments_.strike;
         } else {
             results_.additionalResults["strikeSpread"] = arguments_.strike;
-            strikePrice = 1.0 + forwardRiskyAnnuityStrike(arguments_.strike) *
+            strikePrice = 1.0 + arguments_.tradeDateNtl / arguments_.swap->notional() *
+                                    forwardRiskyAnnuityStrike(arguments_.strike) *
                                     (arguments_.swap->runningSpread() - arguments_.strike);
         }
 
@@ -126,7 +127,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
             brent.setLowerBound(1.0E-8);
             auto strikeTarget = [this](Real strikeSpread) {
                 return forwardRiskyAnnuityStrike(strikeSpread) * (arguments_.swap->runningSpread() - strikeSpread) -
-                       (arguments_.strike - 1.0);
+                       arguments_.tradeDateNtl / arguments_.swap->notional() * (arguments_.strike - 1.0);
             };
             try {
                 strikeSpread = brent.solve(strikeTarget, 1.0E-7, arguments_.swap->fairSpreadClean(), 0.0001);
