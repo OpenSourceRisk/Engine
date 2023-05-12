@@ -1154,9 +1154,17 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
 
     auto tmp = data.schedule();
 
-    for (auto& r : tmp.modifyRules()) {  // For schedules with 1D tenor, this ensures that the index calendar supersedes the calendar provided 
-        if (r.tenor() == "1D")          // in the trade XML, to avoid differing holidays when building the schedule
+    /* For schedules with 1D tenor, this ensures that the index calendar supersedes the calendar provided
+     in the trade XML and using "following" rolling conventions to avoid differing calendars and subsequent
+     "degenerate schedule" errors in the building of the overnight coupon value date schedules.
+     Generally, "1D" is an unusual tenor to use (and often just an error in the input data), but we want to
+     make sure that this edge case works technically. */
+    for (auto& r : tmp.modifyRules()) {
+        if (r.tenor() == "1D") {
             r.modifyCalendar() = to_string(index->fixingCalendar());
+            r.modifyConvention() = "F";
+            r.modifyTermConvention() = "F";
+        }
     }
 
     Schedule schedule = makeSchedule(tmp, openEndDateReplacement);
