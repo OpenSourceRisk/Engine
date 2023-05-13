@@ -841,7 +841,8 @@ public:
     SwaptionQuote() {}
     //! Constructor
     SwaptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period expiry,
-                  Period term, string dimension, Real strike = 0.0, const std::string& quoteTag = std::string())
+                  Period term, string dimension, Real strike = 0.0, const std::string& quoteTag = std::string(),
+                  bool isPayer = true)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::SWAPTION), ccy_(ccy), expiry_(expiry),
           term_(term), dimension_(dimension), strike_(strike), quoteTag_(quoteTag), isPayer_(isPayer) {}
 
