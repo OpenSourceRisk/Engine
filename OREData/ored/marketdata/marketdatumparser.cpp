@@ -466,9 +466,11 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& ccy = tokens[2];
         Size offset = isOnePeriod(tokens[3]) ? 0 : 1;
         std::string quoteTag;
+        Size hasPayReceiveToken = (tokens.back() == "P" || tokens.back() == "R") ? 1 : 0;
+
         if (offset == 1)
             quoteTag = tokens[3];
-        if (tokens.size() >= 6 + offset) { // volatility
+        if (tokens.size() >= 6 + offset + hasPayReceiveToken) { // volatility
             Period expiry = parsePeriod(tokens[3 + offset]);
             Period term = parsePeriod(tokens[4 + offset]);
             const string& dimension = tokens[5 + offset];
@@ -480,8 +482,9 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
                 strike = parseReal(tokens[6 + offset]);
             } else
                 QL_FAIL("Swaption vol quote dimension " << dimension << " not recognised");
+            bool isPayer = !(hasPayReceiveToken == 1 && tokens.back() == "R"); // assume payer if omitted
             return boost::make_shared<SwaptionQuote>(value, asof, datumName, quoteType, ccy, expiry, term, dimension,
-                                                     strike, quoteTag);
+                                                     strike, quoteTag, isPayer);
         } else { // SLN volatility shift
             return boost::make_shared<SwaptionShiftQuote>(value, asof, datumName, quoteType, ccy,
                                                           parsePeriod(tokens[3 + offset]), quoteTag);
