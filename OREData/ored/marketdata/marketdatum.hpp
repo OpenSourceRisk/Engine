@@ -1013,14 +1013,14 @@ public:
     CapFloorQuote() {}
     //! Constructor
     CapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period term,
-                  Period underlying, bool atm, bool relative, Real strike = 0.0, const string& indexName = string())
+                  Period underlying, bool atm, bool relative, Real strike = 0.0, const string& indexName = string(), bool isCap = true)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CAPFLOOR), ccy_(ccy), term_(term),
-          underlying_(underlying), atm_(atm), relative_(relative), strike_(strike), indexName_(indexName) {}
+          underlying_(underlying), atm_(atm), relative_(relative), strike_(strike), indexName_(indexName), isCap_(isCap) {}
 
     //! Make a copy of the market datum
     boost::shared_ptr<MarketDatum> clone() override {
         return boost::make_shared<CapFloorQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, term_,
-                                                 underlying_, atm_, relative_, strike_, indexName_);
+                                                 underlying_, atm_, relative_, strike_, indexName_, isCap_);
     }
 
     //! \name Inspectors
@@ -1032,6 +1032,7 @@ public:
     bool relative() const { return relative_; }
     Real strike() { return strike_; }
     const string& indexName() const { return indexName_; }
+    bool isCap() const { return isCap_; }
     //@}
 private:
     string ccy_;
@@ -1041,6 +1042,7 @@ private:
     bool relative_;
     Real strike_;
     string indexName_;
+    bool isCap_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);

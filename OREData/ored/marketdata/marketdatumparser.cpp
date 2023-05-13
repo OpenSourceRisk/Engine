@@ -437,27 +437,35 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::CAPFLOOR: {
-        QL_REQUIRE(tokens.size() == 8 || tokens.size() == 9 || tokens.size() == 4 || tokens.size() == 5,
-                   "Either 4, 5 or 8, 9 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() >= 8 && tokens.size() <= 10 || tokens.size() == 4 || tokens.size() == 5,
+                   "Either 4, 5 or 8, 9, 10 tokens expected in " << datumName);
         const string& ccy = tokens[2];
-	Size offset = 0;
-	std::string indexName;
-	if(tokens.size() == 9 || tokens.size() == 5) {
-	    offset = 1;
-	    indexName = tokens[3];
-	}
-        if (tokens.size() == 8 || tokens.size() == 9) {
+	    Size offset = 0;
+	    std::string indexName;
+        Size hasCapFloorToken = (tokens.back() == "C" || tokens.back() == "F") ? 1 : 0;
+        QL_REQUIRE(quoteType != MarketDatum::QuoteType::PRICE || hasCapFloorToken == 1,
+            "CAPFLOOR PRICE quotes must specify whether the datum represents a cap or a floor with a \"C\" or"
+            " \"F\" as the final token.");
+
+        if (tokens.size() == 9 + hasCapFloorToken || tokens.size() == 5 + hasCapFloorToken) {
+            // has an index name token... all later tokens are offset by 1
+            offset = 1;
+            indexName = tokens[3];
+        }
+        if (tokens.size() == 8 + hasCapFloorToken || tokens.size() == 9 + hasCapFloorToken) {
             Period term = parsePeriod(tokens[3 + offset]);
             Period tenor = parsePeriod(tokens[4 + offset]);
             bool atm = parseBool(tokens[5 + offset].c_str());
             bool relative = parseBool(tokens[6 + offset].c_str());
             Real strike = parseReal(tokens[7 + offset]);
+            bool isCap = !(hasCapFloorToken==1 && tokens.back() == "F"); // assume cap if omitted
             return boost::make_shared<CapFloorQuote>(value, asof, datumName, quoteType, ccy, term, tenor, atm, relative,
-                                                     strike, indexName);
+                                                        strike, indexName, isCap);
         } else {
+            // not enough tokens, must be a shift quote
             Period indexTenor = parsePeriod(tokens[3 + offset]);
             return boost::make_shared<CapFloorShiftQuote>(value, asof, datumName, quoteType, ccy, indexTenor,
-                                                          indexName);
+                                                            indexName);
         }
     }
 
