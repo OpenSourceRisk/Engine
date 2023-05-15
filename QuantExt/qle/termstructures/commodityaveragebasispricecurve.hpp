@@ -123,7 +123,7 @@ CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     const QuantLib::Handle<PriceTermStructure>& basePts, const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
     bool addBasis, const Interpolator& interpolator)
     : CommodityBasisPriceTermStructure(referenceDate, basisFec, basePts, index, baseFec,
-                                       addBasis),
+                                       addBasis, 0, true),
       QuantLib::InterpolatedCurve<Interpolator>(interpolator), basisData_(basisData) {
 
     using QuantLib::Date;

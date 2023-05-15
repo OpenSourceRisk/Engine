@@ -80,4 +80,64 @@ protected:
     QuantLib::Size monthOffset_;
     bool baseIsAveraging_;
 };
+
+
+class FlatCommodityBasisFutureCurve : public CommodityBasisPriceTermStructure, public QuantLib::LazyObject {
+public:
+    //! \name Constructors
+    //@{
+    //! Curve constructed from dates and quotes
+    FlatCommodityBasisFutureCurve(const QuantLib::Date& referenceDate, const double price,
+                                  const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
+                                  const boost::shared_ptr<CommodityIndex>& baseIndex,
+                                  const QuantLib::Handle<PriceTermStructure>& basePts,
+                                  const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
+                                  QuantLib::Size monthOffset = 0, bool baseIsAverging = false)
+        : CommodityBasisPriceTermStructure(referenceDate, basisFec, basePts, baseIndex, baseFec, addBasis, monthOffset, baseIsAverging),
+          price_(price) {}
+    //@}
+
+    //! \name Observer interface
+    //@{
+    void update() override { QuantLib::LazyObject::update(); }
+    //@}
+
+    //! \name LazyObject interface
+    //@{
+    void performCalculations() const override{};
+    //@}
+
+    //! \name TermStructure interface
+    //@{
+    QuantLib::Date maxDate() const override { return QuantLib::Date::maxDate(); }
+    QuantLib::Time maxTime() const override { return timeFromReference(maxDate()); }
+    //@}
+
+    //! \name PriceTermStructure interface
+    //@{
+    QuantLib::Time minTime() const override { return 0.0; }
+    std::vector<QuantLib::Date> pillarDates() const override {
+        return {referenceDate() + 1 * Days, referenceDate() + 1 * Years};
+    }
+    const QuantLib::Currency& currency() const override { return basePts_->currency(); }
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const std::vector<QuantLib::Time>& times() const { return {1. / 365., 1.0}; }
+
+    const std::vector<QuantLib::Real>& prices() const { return {price_, price_}; }
+    //@}
+
+protected:
+    //! \name PriceTermStructure implementation
+    //@{
+    QuantLib::Real priceImpl(QuantLib::Time t) const override { return price_; }
+    //@}
+
+private:
+    double price_;
+};
+
+
 } // namespace QuantExt
