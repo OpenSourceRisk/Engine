@@ -454,6 +454,7 @@ template <class Archive> void SwaptionQuote::serialize(Archive& ar, const unsign
     ar& dimension_;
     ar& strike_;
     ar& quoteTag_;
+    ar& isPayer_;
 }
 
 template <class Archive> void SwaptionShiftQuote::serialize(Archive& ar, const unsigned int version) {

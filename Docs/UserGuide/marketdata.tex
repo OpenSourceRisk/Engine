@@ -957,6 +957,7 @@ We have the following examples of cap floor implied volatility, shift, and premi
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Swaption Implied Volatility}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\label{ss:swaptionvolatilitydata}
 
 \begin{table}[H]
 \centering
@@ -964,19 +965,22 @@ We have the following examples of cap floor implied volatility, shift, and premi
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
     Instrument Type & \emph{SWAPTION} & \\ \hline
-    Quote Type & \emph{RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL, SHIFT} & Lognormal quoted volatility, Normal quoted volatility, shifted lognormal quoted volatility, shift quote.\\ \hline
+    Quote Type & \emph{RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL, SHIFT, PRICE} & Lognormal quoted volatility, Normal quoted volatility, shifted lognormal quoted volatility, shift, premium quote.\\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Swaption volatility\\ \hline
+    Quote Tag & A string & (optional) A tag to differentiate different sets of swaption data in a currency. See note below. \\ \hline
     Expiry & An integer followed by D, W, M or Y & Period from start to expiry \\ \hline
     Term & An integer followed by D, W, M or Y & Underlying Swap term \\ \hline
     Dimension & \emph{Smile, ATM}  & Whether volatility quote is a Smile or ATM \\ \hline
-    Strike & Real number & Strike rate - (not required for ATM), as deviation from the ATM strike\\ \hline
+    Strike & Real number & (not required for ATM), deviation from the ATM strike. Note that trailing 0s are not ignored.\\ \hline
+    Option Style & P or R & (optional) Valid for premium quotes only, indicates whether the datum represents a payer or receiver swaption premium respectively. \\ \hline
   \end{tabular}
   \caption{Swaption Implied Volatility}
   \label{tab:swaptimplvol_quote}
 \end{table}
 
+\medskip A quote tag should be used where a currency has more than one index with a swaption surface. It must match \lstinline!QuoteTag! in its corresponding \lstinline!SwaptionVolatility! configuration, see section \ref{sss:swaptionconfig}.
 
-\medskip Note: The volatility quote is expected to be an absolute volatility, and not the deviation from the
+Note: The volatility quote is expected to be an absolute volatility, and not the deviation from the
 at-the-money volatility (the latter is e.g. the quotation convention used by BGC partners).\\
 If a swaption shift quote needs to be provided, i.e. in the case of a shifted lognormal surface, the quote is of the form \lstinline!SWAPTION/SHIFT/Currency/Term! where the meaning of \lstinline!Currency! and \lstinline!Term! are given in Table \ref{tab:swaptimplvol_quote}.
 

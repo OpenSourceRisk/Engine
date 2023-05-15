@@ -470,26 +470,34 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::SWAPTION: {
-        QL_REQUIRE(tokens.size() >= 4 && tokens.size() <= 8, "4...8 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() >= 4 && tokens.size() <= 9, "4...9 tokens expected in " << datumName);
         const string& ccy = tokens[2];
         Size offset = isOnePeriod(tokens[3]) ? 0 : 1;
         std::string quoteTag;
+        Size hasPayReceiveToken = (tokens.back() == "P" || tokens.back() == "R") ? 1 : 0;
+        QL_REQUIRE(quoteType != MarketDatum::QuoteType::PRICE || hasPayReceiveToken == 1,
+            "SWAPTION PRICE quotes must specify whether the datum represents a payer or a receiver"
+            " swaption with a \"P\" or \"R\" as the final token.");
+
         if (offset == 1)
             quoteTag = tokens[3];
-        if (tokens.size() >= 6 + offset) { // volatility
+        if (tokens.size() >= 6 + offset + hasPayReceiveToken) { // volatility
             Period expiry = parsePeriod(tokens[3 + offset]);
             Period term = parsePeriod(tokens[4 + offset]);
             const string& dimension = tokens[5 + offset];
             Real strike = 0.0;
             if (dimension == "ATM")
-                QL_REQUIRE(tokens.size() == 6 + offset, 6 + offset << " tokens expected in ATM quote " << datumName);
+                QL_REQUIRE(tokens.size() == 6 + offset + hasPayReceiveToken, 6 + offset + hasPayReceiveToken
+                    << " tokens expected in ATM quote " << datumName);
             else if (dimension == "Smile") {
-                QL_REQUIRE(tokens.size() == 7 + offset, 7 + offset << " tokens expected in Smile quote " << datumName);
+                QL_REQUIRE(tokens.size() == 7 + offset + hasPayReceiveToken, 7 + offset + hasPayReceiveToken
+                    << " tokens expected in Smile quote " << datumName);
                 strike = parseReal(tokens[6 + offset]);
             } else
                 QL_FAIL("Swaption vol quote dimension " << dimension << " not recognised");
+            bool isPayer = !(hasPayReceiveToken == 1 && tokens.back() == "R"); // assume payer if omitted
             return boost::make_shared<SwaptionQuote>(value, asof, datumName, quoteType, ccy, expiry, term, dimension,
-                                                     strike, quoteTag);
+                                                     strike, quoteTag, isPayer);
         } else { // SLN volatility shift
             return boost::make_shared<SwaptionShiftQuote>(value, asof, datumName, quoteType, ccy,
                                                           parsePeriod(tokens[3 + offset]), quoteTag);
