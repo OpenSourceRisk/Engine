@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/model/marketobserver.hpp
+/*! \file qle/models/marketobserver.hpp
     \brief helper class for model builders that observes market ts
     \ingroup models
 */
@@ -25,8 +25,7 @@
 
 #include <ql/patterns/observable.hpp>
 
-namespace ore {
-namespace data {
+namespace QuantExt {
 using namespace QuantLib;
 
 //! Observer class for Model Builders
@@ -75,5 +74,4 @@ inline bool MarketObserver::hasUpdated(const bool reset) {
     }
 }
 
-} // namespace data
-} // namespace ore
+} // namespace QuantExt

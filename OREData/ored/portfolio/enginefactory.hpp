@@ -25,9 +25,10 @@
 
 #include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/marketdata/market.hpp>
-#include <ored/model/modelbuilder.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/legdata.hpp>
+
+#include <qle/models/modelbuilder.hpp>
 
 #include <ql/pricingengine.hpp>
 
@@ -137,7 +138,7 @@ public:
     }
 
     //! return model builders
-    const set<std::pair<string, boost::shared_ptr<ModelBuilder>>>& modelBuilders() const { return modelBuilders_; }
+    const set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders() const { return modelBuilders_; }
 
     /*! retrieve engine parameter p, first look for p_qualifier, if this does not exist fall back to p */
     std::string engineParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
@@ -155,7 +156,7 @@ protected:
     map<string, string> modelParameters_;
     map<string, string> engineParameters_;
     std::map<std::string, std::string> globalParameters_;
-    set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
+    set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
 };
 
 //! Delegating Engine Builder
@@ -276,7 +277,7 @@ public:
     }
 
     //! return model builders
-    set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders() const;
+    set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders() const;
 
 private:
     boost::shared_ptr<Market> market_;

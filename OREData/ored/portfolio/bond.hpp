@@ -177,7 +177,7 @@ private:
 struct BondBuilder {
     struct Result {
         boost::shared_ptr<QuantLib::Bond> bond;
-        boost::shared_ptr<ore::data::ModelBuilder> modelBuilder; // might be nullptr
+        boost::shared_ptr<QuantExt::ModelBuilder> modelBuilder; // might be nullptr
 
         
         bool isInflationLinked = false;
