@@ -164,6 +164,7 @@ public:
         const std::vector<Size>& creditMigrationTimeSteps = {},
         //! Credit State correlation matrix
         const Matrix& creditStateCorrelationMatrix = Matrix(),
+        //! If set to true, cash flows in the margin period of risk are ignored in the collateral modelling
         bool withMporStickyDate = false,
         //! Treatment of cash flows over the margin period of risk
         ScenarioGeneratorData::MporCashFlowMode mporCashFlowMode = ScenarioGeneratorData::MporCashFlowMode::NonePay);

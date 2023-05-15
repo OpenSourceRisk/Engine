@@ -6,8 +6,7 @@
   <TransitionMatrices>
     <TransitionMatrix>
       <Name>TransitionMatrix_1</Name>
-      <Data t0="0.0" t1="1.0">
-    <!--   Aaa     Aa      A       Baa     Ba      B       C    Default  -->
+      <Data t0="0.0" t1="1.0"><!--   Aaa     Aa      A       Baa     Ba      B       C    Default  -->
 	0.8588, 0.0976, 0.0048, 0.0000, 0.0003, 0.0000, 0.0000, 0.0000, 
 	0.0092, 0.8487, 0.0964, 0.0036, 0.0015, 0.0002, 0.0000, 0.0004, 
 	0.0008, 0.0224, 0.8624, 0.0609, 0.0077, 0.0021, 0.0000, 0.0002, 
@@ -30,7 +29,7 @@
       <Name>CPTY_A</Name>
       <FactorLoadings>0.4898979485566356</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
-      <InitialState>5</InitialState>
+      <InitialState>3</InitialState>
     </Entity>
     <Entity>
       <Name>CPTY_B</Name>
@@ -43,96 +42,103 @@
       <!-- no sqrt is taken, these are the actual loadings -->
       <FactorLoadings>0.4898979485566356</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
-      <InitialState>3</InitialState>
+      <InitialState>5</InitialState>
     </Entity>
-    <!--
     <Entity>
       <Name>CPTY_1</Name>
-      <FactorLoadings>0.0</FactorLoadings>
+      <!-- no sqrt is taken, these are the actual loadings -->
+      <FactorLoadings>0.4898979485566356</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
       <InitialState>4</InitialState>
     </Entity>
     <Entity>
       <Name>CPTY_1</Name>
-      <FactorLoadings>0.0</FactorLoadings>
+      <!-- no sqrt is taken, these are the actual loadings -->
+      <FactorLoadings>0.4898979485566356</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
       <InitialState>4</InitialState>
     </Entity>
     <Entity>
       <Name>CPTY_2</Name>
-      <FactorLoadings>0.0</FactorLoadings>
+      <!-- no sqrt is taken, these are the actual loadings -->
+      <FactorLoadings>0.4898979485566356</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
       <InitialState>4</InitialState>
     </Entity>
     <Entity>
       <Name>CPTY_3</Name>
-      <FactorLoadings>0.0</FactorLoadings>
+      <!-- no sqrt is taken, these are the actual loadings -->
+      <FactorLoadings>0.4898979485566356</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
       <InitialState>4</InitialState>
     </Entity>
     <Entity>
       <Name>CPTY_4</Name>
-      <FactorLoadings>0.0</FactorLoadings>
+      <!-- no sqrt is taken, these are the actual loadings -->
+      <FactorLoadings>0.4898979485566356</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
       <InitialState>4</InitialState>
     </Entity>
     <Entity>
       <Name>CPTY_5</Name>
-      <FactorLoadings>0.0</FactorLoadings>
+      <!-- no sqrt is taken, these are the actual loadings -->
+      <FactorLoadings>0.4898979485566356</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
       <InitialState>4</InitialState>
     </Entity>
     <Entity>
       <Name>CPTY_6</Name>
-      <FactorLoadings>0.0</FactorLoadings>
+      <!-- no sqrt is taken, these are the actual loadings -->
+      <FactorLoadings>0.4898979485566356</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
       <InitialState>4</InitialState>
     </Entity>
     <Entity>
       <Name>CPTY_7</Name>
-      <FactorLoadings>0.0</FactorLoadings>
+      <!-- no sqrt is taken, these are the actual loadings -->
+      <FactorLoadings>0.4898979485566356</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
       <InitialState>4</InitialState>
     </Entity>
     <Entity>
       <Name>CPTY_8</Name>
-      <FactorLoadings>0.0</FactorLoadings>
+      <!-- no sqrt is taken, these are the actual loadings -->
+      <FactorLoadings>0.4898979485566356</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
       <InitialState>4</InitialState>
     </Entity>
     <Entity>
       <Name>CPTY_9</Name>
-      <FactorLoadings>0.0</FactorLoadings>
+      <!-- no sqrt is taken, these are the actual loadings -->
+      <FactorLoadings>0.4898979485566356</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
       <InitialState>4</InitialState>
     </Entity>
     <Entity>
       <Name>CPTY_10</Name>
-      <FactorLoadings>0.0</FactorLoadings>
+      <!-- no sqrt is taken, these are the actual loadings -->
+      <FactorLoadings>0.4898979485566356</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
       <InitialState>4</InitialState>
     </Entity>
-    -->
   </Entities>
   <!-- ================================== -->
   <!-- Netting Sets, Risk and PnL         -->
   <!-- ================================== -->
   <NettingSetIds>
-    CPTY_B,CPTY_C
+    CPTY_A,CPTY_B,CPTY_C
   </NettingSetIds>
   <Risk>
     <Market>N</Market>
     <Credit>Y</Credit>
     <ZeroMarketPnl>N</ZeroMarketPnl>
-    <DoubleDefault>Y</DoubleDefault>
-    <!-- Analytic           No simulation of idiosyncratic states -->
-    <!-- TerminalSimulation Terminal Simulation -->
-    <Evaluation>Analytic</Evaluation>
+    <DoubleDefault>N</DoubleDefault>
+    <Evaluation>TerminalSimulation</Evaluation>
     <Seed>42</Seed>
     <Paths>1000</Paths>
-    <!-- Migration, Default -->
     <CreditMode>Migration</CreditMode>
+    <!-- Migration, Default -->
+    <LoanExposureMode>Notional</LoanExposureMode>
     <!-- Notional, Value -->
-    <LoanExposureMode>Value</LoanExposureMode>
   </Risk>
 </CreditSimulation>

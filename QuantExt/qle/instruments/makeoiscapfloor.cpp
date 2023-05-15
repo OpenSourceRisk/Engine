@@ -18,13 +18,17 @@
 
 #include <qle/instruments/makeoiscapfloor.hpp>
 
+#include <ql/cashflows/cashflows.hpp>
+
 namespace QuantExt {
 
 MakeOISCapFloor::MakeOISCapFloor(CapFloor::Type type, const Period& tenor, const ext::shared_ptr<OvernightIndex>& index,
-                                 const Period& rateComputationPeriod, Rate strike)
+                                 const Period& rateComputationPeriod, Rate strike,
+                                 const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve)
     : type_(type), tenor_(tenor), index_(index), rateComputationPeriod_(rateComputationPeriod), strike_(strike),
       nominal_(1.0), settlementDays_(2), calendar_(index->fixingCalendar()), convention_(ModifiedFollowing),
-      rule_(DateGeneration::Backward), dayCounter_(index->dayCounter()), telescopicValueDates_(false) {}
+      rule_(DateGeneration::Backward), dayCounter_(index->dayCounter()), telescopicValueDates_(false),
+      discountCurve_(discountCurve) {}
 
 MakeOISCapFloor::operator Leg() const {
     Calendar calendar = index_->fixingCalendar();
@@ -42,11 +46,24 @@ MakeOISCapFloor::operator Leg() const {
     Schedule schedule(startDate, endDate, rateComputationPeriod_, calendar, ModifiedFollowing, ModifiedFollowing,
                       DateGeneration::Backward, false);
 
+    // determine atm strike if required
+    Real effectiveStrike = strike_;
+    if (effectiveStrike == Null<Real>()) {
+        Leg leg = OvernightLeg(schedule, index_)
+                      .withNotionals(nominal_)
+                      .withPaymentDayCounter(dayCounter_)
+                      .withPaymentAdjustment(convention_)
+                      .withTelescopicValueDates(telescopicValueDates_);
+        effectiveStrike =
+            CashFlows::atmRate(leg, discountCurve_.empty() ? **index_->forwardingTermStructure() : **discountCurve_,
+                               false, index_->forwardingTermStructure()->referenceDate());
+    }
+
     Real cap = Null<Real>(), floor = Null<Real>();
     if (type_ == CapFloor::Cap)
-        cap = strike_;
+        cap = effectiveStrike;
     else if (type_ == CapFloor::Floor)
-        floor = strike_;
+        floor = effectiveStrike;
     else {
         QL_FAIL("MakeOISCapFloor: expected type Cap or Floor");
     }
@@ -61,7 +78,7 @@ MakeOISCapFloor::operator Leg() const {
                   .withTelescopicValueDates(telescopicValueDates_);
 
     if (pricer_) {
-        for (auto c : leg) {
+        for (auto &c : leg) {
             auto f = boost::dynamic_pointer_cast<FloatingRateCoupon>(c);
             if (f) {
                 f->setPricer(pricer_);
@@ -118,7 +135,6 @@ MakeOISCapFloor::withCouponPricer(const ext::shared_ptr<CappedFlooredOvernightIn
     return *this;
 }
 
-//! get the underlying ON coupons from an OIS cf
 Leg getOisCapFloorUnderlying(const Leg& oisCapFloor) {
     Leg underlying;
     for (auto const& c : oisCapFloor) {
@@ -127,6 +143,16 @@ Leg getOisCapFloorUnderlying(const Leg& oisCapFloor) {
         underlying.push_back(cfon->underlying());
     }
     return underlying;
+}
+
+std::vector<std::pair<Real, Real>> getOisCapFloorStrikes(const Leg& oisCapFloor) {
+    std::vector<std::pair<Real, Real>> result;
+    for (auto const& c : oisCapFloor) {
+        auto cfon = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c);
+        QL_REQUIRE(cfon, "getOisCapFloorUnderlying(): expected CappedFlooredOvernightIndexedCoupon");
+        result.push_back(std::make_pair(cfon->cap(), cfon->floor()));
+    }
+    return result;
 }
 
 } // namespace QuantExt
