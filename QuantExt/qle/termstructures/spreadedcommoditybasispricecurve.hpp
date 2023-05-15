@@ -33,7 +33,7 @@ class SpreadedCommodityBasisPriceCurve : public QuantExt::CommodityBasisPriceTer
 public:
     SpreadedCommodityBasisPriceCurve(const boost::shared_ptr<CommodityBasisPriceTermStructure>& referenceCurve,
                                      const boost::shared_ptr<CommodityIndex>& baseIndex,
-                                     const boost::shared_ptr<SpreadedPriceTermStructure>& spreadCurve)
+                                     const boost::shared_ptr<PriceTermStructure>& spreadCurve)
         : CommodityBasisPriceTermStructure(
               referenceCurve->referenceDate(), referenceCurve->calendar(), referenceCurve->dayCounter(),
               referenceCurve->basisFutureExpiryCalculator(), baseIndex->priceCurve(), baseIndex, referenceCurve->baseFutureExpiryCalculator(),
@@ -61,6 +61,6 @@ private:
     void performCalculations() const override{}
     QuantLib::Real priceImpl(QuantLib::Time t) const override { return spreadCurve_->price(t, allowsExtrapolation()); }
 
-    boost::shared_ptr<QuantExt::SpreadedPriceTermStructure> spreadCurve_;
+    boost::shared_ptr<QuantExt::PriceTermStructure> spreadCurve_;
 };
 } // namespace QuantExt

@@ -2315,46 +2315,39 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         writeSimData(simDataTmp, absoluteSimDataTmp);
                         simDataWritten = true;
-
-                                            
-                        vector<Real> simulationTimes;
-                        for (auto const& t : simulationTenors) {
-                            simulationTimes.push_back(commodityCurveDayCounter.yearFraction(asof_, asof_ + t));
-                        }
-                        if (simulationTimes.front() != 0.0) {
-                            simulationTimes.insert(simulationTimes.begin(), 0.0);
-                            quotes.insert(quotes.begin(), quotes.front());
-                        }
-
-                        vector<Handle<Quote>> spreads;
+                        boost::shared_ptr<PriceTermStructure> priceCurve;
 
                         if (param.second.first && useSpreadedTermStructures_) {
+                            vector<Real> simulationTimes;
+                            for (auto const& t : simulationTenors) {
+                                simulationTimes.push_back(commodityCurveDayCounter.yearFraction(asof_, asof_ + t));
+                            }
+                            if (simulationTimes.front() != 0.0) {
+                                simulationTimes.insert(simulationTimes.begin(), 0.0);
+                                quotes.insert(quotes.begin(), quotes.front());
+                            }
                             // Created spreaded commodity price curve if we simulate commodities and spreads should be
                             // used
-                            spreads = quotes;
+                            priceCurve = boost::make_shared<SpreadedPriceTermStructure>(initialCommodityCurve,
+                                                                                        simulationTimes, quotes);
                         } else {
-                            for (const auto& quote : quotes) {
-                                Real t0Value = quote->value();
-                                Handle<Quote> t0quote(boost::make_shared<SimpleQuote>(t0Value));
-                                spreads.push_back(Handle<Quote>(boost::make_shared<CompositeQuote<std::minus<double>>>(
-                                    quote, t0quote, std::minus<double>())));
-                            }
+                            priceCurve= boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(
+                                simulationTenors, quotes, commodityCurveDayCounter, initialCommodityCurve->currency());
                         }
-                        auto spreadCurve = boost::make_shared<SpreadedPriceTermStructure>(initialCommodityCurve,
-                                                                                              simulationTimes, spreads);
+                        
                         auto orgBasisCurve =
                             boost::dynamic_pointer_cast<QuantExt::CommodityBasisPriceTermStructure>(
                                 initialCommodityCurve.currentLink());
 
                         Handle<PriceTermStructure> pts;  
                         if (orgBasisCurve == nullptr) {
-                            pts = Handle<PriceTermStructure>(spreadCurve);
+                            pts = Handle<PriceTermStructure>(priceCurve);
                         } else{
                             auto baseIndex = commodityIndices_.find(
                                 {Market::defaultConfiguration, orgBasisCurve->baseIndex()->underlyingName()});
                             QL_REQUIRE(baseIndex != commodityIndices_.end(), "Couldn't find underlying base curve");
                             pts = Handle<PriceTermStructure>(boost::make_shared<SpreadedCommodityBasisPriceCurve>(
-                                orgBasisCurve, baseIndex->second.currentLink(), spreadCurve));
+                                orgBasisCurve, baseIndex->second.currentLink(), priceCurve));
                         } 
 
                         pts->enableExtrapolation(allowsExtrapolation);
