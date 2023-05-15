@@ -90,7 +90,7 @@
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
-#include <qle/termstructures/spreadedcommoditybasispricecurve.hpp>
+#include <qle/termstructures/commoditybasispricecurvewrapper.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/timer/timer.hpp>
@@ -2346,7 +2346,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             auto baseIndex = commodityIndices_.find(
                                 {Market::defaultConfiguration, orgBasisCurve->baseIndex()->underlyingName()});
                             QL_REQUIRE(baseIndex != commodityIndices_.end(), "Couldn't find underlying base curve");
-                            pts = Handle<PriceTermStructure>(boost::make_shared<SpreadedCommodityBasisPriceCurve>(
+                            pts = Handle<PriceTermStructure>(boost::make_shared<CommodityBasisPriceCurveWrapper>(
                                 orgBasisCurve, baseIndex->second.currentLink(), priceCurve));
                         } 
 

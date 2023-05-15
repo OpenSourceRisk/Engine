@@ -431,6 +431,7 @@
 #include <qle/termstructures/capfloortermvolsurfacesparse.hpp>
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
+#include <qle/termstructures/commoditybasispricecurvewrapper.hpp>
 #include <qle/termstructures/commoditybasispricetermstructure.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/credit/basecorrelationstructure.hpp>
@@ -502,7 +503,6 @@
 #include <qle/termstructures/proxyswaptionvolatility.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
-#include <qle/termstructures/spreadedcommoditybasispricecurve.hpp>
 #include <qle/termstructures/spreadedcorrelationcurve.hpp>
 #include <qle/termstructures/spreadedcpivolatilitysurface.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>

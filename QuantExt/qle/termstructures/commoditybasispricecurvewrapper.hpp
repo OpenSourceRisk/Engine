@@ -16,51 +16,51 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/termstructures/spreadedcommoditybasispricecurve.hpp
+/*! \file qle/termstructures/commoditybasispricecurvewrapper.hpp
     \brief A commodity price curve created from a base price curve and a collection of basis quotes
     \ingroup termstructures
 */
 
 #pragma once
 
-#include <qle/termstructures/spreadedpricetermstructure.hpp>
-#include <qle/termstructures/commoditybasispricecurve.hpp>
+#include <ql/patterns/lazyobject.hpp>
+#include <qle/termstructures/commoditybasispricetermstructure.hpp>
 
 namespace QuantExt {
 
-class SpreadedCommodityBasisPriceCurve : public QuantExt::CommodityBasisPriceTermStructure,
+class CommodityBasisPriceCurveWrapper : public QuantExt::CommodityBasisPriceTermStructure,
                                          public QuantLib::LazyObject {
 public:
-    SpreadedCommodityBasisPriceCurve(const boost::shared_ptr<CommodityBasisPriceTermStructure>& referenceCurve,
+    CommodityBasisPriceCurveWrapper(const boost::shared_ptr<CommodityBasisPriceTermStructure>& referenceCurve,
                                      const boost::shared_ptr<CommodityIndex>& baseIndex,
-                                     const boost::shared_ptr<PriceTermStructure>& spreadCurve)
+                                     const boost::shared_ptr<PriceTermStructure>& priceCurve)
         : CommodityBasisPriceTermStructure(
               referenceCurve->referenceDate(), referenceCurve->calendar(), referenceCurve->dayCounter(),
               referenceCurve->basisFutureExpiryCalculator(), baseIndex->priceCurve(), baseIndex, referenceCurve->baseFutureExpiryCalculator(),
               referenceCurve->addBasis(), referenceCurve->monthOffset(), referenceCurve->baseIsAveraging()),
-          spreadCurve_(spreadCurve) {
+          priceCurve_(priceCurve) {
         registerWith(baseIndex_);
-        registerWith(spreadCurve_);
+        registerWith(priceCurve_);
     };
 
-    QuantLib::Date maxDate() const override { return spreadCurve_->maxDate(); }
+    QuantLib::Date maxDate() const override { return priceCurve_->maxDate(); }
     
     void update() override {
         LazyObject::update();
         TermStructure::update();
     }
 
-    QuantLib::Natural settlementDays() const override { return spreadCurve_->settlementDays(); }
+    QuantLib::Natural settlementDays() const override { return priceCurve_->settlementDays(); }
     
 
-    QuantLib::Time minTime() const override { return spreadCurve_->minTime(); }
-    const QuantLib::Currency& currency() const override { return spreadCurve_->currency(); }
-    std::vector<QuantLib::Date> pillarDates() const override { return spreadCurve_->pillarDates(); }
+    QuantLib::Time minTime() const override { return priceCurve_->minTime(); }
+    const QuantLib::Currency& currency() const override { return priceCurve_->currency(); }
+    std::vector<QuantLib::Date> pillarDates() const override { return priceCurve_->pillarDates(); }
 
 private:
     void performCalculations() const override{}
-    QuantLib::Real priceImpl(QuantLib::Time t) const override { return spreadCurve_->price(t, allowsExtrapolation()); }
+    QuantLib::Real priceImpl(QuantLib::Time t) const override { return priceCurve_->price(t, allowsExtrapolation()); }
 
-    boost::shared_ptr<QuantExt::PriceTermStructure> spreadCurve_;
+    boost::shared_ptr<QuantExt::PriceTermStructure> priceCurve_;
 };
 } // namespace QuantExt
