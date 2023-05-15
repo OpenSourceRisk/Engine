@@ -486,6 +486,7 @@ template <class Archive> void CapFloorQuote::serialize(Archive& ar, const unsign
     ar& relative_;
     ar& strike_;
     ar& indexName_;
+    ar& isCap_;
 }
 
 template <class Archive> void CapFloorShiftQuote::serialize(Archive& ar, const unsigned int version) {
