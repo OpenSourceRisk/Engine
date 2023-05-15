@@ -417,8 +417,8 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
         // We are building a curve that will be used to return an average price.
         if (!baseConvention->isAveraging() && config.averageBase()) {
             DLOG("Creating a CommodityAverageBasisPriceCurve.");
-            populateCurve<CommodityBasisPriceCurve>(asof, basisData, basisFec, baseIndex, basePts, baseFec,
-                                                    config.addBasis(), config.monthOffset(), true);
+            populateCurve<CommodityAverageBasisPriceCurve>(asof, basisData, basisFec, baseIndex, basePts, baseFec,
+                                                    config.addBasis());
         } else {
             // Either 1) base convention is not averaging and config.averageBase() is false or 2) the base convention
             // is averaging. Either way, we build a CommodityBasisPriceCurve.

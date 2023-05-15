@@ -36,7 +36,7 @@ public:
                                      const boost::shared_ptr<SpreadedPriceTermStructure>& spreadCurve)
         : CommodityBasisPriceTermStructure(
               referenceCurve->referenceDate(), referenceCurve->calendar(), referenceCurve->dayCounter(),
-              referenceCurve->basisFutureExpiryCalculator(), baseIndex, referenceCurve->baseFutureExpiryCalculator(),
+              referenceCurve->basisFutureExpiryCalculator(), baseIndex->priceCurve(), baseIndex, referenceCurve->baseFutureExpiryCalculator(),
               referenceCurve->addBasis(), referenceCurve->monthOffset(), referenceCurve->baseIsAveraging()),
           spreadCurve_(spreadCurve) {
         registerWith(baseIndex_);
@@ -56,11 +56,10 @@ public:
     QuantLib::Time minTime() const override { return spreadCurve_->minTime(); }
     const QuantLib::Currency& currency() const override { return spreadCurve_->currency(); }
     std::vector<QuantLib::Date> pillarDates() const override { return spreadCurve_->pillarDates(); }
-    
 
 private:
     void performCalculations() const override{}
-    QuantLib::Real priceImpl(QuantLib::Time t) const override { return spreadCurve_->price(t); }
+    QuantLib::Real priceImpl(QuantLib::Time t) const override { return spreadCurve_->price(t, allowsExtrapolation()); }
 
     boost::shared_ptr<QuantExt::SpreadedPriceTermStructure> spreadCurve_;
 };

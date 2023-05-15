@@ -801,6 +801,7 @@ termstructures/capfloortermvolsurface.hpp
 termstructures/capfloortermvolsurfacesparse.hpp
 termstructures/commodityaveragebasispricecurve.hpp
 termstructures/commoditybasispricecurve.hpp
+termstructures/commoditybasispricetermstructure.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/credit/basecorrelationstructure.hpp
 termstructures/credit/spreadedbasecorrelationcurve.hpp

@@ -43,7 +43,7 @@ makeCommodityCashflowForBasisFuture(const QuantLib::Date& start, const QuantLib:
     if (baseIsAveraging == true) {
         return boost::make_shared<CommodityIndexedAverageCashFlow>(
             1.0, start, end, paymentLag, QuantLib::NullCalendar(), QuantLib::Unadjusted, baseIndex,
-            QuantLib::NullCalendar(), 0.0, 1.0, CommodityIndexedAverageCashFlow::PaymentTiming::InArrears, true, 0, 0,
+            QuantLib::Calendar(), 0.0, 1.0, CommodityIndexedAverageCashFlow::PaymentTiming::InArrears, true, 0, 0,
             baseFec);
 
     } else {

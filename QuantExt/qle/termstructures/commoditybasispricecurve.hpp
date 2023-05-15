@@ -30,12 +30,12 @@
 #include <ql/termstructures/interpolatedcurve.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/utilities/dataformatters.hpp>
-#include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
+#include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/termstructures/commoditybasispricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/utilities/commodity.hpp>
-
 namespace QuantExt {
 
 //! Commodity basis price curve.
@@ -49,38 +49,6 @@ namespace QuantExt {
 
     \ingroup termstructures
 */
-
-class CommodityBasisPriceTermStructure : public PriceTermStructure {
-public:
-    CommodityBasisPriceTermStructure(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal,
-                                     const QuantLib::DayCounter& dc,
-                                     const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-                                     const boost::shared_ptr<CommodityIndex>& baseIndex,
-                                     const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
-                                     QuantLib::Size monthOffset = 0, bool baseIsAveraging = false)
-        : PriceTermStructure(referenceDate, cal, dc), basisFec_(basisFec), baseIndex_(baseIndex), baseFec_(baseFec),
-          addBasis_(addBasis), monthOffset_(monthOffset), baseIsAveraging_(baseIsAveraging) {}
-
-    //! Inspectors
-    const boost::shared_ptr<FutureExpiryCalculator>& basisFutureExpiryCalculator() const { return basisFec_; }
-    const boost::shared_ptr<CommodityIndex>& baseIndex() const { return baseIndex_; }
-    const boost::shared_ptr<FutureExpiryCalculator>& baseFutureExpiryCalculator() const { return baseFec_; }
-    bool addBasis() const { return addBasis_; }
-    bool baseIsAveraging() const { return baseIsAveraging_; }
-    QuantLib::Size monthOffset() const { return monthOffset_; }
-
-
-
-protected:
-    boost::shared_ptr<FutureExpiryCalculator> basisFec_;
-    boost::shared_ptr<CommodityIndex> baseIndex_;
-    boost::shared_ptr<FutureExpiryCalculator> baseFec_;
-
-    bool addBasis_;
-    QuantLib::Size monthOffset_;
-    bool baseIsAveraging_;
-};
-
 template <class Interpolator>
 class CommodityBasisPriceCurve : public CommodityBasisPriceTermStructure,
                                  public QuantLib::LazyObject,
@@ -135,7 +103,6 @@ protected:
     //@}
 
 private:
-    mutable QuantLib::Handle<PriceTermStructure> basePts_;
     std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>> basisData_;
     std::vector<QuantLib::Date> dates_;
 
@@ -161,9 +128,9 @@ CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     const boost::shared_ptr<FutureExpiryCalculator>& basisFec, const boost::shared_ptr<CommodityIndex>& baseIndex,
     const QuantLib::Handle<PriceTermStructure>& basePts, const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
     bool addBasis, QuantLib::Size monthOffset, bool baseIsAveraging, const Interpolator& interpolator)
-    : CommodityBasisPriceTermStructure(referenceDate, QuantLib::NullCalendar(), basePts->dayCounter(), basisFec,
-                                       baseIndex, baseFec, addBasis, monthOffset, baseIsAveraging),
-      QuantLib::InterpolatedCurve<Interpolator>(interpolator), basePts_(basePts), basisData_(basisData) {
+    : CommodityBasisPriceTermStructure(referenceDate, basisFec, basePts, baseIndex, baseFec, addBasis,
+                                       monthOffset, baseIsAveraging),
+      QuantLib::InterpolatedCurve<Interpolator>(interpolator), basisData_(basisData) {
     using QuantLib::Date;
     using QuantLib::Schedule;
     using QuantLib::io::iso_date;
@@ -174,8 +141,6 @@ CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     using std::min;
     using std::sort;
     using std::vector;
-
-    registerWith(basePts_);
 
     // Observe the quotes
     for (auto it = basisData_.cbegin(); it != basisData_.cend();) {
