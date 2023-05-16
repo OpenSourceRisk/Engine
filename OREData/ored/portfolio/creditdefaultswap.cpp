@@ -138,7 +138,7 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     // set isdaSubProduct to entityType in credit reference data 
     additionalData_["isdaSubProduct"] = string("");
     string entity = swap_.referenceInformation() ?
-        swap_.referenceInformation()->referenceEntityId() :
+        swap_.referenceInformation()->id() :
         swap_.creditCurveId();        
     boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
     if (refData && refData->hasData("Credit", entity)) {
