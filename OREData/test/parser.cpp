@@ -335,6 +335,169 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
 
     BOOST_TEST_MESSAGE("Testing market datum parsing...");
 
+    BOOST_TEST_MESSAGE("Testing swaption market datum parsing...");
+
+    { // test swaption normal vol ATM
+        Date d(1, Jan, 1990);
+        Real value = 0.01;
+
+        string input = "SWAPTION/RATE_NVOL/EUR/10Y/30Y/ATM";
+
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::SWAPTION);
+        BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::RATE_NVOL);
+
+        boost::shared_ptr<ore::data::SwaptionQuote> swaptionVolDatum =
+            boost::dynamic_pointer_cast<ore::data::SwaptionQuote>(datum);
+
+        BOOST_CHECK(swaptionVolDatum->ccy() == "EUR");
+        BOOST_CHECK(swaptionVolDatum->expiry() == Period(10, Years));
+        BOOST_CHECK(swaptionVolDatum->term() == Period(30, Years));
+        BOOST_CHECK(swaptionVolDatum->dimension() == "ATM");
+        BOOST_CHECK_CLOSE(swaptionVolDatum->strike(), 0.0, 1e-12);
+        BOOST_CHECK(swaptionVolDatum->quoteTag() == "");
+    }
+
+    { // test swaption normal vol smile
+        Date d(1, Jan, 1990);
+        Real value = 0.01;
+
+        string input = "SWAPTION/RATE_NVOL/EUR/EURIBOR/10Y/30Y/Smile/-0.0025";
+
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::SWAPTION);
+        BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::RATE_NVOL);
+
+        boost::shared_ptr<ore::data::SwaptionQuote> swaptionVolDatum =
+            boost::dynamic_pointer_cast<ore::data::SwaptionQuote>(datum);
+
+        BOOST_CHECK(swaptionVolDatum->ccy() == "EUR");
+        BOOST_CHECK(swaptionVolDatum->expiry() == Period(10, Years));
+        BOOST_CHECK(swaptionVolDatum->term() == Period(30, Years));
+        BOOST_CHECK(swaptionVolDatum->dimension() == "Smile");
+        BOOST_CHECK_CLOSE(swaptionVolDatum->strike(), -0.0025, 1e-12);
+        BOOST_CHECK(swaptionVolDatum->quoteTag() == "EURIBOR");
+    }
+
+    { // test swaption shifted lognormal vol smile
+        Date d(1, Jan, 1990);
+        Real value = 0.01;
+
+        string input = "SWAPTION/RATE_SLNVOL/EUR/EURIBOR/10Y/30Y/Smile/-0.0025";
+
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::SWAPTION);
+        BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::RATE_SLNVOL);
+
+        boost::shared_ptr<ore::data::SwaptionQuote> swaptionVolDatum =
+            boost::dynamic_pointer_cast<ore::data::SwaptionQuote>(datum);
+
+        BOOST_CHECK(swaptionVolDatum->ccy() == "EUR");
+        BOOST_CHECK(swaptionVolDatum->expiry() == Period(10, Years));
+        BOOST_CHECK(swaptionVolDatum->term() == Period(30, Years));
+        BOOST_CHECK(swaptionVolDatum->dimension() == "Smile");
+        BOOST_CHECK_CLOSE(swaptionVolDatum->strike(), -0.0025, 1e-12);
+        BOOST_CHECK(swaptionVolDatum->quoteTag() == "EURIBOR");
+    }
+
+    { // test swaption shift
+        Date d(1, Jan, 1990);
+        Real value = 0.01;
+
+        string input = "SWAPTION/SHIFT/EUR/EURIBOR/30Y";
+
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::SWAPTION);
+        BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::SHIFT);
+
+        boost::shared_ptr<ore::data::SwaptionShiftQuote> swaptionShiftDatum =
+            boost::dynamic_pointer_cast<ore::data::SwaptionShiftQuote>(datum);
+
+        BOOST_CHECK(swaptionShiftDatum->ccy() == "EUR");
+        BOOST_CHECK(swaptionShiftDatum->term() == Period(30, Years));
+        BOOST_CHECK(swaptionShiftDatum->quoteTag() == "EURIBOR");
+    }
+
+    { // test payer swaption ATM premium
+        Date d(1, Jan, 1990);
+        Real value = 0.01;
+
+        string input = "SWAPTION/PRICE/EUR/10Y/30Y/ATM/P";
+
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::SWAPTION);
+        BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::PRICE);
+
+        boost::shared_ptr<ore::data::SwaptionQuote> swaptionPremiumDatum =
+            boost::dynamic_pointer_cast<ore::data::SwaptionQuote>(datum);
+
+        BOOST_CHECK(swaptionPremiumDatum->ccy() == "EUR");
+        BOOST_CHECK(swaptionPremiumDatum->expiry() == Period(10, Years));
+        BOOST_CHECK(swaptionPremiumDatum->term() == Period(30, Years));
+        BOOST_CHECK(swaptionPremiumDatum->dimension() == "ATM");
+        BOOST_CHECK_CLOSE(swaptionPremiumDatum->strike(), 0.0, 1e-12);
+        BOOST_CHECK(swaptionPremiumDatum->quoteTag() == "");
+        BOOST_CHECK(swaptionPremiumDatum->isPayer() == true);
+    }
+
+    { // test receiver swaption smile premium
+        Date d(1, Jan, 1990);
+        Real value = 0.01;
+
+        string input = "SWAPTION/PRICE/EUR/EURIBOR/10Y/30Y/Smile/-0.0025/R";
+
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::SWAPTION);
+        BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::PRICE);
+
+        boost::shared_ptr<ore::data::SwaptionQuote> swaptionPremiumDatum =
+            boost::dynamic_pointer_cast<ore::data::SwaptionQuote>(datum);
+
+        BOOST_CHECK(swaptionPremiumDatum->ccy() == "EUR");
+        BOOST_CHECK(swaptionPremiumDatum->expiry() == Period(10, Years));
+        BOOST_CHECK(swaptionPremiumDatum->term() == Period(30, Years));
+        BOOST_CHECK(swaptionPremiumDatum->dimension() == "Smile");
+        BOOST_CHECK_CLOSE(swaptionPremiumDatum->strike(), -0.0025, 1e-12);
+        BOOST_CHECK(swaptionPremiumDatum->quoteTag() == "EURIBOR");
+        BOOST_CHECK(swaptionPremiumDatum->isPayer() == false);
+    }
+
+    { // test parsing throws
+        Date d(3, Mar, 2018);
+        Real value = 10;
+
+        BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "SWAPTION/543/EUR/EURIBOR/10Y/30Y/Smile/-0.0025", value),
+            QuantLib::Error);
+        BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "SWAPTION/RATE_SLNVOL/EUR/EURIBOR/TodayWasGonna/30Y/Smile/-0.0025", value),
+            QuantLib::Error);
+        BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "SWAPTION/RATE_SLNVOL/EUR/EURIBOR/10Y/BeTheDay/Smile/-0.0025", value),
+            QuantLib::Error);
+        BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "SWAPTION/RATE_SLNVOL/EUR/EURIBOR/10Y/30Y/ButTheyll/-0.0025", value),
+            QuantLib::Error);
+        BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "SWAPTION/RATE_SLNVOL/EUR/EURIBOR/10Y/30Y/Smile/NeverThrowIt", value),
+            QuantLib::Error);
+        BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "SWAPTION/RATE_SLNVOL/EUR/EURIBOR/10Y/30Y/Smile/0.001/BackToYou", value),
+            QuantLib::Error);
+    }
+
     BOOST_TEST_MESSAGE("Testing correlation market datum parsing...");
 
     { // test rate quote
