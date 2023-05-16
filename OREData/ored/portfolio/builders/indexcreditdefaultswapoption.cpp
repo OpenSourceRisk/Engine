@@ -62,24 +62,29 @@ genericEngineImpl(const std::string& curve, const boost::shared_ptr<Market> mark
     QuantLib::Handle<QuantExt::CreditVolCurve> vol = market->cdsVol(volCurveId, configuration);
 
     if (curve == "Index") {
-        QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> dpts =
-            market->defaultCurve(creditCurveId, configuration)->curve();
+        auto creditCurve = market->defaultCurve(creditCurveId, configuration);
         QuantLib::Handle<QuantLib::Quote> recovery = market->recoveryRate(creditCurveId, configuration);
-        return boost::make_shared<ENGINE>(dpts, recovery->value(), yts, vol);
+        return boost::make_shared<ENGINE>(creditCurve->curve(), recovery->value(), creditCurve->rateCurve(), yts, vol);
     } else if (curve == "Underlying") {
         std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>> dpts;
         std::vector<QuantLib::Real> recovery;
+        Handle<QuantExt::CreditCurve> firstCreditCurve;
         for (auto& c : creditCurveIds) {
-            auto tmp = market->defaultCurve(c, configuration)->curve();
-            dpts.push_back(tmp);
+            auto tmp = market->defaultCurve(c, configuration);
+            dpts.push_back(tmp->curve());
             recovery.push_back(market->recoveryRate(c, configuration)->value());
+            if (firstCreditCurve.empty())
+                firstCreditCurve = tmp;
         }
+        QL_REQUIRE(!firstCreditCurve.empty(),
+                   "IndexCdsOptionEngineBuilder::engineImpl(): no credit curve ids given, can not extract inccy "
+                   "discount rate curve");
         QuantLib::Real indexRecovery = QuantLib::Null<QuantLib::Real>();
         try {
             indexRecovery = market->recoveryRate(creditCurveId, configuration)->value();
         } catch (...) {
         }
-        return boost::make_shared<ENGINE>(dpts, recovery, yts, vol, indexRecovery);
+        return boost::make_shared<ENGINE>(dpts, recovery, firstCreditCurve->rateCurve(), yts, vol, indexRecovery);
     } else {
         QL_FAIL("IndexCdsOptionEngineBuilder: Curve Parameter value \""
                 << curve << "\" not recognised, expected Underlying or Index");
