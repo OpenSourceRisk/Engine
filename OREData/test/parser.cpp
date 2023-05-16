@@ -528,6 +528,9 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         Real value = 0.01;
 
         string input = "SWAPTION/RATE_NVOL/EUR/10Y/30Y/ATM";
+
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
         BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::SWAPTION);
         BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::RATE_NVOL);
 
@@ -547,6 +550,9 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         Real value = 0.01;
 
         string input = "SWAPTION/RATE_NVOL/EUR/EURIBOR/10Y/30Y/Smile/-0.0025";
+
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
         BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::SWAPTION);
         BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::RATE_NVOL);
 
@@ -590,6 +596,9 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         Real value = 0.01;
 
         string input = "SWAPTION/SHIFT/EUR/EURIBOR/30Y";
+
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
         BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::SWAPTION);
         BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::SHIFT);
 
@@ -606,6 +615,9 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         Real value = 0.01;
 
         string input = "SWAPTION/PRICE/EUR/10Y/30Y/ATM/P";
+
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
         BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::SWAPTION);
         BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::PRICE);
 
@@ -626,6 +638,9 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         Real value = 0.01;
 
         string input = "SWAPTION/PRICE/EUR/EURIBOR/10Y/30Y/Smile/-0.0025/R";
+
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
         BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::SWAPTION);
         BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::PRICE);
 
