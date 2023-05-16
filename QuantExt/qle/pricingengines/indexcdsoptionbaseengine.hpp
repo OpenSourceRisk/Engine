@@ -32,7 +32,8 @@ class IndexCdsOptionBaseEngine : public QuantExt::IndexCdsOption::engine {
 public:
     //! Constructor taking a default probability term structure bootstrapped from the index spreads.
     IndexCdsOptionBaseEngine(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability,
-                             QuantLib::Real recovery, const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
+                             QuantLib::Real recovery, const Handle<YieldTermStructure>& discountSwapCurrency,
+                             const Handle<YieldTermStructure>& discountTradeCollateral,
                              const QuantLib::Handle<QuantExt::CreditVolCurve>& volatility);
 
     /*! Constructor taking a vector of default probability term structures bootstrapped from the index constituent
@@ -40,7 +41,8 @@ public:
     */
     IndexCdsOptionBaseEngine(
         const std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>>& probabilities,
-        const std::vector<QuantLib::Real>& recoveries, const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
+        const std::vector<QuantLib::Real>& recoveries, const Handle<YieldTermStructure>& discountSwapCurrency,
+        const Handle<YieldTermStructure>& discountTradeCollateral,
         const QuantLib::Handle<QuantExt::CreditVolCurve>& volatility,
         QuantLib::Real indexRecovery = QuantLib::Null<QuantLib::Real>());
 
@@ -48,7 +50,8 @@ public:
     //@{
     const std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>>& probabilities() const;
     const std::vector<QuantLib::Real>& recoveries() const;
-    const QuantLib::Handle<QuantLib::YieldTermStructure> discount() const;
+    const QuantLib::Handle<QuantLib::YieldTermStructure> discountSwapCurrency() const;
+    const QuantLib::Handle<QuantLib::YieldTermStructure> discountTradeCollateral() const;
     const QuantLib::Handle<QuantExt::CreditVolCurve> volatility() const;
     //@}
 
@@ -70,7 +73,8 @@ protected:
     //! Store inputs
     std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>> probabilities_;
     std::vector<QuantLib::Real> recoveries_;
-    QuantLib::Handle<QuantLib::YieldTermStructure> discount_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> discountSwapCurrency_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> discountTradeCollateral_;
     QuantLib::Handle<QuantExt::CreditVolCurve> volatility_;
 
     //! Assumed index recovery used in the flat strike spread curve calculation if provided.
