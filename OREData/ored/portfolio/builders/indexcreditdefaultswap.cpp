@@ -59,27 +59,21 @@ boost::shared_ptr<PricingEngine> MidPointIndexCdsEngineBuilder::engineImpl(
         Real recovery = recoveryRate != Null<Real>() ? recoveryRate : mktRecovery->value();
         return boost::make_shared<QuantExt::MidPointIndexCdsEngine>(
             creditCurve->curve(), recovery,
-            inCcyDiscountCurve ? creditCurve->rateCurve()
-                               : market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)));
+            market_->discountCurve(
+                ccy.code(), configuration(inCcyDiscountCurve ? MarketContext::irCalibration : MarketContext::pricing)));
     } else if (curve == "Underlying") {
         std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
         std::vector<Real> recovery;
-        Handle<QuantExt::CreditCurve> firstCreditCurve;
         for (auto& c : creditCurveIds) {
             auto tmp = market_->defaultCurve(c, configuration(MarketContext::pricing));
             auto tmp2 = market_->recoveryRate(c, configuration(MarketContext::pricing));
             dpts.push_back(tmp->curve());
             recovery.push_back(recoveryRate != Null<Real>() ? recoveryRate : tmp2->value());
-            if (firstCreditCurve.empty())
-                firstCreditCurve = tmp;
         }
-        QL_REQUIRE(!inCcyDiscountCurve || !firstCreditCurve.empty(),
-                   "MidPointIndexCdsEngineBuilder::engineImpl(): no credit curve ids given, can not extract inccy "
-                   "discount rate curve");
         return boost::make_shared<QuantExt::MidPointIndexCdsEngine>(
             dpts, recovery,
-            inCcyDiscountCurve ? firstCreditCurve->rateCurve()
-                               : market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)));
+            market_->discountCurve(
+                ccy.code(), configuration(inCcyDiscountCurve ? MarketContext::irCalibration : MarketContext::pricing)));
     } else {
         QL_FAIL("MidPointIndexCdsEngineBuilder: Curve Parameter value \""
                 << engineParameter("Curve") << "\" not recognised, expected Underlying or Index");
