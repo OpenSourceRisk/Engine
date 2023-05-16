@@ -36,27 +36,23 @@ public:
     CommodityBasisPriceTermStructure(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal,
                                      const QuantLib::DayCounter& dc,
                                      const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-                                     const QuantLib::Handle<PriceTermStructure>& basePts,
                                      const boost::shared_ptr<CommodityIndex>& baseIndex,
                                      const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
-                                     QuantLib::Size monthOffset = 0, bool baseIsAveraging = false)
-        : PriceTermStructure(referenceDate, cal, dc), basisFec_(basisFec), basePts_(basePts),
+                                     QuantLib::Size monthOffset = 0, bool averagingBaseCashflow = false)
+        : PriceTermStructure(referenceDate, cal, dc), basisFec_(basisFec),
           baseIndex_(baseIndex), baseFec_(baseFec), addBasis_(addBasis), monthOffset_(monthOffset),
-          baseIsAveraging_(baseIsAveraging) {
-        registerWith(basePts_);
+          averagingBaseCashflow_(averagingBaseCashflow) {
         registerWith(baseIndex_);
     }
 
     CommodityBasisPriceTermStructure(const QuantLib::Date& referenceDate,
                                      const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-                                     const QuantLib::Handle<PriceTermStructure>& basePts,
                                      const boost::shared_ptr<CommodityIndex>& baseIndex,
                                      const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
-                                     QuantLib::Size monthOffset = 0, bool baseIsAveraging = false)
-        : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), basePts->dayCounter()), basisFec_(basisFec),
-          basePts_(basePts), baseIndex_(baseIndex), baseFec_(baseFec), addBasis_(addBasis),
-          monthOffset_(monthOffset), baseIsAveraging_(baseIsAveraging) {
-        registerWith(basePts_);
+                                     QuantLib::Size monthOffset = 0, bool averagingBaseCashflow = false)
+        : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), baseIndex->priceCurve()->dayCounter()), basisFec_(basisFec),
+          baseIndex_(baseIndex), baseFec_(baseFec), addBasis_(addBasis),
+          monthOffset_(monthOffset), averagingBaseCashflow_(averagingBaseCashflow) {
         registerWith(baseIndex_);
     }
 
@@ -66,78 +62,15 @@ public:
     const boost::shared_ptr<CommodityIndex>& baseIndex() const { return baseIndex_; }
     const boost::shared_ptr<FutureExpiryCalculator>& baseFutureExpiryCalculator() const { return baseFec_; }
     bool addBasis() const { return addBasis_; }
-    bool baseIsAveraging() const { return baseIsAveraging_; }
+    bool averagingBaseCashflow() const { return averagingBaseCashflow_; }
     QuantLib::Size monthOffset() const { return monthOffset_; }
 
 protected:
     boost::shared_ptr<FutureExpiryCalculator> basisFec_;
-
-    QuantLib::Handle<PriceTermStructure> basePts_;
     boost::shared_ptr<CommodityIndex> baseIndex_;
     boost::shared_ptr<FutureExpiryCalculator> baseFec_;
-
     bool addBasis_;
     QuantLib::Size monthOffset_;
-    bool baseIsAveraging_;
+    bool averagingBaseCashflow_;
 };
-
-
-class FlatCommodityBasisFutureCurve : public CommodityBasisPriceTermStructure, public QuantLib::LazyObject {
-public:
-    //! \name Constructors
-    //@{
-    //! Curve constructed from dates and quotes
-    FlatCommodityBasisFutureCurve(const QuantLib::Date& referenceDate, const double price,
-                                  const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-                                  const boost::shared_ptr<CommodityIndex>& baseIndex,
-                                  const QuantLib::Handle<PriceTermStructure>& basePts,
-                                  const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
-                                  QuantLib::Size monthOffset = 0, bool baseIsAverging = false)
-        : CommodityBasisPriceTermStructure(referenceDate, basisFec, basePts, baseIndex, baseFec, addBasis, monthOffset, baseIsAverging),
-          price_(price) {}
-    //@}
-
-    //! \name Observer interface
-    //@{
-    void update() override { QuantLib::LazyObject::update(); }
-    //@}
-
-    //! \name LazyObject interface
-    //@{
-    void performCalculations() const override{};
-    //@}
-
-    //! \name TermStructure interface
-    //@{
-    QuantLib::Date maxDate() const override { return QuantLib::Date::maxDate(); }
-    QuantLib::Time maxTime() const override { return timeFromReference(maxDate()); }
-    //@}
-
-    //! \name PriceTermStructure interface
-    //@{
-    QuantLib::Time minTime() const override { return 0.0; }
-    std::vector<QuantLib::Date> pillarDates() const override {
-        return {referenceDate() + 1 * Days, referenceDate() + 1 * Years};
-    }
-    const QuantLib::Currency& currency() const override { return basePts_->currency(); }
-    //@}
-
-    //! \name Inspectors
-    //@{
-    const std::vector<QuantLib::Time>& times() const { return {1. / 365., 1.0}; }
-
-    const std::vector<QuantLib::Real>& prices() const { return {price_, price_}; }
-    //@}
-
-protected:
-    //! \name PriceTermStructure implementation
-    //@{
-    QuantLib::Real priceImpl(QuantLib::Time t) const override { return price_; }
-    //@}
-
-private:
-    double price_;
-};
-
-
 } // namespace QuantExt

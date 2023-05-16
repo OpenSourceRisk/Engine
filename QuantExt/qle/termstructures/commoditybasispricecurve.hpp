@@ -61,9 +61,8 @@ public:
                              const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>>& basisData,
                              const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
                              const boost::shared_ptr<CommodityIndex>& baseIndex,
-                             const QuantLib::Handle<PriceTermStructure>& basePts,
                              const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
-                             QuantLib::Size monthOffset = 0, bool baseIsAverging = false,
+                             QuantLib::Size monthOffset = 0,
                              const Interpolator& interpolator = Interpolator());
     //@}
 
@@ -87,7 +86,7 @@ public:
     //@{
     QuantLib::Time minTime() const override;
     std::vector<QuantLib::Date> pillarDates() const override;
-    const QuantLib::Currency& currency() const override { return basePts_->currency(); }
+    const QuantLib::Currency& currency() const override { return baseIndex_->priceCurve()->currency(); }
     //@}
 
     //! \name Inspectors
@@ -126,11 +125,13 @@ template <class Interpolator>
 CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     const QuantLib::Date& referenceDate, const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>>& basisData,
     const boost::shared_ptr<FutureExpiryCalculator>& basisFec, const boost::shared_ptr<CommodityIndex>& baseIndex,
-    const QuantLib::Handle<PriceTermStructure>& basePts, const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
-    bool addBasis, QuantLib::Size monthOffset, bool baseIsAveraging, const Interpolator& interpolator)
-    : CommodityBasisPriceTermStructure(referenceDate, basisFec, basePts, baseIndex, baseFec, addBasis,
-                                       monthOffset, baseIsAveraging),
+    const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
+    bool addBasis, QuantLib::Size monthOffset, const Interpolator& interpolator)
+    : CommodityBasisPriceTermStructure(referenceDate, basisFec, baseIndex, baseFec, addBasis,
+                                       monthOffset, false),
       QuantLib::InterpolatedCurve<Interpolator>(interpolator), basisData_(basisData) {
+    QL_REQUIRE(baseIndex != nullptr && !baseIndex->priceCurve().empty(),
+               "CommodityBasisPriceCurve requires baseIndex with priceCurve");
     using QuantLib::Date;
     using QuantLib::Schedule;
     using QuantLib::io::iso_date;
@@ -171,7 +172,7 @@ CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
 
     // Get the first basis contract expiry date on or after the max date. Here, max date is defined as the maximum of
     // 1) last pillar date of base price curve and 2) basis curve data.
-    Date maxDate = max(basePts_->maxDate(), basisData_.rbegin()->first);
+    Date maxDate = max(baseIndex_->priceCurve()->maxDate(), basisData_.rbegin()->first);
     Date end = basisFec_->nextExpiry(true, maxDate);
 
     // Populate the base cashflows.
@@ -181,7 +182,7 @@ CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
         Date periodStart = basisContractDate - monthOffset_ * Months;
         Date periodEnd = (periodStart + 1 * Months) - 1 * Days;
         baseLeg_[basisExpiry] = Commodity::Utilities::makeCommodityCashflowForBasisFuture(
-            periodStart, periodEnd, baseIndex_, baseFec_, baseIsAveraging_);
+            periodStart, periodEnd, baseIndex_, baseFec_, averagingBaseCashflow_);
 
         // Only add to this->times_ if it is not already there. We can use dates_ for this check.
         if (find(dates_.begin(), dates_.end(), basisExpiry) == dates_.end()) {
@@ -226,7 +227,7 @@ template <class Interpolator> void CommodityBasisPriceCurve<Interpolator>::perfo
         } else {
             // If we didn't associate the basis date with a base cashflow, just ask the base pts at t. This will have
             // happened if the basis date that was passed in was not a basis contract expiry date wrt basisFec_.
-            baseValue = basePts_->price(this->times_[i], true);
+            baseValue = baseIndex_->priceCurve()->price(this->times_[i], true);
         }
 
         // Get the basis with flat extrapolation

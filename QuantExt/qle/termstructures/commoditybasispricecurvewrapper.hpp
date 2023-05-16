@@ -31,15 +31,28 @@ namespace QuantExt {
 class CommodityBasisPriceCurveWrapper : public QuantExt::CommodityBasisPriceTermStructure,
                                          public QuantLib::LazyObject {
 public:
+    CommodityBasisPriceCurveWrapper(const QuantLib::Date& referenceDate,
+                                    const boost::shared_ptr<PriceTermStructure>& priceCurve,
+                                    const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
+                                    const boost::shared_ptr<CommodityIndex>& baseIndex,
+                                    const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
+                                    QuantLib::Size monthOffset = 0, bool averagingBaseCashflow = false)
+        : CommodityBasisPriceTermStructure(referenceDate, basisFec, baseIndex, baseFec, addBasis, monthOffset,
+                                           averagingBaseCashflow),
+          priceCurve_(priceCurve) {
+        registerWith(priceCurve_);
+    }
+                                    
+
+
     CommodityBasisPriceCurveWrapper(const boost::shared_ptr<CommodityBasisPriceTermStructure>& referenceCurve,
                                      const boost::shared_ptr<CommodityIndex>& baseIndex,
                                      const boost::shared_ptr<PriceTermStructure>& priceCurve)
         : CommodityBasisPriceTermStructure(
               referenceCurve->referenceDate(), referenceCurve->calendar(), referenceCurve->dayCounter(),
-              referenceCurve->basisFutureExpiryCalculator(), baseIndex->priceCurve(), baseIndex, referenceCurve->baseFutureExpiryCalculator(),
-              referenceCurve->addBasis(), referenceCurve->monthOffset(), referenceCurve->baseIsAveraging()),
+              referenceCurve->basisFutureExpiryCalculator(), baseIndex, referenceCurve->baseFutureExpiryCalculator(),
+              referenceCurve->addBasis(), referenceCurve->monthOffset(), referenceCurve->averagingBaseCashflow()),
           priceCurve_(priceCurve) {
-        registerWith(baseIndex_);
         registerWith(priceCurve_);
     };
 

@@ -42,7 +42,6 @@ CommodityBasisFutureIndex::CommodityBasisFutureIndex(const std::string& underlyi
     QL_REQUIRE(baseFec_ != nullptr,
                "non-null future expiry calculator for the base conventions CommodityBasisFutureIndex");
     registerWith(baseIndex);
-    registerWith(baseIndex->priceCurve());
     cashflow_ = baseCashflow();
 }
 
@@ -52,7 +51,7 @@ CommodityBasisFutureIndex::CommodityBasisFutureIndex(
     : CommodityBasisFutureIndex(underlyingName, expiryDate, fixingCalendar, priceCurve->basisFutureExpiryCalculator(),
                                 priceCurve->baseIndex(), priceCurve->baseFutureExpiryCalculator(),
                                 Handle<PriceTermStructure>(priceCurve), priceCurve->addBasis(),
-                                priceCurve->monthOffset(), priceCurve->baseIsAveraging()) {}
+                                priceCurve->monthOffset(), priceCurve->averagingBaseCashflow()) {}
 
 boost::shared_ptr<CommodityIndex>
 CommodityBasisFutureIndex::clone(const QuantLib::Date& expiry,
