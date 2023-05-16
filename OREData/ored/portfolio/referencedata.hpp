@@ -201,6 +201,8 @@ public:
 
     const std::string& indexFamily() const { return indexFamily_; }
 
+    void setIndexFamily(const std::string& indexFamily) { indexFamily_ = indexFamily; }
+
 private:
     std::set<CreditIndexConstituent> constituents_;
     std::string indexFamily_;
