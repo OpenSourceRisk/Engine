@@ -342,6 +342,7 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         Real value = 0.01;
 
         string input = "CAPFLOOR/RATE_NVOL/USD/5Y/3M/0/0/0";
+
         boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
 
         BOOST_CHECK(datum->asofDate() == d);
@@ -365,29 +366,7 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         Real value = 0.01;
 
         string input = "CAPFLOOR/RATE_SLNVOL/JPY/EYTIBOR/5Y/3M/1/1/0.0075";
-        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
 
-        BOOST_CHECK(datum->asofDate() == d);
-        BOOST_CHECK(datum->quote()->value() == value);
-        BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::CAPFLOOR);
-        BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::RATE_NVOL);
-
-        boost::shared_ptr<ore::data::CapFloorQuote> capfloorVolDatum =
-            boost::dynamic_pointer_cast<ore::data::CapFloorQuote>(datum);
-
-        BOOST_CHECK(capfloorVolDatum->ccy() == "USD");
-        BOOST_CHECK(capfloorVolDatum->term() == Period(5, Years));
-        BOOST_CHECK(capfloorVolDatum->underlying() == Period(3, Months));
-        BOOST_CHECK(capfloorVolDatum->atm() == false);
-        BOOST_CHECK(capfloorVolDatum->relative() == false);
-        BOOST_CHECK_CLOSE(capfloorVolDatum->strike(), 0.0, 1e-12);
-    }
-
-    { // test capfloor shifted lognormal vol ATM w/ index name
-        Date d(1, Jan, 1990);
-        Real value = 0.01;
-
-        string input = "CAPFLOOR/RATE_SLNVOL/JPY/EYTIBOR/5Y/3M/1/1/0.0075";
         boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
 
         BOOST_CHECK(datum->asofDate() == d);
@@ -412,6 +391,7 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         Real value = 0.01;
 
         string input = "CAPFLOOR/SHIFT/USD/5Y";
+
         boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
 
         BOOST_CHECK(datum->asofDate() == d);
