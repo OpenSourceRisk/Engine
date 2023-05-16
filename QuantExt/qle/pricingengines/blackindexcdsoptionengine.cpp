@@ -75,7 +75,8 @@ void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
     // Adjusted strike spread. K' in O'Kane 2008, Section 11.7. K' in ICE paper (notation is poor).
     Real Kp = close_enough(strike, 0.0)
                   ? 0.0
-                  : runningSpread + forwardRiskyAnnuityStrike() * (strike - runningSpread) / rpv01;
+                  : runningSpread + arguments_.tradeDateNtl / cds.notional() * forwardRiskyAnnuityStrike() *
+                                        (strike - runningSpread) / rpv01;
     results_.additionalResults["adjustedStrikeSpread"] = Kp;
 
     // Read the volatility from the volatility surface
@@ -94,7 +95,6 @@ void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
     // NPV. Add the relevant notionals to the additional results also.
     results_.additionalResults["valuationDateNotional"] = cds.notional();
     results_.additionalResults["tradeDateNotional"] = arguments_.tradeDateNtl;
-    Real factor = arguments_.tradeDateNtl / cds.notional();
 
     // Check the forward before plugging it into the black formula
     QL_REQUIRE(Fp > 0.0 || close_enough(stdDev, 0.0),
@@ -104,7 +104,7 @@ void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
     // floored at 0.0, so we ensure this here. This lets us compute the black formula as well in all cases.
     Kp = std::max(Kp, 0.0);
 
-    results_.value = rpv01 * cds.notional() * blackFormula(callPut, factor * Kp, Fp, stdDev, 1.0);
+    results_.value = rpv01 * cds.notional() * blackFormula(callPut, Kp, Fp, stdDev, 1.0);
 }
 
 void BlackIndexCdsOptionEngine::priceStrikeCalculate(Real fep) const {

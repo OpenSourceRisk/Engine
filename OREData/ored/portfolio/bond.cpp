@@ -59,6 +59,7 @@ Real BondData::priceQuoteBaseValue() const {
 void BondData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "BondData");
     QL_REQUIRE(node, "No BondData Node");
+    subType_ = XMLUtils::getChildValue(node, "SubType", false);
     issuerId_ = XMLUtils::getChildValue(node, "IssuerId", false);
     creditCurveId_ = XMLUtils::getChildValue(node, "CreditCurveId", false);
     creditGroup_ = XMLUtils::getChildValue(node, "CreditGroup", false);
@@ -93,6 +94,8 @@ void BondData::fromXML(XMLNode* node) {
 
 XMLNode* BondData::toXML(XMLDocument& doc) {
     XMLNode* bondNode = doc.allocNode("BondData");
+    if (!subType_.empty())
+        XMLUtils::addChild(doc, bondNode, "SubType", subType_);
     if (!issuerId_.empty())
         XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
     if (!creditCurveId_.empty())
@@ -172,7 +175,7 @@ void BondData::initialise() {
 void BondData::populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum,
 					       const std::string& startDate, const std::string& endDate) {
     DLOG("Got BondReferenceDatum for name " << securityId_ << " overwrite empty elements in trade");
-    ore::data::populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, priceQuoteMethod_,
+    ore::data::populateFromBondReferenceData(subType_, issuerId_, settlementDays_, calendar_, issueDate_, priceQuoteMethod_,
                                              priceQuoteBaseValue_, creditCurveId_, creditGroup_, referenceCurveId_,
                                              incomeCurveId_, volatilityCurveId_, coupons_, securityId_, referenceDatum,
                                              startDate, endDate);

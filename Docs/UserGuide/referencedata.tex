@@ -11,6 +11,13 @@ Bond reference data is also used to build yield curves fitted to liquid bond pri
 The allowable types for ReferenceData is
 \begin{enumerate}
 \item \textbf{Bond} static data consists of the Leg data for a given bond.
+\item \texttt{SubType} has been added for reporting purposes, to feed into the ISDA product taxonomy, without impact on pricing. \\
+  Valid \texttt{SubType}s are: \\
+  \begin{itemize}
+    \item ABS, Corp(orate), Loans, Muni, Sovereign 
+    \item ABX, CMBX, MBX, PrimeX, TRX, iBoxx (in case the Bond represents a Credit or Bond index)
+  \end{itemize}
+  Note that the SubType field is currently optional and not covered by schema checks.
 \end{enumerate}
 
 \begin{minted}{xml}
@@ -19,6 +26,7 @@ The allowable types for ReferenceData is
   <ReferenceDatum id="SECURITY_1">
     <Type>Bond</Type>
     <BondReferenceData>
+      <SubType>Muni</SubType>
       <IssuerId>CPTY_C</IssuerId>
       <CreditCurveId>ZERO</CreditCurveId>
       <ReferenceCurveId>EURBENCHMARK-EUR-6M</ReferenceCurveId>
