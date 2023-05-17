@@ -17,7 +17,7 @@
 */
 
 /*! \file qle/indexes/commoditybasisfutureindex.hpp
-    \brief commodity index class for holding commodity basis futures price histories and forwarding.
+    \brief commodity basis future index class for holding price histories and forwarding.
     \ingroup indexes
 */
 

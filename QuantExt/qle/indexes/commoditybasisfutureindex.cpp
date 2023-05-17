@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2023  Quaternion Risk Management Ltd
+ Copyright (C) 2023 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,10 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/indexes/commoditybasisfutureindex.cpp
-    \brief equity index class for holding commodity basis future fixing histories and forwarding.
-    \ingroup indexes
-*/
 #include <qle/indexes/commoditybasisfutureindex.hpp>
 
 namespace QuantExt {
@@ -35,9 +31,9 @@ CommodityBasisFutureIndex::CommodityBasisFutureIndex(const std::string& underlyi
     : CommodityFuturesIndex(underlyingName, expiryDate, fixingCalendar, priceCurve), basisFec_(basisFec),
       baseIndex_(baseIndex), baseFec_(baseFec), addBasis_(addBasis), monthOffset_(monthOffset),
       baseIsAveraging_(baseIsAveraging) {
-    QL_REQUIRE(expiryDate_ != Date(), "non-empty expiry date expected CommodityFuturesIndex");
+    QL_REQUIRE(expiryDate_ != Date(), "non-empty expiry date expected for CommodityFuturesIndex");
     QL_REQUIRE(baseIndex_ != nullptr, "non-null baseIndex required for CommodityBasisFutureIndex");
-    QL_REQUIRE(baseFec_ != nullptr,
+    QL_REQUIRE(basisFec_ != nullptr,
                "non-null future expiry calculator for the basis conventions CommodityBasisFutureIndex");
     QL_REQUIRE(baseFec_ != nullptr,
                "non-null future expiry calculator for the base conventions CommodityBasisFutureIndex");
@@ -63,17 +59,18 @@ CommodityBasisFutureIndex::clone(const QuantLib::Date& expiry,
 }
 
 boost::shared_ptr<QuantLib::CashFlow> CommodityBasisFutureIndex::baseCashflow(const QuantLib::Date& paymentDate) const {
-    auto contractDate = Commodity::Utilities::getContractDate(expiryDate_, basisFec_);
+    auto contractDate = basisFec_->contractDate(expiryDate_);
     Date periodStart = contractDate - monthOffset_ * Months;
     Date periodEnd = (periodStart + 1 * Months) - 1 * Days;
-    return Commodity::Utilities::makeCommodityCashflowForBasisFuture(periodStart, periodEnd, baseIndex_, baseFec_,
-                                                                     baseIsAveraging_, paymentDate);
+    return makeCommodityCashflowForBasisFuture(periodStart, periodEnd, baseIndex_, baseFec_, baseIsAveraging_,
+                                               paymentDate);
 }
 
 QuantLib::Real CommodityBasisFutureIndex::pastFixing(const QuantLib::Date& fixingDate) const {
     auto basisFixing = CommodityFuturesIndex::pastFixing(fixingDate);
-    auto lambda = addBasis_ ? 1.0 : -1.0;
-    auto baseValue = cashflow_->amount();
-    return baseValue + lambda * basisFixing;
+    if (basisFixing == QuantLib::Null<Real>()) {
+        return QuantLib::Null<Real>();
+    }
+    return addBasis_ ? cashflow_->amount() + basisFixing : cashflow_->amount() - basisFixing;
 }
 } // namespace QuantExt

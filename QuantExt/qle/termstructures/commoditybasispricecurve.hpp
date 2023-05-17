@@ -177,11 +177,10 @@ CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
 
     // Populate the base cashflows.
     while (basisExpiry <= end) {
-
-        Date basisContractDate = Commodity::Utilities::getContractDate(basisExpiry, basisFec_);
+        Date basisContractDate = basisFec_->contractDate(basisExpiry);
         Date periodStart = basisContractDate - monthOffset_ * Months;
         Date periodEnd = (periodStart + 1 * Months) - 1 * Days;
-        baseLeg_[basisExpiry] = Commodity::Utilities::makeCommodityCashflowForBasisFuture(
+        baseLeg_[basisExpiry] = makeCommodityCashflowForBasisFuture(
             periodStart, periodEnd, baseIndex_, baseFec_, averagingBaseCashflow_);
 
         // Only add to this->times_ if it is not already there. We can use dates_ for this check.

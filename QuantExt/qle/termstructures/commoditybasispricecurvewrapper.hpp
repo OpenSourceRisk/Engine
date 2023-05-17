@@ -17,7 +17,7 @@
 */
 
 /*! \file qle/termstructures/commoditybasispricecurvewrapper.hpp
-    \brief A commodity price curve created from a base price curve and a collection of basis quotes
+    \brief A commodity price curve created from a generic price curve and a basis curve
     \ingroup termstructures
 */
 

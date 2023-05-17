@@ -27,11 +27,6 @@
 #include <qle/time/futureexpirycalculator.hpp>
 
 namespace QuantExt {
-namespace Commodity {
-namespace Utilities {
-
-//! Get the contract date from an expiry date
-QuantLib::Date getContractDate(const QuantLib::Date& expiry, const boost::shared_ptr<FutureExpiryCalculator>& fec);
 
 //! Make a commodity indexed cashflow
 boost::shared_ptr<CashFlow>
@@ -40,5 +35,3 @@ makeCommodityCashflowForBasisFuture(const QuantLib::Date& start, const QuantLib:
                                     const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool baseIsAveraging,
                                     const QuantLib::Date& paymentDate = QuantLib::Date());
 } // namespace Utilities
-} // namespace Commodity
-} // namespace QuantExt

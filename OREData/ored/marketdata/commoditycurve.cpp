@@ -361,20 +361,20 @@ void CommodityCurve::buildCrossCurrencyPriceCurve(
 }
 
 void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurveConfig& config,
-                                          const Handle<PriceTermStructure>& basePts,
-                                          const Loader& loader) {
+                                          const Handle<PriceTermStructure>& basePts, const Loader& loader) {
 
     LOG("CommodityCurve: start building commodity basis curve.");
 
     QL_REQUIRE(!basePts.empty() && basePts.currentLink() != nullptr,
-               "Can not build commodityBasisCurve '" << config.curveID() << "'without valid baseCurve");
+               "Internal error in commoditycurve: Can not build commodityBasisCurve '" << config.curveID()
+                                                                                       << "'without empty baseCurve");
 
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-    
+
     // We need to have commodity future conventions for both the base curve and the basis curve
     QL_REQUIRE(conventions->has(config.conventionsId()), "Commodity conventions " << config.conventionsId()
-                                                                                 << " requested by commodity config "
-                                                                                 << config.curveID() << " not found");
+                                                                                  << " requested by commodity config "
+                                                                                  << config.curveID() << " not found");
     auto basisConvention =
         boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(config.conventionsId()));
     QL_REQUIRE(basisConvention,

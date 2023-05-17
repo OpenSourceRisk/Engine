@@ -2243,7 +2243,7 @@ ScenarioSimMarket::ScenarioSimMarket(
             case RiskFactorKey::KeyType::CommodityCurve: {
 
                 std::vector<std::string> curveNames;
-
+                std::vector<std::string> basisCurves;
                 for (const auto& name : param.second.second) {
                     Handle<PriceTermStructure> initialCommodityCurve =
                         initMarket->commodityPriceCurve(name, configuration);
@@ -2253,9 +2253,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                     if (basisCurve != nullptr) {
                         curveNames.push_back(name);
                     } else {
-                        curveNames.insert(curveNames.begin(), name);
+                        basisCurves.push_back(name);
                     }
                 }
+                curveNames.insert(curveNames.end(), basisCurves.begin(), basisCurves.end());
+
                 for (const auto& name : curveNames) {
 
                     bool simDataWritten = false;
@@ -2345,7 +2347,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                         } else{
                             auto baseIndex = commodityIndices_.find(
                                 {Market::defaultConfiguration, orgBasisCurve->baseIndex()->underlyingName()});
-                            QL_REQUIRE(baseIndex != commodityIndices_.end(), "Couldn't find underlying base curve");
+                            QL_REQUIRE(baseIndex != commodityIndices_.end(),
+                                       "Internal error in scenariosimmarket: couldn't find underlying base curve to "
+                                       "while building commodity basis curve "
+                                           << name);
                             pts = Handle<PriceTermStructure>(boost::make_shared<CommodityBasisPriceCurveWrapper>(
                                 orgBasisCurve, baseIndex->second.currentLink(), priceCurve));
                         } 
