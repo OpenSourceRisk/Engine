@@ -72,6 +72,9 @@
       <xs:element type="bondBasketData" name="BondBasketData"/>
       <xs:element type="equityPositionData" name="EquityPositionData"/>
       <xs:element type="equityOptionPositionData" name="EquityOptionPositionData"/>
+      <xs:element type="totalReturnSwapData" name="TotalReturnSwapData"/>
+      <xs:element type="totalReturnSwapData" name="ContractForDifferenceData"/>
+      <xs:element type="compositeTradeData" name="CompositeTradeData"/>
 
     </xs:choice>
   </xs:group>
@@ -1036,7 +1039,14 @@
 
   <xs:simpleType name="oreTradeType">
     <xs:restriction base="xs:string">
-
+      <xs:enumeration value="CompositeTrade"/>
+      <xs:enumeration value="ConvertibleBond"/>
+      <xs:enumeration value="Ascot"/>
+      <xs:enumeration value="TotalReturnSwap"/>
+      <xs:enumeration value="ContractForDifference"/>
+      <xs:enumeration value="EquityPosition"/>
+      <xs:enumeration value="EquityOptionPosition"/>
+      <xs:enumeration value="BondPosition"/>
       <xs:enumeration value="MultiLegOption"/>
       <xs:enumeration value="IndexCreditDefaultSwap"/>
       <xs:enumeration value="IndexCreditDefaultSwapOption"/>
@@ -1045,7 +1055,6 @@
       <xs:enumeration value="BondTRS"/>
       <xs:enumeration value="BondRepo"/>
       <xs:enumeration value="CreditLinkedSwap"/>
-      
       <xs:enumeration value="CrossCurrencySwap"/>
       <xs:enumeration value="InflationSwap"/>
       <xs:enumeration value="Swap"/>
@@ -1908,6 +1917,96 @@
       <xs:element type="convertibleBondData" name="ConvertibleBondData"/>
       <xs:element type="optionData" name="OptionData"/>
       <xs:element type="fundingData" name="ReferenceSwapData" maxOccurs="1" minOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="trsUnderlyingData">
+    <xs:sequence>
+      <xs:choice maxOccurs="unbounded">
+	<xs:element name="Derivative">
+          <xs:complexType>
+            <xs:sequence>
+	      <xs:element type="xs:string" name="Id"/>
+	      <xs:element name="Trade">
+		<xs:complexType>
+		  <xs:sequence>
+		    <xs:element type="oreTradeType" name="TradeType"/>
+		    <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+		    <xs:group ref="orePlusTradeData"/>
+		  </xs:sequence>
+		  <xs:attribute type="xs:string" name="id"/>
+		</xs:complexType>
+	      </xs:element>
+	    </xs:sequence>
+	  </xs:complexType>
+	</xs:element>
+	<xs:element name="Trade">
+	  <xs:complexType>
+	    <xs:sequence>
+	      <xs:element type="oreTradeType" name="TradeType"/>
+	      <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+	      <xs:group ref="oreTradeData"/>
+	    </xs:sequence>
+	  <xs:attribute type="xs:string" name="id"/>
+	  </xs:complexType>
+	</xs:element>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="trsReturnData">
+    <xs:all>
+      <xs:element type="xs:boolean" name="Payer"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="scheduleData" name="ScheduleData"/>
+      <xs:element type="xs:string" name="ObservationLag" minOccurs="0"/>
+      <xs:element type="businessDayConvention" name="ObservationConvention" minOccurs="0"/>
+      <xs:element type="calendar" name="ObservationCalendar" minOccurs="0"/>
+      <xs:element type="paymentLag" name="PaymentLag" minOccurs="0"/>
+      <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="0"/>
+      <xs:element type="calendar" name="PaymentCalendar" minOccurs="0"/>
+      <xs:element name="PaymentDates" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="date" name="PaymentDate" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="xs:float" name="InitialPrice" minOccurs="0"/>
+      <xs:element type="extendedCurrencyCode" name="InitialPriceCurrency" minOccurs="0"/>
+      <xs:element type="fxTermsData" name="FXTerms" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:boolean" name="PayUnderlyingCashFlowsImmediately" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:simpleType name="trsNotionalType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="PeriodReset"/>
+      <xs:enumeration value="DailyReset"/>
+      <xs:enumeration value="Fixed"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="trsFundingData">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element type="xs:integer" name="FundingResetGracePeriod"/>
+      <xs:element type="trsNotionalType" name="NotionalType"/>
+      <xs:element type="legData" name="LegData"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="trsAdditionalCashflowData">
+    <xs:sequence>
+      <xs:element type="legData" name="LegData"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="totalReturnSwapData">
+    <xs:all>
+      <xs:element type="trsUnderlyingData" name="UnderlyingData"/>
+      <xs:element type="trsReturnData" name="ReturnData"/>
+      <xs:element type="trsFundingData" name="FundingData" minOccurs="0"/>
+      <xs:element type="trsAdditionalCashflowData" name="AdditionalCashflowData" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
