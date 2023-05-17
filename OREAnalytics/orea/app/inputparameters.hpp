@@ -107,7 +107,6 @@ public:
 
     // Setters for sensi analytics
     void setXbsParConversion(bool b) { xbsParConversion_ = b; }
-    void setAnalyticFxSensis(bool b) { analyticFxSensis_ = b; }
     void setParSensi(bool b) { parSensi_ = b; }
     void setAlignPillars(bool b) { alignPillars_ = b; }
     void setOutputJacobi(bool b) { outputJacobi_ = b; }
@@ -315,7 +314,6 @@ public:
      * Getters for sensi analytics
      *****************************/
     bool xbsParConversion() { return xbsParConversion_; }
-    bool analyticFxSensis() { return analyticFxSensis_; }
     bool parSensi() const { return parSensi_; };
     bool alignPillars() const { return alignPillars_; };
     bool outputJacobi() const { return outputJacobi_; };
@@ -520,7 +518,6 @@ protected:
      * SENSITIVITY analytic
      **********************/
     bool xbsParConversion_ = false;
-    bool analyticFxSensis_ = true;
     bool parSensi_ = false;
     bool outputJacobi_ = false;
     bool alignPillars_ = false;
