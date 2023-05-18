@@ -63,7 +63,6 @@
       <xs:element type="indexCreditDefaultSwapData" name="IndexCreditDefaultSwapData"/>
       <xs:element type="indexCreditDefaultSwapOptionData" name="IndexCreditDefaultSwapOptionData"/>
       <xs:element type="multiLegOptionData" name="MultiLegOptionData"/>
-
       <xs:element type="ascotData" name="AscotData"/>
       <xs:element type="convertibleBondData" name="ConvertibleBondData"/>
       <xs:element type="tlockData" name="TreasuryLockData"/>
@@ -75,7 +74,6 @@
       <xs:element type="totalReturnSwapData" name="TotalReturnSwapData"/>
       <xs:element type="totalReturnSwapData" name="ContractForDifferenceData"/>
       <xs:element type="compositeTradeData" name="CompositeTradeData"/>
-
     </xs:choice>
   </xs:group>
 
@@ -1044,6 +1042,7 @@
       <xs:enumeration value="Ascot"/>
       <xs:enumeration value="TotalReturnSwap"/>
       <xs:enumeration value="ContractForDifference"/>
+      <xs:enumeration value="CBO"/>
       <xs:enumeration value="EquityPosition"/>
       <xs:enumeration value="EquityOptionPosition"/>
       <xs:enumeration value="BondPosition"/>
