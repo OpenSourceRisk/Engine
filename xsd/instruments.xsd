@@ -2566,6 +2566,20 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:simpleType name="notionalCalculation">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value=""/>
+      <xs:enumeration value="Sum"/>
+      <xs:enumeration value="Mean"/>
+      <xs:enumeration value="Average"/>
+      <xs:enumeration value="First"/>
+      <xs:enumeration value="Last"/>
+      <xs:enumeration value="Min"/>
+      <xs:enumeration value="Max"/>
+      <xs:enumeration value="Override"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:complexType name="compositeTradeData">
     <xs:all>
       <xs:element type="currencyCode" name="Currency"/>
