@@ -289,7 +289,7 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
 
                 Array smileBfVol(x.size());
                 for (Size i = 0; i < x.size(); ++i)
-                    smileBfVol[i] = std::exp(x[i]) + std::max(0.5 * abs(rrQuotes[i]) - atmVol, 0.0);
+                    smileBfVol[i] = std::exp(x[i]) + std::max(0.5 * std::abs(rrQuotes[i]) - atmVol, 0.0);
 
                 // compute the call/put vols ....
 
