@@ -33,11 +33,15 @@ namespace data {
 class StructuredConfigurationErrorMessage : public StructuredMessage {
 public:
     StructuredConfigurationErrorMessage(const std::string& configurationType, const std::string& configurationId,
-                                        const std::string& exceptionType, const std::string& exceptionWhat)
+                                        const std::string& exceptionType, const std::string& exceptionWhat,
+                                        const std::map<std::string, std::string>& subFields = {})
         : StructuredMessage(Category::Error, Group::Configuration, exceptionWhat,
                             std::map<string, string>({{"exceptionType", exceptionType},
                                                       {"configurationType", configurationType},
-                                                      {"configurationId", configurationId}})) {}
+                                                      {"configurationId", configurationId}})) {
+        if (!subFields.empty())
+            subFields_.insert(subFields.begin(), subFields.end());
+    }
 };
 
 } // namespace data
