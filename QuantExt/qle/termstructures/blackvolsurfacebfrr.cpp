@@ -255,11 +255,11 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
         }
 
         /* set initial guess for smile butterfly vol := broker butterfly vol
-           we optimise in z = log( bf - max( 0.5 * abs(rr) - atmVol, 0.0 ) */
+           we optimise in z = log( bf - 0.5 * abs(rr) + atmVol ) */
 
         Array guess(deltas.size());
         for (Size i = 0; i < deltas.size(); ++i) {
-            guess[i] = std::log(std::max(0.0001, bfQuotes[i] - std::max(0.5 * std::abs(rrQuotes[i]) - atmVol, 0.0)));
+            guess[i] = std::log(std::max(0.0001, bfQuotes[i] - 0.5 * std::abs(rrQuotes[i]) + atmVol));
         }
 
         /* define the target function to match up the butterfly market values and smile values */
@@ -289,7 +289,7 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
 
                 Array smileBfVol(x.size());
                 for (Size i = 0; i < x.size(); ++i)
-                    smileBfVol[i] = std::exp(x[i]) + std::max(0.5 * std::abs(rrQuotes[i]) - atmVol, 0.0);
+                    smileBfVol[i] = std::exp(x[i]) + 0.5 * abs(rrQuotes[i]) - atmVol;
 
                 // compute the call/put vols ....
 
