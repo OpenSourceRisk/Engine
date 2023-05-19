@@ -132,6 +132,9 @@ instruments/subperiodsswap.cpp
 instruments/syntheticcdo.cpp
 instruments/tenorbasisswap.cpp
 instruments/varianceswap.cpp
+instruments/ascot.cpp
+instruments/convertiblebond.cpp
+instruments/convertiblebond2.cpp
 math/blockmatrixinverse.cpp
 math/deltagammavar.cpp
 math/differentialevolution_mt.cpp
@@ -145,6 +148,8 @@ methods/multipathgeneratorbase.cpp
 methods/multipathvariategenerator.cpp
 methods/projectedbufferedmultipathgenerator.cpp
 methods/projectedvariatemultipathgenerator.cpp
+methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
+methods/fdmdefaultableequityjumpdiffusionop.cpp
 models/annuitymapping.cpp
 models/basket.cpp
 models/carrmadanarbitragecheck.cpp
@@ -197,6 +202,7 @@ models/yoycapfloorhelper.cpp
 models/yoyinflationmodeltermstructure.cpp
 models/yoyswaphelper.cpp
 models/zeroinflationmodeltermstructure.cpp
+models/defaultableequityjumpdiffusionmodel.cpp
 pricingengines/accrualbondrepoengine.cpp
 pricingengines/analyticbarrierengine.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
@@ -257,6 +263,11 @@ pricingengines/oiccbasisswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
 pricingengines/varianceswapgeneralreplicationengine.cpp
 pricingengines/volatilityfromvarianceswapengine.cpp
+pricingengines/binomialconvertibleengine.cpp
+pricingengines/discretizedconvertible.cpp
+pricingengines/fdconvertiblebondevents.cpp
+pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
+pricingengines/intrinsicascotengine.cpp
 processes/commodityschwartzstateprocess.cpp
 processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
@@ -550,6 +561,9 @@ instruments/syntheticcdo.hpp
 instruments/tenorbasisswap.hpp
 instruments/vanillaforwardoption.hpp
 instruments/varianceswap.hpp
+instruments/ascot.hpp
+instruments/convertiblebond.hpp
+instruments/convertiblebond2.hpp
 interpolators/optioninterpolator2d.hpp
 math/blockmatrixinverse.hpp
 math/constantinterpolation.hpp
@@ -578,6 +592,8 @@ methods/projectedbufferedmultipathgenerator.hpp
 methods/projectedbufferedmultipathgeneratorfactory.hpp
 methods/projectedvariatemultipathgenerator.hpp
 methods/projectedvariatepathgeneratorfactory.hpp
+methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
+methods/fdmdefaultableequityjumpdiffusionop.hpp
 models/annuitymapping.hpp
 models/basket.hpp
 models/blackscholesmodelwrapper.hpp
@@ -643,6 +659,8 @@ models/lgmimpliedyieldtermstructure.hpp
 models/lgmvectorised.hpp
 models/linearannuitymapping.hpp
 models/linkablecalibratedmodel.hpp
+models/marketobserver.hpp
+models/modelbuilder.hpp
 models/modelimpliedpricetermstructure.hpp
 models/modelimpliedyieldtermstructure.hpp
 models/normalsabr.hpp
@@ -658,6 +676,7 @@ models/yoycapfloorhelper.hpp
 models/yoyinflationmodeltermstructure.hpp
 models/yoyswaphelper.hpp
 models/zeroinflationmodeltermstructure.hpp
+models/defaultableequityjumpdiffusionmodel.hpp
 pricingengines/accrualbondrepoengine.hpp
 pricingengines/amccalculator.hpp
 pricingengines/analyticbarrierengine.hpp
@@ -719,6 +738,12 @@ pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
 pricingengines/varianceswapgeneralreplicationengine.hpp
 pricingengines/volatilityfromvarianceswapengine.hpp
+pricingengines/binomialconvertibleengine.hpp
+pricingengines/discretizedconvertible.hpp
+pricingengines/fdconvertiblebondevents.hpp
+pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
+pricingengines/intrinsicascotengine.hpp
+pricingengines/tflattice.hpp
 processes/commodityschwartzstateprocess.hpp
 processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
