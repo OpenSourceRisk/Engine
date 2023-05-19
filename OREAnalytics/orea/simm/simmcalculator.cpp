@@ -80,7 +80,7 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
 
         if (isSchedule) {
             if (!quiet_ && determineWinningRegulations) {
-                WLOG(ore::data::StructuredTradeWarningMessage(cr.tradeId, "", "SIMM calculator", "Skipping over Schedule CRIF record"));
+                WLOG(ore::data::StructuredTradeWarningMessage(cr.tradeId, cr.tradeType, "SIMM calculator", "Skipping over Schedule CRIF record"));
             } 
             continue;
         }

@@ -30,9 +30,16 @@ namespace analytics {
 
 class StructuredAnalyticsErrorMessage : public ore::data::StructuredMessage {
 public:
-    StructuredAnalyticsErrorMessage(const std::string& exceptionType, const std::string& exceptionWhat)
-        : StructuredMessage(Category::Error, Group::Analytics, exceptionWhat,
-                            std::map<std::string, std::string>({{"exceptionType", exceptionType}})) {}
+    StructuredAnalyticsErrorMessage(const std::string& analyticType, const std::string& exceptionType,
+                                    const std::string& exceptionWhat,
+                                    const std::map<std::string, std::string>& subFields = {})
+        : StructuredMessage(
+              Category::Error, Group::Analytics, exceptionWhat,
+              std::map<std::string, std::string>({{"exceptionType", exceptionType}, {"analyticType", analyticType}})) {
+
+        if (!subFields.empty())
+            subFields_.insert(subFields.begin(), subFields.end());
+    }
 };
 
 } // namespace analytics
