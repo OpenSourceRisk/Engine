@@ -1377,15 +1377,6 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 
     // Final Nominal Return at Maturity
     if (finalNomFlow) {
-        // boost::shared_ptr<QuantLib::Coupon> coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back());
-        // if (coupon) {
-        //     double finalNomFlow = coupon->nominal();
-        //     Date finalDate = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back())->date();
-        //     if (finalNomFlow != 0)
-        //         leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(finalNomFlow, finalDate)));
-        // } else {
-        //     ALOG("The reference leg's last cash flow is not a coupon, we cannot create a final exchange flow");
-        // }
         auto coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back());
         QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
         double finalNomFlow = (excludeIndexing ? unpackIndexedCoupon(coupon) : coupon)->nominal();
@@ -1534,16 +1525,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     }
 
     // QuantLib CPILeg automatically adds a Notional Cashflow at maturity date on a CPI swap
-    // If Notional Exchange set to false, remove the final cashflow.
     if (!data.notionalFinalExchange()) {
-        // QL_REQUIRE(n > 1, "Cannot have Notional Final Exchange with just a single cashflow");
-        // boost::shared_ptr<CPICashFlow> cpicf = boost::dynamic_pointer_cast<CPICashFlow>(leg[n - 1]);
-        // We do not need this check that the last coupon payment date matches the final CPI cash flow date, this is
-        // identical by construction, see QuantLib::CPILeg or QuantExt::CPILeg.
-        // Moreover, we may have no coupons and just a single fow at the end so that leg[n - 2] causes a problem.
-        // boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(leg[n - 2]);
-        // if (cpicf && (cpicf->date() == coupon->date()))
-        //   leg.pop_back();
         leg.pop_back();
     }
 
@@ -1910,13 +1892,6 @@ Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swa
 
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
 
-    // Not used any more in the digital CMS leg of QuantLib 1.25
-    // Calendar paymentCalendar;
-    // if (data.paymentCalendar().empty())
-    //     paymentCalendar = schedule.calendar();
-    // else
-    //     paymentCalendar = parseCalendar(data.paymentCalendar());
-
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     vector<double> spreads =
@@ -2090,10 +2065,6 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
         paymentCalendar = schedule.calendar();
     else
         paymentCalendar = parseCalendar(data.paymentCalendar());
-
-    // replace the value in schedule data
-    /* LegData new_data = data;
-     string hi = new_data.;*/
 
     vector<double> spreads = ore::data::buildScheduledVectorNormalised(cmsSpreadData->spreads(),
                                                                        cmsSpreadData->spreadDates(), schedule, 0.0);

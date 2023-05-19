@@ -332,6 +332,7 @@ marketdata/curvespec.hpp
 marketdata/curvespecparser.hpp
 marketdata/defaultcurve.hpp
 marketdata/dependencygraph.hpp
+marketdata/dummymarket.hpp
 marketdata/equitycurve.hpp
 marketdata/equityvolcurve.hpp
 marketdata/expiry.hpp
