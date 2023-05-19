@@ -1338,5 +1338,17 @@ std::ostream& operator<<(std::ostream& os, const CreditPortfolioSensitivityDecom
     }
 }
 
+QuantLib::Pillar::Choice parsePillarChoice(const std::string& s) {
+    if (s == "MaturityDate")
+        return QuantLib::Pillar::MaturityDate;
+    else if (s == "LastRelevantDate")
+        return QuantLib::Pillar::LastRelevantDate;
+    else if (s == "CustomDate")
+        return QuantLib::Pillar::CustomDate;
+    else {
+        QL_FAIL("PillarChoice '" << s << "' not recognized, expected MaturityDate, LastRelevantDate, CustomDate");
+    }
+}
+
 } // namespace data
 } // namespace ore

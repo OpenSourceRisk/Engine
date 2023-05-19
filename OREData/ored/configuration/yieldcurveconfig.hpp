@@ -23,16 +23,20 @@
 
 #pragma once
 
-#include <boost/none.hpp>
-#include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
-#include <map>
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/utilities/xmlutils.hpp>
+
 #include <ql/patterns/visitor.hpp>
 #include <ql/types.hpp>
+#include <ql/termstructures/bootstraphelper.hpp>
+
+#include <boost/none.hpp>
+#include <boost/optional.hpp>
+#include <boost/shared_ptr.hpp>
+
 #include <set>
+#include <map>
 
 namespace ore {
 namespace data {
@@ -90,6 +94,7 @@ public:
     // TODO: why typeID?
     const string& typeID() const { return typeID_; }
     const string& conventionsID() const { return conventionsID_; }
+    const QuantLib::Pillar::Choice pillarChoice() const { return pillarChoice_; }
     const vector<pair<string, bool>>& quotes() const { return quotes_; }
     //@}
 
@@ -122,6 +127,7 @@ private:
     Type type_;
     string typeID_;
     string conventionsID_;
+    QuantLib::Pillar::Choice pillarChoice_ = QuantLib::Pillar::LastRelevantDate;
 };
 
 //! Direct yield curve segment
