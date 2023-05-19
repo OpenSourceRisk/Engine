@@ -23,6 +23,7 @@
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <qle/instruments/payment.hpp>
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -104,10 +105,13 @@ bool SingleBarrierOptionWrapper::exercise() const {
             if (eqfxIndex) {
                 Date d = calendar_.adjust(startDate_);
                 while (d < today && !trigger) {
-                    Real fixing = eqfxIndex->pastFixing(d);                    
+                    Real fixing = eqfxIndex->pastFixing(d);
                     if (fixing == 0.0 || fixing == Null<Real>()) {
-                        ALOG("Got invalid fixing for index " << index_->name() << " on " << d
-                                                             << "Skipping this date, assuming no trigger");
+                        ALOG(StructuredMessage(
+                            StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
+                            "Got invalid fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
+                                ", Skipping this date, assuming no trigger",
+                            std::map<string, string>({{"exceptionType", "Invalid or missing fixings"}})));
                     } else {
                         // This is so we can use pastIndex and not fail on a missing fixing to be
                         // consistent with previous implemention, however maybe we should use fixing
@@ -158,8 +162,11 @@ bool DoubleBarrierOptionWrapper::exercise() const {
                 while (d < today && !trigger) {
                     Real fixing = eqfxIndex->pastFixing(d);
                     if (fixing == 0.0 || fixing == Null<Real>()) {
-                        ALOG("Got invalid fixing for index " << index_->name() << " on " << d
-                                                             << "Skipping this date, assuming no trigger");
+                        ALOG(StructuredMessage(
+                            StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
+                            "Got invalid fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
+                                ", Skipping this date, assuming no trigger",
+                            std::map<string, string>({{"exceptionType", "Invalid or missing fixings"}})));
                     } else {
                         trigger = checkBarrier(fixing, barrierLow_, barrierHigh_);
                     }
