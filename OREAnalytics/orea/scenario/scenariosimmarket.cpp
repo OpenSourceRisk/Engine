@@ -2251,9 +2251,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         boost::dynamic_pointer_cast<QuantExt::CommodityBasisPriceTermStructure>(
                             initialCommodityCurve.currentLink());
                     if (basisCurve != nullptr) {
-                        curveNames.push_back(name);
-                    } else {
                         basisCurves.push_back(name);
+                    } else {
+                        curveNames.push_back(name);
                     }
                 }
                 curveNames.insert(curveNames.end(), basisCurves.begin(), basisCurves.end());
