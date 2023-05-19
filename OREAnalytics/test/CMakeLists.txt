@@ -18,8 +18,6 @@ sensitivityperformance.cpp
 sensitivityperformanceplus.cpp
 shiftscenariogenerator.cpp
 simulationmeasures.cpp
-simm.cpp
-simmisdaunittests.cpp
 stresstest.cpp
 swapperformance.cpp
 nettedexpsoure.cpp
