@@ -178,6 +178,7 @@ CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     // Populate the base cashflows.
     while (basisExpiry <= end) {
         Date basisContractDate = basisFec_->contractDate(basisExpiry);
+        basisContractDate = Date(1, basisContractDate.month(), basisContractDate.year()) - monthOffset_ * Months;
         Date periodStart = basisContractDate - monthOffset_ * Months;
         Date periodEnd = (periodStart + 1 * Months) - 1 * Days;
         baseLeg_[basisExpiry] = makeCommodityCashflowForBasisFuture(

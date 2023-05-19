@@ -60,7 +60,7 @@ CommodityBasisFutureIndex::clone(const QuantLib::Date& expiry,
 
 boost::shared_ptr<QuantLib::CashFlow> CommodityBasisFutureIndex::baseCashflow(const QuantLib::Date& paymentDate) const {
     auto contractDate = basisFec_->contractDate(expiryDate_);
-    Date periodStart = contractDate - monthOffset_ * Months;
+    Date periodStart = Date(1,contractDate.month(), contractDate.year()) - monthOffset_ * Months;
     Date periodEnd = (periodStart + 1 * Months) - 1 * Days;
     return makeCommodityCashflowForBasisFuture(periodStart, periodEnd, baseIndex_, baseFec_, baseIsAveraging_,
                                                paymentDate);
