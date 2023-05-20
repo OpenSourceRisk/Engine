@@ -1650,7 +1650,7 @@ void YieldCurve::addSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
                     swapQuote->quote(), swapTenor, swapConvention->fixedCalendar(), swapConvention->fixedFrequency(),
                     swapConvention->fixedConvention(), swapConvention->fixedDayCounter(), swapConvention->index(),
                     Handle<Quote>(), 0 * Days, discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
-                    swapSegment->pillarChoice());
+                    Null<Natural>(), swapSegment->pillarChoice());
             }
 
             instruments.push_back(swapHelper);
