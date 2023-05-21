@@ -1,7 +1,6 @@
 # cpp files, this list is maintained manually
 
-set(OREData-Test_SRC
-adjustmentfactors.cpp
+set(OREData-Test_SRC adjustmentfactors.cpp
 basecorrelationcurve.cpp
 bond.cpp
 calendaradjustment.cpp

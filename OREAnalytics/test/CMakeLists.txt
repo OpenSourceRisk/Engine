@@ -4,6 +4,7 @@ set(OREAnalytics-Test_SRC aggregationscenariodata.cpp
 amcbermudanswaption.cpp
 cube.cpp
 historicalscenariogenerator.cpp
+nettedexpsoure.cpp
 observationmode.cpp
 parsensitivityanalysis.cpp
 parsensitivityanalysismanual.cpp
@@ -20,7 +21,6 @@ shiftscenariogenerator.cpp
 simulationmeasures.cpp
 stresstest.cpp
 swapperformance.cpp
-nettedexpsoure.cpp
 testmarket.cpp
 testportfolio.cpp
 testsuite.cpp)
