@@ -209,8 +209,8 @@ boost::shared_ptr<LegBuilder> EngineFactory::legBuilder(const string& legType) {
     return it->second;
 }
 
-set<std::pair<string, boost::shared_ptr<ModelBuilder>>> EngineFactory::modelBuilders() const {
-    set<std::pair<string, boost::shared_ptr<ModelBuilder>>> res;
+set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>> EngineFactory::modelBuilders() const {
+    set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>> res;
     for (auto const& b : builders_) {
         res.insert(b.second->modelBuilders().begin(), b.second->modelBuilders().end());
     }

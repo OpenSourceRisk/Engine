@@ -1,0 +1,466 @@
+Combination Id|Group|Risk Measure|Element of Calculation Tested|Sensitivity Ids|Passes Required|SIMM Delta|SIMM Vega|SIMM Curvature|SIMM Base Corr|SIMM AddOn|SIMM Benchmark
+C1|Rates & Fx|Delta|IR Risk Weight (regular, 2w)|S_IR_1|None|464000000.0|0.0|0.0|0.0|0.0|464000000.0
+C2|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_2|None|282000000.0|0.0|0.0|0.0|0.0|282000000.0
+C3|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_3|None|118000000.0|0.0|0.0|0.0|0.0|118000000.0
+C4|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_4|None|177000000.0|0.0|0.0|0.0|0.0|177000000.0
+C5|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_5|None|59000000.0|0.0|0.0|0.0|0.0|59000000.0
+C6|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_6|None|98000000.0|0.0|0.0|0.0|0.0|98000000.0
+C7|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_7|None|245000000.0|0.0|0.0|0.0|0.0|245000000.0
+C8|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_8|None|510000000.0|0.0|0.0|0.0|0.0|510000000.0
+C9|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_9|None|1275000000.0|0.0|0.0|0.0|0.0|1275000000.0
+C10|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_10|None|1785000000.0|0.0|0.0|0.0|0.0|1785000000.0
+C11|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_11|None|212000000.0|0.0|0.0|0.0|0.0|212000000.0
+C12|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_12|None|213000000.0|0.0|0.0|0.0|0.0|213000000.0
+C13|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_13|None|104000000.0|0.0|0.0|0.0|0.0|104000000.0
+C14|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_14|None|204000000.0|0.0|0.0|0.0|0.0|204000000.0
+C15|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_15|None|540000000.0|0.0|0.0|0.0|0.0|540000000.0
+C16|Rates & Fx|Delta|IR Risk Weight (regular)|S_IR_16|None|496000000.0|0.0|0.0|0.0|0.0|496000000.0
+C17|Rates & Fx|Delta|IR Risk Weight (inflation)|S_IR_17|None|470000000.0|0.0|0.0|0.0|0.0|470000000.0
+C18|Rates & Fx|Delta|IR Risk Weight (xccy)|S_IR_18|None|600000000.0|0.0|0.0|0.0|0.0|600000000.0
+C19|Rates & Fx|Delta|IR Risk Weight (low vol, 2w)|S_IR_19|None|14000000.0|0.0|0.0|0.0|0.0|14000000.0
+C20|Rates & Fx|Delta|IR Risk Weight (low vol)|S_IR_20|None|30000000.0|0.0|0.0|0.0|0.0|30000000.0
+C21|Rates & Fx|Delta|IR Risk Weight (low vol)|S_IR_21|None|15000000.0|0.0|0.0|0.0|0.0|15000000.0
+C22|Rates & Fx|Delta|IR Risk Weight (low vol)|S_IR_22|None|20000000.0|0.0|0.0|0.0|0.0|20000000.0
+C23|Rates & Fx|Delta|IR Risk Weight (low vol)|S_IR_23|None|42000000.0|0.0|0.0|0.0|0.0|42000000.0
+C24|Rates & Fx|Delta|IR Risk Weight (low vol)|S_IR_24|None|80000000.0|0.0|0.0|0.0|0.0|80000000.0
+C25|Rates & Fx|Delta|IR Risk Weight (low vol)|S_IR_25|None|110000000.0|0.0|0.0|0.0|0.0|110000000.0
+C26|Rates & Fx|Delta|IR Risk Weight (low vol)|S_IR_26|None|400000000.0|0.0|0.0|0.0|0.0|400000000.0
+C27|Rates & Fx|Delta|IR Risk Weight (low vol)|S_IR_27|None|1000000000.0|0.0|0.0|0.0|0.0|1000000000.0
+C28|Rates & Fx|Delta|IR Risk Weight (low vol)|S_IR_28|None|20000000.0|0.0|0.0|0.0|0.0|20000000.0
+C29|Rates & Fx|Delta|IR Risk Weight (low vol)|S_IR_29|None|44000000.0|0.0|0.0|0.0|0.0|44000000.0
+C30|Rates & Fx|Delta|IR Risk Weight (low vol)|S_IR_30|None|81000000.0|0.0|0.0|0.0|0.0|81000000.0
+C31|Rates & Fx|Delta|IR Risk Weight (inflation)|S_IR_31|None|705000000.0|0.0|0.0|0.0|0.0|705000000.0
+C32|Rates & Fx|Delta|IR Risk Weight (xccy)|S_IR_32|None|10000000.0|0.0|0.0|0.0|0.0|10000000.0
+C33|Rates & Fx|Delta|IR Risk Weight (high vol, 2w)|S_IR_33|None|85000000.0|0.0|0.0|0.0|0.0|85000000.0
+C34|Rates & Fx|Delta|IR Risk Weight (high vol)|S_IR_34|None|120000000.0|0.0|0.0|0.0|0.0|120000000.0
+C35|Rates & Fx|Delta|IR Risk Weight (high vol)|S_IR_35|None|39500000.0|0.0|0.0|0.0|0.0|39500000.0
+C36|Rates & Fx|Delta|IR Risk Weight (high vol)|S_IR_36|None|86000000.0|0.0|0.0|0.0|0.0|86000000.0
+C37|Rates & Fx|Delta|IR Risk Weight (high vol)|S_IR_37|None|291000000.0|0.0|0.0|0.0|0.0|291000000.0
+C38|Rates & Fx|Delta|IR Risk Weight (high vol)|S_IR_38|None|612000000.0|0.0|0.0|0.0|0.0|612000000.0
+C39|Rates & Fx|Delta|IR Risk Weight (high vol)|S_IR_39|None|52000000.0|0.0|0.0|0.0|0.0|52000000.0
+C40|Rates & Fx|Delta|IR Risk Weight (high vol)|S_IR_40|None|102000000.0|0.0|0.0|0.0|0.0|102000000.0
+C41|Rates & Fx|Delta|IR Risk Weight (high vol)|S_IR_41|None|412000000.0|0.0|0.0|0.0|0.0|412000000.0
+C42|Rates & Fx|Delta|IR Risk Weight (high vol)|S_IR_42|None|594000000.0|0.0|0.0|0.0|0.0|594000000.0
+C43|Rates & Fx|Delta|IR Risk Weight (high vol)|S_IR_43|None|99000000.0|0.0|0.0|0.0|0.0|99000000.0
+C44|Rates & Fx|Delta|IR Risk Weight (high vol)|S_IR_44|None|100000000.0|0.0|0.0|0.0|0.0|100000000.0
+C45|Rates & Fx|Delta|IR Risk Weight (inflation)|S_IR_45|None|94000000.0|0.0|0.0|0.0|0.0|94000000.0
+C46|Rates & Fx|Delta|IR Risk Weight (xccy)|S_IR_46|None|20000000.0|0.0|0.0|0.0|0.0|20000000.0
+C47|Rates & Fx|Delta|Net Sensitivities (same tenor & subcurve, same sign)|S_IR_8,S_IR_9|C8,C9|1785000000.0|0.0|0.0|0.0|0.0|1785000000.0
+C48|Rates & Fx|Delta|Net Sensitivities (same tenor & subcurve, diff sign)|S_IR_4,S_IR_5|C4,C5|118000000.0|0.0|0.0|0.0|0.0|118000000.0
+C49|Rates & Fx|Delta|Concentration (reg vol, well traded)|S_IR_8,S_IR_9,S_IR_10,S_IR_8,S_IR_9,S_IR_10,S_IR_8,S_IR_9,S_IR_10,S_IR_8,S_IR_9,S_IR_10,S_IR_8,S_IR_9,S_IR_10|C8-C10,C47|21742557759.720512|0.0|0.0|0.0|0.0|21742557759.720512
+C50|Rates & Fx|Delta|Concentration (reg vol, less traded)|S_IR_14,S_IR_15,S_IR_16,S_IR_14,S_IR_15,S_IR_16,S_IR_14,S_IR_15,S_IR_16|C14-C16|2955212983.187506|0.0|0.0|0.0|0.0|2955212983.187506
+C51|Rates & Fx|Delta|Concentration (reg vol, w/inf & xccy)|S_IR_14,S_IR_15,S_IR_16,S_IR_14,S_IR_15,S_IR_16,S_IR_14,S_IR_15,S_IR_16,S_IR_17,S_IR_18|C14-C18,C50|2569035335.6577992|0.0|0.0|0.0|0.0|2569035335.6577992
+C52|Rates & Fx|Delta|Concentration (low vol)|S_IR_26,S_IR_27,S_IR_28,S_IR_26,S_IR_27,S_IR_28,S_IR_26,S_IR_27,S_IR_28|C26-C28|4814735880.606537|0.0|0.0|0.0|0.0|4814735880.606537
+C53|Rates & Fx|Delta|Concentration (low vol, w/inf & xccy)|S_IR_26,S_IR_27,S_IR_28,S_IR_26,S_IR_27,S_IR_28,S_IR_26,S_IR_27,S_IR_28,S_IR_31,S_IR_32|C26-C28,C31,C32,C52|5383482403.790211|0.0|0.0|0.0|0.0|5383482403.790211
+C54|Rates & Fx|Delta|Concentration (high vol)|S_IR_41,S_IR_42,S_IR_43,S_IR_44|C41-C44|872932959.8908315|0.0|0.0|0.0|0.0|872932959.8908315
+C55|Rates & Fx|Delta|Concentration (high vol, w/inf & xccy)|S_IR_41,S_IR_42,S_IR_43,S_IR_44,S_IR_45,S_IR_46|C41-C46,C54|1022659738.8337507|0.0|0.0|0.0|0.0|1022659738.8337507
+C56|Rates & Fx|Delta|Subcurve Correlation (same tenor, same sign)|S_IR_3,S_IR_4|C3,C4|293936081.48711514|0.0|0.0|0.0|0.0|293936081.48711514
+C57|Rates & Fx|Delta|Subcurve Correlation (same tenor, diff sign)|S_IR_6,S_IR_7|C6,C7|149429916.6833737|0.0|0.0|0.0|0.0|149429916.6833737
+C58|Rates & Fx|Delta|Tenor Correlation (diff subcurve)|S_IR_2,S_IR_5|C2,C5|323983790.02659994|0.0|0.0|0.0|0.0|323983790.02659994
+C59|Rates & Fx|Delta|Tenor Correlation (same sign, same subcurve)|S_IR_11,S_IR_12|C11,C12|386025646.8163741|0.0|0.0|0.0|0.0|386025646.8163741
+C60|Rates & Fx|Delta|Tenor Correlation (diff sign, same subcurve)|S_IR_12,S_IR_13|C12,C13|155840046.2012252|0.0|0.0|0.0|0.0|155840046.2012252
+C61|Rates & Fx|Delta|Tenor Correlation (all tenors and subcurves)|S_IR_19,S_IR_20,S_IR_21,S_IR_22,S_IR_23,S_IR_24,S_IR_25,S_IR_26,S_IR_27,S_IR_28,S_IR_29,S_IR_30|C19-C30,C52|1604953835.2862363|0.0|0.0|0.0|0.0|1604953835.2862363
+C62|Rates & Fx|Delta|Tenor Correlation (all tenors and subcurves, w/inf & xccy)|S_IR_19,S_IR_20,S_IR_21,S_IR_22,S_IR_23,S_IR_24,S_IR_25,S_IR_26,S_IR_27,S_IR_28,S_IR_29,S_IR_30,S_IR_31,S_IR_32|C19-C32,C52,C53,C61|1995228010.3787637|0.0|0.0|0.0|0.0|1995228010.3787637
+C63|Rates & Fx|Delta|Inter bucket correlation (all pos)|S_IR_1,S_IR_22,S_IR_33|C1,C22,C33|495081609.43424267|0.0|0.0|0.0|0.0|495081609.43424267
+C64|Rates & Fx|Delta|Inter bucket correlation (one neg)|S_IR_1,S_IR_19,S_IR_33|C1,C19,C33|486506690.6014757|0.0|0.0|0.0|0.0|486506690.6014757
+C65|Rates & Fx|Delta|Inter bucket correlation (all neg)|S_IR_2,S_IR_19,S_IR_35|C2,C19,C35|296920612.28550637|0.0|0.0|0.0|0.0|296920612.28550637
+C66|Rates & Fx|Delta|Inter bucket correlation (exceeds concentration threshold)|S_IR_3,S_IR_21,S_IR_37,S_IR_38,S_IR_37,S_IR_38|C3,C21,C37,C38|2883618816.2413454|0.0|0.0|0.0|0.0|2883618816.2413454
+C67|Rates & Fx|Delta|All Inflation sensitivities|All S_IR|C1-C66|6483191077.938698|0.0|0.0|0.0|0.0|6483191077.938698
+C68|Rates & Fx|Delta|FX Risk Weight & correlation (net to zero)|S_FX_1,S_FX_2|None|0.0|0.0|0.0|0.0|0.0|0.0
+C69|Rates & Fx|Delta|FX Risk Weight & correlation (AmountCurrency qualifier)|S_FX_3,S_FX_4|None|45420000000.0|0.0|0.0|0.0|0.0|45420000000.0
+C70|Rates & Fx|Delta|FX Risk Weight (RR) & correlation (RR)|S_FX_5,S_FX_6|None|6851163666.852515|0.0|0.0|0.0|0.0|6851163666.852515
+C71|Rates & Fx|Delta|FX Risk Weight (RR) & correlation (RR)|S_FX_7,S_FX_8|None|1553234138.8213177|0.0|0.0|0.0|0.0|1553234138.8213177
+C72|Rates & Fx|Delta|FX Risk Weight (RH) & correlation (RH)|S_FX_9,S_FX_10|None|2916025024.858326|0.0|0.0|0.0|0.0|2916025024.858326
+C73|Rates & Fx|Delta|FX Risk Weight (RH) & correlation (HR)|S_FX_11,S_FX_12|None|418810052.9070428|0.0|0.0|0.0|0.0|418810052.9070428
+C74|Rates & Fx|Delta|Concentration (significantly trading)|S_FX_3,S_FX_6,S_FX_3,S_FX_6,S_FX_3,S_FX_6,S_FX_3,S_FX_6,S_FX_3,S_FX_6,S_FX_3,S_FX_6|None|668460416207.108|0.0|0.0|0.0|0.0|668460416207.108
+C75|Rates & Fx|Delta|Concentration (frequently traded)|S_FX_8,S_FX_8,S_FX_8,S_FX_8,S_FX_8,S_FX_8,S_FX_8,S_FX_8,S_FX_8,S_FX_8|None|18212301455.678246|0.0|0.0|0.0|0.0|18212301455.678246
+C76|Rates & Fx|Delta|Concentration (others)|S_FX_10,S_FX_10,S_FX_10,S_FX_10,S_FX_10,S_FX_10,S_FX_10,S_FX_10|None|30216905466.97328|0.0|0.0|0.0|0.0|30216905466.97328
+C77|Rates & Fx|Delta|FX Intercurrency Correlation (3 ccys)|S_FX_3,S_FX_4,S_FX_5,S_FX_6|C69,C70,C74|49152039729.69992|0.0|0.0|0.0|0.0|49152039729.69992
+C78|Rates & Fx|Delta|FX Intercurrency Correlation (4 ccys)|S_FX_5,S_FX_6,S_FX_7,S_FX_8|C70,C71,C75|7025433109.068792|0.0|0.0|0.0|0.0|7025433109.068792
+C79|Rates & Fx|Delta|FX Intercurrency Correlation (exceeds concentration threshold)|S_FX_5,S_FX_6,S_FX_9,S_FX_10,S_FX_9,S_FX_10,S_FX_9,S_FX_10,S_FX_9,S_FX_10,S_FX_9,S_FX_10,S_FX_9,S_FX_10,S_FX_9,S_FX_10,S_FX_9,S_FX_10|C70,C72,C76|29908014077.400723|0.0|0.0|0.0|0.0|29908014077.400723
+C80|Rates & Fx|Delta|All FX sensitivities|All S_FX|C68-C79|50406241221.97192|0.0|0.0|0.0|0.0|50406241221.97192
+C81|Rates & Fx|Delta|All Rates & FX Sensitivities|All S_IR,S_FX|C1-C80|52197176001.15107|0.0|0.0|0.0|0.0|52197176001.15107
+C82|Credit|Delta|CRQ Risk Weight (bkt 1)|S_CRQ_1|None|57600000.0|0.0|0.0|0.0|0.0|57600000.0
+C83|Credit|Delta|CRQ Risk Weight (bkt 1)|S_CRQ_2|None|21600000.0|0.0|0.0|0.0|0.0|21600000.0
+C84|Credit|Delta|CRQ Risk Weight (bkt 2)|S_CRQ_3|None|17460000.0|0.0|0.0|0.0|0.0|17460000.0
+C85|Credit|Delta|CRQ Risk Weight (bkt 2)|S_CRQ_4|None|17460000.0|0.0|0.0|0.0|0.0|17460000.0
+C86|Credit|Delta|CRQ Risk Weight (bkt 3)|S_CRQ_5|None|13500000.0|0.0|0.0|0.0|0.0|13500000.0
+C87|Credit|Delta|CRQ Risk Weight (bkt 3)|S_CRQ_6|None|7500000.0|0.0|0.0|0.0|0.0|7500000.0
+C88|Credit|Delta|CRQ Risk Weight (bkt 4)|S_CRQ_7|None|9540000.0|0.0|0.0|0.0|0.0|9540000.0
+C89|Credit|Delta|CRQ Risk Weight (bkt 4)|S_CRQ_8|None|5300000.0|0.0|0.0|0.0|0.0|5300000.0
+C90|Credit|Delta|CRQ Risk Weight (bkt 5)|S_CRQ_9|None|8100000.0|0.0|0.0|0.0|0.0|8100000.0
+C91|Credit|Delta|CRQ Risk Weight (bkt 5)|S_CRQ_10|None|4500000.0|0.0|0.0|0.0|0.0|4500000.0
+C92|Credit|Delta|CRQ Risk Weight (bkt 6)|S_CRQ_11|None|9540000.0|0.0|0.0|0.0|0.0|9540000.0
+C93|Credit|Delta|CRQ Risk Weight (bkt 7)|S_CRQ_12|None|99000000.0|0.0|0.0|0.0|0.0|99000000.0
+C94|Credit|Delta|CRQ Risk Weight (bkt 8)|S_CRQ_13|None|25000000.0|0.0|0.0|0.0|0.0|25000000.0
+C95|Credit|Delta|CRQ Risk Weight (bkt 9)|S_CRQ_14|None|34380000.0|0.0|0.0|0.0|0.0|34380000.0
+C96|Credit|Delta|CRQ Risk Weight (bkt 10)|S_CRQ_15|None|17900000.0|0.0|0.0|0.0|0.0|17900000.0
+C97|Credit|Delta|CRQ Risk Weight (bkt 11)|S_CRQ_16|None|23760000.0|0.0|0.0|0.0|0.0|23760000.0
+C98|Credit|Delta|CRQ Risk Weight (bkt 12)|S_CRQ_17|None|12900000.0|0.0|0.0|0.0|0.0|12900000.0
+C99|Credit|Delta|CRQ Risk Weight (residual)|S_CRQ_18|None|45000000.0|0.0|0.0|0.0|0.0|45000000.0
+C100|Credit|Delta|CRQ Risk Weight (residual)|S_CRQ_19|None|25000000.0|0.0|0.0|0.0|0.0|25000000.0
+C101|Credit|Delta|CRQ Risk Weight (residual)|S_CRQ_20|None|45000000.0|0.0|0.0|0.0|0.0|45000000.0
+C102|Credit|Delta|CRQ Risk Weight (residual)|S_CRQ_21|None|45000000.0|0.0|0.0|0.0|0.0|45000000.0
+C103|Credit|Delta|CRQ Risk Weight (residual)|S_CRQ_22|None|25000000.0|0.0|0.0|0.0|0.0|25000000.0
+C104|Credit|Delta|CRQ Risk Weight (base corr)|S_CRQ_23|None|0.0|0.0|0.0|3500000.0|0.0|3500000.0
+C105|Credit|Delta|CRQ Risk Weight (base corr)|S_CRQ_24|None|0.0|0.0|0.0|1400000.0|0.0|1400000.0
+C106|Credit|Delta|CRQ Risk Weight (base corr)|S_CRQ_25|None|0.0|0.0|0.0|2800000.0|0.0|2800000.0
+C107|Credit|Delta|CRQ Concentration (bkt 1) (diff tenors)|S_CRQ_1,S_CRQ_1,S_CRQ_2|C82,C83|111625940.7050972|0.0|0.0|0.0|0.0|111625940.7050972
+C108|Credit|Delta|CRQ Concentration (bkt 2-6) (same sign)|S_CRQ_4,S_CRQ_4|C85|49384337.59806848|0.0|0.0|0.0|0.0|49384337.59806848
+C109|Credit|Delta|CRQ Concentration (bkt 7) (all neg)|S_CRQ_12,S_CRQ_12|C93|223713342.4149487|0.0|0.0|0.0|0.0|223713342.4149487
+C110|Credit|Delta|CRQ Concentration (bkt 8-12)|S_CRQ_14,S_CRQ_14|C95|97241324.54877402|0.0|0.0|0.0|0.0|97241324.54877402
+C111|Credit|Delta|CRQ Intra-bucket Correlation (same name, diff tenor)|S_CRQ_1,S_CRQ_2|C82,C83,C107|37688406.705510914|0.0|0.0|0.0|0.0|37688406.705510914
+C112|Credit|Delta|CRQ Intra-bucket Correlation (same name, diff ccy)|S_CRQ_3,S_CRQ_4|C84,C85,C108|5521336.79465399|0.0|0.0|0.0|0.0|5521336.79465399
+C113|Credit|Delta|CRQ Intra-bucket Correlation (same name, diff tenor, diff ccy)|S_CRQ_5,S_CRQ_6|C86,C87|6791538.853603062|0.0|0.0|0.0|0.0|6791538.853603062
+C114|Credit|Delta|CRQ Intra-bucket Correlation (same name, same tenor, same ccy)|S_CRQ_7,S_CRQ_8|C88,C89|4240000.0|0.0|0.0|0.0|0.0|4240000.0
+C115|Credit|Delta|CRQ Intra-bucket Correlation (diff name)|S_CRQ_9,S_CRQ_10|C90,C91|7481376.878623346|0.0|0.0|0.0|0.0|7481376.878623346
+C116|Credit|Delta|CRQ Intra-bucket Correlation (residual, same name, diff tenor)|S_CRQ_18,S_CRQ_19|C99,C100|39051248.37953327|0.0|0.0|0.0|0.0|39051248.37953327
+C117|Credit|Delta|CRQ Intra-bucket Correlation (residual, diff name)|S_CRQ_19,S_CRQ_20|C100,C101|39051248.37953327|0.0|0.0|0.0|0.0|39051248.37953327
+C118|Credit|Delta|CRQ Inter-bucket Correlation (exceeds concentration threshold)|S_CRQ_3,S_CRQ_3,S_CRQ_5|C84,C86|56871928.690418184|0.0|0.0|0.0|0.0|56871928.690418184
+C119|Credit|Delta|CRQ Inter-bucket Correlation (same sign, pos)|S_CRQ_1,S_CRQ_3|C82,C84|66988880.86839487|0.0|0.0|0.0|0.0|66988880.86839487
+C120|Credit|Delta|CRQ Inter-bucket Correlation (same sign, neg)|S_CRQ_2,S_CRQ_4|C83,C85,C108|33102092.98518751|0.0|0.0|0.0|0.0|33102092.98518751
+C121|Credit|Delta|CRQ Inter-bucket Correlation (diff sign)|S_CRQ_1,S_CRQ_4|C82,C85,C108|52513931.86574397|0.0|0.0|0.0|0.0|52513931.86574397
+C122|Credit|Delta|CRQ Inter-bucket Correlation (diff sign)|S_CRQ_1,S_CRQ_4,S_CRQ_18|C82,C85,C99,C108,C121|97513931.86574396|0.0|0.0|0.0|0.0|97513931.86574396
+C123|Credit|Delta|CRQ Inter-bucket Correlation (bkts 1-3, 4-6)|S_CRQ_1,S_CRQ_3,S_CRQ_5,S_CRQ_7,S_CRQ_9,S_CRQ_11|C82,C84,C86,C88,C90,C92,C118,C119|89840540.7374644|0.0|0.0|0.0|0.0|89840540.7374644
+C124|Credit|Delta|CRQ Inter-bucket Correlation (bkts 1-3, 7-9)|S_CRQ_1,S_CRQ_3,S_CRQ_5,S_CRQ_12,S_CRQ_13,S_CRQ_14|C82,C84,C86,C93-C95,C109,C110,C118,C119|99178968.61734347|0.0|0.0|0.0|0.0|99178968.61734347
+C125|Credit|Delta|CRQ Inter-bucket Correlation (bkts 1-3, 10-12)|S_CRQ_1,S_CRQ_3,S_CRQ_5,S_CRQ_15,S_CRQ_16,S_CRQ_17|C82,C84,C86,C96-C98,C118,C119|76515743.42578134|0.0|0.0|0.0|0.0|76515743.42578134
+C126|Credit|Delta|CRQ Inter-bucket Correlation (bkts 4-6, 7-9)|S_CRQ_7,S_CRQ_9,S_CRQ_11,S_CRQ_12,S_CRQ_13,S_CRQ_14|C88,C90,C92-C95,C109,C110|95529128.29079935|0.0|0.0|0.0|0.0|95529128.29079935
+C127|Credit|Delta|CRQ Inter-bucket Correlation (bkts 4-6, 10-12)|S_CRQ_7,S_CRQ_9,S_CRQ_11,S_CRQ_15,S_CRQ_16,S_CRQ_17|C88,C90,C92,C96-C98|32261417.203836534|0.0|0.0|0.0|0.0|32261417.203836534
+C128|Credit|Delta|CRQ Inter-bucket Correlation (bkts 7-9, 10-12)|S_CRQ_12,S_CRQ_13,S_CRQ_14,S_CRQ_15,S_CRQ_16,S_CRQ_17|C93-C98,C109,C110|105735168.87015408|0.0|0.0|0.0|0.0|105735168.87015408
+C129|Credit|Delta|CRQ Inter-bucket Correlation (all)|S_CRQ_1,S_CRQ_3,S_CRQ_5,S_CRQ_7,S_CRQ_9,S_CRQ_11,S_CRQ_12,S_CRQ_13,S_CRQ_14,S_CRQ_15,S_CRQ_16,S_CRQ_17|C82,C84,C86,C88,C90,C92-C98,C109,C110,C118,C119,C123-C128|106379569.91828835|0.0|0.0|0.0|0.0|106379569.91828835
+C130|Credit|Delta|CRQ Inter-bucket Correlation (all + residual)|S_CRQ_1,S_CRQ_3,S_CRQ_5,S_CRQ_7,S_CRQ_9,S_CRQ_11,S_CRQ_12,S_CRQ_13,S_CRQ_14,S_CRQ_15,S_CRQ_16,S_CRQ_17,S_CRQ_18|C82,C84,C86,C88,C90,C92-C99,C109,C110,C118,C119,C123-C129|151379569.91828835|0.0|0.0|0.0|0.0|151379569.91828835
+C131|Credit|Delta|CRQ Base Corr Netting|S_CRQ_23,S_CRQ_24|C104,C105|0.0|0.0|0.0|2100000.0|0.0|2100000.0
+C132|Credit|Delta|CRQ Base Corr Correlation|S_CRQ_23,S_CRQ_24,S_CRQ_25|C104-C106,C131|0.0|0.0|0.0|3727787.5475944174|0.0|3727787.5475944174
+C133|Credit|Delta|All Credit Qualifying (no multiplier)|All S_CRQ|C82-C132|183142485.28675157|0.0|0.0|3727787.5475944174|0.0|186870272.834346
+C134|Credit|Delta|CRNQ Risk Weight (bkt 1)|S_CRNQ_1|None|600000000.0|0.0|0.0|0.0|0.0|600000000.0
+C135|Credit|Delta|CRNQ Risk Weight (bkt 1)|S_CRNQ_2|None|300000000.0|0.0|0.0|0.0|0.0|300000000.0
+C136|Credit|Delta|CRNQ Risk Weight (bkt 1)|S_CRNQ_3|None|300000000.0|0.0|0.0|0.0|0.0|300000000.0
+C137|Credit|Delta|CRNQ Risk Weight (bkt 1)|S_CRNQ_4|None|200000000.0|0.0|0.0|0.0|0.0|200000000.0
+C138|Credit|Delta|CRNQ Risk Weight (bkt 1)|S_CRNQ_5|None|300000000.0|0.0|0.0|0.0|0.0|300000000.0
+C139|Credit|Delta|CRNQ Risk Weight (bkt 1)|S_CRNQ_6|None|400000000.0|0.0|0.0|0.0|0.0|400000000.0
+C140|Credit|Delta|CRNQ Risk Weight (bkt 2)|S_CRNQ_7|None|640000000.0|0.0|0.0|0.0|0.0|640000000.0
+C141|Credit|Delta|CRNQ Risk Weight (bkt 2)|S_CRNQ_8|None|320000000.0|0.0|0.0|0.0|0.0|320000000.0
+C142|Credit|Delta|CRNQ Risk Weight (bkt 2)|S_CRNQ_9|None|320000000.0|0.0|0.0|0.0|0.0|320000000.0
+C143|Credit|Delta|CRNQ Risk Weight (bkt 2)|S_CRNQ_10|None|320000000.0|0.0|0.0|0.0|0.0|320000000.0
+C144|Credit|Delta|CRNQ Risk Weight (bkt 2)|S_CRNQ_11|None|320000000.0|0.0|0.0|0.0|0.0|320000000.0
+C145|Credit|Delta|CRNQ Risk Weight (bkt 2)|S_CRNQ_12|None|480000000.0|0.0|0.0|0.0|0.0|480000000.0
+C146|Credit|Delta|CRNQ Risk Weight (residual)|S_CRNQ_13|None|640000000.0|0.0|0.0|0.0|0.0|640000000.0
+C147|Credit|Delta|CRNQ Risk Weight (residual)|S_CRNQ_14|None|320000000.0|0.0|0.0|0.0|0.0|320000000.0
+C148|Credit|Delta|CRNQ Risk Weight (residual)|S_CRNQ_15|None|480000000.0|0.0|0.0|0.0|0.0|480000000.0
+C149|Credit|Delta|CRNQ Risk Weight (residual)|S_CRNQ_16|None|160000000.0|0.0|0.0|0.0|0.0|160000000.0
+C150|Credit|Delta|CRNQ Concentration (bkt 1)|S_CRNQ_1,S_CRNQ_2,S_CRNQ_2|C134,C135|1140415436.7690103|0.0|0.0|0.0|0.0|1140415436.7690103
+C151|Credit|Delta|CRNQ Concentration (bkt 2)|S_CRNQ_7,S_CRNQ_7,S_CRNQ_10|C140,C143|1539994805.1860433|0.0|0.0|0.0|0.0|1539994805.1860433
+C152|Credit|Delta|CRNQ Concentration (residual)|S_CRNQ_13,S_CRNQ_15|C146,C148|1151555469.7885811|0.0|0.0|0.0|0.0|1151555469.7885811
+C153|Credit|Delta|CRNQ Intra-bucket correlation (same name, same sign)|S_CRNQ_1,S_CRNQ_2|C134,C135,C150|777688883.8089433|0.0|0.0|0.0|0.0|777688883.8089433
+C154|Credit|Delta|CRNQ Intra-bucket correlation (same name, opp sign)|S_CRNQ_2,S_CRNQ_3|C135,C136|320312347.5609393|0.0|0.0|0.0|0.0|320312347.5609393
+C155|Credit|Delta|CRNQ Intra-bucket correlation (diff name, same sign)|S_CRNQ_3,S_CRNQ_4|C136,C137|384707681.23342687|0.0|0.0|0.0|0.0|384707681.23342687
+C156|Credit|Delta|CRNQ Intra-bucket correlation (diff name, opp sign)|S_CRNQ_3,S_CRNQ_6|C136,C139|534789678.2848375|0.0|0.0|0.0|0.0|534789678.2848375
+C157|Credit|Delta|CRNQ Intra-bucket correlation (residual)|S_CRNQ_13,S_CRNQ_14|C146,C147|554256258.4220407|0.0|0.0|0.0|0.0|554256258.4220407
+C158|Credit|Delta|CRNQ Intra-bucket correlation (exceeds concentration threshold)|S_CRNQ_1,S_CRNQ_1,S_CRNQ_7|C134,C140|1391069309.515812|0.0|0.0|0.0|0.0|1391069309.515812
+C159|Credit|Delta|CRNQ Inter-bucket correlation (same sign, pos)|S_CRNQ_1,S_CRNQ_7|C134,C140,C158|799399774.8310916|0.0|0.0|0.0|0.0|799399774.8310916
+C160|Credit|Delta|CRNQ Inter-bucket correlation (same sign, neg)|S_CRNQ_3,S_CRNQ_8|C136,C141|474383810.8536167|0.0|0.0|0.0|0.0|474383810.8536167
+C161|Credit|Delta|CRNQ Inter-bucket correlation (diff sign)|S_CRNQ_2,S_CRNQ_8|C135,C141|399699887.4155458|0.0|0.0|0.0|0.0|399699887.4155458
+C162|Credit|Delta|CRNQ Inter-bucket correlation (w/residual)|S_CRNQ_2,S_CRNQ_8,S_CRNQ_13|C135,C141,C146,C161|1039699887.4155458|0.0|0.0|0.0|0.0|1039699887.4155458
+C163|Credit|Delta|All Credit Non Qualifying|All S_CRNQ|C134-C162|2106642712.4599345|0.0|0.0|0.0|0.0|2106642712.4599345
+C164|Credit|Delta|All Credit Qualifying and Non-Qualifying|All S_CRQ,S_CRNQ|C82-C163|2148975263.9401393|0.0|0.0|3727787.5475944174|0.0|2149990278.63794
+C165|Equities|Delta|EQ Risk Weight (bkt 1)|S_EQ_1|None|132000000.0|0.0|0.0|0.0|0.0|132000000.0
+C166|Equities|Delta|EQ Risk Weight (bkt 1)|S_EQ_2|None|22000000.0|0.0|0.0|0.0|0.0|22000000.0
+C167|Equities|Delta|EQ Risk Weight (bkt 2)|S_EQ_3|None|52000000.0|0.0|0.0|0.0|0.0|52000000.0
+C168|Equities|Delta|EQ Risk Weight (bkt 2)|S_EQ_4|None|26000000.0|0.0|0.0|0.0|0.0|26000000.0
+C169|Equities|Delta|EQ Risk Weight (bkt 3)|S_EQ_5|None|58000000.0|0.0|0.0|0.0|0.0|58000000.0
+C170|Equities|Delta|EQ Risk Weight (bkt 3)|S_EQ_6|None|29000000.0|0.0|0.0|0.0|0.0|29000000.0
+C171|Equities|Delta|EQ Risk Weight (bkt 4)|S_EQ_7|None|52000000.0|0.0|0.0|0.0|0.0|52000000.0
+C172|Equities|Delta|EQ Risk Weight (bkt 4)|S_EQ_8|None|26000000.0|0.0|0.0|0.0|0.0|26000000.0
+C173|Equities|Delta|EQ Risk Weight (bkt 5)|S_EQ_9|None|190000000.0|0.0|0.0|0.0|0.0|190000000.0
+C174|Equities|Delta|EQ Risk Weight (bkt 5)|S_EQ_10|None|38000000.0|0.0|0.0|0.0|0.0|38000000.0
+C175|Equities|Delta|EQ Risk Weight (bkt 6)|S_EQ_11|None|84000000.0|0.0|0.0|0.0|0.0|84000000.0
+C176|Equities|Delta|EQ Risk Weight (bkt 6)|S_EQ_12|None|42000000.0|0.0|0.0|0.0|0.0|42000000.0
+C177|Equities|Delta|EQ Risk Weight (bkt 7)|S_EQ_13|None|100000000.0|0.0|0.0|0.0|0.0|100000000.0
+C178|Equities|Delta|EQ Risk Weight (bkt 7)|S_EQ_14|None|50000000.0|0.0|0.0|0.0|0.0|50000000.0
+C179|Equities|Delta|EQ Risk Weight (bkt 8)|S_EQ_15|None|96000000.0|0.0|0.0|0.0|0.0|96000000.0
+C180|Equities|Delta|EQ Risk Weight (bkt 8)|S_EQ_16|None|48000000.0|0.0|0.0|0.0|0.0|48000000.0
+C181|Equities|Delta|EQ Risk Weight (bkt 9)|S_EQ_17|None|12000000.0|0.0|0.0|0.0|0.0|12000000.0
+C182|Equities|Delta|EQ Risk Weight (bkt 9)|S_EQ_18|None|120000000.0|0.0|0.0|0.0|0.0|120000000.0
+C183|Equities|Delta|EQ Risk Weight (bkt 10)|S_EQ_19|None|58000000.0|0.0|0.0|0.0|0.0|58000000.0
+C184|Equities|Delta|EQ Risk Weight (bkt 10)|S_EQ_20|None|29000000.0|0.0|0.0|0.0|0.0|29000000.0
+C185|Equities|Delta|EQ Risk Weight (bkt 11)|S_EQ_21|None|17000000000.0|0.0|0.0|0.0|0.0|17000000000.0
+C186|Equities|Delta|EQ Risk Weight (bkt 11)|S_EQ_22|None|34000000.0|0.0|0.0|0.0|0.0|34000000.0
+C187|Equities|Delta|EQ Risk Weight (bkt 11)|S_EQ_23|None|17000000.0|0.0|0.0|0.0|0.0|17000000.0
+C188|Equities|Delta|EQ Risk Weight (bkt 12)|S_EQ_24|None|51000000.0|0.0|0.0|0.0|0.0|51000000.0
+C189|Equities|Delta|EQ Risk Weight (bkt 12)|S_EQ_25|None|34000000.0|0.0|0.0|0.0|0.0|34000000.0
+C190|Equities|Delta|EQ Risk Weight (bkt 12)|S_EQ_26|None|17000000.0|0.0|0.0|0.0|0.0|17000000.0
+C191|Equities|Delta|EQ Risk Weight (residual)|S_EQ_27|None|42000000.0|0.0|0.0|0.0|0.0|42000000.0
+C192|Equities|Delta|EQ Risk Weight (residual)|S_EQ_28|None|9000000.0|0.0|0.0|0.0|0.0|9000000.0
+C193|Equities|Delta|EQ Concentration (bkt 1-4)|S_EQ_1,S_EQ_1|C165|275739007.0338254|0.0|0.0|0.0|0.0|275739007.0338254
+C194|Equities|Delta|EQ Concentration (bkt 5-8)|S_EQ_9,S_EQ_9,S_EQ_9,S_EQ_9|C173|790210372.2632552|0.0|0.0|0.0|0.0|790210372.2632552
+C195|Equities|Delta|EQ Concentration (bkt 9)|S_EQ_18,S_EQ_18|C182|300587659.72087175|0.0|0.0|0.0|0.0|300587659.72087175
+C196|Equities|Delta|EQ Concentration (bkt 10)|S_EQ_19,S_EQ_19|C183|149755356.05335346|0.0|0.0|0.0|0.0|149755356.05335346
+C197|Equities|Delta|EQ Concentration (bkt 11-12)|S_EQ_21,S_EQ_21,S_EQ_21,S_EQ_21,S_EQ_21,S_EQ_21,S_EQ_21,S_EQ_21,S_EQ_21,S_EQ_21|C185|400693842672.37695|0.0|0.0|0.0|0.0|400693842672.37695
+C198|Equities|Delta|EQ Concentration (residual)|S_EQ_27,S_EQ_27|C191|90730369.77771005|0.0|0.0|0.0|0.0|90730369.77771005
+C199|Equities|Delta|EQ Intra Bucket Correlation (Bkt 1)|S_EQ_1,S_EQ_2|C165,C166,C193|137248970.85224354|0.0|0.0|0.0|0.0|137248970.85224354
+C200|Equities|Delta|EQ Intra Bucket Correlation (Bkt 2)|S_EQ_3,S_EQ_4|C167,C168|53029802.94136496|0.0|0.0|0.0|0.0|53029802.94136496
+C201|Equities|Delta|EQ Intra Bucket Correlation (Bkt 3)|S_EQ_5,S_EQ_6|C169,C170|57123375.250417404|0.0|0.0|0.0|0.0|57123375.250417404
+C202|Equities|Delta|EQ Intra Bucket Correlation (Bkt 4)|S_EQ_7,S_EQ_8|C171,C172|63686733.31236263|0.0|0.0|0.0|0.0|63686733.31236263
+C203|Equities|Delta|EQ Intra Bucket Correlation (Bkt 5)|S_EQ_9,S_EQ_10|C173,C174,C194|201077099.6409089|0.0|0.0|0.0|0.0|201077099.6409089
+C204|Equities|Delta|EQ Intra Bucket Correlation (Bkt 6)|S_EQ_11,S_EQ_12|C175,C176|81873072.49639529|0.0|0.0|0.0|0.0|81873072.49639529
+C205|Equities|Delta|EQ Intra Bucket Correlation (Bkt 7)|S_EQ_13,S_EQ_14|C177,C178|95916630.4662544|0.0|0.0|0.0|0.0|95916630.4662544
+C206|Equities|Delta|EQ Intra Bucket Correlation (Bkt 8)|S_EQ_15,S_EQ_16|C179,C180|119903961.56924924|0.0|0.0|0.0|0.0|119903961.56924924
+C207|Equities|Delta|EQ Intra Bucket Correlation (Bkt 9)|S_EQ_17,S_EQ_18|C181,C182,C195|118429725.99816315|0.0|0.0|0.0|0.0|118429725.99816315
+C208|Equities|Delta|EQ Intra Bucket Correlation (Bkt 10)|S_EQ_19,S_EQ_20|C183,C184,C196|59995666.51017388|0.0|0.0|0.0|0.0|59995666.51017388
+C209|Equities|Delta|EQ Intra Bucket Correlation (Bkt 11)|S_EQ_22,S_EQ_23|C186,C187|31346451.154795818|0.0|0.0|0.0|0.0|31346451.154795818
+C210|Equities|Delta|EQ Intra Bucket Correlation (Bkt 12)|S_EQ_25,S_EQ_26|C189,C190|31346451.154795818|0.0|0.0|0.0|0.0|31346451.154795818
+C211|Equities|Delta|EQ Intra Bucket Correlation (exceeds concentration threshold)|S_EQ_1,S_EQ_1,S_EQ_2|C165,C166,C193,C199|279954567.74269646|0.0|0.0|0.0|0.0|279954567.74269646
+C212|Equities|Delta|EQ Inter-bucket Correlation (same sign, pos)|S_EQ_1,S_EQ_4|C165,C168,C193|138805187.22295648|0.0|0.0|0.0|0.0|138805187.22295648
+C213|Equities|Delta|EQ Inter-bucket Correlation (same sign, neg)|S_EQ_3,S_EQ_6|C167,C170|64873106.90879542|0.0|0.0|0.0|0.0|64873106.90879542
+C214|Equities|Delta|EQ Inter-bucket Correlation (diff sign)|S_EQ_1,S_EQ_3|C165,C167,C193|133395052.38201302|0.0|0.0|0.0|0.0|133395052.38201302
+C215|Equities|Delta|EQ Inter-bucket Correlation (w/residual)|S_EQ_1,S_EQ_3,S_EQ_27|C165,C167,C191,C193,C198,C214|175395052.38201302|0.0|0.0|0.0|0.0|175395052.38201302
+C216|Equities|Delta|EQ Inter-bucket Correlation (bks 1-3, 4-6)|S_EQ_1,S_EQ_3,S_EQ_5,S_EQ_7,S_EQ_9,S_EQ_11|C165,C167,C169,C171,C173,C175,C193,C194,C214|244300143.26643363|0.0|0.0|0.0|0.0|244300143.26643363
+C217|Equities|Delta|EQ Inter-bucket Correlation (bks 1-3, 7-9)|S_EQ_1,S_EQ_3,S_EQ_5,S_EQ_13,S_EQ_15,S_EQ_17|C165,C167,C169,C177,C179,C181,C193,C214|193419337.19253615|0.0|0.0|0.0|0.0|193419337.19253615
+C218|Equities|Delta|EQ Inter-bucket Correlation (bks 1-3, 10-12)|S_EQ_1,S_EQ_3,S_EQ_5,S_EQ_19,S_EQ_21,S_EQ_24|C165,C167,C169,C183,C185,C188,C193,C196,C197,C214|17061469987.079073|0.0|0.0|0.0|0.0|17061469987.079073
+C219|Equities|Delta|EQ Inter-bucket Correlation (bks 4-6, 7-9)|S_EQ_7,S_EQ_9,S_EQ_11,S_EQ_13,S_EQ_15,S_EQ_17|C171,C173,C175,C177,C179,C181,C194|224081413.77633265|0.0|0.0|0.0|0.0|224081413.77633265
+C220|Equities|Delta|EQ Inter-bucket Correlation (bks 4-6, 10-12)|S_EQ_7,S_EQ_9,S_EQ_11,S_EQ_19,S_EQ_21,S_EQ_24|C171,C173,C175,C183,C185,C188,C194,C196,C197|17044558254.176023|0.0|0.0|0.0|0.0|17044558254.176023
+C221|Equities|Delta|EQ Inter-bucket Correlation (bks 7-9, 10-12)|S_EQ_13,S_EQ_15,S_EQ_17,S_EQ_19,S_EQ_21,S_EQ_24|C177,C179,C181,C183,C185,C188,C196,C197|17038057767.245655|0.0|0.0|0.0|0.0|17038057767.245655
+C222|Equities|Delta|EQ Inter-bucket Correlation (all)|S_EQ_1,S_EQ_3,S_EQ_5,S_EQ_7,S_EQ_9,S_EQ_11,S_EQ_13,S_EQ_15,S_EQ_17,S_EQ_19,S_EQ_21,S_EQ_24|C165,C167,C169,C171,C173,C175,C177,C179,C181,C183,C185,C188,C193,C194,C196,C197,C214,C216-C221|17076221634.776237|0.0|0.0|0.0|0.0|17076221634.776237
+C223|Equities|Delta|All Equity Sensitivities|All S_EQ|C165-C222|17098162126.906532|0.0|0.0|0.0|0.0|17098162126.906532
+C224|Commodities|Delta|CM Risk Weight (bkt 1)|S_CM_1|None|2850000000.0|0.0|0.0|0.0|0.0|2850000000.0
+C225|Commodities|Delta|CM Risk Weight (bkt 1)|S_CM_2|None|19000000.0|0.0|0.0|0.0|0.0|19000000.0
+C226|Commodities|Delta|CM Risk Weight (bkt 2)|S_CM_3|None|42000000000.0|0.0|0.0|0.0|0.0|42000000000.0
+C227|Commodities|Delta|CM Risk Weight (bkt 2)|S_CM_4|None|20000000.0|0.0|0.0|0.0|0.0|20000000.0
+C228|Commodities|Delta|CM Risk Weight (bkt 3)|S_CM_5|None|5760000000.0|0.0|0.0|0.0|0.0|5760000000.0
+C229|Commodities|Delta|CM Risk Weight (bkt 3)|S_CM_6|None|16000000.0|0.0|0.0|0.0|0.0|16000000.0
+C230|Commodities|Delta|CM Risk Weight (bkt 4)|S_CM_7|None|190000000.0|0.0|0.0|0.0|0.0|190000000.0
+C231|Commodities|Delta|CM Risk Weight (bkt 4)|S_CM_8|None|19000000.0|0.0|0.0|0.0|0.0|19000000.0
+C232|Commodities|Delta|CM Risk Weight (bkt 5)|S_CM_9|None|240000000.0|0.0|0.0|0.0|0.0|240000000.0
+C233|Commodities|Delta|CM Risk Weight (bkt 5)|S_CM_10|None|24000000.0|0.0|0.0|0.0|0.0|24000000.0
+C234|Commodities|Delta|CM Risk Weight (bkt 6)|S_CM_11|None|15600000000.0|0.0|0.0|0.0|0.0|15600000000.0
+C235|Commodities|Delta|CM Risk Weight (bkt 6)|S_CM_12|None|24000000.0|0.0|0.0|0.0|0.0|24000000.0
+C236|Commodities|Delta|CM Risk Weight (bkt 7)|S_CM_13|None|280000000.0|0.0|0.0|0.0|0.0|280000000.0
+C237|Commodities|Delta|CM Risk Weight (bkt 8)|S_CM_14|None|12600000000.0|0.0|0.0|0.0|0.0|12600000000.0
+C238|Commodities|Delta|CM Risk Weight (bkt 8)|S_CM_15|None|42000000.0|0.0|0.0|0.0|0.0|42000000.0
+C239|Commodities|Delta|CM Risk Weight (bkt 9)|S_CM_16|None|280000000.0|0.0|0.0|0.0|0.0|280000000.0
+C240|Commodities|Delta|CM Risk Weight (bkt 9)|S_CM_17|None|28000000.0|0.0|0.0|0.0|0.0|28000000.0
+C241|Commodities|Delta|CM Risk Weight (bkt 10)|S_CM_18|None|2703000000.0|0.0|0.0|0.0|0.0|2703000000.0
+C242|Commodities|Delta|CM Risk Weight (bkt 10)|S_CM_19|None|53000000.0|0.0|0.0|0.0|0.0|53000000.0
+C243|Commodities|Delta|CM Risk Weight (bkt 11)|S_CM_20|None|6000000000.0|0.0|0.0|0.0|0.0|6000000000.0
+C244|Commodities|Delta|CM Risk Weight (bkt 11)|S_CM_21|None|20000000.0|0.0|0.0|0.0|0.0|20000000.0
+C245|Commodities|Delta|CM Risk Weight (bkt 12)|S_CM_22|None|15200000000.0|0.0|0.0|0.0|0.0|15200000000.0
+C246|Commodities|Delta|CM Risk Weight (bkt 12)|S_CM_23|None|19000000.0|0.0|0.0|0.0|0.0|19000000.0
+C247|Commodities|Delta|CM Risk Weight (bkt 13)|S_CM_24|None|300000000.0|0.0|0.0|0.0|0.0|300000000.0
+C248|Commodities|Delta|CM Risk Weight (bkt 13)|S_CM_25|None|15000000.0|0.0|0.0|0.0|0.0|15000000.0
+C249|Commodities|Delta|CM Risk Weight (bkt 14)|S_CM_26|None|160000000.0|0.0|0.0|0.0|0.0|160000000.0
+C250|Commodities|Delta|CM Risk Weight (bkt 14)|S_CM_27|None|16000000.0|0.0|0.0|0.0|0.0|16000000.0
+C251|Commodities|Delta|CM Risk Weight (bkt 15)|S_CM_28|None|110000000.0|0.0|0.0|0.0|0.0|110000000.0
+C252|Commodities|Delta|CM Risk Weight (bkt 15)|S_CM_29|None|11000000.0|0.0|0.0|0.0|0.0|11000000.0
+C253|Commodities|Delta|CM Risk Weight (bkt 16)|S_CM_30|None|1325000000.0|0.0|0.0|0.0|0.0|1325000000.0
+C254|Commodities|Delta|CM Risk Weight (bkt 16)|S_CM_31|None|106000000.0|0.0|0.0|0.0|0.0|106000000.0
+C255|Commodities|Delta|CM Risk Weight (bkt 17)|S_CM_32|None|20800000000.0|0.0|0.0|0.0|0.0|20800000000.0
+C256|Commodities|Delta|CM Risk Weight (bkt 17)|S_CM_33|None|32000000.0|0.0|0.0|0.0|0.0|32000000.0
+C257|Commodities|Delta|CM Concentration (bkt 1)|S_CM_1,S_CM_1,S_CM_1,S_CM_1,S_CM_1,S_CM_1,S_CM_1,S_CM_1,S_CM_1,S_CM_1|C224|69810457669.32057|0.0|0.0|0.0|0.0|69810457669.32057
+C258|Commodities|Delta|CM Concentration (bkt 2)|S_CM_3,S_CM_3,S_CM_3,S_CM_3,S_CM_3,S_CM_3,S_CM_3,S_CM_3,S_CM_3,S_CM_3|C226|1269097591067.044|0.0|0.0|0.0|0.0|1269097591067.044
+C259|Commodities|Delta|CM Concentration (bkt 3-5)|S_CM_5,S_CM_5,S_CM_5,S_CM_5,S_CM_5,S_CM_5,S_CM_5,S_CM_5,S_CM_5,S_CM_5|C228|86400000000.0|0.0|0.0|0.0|0.0|86400000000.0
+C260|Commodities|Delta|CM Concentration (bkt 6-7)|S_CM_11,S_CM_11,S_CM_11,S_CM_11,S_CM_11,S_CM_11,S_CM_11,S_CM_11,S_CM_11,S_CM_11|C234|268145143871.40814|0.0|0.0|0.0|0.0|268145143871.40814
+C261|Commodities|Delta|CM Concentration (bkt 8-9)|S_CM_14,S_CM_14,S_CM_14,S_CM_14,S_CM_14,S_CM_14,S_CM_14,S_CM_14,S_CM_14,S_CM_14|C237|147136300446.52783|0.0|0.0|0.0|0.0|147136300446.52783
+C262|Commodities|Delta|CM Concentration (bkt 10)|S_CM_18,S_CM_18,S_CM_18,S_CM_18,S_CM_18|C241|30220458715.90966|0.0|0.0|0.0|0.0|30220458715.90966
+C263|Commodities|Delta|CM Concentration (bkt 11)|S_CM_20,S_CM_20,S_CM_20,S_CM_20,S_CM_20,S_CM_20,S_CM_20,S_CM_20,S_CM_20,S_CM_20|C243|170848439235.44983|0.0|0.0|0.0|0.0|170848439235.44983
+C264|Commodities|Delta|CM Concentration (bkt 12)|S_CM_22,S_CM_22,S_CM_22,S_CM_22,S_CM_22,S_CM_22,S_CM_22,S_CM_22,S_CM_22,S_CM_22|C245|460923610495.97327|0.0|0.0|0.0|0.0|460923610495.97327
+C265|Commodities|Delta|CM Concentration (bkt 13-15)|S_CM_24,S_CM_24,S_CM_24,S_CM_24,S_CM_24,S_CM_24,S_CM_24,S_CM_24,S_CM_24,S_CM_24|C247|8164965809.277261|0.0|0.0|0.0|0.0|8164965809.277261
+C266|Commodities|Delta|CM Concentration (bkt 16)|S_CM_30,S_CM_30,S_CM_30,S_CM_30,S_CM_30,S_CM_30,S_CM_30,S_CM_30,S_CM_30,S_CM_30|C253|40318466038.57473|0.0|0.0|0.0|0.0|40318466038.57473
+C267|Commodities|Delta|CM Concentration (bkt 17)|S_CM_32,S_CM_32,S_CM_32,S_CM_32,S_CM_32,S_CM_32,S_CM_32,S_CM_32,S_CM_32,S_CM_32|C255|370376209529.3998|0.0|0.0|0.0|0.0|370376209529.3998
+C268|Commodities|Delta|CM Intra Bucket Correlation (Bkt 1)|S_CM_1,S_CM_2|C224,C225,C257|2855378258.6550593|0.0|0.0|0.0|0.0|2855378258.6550593
+C269|Commodities|Delta|CM Intra Bucket Correlation (Bkt 2)|S_CM_3,S_CM_4|C226,C227,C258|41980400188.65947|0.0|0.0|0.0|0.0|41980400188.65947
+C270|Commodities|Delta|CM Intra Bucket Correlation (Bkt 3)|S_CM_5,S_CM_6|C228,C229,C259|5745283422.077626|0.0|0.0|0.0|0.0|5745283422.077626
+C271|Commodities|Delta|CM Intra Bucket Correlation (Bkt 4)|S_CM_7,S_CM_8|C230,C231|208481174.21004707|0.0|0.0|0.0|0.0|208481174.21004707
+C272|Commodities|Delta|CM Intra Bucket Correlation (Bkt 5)|S_CM_9,S_CM_10|C232,C233|263781727.94945446|0.0|0.0|0.0|0.0|263781727.94945446
+C273|Commodities|Delta|CM Intra Bucket Correlation (Bkt 6)|S_CM_11,S_CM_12|C234,C235,C260|15582248361.517025|0.0|0.0|0.0|0.0|15582248361.517025
+C274|Commodities|Delta|CM Intra Bucket Correlation (Bkt 8)|S_CM_14,S_CM_15|C237,C238,C261|12614761353.271807|0.0|0.0|0.0|0.0|12614761353.271807
+C275|Commodities|Delta|CM Intra Bucket Correlation (Bkt 9)|S_CM_16,S_CM_17|C239,C240|300005333.28592676|0.0|0.0|0.0|0.0|300005333.28592676
+C276|Commodities|Delta|CM Intra Bucket Correlation (Bkt 10)|S_CM_18,S_CM_19|C241,C242,C262|2696090777.4034615|0.0|0.0|0.0|0.0|2696090777.4034615
+C277|Commodities|Delta|CM Intra Bucket Correlation (Bkt 11)|S_CM_20,S_CM_21|C243,C244,C263|5989424012.373811|0.0|0.0|0.0|0.0|5989424012.373811
+C278|Commodities|Delta|CM Intra Bucket Correlation (Bkt 12)|S_CM_22,S_CM_23|C245,C246,C264|15211977156.175327|0.0|0.0|0.0|0.0|15211977156.175327
+C279|Commodities|Delta|CM Intra Bucket Correlation (Bkt 13)|S_CM_24,S_CM_25|C247,C248,C265|309378409.07212645|0.0|0.0|0.0|0.0|309378409.07212645
+C280|Commodities|Delta|CM Intra Bucket Correlation (Bkt 14)|S_CM_26,S_CM_27|C249,C250|157906301.3308842|0.0|0.0|0.0|0.0|157906301.3308842
+C281|Commodities|Delta|CM Intra Bucket Correlation (Bkt 15)|S_CM_28,S_CM_29|C251,C252|108894444.30272833|0.0|0.0|0.0|0.0|108894444.30272833
+C282|Commodities|Delta|CM Intra Bucket Correlation (Bkt 16)|S_CM_30,S_CM_31|C253,C254,C266|1329233237.622352|0.0|0.0|0.0|0.0|1329233237.622352
+C283|Commodities|Delta|CM Intra Bucket Correlation (Bkt 17)|S_CM_32,S_CM_33|C255,C256,C267|20832000000.0|0.0|0.0|0.0|0.0|20832000000.0
+C284|Commodities|Delta|CM Intra Bucket Correlation (exceeds concentration threshold)|S_CM_18,S_CM_18,S_CM_18,S_CM_18,S_CM_18,S_CM_14|C237,C241,C261,C262|33203890545.923035|0.0|0.0|0.0|0.0|33203890545.923035
+C285|Commodities|Delta|CM Inter Bucket Correlation (same sign, pos)|S_CM_3,S_CM_6|C226,C229,C258|42014880411.58751|0.0|0.0|0.0|0.0|42014880411.58751
+C286|Commodities|Delta|CM Inter Bucket Correlation (same sign, neg)|S_CM_4,S_CM_5|C227,C228,C259|5778604675.871157|0.0|0.0|0.0|0.0|5778604675.871157
+C287|Commodities|Delta|CM Inter Bucket Correlation (diff signs)|S_CM_3,S_CM_5|C226,C228,C258,C259|36704310373.57874|0.0|0.0|0.0|0.0|36704310373.57874
+C288|Commodities|Delta|CM Inter Bucket Correlation (w/residual)|S_CM_3,S_CM_5,S_CM_31|C226,C228,C254,C258,C259,C287|36704463434.301834|0.0|0.0|0.0|0.0|36704463434.301834
+C289|Commodities|Delta|CM Inter Bucket Correlation (bkts 1-4, 5-8)|S_CM_1,S_CM_3,S_CM_5,S_CM_7,S_CM_9,S_CM_11,S_CM_13,S_CM_14|C224,C226,C228,C230,C232,C234,C236,C237,C257-C261,C287|40302083941.1562|0.0|0.0|0.0|0.0|40302083941.1562
+C290|Commodities|Delta|CM Inter Bucket Correlation (bkts 1-4, 9-12)|S_CM_1,S_CM_3,S_CM_5,S_CM_7,S_CM_16,S_CM_18,S_CM_20,S_CM_22|C224,C226,C228,C230,C239,C241,C243,C245,C257-C259,C262-C264,C287|35556969944.02082|0.0|0.0|0.0|0.0|35556969944.02082
+C291|Commodities|Delta|CM Inter Bucket Correlation (bkts 1-4, 13-17)|S_CM_1,S_CM_3,S_CM_5,S_CM_7,S_CM_24,S_CM_26,S_CM_28,S_CM_30,S_CM_32|C224,C226,C228,C230,C247,C249,C251,C253,C255,C257-C259,C265-C267,C287|52825730633.84926|0.0|0.0|0.0|0.0|52825730633.84926
+C292|Commodities|Delta|CM Inter Bucket Correlation (bkts 5-8, 9-12)|S_CM_9,S_CM_11,S_CM_13,S_CM_14,S_CM_16,S_CM_18,S_CM_20,S_CM_22|C232,C234,C236,C237,C239,C241,C243,C245,C260-C264,C284|22228596055.53171|0.0|0.0|0.0|0.0|22228596055.53171
+C293|Commodities|Delta|CM Inter Bucket Correlation (bkts 5-8, 13-17)|S_CM_9,S_CM_11,S_CM_13,S_CM_14,S_CM_24,S_CM_26,S_CM_28,S_CM_30,S_CM_32|C232,C234,C236,C237,C247,C249,C251,C253,C255,C260,C261,C265-C267|25885664005.39109|0.0|0.0|0.0|0.0|25885664005.39109
+C294|Commodities|Delta|CM Inter Bucket Correlation (bkts 9-12, 13-17)|S_CM_16,S_CM_18,S_CM_20,S_CM_22,S_CM_24,S_CM_26,S_CM_28,S_CM_30,S_CM_32|C239,C241,C243,C245,C247,C249,C251,C253,C255,C262-C267|24342464817.680237|0.0|0.0|0.0|0.0|24342464817.680237
+C295|Commodities|Delta|CM Inter Bucket Correlation (all)|S_CM_1,S_CM_3,S_CM_5,S_CM_7,S_CM_9,S_CM_11,S_CM_13,S_CM_14,S_CM_16,S_CM_18,S_CM_20,S_CM_22,S_CM_24,S_CM_26,S_CM_28,S_CM_30,S_CM_32|C224,C226,C228,C230,C232,C234,C236,C237,C239,C241,C243,C245,C247,C249,C251,C253,C255,C257-C267,C284,C287,C289-C294|53271770516.85066|0.0|0.0|0.0|0.0|53271770516.85066
+C296|Commodities|Delta|All Commodities|All S_CM|C224-C295|53302818278.47215|0.0|0.0|0.0|0.0|53302818278.47215
+C297|Global|Delta|All Delta Sensitivities (no multiplier)|All S_IR,S_CRQ,S_CRNQ,S_CM,S_FX,S_EQ|C1-C296|124145731045.79042|0.0|0.0|3727787.5475944174|0.0|124147067840.73784
+C298|Global|Delta|All Delta Sensitivities (with multiplier)|All S_IR,S_CRQ,S_CRNQ,S_CM,S_FX,S_EQ,S_MUL|C1-C297|124145731045.79042|0.0|0.0|3727787.5475944174|8940985027.707743|133088052868.44559
+C299|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_1|None|0.0|96000000.0|9059778.736087713|0.0|0.0|105059778.73608771
+C300|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_2|None|0.0|32000000.0|4529889.368043857|0.0|0.0|36529889.368043855
+C301|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_3|None|0.0|16000000.0|3019926.2453625714|0.0|0.0|19019926.245362572
+C302|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_4|None|0.0|32000000.0|9059778.736087713|0.0|0.0|41059778.73608771
+C303|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_5|None|0.0|14400000.0|8153800.862478944|0.0|0.0|22553800.86247894
+C304|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_6|None|0.0|8000000.0|7549815.61340643|0.0|0.0|15549815.61340643
+C305|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_7|None|0.0|8000000.0|11324723.420109643|0.0|0.0|19324723.420109645
+C306|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_8|None|0.0|16000000.0|45298893.68043857|0.0|0.0|61298893.68043857
+C307|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_9|None|0.0|16000000.0|90597787.36087714|0.0|0.0|106597787.36087714
+C308|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_10|None|0.0|16000000.0|181195574.72175428|0.0|0.0|197195574.72175428
+C309|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_11|None|0.0|16000000.0|543586724.1652629|0.0|0.0|559586724.1652629
+C310|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_12|None|0.0|16000000.0|1181006870.9542913|0.0|0.0|1197006870.9542913
+C311|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_13|None|0.0|16000000.0|0.0|0.0|0.0|16000000.0
+C312|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_14|None|0.0|16000000.0|0.0|0.0|0.0|16000000.0
+C313|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_15|None|0.0|16000000.0|0.0|0.0|0.0|16000000.0
+C314|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_16|None|0.0|12800000.0|1207970.4981450287|0.0|0.0|14007970.498145029
+C315|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_17|None|0.0|6400000.0|905977.8736087714|0.0|0.0|7305977.873608772
+C316|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_18|None|0.0|3200000.0|452988.9368043857|0.0|0.0|3652988.936804386
+C317|Rates & Fx|Vega & Curvature|IRV Risk Weight & Scaling|S_IRV_19|None|0.0|1600000.0|452988.9368043857|0.0|0.0|2052988.9368043856
+C318|Rates & Fx|Vega & Curvature|Concentration (reg vol, well traded)|S_IRV_1,S_IRV_1,S_IRV_1,S_IRV_1,S_IRV_1|C299|0.0|548198631.0913544|45298893.68043857|0.0|0.0|593497524.7717929
+C319|Rates & Fx|Vega & Curvature|Concentration (reg vol, less traded)|S_IRV_3,S_IRV_3|C301|0.0|32831307.266724925|6039852.490725143|0.0|0.0|38871159.75745007
+C320|Rates & Fx|Vega & Curvature|Concentration (reg vol, w/inf|S_IRV_3,S_IRV_3,S_IRV_18|C301,C316,C319|0.0|35916909.95969213|6180556.827753176|0.0|0.0|42097466.78744531
+C321|Rates & Fx|Vega & Curvature|Concentration (low vol)|S_IRV_2,S_IRV_2,S_IRV_2,S_IRV_2,S_IRV_2|C300|0.0|182336922.33542073|22649446.840219285|0.0|0.0|204986369.17564002
+C322|Rates & Fx|Vega & Curvature|Concentration (low vol, w/inf)|S_IRV_2,S_IRV_2,S_IRV_2,S_IRV_2,S_IRV_2,S_IRV_17|C300,C315,C321|0.0|188972846.25939417|22917960.54865739|0.0|0.0|211890806.80805156
+C323|Rates & Fx|Vega & Curvature|Concentration (high vol)|S_IRV_5,S_IRV_5|C303|0.0|29634955.51262553|16307601.724957887|0.0|0.0|45942557.23758341
+C324|Rates & Fx|Vega & Curvature|Concentration (high vol, w/inf)|S_IRV_5,S_IRV_5,S_IRV_20|C303,C323|0.0|31145678.200807177|16581867.846208133|0.0|0.0|47727546.04701531
+C325|Rates & Fx|Vega & Curvature|Intra-currency Correlation (Same Sign - Pos)|S_IRV_1,S_IRV_9|C299,C307,C318|0.0|101949006.86127354|93033027.3507386|0.0|0.0|194982034.21201214
+C326|Rates & Fx|Vega & Curvature|Intra-currency Correlation (Same Sign - Neg)|S_IRV_13,S_IRV_14|C311,C312|0.0|31919899.749216005|0.0|0.0|0.0|31919899.749216005
+C327|Rates & Fx|Vega & Curvature|Intra-currency Correlation (Opposite sign)|S_IRV_2,S_IRV_15|C300,C313,C321|0.0|16316862.44349691|1654890.387516293|0.0|0.0|17971752.831013203
+C328|Rates & Fx|Vega & Curvature|Intra-currency Correlation (Opposite sign, w/Inflation)|S_IRV_2,S_IRV_15,S_IRV_17|C300,C313,C315,C321,C322,C327|0.0|19674145.47064243|2075674.482370908|0.0|0.0|21749819.95301334
+C329|Rates & Fx|Vega & Curvature|Inter-currency Correlation|S_IRV_1,S_IRV_2|C299,C300,C318,C321|0.0|107664664.58406863|10815667.826269954|0.0|0.0|118480332.41033858
+C330|Rates & Fx|Vega & Curvature|Inter-currency Correlation (exeeds concentration threshold)|S_IRV_1,S_IRV_5,S_IRV_5|C299,C303,C318,C323|0.0|106351975.00862546|19989132.85659283|0.0|0.0|126341107.8652183
+C331|Rates & Fx|Vega & Curvature|Inter-currency Correlation (3 ccys)|S_IRV_1,S_IRV_2,S_IRV_3|C299-C301,C318,C319,C321,C329|0.0|112910584.09201504|11793779.531762684|0.0|0.0|124704363.62377773
+C332|Rates & Fx|Vega & Curvature|All Interest Rate Vol Sensitivities|All S_IRV|C299-C331|0.0|154684351.12094912|1518036572.6885982|0.0|0.0|1672720923.8095472
+C333|Rates & Fx|Vega & Curvature|FXV Risk Weight (RR) & Scaling|S_FXV_1|None|0.0|77758789.08247691|202961752.17028216|0.0|0.0|280720541.2527591
+C334|Rates & Fx|Vega & Curvature|FXV Risk Weight (RR) & Scaling|S_FXV_2|None|0.0|323994954.5103204|211418491.84404397|0.0|0.0|535413446.3543644
+C335|Rates & Fx|Vega & Curvature|FXV Risk Weight (HR) & Scaling|S_FXV_3|None|0.0|439982580.23330176|143552318.1081091|0.0|0.0|583534898.3414109
+C336|Rates & Fx|Vega & Curvature|FXV Risk Weight (RR) & Scaling|S_FXV_4|None|0.0|129597981.80412818|0.0|0.0|0.0|129597981.80412818
+C337|Rates & Fx|Vega & Curvature|FXV Risk Weight (RR) & Scaling|S_FXV_5|None|0.0|48599243.17654807|0.0|0.0|0.0|48599243.17654807
+C338|Rates & Fx|Vega & Curvature|FXV Risk Weight (RR) & Scaling|S_FXV_6|None|0.0|38879394.54123846|8456739.673761757|0.0|0.0|47336134.21500021
+C339|Rates & Fx|Vega & Curvature|FXV Risk Weight (RR) & Scaling|S_FXV_7|None|0.0|38879394.54123846|0.0|0.0|0.0|38879394.54123846
+C340|Rates & Fx|Vega & Curvature|FXV Risk Weight (RH) & Scaling|S_FXV_8|None|0.0|131994774.06999052|8613139.086486544|0.0|0.0|140607913.15647706
+C341|Rates & Fx|Vega & Curvature|FXV Concentration (sig:sig)|S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1,S_FXV_1|C333|0.0|1840804796.679171|4059235043.405644|0.0|0.0|5900039840.084815
+C342|Rates & Fx|Vega & Curvature|FXV Concentration (freq:sig)|S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3,S_FXV_3|C335|0.0|34574888565.24225|2871046362.162182|0.0|0.0|37445934927.404434
+C343|Rates & Fx|Vega & Curvature|FXV Concentration (sig:other)|S_FXV_4,S_FXV_4,S_FXV_4,S_FXV_4,S_FXV_4,S_FXV_4,S_FXV_4,S_FXV_4,S_FXV_4,S_FXV_4|C336|0.0|3367028118.8198338|0.0|0.0|0.0|3367028118.8198338
+C344|Rates & Fx|Vega & Curvature|FXV Concentration (freq:freq)|S_FXV_5,S_FXV_5,S_FXV_5,S_FXV_5,S_FXV_5,S_FXV_5,S_FXV_5,S_FXV_5,S_FXV_5,S_FXV_5|C337|0.0|819306129.633287|0.0|0.0|0.0|819306129.633287
+C345|Rates & Fx|Vega & Curvature|FXV Concentration (freq:other)|S_FXV_6,S_FXV_6,S_FXV_6,S_FXV_6,S_FXV_6,S_FXV_6,S_FXV_6,S_FXV_6,S_FXV_6,S_FXV_6|C338|0.0|586247744.0775309|84567396.73761758|0.0|0.0|670815140.8151485
+C346|Rates & Fx|Vega & Curvature|FXV Concentration (other:other)|S_FXV_7,S_FXV_7,S_FXV_7,S_FXV_7,S_FXV_7,S_FXV_7,S_FXV_7,S_FXV_7,S_FXV_7,S_FXV_7|C339|0.0|586247744.0775309|0.0|0.0|0.0|586247744.0775309
+C347|Rates & Fx|Vega & Curvature|FXV Aggregate (swapped currencies)|S_FXV_1,S_FXV_2|C333,C334,C341|0.0|401753743.59279734|414380244.01432616|0.0|0.0|816133987.6071235
+C348|Rates & Fx|Vega & Curvature|FXV Correlation (same sign, pos)|S_FXV_1,S_FXV_3|C333,C335,C341,C342|0.0|483573792.5535794|286923827.8468908|0.0|0.0|770497620.4004703
+C349|Rates & Fx|Vega & Curvature|FXV Correlation (same sign, neg)|S_FXV_4,S_FXV_5|C336,C337,C343,C344|0.0|159549011.7735772|0.0|0.0|0.0|159549011.7735772
+C350|Rates & Fx|Vega & Curvature|FXV Correlation (diff sign)|S_FXV_3,S_FXV_4|C335,C336,C342,C343|0.0|391611355.00550556|188898932.32888094|0.0|0.0|580510287.3343865
+C351|Rates & Fx|Vega & Curvature|FXV Correlation (exceeds concentration threshold)|S_FXV_3,S_FXV_5,S_FXV_5,S_FXV_5,S_FXV_5,S_FXV_5,S_FXV_5,S_FXV_5,S_FXV_5,S_FXV_5,S_FXV_5|C335,C337,C342,C344|0.0|806857484.8518151|177027443.61839643|0.0|0.0|983884928.4702115
+C352|Rates & Fx|Vega & Curvature|All FX Vol Sensitivities|All S_FXV|C333-C351|0.0|716752482.626321|553559004.8818179|0.0|0.0|1270311487.508139
+C353|Credit|Vega & Curvature|CRV  Risk Weight|S_CRV_1|None|0.0|46800000.0|15269351.081802238|0.0|0.0|62069351.081802234
+C354|Credit|Vega & Curvature|CRV  Risk Weight|S_CRV_2|None|0.0|23400000.0|7634675.540901119|0.0|0.0|31034675.540901117
+C355|Credit|Vega & Curvature|CRV  Risk Weight|S_CRV_3|None|0.0|11700000.0|1272445.9234835198|0.0|0.0|12972445.92348352
+C356|Credit|Vega & Curvature|CRV  Risk Weight|S_CRV_4|None|0.0|78000000.0|25448918.469670393|0.0|0.0|103448918.46967039
+C357|Credit|Vega & Curvature|CRV  Risk Weight|S_CRV_5|None|0.0|15600000.0|0.0|0.0|0.0|15600000.0
+C358|Credit|Vega & Curvature|CRV  Risk Weight|S_CRV_6|None|0.0|3900000.0|1272445.9234835198|0.0|0.0|5172445.92348352
+C359|Credit|Vega & Curvature|CRV  Risk Weight|S_CRV_7|None|0.0|11700000.0|763467.5540901117|0.0|0.0|12463467.554090112
+C360|Credit|Vega & Curvature|CRV  Risk Weight|S_CRV_8|None|0.0|58500000.0|0.0|0.0|0.0|58500000.0
+C361|Credit|Vega & Curvature|CRV Concentration (same tenor, diff quanto, same sign)|S_CRV_1,S_CRV_2,S_CRV_1,S_CRV_2|C353,C354|0.0|157419824.4912538|44955799.467813075|0.0|0.0|202375623.95906687
+C362|Credit|Vega & Curvature|CRV Concentration (diff tenor, same quanto, diff sign)|S_CRV_4,S_CRV_5,S_CRV_4,S_CRV_5|C356,C357|0.0|135485413.02611563|46273556.47801861|0.0|0.0|181758969.50413424
+C363|Credit|Vega & Curvature|CRV Concentration (residual)|S_CRV_8,S_CRV_8|C360|0.0|121106505.66458316|0.0|0.0|0.0|121106505.66458316
+C364|Credit|Vega & Curvature|CRV Intra-bucket Correlation (same tenor, diff quanto, same sign)|S_CRV_1,S_CRV_2|C353,C354,C361|0.0|69415617.8392154|22477899.733906537|0.0|0.0|91893517.57312194
+C365|Credit|Vega & Curvature|CRV Intra-bucket Correlation (diff name)|S_CRV_1,S_CRV_3|C353,C355|0.0|52688985.56624525|15685872.003692333|0.0|0.0|68374857.56993759
+C366|Credit|Vega & Curvature|CRV Intra-bucket Correlation (residual, same name)|S_CRV_6,S_CRV_8|C358,C360,C363|0.0|56650772.280702405|1331701.253442974|0.0|0.0|57982473.53414538
+C367|Credit|Vega & Curvature|CRV Intra-bucket Correlation (residual, diff name)|S_CRV_6,S_CRV_7|C358,C359|0.0|14061649.974309558|1699188.9009783994|0.0|0.0|15760838.875287957
+C368|Credit|Vega & Curvature|CRV Intra-bucket Correlation (exceeds concentration threshold)|S_CRV_1,S_CRV_1,S_CRV_1,S_CRV_1,S_CRV_1,S_CRV_3|C353,C355,C365|0.0|346000248.14194244|76728922.06730528|0.0|0.0|422729170.2092477
+C369|Credit|Vega & Curvature|CRV Inter-bucket (same sign)|S_CRV_1,S_CRV_4|C353,C356|0.0|106834376.48996693|33320643.827379722|0.0|0.0|140155020.31734666
+C370|Credit|Vega & Curvature|CRV Inter-bucket (diff sign)|S_CRV_1,S_CRV_5|C353,C357|0.0|42493896.032253854|14664380.215108892|0.0|0.0|57158276.24736275
+C371|Credit|Vega & Curvature|CRV Inter-bucket (w/residual)|S_CRV_1,S_CRV_5,S_CRV_6|C353,C357,C358,C370|0.0|46393896.032253854|15936826.13859241|0.0|0.0|62330722.17084627
+C372|Credit|Vega & Curvature|All Credit Qualifying Vol Sensitivities|All S_CRV|C353-C371|0.0|168953650.5974914|38829224.54459068|0.0|0.0|207782875.1420821
+C373|Credit|Vega & Curvature|CRNQ Vol  Risk Weight|S_CNV_1|None|0.0|15600000.0|5089783.693934079|0.0|0.0|20689783.69393408
+C374|Credit|Vega & Curvature|CRNQ Vol  Risk Weight|S_CNV_2|None|0.0|11700000.0|3817337.7704505594|0.0|0.0|15517337.770450559
+C375|Credit|Vega & Curvature|CRNQ Vol  Risk Weight|S_CNV_3|None|0.0|7800000.0|0.0|0.0|0.0|7800000.0
+C376|Credit|Vega & Curvature|CRNQ Vol  Risk Weight|S_CNV_4|None|0.0|19500000.0|0.0|0.0|0.0|19500000.0
+C377|Credit|Vega & Curvature|CRNQ Vol  Risk Weight|S_CNV_5|None|0.0|7800000.0|508978.36939340783|0.0|0.0|8308978.369393408
+C378|Credit|Vega & Curvature|CRNQ Vol  Risk Weight|S_CNV_6|None|0.0|17550000.0|5726006.655675839|0.0|0.0|23276006.65567584
+C379|Credit|Vega & Curvature|CRNQ Vol  Risk Weight|S_CNV_7|None|0.0|3900000.0|254489.18469670392|0.0|0.0|4154489.184696704
+C380|Credit|Vega & Curvature|CRNQ Vol  Risk Weight|S_CNV_8|None|0.0|9750000.0|318111.4808708799|0.0|0.0|10068111.48087088
+C381|Credit|Vega & Curvature|CRNQ Vol  Risk Weight|S_CNV_9|None|0.0|5850000.0|1908668.8852252797|0.0|0.0|7758668.885225279
+C382|Credit|Vega & Curvature|CNV Concentration (same tenor)|S_CNV_1,S_CNV_1|C373|0.0|36330684.60774992|10179567.387868159|0.0|0.0|46510251.995618075
+C383|Credit|Vega & Curvature|CNV Concentration (diff tenor)|S_CNV_4,S_CNV_4,S_CNV_5|C376,C377|0.0|50473221.629839666|717350.6683330446|0.0|0.0|51190572.29817271
+C384|Credit|Vega & Curvature|CNV Concentration (residual,  diff tenor)|S_CNV_6,S_CNV_8|C378,C380|0.0|26100336.058619656|5848427.75604829|0.0|0.0|31948763.814667948
+C385|Credit|Vega & Curvature|CNV Intra-bucket Correlation (same name)|S_CNV_2,S_CNV_3|C374,C375|0.0|10920000.0|3605792.5761438035|0.0|0.0|14525792.576143803
+C386|Credit|Vega & Curvature|CNV Intra-bucket Correlation (diff name)|S_CNV_1,S_CNV_2|C373,C374,C382|0.0|23177946.414641656|7205768.601541678|0.0|0.0|30383715.016183335
+C387|Credit|Vega & Curvature|CNV Intra-bucket Correlation (residual)|S_CNV_7,S_CNV_9|C379,C381|0.0|8499852.939904314|2014080.24911372|0.0|0.0|10513933.189018033
+C388|Credit|Vega & Curvature|CNV Intra-bucket Correlation (exceeds concentration threshold)|S_CNV_1,S_CNV_1,S_CNV_2,S_CNV_3|C373-C375,C382,C385,C386|0.0|39291345.66374377|11511254.02657851|0.0|0.0|50802599.69032228
+C389|Credit|Vega & Curvature|CNV Inter-bucket Correlation (same sign)|S_CNV_1,S_CNV_5|C373,C377,C382|0.0|18589545.448988255|5200468.317185701|0.0|0.0|23790013.766173955
+C390|Credit|Vega & Curvature|CNV Inter-bucket Correlation (diff sign)|S_CNV_2,S_CNV_4|C374,C376|0.0|20965900.886916354|3918632.889147454|0.0|0.0|24884533.776063807
+C391|Credit|Vega & Curvature|CNV Inter-bucket Correlation (w/residual)|S_CNV_2,S_CNV_3,S_CNV_6|C374,C375,C378,C385|0.0|28470000.0|9331799.231819643|0.0|0.0|37801799.231819645
+C392|Credit|Vega & Curvature|All Credit Non Qualifying Vol Sensitivities|All S_CNV|C373-C391|0.0|59002567.25311217|13752062.193472682|0.0|0.0|72754629.44658485
+C393|Equity|Vega & Curvature|EQV Risk Weight|S_EQV_1|None|0.0|9189986.345106473|88477382.05573726|0.0|0.0|97667368.40084372
+C394|Equity|Vega & Curvature|EQV Risk Weight|S_EQV_2|None|0.0|7658321.954255394|24577050.57103813|0.0|0.0|32235372.525293525
+C395|Equity|Vega & Curvature|EQV Risk Weight|S_EQV_3|None|0.0|22974965.86276618|0.0|0.0|0.0|22974965.86276618
+C396|Equity|Vega & Curvature|EQV Risk Weight|S_EQV_4|None|0.0|18101488.25551275|0.0|0.0|0.0|18101488.25551275
+C397|Equity|Vega & Curvature|EQV Risk Weight|S_EQV_5|None|0.0|9050744.127756376|0.0|0.0|0.0|9050744.127756376
+C398|Equity|Vega & Curvature|EQV Risk Weight|S_EQV_6|None|0.0|99210079.86194488|26532043.230097987|0.0|0.0|125742123.09204286
+C399|Equity|Vega & Curvature|EQV Risk Weight|S_EQV_7|None|0.0|4177266.520502942|0.0|0.0|0.0|4177266.520502942
+C400|Equity|Vega & Curvature|EQV Risk Weight|S_EQV_8|None|0.0|20190121.51576422|1619851.0603638769|0.0|0.0|21809972.5761281
+C401|Equity|Vega & Curvature|EQV Risk Weight|S_EQV_9|None|0.0|2367117694.951667|126609048.39625703|0.0|0.0|2493726743.3479238
+C402|Equity|Vega & Curvature|EQV Risk Weight|S_EQV_10|None|0.0|59177942.37379167|0.0|0.0|0.0|59177942.37379167
+C403|Equity|Vega & Curvature|EQV Risk Weight|S_EQV_11|None|0.0|705583159.0721315|0.0|0.0|0.0|705583159.0721315
+C404|Equity|Vega & Curvature|EQV Risk Weight|S_EQV_12|None|0.0|4177266.520502942|335141.59869597445|0.0|0.0|4512408.1191989165
+C405|Equity|Vega & Curvature|EQV Risk Weight|S_EQV_13|None|0.0|5221583.150628678|0.0|0.0|0.0|5221583.150628678
+C406|Equity|Vega & Curvature|EQV Concentration (bkts 1-4)|S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1,S_EQV_1|C393|0.0|399011110.7733865|1769547641.1147456|0.0|0.0|2168558751.888132
+C407|Equity|Vega & Curvature|EQV Concentration (bkts 5-8)|S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6,S_EQV_6|C398|0.0|5226316129.260733|530640864.60195965|0.0|0.0|5756956993.862692
+C408|Equity|Vega & Curvature|EQV Concentration (bkt 9)|S_EQV_7,S_EQV_7,S_EQV_7,S_EQV_7,S_EQV_7|C399|0.0|29598971.10669476|0.0|0.0|0.0|29598971.10669476
+C409|Equity|Vega & Curvature|EQV Concentration (bkt 10)|S_EQV_8,S_EQV_8,S_EQV_8,S_EQV_8,S_EQV_8|C400|0.0|140657124.21567088|8099255.301819384|0.0|0.0|148756379.51749027
+C410|Equity|Vega & Curvature|EQV Concentration (bkt 11-12)|S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9,S_EQV_9|C401|0.0|210617369196.73346|2532180967.925141|0.0|0.0|213149550164.6586
+C411|Equity|Vega & Curvature|EQV Concentration (residual)|S_EQV_12,S_EQV_12,S_EQV_12,S_EQV_12,S_EQV_12|C404|0.0|29598971.10669476|1675707.9934798724|0.0|0.0|31274679.100174636
+C412|Equity|Vega & Curvature|EQV Intra-bucket Correlation (same sign, pos)|S_EQV_1,S_EQV_2|C393,C394,C406|0.0|12869627.186434157|95539896.6861653|0.0|0.0|108409523.87259945
+C413|Equity|Vega & Curvature|EQV Intra-bucket Correlation (same sign, neg)|S_EQV_4,S_EQV_5|C396,C397|0.0|21872111.47818428|0.0|0.0|0.0|21872111.47818428
+C414|Equity|Vega & Curvature|EQV Intra-bucket Correlation (diff sign)|S_EQV_1,S_EQV_3|C393,C395,C406|0.0|13784979.517659709|51611806.19918007|0.0|0.0|65396785.716839775
+C415|Equity|Vega & Curvature|EQV Intra-bucket Correlation (exceeds concentration threshold)|S_EQV_1,S_EQV_7,S_EQV_7,S_EQV_7,S_EQV_7,S_EQV_7|C393,C399,C406,C408|0.0|29647102.68320122|87962127.28163773|0.0|0.0|117609229.96483895
+C416|Equity|Vega & Curvature|EQV Inter-bucket Correlation (same sign)|S_EQV_3,S_EQV_4|C395,C396|0.0|31573921.182993166|0.0|0.0|0.0|31573921.182993166
+C417|Equity|Vega & Curvature|EQV Inter-bucket Correlation (diff sign)|S_EQV_2,S_EQV_6|C394,C398,C407|0.0|100417317.71569161|38637927.67506418|0.0|0.0|139055245.39075577
+C418|Equity|Vega & Curvature|EQV Inter-bucket Correlation (w/residual)|S_EQV_2,S_EQV_6,S_EQV_12|C394,C398,C404,C407,C411,C417|0.0|104594584.23619455|38973069.27376015|0.0|0.0|143567653.5099547
+C419|Equity|Vega & Curvature|All Equity Vol Sensitivities|All S_EQV|C393-C418|0.0|2704954853.270222|153331578.17171752|0.0|0.0|2858286431.44194
+C420|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_1|None|0.0|79693342.83992295|968419577.8985764|0.0|0.0|1048112920.7384993
+C421|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_2|None|0.0|34154289.78853841|191030711.25670546|0.0|0.0|225185001.04524386
+C422|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_3|None|0.0|34154289.78853841|0.0|0.0|0.0|34154289.78853841
+C423|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_4|None|0.0|383486762.53797495|0.0|0.0|0.0|383486762.53797495
+C424|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_5|None|0.0|119839613.29311718|0.0|0.0|0.0|119839613.29311718
+C425|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_6|None|0.0|76697352.50759502|17874218.597118642|0.0|0.0|94571571.10471366
+C426|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_7|None|0.0|431422607.855222|67028319.73919491|0.0|0.0|498450927.5944169
+C427|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_8|None|0.0|176164231.54088226|16421938.336102746|0.0|0.0|192586169.876985
+C428|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_9|None|0.0|31757497.522676058|1480208.727573887|0.0|0.0|33237706.250249945
+C429|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_10|None|0.0|83887729.30518202|0.0|0.0|0.0|83887729.30518202
+C430|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_11|None|0.0|136617159.15415365|63676903.75223516|0.0|0.0|200294062.90638882
+C431|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_12|None|0.0|71903767.97587031|16757079.934798725|0.0|0.0|88660847.91066903
+C432|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_13|None|0.0|86284521.57104439|2681132.7895677956|0.0|0.0|88965654.36061218
+C433|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_14|None|0.0|19174338.126898754|0.0|0.0|0.0|19174338.126898754
+C434|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_15|None|0.0|31757497.522676058|2960417.455147774|0.0|0.0|34717914.97782383
+C435|Commodities|Vega & Curvature|CMV Risk Weight|S_CMV_16|None|0.0|34933247.274943665|0.0|0.0|0.0|34933247.274943665
+C436|Commodities|Vega & Curvature|CMV Concentration (bkt 1)|S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_1|C420|0.0|2233058215.68597|9684195778.985764|0.0|0.0|11917253994.671734
+C437|Commodities|Vega & Curvature|CMV Concentration (bkt 2)|S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4,S_CMV_4|C423|0.0|29315068119.379246|0.0|0.0|0.0|29315068119.379246
+C438|Commodities|Vega & Curvature|CMV Concentration (bkt 3-5)|S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6,S_CMV_6|C425|0.0|6696033422.247293|357484371.9423728|0.0|0.0|7053517794.189667
+C439|Commodities|Vega & Curvature|CMV Concentration (bkt 6-7)|S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7,S_CMV_7|C426|0.0|26569210334.610954|1340566394.7838986|0.0|0.0|27909776729.39485
+C440|Commodities|Vega & Curvature|CMV Concentration (bkt 8-9)|S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8,S_CMV_8|C427|0.0|11783283240.172358|328438766.722055|0.0|0.0|12111722006.894413
+C441|Commodities|Vega & Curvature|CMV Concentration (bkt 10)|S_CMV_9,S_CMV_9,S_CMV_9,S_CMV_9,S_CMV_9|C428|0.0|338213075.50573254|7401043.637869435|0.0|0.0|345614119.14360195
+C442|Commodities|Vega & Curvature|CMV Concentration (bkt 11)|S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10,S_CMV_10|C429|0.0|5882017689.272477|0.0|0.0|0.0|5882017689.272477
+C443|Commodities|Vega & Curvature|CMV Concentration (bkt 12)|S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11,S_CMV_11|C430|0.0|9855830401.031128|1273538075.044703|0.0|0.0|11129368476.07583
+C444|Commodities|Vega & Curvature|CMV Concentration (bkt 13-15)|S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12,S_CMV_12|C431|0.0|3534955808.786582|335141598.69597465|0.0|0.0|3870097407.482557
+C445|Commodities|Vega & Curvature|CMV Concentration (bkt 16)|S_CMV_15,S_CMV_15,S_CMV_15,S_CMV_15,S_CMV_15,S_CMV_15,S_CMV_15,S_CMV_15,S_CMV_15,S_CMV_15|C434|0.0|956611036.7042452|29604174.551477738|0.0|0.0|986215211.255723
+C446|Commodities|Vega & Curvature|CMV Concentration (bkt 17)|S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13,S_CMV_13|C432|0.0|7374429571.496496|53622655.7913559|0.0|0.0|7428052227.287852
+C447|Commodities|Vega & Curvature|CMV Intra-bucket Correlation (same sign, pos)|S_CMV_1,S_CMV_2|C420,C421,C436|0.0|95088334.39639857|1025447863.6373334|0.0|0.0|1120536198.033732
+C448|Commodities|Vega & Curvature|CMV Intra-bucket Correlation (same sign, neg)|S_CMV_4,S_CMV_5|C423,C424,C437|0.0|501496923.61393267|0.0|0.0|0.0|501496923.61393267
+C449|Commodities|Vega & Curvature|CMV Intra-bucket Correlation (diff sign)|S_CMV_2,S_CMV_3|C421,C422|0.0|40985147.74624609|186138639.348802|0.0|0.0|227123787.0950481
+C450|Commodities|Vega & Curvature|CMV Intra-bucket Correlation (exceeds concentration threshold)|S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_1,S_CMV_3|C420,C422,C436|0.0|2229904267.18511|9670535456.814053|0.0|0.0|11900439723.999163
+C451|Commodities|Vega & Curvature|CMV Inter-bucket Correlation (same sign)|S_CMV_1,S_CMV_6|C420,C425,C436,C438|0.0|117569990.05202968|971510091.1111466|0.0|0.0|1089080081.1631763
+C452|Commodities|Vega & Curvature|CMV Inter-bucket Correlation (diff sign)|S_CMV_2,S_CMV_9|C421,C428,C441|0.0|46869470.39736208|191258801.75803956|0.0|0.0|238128272.15540165
+C453|Commodities|Vega & Curvature|CMV Inter-bucket Correlation (w/residual)|S_CMV_2,S_CMV_9,S_CMV_15|C421,C428,C434,C441,C445,C452|0.0|56615244.450871855|191724470.52000332|0.0|0.0|248339714.97087517
+C454|Commodities|Vega & Curvature|All Commodity Vol Sensitivities|All S_CMV|C420-C453|0.0|611571927.7487146|1029870593.2205436|0.0|0.0|1641442520.9692583
+C455|Global|Vega & Curvature|All Vega Sensitivities (no multiplier)|All S_IRV,S_FXV,S_CRV,S_CNV,S_EQV,S_CMV|C299-C454|0.0|4259899994.3241596|2913842722.6198072|0.0|0.0|6970117464.823208
+C456|Global|Vega & Curvature|All Vega Sensitivities (with multipliers)|All S_IRV,S_FXV,S_CRV,S_CNV,S_EQV,S_CMV,S_MUL|C299-C455|0.0|4259899994.3241596|2913842722.6198072|0.0|811775792.4186443|7781893257.241852
+C457|AddOn|Notional|One Trade|S_AN_1,S_AN_3|None|0.0|0.0|0.0|0.0|10000000.0|10000000.0
+C458|AddOn|Notional|Multi Trades|S_AN_2,S_AN_4,S_AN_5|None|0.0|0.0|0.0|0.0|40000000.0|40000000.0
+C459|AddOn|Notional|Fixed Amount|S_AN_7,S_AN_8|None|0.0|0.0|0.0|0.0|30000000.0|30000000.0
+C460|AddOn|Notional|All Notional|All S_AN|C457-C459|0.0|0.0|0.0|0.0|80000000.0|80000000.0
+C461|Global|All|Risk Class Correlations|S_IR_41,S_FX_11,S_CRQ_1,S_CRNQ_1,S_EQ_25,S_CM_33|C41,C82,C134,C189,C256|1045576383.2751336|0.0|0.0|0.0|0.0|1045576383.2751336
+C462|Global|All|Combination (All w/o Multipliers and Notionals)|All S_IR,S_CRQ,S_CRNQ,S_CM,S_FX,S_EQ,S_IRV,S_FXV,S_CRV,S_CNV,S_EQV,S_CMV|C1-C456,C461|124145731045.79042|4259899994.3241596|2913842722.6198072|3727787.5475944174|0.0|130485395688.52335
+C463|Global|All|Combination (All w/Multiplier)|All S_IR,S_CRQ,S_CRNQ,S_CM,S_FX,S_EQ,S_IRV,S_FXV,S_CRV,S_CNV,S_EQV,S_CMV,S_MUL|C1-C456,C461,C462|124145731045.79042|4259899994.3241596|2913842722.6198072|3727787.5475944174|9725283985.554893|140210679674.07825
+C464|Global|All|Combination (All w/Notionals|All S_IR,S_CRQ,S_CRNQ,S_CM,S_FX,S_EQ,S_IRV,S_FXV,S_CRV,S_CNV,S_EQV,S_CMV,S_AN|C1-C463|124145731045.79042|4259899994.3241596|2913842722.6198072|3727787.5475944174|80000000.0|130565395688.52335
+C465|Global|All|Combination (All)|All|C1-C464|124145731045.79042|4259899994.3241596|2913842722.6198072|3727787.5475944174|9805283985.554893|140290679674.07825

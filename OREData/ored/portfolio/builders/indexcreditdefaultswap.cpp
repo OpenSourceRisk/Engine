@@ -36,41 +36,44 @@ CreditPortfolioSensitivityDecomposition IndexCreditDefaultSwapEngineBuilder::sen
 vector<string> IndexCreditDefaultSwapEngineBuilder::keyImpl(const Currency& ccy, const string& creditCurveId,
                                                             const vector<string>& creditCurveIds,
                                                             const boost::optional<string>& overrideCurve,
-                                                            Real recoveryRate) {
+                                                            Real recoveryRate, const bool inCcyDiscountCurve) {
     vector<string> res{ccy.code()};
     res.insert(res.end(), creditCurveIds.begin(), creditCurveIds.end());
     res.push_back(creditCurveId);
     res.push_back(overrideCurve ? *overrideCurve : "");
     if (recoveryRate != Null<Real>())
         res.push_back(to_string(recoveryRate));
+    res.push_back(inCcyDiscountCurve ? "1" : "0");
     return res;
 }
 
-boost::shared_ptr<PricingEngine>
-MidPointIndexCdsEngineBuilder::engineImpl(const Currency& ccy, const string& creditCurveId,
-                                          const vector<string>& creditCurveIds,
-                                          const boost::optional<string>& overrideCurve,
-                                          Real recoveryRate) {
+boost::shared_ptr<PricingEngine> MidPointIndexCdsEngineBuilder::engineImpl(
+    const Currency& ccy, const string& creditCurveId, const vector<string>& creditCurveIds,
+    const boost::optional<string>& overrideCurve, Real recoveryRate, const bool inCcyDiscountCurve) {
 
-    Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
     std::string curve = overrideCurve ? *overrideCurve : engineParameter("Curve", {}, false, "Underlying");
 
     if (curve == "Index") {
-        Handle<DefaultProbabilityTermStructure> dpts =
-            indexCdsDefaultCurve(market_, creditCurveId, configuration(MarketContext::pricing))->curve();
+        auto creditCurve = indexCdsDefaultCurve(market_, creditCurveId, configuration(MarketContext::pricing));
         Handle<Quote> mktRecovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
         Real recovery = recoveryRate != Null<Real>() ? recoveryRate : mktRecovery->value();
-        return boost::make_shared<QuantExt::MidPointIndexCdsEngine>(dpts, recovery, yts);
+        return boost::make_shared<QuantExt::MidPointIndexCdsEngine>(
+            creditCurve->curve(), recovery,
+            market_->discountCurve(
+                ccy.code(), configuration(inCcyDiscountCurve ? MarketContext::irCalibration : MarketContext::pricing)));
     } else if (curve == "Underlying") {
         std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
         std::vector<Real> recovery;
         for (auto& c : creditCurveIds) {
-            auto tmp = market_->defaultCurve(c, configuration(MarketContext::pricing))->curve();
+            auto tmp = market_->defaultCurve(c, configuration(MarketContext::pricing));
             auto tmp2 = market_->recoveryRate(c, configuration(MarketContext::pricing));
-            dpts.push_back(tmp);
+            dpts.push_back(tmp->curve());
             recovery.push_back(recoveryRate != Null<Real>() ? recoveryRate : tmp2->value());
         }
-        return boost::make_shared<QuantExt::MidPointIndexCdsEngine>(dpts, recovery, yts);
+        return boost::make_shared<QuantExt::MidPointIndexCdsEngine>(
+            dpts, recovery,
+            market_->discountCurve(
+                ccy.code(), configuration(inCcyDiscountCurve ? MarketContext::irCalibration : MarketContext::pricing)));
     } else {
         QL_FAIL("MidPointIndexCdsEngineBuilder: Curve Parameter value \""
                 << engineParameter("Curve") << "\" not recognised, expected Underlying or Index");

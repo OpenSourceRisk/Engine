@@ -262,8 +262,10 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
                                                swap_.creditCurveId() + "')"));
     }
 
-    cds->setPricingEngine(
-        iCdsEngineBuilder->engine(ccy, creditCurveId, constituentIds, overrideCurve, swap_.recoveryRate()));
+    // for cash settlement build the underlying swap with the inccy discount curve
+    Settlement::Type settleType = parseSettlementType(option_.settlement());
+    cds->setPricingEngine(iCdsEngineBuilder->engine(ccy, creditCurveId, constituentIds, overrideCurve,
+                                                    swap_.recoveryRate(), settleType == Settlement::Cash));
 
     // Strike may be in terms of spread or price
     auto strikeType = parseCdsOptionStrikeType(effectiveStrikeType_);
@@ -281,8 +283,9 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     }
 
     // Build the option
-    auto option = boost::make_shared<QuantExt::IndexCdsOption>(
-        cds, exercise, effectiveStrike_, strikeType, notionals_.tradeDate, notionals_.realisedFep, knockOut_, effectiveIndexTerm_);
+    auto option = boost::make_shared<QuantExt::IndexCdsOption>(cds, exercise, effectiveStrike_, strikeType, settleType,
+                                                               notionals_.tradeDate, notionals_.realisedFep, knockOut_,
+                                                               effectiveIndexTerm_);
     // the vol curve id is the credit curve id stripped by a term, if the credit curve id should contain one
     auto p = splitCurveIdWithTenor(swap_.creditCurveId());
     volCurveId_ = p.first;
@@ -310,7 +313,6 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
                                         -indicatorLongShort, ccy, engineFactory, configuration));
 
     // Instrument wrapper depends on the settlement type.
-    Settlement::Type settleType = parseSettlementType(option_.settlement());
     // The instrument build should be indpednent of the evaluation date. However, the general behavior
     // in ORE (e.g. IR swaptions) for normal pricing runs is that the option is considered expired on
     // the expiry date with no assumptions on an (automatic) exercise. Therefore we build a vanilla

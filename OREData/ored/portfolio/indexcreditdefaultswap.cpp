@@ -196,7 +196,7 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
     }
 
     cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveIdWithTerm(),
-                                             basketCreditCurves, boost::none, swap_.recoveryRate()));
+                                             basketCreditCurves, boost::none, swap_.recoveryRate(), false));
 
     instrument_.reset(new VanillaInstrument(cds));
 

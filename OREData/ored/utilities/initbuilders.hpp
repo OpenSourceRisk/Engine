@@ -55,7 +55,7 @@
                                                                  OVERWRITE);
 
 #define ORE_REGISTER_TRS_UNDERLYING_BUILDER(NAME, CLASS, OVERWRITE)                                                    \
-    oreplus::data::TrsUnderlyingBuilderFactory::instance().addBuilder(NAME, boost::make_shared<CLASS>(), OVERWRITE);
+    ore::data::TrsUnderlyingBuilderFactory::instance().addBuilder(NAME, boost::make_shared<CLASS>(), OVERWRITE);
 
 namespace ore::data {
 

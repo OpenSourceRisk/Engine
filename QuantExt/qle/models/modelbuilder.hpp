@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/model/modelbuilder.hpp
+/*! \file qle/models/modelbuilder.hpp
     \brief Model builder base class
     \ingroup models
 */
@@ -25,8 +25,7 @@
 
 #include <ql/patterns/lazyobject.hpp>
 
-namespace ore {
-namespace data {
+namespace QuantExt {
 
 class ModelBuilder : public QuantLib::LazyObject {
 public:
@@ -40,5 +39,4 @@ public:
     virtual bool requiresRecalibration() const = 0;
 };
 
-} // namespace data
-} // namespace ore
+} // namespace QuantExt
