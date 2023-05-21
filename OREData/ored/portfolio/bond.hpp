@@ -100,6 +100,7 @@ public:
     // only used for zero bonds
     Real faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
+    const string& subType() const { return subType_; }
 
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
@@ -139,6 +140,7 @@ private:
     Real bondNotional_;
     bool isPayer_;
     bool isInflationLinked_;
+    string subType_;
 };
 
 //! Serializable Bond

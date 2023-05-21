@@ -507,6 +507,9 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
     // XMLNode* tmp = XMLUtils::getChildNode(node, "CreditCurveId");
     if (auto tmp = XMLUtils::getChildNode(node, "CreditCurveId")) {
         creditCurveId_ = XMLUtils::getNodeValue(tmp);
+        CdsReferenceInformation ref;
+        if (tryParseCdsInformation(creditCurveId_, ref))
+            referenceInformation_ = ref;
     } else {
         tmp = XMLUtils::getChildNode(node, "ReferenceInformation");
         QL_REQUIRE(tmp, "Need either a CreditCurveId or ReferenceInformation node in CreditDefaultSwapData");

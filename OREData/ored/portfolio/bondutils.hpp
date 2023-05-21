@@ -46,7 +46,8 @@ using namespace ore::data;
     incomeCurveId
     volatilityCurveId
     coupons */
-void populateFromBondReferenceData(std::string& issuerId, std::string& settlementDays, std::string& calendar,
+void populateFromBondReferenceData(std::string& subType,
+                                   std::string& issuerId, std::string& settlementDays, std::string& calendar,
                                    std::string& issueDate, std::string& priceQuoteMethod,
                                    std::string& priceQuoteBaseValue, std::string& creditCurveId,
                                    std::string& creditGroup, std::string& referenceCurveId, std::string& incomeCurveId,
