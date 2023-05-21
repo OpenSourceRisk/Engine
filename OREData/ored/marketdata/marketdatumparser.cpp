@@ -437,7 +437,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::CAPFLOOR: {
-        QL_REQUIRE(tokens.size() >= 8 && tokens.size() <= 10 || tokens.size() == 4 || tokens.size() == 5,
+        QL_REQUIRE((tokens.size() >= 8 && tokens.size() <= 10) || tokens.size() == 4 || tokens.size() == 5,
                    "Either 4, 5 or 8, 9, 10 tokens expected in " << datumName);
         const string& ccy = tokens[2];
 	    Size offset = 0;
