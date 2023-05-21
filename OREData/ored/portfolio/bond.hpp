@@ -117,6 +117,9 @@ public:
     //! check data for completeness
     void checkData() const;
 
+    //! return isda sub type "Single Name", "Index" or throw if sub type can not be mapped
+    std::string isdaBaseProduct() const;
+
 private:
     void initialise();
     string issuerId_;
