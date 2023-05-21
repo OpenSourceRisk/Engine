@@ -210,6 +210,21 @@ void BondData::checkData() const {
                                             << securityId_ << "'");
 }
 
+std::string BondData::isdaBaseProduct() const {
+    static const std::set<std::string> singleName = {"ABS", "Corporate", "Loans", "Muni", "Sovereign"};
+    static const std::set<std::string> index = {"ABX", "CMBX", "MBX", "PrimeX", "TRX", "iBoxx"};
+    if (singleName.find(subType()) != singleName.end()) {
+        return "Single Name";
+    } else if (index.find(subType()) != index.end()) {
+        return "Index";
+    } else {
+        QL_FAIL("BondData::isdaBaseProduct() not defined for subType '"
+                << subType() << "', expected: "
+                << boost::algorithm::join(singleName, ", ") + " (map to 'Single Name') " +
+                       boost::algorithm::join(index, ", ") + " (map to 'Index')");
+    }
+}
+
 void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Bond::build() called for trade " << id());
 
