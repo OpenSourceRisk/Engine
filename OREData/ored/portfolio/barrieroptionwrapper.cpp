@@ -109,7 +109,7 @@ bool SingleBarrierOptionWrapper::exercise() const {
                     if (fixing == Null<Real>()) {
                         ALOG(StructuredMessage(
                             StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
-                            "Missing invalid fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
+                            "Missing fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
                                 ", Skipping this date, assuming no trigger",
                             std::map<string, string>({{"exceptionType", "Invalid or missing fixings"}})));
                     } else {
