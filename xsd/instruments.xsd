@@ -1500,7 +1500,7 @@
         <xs:element type="xs:string" name="ReferenceEntityId"/>
         <xs:element type="cdsTierType" name="Tier"/>
         <xs:element type="currencyCode" name="Currency"/>
-        <xs:element type="cdsDocClauseType" name="DocClause"/>
+        <xs:element type="cdsDocClauseType" name="DocClause" minOccurs="0"/>
       </xs:all>
     </xs:complexType>
   </xs:element>
