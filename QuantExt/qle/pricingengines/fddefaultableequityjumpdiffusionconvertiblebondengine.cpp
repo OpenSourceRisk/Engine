@@ -623,7 +623,7 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
            << "|" << std::setw(width) << "eq_fwd"
            << "|" << std::setw(width) << "div_amt"
            << "|" << std::setw(width) << "conv_val"
-           << "|" << std::setw(width) << "conv_prc";
+           << "|" << std::setw(width) << "conv_prc" << "|";
 
     results_.additionalResults["event_0000!"] = header.str();
 
@@ -722,7 +722,8 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
                              << convResetStr.str() << "|" << std::setw(width) << divStr.str() << "|" << std::setw(width)
                              << currentConvStr.str() << "|" << std::setw(width) << fxConvStr.str() << "|"
                              << std::setw(width) << eqFwdStr.str() << "|" << std::setw(width) << divAmtStr.str() << "|"
-                             << std::setw(width) << convValStr.str() << "|" << std::setw(width) << convPrcStr.str();
+                             << std::setw(width) << convValStr.str() << "|" << std::setw(width) << convPrcStr.str()
+                             << "|";
             std::string label = "0000" + std::to_string(counter++);
             results_.additionalResults["event_" + label.substr(label.size() - 5)] = eventDescription.str();
         }
