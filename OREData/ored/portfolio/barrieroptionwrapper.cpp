@@ -106,10 +106,10 @@ bool SingleBarrierOptionWrapper::exercise() const {
                 Date d = calendar_.adjust(startDate_);
                 while (d < today && !trigger) {
                     Real fixing = eqfxIndex->pastFixing(d);
-                    if (fixing == 0.0 || fixing == Null<Real>()) {
+                    if (fixing == Null<Real>()) {
                         ALOG(StructuredMessage(
                             StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
-                            "Got invalid fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
+                            "Missing invalid fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
                                 ", Skipping this date, assuming no trigger",
                             std::map<string, string>({{"exceptionType", "Invalid or missing fixings"}})));
                     } else {
@@ -161,10 +161,10 @@ bool DoubleBarrierOptionWrapper::exercise() const {
                 Date d = calendar_.adjust(startDate_);
                 while (d < today && !trigger) {
                     Real fixing = eqfxIndex->pastFixing(d);
-                    if (fixing == 0.0 || fixing == Null<Real>()) {
+                    if (fixing == Null<Real>()) {
                         ALOG(StructuredMessage(
                             StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
-                            "Got invalid fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
+                            "Missing fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
                                 ", Skipping this date, assuming no trigger",
                             std::map<string, string>({{"exceptionType", "Invalid or missing fixings"}})));
                     } else {
