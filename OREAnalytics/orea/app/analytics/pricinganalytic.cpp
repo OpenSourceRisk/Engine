@@ -184,7 +184,7 @@ void PricingAnalyticImpl::runAnalytic(
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
                     recalibrateModels, analytic()->configurations().curveConfig,
                     analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
-                    *inputs_->iborFallbackConfig(), true, false, inputs_->dryRun());
+                    *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Single-threaded sensi analysis created");
             }
             else {
@@ -200,7 +200,7 @@ void PricingAnalyticImpl::runAnalytic(
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData, 
                     recalibrateModels, analytic()->configurations().curveConfig,
                     analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
-                    *inputs_->iborFallbackConfig(), true, false, inputs_->dryRun());
+                    *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
             // FIXME: Why are these disabled?

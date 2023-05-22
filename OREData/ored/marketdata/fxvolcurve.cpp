@@ -1103,7 +1103,12 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
             if (reportOnDeltaGrid || reportOnMoneynessGrid) {
                 if (auto bfrr = boost::dynamic_pointer_cast<QuantExt::BlackVolatilitySurfaceBFRR>(vol_)) {
-                    std::ostringstream os;
+                    if (bfrr->deltas().size() != bfrr->currentDeltas().size()) {
+                        calibrationInfo_->messages.push_back(
+                            "Warning: Used only " + std::to_string(bfrr->currentDeltas().size()) + " deltas of the " +
+                            std::to_string(bfrr->deltas().size()) +
+                            " deltas that were initially provided, because all smiles were invalid.");
+                    }
                     for (Size i = 0; i < bfrr->dates().size(); ++i) {
                         if (bfrr->smileHasError()[i]) {
                             calibrationInfo_->messages.push_back("Ignore invalid smile at expiry " +

@@ -99,17 +99,6 @@ void SensitivityAnalysisPlus::resetPortfolio(const boost::shared_ptr<EngineFacto
     portfolio_->build(factory, "sensi analysis");
 }
 
-void SensitivityAnalysisPlus::addAnalyticFxSensitivities() {
-
-    if (!analyticFxSensis_) {
-        return;
-    }
-
-    ore::analytics::SensitivityAnalysis::addAnalyticFxSensitivities();
-
-    // Logic for selected ORE+ FX trades would go here.
-}
-
 void SensitivityAnalysisPlus::generateSensitivities(boost::shared_ptr<NPVSensiCube> cube) {
 
     QL_REQUIRE(useSingleThreadedEngine_ || cube == nullptr,
@@ -185,8 +174,6 @@ void SensitivityAnalysisPlus::generateSensitivities(boost::shared_ptr<NPVSensiCu
     sensiCube_ =
         boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
                                             scenarioGenerator_->shiftSizes(), sensitivityData_->twoSidedDeltas());
-
-    addAnalyticFxSensitivities();
 
     initialized_ = true;
 }
