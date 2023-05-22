@@ -41,6 +41,7 @@ engine/cptycalculator.cpp
 engine/filteredsensitivitystream.cpp
 engine/historicalpnlgenerator.cpp
 engine/historicalsensipnlcalculator.cpp
+engine/historicalsimulationvar.cpp
 engine/mporcalculator.cpp
 engine/multithreadedvaluationengine.cpp
 engine/npvrecord.cpp
@@ -137,6 +138,7 @@ engine/cptycalculator.hpp
 engine/filteredsensitivitystream.hpp
 engine/historicalpnlgenerator.hpp
 engine/historicalsensipnlcalculator.hpp
+engine/historicalsimulationvar.hpp
 engine/mporcalculator.hpp
 engine/multithreadedvaluationengine.hpp
 engine/npvrecord.hpp

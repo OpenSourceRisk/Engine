@@ -25,6 +25,7 @@
 
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
+#include <orea/engine/varcalculator.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
@@ -45,12 +46,10 @@ namespace analytics {
 using QuantLib::Array;
 using QuantLib::Matrix;
 
-//! Parametric VaR Calculator
-/*! This class takes sensitivity data and a covariance matrix as an input and computes a parametric value at risk. The
- * output can be broken down by portfolios, risk classes (IR, FX, EQ, ...) and risk types (delta-gamma, vega, ...). */
-class ParametricVarCalculator {
-public:
+typedef std::pair<RiskFactorKey, RiskFactorKey> CrossPair;
 
+class ParametricVarCalculator : public VarCalculator {
+public:
     //! A container for holding the parametric VAR parameters
     struct ParametricVarParams {
         enum class Method {
@@ -69,14 +68,41 @@ public:
         QuantLib::Size seed = QuantLib::Null<QuantLib::Size>();
     };
 
-    virtual ~ParametricVarCalculator() {}
-    ParametricVarCalculator(
+    ParametricVarCalculator(const ParametricVarParams& parametricVarParams, const QuantLib::Matrix& omega,
+                            const std::map<RiskFactorKey, QuantLib::Real>& deltas,
+                            const std::map<CrossPair, Real>& gammas, const QuantExt::CovarianceSalvage& covarianceSalvage,
+                            const bool& includeGammaMargin, const bool& includeDeltaMargin) : 
+        parametricVarParams_(parametricVarParams), omega_(omega), deltas_(deltas), gammas_(gammas), covarianceSalvage_(covarianceSalvage),
+        includeGammaMargin_(includeGammaMargin), includeDeltaMargin_(includeDeltaMargin) {}
+
+    
+    QuantLib::Real var(QuantLib::Real confidence, const bool isCall = true, 
+        const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) override;
+
+private:
+    const ParametricVarParams& parametricVarParams_;
+    const QuantLib::Matrix& omega_;
+    const std::map<RiskFactorKey, QuantLib::Real>& deltas_;
+    const std::map<CrossPair, QuantLib::Real>& gammas_;
+    const QuantExt::CovarianceSalvage& covarianceSalvage_;
+    const bool& includeGammaMargin_;
+    const bool& includeDeltaMargin_;
+};
+
+//! Parametric VaR Calculator
+/*! This class takes sensitivity data and a covariance matrix as an input and computes a parametric value at risk. The
+ * output can be broken down by portfolios, risk classes (IR, FX, EQ, ...) and risk types (delta-gamma, vega, ...). */
+class ParametricVarReport {
+public:
+    virtual ~ParametricVarReport() {}
+    ParametricVarReport(
         const std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>>& tradePortfolio, 
         const std::string& portfolioFilter, const QuantLib::ext::shared_ptr<SensitivityStream>& sensitivities,
         const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance, const std::vector<Real>& p,
-        const ParametricVarParams& parametricVarParams, const bool breakdown, const bool salvageCovarianceMatrix);
+        const ParametricVarCalculator::ParametricVarParams& parametricVarParams, const bool breakdown,
+        const bool salvageCovarianceMatrix);
     
-    ParametricVarCalculator(
+    ParametricVarReport(
         const std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>>& tradePortfolios,
         const std::string& portfolioFilter, const QuantLib::ext::shared_ptr<SensitivityStream>& sensitivities,
         const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
@@ -84,18 +110,12 @@ public:
         const QuantLib::ext::shared_ptr<SensitivityScenarioData>& sensitivityConfig,
         const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketConfig, 
         const std::vector<QuantLib::Real>& p,
-        const ParametricVarParams& parametricVarParams, const bool breakdown,
+        const ParametricVarCalculator::ParametricVarParams& parametricVarParams, const bool breakdown,
         const bool salvageCovarianceMatrix);
-
-    ParametricVarCalculator(const std::vector<QuantLib::Real>& p, const ParametricVarParams& parametricVarParams);
 
     void calculate(ore::data::Report& report);
     
     typedef std::pair<RiskFactorKey, RiskFactorKey> CrossPair;
-    virtual std::vector<Real> computeVar(const Matrix& omega, const map<RiskFactorKey, Real>& deltas,
-        const map<CrossPair, Real>& gammas,
-        const QuantExt::CovarianceSalvage& covarianceSalvage, Real factor = 1.0,
-        const bool includeGammaMargin = true, const bool includeDeltaMargin = true);
 
 protected:
     std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>> tradePortfolios_;
@@ -115,12 +135,12 @@ protected:
     const std::vector<Real> p_;
 
     //! The parameters to use for calculating the parametric VAR benchmark
-    ParametricVarParams parametricVarParams_;
+    ParametricVarCalculator::ParametricVarParams parametricVarParams_;
     bool breakdown_ = false;
     bool salvageCovarianceMatrix_ = true;
 };
 
-ParametricVarCalculator::ParametricVarParams::Method parseParametricVarMethod(const string& method);
+ParametricVarCalculator::ParametricVarParams::Method parseParametricVarMethod(const std::string& method);
 std::ostream& operator<<(std::ostream& out, const ParametricVarCalculator::ParametricVarParams::Method& method);
 
 } // namespace analytics
