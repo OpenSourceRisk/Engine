@@ -681,6 +681,13 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // this can be refined obviously
     requiredFixings_.unsetPayDates();
 
+    // propagate additional data from underlyings to trs trade
+    for (Size i = 0; i < underlying_.size(); ++i) {
+        for (auto const& [key, value] : underlying_[i]->additionalData()) {
+            additionalData_["und_ad_" + std::to_string(i + 1) + "_" + key] = value;
+        }
+    }
+
     // ISDA taxonomy
     bool assetClassIsUnique = true;
     std::string assetClass;
