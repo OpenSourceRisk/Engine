@@ -96,6 +96,7 @@ model/localvolmodelbuilder.cpp
 model/modeldata.cpp
 model/modelparameter.cpp
 model/utilities.cpp
+portfolio/ascot.cpp
 portfolio/asianoption.cpp
 portfolio/barrierdata.cpp
 portfolio/barrieroption.cpp
@@ -103,9 +104,11 @@ portfolio/barrieroptionwrapper.cpp
 portfolio/basketdata.cpp
 portfolio/bond.cpp
 portfolio/bondoption.cpp
+portfolio/bondposition.cpp
 portfolio/bondrepo.cpp
 portfolio/bondtotalreturnswap.cpp
 portfolio/bondutils.cpp
+portfolio/builders/ascot.cpp
 portfolio/builders/bond.cpp
 portfolio/builders/bondoption.cpp
 portfolio/builders/bondrepo.cpp
@@ -128,6 +131,7 @@ portfolio/builders/commodityoption.cpp
 portfolio/builders/commodityspreadoption.cpp
 portfolio/builders/commodityswap.cpp
 portfolio/builders/commodityswaption.cpp
+portfolio/builders/convertiblebond.cpp
 portfolio/builders/cpicapfloor.cpp
 portfolio/builders/creditdefaultswap.cpp
 portfolio/builders/creditdefaultswapoption.cpp
@@ -178,6 +182,7 @@ portfolio/commodityspreadoption.cpp
 portfolio/commodityswap.cpp
 portfolio/commodityswaption.cpp
 portfolio/compositetrade.cpp
+portfolio/convertiblebond.cpp
 portfolio/convertiblebonddata.cpp
 portfolio/convertiblebondreferencedata.cpp
 portfolio/creditdefaultswap.cpp
@@ -200,6 +205,8 @@ portfolio/equityfuturesoption.cpp
 portfolio/equityfxlegbuilder.cpp
 portfolio/equityfxlegdata.cpp
 portfolio/equityoption.cpp
+portfolio/equityoptionposition.cpp
+portfolio/equityposition.cpp
 portfolio/equityswap.cpp
 portfolio/equitytouchoption.cpp
 portfolio/failedtrade.cpp
@@ -236,6 +243,7 @@ portfolio/optionpaymentdata.cpp
 portfolio/optionwrapper.cpp
 portfolio/portfolio.cpp
 portfolio/premiumdata.cpp
+portfolio/rangebound.cpp
 portfolio/referencedata.cpp
 portfolio/referencedatafactory.cpp
 portfolio/schedule.cpp
@@ -248,6 +256,9 @@ portfolio/tradefactory.cpp
 portfolio/trademonetary.cpp
 portfolio/tradestrike.cpp
 portfolio/tranche.cpp
+portfolio/trs.cpp
+portfolio/trsunderlyingbuilder.cpp
+portfolio/trswrapper.cpp
 portfolio/underlying.cpp
 portfolio/vanillaoption.cpp
 portfolio/varianceswap.cpp
@@ -321,6 +332,7 @@ marketdata/curvespec.hpp
 marketdata/curvespecparser.hpp
 marketdata/defaultcurve.hpp
 marketdata/dependencygraph.hpp
+marketdata/dummymarket.hpp
 marketdata/equitycurve.hpp
 marketdata/equityvolcurve.hpp
 marketdata/expiry.hpp
@@ -380,12 +392,11 @@ model/irmodeldata.hpp
 model/lgmbuilder.hpp
 model/lgmdata.hpp
 model/localvolmodelbuilder.hpp
-model/marketobserver.hpp
-model/modelbuilder.hpp
 model/modeldata.hpp
 model/modelparameter.hpp
 model/structuredmodelerror.hpp
 model/utilities.hpp
+portfolio/ascot.hpp
 portfolio/asianoption.hpp
 portfolio/barrierdata.hpp
 portfolio/barrieroption.hpp
@@ -393,9 +404,11 @@ portfolio/barrieroptionwrapper.hpp
 portfolio/basketdata.hpp
 portfolio/bond.hpp
 portfolio/bondoption.hpp
+portfolio/bondposition.hpp
 portfolio/bondrepo.hpp
 portfolio/bondtotalreturnswap.hpp
 portfolio/bondutils.hpp
+portfolio/builders/ascot.hpp
 portfolio/builders/asianoption.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/bondoption.hpp
@@ -421,6 +434,7 @@ portfolio/builders/commodityoption.hpp
 portfolio/builders/commodityspreadoption.hpp
 portfolio/builders/commodityswap.hpp
 portfolio/builders/commodityswaption.hpp
+portfolio/builders/convertiblebond.hpp
 portfolio/builders/cpicapfloor.hpp
 portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/creditdefaultswapoption.hpp
@@ -474,6 +488,7 @@ portfolio/commodityswap.hpp
 portfolio/commodityswaption.hpp
 portfolio/compositeinstrumentwrapper.hpp
 portfolio/compositetrade.hpp
+portfolio/convertiblebond.hpp
 portfolio/convertiblebonddata.hpp
 portfolio/convertiblebondreferencedata.hpp
 portfolio/creditdefaultswap.hpp
@@ -497,6 +512,8 @@ portfolio/equityfuturesoption.hpp
 portfolio/equityfxlegbuilder.hpp
 portfolio/equityfxlegdata.hpp
 portfolio/equityoption.hpp
+portfolio/equityoptionposition.hpp
+portfolio/equityposition.hpp
 portfolio/equityswap.hpp
 portfolio/equitytouchoption.hpp
 portfolio/failedtrade.hpp
@@ -535,9 +552,11 @@ portfolio/optionpaymentdata.hpp
 portfolio/optionwrapper.hpp
 portfolio/portfolio.hpp
 portfolio/premiumdata.hpp
+portfolio/rangebound.hpp
 portfolio/referencedata.hpp
 portfolio/referencedatafactory.hpp
 portfolio/schedule.hpp
+portfolio/simmcreditqualifiermapping.hpp
 portfolio/structuredconfigurationerror.hpp
 portfolio/structuredconfigurationwarning.hpp
 portfolio/structuredtradeerror.hpp
@@ -551,6 +570,9 @@ portfolio/tradefactory.hpp
 portfolio/trademonetary.hpp
 portfolio/tradestrike.hpp
 portfolio/tranche.hpp
+portfolio/trs.hpp
+portfolio/trsunderlyingbuilder.hpp
+portfolio/trswrapper.hpp
 portfolio/types.hpp
 portfolio/underlying.hpp
 portfolio/vanillaoption.hpp

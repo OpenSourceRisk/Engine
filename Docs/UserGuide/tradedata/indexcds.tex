@@ -54,7 +54,7 @@ The meanings of the elements of the {\tt IndexCreditDefaultSwapData}  node follo
 \begin{itemize}
 \item CreditCurveId: The identifier of the index defining the default curve used for pricing. The pricing can be set up to either use the index curve id, or use the curve id:s of the individual index components defined in {\tt BasketData}.
 
-Allowable values: See \lstinline!CreditCurveId! for credit trades - index in Table \ref{tab:equity_credit_data}. \\
+Allowable values: See \lstinline!CreditCurveId! for credit trades - index in Table \ref{tab:equity_credit_data}. Note that the \lstinline!CreditCurveId! cannot be a redcode or other identifier for an ABX or CMBX. For these underlyings, trade type \emph{AssetBackedCreditDefaultSwap} is used instead. \\
 
 \item SettlesAccrual [Optional]: Whether or not the accrued coupon is due in the event of a default. This defaults to \lstinline!true! if not provided.
 

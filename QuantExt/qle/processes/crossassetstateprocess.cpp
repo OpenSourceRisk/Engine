@@ -121,7 +121,7 @@ Array CrossAssetStateProcess::initialValues() const {
                 std::log(model_->infjy(i)->index()->fxSpotToday()->value());
         }
     }
-    /* infdk, crlgm1f and commodity processes have initial value 0 */
+    /* infdk, crlgm1f, commodity, crstate processes have initial value 0 */
     return res;
 }
 
@@ -325,7 +325,7 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
         }
     }
 
-    /* no drift for infdk, crlgm1f components */
+    /* no drift for infdk, crlgm1f, crstate components */
     return res;
 }
 
@@ -352,6 +352,7 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const 
     Size c = model_->components(CrossAssetModel::AssetType::CR);
     Size e = model_->components(CrossAssetModel::AssetType::EQ);
     Size com = model_->components(CrossAssetModel::AssetType::COM);
+    Size crstates = model_->components(CrossAssetModel::AssetType::CrState);
     // ir-ir
     for (Size i = 0; i < n; ++i) {
         Real alphai = model_->irlgm1f(i)->alpha(t);
@@ -403,6 +404,11 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const 
     for (Size i = 0; i < com; ++i) {
         Real sigmai = model_->combs(i)->sigma(t);
         setValue2(res, sigmai, model_, CrossAssetModel::AssetType::COM, i, CrossAssetModel::AssetType::COM, i, 0, 0);
+    }
+    // creditstate-creditstate
+    for (Size i = 0; i < crstates; ++i) {
+        setValue2(res, 1.0, model_, CrossAssetModel::AssetType::CrState, i, CrossAssetModel::AssetType::CrState, i, 0,
+                  0);
     }
 
     if (model_->measure() == IrModel::Measure::BA) {
@@ -631,7 +637,8 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticPr
         }
     }
 
-    /* no COM driftImpl1 contribution for one-factor non mean-reverting commodity case */
+    /* no COM driftImpl1 contribution for one-factor non mean-reverting commodity case,
+       no crstate contribution */
 
     return res;
 }
@@ -710,18 +717,24 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl2(const StochasticPr
         }
     }
 
+    for (Size j = 0; j < model_->components(CrossAssetModel::AssetType::CrState); ++j) {
+        Size idx = model_->pIdx(CrossAssetModel::AssetType::CrState, j, 0);
+        res[idx] += x0[idx]; // drift free
+    }
+
     return res;
 }
 
 Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const StochasticProcess&, Time t0, const Array&,
                                                                    Time dt) const {
-    Matrix res(model_->dimension(), model_->dimension());
+    Matrix res(model_->dimension(), model_->dimension(), 0.0);
     Size n = model_->components(CrossAssetModel::AssetType::IR);
     Size m = model_->components(CrossAssetModel::AssetType::FX);
     Size d = model_->components(CrossAssetModel::AssetType::INF);
     Size c = model_->components(CrossAssetModel::AssetType::CR);
     Size e = model_->components(CrossAssetModel::AssetType::EQ);
     Size com = model_->components(CrossAssetModel::AssetType::COM);
+    Size u = model_->components(CrossAssetModel::AssetType::CrState);
 
     if (model_->measure() == IrModel::Measure::BA) {
         // aux-aux
@@ -911,6 +924,26 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
             // eq-com
             setValue(res, eq_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::EQ, i,
                      CrossAssetModel::AssetType::COM, j, 0, 0);
+        }
+    }
+
+    // ir, fx, creditstate - creditstate
+    for (Size i = 0; i < n; ++i) {
+        for (Size j = 0; j < u; ++j) {
+            setValue(res, ir_crstate_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
+                     CrossAssetModel::AssetType::CrState, j, 0, 0);
+        }
+    }
+    for (Size i = 0; i < m; ++i) {
+        for (Size j = 0; j < u; ++j) {
+            setValue(res, fx_crstate_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
+                     CrossAssetModel::AssetType::CrState, j, 0, 0);
+        }
+    }
+    for (Size i = 0; i < u; ++i) {
+        for (Size j = 0; j <= i; ++j) {
+            setValue(res, crstate_crstate_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CrState,
+                     i, CrossAssetModel::AssetType::CrState, j, 0, 0);
         }
     }
 

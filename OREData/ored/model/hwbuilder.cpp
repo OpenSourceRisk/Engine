@@ -17,7 +17,6 @@
 */
 
 #include <ored/model/hwbuilder.hpp>
-#include <ored/model/marketobserver.hpp>
 #include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/utilities/dategrid.hpp>
@@ -27,6 +26,7 @@
 #include <ored/utilities/strike.hpp>
 
 #include <qle/models/hwconstantparametrization.hpp>
+#include <qle/models/marketobserver.hpp>
 
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>

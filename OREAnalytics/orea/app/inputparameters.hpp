@@ -24,6 +24,7 @@
 
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
+#include <orea/aggregation/creditsimulationparameters.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
@@ -146,7 +147,8 @@ public:
     void setCovarianceDataFromFile(const std::string& fileName);
     void setSensitivityStreamFromFile(const std::string& fileName);
 
-    // Setters for exposure simulation 
+    // Setters for exposure simulation
+    void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
     void setAmc(bool b) { amc_ = b; }
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
     void setExposureBaseCurrency(const std::string& s) { exposureBaseCurrency_ = s; } 
@@ -154,6 +156,7 @@ public:
     void setNettingSetId(const std::string& s) { nettingSetId_ = s; }
     void setScenarioGenType(const std::string& s) { scenarioGenType_ = s; }
     void setStoreFlows(bool b) { storeFlows_ = b; }
+    void setStoreCreditStateNPVs(Size states) { storeCreditStateNPVs_ = states; }
     void setStoreSurvivalProbabilities(bool b) { storeSurvivalProbabilities_ = b; }
     void setWriteCube(bool b) { writeCube_ = b; }
     void setWriteScenarios(bool b) { writeScenarios_ = b; }
@@ -242,6 +245,15 @@ public:
     void setKvaTheirPdFloor(Real r) { kvaTheirPdFloor_ = r; }
     void setKvaOurCvaRiskWeight(Real r) { kvaOurCvaRiskWeight_ = r; }
     void setKvaTheirCvaRiskWeight(Real r) { kvaTheirCvaRiskWeight_ = r; }
+    // credit simulation
+    void setCreditMigrationAnalytic(bool b) { creditMigrationAnalytic_ = b; }
+    void setCreditMigrationDistributionGrid(const std::vector<Real>& grid) { creditMigrationDistributionGrid_ = grid; }
+    void setCreditMigrationTimeSteps(const std::vector<Size>& ts) { creditMigrationTimeSteps_ = ts; }
+    void setCreditSimulationParameters(const boost::shared_ptr<CreditSimulationParameters>& c) {
+        creditSimulationParameters_ = c;
+    }
+    void setCreditSimulationParametersFromFile(const std::string& fileName);
+    void setCreditMigrationOutputFiles(const std::string& s) { creditMigrationOutputFiles_ = s; }
     // Setters for cashflow npv and dynamic backtesting
     void setCashflowHorizon(const std::string& s); // parse to Date
     void setPortfolioFilterDate(const std::string& s); // parse to Date
@@ -349,7 +361,8 @@ public:
     
     /*********************************
      * Getters for exposure simulation 
-     *********************************/    
+     *********************************/
+    bool salvageCorrelationMatrix() { return salvageCorrelationMatrix_; }
     bool amc() { return amc_; }
     const std::set<std::string>& amcTradeTypes() { return amcTradeTypes_; }
     const std::string& exposureBaseCurrency() { return exposureBaseCurrency_; }
@@ -357,6 +370,7 @@ public:
     const std::string& nettingSetId() { return nettingSetId_; }
     const std::string& scenarioGenType() { return scenarioGenType_; }
     bool storeFlows() { return storeFlows_; }
+    Size storeCreditStateNPVs() { return storeCreditStateNPVs_; }
     bool storeSurvivalProbabilities() { return storeSurvivalProbabilities_; }
     bool writeCube() { return writeCube_; }
     bool writeScenarios() { return writeScenarios_; }
@@ -434,6 +448,12 @@ public:
     Real kvaTheirPdFloor() { return kvaTheirPdFloor_; }
     Real kvaOurCvaRiskWeight() { return kvaOurCvaRiskWeight_; }
     Real kvaTheirCvaRiskWeight() { return kvaTheirCvaRiskWeight_; }
+    // credit simulation details
+    bool creditMigrationAnalytic() const { return creditMigrationAnalytic_; }
+    const std::vector<Real>& creditMigrationDistributionGrid() const { return creditMigrationDistributionGrid_; }
+    std::vector<Size> creditMigrationTimeSteps() const { return creditMigrationTimeSteps_; }
+    const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters() const { return creditSimulationParameters_; }
+    const std::string& creditMigrationOutputFiles() const { return creditMigrationOutputFiles_; }
     
     /**************************************************
      * Getters for cashflow npv and dynamic backtesting
@@ -556,7 +576,7 @@ protected:
     /*******************
      * EXPOSURE analytic
      *******************/
-    // bool simulation_ = false;
+    bool salvageCorrelationMatrix_ = false;
     bool amc_ = false;
     std::set<std::string> amcTradeTypes_;
     std::string exposureBaseCurrency_ = "";
@@ -564,6 +584,7 @@ protected:
     std::string nettingSetId_ = "";
     std::string scenarioGenType_ = "";
     bool storeFlows_ = false;
+    Size storeCreditStateNPVs_ = 0;
     bool storeSurvivalProbabilities_ = false;
     bool writeCube_ = false;
     bool writeScenarios_ = false;
@@ -633,7 +654,12 @@ protected:
     Real kvaTheirPdFloor_ = 0.03;
     Real kvaOurCvaRiskWeight_ = 0.05;
     Real kvaTheirCvaRiskWeight_ = 0.05;
-
+    // credit simulation details
+    bool creditMigrationAnalytic_ = false;
+    std::vector<Real> creditMigrationDistributionGrid_;
+    std::vector<Size> creditMigrationTimeSteps_;
+    boost::shared_ptr<CreditSimulationParameters> creditSimulationParameters_;
+    std::string creditMigrationOutputFiles_;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {

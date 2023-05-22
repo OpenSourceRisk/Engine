@@ -837,9 +837,6 @@ boost::shared_ptr<StrippedOptionlet> CapFloorVolCurve::transform(const QuantExt:
         optionletStrikes.push_back(os.optionletStrikes(i));
     }
 
-    // FIXME StrippedOptionlet::atmOptionletRates() is the only method depending on whether index is Ibor or OIS
-    // these are not used above in optSurface() though, so we do not need to extend StrippedOptionlet to handle OIS
-    // at the moment
     boost::shared_ptr<StrippedOptionlet> res = boost::make_shared<StrippedOptionlet>(
         os.settlementDays(), os.calendar(), os.businessDayConvention(), os.index(), os.optionletFixingDates(),
         optionletStrikes, vols, os.dayCounter(), os.volatilityType(), os.displacement());
@@ -854,9 +851,6 @@ CapFloorVolCurve::transform(const Date& asof, vector<Date> dates, const vector<V
                             Natural settleDays, const Calendar& cal, BusinessDayConvention bdc,
                             boost::shared_ptr<IborIndex> index, const DayCounter& dc, VolatilityType type,
                             Real displacement) const {
-
-    QL_REQUIRE(boost::dynamic_pointer_cast<OvernightIndex>(index) == nullptr,
-               "CapFloorVolCurve::transform(): OIS index not supported for ATM curve");
 
     vector<vector<Handle<Quote>>> vols(dates.size());
     for (Size i = 0; i < dates.size(); i++) {

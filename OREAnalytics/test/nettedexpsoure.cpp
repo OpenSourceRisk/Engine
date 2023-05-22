@@ -583,6 +583,8 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
 
         map<string, vector<vector<Real>>> nettingSetDefaultValue;
         map<string, vector<vector<Real>>> nettingSetCloseOutValue;
+        map<string, vector<vector<Real>>> nettingSetMporPositiveFlow;
+        map<string, vector<vector<Real>>> nettingSetMporNegativeFlow;
         map<string, vector<vector<Real>>> nettingSetValue;
         vector<Real> collateralBalance;
         vector<vector<Real>> defaultValue;
@@ -647,11 +649,14 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
             exposureCalculator->build();
             nettingSetDefaultValue = exposureCalculator->nettingSetDefaultValue();
             nettingSetCloseOutValue = exposureCalculator->nettingSetCloseOutValue();
-            boost::shared_ptr<NettedExposureCalculator> nettedExposureCalculator =
-                boost::make_shared<NettedExposureCalculator>(
-                    portfolio, initMarket, cube, "EUR", "Market", 0.99, calcType, false, nettingSetManager,
-                    nettingSetDefaultValue, nettingSetCloseOutValue, *asd, cubeInterpreter, false, dimCalculator, false,
-                    false, 0.1, exposureCalculator->exposureCube(), 0, 0, false);
+            nettingSetMporPositiveFlow = exposureCalculator->nettingSetMporPositiveFlow();
+            nettingSetMporNegativeFlow = exposureCalculator->nettingSetMporNegativeFlow();
+            boost::shared_ptr<NettedExposureCalculator> nettedExposureCalculator = boost::make_shared<NettedExposureCalculator>(portfolio, initMarket, cube, "EUR", "Market",
+                                                                                                                    0.99, calcType, false, nettingSetManager, nettingSetDefaultValue,
+                                                                                                                    nettingSetCloseOutValue, nettingSetMporPositiveFlow,
+                                                                                                                    nettingSetMporNegativeFlow, *asd, cubeInterpreter,
+                                                                                                                    false, dimCalculator, false, false, 0.1, exposureCalculator->exposureCube(),
+                                                                                                                    0, 0, false, mporStickyDate, ScenarioGeneratorData::MporCashFlowMode::BothPay);
             nettedExposureCalculator->build();
             nettingSetValue = (calcType == CollateralExposureHelper::CalculationType::NoLag
                                 ? nettedExposureCalculator->nettingSetCloseOutValue()

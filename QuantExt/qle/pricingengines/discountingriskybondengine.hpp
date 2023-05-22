@@ -89,10 +89,10 @@ public:
     Handle<Quote> recoveryRate() const { return recoveryRate_; };
     Handle<Quote> securitySpread() const { return securitySpread_; };
 
-private:
+protected:
     Handle<YieldTermStructure> discountCurve_;
-    Handle<DefaultProbabilityTermStructure> defaultCurve_;
-    Handle<Quote> recoveryRate_;
+    mutable Handle<DefaultProbabilityTermStructure> defaultCurve_;
+    mutable Handle<Quote> recoveryRate_;
     Handle<Quote> securitySpread_;
     Period timestepPeriod_;
     boost::optional<bool> includeSettlementDateFlows_;

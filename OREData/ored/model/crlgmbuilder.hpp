@@ -23,8 +23,8 @@
 #include <vector>
 
 
-#include <ored/model/modelbuilder.hpp>
 #include <ored/model/crlgmdata.hpp>
+#include <qle/models/modelbuilder.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
 
 namespace ore {
@@ -32,7 +32,7 @@ using namespace data;
 namespace data {
 using namespace QuantLib;
 
-class CrLgmBuilder : public ModelBuilder {
+class CrLgmBuilder : public QuantExt::ModelBuilder {
 public:
     /*! the configuration should refer to the calibration configuration here,
       alternative discounting curves are then usually set in the pricing

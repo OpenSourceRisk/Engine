@@ -22,13 +22,17 @@
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
 #include <ored/model/calibrationinstruments/yoycapfloor.hpp>
 #include <ored/model/calibrationinstruments/yoyswap.hpp>
+
+#include <ored/portfolio/ascot.hpp>
 #include <ored/portfolio/asianoption.hpp>
 #include <ored/portfolio/barrieroption.hpp>
 #include <ored/portfolio/barrieroptionwrapper.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondoption.hpp>
+#include <ored/portfolio/bondposition.hpp>
 #include <ored/portfolio/bondrepo.hpp>
 #include <ored/portfolio/bondtotalreturnswap.hpp>
+#include <ored/portfolio/builders/ascot.hpp>
 #include <ored/portfolio/builders/asianoption.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/bondoption.hpp>
@@ -54,6 +58,7 @@
 #include <ored/portfolio/builders/commodityspreadoption.hpp>
 #include <ored/portfolio/builders/commodityswap.hpp>
 #include <ored/portfolio/builders/commodityswaption.hpp>
+#include <ored/portfolio/builders/convertiblebond.hpp>
 #include <ored/portfolio/builders/cpicapfloor.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/builders/creditdefaultswapoption.hpp>
@@ -107,6 +112,7 @@
 #include <ored/portfolio/commodityswaption.hpp>
 #include <ored/portfolio/compositeinstrumentwrapper.hpp>
 #include <ored/portfolio/compositetrade.hpp>
+#include <ored/portfolio/convertiblebond.hpp>
 #include <ored/portfolio/convertiblebondreferencedata.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapoption.hpp>
@@ -125,6 +131,8 @@
 #include <ored/portfolio/equityfxlegbuilder.hpp>
 #include <ored/portfolio/equityfxlegdata.hpp>
 #include <ored/portfolio/equityoption.hpp>
+#include <ored/portfolio/equityoptionposition.hpp>
+#include <ored/portfolio/equityposition.hpp>
 #include <ored/portfolio/equityswap.hpp>
 #include <ored/portfolio/equitytouchoption.hpp>
 #include <ored/portfolio/failedtrade.hpp>
@@ -157,6 +165,9 @@
 #include <ored/portfolio/referencedatafactory.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
+#include <ored/portfolio/trs.hpp>
+#include <ored/portfolio/trsunderlyingbuilder.hpp>
+#include <ored/portfolio/trswrapper.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/portfolio/varianceswap.hpp>
 
@@ -208,6 +219,7 @@ void initBuilders() {
     ORE_REGISTER_REFERENCE_DATUM("ConvertibleBond", ConvertibleBondReferenceDatum, false)
 
     ORE_REGISTER_BOND_BUILDER("Bond", VanillaBondBuilder, false)
+    ORE_REGISTER_BOND_BUILDER("ConvertibleBond", ConvertibleBondBuilder, false)
 
     ORE_REGISTER_TRADE_BUILDER("CrossCurrencySwap", CrossCurrencySwap, false)
     ORE_REGISTER_TRADE_BUILDER("CommoditySpreadOption", CommoditySpreadOption, false)
@@ -268,6 +280,14 @@ void initBuilders() {
     ORE_REGISTER_TRADE_BUILDER("EquityOption", EquityOption, false)
     ORE_REGISTER_TRADE_BUILDER("FxOption", FxOption, false)
 
+    ORE_REGISTER_TRADE_BUILDER("TotalReturnSwap", TRS, false)
+    ORE_REGISTER_TRADE_BUILDER("ContractForDifference", CFD, false)
+    ORE_REGISTER_TRADE_BUILDER("BondPosition", BondPosition, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityPosition", EquityPosition, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityOptionPosition", EquityOptionPosition, false)
+    ORE_REGISTER_TRADE_BUILDER("Ascot", Ascot, false)
+    ORE_REGISTER_TRADE_BUILDER("ConvertibleBond", ConvertibleBond, false)
+        
     ORE_REGISTER_LEGBUILDER("CommodityFixedLegBuilder", CommodityFixedLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("CommodityFloatingLegBuilder", CommodityFloatingLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("DurationAdjustedCmsLegBuilder", DurationAdjustedCmsLegBuilder, false)
@@ -345,6 +365,7 @@ void initBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(SwapEngineBuilderOptimised, false)
     ORE_REGISTER_ENGINE_BUILDER(CrossCurrencySwapEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(MidPointIndexCdsEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(MidPointCdsMultiStateEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CommodityForwardEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanAsianOptionMCDAAPEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanAsianOptionMCDAASEngineBuilder, false)
@@ -371,6 +392,7 @@ void initBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(LinearTsrDurationAdjustedCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(GaussCopulaBucketingCdoEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BondDiscountingEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(BondMultiStateDiscountingEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CreditLinkedSwapEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityDoubleBarrierOptionAnalyticEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BondOptionEngineBuilder, false)
@@ -387,6 +409,17 @@ void initBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanCSOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxAmericanOptionFDEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxAmericanOptionBAWEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(AscotIntrinsicEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(ConvertibleBondFDDefaultableEquityJumpDiffusionEngineBuilder, false)
+        
+    ORE_REGISTER_TRS_UNDERLYING_BUILDER("Bond", BondTrsUnderlyingBuilder, false)
+    ORE_REGISTER_TRS_UNDERLYING_BUILDER("ForwardBond", ForwardBondTrsUnderlyingBuilder, false)
+    ORE_REGISTER_TRS_UNDERLYING_BUILDER("EquityPosition", EquityPositionTrsUnderlyingBuilder, false)
+    ORE_REGISTER_TRS_UNDERLYING_BUILDER("EquityOptionPosition", EquityOptionPositionTrsUnderlyingBuilder, false)
+    ORE_REGISTER_TRS_UNDERLYING_BUILDER("BondPosition", BondPositionTrsUnderlyingBuilder, false)
+    ORE_REGISTER_TRS_UNDERLYING_BUILDER("Derivative", DerivativeTrsUnderlyingBuilder, false)
+    ORE_REGISTER_TRS_UNDERLYING_BUILDER("ConvertibleBond", ConvertibleBondTrsUnderlyingBuilder, false)
+
 }
 
 } // namespace ore::data

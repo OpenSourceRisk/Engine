@@ -68,8 +68,9 @@ public:
     //@{
     string& modifyStartDate() { return startDate_; }
     string& modifyEndDate() { return endDate_; }
-
     string& modifyCalendar() { return calendar_; }
+    string& modifyConvention() { return convention_; }
+    string& modifyTermConvention() { return termConvention_; }
     //@}
 
     //! \name Serialisation

@@ -28,10 +28,10 @@
 #include <vector>
 
 #include <qle/models/hwmodel.hpp>
+#include <qle/models/marketobserver.hpp>
+#include <qle/models/modelbuilder.hpp>
 
 #include <ored/model/irhwmodeldata.hpp>
-#include <ored/model/marketobserver.hpp>
-#include <ored/model/modelbuilder.hpp>
 
 namespace ore {
 namespace data {
@@ -41,7 +41,7 @@ using QuantExt::HwModel;
 
 //! Builder for a Hull White model or a HW component for the CAM
 /* TODO this has a lot of overlap with LgmBuilder, factor out common logic */
-class HwBuilder : public ModelBuilder {
+class HwBuilder : public QuantExt::ModelBuilder {
 public:
     /*! The configuration should refer to the calibration configuration here,
       alternative discounting curves are then usually set in the pricing
@@ -117,7 +117,7 @@ private:
     bool forceCalibration_ = false;
 
     // LGM Observer
-    boost::shared_ptr<MarketObserver> marketObserver_;
+    boost::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 };
 } // namespace data
 } // namespace ore

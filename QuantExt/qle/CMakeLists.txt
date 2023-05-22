@@ -72,8 +72,8 @@ indexes/bondindex.cpp
 indexes/commodityindex.cpp
 indexes/compoequityindex.cpp
 indexes/compositeindex.cpp
-indexes/equityindex.cpp
 indexes/dividendmanager.cpp
+indexes/equityindex.cpp
 indexes/fallbackiborindex.cpp
 indexes/fallbackovernightindex.cpp
 indexes/fxindex.cpp
@@ -88,6 +88,7 @@ indexes/ibor/sonia.cpp
 indexes/inflationindexwrapper.cpp
 indexes/offpeakpowerindex.cpp
 indexes/region.cpp
+instruments/ascot.cpp
 instruments/averageois.cpp
 instruments/bondoption.cpp
 instruments/bondrepo.cpp
@@ -100,6 +101,8 @@ instruments/cliquetoption.cpp
 instruments/commodityapo.cpp
 instruments/commodityforward.cpp
 instruments/commodityspreadoption.cpp
+instruments/convertiblebond.cpp
+instruments/convertiblebond2.cpp
 instruments/creditlinkedswap.cpp
 instruments/crossccybasismtmresetswap.cpp
 instruments/crossccybasisswap.cpp
@@ -136,9 +139,12 @@ math/blockmatrixinverse.cpp
 math/deltagammavar.cpp
 math/differentialevolution_mt.cpp
 math/fillemptymatrix.cpp
+math/matrixfunctions.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
 methods/brownianbridgepathinterpolator.cpp
+methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
+methods/fdmdefaultableequityjumpdiffusionop.cpp
 methods/interpolatedvariatemultipathgenerator.cpp
 methods/multipathgeneratorbase.cpp
 methods/multipathvariategenerator.cpp
@@ -158,6 +164,7 @@ models/crossassetanalytics.cpp
 models/crossassetmodel.cpp
 models/crossassetmodelimpliedeqvoltermstructure.cpp
 models/crossassetmodelimpliedfxvoltermstructure.cpp
+models/defaultableequityjumpdiffusionmodel.cpp
 models/dkimpliedyoyinflationtermstructure.cpp
 models/dkimpliedzeroinflationtermstructure.cpp
 models/eqbsconstantparametrization.cpp
@@ -191,6 +198,7 @@ models/normalsabrsmilesection.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
 models/projectedcrossassetmodel.cpp
+models/transitionmatrix.cpp
 models/yoycapfloorhelper.cpp
 models/yoyinflationmodeltermstructure.cpp
 models/yoyswaphelper.cpp
@@ -211,6 +219,7 @@ pricingengines/analyticlgmcdsoptionengine.cpp
 pricingengines/analyticlgmswaptionengine.cpp
 pricingengines/analyticxassetlgmeqoptionengine.cpp
 pricingengines/baroneadesiwhaleyengine.cpp
+pricingengines/binomialconvertibleengine.cpp
 pricingengines/blackbondoptionengine.cpp
 pricingengines/blackcdsoptionengine.cpp
 pricingengines/blackindexcdsoptionengine.cpp
@@ -232,10 +241,15 @@ pricingengines/discountingequityforwardengine.cpp
 pricingengines/discountingforwardbondengine.cpp
 pricingengines/discountingfxforwardengine.cpp
 pricingengines/discountingriskybondengine.cpp
+pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginemulticurve.cpp
+pricingengines/discretizedconvertible.cpp
+pricingengines/fdconvertiblebondevents.cpp
+pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
 pricingengines/indexcdsoptionbaseengine.cpp
 pricingengines/indexcdstrancheengine.cpp
 pricingengines/inflationcapfloorengines.cpp
+pricingengines/intrinsicascotengine.cpp
 pricingengines/lgmconvolutionsolver.cpp
 pricingengines/mccamcurrencyswapengine.cpp
 pricingengines/mccamfxforwardengine.cpp
@@ -246,6 +260,7 @@ pricingengines/mclgmswaptionengine.cpp
 pricingengines/mcmultilegbaseengine.cpp
 pricingengines/mcmultilegoptionengine.cpp
 pricingengines/midpointcdoengine.cpp
+pricingengines/midpointcdsenginemultistate.cpp
 pricingengines/midpointindexcdsengine.cpp
 pricingengines/numericalintegrationindexcdsoptionengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
@@ -302,6 +317,7 @@ termstructures/flatcorrelation.cpp
 termstructures/futurepricehelper.cpp
 termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
+termstructures/generatordefaulttermstructure.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
@@ -499,6 +515,7 @@ indexes/inflationindexwrapper.hpp
 indexes/offpeakpowerindex.hpp
 indexes/region.hpp
 indexes/secpi.hpp
+instruments/ascot.hpp
 instruments/averageois.hpp
 instruments/bondoption.hpp
 instruments/bondrepo.hpp
@@ -511,6 +528,8 @@ instruments/cliquetoption.hpp
 instruments/commodityapo.hpp
 instruments/commodityforward.hpp
 instruments/commodityspreadoption.hpp
+instruments/convertiblebond.hpp
+instruments/convertiblebond2.hpp
 instruments/creditlinkedswap.hpp
 instruments/crossccybasismtmresetswap.hpp
 instruments/crossccybasisswap.hpp
@@ -555,6 +574,7 @@ math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
 math/flatextrapolation2d.hpp
 math/logquadraticinterpolation.hpp
+math/matrixfunctions.hpp
 math/method_mt.hpp
 math/nadarayawatson.hpp
 math/problem_mt.hpp
@@ -564,6 +584,8 @@ math/randomvariable_io.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
 methods/brownianbridgepathinterpolator.hpp
+methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
+methods/fdmdefaultableequityjumpdiffusionop.hpp
 methods/interpolatedvariatemultipathgenerator.hpp
 methods/multipathgeneratorbase.hpp
 methods/multipathvariategenerator.hpp
@@ -594,6 +616,8 @@ models/crossassetanalyticsbase.hpp
 models/crossassetmodel.hpp
 models/crossassetmodelimpliedeqvoltermstructure.hpp
 models/crossassetmodelimpliedfxvoltermstructure.hpp
+models/crstateparametrization.hpp
+models/defaultableequityjumpdiffusionmodel.hpp
 models/defaultlossmodel.hpp
 models/defaultprobabilitylatentmodel.hpp
 models/dkimpliedyoyinflationtermstructure.hpp
@@ -636,6 +660,8 @@ models/lgmimpliedyieldtermstructure.hpp
 models/lgmvectorised.hpp
 models/linearannuitymapping.hpp
 models/linkablecalibratedmodel.hpp
+models/marketobserver.hpp
+models/modelbuilder.hpp
 models/modelimpliedpricetermstructure.hpp
 models/modelimpliedyieldtermstructure.hpp
 models/normalsabr.hpp
@@ -646,6 +672,7 @@ models/piecewiseconstanthelper.hpp
 models/poollossmodel.hpp
 models/projectedcrossassetmodel.hpp
 models/pseudoparameter.hpp
+models/transitionmatrix.hpp
 models/yoycapfloorhelper.hpp
 models/yoyinflationmodeltermstructure.hpp
 models/yoyswaphelper.hpp
@@ -667,6 +694,7 @@ pricingengines/analyticlgmcdsoptionengine.hpp
 pricingengines/analyticlgmswaptionengine.hpp
 pricingengines/analyticxassetlgmeqoptionengine.hpp
 pricingengines/baroneadesiwhaleyengine.hpp
+pricingengines/binomialconvertibleengine.hpp
 pricingengines/blackbondoptionengine.hpp
 pricingengines/blackcdsoptionengine.hpp
 pricingengines/blackindexcdsoptionengine.hpp
@@ -688,10 +716,15 @@ pricingengines/discountingequityforwardengine.hpp
 pricingengines/discountingforwardbondengine.hpp
 pricingengines/discountingfxforwardengine.hpp
 pricingengines/discountingriskybondengine.hpp
+pricingengines/discountingriskybondenginemultistate.hpp
 pricingengines/discountingswapenginemulticurve.hpp
+pricingengines/discretizedconvertible.hpp
+pricingengines/fdconvertiblebondevents.hpp
+pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
 pricingengines/indexcdsoptionbaseengine.hpp
 pricingengines/indexcdstrancheengine.hpp
 pricingengines/inflationcapfloorengines.hpp
+pricingengines/intrinsicascotengine.hpp
 pricingengines/lgmconvolutionsolver.hpp
 pricingengines/mccamcurrencyswapengine.hpp
 pricingengines/mccamfxforwardengine.hpp
@@ -702,11 +735,13 @@ pricingengines/mclgmswaptionengine.hpp
 pricingengines/mcmultilegbaseengine.hpp
 pricingengines/mcmultilegoptionengine.hpp
 pricingengines/midpointcdoengine.hpp
+pricingengines/midpointcdsenginemultistate.hpp
 pricingengines/midpointindexcdsengine.hpp
 pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
+pricingengines/tflattice.hpp
 pricingengines/varianceswapgeneralreplicationengine.hpp
 pricingengines/volatilityfromvarianceswapengine.hpp
 processes/commodityschwartzstateprocess.hpp
@@ -774,6 +809,7 @@ termstructures/futurepricehelper.hpp
 termstructures/fxblackvolsurface.hpp
 termstructures/fxsmilesection.hpp
 termstructures/fxvannavolgasmilesection.hpp
+termstructures/generatordefaulttermstructure.hpp
 termstructures/hazardspreadeddefaulttermstructure.hpp
 termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
@@ -860,7 +896,6 @@ version.hpp)
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
 add_library(${QLE_LIB_NAME} ${QuantExt_SRC})
 target_link_libraries(${QLE_LIB_NAME} ${QL_LIB_NAME} ${Boost_LIBRARIES})
-
 
 install(DIRECTORY . DESTINATION include/qle
         FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")

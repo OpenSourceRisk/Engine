@@ -25,18 +25,19 @@
 #define quantext_crossasset_model_hpp
 
 #include <qle/models/cirppparametrization.hpp>
+#include <qle/models/commoditymodel.hpp>
+#include <qle/models/commodityschwartzmodel.hpp>
+#include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/crcirpp.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
+#include <qle/models/crstateparametrization.hpp>
 #include <qle/models/eqbsparametrization.hpp>
+#include <qle/models/fxbsmodel.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/hwmodel.hpp>
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infjyparameterization.hpp>
-#include <qle/models/commoditymodel.hpp>
-#include <qle/models/commodityschwartzmodel.hpp>
-#include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/lgm.hpp>
-#include <qle/models/fxbsmodel.hpp>
 
 #include <qle/processes/crossassetstateprocess.hpp>
 
@@ -56,11 +57,11 @@ using namespace QuantLib;
  */
 class CrossAssetModel : public LinkableCalibratedModel {
 public:
-    enum class AssetType : Size { IR = 0, FX = 1, INF = 2, CR = 3, EQ = 4, COM = 5 };
-    enum class ModelType { LGM1F, HW, BS, DK, CIRPP, JY, GAB };
+    enum class AssetType : Size { IR = 0, FX = 1, INF = 2, CR = 3, EQ = 4, COM = 5, CrState = 6 };
+    enum class ModelType { LGM1F, HW, BS, DK, CIRPP, JY, GAB, GENERIC };
     enum class Discretization { Euler, Exact };
 
-    static constexpr Size numberOfAssetTypes = 6;
+    static constexpr Size numberOfAssetTypes = 7;
 
     /*! Parametrizations must be given in the following order
         - IR  (first parametrization defines the domestic currency)
@@ -150,6 +151,7 @@ public:
     const boost::shared_ptr<Parametrization> cr(const Size i) const;
     const boost::shared_ptr<Parametrization> eq(const Size i) const;
     const boost::shared_ptr<Parametrization> com(const Size i) const;
+    const boost::shared_ptr<Parametrization> crstate(const Size i) const;
 
     /* ir model */
     const boost::shared_ptr<IrModel> irModel(const Size ccy) const;
@@ -223,6 +225,9 @@ public:
 
     /*! COMBS components */
     const boost::shared_ptr<CommoditySchwartzParametrization> combs(const Size ccy) const;
+
+    /*! CreditState components */
+    const boost::shared_ptr<CrStateParametrization> crstateParam(const Size index) const;
 
     /* ... add more components here ...*/
 
@@ -408,8 +413,8 @@ public:
 protected:
     /* ctor to be used in extensions, initialize is not called */
     CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization>>& parametrizations, const Matrix& correlation,
-                    SalvagingAlgorithm::Type salvaging, IrModel::Measure measure, const bool)
-        : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation), salvaging_(salvaging), measure_(measure) {
+                    SalvagingAlgorithm::Type salvaging, IrModel::Measure measure, const Discretization discretization, const bool)
+        : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation), salvaging_(salvaging), measure_(measure), discretization_(discretization) {
     }
 
     /*! number of arguments for a component */
@@ -616,6 +621,10 @@ inline const boost::shared_ptr<CommoditySchwartzParametrization> CrossAssetModel
         boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[idx(CrossAssetModel::AssetType::COM, name)]);
     QL_REQUIRE(tmp, "model at " << name << " is not COM-BS");
     return tmp;
+}
+
+inline const boost::shared_ptr<CrStateParametrization> CrossAssetModel::crstateParam(const Size i) const {
+    return boost::static_pointer_cast<CrStateParametrization>(p_[idx(CrossAssetModel::AssetType::CrState, i)]);
 }
 
 inline QuantLib::Real CrossAssetModel::numeraire(const Size ccy, const QuantLib::Time t, const QuantLib::Array& x,

@@ -672,6 +672,8 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         equityStandardDevs_ != rhs.equityStandardDevs_ ||
         additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
         additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_ ||
+        additionalScenarioDataNumberOfCreditStates_ != rhs.additionalScenarioDataNumberOfCreditStates_ ||
+        additionalScenarioDataSurvivalWeights_ != rhs.additionalScenarioDataSurvivalWeights_ ||
         baseCorrelationTerms_ != rhs.baseCorrelationTerms_ ||
         baseCorrelationDetachmentPoints_ != rhs.baseCorrelationDetachmentPoints_ ||
         zeroInflationTenors_ != rhs.zeroInflationTenors_ || yoyInflationTenors_ != rhs.yoyInflationTenors_ ||
@@ -1528,6 +1530,24 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         }
     }
 
+    DLOG("Loading credit states data");
+    nodeChild = XMLUtils::getChildNode(node, "CreditStates");
+    numberOfCreditStates_ = 0;
+    if (nodeChild) {
+        numberOfCreditStates_ = XMLUtils::getChildValueAsInt(nodeChild, "NumberOfFactors", true);
+    }
+
+    DLOG("Loading AggregationScenarioDataCreditStates");
+    nodeChild = XMLUtils::getChildNode(node, "AggregationScenarioDataCreditStates");
+    additionalScenarioDataNumberOfCreditStates_ = 0;
+    if (nodeChild) {
+        additionalScenarioDataNumberOfCreditStates_ = XMLUtils::getChildValueAsInt(nodeChild, "NumberOfFactors", true);
+    }
+
+    DLOG("Loading AggregationScenarioDataSurvivalWeights");
+    additionalScenarioDataSurvivalWeights_ = XMLUtils::getChildrenValues(node, "AggregationScenarioDataSurvivalWeights", "Name");
+
+
     DLOG("Loaded ScenarioSimMarketParameters");
 }
 
@@ -1936,6 +1956,23 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         DLOG("Writing aggregation scenario data indices");
         XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataIndices", "Index",
                               additionalScenarioDataIndices_);
+    }
+
+    // Credit States
+    DLOG("Writing number of credit states");
+    XMLNode* creditStatesNode = XMLUtils::addChild(doc, marketNode, "CreditStates");
+    XMLUtils::addChild(doc, creditStatesNode, "NumberOfFactors", int(numberOfCreditStates_));
+
+    DLOG("Writing number of credit states, AggregationScenarioDataCreditStates");
+    XMLNode* aggScenDataCreditStatesNode = XMLUtils::addChild(doc, marketNode, "AggregationScenarioDataCreditStates");
+    XMLUtils::addChild(doc, aggScenDataCreditStatesNode, "NumberOfFactors",
+                       int(additionalScenarioDataNumberOfCreditStates_));
+
+    // Survival Weights
+    DLOG("Writing names that need tracking of survival weights");
+    if (!additionalScenarioDataSurvivalWeights_.empty()) {
+        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataSurvivalWeights", "Name",
+                              additionalScenarioDataSurvivalWeights_);
     }
 
     // base correlations

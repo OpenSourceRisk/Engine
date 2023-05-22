@@ -21,6 +21,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/wildcard.hpp>
 
+#include <qle/termstructures/generatordefaulttermstructure.hpp>
 #include <qle/termstructures/interpolatedhazardratecurve.hpp>
 #include <qle/termstructures/interpolatedsurvivalprobabilitycurve.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
@@ -32,9 +33,9 @@
 
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/termstructures/credit/defaultprobabilityhelpers.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <ql/termstructures/credit/defaultprobabilityhelpers.hpp>
 
 #include <algorithm>
 #include <set>
@@ -276,6 +277,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             case DefaultCurveConfig::Config::Type::MultiSection:
                 buildMultiSectionCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
                 break;
+            case DefaultCurveConfig::Config::Type::TransitionMatrix:
+                buildTransitionMatrixCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
+                break;
             case DefaultCurveConfig::Config::Type::Null:
                 buildNullCurve(configs->curveID(), config.second, asof, spec);
                 break;
@@ -384,11 +388,12 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
 
             } catch (exception& e) {
                 if (quote.term == Period(0, Months)) {
-                    WLOG("DefaultCurve:: Cannot add quote of term 0M to CDS curve " << curveID << 
-                        " for asof date " << asof);
+                    WLOG("DefaultCurve:: Cannot add quote of term 0M to CDS curve " << curveID << " for asof date "
+                                                                                    << asof);
                 } else {
-                    QL_FAIL("DefaultCurve:: Failed to add quote of term " << quote.term << " to CDS curve " 
-                        << curveID << " for asof date " << asof << ", with error: " << e.what());
+                    QL_FAIL("DefaultCurve:: Failed to add quote of term " << quote.term << " to CDS curve " << curveID
+                                                                          << " for asof date " << asof
+                                                                          << ", with error: " << e.what());
                 }
             }
             if (tmp) {
@@ -412,8 +417,8 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
             auto tmp = boost::make_shared<UpfrontCdsHelper>(
                 quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
                 cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
-                recoveryRate_, discountCurve, cdsConv->upfrontSettlementDays(),
-                cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter());
+                recoveryRate_, discountCurve, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
+                config.startDate(), cdsConv->lastPeriodDayCounter());
             if (tmp->latestDate() > asof) {
                 helpers.push_back(tmp);
             }
@@ -696,6 +701,56 @@ void DefaultCurve::buildMultiSectionCurve(const std::string& curveID, const Defa
             curves, recoveryRates, switchDates, recoveryRate, config.dayCounter(), config.extrapolation())));
 
     LOG("Finished building default curve of type MultiSection for curve " << curveID);
+}
+
+void DefaultCurve::buildTransitionMatrixCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,
+                                              const Date& asof, const DefaultCurveSpec& spec, const Loader& loader,
+                                              map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves) {
+    LOG("Start building default curve of type TransitionMatrix for curve " << curveID);
+    Size dim = config.states().size();
+    QL_REQUIRE(dim >= 2,
+               "DefaultCurve::buildTransitionMatrixCurve(): transition matrix dimension >= 2 required, found " << dim);
+    Matrix transitionMatrix(dim, dim, Null<Real>());
+    map<string, Size> stateIndex;
+    for (Size i = 0; i < config.states().size(); ++i)
+        stateIndex[config.states()[i]] = i;
+    QL_REQUIRE(!config.cdsQuotes().empty(), "DefaultCurve::buildTransitionMatrixCurve(): not quotes given.");
+    std::vector<std::string> tmp;
+    std::transform(config.cdsQuotes().begin(), config.cdsQuotes().end(), std::back_inserter(tmp),
+                   [](const std::pair<std::string, bool>& p) { return p.first; });
+    auto wildcard = getUniqueWildcard(tmp);
+    std::set<boost::shared_ptr<MarketDatum>> mdData;
+    if (wildcard) {
+        mdData = loader.get(*wildcard, asof);
+    } else {
+        for (auto const& q : config.cdsQuotes()) {
+            if (auto m = loader.get(q, asof))
+                mdData.insert(m);
+        }
+    }
+    for (const auto& md : mdData) {
+        QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::RATING,
+                   "DefaultCurve::buildTransitionMatrixCurve(): quote instrument type must be RATING.");
+        boost::shared_ptr<TransitionProbabilityQuote> q = boost::dynamic_pointer_cast<TransitionProbabilityQuote>(md);
+        Size i = stateIndex[q->fromRating()];
+        Size j = stateIndex[q->toRating()];
+        transitionMatrix[i][j] = q->quote()->value();
+    }
+    for (Size i = 0; i < dim; ++i) {
+        for (Size j = 0; j < dim; ++j) {
+            QL_REQUIRE(transitionMatrix[i][j] != Null<Real>(),
+                       "DefaultCurve::buildTransitionMatrixCurve():matrix element "
+                           << config.states()[i] << " -> " << config.states()[j] << " missing in market data");
+        }
+    }
+    Size initialStateIndex = stateIndex[config.initialState()];
+    curve_ = boost::make_shared<QuantExt::CreditCurve>(
+        Handle<DefaultProbabilityTermStructure>(boost::make_shared<QuantExt::GeneratorDefaultProbabilityTermStructure>(
+            QuantExt::GeneratorDefaultProbabilityTermStructure::MatrixType::Transition, transitionMatrix,
+            initialStateIndex, asof)));
+    if (recoveryRate_ == Null<Real>())
+        recoveryRate_ = 0.0;
+    LOG("Finished building default curve of type TransitionMatrix for curve " << curveID);
 }
 
 void DefaultCurve::buildNullCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,

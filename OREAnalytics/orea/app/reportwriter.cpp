@@ -503,8 +503,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                     if (cf.discountFactor != Null<Real>())
                         discountFactor = cf.discountFactor;
                     else if (!cf.currency.empty() && cf.payDate != Null<Date>() && market) {
-                        discountFactor =
-                            cf.payDate < asof ? 0.0 : market->discountCurve(cf.currency)->discount(cf.payDate);
+                        discountFactor = cf.payDate < asof
+                                             ? 0.0
+                                             : market->discountCurve(cf.currency, configuration)->discount(cf.payDate);
                     }
                     if (cf.presentValue != Null<Real>()) {
                         presentValue = cf.presentValue * multiplier;
@@ -572,12 +573,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
     LOG("Cashflow report written");
 }
 
-void ReportWriter::writeCashflowNpv(ore::data::Report& report,
-                                    const ore::data::InMemoryReport& cashflowReport,
-                                    boost::shared_ptr<ore::data::Market> market,
-                                    const std::string& configuration,
-                                    const std::string& baseCcy,
-                                    const Date& horizon)  {
+void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::InMemoryReport& cashflowReport,
+                                    boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
+                                    const std::string& baseCcy, const Date& horizon) {
     // Pick the following fields form the in memory report:
     // - tradeId 
     // - payment date 
@@ -613,7 +611,7 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report,
                                                  " has no ccy. Assuming ccy = baseCcy = " + baseCcy + "."));
         }
         if (!ccy.empty() && ccy != baseCcy)
-            fx = market->fxSpot(ccy + baseCcy, configuration)->value();
+            fx = market->fxRate(ccy + baseCcy, configuration)->value();
         if (npvMap.find(tradeId) == npvMap.end())
             npvMap[tradeId] = 0.0;
         if (payDate > asof && payDate <= horizon) {

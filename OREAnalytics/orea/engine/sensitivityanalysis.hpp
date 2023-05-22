@@ -159,7 +159,7 @@ protected:
     //! initializationFlag
     bool initialized_, computed_;
     //! model builders
-    std::set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
+    std::set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
     //! sensitivityCube
     boost::shared_ptr<SensitivityCube> sensiCube_;
 };

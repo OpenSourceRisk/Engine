@@ -189,8 +189,9 @@ struct TestData {
         cmb.addCorrelation("INF:EUHICPXT", "IR:EUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.1)));
 
         Real tolerance = 0.0001;
-        boost::shared_ptr<CrossAssetModelData> config(boost::make_shared<CrossAssetModelData>(
-                                                                                              irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs, comConfigs, cmb.correlations(), tolerance));
+        boost::shared_ptr<CrossAssetModelData> config(
+            boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs,
+                                                    crCirConfigs, comConfigs, 0, cmb.correlations(), tolerance));
 
         CrossAssetModelBuilder modelBuilder(market, config);
         ccLgm = *modelBuilder.model();

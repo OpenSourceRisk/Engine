@@ -2,6 +2,9 @@
 
 set(OREAnalytics_SRC aggregation/collateralaccount.cpp
 aggregation/collatexposurehelper.cpp
+aggregation/creditmigrationcalculator.cpp
+aggregation/creditmigrationhelper.cpp
+aggregation/creditsimulationparameters.cpp
 aggregation/cvaspreadsensitivitycalculator.cpp
 aggregation/dimcalculator.cpp
 aggregation/dimregressioncalculator.cpp
@@ -12,10 +15,10 @@ aggregation/nettedexposurecalculator.cpp
 aggregation/postprocess.cpp
 aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
+app/analytic.cpp
 app/analytics/pricinganalytic.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
-app/analytic.cpp
 app/analyticsmanager.cpp
 app/inputparameters.cpp
 app/marketcalibrationreport.cpp
@@ -43,6 +46,7 @@ engine/historicalpnlgenerator.cpp
 engine/historicalsensipnlcalculator.cpp
 engine/historicalsimulationvar.cpp
 engine/mporcalculator.cpp
+engine/multistatenpvcalculator.cpp
 engine/multithreadedvaluationengine.cpp
 engine/npvrecord.cpp
 engine/parametricvar.cpp
@@ -84,6 +88,35 @@ scenario/shiftscenariogenerator.cpp
 scenario/simplescenario.cpp
 scenario/stressscenariodata.cpp
 scenario/stressscenariogenerator.cpp
+simm/crifloader.cpp
+simm/crifrecord.cpp
+simm/simmbasicnamemapper.cpp
+simm/simmbucketmapperbase.cpp
+simm/simmcalculator.cpp
+simm/simmconcentration.cpp
+simm/simmconcentrationisdav1_3.cpp
+simm/simmconcentrationisdav1_3_38.cpp
+simm/simmconcentrationisdav2_0.cpp
+simm/simmconcentrationisdav2_1.cpp
+simm/simmconcentrationisdav2_2.cpp
+simm/simmconcentrationisdav2_3.cpp
+simm/simmconcentrationisdav2_3_8.cpp
+simm/simmconcentrationisdav2_5.cpp
+simm/simmconcentrationisdav2_5a.cpp
+simm/simmconfiguration.cpp
+simm/simmconfigurationbase.cpp
+simm/simmconfigurationisdav1_0.cpp
+simm/simmconfigurationisdav1_3.cpp
+simm/simmconfigurationisdav1_3_38.cpp
+simm/simmconfigurationisdav2_0.cpp
+simm/simmconfigurationisdav2_1.cpp
+simm/simmconfigurationisdav2_2.cpp
+simm/simmconfigurationisdav2_3.cpp
+simm/simmconfigurationisdav2_3_8.cpp
+simm/simmconfigurationisdav2_5.cpp
+simm/simmconfigurationisdav2_5a.cpp
+simm/simmresults.cpp
+simm/utilities.cpp
 simulation/fixingmanager.cpp
 simulation/simmarket.cpp)
 
@@ -91,6 +124,9 @@ simulation/simmarket.cpp)
 
 set(OREAnalytics_HDR aggregation/collateralaccount.hpp
 aggregation/collatexposurehelper.hpp
+aggregation/creditmigrationcalculator.hpp
+aggregation/creditmigrationhelper.hpp
+aggregation/creditsimulationparameters.hpp
 aggregation/cvaspreadsensitivitycalculator.hpp
 aggregation/dimcalculator.hpp
 aggregation/dimregressioncalculator.hpp
@@ -101,10 +137,10 @@ aggregation/nettedexposurecalculator.hpp
 aggregation/postprocess.hpp
 aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
+app/analytic.hpp
 app/analytics/pricinganalytic.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
-app/analytic.hpp
 app/analyticsmanager.hpp
 app/inputparameters.hpp
 app/marketcalibrationreport.hpp
@@ -140,6 +176,7 @@ engine/historicalpnlgenerator.hpp
 engine/historicalsensipnlcalculator.hpp
 engine/historicalsimulationvar.hpp
 engine/mporcalculator.hpp
+engine/multistatenpvcalculator.hpp
 engine/multithreadedvaluationengine.hpp
 engine/npvrecord.hpp
 engine/observationmode.hpp
@@ -189,6 +226,37 @@ scenario/simplescenario.hpp
 scenario/simplescenariofactory.hpp
 scenario/stressscenariodata.hpp
 scenario/stressscenariogenerator.hpp
+simm/crifloader.hpp
+simm/crifrecord.hpp
+simm/simmbasicnamemapper.hpp
+simm/simmbucketmapper.hpp
+simm/simmbucketmapperbase.hpp
+simm/simmcalculator.hpp
+simm/simmconcentration.hpp
+simm/simmconcentrationisdav1_3.hpp
+simm/simmconcentrationisdav1_3_38.hpp
+simm/simmconcentrationisdav2_0.hpp
+simm/simmconcentrationisdav2_1.hpp
+simm/simmconcentrationisdav2_2.hpp
+simm/simmconcentrationisdav2_3.hpp
+simm/simmconcentrationisdav2_3_8.hpp
+simm/simmconcentrationisdav2_5.hpp
+simm/simmconcentrationisdav2_5a.hpp
+simm/simmconfiguration.hpp
+simm/simmconfigurationbase.hpp
+simm/simmconfigurationisdav1_0.hpp
+simm/simmconfigurationisdav1_3.hpp
+simm/simmconfigurationisdav1_3_38.hpp
+simm/simmconfigurationisdav2_0.hpp
+simm/simmconfigurationisdav2_1.hpp
+simm/simmconfigurationisdav2_2.hpp
+simm/simmconfigurationisdav2_3.hpp
+simm/simmconfigurationisdav2_3_8.hpp
+simm/simmconfigurationisdav2_5.hpp
+simm/simmconfigurationisdav2_5a.hpp
+simm/simmnamemapper.hpp
+simm/simmresults.hpp
+simm/utilities.hpp
 simulation/fixingmanager.hpp
 simulation/simmarket.hpp
 version.hpp)
