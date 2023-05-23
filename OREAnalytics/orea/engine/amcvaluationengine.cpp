@@ -749,6 +749,7 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
                 // log error and return code 1 = not ok
 
                 ALOG(ore::analytics::StructuredAnalyticsErrorMessage("AMC Valuation Engine (multithreaded mode)",
+                                                                     "",
                                                                      e.what()));
                 rc = 1;
             }

@@ -414,7 +414,7 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (creditRiskCurrency_.empty()) {
             creditRiskCurrency_ = localCreditRiskCurrency;
         } else if (!localCreditRiskCurrency.empty() && creditRiskCurrency_ != localCreditRiskCurrency) {
-            ALOG(ore::data::StructuredTradeErrorMessage(id(), tradeType(), "Ambiguous SIMM CreditQ currencies for trs",
+            ALOG(ore::data::StructuredTradeErrorMessage(id(), tradeType(), "Ambiguous SIMM CreditQ currencies for TRS",
                                                         "Will use '" + creditRiskCurrency_ + "', found '" +
                                                             localCreditRiskCurrency + "' in addition."));
         }

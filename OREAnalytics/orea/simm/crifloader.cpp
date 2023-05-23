@@ -21,6 +21,7 @@
 #include <orea/simm/simmconfiguration.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/structuredtradewarning.hpp>
+#include <orea/app/structuredanalyticswarning.hpp>
 #include <ored/utilities/parsers.hpp>
 
 #include <algorithm>
@@ -220,10 +221,10 @@ void CrifLoader::add(CrifRecord cr, const bool onDiffAmountCcy) {
                                 ". Please check the SIMM parameters input. If enforceIMRegulations=False, then it "
                                 "is possible that multiple entries for different regulations now belong under the same "
                                 "'Unspecified' regulation.";
-                WLOG(ore::data::StructuredTradeWarningMessage("", "", "Aggregating SIMM parameters", errMsg));
+                WLOG(ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters", errMsg));
             } else {
                 // Handling in case new SIMM parameters are added in the future
-                WLOG(ore::data::StructuredTradeWarningMessage("", "", "Aggregating SIMM parameters",
+                WLOG(ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters",
                                                               "Unknown risk type: " + to_string(it->riskType)));
             }
         } else {
@@ -543,6 +544,7 @@ bool CrifLoader::process(const vector<string>& entries, Size maxIndex, Size curr
                     if (!allowUseCounterpartyTrade_ && use_cp_trade) {
                         QL_FAIL(ore::data::StructuredTradeErrorMessage(
                             tradeId, tradeType,
+                            "CRIF loading",
                             "IM exposure cannot be calculated because one or more trades is picking Counterparty "
                             "sensitivities."));
                     }
