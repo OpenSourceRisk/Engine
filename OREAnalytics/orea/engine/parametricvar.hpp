@@ -70,7 +70,7 @@ public:
 
     ParametricVarCalculator(const ParametricVarParams& parametricVarParams, const QuantLib::Matrix& omega,
                             const std::map<RiskFactorKey, QuantLib::Real>& deltas,
-                            const std::map<CrossPair, Real>& gammas, const QuantExt::CovarianceSalvage& covarianceSalvage,
+                            const std::map<CrossPair, Real>& gammas, const QuantLib::ext::shared_ptr<QuantExt::CovarianceSalvage>& covarianceSalvage,
                             const bool& includeGammaMargin, const bool& includeDeltaMargin) : 
         parametricVarParams_(parametricVarParams), omega_(omega), deltas_(deltas), gammas_(gammas), covarianceSalvage_(covarianceSalvage),
         includeGammaMargin_(includeGammaMargin), includeDeltaMargin_(includeDeltaMargin) {}
@@ -84,7 +84,7 @@ private:
     const QuantLib::Matrix& omega_;
     const std::map<RiskFactorKey, QuantLib::Real>& deltas_;
     const std::map<CrossPair, QuantLib::Real>& gammas_;
-    const QuantExt::CovarianceSalvage& covarianceSalvage_;
+    const QuantLib::ext::shared_ptr<QuantExt::CovarianceSalvage>& covarianceSalvage_;
     const bool& includeGammaMargin_;
     const bool& includeDeltaMargin_;
 };
