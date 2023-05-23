@@ -43,7 +43,7 @@ using QuantLib::Matrix;
 class VarCalculator {
 public:
     VarCalculator() {}
-    ~VarCalculator() {}
+    virtual ~VarCalculator() {}
 
     virtual QuantLib::Real var(QuantLib::Real confidence, const bool isCall = true, 
         const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) = 0;
