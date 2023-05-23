@@ -18,8 +18,6 @@
 
 #include <iomanip>
 #include <iostream>
-using namespace std;
-
 #include <oret/config.hpp>
 
 // Boost
@@ -81,6 +79,7 @@ public:
 
     // Method called in destructor to log time taken
     void stopTimer() {
+        using namespace std;
         t.stop();
         double seconds = t.elapsed().wall * 1e-9;
         int hours = int(seconds / 3600);
