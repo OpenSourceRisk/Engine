@@ -620,14 +620,24 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
            << "|" << std::setw(width) << "div_passth"
            << "|" << std::setw(width) << "curr_cr"
            << "|" << std::setw(width) << "fxConv"
-           << "|";
+           << "|" << std::setw(width) << "eq_fwd"
+           << "|" << std::setw(width) << "div_amt"
+           << "|" << std::setw(width) << "conv_val"
+           << "|" << std::setw(width) << "conv_prc" << "|";
+
     results_.additionalResults["event_0000!"] = header.str();
 
     Size counter = 0;
     for (Size i = 0; i < grid.size(); ++i) {
         if (true || events.hasBondCashflow(i) || events.hasCall(i) || events.hasPut(i) || events.hasConversion(i)) {
             std::ostringstream dateStr, bondFlowStr, callStr, putStr, convStr, convResetStr, divStr, currentConvStr,
-                fxConvStr;
+                fxConvStr, eqFwdStr, divAmtStr, convValStr, convPrcStr;
+
+            Real eqFwd = model_->equity()->equitySpot()->value() /
+                         model_->equity()->equityForecastCurve()->discount(grid[i]) *
+                         model_->equity()->equityDividendCurve()->discount(grid[i]);
+            Real divAmt = 0.0;
+
             if (events.getAssociatedDate(i) != Null<Date>()) {
                 dateStr << QuantLib::io::iso_date(events.getAssociatedDate(i));
             }
@@ -674,11 +684,19 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
                     convResetStr << "DP(" << cd.lastDividendProtectionTimeIndex << "/"
                                  << model_->dividendYield(grid[cd.lastDividendProtectionTimeIndex], grid[i]) << ")@"
                                  << cd.divThreshold;
+                    Real s = grid[cd.lastDividendProtectionTimeIndex + 1];
+                    Real t = grid[i];
+                    divAmt +=
+                        cd.accruedHistoricalDividends + (std::exp(model_->dividendYield(s, t) * (t - s)) - 1.0) * eqFwd;
                 }
             }
             if (events.hasDividendPassThrough(i)) {
                 const auto& cd = events.getDividendPassThroughData(i);
                 divStr << "@" << cd.divThreshold;
+                Real s = grid[cd.lastDividendProtectionTimeIndex + 1];
+                Real t = grid[i];
+                divAmt +=
+                    cd.accruedHistoricalDividends + (std::exp(model_->dividendYield(s, t) * (t - s)) - 1.0) * eqFwd;
             }
             if (events.getCurrentConversionRatio(i) == Null<Real>()) {
                 currentConvStr << "NA";
@@ -689,6 +707,12 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
                 currentConvStr << "s";
             }
             fxConvStr << events.getCurrentFxConversion(i);
+            eqFwdStr << eqFwd;
+            if (!close_enough(divAmt, 0.0))
+                divAmtStr << divAmt;
+            convValStr << events.getCurrentConversionRatio(i) * eqFwd;
+            convPrcStr << N0 / (events.getCurrentConversionRatio(i) * events.getCurrentFxConversion(i));
+
             std::ostringstream eventDescription;
             eventDescription << std::left << "|" << std::setw(width) << grid[i] << "|" << std::setw(width)
                              << dateStr.str() << "|" << std::setw(width) << notional(grid[i]) << "|" << std::setw(width)
@@ -696,7 +720,10 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
                              << std::setw(width) << callStr.str() << "|" << std::setw(width) << putStr.str() << "|"
                              << std::setw(2 * width) << convStr.str() << "|" << std::setw(2 * width)
                              << convResetStr.str() << "|" << std::setw(width) << divStr.str() << "|" << std::setw(width)
-                             << currentConvStr.str() << "|" << std::setw(width) << fxConvStr.str() << "|";
+                             << currentConvStr.str() << "|" << std::setw(width) << fxConvStr.str() << "|"
+                             << std::setw(width) << eqFwdStr.str() << "|" << std::setw(width) << divAmtStr.str() << "|"
+                             << std::setw(width) << convValStr.str() << "|" << std::setw(width) << convPrcStr.str()
+                             << "|";
             std::string label = "0000" + std::to_string(counter++);
             results_.additionalResults["event_" + label.substr(label.size() - 5)] = eventDescription.str();
         }

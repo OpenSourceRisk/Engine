@@ -741,6 +741,14 @@ void TRSWrapperAccrualEngine::calculate() const {
     results_.additionalResults["currentNotional"] = currentNotional * fxAssetToPnlCcy;
     results_.additionalResults["cashFlowResults"] = cfResults;
 
+    // propagate underlying additional results to trswrapper
+
+    for (Size i = 0; i < arguments_.underlying_.size(); ++i) {
+        for (auto const& [key, value] : arguments_.underlying_[i]->instrument()->additionalResults()) {
+            results_.additionalResults["und_ar_" + std::to_string(i + 1) + "_" + key] = value;
+        }
+    }
+
     DLOG("TRSWrapperAccrualEngine: all done, total npv = " << results_.value << " "
                                                            << arguments_.fundingCurrency_.code());
 }
