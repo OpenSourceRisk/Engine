@@ -187,6 +187,8 @@ void Analytic::buildPortfolio() {
         portfolio()->add(trade);
     
     if (market_) {
+        replaceTrades();
+
         LOG("Build the portfolio");
         boost::shared_ptr<EngineFactory> factory = impl()->engineFactory();
         portfolio()->build(factory, "analytic/" + label());
