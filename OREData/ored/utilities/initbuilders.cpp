@@ -213,6 +213,7 @@ void initBuilders() {
     ORE_REGISTER_REFERENCE_DATUM("CreditIndex", CreditIndexReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("EquityIndex", EquityIndexReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("CurrencyHedgedEquityIndex", CurrencyHedgedEquityIndexReferenceDatum, false)
+    ORE_REGISTER_REFERENCE_DATUM("CommodityIndex", CommodityIndexReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("Credit", CreditReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("Equity", EquityReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("BondBasket", BondBasketReferenceDatum, false)

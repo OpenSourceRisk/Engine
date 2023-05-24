@@ -255,6 +255,18 @@ public:
         : IndexReferenceDatum(TYPE, name, validFrom) {}
 };
 
+
+//! EquityIndex Reference data, contains the names and weights of an equity index
+class CommodityIndexReferenceDatum : public IndexReferenceDatum {
+public:
+    static constexpr const char* TYPE = "Commodity";
+
+    CommodityIndexReferenceDatum() {}
+    CommodityIndexReferenceDatum(const string& name) : IndexReferenceDatum(TYPE, name) {}
+    CommodityIndexReferenceDatum(const string& name, const QuantLib::Date& validFrom)
+        : IndexReferenceDatum(TYPE, name, validFrom) {}
+};
+
 /*
 <ReferenceDatum id="RIC:.SPXEURHedgedMonthly">
   <Type>CurrencyHedgedEquityIndex</Type>
