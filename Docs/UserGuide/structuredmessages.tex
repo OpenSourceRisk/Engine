@@ -65,7 +65,7 @@ these can either lead to a larger failure later on in the calculations or have n
 Within each category, structured messages are further subdivided into groups, which indicate the component that the error points to.
 A structured error (warning) has a corresponding \lstinline!message! and usually an \lstinline!exceptionType! (\lstinline!warningType!)
 subfield. Additionally, there may be subfields specific to a group, e.g.\ for structured trade error messages, the trade ID and trade
-type:
+type. Occasionally, some subfields are reused, e.g.\ structured analytics error message related to a specific trade would have a \lstinline!tradeId! subfield:
 
 \begin{itemize}
   \item Analytics: \lstinline!analyticType! (only for warnings)
@@ -101,38 +101,49 @@ be a given instrument's trade ID and trade type.
         \lstinline!warningType!: Error in ORE analytics: <SUB ERR MSG> \\
         \lstinline!message!: <SUB ERR MSG>
 
-  \item \lstinline!exceptionType!: AMC Valuation Engine (multithreaded mode) \\
+  \item \lstinline!analyticType!: AMC Valuation Engine (multithreaded mode) \\
+        \lstinline!exceptionType!: <EMPTY> \\
         \lstinline!message!: <SUB ERR MSG>
 
-  \item \lstinline!exceptionType!: Multithreaded Valuation Engine \\
+  \item \lstinline!analyticType!: Multithreaded Valuation Engine \\
+        \lstinline!exceptionType!: <EMPTY> \\
         \lstinline!message!: <SUB ERR MSG>
 
-  \item \lstinline!exceptionType!: par sensitivity conversion \\
-        \lstinline!message!: skipping par instrument for <CURVE NAME>: <SUB ERR MSG>
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Skipping par instrument for <CURVE NAME> \\
+        \lstinline!message!: <SUB ERR MSG>
 
-  \item \lstinline!exceptionType!: par sensitivity conversion \\
-        \lstinline!message!: skipping par instrument for index curve <INDEX NAME>: <SUB ERR MSG>
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Skipping par instrument for index curve <INDEX NAME> \\
+        \lstinline!message!: <SUB ERR MSG>
 
-  \item \lstinline!exceptionType!: par sensitivity conversion \\
-        \lstinline!message!: skipping par cap/floor for key <KEY>: <SUB ERR MSG>
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Skipping par cap/floor for key <KEY> \\
+        \lstinline!message!: <SUB ERR MSG>
 
-  \item \lstinline!exceptionType!: par sensitivity conversion \\
-        \lstinline!message!: skipping par instrument for cds <KEY>: <SUB ERR MSG>
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Skipping par instrument for cds <KEY> \\
+        \lstinline!message!: <SUB ERR MSG>
 
-  \item \lstinline!exceptionType!: par sensitivity conversion \\
-        \lstinline!message!: skipping par instrument for zero inflation index <INDEX NAME>: <SUB ERR MSG>
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Skipping par instrument for zero inflation index <INDEX NAME> \\
+        \lstinline!message!: <SUB ERR MSG>
 
-  \item \lstinline!exceptionType!: par sensitivity conversion \\
-        \lstinline!message!: skipping par instrument for yoy index <INDEX NAME>: <SUB ERR MSG>
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Skipping par instrument for yoy index <INDEX NAME> \\
+        \lstinline!message!: <SUB ERR MSG>
 
-  \item \lstinline!exceptionType!: par sensitivity conversion \\
-        \lstinline!message!: skipping par instrument for yoy cap floor index <INDEX NAME>: <SUB ERR MSG>
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Skipping par instrument for yoy cap floor index <INDEX NAME> \\
+        \lstinline!message!: <SUB ERR MSG>
 
-  \item \lstinline!exceptionType!: par sensitivity conversion \\
-        \lstinline!message!: Transposed Jacobi matrix inversion failed: <SUB ERR MSG>
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Transposed Jacobi matrix inversion failed \\
+        \lstinline!message!: <SUB ERR MSG>
 
-  \item \lstinline!exceptionType!: par conversion \\
-        \lstinline!message!: par factor <FACTOR> not found in factorToIndex map
+  \item \lstinline!analyticType!: Par conversion \\
+        \lstinline!exceptionType!: <EMPTY> \\
+        \lstinline!message!: Par factor <FACTOR> not found in factorToIndex map
 
   \ifdefined\UserGuide
   \else
@@ -146,11 +157,13 @@ be a given instrument's trade ID and trade type.
 
   \item \lstinline!configurationType!: IborFallbackConfig \\
         \lstinline!configurationId!: <IBOR FALLBACK INDEX> \\
-        \lstinline!message!: update switch date from <FALLBACK SWITCH DATE> to <TARGET SWITCH DATE>
+        \lstinline!warningType!: <EMPTY> \\
+        \lstinline!message!: Updating switch date from <FALLBACK SWITCH DATE> to <TARGET SWITCH DATE>
 
   \item \lstinline!configurationType!: Netting set manager \\
         \lstinline!configurationId!: <EMPTY> \\
-        \lstinline!message!: Netting set definnition failed to parse: <SUB ERR MSG>
+        \lstinline!warningType!: Failed to parse netting set definition \\
+        \lstinline!message!: <SUB ERR MSG>
 
   \ifdefined\UserGuide
   \else
@@ -166,23 +179,11 @@ be a given instrument's trade ID and trade type.
   \item \lstinline!exceptionType!: Failed to calibrate FX BS Model \\
         \lstinline!message!: FX BS <INTEGER> calibration error <ERROR VALUE> exceeds tolerance <BOOTSTRAP TOLERANCE>
 
-  % \item \lstinline!exceptionType!: Calibrating FX BS Model \\
-        % \lstinline!message!: FX BS <INTEGER> calibration error <SUB ERR MSG> exceeds tolerance <CONFIG BOOSTRAP TOLERANCE>
-
   \item \lstinline!exceptionType!: Failed to calibrate EQ BS Model \\
         \lstinline!message!: EQ BS <INTEGER> calibration error <ERROR VALUE> exceeds tolerance <BOOTSTRAP TOLERANCE>
 
-  % \item \lstinline!exceptionType!: Calibrating EQ BS Model \\
-  %       \lstinline!message!: EQ BS <INTEGER> calibration error <SUB ERR MSG> exceeds tolerance <CONFIG BOOSTRAP TOLERANCE>
-
-  % \item \lstinline!exceptionType!: Calibrating INF DK Model \\
-  %       \lstinline!message!: INF (DK) <INTEGER> calibration error <SUB ERR MSG> exceeds tolerance <CONFIG BOOSTRAP TOLERANCE>
-
   \item \lstinline!exceptionType!: Failed to calibrate INF DK Model \\
         \lstinline!message!: INF (DK) <INTEGER> calibration error <EROR VALUE> exceeds tolerance <BOOTSTRAP TOLERANCE>
-
-  % \item \lstinline!exceptionType!: Calibrating INF JY Model \\
-  %       \lstinline!message!: FX BS <INTEGER> calibration error <SUB ERR MSG> exceeds tolerance <BOOTSTRAP TOLERANCE>
 
   \item \lstinline!exceptionType!: Failed to calibrate INF JY Model \\
         \lstinline!message!: FX BS <INTEGER> calibration error <ERROR VALUE> exceeds tolerance <BOOTSTRAP TOLERANCE>
@@ -192,9 +193,6 @@ be a given instrument's trade ID and trade type.
 
   \item \lstinline!exceptionType!: Failed to calibrate LGM Model \\
         \lstinline!message!: LGM (<QUALIFIER>) calibration error <ERROR VALUE> exceeds tolerance <BOOTSTRAP TOLERANCE>
-
-  % \item \lstinline!exceptionType!: LGM calibration \\
-  %       \lstinline!message!: LGM (<QUALIFIER>) calibration error <SUB ERR MSG> exceeds tolerance <BOOTSTRAP TOLERANCE>
 
 \end{itemize}
 
@@ -214,11 +212,7 @@ be a given instrument's trade ID and trade type.
         \lstinline!exceptionType!: skipping this object in scenario sim market (scenario data was not written for this object.) \\
         \lstinline!message!: <SUB ERR MSG>
 
-  % \item \lstinline!curveId!: <CURVE ID> \\
-  %       \lstinline!exceptionType!: Curve config was requested under node `<CURVE TYPE>', but could not be parsed. \\
-  %       \lstinline!message!: <SUB ERR MSG>
-
-  \item \lstinline!exceptionType!: Curve config <CURVE ID> under node `<CURVE TYPE>' was requested, but could not be parsed. \\
+  \item \lstinline!exceptionType!: Curve config under node `<CURVE TYPE>' was requested, but could not be parsed. \\
         \lstinline!message!: <SUB ERR MSG>
 
   \item \lstinline!curveId!: <CURVE SPEC NAME> \\
@@ -334,8 +328,8 @@ be a given instrument's trade ID and trade type.
   \item \lstinline!exceptionType!: Error parsing type and envelope \\
         \lstinline!message!: <SUB ERR MSG>
 
-  \item \lstinline!exceptionType!: Trade is Matured \\
-        \lstinline!message!: <EMPTY>
+  \item \lstinline!exceptionType!: <EMPTY> \\
+        \lstinline!message!: Trade is Matured
   
   \item \lstinline!exceptionType!: Error retrieving underlying indices \\
         \lstinline!message!: <SUB ERR MSG>
@@ -355,7 +349,7 @@ be a given instrument's trade ID and trade type.
 \begin{itemize}
 
   \item \lstinline!exceptionType!: Missing fixing \\
-        \lstinline!message!: Could not find required fixing id <FIXING ID> for date <FIXING DATE><SUB ERR MSG>
+        \lstinline!message!: Could not find required fixing ID <FIXING ID> for date <FIXING DATE><SUB ERR MSG>
 
   \ifdefined\UserGuide
   \else

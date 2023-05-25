@@ -1,0 +1,47 @@
+\subsubsection{Bond Position}
+\label{ss:bond_position}
+
+A bond position represents a position in a weighted basket of underlying bonds.
+
+A bond position can be used both as a stand alone trade type (TradeType: \emph{BondPosition}) or as a trade component ({\tt BondBasketData}) used within the \emph{TotalReturnSwap} (Generic TRS) trade type.
+
+It is set up using an {\tt BondBasketData} block as shown in listing \ref{lst:bondbasketdata}. The meanings and allowable
+values of the elements in the block are as follows:
+
+\begin{itemize}
+\item Quantity: The number of units of the weighted basket held.\\
+  Allowable values: Any positive real number
+\item Identifier: The identifier of the weighted basket. The Underlying data can be retrieved from the reference data
+  via this identifier, if not given in the trade itself.\\
+\item Underlying[Optional]: One or more underlying descriptions. If bond basket data is set up in the reference data for the given identifier, the underlying data will be populated from there and does not need to be provided in the trade. \\
+  Allowable values: See \ref{ss:underlying} for the definition of an underlying. Only bond underlyings are allowed.
+\end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Trade id="BondPosition">
+    <TradeType>BondPosition</TradeType>
+    <Envelope>...</Envelope>
+    <BondBasketData>
+      <Quantity>1000</Quantity>
+      <Identifier>ISIN:GB00B4KT9Q30</Identifier>
+      <Underlying>
+        <Type>Bond</Type>
+        <Name>US69007TAB08</Name>
+        <IdentifierType>ISIN</IdentifierType>
+        <Weight>0.5</Weight>
+        <BidAskAdjustment>-0.0025</BidAskAdjustment>
+      </Underlying>
+      <Underlying>
+        <Type>Bond</Type>
+        <Name>US750236AW16</Name>
+        <IdentifierType>ISIN</IdentifierType>
+        <Weight>0.5</Weight>
+        <BidAskAdjustment>-0.005</BidAskAdjustment>
+      </Underlying>
+    </BondBasketData>
+  </Trade>
+\end{minted}
+\caption{Bond position data}
+\label{lst:bondbasketdata}
+\end{listing}

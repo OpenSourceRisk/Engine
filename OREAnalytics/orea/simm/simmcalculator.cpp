@@ -80,7 +80,7 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
 
         if (isSchedule) {
             if (!quiet_ && determineWinningRegulations) {
-                WLOG(ore::data::StructuredTradeWarningMessage(cr.tradeId, "", "SIMM calculator", "Skipping over Schedule CRIF record"));
+                WLOG(ore::data::StructuredTradeWarningMessage(cr.tradeId, cr.tradeType, "SIMM calculator", "Skipping over Schedule CRIF record"));
             } 
             continue;
         }
@@ -1644,6 +1644,8 @@ void SimmCalculator::addCrifRecord(const CrifRecord& crifRecord, const SimmSide&
     auto newCrifRecord = crifRecord;
     newCrifRecord.collectRegulations.clear();
     newCrifRecord.postRegulations.clear();
+    // Empty headers here, only needed when we load from file/json
+    std::map<QuantLib::Size, std::set<std::string>> additionalCrifHeaders; 
     for (const string& r : regs)
         if (r != "Excluded") {
             // Keep a record of trade IDs for each regulation
@@ -1652,7 +1654,7 @@ void SimmCalculator::addCrifRecord(const CrifRecord& crifRecord, const SimmSide&
 
             // Add CRIF record to the appropriate regulations
             if (regSensitivities_[side][nettingSetDetails][r] == nullptr)
-                regSensitivities_[side][nettingSetDetails][r] = boost::make_shared<CrifLoader>(simmConfiguration_, true, true);
+                regSensitivities_[side][nettingSetDetails][r] = boost::make_shared<CrifLoader>(simmConfiguration_, additionalCrifHeaders, true, true);
 
             regSensitivities_[side][nettingSetDetails][r]->add(newCrifRecord);
         }

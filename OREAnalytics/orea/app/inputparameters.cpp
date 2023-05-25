@@ -374,9 +374,8 @@ void InputParameters::setCrifLoader() {
         buildSimmConfiguration(simmVersion_, simmBucketMapper_);
     bool updateMappings = true;
     bool aggregateTrades = false;
-    bool allowUseCounterpartyTrade = false;
     crifLoader_ =
-        boost::make_shared<CrifLoader>(configuration, updateMappings, aggregateTrades, allowUseCounterpartyTrade);        
+        boost::make_shared<CrifLoader>(configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades);
 }
     
 void InputParameters::setCrifFromFile(const std::string& fileName, char eol, char delim, char quoteChar, char escapeChar) {

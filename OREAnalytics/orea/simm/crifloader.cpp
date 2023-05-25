@@ -21,6 +21,7 @@
 #include <orea/simm/simmconfiguration.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/structuredtradewarning.hpp>
+#include <orea/app/structuredanalyticswarning.hpp>
 #include <ored/utilities/parsers.hpp>
 
 #include <algorithm>
@@ -75,55 +76,6 @@ map<Size, set<string>> CrifLoader::optionalHeaders = {
     {17, {"post_regulations"}},
     {18, {"collect_regulations"}},
     {19, {"end_date"}}};
-
-// Additional headers
-// FIXME: Pass this map as an argument into the CrifLoader constructor
-//        and keep the concrete additionalHeaders below in ORE+, empty by default in ORE
-map<Size, set<string>> CrifLoader::additionalHeaders = {
-    {20, {"counterpartyid", "counterparty_id"}},
-    {21, {"notional"}},         // CRIF+
-    {22, {"trade_currency"}},   // CRIF+
-    {23, {"notional2"}},        // CRIF+
-    {24, {"trade_currency2"}},  // CRIF+
-    {25, {"mtm_curr"}},         // CRIF+
-    {26, {"mtm_value"}},        // CRIF+
-    {27, {"underlying"}},       // CRIF+
-    {28, {"settlement_type"}},  // CRIF+
-    {29, {"strike"}},           // CRIF+
-    {30, {"call_put"}},         // CRIF+
-    {31, {"long_short"}},       // CRIF+
-    {32, {"trade_date"}},       // CRIF+
-    {33, {"xccy_resettable"}},  // CRIF+
-    {34, {"asset_class"}},      // CRIF+, ISDA taxonomy
-    {35, {"base_product"}},     // CRIF+, ISDA taxonomy
-    {36, {"sub_product"}},      // CRIF+, ISDA taxonomy
-    {37, {"party_id"}},
-    {38, {"valuation_date"}},
-    {39, {"match_id"}},
-    {40, {"match_source"}},
-    {41, {"trade_id2"}},
-    {42, {"use_cp_trade"}},
-    {43, {"book", "book"}},
-    {44, {"expiry_date"}},
-    {45, {"usi_prefix"}},
-    {46, {"usi_value"}},
-    {47, {"uti_prefix"}},
-    {48, {"uti_value"}},
-    {49, {"nettingset_id"}},
-    {50, {"xccy_swap_final_notional_exchange"}},
-    {51, {"xccy_swap_pay_fixed_rate"}},
-    {52, {"xccy_swap_rec_fixed_rate"}},
-    {53, {"start_date"}},
-    {54, {"cp_legal_entity_id"}}, 
-    {55, {"cp_org_id"}},
-    {56, {"cp_legal_entity"}},
-    {57, {"agreement_id"}},
-    {58, {"org_id"}},
-    {59, {"version"}},
-    {60, {"mpor"}},
-    {61, {"alpha"}},
-    {62, {"counterparty_risk_weight"}}
-};
 
 // Ease syntax
 using RiskType = SimmConfiguration::RiskType;
@@ -231,10 +183,10 @@ void CrifLoader::add(CrifRecord cr, const bool onDiffAmountCcy) {
                                 ". Please check the SIMM parameters input. If enforceIMRegulations=False, then it "
                                 "is possible that multiple entries for different regulations now belong under the same "
                                 "'Unspecified' regulation.";
-                WLOG(ore::data::StructuredTradeWarningMessage("", "", "Aggregating SIMM parameters", errMsg));
+                WLOG(ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters", errMsg));
             } else {
                 // Handling in case new SIMM parameters are added in the future
-                WLOG(ore::data::StructuredTradeWarningMessage("", "", "Aggregating SIMM parameters",
+                WLOG(ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters",
                                                               "Unknown risk type: " + to_string(it->riskType)));
             }
         } else {
@@ -433,7 +385,7 @@ void CrifLoader::processHeader(const vector<string>& headers) {
         }
     }
 
-    for (const auto& kv : additionalHeaders) {
+    for (const auto& kv : additionalHeaders_) {
         for (Size i = 0; i < headers.size(); ++i) {
             header = boost::to_lower_copy(headers[i]);
             if (kv.second.count(header) > 0) {
@@ -547,6 +499,7 @@ bool CrifLoader::process(const vector<string>& entries, Size maxIndex, Size curr
                                                  cr.legalEntityId);
         cr.postRegulations = loadOptionalString(17);
         cr.collectRegulations = loadOptionalString(18);
+        cr.endDate = loadOptionalString(19);
 
         // Check the IM model
         try {
@@ -557,9 +510,8 @@ bool CrifLoader::process(const vector<string>& entries, Size maxIndex, Size curr
         }
 
         // Store additional data that matches the defined additional headers in the additional fields map
-        for (auto& additionalField : additionalHeaders) {
+        for (auto& additionalField : additionalHeaders_) {
             std::string value = loadOptionalString(additionalField.first);
-
             // FIXME: Ensure we check this down stream in the ORE+ SIMM analytic
             // if use_cp_trade was specified and is set to True
             // if (additionalField.first == 26) {

@@ -141,6 +141,9 @@ struct CrifRecord {
                std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.productClass, cr2.riskType, cr2.qualifier, cr2.bucket,
                         cr2.label1, cr2.label2, cr2.collectRegulations, cr2.postRegulations);
     }
+
+    static std::map<QuantLib::Size, std::set<std::string>> additionalHeaders;
+
 };
 
 //! Enable writing of a CrifRecord

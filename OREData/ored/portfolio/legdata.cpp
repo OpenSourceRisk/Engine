@@ -1340,8 +1340,8 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
 }
 
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,
-                    const BusinessDayConvention paymentConvention, const Calendar paymentCalendar,
-                    const bool excludeIndexing) {
+                    const Natural paymentLag, const BusinessDayConvention paymentConvention,
+                    const Calendar paymentCalendar, const bool excludeIndexing) {
 
     // Assumption - Cashflows on Input Leg are all coupons
     // This is the Leg to be populated
@@ -1353,7 +1353,7 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
         QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
         double initFlowAmt = (excludeIndexing ? unpackIndexedCoupon(coupon) : coupon)->nominal();
         Date initDate = coupon->accrualStartDate();
-        initDate = paymentCalendar.adjust(initDate, paymentConvention);
+        initDate = paymentCalendar.advance(initDate, paymentLag, Days, paymentConvention);
         if (initFlowAmt != 0)
             leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(-initFlowAmt, initDate)));
     }
@@ -1366,7 +1366,7 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
             auto coupon2 = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i - 1]);
             QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
             Date flowDate = coupon->accrualStartDate();
-            flowDate = paymentCalendar.adjust(flowDate, paymentConvention);
+            flowDate = paymentCalendar.advance(flowDate, paymentLag, Days, paymentConvention);
             Real initNom = (excludeIndexing ? unpackIndexedCoupon(coupon2) : coupon2)->nominal();
             Real newNom = (excludeIndexing ? unpackIndexedCoupon(coupon) : coupon)->nominal();
             Real flow = initNom - newNom;
@@ -1381,7 +1381,7 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
         QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
         double finalNomFlow = (excludeIndexing ? unpackIndexedCoupon(coupon) : coupon)->nominal();
         Date finalDate = coupon->accrualEndDate();
-        finalDate = paymentCalendar.adjust(finalDate, paymentConvention);
+        finalDate = paymentCalendar.advance(finalDate, paymentLag, Days, paymentConvention);
         if (finalNomFlow != 0)
             leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(finalNomFlow, finalDate)));
     }
@@ -2665,8 +2665,12 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
 
         // check for notional exchanges on non FX reseting trades
 
+        PaymentLag payLag = parsePaymentLag(data.paymentLag());
+        Natural payLagInteger = boost::apply_visitor(PaymentLagInteger(), payLag);
+
         return makeNotionalLeg(leg, data.notionalInitialExchange(), data.notionalFinalExchange(),
-                               data.notionalAmortizingExchange(), parseBusinessDayConvention(data.paymentConvention()),
+                               data.notionalAmortizingExchange(), payLagInteger,
+                               parseBusinessDayConvention(data.paymentConvention()),
                                parseCalendar(data.paymentCalendar()), true);
     } else {
         return Leg();

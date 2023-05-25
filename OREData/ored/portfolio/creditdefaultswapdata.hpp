@@ -80,7 +80,7 @@ public:
 
     //! Detailed constructor
     CdsReferenceInformation(const std::string& referenceEntityId, CdsTier tier, const QuantLib::Currency& currency,
-                            CdsDocClause docClause);
+                            boost::optional<CdsDocClause> docClause = boost::none);
 
     //! \name XMLSerializable interface
     //@{
@@ -93,7 +93,8 @@ public:
     const std::string& referenceEntityId() const { return referenceEntityId_; }
     CdsTier tier() const { return tier_; }
     const QuantLib::Currency& currency() const { return currency_; }
-    CdsDocClause docClause() const { return docClause_; }
+    bool hasDocClause() const;
+    CdsDocClause docClause() const;
     //@}
 
     /*! Give back the ID for the CdsReferenceInformation object. The id is the concatenation of the string
@@ -105,7 +106,7 @@ private:
     std::string referenceEntityId_;
     CdsTier tier_;
     QuantLib::Currency currency_;
-    CdsDocClause docClause_;
+    boost::optional<CdsDocClause> docClause_;
     std::string id_;
 
     //! Populate the \c id_ member
@@ -120,11 +121,11 @@ private:
 
     If the function receives a \p strInfo of the form `ID|TIER|CCY|DOCCLAUSE` with `CCY` being a valid ISO currency
     code, `TIER` being a valid CDS debt tier and `DOCCLAUSE` being a valid CDS documentation clause, the parsing
-    should be successful.
+    should be successful. Here, DOCCLAUSE is optional.
 
     \ingroup utilities
 */
-bool tryParseCdsInformation(const std::string& strInfo, CdsReferenceInformation& cdsInfo);
+bool tryParseCdsInformation(std::string strInfo, CdsReferenceInformation& cdsInfo);
 
 /*! Serializable credit default swap data
     \ingroup tradedata
