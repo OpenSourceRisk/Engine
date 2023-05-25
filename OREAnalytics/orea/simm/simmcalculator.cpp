@@ -926,7 +926,10 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
                                                      const RiskType& rt, const SimmNetSensitivities& netRecords) const {
     
     // "Bucket" here refers to exposures under the CRIF qualifiers for FX (and IR) risk class, and CRIF buckets for
-    // every other risk class
+    // every other risk class.
+    // For FX Delta margin, this refers to WS_k in Section B. "Structure of the methodology", 8.(b).
+    // For FX Vega margin, this refers to VR_k in Section B., 10.(d).
+    // For other risk type, the bucket margin is K_b in the corresponding subsections.
     map<string, Real> bucketMargins;
 
     bool riskClassIsFX = rt == RiskType::FX || rt == RiskType::FXVol;
@@ -1045,7 +1048,7 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
             }
             // For FX risk class, results are broken down by qualifier, i.e. currency, instead of bucket, which is not used for Risk_FX
             if (riskClassIsFX)
-                bucketMargins[itOuter->qualifier] = wsOuter;
+                bucketMargins[itOuter->qualifier] += wsOuter;
         }
 
         // Finally have the value of $K_b$
@@ -1094,6 +1097,9 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
     if (!riskClassIsFX)
         for (const auto& m : bucketMargin)
             bucketMargins[m.first] = m.second;
+    else
+        for (auto& m : bucketMargins)
+            m.second = std::abs(m.second);
 
     bucketMargins["All"] = margin;
     return make_pair(bucketMargins, true);
@@ -1105,7 +1111,11 @@ SimmCalculator::curvatureMargin(const NettingSetDetails& nettingSetDetails, cons
 
     // "Bucket" here refers to exposures under the CRIF qualifiers for FX (and IR) risk class, and CRIF buckets for
     // every other risk class
+    // For FX Curvature marrgin, this refers to CVR_{b,k} in Section B. "Structure of the methodology", 11.(c).
+    // For other risk types, the bucket margin is K_b in the corresponding subsection.
     map<string, Real> bucketMargins;
+
+    bool riskClassIsFX = rt == RiskType::FX || rt == RiskType::FXVol;
 
     // Multiplier for sensitivities, -1 if SIMM side is Post
     Real multiplier = side == SimmSide::Call ? 1.0 : -1.0;
@@ -1177,6 +1187,10 @@ SimmCalculator::curvatureMargin(const NettingSetDetails& nettingSetDetails, cons
                 Real wsInner = sfInner * ((itInner->amountUsd * multiplier) * sigmaInner);
                 curvatureMargin[bucket] += 2 * corr * corr * wsOuter * wsInner;
             }
+            // For FX risk class, results are broken down by qualifier, i.e. currency, instead of bucket, which is not
+            // used for Risk_FX
+            if (riskClassIsFX)
+                bucketMargins[itOuter->qualifier] += wsOuter;
         }
 
         // Finally have the value of $K_b$
@@ -1245,8 +1259,16 @@ SimmCalculator::curvatureMargin(const NettingSetDetails& nettingSetDetails, cons
         margin += curvatureMargin["Residual"];
     }
 
-    curvatureMargin["All"] = margin;
-    return make_pair(curvatureMargin, true);
+    // For non-FX risk class, results are broken down by buckets
+    if (!riskClassIsFX)
+        for (const auto& m : curvatureMargin)
+            bucketMargins[m.first] = m.second;
+    else
+        for (auto& m : bucketMargins)
+            m.second = std::abs(m.second);
+
+    bucketMargins["All"] = margin;
+    return make_pair(bucketMargins, true);
 }
 
 void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails& nettingSetDetails,
