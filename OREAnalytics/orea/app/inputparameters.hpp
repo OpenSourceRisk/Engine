@@ -31,6 +31,9 @@
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/simm/crifloader.hpp>
+#include <orea/simm/simmbasicnamemapper.hpp>
+#include <orea/simm/simmbucketmapper.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
@@ -257,6 +260,25 @@ public:
     // Setters for cashflow npv and dynamic backtesting
     void setCashflowHorizon(const std::string& s); // parse to Date
     void setPortfolioFilterDate(const std::string& s); // parse to Date
+
+    // Setters for SIMM
+    void setSimmVersion(const std::string& s) { simmVersion_ = s; }
+    void setCrifLoader();
+    void setCrifFromFile(const std::string& fileName,
+                         char eol = '\n', char delim = '\t', char quoteChar = '\0', char escapeChar = '\\');
+    void setCrifFromBuffer(const std::string& csvBuffer,
+                           char eol = '\n', char delim = '\t', char quoteChar = '\0', char escapeChar = '\\');
+    void setSimmNameMapper(const boost::shared_ptr<ore::analytics::SimmBasicNameMapper>& p) { simmNameMapper_ = p; }
+    void setSimmNameMapper(const std::string& xml);
+    void setSimmNameMapperFromFile(const std::string& fileName);
+    void setSimmBucketMapper(const boost::shared_ptr<ore::analytics::SimmBucketMapper>& p) { simmBucketMapper_ = p; }
+    void setSimmBucketMapper(const std::string& xml);
+    void setSimmBucketMapperFromFile(const std::string& fileName);
+    void simmCalculationCurrency(const std::string& s) { simmCalculationCurrency_ = s; }
+    void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
+    void setSimmReportingCurrency(const std::string& s) { simmReportingCurrency_ = s; }
+    void setEnforceIMRegulations(bool b) { enforceIMRegulations_= b; }
+
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>
     void insertAnalytic(const std::string& s); 
@@ -461,6 +483,19 @@ public:
     
     const QuantLib::Date& cashflowHorizon() const { return cashflowHorizon_; };
     const QuantLib::Date& portfolioFilterDate() const { return portfolioFilterDate_; }    
+
+    /******************
+     * Getters for SIMM
+     ******************/
+    const std::string& simmVersion() { return simmVersion_; }
+    const boost::shared_ptr<ore::analytics::CrifLoader>& crifLoader() { return crifLoader_; }
+    const boost::shared_ptr<ore::analytics::SimmBasicNameMapper>& simmNameMapper() { return simmNameMapper_; }
+    const boost::shared_ptr<ore::analytics::SimmBucketMapper>& simmBucketMapper() { return simmBucketMapper_; }
+    const std::string& simmCalculationCurrency() { return simmCalculationCurrency_; }
+    const std::string& simmResultCurrency() { return simmResultCurrency_; }
+    const std::string& simmReportingCurrency() { return simmReportingCurrency_; }
+    bool enforceIMRegulations() { return enforceIMRegulations_; }
+    
     /*************************************
      * List of analytics that shall be run
      *************************************/
@@ -660,6 +695,19 @@ protected:
     std::vector<Size> creditMigrationTimeSteps_;
     boost::shared_ptr<CreditSimulationParameters> creditSimulationParameters_;
     std::string creditMigrationOutputFiles_;
+
+    /***************
+     * SIMM analytic
+     ***************/
+    std::string simmVersion_;
+    boost::shared_ptr<ore::analytics::CrifLoader> crifLoader_;
+    boost::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
+    boost::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
+    std::string simmCalculationCurrency_ = "";
+    std::string simmResultCurrency_ = "";
+    std::string simmReportingCurrency_ = "";
+    bool enforceIMRegulations_;
+
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {

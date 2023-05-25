@@ -95,7 +95,8 @@ public:
 
     //! Map giving option CRIF file headers and their allowable alternatives
     static std::map<QuantLib::Size, std::set<std::string>> optionalHeaders;
-
+    static std::map<QuantLib::Size, std::set<std::string>> additionalHeaders;
+    
     //! Check if netting set details are used anywhere, instead of just the netting set ID
     bool hasNettingSetDetails() const;
 

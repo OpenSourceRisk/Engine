@@ -51,17 +51,18 @@ namespace ore {
 namespace analytics {
 
 // Required headers
-map<Size, set<string>> CrifLoader::requiredHeaders = {{0, {"tradeid", "trade_id"}},
-                                                      {1, {"portfolioid", "portfolio_id"}},
-                                                      {2, {"productclass", "product_class", "asset_class"}},
-                                                      {3, {"risktype", "risk_type"}},
-                                                      {4, {"qualifier"}},
-                                                      {5, {"bucket"}},
-                                                      {6, {"label1"}},
-                                                      {7, {"label2"}},
-                                                      {8, {"amountcurrency", "currency", "amount_currency"}},
-                                                      {9, {"amount"}},
-                                                      {10, {"amountusd", "amount_usd"}}};
+map<Size, set<string>> CrifLoader::requiredHeaders = {
+    {0, {"tradeid", "trade_id"}},
+    {1, {"portfolioid", "portfolio_id"}},
+    {2, {"productclass", "product_class", "asset_class"}},
+    {3, {"risktype", "risk_type"}},
+    {4, {"qualifier"}},
+    {5, {"bucket"}},
+    {6, {"label1"}},
+    {7, {"label2"}},
+    {8, {"amountcurrency", "currency", "amount_currency"}},
+    {9, {"amount"}},
+    {10, {"amountusd", "amount_usd"}}};
 
 // Optional headers
 map<Size, set<string>> CrifLoader::optionalHeaders = {
@@ -69,52 +70,62 @@ map<Size, set<string>> CrifLoader::optionalHeaders = {
     {12, {"calltype", "call_type"}},
     {13, {"initialmargintype", "initial_margin_type"}},
     {14, {"legalentityid", "legal_entity_id"}},
-    {15, {"counterpartyid", "counterparty_id"}},
-    {16, {"notional"}},
-    {17, {"trade_currency"}},
-    {18, {"notional2"}},
-    {19, {"trade_currency2"}},
-    {20, {"end_date"}},
-    {21, {"party_id"}},
-    {22, {"valuation_date"}},
-    {23, {"match_id"}},
-    {24, {"match_source"}},
-    {25, {"trade_id2"}},
-    {26, {"use_cp_trade"}},
-    {27, {"book", "book"}},
-    {28, {"expiry_date"}},
-    {29, {"mtm_curr"}},
-    {30, {"mtm_value"}},
-    {31, {"underlying"}},
-    {32, {"usi_prefix"}},
-    {33, {"usi_value"}},
-    {34, {"uti_prefix"}},
-    {35, {"uti_value"}},
-    {36, {"tradetype", "trade_type"}},
-    {37, {"settlement_type"}},
-    {38, {"strike"}},
-    {39, {"immodel", "im_model"}},
-    {40, {"post_regulations"}},
-    {41, {"collect_regulations"}},
-    {42, {"nettingset_id"}},
-    {43, {"xccy_swap_final_notional_exchange"}},
-    {44, {"xccy_swap_pay_fixed_rate"}},
-    {45, {"xccy_swap_rec_fixed_rate"}},
-    {46, {"start_date"}},
-    {47, {"trade_date"}},
-    {48, {"cp_legal_entity_id"}}, 
-    {49, {"cp_org_id"}},
-    {50, {"cp_legal_entity"}},
-    {51, {"agreement_id"}},
-    {52, {"org_id"}},
-    {53, {"version"}},
-    {54, {"call_put"}},
-    {55, {"long_short"}},
-    {56, {"mpor"}},
-    {57, {"alpha"}},
-    {58, {"counterparty_risk_weight"}}
+    {15, {"tradetype", "trade_type"}},
+    {16, {"immodel", "im_model"}},
+    {17, {"post_regulations"}},
+    {18, {"collect_regulations"}},
+    {19, {"end_date"}}};
+
+// Additional headers
+// FIXME: Pass this map as an argument into the CrifLoader constructor
+//        and keep the concrete additionalHeaders below in ORE+, empty by default in ORE
+map<Size, set<string>> CrifLoader::additionalHeaders = {
+    {20, {"counterpartyid", "counterparty_id"}},
+    {21, {"notional"}},         // CRIF+
+    {22, {"trade_currency"}},   // CRIF+
+    {23, {"notional2"}},        // CRIF+
+    {24, {"trade_currency2"}},  // CRIF+
+    {25, {"mtm_curr"}},         // CRIF+
+    {26, {"mtm_value"}},        // CRIF+
+    {27, {"underlying"}},       // CRIF+
+    {28, {"settlement_type"}},  // CRIF+
+    {29, {"strike"}},           // CRIF+
+    {30, {"call_put"}},         // CRIF+
+    {31, {"long_short"}},       // CRIF+
+    {32, {"trade_date"}},       // CRIF+
+    {33, {"xccy_resettable"}},  // CRIF+
+    {34, {"asset_class"}},      // CRIF+, ISDA taxonomy
+    {35, {"base_product"}},     // CRIF+, ISDA taxonomy
+    {36, {"sub_product"}},      // CRIF+, ISDA taxonomy
+    {37, {"party_id"}},
+    {38, {"valuation_date"}},
+    {39, {"match_id"}},
+    {40, {"match_source"}},
+    {41, {"trade_id2"}},
+    {42, {"use_cp_trade"}},
+    {43, {"book", "book"}},
+    {44, {"expiry_date"}},
+    {45, {"usi_prefix"}},
+    {46, {"usi_value"}},
+    {47, {"uti_prefix"}},
+    {48, {"uti_value"}},
+    {49, {"nettingset_id"}},
+    {50, {"xccy_swap_final_notional_exchange"}},
+    {51, {"xccy_swap_pay_fixed_rate"}},
+    {52, {"xccy_swap_rec_fixed_rate"}},
+    {53, {"start_date"}},
+    {54, {"cp_legal_entity_id"}}, 
+    {55, {"cp_org_id"}},
+    {56, {"cp_legal_entity"}},
+    {57, {"agreement_id"}},
+    {58, {"org_id"}},
+    {59, {"version"}},
+    {60, {"mpor"}},
+    {61, {"alpha"}},
+    {62, {"counterparty_risk_weight"}}
 };
-    // Ease syntax
+
+// Ease syntax
 using RiskType = SimmConfiguration::RiskType;
 using ProductClass = SimmConfiguration::ProductClass;
 
@@ -421,6 +432,15 @@ void CrifLoader::processHeader(const vector<string>& headers) {
             }
         }
     }
+
+    for (const auto& kv : additionalHeaders) {
+        for (Size i = 0; i < headers.size(); ++i) {
+            header = boost::to_lower_copy(headers[i]);
+            if (kv.second.count(header) > 0) {
+                columnIndex_[kv.first] = i;
+            }
+        }
+    }
 }
 
 bool CrifLoader::process(const vector<string>& entries, Size maxIndex, Size currentLine) {
@@ -449,8 +469,8 @@ bool CrifLoader::process(const vector<string>& entries, Size maxIndex, Size curr
     try {
         CrifRecord cr;
         tradeId = entries[columnIndex_.at(0)];
-        tradeType = loadOptionalString(36);
-        imModel = loadOptionalString(39);
+        tradeType = loadOptionalString(15);
+        imModel = loadOptionalString(16);
 
         cr.tradeId = tradeId;
         cr.tradeType = tradeType;
@@ -519,59 +539,42 @@ bool CrifLoader::process(const vector<string>& entries, Size maxIndex, Size curr
         cr.amountUsd = loadOptionalReal(10);
 
         // Populate netting set details
-        const std::string nettingSetId = cr.portfolioId;
-        const std::string agreementType = loadOptionalString(11);
-        const std::string callType = loadOptionalString(12);
-        const std::string initialMarginType = loadOptionalString(13);
-        const std::string lei = loadOptionalString(14);
-        cr.nettingSetDetails = NettingSetDetails(nettingSetId, agreementType, callType, initialMarginType, lei);
+        cr.agreementType = loadOptionalString(11);
+        cr.callType = loadOptionalString(12);
+        cr.initialMarginType = loadOptionalString(13);
+        cr.legalEntityId = loadOptionalString(14);
+        cr.nettingSetDetails = NettingSetDetails(cr.portfolioId, cr. agreementType, cr.callType, cr.initialMarginType,
+                                                 cr.legalEntityId);
+        cr.postRegulations = loadOptionalString(17);
+        cr.collectRegulations = loadOptionalString(18);
 
-        cr.counterpartyId = loadOptionalString(15);
-        cr.notional1 = loadOptionalReal(16);
-        cr.tradeCurrency1 = loadOptionalString(17);
-        cr.notional2 = loadOptionalReal(18);
-        cr.tradeCurrency2 = loadOptionalString(19); 
-        cr.endDate = loadOptionalString(20);
-
-        for (auto& additionalField : optionalHeaders){
-            if (additionalField.first > 15) {
-                std::string value = loadOptionalString(additionalField.first);
-                
-                // if use_cp_trade was specified and is set to True
-                if (additionalField.first == 26) {
-                    bool use_cp_trade = !value.empty() ? parseBool(value) : false;
-                    if (!allowUseCounterpartyTrade_ && use_cp_trade) {
-                        QL_FAIL(ore::data::StructuredTradeErrorMessage(
-                            tradeId, tradeType,
-                            "IM exposure cannot be calculated because one or more trades is picking Counterparty "
-                            "sensitivities."));
-                    }
-                } else if (additionalField.first == 36 || additionalField.first == 39) {
-                    // im_model and trade_type are optional when loading CRIF, but since we always output them in our
-                    // own CRIF report, we then write them out explicitly, rather than treating them as part of
-                    // CrifRecord::additionalFields
-                    continue;
-                } else {
-                    if (!value.empty())
-                        cr.additionalFields[*additionalField.second.begin()] = value;
-                }
-            }
-        }
-
-        // Add post/collect regulations if populated
-        if (cr.additionalFields.find("collect_regulations") != cr.additionalFields.end())
-            cr.collectRegulations = cr.additionalFields["collect_regulations"];
-        if (cr.additionalFields.find("post_regulations") != cr.additionalFields.end())
-            cr.postRegulations = cr.additionalFields["post_regulations"];
-
-        // IM model
+        // Check the IM model
         try {
             cr.imModel = to_string(parseIMModel(cr.imModel));
         } catch (...) {
             // If we cannot convert to a valid im_model, then it was either provided blank
             // or is simply not a valid value
         }
-        
+
+        // Store additional data that matches the defined additional headers in the additional fields map
+        for (auto& additionalField : additionalHeaders) {
+            std::string value = loadOptionalString(additionalField.first);
+
+            // FIXME: Ensure we check this down stream in the ORE+ SIMM analytic
+            // if use_cp_trade was specified and is set to True
+            // if (additionalField.first == 26) {
+            //     bool use_cp_trade = !value.empty() ? parseBool(value) : false;
+            //     if (!allowUseCounterpartyTrade_ && use_cp_trade) {
+            //         QL_FAIL(ore::data::StructuredTradeErrorMessage(
+            //             tradeId, tradeType,
+            //             "IM exposure cannot be calculated because one or more trades is picking Counterparty "
+            //             "sensitivities."));
+            //     }
+            // }
+            if (!value.empty())
+                cr.additionalFields[*additionalField.second.begin()] = value;
+        }
+
         // Add the CRIF record to the net records
         add(cr);
 

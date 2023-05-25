@@ -39,15 +39,15 @@ namespace analytics {
 using ore::data::NettingSetDetails;
 
 /*! A container for holding single CRIF records or aggregated CRIF records.
-    A CRIF record a row of the CRIF file outlined in the document:
+    A CRIF record is a row of the CRIF file outlined in the document:
     <em>ISDA SIMM Methodology, Risk Data Standards. Version 1.36: 1 February 2017.</em>
     or an updated version thereof.
 */
 struct CrifRecord {
+
+    // required data
     std::string tradeId;
-    std::string tradeType;
     std::string portfolioId;
-    NettingSetDetails nettingSetDetails;
     SimmConfiguration::ProductClass productClass = SimmConfiguration::ProductClass::Empty;
     SimmConfiguration::RiskType riskType = SimmConfiguration::RiskType::Notional;
     std::string qualifier;
@@ -57,36 +57,21 @@ struct CrifRecord {
     std::string amountCurrency;
     mutable QuantLib::Real amount = QuantLib::Null<QuantLib::Real>();
     mutable QuantLib::Real amountUsd = QuantLib::Null<QuantLib::Real>();
+
+    // optional data
+    std::string tradeType;
+    std::string agreementType;
+    std::string callType;
+    std::string initialMarginType;
+    std::string legalEntityId;
+    NettingSetDetails nettingSetDetails; // consists of the above: agreementType ... legalEntityId
     mutable std::string imModel;
     mutable std::string collectRegulations;
     mutable std::string postRegulations;
-    // Last cashflow date
     std::string endDate;
-    QuantLib::Real notional1 = QuantLib::Null<QuantLib::Real>();
-    std::string tradeCurrency1;
-    QuantLib::Real notional2 = QuantLib::Null<QuantLib::Real>();
-    std::string tradeCurrency2;
-    // Last fixing date or expiry date of an fx option
-    std::string expiryDate;
-    // alternative to expiryDate
-    std::string riskFactorEndDate;
-    // counterparty id
-    std::string counterpartyId;
-    std::map<std::string, std::string> additionalFields;
 
-    std::string tradeDate;
-    std::string underlying;
-    std::string settlementType;
-    QuantLib::Real strike = QuantLib::Null<QuantLib::Real>();
-    QuantLib::Real mtm = QuantLib::Null<QuantLib::Real>();
-    std::string mtmCurrency;
-    std::string callPut;
-    std::string longShort;
-    // CRIF plus fields for ISDA TradeTaxonomy 
-    std::string assetClass;
-    std::string baseProduct;
-    std::string subProduct;
-    std::string xccyResetting;
+    // additional data
+    std::map<std::string, std::string> additionalFields;
 
     // Default Constructor
     CrifRecord() {}
@@ -97,11 +82,12 @@ struct CrifRecord {
                std::string amountCurrency, QuantLib::Real amount, QuantLib::Real amountUsd, std::string imModel = "",
                std::string collectRegulations = "", std::string postRegulations = "", std::string endDate = "",
                std::map<std::string, std::string> additionalFields = {})
-        : tradeId(tradeId), tradeType(tradeType), portfolioId(nettingSetDetails.nettingSetId()),
-          nettingSetDetails(nettingSetDetails), productClass(productClass), riskType(riskType), qualifier(qualifier),
+        : tradeId(tradeId), portfolioId(nettingSetDetails.nettingSetId()),
+          productClass(productClass), riskType(riskType), qualifier(qualifier),
           bucket(bucket), label1(label1), label2(label2), amountCurrency(amountCurrency), amount(amount),
-          amountUsd(amountUsd), imModel(imModel), collectRegulations(collectRegulations),
-          postRegulations(postRegulations), endDate(endDate), additionalFields(additionalFields) {}
+          amountUsd(amountUsd), tradeType(tradeType), nettingSetDetails(nettingSetDetails), imModel(imModel),
+          collectRegulations(collectRegulations), postRegulations(postRegulations), endDate(endDate),
+          additionalFields(additionalFields) {}
 
     CrifRecord(std::string tradeId, std::string tradeType, std::string portfolioId,
                SimmConfiguration::ProductClass productClass, SimmConfiguration::RiskType riskType,
@@ -109,9 +95,9 @@ struct CrifRecord {
                std::string amountCurrency, QuantLib::Real amount, QuantLib::Real amountUsd, std::string imModel = "",
                std::string collectRegulations = "", std::string postRegulations = "", std::string endDate = "",
                std::map<std::string, std::string> additionalFields = {})
-        : CrifRecord(tradeId, tradeType, NettingSetDetails(portfolioId), productClass, riskType, qualifier, bucket,
-                     label1, label2, amountCurrency, amount, amountUsd, imModel, collectRegulations, postRegulations,
-                     endDate, additionalFields) {}
+        : CrifRecord(tradeId, tradeType, NettingSetDetails(portfolioId), productClass, riskType, qualifier,
+                     bucket, label1, label2, amountCurrency, amount, amountUsd, imModel,
+                     collectRegulations, postRegulations, endDate, additionalFields) {}
 
     bool hasAmountCcy() const { return !amountCurrency.empty(); }
     bool hasAmount() const { return amount != QuantLib::Null<QuantLib::Real>(); }
