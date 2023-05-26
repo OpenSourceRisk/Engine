@@ -317,7 +317,6 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
 
         // multi-threaded engine run
 
-        // TODO we can skip the portfolio build and ssm build when using the mt engine?
         // TODO we assume no netting output cube is needed, this is only used by the sensitivity calculator in ore+
 
         auto cubeFactory = [this](const QuantLib::Date& asof, const std::set<std::string>& ids,
@@ -413,11 +412,8 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
     for (auto const& [tradeId, trade] : portfolio->trades()) {
         if (inputs_->amcTradeTypes().find(trade->tradeType()) != inputs_->amcTradeTypes().end()) {
             try {
-                // building the trades is only required for single-threaded runs
-                if (inputs_->nThreads() == 1) {
-                    trade->reset();
-                    trade->build(factory);
-                }
+                trade->reset();
+                trade->build(factory);
                 amcPortfolio_->add(trade);
                 DLOG("trade " << tradeId << " is added to amc portfolio");
             } catch (const std::exception& e) {
