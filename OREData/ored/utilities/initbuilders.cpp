@@ -107,6 +107,7 @@
 #include <ored/portfolio/commoditylegdata.hpp>
 #include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/commodityoptionstrip.hpp>
+#include <ored/portfolio/commodityposition.hpp>
 #include <ored/portfolio/commodityspreadoption.hpp>
 #include <ored/portfolio/commodityswap.hpp>
 #include <ored/portfolio/commodityswaption.hpp>
@@ -284,6 +285,7 @@ void initBuilders() {
     ORE_REGISTER_TRADE_BUILDER("TotalReturnSwap", TRS, false)
     ORE_REGISTER_TRADE_BUILDER("ContractForDifference", CFD, false)
     ORE_REGISTER_TRADE_BUILDER("BondPosition", BondPosition, false)
+    ORE_REGISTER_TRADE_BUILDER("CommodityPosition", CommodityPosition, false)
     ORE_REGISTER_TRADE_BUILDER("EquityPosition", EquityPosition, false)
     ORE_REGISTER_TRADE_BUILDER("EquityOptionPosition", EquityOptionPosition, false)
     ORE_REGISTER_TRADE_BUILDER("Ascot", Ascot, false)
@@ -415,7 +417,8 @@ void initBuilders() {
         
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Bond", BondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("ForwardBond", ForwardBondTrsUnderlyingBuilder, false)
-    ORE_REGISTER_TRS_UNDERLYING_BUILDER("EquityPosition", EquityPositionTrsUnderlyingBuilder, false)
+    ORE_REGISTER_TRS_UNDERLYING_BUILDER("EquityPosition", AssetPositionTrsUnderlyingBuilder<EquityPosition>, false)
+    ORE_REGISTER_TRS_UNDERLYING_BUILDER("CommodityPosition", AssetPositionTrsUnderlyingBuilder<CommodityPosition>, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("EquityOptionPosition", EquityOptionPositionTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("BondPosition", BondPositionTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Derivative", DerivativeTrsUnderlyingBuilder, false)

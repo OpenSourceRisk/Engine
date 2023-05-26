@@ -20,6 +20,8 @@
 
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/simmcreditqualifiermapping.hpp>
+#include <ored/portfolio/equityposition.hpp>
+#include <ored/portfolio/commodityposition.hpp>
 
 namespace ore {
 namespace data {
@@ -89,7 +91,8 @@ struct ForwardBondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           const std::string& underlyingDerivativeId) const override;
 };
 
-struct EquityPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
+template<class T>
+struct AssetPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
     void
     build(const std::string& parentId, const boost::shared_ptr<Trade>& underlying,
           const std::vector<Date>& valuationDates, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -103,7 +106,16 @@ struct EquityPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
               const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
               getFxIndex,
           const std::string& underlyingDerivativeId) const override;
+
+    void updateQuantities(std::map<std::string, double>& indexQuantities, const std::string& indexName,
+                          const double qty) const;
+
+    std::string getIndexCurrencyFromPosition(boost::shared_ptr<T> position, size_t i) const;
+
 };
+
+template struct AssetPositionTrsUnderlyingBuilder<ore::data::EquityPosition>;
+template struct AssetPositionTrsUnderlyingBuilder<ore::data::CommodityPosition>;
 
 struct EquityOptionPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
     void
@@ -119,6 +131,7 @@ struct EquityOptionPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
               getFxIndex,
           const std::string& underlyingDerivativeId) const override;
 };
+
 
 struct BondPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
     void
