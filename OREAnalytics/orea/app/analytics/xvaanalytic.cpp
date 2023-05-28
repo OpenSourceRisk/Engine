@@ -317,7 +317,7 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
 
         // multi-threaded engine run
 
-        // TODO we assume no netting output cube is needed, this is only used by the sensitivity calculator in ore+
+        /* TODO we assume no netting output cube is needed. Currently there are no valuation calculators in ore that require this cube. */
 
         auto cubeFactory = [this](const QuantLib::Date& asof, const std::set<std::string>& ids,
                                   const std::vector<QuantLib::Date>& dates,
