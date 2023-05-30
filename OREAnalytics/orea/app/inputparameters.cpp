@@ -369,7 +369,8 @@ void InputParameters::setCreditSimulationParametersFromFile(const std::string& f
 
 void InputParameters::setCrifLoader() {
     if (!simmBucketMapper_)
-        setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>(simmVersion_));
+        // setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>(simmVersion_));
+        setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>());
     boost::shared_ptr<SimmConfiguration> configuration =
         buildSimmConfiguration(simmVersion_, simmBucketMapper_);
     bool updateMappings = true;
@@ -403,6 +404,7 @@ void InputParameters::setSimmNameMapperFromFile(const std::string& fileName) {
 void InputParameters::setSimmBucketMapper(const std::string& xml) {
     QL_REQUIRE(simmVersion_ != "", "SIMM version not set");
     QL_REQUIRE(simmBucketMapper_ != nullptr, "SIMMbucket mapper not set");
+    //boost::shared_ptr<SimmBucketMapperBase> sbm = boost::dynamic_pointer_cast<SimmBucketMapperBase>();
     boost::shared_ptr<SimmBucketMapperBase> sbm = boost::dynamic_pointer_cast<SimmBucketMapperBase>(simmBucketMapper_);
     sbm->fromXMLString(xml);
 }
