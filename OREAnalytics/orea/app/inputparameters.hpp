@@ -703,7 +703,7 @@ protected:
     std::string simmCalculationCurrency_ = "";
     std::string simmResultCurrency_ = "";
     std::string simmReportingCurrency_ = "";
-    bool enforceIMRegulations_;
+    bool enforceIMRegulations_ = false;
 
 };
 
