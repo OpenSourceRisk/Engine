@@ -54,16 +54,22 @@ void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>&
     std::vector<std::string> currencies;
     for (auto const& u : data_.underlyings()) {
         auto pts = engineFactory->market()->commodityPriceCurve(u.name(), engineFactory->configuration(MarketContext::pricing));
-        QL_REQUIRE(!pts.empty() && *pts != nullptr, "CommodityPosition, curve misisng for '"<<u.name()<<"'");
-        auto index = parseCommodityIndex(u.name(), false, pts, NullCalendar(), u.priceType() == "Future");
+        QL_REQUIRE(!pts.empty() && *pts != nullptr, "CommodityPosition, curve missing for '"<<u.name()<<"'");
+        auto index = parseCommodityIndex(u.name(), false, pts, NullCalendar(), u.priceType() == "FutureSettlement");
         boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
         pair<bool, boost::shared_ptr<Convention>> p = conventions->get(u.name(), Convention::Type::CommodityFuture);
-        if (p.first) {
+        if (u.priceType() == "FutureSettlement"  && p.first) {
             auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(p.second);
             ConventionsBasedFutureExpiry feCalc(*convention);
-            Date expiry = feCalc.expiryDate(index->expiryDate(), u.futureMonthOffset(), false);
+            Date expiry = Settings::instance().evaluationDate();
+            if (u.deliveryRollDays() > 0) {
+                auto cal = u.deliveryRollCalendar().empty() ? convention->calendar() : parseCalendar(u.deliveryRollCalendar());
+                expiry = cal.advance(expiry, u.deliveryRollDays() * Days, convention->businessDayConvention());
+            }
+            
+            expiry = feCalc.nextExpiry(true, expiry, u.futureMonthOffset());
+            
             index = index->clone(expiry, pts);
-            // TODO implement roll days
         }
         indices_.push_back(index);
         weights_.push_back(u.weight());
