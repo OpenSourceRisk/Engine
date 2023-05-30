@@ -13,6 +13,7 @@ COPY OREAnalytics/test /ore/OREAnalytics/test
 RUN mkdir /ore/App
 
 COPY --from=env_ore /usr/local/bin /ore/App
+COPY --from=env_ore /usr/lib/x86_64-linux-gnu /usr/lib/86_64-linux-gnu
 
 RUN true
 
