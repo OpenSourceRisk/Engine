@@ -62,12 +62,14 @@ void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>&
             auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(p.second);
             ConventionsBasedFutureExpiry feCalc(*convention);
             Date expiry = Settings::instance().evaluationDate();
-            if (u.deliveryRollDays() > 0) {
+            if (u.deliveryRollDays() != Null<Size>()) {
                 auto cal = u.deliveryRollCalendar().empty() ? convention->calendar() : parseCalendar(u.deliveryRollCalendar());
                 expiry = cal.advance(expiry, u.deliveryRollDays() * Days, convention->businessDayConvention());
             }
             
-            expiry = feCalc.nextExpiry(true, expiry, u.futureMonthOffset());
+            Size nOffset = u.futureMonthOffset() == Null<Size>() ? 0 : u.futureMonthOffset();
+
+            expiry = feCalc.nextExpiry(true, expiry, nOffset);
             
             index = index->clone(expiry, pts);
         }
