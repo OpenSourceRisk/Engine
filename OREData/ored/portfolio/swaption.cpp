@@ -58,8 +58,6 @@ QuantLib::Settlement::Method defaultSettlementMethod(const QuantLib::Settlement:
 }
 } // namespace
 
-TradeBuilderRegister<TradeBuilder<Swaption>> Swaption::reg_("Swaption");
-
 void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // build underlying swap and copy its required fixings

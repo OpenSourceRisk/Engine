@@ -30,7 +30,7 @@ void MarketDataCsvLoaderImpl::loadCorporateActionData(boost::shared_ptr<ore::dat
     for (const auto& div : csvLoader_->loadDividends()) {
         for (const auto& it : equities) {
             if (div.name == it.second)
-                loader->addDividend(div.date, div.name, div.fixing);
+                loader->addDividend(div);
         }
     }
 }
@@ -38,13 +38,12 @@ void MarketDataCsvLoaderImpl::loadCorporateActionData(boost::shared_ptr<ore::dat
 void MarketDataCsvLoaderImpl::retrieveMarketData(
     const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
     const map<Date, set<string>>& quotes,
-    const Date& relabelDate) {        
+    const Date& requestDate) {        
     // load csvLoader quotes and add to loader if valid
     // doesn't currently handle Lagged or Mpor Date
     if (inputs_->entireMarket()) {
-        for (const auto& md : csvLoader_->loadQuotes(inputs_->asof())) {
+        for (const auto& md : csvLoader_->loadQuotes(inputs_->asof()))
             loader->add(inputs_->asof(), md->name(), md->quote()->value());
-        }
     } else {
         for (const auto& qd : quotes) {
             auto d = qd.first;

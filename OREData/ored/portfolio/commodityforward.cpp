@@ -36,8 +36,6 @@ using namespace std;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<CommodityForward>> CommodityForward::reg_("CommodityForward");
-
 CommodityForward::CommodityForward() : Trade("CommodityForward"), quantity_(0.0), strike_(0.0) {}
 
 CommodityForward::CommodityForward(const Envelope& envelope, const string& position, const string& commodityName,
@@ -118,7 +116,9 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     }
 
     // add required commodity fixing
-    requiredFixings_.addFixingDate(maturity_, index->name(), paymentDate);
+    DLOG("commodity forward " << id() << " paymentDate is " << paymentDate);
+    requiredFixings_.addFixingDate(maturity_, index->name(),
+                                   paymentDate == Date() ? maturity_ : paymentDate);
 
     // Create the commodity forward instrument
     Currency currency = parseCurrency(currency_);

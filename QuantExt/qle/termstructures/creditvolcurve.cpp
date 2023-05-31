@@ -208,7 +208,7 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
         atmStrike = adjFairSpread1;
     } else if (type() == Type::Price) {
         discToExercise = termCurves_[termIndex_m]->rateCurve()->discount(effExp);
-        forwardPrice1 = (1.0 - underlyings[terms_[termIndex_m]]->NPV()) / discToExercise;
+        forwardPrice1 = 1.0 - underlyings[terms_[termIndex_m]]->NPV() / discToExercise;
         adjForwardPrice1 = forwardPrice1 - fep1 / discToExercise;
         atmStrike = adjForwardPrice1;
     } else {
@@ -244,7 +244,7 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
             adjFairSpread2 = fairSpread2 + fep2 / rpv01_2;
             atmStrike = term_alpha * adjFairSpread1 + (1.0 - term_alpha * adjFairSpread2);
         } else if (type() == Type::Price) {
-            forwardPrice2 = (1.0 - underlyings[terms_[termIndex_p]]->NPV()) / discToExercise;
+            forwardPrice2 = 1.0 - underlyings[terms_[termIndex_p]]->NPV() / discToExercise;
             adjForwardPrice2 = forwardPrice2 - fep2 / discToExercise;
             atmStrike = term_alpha * adjForwardPrice1 + (1.0 - term_alpha) * adjForwardPrice2;
         } else {
@@ -560,6 +560,8 @@ QuantLib::Real ProxyCreditVolCurve::volatility(const QuantLib::Date& exerciseDat
     }
     return source_->volatility(exerciseDate, underlyingLength, effectiveStrike, type());
 }
+
+const Date& ProxyCreditVolCurve::referenceDate() const { return source_->referenceDate(); }
 
 SpreadedCreditVolCurve::SpreadedCreditVolCurve(const Handle<CreditVolCurve> baseCurve, const std::vector<Date> expiries,
                                                const std::vector<Handle<Quote>> spreads, const bool stickyMoneyness,

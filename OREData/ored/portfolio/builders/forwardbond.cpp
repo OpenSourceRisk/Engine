@@ -20,6 +20,5 @@
 
 namespace ore {
 namespace data {
-ORE_REGISTER_ENGINE_BUILDER_IMPL(DiscountingForwardBondEngineBuilder)
 } // namespace data
 } // namespace ore

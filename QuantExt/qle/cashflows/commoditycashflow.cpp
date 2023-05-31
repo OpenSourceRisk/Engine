@@ -26,9 +26,14 @@ using std::set;
 namespace QuantExt {
 
 CommodityCashFlow::CommodityCashFlow(QuantLib::Real quantity, QuantLib::Real spread, QuantLib::Real gearing,
-                                     bool useFuturePrice, const ext::shared_ptr<CommodityIndex>& index)
-    : quantity_(quantity), spread_(spread), gearing_(gearing), useFuturePrice_(useFuturePrice), index_(index) {
+                                     bool useFuturePrice, const ext::shared_ptr<CommodityIndex>& index,
+                                     const ext::shared_ptr<FxIndex>& fxIndex)
+    : quantity_(quantity), spread_(spread), gearing_(gearing), useFuturePrice_(useFuturePrice), index_(index),
+      fxIndex_(fxIndex) {
     registerWith(index_);
+    if (fxIndex) {
+        registerWith(fxIndex);
+    }
 }
 
 set<Date> pricingDates(const Date& s, const Date& e, const Calendar& pricingCalendar,

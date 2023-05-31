@@ -30,8 +30,6 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<CreditDefaultSwap>> CreditDefaultSwap::reg_("CreditDefaultSwap");
-
 void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("CreditDefaultSwap::build() called for trade " << id());
 
@@ -130,6 +128,8 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
         additionalData_["startDate"] = to_string(swap_.protectionStart());
     else
         additionalData_["startDate"] = to_string(schedule.dates().front());
+
+    issuer_ = swap_.issuerId();
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Credit");

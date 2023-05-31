@@ -1,4 +1,5 @@
 include(CheckCXXCompilerFlag)
+include(CheckLinkerFlag)
 
 option(MSVC_LINK_DYNAMIC_RUNTIME "Link against dynamic runtime" ON)
 option(MSVC_PARALLELBUILD "Use flag /MP" ON)
@@ -9,9 +10,19 @@ set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-
 # add compiler flag, if not already present
 macro(add_compiler_flag flag supportsFlag)
     check_cxx_compiler_flag(${flag} ${supportsFlag})
-
     if(${supportsFlag} AND NOT "${CMAKE_CXX_FLAGS}" MATCHES "${flag}")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}")
+    endif()
+endmacro()
+
+# add linker flag for shared libs and exe, if not already present
+macro(add_linker_flag flag supportsFlag)
+    check_linker_flag(CXX ${flag} ${supportsFlag})
+    if(${supportsFlag} AND NOT "${CMAKE_SHARED_LINKER_FLAGS}" MATCHES "${flag}")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${flag}")
+    endif()
+    if(${supportsFlag} AND NOT "${CMAKE_EXE_LINKER_FLAGS}" MATCHES "${flag}")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${flag}")
     endif()
 endmacro()
 
@@ -82,8 +93,6 @@ if(MSVC)
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/GF>")
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Gy>")
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/GT>")
-
-    add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Ob2>")
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Oi>")
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Ot>")
 
@@ -117,7 +126,8 @@ else()
 
     # turn the following warnings into errors
     add_compiler_flag("-Werror=non-virtual-dtor" supportsNonVirtualDtor)
-    add_compiler_flag("-Werror=sign-compare" supportsSignCompare)
+    # the line below breaks the linux build
+    #add_compiler_flag("-Werror=sign-compare" supportsSignCompare)
     add_compiler_flag("-Werror=float-conversion" supportsWfloatConversion)
     add_compiler_flag("-Werror=reorder" supportsReorder)
     add_compiler_flag("-Werror=unused-variable" supportsUnusedVariable)
@@ -126,7 +136,8 @@ else()
     add_compiler_flag("-Werror=unused-lambda-capture" supportsUnusedLambdaCapture)
     add_compiler_flag("-Werror=return-type" supportsReturnType)
     add_compiler_flag("-Werror=unused-function" supportsUnusedFunction)
-    add_compiler_flag("-Werror=suggest-override" supportsSuggestOverride)
+    # the line below breaks the linux build
+    #add_compiler_flag("-Werror=suggest-override" supportsSuggestOverride)
     add_compiler_flag("-Werror=inconsistent-missing-override" supportsInconsistentMissingOverride)
 
     # disable some warnings

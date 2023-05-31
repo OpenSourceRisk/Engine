@@ -45,8 +45,6 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<ForwardBond>> ForwardBond::reg_("ForwardBond");
-
 void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("ForwardBond::build() called for trade " << id());
 
@@ -77,6 +75,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
     Real amount = amount_.empty() ? Null<Real>() : parseReal(amount_);
     Real lockRate = lockRate_.empty() ? Null<Real>() : parseReal(lockRate_);
+    Real dv01 = dv01_.empty() ? Null<Real>() : parseReal(dv01_);
     DayCounter lockRateDayCounter = lockRateDayCounter_.empty() ? Actual360() : parseDayCounter(lockRateDayCounter_);
     bool settlementDirty = settlementDirty_.empty() ? true : parseBool(settlementDirty_);
     Real compensationPayment = parseReal(compensationPayment_);
@@ -86,6 +85,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE((amount == Null<Real>() && lockRate != Null<Real>()) ||
                    (amount != Null<Real>() && lockRate == Null<Real>()),
                "ForwardBond: exactly one of Amount of LockRate must be given");
+    QL_REQUIRE(dv01 >= 0.0, "negative DV01 given");
     QL_REQUIRE(compensationPaymentDate <= fwdMaturityDate, "Premium cannot be paid after forward contract maturity");
 
     if (lockRate != Null<Real>())
@@ -140,7 +140,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                : boost::make_shared<QuantExt::ForwardBond>(bond, lockRate, lockRateDayCounter, longInForward,
                                                            fwdMaturityDate, fwdSettlementDate, isPhysicallySettled,
                                                            settlementDirty, compensationPayment,
-                                                           compensationPaymentDate, bondData_.bondNotional());
+                                                           compensationPaymentDate, bondData_.bondNotional(), dv01);
 
     boost::shared_ptr<fwdBondEngineBuilder> fwdBondBuilder =
         boost::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
@@ -179,6 +179,7 @@ void ForwardBond::fromXML(XMLNode* node) {
     lockRate_ = XMLUtils::getChildValue(fwdSettlementNode, "LockRate", false);
     lockRateDayCounter_ = XMLUtils::getChildValue(fwdSettlementNode, "LockRateDayCounter", false);
     settlementDirty_ = XMLUtils::getChildValue(fwdSettlementNode, "SettlementDirty", false);
+    dv01_ = XMLUtils::getChildValue(fwdSettlementNode, "dv01", false);
 
     XMLNode* fwdPremiumNode = XMLUtils::getChildNode(fwdBondNode, "PremiumData");
     if (fwdPremiumNode) {
@@ -209,6 +210,8 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, fwdSettlementNode, "Amount", amount_);
     if (!lockRate_.empty())
         XMLUtils::addChild(doc, fwdSettlementNode, "LockRate", lockRate_);
+    if (!dv01_.empty())
+        XMLUtils::addChild(doc, fwdSettlementNode, "dv01", dv01_);
     if (!lockRateDayCounter_.empty())
         XMLUtils::addChild(doc, fwdSettlementNode, "LockRateDayCounter", lockRateDayCounter_);
     if (!settlementDirty_.empty())

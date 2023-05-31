@@ -30,7 +30,6 @@
 #include <boost/make_shared.hpp>
 
 using boost::iequals;
-using ore::data::LegDataRegister;
 using ore::data::parseBool;
 using ore::data::parseCommodityQuantityFrequency;
 using ore::data::parseInteger;
@@ -49,8 +48,6 @@ using std::vector;
 
 namespace ore {
 namespace data {
-
-LegDataRegister<CommodityFixedLegData> CommodityFixedLegData::reg_("CommodityFixed");
 
 CommodityPayRelativeTo parseCommodityPayRelativeTo(const string& s) {
     if (iequals(s, "CalculationPeriodEndDate")) {
@@ -170,8 +167,6 @@ XMLNode* CommodityFixedLegData::toXML(XMLDocument& doc) {
 
     return node;
 }
-
-LegDataRegister<CommodityFloatingLegData> CommodityFloatingLegData::reg_("CommodityFloating");
 
 CommodityFloatingLegData::CommodityFloatingLegData()
     : ore::data::LegAdditionalData("CommodityFloating"),

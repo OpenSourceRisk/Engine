@@ -32,7 +32,6 @@ namespace data {
     \ingroup builders
  */
 class CommodityEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(CommodityEuropeanOptionEngineBuilder);
 public:
     CommodityEuropeanOptionEngineBuilder()
         : EuropeanOptionEngineBuilder("BlackScholes", {"CommodityOption"}, AssetClass::COM) {}
@@ -42,7 +41,6 @@ public:
   \ingroup builders
 */
 class CommodityEuropeanForwardOptionEngineBuilder : public EuropeanForwardOptionEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(CommodityEuropeanForwardOptionEngineBuilder);
 public:
     CommodityEuropeanForwardOptionEngineBuilder()
         : EuropeanForwardOptionEngineBuilder("BlackScholes", {"CommodityOptionForward"}, AssetClass::COM) {}
@@ -52,7 +50,6 @@ public:
     \ingroup builders
  */
 class CommodityEuropeanCSOptionEngineBuilder : public EuropeanCSOptionEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(CommodityEuropeanCSOptionEngineBuilder);
 public:
     CommodityEuropeanCSOptionEngineBuilder()
         : EuropeanCSOptionEngineBuilder("BlackScholes", {"CommodityOptionEuropeanCS"}, AssetClass::COM) {}
@@ -62,7 +59,6 @@ public:
     \ingroup builders
  */
 class CommodityAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(CommodityAmericanOptionFDEngineBuilder);
 public:
     CommodityAmericanOptionFDEngineBuilder()
         : AmericanOptionFDEngineBuilder("BlackScholes", {"CommodityOptionAmerican"}, AssetClass::COM, expiryDate_) {}
@@ -72,7 +68,6 @@ public:
     \ingroup builders
  */
 class CommodityAmericanOptionBAWEngineBuilder : public AmericanOptionBAWEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(CommodityAmericanOptionBAWEngineBuilder);
 public:
     CommodityAmericanOptionBAWEngineBuilder()
         : AmericanOptionBAWEngineBuilder("BlackScholes", {"CommodityOptionAmerican"}, AssetClass::COM) {}

@@ -207,8 +207,6 @@ void BondData::checkData() const {
                                             << securityId_ << "'");
 }
 
-TradeBuilderRegister<TradeBuilder<Bond>> Bond::reg_("Bond");
-
 void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Bond::build() called for trade " << id());
 
@@ -258,6 +256,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     maturity_ = bond->cashflows().back()->date();
     notional_ = currentNotional(bond->cashflows());
     notionalCurrency_ = bondData_.currency();
+
+    issuer_ = bondData_.issuerId();
 
     // Add legs (only 1)
     legs_ = {bond->cashflows()};
@@ -325,12 +325,12 @@ BondBuilder::Result BondFactory::build(const boost::shared_ptr<EngineFactory>& e
                "data and that there is a builder for the reference data type.");
 }
 
-void BondFactory::addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder) {
+void BondFactory::addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder,
+                             const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    builders_[referenceDataType] = builder;
+    QL_REQUIRE(builders_.insert(std::make_pair(referenceDataType, builder)).second || allowOverwrite,
+               "BondFactory::addBuilder(" << referenceDataType << "): builder for key already exists.");
 }
-
-BondBuilderRegister<VanillaBondBuilder> VanillaBondBuilder::reg_("Bond");
 
 BondBuilder::Result VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                                               const boost::shared_ptr<ReferenceDataManager>& referenceData,

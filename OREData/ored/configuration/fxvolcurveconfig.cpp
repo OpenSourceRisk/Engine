@@ -33,22 +33,19 @@ FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const st
                                                  const string& fxForeignCurveID, const string& fxDomesticCurveID,
                                                  const DayCounter& dayCounter, const Calendar& calendar,
                                                  const SmileInterpolation& interp, const string& conventionsID,
-                                                 const std::vector<Size>& smileDelta,
-						 const string& smileDynamics)
-
+                                                 const std::vector<Size>& smileDelta)
     : CurveConfig(curveID, curveDescription), dimension_(dimension), expiries_(expiries), dayCounter_(dayCounter),
       calendar_(calendar), fxSpotID_(fxSpotID), fxForeignYieldCurveID_(fxForeignCurveID),
       fxDomesticYieldCurveID_(fxDomesticCurveID), conventionsID_(conventionsID), smileDelta_(smileDelta),
-      smileInterpolation_(interp), smileDynamics_(smileDynamics) {
+      smileInterpolation_(interp) {
     populateRequiredCurveIds();
 }
 
 FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                  const Dimension& dimension, const string& baseVolatility1,
-                                                 const string& baseVolatility2, const string& fxIndexTag,
-						 const string& smileDynamics)
+                                                 const string& baseVolatility2, const string& fxIndexTag)
     : CurveConfig(curveID, curveDescription), dimension_(dimension), baseVolatility1_(baseVolatility1),
-      baseVolatility2_(baseVolatility2), fxIndexTag_(fxIndexTag), smileDynamics_(smileDynamics) {
+      baseVolatility2_(baseVolatility2), fxIndexTag_(fxIndexTag) {
     populateRequiredCurveIds();
 }
 
@@ -66,7 +63,7 @@ const vector<string>& FXVolatilityCurveConfig::quotes() {
                     quotes_.push_back(base + e + "/" + to_string(d) + "RR");
                     quotes_.push_back(base + e + "/" + to_string(d) + "BF");
                 }
-            } else if (dimension_ == Dimension::SmileDelta) {
+            } else if (dimension_ == Dimension::SmileDelta || dimension_ == Dimension::SmileAbsolute) {
                 for (auto d : deltas_) {
                     quotes_.push_back(base + e + "/" + d);
                 }
@@ -169,6 +166,15 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
                     smileDelta_ = {10, 25};
                 else
                     smileDelta_ = parseListOfValues<Size>(sDelta, &parseInteger);
+            } else if (smileType == "Absolute") {
+                dimension_ = Dimension::SmileAbsolute;
+                if (smileInterp == "" || smileInterp == "Cubic") {
+                    smileInterpolation_ = SmileInterpolation::Cubic;
+                } else if (smileInterp == "Linear") {
+                    smileInterpolation_ = SmileInterpolation::Linear;
+                } else {
+                    QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
+                }
             } else {
                 QL_FAIL("SmileType '" << smileType << "' not supported, expected VannaVolga, Delta, BFRR");
             }
@@ -182,8 +188,6 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         fxForeignYieldCurveID_ = XMLUtils::getChildValue(node, "FXForeignCurveID", curvesRequired);
         fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", curvesRequired);
     }
-
-    smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
 
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
@@ -245,6 +249,17 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
         }
         XMLUtils::addGenericChildAsList(doc, node, "SmileDelta", smileDelta_);
         XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_));
+    } else if (dimension_ == Dimension::SmileAbsolute) {
+        XMLUtils::addChild(doc, node, "Dimension", "Smile");
+        XMLUtils::addChild(doc, node, "SmileType", "Absolute");
+        if (smileInterpolation_ == SmileInterpolation::Linear) {
+            XMLUtils::addChild(doc, node, "SmileInterpolation", "Linear");
+        } else if (smileInterpolation_ == SmileInterpolation::Cubic) {
+            XMLUtils::addChild(doc, node, "SmileInterpolation", "Cubic");
+        } else {
+            QL_FAIL("Unknown SmileInterpolation in FXVolatilityCurveConfig::toXML()");
+        }
+        XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_));
     } else {
         QL_FAIL("Unknown Dimension in FXVolatilityCurveConfig::toXML()");
     }
@@ -257,7 +272,6 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
-    XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
     
     return node;
 }

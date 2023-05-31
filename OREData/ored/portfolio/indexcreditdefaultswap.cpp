@@ -36,9 +36,6 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<IndexCreditDefaultSwap>>
-    IndexCreditDefaultSwap::reg_("IndexCreditDefaultSwap");
-
 void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("IndexCreditDefaultSwap::build() called for trade " << id());
 

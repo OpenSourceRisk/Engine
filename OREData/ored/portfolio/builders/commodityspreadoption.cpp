@@ -18,6 +18,4 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 #include <ored/portfolio/builders/commodityspreadoption.hpp>
 
-namespace ore::data {
-ORE_REGISTER_ENGINE_BUILDER(CommoditySpreadOptionEngineBuilder)
-}
+namespace ore::data {}

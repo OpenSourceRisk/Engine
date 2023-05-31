@@ -29,7 +29,7 @@
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-
+#include <map>
 #include <tuple>
 
 namespace QuantExt {
@@ -132,6 +132,8 @@ public:
                         const std::vector<QuantLib::Handle<CreditCurve>>& termCurves = {});
     QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
                               const QuantLib::Real strike, const Type& targetType) const override;
+
+    const QuantLib::Date& referenceDate() const override;
 
 private:
     QuantLib::Handle<CreditVolCurve> source_;

@@ -27,10 +27,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-ORE_REGISTER_ENGINE_BUILDER_IMPL(AnalyticHaganCmsCouponPricerBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(NumericalHaganCmsCouponPricerBuilder)
-ORE_REGISTER_ENGINE_BUILDER_IMPL(LinearTSRCmsCouponPricerBuilder)
-
 GFunctionFactory::YieldCurveModel ycmFromString(const string& s) {
     if (s == "Standard")
         return GFunctionFactory::Standard;

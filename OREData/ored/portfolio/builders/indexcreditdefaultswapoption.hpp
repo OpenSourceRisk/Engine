@@ -65,10 +65,21 @@ protected:
 */
 
 class BlackIndexCdsOptionEngineBuilder : public IndexCreditDefaultSwapOptionEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(BlackIndexCdsOptionEngineBuilder)
 public:
     BlackIndexCdsOptionEngineBuilder()
         : IndexCreditDefaultSwapOptionEngineBuilder("Black", "BlackIndexCdsOptionEngine") {}
+
+protected:
+    virtual boost::shared_ptr<QuantLib::PricingEngine>
+    engineImpl(const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
+               const std::vector<std::string>& creditCurveIds) override;
+};
+
+//! Numerical Integration index CDS option engine.
+class NumericalIntegrationIndexCdsOptionEngineBuilder : public IndexCreditDefaultSwapOptionEngineBuilder {
+public:
+    NumericalIntegrationIndexCdsOptionEngineBuilder()
+        : IndexCreditDefaultSwapOptionEngineBuilder("LognormalAdjustedIndexSpread", "NumericalIntegrationEngine") {}
 
 protected:
     virtual boost::shared_ptr<QuantLib::PricingEngine>

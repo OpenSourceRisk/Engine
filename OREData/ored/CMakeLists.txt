@@ -20,9 +20,9 @@ configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
 configuration/onedimsolverconfig.cpp
 configuration/reportconfig.cpp
-configuration/smiledynamicsconfig.cpp
 configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
+marketdata/adjustmentfactors.cpp
 marketdata/basecorrelationcurve.cpp
 marketdata/capfloorvolcurve.cpp
 marketdata/cdsvolcurve.cpp
@@ -145,6 +145,7 @@ portfolio/builders/equityfuturesoption.cpp
 portfolio/builders/equityoption.cpp
 portfolio/builders/equitytouchoption.cpp
 portfolio/builders/forwardbond.cpp
+portfolio/builders/forwardrateagreement.cpp
 portfolio/builders/fxasianoption.cpp
 portfolio/builders/fxbarrieroption.cpp
 portfolio/builders/fxdigitalbarrieroption.cpp
@@ -260,11 +261,13 @@ utilities/currencyconfig.cpp
 utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
 utilities/dategrid.cpp
+utilities/fileio.cpp
 utilities/filteredbufferedlogger.cpp
 utilities/flowanalysis.cpp
 utilities/indexnametranslator.cpp
 utilities/indexparser.cpp
 utilities/inflationstartdate.cpp
+utilities/initbuilders.cpp
 utilities/log.cpp
 utilities/marketdata.cpp
 utilities/osutils.cpp
@@ -300,11 +303,11 @@ configuration/inflationcurveconfig.hpp
 configuration/onedimsolverconfig.hpp
 configuration/reportconfig.hpp
 configuration/securityconfig.hpp
-configuration/smiledynamicsconfig.hpp
 configuration/swaptionvolcurveconfig.hpp
 configuration/volatilityconfig.hpp
 configuration/yieldcurveconfig.hpp
 configuration/yieldvolcurveconfig.hpp
+marketdata/adjustmentfactors.hpp
 marketdata/basecorrelationcurve.hpp
 marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
@@ -435,6 +438,7 @@ portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
 portfolio/builders/equitytouchoption.hpp
 portfolio/builders/forwardbond.hpp
+portfolio/builders/forwardrateagreement.hpp
 portfolio/builders/fxasianoption.hpp
 portfolio/builders/fxbarrieroption.hpp
 portfolio/builders/fxdigitalbarrieroption.hpp
@@ -563,11 +567,13 @@ utilities/currencyconfig.hpp
 utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
 utilities/dategrid.hpp
+utilities/fileio.hpp
 utilities/filteredbufferedlogger.hpp
 utilities/flowanalysis.hpp
 utilities/indexnametranslator.hpp
 utilities/indexparser.hpp
 utilities/inflationstartdate.hpp
+utilities/initbuilders.hpp
 utilities/log.hpp
 utilities/marketdata.hpp
 utilities/osutils.hpp

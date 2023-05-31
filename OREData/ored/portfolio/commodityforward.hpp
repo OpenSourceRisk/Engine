@@ -32,8 +32,6 @@ namespace data {
 //! Serializable Commodity forward contract
 //! \ingroup tradedata
 class CommodityForward : public Trade {
-    static TradeBuilderRegister<TradeBuilder<CommodityForward>> reg_;
-
 public:
     //! \name Constructors
     //@{

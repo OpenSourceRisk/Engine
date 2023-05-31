@@ -137,8 +137,8 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
     }
 }
 
-bool RiskFilter::allowed(const RiskFactorKey::KeyType& t) const {
-    bool found = std::find(allowed_.begin(), allowed_.end(), t) != allowed_.end();
+bool RiskFilter::allow(const RiskFactorKey& t) const {
+    bool found = std::find(allowed_.begin(), allowed_.end(), t.keytype) != allowed_.end();
     return neg_ ? !found : found;
 }
 

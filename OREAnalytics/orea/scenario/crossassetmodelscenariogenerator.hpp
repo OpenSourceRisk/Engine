@@ -88,11 +88,12 @@ private:
     std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_, zeroInflationKeys_,
         yoyInflationKeys_, defaultCurveKeys_, commodityCurveKeys_;
     std::vector<RiskFactorKey> fxKeys_, eqKeys_, cpiKeys_;
+    std::vector<RiskFactorKey> crStateKeys_, survivalWeightKeys_, recoveryRateKeys_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
     std::vector<std::vector<Period>> ten_dsc_, ten_idx_, ten_yc_, ten_efc_, ten_zinf_, ten_yinf_, ten_dfc_, ten_com_;
     std::vector<bool> modelCcyRelevant_;
-    Size n_ccy_, n_eq_, n_inf_, n_cr_, n_indices_, n_curves_, n_com_;
+    Size n_ccy_, n_eq_, n_inf_, n_cr_, n_indices_, n_curves_, n_com_, n_crstates_, n_survivalweights_;
 
     vector<boost::shared_ptr<QuantExt::ModelImpliedYieldTermStructure>> curves_, fwdCurves_, yieldCurves_;
     vector<boost::shared_ptr<QuantExt::ModelImpliedPriceTermStructure>> comCurves_;
@@ -105,6 +106,7 @@ private:
         yoyInfCurves_;
     vector<boost::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>> lgmDefaultCurves_;
     vector<boost::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>> cirppDefaultCurves_;
+    vector<boost::shared_ptr<QuantExt::CreditCurve>> survivalWeightsDefaultCurves_;
 };
 
 } // namespace analytics

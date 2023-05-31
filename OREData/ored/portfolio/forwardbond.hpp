@@ -29,8 +29,6 @@ namespace ore {
 namespace data {
 
 class ForwardBond : public Trade {
-    static TradeBuilderRegister<TradeBuilder<ForwardBond>> reg_;
-
 public:
     //! Default constructor
     ForwardBond() : Trade("ForwardBond") {}
@@ -38,12 +36,12 @@ public:
     //! Constructor taking an envelope and bond data
     ForwardBond(Envelope env, const BondData& bondData, string fwdMaturityDate, string fwdSettlementDate,
                 string settlement, string amount, string lockRate, string lockRateDayCounter, string settlementDirty,
-                string compensationPayment, string compensationPaymentDate, string longInForward)
+                string compensationPayment, string compensationPaymentDate, string longInForward, string dv01 = string())
         : Trade("ForwardBond", env), originalBondData_(bondData), bondData_(bondData),
           fwdMaturityDate_(fwdMaturityDate), fwdSettlementDate_(fwdSettlementDate), settlement_(settlement),
           amount_(amount), lockRate_(lockRate), lockRateDayCounter_(lockRateDayCounter),
           settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
-          compensationPaymentDate_(compensationPaymentDate), longInForward_(longInForward) {}
+          compensationPaymentDate_(compensationPaymentDate), longInForward_(longInForward), dv01_(dv01) {}
 
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
@@ -67,6 +65,7 @@ public:
     const string& compensationPayment() const { return compensationPayment_; }
     const string& compensationPaymentDate() const { return compensationPaymentDate_; }
     const string& longInForward() const { return longInForward_; }
+    const string& dv01() const { return dv01_; }
 
 protected:
     BondData originalBondData_, bondData_;
@@ -82,6 +81,7 @@ protected:
     string compensationPayment_;
     string compensationPaymentDate_;
     string longInForward_;
+    string dv01_;
 };
 } // namespace data
 } // namespace ore

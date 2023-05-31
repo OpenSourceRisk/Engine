@@ -30,6 +30,7 @@
 #include <ql/handle.hpp>
 #include <ql/math/integrals/integral.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <map>
 
 namespace QuantExt {
 

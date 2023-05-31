@@ -17,6 +17,9 @@
 */
 
 #include <orea/app/analyticsmanager.hpp>
+#include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/analytics/varanalytic.hpp>
+#include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 
@@ -45,6 +48,7 @@ AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inp
                                    const boost::shared_ptr<MarketDataLoader>& marketDataLoader)
     : inputs_(inputs), marketDataLoader_(marketDataLoader) {    
     
+    addAnalytic("MARKETDATA", boost::make_shared<MarketDataAnalytic>(inputs));
     addAnalytic("PRICING", boost::make_shared<PricingAnalytic>(inputs));
     addAnalytic("VAR", boost::make_shared<VarAnalytic>(inputs_));
     addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_));
@@ -107,14 +111,13 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
         return;
 
     std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
+    std::set<Date> marketDates;
     for (const auto& a : analytics_) {
         std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> atmps = a.second->todaysMarketParams();
         tmps.insert(end(tmps), begin(atmps), end(atmps));
+        auto mdates = a.second->marketDates();
+        marketDates.insert(mdates.begin(), mdates.end());
     }
-
-    QuantExt::Date mporDate = QuantExt::Date();
-    if (laggedMarket_)
-        mporDate = inputs_->mporCalendar().advance(inputs_->asof(), inputs_->mporDays(), QuantExt::Days);
 
     // Do we need market data
     bool requireMarketData = false;
@@ -129,7 +132,7 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
         // load the market data
         if (tmps.size() > 0) {
             LOG("AnalyticsManager::runAnalytics: populate loader");
-            marketDataLoader_->populateLoader(tmps, laggedMarket_, mporDate, inputs_->includeMporExpired());
+            marketDataLoader_->populateLoader(tmps, marketDates);
         }
         
         boost::shared_ptr<InMemoryReport> mdReport = boost::make_shared<InMemoryReport>();
@@ -218,14 +221,10 @@ bool endsWith(const std::string& name, const std::string& suffix) {
         return std::equal(suffix.rbegin(), suffix.rend(), name.rbegin());
 }
 
-void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& rpts,
-                               const std::string& outputPath,
-                               const std::map<std::string,std::string>& reportNames,
-                               const char sep,
-                               const bool commentCharacter,
-                               char quoteChar,
-                               const string& nullString,
-                               bool lowerHeader) {
+void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& rpts, const std::string& outputPath,
+                              const std::map<std::string, std::string>& reportNames, const char sep,
+                              const bool commentCharacter, char quoteChar, const string& nullString,
+                              const std::set<std::string>& lowerHeaderReportNames) {
     std::map<std::string, Size> hits = checkReportNames(rpts);    
     for (const auto& rep : rpts) {
         string analytic = rep.first;
@@ -251,11 +250,11 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
                 suffix = ".csv";
             std::string fullFileName = outputPath + "/" + fileName + suffix;
 
-            report->toFile(fullFileName, sep, commentCharacter, quoteChar, nullString, lowerHeader);
+            report->toFile(fullFileName, sep, commentCharacter, quoteChar, nullString,
+                           lowerHeaderReportNames.find(reportName) != lowerHeaderReportNames.end());
             LOG("report " << reportName << " written to " << fullFileName); 
         }
     }
 }
-
 }
 }

@@ -93,6 +93,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     double w2 = arguments_.shortAssetFlow->gearing();
     // Adjust strike for past fixings
     double effectiveStrike = arguments_.effectiveStrike - w1 * accruals1 + w2 * accruals2;
+    Real correlation = QuantLib::Null<Real>();
 
     if (exerciseDate <= today && paymentDate <= today) {
         results_.value = 0;
@@ -114,13 +115,13 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     } else {
         sigma1 = sigma1 * std::min(1.0, std::sqrt(obsTime1 / tte));
         sigma2 = sigma2 * std::min(1.0, std::sqrt(obsTime2 / tte));
-
+        correlation = rho();
         // KirkFormula
         Y = (F2 * w2 + effectiveStrike);
         Z = w1 * F1 / Y;
         sigmaY = sigma2 * F2 * w2 / Y;
 
-        sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaY, 2.0) - 2 * sigma1 * sigmaY * rho());
+        sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaY, 2.0) - 2 * sigma1 * sigmaY * correlation);
 
         stdDev = sigma * sqrt(tte);
 
@@ -150,7 +151,15 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     mp["paymentDate"] = paymentDate;
     mp["w1"] = w1;
     mp["w2"] = w2;
-    mp["rho"] = rho();
+    mp["rho"] = correlation;
+    mp["index1_pricingDates"] = parameterFlow1.pricingDates;
+    mp["index1_index"] = parameterFlow1.indexNames;
+    mp["index1_index_expiry"] = parameterFlow1.expiries;
+    mp["index1_fixing"] = parameterFlow1.fixings;
+    mp["index2_pricingDates"] = parameterFlow2.pricingDates;
+    mp["index2_index"] = parameterFlow2.indexNames;
+    mp["index2_index_expiry"] = parameterFlow2.expiries;
+    mp["index2_fixing"] = parameterFlow2.fixings;
 }
 
 CommoditySpreadOptionAnalyticalEngine::PricingParameter
@@ -170,6 +179,10 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         res.sigma = res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)
                         ? vol->blackVol(res.tn, atmUnderlyingCurrency, true)
                         : 0.0;
+        res.indexNames.push_back(cf->index()->name());
+        res.expiries.push_back(cf->index()->expiryDate());
+        res.fixings.push_back(atmUnderlyingCurrency);
+        res.pricingDates.push_back(cf->pricingDate());
     } else if (auto avgCf = ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(flow)) {
         auto parameter = CommodityAveragePriceOptionMomementMatching::matchFirstTwoMomentsTurnbullWakeman(
             avgCf, vol,
@@ -179,6 +192,10 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         res.atm = parameter.forward;
         res.accruals = parameter.accruals;
         res.sigma = parameter.sigma;
+        res.indexNames = parameter.indexNames;
+        res.expiries = parameter.indexExpiries;
+        res.fixings = parameter.fixings;
+        res.pricingDates = parameter.pricingDates;
     } else {
         QL_FAIL("SpreadOptionEngine supports only CommodityIndexedCashFlow or CommodityIndexedAverageCashFlow");
     }

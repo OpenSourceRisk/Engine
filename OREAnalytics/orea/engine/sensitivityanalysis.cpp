@@ -26,7 +26,6 @@
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
-#include <ql/instruments/forwardrateagreement.hpp>
 #include <ql/instruments/makeois.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
 #include <ql/instruments/vanillaoption.hpp>
@@ -39,6 +38,7 @@
 #include <qle/currencies/metals.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
 #include <qle/instruments/deposit.hpp>
+#include <qle/instruments/forwardrateagreement.hpp>
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/payment.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
@@ -319,7 +319,7 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
             }
 
             // Overwrite the sensitivity cube entries.
-            auto upFactors = sensiCube_->upFactors().left;
+            auto upFactors = sensiCube_->upFactors();
             auto downFactors = sensiCube_->downFactors();
             auto baseNpv = sensiCube_->npvCube()->getT0(tradeIdx);
 

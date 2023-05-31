@@ -8,6 +8,9 @@ LABEL Description="Build ORE and add to the QuantLib build environment"
 # Argument for number of cores to use while building
 ARG num_cores
 
+# install Eigen
+RUN apt-get install -f -y libeigen3-dev
+
 # Copy ORE sources for libs and app
 COPY QuantExt /ore/QuantExt
 COPY OREData /ore/OREData
@@ -24,7 +27,7 @@ RUN cd /ore \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && cp Docker/CMakeLists_ORE.txt CMakeLists.txt \
   && mkdir -p build.ore && cd build.ore \
-  && cmake .. -DBUILD_DOC=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-mavx2" -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON
+  && cmake .. -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-mavx2" -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON
 
 WORKDIR /ore/build.ore
 RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \

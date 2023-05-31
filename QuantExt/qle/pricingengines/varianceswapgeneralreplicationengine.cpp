@@ -117,10 +117,13 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateAccruedVariance(const Ca
     // Calculate historical variance from arguments_.startDate to today
     Date today = QuantLib::Settings::instance().evaluationDate();
 
-    TimeSeries<Real> dividends;
+    std::map<Date, Real> dividends;
     if (arguments_.addPastDividends) {
-        if (auto eqIndex = boost::dynamic_pointer_cast<EquityIndex>(index_))
-            dividends = eqIndex->dividendFixings();
+        if (auto eqIndex = boost::dynamic_pointer_cast<EquityIndex>(index_)) {
+            auto divs = eqIndex->dividendFixings();
+            for (const auto& d : divs)
+                dividends[d.exDate] = d.rate;
+        }
     }
 
     Real variance = 0.0;

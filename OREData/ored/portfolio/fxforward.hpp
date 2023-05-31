@@ -34,8 +34,6 @@ namespace data {
   \ingroup tradedata
 */
 class FxForward : public Trade {
-    static TradeBuilderRegister<TradeBuilder<FxForward>> reg_;
-
 public:
     //! Default constructor
     FxForward() : Trade("FxForward"), boughtAmount_(0.0), soldAmount_(0.0) {}

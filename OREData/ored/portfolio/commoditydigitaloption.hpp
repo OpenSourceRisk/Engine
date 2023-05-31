@@ -33,8 +33,6 @@ namespace data {
 /*! \ingroup tradedata
  */
 class CommodityDigitalOption : public ore::data::Trade {
-    static TradeBuilderRegister<TradeBuilder<CommodityDigitalOption>> reg_;
-
 public:
     //! Default constructor
     CommodityDigitalOption();

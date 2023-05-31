@@ -242,6 +242,7 @@ DayCounter parseDayCounter(const string& s) {
                                         {"Actual/Actual (ISDA)", ActualActual(ActualActual::ISDA)},
                                         {"ActualActual (ISDA)", ActualActual(ActualActual::ISDA)},
                                         {"ACT/ACT", ActualActual(ActualActual::ISDA)},
+                                        {"Act/Act", ActualActual(ActualActual::ISDA)},
                                         {"ACT29", ActualActual(ActualActual::AFB)},
                                         {"ACT", ActualActual(ActualActual::ISDA)},
                                         {"ActActISMA", ActualActual(ActualActual::ISMA)},
@@ -792,6 +793,10 @@ QuantExt::CrossAssetModel::AssetType parseCamAssetType(const string& s) {
         return QuantExt::CrossAssetModel::AssetType::CR;
     } else if (s == "EQ") {
         return QuantExt::CrossAssetModel::AssetType::EQ;
+    } else if (s == "COM") {
+        return QuantExt::CrossAssetModel::AssetType::COM;
+    } else if (s == "CrState") {
+        return QuantExt::CrossAssetModel::AssetType::CrState;
     } else {
         QL_FAIL("Unknown cross asset model type " << s);
     }

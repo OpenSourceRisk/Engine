@@ -1,0 +1,20 @@
+<Portfolio>
+	<Trade id="EQ_CALL_STOXX50E">
+		<TradeType>EquityOption</TradeType>
+		<EquityOptionData>
+			<Name>RIC:.STOXX50E</Name>
+			<Currency>EUR</Currency>
+			<Strike>4000</Strike>
+			<Quantity>1</Quantity>
+			<OptionData>
+				<LongShort>Long</LongShort>
+				<OptionType>Call</OptionType>
+				<Style>European</Style>
+				<Settlement>Cash</Settlement>
+				<ExerciseDates>
+					<ExerciseDate>2021-12-17</ExerciseDate>
+				</ExerciseDates>
+			</OptionData>
+		</EquityOptionData>
+	</Trade>
+</Portfolio>

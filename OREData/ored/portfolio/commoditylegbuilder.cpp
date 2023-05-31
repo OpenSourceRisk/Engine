@@ -308,9 +308,6 @@ void updateQuantities(Leg& leg, bool isAveragingFuture, CommodityQuantityFrequen
 namespace ore {
 namespace data {
 
-ORE_REGISTER_LEG_BUILDER_IMPL(CommodityFixedLegBuilder)
-ORE_REGISTER_LEG_BUILDER_IMPL(CommodityFloatingLegBuilder)
-
 Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                                        RequiredFixings& requiredFixings, const string& configuration,
                                        const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
@@ -372,7 +369,9 @@ Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_
             pmtDate = paymentCalendar.advance(paymentDates[i], paymentLagPeriod, paymentConvention);
         } else {
             // Gather the payment conventions.
-            BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+            BusinessDayConvention bdc =
+                data.paymentConvention().empty() ? Following : parseBusinessDayConvention(data.paymentConvention());
+
             Calendar paymentCalendar =
                 data.paymentCalendar().empty() ? schedule.calendar() : parseCalendar(data.paymentCalendar());
 
@@ -427,6 +426,7 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<CommodityFutureConvention> commFutureConv;
     boost::optional<pair<Calendar, Real>> offPeakPowerData;
+    bool balanceOfTheMonth = false;
     if (conventions->has(commName)) {
         boost::shared_ptr<Convention> commConv = conventions->get(commName);
 
@@ -440,6 +440,7 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
         // If commodity future convention
         commFutureConv = boost::dynamic_pointer_cast<CommodityFutureConvention>(commConv);
         if (commFutureConv) {
+            balanceOfTheMonth = commFutureConv->balanceOfTheMonth();
             commCal = commFutureConv->calendar();
             if (const auto& oppid = commFutureConv->offPeakPowerIndexData()) {
                 offPeakPowerData = make_pair(oppid->peakCalendar(), oppid->offPeakHours());
@@ -495,9 +496,18 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
         data.paymentConvention().empty() ? Following : parseBusinessDayConvention(data.paymentConvention());
     Calendar paymentCalendar =
         data.paymentCalendar().empty() ? schedule.calendar() : parseCalendar(data.paymentCalendar());
-    Calendar pricingCalendar =
-        floatingLegData->pricingCalendar().empty() ? commCal : parseCalendar(floatingLegData->pricingCalendar());
+    Calendar pricingCalendar;
 
+    // Override missing pricing calendar with calendar from convention
+    if (floatingLegData->pricingCalendar().empty() && floatingLegData->isAveraged() && balanceOfTheMonth &&
+        commFutureConv) {
+        pricingCalendar = commFutureConv->balanceOfTheMonthPricingCalendar();
+    } else if (floatingLegData->pricingCalendar().empty()) {
+        pricingCalendar = commCal;
+    } else {
+        pricingCalendar = parseCalendar(floatingLegData->pricingCalendar());
+    }
+         
     // Get explicit payment dates which in most cases should be empty
     vector<Date> paymentDates;
     if (!data.paymentDates().empty()) {
@@ -553,6 +563,14 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
                        << commFutureConv->contractFrequency() << ")");
     }
 
+    if (!floatingLegData->fxIndex().empty()) { // build the fxIndex for daily average conversion
+        auto underlyingCcy = priceCurve->currency().code();
+        auto npvCurrency = data.currency();
+        if (underlyingCcy != npvCurrency) // only need an FX Index if currencies differ
+            fxIndex = buildFxIndex(floatingLegData->fxIndex(), npvCurrency, underlyingCcy, engineFactory->market(),
+                                   engineFactory->configuration(MarketContext::pricing));
+    }
+
     if (isCashFlowAveraged) {
         CommodityIndexedAverageCashFlow::PaymentTiming paymentTiming =
             CommodityIndexedAverageCashFlow::PaymentTiming::InArrears;
@@ -565,14 +583,6 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
         } else {
             QL_FAIL("CommodityLegBuilder: CommodityPayRelativeTo " << floatingLegData->commodityPayRelativeTo()
                                                                    << " not handled. This is an internal error.");
-        }
-
-        if(!floatingLegData->fxIndex().empty()){// build the fxIndex for daily average conversion
-            auto underlyingCcy = priceCurve->currency().code();
-            auto npvCurrency = data.currency();
-            if (underlyingCcy != npvCurrency) // only need an FX Index if currencies differ
-                fxIndex = buildFxIndex(floatingLegData->fxIndex(), npvCurrency, underlyingCcy, engineFactory->market(),
-                                   engineFactory->configuration(MarketContext::pricing));
         }
 
         leg = CommodityIndexedAverageLeg(schedule, index)
@@ -631,7 +641,12 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
                   .payAtMaturity(floatingLegData->commodityPayRelativeTo() == CommodityPayRelativeTo::TerminationDate)
                   .withPricingDates(pricingDates)
                   .withPaymentDates(paymentDates)
-                  .withDailyExpiryOffset(dailyExpOffset);
+                  .withDailyExpiryOffset(dailyExpOffset)
+                  .withFxIndex(fxIndex)
+                  .withIsAveraging(floatingLegData->isAveraged() && balanceOfTheMonth)
+                  .withPricingCalendar(pricingCalendar)
+                  .includeEndDate(floatingLegData->includePeriodEnd())
+                  .excludeStartDate(floatingLegData->excludePeriodStart());
 
         // Possibly update the leg's quantities.
         updateQuantities(leg, allAveraging_, floatingLegData->commodityQuantityFrequency(), schedule,
@@ -673,7 +688,7 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
     if (fxIndex) {
         // fx daily indexing needed
         for (auto cf : leg) {
-            auto cacf = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf);
+            auto cacf = boost::dynamic_pointer_cast<CommodityCashFlow>(cf);
             QL_REQUIRE(cacf, "Commodity Indexed averaged cashflow is required to compute daily converted average.");
             for (auto kv : cacf->indices()) {
                 if (!fxIndex->fixingCalendar().isBusinessDay(

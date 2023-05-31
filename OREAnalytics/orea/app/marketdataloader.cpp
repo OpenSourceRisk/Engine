@@ -169,7 +169,7 @@ void MarketDataLoader::populateFixings(
         LOG("Asking portfolio for its required fixings");
         FixingMap portfolioFixings;
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap;
-                
+        
         // portfolio fixings will warn if missinbg
         if (inputs_->portfolio()) {
             portfolioFixings = inputs_->portfolio()->fixings();
@@ -194,14 +194,28 @@ void MarketDataLoader::populateFixings(
 
         if (fixings_.size() > 0)
             impl()->retrieveFixings(loader_, fixings_, lastAvailableFixingLookupMap);
+        
+        // apply all fixings now
+        applyFixings(loader_->loadFixings());
 
         // check and warn any missing fixings - only warn for portfolio fixings
         for (const auto& f : portfolioFixings_) {
             for (const auto& d : f.second) {
                 if (!loader_->hasFixing(f.first, d)) {
+                    string fixingErr = "";
+                    if (isFxIndex(f.first)) {
+                        auto fxInd = parseFxIndex(f.first);
+                        try { 
+                            if(fxInd->fixingCalendar().isBusinessDay(d))
+                                fxInd->fixing(d);
+                            break;
+                        } catch (const std::exception& e) {
+                            fixingErr = ", error: " + ore::data::to_string(e.what());
+                        }
+                    }
                     WLOG(StructuredFixingWarningMessage(f.first, d, "Missing fixing",
                         "Could not find required fixing id " + f.first +
-                        " for date " + ore::data::to_string(d)));
+                        " for date " + ore::data::to_string(d) + fixingErr));
                 }
             }
         }
@@ -209,8 +223,8 @@ void MarketDataLoader::populateFixings(
 }
 
 void MarketDataLoader::populateLoader(
-    const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters, bool doNPVLagged,
-    const QuantLib::Date& npvLaggedDate, bool includeMporExpired) {
+    const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
+    const std::set<QuantLib::Date>& loaderDates) {
 
     // create a loader if doesn't already exist
     if (!loader_)
@@ -241,6 +255,9 @@ void MarketDataLoader::populateLoader(
     if (equities.size() > 0)
         impl()->loadCorporateActionData(loader_, equities);
 
+    // apply dividends now
+    applyDividends(loader_->loadDividends());
+
     populateFixings(todaysMarketParameters);
 
     LOG("Adding the loaded fixings to the IndexManager");
@@ -248,6 +265,7 @@ void MarketDataLoader::populateLoader(
 
     // Get set of quotes we need
     LOG("Generating market datum set");
+    set<string> quotes;
     for (const auto& tmp : todaysMarketParameters) {
         // Find all configurations in this todaysMarket
         std::set<std::string> configurations;
@@ -256,16 +274,21 @@ void MarketDataLoader::populateLoader(
 
         for (const auto& curveConfig : inputs_->curveConfigs()) {
             auto qs = curveConfig->quotes(tmp, configurations);
-            quotes_[inputs_->asof()].insert(qs.begin(), qs.end());
+            quotes.insert(qs.begin(), qs.end());
         }
     }
-    LOG("CurveConfigs require " << quotes_.size() << " quotes");
 
-    // Get the relevant market data loader for the pricing call
-    QuantLib::Date relabelMd = doNPVLagged ? inputs_->asof() : Date();
-    impl()->retrieveMarketData(loader_, quotes_, relabelMd);
-    if (doNPVLagged && includeMporExpired)
-        impl()->retrieveExpiredContracts(loader_, quotes_, npvLaggedDate);
+    for (const auto& d : loaderDates) {
+        QuoteMap quoteMap;
+        quoteMap[d] = quotes;
+
+        LOG("CurveConfigs require " << quotes.size() << " quotes");
+
+        // Get the relevant market data loader for the pricing call
+        impl()->retrieveMarketData(loader_, quoteMap, d);
+
+        quotes_[d] = quotes;
+    }
     LOG("Got market data");
 }
 

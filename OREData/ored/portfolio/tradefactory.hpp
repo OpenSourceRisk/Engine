@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <map>
 #include <ql/patterns/singleton.hpp>
 
 #include <boost/make_shared.hpp>
@@ -66,16 +67,11 @@ class TradeFactory : public QuantLib::Singleton<TradeFactory, std::integral_cons
 public:
     std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> getBuilders() const;
     boost::shared_ptr<AbstractTradeBuilder> getBuilder(const std::string& tradeType) const;
-    void addBuilder(const std::string& tradeType, const boost::shared_ptr<AbstractTradeBuilder>& builder);
+    void addBuilder(const std::string& tradeType, const boost::shared_ptr<AbstractTradeBuilder>& builder,
+                    const bool allowOverwrite = false);
 
     //! Build, throws for unknown className
     boost::shared_ptr<Trade> build(const std::string& className) const;
-};
-
-template <typename T> struct TradeBuilderRegister {
-    TradeBuilderRegister<T>(const std::string& className) {
-        TradeFactory::instance().addBuilder(className, boost::make_shared<T>());
-    }
 };
 
 } // namespace data

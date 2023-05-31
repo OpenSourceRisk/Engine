@@ -37,8 +37,6 @@ using std::string;
   \ingroup tradedata
 */
 class FxKIKOBarrierOption : public FxSingleAssetDerivative {
-    static TradeBuilderRegister<TradeBuilder<FxKIKOBarrierOption>> reg_;
-
 public:
     //! Default constructor
     FxKIKOBarrierOption()

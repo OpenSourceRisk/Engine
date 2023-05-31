@@ -53,8 +53,12 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "DividendYield";
     case RiskFactorKey::KeyType::SurvivalProbability:
         return out << "SurvivalProbability";
+    case RiskFactorKey::KeyType::SurvivalWeight:
+        return out << "SurvivalWeight";
     case RiskFactorKey::KeyType::RecoveryRate:
         return out << "RecoveryRate";
+    case RiskFactorKey::KeyType::CreditState:
+        return out << "CrState";
     case RiskFactorKey::KeyType::CDSVolatility:
         return out << "CDSVolatility";
     case RiskFactorKey::KeyType::BaseCorrelation:

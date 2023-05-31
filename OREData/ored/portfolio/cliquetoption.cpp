@@ -41,8 +41,6 @@ Real getRealOrNull(XMLNode* node, const string& name) {
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<EquityCliquetOption>> EquityCliquetOption::reg_("EquityCliquetOption");
-    
 void CliquetOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Currency ccy = parseCurrency(currency_);

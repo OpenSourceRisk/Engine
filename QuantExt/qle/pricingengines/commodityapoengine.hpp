@@ -45,6 +45,10 @@ struct MomentMatchingResults {
     std::vector<Real> forwards;
     std::vector<Real> futureVols;
     std::vector<Real> spotVols;
+    std::vector<std::string> indexNames;
+    std::vector<QuantLib::Date> pricingDates;
+    std::vector<QuantLib::Date> indexExpiries;
+    std::vector<QuantLib::Real> fixings;
     Real EA2;
 
     Real firstMoment();

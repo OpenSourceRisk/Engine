@@ -32,8 +32,6 @@ using std::string;
   \ingroup tradedata
 */
 class FxDoubleBarrierOption : public FxOptionWithBarrier {
-    static TradeBuilderRegister<TradeBuilder<FxDoubleBarrierOption>> reg_;
-
 public:
     //! Default constructor
     FxDoubleBarrierOption() : ore::data::Trade("FxDoubleBarrierOption"), FxOptionWithBarrier("") {}

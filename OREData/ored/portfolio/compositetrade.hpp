@@ -38,8 +38,6 @@ using std::string;
  + Bond Option = Callable Bond. \ingroup portfolio
 */
 class CompositeTrade : public Trade {
-    static TradeBuilderRegister<TradeBuilder<CompositeTrade>> reg_;
-
 public:
     /// This enum decalres how the notional of the CompositeTrade should be calculated
     enum class NotionalCalculation {

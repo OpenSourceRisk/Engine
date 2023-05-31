@@ -391,7 +391,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"CNY-REPOFIX", boost::make_shared<IborIndexParserWithPeriod<CNYRepoFix>>()},
         {"USD-SOFR", boost::make_shared<IborIndexParserWithPeriod<QuantExt::SofrTerm>>()},
         {"GBP-SONIA", boost::make_shared<IborIndexParserWithPeriod<QuantExt::SoniaTerm>>()},
-        {"JPY-TONAR", boost::make_shared<IborIndexParserWithPeriod<QuantExt::TonarTerm>>()}};
+        {"JPY-TONAR", boost::make_shared<IborIndexParserWithPeriod<QuantExt::TonarTerm>>()},
+        {"CAD-CORRA", boost::make_shared<IborIndexParserWithPeriod<QuantExt::CORRATerm>>()}};
 
     // Check (once) that we have a one-to-one mapping
     static bool checked = false;
@@ -446,7 +447,7 @@ pair<bool, boost::shared_ptr<ZeroInflationIndex>> isInflationIndex(const string&
     boost::shared_ptr<ZeroInflationIndex> index;
     try {
         // Currently, only way to have an inflation index is to have a ZeroInflationIndex
-        index = parseZeroInflationIndex(indexName, false, Handle<ZeroInflationTermStructure>());
+        index = parseZeroInflationIndex(indexName, Handle<ZeroInflationTermStructure>());
     } catch (...) {
         return make_pair(false, nullptr);
     }
@@ -579,13 +580,18 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
 class ZeroInflationIndexParserBase {
 public:
     virtual ~ZeroInflationIndexParserBase() {}
-    virtual boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
-                                                        const Handle<ZeroInflationTermStructure>& h) const = 0;
+    virtual boost::shared_ptr<ZeroInflationIndex> build(const Handle<ZeroInflationTermStructure>& h) const = 0;
+    virtual QL_DEPRECATED boost::shared_ptr<ZeroInflationIndex>
+    build(bool isInterpolated, const Handle<ZeroInflationTermStructure>& h) const = 0;
 };
 
 template <class T> class ZeroInflationIndexParser : public ZeroInflationIndexParserBase {
 public:
-    boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
+    boost::shared_ptr<ZeroInflationIndex> build(const Handle<ZeroInflationTermStructure>& h) const override {
+        return boost::make_shared<T>(h);
+    }
+
+    QL_DEPRECATED boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
                                                 const Handle<ZeroInflationTermStructure>& h) const override {
         return boost::make_shared<T>(isInterpolated, h);
     }
@@ -594,6 +600,11 @@ public:
 template <class T> class ZeroInflationIndexParserWithFrequency : public ZeroInflationIndexParserBase {
 public:
     ZeroInflationIndexParserWithFrequency(Frequency frequency) : frequency_(frequency) {}
+    
+    boost::shared_ptr<ZeroInflationIndex> build(const Handle<ZeroInflationTermStructure>& h) const override {
+        return boost::make_shared<T>(frequency_, false, h);
+    }
+    
     boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
                                                 const Handle<ZeroInflationTermStructure>& h) const override {
         return boost::make_shared<T>(frequency_, false, isInterpolated, h);
@@ -602,6 +613,60 @@ public:
 private:
     Frequency frequency_;
 };
+
+boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s,
+                                                              const Handle<ZeroInflationTermStructure>& h) {
+    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+
+    // If conventions are non-null and we have provided a convention of type InflationIndex with a name equal to the
+    // string s, we use that convention to construct the inflation index.
+    if (conventions) {
+        pair<bool, boost::shared_ptr<Convention>> p = conventions->get(s, Convention::Type::ZeroInflationIndex);
+        if (p.first) {
+            auto c = boost::dynamic_pointer_cast<ZeroInflationIndexConvention>(p.second);
+            auto index = boost::make_shared<ZeroInflationIndex>(s, c->region(), c->revised(),
+                                                                c->frequency(), c->availabilityLag(), c->currency(), h);
+            IndexNameTranslator::instance().add(index->name(), s);
+            return index;
+        }
+    }
+
+    static map<string, boost::shared_ptr<ZeroInflationIndexParserBase>> m = {
+        {"AUCPI", boost::make_shared<ZeroInflationIndexParserWithFrequency<AUCPI>>(Quarterly)},
+        {"AU CPI", boost::make_shared<ZeroInflationIndexParserWithFrequency<AUCPI>>(Quarterly)},
+        {"BEHICP", boost::make_shared<ZeroInflationIndexParser<BEHICP>>()},
+        {"BE HICP", boost::make_shared<ZeroInflationIndexParser<BEHICP>>()},
+        {"EUHICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
+        {"EU HICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
+        {"EUHICPXT", boost::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},
+        {"EU HICPXT", boost::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},
+        {"FRHICP", boost::make_shared<ZeroInflationIndexParser<FRHICP>>()},
+        {"FR HICP", boost::make_shared<ZeroInflationIndexParser<FRHICP>>()},
+        {"FRCPI", boost::make_shared<ZeroInflationIndexParser<FRCPI>>()},
+        {"FR CPI", boost::make_shared<ZeroInflationIndexParser<FRCPI>>()},
+        {"UKRPI", boost::make_shared<ZeroInflationIndexParser<UKRPI>>()},
+        {"UK RPI", boost::make_shared<ZeroInflationIndexParser<UKRPI>>()},
+        {"USCPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
+        {"US CPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
+        {"ZACPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()},
+        {"ZA CPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()},
+        {"SECPI", boost::make_shared<ZeroInflationIndexParser<SECPI>>()},
+        {"DKCPI", boost::make_shared<ZeroInflationIndexParser<DKCPI>>()},
+        {"CACPI", boost::make_shared<ZeroInflationIndexParser<CACPI>>()},
+        {"ESCPI", boost::make_shared<ZeroInflationIndexParser<ESCPI>>()},
+        {"DECPI", boost::make_shared<ZeroInflationIndexParser<DECPI>>()},
+        {"DE CPI", boost::make_shared<ZeroInflationIndexParser<DECPI>>()}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        auto index = it->second->build(h);
+        IndexNameTranslator::instance().add(index->name(), s);
+        return index;
+    } else {
+        QL_FAIL("parseZeroInflationIndex: \"" << s << "\" not recognized");
+    }
+}
+
 
 boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s,
     bool isInterpolated,
@@ -651,7 +716,9 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s,
 
     auto it = m.find(s);
     if (it != m.end()) {
+        QL_DEPRECATED_DISABLE_WARNING
         auto index = it->second->build(isInterpolated, h);
+        QL_DEPRECATED_ENABLE_WARNING
         IndexNameTranslator::instance().add(index->name(), s);
         return index;
     } else {
@@ -845,7 +912,7 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseCommodityIndex(s);
+            ret_idx = parseCommodityIndex(s, true, QuantLib::Handle<QuantExt::PriceTermStructure>(), QuantLib::NullCalendar(), false);
         } catch (...) {
         }
     }
@@ -881,7 +948,7 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseZeroInflationIndex(s, false, Handle<ZeroInflationTermStructure>());
+            ret_idx = parseZeroInflationIndex(s, Handle<ZeroInflationTermStructure>());
         } catch (...) {
         }
     }

@@ -32,12 +32,12 @@ namespace analytics {
 typedef std::map<QuantLib::Date, std::set<std::string>> QuoteMap;
 typedef std::map<std::string, std::set<QuantLib::Date>> FixingMap;
 
-//! Utility class for Structured Fixing errors
+//! Utility class for Structured Fixing warnings
 class StructuredFixingWarningMessage : public StructuredMessage {
 public:
     StructuredFixingWarningMessage(const std::string& fixingId, const QuantLib::Date& fixingDate,
         const std::string& exceptionType, const std::string& exceptionWhat = "")
-        : StructuredMessage("Warning", "Fixing", exceptionWhat, 
+        : StructuredMessage(Category::Warning, Group::Fixing, exceptionWhat, 
             std::map<std::string, std::string>({{"exceptionType", exceptionType}, {"fixingId", fixingId}, 
                 {"fixingDate", ore::data::to_string(fixingDate)}})) {}
 };
@@ -53,15 +53,12 @@ public:
 
     //! retrieve market data
     virtual void retrieveMarketData(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
-        const QuoteMap& quotes, const QuantLib::Date& relabelDate = QuantExt::Null<QuantLib::Date>()) = 0;
+        const QuoteMap& quotes,
+                                    const QuantLib::Date& requestDate = QuantLib::Date()) = 0;
 
     //! retrieve fixings
     virtual void retrieveFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, FixingMap fixings = {}, 
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap = {}) = 0;
-
-    //! if running a lagged market we may need to load addition contracts
-    virtual void retrieveExpiredContracts(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                                          const QuoteMap& quotes, const Date& npvLaggedDate) = 0;
 };
 
 class MarketDataLoader {
@@ -76,7 +73,7 @@ public:
         marketdata and fixing services
     */
     void populateLoader(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
-        bool doNPVLagged = false, const QuantLib::Date& npvLaggedDate = QuantLib::Date(), bool includeMporExpired = true);
+        const std::set<QuantLib::Date>& loaderDates);
 
     virtual void populateFixings(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters);
 

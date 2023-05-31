@@ -111,7 +111,9 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
             boost::split(tokens, line, boost::is_any_of(",;\t "), boost::token_compress_on);
 
             // TODO: should we try, catch and log any invalid lines?
-            QL_REQUIRE(tokens.size() == 3, "Invalid CSVLoader line, 3 tokens expected " << line);
+            QL_REQUIRE(tokens.size() == 3 || tokens.size() == 4, "Invalid CSVLoader line, 3 tokens expected " << line);
+            if (tokens.size() == 4)
+                QL_REQUIRE(dataType == DataType::Dividend, "CSVLoader, dataType must be of type Dividend");
             Date date = parseDate(tokens[0]);
             const string& key = tokens[1];
             Real value = parseReal(tokens[2]);
@@ -145,9 +147,12 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                     }
                 }
             } else if (dataType == DataType::Dividend) {
+                Date payDate = date;
+                if (tokens.size() == 4)
+                    payDate = parseDate(tokens[3]);
                 // process dividends
                 if (date <= today) {
-                    if(!dividends_.insert(Fixing(date, key, value)).second) {
+                    if (!dividends_.insert(QuantExt::Dividend(date, key, value, payDate)).second) {
                         WLOG("Skipped Dividend " << key << "@" << QuantLib::io::iso_date(date)
                                                  << " - this is already present.");
                     }

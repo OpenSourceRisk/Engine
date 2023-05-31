@@ -25,8 +25,6 @@ using QuantLib::Period;
 namespace ore {
 namespace data {
 
-CalibrationInstrumentRegister<YoYSwap> YoYSwap::reg_("YoYSwap");
-
 YoYSwap::YoYSwap() : CalibrationInstrument("YoYSwap") {}
 
 YoYSwap::YoYSwap(const Period& tenor)

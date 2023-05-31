@@ -93,6 +93,40 @@ const set<SensitivityRecord>& SensitivityAggregator::sensitivities(const string&
     return it->second;
 }
 
+void SensitivityAggregator::generateDeltaGamma(const string& category, map<RiskFactorKey, Real>& deltas,
+    map<CrossPair, Real>& gammas) {
+
+    auto srs = sensitivities(category);
+    for (const auto& sr : srs) {
+        if (!sr.isCrossGamma()) {
+            QL_REQUIRE(deltas.count(sr.key_1) == 0,
+                        "Duplicate sensitivity entry for risk factor key " << sr.key_1 << " in the set");
+            if (!close_enough(sr.delta, 0.0) || !close_enough(sr.gamma, 0.0)) {
+                deltas[sr.key_1] = sr.delta;
+                gammas[std::make_pair(sr.key_1, sr.key_1)] = sr.gamma;
+            }                
+        } else {
+            auto keyPair = sr.key_1 < sr.key_2 ? std::make_pair(sr.key_1, sr.key_2) : std::make_pair(sr.key_2, sr.key_1);
+            QL_REQUIRE(gammas.count(keyPair) == 0, "Duplicate sensitivity entry for cross gamma pair ["
+                                                        << keyPair.first << ", " << keyPair.second << "] in the set");
+            if (!close_enough(sr.gamma, 0.0))
+                gammas[keyPair] = sr.gamma;
+        }
+    }
+
+    // Final check that all cross gamma keys are in delta keys
+    for (const auto& kv : gammas) {
+        if (deltas.count(kv.first.first) == 0)
+            deltas[kv.first.first] = 0.0;
+        if (deltas.count(kv.first.second) == 0)
+            deltas[kv.first.second] = 0.0;
+        if (gammas.count(std::make_pair(kv.first.first, kv.first.first)) == 0)
+            gammas[std::make_pair(kv.first.first, kv.first.first)] = 0.0;
+        if (gammas.count(std::make_pair(kv.first.second, kv.first.second)) == 0)
+            gammas[std::make_pair(kv.first.second, kv.first.second)] = 0.0;
+    }
+}
+
 void SensitivityAggregator::init() {
     // Add an empty set for each of the categories
     for (const auto& kv : categories_) {

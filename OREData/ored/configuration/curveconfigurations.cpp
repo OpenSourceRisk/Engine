@@ -547,14 +547,6 @@ void CurveConfigurations::fromXML(XMLNode* node) {
         }
     }
 
-    if (auto tmp = XMLUtils::getChildNode(node, "SmileDynamics")) {
-      LOG("smile dynamics node found");
-      smileDynamicsConfig_.fromXML(tmp);
-    }
-    else {
-      WLOG("smile dynamics node not found in curve config, using default values");
-    }
-     
     // Load YieldCurves, FXVols, etc, etc
     getNode(node, "YieldCurves", "YieldCurve");
     getNode(node, "FXVolatilities", "FXVolatility");

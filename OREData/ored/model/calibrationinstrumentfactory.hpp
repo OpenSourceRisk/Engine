@@ -87,44 +87,12 @@ public:
     /*! Add a builder function \p builder for a given \p instrumentType
      */
     void addBuilder(const std::string& instrumentType,
-                    std::function<boost::shared_ptr<CalibrationInstrument>()> builder);
+                    std::function<boost::shared_ptr<CalibrationInstrument>()> builder,
+                    const bool allowOverwrite = false);
 
 private:
     boost::shared_mutex mutex_;
     map_type map_;
-};
-
-/*! Calibration instrument registration class
-
-    This class is used in any class derived from \c CalibrationInstrument to register itself with the 
-    \c CalibrationInstrumentFactory so that it can be built via a call to 
-    <code>CalibrationInstrumentFactory::instance().build(const std::string& instrumentType)</code>.
-
-    As a concrete example, a \c CpiCapFloor class derived from \c CalibrationInstrument should have the following form
-    in order to register it with the \c CalibrationInstrumentFactory:
-
-    In cpicapfloor.hpp
-    \code{.cpp}
-    class CpiCapFloor : public CalibrationInstrument {
-    public:
-    private:
-        static CalibrationInstrumentRegister<CpiCapFloor> reg_;
-    }
-    \endcode
-
-    In cpicapfloor.cpp
-    \code{.cpp}
-    CalibrationInstrumentRegister<CpiCapFloor> CpiCapFloor::reg_("CpiCapFloor");
-    \endcode
-
-    \ingroup models
-*/
-template <class T> struct CalibrationInstrumentRegister {
-public:
-    CalibrationInstrumentRegister(const std::string& instrumentType) {
-        CalibrationInstrumentFactory::instance().addBuilder(
-            instrumentType, &createCalibrationInstrument<T>);
-    }
 };
 
 }

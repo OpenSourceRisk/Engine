@@ -57,6 +57,7 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
         return; 
     if (finalized_)
         return;
+    double ratio = static_cast<double>(progress) / static_cast<double>(total);
     if (progress >= total) {
         std::cout << "\r" << std::setw(messageWidth_) << std::left << message_;
         for (unsigned int i = 0; i < barWidth_; ++i)
@@ -70,8 +71,9 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
     if (updateCounter_ > 0 && progress * numberOfScreenUpdates_ < updateCounter_ * total) {
         return;
     }
-    std::cout << "\r" << std::setw(messageWidth_) << std::left << message_ << "[";
-    double ratio = static_cast<double>(progress) / static_cast<double>(total);
+    std::cout << "\r" << std::setw(messageWidth_) << std::left << message_;
+    if (barWidth_ > 0)
+        std::cout << "[";
     unsigned int pos = static_cast<unsigned int>(static_cast<double>(barWidth_) * ratio);
     for (unsigned int i = 0; i < barWidth_; ++i) {
         if (i < pos)
@@ -81,7 +83,9 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
         else
             std::cout << " ";
     }
-    std::cout << "] " << static_cast<int>(ratio * 100.0) << " %\r";
+    if (barWidth_ > 0)
+        std::cout << "] ";
+    std::cout << static_cast<int>(ratio * 100.0) << " %\r";
     std::cout.flush();
     updateCounter_++;
 }

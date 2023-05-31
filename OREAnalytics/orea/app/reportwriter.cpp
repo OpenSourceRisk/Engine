@@ -176,7 +176,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
         try {
             useAdditionalResults = trade->instrument()->additionalResults().find("cashFlowResults") !=
                                    trade->instrument()->additionalResults().end();
-        } catch (...) {
+        } catch (const std::exception& e) {
+            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(),
+                                             "Error during cashflow reporting / checking for cashFlowResults",
+                                             e.what()));
         }
 
         try {
@@ -206,8 +209,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                             std::string ccy = trade->legCurrencies()[i];
                             boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
                                 boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
-                            boost::shared_ptr<QuantExt::CommodityIndexedCashFlow> ptrCommCf =
-                                boost::dynamic_pointer_cast<QuantExt::CommodityIndexedCashFlow>(ptrFlow);
+                            boost::shared_ptr<QuantExt::CommodityCashFlow> ptrCommCf =
+                                boost::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(ptrFlow);
                             Real coupon;
                             Real accrual;
                             Real notional;
@@ -226,7 +229,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                             } else if (ptrCommCf) {
                                 coupon = Null<Real>();
                                 accrual = Null<Real>();
-                                notional = ptrCommCf->quantity(); // this is measured in units, e.g. barrels for oil
+                                notional = ptrCommCf->periodQuantity(); // this is measured in units, e.g. barrels for oil
                                 accrualStartDate = accrualEndDate = Null<Date>();
                                 accruedAmount = Null<Real>();
                                 flowType = "Notional (units)";
@@ -268,9 +271,22 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                     flowType = "BMAaverage";
                             } else if (ptrFloat) {
                                 fixingDate = ptrFloat->fixingDate();
-                                fixingValue = ptrFloat->index()->fixing(fixingDate);
+                                fixingValue = ptrFloat-> index()->fixing(fixingDate);
                                 if (fixingDate > asof)
                                     flowType = "InterestProjected";
+                                if (auto c = boost::dynamic_pointer_cast<QuantLib::IborCoupon>(ptrFloat)) {
+                                    fixingValue = (c->rate() - c->spread()) / c->gearing();
+                                }
+                                if (auto c = boost::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(ptrFloat)) {
+                                    fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
+                                                   c->underlying()->gearing();
+                                }
+                                if (auto sc = boost::dynamic_pointer_cast<QuantLib::StrippedCappedFlooredCoupon>(ptrFloat)) {
+                                    if (auto c = boost::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(sc->underlying())) {
+                                        fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
+                                                       c->underlying()->gearing();
+                                    }
+                                }
                                 // for ON coupons the fixing value is the compounded / averaged rate, not the last
                                 // single ON fixing
                                 if (auto on = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(ptrFloat)) {
@@ -306,8 +322,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                 fixingDate = ptrEqCp->fixingEndDate();
                                 fixingValue = ptrEqCp->equityCurve()->fixing(fixingDate);
                             } else if (ptrCommCf) {
-                                fixingDate = ptrCommCf->date();
-                                fixingValue = ptrCommCf->index()->fixing(ptrCommCf->pricingDate());
+                                fixingDate = ptrCommCf->lastPricingDate();
+                                fixingValue = ptrCommCf->fixing();
                             } else {
                                 fixingDate = Null<Date>();
                                 fixingValue = Null<Real>();
@@ -368,6 +384,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                     volFixingDate = tmp->underlying()->fixingDates().front();
                                     qlIndexName = tmp->index()->name();
                                     usesCapVol = true;
+                                    // for now we output the stripped caplet vol, not the effective one
+                                    // capVolatility = tmp->effectiveCapletVolatility();
+                                    // floorVolatility = tmp->effectiveFloorletVolatility();
                                 } else if (auto tmp =
                                                boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
@@ -375,6 +394,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                     volFixingDate = tmp->underlying()->fixingDates().front();
                                     qlIndexName = tmp->index()->name();
                                     usesCapVol = true;
+                                    // capVolatility = tmp->effectiveCapletVolatility();
+                                    // for now we output the stripped caplet vol, not the effective one
+                                    // floorVolatility = tmp->effectiveFloorletVolatility();
                                 }
 
                                 // get market volaility for cap / floor
@@ -388,7 +410,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                                     ->swaptionVol(IndexNameTranslator::instance().oreName(qlIndexName),
                                                                   configuration)
                                                     ->volatility(volFixingDate, swaptionTenor, floorStrike);
-                                        } else if (usesCapVol) {
+                                        } else if (usesCapVol && floorVolatility == Null<Real>()) {
                                             floorVolatility =
                                                 market
                                                     ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
@@ -403,7 +425,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                                     ->swaptionVol(IndexNameTranslator::instance().oreName(qlIndexName),
                                                                   configuration)
                                                     ->volatility(volFixingDate, swaptionTenor, capStrike);
-                                        } else if (usesCapVol) {
+                                        } else if (usesCapVol && capVolatility == Null<Real>()) {
                                             capVolatility =
                                                 market
                                                     ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
@@ -1026,12 +1048,9 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
     for (const auto& [tradeId, i] : tradeIds) {
 
         Real baseNpv = npvCube->getT0(i);
-        for (Size j = 0; j < scenarioDescriptions.size(); j++) {
+        for (const auto& [j, scenarioNpv] : npvCube->getTradeNPVs(i)) {
             auto scenarioDescription = scenarioDescriptions[j];
-
-            Real scenarioNpv = npvCube->get(i, j);
             Real difference = scenarioNpv - baseNpv;
-
             if (fabs(difference) > outputThreshold) {
                 report.next();
                 report.add(tradeId);
@@ -1555,12 +1574,13 @@ void ReportWriter::writeDividends(Report& report, const boost::shared_ptr<Loader
 
     LOG("Writing Dividends report");
 
-    report.addColumn("dividendDate", Date())
+    report.addColumn("dividendExDate", Date())
         .addColumn("equityId", string())
-        .addColumn("dividendRate", double(), 10);
+        .addColumn("dividendRate", double(), 10)
+        .addColumn("dividendPaymentDate", Date());
 
     for (const auto& f : loader->loadDividends()) {
-        report.next().add(f.date).add(f.name).add(f.fixing);
+        report.next().add(f.exDate).add(f.name).add(f.rate).add(f.payDate);
     }
 
     report.end();

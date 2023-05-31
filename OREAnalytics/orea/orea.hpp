@@ -7,6 +7,9 @@
 
 #include <orea/aggregation/collateralaccount.hpp>
 #include <orea/aggregation/collatexposurehelper.hpp>
+#include <orea/aggregation/creditmigrationcalculator.hpp>
+#include <orea/aggregation/creditmigrationhelper.hpp>
+#include <orea/aggregation/creditsimulationparameters.hpp>
 #include <orea/aggregation/cvaspreadsensitivitycalculator.hpp>
 #include <orea/aggregation/dimcalculator.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
@@ -18,6 +21,9 @@
 #include <orea/aggregation/staticcreditxvacalculator.hpp>
 #include <orea/aggregation/xvacalculator.hpp>
 #include <orea/app/analytic.hpp>
+#include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/analytics/varanalytic.hpp>
+#include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
@@ -48,7 +54,10 @@
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
+#include <orea/engine/historicalpnlgenerator.hpp>
+#include <orea/engine/historicalsensipnlcalculator.hpp>
 #include <orea/engine/mporcalculator.hpp>
+#include <orea/engine/multistatenpvcalculator.hpp>
 #include <orea/engine/multithreadedvaluationengine.hpp>
 #include <orea/engine/npvrecord.hpp>
 #include <orea/engine/observationmode.hpp>
@@ -72,14 +81,21 @@
 #include <orea/scenario/clonedscenariogenerator.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
+#include <orea/scenario/csvscenariogenerator.hpp>
 #include <orea/scenario/deltascenario.hpp>
 #include <orea/scenario/deltascenariofactory.hpp>
+#include <orea/scenario/historicalscenariofilereader.hpp>
+#include <orea/scenario/historicalscenariogenerator.hpp>
+#include <orea/scenario/historicalscenarioloader.hpp>
+#include <orea/scenario/historicalscenarioreader.hpp>
 #include <orea/scenario/lgmscenariogenerator.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/scenariofactory.hpp>
+#include <orea/scenario/scenariofilter.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariogeneratordata.hpp>
+#include <orea/scenario/scenarioshiftcalculator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/scenariosimmarketplus.hpp>

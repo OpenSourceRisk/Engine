@@ -24,6 +24,7 @@
 
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
+#include <orea/aggregation/creditsimulationparameters.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
@@ -92,7 +93,6 @@ public:
     void setMporDays(Size s) { mporDays_ = s; }
     void setMporCalendar(const std::string& s); 
     void setMporForward(bool b) { mporForward_ = b; }
-    void setIncludeMporExpired(bool b) { includeMporExpired_ = b; }
 
     // Setters for npv analytics
     void setOutputAdditionalResults(bool b) { outputAdditionalResults_ = b; }
@@ -147,7 +147,8 @@ public:
     void setCovarianceDataFromFile(const std::string& fileName);
     void setSensitivityStreamFromFile(const std::string& fileName);
 
-    // Setters for exposure simulation 
+    // Setters for exposure simulation
+    void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
     void setAmc(bool b) { amc_ = b; }
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
     void setExposureBaseCurrency(const std::string& s) { exposureBaseCurrency_ = s; } 
@@ -155,6 +156,7 @@ public:
     void setNettingSetId(const std::string& s) { nettingSetId_ = s; }
     void setScenarioGenType(const std::string& s) { scenarioGenType_ = s; }
     void setStoreFlows(bool b) { storeFlows_ = b; }
+    void setStoreCreditStateNPVs(Size states) { storeCreditStateNPVs_ = states; }
     void setStoreSurvivalProbabilities(bool b) { storeSurvivalProbabilities_ = b; }
     void setWriteCube(bool b) { writeCube_ = b; }
     void setWriteScenarios(bool b) { writeScenarios_ = b; }
@@ -222,6 +224,9 @@ public:
     void setFvaLendingCurve(const std::string& s) { fvaLendingCurve_ = s; }
     void setFlipViewBorrowingCurvePostfix(const std::string& s) { flipViewBorrowingCurvePostfix_ = s; }
     void setFlipViewLendingCurvePostfix(const std::string& s) { flipViewLendingCurvePostfix_ = s; }
+    // deterministic initial margin input by netting set
+    void setDeterministicInitialMargin(const std::string& n, TimeSeries<Real> v) { deterministicInitialMargin_[n] = v; }
+    void setDeterministicInitialMarginFromFile(const std::string& fileName);
     // dynamic initial margin details
     void setDimQuantile(Real r) { dimQuantile_ = r; }
     void setDimHorizonCalendarDays(Size s) { dimHorizonCalendarDays_ = s; }
@@ -240,6 +245,15 @@ public:
     void setKvaTheirPdFloor(Real r) { kvaTheirPdFloor_ = r; }
     void setKvaOurCvaRiskWeight(Real r) { kvaOurCvaRiskWeight_ = r; }
     void setKvaTheirCvaRiskWeight(Real r) { kvaTheirCvaRiskWeight_ = r; }
+    // credit simulation
+    void setCreditMigrationAnalytic(bool b) { creditMigrationAnalytic_ = b; }
+    void setCreditMigrationDistributionGrid(const std::vector<Real>& grid) { creditMigrationDistributionGrid_ = grid; }
+    void setCreditMigrationTimeSteps(const std::vector<Size>& ts) { creditMigrationTimeSteps_ = ts; }
+    void setCreditSimulationParameters(const boost::shared_ptr<CreditSimulationParameters>& c) {
+        creditSimulationParameters_ = c;
+    }
+    void setCreditSimulationParametersFromFile(const std::string& fileName);
+    void setCreditMigrationOutputFiles(const std::string& s) { creditMigrationOutputFiles_ = s; }
     // Setters for cashflow npv and dynamic backtesting
     void setCashflowHorizon(const std::string& s); // parse to Date
     void setPortfolioFilterDate(const std::string& s); // parse to Date
@@ -253,6 +267,7 @@ public:
     const QuantLib::Date& asof() { return asof_; }
     const boost::filesystem::path& resultsPath() const { return resultsPath_; }
     const std::string& baseCurrency() { return baseCurrency_; }
+    const std::string& resultCurrency() { return resultCurrency_; }
     bool continueOnError() { return continueOnError_; }
     bool lazyMarketBuilding() { return lazyMarketBuilding_; }
     bool buildFailedTrades() { return buildFailedTrades_; }
@@ -267,6 +282,8 @@ public:
     const boost::shared_ptr<ore::data::EngineData>& pricingEngine() { return pricingEngine_; }
     const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams() { return todaysMarketParams_; }
     const boost::shared_ptr<ore::data::Portfolio>& portfolio() { return portfolio_; }
+
+    QuantLib::Size maxRetries() const { return maxRetries_; }
     QuantLib::Size nThreads() const { return nThreads_; }
     bool entireMarket() { return entireMarket_; }
     bool allFixings() { return allFixings_; }
@@ -287,7 +304,6 @@ public:
             return mporCalendar_;
     }
     bool mporForward() { return mporForward_; }
-    bool includeMporExpired() const { return includeMporExpired_; };
 
     /***************************
      * Getters for npv analytics
@@ -345,7 +361,8 @@ public:
     
     /*********************************
      * Getters for exposure simulation 
-     *********************************/    
+     *********************************/
+    bool salvageCorrelationMatrix() { return salvageCorrelationMatrix_; }
     bool amc() { return amc_; }
     const std::set<std::string>& amcTradeTypes() { return amcTradeTypes_; }
     const std::string& exposureBaseCurrency() { return exposureBaseCurrency_; }
@@ -353,6 +370,7 @@ public:
     const std::string& nettingSetId() { return nettingSetId_; }
     const std::string& scenarioGenType() { return scenarioGenType_; }
     bool storeFlows() { return storeFlows_; }
+    Size storeCreditStateNPVs() { return storeCreditStateNPVs_; }
     bool storeSurvivalProbabilities() { return storeSurvivalProbabilities_; }
     bool writeCube() { return writeCube_; }
     bool writeScenarios() { return writeScenarios_; }
@@ -370,10 +388,10 @@ public:
      *****************/
     const std::string& xvaBaseCurrency() { return xvaBaseCurrency_; }
     bool loadCube() { return loadCube_; }
-    boost::shared_ptr<NPVCube> cube() { return cube_; }
-    boost::shared_ptr<NPVCube> nettingSetCube() { return nettingSetCube_; }
-    boost::shared_ptr<NPVCube> cptyCube() { return cptyCube_; }
-    boost::shared_ptr<AggregationScenarioData> mktCube() { return mktCube_; }
+    const boost::shared_ptr<NPVCube>& cube() { return cube_; }
+    const boost::shared_ptr<NPVCube>& nettingSetCube() { return nettingSetCube_; }
+    const boost::shared_ptr<NPVCube>& cptyCube() { return cptyCube_; }
+    const boost::shared_ptr<AggregationScenarioData>& mktCube() { return mktCube_; }
     bool flipViewXVA() { return flipViewXVA_; }
     bool fullInitialCollateralisation() { return fullInitialCollateralisation_; }
     bool exposureProfiles() { return exposureProfiles_; }
@@ -405,6 +423,13 @@ public:
     const std::string& fvaLendingCurve() { return fvaLendingCurve_; }
     const std::string& flipViewBorrowingCurvePostfix() { return flipViewBorrowingCurvePostfix_; }
     const std::string& flipViewLendingCurvePostfix() { return flipViewLendingCurvePostfix_; }
+    // deterministic initial margin input by nettingset
+    TimeSeries<Real> deterministicInitialMargin(const std::string& n) {
+        if (deterministicInitialMargin_.find(n) != deterministicInitialMargin_.end())
+            return deterministicInitialMargin_.at(n);
+        else
+            return TimeSeries<Real>();
+    }
     // dynamic initial margin details
     Real dimQuantile() { return dimQuantile_; }
     Size dimHorizonCalendarDays() { return dimHorizonCalendarDays_; }
@@ -423,6 +448,12 @@ public:
     Real kvaTheirPdFloor() { return kvaTheirPdFloor_; }
     Real kvaOurCvaRiskWeight() { return kvaOurCvaRiskWeight_; }
     Real kvaTheirCvaRiskWeight() { return kvaTheirCvaRiskWeight_; }
+    // credit simulation details
+    bool creditMigrationAnalytic() const { return creditMigrationAnalytic_; }
+    const std::vector<Real>& creditMigrationDistributionGrid() const { return creditMigrationDistributionGrid_; }
+    std::vector<Size> creditMigrationTimeSteps() const { return creditMigrationTimeSteps_; }
+    const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters() const { return creditSimulationParameters_; }
+    const std::string& creditMigrationOutputFiles() const { return creditMigrationOutputFiles_; }
     
     /**************************************************
      * Getters for cashflow npv and dynamic backtesting
@@ -458,6 +489,7 @@ protected:
     QuantLib::Date asof_;
     boost::filesystem::path resultsPath_;
     std::string baseCurrency_;
+    std::string resultCurrency_;
     bool continueOnError_ = true;
     bool lazyMarketBuilding_ = true;
     bool buildFailedTrades_ = true;
@@ -471,7 +503,9 @@ protected:
     boost::shared_ptr<ore::data::EngineData> pricingEngine_;
     boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     boost::shared_ptr<ore::data::Portfolio> portfolio_;
-    QuantLib::Size nThreads_ = 1;   
+    QuantLib::Size maxRetries_ = 7;
+    QuantLib::Size nThreads_ = 1;
+   
     bool entireMarket_ = false; 
     bool allFixings_ = false; 
     bool eomInflationFixings_ = true;
@@ -485,7 +519,6 @@ protected:
     QuantLib::Size mporDays_ = 10;
     QuantLib::Calendar mporCalendar_;
     bool mporForward_ = true;
-    bool includeMporExpired_ = true;
 
     /**************
      * NPV analytic
@@ -512,7 +545,7 @@ protected:
     bool outputJacobi_ = false;
     bool alignPillars_ = false;
     bool useSensiSpreadedTermStructures_ = true;
-    QuantLib::Real sensiThreshold_ = 0.0;
+    QuantLib::Real sensiThreshold_ = 1e-6;
     boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensiSimMarketParams_;
     boost::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     boost::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
@@ -543,7 +576,7 @@ protected:
     /*******************
      * EXPOSURE analytic
      *******************/
-    // bool simulation_ = false;
+    bool salvageCorrelationMatrix_ = false;
     bool amc_ = false;
     std::set<std::string> amcTradeTypes_;
     std::string exposureBaseCurrency_ = "";
@@ -551,6 +584,7 @@ protected:
     std::string nettingSetId_ = "";
     std::string scenarioGenType_ = "";
     bool storeFlows_ = false;
+    Size storeCreditStateNPVs_ = 0;
     bool storeSurvivalProbabilities_ = false;
     bool writeCube_ = false;
     bool writeScenarios_ = false;
@@ -564,7 +598,7 @@ protected:
     bool exposureProfilesByTrade_ = true;
     Real pfeQuantile_ = 0.95;
     bool fullInitialCollateralisation_ = false;
-    std::string collateralCalculationType_ = "Symmetric";
+    std::string collateralCalculationType_ = "NoLag";
     std::string exposureAllocationMethod_ = "None";
     Real marginalAllocationLimit_ = 1.0;
     // intermediate results of the exposure simulation, before aggregation
@@ -600,6 +634,8 @@ protected:
     std::string fvaLendingCurve_ = "";    
     std::string flipViewBorrowingCurvePostfix_ = "_BORROW";
     std::string flipViewLendingCurvePostfix_ = "_LEND";
+    // deterministic initial margin by netting set
+    std::map<std::string,TimeSeries<Real>> deterministicInitialMargin_;
     // dynamic initial margin details
     Real dimQuantile_ = 0.99;
     Size dimHorizonCalendarDays_ = 14;
@@ -618,7 +654,12 @@ protected:
     Real kvaTheirPdFloor_ = 0.03;
     Real kvaOurCvaRiskWeight_ = 0.05;
     Real kvaTheirCvaRiskWeight_ = 0.05;
-
+    // credit simulation details
+    bool creditMigrationAnalytic_ = false;
+    std::vector<Real> creditMigrationDistributionGrid_;
+    std::vector<Size> creditMigrationTimeSteps_;
+    boost::shared_ptr<CreditSimulationParameters> creditSimulationParameters_;
+    std::string creditMigrationOutputFiles_;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {

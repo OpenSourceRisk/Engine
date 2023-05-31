@@ -1,7 +1,9 @@
 \subsubsection{Commodity Swap and Basis Swap}
 \label{ss:input_commodityswap}
 
-The structure of a \lstinline!CommoditySwap! trade node is shown in listing \ref{lst:commodityswap_data}. This trade node can be used to represent commodity swaps and commodity basis swaps. It consists of the generic \lstinline!Envelope! and the specific \lstinline!SwapData! section. The \lstinline!SwapData! node may contain two or more \lstinline!LegData! nodes. Each \lstinline!LegData! node must have a \lstinline!LegType! of \lstinline!CommodityFixed! or \lstinline!CommodityFloating!. These leg types are described in sections \ref{ss:commodityfixedleg} and \ref{ss:commodityfloatingleg} respectively.
+The structure of a \lstinline!CommoditySwap! trade node is shown in listing \ref{lst:commodityswap_data}. This trade node can be used to represent commodity swaps and commodity basis swaps. It consists of the generic \lstinline!Envelope! and the specific \lstinline!SwapData! section. 
+
+The \lstinline!SwapData! node may contain two or more \lstinline!LegData! nodes. There must be at least one \lstinline!LegData! node of a commodity  \lstinline!LegType!, i.e. \lstinline!CommodityFixed! or \lstinline!CommodityFloating!, but non-commodity leg types are also allowed. The commodity leg types are described in sections \ref{ss:commodityfixedleg} and \ref{ss:commodityfloatingleg} respectively.
 
 \begin{listing}[h!]
 \begin{minted}[fontsize=\footnotesize]{xml}

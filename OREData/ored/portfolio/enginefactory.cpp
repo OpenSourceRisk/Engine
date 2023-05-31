@@ -62,20 +62,56 @@ std::string EngineBuilder::modelParameter(const std::string& p, const std::vecto
     return getParameter(modelParameters_, p, qualifiers, mandatory, defaultValue);
 }
 
-void EngineBuilderFactory::addEngineBuilder(const std::function<boost::shared_ptr<EngineBuilder>()>& builder) {
+void EngineBuilderFactory::addEngineBuilder(const std::function<boost::shared_ptr<EngineBuilder>()>& builder,
+                                            const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    auto tmp = builder();
+    auto key = make_tuple(tmp->model(), tmp->engine(), tmp->tradeTypes());
+    auto it = std::remove_if(engineBuilderBuilders_.begin(), engineBuilderBuilders_.end(),
+                             [&key](std::function<boost::shared_ptr<EngineBuilder>()>& b) {
+                                 auto tmp = b();
+                                 return key == std::make_tuple(tmp->model(), tmp->engine(), tmp->tradeTypes());
+                             });
+    QL_REQUIRE(it == engineBuilderBuilders_.end() || allowOverwrite,
+               "EngineBuilderFactory::addEngineBuilder(" << tmp->model() << "/" << tmp->engine() << "/"
+                                                         << boost::algorithm::join(tmp->tradeTypes(), ",")
+                                                         << "): builder for given key already exists.");
+    engineBuilderBuilders_.erase(it, engineBuilderBuilders_.end());
     engineBuilderBuilders_.push_back(builder);
 }
 
 void EngineBuilderFactory::addAmcEngineBuilder(
     const std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                                                         const std::vector<Date>& grid)>& builder) {
+                                                         const std::vector<Date>& grid)>& builder,
+    const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    auto tmp = builder(nullptr, {});
+    auto key = make_tuple(tmp->model(), tmp->engine(), tmp->tradeTypes());
+    auto it = std::remove_if(
+        amcEngineBuilderBuilders_.begin(), amcEngineBuilderBuilders_.end(),
+        [&key](std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                                              const std::vector<Date>& grid)>& b) {
+            auto tmp = b(nullptr, {});
+            return key == std::make_tuple(tmp->model(), tmp->engine(), tmp->tradeTypes());
+        });
+    QL_REQUIRE(it == amcEngineBuilderBuilders_.end() || allowOverwrite,
+               "EngineBuilderFactory::addAmcEngineBuilder(" << tmp->model() << "/" << tmp->engine() << "/"
+                                                            << boost::algorithm::join(tmp->tradeTypes(), ",")
+                                                            << "): builder for given key already exists.");
+    amcEngineBuilderBuilders_.erase(it, amcEngineBuilderBuilders_.end());
     amcEngineBuilderBuilders_.push_back(builder);
 }
 
-void EngineBuilderFactory::addLegBuilder(const std::function<boost::shared_ptr<LegBuilder>()>& builder) {
+void EngineBuilderFactory::addLegBuilder(const std::function<boost::shared_ptr<LegBuilder>()>& builder,
+                                         const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    auto key = builder()->legType();
+    auto it =
+        std::remove_if(legBuilderBuilders_.begin(), legBuilderBuilders_.end(),
+                       [&key](std::function<boost::shared_ptr<LegBuilder>()>& b) { return key == b()->legType(); });
+    QL_REQUIRE(it == legBuilderBuilders_.end() || allowOverwrite,
+               "EngineBuilderFactory::addLegBuilder(" << key << "): builder for given key already exists.");
+    legBuilderBuilders_.erase(it, legBuilderBuilders_.end());
     legBuilderBuilders_.push_back(builder);
 }
 
@@ -123,7 +159,7 @@ void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& buil
     const string& modelName = builder->model();
     const string& engineName = builder->engine();
     auto key = make_tuple(modelName, engineName, builder->tradeTypes());
-    if(allowOverwrite)
+    if (allowOverwrite)
         builders_.erase(key);
     QL_REQUIRE(builders_.insert(make_pair(key, builder)).second,
                "EngineFactory: duplicate engine builder for (" << modelName << "/" << engineName << "/"
@@ -160,7 +196,7 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
 }
 
 void EngineFactory::registerLegBuilder(const boost::shared_ptr<LegBuilder>& legBuilder, const bool allowOverwrite) {
-    if(allowOverwrite)
+    if (allowOverwrite)
         legBuilders_.erase(legBuilder->legType());
     QL_REQUIRE(legBuilders_.insert(make_pair(legBuilder->legType(), legBuilder)).second,
                "EngineFactory duplicate leg builder for '" << legBuilder->legType()

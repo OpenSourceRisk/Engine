@@ -61,7 +61,6 @@ protected:
 };
 
 class DiscountingForwardBondEngineBuilder : public fwdBondEngineBuilder {
-    ORE_REGISTER_ENGINE_BUILDER(DiscountingForwardBondEngineBuilder)
 public:
     DiscountingForwardBondEngineBuilder()
         : fwdBondEngineBuilder("DiscountedCashflows", "DiscountingForwardBondEngine") {}

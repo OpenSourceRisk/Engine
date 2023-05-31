@@ -118,6 +118,7 @@ public:
         CORRELATION,
         COMMODITY_OPTION,
         CPR,
+        RATING,
         NONE
     };
 
@@ -136,6 +137,7 @@ public:
         RATE_SLNVOL,
         BASE_CORRELATION,
         SHIFT,
+        TRANSITION_PROBABILITY,
         NONE
     };
 
@@ -1188,7 +1190,7 @@ public:
 
         Strike s = parseStrike(strike);
         QL_REQUIRE(s.type == Strike::Type::DeltaCall || s.type == Strike::Type::DeltaPut ||
-                       s.type == Strike::Type::ATM || s.type == Strike::Type::BF || s.type == Strike::Type::RR,
+                       s.type == Strike::Type::ATM || s.type == Strike::Type::BF || s.type == Strike::Type::RR || s.type == Strike::Type::Absolute,
                    "Unsupported FXOptionQuote strike (" << strike << ")");
     }
 
@@ -1926,6 +1928,30 @@ private:
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
+//! Transition Probability data class
+class TransitionProbabilityQuote : public MarketDatum {
+public:
+    TransitionProbabilityQuote() {}
+    TransitionProbabilityQuote(Real value, Date asofDate, const string& name, const string& id,
+                               const string& fromRating, const string& toRating)
+        : MarketDatum(value, asofDate, name, QuoteType::TRANSITION_PROBABILITY, InstrumentType::RATING), id_(id),
+          fromRating_(fromRating), toRating_(toRating) {}
+
+    //! \name Inspectors
+    //@{
+    const string& id() const { return id_; }
+    const string& fromRating() const { return fromRating_; }
+    const string& toRating() const { return toRating_; }
+    //@}
+private:
+    string id_;
+    string fromRating_;
+    string toRating_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
 } // namespace data
 } // namespace ore
 
@@ -1972,3 +1998,4 @@ BOOST_CLASS_EXPORT_KEY(ore::data::CommodityOptionQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::CorrelationQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::CPRQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondPriceQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::TransitionProbabilityQuote);

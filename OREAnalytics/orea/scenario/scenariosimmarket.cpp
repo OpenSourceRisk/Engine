@@ -25,6 +25,8 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <qle/termstructures/credit/basecorrelationstructure.hpp>
+#include <qle/termstructures/proxyoptionletvolatility.hpp>
+#include <qle/termstructures/proxyswaptionvolatility.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
@@ -319,8 +321,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                    parameters_->defaultCurveExtrapolation() == "FlatFwd",
                "ScenarioSimMarket: DefaultCurves / Extrapolation ('" << parameters_->extrapolation()
                                                                      << "') must be set to 'FlatZero' or 'FlatFwd'");
-
-    const SmileDynamicsConfig& smileDynamics = curveConfigs.smileDynamicsConfig();
 
     for (const auto& param : parameters->parameters()) {
         try {
@@ -751,23 +751,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DayCounter dc = wrapper->dayCounter();
                 
 			    if (useSpreadedTermStructures_) {
-			        string smileDynamicsType;
-				boost::shared_ptr<SwaptionVolatilityCurveConfig> config;
-				if (curveConfigs.hasSwaptionVolCurveConfig(name))
-			            config = curveConfigs.swaptionVolCurveConfig(name);
-				if (config && config->smileDynamics() != "") {
-				    smileDynamicsType = config->smileDynamics();
-				    LOG("Using swaption smile dynamics " << smileDynamicsType << " from vol curve config " << name);
-				}
-				else {
-				    smileDynamicsType = smileDynamics.swaption();
-				    string text = !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
-				    LOG("Using swaption smile dynamics " << smileDynamicsType << " from global config for name " << name << ", " << text);
-				}
-				bool stickyAbsMoney = smileDynamicsType == "StickyMoneyness" ? true : false;
+                                bool stickyStrike = parameters_->swapVolSmileDynamics(name) == "StickyStrike";
                                 boost::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
                                 boost::shared_ptr<SwapIndex> simSwapIndex, simShortSwapIndex;
-                                if (stickyAbsMoney) {
+                                if (!stickyStrike) {
                                     if (addSwapIndexToSsm(swapIndexBase, continueOnError)) {
                                         simSwapIndex = *this->swapIndex(swapIndexBase, configuration);
                                     }
@@ -775,7 +762,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         simShortSwapIndex = *this->swapIndex(shortSwapIndexBase, configuration);
                                     }
                                     if (simSwapIndex == nullptr || simShortSwapIndex == nullptr)
-                                        stickyAbsMoney = false;
+                                        stickyStrike = true;
                                 }
                                 if(!swapIndexBase.empty())
                                     swapIndex = *initMarket->swapIndex(swapIndexBase, configuration);
@@ -784,7 +771,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 svp =
                                     Handle<SwaptionVolatilityStructure>(boost::make_shared<SpreadedSwaptionVolatility>(
                                         wrapper, optionTenors, underlyingTenors, strikeSpreads, quotes, swapIndex,
-                                        shortSwapIndex, simSwapIndex, simShortSwapIndex, stickyAbsMoney));
+                                        shortSwapIndex, simSwapIndex, simShortSwapIndex, !stickyStrike));
                             } else {
                                 Handle<SwaptionVolatilityStructure> atm;
                                 atm = Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolatilityMatrix>(
@@ -823,11 +810,24 @@ ScenarioSimMarket::ScenarioSimMarket(
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
                             DLOG("Dynamic (" << wrapper->volatilityType() << ") yield vols (" << decayModeString
                                             << ") for qualifier " << name);
+
+                            QL_REQUIRE(!boost::dynamic_pointer_cast<ProxySwaptionVolatility>(*wrapper),
+                                "DynamicSwaptionVolatilityMatrix does not support ProxySwaptionVolatility surface");
+
+                            boost::shared_ptr<SwaptionVolatilityStructure> atmSlice;
+                            if (isAtm)
+                                atmSlice = *wrapper;
+                            else {
+                                auto c = boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*wrapper);
+                                QL_REQUIRE(c, "internal error - expected swaption cube to be SwaptionVolCubeWithATM.");
+                                atmSlice = *c->cube()->atmVol();
+                            }
+
                             if (isCube)
                                 WLOG("Only ATM slice is considered from init market's cube");
                             boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svolp =
                                 boost::make_shared<QuantExt::DynamicSwaptionVolatilityMatrix>(
-                                    *wrapper, 0, NullCalendar(), decayMode);
+                                    atmSlice, 0, NullCalendar(), decayMode);
                             svp = Handle<SwaptionVolatilityStructure>(svolp);
                         }
 
@@ -1064,6 +1064,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                         } else {
                             string decayModeString = parameters->capFloorVolDecayMode();
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+
+                            QL_REQUIRE(!boost::dynamic_pointer_cast<ProxyOptionletVolatility>(*wrapper), 
+                                "DynamicOptionletVolatilityStructure does not support ProxyOptionletVolatility surface.");
+
                             boost::shared_ptr<OptionletVolatilityStructure> capletVol =
                                 boost::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(),
                                                                                         decayMode);
@@ -1188,9 +1192,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                         LOG("building " << name << "  cds vols..");
                         Handle<QuantExt::CreditVolCurve> wrapper = initMarket->cdsVol(name, configuration);
                         Handle<QuantExt::CreditVolCurve> cvh;
+                        bool stickyStrike = parameters_->cdsVolSmileDynamics(name) == "StickyStrike";
                         if (param.second.first) {
                             LOG("Simulating CDS Vols for " << name);
                             vector<Handle<Quote>> quotes;
+                            vector<Volatility> vols;
                             vector<Time> times;
                             vector<Date> expiryDates;
                             DayCounter dc = wrapper->dayCounter();
@@ -1199,6 +1205,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 expiryDates.push_back(date);
                                 // hardcoded, single term 5y
                                 Volatility vol = wrapper->volatility(date, 5.0, Null<Real>(), wrapper->type());
+                                vols.push_back(vol);
                                 times.push_back(dc.yearFraction(asof_, date));
                                 boost::shared_ptr<SimpleQuote> q =
                                     boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : vol);
@@ -1216,24 +1223,20 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
-                            if (useSpreadedTermStructures_) {
-                                string smileDynamicsType;
-                                boost::shared_ptr<CDSVolatilityCurveConfig> config;
-                                if (curveConfigs.hasCdsVolCurveConfig(name))
-                                    config = curveConfigs.cdsVolCurveConfig(name);
-                                if (config && config->smileDynamics() != "") {
-                                    smileDynamicsType = config->smileDynamics();
-                                    LOG("Using cds smile dynamics " << smileDynamicsType << " from vol curve config "
-                                                                    << name);
+                            if (useSpreadedTermStructures_ ||
+                                (!useSpreadedTermStructures_ && parameters->simulateCdsVolATMOnly())) {
+                                std::vector<Handle<Quote>> spreads;
+                                if (parameters_->simulateCdsVolATMOnly()) {
+                                    for (size_t i = 0; i < quotes.size(); i++) {
+                                        Handle<Quote> atmVol(boost::make_shared<SimpleQuote>(quotes[i]->value()));
+                                        Handle<Quote> quote(boost::make_shared <
+                                                            CompositeQuote<std::minus<double>>>(quotes[i], atmVol,
+                                                                                               std::minus<double>()));
+                                        spreads.push_back(quote);
+                                    }
                                 } else {
-                                    smileDynamicsType = smileDynamics.cds();
-                                    string text =
-                                        !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
-                                    LOG("Using cds smile dynamics " << smileDynamicsType
-                                                                    << " from global config for name " << name << ", "
-                                                                    << text);
+                                    spreads = quotes;
                                 }
-                                bool stickyMoney = smileDynamicsType == "StickyMoneyness" ? true : false;
                                 std::vector<QuantLib::Period> simTerms;
                                 std::vector<Handle<CreditCurve>> simTermCurves;
                                 if (curveConfigs.hasCdsVolCurveConfig(name)) {
@@ -1250,7 +1253,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     }
                                 }
                                 cvh = Handle<CreditVolCurve>(boost::make_shared<SpreadedCreditVolCurve>(
-                                    wrapper, expiryDates, quotes, stickyMoney, simTerms, simTermCurves));
+                                    wrapper, expiryDates, spreads, !stickyStrike, simTerms, simTermCurves));
                             } else {
                                 // TODO support strike and term dependence
                                 cvh = Handle<CreditVolCurve>(boost::make_shared<CreditVolCurveWrapper>(
@@ -1269,7 +1272,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
                                         Handle<BlackVolTermStructure>(
                                             boost::make_shared<BlackVolFromCreditVolWrapper>(wrapper, 5.0)),
-                                        0, NullCalendar(), decayMode, StickyStrike))));
+                                        0, NullCalendar(), decayMode,
+                                        stickyStrike ? StickyStrike : StickyLogMoneyness))));
                         }
 
                         if (wrapper->allowsExtrapolation())
@@ -1306,6 +1310,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                                  << "' from FX volatility curve config for " << name);
                         }
                         Handle<BlackVolTermStructure> fvh;
+
+                        bool stickyStrike = parameters_->fxVolSmileDynamics(name) == "StickyStrike";
 
                         if (param.second.first) {
                             LOG("Simulating FX Vols for " << name);
@@ -1369,20 +1375,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 Size n = strikes.size();
                                 quotes.resize(n, vector<Handle<Quote>>(m, Handle<Quote>()));
 
-			        string smileDynamicsType;
-				boost::shared_ptr<FXVolatilityCurveConfig> config;
-				if (curveConfigs.hasFxVolCurveConfig(name))
-			            config = curveConfigs.fxVolCurveConfig(name);
-				if (config && config->smileDynamics() != "") {
-				    smileDynamicsType = config->smileDynamics();
-				    LOG("Using fx smile dynamics " << smileDynamicsType << " from vol curve config " << name);
-				}
-				else {
-				    smileDynamicsType = smileDynamics.fx();
-				    string text = !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
-				    LOG("Using fx smile dynamics " << smileDynamicsType << " from global config for name " << name << ", " << text);
-				}
-			        bool stickyStrike = smileDynamicsType == "StickyStrike" ? true : false;
                                 // hardcode this for now
                                 bool flatExtrapolation = true;
 
@@ -1492,8 +1484,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         } else {
                                             fxVolCurve = boost::make_shared<BlackVarianceSurfaceStdDevs>(
                                                 cal, spot, times, parameters->fxVolStdDevs(name), quotes, dc,
-                                                fxInd.currentLink(),
-                                                stickyStrike, flatExtrapolation);
+                                                fxInd.currentLink(), stickyStrike, flatExtrapolation);
                                         }
                                     }
                                 }                            
@@ -1557,7 +1548,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                             // that define the ATM level - to be revisited when FX surfaces are supported
                             fvh = Handle<BlackVolTermStructure>(
                                 boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
-                                    wrapper, 0, NullCalendar(), decayMode, StickyStrike));
+                                    wrapper, 0, NullCalendar(), decayMode,
+                                    stickyStrike ? StickyStrike : StickyLogMoneyness));
                         }
 
                         fvh->enableExtrapolation();
@@ -1585,6 +1577,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<BlackVolTermStructure> wrapper = initMarket->equityVol(name, configuration);
                         Handle<BlackVolTermStructure> evh;
 
+                        bool stickyStrike = parameters_->equityVolSmileDynamics(name) == "StickyStrike";
                         if (param.second.first) {
                             auto eqCurve = equityCurve(name, Market::defaultConfiguration);
                             Handle<Quote> spot = eqCurve->equitySpot();
@@ -1623,24 +1616,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 Size n = strikes.size();
                                 quotes.resize(n, vector<Handle<Quote>>(m, Handle<Quote>()));
 
-				// If true, the strikes are fixed, if false they move with the spot handle
-				// Should probably be false, but some people like true for sensi runs.
-				string smileDynamicsType;
-				boost::shared_ptr<EquityVolatilityCurveConfig> config;
-				if (curveConfigs.hasEquityVolCurveConfig(name))
-				    config = curveConfigs.equityVolCurveConfig(name);
-				if (config && config->smileDynamics() != "") {
-				    smileDynamicsType = config->smileDynamics();
-				    LOG("Using equity smile dynamics " << smileDynamicsType << " from vol curve config " << name);
-				}
-				else {
-				    smileDynamicsType = smileDynamics.equity();
-				    string text = !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
-				    LOG("Using equity smile dynamics " << smileDynamicsType << " from global config for name " << name << ", " << text);
-				}
-				bool stickyStrike = smileDynamicsType == "StickyStrike" ? true : false;
-				
-				if (parameters->equityUseMoneyness(name)) { // moneyness surface
+                                if (parameters->equityUseMoneyness(name)) { // moneyness surface
                                     for (Size j = 0; j < m; j++) {
                                         for (Size i = 0; i < n; i++) {
                                             Real mon = strikes[i];
@@ -1811,7 +1787,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                             // that define the ATM level - to be revisited when EQ surfaces are supported
                             evh = Handle<BlackVolTermStructure>(
                                 boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
-                                    wrapper, 0, NullCalendar(), decayMode, StickyStrike));
+                                    wrapper, 0, NullCalendar(), decayMode,
+                                    stickyStrike ? StickyStrike : StickyLogMoneyness));
                         }
                         if (wrapper->allowsExtrapolation())
                             evh->enableExtrapolation();
@@ -2001,14 +1978,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                         } else {
                             zeroCurve = boost::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
                                 0, inflationIndex->fixingCalendar(), dc, inflationTs->observationLag(),
-                                inflationTs->frequency(), inflationIndex->interpolated(), zeroCurveTimes, quotes,
+                                inflationTs->frequency(), false, zeroCurveTimes, quotes,
                                 inflationTs->seasonality());
                         }
 
                         Handle<ZeroInflationTermStructure> its(zeroCurve);
                         its->enableExtrapolation();
                         boost::shared_ptr<ZeroInflationIndex> i =
-                            parseZeroInflationIndex(name, false, Handle<ZeroInflationTermStructure>(its));
+                            parseZeroInflationIndex(name, Handle<ZeroInflationTermStructure>(its));
                         Handle<ZeroInflationIndex> zh(i);
                         zeroInflationIndices_.insert(pair<pair<string, string>, Handle<ZeroInflationIndex>>(
                             make_pair(Market::defaultConfiguration, name), zh));
@@ -2362,6 +2339,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<BlackVolTermStructure> baseVol = initMarket->commodityVolatility(name, configuration);
 
                         Handle<BlackVolTermStructure> newVol;
+                        bool stickyStrike = parameters_->commodityVolSmileDynamics(name) == "StickyStrike";
                         if (param.second.first) {
 
                             // Check and reorg moneyness and/or expiries to simplify subsequent code.
@@ -2474,22 +2452,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             } else {
 			        DLOG("Ssm comm vol for " << name << " uses BlackVarianceSurfaceMoneynessSpot.");
 
-			        string smileDynamicsType;
-				boost::shared_ptr<CommodityVolatilityConfig> config;
-				if (curveConfigs.hasCommodityVolatilityConfig(name))
-			            config = curveConfigs.commodityVolatilityConfig(name);
-				if (config && config->smileDynamics() != "") {
-				    smileDynamicsType = config->smileDynamics();
-				    LOG("Using commodity smile dynamics " << smileDynamicsType << " from vol curve config " << name);
-				}
-				else {
-				    smileDynamicsType = smileDynamics.commodity();
-				    string text = !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
-				    LOG("Using commodity smile dynamics " << smileDynamicsType << " from global config for name " << name << ", " << text);
-				}
-				bool stickyStrike = smileDynamicsType == "StickyStrike" ? true : false;
-
-				bool flatExtrapMoneyness = true;
+                                bool flatExtrapMoneyness = true;
                                 Handle<Quote> spot(boost::make_shared<SimpleQuote>(priceCurve->price(0)));
                                 if (useSpreadedTermStructures_) {
                                     // get init market curves to populate sticky ts in vol surface ctor
@@ -2522,7 +2485,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                             // May need to revisit when looking at commodity RFE
                             newVol = Handle<BlackVolTermStructure>(
                                 boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
-                                    baseVol, 0, NullCalendar(), decayMode, StickyStrike));
+                                    baseVol, 0, NullCalendar(), decayMode,
+                                    stickyStrike ? StickyStrike : StickyLogMoneyness));
                         }
 
                         newVol->enableExtrapolation(baseVol->allowsExtrapolation());
@@ -2644,6 +2608,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                 }
                 break;
 
+            case RiskFactorKey::KeyType::SurvivalWeight:
+                // nothing to do, these are written to asd
+                break;
+
+            case RiskFactorKey::KeyType::CreditState:
+                // nothing to do, these are written to asd
+                break;
+
             case RiskFactorKey::KeyType::None:
                 WLOG("RiskFactorKey None not yet implemented");
                 break;
@@ -2730,6 +2702,8 @@ void ScenarioSimMarket::reset() {
 
 void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenario) {
 
+    currentScenario_ = scenario;
+
     // apply scenario based on cached indices for simData_ for a SimpleScenario
     // this assumes that all scenarios have an identical key structure in their data map
 
@@ -2743,7 +2717,7 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
                 for (auto const& d : s->data()) {
                     auto it = simData_.find(d.first);
                     if (it == simData_.end()) {
-                        ALOG("simulation data point missing for key " << d.first);
+                        WLOG("simulation data point missing for key " << d.first);
                         cachedSimData_.push_back(boost::shared_ptr<SimpleQuote>());
                         cachedSimDataActive_.push_back(false);
                     } else {
@@ -2786,7 +2760,7 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
         // scenario
         auto it = simData_.find(key);
         if (it == simData_.end()) {
-            ALOG("simulation data point missing for key " << key);
+            WLOG("simulation data point missing for key " << key);
         } else {
             if (filter_->allow(key)) {
                 it->second->setValue(scenario->get(key));
@@ -2831,8 +2805,9 @@ void ScenarioSimMarket::updateDate(const Date& d) {
 
 void ScenarioSimMarket::updateScenario(const Date& d) {
     QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
-    boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
-    QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
+    auto scenario = scenarioGenerator_->next(d);
+    QL_REQUIRE(scenario->asof() == d,
+               "Invalid Scenario date " << scenario->asof() << ", expected " << d);
     numeraire_ = scenario->getNumeraire();
     label_ = scenario->label();
     applyScenario(scenario);
@@ -2878,6 +2853,21 @@ void ScenarioSimMarket::updateAsd(const Date& d) {
         for (auto c : parameters_->additionalScenarioDataCcys()) {
             if (c != parameters_->baseCcy())
                 asd_->set(fxSpot(c + parameters_->baseCcy())->value(), AggregationScenarioDataType::FXSpot, c);
+        }
+
+        for (Size i = 0; i < parameters_->additionalScenarioDataNumberOfCreditStates(); ++i) {
+            RiskFactorKey key(RiskFactorKey::KeyType::CreditState, std::to_string(i));
+            QL_REQUIRE(currentScenario_->has(key), "scenario does not have key " << key);
+            asd_->set(currentScenario_->get(key), AggregationScenarioDataType::CreditState, std::to_string(i));
+        }
+
+        for (const auto& n : parameters_->additionalScenarioDataSurvivalWeights()) {
+            RiskFactorKey key(RiskFactorKey::KeyType::SurvivalWeight, n);
+            QL_REQUIRE(currentScenario_->has(key), "scenario does not have key " << key);
+            asd_->set(currentScenario_->get(key), AggregationScenarioDataType::SurvivalWeight, n);
+            RiskFactorKey rrKey(RiskFactorKey::KeyType::RecoveryRate, n);
+            QL_REQUIRE(currentScenario_->has(rrKey), "scenario does not have key " << key);
+            asd_->set(currentScenario_->get(rrKey), AggregationScenarioDataType::RecoveryRate, n);
         }
 
         asd_->set(numeraire_, AggregationScenarioDataType::Numeraire);

@@ -24,8 +24,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-TradeBuilderRegister<TradeBuilder<EquityBarrierOption>> EquityBarrierOption::reg_("EquityBarrierOption");
-
 void EquityBarrierOption::checkBarriers() {
     QL_REQUIRE(barrier().levels().size() == 1, "Invalid number of barrier levels");
     QL_REQUIRE(barrier().style().empty() || barrier().style() == "American", "Only american barrier style suppported");

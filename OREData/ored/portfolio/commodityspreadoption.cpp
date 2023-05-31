@@ -31,8 +31,6 @@ using std::vector;
 
 namespace ore::data {
 
-TradeBuilderRegister<TradeBuilder<CommoditySpreadOption>> CommoditySpreadOption::reg_("CommoditySpreadOption");
-
 void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
 
     DLOG("CommoditySpreadOption::build() called for trade " << id());
@@ -208,7 +206,7 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
     additionalData_["isdaTransaction"] = std::string("");
     if (!optionData_.premiumData().premiumData().empty()) {
         auto premium = optionData_.premiumData().premiumData().front();
-        additionalData_["premiumAmount"] = premium.amount;
+        additionalData_["premiumAmount"] = - bsInd * premium.amount;
         additionalData_["premiumPaymentDate"] = premium.payDate;
         additionalData_["premiumCurrency"] = premium.ccy;
     }

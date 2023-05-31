@@ -2,6 +2,9 @@
 
 set(OREAnalytics_SRC aggregation/collateralaccount.cpp
 aggregation/collatexposurehelper.cpp
+aggregation/creditmigrationcalculator.cpp
+aggregation/creditmigrationhelper.cpp
+aggregation/creditsimulationparameters.cpp
 aggregation/cvaspreadsensitivitycalculator.cpp
 aggregation/dimcalculator.cpp
 aggregation/dimregressioncalculator.cpp
@@ -12,6 +15,9 @@ aggregation/nettedexposurecalculator.cpp
 aggregation/postprocess.cpp
 aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
+app/analytics/pricinganalytic.cpp
+app/analytics/varanalytic.cpp
+app/analytics/xvaanalytic.cpp
 app/analytic.cpp
 app/analyticsmanager.cpp
 app/inputparameters.cpp
@@ -36,7 +42,10 @@ engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
 engine/cptycalculator.cpp
 engine/filteredsensitivitystream.cpp
+engine/historicalpnlgenerator.cpp
+engine/historicalsensipnlcalculator.cpp
 engine/mporcalculator.cpp
+engine/multistatenpvcalculator.cpp
 engine/multithreadedvaluationengine.cpp
 engine/npvrecord.cpp
 engine/parametricvar.cpp
@@ -57,12 +66,17 @@ engine/zerotoparcube.cpp
 scenario/clonedscenariogenerator.cpp
 scenario/clonescenariofactory.cpp
 scenario/crossassetmodelscenariogenerator.cpp
+scenario/csvscenariogenerator.cpp
 scenario/deltascenario.cpp
 scenario/deltascenariofactory.cpp
+scenario/historicalscenariofilereader.cpp
+scenario/historicalscenariogenerator.cpp
+scenario/historicalscenarioloader.cpp
 scenario/lgmscenariogenerator.cpp
 scenario/scenario.cpp
 scenario/scenariogeneratorbuilder.cpp
 scenario/scenariogeneratordata.cpp
+scenario/scenarioshiftcalculator.cpp
 scenario/scenariosimmarket.cpp
 scenario/scenariosimmarketparameters.cpp
 scenario/scenariosimmarketplus.cpp
@@ -80,6 +94,9 @@ simulation/simmarket.cpp)
 
 set(OREAnalytics_HDR aggregation/collateralaccount.hpp
 aggregation/collatexposurehelper.hpp
+aggregation/creditmigrationcalculator.hpp
+aggregation/creditmigrationhelper.hpp
+aggregation/creditsimulationparameters.hpp
 aggregation/cvaspreadsensitivitycalculator.hpp
 aggregation/dimcalculator.hpp
 aggregation/dimregressioncalculator.hpp
@@ -90,6 +107,9 @@ aggregation/nettedexposurecalculator.hpp
 aggregation/postprocess.hpp
 aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
+app/analytics/pricinganalytic.hpp
+app/analytics/varanalytic.hpp
+app/analytics/xvaanalytic.hpp
 app/analytic.hpp
 app/analyticsmanager.hpp
 app/inputparameters.hpp
@@ -122,7 +142,10 @@ engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cptycalculator.hpp
 engine/filteredsensitivitystream.hpp
+engine/historicalpnlgenerator.hpp
+engine/historicalsensipnlcalculator.hpp
 engine/mporcalculator.hpp
+engine/multistatenpvcalculator.hpp
 engine/multithreadedvaluationengine.hpp
 engine/npvrecord.hpp
 engine/observationmode.hpp
@@ -146,14 +169,21 @@ scenario/aggregationscenariodata.hpp
 scenario/clonedscenariogenerator.hpp
 scenario/clonescenariofactory.hpp
 scenario/crossassetmodelscenariogenerator.hpp
+scenario/csvscenariogenerator.hpp
 scenario/deltascenario.hpp
 scenario/deltascenariofactory.hpp
+scenario/historicalscenariofilereader.hpp
+scenario/historicalscenariogenerator.hpp
+scenario/historicalscenarioloader.hpp
+scenario/historicalscenarioreader.hpp
 scenario/lgmscenariogenerator.hpp
 scenario/scenario.hpp
 scenario/scenariofactory.hpp
+scenario/scenariofilter.hpp
 scenario/scenariogenerator.hpp
 scenario/scenariogeneratorbuilder.hpp
 scenario/scenariogeneratordata.hpp
+scenario/scenarioshiftcalculator.hpp
 scenario/scenariosimmarket.hpp
 scenario/scenariosimmarketparameters.hpp
 scenario/scenariosimmarketplus.hpp
@@ -175,7 +205,10 @@ target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${Boost_LIBRARIES})
-target_link_libraries(${OREA_LIB_NAME} ZLIB::ZLIB)
+if(ORE_USE_ZLIB)
+    target_link_libraries(${OREA_LIB_NAME} ${ZLIB_LIBRARIES})
+    add_definitions(-DORE_USE_ZLIB)
+endif()
 
 install(DIRECTORY . DESTINATION include/orea
         FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
