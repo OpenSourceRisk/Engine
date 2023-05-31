@@ -56,6 +56,7 @@
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/historicalpnlgenerator.hpp>
 #include <orea/engine/historicalsensipnlcalculator.hpp>
+#include <orea/engine/historicalsimulationvar.hpp>
 #include <orea/engine/mporcalculator.hpp>
 #include <orea/engine/multistatenpvcalculator.hpp>
 #include <orea/engine/multithreadedvaluationengine.hpp>
