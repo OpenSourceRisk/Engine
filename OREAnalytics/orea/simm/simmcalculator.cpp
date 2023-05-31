@@ -1674,7 +1674,7 @@ void SimmCalculator::addCrifRecord(const CrifRecord& crifRecord, const SimmSide&
 
             // Add CRIF record to the appropriate regulations
             if (regSensitivities_[side][nettingSetDetails][r] == nullptr)
-                regSensitivities_[side][nettingSetDetails][r] = boost::make_shared<CrifLoader>(simmConfiguration_, true, true);
+                regSensitivities_[side][nettingSetDetails][r] = boost::make_shared<CrifLoader>(simmConfiguration_, CrifRecord::additionalHeaders, true, true);
 
             regSensitivities_[side][nettingSetDetails][r]->add(newCrifRecord);
         }
