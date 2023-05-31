@@ -512,17 +512,6 @@ bool CrifLoader::process(const vector<string>& entries, Size maxIndex, Size curr
         // Store additional data that matches the defined additional headers in the additional fields map
         for (auto& additionalField : additionalHeaders_) {
             std::string value = loadOptionalString(additionalField.first);
-            // FIXME: Ensure we check this down stream in the ORE+ SIMM analytic
-            // if use_cp_trade was specified and is set to True
-            // if (additionalField.first == 26) {
-            //     bool use_cp_trade = !value.empty() ? parseBool(value) : false;
-            //     if (!allowUseCounterpartyTrade_ && use_cp_trade) {
-            //         QL_FAIL(ore::data::StructuredTradeErrorMessage(
-            //             tradeId, tradeType,
-            //             "IM exposure cannot be calculated because one or more trades is picking Counterparty "
-            //             "sensitivities."));
-            //     }
-            // }
             if (!value.empty())
                 cr.additionalFields[*additionalField.second.begin()] = value;
         }
