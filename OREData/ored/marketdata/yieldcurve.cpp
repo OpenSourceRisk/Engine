@@ -1350,10 +1350,11 @@ void YieldCurve::buildBondYieldShiftedCurve() {
         iborCurveMapping[c.first] = y->second->handle();
     }
 
-    auto engineFactory = boost::make_shared<EngineFactory>(
-        engineData, boost::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping),
-        std::map<MarketContext, string>(), std::vector<boost::shared_ptr<EngineBuilder>>(),
-        std::vector<boost::shared_ptr<LegBuilder>>(), referenceData_, iborFallbackConfig_);
+    auto engineFactory = boost::make_shared<EngineFactory>(engineData,
+                                                            boost::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping),
+                                                            std::map<MarketContext, string>(),
+                                                            referenceData_,
+                                                            iborFallbackConfig_);
 
     QL_REQUIRE(quoteIDs.size() > 0, "at least one bond for shifting of the reference curve required.");
 
@@ -1398,9 +1399,9 @@ void YieldCurve::buildBondYieldShiftedCurve() {
             bondDurations.push_back(thisDuration);
 
             DLOG("calculated duration of the bond " << securityID << " is equal to " << thisDuration)
-        
+
         } else {
-            
+
             DLOG("error in data collection of bond " << securityID << " with settlement date "
                                          << QuantLib::io::iso_date(qlInstr->settlementDate()) << ", isTradable = "
                                          << std::boolalpha << QuantLib::BondFunctions::isTradable(*qlInstr));
