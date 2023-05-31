@@ -19,7 +19,7 @@
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
     <Parameter name="pricingEnginesFileScenario">pricingengine.xml</Parameter>
-    <Parameter name="portfolioFile">portfolio_swap.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="portfolioRecurseIntoSubDirectories">false</Parameter>
     <Parameter name="continueOnError">true</Parameter>
     <Parameter name="defaultMappingToIdentity">true</Parameter>
@@ -30,32 +30,22 @@
     <Parameter name="implyTodaysFixings">N</Parameter>
   </Setup>
   <Markets>
-    <Parameter name="lgmcalibration">collateral_inccy</Parameter>
-    <Parameter name="fxcalibration">collateral_inccy</Parameter>
-    <Parameter name="pricing">collateral_inccy</Parameter>
-    <Parameter name="bondpricing">collateral_inccy</Parameter>
+    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="pricing">default</Parameter>
   </Markets>
   <Analytics>
+      <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="baseCurrency">USD</Parameter>
+      <Parameter name="extendedResults">false</Parameter>
+    </Analytic>
     <Analytic type="curves">
       <Parameter name="active">Y</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
       <Parameter name="configuration">default</Parameter>
       <Parameter name="grid">360,1M</Parameter>
-    </Analytic>
-    <Analytic type="npv">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="outputFileName">npv.csv</Parameter>
-      <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="extendedResults">false</Parameter>
-    </Analytic>
-    <Analytic type="cashflow">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="outputFileName">cashflows.csv</Parameter>
-      <Parameter name="pastCashFlows">false</Parameter>
-    </Analytic>
-    <Analytic type="greeks">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="outputFileName">greeks.csv</Parameter>
     </Analytic>
   </Analytics>
 </ORE>

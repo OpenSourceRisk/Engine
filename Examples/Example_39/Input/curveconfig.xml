@@ -17,7 +17,7 @@
               <Quote>BOND/PRICE/AS0644417</Quote>
             </Quotes>
             <Conventions>BOND_CONVENTIONS</Conventions>
-            <ExtrapolateFlat>true</ExtrapolateFlat> <!--true will be deafult for the first time-->
+            <ExtrapolateFlat>true</ExtrapolateFlat> <!-- true will be default for the first time-->
             <IborIndexCurves>  <!--if index linked then it is used to forward to the class over what ever function-->
               <IborIndexCurve iborIndex="USD-LIBOR-3M">USD3M</IborIndexCurve>
             </IborIndexCurves>
