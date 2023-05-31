@@ -47,10 +47,10 @@ const map<RiskType, RiskType> nonVolRiskTypeMap = {
     {RiskType::CreditVol, RiskType::CreditQ}, {RiskType::CreditVolNonQ, RiskType::CreditNonQ},
     {RiskType::EquityVol, RiskType::Equity},  {RiskType::CommodityVol, RiskType::Commodity}};
 
-SimmBucketMapperBase::SimmBucketMapperBase(const string& simmVersion,
-                                           const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
+SimmBucketMapperBase::SimmBucketMapperBase(
+    const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
     const boost::shared_ptr<SimmBasicNameMapper>& nameMapper) :
-    version_(parseSimmVersion(simmVersion)), refDataManager_(refDataManager), nameMapper_(nameMapper){
+    refDataManager_(refDataManager), nameMapper_(nameMapper){
 
     // Fill the set of risk types that have buckets
     rtWithBuckets_ = {RiskType::IRCurve,       RiskType::CreditQ,   RiskType::CreditNonQ,   RiskType::Equity,

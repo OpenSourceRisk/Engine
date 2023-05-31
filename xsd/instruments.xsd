@@ -762,6 +762,13 @@
       </xs:element>
       <xs:element type="scheduleData" name="ScheduleData">
       </xs:element>
+      <xs:element name="PaymentDates" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="date" name="PaymentDate" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element ref="legDataType"/>
     </xs:all>
   </xs:complexType>

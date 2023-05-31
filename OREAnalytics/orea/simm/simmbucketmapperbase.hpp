@@ -58,7 +58,7 @@ bool operator< (const BucketMapping &a, const BucketMapping &b);
 class SimmBucketMapperBase : public SimmBucketMapper, public ore::data::XMLSerializable {
 public:
     //! Default constructor that adds fixed known mappings
-    SimmBucketMapperBase(const std::string& simmVersion, 
+    SimmBucketMapperBase(
         const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = nullptr,
         const boost::shared_ptr<SimmBasicNameMapper>& nameMapper = nullptr);
 
@@ -115,9 +115,6 @@ protected:
     std::set<SimmConfiguration::RiskType> rtWithBuckets_;
 
 private:
-    //! SIMM version
-    SimmVersion version_;
-
     //! Reset the SIMM bucket mapper i.e. clears all mappings and adds the initial hard-coded commodity mappings
     void reset();
 
