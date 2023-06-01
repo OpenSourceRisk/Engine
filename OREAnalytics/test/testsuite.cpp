@@ -18,7 +18,6 @@
 
 #include <iomanip>
 #include <iostream>
-
 #include <oret/config.hpp>
 
 // Boost
