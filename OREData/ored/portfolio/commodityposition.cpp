@@ -55,6 +55,8 @@ void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>&
     for (auto const& u : data_.underlyings()) {
         auto pts = engineFactory->market()->commodityPriceCurve(u.name(), engineFactory->configuration(MarketContext::pricing));
         QL_REQUIRE(!pts.empty() && *pts != nullptr, "CommodityPosition, curve missing for '"<<u.name()<<"'");
+        QL_REQUIRE(!pts->currency().empty(),
+                   "CommodityPosition, Currency not set in curve config for commodity curve'" << u.name() << "'. Skip this trade.");
         auto index = parseCommodityIndex(u.name(), false, pts, NullCalendar(), u.priceType() == "FutureSettlement");
         boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
         pair<bool, boost::shared_ptr<Convention>> p = conventions->get(u.name(), Convention::Type::CommodityFuture);
