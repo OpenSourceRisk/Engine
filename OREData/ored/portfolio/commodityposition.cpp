@@ -180,10 +180,9 @@ void CommodityPositionInstrumentWrapper::fetchResults(const PricingEngine::resul
 void CommodityPositionInstrumentWrapperEngine::calculate() const {
     Real result = 0.0;
     Date today = Settings::instance().evaluationDate();
-    Period spotDays = 2 * Days;
     for (Size i = 0; i < arguments_.commodities_.size(); ++i) {
-        // ToDo look up spot dates
-        //Date spotDate = arguments_.commodities_[i]->fixingCalendar().advance(today, spotDays);
+        // TODO: if refering spot price need lookup the spot date instead of today
+        // for future settlement the fixing date is not relvant, always lookup future expiry date
         Real tmp = arguments_.quantity_ * arguments_.commodities_[i]->fixing(today, true);
         if (!arguments_.fxConversion_[i].empty()) {
             tmp *= arguments_.fxConversion_[i]->value();
