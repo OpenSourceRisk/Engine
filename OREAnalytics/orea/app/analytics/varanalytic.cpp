@@ -63,7 +63,7 @@ void VarAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                                                            inputs_->mcVarSeed());
 
     LOG("Build VaR calculator");
-    auto calc = boost::make_shared<ParametricVarCalculator>(tradePortfolio, inputs_->portfolioFilter(), 
+    auto calc = boost::make_shared<ParametricVarReport>(tradePortfolio, inputs_->portfolioFilter(), 
         inputs_->sensitivityStream(), inputs_->covarianceData(), inputs_->varQuantiles(), 
         varParams, inputs_->varBreakDown(), inputs_->salvageCovariance());
 

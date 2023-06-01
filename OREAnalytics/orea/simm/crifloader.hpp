@@ -43,10 +43,11 @@ public:
         We set the trade ID to an empty string if we are going to be netting at portfolio level.
         This is the default. To override this the flag \p keepTradeId may be set to true.
     */
-    CrifLoader(const boost::shared_ptr<SimmConfiguration>& configuration, bool updateMapper = false,
-               bool aggregateTrades = true, const bool allowUseCounterpartyTrade = true)
-        : configuration_(configuration), updateMapper_(updateMapper), aggregateTrades_(aggregateTrades),
-          allowUseCounterpartyTrade_(allowUseCounterpartyTrade) {}
+    CrifLoader(const boost::shared_ptr<SimmConfiguration>& configuration,
+               std::map<QuantLib::Size, std::set<std::string>> additionalHeaders = std::map<QuantLib::Size, std::set<std::string>>(),
+               bool updateMapper = false, bool aggregateTrades = true)
+        : configuration_(configuration), additionalHeaders_(additionalHeaders),
+          updateMapper_(updateMapper), aggregateTrades_(aggregateTrades) {}
 
     /*! Destructor */
     virtual ~CrifLoader() {}
@@ -93,13 +94,11 @@ public:
     //! Map giving required CRIF file headers and their allowable alternatives
     static std::map<QuantLib::Size, std::set<std::string>> requiredHeaders;
 
-    //! Map giving option CRIF file headers and their allowable alternatives
+    //! Map giving optional CRIF file headers and their allowable alternatives
     static std::map<QuantLib::Size, std::set<std::string>> optionalHeaders;
-
+    
     //! Check if netting set details are used anywhere, instead of just the netting set ID
     bool hasNettingSetDetails() const;
-
-    const bool allowUseCounterpartyTrade() const { return allowUseCounterpartyTrade_; }
 
     //! Aggregate all existing records
     void aggregate();
@@ -115,6 +114,9 @@ protected:
     //! Simm configuration that is used during loading of CRIF records
     boost::shared_ptr<SimmConfiguration> configuration_;
 
+    //! Defines accepted column headers, beyond required and optional headers, see crifloader.cpp
+    std::map<QuantLib::Size, std::set<std::string>> additionalHeaders_;
+    
     /*! If true, the SIMM configuration's bucket mapper is updated during the
         CRIF loading with the mapping from SIMM qualifier to SIMM bucket. This is
         useful when consuming CRIF files from elsewhere in that it allows for
@@ -134,9 +136,6 @@ protected:
     //! Set of portfolio IDs that have been loaded
     std::set<std::string> portfolioIds_;
     std::set<ore::data::NettingSetDetails> nettingSetDetails_;
-
-    //! Whether to allow CRIF records with additionalFields["use_cp_trade"] set to True
-    bool allowUseCounterpartyTrade_;
 
     /*! Internal map from known index of CRIF record member to file column
         For example, give trade ID an index of 0 and find the column index of
