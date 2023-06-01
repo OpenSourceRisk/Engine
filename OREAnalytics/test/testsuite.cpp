@@ -79,19 +79,18 @@ public:
 
     // Method called in destructor to log time taken
     void stopTimer() {
-        using namespace std;
         t.stop();
         double seconds = t.elapsed().wall * 1e-9;
         int hours = int(seconds / 3600);
         seconds -= hours * 3600;
         int minutes = int(seconds / 60);
         seconds -= minutes * 60;
-        cout << endl << "OREData tests completed in ";
+        std::cout << std::endl << "OREData tests completed in ";
         if (hours > 0)
-            cout << hours << " h ";
+            std::cout << hours << " h ";
         if (hours > 0 || minutes > 0)
-            cout << minutes << " m ";
-        cout << fixed << setprecision(0) << seconds << " s" << endl;
+            std::cout << minutes << " m ";
+        std::cout << std::fixed << std::setprecision(0) << seconds << " s" << std::endl;
     }
 
 private:
