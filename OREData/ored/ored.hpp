@@ -196,6 +196,7 @@
 #include <ored/portfolio/commoditylegdata.hpp>
 #include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/commodityoptionstrip.hpp>
+#include <ored/portfolio/commodityposition.hpp>
 #include <ored/portfolio/commodityspreadoption.hpp>
 #include <ored/portfolio/commodityswap.hpp>
 #include <ored/portfolio/commodityswaption.hpp>

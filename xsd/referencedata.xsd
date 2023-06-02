@@ -21,6 +21,7 @@
     <xs:choice>
       <xs:element type="currencyHedgedIndexReferenceDatum" name="CurrencyHedgedEquityIndexReferenceData"/>
       <xs:element type="indexReferenceDatum" name="EquityIndexReferenceData"/>
+      <xs:element type="indexReferenceDatum" name="CommodityIndexReferenceData"/>
       <xs:element type="creditIndexReferenceDatum" name="CreditIndexReferenceData"/>
       <xs:element type="bondReferenceDatum" name="BondReferenceData"/>
       <xs:element type="cboReferenceDatum" name="CboReferenceData"/>
