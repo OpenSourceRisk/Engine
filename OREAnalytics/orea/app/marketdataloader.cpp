@@ -162,7 +162,8 @@ void MarketDataLoader::addRelevantFixings(
 }
 
 void MarketDataLoader::populateFixings(
-    const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters) {
+    const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
+    const std::set<QuantLib::Date>& loaderDates) {
     if (inputs_->allFixings()) {
         impl()->retrieveFixings(loader_);
     } else {
@@ -180,7 +181,8 @@ void MarketDataLoader::populateFixings(
 
         LOG("Add fixings possibly required for bootstrapping TodaysMarket");
         for (const auto& tmp : todaysMarketParameters) {
-            addMarketFixingDates(fixings_, *tmp);
+            for (const auto d : loaderDates)
+                addMarketFixingDates(d, fixings_, *tmp);
             LOG("Add fixing possibly required for equity index delta risk decomposition")
             additional_equity_fixings(fixings_, *tmp, inputs_->refDataManager(),
                                   inputs_->curveConfigs().front());
@@ -258,7 +260,7 @@ void MarketDataLoader::populateLoader(
     // apply dividends now
     applyDividends(loader_->loadDividends());
 
-    populateFixings(todaysMarketParameters);
+    populateFixings(todaysMarketParameters, loaderDates);
 
     LOG("Adding the loaded fixings to the IndexManager");
     applyFixings(loader_->loadFixings());
