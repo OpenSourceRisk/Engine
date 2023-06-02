@@ -47,5 +47,11 @@ boost::shared_ptr<SimmConfiguration> buildSimmConfiguration(const std::string& s
                                                             const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                                             const QuantExt::Size& mporDays = 10);
 
+//! If the input *str* is a comma seperated list the method quotation marks " if the csvQuoteChar is '\0'
+//! Example:
+//!  commaSeparatedListToJsonArrayString("item1,item2", '') -> "item1, item2" 
+//!  commaSeparatedListToJsonArrayString("item", '') -> "item" 
+std::string escapeCommaSeparatedList(const std::string& str, const char& csvQuoteChar);
+
 } // namespace analytics
 } // namespace ore

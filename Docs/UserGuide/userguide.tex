@@ -3180,6 +3180,83 @@ or even fully remove the environment again by removing the {\tt env1} folder.
 Finally, you can build the Python module and installable packages yourself following the instructions in sections \ref{sec:oreswig}, \ref{sec:win_wheel}, \ref{sec:nix_wheel}
 based on your local ORE code. 
 
+%--------------------------------------------------------------------
+\subsection{Credit Portfolio Model}% Example 43
+\label{example:43}
+%--------------------------------------------------------------------
+
+The purpose of the credit portfolio model in ORE is to generate an integrated portfolio gain/loss distribution at a given future horizon which is driven by 
+\begin{itemize}
+\item credit defaults and rating migrations in Bonds and CDS, and 
+\item the PnL of a portfolio of derivatives over the specified time horizon.
+\end{itemize}
+The model integrates Credit and Market Risk by jointly evolving systemic credit risk drivers alongside the usual risk factors in ORE's Cross Asset Model.
+See also the separate documentation in Docs/UserGuide/creditmodel.tex.
+
+By running \\
+\medskip
+\centerline{{\tt python run.py}} 
+
+\medskip
+this example demonstrates the model's outcome for seven demo portfolios
+
+\begin{center}
+\begin{tabular}{|l|l|l|l|}
+\hline
+Case & Credit Mode & Exposure Mode & Evaluation \\
+\hline
+\hline
+Single Bond & Migration & Value & Analytic \\
+\hline
+Bond and Swap & Migration & Value & Analytic \\
+\hline
+3 Bonds & Migration & Value & Analytic \\
+\hline
+10 Bonds & Migration & Value & Analytic \\
+\hline
+10 Bonds & Migration & Value & Terminal Simulation \\
+\hline
+Bonds and CDS & Migration & Notional & Analytic \\
+\hline
+100 Bonds & Default & Notional & Analytic \\
+\hline
+\end{tabular}
+\end{center}
+The last demo case in this table can be activated by uncommenting the corresponding section at the end of the {\tt run.py} script.
+ 
+%--------------------------------------------------------------------
+\subsection{ISDA SIMM Model}% Example 44
+\label{example:44}
+%--------------------------------------------------------------------
+
+This example demonstrates the calculation of initial margin using ISDA's Standard Initial Margin Model (SIMM) based on a provided 
+sensitivity file in ISDA's Common Risk Interchange Format (CRIF).
+ORE covers all SIMM versions since inception to date, i.e. 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.5A.
+All versions have been tested against the respective ISDA SIMM model unit test suites and pass these tests.
+Any new SIMM versions will be added with each ORE release.
+
+Note that you need to purchase a SIMM model license from ISDA if you want to use the model in production, and the unit test
+suites mentioned above are provided to licensed vendors only. Therefore we unfortunately cannot share our ORE SIMM model 
+test suite here either. 
+
+By running \\
+\medskip
+\centerline{{\tt python run.py}} 
+
+\medskip
+ORE will pick up the small example CRIF file in {\tt Input/crif.csv} (i.e. par sensitivities rebucketed and reformatted to match the ISDA CRIF template) and generate the resulting SIMM report in {\tt Output/simm.csv} for SIMM version 2.1 in this example. This report shows ISDA SIMM results with the usual breakdown by product class, risk class, margin type, bucket and SIMM "side" (IM to call or post).
+
+\medskip
+The relevant inputs in {\tt ore.xml} are 
+\begin{itemize}
+\item SIMM version
+\item name of the CRIF file to be loaded
+\item calculation currency - this determines which Risk\_FX entries of the CRIF will be ignored in the SIMM calculation
+\item result currency (optional) - currency of the resulting SIMM amounts in the report, by default equal to the calculation currency
+\end{itemize}
+
+The market data input and todays's market configuration required here is minimal - limited to FX rates for conversions from base/calculation currency into USD and into the result currency.
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
@@ -3419,13 +3496,13 @@ type can be (so far) in
 \begin{itemize}
 \item npv
 \item cashflow
-\item additionalResults
-\item todaysMarketCalibration
 \item curves
 \item simulation
 \item xva
 \item sensitivity
 \item stress
+\item parametricVar
+\item simm
 \end{itemize}
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter
@@ -3441,24 +3518,19 @@ the list above.
     <Parameter name="active">Y</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="outputFileName">npv.csv</Parameter>
+    <Parameter name="additionalResults">Y</Parameter>
   </Analytic>      
   <Analytic type="cashflow">
     <Parameter name="active">Y</Parameter>
     <Parameter name="outputFileName">flows.csv</Parameter>
+    <Parameter name="includePastCashflows">N</Parameter>
   </Analytic>      
   <Analytic type="curves">
     <Parameter name="active">Y</Parameter>
     <Parameter name="configuration">default</Parameter>
     <Parameter name="grid">240,1M</Parameter>
     <Parameter name="outputFileName">curves.csv</Parameter>
-  </Analytic>
-  <Analytic type="additionalResults">
-    <Parameter name="active">Y</Parameter>
-    <Parameter name="outputFileName">additional_results.csv</Parameter>
-  </Analytic> 
-  <Analytic type="todaysMarketCalibration">
-    <Parameter name="active">Y</Parameter>
-    <Parameter name="outputFileName">todaysmarketcalibration.csv</Parameter>
+    <Parameter name="outputTodaysMarketCalibration">N</Parameter>
   </Analytic>
   <Analytic type="...">
     <!-- ... -->
@@ -3860,7 +3932,8 @@ scenarios is described in more detail in section \ref{sec:stress}.
       <Parameter name="mcSamples">100000</Parameter> 
       <Parameter name="mcSeed">42</Parameter> 
       <Parameter name="outputFile">var.csv</Parameter> 
-    </Analytic> </Analytics>
+    </Analytic> 
+</Analytics>
 \end{minted}
 \caption{ORE analytic: VaR}
 \label{lst:ore_var}
@@ -3880,6 +3953,37 @@ The parameters have the following interpretation:
 \item {\tt mcSeed:} Random number generator seed when the {\em MonteCarlo} method is chosen
 \item {\tt outputFile:} Output file name
 \end{itemize}
+
+\medskip The {\tt simm} 'analytic' provides computation of initial margin using ISDA's Standard Initial Margin Model (SIMM) based on sensitivities in the Common Risk Interchange Format (CRIF) defined by ISDA. Listing \ref{lst:ore_simm} shows a configuration example.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+   <Analytic type="simm">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="version">2.1</Parameter>
+      <Parameter name="crif">crif.csv</Parameter>
+      <Parameter name="calculationCurrency">USD</Parameter>
+      <Parameter name="resultCurrency">USD</Parameter>
+    </Analytic>
+<Analytics>
+\end{minted}
+\caption{ORE analytic: SIMM}
+\label{lst:ore_simm}
+\end{listing}
+
+The parameters have the following interpretation:
+
+\begin{itemize}
+\item {\tt version:} SIMM model version string \\
+Allowable values: 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.5A  \\
+Note that any new SIMM model versions are integrated into ORE with each release, tested against the official ISDA SIMM unit tests.
+\item {\tt crif:} Name of the CRIF file to be loaded
+\item {\tt calculationCurrency:} Determines the {\tt Risk\_FX} CRIF entry that is ignored in ISDA SIMM calculation
+\item {\tt resultCurrency} (optional): Currency for expressing the amounts in the resulting SIMM report, by default set to the calculationCurrency.
+\end{itemize}
+
+The SIMM analytic requires minimal market data input and today's market configuration - FX rates for conversions calculation currency, USD and result currency.
 
 %--------------------------------------------------------
 \subsection{Market: {\tt todaysmarket.xml}}\label{sec:market}
