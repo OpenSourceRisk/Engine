@@ -31,13 +31,6 @@ namespace QuantExt {
 
 //! Commodity Index
 /*! This index can represent futures prices derived from basis future index and a base future index
-
-    If it is a futures index and \c keepDays_ is \c false, we set the name() to
-    "COMM-" + underlyingName + "-" + "yyyy-mm", where "yyyy" is the expiry date's year and "mm" is the expiry date's
-    month. The index forecast for fixing Date yields the price curve's forecast to the futures expiry instead which
-    is beyond the fixing date. If \c keepDays_ is \c true, the date suffix in the name is "yyyy-mm-dd" i.e. we keep
-    the full date. This is useful for commodities whose expiry cycle is less than one month e.g. daily.
-
     \ingroup indexes
 */
 class CommodityBasisFutureIndex : public CommodityFuturesIndex {

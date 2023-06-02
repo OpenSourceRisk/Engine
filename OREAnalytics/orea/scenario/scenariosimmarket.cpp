@@ -2348,9 +2348,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             auto baseIndex = commodityIndices_.find(
                                 {Market::defaultConfiguration, orgBasisCurve->baseIndex()->underlyingName()});
                             QL_REQUIRE(baseIndex != commodityIndices_.end(),
-                                       "Internal error in scenariosimmarket: couldn't find underlying base curve to "
-                                       "while building commodity basis curve "
-                                           << name);
+                                       "Internal error in scenariosimmarket: couldn't find underlying base curve "
+                                           << orgBasisCurve->baseIndex()->underlyingName()
+                                           << " while building commodity basis curve " << name);
                             pts = Handle<PriceTermStructure>(boost::make_shared<CommodityBasisPriceCurveWrapper>(
                                 orgBasisCurve, baseIndex->second.currentLink(), priceCurve));
                         } 
