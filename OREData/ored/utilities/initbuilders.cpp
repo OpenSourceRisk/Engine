@@ -417,8 +417,8 @@ void initBuilders() {
         
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Bond", BondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("ForwardBond", ForwardBondTrsUnderlyingBuilder, false)
-    ORE_REGISTER_TRS_UNDERLYING_BUILDER("EquityPosition", AssetPositionTrsUnderlyingBuilder<EquityPosition>, false)
-    ORE_REGISTER_TRS_UNDERLYING_BUILDER("CommodityPosition", AssetPositionTrsUnderlyingBuilder<CommodityPosition>, false)
+    ORE_REGISTER_TRS_UNDERLYING_BUILDER("EquityPosition", EquityPositionTrsUnderlyingBuilder, false)
+    ORE_REGISTER_TRS_UNDERLYING_BUILDER("CommodityPosition", CommodityPositionTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("EquityOptionPosition", EquityOptionPositionTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("BondPosition", BondPositionTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Derivative", DerivativeTrsUnderlyingBuilder, false)

@@ -340,5 +340,8 @@ void DerivativeTrsUnderlyingBuilder::build(
     maturity = underlying->maturity();
 }
 
+template struct AssetPositionTrsUnderlyingBuilder<ore::data::EquityPosition>;
+template struct AssetPositionTrsUnderlyingBuilder<ore::data::CommodityPosition>;
+
 } // namespace data
 } // namespace ore
