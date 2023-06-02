@@ -51,7 +51,7 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
     if (analytic()->getWriteIntermediateReports()) {
         boost::shared_ptr<InMemoryReport> crifReport = boost::make_shared<InMemoryReport>();
         ReportWriter(inputs_->reportNaString())
-            .writeCrifReport(crifReport, *simmAnalytic->crifRecords(), simmAnalytic->hasNettingSetDetails());
+            .writeCrifReport(crifReport, *simmAnalytic->crifRecords());
         analytic()->reports()[LABEL]["crif"] = crifReport;
         LOG("CRIF report generated");
 

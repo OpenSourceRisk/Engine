@@ -1927,8 +1927,16 @@ void ReportWriter::writeSIMMData(const SimmNetSensitivities& simmData, const boo
 }
 
 void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report,
-                                   const SimmNetSensitivities& crifRecords,
-                                   bool hasNettingSetDetails) {
+                                   const SimmNetSensitivities& crifRecords) {
+
+    // If we have SIMM parameters, check if at least one of them uses netting set details optional field/s
+    // It is easier to check here than to pass the flag from other places, since otherwise we'd have to handle certain edge cases
+    // e.g. SIMM parameters use optional NSDs, but trades don't. So SIMM report should not display NSDs, but CRIF report still should.
+    bool hasNettingSetDetails = false;
+    for (const CrifRecord& cr : crifRecords) {
+        if (!cr.nettingSetDetails.emptyOptionalFields())
+            hasNettingSetDetails = true;
+    }
 
     std::vector<string> addFields;
     for (const auto& cr : crifRecords) {

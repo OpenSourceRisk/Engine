@@ -151,8 +151,7 @@ public:
 
     //! Write out CRIF records to a report
     virtual void writeCrifReport(const boost::shared_ptr<ore::data::Report>& report,
-                                 const SimmNetSensitivities& crifRecords,
-                                 bool hasNettingSetDetails);
+                                 const SimmNetSensitivities& crifRecords);
 
 protected:
     std::string nullString_;
