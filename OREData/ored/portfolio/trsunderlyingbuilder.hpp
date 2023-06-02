@@ -114,8 +114,8 @@ struct AssetPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
 
 };
 
-template struct AssetPositionTrsUnderlyingBuilder<ore::data::EquityPosition>;
-template struct AssetPositionTrsUnderlyingBuilder<ore::data::CommodityPosition>;
+typedef AssetPositionTrsUnderlyingBuilder<ore::data::EquityPosition> EquityPositionTrsUnderlyingBuilder;
+typedef AssetPositionTrsUnderlyingBuilder<ore::data::CommodityPosition> CommodityPositionTrsUnderlyingBuilder;
 
 struct EquityOptionPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
     void
