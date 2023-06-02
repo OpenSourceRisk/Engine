@@ -94,6 +94,7 @@ public:
     void setCsvCommentCharacter(const char& c) { csvCommentCharacter_ = c; }
     void setDryRun(bool b) { dryRun_ = b; }
     void setMporDays(Size s) { mporDays_ = s; }
+    void setMporDate(const QuantLib::Date& d) { mporDate_ = d; }
     void setMporCalendar(const std::string& s); 
     void setMporForward(bool b) { mporForward_ = b; }
 
@@ -319,6 +320,7 @@ public:
     char csvEscapeChar() const { return csvEscapeChar_; }
     bool dryRun() const { return dryRun_; }
     QuantLib::Size mporDays() { return mporDays_; }
+    QuantLib::Date mporDate() { return mporDate_; }
     const QuantLib::Calendar mporCalendar() {
         if (mporCalendar_.empty()) {
             QL_REQUIRE(!baseCurrency_.empty(), "mpor calendar or baseCurrency must be provided";);
@@ -553,6 +555,7 @@ protected:
     char csvEscapeChar_ = '\\';
     std::string reportNaString_ = "#N/A";
     bool dryRun_ = false;
+    QuantLib::Date mporDate_;
     QuantLib::Size mporDays_ = 10;
     QuantLib::Calendar mporCalendar_;
     bool mporForward_ = true;
