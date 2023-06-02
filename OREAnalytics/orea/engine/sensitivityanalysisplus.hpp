@@ -59,7 +59,7 @@ public:
         : ore::analytics::SensitivityAnalysis(portfolio, market, marketConfiguration, engineData, simMarketData,
                                               sensitivityData, recalibrateModels, curveConfigs, todaysMarketParams,
                                               nonShiftedBaseCurrencyConversion, referenceData, iborFallbackConfig,
-                                              continueOnError, analyticFxSensis, dryRun),
+                                              continueOnError, dryRun),
           useSingleThreadedEngine_(true) {}
 
     //! Constructor using multi-threaded engine
@@ -74,12 +74,12 @@ public:
                             const bool nonShiftedBaseCurrencyConversion = false,
                             const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                             const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                            const bool continueOnError = false, bool analyticFxSensis = false, bool dryRun = false,
+                            const bool continueOnError = false, bool dryRun = false,
                             const std::string& context = "sensi analysis")
         : ore::analytics::SensitivityAnalysis(portfolio, nullptr, marketConfiguration, engineData, simMarketData,
                                               sensitivityData, recalibrateModels, curveConfigs, todaysMarketParams,
                                               nonShiftedBaseCurrencyConversion, referenceData, iborFallbackConfig,
-                                              continueOnError, analyticFxSensis, dryRun),
+                                              continueOnError, dryRun),
           useSingleThreadedEngine_(false), nThreads_(nThreads), loader_(loader), context_(context) {
         asof_ = asof;
     }
@@ -97,9 +97,6 @@ protected:
 
     //! reset and rebuild the portfolio to make use of the appropriate engine factory
     void resetPortfolio(const boost::shared_ptr<ore::data::EngineFactory>& factory) override;
-
-    //! Overwrite FX sensitivities in the cube with first order analytical values where possible.
-    void addAnalyticFxSensitivities() override;
 
 private:
     bool useSingleThreadedEngine_;
