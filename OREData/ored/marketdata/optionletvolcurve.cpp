@@ -32,6 +32,8 @@
 #include <qle/termstructures/optionletstripper1.hpp>
 #include <qle/termstructures/optionletstripper2.hpp>
 #include <qle/termstructures/optionletstripperwithatm.hpp>
+#include <qle/termstructures/piecewiseatmoptionletcurve.hpp>
+#include <qle/termstructures/piecewiseoptionletstripper.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 #include <qle/instruments/makeoiscapfloor.hpp>
@@ -234,7 +236,7 @@ void OptionletVolCurve::optSurface(const Date& asof, OptionletVolatilityCurveCon
             capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, CubicFlat>>(
                 asof, optionletSurface);
         } else {
-            QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
+            QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                         << config.strikeInterpolation());
         }
     } else if (config.timeInterpolation() == "LinearFlat") {
@@ -251,7 +253,7 @@ void OptionletVolCurve::optSurface(const Date& asof, OptionletVolatilityCurveCon
             capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, CubicFlat>>(
                 asof, optionletSurface);
         } else {
-            QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
+            QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                         << config.strikeInterpolation());
         }
     } else if (config.timeInterpolation() == "BackwardFlat") {
@@ -265,7 +267,7 @@ void OptionletVolCurve::optSurface(const Date& asof, OptionletVolatilityCurveCon
         } else if (config.strikeInterpolation() == "CubicFlat") {
             capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, CubicFlat>>(asof, optionletSurface);
         } else {
-            QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
+            QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                         << config.strikeInterpolation());
         }
     } else if (config.timeInterpolation() == "Cubic") {
@@ -278,7 +280,7 @@ void OptionletVolCurve::optSurface(const Date& asof, OptionletVolatilityCurveCon
         } else if (config.strikeInterpolation() == "CubicFlat") {
             capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, CubicFlat>>(asof, optionletSurface);
         } else {
-            QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
+            QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                         << config.strikeInterpolation());
         }
     } else if (config.timeInterpolation() == "CubicFlat") {
@@ -291,11 +293,11 @@ void OptionletVolCurve::optSurface(const Date& asof, OptionletVolatilityCurveCon
         } else if (config.strikeInterpolation() == "CubicFlat") {
             capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, CubicFlat>>(asof, optionletSurface);
         } else {
-            QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
+            QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                         << config.strikeInterpolation());
         }
     } else {
-        QL_FAIL("Cap floor config " << config.curveID() << " has unexpected time interpolation "
+        QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected time interpolation "
                                     << config.timeInterpolation());
     }
 }
