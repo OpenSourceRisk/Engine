@@ -77,6 +77,7 @@
 #include <orea/engine/stresstest.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
+#include <orea/engine/varcalculator.hpp>
 #include <orea/engine/zerotoparcube.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
 #include <orea/scenario/clonedscenariogenerator.hpp>
