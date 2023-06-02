@@ -128,6 +128,7 @@ const map<string, SimmConfiguration::ProductClass> tradeProductClassMap = {
     {"CommodityDigitalAveragePriceOption", SimmConfiguration::ProductClass::Commodity},
     {"CommodityDigitalOption", SimmConfiguration::ProductClass::Commodity},
     {"CommodityOptionStrip", SimmConfiguration::ProductClass::Commodity},
+    {"CommodityPosition", SimmConfiguration::ProductClass::Commodity},
     {"CommodityRainbowOption", SimmConfiguration::ProductClass::Commodity},
     {"CommoditySpreadOption", SimmConfiguration::ProductClass::Commodity},
     {"CommoditySwap", SimmConfiguration::ProductClass::Commodity},
