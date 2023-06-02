@@ -36,6 +36,7 @@
 #include <ored/configuration/fxvolcurveconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
+#include <ored/configuration/optionletvolcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
@@ -67,6 +68,7 @@ public:
     const ReportConfig& reportConfigFxVols() const { return reportConfigFxVols_; }
     const ReportConfig& reportConfigCommVols() const { return reportConfigCommVols_; }
     const ReportConfig& reportConfigIrCapFloorVols() const { return reportConfigIrCapFloorVols_; }
+    const ReportConfig& reportConfigIrOptionletVols() const { return reportConfigIrOptionletVols_; }
     const ReportConfig& reportConfigIrSwaptionVols() const { return reportConfigIrSwaptionVols_; }
 
     bool hasYieldCurveConfig(const std::string& curveID) const;
@@ -83,6 +85,9 @@ public:
 
     bool hasCapFloorVolCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<CapFloorVolatilityCurveConfig> capFloorVolCurveConfig(const string& curveID) const;
+
+    bool hasOptionletVolCurveConfig(const std::string& curveID) const;
+    boost::shared_ptr<OptionletVolatilityCurveConfig> optionletVolCurveConfig(const string& curveID) const;
 
     bool hasDefaultCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<DefaultCurveConfig> defaultCurveConfig(const string& curveID) const;
@@ -162,6 +167,7 @@ public:
     ReportConfig reportConfigFxVols_;
     ReportConfig reportConfigCommVols_;
     ReportConfig reportConfigIrCapFloorVols_;
+    ReportConfig reportConfigIrOptionletVols_;
     ReportConfig reportConfigIrSwaptionVols_;
 
     mutable std::map<CurveSpec::CurveType, std::map<std::string, boost::shared_ptr<CurveConfig>>> configs_;

@@ -52,6 +52,7 @@ marketdata/market.cpp
 marketdata/marketdatum.cpp
 marketdata/marketdatumparser.cpp
 marketdata/marketimpl.cpp
+marketdata/optionletvolcurve.cpp
 marketdata/security.cpp
 marketdata/strike.cpp
 marketdata/swaptionvolcurve.cpp
@@ -339,6 +340,7 @@ marketdata/market.hpp
 marketdata/marketdatum.hpp
 marketdata/marketdatumparser.hpp
 marketdata/marketimpl.hpp
+marketdata/optionletvolcurve.hpp
 marketdata/security.hpp
 marketdata/strike.hpp
 marketdata/structuredcurveerror.hpp

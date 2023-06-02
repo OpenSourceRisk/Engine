@@ -97,6 +97,10 @@ void CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const stri
                 config = boost::make_shared<CapFloorVolatilityCurveConfig>();
                 break;
             }
+            case CurveSpec::CurveType::OptionletVolatility: {
+                config = boost::make_shared<OptionletVolatilityCurveConfig>();
+                break;
+            }
             case CurveSpec::CurveType::Inflation: {
                 config = boost::make_shared<InflationCurveConfig>();
                 break;
@@ -406,6 +410,16 @@ CurveConfigurations::capFloorVolCurveConfig(const string& curveID) const {
     return boost::dynamic_pointer_cast<CapFloorVolatilityCurveConfig>(cc);
 }
 
+bool CurveConfigurations::hasOptionletVolCurveConfig(const string& curveID) const {
+    return has(CurveSpec::CurveType::OptionletVolatility, curveID);
+}
+
+boost::shared_ptr<OptionletVolatilityCurveConfig>
+CurveConfigurations::optionletVolCurveConfig(const string& curveID) const {
+    auto cc = get(CurveSpec::CurveType::OptionletVolatility, curveID);
+    return boost::dynamic_pointer_cast<OptionletVolatilityCurveConfig>(cc);
+}
+
 bool CurveConfigurations::hasDefaultCurveConfig(const string& curveID) const {
     return has(CurveSpec::CurveType::Default, curveID);
 }
@@ -541,6 +555,10 @@ void CurveConfigurations::fromXML(XMLNode* node) {
             if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
                 reportConfigIrCapFloorVols_.fromXML(tmp3);
         }
+        if (auto tmp2 = XMLUtils::getChildNode(tmp, "IROptionletVolatilities")) {
+            if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
+                reportConfigIrOptionletVols_.fromXML(tmp3);
+        }
         if (auto tmp2 = XMLUtils::getChildNode(tmp, "IRSwaptionVolatilities")) {
             if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
                 reportConfigIrSwaptionVols_.fromXML(tmp3);
@@ -553,6 +571,7 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     getNode(node, "SwaptionVolatilities", "SwaptionVolatility");
     getNode(node, "YieldVolatilities", "YieldVolatility");
     getNode(node, "CapFloorVolatilities", "CapFloorVolatility");
+    getNode(node, "OptionletVolatilities", "OptionletVolatility");
     getNode(node, "DefaultCurves", "DefaultCurve");
     getNode(node, "CDSVolatilities", "CDSVolatility");
     getNode(node, "BaseCorrelations", "BaseCorrelation");
@@ -575,6 +594,7 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "SwaptionVolatilities");
     addNodes(doc, parent, "YieldVolatilities");
     addNodes(doc, parent, "CapFloorVolatilities");
+    addNodes(doc, parent, "OptionletVolatilities");
     addNodes(doc, parent, "CDSVolatilities");
     addNodes(doc, parent, "DefaultCurves");
     addNodes(doc, parent, "YieldCurves");

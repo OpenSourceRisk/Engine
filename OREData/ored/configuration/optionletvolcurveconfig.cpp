@@ -105,13 +105,13 @@ void OptionletVolatilityCurveConfig::fromXML(XMLNode* node) {
     businessDayConvention_ =
         parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));
     if (auto iborNode = XMLUtils::getChildNode(node, "IborIndex")) {
-        WLOG("CapFloorVolatilityCurveConfig (" << curveID_
+        WLOG("OptionletVolatilityCurveConfig (" << curveID_
                                                 << "): The IborIndex node is deprecated, use Index instead.");
         index_ = XMLUtils::getNodeValue(iborNode);
     } else if (auto indexNode = XMLUtils::getChildNode(node, "Index")) {
         index_ = XMLUtils::getNodeValue(indexNode);
     } else {
-        QL_FAIL("CapFloorVOlatilityCurveConfig (" << curveID_
+        QL_FAIL("OptionletVolatilityCurveConfig (" << curveID_
                                                     << "): Index node (or the deprecated IborIndex node) expected");
     }
     discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);

@@ -62,6 +62,7 @@
 #include <ored/marketdata/marketdatum.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/marketimpl.hpp>
+#include <ored/marketdata/optionletvolcurve.hpp>
 #include <ored/marketdata/security.hpp>
 #include <ored/marketdata/strike.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>

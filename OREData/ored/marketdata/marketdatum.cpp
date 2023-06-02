@@ -492,6 +492,17 @@ template <class Archive> void CapFloorShiftQuote::serialize(Archive& ar, const u
     ar& indexName_;
 }
 
+template <class Archive> void OptionletQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& ccy_;
+    ar& term_;
+    ar& underlying_;
+    ar& atm_;
+    ar& relative_;
+    ar& strike_;
+    ar& indexName_;
+}
+
 template <class Archive> void FXSpotQuote::serialize(Archive& ar, const unsigned int version) {
     ar& boost::serialization::base_object<MarketDatum>(*this);
     ar& unitCcy_;
@@ -684,6 +695,8 @@ template void CapFloorQuote::serialize(boost::archive::binary_oarchive& ar, cons
 template void CapFloorQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void CapFloorShiftQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void CapFloorShiftQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void OptionletQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void OptionletQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void FXSpotQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void FXSpotQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void FXForwardQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
@@ -753,6 +766,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondOptionQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondOptionShiftQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CapFloorQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CapFloorShiftQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::OptionletQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::FXSpotQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::FXForwardQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::FXOptionQuote);

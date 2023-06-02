@@ -44,6 +44,7 @@ public:
         FX,
         Yield,
         CapFloorVolatility,
+        OptionletVolatility,
         SwaptionVolatility,
         YieldVolatility,
         FXVolatility,
@@ -245,6 +246,28 @@ public:
     //! \name CurveSpec interface
     //@{
     CurveType baseType() const override { return CurveType::CapFloorVolatility; }
+    string subName() const override { return key() + "/" + curveConfigID(); }
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const string& key() const { return key_; }
+    //@}
+
+private:
+    string key_;
+};
+
+//! Optionlet Volatility curve description
+class OptionletVolatilityCurveSpec : public CurveSpec {
+public:
+    OptionletVolatilityCurveSpec() {}
+    // key is an index name (Ibor, OIS) or a currency
+    OptionletVolatilityCurveSpec(const string& key, const string& curveConfigID) : CurveSpec(curveConfigID), key_(key) {}
+
+    //! \name CurveSpec interface
+    //@{
+    CurveType baseType() const override { return CurveType::OptionletVolatility; }
     string subName() const override { return key() + "/" + curveConfigID(); }
     //@}
 
