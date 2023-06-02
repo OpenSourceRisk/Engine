@@ -227,5 +227,14 @@ boost::shared_ptr<SimmConfiguration> buildSimmConfiguration(const string& simmVe
 
     QL_FAIL("SIMM configuration for version '" << simmVersion << "' cannot be built");
 }
+
+std::string escapeCommaSeparatedList(const std::string& str, const char& csvQuoteChar) {
+    std::string result = str;
+    if (result.find(',') != string::npos && csvQuoteChar == '\0') {
+        result = '\"' + result + '\"';
+    }
+    return result;
+}
+
 } // namespace analytics
 } // namespace ore

@@ -28,6 +28,7 @@
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/math/comparison.hpp>
+#include <ql/quote.hpp>
 
 using std::abs;
 using std::accumulate;
@@ -1693,7 +1694,10 @@ void SimmCalculator::convert() {
     if (resultCcy_ == "USD")
         return;
 
-    const Real fxSpot = market_->fxRate("USD" + resultCcy_)->value();
+    QL_REQUIRE(market_, "market not set");
+    QuantLib::Handle<QuantLib::Quote> fxQuote = market_->fxRate("USD" + resultCcy_);
+    QL_REQUIRE(!fxQuote.empty(), "market FX/USD/" << resultCcy_ << " rate not found");
+    const Real fxSpot = fxQuote->value();
 
     QL_REQUIRE(fxSpot > 0, "SIMM Calculator: The USD spot rate must be positive");
 

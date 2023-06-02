@@ -264,16 +264,16 @@ public:
     void setSimmVersion(const std::string& s) { simmVersion_ = s; }
     void setCrifLoader();
     void setCrifFromFile(const std::string& fileName,
-                         char eol = '\n', char delim = '\t', char quoteChar = '\0', char escapeChar = '\\');
+                         char eol = '\n', char delim = ',', char quoteChar = '\0', char escapeChar = '\\');
     void setCrifFromBuffer(const std::string& csvBuffer,
-                           char eol = '\n', char delim = '\t', char quoteChar = '\0', char escapeChar = '\\');
+                           char eol = '\n', char delim = ',', char quoteChar = '\0', char escapeChar = '\\');
     void setSimmNameMapper(const boost::shared_ptr<ore::analytics::SimmBasicNameMapper>& p) { simmNameMapper_ = p; }
     void setSimmNameMapper(const std::string& xml);
     void setSimmNameMapperFromFile(const std::string& fileName);
     void setSimmBucketMapper(const boost::shared_ptr<ore::analytics::SimmBucketMapper>& p) { simmBucketMapper_ = p; }
     void setSimmBucketMapper(const std::string& xml);
     void setSimmBucketMapperFromFile(const std::string& fileName);
-    void simmCalculationCurrency(const std::string& s) { simmCalculationCurrency_ = s; }
+    void setSimmCalculationCurrency(const std::string& s) { simmCalculationCurrency_ = s; }
     void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
     void setSimmReportingCurrency(const std::string& s) { simmReportingCurrency_ = s; }
     void setEnforceIMRegulations(bool b) { enforceIMRegulations_= b; }
@@ -312,9 +312,11 @@ public:
     bool useMarketDataFixings() { return useMarketDataFixings_; }
     bool iborFallbackOverride() { return iborFallbackOverride_; }
     const std::string& reportNaString() { return reportNaString_; }
+    char csvCommentCharacter() const { return csvCommentCharacter_; }
+    char csvEolChar() const { return csvEolChar_; }
     char csvQuoteChar() const { return csvQuoteChar_; }
     char csvSeparator() const { return csvSeparator_; }
-    char csvCommentCharacter() const { return csvCommentCharacter_; }
+    char csvEscapeChar() const { return csvEscapeChar_; }
     bool dryRun() const { return dryRun_; }
     QuantLib::Size mporDays() { return mporDays_; }
     const QuantLib::Calendar mporCalendar() {
@@ -544,9 +546,11 @@ protected:
     bool eomInflationFixings_ = true;
     bool useMarketDataFixings_ = true;
     bool iborFallbackOverride_ = false;
-    char csvSeparator_ = ',';
     bool csvCommentCharacter_ = true;
+    char csvEolChar_ = '\n';
+    char csvSeparator_ = ',';
     char csvQuoteChar_ = '\0';
+    char csvEscapeChar_ = '\\';
     std::string reportNaString_ = "#N/A";
     bool dryRun_ = false;
     QuantLib::Size mporDays_ = 10;
@@ -704,7 +708,6 @@ protected:
     std::string simmResultCurrency_ = "";
     std::string simmReportingCurrency_ = "";
     bool enforceIMRegulations_ = false;
-
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {

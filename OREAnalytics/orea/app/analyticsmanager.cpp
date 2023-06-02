@@ -18,6 +18,7 @@
 
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/reportwriter.hpp>
@@ -52,6 +53,7 @@ AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inp
     addAnalytic("PRICING", boost::make_shared<PricingAnalytic>(inputs));
     addAnalytic("VAR", boost::make_shared<VarAnalytic>(inputs_));
     addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_));
+    addAnalytic("SIMM", boost::make_shared<SimmAnalytic>(inputs_));
 }
 
 void AnalyticsManager::clear() {

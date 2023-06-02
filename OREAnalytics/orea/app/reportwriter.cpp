@@ -1676,5 +1676,331 @@ void ReportWriter::writeCube(ore::data::Report& report, const boost::shared_ptr<
     LOG("Cube report written");
 }
 
+// Ease notation again
+typedef SimmConfiguration::ProductClass ProductClass;
+typedef SimmConfiguration::RiskClass RiskClass;
+typedef SimmConfiguration::MarginType MarginType;
+typedef SimmConfiguration::SimmSide SimmSide;
+
+void ReportWriter::writeSIMMReport(
+    const map<SimmSide, map<NettingSetDetails, pair<string, SimmResults>>>& finalSimmResultsMap,
+    const boost::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
+    const string& reportCcy, Real fxSpot, Real outputThreshold) {
+
+
+    // Transform final SIMM results
+    map<SimmSide, map<NettingSetDetails, map<string, SimmResults>>> finalSimmResults;
+    for (const auto& sv : finalSimmResultsMap) {
+        const SimmSide& side = sv.first;
+        for (const auto& nv : sv.second) {
+            const NettingSetDetails& nettingSetDetails = nv.first;
+            const string& regulation = nv.second.first;
+            const SimmResults& simmResults = nv.second.second;
+
+            finalSimmResults[side][nettingSetDetails][regulation] = simmResults;
+        }
+    }
+
+    writeSIMMReport(finalSimmResults, report, hasNettingSetDetails, simmResultCcy, reportCcy, true, fxSpot,
+                    outputThreshold);
+}
+
+void ReportWriter::writeSIMMReport(
+    const map<SimmSide, map<NettingSetDetails, map<string, SimmResults>>>& simmResultsMap,
+    const boost::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
+    const string& reportCcy, const bool isFinalSimm, Real fxSpot, Real outputThreshold) {
+
+    if (isFinalSimm) {
+        LOG("Writing SIMM results report.");
+    } else {
+        LOG("Writing full SIMM results report.");
+    }
+
+    // netting set headers
+    report->addColumn("Portfolio", string());
+    if (hasNettingSetDetails) {
+        for (const string& field : NettingSetDetails::optionalFieldNames())
+            report->addColumn(field, string());
+    }
+
+    report->addColumn("ProductClass", string())
+        .addColumn("RiskClass", string())
+        .addColumn("MarginType", string())
+        .addColumn("Bucket", string())
+        .addColumn("SimmSide", string())
+        .addColumn("Regulation", string())
+        .addColumn("InitialMargin", double(), 2)
+        .addColumn("Currency", string());
+    if (!reportCcy.empty()) {
+        report->addColumn("InitialMargin(Report)", double(), 2).addColumn("ReportCurrency", string());
+    }
+
+    // Ensure that fxSpot is 1 if no reporting currency provided
+    if (reportCcy.empty() && fxSpot != 1.0)
+        fxSpot = 1.0;
+
+    const vector<SimmSide> sides({SimmSide::Call, SimmSide::Post});
+    for (const SimmSide side : sides) {
+        const string& sideString = to_string(side);
+
+        // Variable to hold sum of initial margin over all portfolios
+        Real sumSidePortfolios = 0.0;
+        Real sumSidePortfoliosReporting = 0.0;
+
+        set<string> winningRegs;
+        if (simmResultsMap.find(side) != simmResultsMap.end()) {
+            for (const auto& nv : simmResultsMap.at(side)) {
+                const NettingSetDetails& portfolioId = nv.first;
+                const auto& simmResultsMap = nv.second;
+
+                if (isFinalSimm)
+                    QL_REQUIRE(simmResultsMap.size() <= 1,
+                               "Final SIMM results should only have one (winning) regulation per netting set.");
+
+                for (const auto& rv : simmResultsMap) {
+                    const string& regulation = rv.first;
+                    const SimmResults& results = rv.second;
+
+                    if (isFinalSimm)
+                        winningRegs.insert(regulation);
+
+                    QL_REQUIRE(results.currency() == simmResultCcy,
+                               "writeSIMMReport(): SIMM results ("
+                                   << results.currency() << ") should be denominated in the SIMM result currency ("
+                                   << simmResultCcy << ").");
+
+                    // Loop over the results for this portfolio
+                    for (const auto& result : results.data()) {
+                        // Get the key values
+                        const auto& key = result.first;
+                        ProductClass pc = get<0>(key);
+                        RiskClass rc = get<1>(key);
+                        MarginType mt = get<2>(key);
+                        string b = get<3>(key);
+                        Real im = result.second;
+                        Real simmReporting = 0.0;
+
+                        // Write row if IM not negligible relative to outputThreshold.
+                        if (fabs(im) >= outputThreshold ||
+                            (pc == ProductClass::All && rc == RiskClass::All && mt == MarginType::All)) {
+                            report->next();
+                            map<string, string> nettingSetMap = portfolioId.mapRepresentation();
+                            for (const string& field : NettingSetDetails::fieldNames(hasNettingSetDetails)) {
+                                report->add(nettingSetMap[field]);
+                            }
+                            report->add(to_string(pc))
+                                .add(to_string(rc))
+                                .add(to_string(mt))
+                                .add(b)
+                                .add(sideString)
+                                .add(regulation)
+                                .add(result.second)
+                                .add(results.currency());
+                            if (!reportCcy.empty()) {
+                                simmReporting = result.second * fxSpot;
+                                report->add(simmReporting).add(reportCcy);
+                            }
+                            // Update aggregate portfolio IM value if necessary
+                            // SimmResults should always contain an entry with this key - it is the portfolio IM
+                            if (isFinalSimm &&
+                                (pc == ProductClass::All && rc == RiskClass::All && mt == MarginType::All)) {
+                                sumSidePortfolios += result.second;
+                                sumSidePortfoliosReporting += simmReporting;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Write out a row for the aggregate IM over all portfolios
+        // We only write out this row if either reporting ccy was provided or if currency of all the results is the same
+        if (isFinalSimm) {
+            string finalWinningReg = winningRegs.size() == 1 ? *(winningRegs.begin()) : "";
+
+            // Write out common columns
+            report->next();
+            Size numNettingSetFields = NettingSetDetails::fieldNames(hasNettingSetDetails).size();
+            for (Size t = 0; t < numNettingSetFields; t++)
+                report->add("All");
+            report->add("All")
+                .add("All")
+                .add("All")
+                .add("All")
+                .add(sideString)
+                .add(finalWinningReg)
+                .add(sumSidePortfolios)
+                .add(simmResultCcy);
+
+            // Write out SIMM in reporting currency if we can
+            if (!reportCcy.empty())
+                report->add(sumSidePortfoliosReporting).add(reportCcy);
+        }
+
+        report->end();
+
+        LOG("SIMM results report written.");
+    }
+}
+
+void ReportWriter::writeSIMMData(const SimmNetSensitivities& simmData, const boost::shared_ptr<Report>& dataReport,
+                                 const bool hasNettingSetDetails) {
+
+    LOG("Writing SIMM data report.");
+
+    // Add the headers to the report
+
+    bool hasRegulations = false;
+    for (const auto& cr : simmData) {
+        if (!cr.collectRegulations.empty() || !cr.postRegulations.empty()) {
+            hasRegulations = true;
+            break;
+        }
+    }
+        
+    // netting set headers
+    dataReport->addColumn("Portfolio", string());
+    if (hasNettingSetDetails) {
+        for (const string& field : NettingSetDetails::optionalFieldNames())
+            dataReport->addColumn(field, string());
+    }
+
+    dataReport->addColumn("RiskType", string())
+        .addColumn("ProductClass", string())
+        .addColumn("Bucket", string())
+        .addColumn("Qualifier", string())
+        .addColumn("Label1", string())
+        .addColumn("Label2", string())
+        .addColumn("Amount", double())
+        .addColumn("IMModel", string());
+
+    if (hasRegulations)
+        dataReport->addColumn("collect_regulations", string())
+            .addColumn("post_regulations", string());
+
+    // Write the report body by looping over the netted CRIF records
+    for (const auto& cr : simmData) {
+        // Skip to next netted CRIF record if 'AmountUSD' is negligible
+        if (close_enough(cr.amountUsd, 0.0))
+            continue;
+
+        // Skip Schedule IM records
+        if (cr.imModel == "Schedule")
+            continue;
+
+        // Same check as above, but for backwards compatibility, if im_model is not used
+        // but Risk::Type is PV or Notional
+        if (cr.imModel.empty() &&
+            (cr.riskType == SimmConfiguration::RiskType::Notional || cr.riskType == SimmConfiguration::RiskType::PV))
+            continue;
+
+        // Write current netted CRIF record
+        dataReport->next();
+        map<string, string> nettingSetMap = cr.nettingSetDetails.mapRepresentation();
+        for (const string& field : NettingSetDetails::fieldNames(hasNettingSetDetails))
+            dataReport->add(nettingSetMap[field]);
+        dataReport->add(to_string(cr.riskType))
+            .add(to_string(cr.productClass))
+            .add(cr.bucket)
+            .add(cr.qualifier)
+            .add(cr.label1)
+            .add(cr.label2)
+            .add(cr.amountUsd)
+            .add(cr.imModel);
+
+        if (hasRegulations) {
+            string collectRegString = cr.collectRegulations.find(',') == string::npos
+                                        ? cr.collectRegulations
+                                        : '\"' + cr.collectRegulations + '\"';
+            string postRegString = cr.postRegulations.find(',') == string::npos
+                                        ? cr.postRegulations
+                                        : '\"' + cr.postRegulations + '\"';
+
+            dataReport->add(collectRegString)
+                .add(postRegString);
+        }
+    }
+
+    dataReport->end();
+
+    LOG("SIMM data report written.");
+}
+
+void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report,
+                                   const SimmNetSensitivities& crifRecords,
+                                   bool hasNettingSetDetails) {
+
+    std::vector<string> addFields;
+    for (const auto& cr : crifRecords) {
+        for (const auto& af : cr.additionalFields) {
+            if (std::find(addFields.begin(), addFields.end(), af.first) == addFields.end()) {
+                addFields.push_back(af.first);
+            }
+        }
+    }
+
+    // Add report headers
+    report->addColumn("TradeID", string()).addColumn("PortfolioID", string());
+    // Add additional netting set fields if netting set details are being used instead of just the netting set ID
+    if (hasNettingSetDetails) {
+        for (const string& optionalField : NettingSetDetails::optionalFieldNames())
+            report->addColumn(optionalField, string());
+    }
+
+    report->addColumn("ProductClass", string())
+        .addColumn("RiskType", string())
+        .addColumn("Qualifier", string())
+        .addColumn("Bucket", string())
+        .addColumn("Label1", string())
+        .addColumn("Label2", string())
+        .addColumn("AmountCurrency", string())
+        .addColumn("Amount", double(), 2)
+        .addColumn("AmountUSD", double(), 2)
+        .addColumn("IMModel", string())
+        .addColumn("TradeType", string());
+
+    // Add additional CRIF fields
+    for (const string& f : addFields) {
+        report->addColumn(f, string());
+    }
+
+    // Write individual CRIF records
+    for (const auto& cr : crifRecords) {
+        
+        report->next().add(cr.tradeId).add(cr.portfolioId);
+
+        if (hasNettingSetDetails) {
+            map<string, string> crNettingSetDetailsMap = NettingSetDetails(cr.nettingSetDetails).mapRepresentation();
+            for (const string& optionalField : NettingSetDetails::optionalFieldNames())
+                report->add(crNettingSetDetailsMap[optionalField]);
+        }
+
+        report->add(to_string(cr.productClass))
+            .add(to_string(cr.riskType))
+            .add(cr.qualifier)
+            .add(cr.bucket)
+            .add(cr.label1)
+            .add(cr.label2)
+            .add(cr.amountCurrency)
+            .add(cr.amount)
+            .add(cr.amountUsd)
+            .add(cr.imModel)
+            .add(cr.tradeType);
+
+        for (const string& af : addFields) {
+            if (cr.additionalFields.find(af) == cr.additionalFields.end())
+                report->add("");
+            else {
+                string value = cr.additionalFields.at(af);
+                if (af == "collect_regulations" || af == "post_regulations")
+                    value = escapeCommaSeparatedList(value, '\0');
+                report->add(value);
+            }
+        }
+    }
+
+    report->end();
+}
+
 } // namespace analytics
 } // namespace ore
