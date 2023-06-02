@@ -151,6 +151,7 @@ void MarketDataLoader::addRelevantFixings(
     if (isFxIndex(fixing.first)) {
         // for FX fixings we want to add additional fixings to allow triangulation in case of missing
         // fixings if we need EUR/GBP fixing but it is not available, we can imply from EUR/USD and GBP/USD
+        additional_fx_fixings(fixing.first, fixing.second, fixings_);
     }
     if (isCommodityIndex(fixing.first)) {
         additional_commodity_fixings(fixing.first, fixing.second, fixings_, lastAvailableFixingLookupMap);
