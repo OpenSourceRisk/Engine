@@ -76,7 +76,9 @@ public:
     void populateLoader(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
         const std::set<QuantLib::Date>& loaderDates);
 
-    virtual void populateFixings(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters);
+    virtual void
+    populateFixings(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
+                    const std::set<QuantLib::Date>& loaderDates = {});
 
     virtual void addRelevantFixings(const std::pair<std::string, std::set<QuantLib::Date>>& fixing,
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>>& lastAvailableFixingLookupMap);
