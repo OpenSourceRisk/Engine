@@ -1,6 +1,6 @@
 1) Portfolio
 
-   simple swap
+   two zero coupon bonds with shorter and longer maturity
 
 2) Market
 
@@ -12,7 +12,7 @@
 
 4) Analytics
 
-   NPV and Curve
+   NPV, Cash Flow and Curve
 
 5) Run Example
 

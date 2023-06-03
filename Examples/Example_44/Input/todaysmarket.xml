@@ -16,9 +16,10 @@
     <Index name="USD-LIBOR-3M">Yield/USD/USD3M</Index>
     <Index name="USD-LIBOR-6M">Yield/USD/USD6M</Index>
   </IndexForwardingCurves>
-  <FxSpots/>
-  <SwapIndexCurves/>
+  <FxSpots />
+  <SwapIndexCurves />
   <DefaultCurves id="default">
+    <DefaultCurve name="USD.CSB.DEFAULT_CURVE_SHIFTED">Default/USD/USD.CSB.DEFAULT_CURVE_SHIFTED</DefaultCurve>
   </DefaultCurves>
   <Securities id="default">
     <Security name="DUMMY_SECURITY">Security/DUMMY_SECURITY</Security>

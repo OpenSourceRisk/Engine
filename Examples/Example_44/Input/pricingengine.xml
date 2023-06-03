@@ -1,11 +1,5 @@
 <?xml version="1.0"?>
 <PricingEngines>
-  <Product type="Swap">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingSwapEngineOptimised</Engine>
-    <EngineParameters/>
-  </Product>
   <Product type="Bond">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>

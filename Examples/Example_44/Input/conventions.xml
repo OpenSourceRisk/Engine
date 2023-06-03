@@ -109,18 +109,6 @@
     <Index>USD-LIBOR-6M</Index>
   </Swap>
   <OIS>
-    <Id>EUR-OIS-CONVENTIONS</Id>
-    <SpotLag>2</SpotLag>
-    <Index>EUR-EONIA</Index>
-    <FixedDayCounter>A360</FixedDayCounter>
-    <PaymentLag>1</PaymentLag>
-    <EOM>false</EOM>
-    <FixedFrequency>Annual</FixedFrequency>
-    <FixedConvention>Following</FixedConvention>
-    <FixedPaymentConvention>Following</FixedPaymentConvention>
-    <Rule>Backward</Rule>
-  </OIS>
-  <OIS>
     <Id>USD-OIS-CONVENTIONS</Id>
     <SpotLag>2</SpotLag>
     <Index>USD-FedFunds</Index>
