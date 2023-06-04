@@ -394,8 +394,8 @@ BOOST_FIXTURE_TEST_CASE(testDividends, F) {
 
     BOOST_REQUIRE_MESSAGE(DividendManager::instance().hasHistory(eq->name()),
                           "Could not find index " << eq->name() << " in DividendManager");
-    map<Date, Dividend> divMap;
-    const set<Dividend>& dividends = eq->dividendFixings();
+    map<Date, QuantExt::Dividend> divMap;
+    const set<QuantExt::Dividend>& dividends = eq->dividendFixings();
     for (const auto& d : dividends)
         divMap[d.exDate] = d;
 
