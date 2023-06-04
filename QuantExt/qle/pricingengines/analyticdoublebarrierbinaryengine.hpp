@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ql/experimental/barrieroption/analyticdoublebarrierbinaryengine.hpp>
-#include <ql/experimental/barrieroption/doublebarrieroption.hpp>
+#include <ql/pricingengines/barrier/analyticdoublebarrierbinaryengine.hpp>
+#include <ql/instruments/doublebarrieroption.hpp>
 
 namespace QuantExt {
 
