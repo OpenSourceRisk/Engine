@@ -18,8 +18,6 @@
 			<SmileOptionTenors>2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 15Y, 20Y, 25Y, 30Y</SmileOptionTenors>
 			<SmileSwapTenors>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 15Y, 20Y, 25Y, 30Y</SmileSwapTenors>
 			<SmileSpreads>-0.005, -0.0025, 0.0025, 0.005, 0.01, 0.015, 0.02</SmileSpreads>
-			<SmileDynamics/>
-			<Report/>
 		</SwaptionVolatility>
 	</SwaptionVolatilities>
 	<YieldVolatilities/>
