@@ -23,7 +23,6 @@
 #include <iomanip>
 
 using namespace ore::data;
-using namespace QuantExt;
 
 BOOST_FIXTURE_TEST_SUITE(OREPlusCreditTestSuite, ore::test::TopLevelFixture)
 
@@ -32,9 +31,9 @@ BOOST_AUTO_TEST_SUITE(CBOTest)
 BOOST_AUTO_TEST_CASE(testSimpleCBO) {
     BOOST_TEST_MESSAGE("Testing simple CBO...");
 
-    ORE_REGISTER_REFERENCE_DATUM("CBO", CboReferenceDatum, true)
+    ORE_REGISTER_REFERENCE_DATUM("CBO", CboReferenceDatum, false)
     ORE_REGISTER_ENGINE_BUILDER(CboMCEngineBuilder, false)
-    ORE_REGISTER_TRADE_BUILDER("CBO", ore::data::CBO, false)
+    ORE_REGISTER_TRADE_BUILDER("CBO", CBO, false)
 
     Settings::instance().evaluationDate() = Date(31, Dec, 2018);
     Date asof = Settings::instance().evaluationDate();
