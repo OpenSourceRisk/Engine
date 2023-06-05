@@ -17,24 +17,22 @@
 #include <ored/portfolio/tranche.hpp>
 #include <ored/portfolio/referencedata.hpp>
 
-namespace oreplus {
+namespace ore {
 namespace data {
 
-using namespace ore::data;
-
-class CboReferenceDatum : public ore::data::ReferenceDatum {
+class CboReferenceDatum : public ReferenceDatum {
 public:
     static constexpr const char* TYPE = "CBO";
     struct CboStructure : XMLSerializable {
 
-        oreplus::data::BondBasket bondbasketdata;
+        BondBasket bondbasketdata;
         std::string feeDayCounter;
         std::string seniorFee;
         std::string subordinatedFee;
         std::string equityKicker;
         std::string ccy;
         std::string reinvestmentEndDate;
-        std::vector<boost::shared_ptr<oreplus::data::TrancheData>> trancheData;
+        std::vector<boost::shared_ptr<TrancheData>> trancheData;
         ScheduleData scheduleData;
         std::string daycounter;
         std::string paymentConvention;
@@ -73,7 +71,7 @@ public:
     std::string notionalCurrency() const override { return ccy_; }
 
     std::string investedTrancheName() { return investedTrancheName_; };
-    const oreplus::data::BondBasket& bondBasketData() { return bondbasketdata_; }
+    const BondBasket& bondBasketData() { return bondbasketdata_; }
     double underlyingMultiplier() { return multiplier_; }
 
 protected:
@@ -81,12 +79,12 @@ protected:
 
 private:
 
-    void populateFromCboReferenceData(const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceDataManager);
-    void populateFromCboReferenceData(const boost::shared_ptr<oreplus::data::CboReferenceDatum>& cboReferenceDatum);
+    void populateFromCboReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager);
+    void populateFromCboReferenceData(const boost::shared_ptr<CboReferenceDatum>& cboReferenceDatum);
     void validateCbo();
 
     boost::shared_ptr<QuantExt::BondBasket> bondbasket_;
-    oreplus::data::BondBasket bondbasketdata_;
+    BondBasket bondbasketdata_;
     std::string feeDayCounter_;
     std::string seniorFee_;
     std::string subordinatedFee_;
@@ -94,7 +92,7 @@ private:
     std::string ccy_;
     std::string reinvestmentEndDate_;
     std::string investedTrancheName_;
-    std::vector<boost::shared_ptr<oreplus::data::TrancheData>> trancheData_;
+    std::vector<boost::shared_ptr<TrancheData>> trancheData_;
     ScheduleData scheduleData_;
     std::string daycounter_;
     std::string paymentConvention_;
@@ -120,4 +118,4 @@ struct CBOTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
 };
 
 } // namespace data
-} // namespace oreplus
+} // namespace ore

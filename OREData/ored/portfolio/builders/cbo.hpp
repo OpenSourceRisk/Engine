@@ -13,10 +13,8 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ql/experimental/credit/pool.hpp>
 
-namespace oreplus {
+namespace ore {
 namespace data {
-
-using namespace ore::data;
 
 class CboMCEngineBuilder : public EngineBuilder {
 public:
@@ -27,4 +25,4 @@ public:
 };
 
 } // namespace data
-} // namespace oreplus
+} // namespace ore

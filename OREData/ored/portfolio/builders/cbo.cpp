@@ -12,7 +12,7 @@
 #include <ql/experimental/credit/onefactorgaussiancopula.hpp>
 #include <ql/experimental/credit/randomdefaultmodel.hpp>
 
-namespace oreplus {
+namespace ore {
 namespace data {
 
 static DefaultProbKey dummyDefaultProbKey() {
@@ -54,4 +54,4 @@ boost::shared_ptr<PricingEngine> CboMCEngineBuilder::engine(const boost::shared_
 };
 
 } // namespace data
-} // namespace oreplus
+} // namespace ore

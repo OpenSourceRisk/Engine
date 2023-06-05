@@ -20,10 +20,9 @@
 
 #include <vector>
 
-namespace oreplus {
+namespace ore {
 namespace data {
 using namespace QuantLib;
-using namespace ore::data;
 using ore::data::XMLSerializable;
 using std::string;
 using std::vector;
@@ -55,7 +54,7 @@ public:
                                                   const std::string& reinvestmentEndDate);
     //@}
 
-    const std::vector<boost::shared_ptr<ore::data::Bond>>& bonds() const { return bonds_; }
+    const std::vector<boost::shared_ptr<Bond>>& bonds() const { return bonds_; }
 
     const RequiredFixings& requiredFixings() const { return requiredFixings_; }
 private:
@@ -63,7 +62,7 @@ private:
     bool isFeeFlow(const ext::shared_ptr<QuantLib::CashFlow>& cf, const std::string& name);
     void setReinvestmentScalar();
 
-    vector<boost::shared_ptr<ore::data::Bond>> bonds_;
+    vector<boost::shared_ptr<Bond>> bonds_;
     std::map <string, boost::shared_ptr<QuantExt::FxIndex>> fxIndexMap_;
     RequiredFixings requiredFixings_;
     QuantLib::Date reinvestment_;
@@ -72,4 +71,4 @@ private:
 
 };
 } // namespace data
-} // namespace oreplus
+} // namespace ore

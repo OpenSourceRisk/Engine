@@ -19,12 +19,11 @@
 #include <ql/math/functional.hpp>
 #include <ql/quotes/derivedquote.hpp>
 
-using namespace ore::data;
 using namespace QuantLib;
 using std::string;
 using std::vector;
 
-namespace oreplus {
+namespace ore {
 namespace data {
 
 static DefaultProbKey dummyDefaultProbKey() {
@@ -278,4 +277,4 @@ std::map<AssetClass, std::set<std::string>> BondBasket::underlyingIndices(const 
 }
 
 } // namespace data
-} // namespace oreplus
+} // namespace orep
