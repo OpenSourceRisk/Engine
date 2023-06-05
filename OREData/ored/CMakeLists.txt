@@ -103,6 +103,7 @@ portfolio/barrieroption.cpp
 portfolio/barrieroptionwrapper.cpp
 portfolio/basketdata.cpp
 portfolio/bond.cpp
+portfolio/bondbasket.cpp
 portfolio/bondoption.cpp
 portfolio/bondposition.cpp
 portfolio/bondrepo.cpp
@@ -120,6 +121,7 @@ portfolio/builders/capfloorediborleg.cpp
 portfolio/builders/capfloorednonstandardyoyleg.cpp
 portfolio/builders/capflooredovernightindexedcouponleg.cpp
 portfolio/builders/capflooredyoyleg.cpp
+portfolio/builders/cbo.cpp
 portfolio/builders/cdo.cpp
 portfolio/builders/cms.cpp
 portfolio/builders/cmsspread.cpp
@@ -168,6 +170,7 @@ portfolio/builders/swaption.cpp
 portfolio/builders/varianceswap.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
+portfolio/cbo.cpp
 portfolio/cdo.cpp
 portfolio/cliquetoption.cpp
 portfolio/commodityapo.cpp
@@ -404,6 +407,7 @@ portfolio/barrieroption.hpp
 portfolio/barrieroptionwrapper.hpp
 portfolio/basketdata.hpp
 portfolio/bond.hpp
+portfolio/bondbasket.hpp
 portfolio/bondoption.hpp
 portfolio/bondposition.hpp
 portfolio/bondrepo.hpp
@@ -423,6 +427,7 @@ portfolio/builders/capfloorediborleg.hpp
 portfolio/builders/capfloorednonstandardyoyleg.hpp
 portfolio/builders/capflooredovernightindexedcouponleg.hpp
 portfolio/builders/capflooredyoyleg.hpp
+portfolio/builders/cbo.hpp
 portfolio/builders/cdo.hpp
 portfolio/builders/cliquetoption.hpp
 portfolio/builders/cms.hpp
@@ -474,6 +479,7 @@ portfolio/builders/vanillaoption.hpp
 portfolio/builders/varianceswap.hpp
 portfolio/builders/yoycapfloor.hpp
 portfolio/capfloor.hpp
+portfolio/cbo.hpp
 portfolio/cdo.hpp
 portfolio/cliquetoption.hpp
 portfolio/commodityapo.hpp
