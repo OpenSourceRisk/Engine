@@ -3257,6 +3257,33 @@ The relevant inputs in {\tt ore.xml} are
 
 The market data input and todays's market configuration required here is minimal - limited to FX rates for conversions from base/calculation currency into USD and into the result currency.
 
+%--------------------------------------------------------
+\subsection{Collateral Bond Obligation}% Example 45
+%--------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_45} demonstrates a Cashflow CDO or Collateral Bond Obligation (CBO) via ORE. Calling
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+will launch a single ORE run to process a CBO example, referencing underyling bond portfolio of 20 trades. 
+The CBO is represented by a CBO reference datum specified in the reference data file. 
+NPV results are calculated for the investment in the junior tranche. 
+
+%--------------------------------------------------------
+\subsection{TRS on CBO}% Example 46
+%--------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_46} demonstrates a Total Return Swap (TRS) referencing a CBO pricing via ORE. Calling
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+will launch a single ORE run to process a TRS example and to generate NPV and cash flows in the usual result files.
+As opposed to example 45, the CBO and its bondbasket are represented explicitly in the CBO node.
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
