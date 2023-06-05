@@ -9,10 +9,6 @@
 
 #pragma once
 
-#ifdef OREPLUS_LICENSE
-#include <orepbase/license.hpp>
-#endif
-
 #include <qle/instruments/cbo.hpp>
 #include <ql/experimental/credit/distribution.hpp>
 #include <ql/experimental/credit/randomdefaultmodel.hpp>

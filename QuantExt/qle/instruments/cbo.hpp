@@ -9,10 +9,6 @@
 
 #pragma once
 
-#ifdef OREPLUS_LICENSE
-#include <orepbase/license.hpp>
-#endif
-
 #include <ql/event.hpp>
 #include <ql/instrument.hpp>
 
