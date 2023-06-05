@@ -229,6 +229,27 @@
       <DiscountCurve>Yield/USD/USD1D</DiscountCurve>
     </CapFloorVolatility>
   </CapFloorVolatilities>
+  <OptionletVolatilities>
+    <OptionletVolatility>
+      <CurveId>USD_CF_N</CurveId>
+      <CurveDescription>USD normal optionlet volatilities</CurveDescription>
+      <!-- Normal, Lognormal or ShiftedLognormal -->
+      <VolatilityType>Normal</VolatilityType>
+      <!-- Linear, Flat, None -->
+      <Extrapolation>Linear</Extrapolation>
+      <!-- Include ATM vol quotes also: True or False -->
+      <IncludeAtm>FALSE</IncludeAtm>
+      <!-- Day counter for date to time conversion -->
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <!--Calendar and Business day convention for cap/floor term to date conversion -->
+      <Calendar>UK</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Tenors>
+      <Strikes>0.005,0.015,0.02,0.025,0.03,0.035,0.04,0.045,0.05,0.055,0.06,0.065,0.07,0.075,0.08,0.085,0.09,0.095,0.1</Strikes>
+      <IborIndex>USD-LIBOR-3M</IborIndex>
+      <DiscountCurve>Yield/USD/USD1D</DiscountCurve>
+    </OptionletVolatility>
+  </OptionletVolatilities>
   <DefaultCurves>
     <DefaultCurve>
       <CurveId>BANK_SR_USD</CurveId>

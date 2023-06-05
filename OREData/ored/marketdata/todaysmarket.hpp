@@ -50,6 +50,7 @@ class FXVolCurve;
 class GenericYieldVolCurve;
 class YieldVolCurve;
 class CapFloorVolCurve;
+class OptionletVolCurve;
 class DefaultCurve;
 class CDSVolCurve;
 class BaseCorrelationCurve;

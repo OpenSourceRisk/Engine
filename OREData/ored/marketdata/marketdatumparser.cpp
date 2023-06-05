@@ -461,6 +461,36 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         }
     }
 
+    case MarketDatum::InstrumentType::OPTIONLET: {
+        QL_REQUIRE(tokens.size() == 8 || tokens.size() == 9 || tokens.size() == 4 || tokens.size() == 5,
+                   "Either 4, 5 or 8, 9 tokens expected in " << datumName);
+        const string& ccy = tokens[2];
+        Size offset = 0;
+        std::string indexName;
+        /*
+        if (tokens.size() == 9 || tokens.size() == 5) {
+            offset = 1;
+            indexName = tokens[3];
+        }
+        */
+        if (tokens.size() == 8 || tokens.size() == 9) {
+            Period term = parsePeriod(tokens[3 + offset]);
+            Period tenor = parsePeriod(tokens[4 + offset]);
+            bool atm = parseBool(tokens[5 + offset].c_str());
+            bool relative = parseBool(tokens[6 + offset].c_str());
+            Real strike = parseReal(tokens[7 + offset]);
+            return boost::make_shared<OptionletQuote>(value, asof, datumName, quoteType, ccy, term, tenor, atm, relative,
+                                                     strike, indexName);
+        } 
+        /*
+        else {
+            Period indexTenor = parsePeriod(tokens[3 + offset]);
+            return boost::make_shared<CapFloorShiftQuote>(value, asof, datumName, quoteType, ccy, indexTenor,
+                                                          indexName);
+        } 
+        */
+    }
+
     case MarketDatum::InstrumentType::SWAPTION: {
         QL_REQUIRE(tokens.size() >= 4 && tokens.size() <= 8, "4...8 tokens expected in " << datumName);
         const string& ccy = tokens[2];
