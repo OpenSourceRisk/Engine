@@ -29,7 +29,7 @@
 
 namespace QuantExt {
 
-//! Commodity Index
+//! Commodity Basis Future Index
 /*! This index can represent futures prices derived from basis future index and a base future index
     \ingroup indexes
 */
