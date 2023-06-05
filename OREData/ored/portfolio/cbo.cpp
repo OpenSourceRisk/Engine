@@ -16,7 +16,7 @@ using namespace QuantExt;
 using namespace std::placeholders;
 using namespace ore::data;
 
-namespace oreplus {
+namespace ore {
 namespace data {
 
 void CBO::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
@@ -183,7 +183,7 @@ void CBO::fromXML(XMLNode* node) {
         XMLNode* tranchesNode = XMLUtils::getChildNode(cboStructure, "CBOTranches");
         if(tranchesNode){
             for (XMLNode* child = XMLUtils::getChildNode(tranchesNode, "Tranche"); child; child = XMLUtils::getNextSibling(child)) {
-                auto data = boost::make_shared<oreplus::data::TrancheData>();
+                auto data = boost::make_shared<ore::data::TrancheData>();
                 data->fromXML(child);
                 trancheData_.push_back(data);
             }
@@ -244,8 +244,8 @@ void CBOTrsUnderlyingBuilder::build(
         const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
     const std::string& underlyingDerivativeId) const {
-    auto t = boost::dynamic_pointer_cast<oreplus::data::CBO>(underlying);
-    QL_REQUIRE(t, "could not cast to oreplus::data::CBO, this is unexpected");
+    auto t = boost::dynamic_pointer_cast<ore::data::CBO>(underlying);
+    QL_REQUIRE(t, "could not cast to ore::data::CBO, this is unexpected");
     string indexName = "GENERIC-" + t->investedTrancheName();
     indexQuantities[indexName] = t->underlyingMultiplier();
     underlyingIndex = boost::make_shared<QuantExt::GenericIndex>(indexName);
@@ -291,7 +291,7 @@ void CboReferenceDatum::CboStructure::fromXML(XMLNode* node) {
     XMLNode* tranchesNode = XMLUtils::getChildNode(node, "CBOTranches");
     QL_REQUIRE(tranchesNode, "No CBOTranches Node");
     for (XMLNode* child = XMLUtils::getChildNode(tranchesNode, "Tranche"); child; child = XMLUtils::getNextSibling(child)) {
-        auto data = boost::make_shared<oreplus::data::TrancheData>();
+        auto data = boost::make_shared<ore::data::TrancheData>();
         data->fromXML(child);
         trancheData.push_back(data);
     }
@@ -446,4 +446,4 @@ void CBO::validateCbo(){
 }
 
 } // namespace data
-} // namespace oreplus
+} // namespace ore
