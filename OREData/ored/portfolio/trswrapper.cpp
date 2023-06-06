@@ -482,7 +482,7 @@ void TRSWrapperAccrualEngine::calculate() const {
                     }
                     // account for dividends
                     Real dividends = 0.0;
-                    if (auto e = boost::dynamic_pointer_cast<EquityIndex>(arguments_.underlyingIndex_[i])) {
+                    if (auto e = boost::dynamic_pointer_cast<EquityIndex2>(arguments_.underlyingIndex_[i])) {
                         dividends +=
                             e->dividendsBetweenDates(startDate + 1, today) * arguments_.underlyingMultiplier_[i];
                     } else if (auto e = boost::dynamic_pointer_cast<CompositeIndex>(arguments_.underlyingIndex_[i])) {
