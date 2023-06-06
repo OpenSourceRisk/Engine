@@ -2,12 +2,12 @@
 <Simulation>
   <Parameters>
     <Discretization>Exact</Discretization>
-    <Grid>80,3M</Grid>
+    <Grid>20,1Y</Grid>
     <Calendar>EUR,USD,GBP,CHF</Calendar>
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>1000</Samples>
+    <Samples>2</Samples>
   </Parameters>
   <CrossAssetModel>
     <DomesticCcy>EUR</DomesticCcy>
