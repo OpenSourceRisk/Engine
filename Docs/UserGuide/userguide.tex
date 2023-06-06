@@ -818,6 +818,8 @@ where the -G option allows choosing the desired build system generator.
   \medskip {\tt ctest -j4}
 \end{enumerate}
 
+For the best results, it is recommended, to compile ORE without the compiler flag \emph{QL_USE_INDEXED_COUPON}. Not all ORE classes (in particular coupons and rate helpers) support this functionality yet and the results might not always be what is expected.
+
 \subsubsection*{ZLIB support}
 
 To enable zlib support configure CMake with the flag {\tt -DORE\_USE\_ZLIB=ON}. 
