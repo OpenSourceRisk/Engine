@@ -1,0 +1,51 @@
+\subsubsection{RangeBound}
+\label{ss:rangebound}
+This trade component node is used within the following trade data containers
+
+\begin{itemize}
+  \item FxTaRFfData, EquityTaRFData, CommodityTaRFData
+  \item FxAccumulatorData, EquityAccumulatorData, CommodityAccumulatorData
+\end{itemize}
+
+An example structure of the \lstinline!RangeBound! trade component node is shown in Listing
+\ref{lst:rangebound}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <RangeBound>
+          <RangeFrom>0</RangeFrom>
+          <RangeTo>155.00</RangeTo>
+          <Leverage>2</Leverage>
+          <Strike>150.54</Strike>
+        </RangeBound>
+\end{minted}
+\caption{RangeBound}
+\label{lst:rangebound}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!RangeBound! node follow below.
+
+\begin{itemize}
+\item RangeFrom [Optional]: The lower bound of the range. 
+
+Allowable values:  Any real number. If omitted, no lower bound applies. Cannot be left blank.
+
+\item RangeTo [Optional]: The upper bound of the range. 
+
+Allowable values:  Any real number. If omitted, no lower bound applies. Cannot be left blank.
+
+\item Leverage [Optional]: The leverage that applies to the range. For TaRFs, negative leverage can be mixed with positive leverage to reflect a TaRF with switching buyer/seller. However, for Accumulators all given Leverage parameters within the same instrument (in multiple \lstinline!RangeBound! nodes) must have the same sign.
+
+Allowable values:  Any real number. Defaults to 1 if omitted. Cannot be left blank.
+
+\item Strike [Optional]: The strike specific to the range. If given overwrites a strike given on the trade level.
+
+Allowable values:  Any real number. Defaults to the trade level strike if omitted. Cannot be left blank.
+
+\item StrikeAdjustment [Optional]: A strike adjustment relative to the strike given on the trade level.  If given the
+  strike for the defined range is computed as $K+A$ where $K$ is the strike on the trade level and $A$ is the strike
+  adjustment. Notice that Strike and StrikeAdjustment can not be given both at the same time.
+
+Allowable values:  Any real number.
+\end{itemize}

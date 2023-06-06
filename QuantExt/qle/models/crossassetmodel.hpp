@@ -413,8 +413,8 @@ public:
 protected:
     /* ctor to be used in extensions, initialize is not called */
     CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization>>& parametrizations, const Matrix& correlation,
-                    SalvagingAlgorithm::Type salvaging, IrModel::Measure measure, const bool)
-        : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation), salvaging_(salvaging), measure_(measure) {
+                    SalvagingAlgorithm::Type salvaging, IrModel::Measure measure, const Discretization discretization, const bool)
+        : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation), salvaging_(salvaging), measure_(measure), discretization_(discretization) {
     }
 
     /*! number of arguments for a component */

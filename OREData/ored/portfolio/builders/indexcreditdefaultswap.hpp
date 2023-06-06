@@ -40,7 +40,7 @@ namespace data {
 
 class IndexCreditDefaultSwapEngineBuilder
     : public CachingPricingEngineBuilder<vector<string>, const Currency&, const string&, const vector<string>&,
-                                         const boost::optional<string>&, Real> {
+                                         const boost::optional<string>&, Real, bool> {
 
 public:
     CreditPortfolioSensitivityDecomposition sensitivityDecomposition();
@@ -50,7 +50,8 @@ protected:
         : CachingEngineBuilder(model, engine, {"IndexCreditDefaultSwap"}) {}
 
     vector<string> keyImpl(const Currency& ccy, const string& creditCurveId, const vector<string>& creditCurveIds,
-                           const boost::optional<string>& overrideCurve, Real recoveryRate = Null<Real>()) override;
+                           const boost::optional<string>& overrideCurve, Real recoveryRate = Null<Real>(),
+                           const bool inCcyDiscountCurve = false) override;
 };
 
 //! Midpoint Engine Builder class for IndexCreditDefaultSwaps
@@ -67,7 +68,8 @@ protected:
     boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
                                                 const vector<string>& creditCurveIds,
                                                 const boost::optional<string>& overrideCurve,
-                                                Real recoveryRate = Null<Real>()) override;
+                                                Real recoveryRate = Null<Real>(),
+                                                const bool inCcyDiscountCurve = false) override;
 };
 
 } // namespace data

@@ -894,6 +894,7 @@
       <xs:element type="simpleSegmentTypeType" name="Type"/>
       <xs:element type="quoteType" name="Quotes"/>
       <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
       <xs:element type="xs:string" name="ProjectionCurve" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
@@ -914,6 +915,7 @@
       <xs:element type="xs:string" name="Type" fixed="Average OIS"/>
       <xs:element type="compositeQuoteType" name="Quotes"/>
       <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
       <xs:element type="xs:string" name="ProjectionCurve" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
@@ -923,6 +925,7 @@
       <xs:element type="tenorBasisSegmentTypeType" name="Type"/>
       <xs:element type="quoteType" name="Quotes"/>
       <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
       <xs:element type="xs:string" name="ProjectionCurveLong" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="ProjectionCurveShort" minOccurs="0" maxOccurs="1"/>
     </xs:all>
@@ -940,6 +943,7 @@
       <xs:element type="crossCurrencySegmentTypeType" name="Type"/>
       <xs:element type="quoteType" name="Quotes"/>
       <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
       <xs:element type="xs:string" name="DiscountCurve"/>
       <xs:element type="xs:string" name="SpotRate"/>
       <xs:element type="xs:string" name="ProjectionCurveDomestic" minOccurs="0" maxOccurs="1"/>

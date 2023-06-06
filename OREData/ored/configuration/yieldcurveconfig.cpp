@@ -19,13 +19,15 @@
 
 #include <ql/errors.hpp>
 
-#include <boost/algorithm/string/predicate.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
+
+#include <boost/algorithm/string/predicate.hpp>
 
 using boost::iequals;
 using ore::data::XMLUtils;
@@ -419,8 +421,8 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
     QL_REQUIRE(std::find(validTypes.begin(), validTypes.end(), typeID_) != validTypes.end(),
                "The curve type " << typeID_ << " is not a valid " << name << " curve segment type");
 
-    if (name == "DiscountRatio") {
-    } else if (name == "AverageOIS") {
+    quotes_.clear();
+    if (name == "AverageOIS") {
         XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
         if (quotesNode) {
             for (XMLNode* child = XMLUtils::getChildNode(quotesNode, "CompositeQuote"); child;
@@ -432,7 +434,6 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
             QL_FAIL("No Quotes in segment. Remove segment or add quotes.");
         }
     } else {
-        quotes_.clear();
         XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
         if (quotesNode) {
             for (auto n : XMLUtils::getChildrenNodes(quotesNode, "Quote")) {
@@ -444,6 +445,9 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
     }
     type_ = parseYieldCurveSegment(typeID_);
     conventionsID_ = XMLUtils::getChildValue(node, "Conventions", false);
+    pillarChoice_ = parsePillarChoice(XMLUtils::getChildValue(node, "PillarChoice", false, "LastRelevantDate"));
+    QL_REQUIRE(pillarChoice_ == QuantLib::Pillar::MaturityDate || pillarChoice_ == QuantLib::Pillar::LastRelevantDate,
+               "PillarChoice " << pillarChoice_ << " not supported, expected MaturityDate, LastRelevantDate");
 }
 
 XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) {
@@ -476,6 +480,7 @@ XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) {
     }
 
     XMLUtils::addChild(doc, node, "Conventions", conventionsID_);
+    XMLUtils::addChild(doc, node, "PillarChoice", ore::data::to_string(pillarChoice_));
     return node;
 }
 

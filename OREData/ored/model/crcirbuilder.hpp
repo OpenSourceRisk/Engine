@@ -28,8 +28,8 @@
 #include <vector>
 
 #include <qle/models/crcirpp.hpp>
+#include <qle/models/modelbuilder.hpp>
 
-#include <ored/model/modelbuilder.hpp>
 #include <ored/model/crcirdata.hpp>
 
 namespace ore {
@@ -37,7 +37,7 @@ namespace data {
 using namespace QuantLib;
 
 //! Builder for a cir model component
-class CrCirBuilder : public ModelBuilder {
+class CrCirBuilder : public QuantExt::ModelBuilder {
 public:
     CrCirBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<CrCirData>& data,
                  const std::string& configuration = Market::defaultConfiguration);

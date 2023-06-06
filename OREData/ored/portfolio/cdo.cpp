@@ -665,8 +665,17 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Credit");
     additionalData_["isdaBaseProduct"] = string("Index Tranche");
-    // Deferring the mapping of qualifier to CDX, LCDX, CDX Structured Tranche, iTraxx, iTraxx Structured Tranche, ABX, MCDX
-    additionalData_["isdaSubProduct"] = qualifier_; 
+    boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
+    if (refData && refData->hasData("CreditIndex", qualifier_)) {
+        auto refDatum = refData->getData("CreditIndex", qualifier_);
+        boost::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum = boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
+        additionalData_["isdaSubProduct"] = creditIndexRefDatum->indexFamily();
+        if (creditIndexRefDatum->indexFamily() == "") {
+            ALOG("IndexFamily is blank in credit index reference data for entity " << qualifier_);
+        }
+    } else {
+        ALOG("Credit index reference data missing for entity " << qualifier_ << ", isdaSubProduct left blank");
+    }
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");  
 

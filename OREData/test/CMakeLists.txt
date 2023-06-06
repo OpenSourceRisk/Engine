@@ -1,9 +1,11 @@
 # cpp files, this list is maintained manually
 
-set(OREData-Test_SRC basecorrelationcurve.cpp
+set(OREData-Test_SRC adjustmentfactors.cpp
+basecorrelationcurve.cpp
 bond.cpp
 calendaradjustment.cpp
 calendars.cpp
+cbo.cpp
 ccyswapwithresets.cpp
 cds.cpp
 cdsindexoption.cpp
