@@ -276,7 +276,8 @@ EquityLeg::operator Leg() const {
     if (valuationSchedule_.size() > 0)
         legFixingDate = valuationSchedule_.dates().front();
     else if (schedule_.size() > 0)
-        legFixingDate = schedule_.dates().front();
+        legFixingDate = equityCurve_->fixingCalendar().advance(schedule_.dates().front(),
+                                                               -static_cast<Integer>(fixingDays_), Days, Preceding);
     else
         QL_FAIL("Cannot build equity leg, neither schedule nor valuation schedule are defined");
     
