@@ -18,7 +18,4 @@
   <DefaultCurves id="default">
     <DefaultCurve name="USD.CSB.DEFAULT_CURVE_SHIFTED">Default/USD/USD.CSB.DEFAULT_CURVE_SHIFTED</DefaultCurve>
   </DefaultCurves>
-  <Securities id="default">
-    <Security name="DUMMY_SECURITY">Security/DUMMY_SECURITY</Security>
-  </Securities>
 </TodaysMarket>

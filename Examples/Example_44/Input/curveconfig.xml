@@ -159,13 +159,6 @@
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
   </YieldCurves>
-  <Securities>
-    <Security>
-      <CurveId>DUMMY_SECURITY</CurveId>
-      <CurveDescription>Dummy security curve</CurveDescription>
-      <SpreadQuote>BOND/YIELD_SPREAD/DUMMY_SECURITY</SpreadQuote>
-    </Security>
-  </Securities>
   <DefaultCurves>
       <DefaultCurve>
       <CurveId>USD.CSB.DEFAULT_CURVE_SHIFTED</CurveId>

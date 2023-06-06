@@ -1,5 +1,0 @@
-#TradeId,Type,CashflowNo,LegNo,PayDate,FlowType,Amount,Currency,Coupon,Accrual,AccrualStartDate,AccrualEndDate,AccruedAmount,fixingDate,fixingValue,Notional,DiscountFactor,PresentValue,FXRate(Local-Base),PresentValue(Base),BaseCurrency,FloorStrike,CapStrike,FloorVolatility,CapVolatility
-DummyBond_Long,Bond,1,0,2052-06-03,Interest,0.0000,USD,0.0000000000,31.3248746164,2021-02-05,2052-06-03,0.0000,#N/A,#N/A,10000000.0000,0.2022230175,0.0000000000,1.0000000000,0.0000000000,USD,#N/A,#N/A,#N/A,#N/A
-DummyBond_Long,Bond,2,0,2052-06-03,Notional,10000000.0000,USD,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,0.2022230175,2022230.1748187239,1.0000000000,2022230.1748187239,USD,#N/A,#N/A,#N/A,#N/A
-DummyBond_Short,Bond,1,0,2032-06-01,Interest,0.0000,USD,0.0000000000,11.3194101355,2021-02-05,2032-06-01,0.0000,#N/A,#N/A,10000000.0000,0.5754510642,0.0000000000,1.0000000000,0.0000000000,USD,#N/A,#N/A,#N/A,#N/A
-DummyBond_Short,Bond,2,0,2032-06-01,Notional,10000000.0000,USD,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,0.5754510642,5754510.6415215051,1.0000000000,5754510.6415215051,USD,#N/A,#N/A,#N/A,#N/A

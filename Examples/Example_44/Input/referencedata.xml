@@ -3,8 +3,8 @@
     <ReferenceDatum id="EJ7706660">
         <Type>Bond</Type>
         <BondReferenceData>
-            <IssuerId>DUMMY_ISSUER</IssuerId>
-            <CreditCurveId>DUMMY_ISSUER</CreditCurveId>
+            <IssuerId></IssuerId>
+            <CreditCurveId></CreditCurveId>
             <ReferenceCurveId>USD-LIBOR-3M</ReferenceCurveId>
             <SettlementDays>2</SettlementDays>
             <Calendar>US</Calendar>
@@ -41,8 +41,8 @@
     <ReferenceDatum id="ZR5330686">
         <Type>Bond</Type>
         <BondReferenceData>
-            <IssuerId>DUMMY_ISSUER</IssuerId>
-            <CreditCurveId>DUMMY_ISSUER</CreditCurveId>
+            <IssuerId></IssuerId>
+            <CreditCurveId></CreditCurveId>
             <ReferenceCurveId>USD-LIBOR-3M</ReferenceCurveId>
             <IncomeCurveId/>
             <SettlementDays>2</SettlementDays>
@@ -80,8 +80,8 @@
     <ReferenceDatum id="AS0644417">
         <Type>Bond</Type>
         <BondReferenceData>
-            <IssuerId>DUMMY_ISSUER</IssuerId>
-            <CreditCurveId>DUMMY_ISSUER</CreditCurveId>
+            <IssuerId></IssuerId>
+            <CreditCurveId></CreditCurveId>
             <ReferenceCurveId>USD-LIBOR-3M</ReferenceCurveId>
             <SettlementDays>2</SettlementDays>
             <Calendar>US</Calendar>

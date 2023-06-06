@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <Trade id="DummyBond_Long">
+  <Trade id="ZeroBond_long">
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -46,7 +46,7 @@
       </LegData>
     </BondData>
   </Trade>
-  <Trade id="DummyBond_Short">
+  <Trade id="ZeroBond_short">
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>

@@ -3180,6 +3180,31 @@ or even fully remove the environment again by removing the {\tt env1} folder.
 Finally, you can build the Python module and installable packages yourself following the instructions in sections \ref{sec:oreswig}, \ref{sec:win_wheel}, \ref{sec:nix_wheel}
 based on your local ORE code. 
 
+%--------------------------------------------------------
+\subsection{Bond Yield Shifted}% Example 44
+\label{example:44}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_44} shows how to use a yield curve
+built from a BondYieldShifted segment, as described in section \ref{sec:bond_yield_shifted}.
+
+In particular, it builds the curve {\tt USD.BMK.GVN.CURVE\_SHIFTED} shifted by three liquid Bonds:
+
+\begin{itemize}
+\item {\tt EJ7706660}, fixed Rate USD Bond maturing in August 2023.
+\item {\tt ZR5330686}, fixed Rate USD Bond maturing in September 2049.
+\item {\tt AS064441}, floating Rate Bond maturing in May 2025.
+\end{itemize}
+
+The resulting curve is exhibited in the {\tt curves.csv} output file.
+Moreover, the results can be crosschecked against the NPVs, i.e. prices, of the ZeroBonds comprised in the portfolio.
+\begin{itemize}
+\item {\tt ZeroBond\_long}, maturing 2052-06-03 shows a price of 0.2022 akin to the 0.2022 in the curves output at the same date.
+\item {\tt ZeroBond\_short}, maturing 2032-06-01 shows a price of 0.5754 aktin to the 0.5754 in the curves output at the same date.
+\end{itemize}
+
+The example can be run calling {\tt python run.py}.
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}

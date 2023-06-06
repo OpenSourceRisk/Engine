@@ -48,7 +48,7 @@
       <Parameter name="grid">360,1M</Parameter>
     </Analytic>
     <Analytic type="cashflow">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="outputFileName">flows.csv</Parameter>
     </Analytic>
   </Analytics>
