@@ -5,6 +5,7 @@ basecorrelationcurve.cpp
 bond.cpp
 calendaradjustment.cpp
 calendars.cpp
+cbo.cpp
 ccyswapwithresets.cpp
 cds.cpp
 cdsindexoption.cpp

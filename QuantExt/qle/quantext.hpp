@@ -62,6 +62,7 @@
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/quantocouponpricer.hpp>
+#include <qle/cashflows/scaledcoupon.hpp>
 #include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
@@ -157,12 +158,14 @@
 #include <qle/indexes/secpi.hpp>
 #include <qle/instruments/ascot.hpp>
 #include <qle/instruments/averageois.hpp>
+#include <qle/instruments/bondbasket.hpp>
 #include <qle/instruments/bondoption.hpp>
 #include <qle/instruments/bondrepo.hpp>
 #include <qle/instruments/bondtotalreturnswap.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
+#include <qle/instruments/cbo.hpp>
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/instruments/cliquetoption.hpp>
 #include <qle/instruments/commodityapo.hpp>
@@ -206,10 +209,12 @@
 #include <qle/instruments/varianceswap.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 #include <qle/math/blockmatrixinverse.hpp>
+#include <qle/math/bucketeddistribution.hpp>
 #include <qle/math/constantinterpolation.hpp>
 #include <qle/math/covariancesalvage.hpp>
 #include <qle/math/deltagammavar.hpp>
 #include <qle/math/differentialevolution_mt.hpp>
+#include <qle/math/discretedistribution.hpp>
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/math/flatextrapolation2d.hpp>
@@ -338,6 +343,8 @@
 #include <qle/pricingengines/blackbondoptionengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 #include <qle/pricingengines/blackindexcdsoptionengine.hpp>
+#include <qle/pricingengines/cboengine.hpp>
+#include <qle/pricingengines/cbomcengine.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
 #include <qle/pricingengines/commodityschwartzfutureoptionengine.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
