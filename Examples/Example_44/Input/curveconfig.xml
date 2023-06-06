@@ -158,66 +158,6 @@
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
-    <YieldCurve>
-      <CurveId>USD6M</CurveId>
-      <CurveDescription/>
-      <Currency>USD</Currency>
-      <DiscountCurve>USD1D</DiscountCurve>
-      <Segments>
-        <Direct>
-          <Type>Discount</Type>
-          <Quotes>
-            <Quote>DISCOUNT/RATE/USD/USD6M/1D</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/2D</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/3D</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/1W</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/2W</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/3W</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/1M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/2M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/3M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/4M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/5M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/6M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/7M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/8M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/9M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/10M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/11M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/12M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/13M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/14M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/15M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/16M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/17M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/18M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/21M</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/2Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/3Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/4Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/5Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/6Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/7Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/8Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/9Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/10Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/11Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/12Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/13Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/15Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/17Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/20Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/25Y</Quote>
-            <Quote>DISCOUNT/RATE/USD/USD6M/30Y</Quote>
-          </Quotes>
-          <Conventions>CCY-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
-        </Direct>
-      </Segments>
-      <InterpolationVariable>Discount</InterpolationVariable>
-      <InterpolationMethod>FinancialCubic</InterpolationMethod>
-      <YieldCurveDayCounter>A365</YieldCurveDayCounter>
-      <Tolerance>0.000000000001</Tolerance>
-    </YieldCurve>
   </YieldCurves>
   <Securities>
     <Security>
