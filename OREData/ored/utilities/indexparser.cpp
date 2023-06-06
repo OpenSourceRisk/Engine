@@ -225,12 +225,12 @@ boost::shared_ptr<FxIndex> parseFxIndex(const string& s, const Handle<Quote>& fx
     return index;
 }
 
-boost::shared_ptr<QuantExt::EquityIndex> parseEquityIndex(const string& s) {
+boost::shared_ptr<QuantExt::EquityIndex2> parseEquityIndex(const string& s) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
     QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
     QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
-    auto index = boost::make_shared<QuantExt::EquityIndex>(tokens[1], NullCalendar(), Currency());
+    auto index = boost::make_shared<QuantExt::EquityIndex2>(tokens[1], NullCalendar(), Currency());
     IndexNameTranslator::instance().add(index->name(), s);
     return index;
 }

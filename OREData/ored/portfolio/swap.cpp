@@ -273,7 +273,7 @@ Swap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
 
             boost::shared_ptr<Index> index = parseIndex(ind);
 
-            if (auto ei = boost::dynamic_pointer_cast<EquityIndex>(index)) {
+            if (auto ei = boost::dynamic_pointer_cast<EquityIndex2>(index)) {
                 result[AssetClass::EQ].insert(ei->name());
             } else if (auto ci = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
                 result[AssetClass::COM].insert(ci->name());

@@ -65,8 +65,8 @@
              Handle<Quote>(boost::make_shared<SimpleQuote>(spot));
 
          // Add COMPANY equity curve
-         equityCurves_[make_pair(Market::defaultConfiguration, "COMPANY")] = Handle<EquityIndex>(
-             boost::make_shared<EquityIndex>("COMPANY", TARGET(), parseCurrency("USD"), equitySpot("COMPANY"),
+         equityCurves_[make_pair(Market::defaultConfiguration, "COMPANY")] = Handle<EquityIndex2>(
+             boost::make_shared<EquityIndex2>("COMPANY", TARGET(), parseCurrency("USD"), equitySpot("COMPANY"),
                                              yieldCurve(YieldCurveType::Discount, "USD"),
                                              yieldCurve(YieldCurveType::EquityDividend, "COMPANY")));
 
