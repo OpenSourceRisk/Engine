@@ -20,8 +20,8 @@
         </Notionals>
         <ScheduleData>
           <Rules>
-            <StartDate>20140923</StartDate>
-            <EndDate>20260923</EndDate>
+            <StartDate>20140205</StartDate>
+            <EndDate>20260205</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>US</Calendar>
             <Convention>MF</Convention>
@@ -47,6 +47,7 @@
       <Floors/>
     </CapFloorData>
   </Trade>
+  <!--
   <Trade id="floor_01">
     <TradeType>CapFloor</TradeType>
     <Envelope>
@@ -143,4 +144,5 @@
       </Floors>
     </CapFloorData>
   </Trade>
+  -->
 </Portfolio>

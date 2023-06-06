@@ -191,10 +191,12 @@ void OptionletVolCurve::optSurface(const Date& asof, OptionletVolatilityCurveCon
                                                             << " for optionlet vol config " << config.curveID());
                 }
             }
-            vols_vec.push_back(vols_tenor);
-            vols_tenor.clear();
         }
+        vols_vec.push_back(vols_tenor);
+        vols_tenor.clear();
     }
+    std::cout << "vols_vec.size() = " <<  vols_vec.size() << std::endl;
+    std::cout << "dates.size() = " << dates.size() << std::endl;
 
     DLOG("Found " << quoteCounter << " quotes for optionlet vol surface " << config.curveID());
     boost::shared_ptr<StrippedOptionlet> optionletSurface;

@@ -271,12 +271,21 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
     auto it = capFloorCurves_.find(make_pair(configuration, key));
     if (it != capFloorCurves_.end())
         return it->second;
+    // If no CapFloorVol found, try OptionletVol
+    require(MarketObject::OptionletVol, key, configuration);
+    auto itOptionlet = capFloorCurves_.find(make_pair(configuration, key));
+    if (itOptionlet != capFloorCurves_.end())
+        return itOptionlet->second;
     // first try the default config with the same key
     if (configuration != Market::defaultConfiguration) {
         require(MarketObject::CapFloorVol, key, Market::defaultConfiguration);
         auto it2 = capFloorCurves_.find(make_pair(Market::defaultConfiguration, key));
         if (it2 != capFloorCurves_.end())
             return it2->second;
+        require(MarketObject::OptionletVol, key, Market::defaultConfiguration);
+        auto itOptionlet2 = capFloorCurves_.find(make_pair(Market::defaultConfiguration, key));
+        if (itOptionlet2 != capFloorCurves_.end())
+            return itOptionlet2->second;
     }
     // if key is an index name and we have a cap floor surface for its ccy, we return that
     boost::shared_ptr<IborIndex> index;
@@ -289,12 +298,21 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
     if (it3 != capFloorCurves_.end()) {
         return it3->second;
     }
+    require(MarketObject::OptionletVol, ccy, configuration);
+    auto itOptionlet3 = capFloorCurves_.find(make_pair(configuration, ccy));
+    if (itOptionlet3 != capFloorCurves_.end()) {
+        return itOptionlet3->second;
+    }
     // check if we have a curve for the ccy in the default config
     if (configuration != Market::defaultConfiguration) {
-	require(MarketObject::CapFloorVol, ccy, configuration);
+	    require(MarketObject::CapFloorVol, ccy, configuration);
         auto it4 = capFloorCurves_.find(make_pair(Market::defaultConfiguration, ccy));
         if (it4 != capFloorCurves_.end())
             return it4->second;
+        require(MarketObject::OptionletVol, ccy, configuration);
+        auto itOptionlet4 = capFloorCurves_.find(make_pair(Market::defaultConfiguration, ccy));
+        if (itOptionlet4 != capFloorCurves_.end())
+            return itOptionlet4->second;
     }
     QL_FAIL("did not find capfloor curve for key '" << key << "'");
 }
