@@ -190,8 +190,7 @@ void SegmentIDGetter::visit(FittedBondYieldCurveSegment& s) {
 void SegmentIDGetter::visit(BondYieldShiftedYieldCurveSegment& s) {
     for (auto const& c : s.iborIndexCurves())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(c.second);
-    string refCurveID = s.referenceCurveID();
-    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(refCurveID);
+    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(s.referenceCurveID());
 }
 
 void SegmentIDGetter::visit(WeightedAverageYieldCurveSegment& s) {

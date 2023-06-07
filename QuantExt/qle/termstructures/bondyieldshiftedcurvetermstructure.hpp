@@ -55,7 +55,9 @@ public:
 
         QL_REQUIRE(bondYields.size() == bondDurations.size(),
                    "BondYieldShiftedCurveTermStructure: inconsistent lengths of yield and duration vectors ("
-                       << bondYields.size() << " vs. " << bondYields.size() << ")");
+                       << bondYields.size() << " vs. " << bondDurations.size() << ")");
+
+        QL_REQUIRE(bondYields.size() > 0, "at least one bondYield for shifting of the reference curve required.");
 
         accumulator_set<Real, stats<tag::mean>> spreadMean, durationMean;
 

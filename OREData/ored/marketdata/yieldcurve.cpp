@@ -1332,9 +1332,6 @@ void YieldCurve::buildBondYieldShiftedCurve() {
     Rate bondYield = Null<Real>();
     Real thisDuration = Null<Real>();
 
-    // not really relevant, we just need a working engine configuration so that the bond can be built
-    // the pricing engine here is _not_ used during the curve construction, for this a local engine is
-    // set up within the fuction
     auto engineData = boost::make_shared<EngineData>();
     engineData->model("Bond") = "DiscountedCashflows";
     engineData->engine("Bond") = "DiscountingRiskyBondEngine";
@@ -1403,9 +1400,9 @@ void YieldCurve::buildBondYieldShiftedCurve() {
 
         } else {
 
-            DLOG("error in data collection of bond " << securityID << " with settlement date "
-                                         << QuantLib::io::iso_date(qlInstr->settlementDate()) << ", isTradable = "
-                                         << std::boolalpha << QuantLib::BondFunctions::isTradable(*qlInstr));
+            DLOG("Skipping bond " << securityID
+                << ", with settlement date " << QuantLib::io::iso_date(qlInstr->settlementDate())
+                << ", isTradable = " << std::boolalpha << QuantLib::BondFunctions::isTradable(*qlInstr));
         }
 
     }
