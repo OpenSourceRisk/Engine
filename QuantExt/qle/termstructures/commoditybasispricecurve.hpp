@@ -62,7 +62,7 @@ public:
                              const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
                              const boost::shared_ptr<CommodityIndex>& baseIndex,
                              const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
-                             QuantLib::Size monthOffset = 0,
+                             QuantLib::Size monthOffset = 0, bool priceAsHistFixing = true,
                              const Interpolator& interpolator = Interpolator());
     //@}
 
@@ -125,10 +125,10 @@ template <class Interpolator>
 CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     const QuantLib::Date& referenceDate, const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>>& basisData,
     const boost::shared_ptr<FutureExpiryCalculator>& basisFec, const boost::shared_ptr<CommodityIndex>& baseIndex,
-    const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
-    bool addBasis, QuantLib::Size monthOffset, const Interpolator& interpolator)
-    : CommodityBasisPriceTermStructure(referenceDate, basisFec, baseIndex, baseFec, addBasis,
-                                       monthOffset, false),
+    const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis, QuantLib::Size monthOffset,
+    bool priceAsHistFixing, const Interpolator& interpolator)
+    : CommodityBasisPriceTermStructure(referenceDate, basisFec, baseIndex, baseFec, addBasis, monthOffset, false,
+                                       priceAsHistFixing),
       QuantLib::InterpolatedCurve<Interpolator>(interpolator), basisData_(basisData) {
     QL_REQUIRE(baseIndex != nullptr && !baseIndex->priceCurve().empty(),
                "CommodityBasisPriceCurve requires baseIndex with priceCurve");

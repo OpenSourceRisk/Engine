@@ -28,50 +28,48 @@
 
 namespace QuantExt {
 
-class CommodityBasisPriceCurveWrapper : public QuantExt::CommodityBasisPriceTermStructure,
-                                         public QuantLib::LazyObject {
+class CommodityBasisPriceCurveWrapper : public QuantExt::CommodityBasisPriceTermStructure, public QuantLib::LazyObject {
 public:
     CommodityBasisPriceCurveWrapper(const QuantLib::Date& referenceDate,
                                     const boost::shared_ptr<PriceTermStructure>& priceCurve,
                                     const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
                                     const boost::shared_ptr<CommodityIndex>& baseIndex,
                                     const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
-                                    QuantLib::Size monthOffset = 0, bool averagingBaseCashflow = false)
+                                    QuantLib::Size monthOffset = 0, bool averagingBaseCashflow = false,
+                                    bool priceAsHistFixing = true)
         : CommodityBasisPriceTermStructure(referenceDate, basisFec, baseIndex, baseFec, addBasis, monthOffset,
-                                           averagingBaseCashflow),
+                                           averagingBaseCashflow, priceAsHistFixing),
           priceCurve_(priceCurve) {
         registerWith(priceCurve_);
     }
-                                    
-
 
     CommodityBasisPriceCurveWrapper(const boost::shared_ptr<CommodityBasisPriceTermStructure>& referenceCurve,
-                                     const boost::shared_ptr<CommodityIndex>& baseIndex,
-                                     const boost::shared_ptr<PriceTermStructure>& priceCurve)
+                                    const boost::shared_ptr<CommodityIndex>& baseIndex,
+                                    const boost::shared_ptr<PriceTermStructure>& priceCurve)
         : CommodityBasisPriceTermStructure(
               referenceCurve->referenceDate(), referenceCurve->calendar(), referenceCurve->dayCounter(),
               referenceCurve->basisFutureExpiryCalculator(), baseIndex, referenceCurve->baseFutureExpiryCalculator(),
-              referenceCurve->addBasis(), referenceCurve->monthOffset(), referenceCurve->averagingBaseCashflow()),
+              referenceCurve->addBasis(), referenceCurve->monthOffset(), referenceCurve->averagingBaseCashflow(),
+              referenceCurve->priceAsHistoricalFixing()),
           priceCurve_(priceCurve) {
         registerWith(priceCurve_);
     };
 
     QuantLib::Date maxDate() const override { return priceCurve_->maxDate(); }
-    
+
     void update() override {
         LazyObject::update();
         TermStructure::update();
     }
 
     QuantLib::Natural settlementDays() const override { return priceCurve_->settlementDays(); }
-    
 
     QuantLib::Time minTime() const override { return priceCurve_->minTime(); }
     const QuantLib::Currency& currency() const override { return priceCurve_->currency(); }
     std::vector<QuantLib::Date> pillarDates() const override { return priceCurve_->pillarDates(); }
 
 private:
-    void performCalculations() const override{}
+    void performCalculations() const override {}
     QuantLib::Real priceImpl(QuantLib::Time t) const override { return priceCurve_->price(t, allowsExtrapolation()); }
 
     boost::shared_ptr<QuantExt::PriceTermStructure> priceCurve_;

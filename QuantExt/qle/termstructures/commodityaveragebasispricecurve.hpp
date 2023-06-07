@@ -52,11 +52,11 @@ public:
     //@{
     //! Curve constructed from dates and quotes
     CommodityAverageBasisPriceCurve(const QuantLib::Date& referenceDate,
-                                    const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
+                                    const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>>& basisData,
                                     const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
                                     const boost::shared_ptr<CommodityIndex>& index,
                                     const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
-                                    const Interpolator& interpolator = Interpolator());
+                                    bool priceAsHistFixing = true, const Interpolator& interpolator = Interpolator());
     //@}
 
     //! \name Observer interface
@@ -119,10 +119,9 @@ template <class Interpolator>
 CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     const QuantLib::Date& referenceDate, const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
     const boost::shared_ptr<FutureExpiryCalculator>& basisFec, const boost::shared_ptr<CommodityIndex>& index,
-    const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
-    bool addBasis, const Interpolator& interpolator)
-    : CommodityBasisPriceTermStructure(referenceDate, basisFec, index, baseFec,
-                                       addBasis, 0, true),
+    const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis, bool priceAsHistFixing,
+    const Interpolator& interpolator)
+    : CommodityBasisPriceTermStructure(referenceDate, basisFec, index, baseFec, addBasis, 0, true, priceAsHistFixing),
       QuantLib::InterpolatedCurve<Interpolator>(interpolator), basisData_(basisData) {
     QL_REQUIRE(baseIndex_ != nullptr && !baseIndex_->priceCurve().empty(),
                "CommodityAverageBasisPriceCurve requires baseIndex with priceCurve");

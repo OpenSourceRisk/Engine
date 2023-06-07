@@ -43,7 +43,7 @@ public:
                               const QuantLib::Handle<QuantExt::PriceTermStructure>& priceCurve =
                                   QuantLib::Handle<QuantExt::PriceTermStructure>(),
                               const bool addBasis = true, const QuantLib::Size monthOffset = 0,
-                              const bool baseIsAveraging = false);
+                              const bool baseIsAveraging = false, const bool priceAsHistoricalFixing = true);
 
     CommodityBasisFutureIndex(const std::string& underlyingName, const QuantLib::Date& expiryDate,
                               const QuantLib::Calendar& fixingCalendar,
@@ -66,6 +66,7 @@ private:
     bool addBasis_;
     QuantLib::Size monthOffset_;
     bool baseIsAveraging_;
+    bool priceAsHistoricalFixing_;
     boost::shared_ptr<QuantLib::CashFlow> cashflow_;
 };
 

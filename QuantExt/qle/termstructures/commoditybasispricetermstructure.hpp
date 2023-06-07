@@ -38,10 +38,11 @@ public:
                                      const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
                                      const boost::shared_ptr<CommodityIndex>& baseIndex,
                                      const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
-                                     QuantLib::Size monthOffset = 0, bool averagingBaseCashflow = false)
+                                     QuantLib::Size monthOffset = 0, bool averagingBaseCashflow = false,
+                                     bool priceAsHistoricalFixing = true)
         : PriceTermStructure(referenceDate, cal, dc), basisFec_(basisFec),
           baseIndex_(baseIndex), baseFec_(baseFec), addBasis_(addBasis), monthOffset_(monthOffset),
-          averagingBaseCashflow_(averagingBaseCashflow) {
+          averagingBaseCashflow_(averagingBaseCashflow), priceAsHistoricalFixing_(priceAsHistoricalFixing) {
         registerWith(baseIndex_);
     }
 
@@ -49,10 +50,11 @@ public:
                                      const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
                                      const boost::shared_ptr<CommodityIndex>& baseIndex,
                                      const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
-                                     QuantLib::Size monthOffset = 0, bool averagingBaseCashflow = false)
+                                     QuantLib::Size monthOffset = 0, bool averagingBaseCashflow = false,
+                                     bool priceAsHistoricalFixing = true)
         : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), baseIndex->priceCurve()->dayCounter()), basisFec_(basisFec),
-          baseIndex_(baseIndex), baseFec_(baseFec), addBasis_(addBasis),
-          monthOffset_(monthOffset), averagingBaseCashflow_(averagingBaseCashflow) {
+          baseIndex_(baseIndex), baseFec_(baseFec), addBasis_(addBasis), monthOffset_(monthOffset),
+          averagingBaseCashflow_(averagingBaseCashflow), priceAsHistoricalFixing_(priceAsHistoricalFixing) {
         registerWith(baseIndex_);
     }
 
@@ -63,6 +65,7 @@ public:
     const boost::shared_ptr<FutureExpiryCalculator>& baseFutureExpiryCalculator() const { return baseFec_; }
     bool addBasis() const { return addBasis_; }
     bool averagingBaseCashflow() const { return averagingBaseCashflow_; }
+    bool priceAsHistoricalFixing() const { return priceAsHistoricalFixing_; }
     QuantLib::Size monthOffset() const { return monthOffset_; }
 
 protected:
@@ -72,5 +75,6 @@ protected:
     bool addBasis_;
     QuantLib::Size monthOffset_;
     bool averagingBaseCashflow_;
+    bool priceAsHistoricalFixing_;
 };
 } // namespace QuantExt
