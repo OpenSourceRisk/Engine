@@ -541,7 +541,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // Get the nominal term structure from this scenario simulation market
                         Handle<YieldTermStructure> forecastTs =
                             getYieldCurve(forecastCurve, todaysMarketParams, Market::defaultConfiguration);
-                        Handle<EquityIndex> curve = initMarket->equityCurve(name, configuration);
+                        Handle<EquityIndex2> curve = initMarket->equityCurve(name, configuration);
 
                         // If forecast term structure is empty, fall back on this scenario simulation market's discount
                         // curve
@@ -551,11 +551,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                                  << ccy << "' for equity forecast curve '" << name << "'");
                             forecastTs = discountCurve(ccy);
                         }
-                        boost::shared_ptr<EquityIndex> ei(
+                        boost::shared_ptr<EquityIndex2> ei(
                             curve->clone(equitySpot(name, configuration), forecastTs,
                                          yieldCurve(YieldCurveType::EquityDividend, name, configuration)));
-                        Handle<EquityIndex> eh(ei);
-                        equityCurves_.insert(pair<pair<string, string>, Handle<EquityIndex>>(
+                        Handle<EquityIndex2> eh(ei);
+                        equityCurves_.insert(pair<pair<string, string>, Handle<EquityIndex2>>(
                             make_pair(Market::defaultConfiguration, name), eh));
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, param.first, simDataWritten);

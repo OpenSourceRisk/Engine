@@ -68,7 +68,7 @@ public:
 
         // add equity curve
         equityCurves_[make_pair(Market::defaultConfiguration, "zzzCorp")] =
-            Handle<EquityIndex>(boost::make_shared<EquityIndex>(
+            Handle<EquityIndex2>(boost::make_shared<EquityIndex2>(
                 "zzzCorp", TARGET(), parseCurrency("EUR"), equitySpot("zzzCorp"),
                 yieldCurve(YieldCurveType::Discount, "EUR"), yieldCurve(YieldCurveType::EquityDividend, "zzzCorp")));
 

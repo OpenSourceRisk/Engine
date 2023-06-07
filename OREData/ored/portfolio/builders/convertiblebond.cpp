@@ -44,7 +44,7 @@ using namespace QuantExt;
 std::string ConvertibleBondEngineBuilder::keyImpl(
     const std::string& id, const std::string& ccy, const std::string& creditCurveId, const bool hasCreditRisk,
     const std::string& securityId, const std::string& referenceCurveId, const bool isExchangeable,
-    boost::shared_ptr<QuantExt::EquityIndex> equity, const boost::shared_ptr<QuantExt::FxIndex>& fx,
+    boost::shared_ptr<QuantExt::EquityIndex2> equity, const boost::shared_ptr<QuantExt::FxIndex>& fx,
     const std::string& equityCreditCurveId, const QuantLib::Date& startDate, const QuantLib::Date& maturityDate) {
     return id;
 }
@@ -52,7 +52,7 @@ std::string ConvertibleBondEngineBuilder::keyImpl(
 boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJumpDiffusionEngineBuilder::engineImpl(
     const std::string& id, const std::string& ccy, const std::string& creditCurveId, const bool hasCreditRisk,
     const std::string& securityId, const std::string& referenceCurveId, const bool isExchangeable,
-    boost::shared_ptr<QuantExt::EquityIndex> equity, const boost::shared_ptr<QuantExt::FxIndex>& fx,
+    boost::shared_ptr<QuantExt::EquityIndex2> equity, const boost::shared_ptr<QuantExt::FxIndex>& fx,
     const std::string& equityCreditCurveId, const QuantLib::Date& startDate, const QuantLib::Date& maturityDate) {
 
     std::string config = this->configuration(ore::data::MarketContext::pricing);

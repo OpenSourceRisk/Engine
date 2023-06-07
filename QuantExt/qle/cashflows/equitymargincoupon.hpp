@@ -48,7 +48,7 @@ class EquityMarginCouponPricer;
 class EquityMarginCoupon : public Coupon, public Observer {
 public:
     EquityMarginCoupon(const Date& paymentDate, Real nominal, Rate rate, Real marginFactor, const Date& startDate, const Date& endDate, Natural fixingDays,
-                 const boost::shared_ptr<EquityIndex>& equityCurve, const DayCounter& dayCounter,
+                 const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve, const DayCounter& dayCounter,
                  bool isTotalReturn = false, Real dividendFactor = 1.0, bool notionalReset = false,
                  Real initialPrice = Null<Real>(), Real quantity = Null<Real>(), const Date& fixingStartDate = Date(),
                  const Date& fixingEndDate = Date(), const Date& refPeriodStart = Date(),
@@ -73,7 +73,7 @@ public:
     //! \name Inspectors
     //@{
     //! equity reference rate curve
-    const boost::shared_ptr<EquityIndex>& equityCurve() const { return equityCurve_; }
+    const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve() const { return equityCurve_; }
     //! fx index curve
     const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     //! total return or price return?
@@ -120,7 +120,7 @@ public:
 protected:
     boost::shared_ptr<EquityMarginCouponPricer> pricer_;
     Natural fixingDays_;
-    boost::shared_ptr<EquityIndex> equityCurve_;
+    boost::shared_ptr<QuantExt::EquityIndex2> equityCurve_;
     DayCounter dayCounter_;
     bool isTotalReturn_;
     Real dividendFactor_;
@@ -152,7 +152,7 @@ inline void EquityMarginCoupon::accept(AcyclicVisitor& v) {
  */
 class EquityMarginLeg {
 public:
-    EquityMarginLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
+    EquityMarginLeg(const Schedule& schedule, const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
               const boost::shared_ptr<FxIndex>& fxIndex = nullptr);
 
     EquityMarginLeg& withCouponRates(Rate,
@@ -191,7 +191,7 @@ private:
     std::vector<InterestRate> couponRates_;
     Real marginFactor_;
     Schedule schedule_;
-    boost::shared_ptr<EquityIndex> equityCurve_;
+    boost::shared_ptr<QuantExt::EquityIndex2> equityCurve_;
     boost::shared_ptr<FxIndex> fxIndex_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;

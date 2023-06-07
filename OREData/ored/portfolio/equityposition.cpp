@@ -123,7 +123,7 @@ EquityPosition::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>&
 }
 
 EquityPositionInstrumentWrapper::EquityPositionInstrumentWrapper(
-    const Real quantity, const std::vector<boost::shared_ptr<QuantExt::EquityIndex>>& equities,
+    const Real quantity, const std::vector<boost::shared_ptr<QuantExt::EquityIndex2>>& equities,
     const std::vector<Real>& weights, const std::vector<Handle<Quote>>& fxConversion)
     : quantity_(quantity), equities_(equities), weights_(weights), fxConversion_(fxConversion) {
     QL_REQUIRE(equities_.size() == weights_.size(), "EquityPositionInstrumentWrapper: equities size ("
