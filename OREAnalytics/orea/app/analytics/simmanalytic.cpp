@@ -88,7 +88,7 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
         .writeSIMMReport(simm->simmResults(), simmRegulationBreakdownReport, simmAnalytic->hasNettingSetDetails(),
                          inputs_->simmResultCurrency(), inputs_->simmReportingCurrency(), false, fxSpot);
     LOG("SIMM regulation breakdown report generated");
-    analytic()->reports()[LABEL]["simm_regulation_breakdown"] = simmRegulationBreakdownReport;
+    analytic()->reports()[LABEL]["regulation_breakdown_simm"] = simmRegulationBreakdownReport;
 
 
     boost::shared_ptr<InMemoryReport> simmReport = boost::make_shared<InMemoryReport>();

@@ -1,23 +1,10 @@
 /*
  Copyright (C) 2023 Quaternion Risk Management Ltd.
  All rights reserved.
-
- This file is part of ORE, a free-software/open-source library
- for transparent pricing and risk analysis - http://opensourcerisk.org
-
- ORE is free software: you can redistribute it and/or modify it
- under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program.
- The license is also available online at <http://opensourcerisk.org>
-
- This program is distributed on the basis that it will form a useful
- contribution to risk analytics and model standardisation, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/simm/simmconfigurationisdav2_5A.hpp
-    \brief SIMM configuration for SIMM version 2.5A
+/*! \file orepsimm/orea/simmconfigurationisdav2_6.hpp
+    \brief SIMM configuration for SIMM version 2.6
 */
 
 #pragma once
@@ -28,15 +15,15 @@ namespace ore {
 namespace analytics {
 
 /*! Class giving the SIMM configuration as outlined in the document
-    <em>ISDA SIMM Methodology, version 2.5A.
-        Effective Date: 15 July 2023.</em>
+    <em>ISDA SIMM Methodology, version 2.6.
+        Effective Date: 3 December 2023.</em>
 */
-class SimmConfiguration_ISDA_V2_5A : public SimmConfigurationBase {
+class SimmConfiguration_ISDA_V2_6: public SimmConfigurationBase {
 public:
-    SimmConfiguration_ISDA_V2_5A(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+    SimmConfiguration_ISDA_V2_6(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                 const QuantLib::Size& mporDays = 10,
-                                const std::string& name = "SIMM ISDA 2.5A (15 July 2023)",
-                                const std::string version = "2.5A");
+                                const std::string& name = "SIMM ISDA 2.6 (3 December 2023)",
+                                const std::string version = "2.6");
 
     //! Return the SIMM <em>Label2</em> value for the given interest rate index
     std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const override;
