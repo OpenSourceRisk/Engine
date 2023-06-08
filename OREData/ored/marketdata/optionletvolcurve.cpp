@@ -99,6 +99,7 @@ void OptionletVolCurve::optSurface(const Date& asof, OptionletVolatilityCurveCon
     map<pair<Period, Rate>, Real, decltype(comp)> volQuotes(comp);
 
     bool optionalQuotes = config.optionalQuotes();
+    QL_REQUIRE(optionalQuotes == true, "Optional quotes for optionlet volatilities are not supported.");
     Size quoteCounter = 0;
     bool quoteRelevant = false;
     bool tenorRelevant = false;

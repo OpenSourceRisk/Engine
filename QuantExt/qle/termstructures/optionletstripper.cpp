@@ -22,6 +22,8 @@
 #include <qle/instruments/makeoiscapfloor.hpp>
 #include <qle/termstructures/optionletstripper.hpp>
 
+#include <iostream>
+
 using std::vector;
 using namespace QuantLib;
 
@@ -73,6 +75,7 @@ OptionletStripper::OptionletStripper(const ext::shared_ptr<QuantExt::CapFloorTer
     if(isOis)
         optionletTenors_.push_back(capFloorLengths_.back());
     nOptionletTenors_ = optionletTenors_.size();
+    std::cout << "nOptionletTenors_ = " << nOptionletTenors_ << std::endl;
 
     optionletVolatilities_ = vector<vector<Volatility>>(nOptionletTenors_, vector<Volatility>(nStrikes_));
     optionletStrikes_ = vector<vector<Rate>>(nOptionletTenors_, termVolSurface->strikes());

@@ -90,10 +90,10 @@ CapFloorVolCurve::CapFloorVolCurve(
             }
 
             // There are three possible cap floor configurations
-            if (config->type() == CfgType::Atm) {
-                atmOptCurve(asof, *config, loader, iborIndex, discountCurve, shift);
-            } else if (config->type() == CfgType::Surface || config->type() == CfgType::SurfaceWithAtm) {
-                optSurface(asof, *config, loader, iborIndex, discountCurve, shift);
+            if (config->type() == CfgType::TermAtm) {
+                termAtmOptCurve(asof, *config, loader, iborIndex, discountCurve, shift);
+            } else if (config->type() == CfgType::TermSurface || config->type() == CfgType::TermSurfaceWithAtm) {
+                termOptSurface(asof, *config, loader, iborIndex, discountCurve, shift);
             } else {
                 QL_FAIL("Unexpected type (" << static_cast<int>(config->type()) << ") for cap floor config "
                                             << config->curveID());
@@ -134,7 +134,7 @@ void CapFloorVolCurve::buildProxyCurve(
         config.proxySourceRateComputationPeriod(), config.proxyTargetRateComputationPeriod());
 }
 
-void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
+void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
                                    boost::shared_ptr<IborIndex> index, Handle<YieldTermStructure> discountCurve,
                                    Real shift) {
 
@@ -287,7 +287,7 @@ void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConf
     }
 }
 
-void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
+void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
                                   boost::shared_ptr<IborIndex> index, Handle<YieldTermStructure> discountCurve,
                                   Real shift) {
 

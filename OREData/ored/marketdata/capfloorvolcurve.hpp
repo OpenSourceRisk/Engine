@@ -70,13 +70,13 @@ private:
     boost::shared_ptr<QuantLib::OptionletVolatilityStructure> capletVol_;
     boost::shared_ptr<IrVolCalibrationInfo> calibrationInfo_;
 
-    //! Build ATM optionlet curve
-    void atmOptCurve(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
+    //! Build ATM optionlet curve from term vol
+    void termAtmOptCurve(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
                      boost::shared_ptr<QuantLib::IborIndex> iborIndex,
                      QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, QuantLib::Real shift);
 
-    //! Build optionlet surface
-    void optSurface(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
+    //! Build optionlet surface from term vol
+    void termOptSurface(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
                     boost::shared_ptr<QuantLib::IborIndex> iborIndex,
                     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, QuantLib::Real shift);
 
