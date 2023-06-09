@@ -36,7 +36,6 @@
 #include <ored/configuration/fxvolcurveconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
-#include <ored/configuration/optionletvolcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
@@ -85,9 +84,6 @@ public:
 
     bool hasCapFloorVolCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<CapFloorVolatilityCurveConfig> capFloorVolCurveConfig(const string& curveID) const;
-
-    bool hasOptionletVolCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<OptionletVolatilityCurveConfig> optionletVolCurveConfig(const string& curveID) const;
 
     bool hasDefaultCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<DefaultCurveConfig> defaultCurveConfig(const string& curveID) const;

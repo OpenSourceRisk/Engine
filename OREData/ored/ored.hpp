@@ -25,7 +25,6 @@
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/onedimsolverconfig.hpp>
-#include <ored/configuration/optionletvolcurveconfig.hpp>
 #include <ored/configuration/reportconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
@@ -62,7 +61,6 @@
 #include <ored/marketdata/marketdatum.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/marketimpl.hpp>
-#include <ored/marketdata/optionletvolcurve.hpp>
 #include <ored/marketdata/security.hpp>
 #include <ored/marketdata/strike.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>

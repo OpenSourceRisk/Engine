@@ -80,6 +80,11 @@ private:
                     boost::shared_ptr<QuantLib::IborIndex> iborIndex,
                     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, QuantLib::Real shift);
 
+    //! Build optionlet surface from term vol
+    void optOptSurface(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
+                       boost::shared_ptr<QuantLib::IborIndex> iborIndex,
+                       QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, QuantLib::Real shift);
+
     //! Build a cap floor term volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface>
     capSurface(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader) const;

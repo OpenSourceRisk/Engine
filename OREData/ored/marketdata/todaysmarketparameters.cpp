@@ -50,7 +50,6 @@ static const vector<MarketObjectMetaInfo> marketObjectData = {
     {MarketObject::SwaptionVol, "SwaptionVol", "SwaptionVolatilities", {"SwaptionVolatility", "key"}},
     {MarketObject::YieldVol, "YieldVol", "YieldVolatilities", {"YieldVolatility", "name"}},
     {MarketObject::CapFloorVol, "CapFloorVol", "CapFloorVolatilities", {"CapFloorVolatility", "key"}},
-    {MarketObject::OptionletVol, "OptionletVol", "OptionletVolatilities", {"OptionletVolatility", "key"}},
     {MarketObject::CDSVol, "CDSVol", "CDSVolatilities", {"CDSVolatility", "name"}},
     {MarketObject::DefaultCurve, "DefaultCurve", "DefaultCurves", {"DefaultCurve", "name"}},
     {MarketObject::YoYInflationCapFloorVol,
@@ -182,8 +181,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                                                                      marketObjectData[i].xmlSingleName.second, false);
 			// deprecated attribute currency for capfloor vols and swaption vols
                         if (marketObjectData[i].obj == MarketObject::CapFloorVol ||
-                            marketObjectData[i].obj == MarketObject::SwaptionVol ||
-                            marketObjectData[i].obj == MarketObject::OptionletVol) {
+                            marketObjectData[i].obj == MarketObject::SwaptionVol) {
                             auto mp2 = XMLUtils::getChildrenAttributesAndValues(
                                 n, marketObjectData[i].xmlSingleName.first, "currency", false);
                             if (!mp2.empty()) {

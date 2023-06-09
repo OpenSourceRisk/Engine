@@ -57,6 +57,7 @@ namespace data {
 
 // Currently, only two possibilities for variable InterpolateOn: TermVolatilities and OptionletVolatilities
 // Here, we convert the value to a bool for use in building the structures. May need to broaden if we add more.
+// If InputType is OptionletVolatilities, InterpolateOn node will be ignored.
 bool interpOnOpt(CapFloorVolatilityCurveConfig& config) {
     QL_REQUIRE(config.interpolateOn() == "TermVolatilities" || config.interpolateOn() == "OptionletVolatilities",
                "Expected InterpolateOn to be one of TermVolatilities or OptionletVolatilities");
@@ -94,6 +95,8 @@ CapFloorVolCurve::CapFloorVolCurve(
                 termAtmOptCurve(asof, *config, loader, iborIndex, discountCurve, shift);
             } else if (config->type() == CfgType::TermSurface || config->type() == CfgType::TermSurfaceWithAtm) {
                 termOptSurface(asof, *config, loader, iborIndex, discountCurve, shift);
+            } else if (config->type() == CfgType::OptionletSurface) {
+                optOptSurface(asof, *config, loader, iborIndex, discountCurve, shift);
             } else {
                 QL_FAIL("Unexpected type (" << static_cast<int>(config->type()) << ") for cap floor config "
                                             << config->curveID());
@@ -592,6 +595,235 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
             QL_FAIL("Cap floor config " << config.curveID() << " has unexpected interpolation method "
                                         << static_cast<int>(config.interpolationMethod()));
         }
+    }
+}
+
+void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config,
+                                     const Loader& loader, boost::shared_ptr<QuantLib::IborIndex> iborIndex,
+                                     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
+                                     QuantLib::Real shift) {
+
+    QL_REQUIRE(config.optionalQuotes() == false, "Optional quotes for optionlet volatilities are not supported.");
+    // Load optionlet vol surface
+    // Map to store the quote values that we load with key (period, strike) where strike
+    // needs a custom comparator to avoid == with double
+    std::cout << "CapFloorVolCurve::optOptSurface" << std::endl;
+    auto comp = [](const pair<Period, Rate>& a, const pair<Period, Rate>& b) {
+        return (a.first < b.first) || (!(b.first < a.first) && (a.second < b.second && !close(a.second, b.second)));
+    };
+    Size quoteCounter = 0;
+    bool quoteRelevant = false;
+    bool tenorRelevant = false;
+    bool strikeRelevant = false;
+    bool wildcardTenor = false;
+
+    Period tenor = parsePeriod(config.indexTenor()); // 1D, 1M, 3M, 6M, 12M
+    string currency = config.currency();
+    vector<Period> configTenors;
+    std::map<Period, std::map<Real, Real>> capfloorVols;
+
+    if (config.tenors()[0] == "*") {
+        wildcardTenor = true;
+    } else {
+        configTenors = parseVectorOfValues<Period>(config.tenors(), &parsePeriod);
+    }
+
+    std::ostringstream ss;
+    ss << MarketDatum::InstrumentType::CAPFLOOR << "/" << config.quoteType() << "/" << currency << "/";
+    if (config.quoteIncludesIndexName())
+        ss << config.index() << "/";
+    ss << "*";
+    Wildcard w(ss.str());
+    for (const auto& md : loader.get(w, asof)) {
+        QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
+        boost::shared_ptr<CapFloorQuote> cfq = boost::dynamic_pointer_cast<CapFloorQuote>(md);
+        QL_REQUIRE(cfq, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CapFloorQuote");
+        QL_REQUIRE(cfq->ccy() == currency,
+                   "CapFloorQuote ccy '" << cfq->ccy() << "' <> config ccy '" << currency << "'");
+        if (cfq->underlying() == tenor && !cfq->atm()) {
+            auto findTenor = std::find(configTenors.begin(), configTenors.end(), cfq->term());
+            if (wildcardTenor) {
+                tenorRelevant = true;
+            } else {
+                tenorRelevant = findTenor != configTenors.end();
+            }
+
+            Real strike = cfq->strike();
+            auto i = std::find_if(config.strikes().begin(), config.strikes().end(),
+                                  [&strike](const std::string& x) { return close_enough(parseReal(x), strike); });
+            strikeRelevant = i != config.strikes().end();
+
+            quoteRelevant = strikeRelevant && tenorRelevant;
+
+            if (quoteRelevant) {
+                quoteCounter++;
+                // Check duplicate quotes
+                auto k = capfloorVols.find(cfq->term());
+                if (k != capfloorVols.end()) {
+                    if (k->second.find(cfq->strike()) != k->second.end()) {
+                        if (config.quoteIncludesIndexName())
+                            QL_FAIL("Duplicate optionlet vol quote in config "
+                                    << config.curveID() << ", with underlying tenor " << tenor << " ,currency "
+                                    << currency << " and index " << config.index() << ", for tenor " << cfq->term()
+                                    << " and strike " << cfq->strike());
+                        else
+                            QL_FAIL("Duplicate optionlet vol quote in config "
+                                    << config.curveID() << ", with underlying tenor " << tenor << " and currency "
+                                    << currency << ", for tenor " << cfq->term() << " and strike " << cfq->strike());
+                    }
+                }
+                // Store the vols into a map to sort the wildcard tenors
+                capfloorVols[cfq->term()][cfq->strike()] = cfq->quote()->value();
+            }
+        }
+    }
+    Size totalQuotes = capfloorVols.size() * config.strikes().size();
+    if (quoteCounter < totalQuotes) {
+        WLOG("Found only " << quoteCounter << " out of " << totalQuotes << " quotes for Optionlet vol surface "
+                           << config.curveID());
+    }
+
+    vector<Rate> strikes = parseVectorOfValues<Real>(config.strikes(), &parseReal);
+    vector<vector<Handle<Quote>>> vols_vec;
+    vector<Handle<Quote>> vols_tenor;
+    auto tenor_itr = configTenors.begin();
+    for (auto const& vols_outer: capfloorVols) {
+        // Check if all tenor is available
+        if (wildcardTenor) {
+            configTenors.push_back(vols_outer.first);
+        } else {
+            QL_REQUIRE(*tenor_itr == vols_outer.first, "Quote with tenor " << vols_outer.first
+                                                                             << " not loaded for optionlet vol config "
+                                                                             << config.curveID());
+            tenor_itr++;
+        }
+        for (Size j = 0; j < strikes.size(); j++) {
+            auto it = vols_outer.second.find(strikes[j]);
+            QL_REQUIRE(it != vols_outer.second.end(),
+                       "Quote with tenor " << vols_outer.first << " and strike " << strikes[j]
+                                                                    << " not loaded for optionlet vol config "
+                                                                    << config.curveID());
+            vols_tenor.push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(it->second)));
+        }
+        vols_vec.push_back(vols_tenor);
+        vols_tenor.clear();
+    }
+    // Find the fixing date of the term quotes
+    vector<Date> fixingDates;
+    bool isOis = boost::dynamic_pointer_cast<OvernightIndex>(iborIndex) != nullptr;
+    boost::shared_ptr<BlackCapFloorEngine> dummyEngine =
+        boost::make_shared<BlackCapFloorEngine>(iborIndex->forwardingTermStructure(), 0.20, config.dayCounter());
+    for (Size i = 0; i < configTenors.size(); i++) {
+        if (isOis) {
+            Leg dummyCap =
+                MakeOISCapFloor(CapFloor::Cap, configTenors[i], boost::dynamic_pointer_cast<OvernightIndex>(iborIndex),
+                                config.rateComputationPeriod(), 0.04)
+                    .withTelescopicValueDates(true)
+                    .withSettlementDays(config.settleDays());
+            auto lastCoupon = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
+            QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
+            fixingDates.push_back(std::max(asof + 1, lastCoupon->underlying()->fixingDates().front()));
+        } else {
+            CapFloor dummyCap =
+                MakeCapFloor(CapFloor::Cap, configTenors[i], iborIndex, 0.04, 0 * Days).withPricingEngine(dummyEngine);
+            boost::shared_ptr<FloatingRateCoupon> lastCoupon = dummyCap.lastFloatingRateCoupon();
+            fixingDates.push_back(std::max(asof + 1, lastCoupon->fixingDate()));
+        }
+    }
+    DLOG("Found " << quoteCounter << " quotes for optionlet vol surface " << config.curveID());
+    boost::shared_ptr<StrippedOptionlet> optionletSurface;
+
+    // Return for the cap floor term volatility surface
+    optionletSurface = boost::make_shared<StrippedOptionlet>(
+        config.settleDays(), config.calendar(), config.businessDayConvention(), iborIndex, fixingDates, strikes, vols_vec,
+        config.dayCounter(), QuantLib::VolatilityType::Normal);
+
+
+    // This is not pretty but can't think of a better way (with template functions and or classes)
+    if (config.timeInterpolation() == "Linear") {
+        if (config.strikeInterpolation() == "Linear") {
+            capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "LinearFlat") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, LinearFlat>>(asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "Cubic") {
+            capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Cubic>>(asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "CubicFlat") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, CubicFlat>>(asof, optionletSurface);
+        } else {
+            QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
+                                            << config.strikeInterpolation());
+        }
+    } else if (config.timeInterpolation() == "LinearFlat") {
+        if (config.strikeInterpolation() == "Linear") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, Linear>>(asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "LinearFlat") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "Cubic") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, Cubic>>(asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "CubicFlat") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, CubicFlat>>(asof, optionletSurface);
+        } else {
+            QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
+                                            << config.strikeInterpolation());
+        }
+    } else if (config.timeInterpolation() == "BackwardFlat") {
+        if (config.strikeInterpolation() == "Linear") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, Linear>>(asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "LinearFlat") {
+            capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, LinearFlat>>(
+                asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "Cubic") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, Cubic>>(asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "CubicFlat") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, CubicFlat>>(asof, optionletSurface);
+        } else {
+            QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
+                                            << config.strikeInterpolation());
+        }
+    } else if (config.timeInterpolation() == "Cubic") {
+        if (config.strikeInterpolation() == "Linear") {
+            capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Linear>>(asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "LinearFlat") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, LinearFlat>>(asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "Cubic") {
+            capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Cubic>>(asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "CubicFlat") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, CubicFlat>>(asof, optionletSurface);
+        } else {
+            QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
+                                            << config.strikeInterpolation());
+        }
+    } else if (config.timeInterpolation() == "CubicFlat") {
+        if (config.strikeInterpolation() == "Linear") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, Linear>>(asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "LinearFlat") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, LinearFlat>>(asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "Cubic") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, Cubic>>(asof, optionletSurface);
+        } else if (config.strikeInterpolation() == "CubicFlat") {
+            capletVol_ =
+                boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, CubicFlat>>(asof, optionletSurface);
+        } else {
+            QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
+                                            << config.strikeInterpolation());
+        }
+    } else {
+        QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected time interpolation "
+                                        << config.timeInterpolation());
     }
 }
 

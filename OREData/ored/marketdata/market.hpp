@@ -84,8 +84,7 @@ enum class MarketObject {
     CommodityCurve = 18,
     CommodityVolatility = 19,
     Correlation = 20,
-    YieldVol = 21,
-    OptionletVol = 22
+    YieldVol = 21
 };
 
 //! Struct to store parameters for commodities to be treatred as pseudo currencies

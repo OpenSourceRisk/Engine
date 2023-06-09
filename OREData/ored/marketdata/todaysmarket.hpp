@@ -50,7 +50,6 @@ class FXVolCurve;
 class GenericYieldVolCurve;
 class YieldVolCurve;
 class CapFloorVolCurve;
-class OptionletVolCurve;
 class DefaultCurve;
 class CDSVolCurve;
 class BaseCorrelationCurve;
@@ -152,8 +151,6 @@ private:
     mutable map<string, boost::shared_ptr<GenericYieldVolCurve>> requiredGenericYieldVolCurves_;
     mutable map<string, std::pair<boost::shared_ptr<CapFloorVolCurve>, std::pair<std::string, QuantLib::Period>>>
         requiredCapFloorVolCurves_;
-    mutable map<string, std::pair<boost::shared_ptr<OptionletVolCurve>, std::pair<std::string, QuantLib::Period>>>
-        requiredOptionletVolCurves_;
     mutable map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
     mutable map<string, boost::shared_ptr<CDSVolCurve>> requiredCDSVolCurves_;
     mutable map<string, boost::shared_ptr<BaseCorrelationCurve>> requiredBaseCorrelationCurves_;

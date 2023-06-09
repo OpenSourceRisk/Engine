@@ -19,7 +19,6 @@ configuration/iborfallbackconfig.cpp
 configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
 configuration/onedimsolverconfig.cpp
-configuration/optionletvolcurveconfig.cpp
 configuration/reportconfig.cpp
 configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
@@ -52,7 +51,6 @@ marketdata/market.cpp
 marketdata/marketdatum.cpp
 marketdata/marketdatumparser.cpp
 marketdata/marketimpl.cpp
-marketdata/optionletvolcurve.cpp
 marketdata/security.cpp
 marketdata/strike.cpp
 marketdata/swaptionvolcurve.cpp
@@ -303,7 +301,6 @@ configuration/iborfallbackconfig.hpp
 configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
 configuration/onedimsolverconfig.hpp
-configuration/optionletvolcurveconfig.hpp
 configuration/reportconfig.hpp
 configuration/securityconfig.hpp
 configuration/swaptionvolcurveconfig.hpp
@@ -340,7 +337,6 @@ marketdata/market.hpp
 marketdata/marketdatum.hpp
 marketdata/marketdatumparser.hpp
 marketdata/marketimpl.hpp
-marketdata/optionletvolcurve.hpp
 marketdata/security.hpp
 marketdata/strike.hpp
 marketdata/structuredcurveerror.hpp

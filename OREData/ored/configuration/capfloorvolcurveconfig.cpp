@@ -216,9 +216,10 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
             bootstrapConfig_.fromXML(n);
         }
 
-        // Optional input Type
+        // Optional Input Type
+        inputType_ = "TermVolatilities";
         if (XMLNode* n = XMLUtils::getChildNode(node, "InputType")) {
-            bootstrapConfig_.fromXML(n);
+            inputType_ = XMLUtils::getNodeValue(n);
         }
 
         // Set type_

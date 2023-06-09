@@ -36,7 +36,6 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
     static map<string, CurveSpec::CurveType> b = {
         {"Yield", CurveSpec::CurveType::Yield},
         {"CapFloorVolatility", CurveSpec::CurveType::CapFloorVolatility},
-        {"OptionletVolatility", CurveSpec::CurveType::OptionletVolatility},
         {"SwaptionVolatility", CurveSpec::CurveType::SwaptionVolatility},
         {"YieldVolatility", CurveSpec::CurveType::YieldVolatility},
         {"FX", CurveSpec::CurveType::FX},
@@ -167,18 +166,6 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
         return boost::make_shared<CapFloorVolatilityCurveSpec>(key, curveConfigID);
     }
 
-    case CurveSpec::CurveType::OptionletVolatility: {
-        // e.g. OptionletVolatility/EUR-EURIBOR-3M/CurveConfigID
-        //      OptionletVolatility/EUR-ESTER/CurveConfigID
-        //      OptionletVolatility/EUR/CurveConfigID
-        QL_REQUIRE(tokens.size() == 3, "Unexpected number"
-                                       " of tokens in Optionlet volatility curve spec "
-                                           << s);
-        const string& key = tokens[1];
-        const string& curveConfigID = tokens[2];
-        return boost::make_shared<OptionletVolatilityCurveSpec>(key, curveConfigID);
-    }
-
     case CurveSpec::CurveType::Inflation: {
         // Inflation/EUHICPXT/CurveConfigID
         QL_REQUIRE(tokens.size() == 3, "Unexpected number"
@@ -258,7 +245,6 @@ CurveSpec::CurveType parseCurveConfigurationType(const std::string& s) {
     static const map<string, CurveSpec::CurveType> b = {
         {"YieldCurves", CurveSpec::CurveType::Yield},
         {"CapFloorVolatilities", CurveSpec::CurveType::CapFloorVolatility},
-        {"OptionletVolatilities", CurveSpec::CurveType::OptionletVolatility},
         {"SwaptionVolatilities", CurveSpec::CurveType::SwaptionVolatility},
         {"YieldVolatilities", CurveSpec::CurveType::YieldVolatility},
         {"FXSpots", CurveSpec::CurveType::FX},

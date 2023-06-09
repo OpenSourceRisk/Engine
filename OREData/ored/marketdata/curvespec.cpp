@@ -59,8 +59,6 @@ std::ostream& operator<<(std::ostream& os, const CurveSpec::CurveType& t) {
         return os << "Yield";
     case CurveSpec::CurveType::CapFloorVolatility:
         return os << "CapFloorVolatility";
-    case CurveSpec::CurveType::OptionletVolatility:
-        return os << "OptionletVolatility";
     case CurveSpec::CurveType::SwaptionVolatility:
         return os << "SwaptionVolatility";
     case CurveSpec::CurveType::YieldVolatility:

@@ -34,7 +34,6 @@
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/inflationcapfloorvolcurve.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
-#include <ored/marketdata/optionletvolcurve.hpp>
 #include <ored/marketdata/security.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
@@ -493,52 +492,6 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             }
 
             DLOG("Adding CapFloorVol (" << node.name << ") with spec " << *cfVolSpec << " to configuration "
-                                        << configuration);
-            capFloorCurves_[make_pair(configuration, node.name)] =
-                Handle<OptionletVolatilityStructure>(itr->second.first->capletVolStructure());
-            capFloorIndexBase_[make_pair(configuration, node.name)] = itr->second.second;
-            break;
-        }
-
-        // Optionlet Vol
-        case CurveSpec::CurveType::OptionletVolatility: {
-            boost::shared_ptr<OptionletVolatilityCurveSpec> oVolSpec =
-                boost::dynamic_pointer_cast<OptionletVolatilityCurveSpec>(spec);
-            QL_REQUIRE(oVolSpec, "Failed to convert spec " << *spec);
-            boost::shared_ptr<OptionletVolatilityCurveConfig> ofg =
-                curveConfigs_->optionletVolCurveConfig(oVolSpec->curveConfigID());
-            auto itr = requiredOptionletVolCurves_.find(oVolSpec->name());
-            if (itr == requiredOptionletVolCurves_.end()) {
-                DLOG("Building optionlet volatility for asof " << asof_);
-
-                // Firstly, need to retrieve ibor index and discount curve
-                // Ibor index
-                std::string iborIndexName = ofg->index();
-                QuantLib::Period rateComputationPeriod = ofg->rateComputationPeriod();
-                Handle<IborIndex> iborIndex = MarketImpl::iborIndex(iborIndexName, configuration);
-                Handle<YieldTermStructure> discountCurve;
-                // Discount curve
-                if (!ofg->discountCurve().empty()) {
-                    auto it = requiredYieldCurves_.find(ofg->discountCurve());
-                    QL_REQUIRE(it != requiredYieldCurves_.end(), "Discount curve with spec, "
-                                                                     << ofg->discountCurve()
-                                                                     << ", not found in loaded yield curves");
-                    discountCurve = it->second->handle();
-                }
-
-                // Now create optionlet vol curve
-                boost::shared_ptr<OptionletVolCurve> optionletVolCurve = boost::make_shared<OptionletVolCurve>(
-                    asof_, *oVolSpec, *loader_, *curveConfigs_, iborIndex.currentLink(), discountCurve, 
-                    requiredOptionletVolCurves_, buildCalibrationInfo_);
-                calibrationInfo_->irVolCalibrationInfo[oVolSpec->name()] = optionletVolCurve->calibrationInfo();
-                itr = requiredOptionletVolCurves_
-                          .insert(make_pair(
-                              oVolSpec->name(),
-                              std::make_pair(optionletVolCurve, std::make_pair(iborIndexName, rateComputationPeriod))))
-                          .first;
-            }
-
-            DLOG("Adding OptionletVol (" << node.name << ") with spec " << *oVolSpec << " to configuration "
                                         << configuration);
             capFloorCurves_[make_pair(configuration, node.name)] =
                 Handle<OptionletVolatilityStructure>(itr->second.first->capletVolStructure());

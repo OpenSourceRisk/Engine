@@ -100,7 +100,6 @@ public:
         RECOVERY_RATE,
         SWAPTION,
         CAPFLOOR,
-        OPTIONLET,
         FX_OPTION,
         ZC_INFLATIONSWAP,
         ZC_INFLATIONCAPFLOOR,
@@ -1079,58 +1078,6 @@ private:
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
-//! Optionlet data class
-/*!
-  This class holds single market points of type
-  - OPTIONLET
-  Specific data comprise
-  - currency
-  - term
-  - underlying index tenor
-  - at-the-money flag (is an at-the-money cap/floor quote?)
-  - relative quotation flag (quote to be added to the at-the-money quote?)
-  - strike
-
-  \ingroup marketdata
-*/
-class OptionletQuote : public MarketDatum {
-public:
-    OptionletQuote() {}
-    //! Constructor
-    OptionletQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period term,
-                  Period underlying, bool atm, bool relative, Real strike = 0.0, const string& indexName = string())
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::OPTIONLET), ccy_(ccy), term_(term),
-          underlying_(underlying), atm_(atm), relative_(relative), strike_(strike), indexName_(indexName) {}
-
-    //! Make a copy of the market datum
-    boost::shared_ptr<MarketDatum> clone() override {
-        return boost::make_shared<OptionletQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, term_,
-                                                 underlying_, atm_, relative_, strike_, indexName_);
-    }
-
-    //! \name Inspectors
-    //@{
-    const string& ccy() const { return ccy_; }
-    const Period& term() const { return term_; }
-    const Period& underlying() const { return underlying_; }
-    bool atm() const { return atm_; }
-    bool relative() const { return relative_; }
-    Real strike() { return strike_; }
-    const string& indexName() const { return indexName_; }
-    //@}
-private:
-    string ccy_;
-    Period term_;
-    Period underlying_;
-    bool atm_;
-    bool relative_;
-    Real strike_;
-    string indexName_;
-    //! Serialization
-    friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version);
-};
-
 //! Foreign exchange rate data class
 /*!
   This class holds single market points of type
@@ -2003,7 +1950,6 @@ BOOST_CLASS_EXPORT_KEY(ore::data::BondOptionQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondOptionShiftQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::CapFloorQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::CapFloorShiftQuote);
-BOOST_CLASS_EXPORT_KEY(ore::data::OptionletQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::FXSpotQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::FXForwardQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::FXOptionQuote);
