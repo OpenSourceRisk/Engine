@@ -22,8 +22,6 @@
 #include <qle/instruments/makeoiscapfloor.hpp>
 #include <qle/termstructures/optionletstripper.hpp>
 
-#include <iostream>
-
 using std::vector;
 using namespace QuantLib;
 

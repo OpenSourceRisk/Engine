@@ -692,7 +692,7 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         if (wildcardTenor) {
             configTenors.push_back(vols_outer.first);
         } else {
-            QL_REQUIRE(*tenor_itr == vols_outer.first, "Quote with tenor " << vols_outer.first
+            QL_REQUIRE(*tenor_itr == vols_outer.first, "Quote with tenor " << *tenor_itr
                                                                              << " not loaded for optionlet vol config "
                                                                              << config.curveID());
             tenor_itr++;
