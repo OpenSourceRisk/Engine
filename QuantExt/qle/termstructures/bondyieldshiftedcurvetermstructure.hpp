@@ -63,7 +63,7 @@ public:
 
         for (Size i = 0; i < bondYields.size(); ++i)  {
             //estimate spread at duration
-            Real thisCrvRate = -log(originalCurve_->discount(static_cast<Real>(bondDurations[i])))/bondDurations[i];
+            Real thisCrvRate = -std::log(originalCurve_->discount(static_cast<Real>(bondDurations[i])))/bondDurations[i];
             Real thisSpread = static_cast<Real>(bondYields[i]) - thisCrvRate;
 
             spreadMean(thisSpread);
@@ -115,7 +115,7 @@ inline DiscountFactor BondYieldShiftedCurveTermStructure::discountImpl(Time t) c
 
     if ((duration_ != Null<Real>()) && (bondSpread_ != Null<Real>())) {
 
-        Real df = originalCurve_->discount(t) * exp(-t * bondSpread_);
+        Real df = originalCurve_->discount(t) * std::exp(-t * bondSpread_);
 
         return df;
 
