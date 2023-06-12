@@ -80,7 +80,12 @@ private:
                     boost::shared_ptr<QuantLib::IborIndex> iborIndex,
                     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, QuantLib::Real shift);
 
-    //! Build optionlet surface from term vol
+    //! Build ATM optionlet curve from optionlet vol
+    void optAtmOptCurve(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
+                         boost::shared_ptr<QuantLib::IborIndex> iborIndex,
+                         QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, QuantLib::Real shift);
+
+    //! Build optionlet surface from optionlet vol
     void optOptSurface(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
                        boost::shared_ptr<QuantLib::IborIndex> iborIndex,
                        QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, QuantLib::Real shift);
@@ -113,6 +118,10 @@ private:
               const QuantLib::Calendar& cal, QuantLib::BusinessDayConvention bdc,
               boost::shared_ptr<QuantLib::IborIndex> iborIndex, const QuantLib::DayCounter& dc,
               QuantLib::VolatilityType type, QuantLib::Real displacement) const;
+
+    //! Generate fixing days from end date for optionlet vol
+    vector<Date> populateFixingDates(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config,
+                                     boost::shared_ptr<QuantLib::IborIndex> iborIndex, const vector<Period>& configTenors);
 
     //! Build calibration info
     void buildCalibrationInfo(const Date& asof, const CurveConfigurations& curveConfigs,
