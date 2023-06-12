@@ -3284,6 +3284,31 @@ This example in folder {\tt Examples/Example\_46} demonstrates a Total Return Sw
 will launch a single ORE run to process a TRS example and to generate NPV and cash flows in the usual result files.
 As opposed to example 45, the CBO and its bondbasket are represented explicitly in the CBO node.
 
+%--------------------------------------------------------
+\subsection{Bond Yield Shifted}% Example 47
+\label{example:47}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_47} shows how to use a yield curve
+built from a BondYieldShifted segment, as described in section \ref{sec:bond_yield_shifted}.
+
+In particular, it builds the curve {\tt USD.BMK.GVN.CURVE\_SHIFTED} shifted by three liquid Bonds:
+
+\begin{itemize}
+\item Fixed rate USD Bond maturing in August 2023 with id {\tt EJ7706660}.
+\item Fixed rate USD Bond maturing in September 2049 with id {\tt ZR5330686}.
+\item Floating Rate Bond maturing in May 2025 with id {\tt AS064441}.
+\end{itemize}
+
+The resulting curve is exhibited in the {\tt curves.csv} output file.
+Moreover, the results can be crosschecked against the NPVs, i.e. prices, of the ZeroBonds comprised in the portfolio.
+\begin{itemize}
+\item {\tt ZeroBond\_long}, maturing 2052-06-03 shows a price of 0.2022 akin to the 0.2022 in the curves output at the same date.
+\item {\tt ZeroBond\_short}, maturing 2032-06-01 shows a price of 0.5754 aktin to the 0.5754 in the curves output at the same date.
+\end{itemize}
+
+The example can be run calling {\tt python run.py}.
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}

@@ -104,6 +104,7 @@ simm/simmconcentrationisdav2_3.cpp
 simm/simmconcentrationisdav2_3_8.cpp
 simm/simmconcentrationisdav2_5.cpp
 simm/simmconcentrationisdav2_5a.cpp
+simm/simmconcentrationisdav2_6.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
 simm/simmconfigurationisdav1_0.cpp
@@ -116,6 +117,7 @@ simm/simmconfigurationisdav2_3.cpp
 simm/simmconfigurationisdav2_3_8.cpp
 simm/simmconfigurationisdav2_5.cpp
 simm/simmconfigurationisdav2_5a.cpp
+simm/simmconfigurationisdav2_6.cpp
 simm/simmresults.cpp
 simm/utilities.cpp
 simulation/fixingmanager.cpp
@@ -245,6 +247,7 @@ simm/simmconcentrationisdav2_3.hpp
 simm/simmconcentrationisdav2_3_8.hpp
 simm/simmconcentrationisdav2_5.hpp
 simm/simmconcentrationisdav2_5a.hpp
+simm/simmconcentrationisdav2_6.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
 simm/simmconfigurationisdav1_0.hpp
@@ -257,6 +260,7 @@ simm/simmconfigurationisdav2_3.hpp
 simm/simmconfigurationisdav2_3_8.hpp
 simm/simmconfigurationisdav2_5.hpp
 simm/simmconfigurationisdav2_5a.hpp
+simm/simmconfigurationisdav2_6.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
 simm/utilities.hpp
