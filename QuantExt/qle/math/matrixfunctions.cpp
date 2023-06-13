@@ -71,7 +71,7 @@ QuantLib::Matrix Expm(const QuantLib::Matrix& m) {
 
 #else
 
-#include <ql/math/matrixutilities/expm.hpp>
+#include <ql/experimental/math/expm.hpp>
 
 namespace QuantExt {
 
