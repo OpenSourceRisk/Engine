@@ -1,5 +1,5 @@
-ARG tag=:latest
-FROM debian${tag}
+ARG debian_tag
+FROM debian:${debian_tag}
 
 MAINTAINER Quaternion Risk Management
 LABEL Description="Provide a base environment for building in C++ with Boost"
