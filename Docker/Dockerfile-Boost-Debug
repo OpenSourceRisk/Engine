@@ -1,4 +1,4 @@
-ARG tag=:12.0
+ARG tag=:${DEBIAN_TAG}
 FROM debian${tag}
 
 MAINTAINER Quaternion Risk Management
