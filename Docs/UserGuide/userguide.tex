@@ -131,7 +131,7 @@
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Acadia Inc.}
-\date{31 March 2023}
+\date{16 June 2023}
 \maketitle
 
 \newpage
@@ -153,6 +153,7 @@ Date & Author & Comment \\
 16 September 2022 & Acadia & updates for release 7\\
 6 December 2022 & Acadia & updates for release 8\\
 31 March 2023 & Acadia & updates for release 9\\
+16 June 2023 & Acadia & updates for release 10\\
 \hline
 \end{supertabular}
 \end{center}
@@ -817,6 +818,8 @@ where the -G option allows choosing the desired build system generator.
 \item Run all test suites by invoking \\
   \medskip {\tt ctest -j4}
 \end{enumerate}
+
+For the best results, it is recommended, to compile ORE without the compiler flag \emph{QL\_USE\_INDEXED\_COUPON}. Not all ORE classes (in particular coupons and rate helpers) support this functionality yet and the results might not always be what is expected.
 
 \subsubsection*{ZLIB support}
 
@@ -3322,6 +3325,31 @@ Calling
 
 \medskip
 runs ORE and generates an NPV report.
+
+%--------------------------------------------------------
+\subsection{Bond Yield Shifted}% Example 49
+\label{example:49}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_49} shows how to use a yield curve
+built from a BondYieldShifted segment, as described in section \ref{sec:bond_yield_shifted}.
+
+In particular, it builds the curve {\tt USD.BMK.GVN.CURVE\_SHIFTED} shifted by three liquid Bonds:
+
+\begin{itemize}
+\item Fixed rate USD Bond maturing in August 2023 with id {\tt EJ7706660}.
+\item Fixed rate USD Bond maturing in September 2049 with id {\tt ZR5330686}.
+\item Floating Rate Bond maturing in May 2025 with id {\tt AS064441}.
+\end{itemize}
+
+The resulting curve is exhibited in the {\tt curves.csv} output file.
+Moreover, the results can be crosschecked against the NPVs, i.e. prices, of the ZeroBonds comprised in the portfolio.
+\begin{itemize}
+\item {\tt ZeroBond\_long}, maturing 2052-06-03 shows a price of 0.2022 akin to the 0.2022 in the curves output at the same date.
+\item {\tt ZeroBond\_short}, maturing 2032-06-01 shows a price of 0.5754 aktin to the 0.5754 in the curves output at the same date.
+\end{itemize}
+
+The example can be run calling {\tt python run.py}.
 
 \clearpage
 %========================================================
