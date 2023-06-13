@@ -1,0 +1,2 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+ConvertibleBondTRS,TotalReturnSwap,2026-02-03,7.435616,29902.183605,EUR,34965.710248,USD,1083808.22,EUR,1267336.35,,CPTY_C
