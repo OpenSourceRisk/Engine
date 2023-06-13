@@ -10,3 +10,4 @@ services:
         - boost_version=${BOOST_TAG}
         - boost_dir=boost_${BOOST_DIR}
         - num_cores=16
+        - debian_tag=${DEBIAN_TAG}
