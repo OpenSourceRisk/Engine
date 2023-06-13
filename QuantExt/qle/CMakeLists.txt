@@ -32,7 +32,6 @@ cashflows/brlcdicouponpricer.cpp
 cashflows/cashflows.cpp
 cashflows/cashflowtable.cpp
 cashflows/cmbcoupon.cpp
-
 cashflows/commoditycashflow.cpp
 cashflows/commodityindexedaveragecashflow.cpp
 cashflows/commodityindexedcashflow.cpp
@@ -407,7 +406,6 @@ cashflows/brlcdicouponpricer.hpp
 cashflows/cashflows.hpp
 cashflows/cashflowtable.hpp
 cashflows/cmbcoupon.hpp
-cashflows/commoditybasiscashflow.hpp
 cashflows/commoditycashflow.hpp
 cashflows/commodityindexedaveragecashflow.hpp
 cashflows/commodityindexedcashflow.hpp
