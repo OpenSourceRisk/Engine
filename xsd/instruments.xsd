@@ -393,6 +393,9 @@
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="LocalCapFloor" minOccurs="0"/>
+        <xs:element type="xs:boolean" name="StrictResetDates" minOccurs="0"/>
+        <xs:element type="scheduleData" name="FixingSchedule" minOccurs="0">
+        <xs:element type="scheduleData" name="ResetSchedule" minOccurs="0">
       </xs:all>
     </xs:complexType>
   </xs:element>
@@ -721,8 +724,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element type="scheduleData" name="ScheduleData" minOccurs="0">
-      </xs:element>
+      <xs:element type="scheduleData" name="ScheduleData" minOccurs="0"/>
       <xs:element name="PaymentDates" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
@@ -740,6 +742,8 @@
       </xs:element>
       <xs:element type="dayCounter" name="LastPeriodDayCounter" minOccurs="0"/>
       <xs:element ref="legDataType" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="StrictNotionalDates" minOccurs="0"/>
+      <xs:element type="scheduleData" name="PaymentSchedule" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
