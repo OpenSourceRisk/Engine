@@ -26,9 +26,7 @@
         <InterpolationVariable>Discount</InterpolationVariable>
         <InterpolationMethod>Linear</InterpolationMethod>
         <YieldCurveDayCounter>A365</YieldCurveDayCounter>
-        <Tolerance> </Tolerance>
         <Extrapolation>true</Extrapolation>
-        <BootstrapConfig> </BootstrapConfig>
     </YieldCurve>
     <YieldCurve>
       <CurveId>USD1D</CurveId>

@@ -818,7 +818,8 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
     }
 
     // set max expiry date (used in buildCalibrationInfo())
-    maxExpiry_ = *max_element(expiryDates.begin(),expiryDates.end());
+    if (expiryDates.size() > 0)
+        maxExpiry_ = *max_element(expiryDates.begin(),expiryDates.end());
 
     // Trace log the surface
     TLOG("Explicit strike surface grid points:");
@@ -1048,7 +1049,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         copy(row.value().second.begin(), row.value().second.end(), vols.row_begin(row.index()));
     }
 
-    maxExpiry_ = *std::max_element(expiryDates.begin(),expiryDates.end());
+    if (expiryDates.size() > 0)
+        maxExpiry_ = *std::max_element(expiryDates.begin(),expiryDates.end());
 
     // Need to multiply each put delta value by -1 before passing it to the BlackVolatilitySurfaceDelta ctor
     // i.e. a put delta of 0.25 that is passed in to the config must be -0.25 when passed to the ctor.
@@ -1272,7 +1274,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         }
     }
 
-    maxExpiry_ = *std::max_element(expiryDates.begin(),expiryDates.end());
+    if (expiryDates.size() > 0)
+        maxExpiry_ = *std::max_element(expiryDates.begin(),expiryDates.end());
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurfaceMoneyness time extrapolation is hard-coded to constant in volatility.
