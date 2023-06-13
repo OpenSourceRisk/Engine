@@ -1,3 +1,4 @@
+ARG debian_tag
 FROM debian:${debian_tag}
 
 MAINTAINER Quaternion Risk Management
