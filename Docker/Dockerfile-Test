@@ -1,5 +1,4 @@
-ARG tag=${DEBIAN_TAG}
-FROM debian:${tag}
+FROM debian:${debian_tag}
 
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y dos2unix python3 python3-pip libxml2-utils xsltproc \
