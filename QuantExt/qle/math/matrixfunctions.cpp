@@ -22,7 +22,7 @@
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wfloat-conversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion -Wunused-variable"
 #endif
 
 #include <unsupported/Eigen/MatrixFunctions>
