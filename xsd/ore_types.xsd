@@ -432,6 +432,7 @@
       <xs:enumeration value="MondayAfterThirdFriday"/>
       <xs:enumeration value="TuesdayAfterThirdFriday"/>
       <xs:enumeration value="LastWednesday"/>
+      <xs:enumeration value="EveryThursday"/>
       <xs:enumeration value=""/>
     </xs:restriction>
   </xs:simpleType>

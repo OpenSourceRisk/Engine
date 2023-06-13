@@ -123,9 +123,11 @@ Note: Currency codes must also match available currencies in the {\tt simulation
 \emph{OldCDS}   &   Same as TwentiethIMM with unrestricted date ends and long/short stub coupon period (old CDS convention).\\ \hline
 \emph{CDS}   &    \makecell[tl]{Credit derivatives standard rule defined in 'Big Bang' changes in 2009. \\ \\ For quarterly periods (\lstinline!Tenor! set to \emph{3M}): \\ (Assuming no \lstinline!FirstDate!/\lstinline!LastDate!) \\ Dates fall on 20th of March, June, September, December. A \emph{Following} \\ roll convention will be applied if the 20th falls on a non-business day. \\ If the \lstinline!EndDate! in the schedule is set to a date beyond the rolled \\ quarterly CDS date, the actual trade termination date will be on the \\ following quarterly CDS date. \\ The first coupon will be paid on the quarterly CDS date following the \\ \lstinline!StartDate!, and be for the period since the previous quarterly CDS \\ date.  \\ \\ For monthly periods (\lstinline!Tenor! set to \emph{1M}): \\ (Assuming no \lstinline!FirstDate!/\lstinline!LastDate!)\\ Dates fall on 20th of each month, but the termination is still adjusted \\ to be in line with quarterly periods. \\ If the \lstinline!EndDate! in the schedule is set to a date beyond the rolled \\ quarterly CDS date (i.e. the 20th+roll Mar, Jun, Sep, Dec), \\ the actual termination date will be on the following quarterly CDS \\ date, causing a long final stub. \\ The first coupon will be paid on the next 20th monthly following the \\ \lstinline!StartDate!, and be for the period since the previous month's 20th.}\\ \hline
 \emph{CDS2015}   &    \makecell[tl]{Credit derivatives standard rule updated in 2015. \\ Same as  \emph{CDS} but with termination dates adjusted to \\ 20th June and 20th December. \\ For schedule \lstinline!EndDates!  from the 20th of March to the 19th September, \\ both included, the termination date will fall on the 20th June (with \\  \emph{Following} roll). \\ For schedule \lstinline!EndDates! from the 20th September to the 19th March, \\ both included, the termination date will fall on the 20th December \\ (with \emph{Following} roll).} \\ \hline
-  \caption{Allowable Values for Rule}
-  \label{tab:rule}
-  \end{longtable}
+\emph{EveryThursday}   &  If FirstDate is not given, all thursdays between start and end date.
+                          If FirstDate is given, FirstDate plus all thursdays between FirstDate and end date. \\ \hline
+\caption{Allowable Values for Rule}
+\label{tab:rule}
+\end{longtable}
 
 \begin{longtable}{| p{.30\textwidth} | p{.70\textwidth} |}
     \hline
