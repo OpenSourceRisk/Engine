@@ -27,6 +27,25 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+namespace {
+std::vector<Date> everyThursdayDates(const Date& startDate, const Date& endDate, const Date& firstDate) {
+    std::vector<Date> result;
+    if (firstDate != Date())
+        result.push_back(firstDate);
+    Date d = startDate;
+    while (d <= endDate && (d.weekday() != QuantLib::Thursday || d < firstDate)) {
+        ++d;
+    }
+    if (d.weekday() == QuantLib::Thursday && (result.empty() || result.back() != d))
+        result.push_back(d);
+    while (d + 7 <= endDate) {
+        d += 7;
+        result.push_back(d);
+    }
+    return result;
+}
+} // namespace
+
 void ScheduleRules::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Rules");
     startDate_ = XMLUtils::getChildValue(node, "StartDate");
@@ -296,10 +315,23 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
         bdcEnd = parseBusinessDayConvention(data.termConvention());
     else
         bdcEnd = bdc; // except here
-    if (!data.rule().empty())
-        rule = parseDateGenerationRule(data.rule());
+
     if (!data.endOfMonth().empty())
         endOfMonth = parseBool(data.endOfMonth());
+
+    if (!data.rule().empty()) {
+
+        // handle special rules outside the QuantLib date generation rules
+
+        if (data.rule() == "EveryThursday") {
+            return Schedule(everyThursdayDates(startDate, endDate, firstDate), calendar, bdc, bdcEnd, tenor, rule,
+                            endOfMonth);
+        }
+    }
+
+    rule = parseDateGenerationRule(data.rule());
+
+    // handling of date generation rules that require special adjustments
 
     if ((rule == DateGeneration::CDS || rule == DateGeneration::CDS2015) &&
         (firstDate != Null<Date>() || lastDate != Null<Date>())) {
@@ -316,9 +348,11 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
         if (lastDate != Date())
             dates.back() = lastDate;
         return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth);
-    } else {
-        return Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate, lastDate);
     }
+
+    // default handling (QuantLib scheduler)
+
+    return Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate, lastDate);
 }
 
 namespace {
