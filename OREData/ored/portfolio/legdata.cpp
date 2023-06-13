@@ -188,6 +188,15 @@ void FloatingLegData::fromXML(XMLNode* node) {
         localCapFloor_ = XMLUtils::getChildValueAsBool(node, "LocalCapFloor", false);
     else
         localCapFloor_ = false;
+
+    strictResetDates_ = XMLUtils::getChildValueAsBool(node, "StrictResetDates", false, false);
+
+    if (auto tmp = XMLUtils::getChildNode(node, "FixingSchedule")) {
+        fixingSchedule_.fromXML(tmp);
+    }
+    if (auto tmp = XMLUtils::getChildNode(node, "ResetSchedule")) {
+        resetSchedule_.fromXML(tmp);
+    }
 }
 
 XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
@@ -216,6 +225,19 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     if (localCapFloor_)
         XMLUtils::addChild(doc, node, "LocalCapFloor", localCapFloor_);
+    if(strictResetDates_) {
+        XMLUtils::addChild(doc, node, "StrictResetDates", strictResetDates_);
+    }
+    if (fixingSchedule_.hasData()) {
+        auto tmp = fixingSchedule_.toXML(doc);
+        XMLUtils::setNodeName(doc, tmp, "FixingSchedule");
+        XMLUtils::appendNode(node, tmp);
+    }
+    if (resetSchedule_.hasData()) {
+        auto tmp = resetSchedule_.toXML(doc);
+        XMLUtils::setNodeName(doc, tmp, "ResetSchedule");
+        XMLUtils::appendNode(node, tmp);
+    }
     return node;
 }
 
@@ -728,12 +750,11 @@ void LegData::fromXML(XMLNode* node) {
     // if not given, default of getChildValueAsBool is true, which fits our needs here
     notionals_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Notionals", "Notional", "startDate",
                                                                  notionalDates_, &parseReal);
-    XMLNode* tmp = XMLUtils::getChildNode(node, "Notionals");
     isNotResetXCCY_ = true;
     notionalInitialExchange_ = false;
     notionalFinalExchange_ = false;
     notionalAmortizingExchange_ = false;
-    if (tmp) {
+    if (auto tmp = XMLUtils::getChildNode(node, "Notionals")) {
         XMLNode* fxResetNode = XMLUtils::getChildNode(tmp, "FXReset");
         if (fxResetNode) {
             isNotResetXCCY_ = false;
@@ -770,14 +791,23 @@ void LegData::fromXML(XMLNode* node) {
         }
     }
 
-    tmp = XMLUtils::getChildNode(node, "ScheduleData");
-    if (tmp)
+    if (auto tmp = XMLUtils::getChildNode(node, "ScheduleData"))
         schedule_.fromXML(tmp);
 
     paymentDates_ = XMLUtils::getChildrenValues(node, "PaymentDates", "PaymentDate", false);
+    if (!paymentDates_.empty()) {
+        WLOG("Usage of PaymentDates is deprecated, use PaymentSchedule instead.");
+    }
 
-    tmp = XMLUtils::getChildNode(node, "Indexings");
-    if (tmp) {
+    strictNotionalDates_ = XMLUtils::getChildValueAsBool(node, "StrictNotionalDates", false, false);
+
+    if (auto tmp = XMLUtils::getChildNode(node, "PaymentSchedule")) {
+        paymentSchedule_.fromXML(tmp);
+        QL_REQUIRE(paymentDates_.empty(), "Both PaymentDates and PaymentSchedule is given. Remove one of them. "
+                                          "PaymentDates is deprecated, so preferably use PaymentSchedule.");
+    }
+
+    if (auto tmp = XMLUtils::getChildNode(node, "Indexings")) {
         if (auto n = XMLUtils::getChildNode(tmp, "FromAssetLeg")) {
             indexingFromAssetLeg_ = parseBool(XMLUtils::getNodeValue(n));
         } else {
@@ -849,6 +879,16 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
             }
         }
         XMLUtils::appendNode(node, amortisationsParentNode);
+    }
+
+    if (strictNotionalDates_) {
+        XMLUtils::addChild(doc, node, "StrictNotionalDates", strictNotionalDates_);
+    }
+
+    if (paymentSchedule_.hasData()) {
+        auto tmp = paymentSchedule_.toXML(doc);
+        XMLUtils::setNodeName(doc, tmp, "PaymentSchedule");
+        XMLUtils::appendNode(node, tmp);
     }
 
     if (!indexing_.empty() || indexingFromAssetLeg_) {
