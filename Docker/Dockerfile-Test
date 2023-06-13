@@ -1,4 +1,4 @@
-ARG tag=latest
+ARG tag=${DEBIAN_TAG}
 FROM debian:${tag}
 
 RUN apt-get update \
