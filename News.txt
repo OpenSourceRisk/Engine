@@ -6,12 +6,12 @@ found in the commits between April and June 2022.
 
 INSTRUMENTS
 - roll out of Hybrid and Credit instruments, thanks to Acadia Inc., as announced in September 22:
-  * Composite Trade, composites of any ORE trade types
-  * Convertible Bond and Asset Swapped Convertible Bond Transaction (ASCOT)
   * Collateralized Bond Obligation, see Examples 45
-  * Generic Total Return Swap and Contract For Difference framework,
-    referencing Bonds, Forward Bonds, Convertible Bonds, CBOs (see Example 46),
+  * Generic Total Return Swap and Contract For Difference framework, see Example 46,
+    referencing Bonds, Forward Bonds, Convertible Bonds, CBOs,
     Equity and Equity Option positions, or any combination of derivatives covered in ORE
+  * Composite Trade, composites of any ORE trade types, see Example 47
+  * Convertible Bond and Asset Swapped Convertible Bond Transaction (ASCOT), see example 48
 - support separate fixing and payment date schedules on floating legs
 - support capped/floored BMA/SIFMA legs
 - support FRAs on OIS
