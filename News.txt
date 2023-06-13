@@ -11,7 +11,7 @@ INSTRUMENTS
     referencing Bonds, Forward Bonds, Convertible Bonds, CBOs,
     Equity and Equity Option positions, or any combination of derivatives covered in ORE
   * Composite Trade, composites of any ORE trade types, see Example 47
-  * Convertible Bond and Asset Swapped Convertible Bond Transaction (ASCOT), see example 48
+  * Convertible Bond and Asset Swapped Convertible Option Transaction (ASCOT), see example 48
 - support separate fixing and payment date schedules on floating legs
 - support capped/floored BMA/SIFMA legs
 - support FRAs on OIS

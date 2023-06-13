@@ -1,8 +1,10 @@
-Demonstrate the ConvertibleBond product 
+Demonstrate the ConvertibleBond and ASCOT product 
 
 Portfolio
 
-   Total Return Swap on a Convertible Bond
+   Convertible Bond trade
+   Ascot
+   Asset Swap
 
 Market
 

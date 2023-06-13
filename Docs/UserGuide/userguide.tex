@@ -3264,10 +3264,10 @@ If the ORE Python module is installed, as shown in Example 42, then you can also
 \centerline{\tt python ore.py} 
 
 %--------------------------------------------------------
-\subsection{Collateral Bond Obligation}% Example 45
+\subsection{Collateralized Bond Obligation}% Example 45
 %--------------------------------------------------------
 
-This example in folder {\tt Examples/Example\_45} demonstrates a Cashflow CDO or Collateral Bond Obligation (CBO) via ORE. Calling
+This example in folder {\tt Examples/Example\_45} demonstrates a Cashflow CDO or Collateralized Bond Obligation (CBO) via ORE. Calling
 
 \medskip
 \centerline{\tt python run.py}
@@ -3278,10 +3278,11 @@ The CBO is represented by a CBO reference datum specified in the reference data 
 NPV results are calculated for the investment in the junior tranche. 
 
 %--------------------------------------------------------
-\subsection{TRS on CBO}% Example 46
+\subsection{Generic Total Return Swap}% Example 46
 %--------------------------------------------------------
 
-This example in folder {\tt Examples/Example\_46} demonstrates a Total Return Swap (TRS) referencing a CBO pricing via ORE. Calling
+This example in folder {\tt Examples/Example\_46} demonstrates ORE's generic Total Return Swap referencing a CBO. 
+Calling
 
 \medskip
 \centerline{\tt python run.py}
@@ -3289,6 +3290,38 @@ This example in folder {\tt Examples/Example\_46} demonstrates a Total Return Sw
 \medskip
 will launch a single ORE run to process a TRS example and to generate NPV and cash flows in the usual result files.
 As opposed to example 45, the CBO and its bondbasket are represented explicitly in the CBO node.
+
+%--------------------------------------------------------
+\subsection{Composite Trade}% Example 47
+%--------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_48} demonstrates the input of ORE's Composite Trade that can consist on any number 
+and type of products covered by ORE. In this case the composite consists of two Equity Swaps.
+Calling
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+runs ORE and generates an NPV report.
+
+%--------------------------------------------------------
+\subsection{Convertible Bond and ASCOT}% Example 48
+%--------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_48} demonstrates the input of 
+\begin{itemize}
+\item a ConvertibleBond  trade
+\item a related Asset Swapped Convertible Option Transaction (ASCOT)
+\item a vanilla Swap that represents the package of Convertible Bond position and ASCOT
+\end{itemize}
+
+Calling
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+runs ORE and generates an NPV report.
 
 \clearpage
 %========================================================
