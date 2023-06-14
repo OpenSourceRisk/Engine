@@ -393,7 +393,6 @@
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="LocalCapFloor" minOccurs="0"/>
-        <xs:element type="xs:boolean" name="StrictResetDates" minOccurs="0"/>
         <xs:element type="scheduleData" name="FixingSchedule" minOccurs="0">
         <xs:element type="scheduleData" name="ResetSchedule" minOccurs="0">
       </xs:all>

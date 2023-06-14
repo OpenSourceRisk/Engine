@@ -193,8 +193,6 @@ void FloatingLegData::fromXML(XMLNode* node) {
     else
         localCapFloor_ = false;
 
-    strictResetDates_ = XMLUtils::getChildValueAsBool(node, "StrictResetDates", false, false);
-
     if (auto tmp = XMLUtils::getChildNode(node, "FixingSchedule")) {
         fixingSchedule_.fromXML(tmp);
     }
@@ -229,9 +227,6 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     if (localCapFloor_)
         XMLUtils::addChild(doc, node, "LocalCapFloor", localCapFloor_);
-    if (strictResetDates_) {
-        XMLUtils::addChild(doc, node, "StrictResetDates", strictResetDates_);
-    }
     if (fixingSchedule_.hasData()) {
         auto tmp = fixingSchedule_.toXML(doc);
         XMLUtils::setNodeName(doc, tmp, "FixingSchedule");
@@ -1012,13 +1007,20 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
 
         std::vector<Date> notionalDatesAsDates;
         std::vector<Date> rateDatesAsDates;
-        std::transform(data.notionalDates().begin(), data.notionalDates().end(),
-                       std::back_inserter(notionalDatesAsDates), &parseDate);
-        std::transform(fixedLegData->rateDates().begin(), fixedLegData->rateDates().end(),
-                       std::back_inserter(rateDatesAsDates), &parseDate);
+
+        for (auto const& d : data.notionalDates()) {
+            if (!d.empty())
+                notionalDatesAsDates.push_back(parseDate(d));
+        }
+
+        for (auto const& d : fixedLegData->rateDates()) {
+            if (!d.empty())
+                rateDatesAsDates.push_back(parseDate(d));
+        }
 
         return makeNonStandardFixedLeg(schedule.dates(), paymentDates, data.notionals(), notionalDatesAsDates,
-                                       fixedLegData->rates(), rateDatesAsDates, data.strictNotionalDates(), dc);
+                                       fixedLegData->rates(), rateDatesAsDates, data.strictNotionalDates(), dc,
+                                       paymentCalendar, bdc, boost::apply_visitor(PaymentLagPeriod(), paymentLag));
     }
 }
 
@@ -1088,7 +1090,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     Schedule paymentSchedule;
     ScheduleBuilder scheduleBuilder;
     scheduleBuilder.add(schedule, data.schedule());
-    scheduleBuilder.add(fixingSchedule,floatData->fixingSchedule());
+    scheduleBuilder.add(fixingSchedule, floatData->fixingSchedule());
     scheduleBuilder.add(resetSchedule, floatData->resetSchedule());
     scheduleBuilder.add(paymentSchedule, data.paymentSchedule());
     scheduleBuilder.makeSchedules(openEndDateReplacement);
@@ -1221,6 +1223,10 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
         return leg;
     }
 
+    // parse payment lag
+
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
+
     // handle ibor leg
 
     Leg tmpLeg;
@@ -1230,7 +1236,6 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
 
         // no strict notional dates, no fixing or reset schedule
 
-        PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
         IborLeg iborLeg = IborLeg(schedule, index)
                               .withNotionals(notionals)
                               .withSpreads(spreads)
@@ -1255,22 +1260,32 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
         // strict notional dates, fixing or reset schedule present
 
         QL_REQUIRE(!hasCapsFloors, "Ibor leg with strict notional or reset dates, explicit fixing or reset schedule "
-                                  "does not support cap / floors");
+                                   "does not support cap / floors");
 
         std::vector<Date> notionalDatesAsDates;
         std::vector<Date> spreadDatesAsDates;
         std::vector<Date> gearingDatesAsDates;
-        std::transform(data.notionalDates().begin(), data.notionalDates().end(),
-                       std::back_inserter(notionalDatesAsDates), &parseDate);
-        std::transform(floatData->spreadDates().begin(), floatData->spreadDates().end(),
-                       std::back_inserter(spreadDatesAsDates), &parseDate);
-        std::transform(floatData->gearingDates().begin(), floatData->gearingDates().end(),
-                       std::back_inserter(gearingDatesAsDates), &parseDate);
 
-        tmpLeg = makeNonStandardIborLeg(
-            index, schedule.dates(), paymentDates, fixingSchedule.dates(), resetSchedule.dates(), fixingDays,
-            data.notionals(), notionalDatesAsDates, floatData->spreads(), spreadDatesAsDates, floatData->gearings(),
-            gearingDatesAsDates, floatData->strictResetDates(), data.strictNotionalDates(), dc);
+        for (auto const& d : data.notionalDates()) {
+            if (!d.empty())
+                notionalDatesAsDates.push_back(parseDate(d));
+        }
+
+        for (auto const& d : floatData->spreadDates()) {
+            if (!d.empty())
+                spreadDatesAsDates.push_back(parseDate(d));
+        }
+
+        for (auto const& d : floatData->gearingDates()) {
+            if (!d.empty())
+                gearingDatesAsDates.push_back(parseDate(d));
+        }
+
+        tmpLeg = makeNonStandardIborLeg(index, schedule.dates(), paymentDates, fixingSchedule.dates(),
+                                        resetSchedule.dates(), fixingDays, data.notionals(), notionalDatesAsDates,
+                                        floatData->spreads(), spreadDatesAsDates, floatData->gearings(),
+                                        gearingDatesAsDates, data.strictNotionalDates(), dc, paymentCalendar, bdc,
+                                        boost::apply_visitor(PaymentLagPeriod(), paymentLag));
 
         isNonStandard = true;
     }

@@ -26,20 +26,18 @@ using namespace QuantLib;
 namespace ore::data {
 
 Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std::vector<Date>& calcDates,
-                           const std::vector<Date>& payDates, const std::vector<Date>& fixingDatesInput,
+                           const std::vector<Date>& payDatesInput, const std::vector<Date>& fixingDatesInput,
                            const std::vector<Date>& resetDatesInput, const Size fixingDays,
                            const std::vector<Real>& notionals, const std::vector<Date>& notionalDates,
                            const std::vector<Real>& spreads, const std::vector<Date>& spreadDates,
                            const std::vector<Real>& gearings, const std::vector<Date>& gearingDates,
-                           const bool strictResetDates, const bool strictNotionalDates, const DayCounter& dayCounter) {
+                           const bool strictNotionalDates, const DayCounter& dayCounter, const Calendar& payCalendar,
+                           const BusinessDayConvention payConv, const Period& payLag) {
 
     // checks
 
     QL_REQUIRE(calcDates.size() >= 2,
                "makeNonStandardIborLeg(): calc dates size (" << calcDates.size() << ") >= 2 required");
-    QL_REQUIRE(payDates.size() == calcDates.size() - 1, "makeNonStandardIborLeg(): pay dates size ("
-                                                            << payDates.size() << ") = calc dates size ("
-                                                            << calcDates.size() << " required");
     QL_REQUIRE(!notionals.empty(), "makeNonStandardIborLeg(): empty notinoals");
     QL_REQUIRE(notionalDates.empty() || notionalDates.size() == notionals.size() - 1,
                "makeNonStandardIborLeg(): notional dates (" << notionalDates.size() << ") must match notional ("
@@ -51,18 +49,29 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
                "makeNonStandardIborLeg(): gearing dates (" << gearingDates.size() << ") must match gearing ("
                                                            << gearings.size() << ") minus 1");
 
-    // populate reset dates, fixing dates if not explicitly given
+    // populate pay dates, reset dates, fixing dates if not explicitly given
 
+    std::vector<Date> payDates(payDatesInput);
     std::vector<Date> resetDates(resetDatesInput);
     std::vector<Date> fixingDates(fixingDatesInput);
 
-    if (resetDates.empty()) {
-        for (Size i = 0; i < calcDates.size() - 1; ++i) {
-            resetDates.push_back(calcDates[i]);
+    if (payDates.empty()) {
+        for (Size i = 1; i < calcDates.size(); ++i) {
+            payDates.push_back(payCalendar.advance(calcDates[i], payLag, payConv));
         }
     }
 
-    if (fixingDates.empty()) {
+    if (resetDates.empty() && fixingDates.empty()) {
+        for (Size i = 0; i < calcDates.size() - 1; ++i) {
+            resetDates.push_back(calcDates[i]);
+            fixingDates.push_back(
+                index->fixingCalendar().advance(resetDates.back(), -static_cast<int>(fixingDays) * Days, Preceding));
+        }
+    } else if (resetDates.empty()) {
+        for (Size i = 0; i < fixingDates.size(); ++i) {
+            resetDates.push_back(index->fixingCalendar().advance(fixingDates[i], fixingDays * Days, Preceding));
+        }
+    } else if (fixingDates.empty()) {
         for (Size i = 0; i < resetDates.size(); ++i) {
             fixingDates.push_back(
                 index->fixingCalendar().advance(resetDates[i], -static_cast<int>(fixingDays) * Days, Preceding));
@@ -71,12 +80,12 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
 
     // more checks
 
+    QL_REQUIRE(payDates.size() == calcDates.size() - 1, "makeNonStandardIborLeg(): pay dates size ("
+                                                            << payDates.size() << ") = calc dates size ("
+                                                            << calcDates.size() << ") minus 1 required");
     QL_REQUIRE(fixingDates.size() == resetDates.size(), "makeNonStandardIborLeg(): fixing dates ("
                                                             << fixingDates.size() << ") must match reset dates ("
                                                             << resetDates.size() << ")");
-    QL_REQUIRE(resetDates.size() == calcDates.size() - 1, "makeNonStandardIborLeg(): reset dates ("
-                                                              << resetDates.size() << ") must match calc dates size ("
-                                                              << calcDates.size() << ") minus 1");
 
     for (Size i = 0; i < fixingDates.size(); ++i) {
         QL_REQUIRE(fixingDates[i] <= resetDates[i], "makeNonStandardIborLeg(): fixing date at "
@@ -100,14 +109,14 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
         QL_REQUIRE(fixingDates[i] <= fixingDates[i + 1], "makeNonStandardIborLeg(): fixing date at "
                                                              << i << " (" << fixingDates[i]
                                                              << ") must be less or equal fixing date at " << (i + 1)
-                                                             << " (" << fixingDates[i + 1]);
+                                                             << " (" << fixingDates[i + 1] << ")");
     }
 
     for (Size i = 0; i < resetDates.size() - 1; ++i) {
         QL_REQUIRE(resetDates[i] <= resetDates[i + 1], "makeNonStandardIborLeg(): reset date at "
                                                            << i << " (" << resetDates[i]
                                                            << ") must be less or equal reset date at " << (i + 1)
-                                                           << " (" << resetDates[i + 1]);
+                                                           << " (" << resetDates[i + 1] << ")");
     }
 
     // build calculation periods including broken periods due to notional resets or fixing resets
@@ -117,9 +126,8 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
     for (auto const& d : calcDates)
         effCalcDates.insert(d);
 
-    if (strictResetDates)
-        for (auto const& d : resetDates)
-            effCalcDates.insert(d);
+    for (auto const& d : resetDates)
+        effCalcDates.insert(d);
 
     if (strictNotionalDates)
         for (auto const& d : notionalDates) {
@@ -146,10 +154,10 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
 
         // determine reset and thereby fixing date
 
-        auto nextCalcDate2 = std::upper_bound(effCalcDates.begin(), effCalcDates.end(), *startDate);
-        QL_REQUIRE(nextCalcDate2 != effCalcDates.begin(),
+        auto nextReset = std::upper_bound(resetDates.begin(), resetDates.end(), *startDate);
+        QL_REQUIRE(nextCalcDate2 != effCalcDates.begin() && nextCalcDate2 != effCalcDates.end(),
                    "makeNonStandardIborLeg(): internal error, nextCalcDate2 == effCalcDates.begin(), contact dev.");
-        Date fixingDate = fixingDates[std::distance(effCalcDates.begin(), nextCalcDate2) - 1];
+        Date fixingDate = fixingDates[std::distance(resetDates.begin(), nextReset) - 1];
 
         // determine notional
 
@@ -175,18 +183,16 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
     return leg;
 }
 
-Leg makeNonStandardFixedLeg(const std::vector<Date>& calcDates, const std::vector<Date>& payDates,
+Leg makeNonStandardFixedLeg(const std::vector<Date>& calcDates, const std::vector<Date>& payDatesInput,
                             const std::vector<Real>& notionals, const std::vector<Date>& notionalDates,
                             const std::vector<Real>& rates, const std::vector<Date>& rateDates,
-                            const bool strictNotionalDates, const DayCounter& dayCounter) {
+                            const bool strictNotionalDates, const DayCounter& dayCounter, const Calendar& payCalendar,
+                            const BusinessDayConvention payConv, const Period& payLag) {
 
     // checks
 
     QL_REQUIRE(calcDates.size() >= 2,
                "makeNonStandardFixedLeg(): calc dates size (" << calcDates.size() << ") >= 2 required");
-    QL_REQUIRE(payDates.size() == calcDates.size() - 1, "makeNonStandardFixedLeg(): pay dates size ("
-                                                            << payDates.size() << ") = calc dates size ("
-                                                            << calcDates.size() << " required");
     QL_REQUIRE(!notionals.empty(), "makeNonStandardFixedLeg(): empty notinoals");
     QL_REQUIRE(notionalDates.empty() || notionalDates.size() == notionals.size() - 1,
                "makeNonStandardFixedLeg(): notional dates (" << notionalDates.size() << ") must match notional ("
@@ -199,8 +205,24 @@ Leg makeNonStandardFixedLeg(const std::vector<Date>& calcDates, const std::vecto
         QL_REQUIRE(calcDates[i] <= calcDates[i + 1], "makeNonStandardFixedLeg(): calc date at "
                                                          << i << " (" << calcDates[i]
                                                          << ") must be less or equal calc date at " << (i + 1) << " ("
-                                                         << calcDates[i + 1]);
+                                                         << calcDates[i + 1] << ")");
     }
+
+    // populate pay dates if not given
+
+    std::vector<Date> payDates(payDatesInput);
+
+    if (payDates.empty()) {
+        for (Size i = 1; i < calcDates.size(); ++i) {
+            payDates.push_back(payCalendar.advance(calcDates[i], payLag, payConv));
+        }
+    }
+
+    // more checks
+
+    QL_REQUIRE(payDates.size() == calcDates.size() - 1, "makeNonStandardFixedLeg(): pay dates size ("
+                                                            << payDates.size() << ") = calc dates size ("
+                                                            << calcDates.size() << ") minus 1 required");
 
     // build calculation periods including broken periods due to notional resets or fixing resets
 

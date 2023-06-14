@@ -221,7 +221,6 @@ public:
     const boost::optional<Period>& lastRecentPeriod() const { return lastRecentPeriod_; }
     const std::string& lastRecentPeriodCalendar() const { return lastRecentPeriodCalendar_; }
     bool telescopicValueDates() const { return telescopicValueDates_; }
-    bool strictResetDates() const { return strictResetDates_; }
     ScheduleData fixingSchedule() const { return fixingSchedule_; }
     ScheduleData resetSchedule() const { return resetSchedule_; }
     //@}
@@ -264,7 +263,6 @@ private:
     boost::optional<Period> lastRecentPeriod_;
     std::string lastRecentPeriodCalendar_;
     bool telescopicValueDates_ = false;
-    bool strictResetDates_ = false;
     ScheduleData fixingSchedule_;
     ScheduleData resetSchedule_;
 };
