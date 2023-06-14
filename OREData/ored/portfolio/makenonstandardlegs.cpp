@@ -69,7 +69,7 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
         }
     } else if (resetDates.empty()) {
         for (Size i = 0; i < fixingDates.size(); ++i) {
-            resetDates.push_back(index->fixingCalendar().advance(fixingDates[i], fixingDays * Days, Preceding));
+            resetDates.push_back(index->fixingCalendar().advance(fixingDates[i], fixingDays * Days, Following));
         }
     } else if (fixingDates.empty()) {
         for (Size i = 0; i < resetDates.size(); ++i) {
@@ -155,7 +155,9 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
 
         auto nextReset = std::upper_bound(resetDates.begin(), resetDates.end(), *startDate);
         QL_REQUIRE(nextReset != resetDates.begin(),
-                   "makeNonStandardIborLeg(): internal error, nextCalcDate2 == effCalcDates.begin(), contact dev.");
+                   "makeNonStandardIborLeg(): calc start date "
+                       << *startDate << " is before first reset date " << *resetDates.begin()
+                       << ". Ensure that there is a reset date on or before the calc start date.");
         Date fixingDate = fixingDates[std::distance(resetDates.begin(), nextReset) - 1];
 
         // determine notional
