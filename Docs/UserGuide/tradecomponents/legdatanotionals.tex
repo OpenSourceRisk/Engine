@@ -193,7 +193,7 @@ Allowable values:  A string on the form FX-SOURCE-CCY1-CCY2.
 \item StrictNotionalDates [Optional]: If given and set to true, notional changes specified by startDate will be
   interpreted as taking place on the exact given date, even if that date falls into a calculation (accrual)
   period. Otherwise the notional change is applied for the next calculation period. Supported only for fixed and
-  floating legs with OIS and IBOR coupons.
+  floating legs with IBOR / RFR term rate coupons.
 \item ScheduleData: This is a trade component sub-node outlined in section \ref{ss:schedule_data} Schedule Data and
   Dates.
 \item \lstinline!PaymentSchedule! [Optional]: This node allows for the specification of an explicit payment schedule,
