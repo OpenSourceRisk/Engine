@@ -822,6 +822,8 @@
             <xs:element type="bool" name="EndOfMonth" minOccurs="0"/>
             <xs:element type="date" name="FirstDate" minOccurs="0"/>
             <xs:element type="date" name="LastDate" minOccurs="0"/>
+            <xs:element type="xs:boolean" name="RemoveFirstDate" minOccurs="0"/>
+            <xs:element type="xs:boolean" name="RemoveLastDate" minOccurs="0"/>
           </xs:all>
         </xs:complexType>
       </xs:element>
@@ -895,6 +897,8 @@
       <xs:element type="xs:string" name="Shift" minOccurs="0"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0"/>
       <xs:element type="businessDayConvention" name="Convention" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="RemoveFirstDate" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="RemoveLastDate" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
