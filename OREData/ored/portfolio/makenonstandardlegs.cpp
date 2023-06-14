@@ -147,15 +147,14 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
         // determine pay date
 
         auto nextCalcDate = std::lower_bound(calcDates.begin(), calcDates.end(), endDate);
-        QL_REQUIRE(nextCalcDate != calcDates.begin() && nextCalcDate != calcDates.end(),
-                   "makeNonStandardIborLeg(): internal error, nextCalcDate == calcDates.begin() or nextCalcDate == "
-                   "calcDates.end(), contact dev.");
+        QL_REQUIRE(nextCalcDate != calcDates.begin(),
+                   "makeNonStandardIborLeg(): internal error, nextCalcDate == calcDates.begin(), contact dev.");
         Date payDate = payDates[std::distance(calcDates.begin(), nextCalcDate) - 1];
 
         // determine reset and thereby fixing date
 
         auto nextReset = std::upper_bound(resetDates.begin(), resetDates.end(), *startDate);
-        QL_REQUIRE(nextCalcDate2 != effCalcDates.begin() && nextCalcDate2 != effCalcDates.end(),
+        QL_REQUIRE(nextReset != resetDates.begin(),
                    "makeNonStandardIborLeg(): internal error, nextCalcDate2 == effCalcDates.begin(), contact dev.");
         Date fixingDate = fixingDates[std::distance(resetDates.begin(), nextReset) - 1];
 
@@ -249,9 +248,8 @@ Leg makeNonStandardFixedLeg(const std::vector<Date>& calcDates, const std::vecto
         // determine pay date
 
         auto nextCalcDate = std::lower_bound(calcDates.begin(), calcDates.end(), endDate);
-        QL_REQUIRE(nextCalcDate != calcDates.begin() && nextCalcDate != calcDates.end(),
-                   "makeNonStandardFixedLeg(): internal error, nextCalcDate == calcDates.begin() or nextCalcDate == "
-                   "calcDates.end(), contact dev.");
+        QL_REQUIRE(nextCalcDate != calcDates.begin(),
+                   "makeNonStandardFixedLeg(): internal error, nextCalcDate == calcDates.begin(), contact dev.");
         Date payDate = payDates[std::distance(calcDates.begin(), nextCalcDate) - 1];
 
         // determine notional
