@@ -278,9 +278,24 @@ public:
     void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
     void setSimmReportingCurrency(const std::string& s) { simmReportingCurrency_ = s; }
     void setEnforceIMRegulations(bool b) { enforceIMRegulations_= b; }
-    
-    // Setters for ZeroToParSensiConversion 
-    void setZeroToParSensiInputFile(const std::string s) { zeroToParSensiInputFile_ = s; }
+
+    // Setters for ZeroToParSensiConversion
+    void setParConversionXbsParConversion(bool b) { parConversionXbsParConversion_ = b; }
+    void setParConversionAlignPillars(bool b) { parConversionAlignPillars_ = b; }
+    void setParConversionOutputJacobi(bool b) { parConversionOutputJacobi_ = b; }
+    void setParConversionThreshold(Real r) { parConversionThreshold_ = r; }
+    void setParConversionSimMarketParams(const std::string& xml);
+    void setParConversionSimMarketParamsFromFile(const std::string& fileName);
+    void setParConversionScenarioData(const std::string& xml);
+    void setParConversionScenarioDataFromFile(const std::string& fileName);
+    void setParConversionPricingEngine(const std::string& xml);
+    void setParConversionPricingEngineFromFile(const std::string& fileName);
+    void setParConversionPricingEngine(const boost::shared_ptr<EngineData>& engineData) {
+        parConversionPricingEngine_ = engineData;
+    }
+
+
+    void parConversionInputFile(const std::string s) { parConversionInputFile_ = s; }
 
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>
@@ -504,8 +519,18 @@ public:
     /**************************************************
      * Getters for Zero to Par Sensi conversion
      **************************************************/
-
-    const std::string& zeroToParSensiInputFile() const { return zeroToParSensiInputFile_; }
+    bool parConversionXbsParConversion() { return parConversionXbsParConversion_; }
+    bool parConversionAlignPillars() const { return parConversionAlignPillars_; };
+    bool parConversionOutputJacobi() const { return parConversionOutputJacobi_; };
+    QuantLib::Real parConversionThreshold() const { return parConversionThreshold_; }
+    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& parConversionSimMarketParams() {
+        return parConversionSimMarketParams_;
+    }
+    const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& parConversionScenarioData() {
+        return parConversionScenarioData_;
+    }
+    const boost::shared_ptr<ore::data::EngineData>& parConversionPricingEngine() { return parConversionPricingEngine_; }
+    const std::string& parConversionInputFile() const { return parConversionInputFile_; }
     
     /*************************************
      * List of analytics that shall be run
@@ -724,7 +749,14 @@ protected:
     /***************
      * Zero to Par Conversion analytic
      ***************/
-    std::string zeroToParSensiInputFile_;
+    bool parConversionXbsParConversion_ = false;
+    bool parConversionOutputJacobi_ = false;
+    bool parConversionAlignPillars_ = false;
+    QuantLib::Real parConversionThreshold_ = 1e-6;
+    boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> parConversionSimMarketParams_;
+    boost::shared_ptr<ore::analytics::SensitivityScenarioData> parConversionScenarioData_;
+    boost::shared_ptr<ore::data::EngineData> parConversionPricingEngine_;
+    std::string parConversionInputFile_;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {

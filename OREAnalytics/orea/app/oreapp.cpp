@@ -1216,12 +1216,14 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     // analyticFxSensis_ = true;
     // useSensiSpreadedTermStructures_ = true;
     tmp = params_->get("zeroToParSensiConversion", "active", false);
-    if (!tmp.empty() && parseBool(tmp))
+    if (!tmp.empty() && parseBool(tmp)) {
         inputs->insertAnalytic("PARCONVERSION");
+        
+        tmp = params_->get("zeroToParSensiConversion", "sensitivityInputFile", false);
+        if (tmp != "") {
+            inputs->setZeroToParSensiInputFile(tmp);
+        }
 
-    tmp = params_->get("zeroToParSensiConversion", "zeroSensiInputFile", false);
-    if (tmp != "") {
-        inputs->setZeroToParSensiInputFile(tmp);
     }
 
     LOG("buildInputParameters done");
