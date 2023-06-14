@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file scalablecoupon.hpp
+/*! \file qle/cashflows/scaledcoupon.hpp
     \brief Coupon / Cashflow paying scaled amounts
     \ingroup cashflows
 */
