@@ -211,6 +211,7 @@
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/math/flatextrapolation2d.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
+#include <qle/math/matrixfunctions.hpp>
 #include <qle/math/method_mt.hpp>
 #include <qle/math/nadarayawatson.hpp>
 #include <qle/math/problem_mt.hpp>
@@ -250,6 +251,7 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
 #include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
+#include <qle/models/crstateparametrization.hpp>
 #include <qle/models/defaultlossmodel.hpp>
 #include <qle/models/defaultprobabilitylatentmodel.hpp>
 #include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
@@ -302,6 +304,7 @@
 #include <qle/models/poollossmodel.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/models/pseudoparameter.hpp>
+#include <qle/models/transitionmatrix.hpp>
 #include <qle/models/yoycapfloorhelper.hpp>
 #include <qle/models/yoyinflationmodeltermstructure.hpp>
 #include <qle/models/yoyswaphelper.hpp>
@@ -344,6 +347,7 @@
 #include <qle/pricingengines/discountingforwardbondengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
+#include <qle/pricingengines/discountingriskybondenginemultistate.hpp>
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 #include <qle/pricingengines/indexcdsoptionbaseengine.hpp>
 #include <qle/pricingengines/indexcdstrancheengine.hpp>
@@ -358,6 +362,7 @@
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/pricingengines/mcmultilegoptionengine.hpp>
 #include <qle/pricingengines/midpointcdoengine.hpp>
+#include <qle/pricingengines/midpointcdsenginemultistate.hpp>
 #include <qle/pricingengines/midpointindexcdsengine.hpp>
 #include <qle/pricingengines/numericalintegrationindexcdsoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
@@ -430,6 +435,7 @@
 #include <qle/termstructures/fxblackvolsurface.hpp>
 #include <qle/termstructures/fxsmilesection.hpp>
 #include <qle/termstructures/fxvannavolgasmilesection.hpp>
+#include <qle/termstructures/generatordefaulttermstructure.hpp>
 #include <qle/termstructures/hazardspreadeddefaulttermstructure.hpp>
 #include <qle/termstructures/iborfallbackcurve.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>

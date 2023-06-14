@@ -202,17 +202,20 @@ void MarketDataLoader::populateFixings(
         for (const auto& f : portfolioFixings_) {
             for (const auto& d : f.second) {
                 if (!loader_->hasFixing(f.first, d)) {
+                    string fixingErr = "";
                     if (isFxIndex(f.first)) {
                         auto fxInd = parseFxIndex(f.first);
                         try { 
-                            fxInd->pastFixing(d);
+                            if(fxInd->fixingCalendar().isBusinessDay(d))
+                                fxInd->fixing(d);
                             break;
+                        } catch (const std::exception& e) {
+                            fixingErr = ", error: " + ore::data::to_string(e.what());
                         }
-                        catch (...) {}                        
                     }
                     WLOG(StructuredFixingWarningMessage(f.first, d, "Missing fixing",
                         "Could not find required fixing id " + f.first +
-                        " for date " + ore::data::to_string(d)));
+                        " for date " + ore::data::to_string(d) + fixingErr));
                 }
             }
         }
@@ -220,8 +223,8 @@ void MarketDataLoader::populateFixings(
 }
 
 void MarketDataLoader::populateLoader(
-    const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters, bool doNPVLagged,
-    const QuantLib::Date& npvLaggedDate, bool includeMporExpired) {
+    const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
+    const std::set<QuantLib::Date>& loaderDates) {
 
     // create a loader if doesn't already exist
     if (!loader_)
@@ -262,6 +265,7 @@ void MarketDataLoader::populateLoader(
 
     // Get set of quotes we need
     LOG("Generating market datum set");
+    set<string> quotes;
     for (const auto& tmp : todaysMarketParameters) {
         // Find all configurations in this todaysMarket
         std::set<std::string> configurations;
@@ -270,16 +274,21 @@ void MarketDataLoader::populateLoader(
 
         for (const auto& curveConfig : inputs_->curveConfigs()) {
             auto qs = curveConfig->quotes(tmp, configurations);
-            quotes_[inputs_->asof()].insert(qs.begin(), qs.end());
+            quotes.insert(qs.begin(), qs.end());
         }
     }
-    LOG("CurveConfigs require " << quotes_.size() << " quotes");
 
-    // Get the relevant market data loader for the pricing call
-    QuantLib::Date relabelMd = doNPVLagged ? inputs_->asof() : Date();
-    impl()->retrieveMarketData(loader_, quotes_, relabelMd);
-    if (doNPVLagged && includeMporExpired)
-        impl()->retrieveExpiredContracts(loader_, quotes_, npvLaggedDate);
+    for (const auto& d : loaderDates) {
+        QuoteMap quoteMap;
+        quoteMap[d] = quotes;
+
+        LOG("CurveConfigs require " << quotes.size() << " quotes");
+
+        // Get the relevant market data loader for the pricing call
+        impl()->retrieveMarketData(loader_, quoteMap, d);
+
+        quotes_[d] = quotes;
+    }
     LOG("Got market data");
 }
 

@@ -793,6 +793,10 @@ QuantExt::CrossAssetModel::AssetType parseCamAssetType(const string& s) {
         return QuantExt::CrossAssetModel::AssetType::CR;
     } else if (s == "EQ") {
         return QuantExt::CrossAssetModel::AssetType::EQ;
+    } else if (s == "COM") {
+        return QuantExt::CrossAssetModel::AssetType::COM;
+    } else if (s == "CrState") {
+        return QuantExt::CrossAssetModel::AssetType::CrState;
     } else {
         QL_FAIL("Unknown cross asset model type " << s);
     }

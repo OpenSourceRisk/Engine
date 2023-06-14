@@ -23,10 +23,11 @@
 #include <orea/cube/jointnpvcube.hpp>
 #include <orea/engine/amcvaluationengine.hpp>
 #include <orea/engine/mporcalculator.hpp>
+#include <orea/engine/multistatenpvcalculator.hpp>
 #include <orea/engine/multithreadedvaluationengine.hpp>
 #include <orea/engine/observationmode.hpp>
-#include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/scenariowriter.hpp>
+#include <orea/scenario/simplescenariofactory.hpp>
 
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -152,11 +153,11 @@ void XvaAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError
     LOG("XVA: Build Simulation Model (continueOnCalibrationError = "
         << std::boolalpha << continueOnCalibrationError << ")");
     CrossAssetModelBuilder modelBuilder(
-        analytic()->market(), analytic()->configurations().crossAssetModelData,
-                                        inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
-                                        inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
-                                        inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"),
-                                        false, continueOnCalibrationError);
+        analytic()->market(), analytic()->configurations().crossAssetModelData, inputs_->marketConfig("lgmcalibration"),
+        inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
+        inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
+        inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "",
+        inputs_->salvageCorrelationMatrix() ? SalvagingAlgorithm::Spectral : SalvagingAlgorithm::None);
     model_ = *modelBuilder.model();
 }
 
@@ -270,9 +271,13 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
         } else
             calculators.push_back(boost::make_shared<NPVCalculator>(inputs_->exposureBaseCurrency()));
         if (inputs_->storeFlows())
-            // cash flow stored at index 1 (no close-out lag) or 2 (have close-out lag)
             calculators.push_back(boost::make_shared<CashflowCalculator>(
                 inputs_->exposureBaseCurrency(), inputs_->asof(), grid_, cubeInterpreter_->mporFlowsIndex()));
+        if(inputs_->storeCreditStateNPVs() > 0) {
+            calculators.push_back(boost::make_shared<MultiStateNPVCalculator>(inputs_->exposureBaseCurrency(),
+                                                                              cubeInterpreter_->creditStateNPVsIndex(),
+                                                                              inputs_->storeCreditStateNPVs()));
+        }
         return calculators;
     };
 
@@ -505,6 +510,7 @@ void XvaAnalyticImpl::runPostProcessor() {
     analytics["dynamicCredit"] = inputs_->dynamicCredit();
     analytics["cvaSensi"] = inputs_->cvaSensi();
     analytics["flipViewXVA"] = inputs_->flipViewXVA();
+    analytics["creditMigration"] = inputs_->creditMigrationAnalytic();
 
     string baseCurrency = inputs_->xvaBaseCurrency();
     string calculationType = inputs_->collateralCalculationType();
@@ -554,12 +560,12 @@ void XvaAnalyticImpl::runPostProcessor() {
 
     postProcess_ = boost::make_shared<PostProcess>(
         analytic()->portfolio(), netting, analytic()->market(), marketConfiguration, cube_, *scenarioData_, analytics,
-        baseCurrency,
-        allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
+        baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid,
         cvaSensiShiftSize, kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor,
         kvaTheirPdFloor, kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight, cptyCube_, flipViewBorrowingCurvePostfix,
-        flipViewLendingCurvePostfix);
+        flipViewLendingCurvePostfix, inputs_->creditSimulationParameters(), inputs_->creditMigrationDistributionGrid(),
+        inputs_->creditMigrationTimeSteps(), creditStateCorrelationMatrix());
     LOG("post done");
 }
 
@@ -585,7 +591,7 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
     grid_ = analytic()->configurations().scenarioGeneratorData->getGrid();
     cubeInterpreter_ = boost::make_shared<CubeInterpretation>(
         inputs_->storeFlows(), analytic()->configurations().scenarioGeneratorData->withCloseOutLag(), scenarioData_,
-        grid_, inputs_->flipViewXVA());
+        grid_, inputs_->storeCreditStateNPVs(), inputs_->flipViewXVA());
 
     if (runSimulation_) {
     
@@ -791,11 +797,50 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                                               dimRegReports);
         }
 
+        if (inputs_->creditMigrationAnalytic()) {
+            QL_REQUIRE(
+                postProcess_->creditMigrationPdf().size() == inputs_->creditMigrationTimeSteps().size(),
+                "XvaAnalyticImpl::runAnalytic(): inconsistent post process results for credit migration pdf / cdf ("
+                    << postProcess_->creditMigrationPdf().size() << ") and input credit migration time steps ("
+                    << inputs_->creditMigrationTimeSteps().size() << ")");
+            for (Size i = 0; i < postProcess_->creditMigrationPdf().size(); ++i) {
+                auto rep = boost::make_shared<InMemoryReport>();
+                analytic()->reports()["XVA"]["credit_migration_" + to_string(inputs_->creditMigrationTimeSteps()[i])] =
+                    rep;
+                (*rep)
+                    .addColumn("upperBucketBound", double(), 6)
+                    .addColumn("pdf", double(), 8)
+                    .addColumn("cdf", double(), 8);
+                for (Size j = 0; j < postProcess_->creditMigrationPdf()[i].size(); ++j) {
+                    (*rep)
+                        .next()
+                        .add(postProcess_->creditMigrationUpperBucketBounds()[j])
+                        .add(postProcess_->creditMigrationPdf()[i][j])
+                        .add(postProcess_->creditMigrationCdf()[i][j]);
+                }
+                rep->end();
+            }
+        }
+
         CONSOLE("OK");
     }
 
     // reset that mode
     ObservationMode::instance().setMode(inputs_->observationModel());
+}
+
+Matrix XvaAnalyticImpl::creditStateCorrelationMatrix() const {
+
+    CorrelationMatrixBuilder cmb;
+    for (auto const& [pair, value] : analytic()->configurations().crossAssetModelData->correlations()) {
+        cmb.addCorrelation(pair.first, pair.second, value);
+    }
+
+    CorrelationMatrixBuilder::ProcessInfo processInfo;
+    processInfo[CrossAssetModel::AssetType::CrState] = {
+        {"CrState", analytic()->configurations().simMarketParams->numberOfCreditStates()}};
+
+    return cmb.correlationMatrix(processInfo);
 }
 
 } // namespace analytics

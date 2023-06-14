@@ -1196,6 +1196,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (param.second.first) {
                             LOG("Simulating CDS Vols for " << name);
                             vector<Handle<Quote>> quotes;
+                            vector<Volatility> vols;
                             vector<Time> times;
                             vector<Date> expiryDates;
                             DayCounter dc = wrapper->dayCounter();
@@ -1204,6 +1205,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 expiryDates.push_back(date);
                                 // hardcoded, single term 5y
                                 Volatility vol = wrapper->volatility(date, 5.0, Null<Real>(), wrapper->type());
+                                vols.push_back(vol);
                                 times.push_back(dc.yearFraction(asof_, date));
                                 boost::shared_ptr<SimpleQuote> q =
                                     boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : vol);
@@ -1221,7 +1223,20 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
-                            if (useSpreadedTermStructures_) {
+                            if (useSpreadedTermStructures_ ||
+                                (!useSpreadedTermStructures_ && parameters->simulateCdsVolATMOnly())) {
+                                std::vector<Handle<Quote>> spreads;
+                                if (parameters_->simulateCdsVolATMOnly()) {
+                                    for (size_t i = 0; i < quotes.size(); i++) {
+                                        Handle<Quote> atmVol(boost::make_shared<SimpleQuote>(quotes[i]->value()));
+                                        Handle<Quote> quote(boost::make_shared <
+                                                            CompositeQuote<std::minus<double>>>(quotes[i], atmVol,
+                                                                                               std::minus<double>()));
+                                        spreads.push_back(quote);
+                                    }
+                                } else {
+                                    spreads = quotes;
+                                }
                                 std::vector<QuantLib::Period> simTerms;
                                 std::vector<Handle<CreditCurve>> simTermCurves;
                                 if (curveConfigs.hasCdsVolCurveConfig(name)) {
@@ -1238,7 +1253,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     }
                                 }
                                 cvh = Handle<CreditVolCurve>(boost::make_shared<SpreadedCreditVolCurve>(
-                                    wrapper, expiryDates, quotes, !stickyStrike, simTerms, simTermCurves));
+                                    wrapper, expiryDates, spreads, !stickyStrike, simTerms, simTermCurves));
                             } else {
                                 // TODO support strike and term dependence
                                 cvh = Handle<CreditVolCurve>(boost::make_shared<CreditVolCurveWrapper>(
@@ -2593,6 +2608,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                 }
                 break;
 
+            case RiskFactorKey::KeyType::SurvivalWeight:
+                // nothing to do, these are written to asd
+                break;
+
+            case RiskFactorKey::KeyType::CreditState:
+                // nothing to do, these are written to asd
+                break;
+
             case RiskFactorKey::KeyType::None:
                 WLOG("RiskFactorKey None not yet implemented");
                 break;
@@ -2679,6 +2702,8 @@ void ScenarioSimMarket::reset() {
 
 void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenario) {
 
+    currentScenario_ = scenario;
+
     // apply scenario based on cached indices for simData_ for a SimpleScenario
     // this assumes that all scenarios have an identical key structure in their data map
 
@@ -2692,7 +2717,7 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
                 for (auto const& d : s->data()) {
                     auto it = simData_.find(d.first);
                     if (it == simData_.end()) {
-                        ALOG("simulation data point missing for key " << d.first);
+                        WLOG("simulation data point missing for key " << d.first);
                         cachedSimData_.push_back(boost::shared_ptr<SimpleQuote>());
                         cachedSimDataActive_.push_back(false);
                     } else {
@@ -2735,7 +2760,7 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
         // scenario
         auto it = simData_.find(key);
         if (it == simData_.end()) {
-            ALOG("simulation data point missing for key " << key);
+            WLOG("simulation data point missing for key " << key);
         } else {
             if (filter_->allow(key)) {
                 it->second->setValue(scenario->get(key));
@@ -2780,8 +2805,9 @@ void ScenarioSimMarket::updateDate(const Date& d) {
 
 void ScenarioSimMarket::updateScenario(const Date& d) {
     QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
-    boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
-    QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
+    auto scenario = scenarioGenerator_->next(d);
+    QL_REQUIRE(scenario->asof() == d,
+               "Invalid Scenario date " << scenario->asof() << ", expected " << d);
     numeraire_ = scenario->getNumeraire();
     label_ = scenario->label();
     applyScenario(scenario);
@@ -2827,6 +2853,21 @@ void ScenarioSimMarket::updateAsd(const Date& d) {
         for (auto c : parameters_->additionalScenarioDataCcys()) {
             if (c != parameters_->baseCcy())
                 asd_->set(fxSpot(c + parameters_->baseCcy())->value(), AggregationScenarioDataType::FXSpot, c);
+        }
+
+        for (Size i = 0; i < parameters_->additionalScenarioDataNumberOfCreditStates(); ++i) {
+            RiskFactorKey key(RiskFactorKey::KeyType::CreditState, std::to_string(i));
+            QL_REQUIRE(currentScenario_->has(key), "scenario does not have key " << key);
+            asd_->set(currentScenario_->get(key), AggregationScenarioDataType::CreditState, std::to_string(i));
+        }
+
+        for (const auto& n : parameters_->additionalScenarioDataSurvivalWeights()) {
+            RiskFactorKey key(RiskFactorKey::KeyType::SurvivalWeight, n);
+            QL_REQUIRE(currentScenario_->has(key), "scenario does not have key " << key);
+            asd_->set(currentScenario_->get(key), AggregationScenarioDataType::SurvivalWeight, n);
+            RiskFactorKey rrKey(RiskFactorKey::KeyType::RecoveryRate, n);
+            QL_REQUIRE(currentScenario_->has(rrKey), "scenario does not have key " << key);
+            asd_->set(currentScenario_->get(rrKey), AggregationScenarioDataType::RecoveryRate, n);
         }
 
         asd_->set(numeraire_, AggregationScenarioDataType::Numeraire);

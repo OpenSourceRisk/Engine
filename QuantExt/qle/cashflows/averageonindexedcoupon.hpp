@@ -129,6 +129,10 @@ public:
     Rate effectiveCap() const;
     //! effective floor of fixing
     Rate effectiveFloor() const;
+    //! effective caplet volatility
+    Real effectiveCapletVolatility() const;
+    //! effective floorlet volatility
+    Real effectiveFloorletVolatility() const;
     //@}
     //! \name Visitability
     //@{
@@ -148,16 +152,25 @@ protected:
     bool nakedOption_;
     bool localCapFloor_;
     bool includeSpread_;
+    mutable Real effectiveCapletVolatility_;
+    mutable Real effectiveFloorletVolatility_;
 };
 
 //! capped floored averaged indexed coupon pricer base class
 class CapFlooredAverageONIndexedCouponPricer : public FloatingRateCouponPricer {
 public:
-    CapFlooredAverageONIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
+    CapFlooredAverageONIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v,
+                                           const bool effectiveVolatilityInput = false);
     Handle<OptionletVolatilityStructure> capletVolatility() const;
+    bool effectiveVolatilityInput() const;
+    Real effectiveCapletVolatility() const;   // only available after capletRate() was called
+    Real effectiveFloorletVolatility() const; // only available after floorletRate() was called
 
-private:
+protected:
     Handle<OptionletVolatilityStructure> capletVol_;
+    bool effectiveVolatilityInput_;
+    mutable Real effectiveCapletVolatility_;
+    mutable Real effectiveFloorletVolatility_;
 };
 
 //! helper class building a sequence of overnight coupons
@@ -190,6 +203,7 @@ public:
     AverageONLeg& withInArrears(const bool inArrears);
     AverageONLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
     AverageONLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
+    AverageONLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
     AverageONLeg& withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
     AverageONLeg& withCapFlooredAverageONIndexedCouponPricer(
         const boost::shared_ptr<CapFlooredAverageONIndexedCouponPricer>& couponPricer);
@@ -216,6 +230,7 @@ private:
     bool inArrears_;
     boost::optional<Period> lastRecentPeriod_;
     Calendar lastRecentPeriodCalendar_;
+    std::vector<QuantLib::Date> paymentDates_;
     boost::shared_ptr<AverageONIndexedCouponPricer> couponPricer_;
     boost::shared_ptr<CapFlooredAverageONIndexedCouponPricer> capFlooredCouponPricer_;
 };

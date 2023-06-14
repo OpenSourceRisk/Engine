@@ -257,6 +257,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     notional_ = currentNotional(bond->cashflows());
     notionalCurrency_ = bondData_.currency();
 
+    issuer_ = bondData_.issuerId();
+
     // Add legs (only 1)
     legs_ = {bond->cashflows()};
     legCurrencies_ = {npvCurrency_};

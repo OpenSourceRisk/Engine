@@ -8,6 +8,9 @@ LABEL Description="Build ORE and add to the QuantLib build environment"
 # Argument for number of cores to use while building
 ARG num_cores
 
+# install Eigen
+RUN apt-get install -f -y libeigen3-dev
+
 # Copy ORE sources for libs and app
 COPY QuantExt /ore/QuantExt
 COPY OREData /ore/OREData
