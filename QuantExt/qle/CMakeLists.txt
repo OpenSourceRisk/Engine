@@ -32,7 +32,6 @@ cashflows/brlcdicouponpricer.cpp
 cashflows/cashflows.cpp
 cashflows/cashflowtable.cpp
 cashflows/cmbcoupon.cpp
-
 cashflows/commoditycashflow.cpp
 cashflows/commodityindexedaveragecashflow.cpp
 cashflows/commodityindexedcashflow.cpp
@@ -139,11 +138,11 @@ instruments/subperiodsswap.cpp
 instruments/syntheticcdo.cpp
 instruments/tenorbasisswap.cpp
 instruments/varianceswap.cpp
-math/bucketeddistribution.cpp
 math/blockmatrixinverse.cpp
+math/bucketeddistribution.cpp
 math/deltagammavar.cpp
-math/discretedistribution.cpp
 math/differentialevolution_mt.cpp
+math/discretedistribution.cpp
 math/fillemptymatrix.cpp
 math/matrixfunctions.cpp
 math/randomvariable.cpp
@@ -345,7 +344,6 @@ termstructures/proxyoptionletvolatility.cpp
 termstructures/proxyswaptionvolatility.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.cpp
-
 termstructures/spreadedcorrelationcurve.cpp
 termstructures/spreadedcpivolatilitysurface.cpp
 termstructures/spreadeddiscountcurve.cpp
@@ -407,7 +405,6 @@ cashflows/brlcdicouponpricer.hpp
 cashflows/cashflows.hpp
 cashflows/cashflowtable.hpp
 cashflows/cmbcoupon.hpp
-cashflows/commoditybasiscashflow.hpp
 cashflows/commoditycashflow.hpp
 cashflows/commodityindexedaveragecashflow.hpp
 cashflows/commodityindexedcashflow.hpp
