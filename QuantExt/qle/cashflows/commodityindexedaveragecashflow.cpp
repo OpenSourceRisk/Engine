@@ -119,7 +119,7 @@ void CommodityIndexedAverageCashFlow::accept(AcyclicVisitor& v) {
     if (Visitor<CommodityIndexedAverageCashFlow>* v1 = dynamic_cast<Visitor<CommodityIndexedAverageCashFlow>*>(&v))
         v1->visit(*this);
     else
-        CashFlow::accept(v);
+        CommodityCashFlow::accept(v);
 }
 
 void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator>& calc) {

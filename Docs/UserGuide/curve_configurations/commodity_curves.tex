@@ -143,6 +143,7 @@ The base future is averaging and the basis future is not averaging. This combina
     <InterpolationMethod>LinearFlat</InterpolationMethod>
     <AddBasis>true</AddBasis>
     <AverageBase>true</AverageBase>
+    <PriceAsHistoricalFixing>true</PriceAsHistoricalFixing>
   </BasisConfiguration>
   <Extrapolation>true</Extrapolation>
 </CommodityCurve>
@@ -161,6 +162,8 @@ The meaning of the fields in the \lstinline!BasisConfiguration! node in Listings
 \item \lstinline!InterpolationMethod! [Optional]: Has the meaning given previously in this section.
 \item \lstinline!AddBasis! [Optional]: This is a boolean flag where \lstinline!true!, the default value, indicates that the basis value should be added to the base price to give the outright price and \lstinline!false! indicates that the basis value should be subtracted from the base price to give the outright price.
 \item \lstinline!MonthOffset! [Optional]: This is an optional non-negative integer value. In general, the basis contract period and the base contract period are equal, i.e.\ the value of the March basis contract for ICE Waha will be added to the value of thr March contract for CME NG. If for contracts with a monthly cycle or greater, the base contract month is $n$ months prior to the basis contract month, the \lstinline!MonthOffset! should be set to $n$. The default value if omitted is 0.
+\item \lstinline!PriceAsHistoricalFixing! [Optional]: This is a boolean flag where \lstinline!true!, the default value, indicates that the historical fixings are prices of the underlying. If set to false, the fixings are basis spreads and ORE will convert them into prices by adding the corresponding base index fixings.
+
 \end{itemize}
 
 A commodity curve may also be set up as a piecewise price curve involving sets of quotes e.g. direct future price quotes, future price quotes that are the average of other future prices over a period, future price quotes that are the average of spot price over a period etc. This is particularly useful for cases where there are future contracts with different cycles. For example, in the power markets, there are daily future contracts at the short end and monthly future contracts that average the daily prices over the month at the long end. An example of such a set-up is shown in Listing \ref{lst:commodity_crv_config_ice_pdq}.

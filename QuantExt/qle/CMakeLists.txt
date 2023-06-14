@@ -69,6 +69,7 @@ currencies/configurablecurrency.cpp
 currencies/europe.cpp
 currencies/metals.cpp
 indexes/bondindex.cpp
+indexes/commoditybasisfutureindex.cpp
 indexes/commodityindex.cpp
 indexes/compoequityindex.cpp
 indexes/compositeindex.cpp
@@ -137,11 +138,11 @@ instruments/subperiodsswap.cpp
 instruments/syntheticcdo.cpp
 instruments/tenorbasisswap.cpp
 instruments/varianceswap.cpp
-math/bucketeddistribution.cpp
 math/blockmatrixinverse.cpp
+math/bucketeddistribution.cpp
 math/deltagammavar.cpp
-math/discretedistribution.cpp
 math/differentialevolution_mt.cpp
+math/discretedistribution.cpp
 math/fillemptymatrix.cpp
 math/matrixfunctions.cpp
 math/randomvariable.cpp
@@ -365,6 +366,7 @@ termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
 time/dateutilities.cpp
 time/yearcounter.cpp
+utilities/commodity.cpp
 utilities/inflation.cpp
 utilities/time.cpp)
 
@@ -446,6 +448,7 @@ indexes/behicp.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
 indexes/cacpi.hpp
+indexes/commoditybasisfutureindex.hpp
 indexes/commodityindex.hpp
 indexes/compoequityindex.hpp
 indexes/compositeindex.hpp
@@ -796,6 +799,8 @@ termstructures/capfloortermvolsurface.hpp
 termstructures/capfloortermvolsurfacesparse.hpp
 termstructures/commodityaveragebasispricecurve.hpp
 termstructures/commoditybasispricecurve.hpp
+termstructures/commoditybasispricecurvewrapper.hpp
+termstructures/commoditybasispricetermstructure.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/credit/basecorrelationstructure.hpp
 termstructures/credit/spreadedbasecorrelationcurve.hpp
@@ -901,6 +906,7 @@ termstructures/zeroinflationcurveobserverstatic.hpp
 time/dateutilities.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
+utilities/commodity.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
 utilities/savedobservablesettings.hpp

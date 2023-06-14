@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/pricingengines/cashflowcboengines.hpp
+/*! \file qle/pricingengines/cbomcengine.hpp
  \brief Monte Carlo pricing engine for the cashflow CDO instrument
  */
 

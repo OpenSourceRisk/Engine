@@ -1,19 +1,17 @@
-1) Portfolio
+Demonstrate the representation of Composite Trades in ORE
 
-   two zero coupon bonds with shorter and longer maturity
+Portfolio
 
-2) Market
+   Composite of two Equity Swaps
 
-   building the new feature bond yield shift
+Market
 
-3) Pricing
+   Pseudo market as of 25/02/2021
+   
+Analytics
 
-   Multi-curve
+   NPV
 
-4) Analytics
-
-   NPV, Cash Flow and Curve
-
-5) Run Example
+Run Example
 
    python run.py

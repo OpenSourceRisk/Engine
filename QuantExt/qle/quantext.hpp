@@ -37,6 +37,7 @@
 #include <qle/cashflows/cashflows.hpp>
 #include <qle/cashflows/cashflowtable.hpp>
 #include <qle/cashflows/cmbcoupon.hpp>
+#include <qle/cashflows/commoditybasiscashflow.hpp>
 #include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
@@ -80,6 +81,7 @@
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/bondindex.hpp>
 #include <qle/indexes/cacpi.hpp>
+#include <qle/indexes/commoditybasisfutureindex.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/compoequityindex.hpp>
 #include <qle/indexes/compositeindex.hpp>
@@ -430,6 +432,8 @@
 #include <qle/termstructures/capfloortermvolsurfacesparse.hpp>
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
+#include <qle/termstructures/commoditybasispricecurvewrapper.hpp>
+#include <qle/termstructures/commoditybasispricetermstructure.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/credit/basecorrelationstructure.hpp>
 #include <qle/termstructures/credit/spreadedbasecorrelationcurve.hpp>
@@ -535,6 +539,7 @@
 #include <qle/time/dateutilities.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/utilities/commodity.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>

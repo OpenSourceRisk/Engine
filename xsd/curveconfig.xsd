@@ -710,6 +710,7 @@
       <xs:element type="bool" name="AddBasis" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="MonthOffset" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="AverageBase" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="PriceAsHistoricalFixing" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
   
