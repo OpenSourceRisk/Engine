@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <ORE>
   <Setup>
-    <Parameter name="asofDate">2021-02-25</Parameter>
+    <Parameter name="asofDate">2018-08-28</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
@@ -14,6 +14,7 @@
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="referenceDataFile">reference_data.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
   </Setup>
   <Markets>
