@@ -1157,20 +1157,21 @@ ParSensitivityAnalysis::makeSwap(const boost::shared_ptr<Market>& market, string
         boost::shared_ptr<FloatingRateCoupon> lastCoupon =
             boost::dynamic_pointer_cast<FloatingRateCoupon>(subPeriodSwap->floatLeg().back());
         helper = subPeriodSwap;
-        #ifdef QL_USE_INDEXED_COUPON
-            /* May need to adjust latestRelevantDate if you are projecting libor based
-            on tenor length rather than from accrual date to accrual date. */
-            Date fixingValueDate = indexWithoutFixings->valueDate(lastCoupon->fixingDate());
-            Date endValueDate = indexWithoutFixings->maturityDate(fixingValueDate);
-            latestRelevantDate = std::max(latestRelevantDate, endValueDate);
-        #else
+        if (IborCoupon::Settings::instance().usingAtParCoupons()) {
             /* Subperiods coupons do not have a par approximation either... */
             if (boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(lastCoupon)) {
                 Date fixingValueDate = index->valueDate(lastCoupon->fixingDate());
                 Date endValueDate = index->maturityDate(fixingValueDate);
                 latestRelevantDate = std::max(latestRelevantDate, endValueDate);
             }
-        #endif
+        } else {
+            /* May need to adjust latestRelevantDate if you are projecting libor based
+            on tenor length rather than from accrual date to accrual date. */
+            Date fixingValueDate = index->valueDate(lastCoupon->fixingDate());
+            Date endValueDate = index->maturityDate(fixingValueDate);
+            latestRelevantDate = std::max(latestRelevantDate, endValueDate);
+            
+        }
     } else {
         removeTodaysFixingIndices_.insert(index->name());
         helper = boost::shared_ptr<VanillaSwap>(

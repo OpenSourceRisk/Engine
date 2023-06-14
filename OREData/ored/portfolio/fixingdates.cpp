@@ -33,10 +33,10 @@
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
+#include <qle/indexes/commoditybasisfutureindex.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
-
 #include <ql/cashflow.hpp>
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -520,7 +520,7 @@ void FixingDateGetter::visit(EquityMarginCoupon& c) {
                                        IndexNameTranslator::instance().oreName(c.fxIndex()->name()), c.date());
 }
 
-void FixingDateGetter::visit(CommodityIndexedCashFlow& c) {
+void FixingDateGetter::visit(CommodityCashFlow& c) {
     auto indices = c.indices();
     for (const auto& kv : indices) {
         // see above, the ql and ORE index names are identical
@@ -529,17 +529,8 @@ void FixingDateGetter::visit(CommodityIndexedCashFlow& c) {
         if (auto d = kv.second->expiryDate(); d != Date() && d < kv.first) {
             requiredFixings_.addFixingDate(d, kv.second->name(), d);
         }
-    }
-}
-
-void FixingDateGetter::visit(CommodityIndexedAverageCashFlow& c) {
-    auto indices = c.indices();
-    for (const auto& kv : indices) {
-        // see above, the ql and ORE index names are identical
-        requiredFixings_.addFixingDate(kv.first, kv.second->name(), c.date());
-        // if the pricing date is > future expiry, add the future expiry itself as well
-        if (auto d = kv.second->expiryDate(); d != Date() && d < kv.first) {
-            requiredFixings_.addFixingDate(d, kv.second->name(), d);
+        if (auto baseFutureIndex = boost::dynamic_pointer_cast<CommodityBasisFutureIndex>(kv.second)) {
+            baseFutureIndex->baseCashflow(c.date())->accept(*this);
         }
     }
 }
