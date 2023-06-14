@@ -67,6 +67,8 @@ void ScheduleRules::fromXML(XMLNode* node) {
     endOfMonth_ = XMLUtils::getChildValue(node, "EndOfMonth");
     firstDate_ = XMLUtils::getChildValue(node, "FirstDate");
     lastDate_ = XMLUtils::getChildValue(node, "LastDate");
+    removeFirstDate_ = XMLUtils::getChildValueAsBool(node, "RemoveFirstDate", false, false);
+    removeLastDate_ = XMLUtils::getChildValueAsBool(node, "RemoveLastDate", false, false);
 }
 
 XMLNode* ScheduleRules::toXML(XMLDocument& doc) {
@@ -82,6 +84,10 @@ XMLNode* ScheduleRules::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, rules, "EndOfMonth", endOfMonth_);
     XMLUtils::addChild(doc, rules, "FirstDate", firstDate_);
     XMLUtils::addChild(doc, rules, "LastDate", lastDate_);
+    if(removeFirstDate_)
+        XMLUtils::addChild(doc,rules,"RemoveFirstDate", removeFirstDate_);
+    if(removeLastDate_)
+        XMLUtils::addChild(doc,rules,"RemoveLastDate", removeLastDate_);
     return rules;
 }
 
@@ -112,19 +118,23 @@ void ScheduleDerived::fromXML(XMLNode* node) {
     shift_ = XMLUtils::getChildValue(node, "Shift", false);
     calendar_ = XMLUtils::getChildValue(node, "Calendar", false);
     convention_ = XMLUtils::getChildValue(node, "Convention", false);
+    removeFirstDate_ = XMLUtils::getChildValueAsBool(node, "RemoveFirstDate", false, false);
+    removeLastDate_ = XMLUtils::getChildValueAsBool(node, "RemoveLastDate", false, false);
 }
 
 XMLNode* ScheduleDerived::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Derived");
     XMLUtils::addChild(doc, node, "BaseSchedule", baseSchedule_);
-
     if (!shift_.empty())
         XMLUtils::addChild(doc, node, "Shift", shift_);
     if (!calendar_.empty())
         XMLUtils::addChild(doc, node, "Calendar", calendar_);
     if (!convention_.empty())
         XMLUtils::addChild(doc, node, "Convention", convention_);
-
+    if(removeFirstDate_)
+        XMLUtils::addChild(doc, node, "RemoveFirstDate", removeFirstDate_);
+    if(removeLastDate_)
+        XMLUtils::addChild(doc, node, "RemoveLastDate", removeLastDate_);
     return node;
 }
 
@@ -374,6 +384,8 @@ Calendar parseCalendarTemp(const string& s) { return parseCalendar(s); }
 } // namespace
 
 Schedule makeSchedule(const ScheduleData& data, const Date& openEndDateReplacement, const map<string, QuantLib::Schedule>& baseSchedules) {
+    if(!data.hasData())
+        return Schedule();
     // only the last rule-based schedule is allowed to have an open end date, check this
     for (Size i = 1; i < data.rules().size(); ++i) {
         QL_REQUIRE(!data.rules()[i - 1].endDate().empty(),
