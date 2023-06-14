@@ -1198,13 +1198,30 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     tmp = params_->get("cashflow", "portfolioFilterDate", false);
     if (tmp != "")
         inputs->setPortfolioFilterDate(tmp);
-    
+
     if (inputs->analytics().size() == 0) {
         inputs->insertAnalytic("MARKETDATA");
         inputs->setOutputTodaysMarketCalibration(true);
         if (inputs->lazyMarketBuilding())
             LOG("Lazy market build being overridden to \"false\" for MARKETDATA analytic.")
-            inputs->setLazyMarketBuilding(false);
+        inputs->setLazyMarketBuilding(false);
+    }
+
+    /*************
+     * ZERO TO PAR SENSI CONVERSION
+     *************/
+
+    // FIXME: The following are not loaded from params so far, relying on defaults
+    // xbsParConversion_ = false;
+    // analyticFxSensis_ = true;
+    // useSensiSpreadedTermStructures_ = true;
+    tmp = params_->get("zeroToParSensiConversion", "active", false);
+    if (!tmp.empty() && parseBool(tmp))
+        inputs->insertAnalytic("PARCONVERSION");
+
+    tmp = params_->get("zeroToParSensiConversion", "zeroSensiInputFile", false);
+    if (tmp != "") {
+        inputs->setZeroToParSensiInputFile(tmp);
     }
 
     LOG("buildInputParameters done");

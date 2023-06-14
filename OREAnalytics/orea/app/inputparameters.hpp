@@ -278,6 +278,9 @@ public:
     void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
     void setSimmReportingCurrency(const std::string& s) { simmReportingCurrency_ = s; }
     void setEnforceIMRegulations(bool b) { enforceIMRegulations_= b; }
+    
+    // Setters for ZeroToParSensiConversion 
+    void setZeroToParSensiInputFile(const std::string s) { zeroToParSensiInputFile_ = s; }
 
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>
@@ -497,6 +500,12 @@ public:
     const std::string& simmResultCurrency() { return simmResultCurrency_; }
     const std::string& simmReportingCurrency() { return simmReportingCurrency_; }
     bool enforceIMRegulations() { return enforceIMRegulations_; }
+
+    /**************************************************
+     * Getters for Zero to Par Sensi conversion
+     **************************************************/
+
+    const std::string& zeroToParSensiInputFile() const { return zeroToParSensiInputFile_; }
     
     /*************************************
      * List of analytics that shall be run
@@ -711,6 +720,11 @@ protected:
     std::string simmResultCurrency_ = "";
     std::string simmReportingCurrency_ = "";
     bool enforceIMRegulations_ = false;
+
+    /***************
+     * Zero to Par Conversion analytic
+     ***************/
+    std::string zeroToParSensiInputFile_;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {
