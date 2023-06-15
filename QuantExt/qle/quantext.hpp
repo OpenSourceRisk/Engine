@@ -37,7 +37,6 @@
 #include <qle/cashflows/cashflows.hpp>
 #include <qle/cashflows/cashflowtable.hpp>
 #include <qle/cashflows/cmbcoupon.hpp>
-#include <qle/cashflows/commoditybasiscashflow.hpp>
 #include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
