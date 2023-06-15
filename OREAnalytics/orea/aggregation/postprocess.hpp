@@ -24,6 +24,7 @@
 #pragma once
 
 #include <orea/aggregation/collatexposurehelper.hpp>
+#include <orea/aggregation/creditmigrationcalculator.hpp>
 #include <orea/aggregation/dimcalculator.hpp>
 #include <orea/aggregation/exposurecalculator.hpp>
 #include <orea/aggregation/nettedexposurecalculator.hpp>
@@ -123,15 +124,16 @@ public:
         //! Lending curve name to be used in FVA calculations
         const string& fvaLendingCurve = "",
         //! Dynamic Initial Margin Calculator
-        const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator = boost::shared_ptr<DynamicInitialMarginCalculator>(),
+        const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator =
+            boost::shared_ptr<DynamicInitialMarginCalculator>(),
         //! Interpreter for cube storage (where to find which data items)
         const boost::shared_ptr<CubeInterpretation>& cubeInterpretation = boost::shared_ptr<CubeInterpretation>(),
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
         bool fullInitialCollateralisation = false,
-	    //! CVA spread sensitivity grid
-	    vector<Period> cvaSpreadSensiGrid = { 6*Months, 1*Years, 3*Years, 5*Years, 10*Years },
-	    //! CVA spread sensitivity shift size
-	    Real cvaSpreadSensiShiftSize = 0.0001,
+        //! CVA spread sensitivity grid
+        vector<Period> cvaSpreadSensiGrid = {6 * Months, 1 * Years, 3 * Years, 5 * Years, 10 * Years},
+        //! CVA spread sensitivity shift size
+        Real cvaSpreadSensiShiftSize = 0.0001,
         //! own capital discounting rate for discounting expected capital for KVA
         Real kvaCapitalDiscountRate = 0.10,
         //! alpha to adjust EEPE to give EAD for risk capital
@@ -151,9 +153,21 @@ public:
         //! Input Counterparty Cube
         const boost::shared_ptr<NPVCube>& cptyCube_ = nullptr,
         //! Postfix for flipView borrowing curve for fva
-        const string& flipViewBorrowingCurvePostfix = "_BORROW", 
+        const string& flipViewBorrowingCurvePostfix = "_BORROW",
         //! Postfix for flipView lending curve for fva
-        const string& flipViewLendingCurvePostfix = "_LEND");
+        const string& flipViewLendingCurvePostfix = "_LEND",
+        //! Credit simulation parameters
+        const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters = nullptr,
+        //! Credit simulation distribution grid
+        const std::vector<Real>& creditMigrationDistributionGrid = {},
+        //! Credit simulation time steps
+        const std::vector<Size>& creditMigrationTimeSteps = {},
+        //! Credit State correlation matrix
+        const Matrix& creditStateCorrelationMatrix = Matrix(),
+        //! If set to true, cash flows in the margin period of risk are ignored in the collateral modelling
+        bool withMporStickyDate = false,
+        //! Treatment of cash flows over the margin period of risk
+        ScenarioGeneratorData::MporCashFlowMode mporCashFlowMode = ScenarioGeneratorData::MporCashFlowMode::NonePay);
 
     void setDimCalculator(boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
@@ -293,6 +307,11 @@ public:
 
     //! get the cvaSpreadSensiShiftSize
     QuantLib::Real cvaSpreadSensiShiftSize() { return cvaSpreadSensiShiftSize_; }
+
+    //! get the credit migration pnl distributions for each time step
+    const std::vector<Real>& creditMigrationUpperBucketBounds() const { return creditMigrationUpperBucketBounds_; }
+    const std::vector<std::vector<Real>>& creditMigrationCdf() const { return creditMigrationCdf_; }
+    const std::vector<std::vector<Real>>& creditMigrationPdf() const { return creditMigrationPdf_; }
   
 protected:
     //! Helper function to return the collateral account evolution for a given netting set
@@ -348,6 +367,17 @@ protected:
     Real kvaTheirPdFloor_;
     Real kvaOurCvaRiskWeight_;
     Real kvaTheirCvaRiskWeight_;
+
+    boost::shared_ptr<CreditSimulationParameters> creditSimulationParameters_;
+    std::vector<Real> creditMigrationDistributionGrid_;
+    std::vector<Size> creditMigrationTimeSteps_;
+    Matrix creditStateCorrelationMatrix_;
+    boost::shared_ptr<CreditMigrationCalculator> creditMigrationCalculator_;
+    std::vector<Real> creditMigrationUpperBucketBounds_;
+    std::vector<std::vector<Real>> creditMigrationCdf_;
+    std::vector<std::vector<Real>> creditMigrationPdf_;
+    bool withMporStickyDate_;
+    ScenarioGeneratorData::MporCashFlowMode mporCashFlowMode_;
 };
 
 } // namespace analytics

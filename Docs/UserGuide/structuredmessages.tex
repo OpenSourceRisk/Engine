@@ -44,36 +44,317 @@ A structured message has the following form:
 
 \subsection{Categories}
 
-There are two main types/categories of structured messages.
+There are two main types (``categories'') of structured messages:
 \begin{enumerate}
   \item \textbf{Warnings} - Structured warning messages are returned when there is an apparent inconsistency in input values, or when
   amounts are unexpectedly large (or small). If the user intended this, then there may be nothing wrong with the calculation and the
   output can be assumed to be correct.
   \item \textbf{Errors} - Structured error messages are returned when part of a calculation has failed, or when something has gone
-  wrong to the extent that continuing the calculation would yield nonsensical results, and hence the calculation is either skipped
-  over or failed entirely. ORE will always attempt to complete the calculation so that only results from the failing components are
-  missing.
+  wrong to the extent that continuing the calculation would likely yield nonsensical results, and hence the calculation is either skipped
+  over for that particular component or failed entirely. ORE will always attempt to complete the calculation so that only results from the
+  working components are given.
 \end{enumerate}
-Where the distinction between the two can sometimes be unclear, a structured warning will only ever be raised for apparent
-inconsistencies or unusual values, while a structured error would indicate that a component has failed. Depending on the circumstances,
-these can either lead to a larger failure later on in the calculations, or sometimes have no impact on the output reports.
+Where the distinction between a warning and error can sometimes be unclear, a structured warning will only ever be raised for apparent
+inconsistencies or unusual values, while a structured error would indicate some kind of failure. Depending on the circumstances,
+these can either lead to a larger failure later on in the calculations or have no material impact on the output reports.
 
 % Structured Message Groups
 
 \subsection{Groups}
 
-Within each category (i.e.\ warning or error), structured messages are further subdivided into groups, which give an indication of what
-part of ORE is failing. A structured error (warning) has a corresponding \lstinline!message! and usually an \lstinline!exceptionType!
-(\lstinline!warningType!) subfield. Additionally, there may be other subfields based on the structured message group, e.g.\ for
-structured trade error messages, the trade ID and trade type:
+Within each category, structured messages are further subdivided into groups, which indicate the component that the error points to.
+A structured error (warning) has a corresponding \lstinline!message! and usually an \lstinline!exceptionType! (\lstinline!warningType!)
+subfield. Additionally, there may be subfields specific to a group, e.g.\ for structured trade error messages, the trade ID and trade
+type. Occasionally, some subfields are reused, e.g.\ structured analytics error message related to a specific trade would have a \lstinline!tradeId! subfield:
 
 \begin{itemize}
-  \item Analytics: \lstinline!analyticType!
+  \item Analytics: \lstinline!analyticType! (only for warnings)
   \item Configuration: \lstinline!configurationType!, \lstinline!configurationId!
   \item Model
   \item Curve: \lstinline!curveId!
   \item Trade: \lstinline!tradeId!, \lstinline!tradeType!
+  \item Fixing: \lstinline!fixingId!, \lstinline!fixingDate!
 \end{itemize}
 
+% Interpretation/Meaning
 
-% Specific Instances of Warnings/Examples
+\subsection{Messages}
+
+This section gives the list of the structured messages. Variables are denoted by angle brackets (``<>'').
+For brevity, we omit subfields in messages where the subfields are generic and self-explanatory,
+e.g.\ \lstinline!tradeId! and \lstinline!tradeType! in the Trade group will, unless specified otherwise,
+be a given instrument's trade ID and trade type.
+
+\subsubsection*{Analytics Group}
+\begin{itemize}
+
+
+  \item \lstinline!analyticType!: XvaAnalytic \\
+        \lstinline!warningType!: Inconsistent MPoR period \\
+        \lstinline!message!: For netting set <NETTING SET DETAILS>, close-out lag is not consistent with the netting-set's mpor
+
+  \item \lstinline!analyticType!: OREApp::run() \\
+        \lstinline!warningType!: Error \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!analyticType!: OREApp::run() \\
+        \lstinline!warningType!: Error in ORE analytics: <SUB ERR MSG> \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!analyticType!: AMC Valuation Engine (multithreaded mode) \\
+        \lstinline!exceptionType!: <EMPTY> \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!analyticType!: Multithreaded Valuation Engine \\
+        \lstinline!exceptionType!: <EMPTY> \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Skipping par instrument for <CURVE NAME> \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Skipping par instrument for index curve <INDEX NAME> \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Skipping par cap/floor for key <KEY> \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Skipping par instrument for cds <KEY> \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Skipping par instrument for zero inflation index <INDEX NAME> \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Skipping par instrument for yoy index <INDEX NAME> \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Skipping par instrument for yoy cap floor index <INDEX NAME> \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!analyticType!: Par sensitivity conversion \\
+        \lstinline!exceptionType!: Transposed Jacobi matrix inversion failed \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!analyticType!: Par conversion \\
+        \lstinline!exceptionType!: <EMPTY> \\
+        \lstinline!message!: Par factor <FACTOR> not found in factorToIndex map
+
+  \ifdefined\UserGuide
+  \else
+    \input{structured_messages/analytics}
+  \fi
+\end{itemize}
+
+\subsubsection*{Configuration Group}
+
+\begin{itemize}
+
+  \item \lstinline!configurationType!: IborFallbackConfig \\
+        \lstinline!configurationId!: <IBOR FALLBACK INDEX> \\
+        \lstinline!warningType!: <EMPTY> \\
+        \lstinline!message!: Updating switch date from <FALLBACK SWITCH DATE> to <TARGET SWITCH DATE>
+
+  \item \lstinline!configurationType!: Netting set manager \\
+        \lstinline!configurationId!: <EMPTY> \\
+        \lstinline!warningType!: Failed to parse netting set definition \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \ifdefined\UserGuide
+  \else
+    \input{structured_messages/configuration}
+  \fi
+
+\end{itemize}
+
+\subsubsection*{Model Group}
+
+\begin{itemize}
+
+  \item \lstinline!exceptionType!: Failed to calibrate FX BS Model \\
+        \lstinline!message!: FX BS <INTEGER> calibration error <ERROR VALUE> exceeds tolerance <BOOTSTRAP TOLERANCE>
+
+  \item \lstinline!exceptionType!: Failed to calibrate EQ BS Model \\
+        \lstinline!message!: EQ BS <INTEGER> calibration error <ERROR VALUE> exceeds tolerance <BOOTSTRAP TOLERANCE>
+
+  \item \lstinline!exceptionType!: Failed to calibrate INF DK Model \\
+        \lstinline!message!: INF (DK) <INTEGER> calibration error <EROR VALUE> exceeds tolerance <BOOTSTRAP TOLERANCE>
+
+  \item \lstinline!exceptionType!: Failed to calibrate INF JY Model \\
+        \lstinline!message!: FX BS <INTEGER> calibration error <ERROR VALUE> exceeds tolerance <BOOTSTRAP TOLERANCE>
+
+  \item \lstinline!exceptionType!: Error during LGM calibration: \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!exceptionType!: Failed to calibrate LGM Model \\
+        \lstinline!message!: LGM (<QUALIFIER>) calibration error <ERROR VALUE> exceeds tolerance <BOOTSTRAP TOLERANCE>
+
+\end{itemize}
+
+\subsubsection*{Curve Group}
+
+\begin{itemize}
+
+  \item \lstinline!curveId!: <RISK FACTOR KEY>/<CURVE ID> \\
+        \lstinline!exceptionType!: skipping this object in scenario sim market \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!curveId!: <RISK FACTOR KEY>/<CURVE ID> \\
+        \lstinline!exceptionType!: skipping this object in scenario sim market (scenario data was written for this object.) \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!curveId!: <RISK FACTOR KEY>/<CURVE ID> \\
+        \lstinline!exceptionType!: skipping this object in scenario sim market (scenario data was not written for this object.) \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!exceptionType!: Curve config under node `<CURVE TYPE>' was requested, but could not be parsed. \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!curveId!: <CURVE SPEC NAME> \\
+        \lstinline!exceptionType!: Failed to Build Curve \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!curveId!: <MARKET OBJECT> (<NAME>) \\
+        \lstinline!exceptionType!: Failed to Build Curve \\
+        \lstinline!message!: Configuration `<CONFIGURATION>' not known, retry with default configuration.
+
+  \item \lstinline!curveId!: <MARKET OBJECT> (<NAME>) \\
+        \lstinline!exceptionType!: Failed to Build Curve \\
+        \lstinline!message!: Configuration `default' not known, this is unexpected. Do nothing.
+
+  \ifdefined\UserGuide
+  \else
+    \input{structured_messages/curve}
+  \fi
+
+\end{itemize}
+
+\subsubsection*{Trade Group}
+
+\begin{itemize}
+
+  \item \lstinline!exceptionType!: Error building trade for AMC simulation \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!exceptionType!: Error during trade pricing \\
+        \lstinline!message!: <SUB ERR MSG> \\
+        \textbf{Meaning}: Failure in NPV report writing.
+
+  \item \lstinline!exceptionType!: Error during cashflow reporting / checking for cashFlowResults \\
+        \lstinline!message!: <SUB ERR MSG> \\
+        \textbf{Meaning}: Failure in cashflow report writing.
+
+  \item \lstinline!exceptionType!: Error during CashflowNpv calculation. \\
+        \lstinline!message!: Cashflow in row <INTEGER> has no ccy. Assuming ccy = baseCcy = <CCY>. \\
+        \textbf{Meaning}: Failure in cashflow report writing.
+
+  \item \lstinline!exceptionType!: Error during trade pricing (additional results). \\
+        \lstinline!message!: <SUB ERR MSG>. \\
+        \textbf{Meaning}: Failure in additional results report writing.
+
+  \item \lstinline!exceptionType!: Error during amc path simulation for trade. \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!exceptionType!: Additional instrument is ignored in AMC simulation \\
+        \lstinline!message!: only QuantExt::Payment is handled as additional instrument.
+
+  \item \lstinline!exceptionType!: Error building trade for AMC simulation \\
+        \lstinline!message!: <SUB ERRORR MESSAGE>
+
+  \item \lstinline!exceptionType!: ScenarioValuation \\
+        \lstinline!message!: T0 valuation error: <SUB ERR MSG>
+
+  \item \lstinline!exceptionType!: ScenarioValuation \\
+        \lstinline!message!: date = <DATE>, sample = <SAMPLE NUMBER>, label = <LABEL>: <SUB ERR MSG>
+
+  \item \lstinline!warningType!: Trade build \\
+        \lstinline!message!: Found more than 1 payment date. The first one will be used.
+
+  \item \lstinline!tradeId!: <BOND ISSUER ID> \\
+        \lstinline!tradeType!: Bond-linked \\
+        \lstinline!exceptionType!: update reference data \\
+        \lstinline!message!: modifified start date cannot be applied to multiple legs/schedules
+
+  \item \lstinline!tradeId!: <BOND ISSUER ID> \\
+        \lstinline!tradeType!: Bond-linked \\
+        \lstinline!exceptionType!: update reference data \\
+        \lstinline!message!: modified end date cannot be applied to multiple legs/schedules
+
+  \item \lstinline!tradeType!: Synthetic CDO \\
+        \lstinline!exceptionType!: Error building trade \\
+        \lstinline!message!: Invalid Basket: found a duplicate credit curve <CREDIT CURVE>, skip it. Check the basket data for possible errors.
+
+  \item \lstinline!tradeType!: Synthetic CDO \\
+        \lstinline!exceptionType!: Error building trade \\
+        \lstinline!message!: Total remaining notional (<REMAINING NOTIONAL>) is greater than total original notional (<ORIGINAL NOTIONAL>), check the basket data for possible errors.
+
+  \item \lstinline!tradeType!: Synthetic CDO \\
+        \lstinline!exceptionType!: Error building trade \\
+        \lstinline!message!: Expected the total notional (<TOTAL NOTIONAL> = <TOTAL REMAINING NOTIONAL> + <TOTAL PRIOR NOTIONAL>) to equal the total original notional (<ORIGINAL TOTAL NOTIONAL>), check the basket data for possible errors.
+
+  \item \lstinline!exceptionType!: Error building composite trade \\
+        \lstinline!message!: Component trade `<TRADE ID>' does not provide notional currency for notional <TRADE NOTIONAL>. Assuming <NPV CURRENCY>.
+
+  \item \lstinline!warningType!: Trade build \\
+        \lstinline!message!: Found more than 1 payment date. The first one will be used.
+
+  \item \lstinline!tradeType!: IndexCDS \\
+        \lstinline!exceptionType!: Error building trade \\
+        \lstinline!message!: Invalid Basket: found a duplicate credit curve <CREDIT CURVE NAME>, skip it. Check the basket data for possible errors.
+
+  \item \lstinline!tradeType!: IndexCDS \\
+        \lstinline!exceptionType!: Error building trade \\
+        \lstinline!message!: Sum of basket notionals (<BASKET NOTIONAL>) is greater than trade notional (<NOTIONAL>). Check the basket data for possible errors.
+
+  \item \lstinline!warningType!: Could not imply Index CDS term. \\
+        \lstinline!message!: Index CDS term could not be derived from start, end date, are these dates correct (credit curve id is `<CREDIT CURVE ID>')
+
+  \item \lstinline!tradeType!: IndexCDSOption \\
+        \lstinline!exceptionType!: Error building trade \\
+        \lstinline!message!: Invalid Basket: found a duplicate credit curve <CREDIT CURVE NAME>.Skip it. Check the basket data for possible errors.
+
+  \item \lstinline!tradeType!: IndexCDSOption \\
+        \lstinline!exceptionType!: Error building trade \\
+        \lstinline!message!: Sum of basket notionals (<BASKET NOTIONAL>) is greater than trade notional (<FULL NOTIONAL>). Check the basket data for possible errors.
+
+  \item \lstinline!exceptionType!: Error parsing Trade XML \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!exceptionType!: Error parsing type and envelope \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!exceptionType!: <EMPTY> \\
+        \lstinline!message!: Trade is Matured
+  
+  \item \lstinline!exceptionType!: Error retrieving underlying indices \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \item \lstinline!exceptionType!: Error building trade for context `<CONTEXT>' \\
+        \lstinline!message!: <SUB ERR MSG>
+
+  \ifdefined\UserGuide
+  \else
+    \input{structured_messages/trade}
+  \fi
+
+\end{itemize}
+
+\subsubsection*{Fixing Group}
+
+\begin{itemize}
+
+  \item \lstinline!exceptionType!: Missing fixing \\
+        \lstinline!message!: Could not find required fixing ID <FIXING ID> for date <FIXING DATE><SUB ERR MSG>
+
+  \ifdefined\UserGuide
+  \else
+    \input{structured_messages/fixing}
+  \fi
+
+
+\end{itemize}

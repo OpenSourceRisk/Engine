@@ -719,6 +719,25 @@ Real eq_com_covariance(const CrossAssetModel* model, const Size i, const Size j,
     QL_REQUIRE(close_enough(corr, 0.0), "non-zero EQ-COM correlation not implemented yet"); 
     return 0.0;
 }
-    
+
+Real ir_crstate_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
+    Real res = integral(x, P(az(i), rzcrs(i, j)), t0, t0 + dt);
+    return res;
+}
+
+Real fx_crstate_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
+    Real res = Hz(0).eval(x, t0 + dt) * integral(x, P(az(0), rzcrs(0, j)), t0, t0 + dt) -
+               integral(x, P(Hz(0), az(0), rzcrs(0, j)), t0, t0 + dt) -
+               Hz(i + 1).eval(x, t0 + dt) * integral(x, P(az(i + 1), rzcrs(i + 1, j)), t0, t0 + dt) +
+               integral(x, P(Hz(i + 1), az(i + 1), rzcrs(i + 1, j)), t0, t0 + dt) +
+               integral(x, P(sx(i), rxcrs(i, j)), t0, t0 + dt);
+    return res;
+}
+
+Real crstate_crstate_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
+    Real res = integral(x, rccrs(i, j), t0, t0 + dt);
+    return res;
+}
+
 } // namespace CrossAssetAnalytics
 } // namespace QuantExt

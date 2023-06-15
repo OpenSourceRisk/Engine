@@ -62,8 +62,8 @@ public:
         iborIndices_[make_pair(Market::defaultConfiguration, "USD-LIBOR-3M")] = hUSD;
 
         // build SP5 Equity Curve
-        hSP5 = Handle<EquityIndex>(boost::shared_ptr<EquityIndex>(
-            new EquityIndex("SP5", UnitedStates(UnitedStates::Settlement), parseCurrency("USD"), spotSP5, forecastSP5, dividendSP5)));
+        hSP5 = Handle<EquityIndex2>(boost::shared_ptr<EquityIndex2>(
+            new EquityIndex2("SP5", UnitedStates(UnitedStates::Settlement), parseCurrency("USD"), spotSP5, forecastSP5, dividendSP5)));
         equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = hSP5;
         IndexNameTranslator::instance().add(hSP5->name(), "EQ-" + hSP5->name());
 
@@ -74,7 +74,7 @@ public:
     }
 
     Handle<IborIndex> hUSD;
-    Handle<EquityIndex> hSP5;
+    Handle<EquityIndex2> hSP5;
     Handle<Quote> spotSP5;
     Handle<YieldTermStructure> forecastSP5;
     Handle<YieldTermStructure> dividendSP5;

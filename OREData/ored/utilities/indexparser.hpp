@@ -122,7 +122,7 @@ bool isGenericIndex(const std::string& indexName);
 /*!
 \ingroup utilities
 */
-boost::shared_ptr<QuantExt::EquityIndex> parseEquityIndex(const string& s);
+boost::shared_ptr<QuantExt::EquityIndex2> parseEquityIndex(const string& s);
 
 //! Convert std::string to QuantLib::SwapIndex
 /*!
@@ -137,7 +137,11 @@ parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = H
  \ingroup utilities
  */
 boost::shared_ptr<ZeroInflationIndex>
-parseZeroInflationIndex(const string& s, bool isInterpolated = false,
+parseZeroInflationIndex(const string& s, const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
+
+QL_DEPRECATED
+boost::shared_ptr<ZeroInflationIndex>
+parseZeroInflationIndex(const string& s, bool isInterpolated,
                         const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
 
 //! Convert std::string to QuantExt::BondIndex

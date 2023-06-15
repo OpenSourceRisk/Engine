@@ -44,6 +44,7 @@
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <qle/indexes/dividendmanager.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/fallbackovernightindex.hpp>
@@ -61,10 +62,11 @@ using namespace std;
 using namespace QuantLib;
 
 using QuantExt::CommodityIndex;
-using QuantExt::EquityIndex;
+using QuantExt::EquityIndex2;
 using QuantExt::FxIndex;
 using QuantExt::PriceTermStructure;
 using QuantExt::PriceTermStructureAdapter;
+using QuantExt::applyDividends;
 
 namespace ore {
 namespace data {
@@ -582,7 +584,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 QL_REQUIRE(ts,
                            "expected zero inflation term structure for index " << node.name << ", but could not cast");
                 // index is not interpolated
-                auto tmp = parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>(ts));
+                auto tmp = parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>(ts));
                 zeroInflationIndices_[make_pair(configuration, node.name)] = Handle<ZeroInflationIndex>(tmp);
             }
 
@@ -595,7 +597,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                            "expected yoy inflation term structure for index " << node.name << ", but could not cast");
                 yoyInflationIndices_[make_pair(configuration, node.name)] =
                     Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                        parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>()), false,
+                        parseZeroInflationIndex(node.name, Handle<ZeroInflationTermStructure>()), false,
                         Handle<YoYInflationTermStructure>(ts)));
             }
             break;
@@ -651,7 +653,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             yieldCurves_[make_tuple(configuration, YieldCurveType::EquityDividend, node.name)] =
                 itr->second->equityIndex()->equityDividendCurve();
             equitySpots_[make_pair(configuration, node.name)] = itr->second->equityIndex()->equitySpot();
-            equityCurves_[make_pair(configuration, node.name)] = Handle<EquityIndex>(itr->second->equityIndex());
+            equityCurves_[make_pair(configuration, node.name)] = Handle<EquityIndex2>(itr->second->equityIndex());
             IndexNameTranslator::instance().add(itr->second->equityIndex()->name(),
                                                 "EQ-" + itr->second->equityIndex()->name());
             break;
@@ -673,7 +675,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 // The EQVol builder should rather get the index from the requiredEquityCurves_.
                 // In addition we should maybe specify the eqIndex name in the vol curve config explicitly
                 // instead of assuming that it has the same curve id as the vol curve to be build?
-                Handle<EquityIndex> eqIndex = MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration);
+                Handle<EquityIndex2> eqIndex = MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration);
                 boost::shared_ptr<EquityVolCurve> eqVolCurve = boost::make_shared<EquityVolCurve>(
                     asof_, *eqvolspec, *loader_, *curveConfigs_, eqIndex, requiredEquityCurves_,
                     requiredEquityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, this,

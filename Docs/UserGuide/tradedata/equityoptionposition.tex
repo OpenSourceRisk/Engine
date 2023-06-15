@@ -1,0 +1,96 @@
+\subsubsection{Equity Option Position}
+\label{ss:equity_option_position}
+
+An equity option position represents a position in a single equity option - using a single \lstinline!Underlying! node,
+or in a weighted basket of underlying equity options - using multiple \lstinline!Underlying! nodes.
+
+An Equity Option Position can be used both as a stand alone trade type (TradeType: \emph{EquityOptionPosition}) or as a
+trade component ({\tt EquityOptionPositionData}) used within the \emph{TotalReturnSwap} (Generic TRS) trade type, to set
+up for example Equity Option Basket trades.
+
+It is set up using an {\tt EquityOptionPositionData} block as shown in listing \ref{lst:equityoptionpositiondata}. The
+meanings and allowable values of the elements in the block are as follows:
+
+\begin{itemize}
+\item Quantity: The number of options written on one underlying share resp. the number of units of the option basket
+  held. \\
+  Allowable values: Any positive real number
+\item Underlying: One or more underlying descriptions, each comprising an \lstinline!Underlying! block, an \lstinline!Optiondata! block and a \lstinline!Strike! element, in that order:
+  \begin{itemize}
+  \item Underlying: an underlying description, see \ref{ss:underlying}, only equity underlying are allowed
+  \item OptionData: the option description, see \ref{ss:option_data}, the relevant / allowed data is
+    \begin{itemize}
+    \item LongShort: the type of the position,\emph{long} and \emph{Short} positions are allowed. Note that negative weights are allowed. A \emph{long} position with a negative weight results in a \emph{short} position, and a \emph{short} position with a negative weight results in a \emph{long} position.
+    \item OptionType: \emph{Call} or \emph{Put}
+    \item Style: \emph{European} or \emph{American}
+    \item Settlement: \emph{Cash} or \emph{Physical}
+    \item ExerciseDates: exactly one exercise must be given representing the European exercise date or the last American
+      exercise date
+    \end{itemize}
+  \item Strike: the strike of the option. Allowable values are non-negative real numbers.
+  \end{itemize}
+\end{itemize}
+
+If a basket of equities is defined, the \verb+Weight+ field should be populated for each underlying. The weighted basket
+price is then given by
+$$\text{Basket-Price} = \text{Quantity} \times \sum_i \text{Weight}_i \times p_i \times \text{FX}_i$$
+where
+\begin{itemize}
+\item $p_i$ is the price of the ith option in the basket, written on one underlying share
+\item $FX_i$ is the FX Spot converting from the ith equity currency to the first equity currency which is by definition
+  the currency in which the npv of the basket is expressed.
+\end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="EquityOptionPositionTrade">
+  <TradeType>EquityOptionPosition</TradeType>
+  <EquityOptionPositionData>
+    <!-- basket price = quantity x sum_i ( weight_i x equityOptionPrice_i x fx_i ) -->
+    <Quantity>1000</Quantity>
+    <!-- option #1 -->
+    <Underlying>
+      <Underlying>
+        <Type>Equity</Type>
+        <Name>.SPX</Name>
+        <Weight>0.5</Weight>
+        <IdentifierType>RIC</IdentifierType>
+      </Underlying>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <ExerciseDates>
+          <ExerciseDate>2021-01-29</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Strike>3300</Strike>
+    </Underlying>
+    <!-- option #2 -->
+    <Underlying>
+      <Underlying>
+        <Type>Equity</Type>
+        <Name>.SPX</Name>
+        <Weight>0.5</Weight>
+        <IdentifierType>RIC</IdentifierType>
+      </Underlying>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <ExerciseDates>
+          <ExerciseDate>2021-01-29</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Strike>3400</Strike>
+    </Underlying>
+    <!-- option #3 -->
+    <!-- ... -->
+  </EquityOptionPositionData>
+</Trade>
+\end{minted}
+\caption{Equity Option position data}
+\label{lst:equityoptionpositiondata}
+\end{listing}

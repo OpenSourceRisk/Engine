@@ -131,6 +131,17 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
         }
     }
 
+    if (XMLUtils::getChildNode(node, "MporCashFlowMode") != NULL) {
+        string mporCashFlowModeString = XMLUtils::getChildValue(node, "MporCashFlowMode", true);
+        mporCashFlowMode_ = parseMporCashFlowMode(mporCashFlowModeString);
+        LOG("Mpor cash flow mode is" << mporCashFlowModeString);
+    } else {
+        if (withMporStickyDate_)
+            mporCashFlowMode_ = ScenarioGeneratorData::MporCashFlowMode::NonePay;
+        else
+            mporCashFlowMode_ = ScenarioGeneratorData::MporCashFlowMode::BothPay;
+    }
+
     LOG("ScenarioGeneratorData done.");
 }
 
@@ -165,6 +176,35 @@ XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) {
     }
 
     return node;
+}
+
+ScenarioGeneratorData::MporCashFlowMode parseMporCashFlowMode(const string& s) {
+    static map<string, ScenarioGeneratorData::MporCashFlowMode> m = {
+        {"NonePay", ScenarioGeneratorData::MporCashFlowMode::NonePay},
+        {"BothPay", ScenarioGeneratorData::MporCashFlowMode::BothPay},
+        {"WePay", ScenarioGeneratorData::MporCashFlowMode::WePay},
+        {"TheyPay", ScenarioGeneratorData::MporCashFlowMode::TheyPay}
+    };
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Mpor cash flow mode \"" << s << "\" not recognized");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, ScenarioGeneratorData::MporCashFlowMode t) {
+    if (t == ScenarioGeneratorData::MporCashFlowMode::NonePay)
+        out << "NonePay";
+    else if (t == ScenarioGeneratorData::MporCashFlowMode::BothPay)
+        out << "BothPay";
+    else if (t == ScenarioGeneratorData::MporCashFlowMode::WePay)
+        out << "WePay";
+    else if (t == ScenarioGeneratorData::MporCashFlowMode::TheyPay)
+        out << "TheyPay";
+    else
+        QL_FAIL("Mpor cash flow mode not covered");
+    return out;
 }
 } // namespace analytics
 } // namespace ore

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/initbuilders.hpp
+/*! \file ored/utilities/initbuilders.hpp
     \brief add builders to factories
 */
 
@@ -55,7 +55,7 @@
                                                                  OVERWRITE);
 
 #define ORE_REGISTER_TRS_UNDERLYING_BUILDER(NAME, CLASS, OVERWRITE)                                                    \
-    oreplus::data::TrsUnderlyingBuilderFactory::instance().addBuilder(NAME, boost::make_shared<CLASS>(), OVERWRITE);
+    ore::data::TrsUnderlyingBuilderFactory::instance().addBuilder(NAME, boost::make_shared<CLASS>(), OVERWRITE);
 
 namespace ore::data {
 

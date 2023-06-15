@@ -68,7 +68,6 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     if (payCurrency_.empty()) {
         // If settlement currency is not set, set it to the domestic currency.
-        //LOG("Settlement currency was not specified, defaulting to " << soldCcy.code());
         payCcy = soldCcy;
     } else {
         payCcy = parseCurrency(payCurrency_);
@@ -77,14 +76,26 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     Date fixingDate;
-    bool fixingRequired = (settlement_ == "Cash") && (payDate > maturityDate);
-    if (fixingRequired) {
-        QL_REQUIRE(!fxIndex_.empty(), "FX settlement index must be specified for non-deliverable forwards");
-        Currency nonPayCcy = payCcy == boughtCcy ? soldCcy : boughtCcy;
-        fxIndex = buildFxIndex(fxIndex_, nonPayCcy.code(), payCcy.code(), engineFactory->market(),
-                                 engineFactory->configuration(MarketContext::pricing));
-        fixingDate = fxIndex->fixingCalendar().adjust(maturityDate);
-	requiredFixings_.addFixingDate(fixingDate, fxIndex_, payDate);
+    if (settlement_ == "Cash") {
+        // We allow for an empty fxIndex if maturiytDate == payDate in order not to break trades that were previously
+        // pricing - we should really require fxIndex whenever cash settlement is specified. If the fxIndex is not
+        // given in this case, we assume that the current FX Spot rate is used to determine the settlement amount.
+        if (maturityDate <= payDate && !fxIndex_.empty()) {
+            Currency nonPayCcy = payCcy == boughtCcy ? soldCcy : boughtCcy;
+            fxIndex = buildFxIndex(fxIndex_, nonPayCcy.code(), payCcy.code(), engineFactory->market(),
+                                   engineFactory->configuration(MarketContext::pricing));
+            // We also allow for an effective fixing date > payDate in order not to break trades that were preivously
+            // pricing - this should be an error as well. If this is the case we assume that the current FX Spot
+            // rate is used to determine the settlement amount as above.
+            fixingDate = fxIndex->fixingCalendar().adjust(maturityDate);
+            if (fixingDate <= payDate) {
+                requiredFixings_.addFixingDate(fixingDate, fxIndex_, payDate);
+            }
+        } else {
+            QL_REQUIRE(maturityDate >= payDate,
+                       "FX settlement index must be specified for non-deliverable forward if value date ("
+                           << maturityDate << ") < payDate (" << payDate << ")");
+        }
     }
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxForward");
@@ -116,13 +127,19 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     instrument_->qlInstrument()->setPricingEngine(fxBuilder->engine(boughtCcy, soldCcy));
 
-    DLOG("FxForward leg 0: " << legs_[0][0]->date() << " " << legs_[0][0]->amount());
-    DLOG("FxForward leg 1: " << legs_[1][0]->date() << " " << legs_[1][0]->amount());
-
     additionalData_["soldCurrency"] = soldCurrency_;
     additionalData_["boughtCurrency"] = boughtCurrency_;
     additionalData_["soldAmount"] = soldAmount_;
     additionalData_["boughtAmount"] = boughtAmount_;
+    additionalData_["valueDate"] = maturityDate_;
+    if (fixingDate != Date()) {
+        if (fixingDate <= payDate)
+            additionalData_["fixingDate"] = fixingDate;
+        else
+            additionalData_["adjustedValueDate"] = fixingDate;
+    }
+    additionalData_["payDate"] = payDate;
+    additionalData_["settlement"] = settlement_;
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Foreign Exchange");

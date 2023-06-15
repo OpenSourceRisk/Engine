@@ -1,0 +1,59 @@
+\subsubsection{Commodity Position}
+\label{ss:commodity_position}
+
+An commodity position represents a position in a single commodity - using a single \lstinline!Underlying! node, or in a weighted basket of underlying commodities -  using multiple \lstinline!Underlying! nodes. 
+
+An commodity Position can be used both as a stand alone trade type (TradeType: \emph{CommodityPosition}) or as a trade component ({\tt CommodityPositionData}) used within the \emph{TotalReturnSwap} (Generic TRS) trade type, to set up for example Commodity Basket trades.
+
+If the \emph{PriceType} is set to \emph{FutureSettlement} it will refer by default to today's prompt (lead) future. At the moment a generic TRS doesn't support rolling of the future contracts. Today's prompt future could be different from the prompt future at inception. If the initial price for the basket is not set, it will use the price of today's prompt future at trade inception as initial price and the TRS will also ignore the roll yield caused by rolling from one prompt future to the next contract.
+
+ It is set up using an {\tt CommodityPositionData} block as shown in listing \ref{lst:commoditypositiondata}. The meanings and allowable
+values of the elements in the block are as follows:
+
+\begin{itemize}
+\item Quantity: The number of shares or units of the weighted basket held.\\
+  Allowable values: Any positive real number
+\item Underlying: One or more underlying descriptions. If a basket of commodities is defined, the \verb+Weight+ field
+  should be populated for each underlyings. The weighted basket price is then given by\\
+  $$\text{Basket-Price} = \text{Quantity} \times \sum_i \text{Weight}_i \times S_i \times \text{FX}_i$$
+  where
+  \begin{itemize}
+  \item $S_i$ is the i-th commodity prompt future or spot price in the basket
+  \item $FX_i$ is the FX Spot converting from the ith commodity currency to the first commodity currency which is by
+    definition the currency in which the npv of the basket is expressed.
+  \end{itemize}
+  Allowable values: See \ref{ss:underlying} for the definition of an underlying. Only commodity underlyings are allowed.
+\end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Trade id="CommodityPosition">
+    <TradeType>CommodityPosition</TradeType>
+    <Envelope>...</Envelope>
+    <CommodityPositionData>
+      <Quantity>1000</Quantity>
+      <Underlying>
+        <Type>Commodity</Type>
+        <Name>NYMEX:CL</Name>
+        <Weight>0.5</Weight>
+        <PriceType>FutureSettlement</PriceType>
+        <FutureMonthOffset>0</FutureMonthOffset>
+        <DeliveryRollDays>0</DeliveryRollDays>
+        <DeliveryRollCalendar>TARGET</DeliveryRollCalendar>
+      </Underlying>
+      <Underlying>
+        <Type>Commodity</Type>
+        <Name>ICE:B</Name>
+        <Weight>0.5</Weight>
+        <PriceType>FutureSettlement</PriceType>
+        <FutureMonthOffset>0</FutureMonthOffset>
+        <DeliveryRollDays>0</DeliveryRollDays>
+        <DeliveryRollCalendar>TARGET</DeliveryRollCalendar>
+      </Underlying>
+    </CommodityPositionData>
+  </Trade>
+\end{minted}
+\caption{Commodity position data}
+\label{lst:commoditypositiondata}
+\end{listing}
+

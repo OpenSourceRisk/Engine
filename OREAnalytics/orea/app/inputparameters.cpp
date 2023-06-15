@@ -22,6 +22,7 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityfilestream.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
+#include <orea/simm/simmbucketmapperbase.hpp>
 #include <ored/ored.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
@@ -307,6 +308,40 @@ void InputParameters::setCvaSensiGrid(const std::string& s) {
     cvaSensiGrid_ = parseListOfValues<Period>(s, &parsePeriod);
 }
     
+void InputParameters::setDeterministicInitialMarginFromFile(const std::string& fileName) {
+    // Minimum requirement: The file has a header line and contains at least
+    // columns "Date", "NettingSet" and "InitialMargin".
+    // We don't assume that data is sorted by netting set or date.
+    ore::data::CSVFileReader reader(fileName, true);
+    std::map<std::string, std::map<Date, Real>> data;
+    while (reader.next()) {
+        Date date = parseDate(reader.get("Date"));
+        std::string nettingSet = reader.get("NettingSet");
+        Real initialMargin = parseReal(reader.get("InitialMargin"));        
+        // LOG("IM Evolution NettingSet " << nettingSet << ": "
+        //     << io::iso_date(date) << " " << initialMargin);
+        if (data.find(nettingSet) == data.end())
+            data[nettingSet] = std::map<Date,Real>();
+        std::map<Date,Real>& evolution = data[nettingSet];
+        evolution[date] = initialMargin;
+    }
+    for (auto d : data) {
+        std::string n = d.first;
+        LOG("Loading IM evolution for netting set " << n << ", size " << d.second.size());
+        vector<Real> im;
+        vector<Date> date;
+        for (auto row : d.second) {
+            im.push_back(row.second);
+            date.push_back(row.first);
+        }
+        TimeSeries<Real> ts(date.begin(), date.end(), im.begin());
+        // for (auto d : ts.dates())
+        //     LOG("TimeSeries " << io::iso_date(d) << " " << ts[d]);
+        setDeterministicInitialMargin(n, ts);
+        WLOG("External IM evolution for NettingSet " << n << " loaded");
+    }
+}
+
 void InputParameters::setDimRegressors(const std::string& s) {
     // parse to vector<string>
     dimRegressors_ = parseListOfValues(s);
@@ -326,7 +361,61 @@ void InputParameters::setPortfolioFilterDate(const std::string& s) {
     // parse to Date
     portfolioFilterDate_ = parseDate(s);
 }
+
+void InputParameters::setCreditSimulationParametersFromFile(const std::string& fileName) {
+    creditSimulationParameters_ = boost::make_shared<CreditSimulationParameters>();
+    creditSimulationParameters_->fromFile(fileName);
+}
+
+void InputParameters::setCrifLoader() {
+    if (!simmBucketMapper_)
+        // setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>(simmVersion_));
+        setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>());
+    boost::shared_ptr<SimmConfiguration> configuration =
+        buildSimmConfiguration(simmVersion_, simmBucketMapper_);
+    bool updateMappings = true;
+    bool aggregateTrades = false;
+    crifLoader_ =
+        boost::make_shared<CrifLoader>(configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades);
+}
     
+void InputParameters::setCrifFromFile(const std::string& fileName, char eol, char delim, char quoteChar, char escapeChar) {
+    if (!crifLoader_)
+        setCrifLoader();
+    crifLoader_->loadFromFile(fileName, eol, delim, quoteChar, escapeChar);
+}
+
+void InputParameters::setCrifFromBuffer(const std::string& csvBuffer, char eol, char delim, char quoteChar, char escapeChar) {
+    if (!crifLoader_)
+        setCrifLoader();
+    crifLoader_->loadFromString(csvBuffer, eol, delim, quoteChar, escapeChar);
+}
+
+void InputParameters::setSimmNameMapper(const std::string& xml) {
+    simmNameMapper_ = boost::make_shared<SimmBasicNameMapper>();
+    simmNameMapper_->fromXMLString(xml);    
+}
+    
+void InputParameters::setSimmNameMapperFromFile(const std::string& fileName) {
+    simmNameMapper_ = boost::make_shared<SimmBasicNameMapper>();
+    simmNameMapper_->fromFile(fileName);    
+}
+
+void InputParameters::setSimmBucketMapper(const std::string& xml) {
+    QL_REQUIRE(simmVersion_ != "", "SIMM version not set");
+    QL_REQUIRE(simmBucketMapper_ != nullptr, "SIMMbucket mapper not set");
+    //boost::shared_ptr<SimmBucketMapperBase> sbm = boost::dynamic_pointer_cast<SimmBucketMapperBase>();
+    boost::shared_ptr<SimmBucketMapperBase> sbm = boost::dynamic_pointer_cast<SimmBucketMapperBase>(simmBucketMapper_);
+    sbm->fromXMLString(xml);
+}
+    
+void InputParameters::setSimmBucketMapperFromFile(const std::string& fileName) {
+    QL_REQUIRE(simmVersion_ != "", "SIMM version not set");
+    QL_REQUIRE(simmBucketMapper_ != nullptr, "SIMMbucket mapper not set");
+    boost::shared_ptr<SimmBucketMapperBase> sbm = boost::dynamic_pointer_cast<SimmBucketMapperBase>(simmBucketMapper_);
+    sbm->fromFile(fileName);    
+}
+
 void InputParameters::setAnalytics(const std::string& s) {
     // parse to set<string>
     auto v = parseListOfValues(s);
@@ -386,7 +475,16 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
                << "and file names size (" << dimRegressionFileNames_.size() << ") do not match");
     for (Size i = 0; i < dimRegressionFileNames_.size(); ++i)
         fileNameMap_["dim_regression_" + to_string(i)] = dimRegressionFileNames_[i];
-    
+
+    tmp = params->get("xva", "creditMigrationTimeSteps", false);
+    if (tmp != "") {
+        auto ts = parseListOfValues<Size>(tmp, &parseInteger);
+        for (auto const& t : ts) {
+            fileNameMap_["credit_migration_" + to_string(t)] =
+                params->get("xva", "creditMigrationOutputFiles") + "_" + std::to_string(t);
+        }
+    }
+
     LOG("OutputFileNameMap complete");
 }
     

@@ -59,30 +59,32 @@ PostProcess::PostProcess(
     const boost::shared_ptr<AggregationScenarioData>& scenarioData, const map<string, bool>& analytics,
     const string& baseCurrency, const string& allocMethod, Real marginalAllocationLimit, Real quantile,
     const string& calculationType, const string& dvaName, const string& fvaBorrowingCurve,
-    const string& fvaLendingCurve,const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
+    const string& fvaLendingCurve, const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
     const boost::shared_ptr<CubeInterpretation>& cubeInterpretation, bool fullInitialCollateralisation,
-    vector<Period> cvaSensiGrid, Real cvaSensiShiftSize,
-    Real kvaCapitalDiscountRate, Real kvaAlpha, Real kvaRegAdjustment, Real kvaCapitalHurdle, Real kvaOurPdFloor,
-    Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight, Real kvaTheirCvaRiskWeight, const boost::shared_ptr<NPVCube>& cptyCube,
-    const string& flipViewBorrowingCurvePostfix, const string& flipViewLendingCurvePostfix)
+    vector<Period> cvaSensiGrid, Real cvaSensiShiftSize, Real kvaCapitalDiscountRate, Real kvaAlpha,
+    Real kvaRegAdjustment, Real kvaCapitalHurdle, Real kvaOurPdFloor, Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight,
+    Real kvaTheirCvaRiskWeight, const boost::shared_ptr<NPVCube>& cptyCube, const string& flipViewBorrowingCurvePostfix,
+    const string& flipViewLendingCurvePostfix,
+    const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters,
+    const std::vector<Real>& creditMigrationDistributionGrid, const std::vector<Size>& creditMigrationTimeSteps,
+    const Matrix& creditStateCorrelationMatrix,
+    bool withMporStickyDate, ScenarioGeneratorData::MporCashFlowMode mporCashFlowMode)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), configuration_(configuration),
-      cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
-      calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
+      cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency),
+      quantile_(quantile), calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
       fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), dimCalculator_(dimCalculator),
       cubeInterpretation_(cubeInterpretation), fullInitialCollateralisation_(fullInitialCollateralisation),
       cvaSpreadSensiGrid_(cvaSensiGrid), cvaSpreadSensiShiftSize_(cvaSensiShiftSize),
       kvaCapitalDiscountRate_(kvaCapitalDiscountRate), kvaAlpha_(kvaAlpha), kvaRegAdjustment_(kvaRegAdjustment),
       kvaCapitalHurdle_(kvaCapitalHurdle), kvaOurPdFloor_(kvaOurPdFloor), kvaTheirPdFloor_(kvaTheirPdFloor),
-      kvaOurCvaRiskWeight_(kvaOurCvaRiskWeight), kvaTheirCvaRiskWeight_(kvaTheirCvaRiskWeight) {
+      kvaOurCvaRiskWeight_(kvaOurCvaRiskWeight), kvaTheirCvaRiskWeight_(kvaTheirCvaRiskWeight),
+      creditSimulationParameters_(creditSimulationParameters),
+      creditMigrationDistributionGrid_(creditMigrationDistributionGrid),
+      creditMigrationTimeSteps_(creditMigrationTimeSteps), creditStateCorrelationMatrix_(creditStateCorrelationMatrix),
+      withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode) {
 
-    // set a default value for the cube interpretation object if it is NULL
-    if (!cubeInterpretation_) {
-        WLOG("cube interpretation is not set, use regular");
-        cubeInterpretation_ = boost::make_shared<RegularCubeInterpretation>(scenarioData_);
-    }
-    boost::shared_ptr<RegularCubeInterpretation> regularCubeInterpretation =
-        boost::dynamic_pointer_cast<RegularCubeInterpretation>(cubeInterpretation_);
-    bool isRegularCubeStorage = (regularCubeInterpretation != NULL);
+    QL_REQUIRE(cubeInterpretation_ != nullptr, "PostProcess: cubeInterpretation is not given.");
+    bool isRegularCubeStorage = !cubeInterpretation_->withCloseOutLag();
 
     LOG("cube storage is regular: " << isRegularCubeStorage);
     LOG("cube dates: " << cube->dates().size());
@@ -184,11 +186,13 @@ PostProcess::PostProcess(
             calcType_, analytics_["dynamicCredit"], nettingSetManager_,
 	        exposureCalculator_->nettingSetDefaultValue(),
 	        exposureCalculator_->nettingSetCloseOutValue(),
+            exposureCalculator_->nettingSetMporPositiveFlow(),
+	        exposureCalculator_->nettingSetMporNegativeFlow(),
             scenarioData_, cubeInterpretation_, analytics_["dim"],
             dimCalculator_, fullInitialCollateralisation_,
             allocationMethod == ExposureAllocator::AllocationMethod::Marginal, marginalAllocationLimit,
             exposureCalculator_->exposureCube(), ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
-            analytics_["flipViewXVA"]
+            analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_
         );
     nettedExposureCalculator_->build();
 
@@ -305,6 +309,20 @@ PostProcess::PostProcess(
      * Calculate netting set CVA sensitivity
      */
     updateNettingSetCvaSensitivity();
+
+    /***************************************
+     * Credit migration analysis
+     */
+    if (analytics_["creditMigration"]) {
+        creditMigrationCalculator_ = boost::make_shared<CreditMigrationCalculator>(
+            portfolio_, creditSimulationParameters_, cube_, cubeInterpretation_,
+            nettedExposureCalculator_->nettedCube(), scenarioData_, creditMigrationDistributionGrid_,
+            creditMigrationTimeSteps_, creditStateCorrelationMatrix_, baseCurrency_);
+        creditMigrationCalculator_->build();
+        creditMigrationUpperBucketBounds_ = creditMigrationCalculator_->upperBucketBounds();
+        creditMigrationCdf_ = creditMigrationCalculator_->cdf();
+        creditMigrationPdf_ = creditMigrationCalculator_->pdf();
+    }
 }
 
 void PostProcess::updateNettingSetKVA() {

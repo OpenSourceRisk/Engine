@@ -394,7 +394,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             // Return a flat curve @ 0%
             dividendYieldTermStructure = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(asof, 0.0, dc_));
             equityIndex_ =
-                boost::make_shared<EquityIndex>(spec.curveConfigID(), calendar, parseCurrency(config->currency()),
+                boost::make_shared<EquityIndex2>(spec.curveConfigID(), calendar, parseCurrency(config->currency()),
                                                 equitySpot, forecastYieldTermStructure, dividendYieldTermStructure);
             return;
         } else
@@ -450,7 +450,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         dividendYieldTermStructure = Handle<YieldTermStructure>(divCurve);
 
         equityIndex_ =
-            boost::make_shared<EquityIndex>(spec.curveConfigID(), calendar, parseCurrency(config->currency()),
+            boost::make_shared<EquityIndex2>(spec.curveConfigID(), calendar, parseCurrency(config->currency()),
                                             equitySpot, forecastYieldTermStructure, dividendYieldTermStructure);
 
         if (buildCalibrationInfo) {

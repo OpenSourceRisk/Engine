@@ -31,6 +31,7 @@ crossccyfixfloatswap.cpp
 crossccyfixfloatswaphelper.cpp
 currency.cpp
 dategeneration.cpp
+defaultableequityjumpdiffusionmodel.cpp
 deltagammavar.cpp
 deposit.cpp
 discountcurve.cpp
@@ -41,6 +42,7 @@ dynamicblackvoltermstructure.cpp
 dynamicswaptionvolmatrix.cpp
 equityforwardcurvestripper.cpp
 exactbachelierimpliedvolatility.cpp
+fddefaultableequityjumppdiffusionconvertiblebondengine.cpp
 fillemptymatrix.cpp
 forwardbond.cpp
 fxvolsmile.cpp
@@ -71,7 +73,8 @@ strippedoptionletadapter2.cpp
 survivalprobabilitycurve.cpp
 swaptionvolatilityconverter.cpp
 swaptionvolconstantspread.cpp
-testsuite.cpp)
+testsuite.cpp
+transitionmatrix.cpp)
 
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
 target_link_libraries(quantext-test-suite ${QL_LIB_NAME})

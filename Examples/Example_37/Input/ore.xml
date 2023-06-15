@@ -5,7 +5,7 @@
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">255</Parameter>
+    <Parameter name="logMask">15</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205_flat.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">Y</Parameter>

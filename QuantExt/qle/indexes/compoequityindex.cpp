@@ -24,9 +24,9 @@
 
 namespace QuantExt {
 
-CompoEquityIndex::CompoEquityIndex(const boost::shared_ptr<EquityIndex>& source,
+CompoEquityIndex::CompoEquityIndex(const boost::shared_ptr<QuantExt::EquityIndex2>& source,
                                    const boost::shared_ptr<FxIndex>& fxIndex, const Date& dividendCutoffDate)
-    : EquityIndex(source->familyName() + "_compo_" + fxIndex->targetCurrency().code(),
+    : QuantExt::EquityIndex2(source->familyName() + "_compo_" + fxIndex->targetCurrency().code(),
                   JointCalendar(source->fixingCalendar(), fxIndex->fixingCalendar()), fxIndex->targetCurrency(),
                   Handle<Quote>(boost::make_shared<CompositeQuote<std::function<Real(Real, Real)>>>(
                       source->equitySpot(), fxIndex->fxQuote(),
@@ -39,27 +39,29 @@ CompoEquityIndex::CompoEquityIndex(const boost::shared_ptr<EquityIndex>& source,
     LazyObject::registerWith(fxIndex_);
 }
 
-boost::shared_ptr<EquityIndex> CompoEquityIndex::source() const { return source_; }
+boost::shared_ptr<QuantExt::EquityIndex2> CompoEquityIndex::source() const { return source_; }
 
-void CompoEquityIndex::addDividend(const Date& fixingDate, Real fixing, bool forceOverwrite) {
-    if (dividendCutoffDate_ == Date() || fixingDate >= dividendCutoffDate_) {
-        source_->addDividend(fixingDate, fixing / fxIndex_->fixing(fixingDate), forceOverwrite);
+void CompoEquityIndex::addDividend(const Dividend& dividend, bool forceOverwrite) {
+    if (dividendCutoffDate_ == Date() || dividend.exDate >= dividendCutoffDate_) {
+        Dividend newDiv(dividend.exDate, dividend.name, dividend.rate / fxIndex_->fixing(dividend.exDate),
+                        dividend.payDate);
+        source_->addDividend(newDiv, forceOverwrite);
         LazyObject::update();
     }
 }
 
 void CompoEquityIndex::performCalculations() const {
-    dividendFixings_ = TimeSeries<Real>();
+    dividendFixings_ = std::set<Dividend>();
     auto const& ts = source_->dividendFixings();
     for (auto const& d : ts) {
-        if (dividendCutoffDate_ == Date() || d.first >= dividendCutoffDate_) {
-            dividendFixings_[d.first] =
-                d.second * fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(d.first, Preceding));
+        if (dividendCutoffDate_ == Date() || d.exDate >= dividendCutoffDate_) {
+            Dividend div(d.exDate, d.name, d.rate * fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(d.exDate, Preceding)), d.payDate);
+            dividendFixings_.insert(div);
         }
     }
 }
 
-const TimeSeries<Real>& CompoEquityIndex::dividendFixings() const {
+const std::set<Dividend>& CompoEquityIndex::dividendFixings() const {
     calculate();
     return dividendFixings_;
 }
@@ -68,7 +70,7 @@ Real CompoEquityIndex::pastFixing(const Date& fixingDate) const {
     return source_->fixing(fixingDate) * fxIndex_->fixing(fixingDate);
 }
 
-boost::shared_ptr<EquityIndex> CompoEquityIndex::clone(const Handle<Quote> spotQuote,
+boost::shared_ptr<QuantExt::EquityIndex2> CompoEquityIndex::clone(const Handle<Quote> spotQuote,
                                                        const Handle<YieldTermStructure>& rate,
                                                        const Handle<YieldTermStructure>& dividend) const {
     return boost::make_shared<CompoEquityIndex>(source_->clone(spotQuote, rate, dividend), fxIndex_);

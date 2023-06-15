@@ -405,6 +405,16 @@ void CrossAssetModelBuilder::buildModel() const {
         processInfo[CrossAssetModel::AssetType::COM].emplace_back(comName, 1);
     }
 
+    /*******************************************************
+     * Build the CrState parametrizations
+     */
+    std::vector<boost::shared_ptr<QuantExt::CrStateParametrization>> crStateParametrizations;
+    for (Size i = 0; i < config_->numberOfCreditStates(); i++) {
+        DLOG("CrState Parametrization " << i);
+        crStateParametrizations.push_back(boost::make_shared<QuantExt::CrStateParametrization>(i));
+        processInfo[CrossAssetModel::AssetType::CrState].emplace_back(std::to_string(i), 1);
+    }
+
     std::vector<boost::shared_ptr<QuantExt::Parametrization>> parametrizations;
     for (Size i = 0; i < irParametrizations.size(); i++)
         parametrizations.push_back(irParametrizations[i]);
@@ -419,6 +429,8 @@ void CrossAssetModelBuilder::buildModel() const {
         parametrizations.push_back(crCirParametrizations[i]);
     for (Size i = 0; i < comParametrizations.size(); i++)
         parametrizations.push_back(comParametrizations[i]);
+    for (Size i = 0; i < crStateParametrizations.size(); i++)
+        parametrizations.push_back(crStateParametrizations[i]);
 
     QL_REQUIRE(fxParametrizations.size() == irParametrizations.size() - 1, "mismatch in IR/FX parametrization sizes");
 
@@ -692,7 +704,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
     if (data.calibrationType() == CalibrationType::Bootstrap) {
         if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
             TLOGGERSTREAM("Calibration details:");
-            TLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, zInfIndex->interpolated()));
+            TLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
             TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             string exceptionMessage = "INF (DK) " + std::to_string(modelIdx) + " calibration error " +
@@ -700,7 +712,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
                                       std::to_string(config_->bootstrapTolerance());
             WLOG(StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage));
             WLOGGERSTREAM("Calibration details:");
-            WLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, zInfIndex->interpolated()));
+            WLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
             WLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
             if (!continueOnError_)
                 QL_FAIL(exceptionMessage);
@@ -733,8 +745,8 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     auto idxBasket = jyBuilder->indexBasket();
 
     // Attach engines to the helpers.
-    setJyPricingEngine(modelIdx, rrBasket, zInfIndex->interpolated());
-    setJyPricingEngine(modelIdx, idxBasket, zInfIndex->interpolated());
+    setJyPricingEngine(modelIdx, rrBasket, false);
+    setJyPricingEngine(modelIdx, idxBasket, false);
 
     if (dontCalibrate_)
         return;

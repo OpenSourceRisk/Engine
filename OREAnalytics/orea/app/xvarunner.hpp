@@ -22,6 +22,7 @@
 */
 #pragma once
 
+#include <orea/app/inputparameters.hpp>
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/scenario/scenariogeneratordata.hpp>
@@ -39,7 +40,8 @@ class XvaRunner {
 public:
     virtual ~XvaRunner() {}
 
-    XvaRunner(QuantLib::Date asof, const std::string& baseCurrency,
+    XvaRunner(const boost::shared_ptr<InputParameters>& inputs,
+              QuantLib::Date asof, const std::string& baseCurrency,
               const boost::shared_ptr<ore::data::Portfolio>& portfolio,
               const boost::shared_ptr<ore::data::NettingSetManager>& netting,
               const boost::shared_ptr<ore::data::EngineData>& engineData,
@@ -83,7 +85,7 @@ public:
     boost::shared_ptr<NPVCube> nettingCube() const { return nettingCube_; }
 
     // get aggregation scenario data from step 5
-    boost::shared_ptr<AggregationScenarioData> aggregationScenarioData() { return scenarioData_; }
+    QuantLib::Handle<AggregationScenarioData> aggregationScenarioData() { return scenarioData_; }
 
     // partial step 3: build post processor on given cubes / agg scen data (requires runXva() or buildCamModel() call)
     void generatePostProcessor(
@@ -123,6 +125,7 @@ protected:
         const boost::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
         const boost::shared_ptr<ScenarioFactory>& scenarioFactory, const bool continueOnErr) const;
     
+    boost::shared_ptr<InputParameters> inputs_;
     QuantLib::Date asof_;
     std::string baseCurrency_;
     boost::shared_ptr<ore::data::Portfolio> portfolio_;
@@ -149,7 +152,7 @@ protected:
     boost::shared_ptr<QuantExt::CrossAssetModel> model_;
     boost::shared_ptr<ScenarioSimMarket> simMarket_;
     boost::shared_ptr<EngineFactory> simFactory_;
-    boost::shared_ptr<AggregationScenarioData> scenarioData_;
+    QuantLib::RelinkableHandle<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<NPVCube> cube_, nettingCube_;
     boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
     std::string calculationType_;

@@ -70,9 +70,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (currencies[i] != currency)
             isXCCY_ = true;
         isResetting_ = isResetting_ || (!legData_[i].isNotResetXCCY());
-        if (legTypeCount_.find(legData_[i].legType()) == legTypeCount_.end()) 
-            legTypeCount_[legData_[i].legType()] = 0;
-        legTypeCount_[legData_[i].legType()] ++;
     }
 
     static std::set<std::string> eligibleForXbs = {"Fixed", "Floating"};
@@ -191,18 +188,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Interest Rate");
     additionalData_["isdaBaseProduct"] = string(isXCCY_ ? "Cross Currency" : "IR Swap");
-    Size nfixed = 0;
-    auto it1 = legTypeCount_.find("Fixed");
-    auto it2 = legTypeCount_.find("ZeroCouponFixed");
-    nfixed += (it1 == legTypeCount_.end() ? 0 : it1->second);
-    nfixed += (it2 == legTypeCount_.end() ? 0 : it2->second);    
-    if (nfixed == 0)
-        additionalData_["isdaSubProduct"] = string("Basis");  
-    else if (nfixed == 1)
-        additionalData_["isdaSubProduct"] = string("Fixed Float");  
-    else
-        additionalData_["isdaSubProduct"] = string("Fixed Fixed");
-    // skip transaction level for now
+    additionalData_["isdaSubProduct"] = isdaSubProductSwap(id(), legData_);
     additionalData_["isdaTransaction"] = string("");  
 }
 
@@ -287,7 +273,7 @@ Swap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
 
             boost::shared_ptr<Index> index = parseIndex(ind);
 
-            if (auto ei = boost::dynamic_pointer_cast<EquityIndex>(index)) {
+            if (auto ei = boost::dynamic_pointer_cast<EquityIndex2>(index)) {
                 result[AssetClass::EQ].insert(ei->name());
             } else if (auto ci = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
                 result[AssetClass::COM].insert(ci->name());
@@ -296,6 +282,39 @@ Swap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
     }
 
     return result;
+}
+
+std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>& legData) {
+
+    Size nFixed = 0;
+    Size nFloating = 0;
+    for (Size i = 0; i < legData.size(); ++i) {
+        std::string type = legData[i].legType();
+        if (type == "Fixed" ||
+            type == "ZeroCouponFixed" ||
+            type == "Cashflow")
+            nFixed++;
+        else if (type == "Floating" ||
+                 type == "CPI" ||
+                 type == "YY" ||
+                 type == "CMS" ||
+                 type == "DigitalCMS" ||
+                 type == "CMSSpread" ||
+                 type == "DigitalCMSSpread" ||
+                 type == "CMB" ||
+                 type == "Equity")
+            nFloating++;
+        else {
+            ALOG("leg type " << type << " not mapped for trade " << tradeId);
+        }
+    }
+
+    if (nFixed == 0)
+        return string("Basis");  
+    else if (nFloating >= 1)
+        return string("Fixed Float");  
+    else
+        return string("Fixed Fixed");
 }
 
 void Swap::fromXML(XMLNode* node) {

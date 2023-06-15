@@ -77,7 +77,8 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"COMMODITY_FWD", MarketDatum::InstrumentType::COMMODITY_FWD},
         {"CORRELATION", MarketDatum::InstrumentType::CORRELATION},
         {"COMMODITY_OPTION", MarketDatum::InstrumentType::COMMODITY_OPTION},
-        {"CPR", MarketDatum::InstrumentType::CPR}};
+        {"CPR", MarketDatum::InstrumentType::CPR},
+        {"RATING", MarketDatum::InstrumentType::RATING}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -102,8 +103,8 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
         {"BASE_CORRELATION", MarketDatum::QuoteType::BASE_CORRELATION},
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
-        {"NULL", MarketDatum::QuoteType::NONE}
-    };
+        {"NULL", MarketDatum::QuoteType::NONE},
+        {"TRANSITION_PROBABILITY", MarketDatum::QuoteType::TRANSITION_PROBABILITY}};
 
     if (s == "RATE_GVOL")
         LOG("Use of deprecated quote type RATE_GVOL");
@@ -436,51 +437,67 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::CAPFLOOR: {
-        QL_REQUIRE(tokens.size() == 8 || tokens.size() == 9 || tokens.size() == 4 || tokens.size() == 5,
-                   "Either 4, 5 or 8, 9 tokens expected in " << datumName);
+        QL_REQUIRE((tokens.size() >= 8 && tokens.size() <= 10) || tokens.size() == 4 || tokens.size() == 5,
+                   "Either 4, 5 or 8, 9, 10 tokens expected in " << datumName);
         const string& ccy = tokens[2];
-	Size offset = 0;
-	std::string indexName;
-	if(tokens.size() == 9 || tokens.size() == 5) {
-	    offset = 1;
-	    indexName = tokens[3];
-	}
-        if (tokens.size() == 8 || tokens.size() == 9) {
+	    Size offset = 0;
+	    std::string indexName;
+        Size hasCapFloorToken = (tokens.back() == "C" || tokens.back() == "F") ? 1 : 0;
+        QL_REQUIRE(quoteType != MarketDatum::QuoteType::PRICE || hasCapFloorToken == 1,
+            "CAPFLOOR PRICE quotes must specify whether the datum represents a cap or a floor with a \"C\" or"
+            " \"F\" as the final token.");
+
+        if (tokens.size() == 9 + hasCapFloorToken || tokens.size() == 5 + hasCapFloorToken) {
+            // has an index name token... all later tokens are offset by 1
+            offset = 1;
+            indexName = tokens[3];
+        }
+        if (tokens.size() == 8 + hasCapFloorToken || tokens.size() == 9 + hasCapFloorToken) {
             Period term = parsePeriod(tokens[3 + offset]);
             Period tenor = parsePeriod(tokens[4 + offset]);
             bool atm = parseBool(tokens[5 + offset].c_str());
             bool relative = parseBool(tokens[6 + offset].c_str());
             Real strike = parseReal(tokens[7 + offset]);
+            bool isCap = !(hasCapFloorToken==1 && tokens.back() == "F"); // assume cap if omitted
             return boost::make_shared<CapFloorQuote>(value, asof, datumName, quoteType, ccy, term, tenor, atm, relative,
-                                                     strike, indexName);
+                                                        strike, indexName, isCap);
         } else {
+            // not enough tokens, must be a shift quote
             Period indexTenor = parsePeriod(tokens[3 + offset]);
             return boost::make_shared<CapFloorShiftQuote>(value, asof, datumName, quoteType, ccy, indexTenor,
-                                                          indexName);
+                                                            indexName);
         }
     }
 
     case MarketDatum::InstrumentType::SWAPTION: {
-        QL_REQUIRE(tokens.size() >= 4 && tokens.size() <= 8, "4...8 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() >= 4 && tokens.size() <= 9, "4...9 tokens expected in " << datumName);
         const string& ccy = tokens[2];
         Size offset = isOnePeriod(tokens[3]) ? 0 : 1;
         std::string quoteTag;
+        Size hasPayReceiveToken = (tokens.back() == "P" || tokens.back() == "R") ? 1 : 0;
+        QL_REQUIRE(quoteType != MarketDatum::QuoteType::PRICE || hasPayReceiveToken == 1,
+            "SWAPTION PRICE quotes must specify whether the datum represents a payer or a receiver"
+            " swaption with a \"P\" or \"R\" as the final token.");
+
         if (offset == 1)
             quoteTag = tokens[3];
-        if (tokens.size() >= 6) { // volatility
+        if (tokens.size() >= 6 + offset + hasPayReceiveToken) { // volatility
             Period expiry = parsePeriod(tokens[3 + offset]);
             Period term = parsePeriod(tokens[4 + offset]);
             const string& dimension = tokens[5 + offset];
             Real strike = 0.0;
             if (dimension == "ATM")
-                QL_REQUIRE(tokens.size() == 6 + offset, 6 + offset << " tokens expected in ATM quote " << datumName);
+                QL_REQUIRE(tokens.size() == 6 + offset + hasPayReceiveToken, 6 + offset + hasPayReceiveToken
+                    << " tokens expected in ATM quote " << datumName);
             else if (dimension == "Smile") {
-                QL_REQUIRE(tokens.size() == 7 + offset, 7 + offset << " tokens expected in Smile quote " << datumName);
+                QL_REQUIRE(tokens.size() == 7 + offset + hasPayReceiveToken, 7 + offset + hasPayReceiveToken
+                    << " tokens expected in Smile quote " << datumName);
                 strike = parseReal(tokens[6 + offset]);
             } else
                 QL_FAIL("Swaption vol quote dimension " << dimension << " not recognised");
+            bool isPayer = !(hasPayReceiveToken == 1 && tokens.back() == "R"); // assume payer if omitted
             return boost::make_shared<SwaptionQuote>(value, asof, datumName, quoteType, ccy, expiry, term, dimension,
-                                                     strike, quoteTag);
+                                                     strike, quoteTag, isPayer);
         } else { // SLN volatility shift
             return boost::make_shared<SwaptionShiftQuote>(value, asof, datumName, quoteType, ccy,
                                                           parsePeriod(tokens[3 + offset]), quoteTag);
@@ -771,6 +788,15 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& securityID = tokens[2];
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE, "Invalid quote type for " << datumName);
         return boost::make_shared<CPRQuote>(value, asof, datumName, securityID);
+    }
+
+    case MarketDatum::InstrumentType::RATING: {
+        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
+        const string& name = tokens[2];
+        const string& fromRating = tokens[3];
+        const string& toRating = tokens[4];
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::TRANSITION_PROBABILITY, "Invalid quote type for " << datumName);
+        return boost::make_shared<TransitionProbabilityQuote>(value, asof, datumName, name, fromRating, toRating);
     }
 
     default:

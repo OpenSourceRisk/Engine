@@ -6,3 +6,5 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-Test
+      args:
+        - debian_tag=${DEBIAN_TAG}

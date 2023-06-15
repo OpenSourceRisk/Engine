@@ -25,6 +25,7 @@
 
 #include <ql/errors.hpp>
 #include <ql/types.hpp>
+#include <ql/patterns/observable.hpp>
 
 #include <fstream>
 #include <map>
@@ -38,7 +39,15 @@ using std::map;
 using std::string;
 using std::vector;
 
-enum class AggregationScenarioDataType : unsigned int { IndexFixing = 0, FXSpot = 1, Numeraire = 2, Generic = 3 };
+enum class AggregationScenarioDataType : unsigned int {
+    IndexFixing = 0,
+    FXSpot = 1,
+    Numeraire = 2,
+    CreditState = 3,
+    SurvivalWeight = 4,
+    RecoveryRate = 5,
+    Generic = 6
+};
 
 //! Container for storing simulated market data
 /*! The indexes for dates and samples are (by convention) the
@@ -46,7 +55,7 @@ enum class AggregationScenarioDataType : unsigned int { IndexFixing = 0, FXSpot 
 
         \ingroup scenario
 */
-class AggregationScenarioData {
+class AggregationScenarioData : public QuantLib::Observable {
 public:
     //! default ctor
     AggregationScenarioData() : dIndex_(0), sIndex_(0) {}
@@ -152,6 +161,12 @@ inline std::ostream& operator<<(std::ostream& out, const AggregationScenarioData
         return out << "FXSpot";
     case AggregationScenarioDataType::Numeraire:
         return out << "Numeraire";
+    case AggregationScenarioDataType::CreditState:
+        return out << "CreditState";
+    case AggregationScenarioDataType::SurvivalWeight:
+        return out << "SurvivalWeight";
+    case AggregationScenarioDataType::RecoveryRate:
+        return out << "RecoveryRate";
     case AggregationScenarioDataType::Generic:
         return out << "Generic";
     default:

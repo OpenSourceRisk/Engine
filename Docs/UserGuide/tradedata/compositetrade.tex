@@ -1,0 +1,46 @@
+\subsubsection{Composite Trade}
+
+The \lstinline!CompositeTradeData!  node is the trade data container for the  \emph{CompositeTrade} trade type.   A composite trade is a hybrid position consisting of multiple component trades. The structure of an example \lstinline!CompositeTradeData! node for a commodity option is shown in 
+Listing \ref{lst:compositetrade_data}.
+
+\begin{listing}[H]
+	%\hrule\medskip
+	\begin{minted}[fontsize=\footnotesize]{xml}
+		<CompositeTradeData>
+		  <Currency>USD</Currency>
+		  <NotionalCalculation>Sum</NotionalCalculation>
+		  <Components>
+		    <Trade id="">
+		      <!-- A valid trade xml -->
+		    </Trade>
+		    <Trade id="">
+		      <!-- A valid trade xml -->
+		    </Trade>
+		  </Components>
+		</CompositeTradeData>
+	\end{minted}
+	\caption{Composite trade data}
+	\label{lst:compositetrade_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!CompositeTradeData!  node follow below.
+
+\begin{itemize}
+	\item Currency: Defines the currency the NPV of the composite trade will be represented in. \\
+	  Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
+	\item NotionalCalculation [Optional]: The method by which the notional of the composite trade will be calculated. \\
+	  Allowable values:
+	  \begin{itemize}
+	  	\item[] \emph{Sum}: The notional will be calculated as the sum of the notionals of the constituent trades. This is the default behaviour if the field is omitted (unless an override is provided).
+	  	\item[] \emph{Mean} or \emph{Average}: The notional will be calculated as the mean of the notionals of the constituent trades.
+	  	\item[] \emph{First}: The notional of the first constituent trade will be used.
+	  	\item[] \emph{Last}: The notional of the first constituent trade will be used.
+	  	\item[] \emph{Min}: The notional will be calculated as the minimum of the notionals of the constituent trades.
+	  	\item[] \emph{Max}: The notional will be calculated as the minimum of the notionals of the constituent trades.
+	  	\item[] \emph{Override}: the notional will be read directly from the notional override field.
+	  \end{itemize}
+	\item NotionalOverride [Optional]: The notional which will be used for the trade, overriding any calculation method specified. \\
+      Allowable values: Any non-negative real number.
+	\item Components: The portfolio of trades that make up the composite trade. \\
+      Allowable values: These trades should be valid xmls that could otherwise be entered into the portfolio, with the exception that they can have empty ids.
+\end{itemize}

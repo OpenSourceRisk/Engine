@@ -363,6 +363,7 @@
       <xs:enumeration value="Actual/Actual (ISDA)"/>
       <xs:enumeration value="ActualActual (ISDA)"/>
       <xs:enumeration value="ACT/ACT"/>
+      <xs:enumeration value="Act/Act"/>
       <xs:enumeration value="ACT29"/>
       <xs:enumeration value="ACT"/>
       <xs:enumeration value="ActActISMA"/>
@@ -515,6 +516,7 @@
       <xs:enumeration value="VannaVolga"/>
       <xs:enumeration value="Delta"/>
       <xs:enumeration value="BFRR"/>
+      <xs:enumeration value="Absolute"/>
     </xs:restriction>
   </xs:simpleType>
 

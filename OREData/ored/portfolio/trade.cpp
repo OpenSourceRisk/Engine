@@ -18,10 +18,12 @@
 
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 
+#include <qle/cashflows/equitycouponpricer.hpp>
+#include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/instruments/payment.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
-#include <qle/cashflows/equitycouponpricer.hpp>
 
 using ore::data::XMLUtils;
 
@@ -131,6 +133,7 @@ void Trade::reset() {
     notional_ = Null<Real>();
     notionalCurrency_ = "";
     maturity_ = Date();
+    issuer_ = "";
     requiredFixings_.clear();
 }
     
@@ -243,6 +246,20 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                 ALOG("original nominal could not be determined for trade " << id() << ", set to zero: " << e.what());
             }
             additionalData_["originalNotional[" + legID + "]"] = originalNotional;
+        }
+    }
+    for (Size j = 0; j < legs_[i].size(); ++j) {
+        boost::shared_ptr<CashFlow> flow = legs_[i][j];
+        if (flow->date() > asof) {
+            Size k = 0;
+            for (auto const& [fixingDate, index, multiplier] :
+                 QuantExt::getIndexedCouponOrCashFlowFixingDetails(flow)) {
+                auto label = "[" + legID + "][" + std::to_string(j) + "][" + std::to_string(k) + "]";
+                additionalData_["indexingFixingDate" + label] = fixingDate;
+                additionalData_["indexingIndex" + label] =
+                    index == nullptr ? "na" : IndexNameTranslator::instance().oreName(index->name());
+                additionalData_["indexingMultiplier" + label] = multiplier;
+            }
         }
     }
 }

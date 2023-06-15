@@ -56,10 +56,10 @@ public:
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = nominalTs;
 
         // Add EUHICPXT YoY Inflation Curve
-        boost::shared_ptr<ZeroInflationIndex> zcindex = boost::shared_ptr<EUHICPXT>(new EUHICPXT(false));
+        boost::shared_ptr<ZeroInflationIndex> zcindex = boost::shared_ptr<EUHICPXT>(new EUHICPXT());
         ;
         boost::shared_ptr<YoYInflationIndex> index =
-            boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex, zcindex->interpolated());
+            boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex, false);
 
         std::vector<Date> datesZCII = {asof + 1 * Years, asof + 2 * Years, asof + 5 * Years, asof + 10 * Years,
                                        asof + 20 * Years};
@@ -79,7 +79,7 @@ public:
 
         yoyInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
             Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                parseZeroInflationIndex("EUHICPXT", false), false, Handle<YoYInflationTermStructure>(yoyTs)));
+                parseZeroInflationIndex("EUHICPXT"), false, Handle<YoYInflationTermStructure>(yoyTs)));
 
         // Add EUHICPXT yoy volatility term structure
         boost::shared_ptr<QuantLib::ConstantYoYOptionletVolatility> volSurface =

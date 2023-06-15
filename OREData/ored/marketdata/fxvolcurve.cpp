@@ -28,6 +28,7 @@
 #include <qle/termstructures/blackdeltautilities.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 #include <qle/termstructures/blacktriangulationatmvol.hpp>
+#include <qle/termstructures/blackvolsurfaceabsolute.hpp>
 #include <qle/termstructures/blackvolsurfacebfrr.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
@@ -519,6 +520,123 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     vol_->enableExtrapolation();
 }
 
+void FXVolCurve::buildSmileAbsoluteCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
+                                         boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
+                                         const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
+
+    // collect relevant market data and populate expiries (as per regex or configured list)
+    std::set<Period> expiriesTmp;
+
+    std::vector<boost::shared_ptr<FXOptionQuote>> data;
+    std::ostringstream ss;
+    ss << MarketDatum::InstrumentType::FX_OPTION << "/RATE_LNVOL/" << spec.unitCcy() << "/" << spec.ccy() << "/*";
+    Wildcard w(ss.str());
+    for (const auto& md : loader.get(w, asof)) {
+        boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+        QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to FXOptionQuote");
+        QL_REQUIRE(q->unitCcy() == spec.unitCcy(), "FXOptionQuote unit ccy '" << q->unitCcy()
+                                                                              << "' <> FXVolatilityCurveSpec unit ccy '"
+                                                                              << spec.unitCcy() << "'");
+        QL_REQUIRE(q->ccy() == spec.ccy(),
+                   "FXOptionQuote ccy '" << q->ccy() << "' <> FXVolatilityCurveSpec ccy '" << spec.ccy() << "'");
+        Strike s = parseStrike(q->strike());
+        if (s.type == Strike::Type::Absolute) {
+            vector<string> tokens;
+            boost::split(tokens, md->name(), boost::is_any_of("/"));
+            QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
+            if (expiriesWildcard_ && expiriesWildcard_->matches(tokens[4]))
+                expiriesTmp.insert(q->expiry());
+            data.push_back(q);
+        }
+    }
+
+    if (!expiriesWildcard_) {
+        auto tmp = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
+        expiriesTmp = std::set<Period>(tmp.begin(), tmp.end());
+    }
+
+    // populate quotes
+    std::vector<std::map<Real, Real>> strikeQuotesTmp(expiriesTmp.size());
+
+    for (auto const& q : data) {
+        Size expiryIdx = std::distance(expiriesTmp.begin(), expiriesTmp.find(q->expiry()));
+        if (expiryIdx >= expiriesTmp.size())
+            continue;
+        Strike s = parseStrike(q->strike());
+        // If the strike for expirtIdx does not exist, read in the quote
+        if (strikeQuotesTmp[expiryIdx].count(s.value) == 0)
+            strikeQuotesTmp[expiryIdx][s.value] = q->quote()->value();
+    }
+
+    // identify the expiries with at least one strike quote
+    std::vector<bool> dataComplete(expiriesTmp.size(), true);
+
+    for (Size i = 0; i < expiriesTmp.size(); ++i) {
+        if (strikeQuotesTmp[i].empty())
+            dataComplete[i] = false;
+    }
+
+    // if we have an explicitly configured expiry list, we require that there is at least one strike quote for all expiries
+
+    if (!expiriesWildcard_) {
+        Size i = 0;
+        for (auto const& e : expiriesTmp) {
+            QL_REQUIRE(dataComplete[i++], "Absolute FX vol surface: missing data for expiry " << e);
+        }
+    }
+
+    // build the final quotes for the expiries that have complete data
+    Size i = 0;
+    for (auto const& e : expiriesTmp) {
+        if (dataComplete[i++]) {
+            expiries_.push_back(e);
+            TLOG("adding expiry " << e << " with at least one strike quote");
+        } else {
+            TLOG("removing expiry " << e << ", no strike quote found");
+        }
+    }
+
+    std::vector<std::vector<Real>> strikeQuotes, strikes;
+    std::vector<Real> strikeQuote, strike;
+
+    for (Size i = 0; i < expiriesTmp.size(); ++i) {
+        if (!dataComplete[i])
+            continue;
+        for (auto const& quote : strikeQuotesTmp[i]) {
+            strike.push_back(quote.first);
+            strikeQuote.push_back(quote.second);
+        }
+        strikeQuotes.push_back(strikeQuote);
+        strikes.push_back(strike);
+        strikeQuote.clear();
+        strike.clear();
+    }
+
+    // build Absolute surface
+
+    DLOG("build Absolute fx vol surface with " << expiries_.size() << " expiries");
+
+    QuantExt::BlackVolatilitySurfaceAbsolute::SmileInterpolation interp;
+    if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Linear)
+        interp = QuantExt::BlackVolatilitySurfaceAbsolute::SmileInterpolation::Linear;
+    else if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Cubic)
+        interp = QuantExt::BlackVolatilitySurfaceAbsolute::SmileInterpolation::Cubic;
+    else {
+        QL_FAIL("Absolute FX vol surface: invalid interpolation, expected Linear, Cubic");
+    }
+
+    std::vector<Date> dates;
+    std::transform(expiries_.begin(), expiries_.end(), std::back_inserter(dates),
+                   [&asof, &config](const Period& p) { return config->calendar().advance(asof, p); });
+
+    vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceAbsolute>(
+        asof, dates, strikes, strikeQuotes, config->dayCounter(), config->calendar(),
+        fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_,
+        longTermAtmType_, interp);
+
+    vol_->enableExtrapolation();
+}
+
 Handle<QuantExt::CorrelationTermStructure>
 getCorrelationCurve(const std::string& index1, const std::string& index2,
                     const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves) {
@@ -670,7 +788,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                        config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::SmileVannaVolga ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta ||
-                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileBFRR,
+                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileBFRR ||
+                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileAbsolute,
                    "Unknown FX curve building dimension");
 
         expiriesWildcard_ = getUniqueWildcard(config->expiries());
@@ -782,6 +901,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             buildSmileBfRrCurve(asof, spec, loader, config, fxSpots, yieldCurves);
         } else if (config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated) {
             buildATMTriangulated(asof, spec, loader, config, fxSpots, yieldCurves, fxVols, correlationCurves);
+        } else if (config->dimension() == FXVolatilityCurveConfig::Dimension::SmileAbsolute) {
+            buildSmileAbsoluteCurve(asof, spec, loader, config, fxSpots, yieldCurves);
         } else {
             buildVannaVolgaOrATMCurve(asof, spec, loader, config, fxSpots, yieldCurves);
         }
@@ -982,7 +1103,12 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
             if (reportOnDeltaGrid || reportOnMoneynessGrid) {
                 if (auto bfrr = boost::dynamic_pointer_cast<QuantExt::BlackVolatilitySurfaceBFRR>(vol_)) {
-                    std::ostringstream os;
+                    if (bfrr->deltas().size() != bfrr->currentDeltas().size()) {
+                        calibrationInfo_->messages.push_back(
+                            "Warning: Used only " + std::to_string(bfrr->currentDeltas().size()) + " deltas of the " +
+                            std::to_string(bfrr->deltas().size()) +
+                            " deltas that were initially provided, because all smiles were invalid.");
+                    }
                     for (Size i = 0; i < bfrr->dates().size(); ++i) {
                         if (bfrr->smileHasError()[i]) {
                             calibrationInfo_->messages.push_back("Ignore invalid smile at expiry " +

@@ -24,26 +24,27 @@
 
 #pragma once
 
-#include <ored/utilities/log.hpp>
-#include <ored/configuration/conventions.hpp>
 #include <ored/configuration/commoditycurveconfig.hpp>
+#include <ored/configuration/conventions.hpp>
 #include <ored/portfolio/types.hpp>
+#include <ored/utilities/log.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
+#include <ql/instruments/doublebarriertype.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
-#include <ql/experimental/barrieroption/doublebarriertype.hpp>
-#include <ql/instruments/barriertype.hpp>
 #include <ql/instruments/averagetype.hpp>
-#include <ql/instruments/swaption.hpp>
-#include <ql/instruments/capfloor.hpp>
+#include <ql/instruments/barriertype.hpp>
 #include <ql/instruments/bond.hpp>
+#include <ql/instruments/capfloor.hpp>
 #include <ql/instruments/inflationcapfloor.hpp>
 #include <ql/instruments/overnightindexfuture.hpp>
+#include <ql/instruments/swaption.hpp>
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/position.hpp>
+#include <ql/termstructures/bootstraphelper.hpp>
 #include <ql/time/businessdayconvention.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
@@ -544,6 +545,12 @@ CreditPortfolioSensitivityDecomposition parseCreditPortfolioSensitivityDecomposi
 
 //! Output operator for CreditPortfolioSensitivityDecomposition
 std::ostream& operator<<(std::ostream& os, const CreditPortfolioSensitivityDecomposition d);
-    
+
+//! Convert text to QuantLib::Pillar::Choice
+/*!
+\ingroup utilities
+*/
+QuantLib::Pillar::Choice parsePillarChoice(const std::string& s);
+
 } // namespace data
 } // namespace ore

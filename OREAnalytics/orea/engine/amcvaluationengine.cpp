@@ -34,6 +34,8 @@
 #include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 
+#include <ql/instruments/compositeinstrument.hpp>
+
 #include <ored/portfolio/optionwrapper.hpp>
 
 #include <boost/timer/timer.hpp>
@@ -203,36 +205,66 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     std::vector<std::vector<std::tuple<Size, Real, QuantLib::Date>>> tradeFees;
     timer.start();
     Size progressCounter = 0;
+
+    auto extractAmcCalculator = [&amcCalculators, &tradeId, &tradeLabel, &tradeType, &effectiveMultiplier,
+                            &currencyIndex, &tradeFees, &model, &outputCube](
+        const std::pair<std::string, boost::shared_ptr<Trade>>& trade,
+        boost::shared_ptr<AmcCalculator> amcCalc, Real multiplier) {
+        LOG("AMCCalculator extracted for \"" << trade.first << "\"");
+        amcCalculators.push_back(amcCalc);
+        effectiveMultiplier.push_back(multiplier);
+        currencyIndex.push_back(model->ccyIndex(amcCalc->npvCurrency()));
+
+        if (auto id = outputCube->idsAndIndexes().find(trade.first); id != outputCube->idsAndIndexes().end()) {
+            tradeId.push_back(id->second);
+        } else {
+            QL_FAIL("AMCValuationEngine: trade id '" << trade.first
+                                                    << "' is not present in output cube - internal error.");
+        }
+
+        tradeLabel.push_back(trade.first);
+        tradeType.push_back(trade.second->tradeType());
+        tradeFees.push_back({});
+        for (Size i = 0; i < trade.second->instrument()->additionalInstruments().size(); ++i) {
+            if (auto p = boost::dynamic_pointer_cast<QuantExt::Payment>(
+                    trade.second->instrument()->additionalInstruments()[i])) {
+                tradeFees.back().push_back(std::make_tuple(model->ccyIndex(p->currency()), p->cashFlow()->amount(),
+                                                        p->cashFlow()->date()));
+            } else {
+                ALOG(StructuredTradeErrorMessage(trade.second, "Additional instrument is ignored in AMC simulation",
+                                                "only QuantExt::Payment is handled as additional instrument."));
+            }
+        }
+    };
     for (auto const& trade : portfolio->trades()) {
         boost::shared_ptr<AmcCalculator> amcCalc;
         try {
-            amcCalc = trade.second->instrument()->qlInstrument(true)->result<boost::shared_ptr<AmcCalculator>>(
-                "amcCalculator");
-            LOG("AMCCalculator extracted for \"" << trade.first << "\"");
-            amcCalculators.push_back(amcCalc);
-            effectiveMultiplier.push_back(trade.second->instrument()->multiplier() *
-                                          trade.second->instrument()->multiplier2());
-            currencyIndex.push_back(model->ccyIndex(amcCalc->npvCurrency()));
-            if (auto id = outputCube->idsAndIndexes().find(trade.first); id != outputCube->idsAndIndexes().end()) {
-                tradeId.push_back(id->second);
-            } else {
-                QL_FAIL("AMCValuationEngine: trade id '" << trade.first
-                                                         << "' is not present in output cube - internal error.");
-            }
-            tradeLabel.push_back(trade.first);
-            tradeType.push_back(trade.second->tradeType());
-            // store fees from add instruments + emit error for other add instruments that are not handled
-            tradeFees.push_back({});
-            for (Size i = 0; i < trade.second->instrument()->additionalInstruments().size(); ++i) {
-                if (auto p = boost::dynamic_pointer_cast<QuantExt::Payment>(
-                        trade.second->instrument()->additionalInstruments()[i])) {
-                    tradeFees.back().push_back(std::make_tuple(model->ccyIndex(p->currency()), p->cashFlow()->amount(),
-                                                               p->cashFlow()->date()));
-                } else {
-                    ALOG(StructuredTradeErrorMessage(trade.second, "Additional instrument is ignored in AMC simulation",
-                                                     "only QuantExt::Payment is handled as additional instrument."));
+            auto inst = trade.second->instrument()->qlInstrument(true);
+            Real multiplier = trade.second->instrument()->multiplier() *
+                trade.second->instrument()->multiplier2();
+            if (auto cInst = boost::dynamic_pointer_cast<CompositeInstrument>(inst)) {
+                auto addResults = cInst->additionalResults();
+                std::vector<Real> multipliers;
+                while(true) {
+                    std::stringstream ss;
+                    ss << multipliers.size() + 1 << "_multiplier";
+                    if (addResults.find(ss.str()) == addResults.end())
+                        break;
+                    multipliers.push_back(inst->result<Real>(ss.str()));
                 }
+                for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
+                    std::stringstream ss;
+                    ss << cmpIdx + 1 << "_amcCalculator";
+                    if (addResults.find(ss.str()) != addResults.end()) {
+                        amcCalc = inst->result<boost::shared_ptr<AmcCalculator>>(ss.str());
+                        extractAmcCalculator(trade, amcCalc, multiplier * multipliers[cmpIdx]);
+                    }
+                }
+                continue;
             }
+            amcCalc = inst->result<boost::shared_ptr<AmcCalculator>>(
+                "amcCalculator");
+            extractAmcCalculator(trade, amcCalc, multiplier);
         } catch (const std::exception& e) {
             ALOG(StructuredTradeErrorMessage(trade.second, "Error building trade for AMC simulation", e.what()));
         }
@@ -356,7 +388,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
             // no close-out lag, fill depth 0 with npv on path
             auto res = simulatePathInterface2(amcCalculators[j], pathTimes, paths, allTimes, false, tradeLabel[j],
                                               tradeType[j]);
-            outputCube->setT0(res[0].at(0) * fx(fxBuffer, currencyIndex[j], 0, 0) *
+            Real v = outputCube->getT0(tradeId[j], 0);
+            outputCube->setT0(v + res[0].at(0) * fx(fxBuffer, currencyIndex[j], 0, 0) *
                                       numRatio(model, irStateBuffer, currencyIndex[j], 0, 0.0, 0) *
                                       effectiveMultiplier[j] +
                                   resFee[0][0],
@@ -364,7 +397,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
             for (Size k = 1; k < res.size(); ++k) {
                 Real t = sgd->getGrid()->timeGrid()[k];
                 for (Size i = 0; i < outputCube->samples(); ++i) {
-                    outputCube->set(res[k][i] * fx(fxBuffer, currencyIndex[j], k, i) *
+                    Real v = outputCube->get(tradeId[j], k - 1, i, 0);
+                    outputCube->set(v + res[k][i] * fx(fxBuffer, currencyIndex[j], k, i) *
                                             numRatio(model, irStateBuffer, currencyIndex[j], k, t, i) *
                                             effectiveMultiplier[j] +
                                         resFee[k][i],
@@ -380,7 +414,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                 // ... and then the close-out times, but times moved to the valuation times
                 auto resLag = simulatePathInterface2(amcCalculators[j], pathTimes, paths, closeOutTimes, true,
                                                      tradeLabel[j], tradeType[j]);
-                outputCube->setT0(res[0].at(0) * fx(fxBuffer, currencyIndex[j], 0, 0) *
+                Real v = outputCube->getT0(tradeId[j], 0);
+                outputCube->setT0(v + res[0].at(0) * fx(fxBuffer, currencyIndex[j], 0, 0) *
                                           numRatio(model, irStateBuffer, currencyIndex[j], 0, 0.0, 0) *
                                           effectiveMultiplier[j] +
                                       resFee[0][0],
@@ -392,7 +427,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                     if (sgd->getGrid()->isCloseOutDate()[k]) {
                         QL_REQUIRE(dateIndex >= 0, "first date in grid must be a valuation date");
                         for (Size i = 0; i < outputCube->samples(); ++i) {
-                            outputCube->set(resLag[dateIndex + 1][i] * fx(fxBuffer, currencyIndex[j], k + 1, i) *
+                            Real v = outputCube->get(tradeId[j], dateIndex, i, 1);
+                            outputCube->set(v + resLag[dateIndex + 1][i] * fx(fxBuffer, currencyIndex[j], k + 1, i) *
                                                     num(model, irStateBuffer, currencyIndex[j], k + 1, tm, i) *
                                                     effectiveMultiplier[j] +
                                                 resFee[dateIndex + 1][i],
@@ -402,7 +438,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                     if (sgd->getGrid()->isValuationDate()[k]) {
                         ++dateIndex;
                         for (Size i = 0; i < outputCube->samples(); ++i) {
-                            outputCube->set(res[dateIndex + 1][i] * fx(fxBuffer, currencyIndex[j], k + 1, i) *
+                            Real v = outputCube->get(tradeId[j], dateIndex, i, 1);
+                            outputCube->set(v + res[dateIndex + 1][i] * fx(fxBuffer, currencyIndex[j], k + 1, i) *
                                                     numRatio(model, irStateBuffer, currencyIndex[j], k + 1, t, i) *
                                                     effectiveMultiplier[j] +
                                                 resFee[dateIndex + 1][i],
@@ -414,7 +451,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                 // actual date mpor mode: simulate all times in one go
                 auto res = simulatePathInterface2(amcCalculators[j], pathTimes, paths, allTimes, false, tradeLabel[j],
                                                   tradeType[j]);
-                outputCube->setT0(res[0].at(0) * fx(fxBuffer, currencyIndex[j], 0, 0) *
+                Real v = outputCube->getT0(tradeId[j], 0);
+                outputCube->setT0(v + res[0].at(0) * fx(fxBuffer, currencyIndex[j], 0, 0) *
                                       numRatio(model, irStateBuffer, currencyIndex[j], 0, 0.0, 0) *
                                       effectiveMultiplier[j],
                                   tradeId[j], 0);
@@ -424,7 +462,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                     if (sgd->getGrid()->isCloseOutDate()[k - 1]) {
                         QL_REQUIRE(dateIndex >= 0, "first date in grid must be a valuation date");
                         for (Size i = 0; i < outputCube->samples(); ++i) {
-                            outputCube->set(res[k][i] * fx(fxBuffer, currencyIndex[j], k, i) *
+                            Real v = outputCube->get(tradeId[j], dateIndex, i, 1);
+                            outputCube->set(v + res[k][i] * fx(fxBuffer, currencyIndex[j], k, i) *
                                                     num(model, irStateBuffer, currencyIndex[j], k, t, i) *
                                                     effectiveMultiplier[j] +
                                                 resFee[k][i],
@@ -434,7 +473,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                     if (sgd->getGrid()->isValuationDate()[k - 1]) {
                         ++dateIndex;
                         for (Size i = 0; i < outputCube->samples(); ++i) {
-                            outputCube->set(res[k][i] * fx(fxBuffer, currencyIndex[j], k, i) *
+                            Real v = outputCube->get(tradeId[j], dateIndex, i, 0);
+                            outputCube->set(v + res[k][i] * fx(fxBuffer, currencyIndex[j], k, i) *
                                                     numRatio(model, irStateBuffer, currencyIndex[j], k, t, i) *
                                                     effectiveMultiplier[j] +
                                                 resFee[k][i],
@@ -709,6 +749,7 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
                 // log error and return code 1 = not ok
 
                 ALOG(ore::analytics::StructuredAnalyticsErrorMessage("AMC Valuation Engine (multithreaded mode)",
+                                                                     "",
                                                                      e.what()));
                 rc = 1;
             }

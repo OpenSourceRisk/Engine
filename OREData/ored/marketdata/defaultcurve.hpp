@@ -85,6 +85,10 @@ private:
                                 const DefaultCurveSpec& spec, const Loader& loader,
                                 map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves);
 
+    void buildTransitionMatrixCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,
+                                    const Date& asof, const DefaultCurveSpec& spec, const Loader& loader,
+                                    map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves);
+
     //! Build a null curve (null rate, null recovery)
     void buildNullCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const Date& asof,
                         const DefaultCurveSpec& spec);

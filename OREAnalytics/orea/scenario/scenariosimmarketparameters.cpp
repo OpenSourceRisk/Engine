@@ -672,6 +672,8 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         equityStandardDevs_ != rhs.equityStandardDevs_ ||
         additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
         additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_ ||
+        additionalScenarioDataNumberOfCreditStates_ != rhs.additionalScenarioDataNumberOfCreditStates_ ||
+        additionalScenarioDataSurvivalWeights_ != rhs.additionalScenarioDataSurvivalWeights_ ||
         baseCorrelationTerms_ != rhs.baseCorrelationTerms_ ||
         baseCorrelationDetachmentPoints_ != rhs.baseCorrelationDetachmentPoints_ ||
         zeroInflationTenors_ != rhs.zeroInflationTenors_ || yoyInflationTenors_ != rhs.yoyInflationTenors_ ||
@@ -1246,6 +1248,17 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         cdsVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
         setCdsVolNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
         cdsVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        
+        XMLNode* cdsSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
+        if (cdsSurfaceNode) {
+            XMLNode* atmOnlyNode = XMLUtils::getChildNode(cdsSurfaceNode, "SimulateATMOnly");
+            // if set to true we will simulate ATM only for any surfaces without an explicit surface defined
+            // adding a default surface of moneyness or standard deviations below will supersede this
+            if (atmOnlyNode) {
+                cdsVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(cdsSurfaceNode, "SimulateATMOnly", true);
+            }
+        }
+
         // Get smile dynamics
         vector<XMLNode*> smileDynamicsNodes = XMLUtils::getChildrenNodes(nodeChild, "SmileDynamics");
         for (XMLNode* smileDynamicsNode : smileDynamicsNodes) {
@@ -1517,6 +1530,24 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         }
     }
 
+    DLOG("Loading credit states data");
+    nodeChild = XMLUtils::getChildNode(node, "CreditStates");
+    numberOfCreditStates_ = 0;
+    if (nodeChild) {
+        numberOfCreditStates_ = XMLUtils::getChildValueAsInt(nodeChild, "NumberOfFactors", true);
+    }
+
+    DLOG("Loading AggregationScenarioDataCreditStates");
+    nodeChild = XMLUtils::getChildNode(node, "AggregationScenarioDataCreditStates");
+    additionalScenarioDataNumberOfCreditStates_ = 0;
+    if (nodeChild) {
+        additionalScenarioDataNumberOfCreditStates_ = XMLUtils::getChildValueAsInt(nodeChild, "NumberOfFactors", true);
+    }
+
+    DLOG("Loading AggregationScenarioDataSurvivalWeights");
+    additionalScenarioDataSurvivalWeights_ = XMLUtils::getChildrenValues(node, "AggregationScenarioDataSurvivalWeights", "Name");
+
+
     DLOG("Loaded ScenarioSimMarketParameters");
 }
 
@@ -1729,6 +1760,10 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, cdsVolatilitiesNode, "ReactionToTimeDecay", cdsVolDecayMode_);
         XMLUtils::addChildren(doc, cdsVolatilitiesNode, "Names", "Name", cdsVolNames());
         XMLUtils::addGenericChildAsList(doc, cdsVolatilitiesNode, "Expiries", cdsVolExpiries_);
+        if (cdsVolSimulateATMOnly_) {
+            XMLNode* cdsSurfaceNode = XMLUtils::addChild(doc, cdsVolatilitiesNode, "Surface");
+            XMLUtils::addChild(doc, cdsSurfaceNode, "SimulateATMOnly", cdsVolSimulateATMOnly_);
+        }
         for (auto it = cdsVolSmileDynamics_.begin(); it != cdsVolSmileDynamics_.end(); it++) {
             XMLUtils::addChild(doc, cdsVolatilitiesNode, "SmileDynamics", it->second, "key", it->first);
         }
@@ -1921,6 +1956,23 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         DLOG("Writing aggregation scenario data indices");
         XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataIndices", "Index",
                               additionalScenarioDataIndices_);
+    }
+
+    // Credit States
+    DLOG("Writing number of credit states");
+    XMLNode* creditStatesNode = XMLUtils::addChild(doc, marketNode, "CreditStates");
+    XMLUtils::addChild(doc, creditStatesNode, "NumberOfFactors", int(numberOfCreditStates_));
+
+    DLOG("Writing number of credit states, AggregationScenarioDataCreditStates");
+    XMLNode* aggScenDataCreditStatesNode = XMLUtils::addChild(doc, marketNode, "AggregationScenarioDataCreditStates");
+    XMLUtils::addChild(doc, aggScenDataCreditStatesNode, "NumberOfFactors",
+                       int(additionalScenarioDataNumberOfCreditStates_));
+
+    // Survival Weights
+    DLOG("Writing names that need tracking of survival weights");
+    if (!additionalScenarioDataSurvivalWeights_.empty()) {
+        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataSurvivalWeights", "Name",
+                              additionalScenarioDataSurvivalWeights_);
     }
 
     // base correlations

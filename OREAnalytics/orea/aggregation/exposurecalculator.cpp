@@ -65,9 +65,7 @@ ExposureCalculator::ExposureCalculator(
     for (Size i = 0; i < dates_.size(); i++)
         times_[i] = dc_.yearFraction(today_, cube_->dates()[i]);
 
-    boost::shared_ptr<RegularCubeInterpretation> regularCubeInterpretation =
-        boost::dynamic_pointer_cast<RegularCubeInterpretation>(cubeInterpretation_);
-    isRegularCubeStorage_ = (regularCubeInterpretation != NULL);
+    isRegularCubeStorage_ = !cubeInterpretation_->withCloseOutLag();
 }
 
 void ExposureCalculator::build() {
@@ -81,6 +79,8 @@ void ExposureCalculator::build() {
         if (nettingSetDefaultValue_.find(nettingSetId) == nettingSetDefaultValue_.end()) {
             nettingSetDefaultValue_[nettingSetId] = vector<vector<Real>>(dates_.size(), vector<Real>(cube_->samples(), 0.0));
             nettingSetCloseOutValue_[nettingSetId] = vector<vector<Real>>(dates_.size(), vector<Real>(cube_->samples(), 0.0));
+            nettingSetMporPositiveFlow_[nettingSetId] = vector<vector<Real>>(dates_.size(), vector<Real>(cube_->samples(), 0.0));
+            nettingSetMporNegativeFlow_[nettingSetId] = vector<vector<Real>>(dates_.size(), vector<Real>(cube_->samples(), 0.0));
         }
 
         // Identify the next break date if provided, default is trade maturity.
@@ -149,11 +149,17 @@ void ExposureCalculator::build() {
                     closeOutValue = d > nextBreakDate && exerciseNextBreak_
                                         ? 0.0
                                         : cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
-                Real npv = calcType_ == CollateralExposureHelper::CalculationType::NoLag ? closeOutValue : defaultValue;
+
+                Real positiveCashFlow = cubeInterpretation_->getMporPositiveFlows(cube_, i, j, k);
+                Real negativeCashFlow = cubeInterpretation_->getMporNegativeFlows(cube_, i, j, k);
+                //for single trade exposures, always default value is relevant
+                Real npv = defaultValue;
                 epe[j + 1] += max(npv, 0.0) / cube_->samples();
                 ene[j + 1] += max(-npv, 0.0) / cube_->samples();
                 nettingSetDefaultValue_[nettingSetId][j][k] += defaultValue;
                 nettingSetCloseOutValue_[nettingSetId][j][k] += closeOutValue;
+                nettingSetMporPositiveFlow_[nettingSetId][j][k] += positiveCashFlow;
+                nettingSetMporNegativeFlow_[nettingSetId][j][k] += negativeCashFlow;
                 distribution[k] = npv;
                 if (multiPath_) {
                     exposureCube_->set(max(npv, 0.0), tradeId, d, k, ExposureIndex::EPE);

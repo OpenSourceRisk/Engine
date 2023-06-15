@@ -29,8 +29,8 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/commodityschwartzmodeldata.hpp>
-#include <ored/model/marketobserver.hpp>
-#include <ored/model/modelbuilder.hpp>
+#include <qle/models/marketobserver.hpp>
+#include <qle/models/modelbuilder.hpp>
 
 #include <qle/models/crossassetmodel.hpp>
 
@@ -43,10 +43,10 @@ using namespace QuantLib;
   This class is a utility to turn a COM model component's description
   into a COM model parametrization which can be used to ultimately
   instantiate a CrossAssetModel.
-
+h
   \ingroup models
  */
-class CommoditySchwartzModelBuilder : public ModelBuilder {
+class CommoditySchwartzModelBuilder : public QuantExt::ModelBuilder {
 public:
     //! Constructor
     CommoditySchwartzModelBuilder( //! Market object
@@ -114,7 +114,7 @@ private:
     bool forceCalibration_ = false;
 
     // market observer
-    boost::shared_ptr<MarketObserver> marketObserver_;
+    boost::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 
     mutable std::vector<Real> calibrationErrors_;
 };

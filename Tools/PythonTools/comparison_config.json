@@ -598,6 +598,7 @@
           "ProductClass",
           "RiskClass",
           "MarginType",
+          "Bucket",
           "SimmSide"
         ],
         "rename_cols": {
@@ -605,6 +606,7 @@
           "product_class": "ProductClass",
           "riskClass": "RiskClass",
           "marginType": "MarginType",
+          "bucket": "Bucket",
           "initialMargin": "InitialMargin"
         },
         "use_cols": [
@@ -1142,8 +1144,8 @@
               "AverageFLOW",
               "SimpleDIM"
             ],
-            "abs_tol": 0.03,
-            "rel_tol": null
+            "abs_tol": 0.16,
+            "rel_tol": 1e-7
           }
         ]
       },
@@ -1188,21 +1190,38 @@
           }
         ]
       },
-	  "dividends.csv": {
+      "dividends.csv": {
         "keys": [
-          "dividendDate",
+          "dividendExDate",
           "equityId"
         ],
         "column_settings": [
           {
             "names": [
-              "dividendRate"
+              "dividendRate",
+              "dividendPaymentDate"
+            ],
+            "abs_tol": 1e-6,
+            "rel_tol": 1e-6
+          }
+        ]
+      },
+      "credit_migration.*\\.csv": {
+        "keys": [
+          "upperBucketBound"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "pdf",
+              "cdf"
             ],
             "abs_tol": 1e-6,
             "rel_tol": 1e-6
           }
         ]
       }
+
     }
   }
 }

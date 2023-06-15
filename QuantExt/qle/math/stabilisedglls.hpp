@@ -135,7 +135,7 @@ void StabilisedGLLS::calculate(
         break;
     }
     case MeanStdDev: {
-        accumulator_set<Real, stats<tag::mean, tag::variance> > acc;
+        accumulator_set<Real, stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance> > acc;
         for (Size i = 0; i < static_cast<Size>(x.end() - x.begin()); ++i) {
             acc(x[i]);
         }
@@ -143,7 +143,7 @@ void StabilisedGLLS::calculate(
         Real tmp = variance(acc);
         if (!QuantLib::close_enough(tmp, 0.0))
             xMultiplier_[0] = 1.0 / std::sqrt(tmp);
-        accumulator_set<Real, stats<tag::mean, tag::variance> > acc2;
+        accumulator_set<Real, stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance> > acc2;
         for (Size i = 0; i < static_cast<Size>(y.end() - y.begin()); ++i) {
             acc2(y[i]);
         }
@@ -205,7 +205,7 @@ void StabilisedGLLS::calculate(
         break;
     }
     case MeanStdDev: {
-        std::vector<accumulator_set<Real, stats<tag::mean, tag::variance> > > acc(x[0].end() - x[0].begin());
+        std::vector<accumulator_set<Real, stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance> > > acc(x[0].end() - x[0].begin());
         for (Size i = 0; i < static_cast<Size>(x.end() - x.begin()); ++i) {
             for (Size j = 0; j < acc.size(); ++j) {
                 acc[j](x[i][j]);
@@ -217,7 +217,7 @@ void StabilisedGLLS::calculate(
             if (!QuantLib::close_enough(tmp, 0.0))
                 xMultiplier_[j] = 1.0 / std::sqrt(tmp);
         }
-        accumulator_set<Real, stats<tag::mean, tag::variance> > acc2;
+        accumulator_set<Real, stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance> > acc2;
         for (Size i = 0; i < static_cast<Size>(y.end() - y.begin()); ++i) {
             acc2(y[i]);
         }

@@ -86,7 +86,7 @@ public:
     //! Load fixings
     std::set<Fixing> loadFixings() const override { return fixings_; }
     //! Load dividends
-    std::set<Fixing> loadDividends() const override { return dividends_; }
+    std::set<QuantExt::Dividend> loadDividends() const override { return dividends_; }
     //@}
 
 private:
@@ -96,7 +96,7 @@ private:
     bool implyTodaysFixings_;
     std::map<QuantLib::Date, std::set<boost::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>> data_;
     std::set<Fixing> fixings_;
-    std::set<Fixing> dividends_;
+    std::set<QuantExt::Dividend> dividends_;
 };
 } // namespace data
 } // namespace ore

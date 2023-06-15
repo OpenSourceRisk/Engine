@@ -34,12 +34,14 @@
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <qle/indexes/dividendmanager.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <tuple>
 
 using namespace QuantLib;
+using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
@@ -327,7 +329,7 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
 
     // Populate empty fixings map using the function to be tested
     map<string, set<Date>> fixings;
-    addMarketFixingDates(fixings, mktParams);
+    addMarketFixingDates(asof, fixings, mktParams);
 
     // Check the results
     BOOST_CHECK_EQUAL(expectedFixings.size(), fixings.size());
@@ -390,16 +392,19 @@ BOOST_FIXTURE_TEST_CASE(testDividends, F) {
     auto eq = parseEquityIndex("EQ-" + equityName);
     BOOST_REQUIRE_MESSAGE(eq, "Could not parse equity index EQ-" + equityName);
 
-    BOOST_REQUIRE_MESSAGE(IndexManager::instance().hasHistory(eq->dividendName()),
-                          "Could not find index " << eq->dividendName() << " in IndexManager");
-    const TimeSeries<Real>& dividends = eq->dividendFixings();
+    BOOST_REQUIRE_MESSAGE(DividendManager::instance().hasHistory(eq->name()),
+                          "Could not find index " << eq->name() << " in DividendManager");
+    map<Date, QuantExt::Dividend> divMap;
+    const set<QuantExt::Dividend>& dividends = eq->dividendFixings();
+    for (const auto& d : dividends)
+        divMap[d.exDate] = d;
 
     // Expected results
     map<Date, Real> exp = {{Date(1, Nov, 2018), 25.313}, {Date(1, Dec, 2018), 15.957}};
 
     BOOST_CHECK_EQUAL(dividends.size(), exp.size());
     for (const auto& kv : exp) {
-        BOOST_CHECK_EQUAL(dividends[kv.first], kv.second);
+        BOOST_CHECK_EQUAL(divMap[kv.first].rate, kv.second);
     }
 }
 

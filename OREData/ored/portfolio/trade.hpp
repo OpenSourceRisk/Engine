@@ -154,6 +154,8 @@ public:
 
     const Date& maturity() const { return maturity_; }
 
+    const string& issuer() const { return issuer_; }
+
     //! returns any additional datum.
     template <typename T> T additionalDatum(const std::string& tag) const;
     //! returns all additional data returned by the trade once built
@@ -193,6 +195,7 @@ protected:
     QuantLib::Real notional_;
     string notionalCurrency_;
     Date maturity_;
+    string issuer_;
 
     std::size_t savedNumberOfPricings_ = 0;
     boost::timer::nanosecond_type savedCumulativePricingTime_ = 0;

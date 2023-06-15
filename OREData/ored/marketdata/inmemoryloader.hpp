@@ -35,7 +35,7 @@ public:
                                                  const QuantLib::Date& asof) const override;
     std::set<boost::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const override;
     std::set<Fixing> loadFixings() const override { return fixings_; }
-    std::set<Fixing> loadDividends() const override { return dividends_; }
+    std::set<QuantExt::Dividend> loadDividends() const override { return dividends_; }
     bool hasQuotes(const QuantLib::Date& d) const override;
 
     // add a market datum
@@ -45,7 +45,7 @@ public:
     virtual void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value);
 
     // add a dividend
-    virtual void addDividend(Date date, const string& name, Real value);
+    virtual void addDividend(const QuantExt::Dividend& dividend);
 
     // clear data
     void reset();
@@ -53,7 +53,7 @@ public:
 protected:
     std::map<QuantLib::Date, std::set<boost::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>> data_;
     std::set<Fixing> fixings_;
-    std::set<Fixing> dividends_;
+    std::set<QuantExt::Dividend> dividends_;
 };
 
 //! Utility function for loading market quotes and fixings from an in memory csv buffer

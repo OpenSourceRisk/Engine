@@ -55,8 +55,10 @@ void CPICapFloorEngine::calculate() const {
     auto index = arguments_.index;
     DiscountFactor d = arguments_.nominal * discountCurve_->discount(maturity);
 
+    QL_DEPRECATED_DISABLE_WARNING
     bool isInterpolated = arguments_.observationInterpolation == CPI::Linear ||
                           (arguments_.observationInterpolation == CPI::AsIndex && index->interpolated());
+    QL_DEPRECATED_ENABLE_WARNING
 
     Date optionObservationDate = QuantExt::ZeroInflation::fixingDate(arguments_.payDate, arguments_.observationLag,
                                                                      index->frequency(), isInterpolated);

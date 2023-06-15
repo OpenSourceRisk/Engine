@@ -228,6 +228,8 @@ protected:
     bool cacheSimData_;
     bool allowPartialScenarios_;
     IborFallbackConfig iborFallbackConfig_;
+
+    mutable boost::shared_ptr<Scenario> currentScenario_;
 };
 } // namespace analytics
 } // namespace ore

@@ -183,7 +183,7 @@ public:
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override { return BarrierOption::toXML(doc); }
 
 private:
-    boost::shared_ptr<QuantExt::EquityIndex> eqIndex_;
+    boost::shared_ptr<QuantExt::EquityIndex2> eqIndex_;
     QuantLib::Currency currency_;
     std::string currencyStr_;
     QuantLib::Real quantity_;

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Conventions>
+    <Zero>
+    <Id>CCY-ZERO-CONVENTIONS-TENOR-BASED</Id>
+    <TenorBased>true</TenorBased>
+    <DayCounter>A365</DayCounter>
+    <Compounding>Continuous</Compounding>
+    <CompoundingFrequency>Daily</CompoundingFrequency>
+    <TenorCalendar>TARGET</TenorCalendar>
+    <SpotLag>2</SpotLag>
+    <SpotCalendar>TARGET</SpotCalendar>
+    <RollConvention>Following</RollConvention>
+    <EOM>false</EOM>
+  </Zero>
+</Conventions>
