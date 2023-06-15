@@ -386,7 +386,7 @@ void CapFloorVolatilityCurveConfig::configureType() {
     if (inputType_ == "TermVolatilities")
         type_ = tenors_.empty() ? Type::TermAtm : (includeAtm_ ? Type::TermSurfaceWithAtm : Type::TermSurface);
     else if (inputType_ == "OptionletVolatilities")
-        type_ = tenors_.empty() ? Type::OptionletAtm : Type::OptionletSurface;
+        type_ = tenors_.empty() ? Type::OptionletAtm : (includeAtm_ ? Type::OptionletSurfaceWithAtm : Type::OptionletSurface);
     else
         QL_FAIL("InputType  " << inputType_ << " not supported");
 }
