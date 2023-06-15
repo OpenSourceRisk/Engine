@@ -27,6 +27,25 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+namespace {
+std::vector<Date> everyThursdayDates(const Date& startDate, const Date& endDate, const Date& firstDate) {
+    std::vector<Date> result;
+    if (firstDate != Date())
+        result.push_back(firstDate);
+    Date d = startDate;
+    while (d <= endDate && (d.weekday() != QuantLib::Thursday || d < firstDate)) {
+        ++d;
+    }
+    if (d.weekday() == QuantLib::Thursday && (result.empty() || result.back() != d))
+        result.push_back(d);
+    while (d + 7 <= endDate) {
+        d += 7;
+        result.push_back(d);
+    }
+    return result;
+}
+} // namespace
+
 void ScheduleRules::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Rules");
     startDate_ = XMLUtils::getChildValue(node, "StartDate");
@@ -48,6 +67,8 @@ void ScheduleRules::fromXML(XMLNode* node) {
     endOfMonth_ = XMLUtils::getChildValue(node, "EndOfMonth");
     firstDate_ = XMLUtils::getChildValue(node, "FirstDate");
     lastDate_ = XMLUtils::getChildValue(node, "LastDate");
+    removeFirstDate_ = XMLUtils::getChildValueAsBool(node, "RemoveFirstDate", false, false);
+    removeLastDate_ = XMLUtils::getChildValueAsBool(node, "RemoveLastDate", false, false);
 }
 
 XMLNode* ScheduleRules::toXML(XMLDocument& doc) {
@@ -63,6 +84,10 @@ XMLNode* ScheduleRules::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, rules, "EndOfMonth", endOfMonth_);
     XMLUtils::addChild(doc, rules, "FirstDate", firstDate_);
     XMLUtils::addChild(doc, rules, "LastDate", lastDate_);
+    if(removeFirstDate_)
+        XMLUtils::addChild(doc,rules,"RemoveFirstDate", removeFirstDate_);
+    if(removeLastDate_)
+        XMLUtils::addChild(doc,rules,"RemoveLastDate", removeLastDate_);
     return rules;
 }
 
@@ -93,19 +118,23 @@ void ScheduleDerived::fromXML(XMLNode* node) {
     shift_ = XMLUtils::getChildValue(node, "Shift", false);
     calendar_ = XMLUtils::getChildValue(node, "Calendar", false);
     convention_ = XMLUtils::getChildValue(node, "Convention", false);
+    removeFirstDate_ = XMLUtils::getChildValueAsBool(node, "RemoveFirstDate", false, false);
+    removeLastDate_ = XMLUtils::getChildValueAsBool(node, "RemoveLastDate", false, false);
 }
 
 XMLNode* ScheduleDerived::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Derived");
     XMLUtils::addChild(doc, node, "BaseSchedule", baseSchedule_);
-
     if (!shift_.empty())
         XMLUtils::addChild(doc, node, "Shift", shift_);
     if (!calendar_.empty())
         XMLUtils::addChild(doc, node, "Calendar", calendar_);
     if (!convention_.empty())
         XMLUtils::addChild(doc, node, "Convention", convention_);
-
+    if(removeFirstDate_)
+        XMLUtils::addChild(doc, node, "RemoveFirstDate", removeFirstDate_);
+    if(removeLastDate_)
+        XMLUtils::addChild(doc, node, "RemoveLastDate", removeLastDate_);
     return node;
 }
 
@@ -296,10 +325,27 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
         bdcEnd = parseBusinessDayConvention(data.termConvention());
     else
         bdcEnd = bdc; // except here
-    if (!data.rule().empty())
-        rule = parseDateGenerationRule(data.rule());
+
     if (!data.endOfMonth().empty())
         endOfMonth = parseBool(data.endOfMonth());
+
+    if (!data.rule().empty()) {
+
+        // handle special rules outside the QuantLib date generation rules
+
+        if (data.rule() == "EveryThursday") {
+            auto dates = everyThursdayDates(startDate, endDate, firstDate);
+            for (auto& d : dates)
+                d = calendar.adjust(d, bdc);
+            return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth);
+        }
+
+        // parse rule for further processing below
+
+        rule = parseDateGenerationRule(data.rule());
+    }
+
+    // handling of date generation rules that require special adjustments
 
     if ((rule == DateGeneration::CDS || rule == DateGeneration::CDS2015) &&
         (firstDate != Null<Date>() || lastDate != Null<Date>())) {
@@ -316,9 +362,11 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
         if (lastDate != Date())
             dates.back() = lastDate;
         return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth);
-    } else {
-        return Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate, lastDate);
     }
+
+    // default handling (QuantLib scheduler)
+
+    return Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate, lastDate);
 }
 
 namespace {
@@ -340,6 +388,8 @@ Calendar parseCalendarTemp(const string& s) { return parseCalendar(s); }
 } // namespace
 
 Schedule makeSchedule(const ScheduleData& data, const Date& openEndDateReplacement, const map<string, QuantLib::Schedule>& baseSchedules) {
+    if(!data.hasData())
+        return Schedule();
     // only the last rule-based schedule is allowed to have an open end date, check this
     for (Size i = 1; i < data.rules().size(); ++i) {
         QL_REQUIRE(!data.rules()[i - 1].endDate().empty(),
