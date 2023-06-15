@@ -60,6 +60,12 @@ if(MSVC)
         endif()
     endif()
 
+    # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
+    include_directories("${PROJECT_BINARY_DIR}/QuantLib")
+
+    # similar if QuantLib is build separately
+    include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
+
     IF(NOT Boost_USE_STATIC_LIBS)
         add_definitions(-DBOOST_ALL_DYN_LINK)
         add_definitions(-DBOOST_TEST_DYN_LINK)
@@ -148,11 +154,7 @@ else()
     # disable warnings from boost
     add_compiler_flag("--system-header-prefix=boost/" supportsSystemHeaderPrefixBoost)
 
-    # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
-    include_directories("${PROJECT_BINARY_DIR}/QuantLib")
-
-    # similar if QuantLib is build separately
-    include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
+   
 endif()
 
 # workaround when building with boost 1.81, see https://github.com/boostorg/phoenix/issues/111
