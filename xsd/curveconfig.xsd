@@ -408,6 +408,14 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
+	  <xs:element name="InputType" minOccurs="0" maxOccurs="1">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="TermVolatilities"/>
+            <xs:enumeration value="OptionletVolatilities"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
       <xs:element type="bool" name="QuoteIncludesIndexName" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
