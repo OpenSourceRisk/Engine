@@ -15,7 +15,37 @@
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": true,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": false,
-        "ENABLE_SESSIONS": true,
+        "QL_ENABLE_SESSIONS": true,
+        "ORE_BUILD_DOC": false
+      },
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-msvc-x64",
+          "hostOS": [
+            "Windows"
+          ]
+        }
+      }
+    },
+    {
+      "name": "windows-ninja-x64-release",
+      "binaryDir": "${sourceDir}/build",
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "CMAKE_BUILD_TYPE": "Release",
+        "BOOST_INCLUDEDIR": "$env{BOOST}",
+        "BOOST_LIBRARYDIR": "$env{BOOST_LIB64}",
+        "QL_BUILD_EXAMPLES": false,
+        "QL_BUILD_TEST_SUITE": false,
+        "QL_BUILD_BENCHMARK": false,
+        "MSVC_LINK_DYNAMIC_RUNTIME": true,
+        "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
+        "QL_ENABLE_SESSIONS": true,
         "ORE_BUILD_DOC": false
       },
       "architecture": {
@@ -45,7 +75,7 @@
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": true,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
-        "ENABLE_SESSIONS": true,
+        "QL_ENABLE_SESSIONS": true,
         "ORE_BUILD_DOC": false
       },
       "architecture": {
@@ -73,7 +103,7 @@
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": true,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": false,
-        "ENABLE_SESSIONS": true,
+        "QL_ENABLE_SESSIONS": true,
         "ORE_BUILD_DOC": false
       },
       "architecture": {
@@ -101,7 +131,7 @@
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": false,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
-        "ENABLE_SESSIONS": true,
+        "QL_ENABLE_SESSIONS": true,
         "ORE_BUILD_DOC": false
       },
       "architecture": {
@@ -120,6 +150,11 @@
   ],
   "buildPresets": [
     {
+      "name": "windows-ninja-x64-release",
+      "configurePreset": "windows-ninja-x64-release",
+      "configuration": "Release"
+    },
+    {
       "name": "windows-ninja-x64-relWithDebInfo",
       "configurePreset": "windows-ninja-x64-relWithDebInfo",
       "configuration": "RelWithDebInfo"
@@ -128,6 +163,14 @@
       "name": "windows-ninja-x64-debug",
       "configurePreset": "windows-ninja-x64-debug",
       "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-x64-release",
+      "configurePreset": "windows-msvc-x64",
+      "configuration": "Release",
+      "nativeToolOptions": [
+        "-m"
+      ]
     },
     {
       "name": "windows-msvc-x64-relWithDebInfo",
@@ -141,6 +184,14 @@
       "name": "windows-msvc-x64-debug",
       "configurePreset": "windows-msvc-x64",
       "configuration": "Debug",
+      "nativeToolOptions": [
+        "-m"
+      ]
+    },
+    {
+      "name": "windows-msvc-x64-static-release",
+      "configurePreset": "windows-msvc-x64-static",
+      "configuration": "Release",
       "nativeToolOptions": [
         "-m"
       ]

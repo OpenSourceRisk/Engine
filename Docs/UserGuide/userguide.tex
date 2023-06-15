@@ -131,7 +131,7 @@
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Acadia Inc.}
-\date{31 March 2023}
+\date{16 June 2023}
 \maketitle
 
 \newpage
@@ -153,6 +153,7 @@ Date & Author & Comment \\
 16 September 2022 & Acadia & updates for release 7\\
 6 December 2022 & Acadia & updates for release 8\\
 31 March 2023 & Acadia & updates for release 9\\
+16 June 2023 & Acadia & updates for release 10\\
 \hline
 \end{supertabular}
 \end{center}
@@ -818,7 +819,7 @@ where the -G option allows choosing the desired build system generator.
   \medskip {\tt ctest -j4}
 \end{enumerate}
 
-For the best results, it is recommended, to compile ORE without the compiler flag \emph{QL_USE_INDEXED_COUPON}. Not all ORE classes (in particular coupons and rate helpers) support this functionality yet and the results might not always be what is expected.
+For the best results, it is recommended, to compile ORE without the compiler flag \emph{QL\_USE\_INDEXED\_COUPON}. Not all ORE classes (in particular coupons and rate helpers) support this functionality yet and the results might not always be what is expected.
 
 \subsubsection*{ZLIB support}
 
@@ -3259,11 +3260,17 @@ The relevant inputs in {\tt ore.xml} are
 
 The market data input and todays's market configuration required here is minimal - limited to FX rates for conversions from base/calculation currency into USD and into the result currency.
 
+\bigskip
+If the ORE Python module is installed, as shown in Example 42, then you can also run the SIMM example using
+
+\medskip
+\centerline{\tt python ore.py} 
+
 %--------------------------------------------------------
-\subsection{Collateral Bond Obligation}% Example 45
+\subsection{Collateralized Bond Obligation}% Example 45
 %--------------------------------------------------------
 
-This example in folder {\tt Examples/Example\_45} demonstrates a Cashflow CDO or Collateral Bond Obligation (CBO) via ORE. Calling
+This example in folder {\tt Examples/Example\_45} demonstrates a Cashflow CDO or Collateralized Bond Obligation (CBO) via ORE. Calling
 
 \medskip
 \centerline{\tt python run.py}
@@ -3274,10 +3281,11 @@ The CBO is represented by a CBO reference datum specified in the reference data 
 NPV results are calculated for the investment in the junior tranche. 
 
 %--------------------------------------------------------
-\subsection{TRS on CBO}% Example 46
+\subsection{Generic Total Return Swap}% Example 46
 %--------------------------------------------------------
 
-This example in folder {\tt Examples/Example\_46} demonstrates a Total Return Swap (TRS) referencing a CBO pricing via ORE. Calling
+This example in folder {\tt Examples/Example\_46} demonstrates ORE's generic Total Return Swap referencing a CBO. 
+Calling
 
 \medskip
 \centerline{\tt python run.py}
@@ -3287,11 +3295,43 @@ will launch a single ORE run to process a TRS example and to generate NPV and ca
 As opposed to example 45, the CBO and its bondbasket are represented explicitly in the CBO node.
 
 %--------------------------------------------------------
-\subsection{Bond Yield Shifted}% Example 47
-\label{example:47}
+\subsection{Composite Trade}% Example 47
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_47} shows how to use a yield curve
+This example in folder {\tt Examples/Example\_47} demonstrates the input of ORE's Composite Trade that can consist on any number 
+and type of products covered by ORE. In this case the composite consists of two Equity Swaps.
+Calling
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+runs ORE and generates an NPV report.
+
+%--------------------------------------------------------
+\subsection{Convertible Bond and ASCOT}% Example 48
+%--------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_48} demonstrates the input of 
+\begin{itemize}
+\item a ConvertibleBond  trade
+\item a related Asset Swapped Convertible Option Transaction (ASCOT)
+\item a vanilla Swap that represents the package of Convertible Bond position and ASCOT
+\end{itemize}
+
+Calling
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+runs ORE and generates an NPV report.
+
+%--------------------------------------------------------
+\subsection{Bond Yield Shifted}% Example 49
+\label{example:49}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_49} shows how to use a yield curve
 built from a BondYieldShifted segment, as described in section \ref{sec:bond_yield_shifted}.
 
 In particular, it builds the curve {\tt USD.BMK.GVN.CURVE\_SHIFTED} shifted by three liquid Bonds:
