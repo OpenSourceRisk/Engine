@@ -339,9 +339,11 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
                 d = calendar.adjust(d, bdc);
             return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth);
         }
-    }
 
-    rule = parseDateGenerationRule(data.rule());
+        // parse rule for further processing below
+
+        rule = parseDateGenerationRule(data.rule());
+    }
 
     // handling of date generation rules that require special adjustments
 
