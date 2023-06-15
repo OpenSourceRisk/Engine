@@ -273,8 +273,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                 fixingDate = ptrFloat->fixingDate();
                                 try {
                                     fixingValue = ptrFloat->index()->fixing(fixingDate);
-                                } catch () {
-                                    // catch invalid fixing date, missing fixing and fall through with
+                                } catch (...) {
+                                    // catch invalid fixing date, missing fixing, etc. and fall through with
                                     // fixingValue = Null (which appears as NA in the report)
                                 }
                                 if (fixingDate > asof)
