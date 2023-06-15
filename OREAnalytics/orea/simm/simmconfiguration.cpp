@@ -83,7 +83,7 @@ const bm<SimmConfiguration::RiskType> riskTypeMap = list_of<bm<SimmConfiguration
 const bm<SimmConfiguration::MarginType> marginTypeMap =
     list_of<bm<SimmConfiguration::MarginType>::value_type>(SimmConfiguration::MarginType::Delta, "Delta")(
         SimmConfiguration::MarginType::Vega, "Vega")(SimmConfiguration::MarginType::Curvature, "Curvature")(
-        SimmConfiguration::MarginType::BaseCorr, "BaseCorr")(SimmConfiguration::MarginType::AdditionalIM, "Additional_IM")(
+        SimmConfiguration::MarginType::BaseCorr, "BaseCorr")(SimmConfiguration::MarginType::AdditionalIM, "AdditionalIM")(
         SimmConfiguration::MarginType::All, "All");
 
 const bm<SimmConfiguration::ProductClass> productClassMap =
@@ -128,6 +128,7 @@ const map<string, SimmConfiguration::ProductClass> tradeProductClassMap = {
     {"CommodityDigitalAveragePriceOption", SimmConfiguration::ProductClass::Commodity},
     {"CommodityDigitalOption", SimmConfiguration::ProductClass::Commodity},
     {"CommodityOptionStrip", SimmConfiguration::ProductClass::Commodity},
+    {"CommodityPosition", SimmConfiguration::ProductClass::Commodity},
     {"CommodityRainbowOption", SimmConfiguration::ProductClass::Commodity},
     {"CommoditySpreadOption", SimmConfiguration::ProductClass::Commodity},
     {"CommoditySwap", SimmConfiguration::ProductClass::Commodity},

@@ -730,7 +730,7 @@ Real fx_crstate_covariance(const CrossAssetModel* x, const Size i, const Size j,
                integral(x, P(Hz(0), az(0), rzcrs(0, j)), t0, t0 + dt) -
                Hz(i + 1).eval(x, t0 + dt) * integral(x, P(az(i + 1), rzcrs(i + 1, j)), t0, t0 + dt) +
                integral(x, P(Hz(i + 1), az(i + 1), rzcrs(i + 1, j)), t0, t0 + dt) +
-               integral(x, P(sx(j), rxcrs(i, j)), t0, t0 + dt);
+               integral(x, P(sx(i), rxcrs(i, j)), t0, t0 + dt);
     return res;
 }
 

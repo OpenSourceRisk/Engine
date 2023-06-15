@@ -361,9 +361,9 @@ Handle<Quote> MarketImpl::equitySpot(const string& key, const string& configurat
     return lookup<Handle<Quote>>(equitySpots_, key, configuration, "equity spot");
 }
 
-Handle<QuantExt::EquityIndex> MarketImpl::equityCurve(const string& key, const string& configuration) const {
+Handle<QuantExt::EquityIndex2> MarketImpl::equityCurve(const string& key, const string& configuration) const {
     require(MarketObject::EquityCurve, key, configuration);
-    return lookup<Handle<QuantExt::EquityIndex>>(equityCurves_, key, configuration, "equity curve");
+    return lookup<Handle<QuantExt::EquityIndex2>>(equityCurves_, key, configuration, "equity curve");
 };
 
 Handle<YieldTermStructure> MarketImpl::equityDividendCurve(const string& key, const string& configuration) const {

@@ -24,6 +24,8 @@ using std::string;
 namespace ore {
 namespace analytics {
 
+std::map<QuantLib::Size, std::set<std::string>> CrifRecord::additionalHeaders = {};
+    
 ostream& operator<<(ostream& out, const CrifRecord& cr) {
     const NettingSetDetails& n = cr.nettingSetDetails;
     if (n.empty()) {

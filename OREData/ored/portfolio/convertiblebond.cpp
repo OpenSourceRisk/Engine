@@ -152,7 +152,7 @@ buildConversionRatioData(const ConvertibleBondData::ConversionData& conversionDa
 
 std::vector<ConvertibleBond2::ConversionData>
 buildConversionData(const ConvertibleBondData::ConversionData& conversionData, RequiredFixings& requiredFixings,
-                    const boost::shared_ptr<EquityIndex>& equity, const boost::shared_ptr<FxIndex>& fx,
+                    const boost::shared_ptr<EquityIndex2>& equity, const boost::shared_ptr<FxIndex>& fx,
                     const std::string& fxIndexName, const Date& openEndDateReplacement) {
     std::vector<ConvertibleBond2::ConversionData> result;
     Calendar fixingCalendar =
@@ -239,7 +239,7 @@ buildMandatoryConversionData(const ConvertibleBondData::ConversionData& conversi
 
 std::vector<ConvertibleBond2::ConversionResetData>
 buildConversionResetData(const ConvertibleBondData::ConversionData& conversionData, RequiredFixings& requiredFixings,
-                         const boost::shared_ptr<EquityIndex>& equity, const boost::shared_ptr<FxIndex>& fx,
+                         const boost::shared_ptr<EquityIndex2>& equity, const boost::shared_ptr<FxIndex>& fx,
                          const std::string& fxIndexName, const Date& openEndDateReplacement) {
     std::vector<ConvertibleBond2::ConversionResetData> result;
     Calendar fixingCalendar =
@@ -298,7 +298,7 @@ buildConversionResetData(const ConvertibleBondData::ConversionData& conversionDa
 
 std::vector<ConvertibleBond2::DividendProtectionData>
 buildDividendProtectionData(const ConvertibleBondData::DividendProtectionData& dividendProtectionData,
-                            RequiredFixings& requiredFixings, const boost::shared_ptr<EquityIndex>& equity,
+                            RequiredFixings& requiredFixings, const boost::shared_ptr<EquityIndex2>& equity,
                             const boost::shared_ptr<FxIndex>& fx, const std::string& fxIndexName,
                             const Date& openEndDateReplacement) {
     std::vector<ConvertibleBond2::DividendProtectionData> result;
@@ -420,7 +420,7 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
 
     auto config = builder->configuration(MarketContext::pricing);
 
-    boost::shared_ptr<EquityIndex> equity =
+    boost::shared_ptr<EquityIndex2> equity =
         *engineFactory->market()->equityCurve(data_.conversionData().equityUnderlying().name(), config);
 
     boost::shared_ptr<FxIndex> fx;

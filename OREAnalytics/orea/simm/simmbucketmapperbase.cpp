@@ -47,10 +47,10 @@ const map<RiskType, RiskType> nonVolRiskTypeMap = {
     {RiskType::CreditVol, RiskType::CreditQ}, {RiskType::CreditVolNonQ, RiskType::CreditNonQ},
     {RiskType::EquityVol, RiskType::Equity},  {RiskType::CommodityVol, RiskType::Commodity}};
 
-SimmBucketMapperBase::SimmBucketMapperBase(const string& simmVersion,
-                                           const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
+SimmBucketMapperBase::SimmBucketMapperBase(
+    const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
     const boost::shared_ptr<SimmBasicNameMapper>& nameMapper) :
-    version_(parseSimmVersion(simmVersion)), refDataManager_(refDataManager), nameMapper_(nameMapper){
+    refDataManager_(refDataManager), nameMapper_(nameMapper){
 
     // Fill the set of risk types that have buckets
     rtWithBuckets_ = {RiskType::IRCurve,       RiskType::CreditQ,   RiskType::CreditNonQ,   RiskType::Equity,
@@ -116,12 +116,23 @@ string SimmBucketMapperBase::bucket(const RiskType& riskType, const string& qual
     // Do some checks and return the lookup
     if (noBucket) {
         if (lookupRiskType == RiskType::Commodity) {
+            bool commIndex = false;
+            // first check is there is an entry under equity reference, this may tell us if it is an index
+            if (refDataManager_ != nullptr && refDataManager_->hasData("Equity", lookupName)) {
+                auto refData = boost::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(
+                    refDataManager_->getData("Equity", lookupName));
+                if (refData->equityData().isIndex)
+                    commIndex = true;
+            }
+
+            
+            // Commodity does not allow "Residual", but bucket 16 is "Other", bucket 17 for Indices
+            // FAQ Methodology and implementation 20180124 (H3) says to use "Other"
+            bucket = commIndex ? "17" : "16";                        
             TLOG("Don't have any bucket mappings for the "
                 << "combination of risk type " << riskType << " and qualifier " << lookupName
-                << " - assigning to bucket 16");
-            // Commodity does not allow "Residual", but bucket 16 is "Other"
-            // FAQ Methodology and implementation 20180124 (H3) says to use "Other"
-            bucket = "16";
+                << " - assigning to bucket " << bucket);
+
         } else if (lookupRiskType == RiskType::Equity) {
             // check if it is an index
             if (refDataManager_ != nullptr && refDataManager_->hasData("Equity", lookupName)) {

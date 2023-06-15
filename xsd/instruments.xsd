@@ -52,6 +52,7 @@
       <xs:element type="commoditySwaptionData" name="CommoditySwaptionData"/>
       <xs:element type="commodityAveragePriceOptionData" name="CommodityAveragePriceOptionData"/>
       <xs:element type="commodityOptionStripData" name="CommodityOptionStripData"/>
+      <xs:element type="commodityPositionData" name="CommodityPositionData"/>
       <xs:element type="singleUnderlyingAsianOptionData" name="EquityAsianOptionData" />
       <xs:element type="singleUnderlyingAsianOptionData" name="FxAsianOptionData" />
       <xs:element type="singleUnderlyingAsianOptionData" name="CommodityAsianOptionData" />
@@ -762,6 +763,13 @@
       </xs:element>
       <xs:element type="scheduleData" name="ScheduleData">
       </xs:element>
+      <xs:element name="PaymentDates" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="date" name="PaymentDate" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element ref="legDataType"/>
     </xs:all>
   </xs:complexType>
@@ -1098,6 +1106,7 @@
       <xs:enumeration value="CommoditySpreadOption"/>
       <xs:enumeration value="CommodityAveragePriceOption"/>
       <xs:enumeration value="CommodityOptionStrip"/>
+      <xs:enumeration value="CommodityPosition"/>
       <xs:enumeration value="CommodityVarianceSwap"/>
       <xs:enumeration value="Bond"/>
       <xs:enumeration value="ForwardBond"/>
@@ -2011,6 +2020,13 @@
   </xs:complexType>
 
   <xs:complexType name="equityPositionData">
+    <xs:sequence>
+      <xs:element type="xs:float" name="Quantity"/>
+      <xs:element type="underlying" name="Underlying" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="commodityPositionData">
     <xs:sequence>
       <xs:element type="xs:float" name="Quantity"/>
       <xs:element type="underlying" name="Underlying" maxOccurs="unbounded"/>

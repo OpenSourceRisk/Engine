@@ -34,7 +34,7 @@ std::string getDateStr(const Date& d) {
 } // namespace
 
 FdConvertibleBondEvents::FdConvertibleBondEvents(const Date& today, const DayCounter& dc, const Real N0,
-                                                 const boost::shared_ptr<EquityIndex>& equity,
+                                                 const boost::shared_ptr<QuantExt::EquityIndex2>& equity,
                                                  const boost::shared_ptr<FxIndex>& fxConversion)
     : today_(today), dc_(dc), N0_(N0), equity_(equity), fxConversion_(fxConversion) {}
 

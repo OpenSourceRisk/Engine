@@ -122,7 +122,7 @@ bool isGenericIndex(const std::string& indexName);
 /*!
 \ingroup utilities
 */
-boost::shared_ptr<QuantExt::EquityIndex> parseEquityIndex(const string& s);
+boost::shared_ptr<QuantExt::EquityIndex2> parseEquityIndex(const string& s);
 
 //! Convert std::string to QuantLib::SwapIndex
 /*!

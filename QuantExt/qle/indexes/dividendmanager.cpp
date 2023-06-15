@@ -29,13 +29,13 @@ namespace QuantExt {
 
 void applyDividends(const set<Dividend>& dividends) {
     Size count = 0;
-    map<string, boost::shared_ptr<EquityIndex>> cache;
-    boost::shared_ptr<EquityIndex> index;
+    map<string, boost::shared_ptr<EquityIndex2>> cache;
+    boost::shared_ptr<EquityIndex2> index;
     std::string lastIndexName;
     for (auto& d: dividends) {
         try {
             if (lastIndexName != d.name) {
-                index = boost::make_shared<EquityIndex>(d.name, NullCalendar(), Currency());
+                index = boost::make_shared<EquityIndex2>(d.name, NullCalendar(), Currency());
                 lastIndexName = d.name;
             }
             index->addDividend(d, true);

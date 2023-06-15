@@ -22,6 +22,7 @@
 #include <orea/aggregation/xvacalculator.hpp>
 #include <orea/app/analytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
@@ -56,6 +57,7 @@
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/historicalpnlgenerator.hpp>
 #include <orea/engine/historicalsensipnlcalculator.hpp>
+#include <orea/engine/historicalsimulationvar.hpp>
 #include <orea/engine/mporcalculator.hpp>
 #include <orea/engine/multistatenpvcalculator.hpp>
 #include <orea/engine/multithreadedvaluationengine.hpp>
@@ -76,6 +78,7 @@
 #include <orea/engine/stresstest.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
+#include <orea/engine/varcalculator.hpp>
 #include <orea/engine/zerotoparcube.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
 #include <orea/scenario/clonedscenariogenerator.hpp>
@@ -123,6 +126,7 @@
 #include <orea/simm/simmconcentrationisdav2_3_8.hpp>
 #include <orea/simm/simmconcentrationisdav2_5.hpp>
 #include <orea/simm/simmconcentrationisdav2_5a.hpp>
+#include <orea/simm/simmconcentrationisdav2_6.hpp>
 #include <orea/simm/simmconfiguration.hpp>
 #include <orea/simm/simmconfigurationbase.hpp>
 #include <orea/simm/simmconfigurationisdav1_0.hpp>
@@ -135,6 +139,7 @@
 #include <orea/simm/simmconfigurationisdav2_3_8.hpp>
 #include <orea/simm/simmconfigurationisdav2_5.hpp>
 #include <orea/simm/simmconfigurationisdav2_5a.hpp>
+#include <orea/simm/simmconfigurationisdav2_6.hpp>
 #include <orea/simm/simmnamemapper.hpp>
 #include <orea/simm/simmresults.hpp>
 #include <orea/simm/utilities.hpp>

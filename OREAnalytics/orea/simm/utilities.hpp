@@ -39,13 +39,19 @@ std::vector<std::vector<double>> loadScenarios(const std::string& inputFileName,
 QuantLib::Matrix loadCovarianceMatrix(const std::string& inputFileName, const char delim = '\n');
 
 //! Ordered SIMM versions
-enum class SimmVersion { V1_0, V1_1, V1_2, V1_3, V1_3_38, V2_0, V2_1, V2_2, V2_3, V2_3_8, V2_5, V2_5A};
+enum class SimmVersion { V1_0, V1_1, V1_2, V1_3, V1_3_38, V2_0, V2_1, V2_2, V2_3, V2_3_8, V2_5, V2_5A, V2_6};
 
 SimmVersion parseSimmVersion(const std::string& version);
 
 boost::shared_ptr<SimmConfiguration> buildSimmConfiguration(const std::string& simmVersion,
                                                             const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                                             const QuantExt::Size& mporDays = 10);
+
+//! If the input *str* is a comma seperated list the method quotation marks " if the csvQuoteChar is '\0'
+//! Example:
+//!  commaSeparatedListToJsonArrayString("item1,item2", '') -> "item1, item2" 
+//!  commaSeparatedListToJsonArrayString("item", '') -> "item" 
+std::string escapeCommaSeparatedList(const std::string& str, const char& csvQuoteChar);
 
 } // namespace analytics
 } // namespace ore

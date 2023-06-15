@@ -125,7 +125,8 @@ void ForwardBondTrsUnderlyingBuilder::build(
         SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup());
 }
 
-void EquityPositionTrsUnderlyingBuilder::build(
+template <class T>
+void AssetPositionTrsUnderlyingBuilder<T>::build(
     const std::string& parentId, const boost::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates,
     const boost::shared_ptr<EngineFactory>& engineFactory, boost::shared_ptr<QuantLib::Index>& underlyingIndex,
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
@@ -137,7 +138,7 @@ void EquityPositionTrsUnderlyingBuilder::build(
         const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
     const std::string& underlyingDerivativeId) const {
-    auto t = boost::dynamic_pointer_cast<ore::data::EquityPosition>(underlying);
+    auto t = boost::dynamic_pointer_cast<T>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::EquityPosition, this is unexpected");
     if (t->isSingleCurrency()) {
         assetCurrency = t->npvCurrency();
@@ -159,13 +160,49 @@ void EquityPositionTrsUnderlyingBuilder::build(
     }
     for (Size i = 0; i < t->data().underlyings().size(); ++i) {
         fxConversion[i] = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
-                                     assetCurrency, t->indices()[i]->currency().code(), fxIndices);
-        indexQuantities["EQ-" + t->data().underlyings()[i].name()] = t->weights()[i] * t->data().quantity();
+                                     assetCurrency, getIndexCurrencyFromPosition(t, i), fxIndices);
+        updateQuantities(indexQuantities, t->data().underlyings()[i].name(),
+                         t->weights()[i] * t->data().quantity());
     }
     underlyingIndex = boost::make_shared<QuantExt::CompositeIndex>("Composite Index trade id " + parentId, indices,
                                                                    t->weights(), fxConversion);
     DLOG("underlying equity index built with " << indices.size() << " constituents.");
     underlyingMultiplier = t->data().quantity();
+}
+
+template <>
+std::string AssetPositionTrsUnderlyingBuilder<ore::data::EquityPosition>::getIndexCurrencyFromPosition(
+    boost::shared_ptr<EquityPosition> position, size_t i) const {
+    return position->indices()[i]->currency().code();
+}
+
+template <>
+std::string AssetPositionTrsUnderlyingBuilder<ore::data::CommodityPosition>::getIndexCurrencyFromPosition(
+    boost::shared_ptr<CommodityPosition> position, size_t i) const {
+    return position->indices()[i]->priceCurve()->currency().code();
+}
+
+template <class T>
+std::string AssetPositionTrsUnderlyingBuilder<T>::getIndexCurrencyFromPosition(
+    boost::shared_ptr<T> position, size_t i) const {
+    QL_FAIL("internal error AssetPositionTrsUnderlyingBuilder only support Equity and Commodity positions");
+}
+
+template<>
+void AssetPositionTrsUnderlyingBuilder<ore::data::EquityPosition>::updateQuantities(std::map<std::string, double>& indexQuantities, const std::string& indexName, const double qty) const {
+    indexQuantities["EQ-" + indexName] = qty;
+}
+
+template <>
+void AssetPositionTrsUnderlyingBuilder<ore::data::CommodityPosition>::updateQuantities(
+    std::map<std::string, double>& indexQuantities, const std::string& indexName, const double qty) const {
+    indexQuantities["COMM-" + indexName] = qty;
+}
+
+template <class T>
+void AssetPositionTrsUnderlyingBuilder<T>::updateQuantities(std::map<std::string, double>& indexQuantities,
+                                                            const std::string& indexName, const double qty) const {
+    QL_FAIL("internal error AssetPositionTrsUnderlyingBuilder only support Equity and Commodity positions");
 }
 
 void EquityOptionPositionTrsUnderlyingBuilder::build(
@@ -302,6 +339,9 @@ void DerivativeTrsUnderlyingBuilder::build(
     // maturity date based on valuation / funding dates?
     maturity = underlying->maturity();
 }
+
+template struct AssetPositionTrsUnderlyingBuilder<ore::data::EquityPosition>;
+template struct AssetPositionTrsUnderlyingBuilder<ore::data::CommodityPosition>;
 
 } // namespace data
 } // namespace ore

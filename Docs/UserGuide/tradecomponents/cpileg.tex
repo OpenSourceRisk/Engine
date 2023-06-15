@@ -1,7 +1,7 @@
 \subsubsection{CPI Leg Data}
 \label{ss:cpilegdata}
 
-A CPI leg contains a series of CPI-linked coupon payments $(I(t)/I_0)\,N\,c\,\delta$ and, if \lstinline!NotionalFinalExchange! is set to \emph{true}, a final
+A CPI leg contains a series of CPI-linked coupon payments $N\,r\,({I(t)}/{I_0})\,\delta$ and, if \lstinline!NotionalFinalExchange! is set to \emph{true}, a final
 inflation-linked redemption $(I(t)/I_0)\,N$. Each coupon and the final redemption can be
 subtracting the (un-inflated) notional $N$, i.e. $(I(t)/I_0-1)\,N$,
 see below.
@@ -16,11 +16,26 @@ The  \lstinline!CPILegData! block contains the following elements:
 \item Index: The underlying zero inflation index.
 
 Allowable values:  See \lstinline!Inflation CPI Index! in Table \ref{tab:cpiindex_data}.
-\item Rates: The fixed real rate(s) of the leg. As usual, this can be a single value, a vector of values or a dated vector of
+\item Rates: The contractual fixed real rate(s) of the leg, \emph{r}. As usual, this can be a single value, a vector of values or a dated vector of
   values.
  
+Note that a CPI leg coupon payment at time $t$ is:
+$$
+N\,r\,\frac{I(t)}{I_0}\,\delta
+$$
+where:
+\begin{itemize}
+\item $N$: notional
+\item $r$: the contractual fixed real rate
+\item $I(t)$: the relevant CPI fixing for time $t$
+\item $I_0$: the BaseCPI
+\item $\delta$: the day count fraction for the accrual period up to 
+time $t$
+\end{itemize}
+
  Allowable values: Each rate element can take any  real number. The rate is
   expressed in decimal form, e.g. 0.05 is a rate of 5\%.
+  
 \item BaseCPI [Optional]: The base CPI value $I_0$ used to determine the lifting factor for the fixed coupons. If omitted it will take the observed CPI fixing on startDate - observationLag.
 
 Allowable values:  Any positive real number.

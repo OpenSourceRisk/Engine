@@ -101,7 +101,7 @@ public:
     Handle<YieldTermStructure>
     equityForecastCurve(const string& eqName,
                         const string& configuration = Market::defaultConfiguration) const override;
-    Handle<QuantExt::EquityIndex>
+    Handle<QuantExt::EquityIndex2>
     equityCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const override;
     Handle<BlackVolTermStructure> equityVol(const string& eqName,
                                             const string& configuration = Market::defaultConfiguration) const override;

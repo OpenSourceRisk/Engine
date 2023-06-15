@@ -36,10 +36,14 @@
 using namespace QuantLib;
 
 namespace ore {
-namespace analytics {
+namespace analytics {   
 
-ParametricVarCalculator::ParametricVarParams::Method parseParametricVarMethod(const string& s) {
-    static map<string, ParametricVarCalculator::ParametricVarParams::Method> m = {
+ParametricVarCalculator::ParametricVarParams::ParametricVarParams(const std::string& m, QuantLib::Size samp,
+                                                                  QuantLib::Size sd)
+    : method(parseParametricVarMethod(m)), samples(samp), seed(sd) {}
+
+ParametricVarCalculator::ParametricVarParams::Method parseParametricVarMethod(const std::string& s) {
+    static map<std::string, ParametricVarCalculator::ParametricVarParams::Method> m = {
         {"Delta", ParametricVarCalculator::ParametricVarParams::Method::Delta},
         {"DeltaGammaNormal", ParametricVarCalculator::ParametricVarParams::Method::DeltaGammaNormal},
         {"MonteCarlo", ParametricVarCalculator::ParametricVarParams::Method::MonteCarlo},
@@ -71,22 +75,78 @@ std::ostream& operator<<(std::ostream& out, const ParametricVarCalculator::Param
     }
 }
 
-ParametricVarCalculator::ParametricVarParams::ParametricVarParams(const std::string& m, QuantLib::Size samp,
-                                                                  QuantLib::Size sd)
-    : method(parseParametricVarMethod(m)), samples(samp), seed(sd) {}
+QuantLib::Real ParametricVarCalculator::var(QuantLib::Real confidence, const bool isCall, 
+    const set<pair<string, Size>>& tradeIds) {
+    Real factor = isCall ? 1.0 : -1.0;
 
-ParametricVarCalculator::ParametricVarCalculator(
+    Array delta(deltas_.size(), 0.0);
+    Matrix gamma(deltas_.size(), deltas_.size(), 0.0);
+
+    if (includeDeltaMargin_) {
+        Size counter = 0;
+        for (auto it = deltas_.begin(); it != deltas_.end(); it++)
+            delta[counter++] = factor * it->second;
+    }
+
+    if (includeGammaMargin_) {
+        Size outerIdx = 0;
+        for (auto ito = deltas_.begin(); ito != deltas_.end(); ito++) {
+            Size innerIdx = 0;
+            // Error if no diagonal element
+            gamma[outerIdx][outerIdx] = factor * gammas_.at(std::make_pair(ito->first, ito->first));
+            for (auto iti = deltas_.begin(); iti != ito; iti++) {
+                auto it = gammas_.find(std::make_pair(iti->first, ito->first));
+                if (it != gammas_.end()) {
+                    gamma[innerIdx][outerIdx] = factor * it->second;
+                    gamma[outerIdx][innerIdx] = factor * it->second;
+                }
+                innerIdx++;
+            }
+            outerIdx++;
+        }
+    }
+
+    if (parametricVarParams_.method == ParametricVarCalculator::ParametricVarParams::Method::Delta)
+        return QuantExt::deltaVar(omega_, delta, confidence, *covarianceSalvage_);
+    else if (parametricVarParams_.method ==
+                ParametricVarCalculator::ParametricVarParams::Method::DeltaGammaNormal)
+        return QuantExt::deltaGammaVarNormal(omega_, delta, gamma, confidence, *covarianceSalvage_);
+    else if (parametricVarParams_.method == ParametricVarCalculator::ParametricVarParams::Method::MonteCarlo) {
+        QL_REQUIRE(parametricVarParams_.samples != Null<Size>(),
+                    "ParametricVarCalculator::computeVar(): method MonteCarlo requires mcSamples");
+        QL_REQUIRE(parametricVarParams_.seed != Null<Size>(),
+                    "ParametricVarCalculator::computeVar(): method MonteCarlo requires mcSamples");
+        return QuantExt::deltaGammaVarMc<PseudoRandom>(omega_, delta, gamma, confidence, parametricVarParams_.samples,
+                                                        parametricVarParams_.seed, *covarianceSalvage_);
+    } else if (parametricVarParams_.method == ParametricVarCalculator::ParametricVarParams::Method::CornishFisher)
+        return QuantExt::deltaGammaVarCornishFisher(omega_, delta, gamma, confidence, *covarianceSalvage_);
+    else if (parametricVarParams_.method == ParametricVarCalculator::ParametricVarParams::Method::Saddlepoint) {
+        Real res;
+        try {
+            res = QuantExt::deltaGammaVarSaddlepoint(omega_, delta, gamma, confidence, *covarianceSalvage_);
+        } catch (const std::exception& e) {
+            ALOG("Saddlepoint VaR computation exited with an error: " << e.what()
+                                                                        << ", falling back on Monte-Carlo");
+            res = QuantExt::deltaGammaVarMc<PseudoRandom>(omega_, delta, gamma, confidence,
+                parametricVarParams_.samples, parametricVarParams_.seed, *covarianceSalvage_);
+        }        
+        return res;
+    } else
+        QL_FAIL("ParametricVarCalculator::computeVar(): method " << parametricVarParams_.method << " not known.");
+}
+
+ParametricVarReport::ParametricVarReport(
     const map<string, set<pair<string, Size>>>& tradePortfolios, 
     const string& portfolioFilter,
     const ext::shared_ptr<SensitivityStream>& sensitivities,
     const map<pair<RiskFactorKey, RiskFactorKey>, Real> covariance, const vector<Real>& p, 
-    const ParametricVarParams& parametricVarParams, const bool breakdown,
-    const bool salvageCovarianceMatrix)
+    const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
+    const bool breakdown, const bool salvageCovarianceMatrix)
     : tradePortfolios_(tradePortfolios), portfolioFilter_(portfolioFilter), sensitivities_(sensitivities),
       covariance_(covariance), p_(p), parametricVarParams_(parametricVarParams),
       breakdown_(breakdown), salvageCovarianceMatrix_(salvageCovarianceMatrix) {}
 
-ParametricVarCalculator::ParametricVarCalculator(
+ParametricVarReport::ParametricVarReport(
     const map<string, set<pair<string, Size>>>& tradePortfolios,
     const string& portfolioFilter, const ext::shared_ptr<SensitivityStream>& sensitivities,
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
@@ -94,19 +154,15 @@ ParametricVarCalculator::ParametricVarCalculator(
     const ext::shared_ptr<SensitivityScenarioData>& sensitivityConfig,
     const ext::shared_ptr<ScenarioSimMarketParameters>& simMarketConfig, 
     const vector<Real>& p,
-    const ParametricVarParams& parametricVarParams, const bool breakdown,
+    const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
+    const bool breakdown,
     const bool salvageCovarianceMatrix)
     : tradePortfolios_(tradePortfolios), portfolioFilter_(portfolioFilter), sensitivities_(sensitivities),
       hisScenGen_(hisScenGen), benchmarkPeriod_(benchmarkPeriod), sensitivityConfig_(sensitivityConfig), 
       simMarketConfig_(simMarketConfig), p_(p), parametricVarParams_(parametricVarParams), 
       breakdown_(breakdown), salvageCovarianceMatrix_(salvageCovarianceMatrix) {}
 
-
-ParametricVarCalculator::ParametricVarCalculator(const std::vector<QuantLib::Real>& p,
-                                                 const ParametricVarParams& parametricVarParams)
-    : p_(p), parametricVarParams_(parametricVarParams) {}
-
-void ParametricVarCalculator::calculate(ore::data::Report& report) {
+void ParametricVarReport::calculate(ore::data::Report& report) {
     // prepare report
     report.addColumn("Portfolio", string()).addColumn("RiskClass", string()).addColumn("RiskType", string());
     for (Size i = 0; i < p_.size(); ++i)
@@ -141,6 +197,18 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
 
     SensitivityAggregator sensiAgg(tradePortfolios_);
 
+    // create a calculator for the VAR
+
+    Matrix covariance;
+    map<RiskFactorKey, Real> deltas;
+    map<pair<RiskFactorKey, RiskFactorKey>, Real> gammas;
+    boost::shared_ptr<QuantExt::CovarianceSalvage> covarianceSalvage =
+        boost::make_shared<QuantExt::SpectralCovarianceSalvage>();
+    bool includeGammaMargin = true;
+    bool includeDeltaMargin = true;
+    ParametricVarCalculator calculator(parametricVarParams_, covariance, deltas, gammas, covarianceSalvage,
+                                       includeGammaMargin, includeDeltaMargin); 
+
     // loop over risk class and type filters (index 0 == all risk types)
     for (Size j = 0; j < (breakdown_ ? RiskFilter::numberOfRiskClasses() : 1); ++j) {
         for (Size k = 0; k < (breakdown_ ? RiskFilter::numberOfRiskTypes() : 1); ++k) {
@@ -149,14 +217,12 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
                         
             for (const auto& portfolioId : portfolioIds) {
                 if (!hasFilter || portfolioId == allStr || boost::regex_match(portfolioId, filter)) {
-                    map<RiskFactorKey, Real> deltas;
-                    map<pair<RiskFactorKey, RiskFactorKey>, Real> gammas;
 
                     set<SensitivityRecord> srs = sensiAgg.sensitivities(portfolioId);
-
+                    deltas.clear();
+                    gammas.clear();
                     // Populate the deltas and gammas for a parametric VAR benchmark calculation
                     sensiAgg.generateDeltaGamma(portfolioId, deltas, gammas);
-                    Matrix covariance;
 
                     std::vector<Real> var;
                     if (deltas.size() > 0) {
@@ -205,12 +271,8 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
                         }
 
                         // make covariance matrix positive semi-definite
-                        boost::shared_ptr<QuantExt::CovarianceSalvage> covarianceSalvage;
                         DLOG("Covariance matrix has dimension " << keys.size() << " x " << keys.size());
-                        if (salvageCovarianceMatrix_) {
-                            DLOG("Make covariance matrix positive semi-definite using spectral method");
-                            covarianceSalvage = boost::make_shared<QuantExt::SpectralCovarianceSalvage>();
-                        } else {
+                        if (!salvageCovarianceMatrix_) {
                             LOG("Covariance matrix is no salvaged, check for positive semi-definiteness");
                             SymmetricSchurDecomposition ssd(covariance);
                             Real evMin = ssd.eigenvalues().back();
@@ -223,7 +285,8 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
                         }
                         DLOG("Covariance matrix salvage complete.");
                         // compute var and write to report
-                        var = computeVar(covariance, deltas, gammas, *covarianceSalvage);
+                        for (Size i = 0; i < p_.size(); i++)
+                            var.push_back(calculator.var(p_[i]));
                     } else
                         var = std::vector<Real>(p_.size(), 0.0);
 
@@ -240,76 +303,6 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
             sensiAgg.reset();
         }
     }
-}
-
-std::vector<Real> ParametricVarCalculator::computeVar(const Matrix& omega, const map<RiskFactorKey, Real>& deltas,
-    const map<CrossPair, Real>& gammas, const QuantExt::CovarianceSalvage& covarianceSalvage,
-    Real factor, const bool includeGammaMargin, const bool includeDeltaMargin) {
-
-    Array delta(deltas.size(), 0.0);
-    Matrix gamma(deltas.size(), deltas.size(), 0.0);
-
-     if (includeDeltaMargin) {
-        Size counter = 0;
-        for (auto it = deltas.begin(); it != deltas.end(); it++)
-            delta[counter++] = factor * it->second;
-    }
-
-    if (includeGammaMargin) {
-        Size outerIdx = 0;
-        for (auto ito = deltas.begin(); ito != deltas.end(); ito++) {
-            Size innerIdx = 0;
-            // Error if no diagonal element
-            gamma[outerIdx][outerIdx] = factor * gammas.at(std::make_pair(ito->first, ito->first));
-            for (auto iti = deltas.begin(); iti != ito; iti++) {
-                auto it = gammas.find(std::make_pair(iti->first, ito->first));
-                if (it != gammas.end()) {
-                    gamma[innerIdx][outerIdx] = factor * it->second;
-                    gamma[outerIdx][innerIdx] = factor * it->second;
-                }
-                innerIdx++;
-            }
-            outerIdx++;
-        }
-    }
-
-    if (parametricVarParams_.method == ParametricVarParams::Method::Delta) {
-        std::vector<Real> res(p_.size());
-        for (Size i = 0; i < p_.size(); ++i)
-            res[i] = QuantExt::deltaVar(omega, delta, p_[i], covarianceSalvage);
-        return res;
-    } else if (parametricVarParams_.method == ParametricVarParams::Method::DeltaGammaNormal) {
-        std::vector<Real> res(p_.size());
-        for (Size i = 0; i < p_.size(); ++i) 
-            res[i] = QuantExt::deltaGammaVarNormal(omega, delta, gamma, p_[i], covarianceSalvage);
-        return res;
-    } else if (parametricVarParams_.method == ParametricVarParams::Method::MonteCarlo) {
-        QL_REQUIRE(parametricVarParams_.samples != Null<Size>(),
-                   "ParametricVarCalculator::computeVar(): method MonteCarlo requires mcSamples");
-        QL_REQUIRE(parametricVarParams_.seed != Null<Size>(),
-                   "ParametricVarCalculator::computeVar(): method MonteCarlo requires mcSamples");
-        return QuantExt::deltaGammaVarMc<PseudoRandom>(omega, delta, gamma, p_, parametricVarParams_.samples,
-                                                       parametricVarParams_.seed, covarianceSalvage);
-    } else if (parametricVarParams_.method == ParametricVarParams::Method::CornishFisher) {
-        std::vector<Real> res(p_.size());
-        for (Size i = 0; i < p_.size(); ++i)
-            res[i] = QuantExt::deltaGammaVarCornishFisher(omega, delta, gamma, p_[i], covarianceSalvage);        
-        return res;
-    } else if (parametricVarParams_.method == ParametricVarParams::Method::Saddlepoint) {
-        std::vector<Real> res(p_.size());
-        for (Size i = 0; i < p_.size(); ++i) {
-            try {            
-                res[i] = QuantExt::deltaGammaVarSaddlepoint(omega, delta, gamma, p_[i], covarianceSalvage);
-            } catch (const std::exception& e) {
-                ALOG("Saddlepoint VaR computation exited with an error: " << e.what()
-                                                                          << ", falling back on Monte-Carlo");
-                res[i] = QuantExt::deltaGammaVarMc<PseudoRandom>(omega, delta, gamma, p_[i], 
-                    parametricVarParams_.samples, parametricVarParams_.seed, covarianceSalvage);
-            }
-        }
-        return res;
-    } else
-        QL_FAIL("ParametricVarCalculator::computeVar(): method " << parametricVarParams_.method << " not known.");
 }
 
 } // namespace analytics

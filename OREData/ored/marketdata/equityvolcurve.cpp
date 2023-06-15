@@ -55,7 +55,7 @@ namespace ore {
 namespace data {
 
 EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader,
-                               const CurveConfigurations& curveConfigs, const Handle<EquityIndex>& eqIndex,
+                               const CurveConfigurations& curveConfigs, const Handle<EquityIndex2>& eqIndex,
                                const map<string, boost::shared_ptr<EquityCurve>>& requiredEquityCurves,
                                const map<string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves,
                                const map<string, boost::shared_ptr<FXVolCurve>>& requiredFxVolCurves,
@@ -320,7 +320,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 
 void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-                                     const QuantLib::Handle<EquityIndex>& eqIndex) {
+                                     const QuantLib::Handle<EquityIndex2>& eqIndex) {
     
     DLOG("EquityVolCurve: start building 2-D strike volatility surface");
    
@@ -566,7 +566,7 @@ vector<Real> checkMoneyness(const vector<string>& strMoneynessLevels) {
 
 void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilityMoneynessSurfaceConfig& vmsc, const Loader& loader,
-                                     const QuantLib::Handle<EquityIndex>& eqIndex) {
+                                     const QuantLib::Handle<EquityIndex2>& eqIndex) {
 
     LOG("EquityVolCurve: start building 2-D volatility moneyness strike surface");
     using boost::adaptors::transformed;
@@ -766,7 +766,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
 void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilityDeltaSurfaceConfig& vdsc, const Loader& loader,
-                                     const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex) {
+                                     const QuantLib::Handle<QuantExt::EquityIndex2>& eqIndex) {
 
     using boost::adaptors::transformed;
     using boost::algorithm::join;
@@ -1076,7 +1076,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
 
 void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const CurveConfigurations& curveConfigs,
                                           const EquityVolatilityCurveConfig& config,
-                                          const Handle<EquityIndex>& eqIndex) {
+                                          const Handle<EquityIndex2>& eqIndex) {
 
     DLOG("EquityVolCurve: Building calibration info for eq vol surface");
 
