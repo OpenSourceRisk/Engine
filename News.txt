@@ -20,10 +20,11 @@ MARKETS
 -
 
 ANALYTICS
-- Add a Credit Portfolio Model to construct portfolio loss distributions due to credit migration,
-  credit default and market moves across cash products and derivatives, see Example 43
+- Add a proof-of-concept Credit Portfolio Model to construct portfolio loss distributions due to
+  credit migration, credit default and market moves across cash products and derivatives, see Example 43
 - Add the ISDA Standard Initial Margin Model (SIMM), all versions since inception, see Example 44
-- Expose par sensitivity conversion such that it can be applied to externally enerated sensitivities
+- Fix the Windows build with QL_ENABLE_SESSIONS=ON, this enables ORE multi-threading on Windows,
+  thanks to Steven van Haaren for reporting this issue and enabling this important fix. 
 
 TEST
 - QuantExt: 267 test functions (vs 263 in the previous release)
@@ -31,7 +32,7 @@ TEST
 - OREAnalytics: 78 test functions (vs. 88 in the previous release)
 
 DOCUMENTATION
-- The user guide has grown from 486 to 533 pages, due to the migration of Hybrid instruments
+- The user guide has grown from 486 to 537 pages, due to the migration of Hybrid instruments
   into ORE, new analytics and examples 43ff.
 - A separate guide for the Credit Portfolio Model in ORE has been added,
   see Docs/UserGuide/creditmodel.tex
