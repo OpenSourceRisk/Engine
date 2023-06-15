@@ -181,17 +181,17 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
         // determine notional
 
         auto notionalDate = std::upper_bound(notionalDates.begin(), notionalDates.end(), *startDate);
-        Real notional = notionals[std::max<std::size_t>(1, std::distance(notionalDates.begin(), notionalDate)) - 1];
+        Real notional = notionals[std::distance(notionalDates.begin(), notionalDate)];
 
         // determine spread
 
         auto spreadDate = std::upper_bound(spreadDates.begin(), spreadDates.end(), *startDate);
-        Real spread = spreads[std::max<std::size_t>(1, std::distance(spreadDates.begin(), spreadDate)) - 1];
+        Real spread = spreads[std::distance(spreadDates.begin(), spreadDate)];
 
         // determine gearing
 
         auto gearingDate = std::upper_bound(gearingDates.begin(), gearingDates.end(), *startDate);
-        Real gearing = gearings[std::max<std::size_t>(1, std::distance(gearingDates.begin(), gearingDate)) - 1];
+        Real gearing = gearings[std::distance(gearingDates.begin(), gearingDate)];
 
         // build coupon
 
@@ -287,12 +287,12 @@ Leg makeNonStandardFixedLeg(const std::vector<Date>& calcDates, const std::vecto
         // determine notional
 
         auto notionalDate = std::upper_bound(notionalDates.begin(), notionalDates.end(), *startDate);
-        Real notional = notionals[std::max<std::size_t>(1, std::distance(notionalDates.begin(), notionalDate)) - 1];
+        Real notional = notionals[std::distance(notionalDates.begin(), notionalDate)];
 
         // determine rate
 
         auto rateDate = std::upper_bound(rateDates.begin(), rateDates.end(), *startDate);
-        Real rate = rates[std::max<std::size_t>(1, std::distance(rateDates.begin(), rateDate)) - 1];
+        Real rate = rates[std::distance(rateDates.begin(), rateDate)];
 
         // build coupon
 
