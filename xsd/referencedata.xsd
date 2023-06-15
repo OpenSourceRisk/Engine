@@ -21,6 +21,7 @@
     <xs:choice>
       <xs:element type="currencyHedgedIndexReferenceDatum" name="CurrencyHedgedEquityIndexReferenceData"/>
       <xs:element type="indexReferenceDatum" name="EquityIndexReferenceData"/>
+      <xs:element type="indexReferenceDatum" name="CommodityIndexReferenceData"/>
       <xs:element type="creditIndexReferenceDatum" name="CreditIndexReferenceData"/>
       <xs:element type="bondReferenceDatum" name="BondReferenceData"/>
       <xs:element type="cboReferenceDatum" name="CboReferenceData"/>
@@ -46,6 +47,7 @@
 
   <xs:complexType name="creditIndexReferenceDatum">
     <xs:sequence>
+      <xs:element name="IndexFamily" minOccurs="0" maxOccurs="1"/>
       <xs:element name="Underlying" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
           <xs:all>
@@ -77,6 +79,7 @@
       <xs:element type="xs:string" name="PriceQuoteMethod" minOccurs="0"/>
       <xs:element type="xs:string" name="PriceQuoteBaseValue" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="xs:string" name="SubType" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

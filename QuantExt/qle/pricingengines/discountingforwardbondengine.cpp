@@ -531,10 +531,6 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
         }
     }
 
-    results_.additionalResults["forwardBondCashflow"] = fwdBondCashflows;
-    results_.additionalResults["forwardBondCashflowPayDates"] = fwdBondCashflowPayDates;
-    results_.additionalResults["forwardBondCashflowSurvivalProbabilities"] = fwdBondCashflowSurvivalProbabilities;
-    results_.additionalResults["forwardBondCashflowDiscountFactors"] = fwdBondCashflowDiscountFactors;
     results_.additionalResults["forwardBondRecovery"] = fwdBondRecovery;
 
     // Add cashflowResults

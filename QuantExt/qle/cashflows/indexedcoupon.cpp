@@ -254,4 +254,19 @@ Real getIndexedCouponOrCashFlowMultiplier(const boost::shared_ptr<CashFlow>& c) 
     }
 }
 
+std::vector<std::tuple<Date, boost::shared_ptr<Index>, Real>>
+getIndexedCouponOrCashFlowFixingDetails(const boost::shared_ptr<CashFlow>& c) {
+    if (auto cpn = boost::dynamic_pointer_cast<IndexedCoupon>(c)) {
+        auto v = getIndexedCouponOrCashFlowFixingDetails(cpn->underlying());
+        v.push_back(std::make_tuple(cpn->fixingDate(), cpn->index(), cpn->multiplier()));
+        return v;
+    } else if (auto cf = boost::dynamic_pointer_cast<IndexWrappedCashFlow>(c)) {
+        auto v = getIndexedCouponOrCashFlowFixingDetails(cf->underlying());
+        v.push_back(std::make_tuple(cf->fixingDate(), cf->index(), cf->multiplier()));
+        return v;
+    } else {
+        return {};
+    }
+}
+
 } // namespace QuantExt

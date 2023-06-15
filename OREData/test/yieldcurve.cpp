@@ -63,15 +63,15 @@ public:
     MarketDataLoader(vector<string> data);
     vector<boost::shared_ptr<MarketDatum>> loadQuotes(const Date&) const override;
     set<Fixing> loadFixings() const override { return fixings_; }
-    set<Dividend> loadDividends() const override { return dividends_; }
+    set<QuantExt::Dividend> loadDividends() const override { return dividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
     void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
-    void addDividend(const Dividend& div) {}
+    void addDividend(const QuantExt::Dividend& div) {}
 
 private:
     map<Date, vector<boost::shared_ptr<MarketDatum>>> data_;
     set<Fixing> fixings_;
-    set<Dividend> dividends_;
+    set<QuantExt::Dividend> dividends_;
 };
 
 vector<boost::shared_ptr<MarketDatum>> MarketDataLoader::loadQuotes(const Date& d) const {

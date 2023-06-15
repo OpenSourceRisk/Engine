@@ -192,7 +192,8 @@ void IborFallbackConfig::updateSwitchDate(QuantLib::Date targetSwitchDate, const
         if ((f->first == indexName || indexName == "") && // selected index or all of them if indexName is left blank
             f->second.switchDate > targetSwitchDate)  {   // skipping IBORs with switch dates before the target switch date
             WLOG(StructuredConfigurationWarningMessage("IborFallbackConfig", f->first,
-                                                       "update switch date from " + to_string(f->second.switchDate) +
+                                                       "",
+                                                       "Updating switch date from " + to_string(f->second.switchDate) +
                                                            " to " + to_string(targetSwitchDate)));
             f->second.switchDate = targetSwitchDate;
         }

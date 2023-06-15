@@ -52,6 +52,8 @@ public:
         const boost::shared_ptr<NettingSetManager>& nettingSetManager,
         const map<string, vector<vector<Real>>>& nettingSetDefaultValue,
         const map<string, vector<vector<Real>>>& nettingSetCloseOutValue,
+        const map<string, vector<vector<Real>>>& nettingSetMporPositiveFlow,
+        const map<string, vector<vector<Real>>>& nettingSetMporNegativeFlow,
         const boost::shared_ptr<AggregationScenarioData>& scenarioData,
         const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
         const bool applyInitialMargin,
@@ -63,7 +65,9 @@ public:
         const boost::shared_ptr<NPVCube>& tradeExposureCube,
         const Size allocatedEpeIndex,
         const Size allocatedEneIndex,
-        const bool flipViewXVA);
+        const bool flipViewXVA,
+        const bool withMporStickyDate,
+        const ScenarioGeneratorData::MporCashFlowMode& mporCashFlowMode);
 
     virtual ~NettedExposureCalculator() {}
     const boost::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
@@ -94,6 +98,8 @@ public:
     const map<string, string>& counterpartyMap() { return counterpartyMap_; }
     map<string, vector<vector<Real>>> nettingSetCloseOutValue() { return nettingSetCloseOutValue_; }
     map<string, vector<vector<Real>>> nettingSetDefaultValue() { return nettingSetDefaultValue_; }
+    map<string, vector<vector<Real>>> nettingSetMporPositiveFlow() { return nettingSetMporPositiveFlow_; }
+    map<string, vector<vector<Real>>> nettingSetMporNegativeFlow() { return nettingSetMporNegativeFlow_; }
 protected:
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<Market> market_;
@@ -106,6 +112,8 @@ protected:
     const boost::shared_ptr<NettingSetManager> nettingSetManager_;
     map<string, vector<vector<Real>>> nettingSetDefaultValue_;
     map<string, vector<vector<Real>>> nettingSetCloseOutValue_;
+    map<string, vector<vector<Real>>> nettingSetMporPositiveFlow_;
+    map<string, vector<vector<Real>>> nettingSetMporNegativeFlow_;
     const boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
     const bool applyInitialMargin_;
@@ -140,6 +148,9 @@ protected:
         const Real& nettingSetValueToday,
         const vector<vector<Real>>& nettingSetValue,
         const Date& nettingSetMaturity);
+
+    bool withMporStickyDate_;
+    ScenarioGeneratorData::MporCashFlowMode mporCashFlowMode_;
 };
 
 } // namespace analytics

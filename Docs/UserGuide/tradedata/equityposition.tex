@@ -1,0 +1,54 @@
+\subsubsection{Equity Position}
+\label{ss:equity_position}
+
+An equity position represents a position in a single equity - using a single \lstinline!Underlying! node, or in a weighted basket of underlying equities -  using multiple \lstinline!Underlying! nodes. 
+
+An Equity Position can be used both as a stand alone trade type (TradeType: \emph{EquityPosition}) or as a trade component ({\tt EquityPositionData}) used within the \emph{TotalReturnSwap} (Generic TRS) trade type, to set up for example Equity Basket trades.
+
+ It is set up using an {\tt EquityPositionData} block as shown in listing \ref{lst:equitypositiondata}. The meanings and allowable
+values of the elements in the block are as follows:
+
+\begin{itemize}
+\item Quantity: The number of shares or units of the weighted basket held.\\
+  Allowable values: Any positive real number
+\item Underlying: One or more underlying descriptions. If a basket of equities is defined, the \verb+Weight+ field
+  should be populated for each underlyings. The weighted basket price is then given by\\
+  $$\text{Basket-Price} = \text{Quantity} \times \sum_i \text{Weight}_i \times S_i \times \text{FX}_i$$
+  where
+  \begin{itemize}
+  \item $S_i$ is the price of the ith share in the basket
+  \item $FX_i$ is the FX Spot converting from the ith equity currency to the first equity currency which is by
+    definition the currency in which the npv of the basket is expressed.
+  \end{itemize}
+  Allowable values: See \ref{ss:underlying} for the definition of an underlying. Only equity underlyings are allowed.
+\end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Trade id="EquityPosition">
+    <TradeType>EquityPosition</TradeType>
+    <Envelope>...</Envelope>
+    <EquityPositionData>
+      <Quantity>1000</Quantity>
+        <Underlying>
+          <Type>Equity</Type>
+          <Name>BE0003565737</Name>
+          <Weight>0.5</Weight>
+          <IdentifierType>ISIN</IdentifierType>
+          <Currency>EUR</Currency>
+          <Exchange>XFRA</Exchange>
+        </Underlying>
+        <Underlying>
+          <Type>Equity</Type>
+          <Name>GB00BH4HKS39</Name>
+          <Weight>0.5</Weight>
+          <IdentifierType>ISIN</IdentifierType>
+          <Currency>GBP</Currency>
+          <Exchange>XLON</Exchange>
+        </Underlying>
+    </EquityPositionData>
+  </Trade>
+\end{minted}
+\caption{Equity position data}
+\label{lst:equitypositiondata}
+\end{listing}

@@ -82,7 +82,7 @@ std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuil
                 checkMaturities.push_back(t);
                 Real atmLevel =
                     atmForward(processes_[l]->x0(), processes_[l]->riskFreeRate(), processes_[l]->dividendYield(), t);
-                Real atmMarketVol = processes_[l]->blackVolatility()->blackVol(t, atmLevel);
+                Real atmMarketVol = std::max(1e-4, processes_[l]->blackVolatility()->blackVol(t, atmLevel));
                 callPrices.push_back(std::vector<Real>());
                 atmForwards.push_back(atmLevel);
                 for (Size i = 0; i < calibrationMoneyness_.size(); ++i) {
@@ -178,7 +178,7 @@ std::vector<std::vector<std::pair<Real, Real>>> LocalVolModelBuilder::getVolTime
         volTimesStrikes.push_back(std::vector<std::pair<Real, Real>>());
         for (auto const t : times) {
             Real atmLevel = atmForward(p->x0(), p->riskFreeRate(), p->dividendYield(), t);
-            Real atmMarketVol = p->blackVolatility()->blackVol(t, atmLevel);
+            Real atmMarketVol = std::max(1e-4, p->blackVolatility()->blackVol(t, atmLevel));
             for (auto const m : calibrationMoneyness_) {
                 Real strike = atmLevel * std::exp(m * atmMarketVol * std::sqrt(t));
                 volTimesStrikes.back().push_back(std::make_pair(t, strike));

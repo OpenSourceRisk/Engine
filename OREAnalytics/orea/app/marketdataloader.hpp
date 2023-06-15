@@ -36,10 +36,11 @@ typedef std::map<std::string, std::set<QuantLib::Date>> FixingMap;
 class StructuredFixingWarningMessage : public StructuredMessage {
 public:
     StructuredFixingWarningMessage(const std::string& fixingId, const QuantLib::Date& fixingDate,
-        const std::string& exceptionType, const std::string& exceptionWhat = "")
-        : StructuredMessage(Category::Warning, Group::Fixing, exceptionWhat, 
-            std::map<std::string, std::string>({{"exceptionType", exceptionType}, {"fixingId", fixingId}, 
-                {"fixingDate", ore::data::to_string(fixingDate)}})) {}
+                                   const std::string& exceptionType, const std::string& exceptionWhat)
+        : StructuredMessage(Category::Warning, Group::Fixing, exceptionWhat,
+                            std::map<std::string, std::string>({{"exceptionType", exceptionType},
+                                                                {"fixingId", fixingId},
+                                                                {"fixingDate", ore::data::to_string(fixingDate)}})) {}
 };
 
 class MarketDataLoaderImpl {
@@ -75,7 +76,9 @@ public:
     void populateLoader(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
         const std::set<QuantLib::Date>& loaderDates);
 
-    virtual void populateFixings(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters);
+    virtual void
+    populateFixings(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
+                    const std::set<QuantLib::Date>& loaderDates = {});
 
     virtual void addRelevantFixings(const std::pair<std::string, std::set<QuantLib::Date>>& fixing,
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>>& lastAvailableFixingLookupMap);

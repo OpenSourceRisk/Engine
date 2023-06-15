@@ -25,6 +25,8 @@
 
 #include <qle/instruments/indexcreditdefaultswap.hpp>
 #include <qle/instruments/cdsoption.hpp>
+
+#include <ql/instruments/swaption.hpp>
 #include <ql/option.hpp>
 
 namespace QuantExt {
@@ -39,6 +41,7 @@ public:
     IndexCdsOption(const boost::shared_ptr<IndexCreditDefaultSwap>& swap,
                    const boost::shared_ptr<QuantLib::Exercise>& exercise, QuantLib::Real strike,
                    CdsOption::StrikeType strikeType_ = CdsOption::Spread,
+                   Settlement::Type settlementType = Settlement::Cash,
                    QuantLib::Real tradeDateNtl = QuantLib::Null<QuantLib::Real>(),
                    QuantLib::Real realisedFep = QuantLib::Null<QuantLib::Real>(), bool knocksOut = false,
                    const QuantLib::Period& indexTerm = 5 * Years);
@@ -58,20 +61,20 @@ public:
     //@{
     QuantLib::Rate atmRate() const;
     QuantLib::Real riskyAnnuity() const;
-    QuantLib::Volatility impliedVolatility(QuantLib::Real price,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& termStructure,
-        const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>&,
-        QuantLib::Real recoveryRate,
-        QuantLib::Real accuracy = 1.e-4,
-        QuantLib::Size maxEvaluations = 100,
-        QuantLib::Volatility minVol = 1.0e-7,
-        QuantLib::Volatility maxVol = 4.0) const;
+    QuantLib::Volatility
+    impliedVolatility(QuantLib::Real price,
+                      const QuantLib::Handle<QuantLib::YieldTermStructure>& termStructureSwapCurrency,
+                      const QuantLib::Handle<QuantLib::YieldTermStructure>& termStructureTradeCollateral,
+                      const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>&, QuantLib::Real recoveryRate,
+                      QuantLib::Real accuracy = 1.e-4, QuantLib::Size maxEvaluations = 100,
+                      QuantLib::Volatility minVol = 1.0e-7, QuantLib::Volatility maxVol = 4.0) const;
     //@}
 
 private:
     boost::shared_ptr<IndexCreditDefaultSwap> swap_;
     QuantLib::Real strike_;
     CdsOption::StrikeType strikeType_;
+    Settlement::Type settlementType_;
     QuantLib::Real tradeDateNtl_;
     QuantLib::Real realisedFep_;
     bool knocksOut_;
@@ -89,13 +92,15 @@ private:
 //! %Arguments for index CDS option calculation
 class IndexCdsOption::arguments : public IndexCreditDefaultSwap::arguments, public Option::arguments {
 public:
-    arguments() : strike(QuantLib::Null<QuantLib::Real>()), strikeType(CdsOption::Spread),
-        tradeDateNtl(QuantLib::Null<QuantLib::Real>()), realisedFep(QuantLib::Null<QuantLib::Real>()),
-        knocksOut(false) {}
+    arguments()
+        : strike(QuantLib::Null<QuantLib::Real>()), strikeType(CdsOption::Spread), settlementType(Settlement::Cash),
+          tradeDateNtl(QuantLib::Null<QuantLib::Real>()), realisedFep(QuantLib::Null<QuantLib::Real>()),
+          knocksOut(false) {}
 
     boost::shared_ptr<IndexCreditDefaultSwap> swap;
     QuantLib::Real strike;
     CdsOption::StrikeType strikeType;
+    Settlement::Type settlementType;
     QuantLib::Real tradeDateNtl;
     QuantLib::Real realisedFep;
     bool knocksOut;

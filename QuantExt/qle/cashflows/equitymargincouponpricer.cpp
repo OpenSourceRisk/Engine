@@ -63,7 +63,7 @@ void EquityMarginCouponPricer::initialize(const EquityMarginCoupon& coupon) {
 
     marginFactor_ = coupon.marginFactor();
     fixedRate_ = coupon.fixedRate();
-    equityCurve_ = boost::dynamic_pointer_cast<EquityIndex>(coupon.equityCurve());
+    equityCurve_ = boost::dynamic_pointer_cast<EquityIndex2>(coupon.equityCurve());
     fxIndex_ = boost::dynamic_pointer_cast<FxIndex>(coupon.fxIndex());
     isTotalReturn_ = coupon.isTotalReturn();
     dividendFactor_ = coupon.dividendFactor();

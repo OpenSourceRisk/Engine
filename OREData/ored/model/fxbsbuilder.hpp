@@ -29,9 +29,8 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/fxbsdata.hpp>
-#include <ored/model/marketobserver.hpp>
-#include <ored/model/modelbuilder.hpp>
-
+#include <qle/models/marketobserver.hpp>
+#include <qle/models/modelbuilder.hpp>
 #include <qle/models/crossassetmodel.hpp>
 
 namespace ore {
@@ -46,7 +45,7 @@ using namespace QuantLib;
 
   \ingroup models
  */
-class FxBsBuilder : public ModelBuilder {
+class FxBsBuilder : public QuantExt::ModelBuilder {
 public:
     //! Constructor
     FxBsBuilder( //! Market object
@@ -109,7 +108,7 @@ private:
     bool forceCalibration_ = false;
 
     // market observer
-    boost::shared_ptr<MarketObserver> marketObserver_;
+    boost::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 };
 
 } // namespace data

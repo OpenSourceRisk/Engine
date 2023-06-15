@@ -73,7 +73,7 @@ private:
 //! \name Utilities for building QuantLib Legs
 //@{
 QuantExt::Leg makeEquityMarginLeg(const ore::data::LegData& data,
-                                  const boost::shared_ptr<QuantExt::EquityIndex>& equityCurve,
+                                  const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
                                   const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
                                   const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>());
 //@}

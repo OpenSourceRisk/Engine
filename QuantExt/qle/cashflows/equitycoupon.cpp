@@ -55,7 +55,7 @@ EquityReturnType parseEquityReturnType(const std::string& str) {
 }
 
 EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
-                           Natural fixingDays, const boost::shared_ptr<EquityIndex>& equityCurve,
+                           Natural fixingDays, const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
                            const DayCounter& dayCounter, EquityReturnType returnType, Real dividendFactor,
                            bool notionalReset, Real initialPrice, Real quantity, const Date& fixingStartDate,
                            const Date& fixingEndDate, const Date& refPeriodStart, const Date& refPeriodEnd, 
@@ -173,7 +173,7 @@ std::vector<Date> EquityCoupon::fixingDates() const {
     return fixingDates;
 };
 
-EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
+EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
                      const boost::shared_ptr<FxIndex>& fxIndex)
     : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentLag_(0), paymentAdjustment_(Following),
       paymentCalendar_(Calendar()), returnType_(EquityReturnType::Total), initialPrice_(Null<Real>()),
@@ -276,7 +276,8 @@ EquityLeg::operator Leg() const {
     if (valuationSchedule_.size() > 0)
         legFixingDate = valuationSchedule_.dates().front();
     else if (schedule_.size() > 0)
-        legFixingDate = schedule_.dates().front();
+        legFixingDate = equityCurve_->fixingCalendar().advance(schedule_.dates().front(),
+                                                               -static_cast<Integer>(fixingDays_), Days, Preceding);
     else
         QL_FAIL("Cannot build equity leg, neither schedule nor valuation schedule are defined");
     

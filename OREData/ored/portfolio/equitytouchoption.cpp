@@ -101,7 +101,7 @@ void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFact
     QL_REQUIRE(eqIndex_ != "", "No eqIndex provided");
     QL_REQUIRE(calendar_ != "", "No calendar provided");
 
-    boost::shared_ptr<QuantExt::EquityIndex> eqIndex = parseEquityIndex(eqIndex_);
+    boost::shared_ptr<QuantExt::EquityIndex2> eqIndex = parseEquityIndex(eqIndex_);
 
     // check if the barrier has been triggered already
     bool triggered = false;

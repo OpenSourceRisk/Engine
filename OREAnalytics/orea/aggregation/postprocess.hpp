@@ -163,7 +163,11 @@ public:
         //! Credit simulation time steps
         const std::vector<Size>& creditMigrationTimeSteps = {},
         //! Credit State correlation matrix
-        const Matrix& creditStateCorrelationMatrix = Matrix());
+        const Matrix& creditStateCorrelationMatrix = Matrix(),
+        //! If set to true, cash flows in the margin period of risk are ignored in the collateral modelling
+        bool withMporStickyDate = false,
+        //! Treatment of cash flows over the margin period of risk
+        ScenarioGeneratorData::MporCashFlowMode mporCashFlowMode = ScenarioGeneratorData::MporCashFlowMode::NonePay);
 
     void setDimCalculator(boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
@@ -372,6 +376,8 @@ protected:
     std::vector<Real> creditMigrationUpperBucketBounds_;
     std::vector<std::vector<Real>> creditMigrationCdf_;
     std::vector<std::vector<Real>> creditMigrationPdf_;
+    bool withMporStickyDate_;
+    ScenarioGeneratorData::MporCashFlowMode mporCashFlowMode_;
 };
 
 } // namespace analytics

@@ -58,6 +58,7 @@
 #include <qle/termstructures/weightedyieldtermstructure.hpp>
 #include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
 #include <qle/termstructures/iborfallbackcurve.hpp>
+#include <qle/termstructures/bondyieldshiftedcurvetermstructure.hpp>
 
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
@@ -270,6 +271,9 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
         } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::IborFallback) {
             DLOG("Building IborFallbackCurve " << curveSpec_);
             buildIborFallbackCurve();
+        } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::BondYieldShifted) {
+            DLOG("Building BondYieldShiftedCurve " << curveSpec_);
+            buildBondYieldShiftedCurve();
         } else {
             DLOG("Bootstrapping YieldCurve " << curveSpec_);
             buildBootstrappedCurve();
@@ -1111,7 +1115,7 @@ void YieldCurve::buildFittedBondCurve() {
                        "Market quote not of type Bond / Price.");
             boost::shared_ptr<BondPriceQuote> bondQuote = boost::dynamic_pointer_cast<BondPriceQuote>(marketQuote);
             QL_REQUIRE(bondQuote, "market quote has type bond quote, but can not be casted, this is unexpected.");
-	    auto m = [](Real x) { return 100.0 * x; };
+	        auto m = [](Real x) { return 100.0 * x; };
             Handle<Quote> rescaledBondQuote(boost::make_shared<DerivedQuote<decltype(m)>>(bondQuote->quote(), m));
             string securityID = bondQuote->securityID();
 
@@ -1310,6 +1314,103 @@ void YieldCurve::buildFittedBondCurve() {
     }
 }
 
+void YieldCurve::buildBondYieldShiftedCurve() {
+    QL_REQUIRE(curveSegments_.size() == 1,
+               "One segment required for bond yield shifted curve, got " << curveSegments_.size());
+    QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::BondYieldShifted,
+               "The curve segment is not of type Bond Yield Shifted.");
+    auto segment = boost::dynamic_pointer_cast<BondYieldShiftedYieldCurveSegment>(curveSegments_[0]);
+    QL_REQUIRE(segment != nullptr, "expected BondYieldShiftedYieldCurveSegment, this is unexpected");
+    auto it = requiredYieldCurves_.find(yieldCurveKey(currency_, segment->referenceCurveID(), asofDate_));
+    QL_REQUIRE(it != requiredYieldCurves_.end(), "Could not find reference curve: " << segment->referenceCurveID());
+
+    //prepare parameters
+    auto quoteIDs = segment->quotes();
+    boost::shared_ptr<QuantLib::Bond> bond;
+    string securityID;
+    Date securityMaturityDate;
+    Rate bondYield = Null<Real>();
+    Real thisDuration = Null<Real>();
+
+    auto engineData = boost::make_shared<EngineData>();
+    engineData->model("Bond") = "DiscountedCashflows";
+    engineData->engine("Bond") = "DiscountingRiskyBondEngine";
+    engineData->engineParameters("Bond") = {{"TimestepPeriod", "3M"}};
+
+    //  needed to link the ibors in case bond is a floater
+    std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;
+    for (auto const& c : segment->iborIndexCurves()) {
+        auto index = parseIborIndex(c.first);
+        auto key = yieldCurveKey(index->currency(), c.second, asofDate_);
+        auto y = requiredYieldCurves_.find(key);
+        QL_REQUIRE(y != requiredYieldCurves_.end(), "required ibor curve '" << key << "' for iborIndex '" << c.first
+                                                                             << "' not provided");
+        iborCurveMapping[c.first] = y->second->handle();
+    }
+
+    auto engineFactory = boost::make_shared<EngineFactory>(engineData,
+                                                            boost::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping),
+                                                            std::map<MarketContext, string>(),
+                                                            referenceData_,
+                                                            iborFallbackConfig_);
+
+    QL_REQUIRE(quoteIDs.size() > 0, "at least one bond for shifting of the reference curve required.");
+
+    std::vector<Real> bondYields, bondDurations;
+
+    for (Size b = 0; b < quoteIDs.size(); ++b) {
+
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(quoteIDs[b], asofDate_);
+
+        QL_REQUIRE(marketQuote != nullptr,"no quotes for the bond " << quoteIDs[b].first << " found. this is unexpected");
+
+        QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::BOND && marketQuote->quoteType() == MarketDatum::QuoteType::PRICE,
+                "Market quote not of type Bond / Price.");
+        boost::shared_ptr<BondPriceQuote> bondQuote = boost::dynamic_pointer_cast<BondPriceQuote>(marketQuote);
+        QL_REQUIRE(bondQuote, "market quote has type bond quote, but can not be casted, this is unexpected.");
+        auto m = [bondQuote](Real x) { return x * 100.0; };
+        Handle<Quote> rescaledBondQuote(boost::make_shared<DerivedQuote<decltype(m)>>(bondQuote->quote(), m));
+
+        securityID = bondQuote->securityID();
+        QL_REQUIRE(referenceData_ != nullptr, "reference data required to build bond yield shifted curve");
+
+        auto res = BondFactory::instance().build(engineFactory, referenceData_, securityID);
+        auto qlInstr = res.bond;
+        auto inflationQuoteFactor = res.inflationFactor();
+
+        // skip bonds with settlement date <= curve reference date or which are otherwise non-tradeable
+        if (qlInstr->settlementDate() > asofDate_ && QuantLib::BondFunctions::isTradable(*qlInstr)) {
+
+            Date thisMaturity = qlInstr->maturityDate();
+            bondYield = qlInstr->yield(rescaledBondQuote->value() * inflationQuoteFactor,
+                                                      ActualActual(ActualActual::ISDA), Continuous, NoFrequency);
+
+            thisDuration = QuantLib::BondFunctions::duration(*qlInstr,InterestRate(bondYield,ActualActual(ActualActual::ISDA),Continuous,NoFrequency)
+                                                                           ,Duration::Modified,asofDate_);
+
+            DLOG("found bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
+                << ", clean price = " << rescaledBondQuote->value() * inflationQuoteFactor
+                << ", yield (cont,act/act) = " << bondYield
+                << ", duration = " << thisDuration);
+
+            bondYields.push_back(bondYield);
+            bondDurations.push_back(thisDuration);
+
+            DLOG("calculated duration of the bond " << securityID << " is equal to " << thisDuration)
+
+        } else {
+
+            DLOG("Skipping bond " << securityID
+                << ", with settlement date " << QuantLib::io::iso_date(qlInstr->settlementDate())
+                << ", isTradable = " << std::boolalpha << QuantLib::BondFunctions::isTradable(*qlInstr));
+        }
+
+    }
+
+    p_ = boost::make_shared<BondYieldShiftedCurveTermStructure>(it->second->handle(), bondYields, bondDurations);
+
+}
+
 void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment,
                              vector<boost::shared_ptr<RateHelper>>& instruments) {
 
@@ -1327,6 +1428,8 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
         boost::dynamic_pointer_cast<SimpleYieldCurveSegment>(segment);
     auto depositQuoteIDs = depositSegment->quotes();
 
+    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
+               "Deposit segment does not support pillar choice " << segment->pillarChoice());
     for (Size i = 0; i < depositQuoteIDs.size(); i++) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(depositQuoteIDs[i], asofDate_);
 
@@ -1396,6 +1499,8 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
         boost::dynamic_pointer_cast<SimpleYieldCurveSegment>(segment);
     auto futureQuoteIDs = futureSegment->quotes();
 
+    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
+               "Future segment does not support pillar choice " << segment->pillarChoice());
     for (Size i = 0; i < futureQuoteIDs.size(); i++) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(futureQuoteIDs[i], asofDate_);
 
@@ -1509,13 +1614,14 @@ void YieldCurve::addFras(const boost::shared_ptr<YieldCurveSegment>& segment,
                 immFraQuote = boost::dynamic_pointer_cast<ImmFraQuote>(marketQuote);
                 Size imm1 = immFraQuote->imm1();
                 Size imm2 = immFraQuote->imm2();
-                fraHelper =
-                    boost::make_shared<ImmFraRateHelper>(immFraQuote->quote(), imm1, imm2, fraConvention->index());
+                fraHelper = boost::make_shared<ImmFraRateHelper>(immFraQuote->quote(), imm1, imm2,
+                                                                 fraConvention->index(), fraSegment->pillarChoice());
             } else if (marketQuote->instrumentType() == MarketDatum::InstrumentType::FRA) {
                 boost::shared_ptr<FRAQuote> fraQuote;
                 fraQuote = boost::dynamic_pointer_cast<FRAQuote>(marketQuote);
                 Period periodToStart = fraQuote->fwdStart();
-                fraHelper = boost::make_shared<FraRateHelper>(fraQuote->quote(), periodToStart, fraConvention->index());
+                fraHelper = boost::make_shared<FraRateHelper>(fraQuote->quote(), periodToStart, fraConvention->index(),
+                                                              fraSegment->pillarChoice());
             } else {
                 QL_FAIL("Market quote not of type FRA.");
             }
@@ -1577,6 +1683,8 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
             Period oisTenor = oisQuote->term();
             boost::shared_ptr<RateHelper> oisHelper;
             if (brlCdiIndex) {
+                QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
+                           "OIS segment for BRL-CDI does not support pillar choice " << segment->pillarChoice());
                 oisHelper = boost::make_shared<BRLCdiRateHelper>(
                     oisTenor, oisQuote->quote(), brlCdiIndex,
                     discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
@@ -1586,7 +1694,8 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
                     oisConvention->fixedCalendar(), oisConvention->paymentLag(), oisConvention->eom(),
                     oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
                     oisConvention->fixedPaymentConvention(), oisConvention->rule(),
-                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
+                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true,
+                    oisSegment->pillarChoice());
             }
 
             instruments.push_back(oisHelper);
@@ -1628,6 +1737,8 @@ void YieldCurve::addSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
             Period swapTenor = swapQuote->term();
             boost::shared_ptr<RateHelper> swapHelper;
             if (swapConvention->hasSubPeriod()) {
+                QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
+                           "Subperiod Swap segment does not support pillar choice " << segment->pillarChoice());
                 swapHelper = boost::make_shared<SubPeriodsSwapHelper>(
                     swapQuote->quote(), swapTenor, Period(swapConvention->fixedFrequency()),
                     swapConvention->fixedCalendar(), swapConvention->fixedDayCounter(),
@@ -1639,8 +1750,8 @@ void YieldCurve::addSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
                 swapHelper = boost::make_shared<SwapRateHelper>(
                     swapQuote->quote(), swapTenor, swapConvention->fixedCalendar(), swapConvention->fixedFrequency(),
                     swapConvention->fixedConvention(), swapConvention->fixedDayCounter(), swapConvention->index(),
-                    Handle<Quote>(), 0 * Days,
-                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>());
+                    Handle<Quote>(), 0 * Days, discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
+                    Null<Natural>(), swapSegment->pillarChoice());
             }
 
             instruments.push_back(swapHelper);
@@ -1684,6 +1795,8 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
         onIndex = boost::dynamic_pointer_cast<OvernightIndex>(onIndex->clone(projectionCurve->handle()));
     }
 
+    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
+               "Average OIS segment does not support pillar choice " << segment->pillarChoice());
     auto averageOisQuoteIDs = averageOisSegment->quotes();
     for (Size i = 0; i < averageOisQuoteIDs.size(); i += 2) {
         // we are assuming i = spread, i+1 = rate
@@ -1781,6 +1894,8 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
         longIndex = longIndex->clone(longCurve->handle());
     }
 
+    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
+               "Tenor basis swap segment does not support pillar choice " << segment->pillarChoice());
     auto basisSwapQuoteIDs = basisSwapSegment->quotes();
     for (Size i = 0; i < basisSwapQuoteIDs.size(); i++) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(basisSwapQuoteIDs[i], asofDate_);
@@ -1870,6 +1985,8 @@ void YieldCurve::addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment
         longIndex = longIndex->clone(longCurve->handle());
     }
 
+    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
+               "Tenor basis two swap segment does not support pillar choice " << segment->pillarChoice());
     auto basisSwapQuoteIDs = basisSwapSegment->quotes();
     for (Size i = 0; i < basisSwapQuoteIDs.size(); i++) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(basisSwapQuoteIDs[i], asofDate_);
@@ -1936,6 +2053,8 @@ void YieldCurve::addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& se
     }
     liborIndex = liborIndex->clone(liborCurve->handle());
 
+    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
+               "BMA swap segment does not support pillar choice " << segment->pillarChoice());
     auto bmaBasisSwapQuoteIDs = bmaBasisSwapSegment->quotes();
     for (Size i = 0; i < bmaBasisSwapQuoteIDs.size(); i++) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(bmaBasisSwapQuoteIDs[i], asofDate_);
@@ -2018,6 +2137,8 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
     Currency fxSpotSourceCcy = parseCurrency(fxSpotQuote->unitCcy());
     Currency fxSpotTargetCcy = parseCurrency(fxSpotQuote->ccy());
 
+    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
+               "FX Forward segment does not support pillar choice " << segment->pillarChoice());
     DLOG("YieldCurve::addFXForwards(), create FX forward quotes and helpers");
     auto fxForwardQuoteIDs = fxForwardSegment->quotes();
     for (Size i = 0; i < fxForwardQuoteIDs.size(); i++) {
@@ -2240,6 +2361,8 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
     Period flatTenor = basisSwapConvention->flatTenor();
     Period spreadTenor = basisSwapConvention->spreadTenor();
 
+    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
+               "XCcy basis segment does not support pillar choice " << segment->pillarChoice());
     auto basisSwapQuoteIDs = basisSwapSegment->quotes();
     for (Size i = 0; i < basisSwapQuoteIDs.size(); i++) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(basisSwapQuoteIDs[i], asofDate_);
@@ -2382,6 +2505,8 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
     }
 
     // Create the helpers
+    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
+               "XCcy fix-float basis segment does not support pillar choice " << segment->pillarChoice());
     auto quoteIds = swapSegment->quotes();
     for (Size i = 0; i < quoteIds.size(); i++) {
 

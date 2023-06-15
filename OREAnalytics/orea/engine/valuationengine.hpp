@@ -27,10 +27,10 @@
 #include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/simulation/simmarket.hpp>
-#include <ored/model/modelbuilder.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/progressbar.hpp>
+#include <qle/models/modelbuilder.hpp>
 
 #include <map>
 #include <set>
@@ -66,8 +66,8 @@ public:
         //! Simulated market object
         const boost::shared_ptr<analytics::SimMarket>& simMarket,
         //! model builders to be updated
-        const set<std::pair<string, boost::shared_ptr<data::ModelBuilder>>>& modelBuilders =
-            set<std::pair<string, boost::shared_ptr<data::ModelBuilder>>>());
+        const set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders =
+            set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>>());
 
     //! Build NPV cube
     void buildCube(
@@ -104,7 +104,7 @@ private:
     QuantLib::Date today_;
     boost::shared_ptr<DateGrid> dg_;
     boost::shared_ptr<analytics::SimMarket> simMarket_;
-    set<std::pair<string, boost::shared_ptr<data::ModelBuilder>>> modelBuilders_;
+    set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
 };
 } // namespace analytics
 } // namespace ore

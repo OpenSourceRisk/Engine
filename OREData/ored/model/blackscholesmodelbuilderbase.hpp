@@ -25,8 +25,8 @@
 
 #include <ored/model/calibrationpointcache.hpp>
 
-#include <ored/model/marketobserver.hpp>
-#include <ored/model/modelbuilder.hpp>
+#include <qle/models/marketobserver.hpp>
+#include <qle/models/modelbuilder.hpp>
 
 #include <qle/models/blackscholesmodelwrapper.hpp>
 
@@ -35,7 +35,6 @@
 namespace ore {
 namespace data {
 
-using namespace ore::data;
 using namespace QuantExt;
 using namespace QuantLib;
 
