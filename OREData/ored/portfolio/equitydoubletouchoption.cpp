@@ -103,7 +103,7 @@ void EquityDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engi
 
     
 
-    boost::shared_ptr<QuantExt::EquityIndex> eqIndex = engineFactory->market()->equityCurve(assetName).currentLink();
+    boost::shared_ptr<QuantExt::EquityIndex2> eqIndex = engineFactory->market()->equityCurve(assetName).currentLink();
 
     // set pricing engines
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);

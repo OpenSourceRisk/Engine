@@ -100,6 +100,7 @@ public:
     // only used for zero bonds
     Real faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
+    const string& subType() const { return subType_; }
 
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
@@ -115,6 +116,9 @@ public:
 
     //! check data for completeness
     void checkData() const;
+
+    //! return isda sub type "Single Name", "Index" or throw if sub type can not be mapped
+    std::string isdaBaseProduct() const;
 
 private:
     void initialise();
@@ -139,6 +143,7 @@ private:
     Real bondNotional_;
     bool isPayer_;
     bool isInflationLinked_;
+    string subType_;
 };
 
 //! Serializable Bond
@@ -177,7 +182,7 @@ private:
 struct BondBuilder {
     struct Result {
         boost::shared_ptr<QuantLib::Bond> bond;
-        boost::shared_ptr<ore::data::ModelBuilder> modelBuilder; // might be nullptr
+        boost::shared_ptr<QuantExt::ModelBuilder> modelBuilder; // might be nullptr
 
         
         bool isInflationLinked = false;

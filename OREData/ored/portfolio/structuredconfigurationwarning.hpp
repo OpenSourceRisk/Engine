@@ -33,10 +33,15 @@ namespace data {
 class StructuredConfigurationWarningMessage : public StructuredMessage {
 public:
     StructuredConfigurationWarningMessage(const std::string& configurationType, const std::string& configurationId,
-                                          const std::string& warningWhat)
+                                          const std::string& warningType, const std::string& warningWhat,
+                                          const std::map<std::string, std::string>& subFields = {})
         : StructuredMessage(Category::Warning, Group::Configuration, warningWhat,
-                            std::map<std::string, std::string>(
-                                {{"configurationType", configurationType}, {"configurationId", configurationId}})) {}
+                            std::map<std::string, std::string>({{"warningType", warningType},
+                                                                {"configurationType", configurationType},
+                                                                {"configurationId", configurationId}})) {
+        if (!subFields.empty())
+            subFields_.insert(subFields.begin(), subFields.end());
+    }
 };
 
 } // namespace data

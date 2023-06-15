@@ -449,7 +449,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     if (params_->hasGroup("npv"))
         inputs->setBaseCurrency(params_->get("npv", "baseCurrency"));
     else {
-        ALOG("Base currency not set");
+        WLOG("Base currency not set");
     }
         
     tmp = params_->get("setup", "useMarketDataFixings", false);
@@ -561,7 +561,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     if (tmp != "") {
         inputs->setPortfolioFromFile(tmp, inputPath);
     } else {
-        ALOG("Portfolio data not found");
+        WLOG("Portfolio data not provided");
     }
 
     if (params_->hasGroup("markets")) {
@@ -762,6 +762,45 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         std::string sensiFile = inputPath + "/" + tmp;
         LOG("Get sensitivity data from file " << sensiFile);
         inputs->setSensitivityStreamFromFile(sensiFile);
+    }
+    
+    /****************
+     * SIMM
+     ****************/
+
+    tmp = params_->get("simm", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        inputs->insertAnalytic("SIMM");
+        
+        tmp = params_->get("simm", "version", false);
+        if (tmp != "")
+            inputs->setSimmVersion(tmp);
+
+        tmp = params_->get("simm", "crif", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            inputs->setCrifFromFile(file, inputs->csvEolChar(), inputs->csvSeparator(),
+                                    inputs->csvQuoteChar(), inputs->csvEscapeChar());
+        }
+        
+        tmp = params_->get("simm", "calculationCurrency", false);
+        if (tmp != "")
+            inputs->setSimmCalculationCurrency(tmp);
+        else {
+            QL_REQUIRE(inputs->baseCurrency() != "",
+                       "either base currency or calculation currency is required");
+            inputs->setSimmCalculationCurrency(inputs->baseCurrency());
+        }
+        
+        tmp = params_->get("simm", "resultCurrency", false);
+        if (tmp != "")
+            inputs->setSimmResultCurrency(tmp);
+        else
+            inputs->setSimmResultCurrency(inputs->simmCalculationCurrency());
+
+        tmp = params_->get("simm", "reportingCurrency", false);
+        if (tmp != "")
+            inputs->setSimmReportingCurrency(tmp);
     }
     
     /************

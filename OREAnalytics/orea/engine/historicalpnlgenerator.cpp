@@ -45,7 +45,7 @@ HistoricalPnlGenerator::HistoricalPnlGenerator(
     const string& baseCurrency, const boost::shared_ptr<Portfolio>& portfolio,
     const boost::shared_ptr<ScenarioSimMarket>& simMarket,
     const boost::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, const boost::shared_ptr<NPVCube>& cube,
-    const set<std::pair<string, boost::shared_ptr<ModelBuilder>>>& modelBuilders, bool dryRun)
+    const set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders, bool dryRun)
     : useSingleThreadedEngine_(true), portfolio_(portfolio), simMarket_(simMarket), hisScenGen_(hisScenGen),
       cube_(cube), dryRun_(dryRun),
       npvCalculator_([&baseCurrency]() -> std::vector<boost::shared_ptr<ValuationCalculator>> {

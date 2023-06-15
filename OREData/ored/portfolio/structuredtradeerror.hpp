@@ -41,7 +41,7 @@ public:
                   {{"exceptionType", exceptionType}, {"tradeId", trade->id()}, {"tradeType", trade->tradeType()}})) {}
 
     StructuredTradeErrorMessage(const std::string& tradeId, const std::string& tradeType,
-                                const std::string& exceptionType, const std::string& exceptionWhat = "")
+                                const std::string& exceptionType, const std::string& exceptionWhat)
         : StructuredMessage(Category::Error, Group::Trade, exceptionWhat,
                             std::map<std::string, std::string>(
                                 {{"exceptionType", exceptionType}, {"tradeId", tradeId}, {"tradeType", tradeType}})) {}

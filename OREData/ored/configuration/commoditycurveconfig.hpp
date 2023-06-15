@@ -177,6 +177,7 @@ public:
     bool addBasis() const { return addBasis_; }
     QuantLib::Natural monthOffset() const { return monthOffset_; }
     bool averageBase() const { return averageBase_; }
+    bool priceAsHistFixing() const { return priceAsHistFixing_; }
     const std::map<unsigned short, PriceSegment>& priceSegments() const { return priceSegments_; }
     const boost::optional<BootstrapConfig>& bootstrapConfig() const { return bootstrapConfig_; }
     //@}
@@ -197,6 +198,7 @@ public:
     bool& addBasis() { return addBasis_; }
     QuantLib::Natural& monthOffset() { return monthOffset_; }
     bool& averageBase() { return averageBase_; }
+    bool& priceAsHistFixing() { return priceAsHistFixing_; }
     void setPriceSegments(const std::map<unsigned short, PriceSegment>& priceSegments) {
         priceSegments_ = priceSegments;
     }
@@ -225,6 +227,7 @@ private:
     bool addBasis_;
     QuantLib::Natural monthOffset_;
     bool averageBase_;
+    bool priceAsHistFixing_;
     /*! The map key is the internal priority of the price segment and does not necessarily map the PriceSegment's 
         priority member value. We are allowing here for the priority to be unspecified in the PriceSegment during 
         configuration.

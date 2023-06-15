@@ -29,6 +29,7 @@ for the construction of a market.
 \input{curve_configurations/default_curves_other}
 
 \subsubsection{Swaption Volatility Structures}
+\label{sss:swaptionconfig}
 
 Listing \ref{lst:swaptionvol_configuration} shows an example of a Swaption volatility structure configuration.
 
@@ -88,12 +89,12 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
   \begin{itemize}
   \item SmileOptionTenors: Option expiries, in period form, where smile section data is to be taken into account
   \item SmileSwapTenors: Underlying Swap term, in period form, where smile section data is to be taken into account
-  \item SmileSpreads: Strikes in smile direction expressed as strike spreads, relative to the ATM strike at the expiry/term point of the ATM matrix
+  \item SmileSpreads: Strikes in smile direction expressed as strike spreads, relative to the ATM strike at the expiry/term point of the ATM matrix. Note that trailing 0s are not ignored.
   \end{itemize}
 \item QuoteTag [Optional]: If non-empty, a tag will be included in the market datum labels. This can be used to set up
   underlying specific volatility date. For example, if the quote tag is set to EUR-EURIBOR-3M, the market datum labels
-  will be \verb+SWAPTION/RATE\_LNVOL/EUR/EUR-EURIBOR-3M/5Y/10Y/ATM+ instead of
-  \verb+SWAPTION/RATE\_LNVOL/EUR/5Y/10Y/ATM+.
+  will be \verb+SWAPTION/RATE_LNVOL/EUR/EUR-EURIBOR-3M/5Y/10Y/ATM+ instead of
+  \verb+SWAPTION/RATE_LNVOL/EUR/5Y/10Y/ATM+. See section \ref{ss:swaptionvolatilitydata}.
 \end{itemize}
 
 \input{curve_configurations/capfloorvolatility}

@@ -262,8 +262,10 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
                                                swap_.creditCurveId() + "')"));
     }
 
-    cds->setPricingEngine(
-        iCdsEngineBuilder->engine(ccy, creditCurveId, constituentIds, overrideCurve, swap_.recoveryRate()));
+    // for cash settlement build the underlying swap with the inccy discount curve
+    Settlement::Type settleType = parseSettlementType(option_.settlement());
+    cds->setPricingEngine(iCdsEngineBuilder->engine(ccy, creditCurveId, constituentIds, overrideCurve,
+                                                    swap_.recoveryRate(), settleType == Settlement::Cash));
 
     // Strike may be in terms of spread or price
     auto strikeType = parseCdsOptionStrikeType(effectiveStrikeType_);
@@ -281,8 +283,9 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     }
 
     // Build the option
-    auto option = boost::make_shared<QuantExt::IndexCdsOption>(
-        cds, exercise, effectiveStrike_, strikeType, notionals_.tradeDate, notionals_.realisedFep, knockOut_, effectiveIndexTerm_);
+    auto option = boost::make_shared<QuantExt::IndexCdsOption>(cds, exercise, effectiveStrike_, strikeType, settleType,
+                                                               notionals_.tradeDate, notionals_.realisedFep, knockOut_,
+                                                               effectiveIndexTerm_);
     // the vol curve id is the credit curve id stripped by a term, if the credit curve id should contain one
     auto p = splitCurveIdWithTenor(swap_.creditCurveId());
     volCurveId_ = p.first;
@@ -310,7 +313,6 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
                                         -indicatorLongShort, ccy, engineFactory, configuration));
 
     // Instrument wrapper depends on the settlement type.
-    Settlement::Type settleType = parseSettlementType(option_.settlement());
     // The instrument build should be indpednent of the evaluation date. However, the general behavior
     // in ORE (e.g. IR swaptions) for normal pricing runs is that the option is considered expired on
     // the expiry date with no assumptions on an (automatic) exercise. Therefore we build a vanilla
@@ -330,8 +332,18 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Credit");
     additionalData_["isdaBaseProduct"] = string("Swaptions");
-    // Deferring the mapping of creditCurveId to CDX, iTraxx, MCDX
-    additionalData_["isdaSubProduct"] = swap_.creditCurveId(); 
+    string entity = swap_.creditCurveId();   
+    boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
+    if (refData && refData->hasData("CreditIndex", entity)) {
+        auto refDatum = refData->getData("CreditIndex", entity);
+        boost::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum = boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
+        additionalData_["isdaSubProduct"] = creditIndexRefDatum->indexFamily();
+        if (creditIndexRefDatum->indexFamily() == "") {
+            ALOG("IndexFamily is blank in credit index reference data for entity " << entity);
+        }
+    } else {
+        ALOG("Credit index reference data missing for entity " << entity << ", isdaSubProduct left blank");
+    }
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");  
 }

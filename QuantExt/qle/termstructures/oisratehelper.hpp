@@ -42,7 +42,8 @@ public:
                   BusinessDayConvention paymentAdjustment = Following,
                   DateGeneration::Rule rule = DateGeneration::Backward,
                   const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
-                  bool telescopicValueDates = false);
+                  bool telescopicValueDates = false, Pillar::Choice pillar = Pillar::LastRelevantDate,
+                  Date customPillarDate = Date());
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -76,6 +77,7 @@ protected:
     Handle<YieldTermStructure> discountHandle_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
     bool telescopicValueDates_;
+    Pillar::Choice pillarChoice_;
 };
 
 //! Rate helper for bootstrapping using Overnight Indexed Swaps
@@ -90,7 +92,9 @@ public:
                        BusinessDayConvention paymentAdjustment = Following,
                        DateGeneration::Rule rule = DateGeneration::Backward,
                        const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
-                       bool telescopicValueDates = false);
+                       bool telescopicValueDates = false, Pillar::Choice pillar = Pillar::LastRelevantDate,
+                       Date customPillarDate = Date());
+
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -115,6 +119,7 @@ protected:
     Handle<YieldTermStructure> discountHandle_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
     bool telescopicValueDates_;
+    Pillar::Choice pillarChoice_;
 };
 } // namespace QuantExt
 

@@ -29,7 +29,7 @@
       <Name>CPTY_A</Name>
       <FactorLoadings>0.00</FactorLoadings>
       <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
-      <InitialState>3</InitialState>
+      <InitialState>4</InitialState>
     </Entity>
     <Entity>
       <Name>CPTY_B</Name>
@@ -647,18 +647,16 @@
   <!-- ================================== -->
   <!-- Netting Sets, Risk and PnL         -->
   <!-- ================================== -->
-  <NettingSetIds>
-    CPTY_A,CPTY_B,CPTY_C
-  </NettingSetIds>
+  <NettingSetIds> </NettingSetIds>
   <Risk>
     <Market>N</Market>
     <Credit>Y</Credit>
     <ZeroMarketPnl>N</ZeroMarketPnl>
-    <Evaluation>Analytic</Evaluation>
     <DoubleDefault>Y</DoubleDefault>
+    <Evaluation>Analytic</Evaluation>
     <Seed>42</Seed>
     <Paths>100</Paths>
-    <CreditMode>Migration</CreditMode>
+    <CreditMode>Default</CreditMode>
     <!-- Migration, Default -->
     <LoanExposureMode>Notional</LoanExposureMode>
     <!-- Notional, Value -->
