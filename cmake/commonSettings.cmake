@@ -35,11 +35,10 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 endif()
 
-# add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
-include_directories("${PROJECT_BINARY_DIR}/QuantLib")
-
-# similar if QuantLib is build separately
-include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
+if(NOT DONT_SET_QL_INCLUDE_DIR_FIRST)
+   # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
+    include_directories("${PROJECT_BINARY_DIR}/QuantLib")
+endif()
 
 if(MSVC)
     set(BUILD_SHARED_LIBS OFF)
@@ -155,6 +154,10 @@ else()
 
     # disable warnings from boost
     add_compiler_flag("--system-header-prefix=boost/" supportsSystemHeaderPrefixBoost)
+
+    # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
+    # if QuantLib is build separately
+    include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
 
    
 endif()
