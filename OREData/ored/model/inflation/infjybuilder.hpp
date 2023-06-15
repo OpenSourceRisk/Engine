@@ -25,8 +25,8 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/inflation/infjydata.hpp>
-#include <ored/model/marketobserver.hpp>
-#include <ored/model/modelbuilder.hpp>
+#include <qle/models/marketobserver.hpp>
+#include <qle/models/modelbuilder.hpp>
 #include <qle/models/infjyparameterization.hpp>
 
 namespace ore {
@@ -39,7 +39,7 @@ namespace data {
 
     \ingroup models
 */
-class InfJyBuilder : public ModelBuilder {
+class InfJyBuilder : public QuantExt::ModelBuilder {
 public:
     /*! Constructor
         \param market                   Market object
@@ -76,7 +76,7 @@ private:
     std::string referenceCalibrationGrid_;
     
     boost::shared_ptr<QuantExt::InfJyParameterization> parameterization_;
-    boost::shared_ptr<MarketObserver> marketObserver_;
+    boost::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 
     // The rate curve to use
     Handle<YieldTermStructure> rateCurve_;

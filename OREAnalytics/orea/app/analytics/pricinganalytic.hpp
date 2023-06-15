@@ -45,7 +45,7 @@ class PricingAnalytic : public Analytic {
 public:
     PricingAnalytic(const boost::shared_ptr<InputParameters>& inputs)
         : Analytic(std::make_unique<PricingAnalyticImpl>(inputs),
-            {"NPV", "NPV_LAGGED", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"},
+            {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"},
                    inputs) {}
 };
  

@@ -1,0 +1,52 @@
+\subsubsection{CBO Tranches}
+\label{ss:cbotranches} 
+
+This trade component node is used in a CBO trade as explained in \ref{ss:CBOData}.
+An example structure of the \lstinline!CBOTranches! trade component node is shown in Listing \ref{lst:cbotranches}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CBOTranches>
+  <Tranche>
+    <Name>JuniorNote</Name>
+    <ICRatio>0.0</ICRatio>
+    <OCRatio>0.0</OCRatio>
+    <Notional>4000000.00</Notional>
+    <FixedLegData>
+      <Rates>
+        <Rate>0.03</Rate>
+      </Rates>
+    </FixedLegData>
+  </Tranche>
+  ...
+</CBOTranches>
+
+\end{minted}
+\caption{CBO Tranches}
+\label{lst:cbotranches}
+\end{listing}
+
+The meanings of the elements of the {\tt CBO tranches} node follow below:
+
+\begin{itemize}
+\item Tranche: Multiple tranches are allowed and are indicated by the tranche node within the embracing CBOTranches node. 
+
+\item Name: This string is the name of the tranche, possibly reflecting the position in the capital structure.  
+
+\item ICRatio: The interest coverage ratio is a number, defined as BasketInterest over TrancheInterest (incl. all senior tranches).
+
+\item OCRatio: The overcollateralisation ratio is a number, defined as BasketNotional over TrancheNotional (incl. all senior tranches).
+
+\item Notional: The face amount of the tranche.
+
+\end{itemize}
+
+Depending on the tranche, one can specify a floating or fixed return via the nodes:
+
+\begin{itemize}
+\item FixedLegData, which is outlined in section \ref{ss:fixedleg_data}.
+
+\item FloatingLegData, which is outlined in section \ref{ss:floatingleg_data}.
+
+\end{itemize}

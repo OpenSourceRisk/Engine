@@ -62,6 +62,7 @@ void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
     issueDate = XMLUtils::getChildValue(node, "IssueDate", true);
     priceQuoteMethod = XMLUtils::getChildValue(node, "PriceQuoteMethod", false);
     priceQuoteBaseValue = XMLUtils::getChildValue(node, "PriceQuoteBaseValue", false);
+    subType = XMLUtils::getChildValue(node, "SubType", false);
 
     legData.clear();
     XMLNode* legNode = XMLUtils::getChildNode(node, "LegData");
@@ -86,6 +87,7 @@ XMLNode* BondReferenceDatum::BondData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "IssueDate", issueDate);
     XMLUtils::addChild(doc, node, "PriceQuoteMethod", priceQuoteMethod);
     XMLUtils::addChild(doc, node, "PriceQuoteBaseValue", priceQuoteBaseValue);
+    XMLUtils::addChild(doc, node, "SubType", subType);
     for (auto& bd : legData)
         XMLUtils::appendNode(node, bd.toXML(doc));
     return node;
@@ -208,6 +210,8 @@ void CreditIndexReferenceDatum::fromXML(XMLNode* node) {
     XMLNode* cird = XMLUtils::getChildNode(node, "CreditIndexReferenceData");
     QL_REQUIRE(cird, "Expected a CreditIndexReferenceData node.");
 
+    indexFamily_ = XMLUtils::getChildValue(cird, "IndexFamily", false);
+
     constituents_.clear();
 
     for (XMLNode* child = XMLUtils::getChildNode(cird, "Underlying"); child;
@@ -222,6 +226,8 @@ XMLNode* CreditIndexReferenceDatum::toXML(ore::data::XMLDocument& doc) {
 
     XMLNode* node = ReferenceDatum::toXML(doc);
     XMLNode* cird = XMLUtils::addChild(doc, node, "CreditIndexReferenceData");
+
+    XMLUtils::addChild(doc, cird, "IndexFamily", indexFamily_);
 
     for (auto c : constituents_) {
         auto cNode = c.toXML(doc);
@@ -402,6 +408,7 @@ void CreditReferenceDatum::fromXML(XMLNode* node) {
         parseDate(XMLUtils::getChildValue(innerNode, "SuccessorImplementationDate", false));
     creditData_.predecessorImplementationDate =
         parseDate(XMLUtils::getChildValue(innerNode, "PredecessorImplementationDate", false));
+    creditData_.entityType = XMLUtils::getChildValue(innerNode, "EntityType", false);
 }
 
 XMLNode* CreditReferenceDatum::toXML(XMLDocument& doc) {
@@ -418,6 +425,7 @@ XMLNode* CreditReferenceDatum::toXML(XMLDocument& doc) {
     if (creditData_.predecessorImplementationDate != Date())
         XMLUtils::addChild(doc, creditNode, "PredecessorImplementationDate",
                            to_string(creditData_.predecessorImplementationDate));
+    XMLUtils::addChild(doc, creditNode, "EntityType", creditData_.entityType);
     return node;
 }
 

@@ -22,6 +22,7 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityfilestream.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
+#include <orea/simm/simmbucketmapperbase.hpp>
 #include <ored/ored.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
@@ -360,7 +361,61 @@ void InputParameters::setPortfolioFilterDate(const std::string& s) {
     // parse to Date
     portfolioFilterDate_ = parseDate(s);
 }
+
+void InputParameters::setCreditSimulationParametersFromFile(const std::string& fileName) {
+    creditSimulationParameters_ = boost::make_shared<CreditSimulationParameters>();
+    creditSimulationParameters_->fromFile(fileName);
+}
+
+void InputParameters::setCrifLoader() {
+    if (!simmBucketMapper_)
+        // setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>(simmVersion_));
+        setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>());
+    boost::shared_ptr<SimmConfiguration> configuration =
+        buildSimmConfiguration(simmVersion_, simmBucketMapper_);
+    bool updateMappings = true;
+    bool aggregateTrades = false;
+    crifLoader_ =
+        boost::make_shared<CrifLoader>(configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades);
+}
     
+void InputParameters::setCrifFromFile(const std::string& fileName, char eol, char delim, char quoteChar, char escapeChar) {
+    if (!crifLoader_)
+        setCrifLoader();
+    crifLoader_->loadFromFile(fileName, eol, delim, quoteChar, escapeChar);
+}
+
+void InputParameters::setCrifFromBuffer(const std::string& csvBuffer, char eol, char delim, char quoteChar, char escapeChar) {
+    if (!crifLoader_)
+        setCrifLoader();
+    crifLoader_->loadFromString(csvBuffer, eol, delim, quoteChar, escapeChar);
+}
+
+void InputParameters::setSimmNameMapper(const std::string& xml) {
+    simmNameMapper_ = boost::make_shared<SimmBasicNameMapper>();
+    simmNameMapper_->fromXMLString(xml);    
+}
+    
+void InputParameters::setSimmNameMapperFromFile(const std::string& fileName) {
+    simmNameMapper_ = boost::make_shared<SimmBasicNameMapper>();
+    simmNameMapper_->fromFile(fileName);    
+}
+
+void InputParameters::setSimmBucketMapper(const std::string& xml) {
+    QL_REQUIRE(simmVersion_ != "", "SIMM version not set");
+    QL_REQUIRE(simmBucketMapper_ != nullptr, "SIMMbucket mapper not set");
+    //boost::shared_ptr<SimmBucketMapperBase> sbm = boost::dynamic_pointer_cast<SimmBucketMapperBase>();
+    boost::shared_ptr<SimmBucketMapperBase> sbm = boost::dynamic_pointer_cast<SimmBucketMapperBase>(simmBucketMapper_);
+    sbm->fromXMLString(xml);
+}
+    
+void InputParameters::setSimmBucketMapperFromFile(const std::string& fileName) {
+    QL_REQUIRE(simmVersion_ != "", "SIMM version not set");
+    QL_REQUIRE(simmBucketMapper_ != nullptr, "SIMMbucket mapper not set");
+    boost::shared_ptr<SimmBucketMapperBase> sbm = boost::dynamic_pointer_cast<SimmBucketMapperBase>(simmBucketMapper_);
+    sbm->fromFile(fileName);    
+}
+
 void InputParameters::setAnalytics(const std::string& s) {
     // parse to set<string>
     auto v = parseListOfValues(s);
@@ -420,7 +475,16 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
                << "and file names size (" << dimRegressionFileNames_.size() << ") do not match");
     for (Size i = 0; i < dimRegressionFileNames_.size(); ++i)
         fileNameMap_["dim_regression_" + to_string(i)] = dimRegressionFileNames_[i];
-    
+
+    tmp = params->get("xva", "creditMigrationTimeSteps", false);
+    if (tmp != "") {
+        auto ts = parseListOfValues<Size>(tmp, &parseInteger);
+        for (auto const& t : ts) {
+            fileNameMap_["credit_migration_" + to_string(t)] =
+                params->get("xva", "creditMigrationOutputFiles") + "_" + std::to_string(t);
+        }
+    }
+
     LOG("OutputFileNameMap complete");
 }
     

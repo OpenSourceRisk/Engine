@@ -18,6 +18,7 @@
 
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/reportwriter.hpp>
@@ -52,6 +53,7 @@ AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inp
     addAnalytic("PRICING", boost::make_shared<PricingAnalytic>(inputs));
     addAnalytic("VAR", boost::make_shared<VarAnalytic>(inputs_));
     addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_));
+    addAnalytic("SIMM", boost::make_shared<SimmAnalytic>(inputs_));
 }
 
 void AnalyticsManager::clear() {
@@ -111,14 +113,13 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
         return;
 
     std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
+    std::set<Date> marketDates;
     for (const auto& a : analytics_) {
         std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> atmps = a.second->todaysMarketParams();
         tmps.insert(end(tmps), begin(atmps), end(atmps));
+        auto mdates = a.second->marketDates();
+        marketDates.insert(mdates.begin(), mdates.end());
     }
-
-    QuantExt::Date mporDate = QuantExt::Date();
-    if (laggedMarket_)
-        mporDate = inputs_->mporCalendar().advance(inputs_->asof(), inputs_->mporDays(), QuantExt::Days);
 
     // Do we need market data
     bool requireMarketData = false;
@@ -133,7 +134,7 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
         // load the market data
         if (tmps.size() > 0) {
             LOG("AnalyticsManager::runAnalytics: populate loader");
-            marketDataLoader_->populateLoader(tmps, laggedMarket_, mporDate, inputs_->includeMporExpired());
+            marketDataLoader_->populateLoader(tmps, marketDates);
         }
         
         boost::shared_ptr<InMemoryReport> mdReport = boost::make_shared<InMemoryReport>();
@@ -149,9 +150,9 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
         ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeDividends(*dividendReport, marketDataLoader_->loader());
 
-        marketDataReports_["MARKETDATA"]["marketdata"] = mdReport;
-        marketDataReports_["FIXINGS"]["fixings"] = fixingReport;
-        marketDataReports_["DIVIDENDS"]["dividends"] = dividendReport;
+        reports_["MARKETDATA"]["marketdata"] = mdReport;
+        reports_["FIXINGS"]["fixings"] = fixingReport;
+        reports_["DIVIDENDS"]["dividends"] = dividendReport;
     }
 
     // run requested analytics
@@ -166,12 +167,19 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
         }
     }
 
+    if (inputs_->portfolio()) {
+        auto pricingStatsReport = boost::make_shared<InMemoryReport>();
+        ReportWriter(inputs_->reportNaString())
+            .writePricingStats(*pricingStatsReport, inputs_->portfolio());
+        reports_["STATS"]["pricingstats"] = pricingStatsReport;
+    }
+
     if (marketCalibrationReport)
         marketCalibrationReport->outputCalibrationReport();
 }
 
 Analytic::analytic_reports const AnalyticsManager::reports() {
-    Analytic::analytic_reports reports = marketDataReports_;    
+    Analytic::analytic_reports reports = reports_;
     for (auto a : analytics_) {
         auto rs = a.second->reports();
         reports.insert(rs.begin(), rs.end());

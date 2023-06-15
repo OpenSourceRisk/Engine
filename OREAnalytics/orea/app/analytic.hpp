@@ -104,6 +104,7 @@ public:
     virtual void buildPortfolio();
     virtual void marketCalibration(const boost::shared_ptr<MarketCalibrationReport>& mcr = nullptr);
     virtual void modifyPortfolio() {}
+    virtual void replaceTrades() {}
 
     //! Inspectors
     const std::string label() const;
@@ -115,6 +116,7 @@ public:
         return boost::dynamic_pointer_cast<MarketImpl>(market_);
     }
     const boost::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; };
+    void setMarket(const boost::shared_ptr<ore::data::Market>& market) { market_ = market; };
     void setPortfolio(const boost::shared_ptr<ore::data::Portfolio>& portfolio) { portfolio_ = portfolio; };
     std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
     const boost::shared_ptr<ore::data::Loader>& loader() const { return loader_; };
@@ -137,6 +139,8 @@ public:
     bool hasDependentAnalytic(const std::string& key) {  return dependentAnalytics_.find(key) != dependentAnalytics_.end(); }
     template <class T> boost::shared_ptr<T> dependentAnalytic(const std::string& key) const;
 
+    virtual std::set<QuantLib::Date> marketDates() const { return {inputs_->asof()}; }
+
 private:
     std::unique_ptr<Impl> impl_;
 
@@ -154,9 +158,6 @@ protected:
     analytic_reports reports_;
     analytic_npvcubes npvCubes_;
     analytic_mktcubes mktCubes_;
-
-    //! flag to replace trades with schedule trades
-    bool replaceScheduleTrades_ = false;
 
     //! Whether to write intermediate reports or not.
     //! This would typically be used when the analytic is being called by another analytic

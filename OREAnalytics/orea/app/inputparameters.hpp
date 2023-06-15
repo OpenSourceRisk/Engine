@@ -24,12 +24,16 @@
 
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
+#include <orea/aggregation/creditsimulationparameters.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/simm/crifloader.hpp>
+#include <orea/simm/simmbasicnamemapper.hpp>
+#include <orea/simm/simmbucketmapper.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
@@ -90,9 +94,9 @@ public:
     void setCsvCommentCharacter(const char& c) { csvCommentCharacter_ = c; }
     void setDryRun(bool b) { dryRun_ = b; }
     void setMporDays(Size s) { mporDays_ = s; }
+    void setMporDate(const QuantLib::Date& d) { mporDate_ = d; }
     void setMporCalendar(const std::string& s); 
     void setMporForward(bool b) { mporForward_ = b; }
-    void setIncludeMporExpired(bool b) { includeMporExpired_ = b; }
 
     // Setters for npv analytics
     void setOutputAdditionalResults(bool b) { outputAdditionalResults_ = b; }
@@ -108,7 +112,6 @@ public:
 
     // Setters for sensi analytics
     void setXbsParConversion(bool b) { xbsParConversion_ = b; }
-    void setAnalyticFxSensis(bool b) { analyticFxSensis_ = b; }
     void setParSensi(bool b) { parSensi_ = b; }
     void setAlignPillars(bool b) { alignPillars_ = b; }
     void setOutputJacobi(bool b) { outputJacobi_ = b; }
@@ -147,7 +150,8 @@ public:
     void setCovarianceDataFromFile(const std::string& fileName);
     void setSensitivityStreamFromFile(const std::string& fileName);
 
-    // Setters for exposure simulation 
+    // Setters for exposure simulation
+    void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
     void setAmc(bool b) { amc_ = b; }
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
     void setExposureBaseCurrency(const std::string& s) { exposureBaseCurrency_ = s; } 
@@ -155,6 +159,7 @@ public:
     void setNettingSetId(const std::string& s) { nettingSetId_ = s; }
     void setScenarioGenType(const std::string& s) { scenarioGenType_ = s; }
     void setStoreFlows(bool b) { storeFlows_ = b; }
+    void setStoreCreditStateNPVs(Size states) { storeCreditStateNPVs_ = states; }
     void setStoreSurvivalProbabilities(bool b) { storeSurvivalProbabilities_ = b; }
     void setWriteCube(bool b) { writeCube_ = b; }
     void setWriteScenarios(bool b) { writeScenarios_ = b; }
@@ -243,9 +248,37 @@ public:
     void setKvaTheirPdFloor(Real r) { kvaTheirPdFloor_ = r; }
     void setKvaOurCvaRiskWeight(Real r) { kvaOurCvaRiskWeight_ = r; }
     void setKvaTheirCvaRiskWeight(Real r) { kvaTheirCvaRiskWeight_ = r; }
+    // credit simulation
+    void setCreditMigrationAnalytic(bool b) { creditMigrationAnalytic_ = b; }
+    void setCreditMigrationDistributionGrid(const std::vector<Real>& grid) { creditMigrationDistributionGrid_ = grid; }
+    void setCreditMigrationTimeSteps(const std::vector<Size>& ts) { creditMigrationTimeSteps_ = ts; }
+    void setCreditSimulationParameters(const boost::shared_ptr<CreditSimulationParameters>& c) {
+        creditSimulationParameters_ = c;
+    }
+    void setCreditSimulationParametersFromFile(const std::string& fileName);
+    void setCreditMigrationOutputFiles(const std::string& s) { creditMigrationOutputFiles_ = s; }
     // Setters for cashflow npv and dynamic backtesting
     void setCashflowHorizon(const std::string& s); // parse to Date
     void setPortfolioFilterDate(const std::string& s); // parse to Date
+
+    // Setters for SIMM
+    void setSimmVersion(const std::string& s) { simmVersion_ = s; }
+    void setCrifLoader();
+    void setCrifFromFile(const std::string& fileName,
+                         char eol = '\n', char delim = ',', char quoteChar = '\0', char escapeChar = '\\');
+    void setCrifFromBuffer(const std::string& csvBuffer,
+                           char eol = '\n', char delim = ',', char quoteChar = '\0', char escapeChar = '\\');
+    void setSimmNameMapper(const boost::shared_ptr<ore::analytics::SimmBasicNameMapper>& p) { simmNameMapper_ = p; }
+    void setSimmNameMapper(const std::string& xml);
+    void setSimmNameMapperFromFile(const std::string& fileName);
+    void setSimmBucketMapper(const boost::shared_ptr<ore::analytics::SimmBucketMapper>& p) { simmBucketMapper_ = p; }
+    void setSimmBucketMapper(const std::string& xml);
+    void setSimmBucketMapperFromFile(const std::string& fileName);
+    void setSimmCalculationCurrency(const std::string& s) { simmCalculationCurrency_ = s; }
+    void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
+    void setSimmReportingCurrency(const std::string& s) { simmReportingCurrency_ = s; }
+    void setEnforceIMRegulations(bool b) { enforceIMRegulations_= b; }
+
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>
     void insertAnalytic(const std::string& s); 
@@ -280,11 +313,14 @@ public:
     bool useMarketDataFixings() { return useMarketDataFixings_; }
     bool iborFallbackOverride() { return iborFallbackOverride_; }
     const std::string& reportNaString() { return reportNaString_; }
+    char csvCommentCharacter() const { return csvCommentCharacter_; }
+    char csvEolChar() const { return csvEolChar_; }
     char csvQuoteChar() const { return csvQuoteChar_; }
     char csvSeparator() const { return csvSeparator_; }
-    char csvCommentCharacter() const { return csvCommentCharacter_; }
+    char csvEscapeChar() const { return csvEscapeChar_; }
     bool dryRun() const { return dryRun_; }
     QuantLib::Size mporDays() { return mporDays_; }
+    QuantLib::Date mporDate() { return mporDate_; }
     const QuantLib::Calendar mporCalendar() {
         if (mporCalendar_.empty()) {
             QL_REQUIRE(!baseCurrency_.empty(), "mpor calendar or baseCurrency must be provided";);
@@ -293,7 +329,6 @@ public:
             return mporCalendar_;
     }
     bool mporForward() { return mporForward_; }
-    bool includeMporExpired() const { return includeMporExpired_; };
 
     /***************************
      * Getters for npv analytics
@@ -317,7 +352,6 @@ public:
      * Getters for sensi analytics
      *****************************/
     bool xbsParConversion() { return xbsParConversion_; }
-    bool analyticFxSensis() { return analyticFxSensis_; }
     bool parSensi() const { return parSensi_; };
     bool alignPillars() const { return alignPillars_; };
     bool outputJacobi() const { return outputJacobi_; };
@@ -351,7 +385,8 @@ public:
     
     /*********************************
      * Getters for exposure simulation 
-     *********************************/    
+     *********************************/
+    bool salvageCorrelationMatrix() { return salvageCorrelationMatrix_; }
     bool amc() { return amc_; }
     const std::set<std::string>& amcTradeTypes() { return amcTradeTypes_; }
     const std::string& exposureBaseCurrency() { return exposureBaseCurrency_; }
@@ -359,6 +394,7 @@ public:
     const std::string& nettingSetId() { return nettingSetId_; }
     const std::string& scenarioGenType() { return scenarioGenType_; }
     bool storeFlows() { return storeFlows_; }
+    Size storeCreditStateNPVs() { return storeCreditStateNPVs_; }
     bool storeSurvivalProbabilities() { return storeSurvivalProbabilities_; }
     bool writeCube() { return writeCube_; }
     bool writeScenarios() { return writeScenarios_; }
@@ -436,6 +472,12 @@ public:
     Real kvaTheirPdFloor() { return kvaTheirPdFloor_; }
     Real kvaOurCvaRiskWeight() { return kvaOurCvaRiskWeight_; }
     Real kvaTheirCvaRiskWeight() { return kvaTheirCvaRiskWeight_; }
+    // credit simulation details
+    bool creditMigrationAnalytic() const { return creditMigrationAnalytic_; }
+    const std::vector<Real>& creditMigrationDistributionGrid() const { return creditMigrationDistributionGrid_; }
+    std::vector<Size> creditMigrationTimeSteps() const { return creditMigrationTimeSteps_; }
+    const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters() const { return creditSimulationParameters_; }
+    const std::string& creditMigrationOutputFiles() const { return creditMigrationOutputFiles_; }
     
     /**************************************************
      * Getters for cashflow npv and dynamic backtesting
@@ -443,6 +485,19 @@ public:
     
     const QuantLib::Date& cashflowHorizon() const { return cashflowHorizon_; };
     const QuantLib::Date& portfolioFilterDate() const { return portfolioFilterDate_; }    
+
+    /******************
+     * Getters for SIMM
+     ******************/
+    const std::string& simmVersion() { return simmVersion_; }
+    const boost::shared_ptr<ore::analytics::CrifLoader>& crifLoader() { return crifLoader_; }
+    const boost::shared_ptr<ore::analytics::SimmBasicNameMapper>& simmNameMapper() { return simmNameMapper_; }
+    const boost::shared_ptr<ore::analytics::SimmBucketMapper>& simmBucketMapper() { return simmBucketMapper_; }
+    const std::string& simmCalculationCurrency() { return simmCalculationCurrency_; }
+    const std::string& simmResultCurrency() { return simmResultCurrency_; }
+    const std::string& simmReportingCurrency() { return simmReportingCurrency_; }
+    bool enforceIMRegulations() { return enforceIMRegulations_; }
+    
     /*************************************
      * List of analytics that shall be run
      *************************************/
@@ -493,15 +548,17 @@ protected:
     bool eomInflationFixings_ = true;
     bool useMarketDataFixings_ = true;
     bool iborFallbackOverride_ = false;
-    char csvSeparator_ = ',';
     bool csvCommentCharacter_ = true;
+    char csvEolChar_ = '\n';
+    char csvSeparator_ = ',';
     char csvQuoteChar_ = '\0';
+    char csvEscapeChar_ = '\\';
     std::string reportNaString_ = "#N/A";
     bool dryRun_ = false;
+    QuantLib::Date mporDate_;
     QuantLib::Size mporDays_ = 10;
     QuantLib::Calendar mporCalendar_;
     bool mporForward_ = true;
-    bool includeMporExpired_ = true;
 
     /**************
      * NPV analytic
@@ -523,12 +580,11 @@ protected:
      * SENSITIVITY analytic
      **********************/
     bool xbsParConversion_ = false;
-    bool analyticFxSensis_ = true;
     bool parSensi_ = false;
     bool outputJacobi_ = false;
     bool alignPillars_ = false;
     bool useSensiSpreadedTermStructures_ = true;
-    QuantLib::Real sensiThreshold_ = 0.0;
+    QuantLib::Real sensiThreshold_ = 1e-6;
     boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensiSimMarketParams_;
     boost::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     boost::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
@@ -559,7 +615,7 @@ protected:
     /*******************
      * EXPOSURE analytic
      *******************/
-    // bool simulation_ = false;
+    bool salvageCorrelationMatrix_ = false;
     bool amc_ = false;
     std::set<std::string> amcTradeTypes_;
     std::string exposureBaseCurrency_ = "";
@@ -567,6 +623,7 @@ protected:
     std::string nettingSetId_ = "";
     std::string scenarioGenType_ = "";
     bool storeFlows_ = false;
+    Size storeCreditStateNPVs_ = 0;
     bool storeSurvivalProbabilities_ = false;
     bool writeCube_ = false;
     bool writeScenarios_ = false;
@@ -636,7 +693,24 @@ protected:
     Real kvaTheirPdFloor_ = 0.03;
     Real kvaOurCvaRiskWeight_ = 0.05;
     Real kvaTheirCvaRiskWeight_ = 0.05;
+    // credit simulation details
+    bool creditMigrationAnalytic_ = false;
+    std::vector<Real> creditMigrationDistributionGrid_;
+    std::vector<Size> creditMigrationTimeSteps_;
+    boost::shared_ptr<CreditSimulationParameters> creditSimulationParameters_;
+    std::string creditMigrationOutputFiles_;
 
+    /***************
+     * SIMM analytic
+     ***************/
+    std::string simmVersion_;
+    boost::shared_ptr<ore::analytics::CrifLoader> crifLoader_;
+    boost::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
+    boost::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
+    std::string simmCalculationCurrency_ = "";
+    std::string simmResultCurrency_ = "";
+    std::string simmReportingCurrency_ = "";
+    bool enforceIMRegulations_ = false;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {

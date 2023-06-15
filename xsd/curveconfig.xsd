@@ -478,6 +478,8 @@
               </xs:sequence>
             </xs:complexType>
           </xs:element>
+          <xs:element type="xs:string" name="InitialState" minOccurs="0"/>
+          <xs:element type="xs:string" name="States" minOccurs="0"/>
           <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
           <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
           <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
@@ -503,7 +505,6 @@
       <xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Pillars" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="SpotLag" minOccurs="0" maxOccurs="1"/>
-      <!-- SourceCurves and SwitchDates removed by JW, but restored here -->
       <xs:element name="SourceCurves" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
@@ -527,6 +528,8 @@
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
       <!-- AllowNegativeRates removed by JW, but restored here -->
       <xs:element type="bool" name="AllowNegativeRates" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="InitialState" minOccurs="0"/>
+      <xs:element type="xs:string" name="States" minOccurs="0"/>
    </xs:all>
   </xs:complexType>
 
@@ -536,6 +539,7 @@
       <xs:enumeration value="HazardRate"/>
       <xs:enumeration value="Benchmark"/>
       <xs:enumeration value="Price"/>
+      <xs:enumeration value="TransitionMatrix"/>
       <xs:enumeration value="Null"/>
     </xs:restriction>
   </xs:simpleType>
@@ -706,6 +710,7 @@
       <xs:element type="bool" name="AddBasis" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="MonthOffset" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="AverageBase" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="PriceAsHistoricalFixing" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
   
@@ -863,6 +868,7 @@
       <xs:element type="discountRatioType" name="DiscountRatio"/>
       <xs:element type="fittedBondType" name="FittedBond"/>
       <!-- weightedAverageType and yieldPlusDefaultType removed by JW, but restored here -->
+      <xs:element type="BondYieldShiftedType" name="BondYieldShifted"/>
       <xs:element type="weightedAverageType" name="WeightedAverage"/>
       <xs:element type="yieldPlusDefaultType" name="YieldPlusDefault"/>
       <xs:element type="iborFallbackType" name="IborFallback"/>
@@ -889,6 +895,7 @@
       <xs:element type="simpleSegmentTypeType" name="Type"/>
       <xs:element type="quoteType" name="Quotes"/>
       <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
       <xs:element type="xs:string" name="ProjectionCurve" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
@@ -909,6 +916,7 @@
       <xs:element type="xs:string" name="Type" fixed="Average OIS"/>
       <xs:element type="compositeQuoteType" name="Quotes"/>
       <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
       <xs:element type="xs:string" name="ProjectionCurve" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
@@ -918,6 +926,7 @@
       <xs:element type="tenorBasisSegmentTypeType" name="Type"/>
       <xs:element type="quoteType" name="Quotes"/>
       <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
       <xs:element type="xs:string" name="ProjectionCurveLong" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="ProjectionCurveShort" minOccurs="0" maxOccurs="1"/>
     </xs:all>
@@ -935,6 +944,7 @@
       <xs:element type="crossCurrencySegmentTypeType" name="Type"/>
       <xs:element type="quoteType" name="Quotes"/>
       <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
       <xs:element type="xs:string" name="DiscountCurve"/>
       <xs:element type="xs:string" name="SpotRate"/>
       <xs:element type="xs:string" name="ProjectionCurveDomestic" minOccurs="0" maxOccurs="1"/>
@@ -1008,6 +1018,31 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element type="xs:boolean" name="ExtrapolateFlat" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+    <xs:complexType name="BondYieldShiftedType">
+    <xs:all>
+      <xs:element type="xs:string" name="Type" fixed="Bond Yield Shifted"/>
+      <xs:element type="xs:string" name="ReferenceCurve"/>
+      <xs:element type="quoteType" name="Quotes"/>
+      <xs:element name="IborIndexCurves" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="IborIndexCurve" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="iborIndex" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="xs:string" name="Conventions"/>
       <xs:element type="xs:boolean" name="ExtrapolateFlat" minOccurs="0"/>
     </xs:all>
   </xs:complexType>

@@ -51,10 +51,6 @@ void cacheTradeSensitivities(TradeSensiCache& cache, ore::analytics::Sensitivity
         auto itSr = find_if(srs.begin(), srs.end(), [&sr](const SensitivityRecord& other) {
             return sr.key_1 == other.key_1 && sr.key_2 == other.key_2;
         });
-        if (itSr == srs.end()) {
-            WLOG("Sensitivity record " << sr << " not in aggregate sensitivity records.");
-            continue;
-        }
 
         // Positions for the cache keys.
         auto posTrade = distance(tradeIds.begin(), itTrade);
@@ -161,8 +157,11 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(boost::shared_ptr<NPVCube
     boost::shared_ptr<Scenario> baseScenario = hisScenGen_->baseScenario();
 
     set<string> keyNames;
-    for (auto k : keys)
+    std::map<std::string, RiskFactorKey> keyNameMapping;
+    for (auto k : keys) {
         keyNames.insert(ore::data::to_string(k));
+        keyNameMapping.insert({ore::data::to_string(k), k});
+    }
 
     cube = boost::make_shared<DoublePrecisionInMemoryCube>(
         baseScenario->asof(), keyNames, vector<Date>(1, baseScenario->asof()), hisScenGen_->numScenarios());
@@ -173,7 +172,7 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(boost::shared_ptr<NPVCube
         boost::shared_ptr<Scenario> scenario = hisScenGen_->next(baseScenario->asof());
 
         Size j = 0;
-        for (const auto& key : keys) {
+        for (const auto& [_, key] : keyNameMapping) {
             Real shift = shiftCalculator->shift(key, *baseScenario, *scenario);
             cube->set(shift, j, 0, i);
             j++;
@@ -182,8 +181,8 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(boost::shared_ptr<NPVCube
 }
 
 void HistoricalSensiPnlCalculator::calculateSensiPnl(
-    const set<SensitivityRecord>& srs, const vector<RiskFactorKey>& rfKeys, ext::shared_ptr<NPVCube>& shiftCube,
-    const vector<RiskFactorKey>& shiftCubeKeys, const vector<ext::shared_ptr<PNLCalculator>>& pnlCalculators,
+    const set<SensitivityRecord>& srs, const vector<RiskFactorKey>& rfKeys, ext::shared_ptr<NPVCube>& shiftCube, 
+    const vector<ext::shared_ptr<PNLCalculator>>& pnlCalculators,
     const ext::shared_ptr<CovarianceCalculator>& covarianceCalculator,
     const vector<string>& tradeIds, const bool includeGammaMargin, 
     const bool includeDeltaMargin, const bool tradeLevel) {    
@@ -192,26 +191,26 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
     // Add the index of the key location in sensi shift cube
     set<pair<RiskFactorKey, Size>> keys;
     for (auto it = rfKeys.begin(); it != rfKeys.end(); it++) {
-        auto it1 = std::find(shiftCubeKeys.begin(), shiftCubeKeys.end(), *it);
-        QL_REQUIRE(it1 != shiftCubeKeys.end(),
+        auto it1 = shiftCube->idsAndIndexes().find(ore::data::to_string(*it));
+        QL_REQUIRE(it1 != shiftCube->idsAndIndexes().end(),
                    "Could not find key " << *it << " in sensi shift cube keys");
-        keys.insert(make_pair(*it, distance(shiftCubeKeys.begin(), it1)));
+        keys.insert(make_pair(*it, it1->second));
     }
     // Create an index pair for each sensitivity record. The first element holds the index position
     // in the sensi shift cube of key_1. The second element holds the index of key_2 for cross
     // gamma record.
     vector<pair<Size, Size>> srsIndex;
     for (auto it = srs.begin(); it != srs.end(); it++) {
-        auto it1 = std::find(shiftCubeKeys.begin(), shiftCubeKeys.end(), it->key_1);
-        QL_REQUIRE(it1 != shiftCubeKeys.end(),
+        auto it1 = shiftCube->idsAndIndexes().find(ore::data::to_string(it->key_1));
+        QL_REQUIRE(it1 != shiftCube->idsAndIndexes().end(),
                    "Could not find key " << it->key_1 << " in sensi shift cube keys");
-        Size ind_1 = distance(shiftCubeKeys.begin(), it1);
+        Size ind_1 = it1->second;
         Size ind_2 = Size();
         if (it->isCrossGamma()) {
-            auto it2 = std::find(shiftCubeKeys.begin(), shiftCubeKeys.end(), it->key_2);
-            QL_REQUIRE(it2 != shiftCubeKeys.end(),
+            auto it2 = shiftCube->idsAndIndexes().find(ore::data::to_string(it->key_2));
+            QL_REQUIRE(it2 != shiftCube->idsAndIndexes().end(),
                        "Could not find key " << it->key_2 << " in sensi shift cube keys");
-            ind_2 = distance(shiftCubeKeys.begin(), it2);
+            ind_2 = it2->second;
         }
         srsIndex.push_back(make_pair(ind_1, ind_2));
     }

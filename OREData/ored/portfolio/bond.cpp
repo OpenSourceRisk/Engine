@@ -59,6 +59,7 @@ Real BondData::priceQuoteBaseValue() const {
 void BondData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "BondData");
     QL_REQUIRE(node, "No BondData Node");
+    subType_ = XMLUtils::getChildValue(node, "SubType", false);
     issuerId_ = XMLUtils::getChildValue(node, "IssuerId", false);
     creditCurveId_ = XMLUtils::getChildValue(node, "CreditCurveId", false);
     creditGroup_ = XMLUtils::getChildValue(node, "CreditGroup", false);
@@ -93,6 +94,8 @@ void BondData::fromXML(XMLNode* node) {
 
 XMLNode* BondData::toXML(XMLDocument& doc) {
     XMLNode* bondNode = doc.allocNode("BondData");
+    if (!subType_.empty())
+        XMLUtils::addChild(doc, bondNode, "SubType", subType_);
     if (!issuerId_.empty())
         XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
     if (!creditCurveId_.empty())
@@ -172,7 +175,7 @@ void BondData::initialise() {
 void BondData::populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum,
 					       const std::string& startDate, const std::string& endDate) {
     DLOG("Got BondReferenceDatum for name " << securityId_ << " overwrite empty elements in trade");
-    ore::data::populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, priceQuoteMethod_,
+    ore::data::populateFromBondReferenceData(subType_, issuerId_, settlementDays_, calendar_, issueDate_, priceQuoteMethod_,
                                              priceQuoteBaseValue_, creditCurveId_, creditGroup_, referenceCurveId_,
                                              incomeCurveId_, volatilityCurveId_, coupons_, securityId_, referenceDatum,
                                              startDate, endDate);
@@ -205,6 +208,21 @@ void BondData::checkData() const {
     QL_REQUIRE(missingElements.empty(), "BondData invalid: missing " + boost::algorithm::join(missingElements, ", ") +
                                                 " - check if reference data is set up for '"
                                             << securityId_ << "'");
+}
+
+std::string BondData::isdaBaseProduct() const {
+    static const std::set<std::string> singleName = {"ABS", "Corporate", "Loans", "Muni", "Sovereign"};
+    static const std::set<std::string> index = {"ABX", "CMBX", "MBX", "PrimeX", "TRX", "iBoxx"};
+    if (singleName.find(subType()) != singleName.end()) {
+        return "Single Name";
+    } else if (index.find(subType()) != index.end()) {
+        return "Index";
+    } else {
+        QL_FAIL("BondData::isdaBaseProduct() not defined for subType '"
+                << subType() << "', expected: "
+                << boost::algorithm::join(singleName, ", ") + " (map to 'Single Name') " +
+                       boost::algorithm::join(index, ", ") + " (map to 'Index')");
+    }
 }
 
 void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
@@ -256,6 +274,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     maturity_ = bond->cashflows().back()->date();
     notional_ = currentNotional(bond->cashflows());
     notionalCurrency_ = bondData_.currency();
+
+    issuer_ = bondData_.issuerId();
 
     // Add legs (only 1)
     legs_ = {bond->cashflows()};

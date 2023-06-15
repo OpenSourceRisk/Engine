@@ -171,14 +171,12 @@ struct TestData {
         cmb.addCorrelation("IR:GBP", "FX:GBPEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.1)));
 
         Real tolerance = 1e-4;
-        boost::shared_ptr<CrossAssetModelData> config1(
-            boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs,
-                                                    crCirConfigs, comConfigs, cmb.correlations(), tolerance, measure,
-                                                    CrossAssetModel::Discretization::Exact));
-        boost::shared_ptr<CrossAssetModelData> config2(
-            boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs,
-                                                    crCirConfigs, comConfigs, cmb.correlations(), tolerance, measure,
-                                                    CrossAssetModel::Discretization::Euler));
+        boost::shared_ptr<CrossAssetModelData> config1(boost::make_shared<CrossAssetModelData>(
+            irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs, comConfigs, 0, cmb.correlations(),
+            tolerance, measure, CrossAssetModel::Discretization::Exact));
+        boost::shared_ptr<CrossAssetModelData> config2(boost::make_shared<CrossAssetModelData>(
+            irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs, comConfigs, 0, cmb.correlations(),
+            tolerance, measure, CrossAssetModel::Discretization::Euler));
 
         CrossAssetModelBuilder modelBuilder1(market, config1);
         ccLgmExact = *modelBuilder1.model();

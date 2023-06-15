@@ -16,11 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/instruments/makevanillaswap.hpp>
-#ifdef QL_USE_INDEXED_COUPON
 #include <ql/cashflows/floatingratecoupon.hpp>
-#endif
-
+#include <ql/cashflows/iborcoupon.hpp>
+#include <ql/instruments/makevanillaswap.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
 
 namespace QuantExt {
@@ -100,22 +98,22 @@ void BasisTwoSwapHelper::initializeDates() {
 
 /* May need to adjust latestDate_ if you are projecting libor based
    on tenor length rather than from accrual date to accrual date. */
-#ifdef QL_USE_INDEXED_COUPON
-    if (termStructureHandle_ == shortIndex_->forwardingTermStructure()) {
-        boost::shared_ptr<FloatingRateCoupon> lastFloating =
-            boost::dynamic_pointer_cast<FloatingRateCoupon>(shortSwap_->floatingLeg().back());
-        Date fixingValueDate = shortIndex_->valueDate(lastFloating->fixingDate());
-        Date endValueDate = shortIndex_->maturityDate(fixingValueDate);
-        latestDate_ = std::max(latestDate_, endValueDate);
+    if (!IborCoupon::Settings::instance().usingAtParCoupons()) {
+        if (termStructureHandle_ == shortIndex_->forwardingTermStructure()) {
+            boost::shared_ptr<FloatingRateCoupon> lastFloating =
+                boost::dynamic_pointer_cast<FloatingRateCoupon>(shortSwap_->floatingLeg().back());
+            Date fixingValueDate = shortIndex_->valueDate(lastFloating->fixingDate());
+            Date endValueDate = shortIndex_->maturityDate(fixingValueDate);
+            latestDate_ = std::max(latestDate_, endValueDate);
+        }
+        if (termStructureHandle_ == longIndex_->forwardingTermStructure()) {
+            boost::shared_ptr<FloatingRateCoupon> lastFloating =
+                boost::dynamic_pointer_cast<FloatingRateCoupon>(longSwap_->floatingLeg().back());
+            Date fixingValueDate = longIndex_->valueDate(lastFloating->fixingDate());
+            Date endValueDate = longIndex_->maturityDate(fixingValueDate);
+            latestDate_ = std::max(latestDate_, endValueDate);
+        }
     }
-    if (termStructureHandle_ == longIndex_->forwardingTermStructure()) {
-        boost::shared_ptr<FloatingRateCoupon> lastFloating =
-            boost::dynamic_pointer_cast<FloatingRateCoupon>(longSwap_->floatingLeg().back());
-        Date fixingValueDate = longIndex_->valueDate(lastFloating->fixingDate());
-        Date endValueDate = longIndex_->maturityDate(fixingValueDate);
-        latestDate_ = std::max(latestDate_, endValueDate);
-    }
-#endif
 }
 
 void BasisTwoSwapHelper::setTermStructure(YieldTermStructure* t) {

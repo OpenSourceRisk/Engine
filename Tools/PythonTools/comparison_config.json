@@ -598,6 +598,7 @@
           "ProductClass",
           "RiskClass",
           "MarginType",
+          "Bucket",
           "SimmSide"
         ],
         "rename_cols": {
@@ -605,6 +606,7 @@
           "product_class": "ProductClass",
           "riskClass": "RiskClass",
           "marginType": "MarginType",
+          "bucket": "Bucket",
           "initialMargin": "InitialMargin"
         },
         "use_cols": [
@@ -1188,7 +1190,7 @@
           }
         ]
       },
-	  "dividends.csv": {
+      "dividends.csv": {
         "keys": [
           "dividendExDate",
           "equityId"
@@ -1203,7 +1205,23 @@
             "rel_tol": 1e-6
           }
         ]
+      },
+      "credit_migration.*\\.csv": {
+        "keys": [
+          "upperBucketBound"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "pdf",
+              "cdf"
+            ],
+            "abs_tol": 1e-6,
+            "rel_tol": 1e-6
+          }
+        ]
       }
+
     }
   }
 }

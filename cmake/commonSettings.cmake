@@ -71,9 +71,6 @@ if(MSVC)
     add_compile_definitions(_SCL_SECURE_NO_DEPRECATE)
     add_compile_definitions(_CRT_SECURE_NO_DEPRECATE)
     add_compile_definitions(BOOST_ENABLE_ASSERT_HANDLER)
-    if(ENABLE_SESSIONS)
-        add_compile_definitions(QL_ENABLE_SESSIONS)
-    endif()
     add_compile_options(/bigobj)
     add_compile_options(/W3)
     #add_compile_options(/we4265) #no-virtual-destructor
@@ -89,6 +86,11 @@ if(MSVC)
     # add_compiler_flag("/we4389" signed_compare_mscv)
     
     add_link_options(/LARGEADDRESSAWARE)
+
+    add_compile_options("$<$<CONFIG:Release>:/GF>")
+    add_compile_options("$<$<CONFIG:Release>:/Gy>")
+    add_compile_options("$<$<CONFIG:Release>:/Ot>")
+    add_compile_options("$<$<CONFIG:Release>:/GT>")
 
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/GF>")
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Gy>")

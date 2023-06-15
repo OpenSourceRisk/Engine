@@ -25,9 +25,10 @@ namespace analytics {
 
 CubeInterpretation::CubeInterpretation(const bool storeFlows, const bool withCloseOutLag,
                                        const QuantLib::Handle<AggregationScenarioData>& aggregationScenarioData,
-                                       const boost::shared_ptr<DateGrid>& dateGrid, const bool flipViewXVA)
+                                       const boost::shared_ptr<DateGrid>& dateGrid, const Size storeCreditStateNPVs,
+                                       const bool flipViewXVA)
     : storeFlows_(storeFlows), withCloseOutLag_(withCloseOutLag), aggregationScenarioData_(aggregationScenarioData),
-      dateGrid_(dateGrid), flipViewXVA_(flipViewXVA) {
+      dateGrid_(dateGrid), storeCreditStateNPVs_(storeCreditStateNPVs), flipViewXVA_(flipViewXVA) {
 
     // determine required cube depth and layout
 
@@ -40,13 +41,21 @@ CubeInterpretation::CubeInterpretation(const bool storeFlows, const bool withClo
     }
 
     if (storeFlows_) {
-        mporFlowsIndex_ = requiredCubeDepth_++;
+        mporFlowsIndex_ = requiredCubeDepth_;
+        requiredCubeDepth_ += 2;
+    }
+
+    if (storeCreditStateNPVs_ > 0) {
+        creditStateNPVsIndex_ = requiredCubeDepth_;
+        requiredCubeDepth_ += storeCreditStateNPVs_;
     }
 }
 
 bool CubeInterpretation::storeFlows() const { return storeFlows_; }
 
 bool CubeInterpretation::withCloseOutLag() const { return withCloseOutLag_; }
+
+Size CubeInterpretation::storeCreditStateNPVs() const { return storeCreditStateNPVs_; }
 
 const QuantLib::Handle<AggregationScenarioData>& CubeInterpretation::aggregationScenarioData() const {
     return aggregationScenarioData_;
@@ -61,6 +70,7 @@ Size CubeInterpretation::requiredNpvCubeDepth() const { return requiredCubeDepth
 Size CubeInterpretation::defaultDateNpvIndex() const { return defaultDateNpvIndex_; }
 Size CubeInterpretation::closeOutDateNpvIndex() const { return closeOutDateNpvIndex_; }
 Size CubeInterpretation::mporFlowsIndex() const { return mporFlowsIndex_; }
+Size CubeInterpretation::creditStateNPVsIndex() const { return creditStateNPVsIndex_; }
 
 Real CubeInterpretation::getGenericValue(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
                                          Size sampleIdx, Size depth) const {
@@ -85,8 +95,8 @@ Real CubeInterpretation::getCloseOutNpv(const boost::shared_ptr<NPVCube>& cube, 
         return getGenericValue(cube, tradeIdx, dateIdx + 1, sampleIdx, defaultDateNpvIndex_);
 }
 
-Real CubeInterpretation::getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
-                                      Size sampleIdx) const {
+Real CubeInterpretation::getMporPositiveFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+                                             Size sampleIdx) const {
     Real aggMporFlowsVal = 0.0;
     try {
         aggMporFlowsVal = getGenericValue(cube, tradeIdx, dateIdx, sampleIdx, mporFlowsIndex_);
@@ -95,6 +105,23 @@ Real CubeInterpretation::getMporFlows(const boost::shared_ptr<NPVCube>& cube, Si
                                                         << "; " << e.what());
     }
     return aggMporFlowsVal;
+}
+
+Real CubeInterpretation::getMporNegativeFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+                                             Size sampleIdx) const {
+    Real aggMporFlowsVal = 0.0;
+    try {
+        aggMporFlowsVal = getGenericValue(cube, tradeIdx, dateIdx, sampleIdx, mporFlowsIndex_ + 1);
+    } catch (std::exception& e) {
+        DLOG("Unable to retrieve MPOR flows for trade " << tradeIdx << ", date " << dateIdx << ", sample " << sampleIdx
+                                                        << "; " << e.what());
+    }
+    return aggMporFlowsVal;
+}
+
+Real CubeInterpretation::getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+                                      Size sampleIdx) const {
+    return getMporPositiveFlows(cube, tradeIdx, dateIdx, sampleIdx) + getMporNegativeFlows(cube, tradeIdx, dateIdx, sampleIdx) ;
 }
 
 Real CubeInterpretation::getDefaultAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx,

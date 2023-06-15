@@ -251,7 +251,7 @@ void OREApp::analytics() {
             for (auto b : a.second) {
                 LOG("write npv cube " << b.first);
                 string reportName = b.first;
-                std::string fileName = inputs_->resultsPath().string() + "/" + outputs_->outputFileName(reportName, "dat");
+                std::string fileName = inputs_->resultsPath().string() + "/" + outputs_->outputFileName(reportName, "csv.gz");
                 LOG("write npv cube " << reportName << " to file " << fileName);
                 saveCube(fileName, *b.second);
             }
@@ -261,7 +261,7 @@ void OREApp::analytics() {
         for (auto a : analyticsManager_->mktCubes()) {
             for (auto b : a.second) {
                 string reportName = b.first;
-                std::string fileName = inputs_->resultsPath().string() + "/" + outputs_->outputFileName(reportName, "dat");
+                std::string fileName = inputs_->resultsPath().string() + "/" + outputs_->outputFileName(reportName, "csv.gz");
                 LOG("write market cube " << reportName << " to file " << fileName);
                 saveAggregationScenarioData(fileName, *b.second);
             }
@@ -449,7 +449,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     if (params_->hasGroup("npv"))
         inputs->setBaseCurrency(params_->get("npv", "baseCurrency"));
     else {
-        ALOG("Base currency not set");
+        WLOG("Base currency not set");
     }
         
     tmp = params_->get("setup", "useMarketDataFixings", false);
@@ -561,7 +561,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     if (tmp != "") {
         inputs->setPortfolioFromFile(tmp, inputPath);
     } else {
-        ALOG("Portfolio data not found");
+        WLOG("Portfolio data not provided");
     }
 
     if (params_->hasGroup("markets")) {
@@ -764,6 +764,45 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         inputs->setSensitivityStreamFromFile(sensiFile);
     }
     
+    /****************
+     * SIMM
+     ****************/
+
+    tmp = params_->get("simm", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        inputs->insertAnalytic("SIMM");
+        
+        tmp = params_->get("simm", "version", false);
+        if (tmp != "")
+            inputs->setSimmVersion(tmp);
+
+        tmp = params_->get("simm", "crif", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            inputs->setCrifFromFile(file, inputs->csvEolChar(), inputs->csvSeparator(),
+                                    inputs->csvQuoteChar(), inputs->csvEscapeChar());
+        }
+        
+        tmp = params_->get("simm", "calculationCurrency", false);
+        if (tmp != "")
+            inputs->setSimmCalculationCurrency(tmp);
+        else {
+            QL_REQUIRE(inputs->baseCurrency() != "",
+                       "either base currency or calculation currency is required");
+            inputs->setSimmCalculationCurrency(inputs->baseCurrency());
+        }
+        
+        tmp = params_->get("simm", "resultCurrency", false);
+        if (tmp != "")
+            inputs->setSimmResultCurrency(tmp);
+        else
+            inputs->setSimmResultCurrency(inputs->simmCalculationCurrency());
+
+        tmp = params_->get("simm", "reportingCurrency", false);
+        if (tmp != "")
+            inputs->setSimmReportingCurrency(tmp);
+    }
+    
     /************
      * Simulation
      ************/
@@ -777,7 +816,11 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     tmp = params_->get("xva", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         inputs->insertAnalytic("XVA");
-    
+
+    tmp = params_->get("simulation", "salvageCorrelationMatrix", false);
+    if (tmp != "")
+        inputs->setSalvageCorrelationMatrix(parseBool(tmp));
+
     tmp = params_->get("simulation", "amc", false);
     if (tmp != "")
         inputs->setAmc(parseBool(tmp));
@@ -840,7 +883,11 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("simulation", "storeFlows", false);
         if (tmp == "Y")
             inputs->setStoreFlows(true);
-        
+
+        tmp = params_->get("simulation", "storeCreditStateNPVs", false);
+        if (!tmp.empty())
+            inputs->setStoreCreditStateNPVs(parseInteger(tmp));
+
         tmp = params_->get("simulation", "storeSurvivalProbabilities", false);
         if (tmp == "Y")
             inputs->setStoreSurvivalProbabilities(true);
@@ -1116,6 +1163,31 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     tmp = params_->get("xva", "kvaTheirCvaRiskWeight", false);
     if (tmp != "")
         inputs->setKvaTheirCvaRiskWeight(parseReal(tmp));
+
+    // credit simulation
+
+    tmp = params_->get("xva", "creditMigration", false);
+    if (tmp != "")
+        inputs->setCreditMigrationAnalytic(parseBool(tmp));
+
+    tmp = params_->get("xva", "creditMigrationDistributionGrid", false);
+    if (tmp != "")
+        inputs->setCreditMigrationDistributionGrid(parseListOfValues<Real>(tmp, &parseReal));
+
+    tmp = params_->get("xva", "creditMigrationTimeSteps", false);
+    if (tmp != "")
+        inputs->setCreditMigrationTimeSteps(parseListOfValues<Size>(tmp, &parseInteger));
+
+    tmp = params_->get("xva", "creditMigrationConfig", false);
+    if (tmp != "") {
+        string file = inputPath + "/" + tmp;
+        LOG("Loading credit migration config from file" << file);
+        inputs->setCreditSimulationParametersFromFile(file);
+    }
+
+    tmp = params_->get("xva", "creditMigrationOutputFiles", false);
+    if (tmp != "")
+        inputs->setCreditMigrationOutputFiles(tmp);
 
     // cashflow npv and dynamic backtesting
 

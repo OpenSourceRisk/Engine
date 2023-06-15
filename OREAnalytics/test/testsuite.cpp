@@ -18,8 +18,13 @@
 
 #include <iomanip>
 #include <iostream>
-
 #include <oret/config.hpp>
+
+// Boost
+#include <boost/make_shared.hpp>
+#include <boost/timer/timer.hpp>
+using namespace boost;
+using boost::timer::cpu_timer;
 
 // Boost.Test
 #define BOOST_TEST_MODULE "OREAnalyticsTestSuite"
@@ -30,13 +35,13 @@
 #endif
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/test_tools.hpp>
-
-// Boost
-using namespace boost;
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
+#include <oret/basedatapath.hpp>
+#include <oret/datapaths.hpp>
 #include <oret/oret.hpp>
+using ore::test::getBaseDataPath;
 using ore::test::setupTestLogging;
 
 #ifdef BOOST_MSVC
@@ -54,6 +59,9 @@ using ore::test::setupTestLogging;
 #include <boost/config/auto_link.hpp>
 #endif
 
+// Global base path variable
+string basePath = "";
+
 class OreaGlobalFixture {
 public:
     OreaGlobalFixture() {
@@ -62,7 +70,32 @@ public:
 
         // Set up test logging
         setupTestLogging(argc, argv);
+
+        // Set the base data path for the unit tests
+        basePath = getBaseDataPath(argc, argv);
     }
+
+    ~OreaGlobalFixture() { stopTimer(); }
+
+    // Method called in destructor to log time taken
+    void stopTimer() {
+        t.stop();
+        double seconds = t.elapsed().wall * 1e-9;
+        int hours = int(seconds / 3600);
+        seconds -= hours * 3600;
+        int minutes = int(seconds / 60);
+        seconds -= minutes * 60;
+        std::cout << std::endl << "OREData tests completed in ";
+        if (hours > 0)
+            std::cout << hours << " h ";
+        if (hours > 0 || minutes > 0)
+            std::cout << minutes << " m ";
+        std::cout << std::fixed << std::setprecision(0) << seconds << " s" << std::endl;
+    }
+
+private:
+    // Timing the test run
+    cpu_timer t;
 };
 
 // Breaking change in 1.65.0

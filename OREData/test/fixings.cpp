@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
 
     // Populate empty fixings map using the function to be tested
     map<string, set<Date>> fixings;
-    addMarketFixingDates(fixings, mktParams);
+    addMarketFixingDates(asof, fixings, mktParams);
 
     // Check the results
     BOOST_CHECK_EQUAL(expectedFixings.size(), fixings.size());
@@ -394,8 +394,8 @@ BOOST_FIXTURE_TEST_CASE(testDividends, F) {
 
     BOOST_REQUIRE_MESSAGE(DividendManager::instance().hasHistory(eq->name()),
                           "Could not find index " << eq->name() << " in DividendManager");
-    map<Date, Dividend> divMap;
-    const set<Dividend>& dividends = eq->dividendFixings();
+    map<Date, QuantExt::Dividend> divMap;
+    const set<QuantExt::Dividend>& dividends = eq->dividendFixings();
     for (const auto& d : dividends)
         divMap[d.exDate] = d;
 

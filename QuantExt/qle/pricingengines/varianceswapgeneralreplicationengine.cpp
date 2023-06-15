@@ -119,7 +119,7 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateAccruedVariance(const Ca
 
     std::map<Date, Real> dividends;
     if (arguments_.addPastDividends) {
-        if (auto eqIndex = boost::dynamic_pointer_cast<EquityIndex>(index_)) {
+        if (auto eqIndex = boost::dynamic_pointer_cast<EquityIndex2>(index_)) {
             auto divs = eqIndex->dividendFixings();
             for (const auto& d : divs)
                 dividends[d.exDate] = d.rate;

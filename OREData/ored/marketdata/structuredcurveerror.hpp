@@ -33,7 +33,7 @@ namespace data {
 class StructuredCurveErrorMessage : public StructuredMessage {
 public:
     StructuredCurveErrorMessage(const std::string& curveId, const std::string& exceptionType,
-                                const std::string& exceptionWhat = "")
+                                const std::string& exceptionWhat)
         : StructuredMessage(Category::Error, Group::Curve, exceptionWhat,
               std::map<std::string, std::string>({{"exceptionType", exceptionType}, {"curveId", curveId}})) {}
 };

@@ -25,10 +25,10 @@
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
+#include <qle/models/marketobserver.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
 #include <ored/model/lgmbuilder.hpp>
-#include <ored/model/marketobserver.hpp>
 #include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/utilities/dategrid.hpp>
@@ -83,36 +83,71 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
                      const Handle<YieldTermStructure>& yts, BlackCalibrationHelper::CalibrationErrorType errorType,
                      Real strike, Real shift, const Size settlementDays, const RateAveraging::Type averagingMethod) {
 
+    // hardcoded parameters to ensure a robust cailbration:
+
+    // 1 If the helper's strike is too far away from the ATM level in terms of the relevant std dev, we move the
+    //   calibration strike closer to the ATM level
+    static constexpr Real maxAtmStdDev = 3.0;
+
+    // 2 If the helper value is lower than mmv, replace it with a "more reasonable" helper. Here, we replace
+    //   the helper with a helper that has the ATM strike. There are other options here.
+    static constexpr Real mmv = 1.0E-20;
+
+    // 3 Switch to PriceError if helper's market value is below smv
+    static constexpr Real smv = 1.0E-8;
+
+    // Notice: the vol that is passed in to this method is in general a dummy value, which is good enough though to
+    // check 2 and 3 above. To check 1, the vol is not needed at all.
+
     auto vt = svts->volatilityType();
     auto helper = boost::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                      floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
                                                      settlementDays, averagingMethod);
+    auto sd = swaptionData(helper->swaption(), yts, svts);
 
-    // If the helper value is lower than mmv, replace it with a "more reasonable" helper. Here, we replace
-    // the helper with a helper that has the ATM strike. There are other options here.
-    static constexpr Real mmv = 1.0E-20;
+    // ensure point 1 from above
+
+    Real atmStdDev = svts->volatility(sd.timeToExpiry, sd.swapLength, sd.atmForward) * std::sqrt(sd.timeToExpiry);
+    if (vt == ShiftedLognormal) {
+        atmStdDev *= sd.atmForward + shift;
+    }
+    if (strike != Null<Real>() && std::abs(strike - sd.atmForward) > maxAtmStdDev * atmStdDev) {
+        DLOG("Helper with expiry " << expiry << " and term " << term << " has a strike (" << strike
+                                   << ") that is too far out of the money (atm = " << sd.atmForward << ", atmStdDev = "
+                                   << atmStdDev << "). Adjusting the strike using maxAtmStdDev " << maxAtmStdDev);
+        if (strike > sd.atmForward)
+            strike = sd.atmForward + maxAtmStdDev * atmStdDev;
+        else
+            strike = sd.atmForward - maxAtmStdDev * atmStdDev;
+        helper = boost::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
+                                                    floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
+                                                    settlementDays, averagingMethod);
+    }
+
+    // ensure point 2 from above
+
     auto mv = std::abs(helper->marketValue());
     if (mv < mmv) {
-        auto sd = swaptionData(helper->swaption(), yts, svts);
+        DLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
+                                   << std::scientific << mv << " which is lower than minimum market value " << mmv
+                                   << " so switching to helper with atm rate " << sd.atmForward);
         strike = sd.atmForward;
         helper = boost::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                     floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
                                                     settlementDays, averagingMethod);
-        DLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
-                                   << std::scientific << mv << " which is lower than minimum market value " << mmv
-                                   << " so switching to helper with atm rate " << strike);
     }
 
-    // Switch to PriceError if helper's market value is below 1e-8
-    static constexpr Real smv = 1.0E-8;
+    // ensure point 3 from above
+
     mv = std::abs(helper->marketValue());
     if (errorType != BlackCalibrationHelper::PriceError && mv < smv) {
-        helper = boost::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
-                                                    floatDayCounter, yts, BlackCalibrationHelper::PriceError, strike,
-                                                    1.0, vt, shift, settlementDays, averagingMethod);
+        errorType = BlackCalibrationHelper::PriceError;
         TLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
                                    << std::scientific << mv << " which is lower than " << smv
                                    << " so switching to a price error helper.");
+        helper = boost::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
+                                                    floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
+                                                    settlementDays, averagingMethod);
     }
 
     DLOG("Created swaption helper with expiry " << expiry << " and term " << term << ": vol=" << vol->value()

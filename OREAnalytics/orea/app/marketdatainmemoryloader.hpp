@@ -42,14 +42,11 @@ public:
     
     void retrieveMarketData(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
         const ore::analytics::QuoteMap& quotes,
-        const QuantLib::Date& relabelDate = QuantExt::Null<QuantLib::Date>()) override;        
+        const QuantLib::Date& marketDate) override;        
     
     void retrieveFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
         ore::analytics::FixingMap fixings = {},
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap = {}) override;
-
-    void retrieveExpiredContracts(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, const QuoteMap& quotes,
-                             const Date& npvLaggedDate) override {};
 
 private:
     boost::shared_ptr<InputParameters> inputs_;

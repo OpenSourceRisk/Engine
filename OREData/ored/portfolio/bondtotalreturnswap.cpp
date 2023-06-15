@@ -169,10 +169,11 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Leg fundingNotionalLeg;
     if (fundingLegData_.notionalInitialExchange() || fundingLegData_.notionalFinalExchange() ||
         fundingLegData_.notionalAmortizingExchange()) {
+        Natural fundingLegPayLag = 0;
         fundingNotionalLeg =
             makeNotionalLeg(fundingLeg, fundingLegData_.notionalInitialExchange(),
                             fundingLegData_.notionalFinalExchange(), fundingLegData_.notionalAmortizingExchange(),
-                            parseBusinessDayConvention(fundingLegData_.paymentConvention()),
+                            fundingLegPayLag, parseBusinessDayConvention(fundingLegData_.paymentConvention()),
                             parseCalendar(fundingLegData_.paymentCalendar()));
     }
 

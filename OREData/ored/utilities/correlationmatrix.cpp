@@ -130,15 +130,6 @@ Matrix CorrelationMatrixBuilder::correlationMatrix(const vector<string>& ccys,
 
 Matrix CorrelationMatrixBuilder::correlationMatrix(const ProcessInfo& processInfo) {
 
-    // Check that all IR processes are currency codes and that we have at least one currency
-    auto outerIt = processInfo.find(CrossAssetModel::AssetType::IR);
-    QL_REQUIRE(outerIt != processInfo.end() && !outerIt->second.empty(),
-        "Need at least one currency to build correlation matrix.");
-    
-    for (const auto& p : outerIt->second) {
-        QL_REQUIRE(p.first.size() == 3, "Invalid ccy code " << p.first);
-    }
-
     // Get the dimension of the matrix to create and create a list of factors.
     Size dim = 0;
     vector<CorrelationFactor> factors;
@@ -230,6 +221,8 @@ void CorrelationMatrixBuilder::checkFactor(const CorrelationFactor& f) const {
     case CrossAssetModel::AssetType::INF:
     case CrossAssetModel::AssetType::CR:
     case CrossAssetModel::AssetType::EQ:
+    case CrossAssetModel::AssetType::COM:
+    case CrossAssetModel::AssetType::CrState:
         QL_REQUIRE(!f.name.empty(), "Expected non-empty factor name for factor type " << f.type);
         break;
     default:

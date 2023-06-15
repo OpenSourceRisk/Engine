@@ -64,7 +64,7 @@ public:
                            const boost::shared_ptr<ScenarioSimMarket>& simMarket,
                            const boost::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
                            const boost::shared_ptr<NPVCube>& cube,
-                           const set<std::pair<string, boost::shared_ptr<ModelBuilder>>>& modelBuilders = {},
+                           const set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders = {},
                            bool dryRun = false);
 
     /*! Constructor to use a multi-threaded valuation engine */

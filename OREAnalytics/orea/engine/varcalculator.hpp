@@ -16,29 +16,38 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/model/modelbuilder.hpp
-    \brief Model builder base class
-    \ingroup models
+/*! \file engine/varcalculator.hpp
+    \brief Base class for a var calculation
+    \ingroup engine
 */
 
 #pragma once
 
-#include <ql/patterns/lazyobject.hpp>
+#include <ored/report/report.hpp>
+#include <ored/utilities/timeperiod.hpp>
+
+#include <qle/math/covariancesalvage.hpp>
+
+#include <ql/math/array.hpp>
+#include <ql/math/matrix.hpp>
+
+#include <map>
+#include <set>
 
 namespace ore {
-namespace data {
+namespace analytics {
+using QuantLib::Array;
+using QuantLib::Matrix;
 
-class ModelBuilder : public QuantLib::LazyObject {
+//! VaR Calculator
+class VarCalculator {
 public:
-    //! recalibrate model, if necessary
-    void recalibrate() const { calculate(); }
+    VarCalculator() {}
+    virtual ~VarCalculator() {}
 
-    //! force recalibration of model
-    virtual void forceRecalculate() { recalculate(); }
-
-    //! if false is returned, the model does not require a recalibration
-    virtual bool requiresRecalibration() const = 0;
+    virtual QuantLib::Real var(QuantLib::Real confidence, const bool isCall = true, 
+        const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) = 0;
 };
 
-} // namespace data
+} // namespace analytics
 } // namespace ore

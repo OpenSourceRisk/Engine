@@ -27,6 +27,7 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/engine/valuationengine.hpp>
+#include <orea/aggregation/dimregressioncalculator.hpp>
 
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/builders/currencyswap.hpp>
@@ -186,6 +187,8 @@ void Analytic::buildPortfolio() {
         portfolio()->add(trade);
     
     if (market_) {
+        replaceTrades();
+
         LOG("Build the portfolio");
         boost::shared_ptr<EngineFactory> factory = impl()->engineFactory();
         portfolio()->build(factory, "analytic/" + label());

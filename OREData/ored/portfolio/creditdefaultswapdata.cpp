@@ -404,11 +404,10 @@ bool isAuctionedSeniority(CdsTier contractTier, CreditEventTiers creditEventTier
 }
 // end TODO refactor to creditevents.cpp
 
-CdsReferenceInformation::CdsReferenceInformation():
-    tier_(CdsTier::SNRFOR), docClause_(CdsDocClause::XR14) {}
+CdsReferenceInformation::CdsReferenceInformation() : tier_(CdsTier::SNRFOR), docClause_(boost::none) {}
 
 CdsReferenceInformation::CdsReferenceInformation(const string& referenceEntityId, CdsTier tier,
-                                                 const Currency& currency, CdsDocClause docClause)
+                                                 const Currency& currency, boost::optional<CdsDocClause> docClause)
     : referenceEntityId_(referenceEntityId), tier_(tier), currency_(currency), docClause_(docClause) {
     populateId();
 }
@@ -418,7 +417,9 @@ void CdsReferenceInformation::fromXML(XMLNode* node) {
     referenceEntityId_ = XMLUtils::getChildValue(node, "ReferenceEntityId", true);
     tier_ = parseCdsTier(XMLUtils::getChildValue(node, "Tier", true));
     currency_ = parseCurrency(XMLUtils::getChildValue(node, "Currency", true));
-    docClause_ = parseCdsDocClause(XMLUtils::getChildValue(node, "DocClause", true));
+    if (auto s = XMLUtils::getChildValue(node, "DocClause", false); !s.empty()) {
+        docClause_ = parseCdsDocClause(s);
+    }
     populateId();
 }
 
@@ -427,24 +428,34 @@ XMLNode* CdsReferenceInformation::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "ReferenceEntityId", referenceEntityId_);
     XMLUtils::addChild(doc, node, "Tier", to_string(tier_));
     XMLUtils::addChild(doc, node, "Currency", currency_.code());
-    XMLUtils::addChild(doc, node, "DocClause", to_string(docClause_));
+    if(docClause_)
+        XMLUtils::addChild(doc, node, "DocClause", to_string(*docClause_));
     return node;
 }
 
 void CdsReferenceInformation::populateId() {
-    id_ = referenceEntityId_ + "|" + to_string(tier_) + "|" + currency_.code() + "|" + to_string(docClause_);
+    id_ = referenceEntityId_ + "|" + to_string(tier_) + "|" + currency_.code();
+    if (docClause_)
+        id_ += "|" + to_string(*docClause_);
 }
 
-bool tryParseCdsInformation(const string& strInfo, CdsReferenceInformation& cdsInfo) {
+CdsDocClause CdsReferenceInformation::docClause() const {
+    QL_REQUIRE(docClause_, "CdsReferenceInforamtion::docClause(): docClause not set.");
+    return *docClause_;
+}
+
+bool CdsReferenceInformation::hasDocClause() const { return docClause_ != boost::none; }
+
+bool tryParseCdsInformation(string strInfo, CdsReferenceInformation& cdsInfo) {
 
     DLOG("tryParseCdsInformation: attempting to parse " << strInfo);
 
-    // As in documentation comment, expect strInfo of form ID|TIER|CCY|DOCCLAUSE
+    // As in documentation comment, expect strInfo of form ID|TIER|CCY(|DOCCLAUSE)
     vector<string> tokens;
     boost::split(tokens, strInfo, boost::is_any_of("|"));
 
-    if (tokens.size() != 4) {
-        TLOG("String " << strInfo << " not of form ID|TIER|CCY|DOCCLAUSE so parsing failed");
+    if (tokens.size() != 4 && tokens.size() != 3) {
+        TLOG("String " << strInfo << " not of form ID|TIER|CCY(|DOCCLAUSE) so parsing failed");
         return false;
     }
 
@@ -458,9 +469,13 @@ bool tryParseCdsInformation(const string& strInfo, CdsReferenceInformation& cdsI
         return false;
     }
 
-    CdsDocClause cdsDocClause;
-    if (!tryParse<CdsDocClause>(tokens[3], cdsDocClause, &parseCdsDocClause)) {
-        return false;
+    boost::optional<CdsDocClause> cdsDocClause;
+    if (tokens.size() == 4) {
+        CdsDocClause tmp;
+        if (!tryParse<CdsDocClause>(tokens[3], tmp, &parseCdsDocClause)) {
+            return false;
+        }
+        cdsDocClause = tmp;
     }
 
     cdsInfo = CdsReferenceInformation(tokens[0], cdsTier, ccy, cdsDocClause);
@@ -507,6 +522,9 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
     // XMLNode* tmp = XMLUtils::getChildNode(node, "CreditCurveId");
     if (auto tmp = XMLUtils::getChildNode(node, "CreditCurveId")) {
         creditCurveId_ = XMLUtils::getNodeValue(tmp);
+        CdsReferenceInformation ref;
+        if (tryParseCdsInformation(creditCurveId_, ref))
+            referenceInformation_ = ref;
     } else {
         tmp = XMLUtils::getChildNode(node, "ReferenceInformation");
         QL_REQUIRE(tmp, "Need either a CreditCurveId or ReferenceInformation node in CreditDefaultSwapData");

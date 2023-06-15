@@ -153,7 +153,7 @@ void OISCapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
             constOvts = Handle<OptionletVolatilityStructure>(boost::make_shared<ConstantOptionletVolatility>(
                 0, NullCalendar(), Unadjusted, rawQuote_, Actual365Fixed(), Normal));
         }
-        auto pricer = boost::make_shared<BlackOvernightIndexedCouponPricer>(constOvts);
+        auto pricer = boost::make_shared<BlackOvernightIndexedCouponPricer>(constOvts, true);
         for (auto c : capFloorCopy_) {
             auto f = boost::dynamic_pointer_cast<FloatingRateCoupon>(c);
             if (f) {

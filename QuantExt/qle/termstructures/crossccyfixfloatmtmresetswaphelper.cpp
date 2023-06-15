@@ -15,14 +15,10 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-#include <qle/pricingengines/crossccyswapengine.hpp>
-#ifdef QL_USE_INDEXED_COUPON
-#include <ql/cashflows/floatingratecoupon.hpp>
-#endif
-
-#include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
-
 #include <boost/make_shared.hpp>
+#include <ql/cashflows/iborcoupon.hpp>
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
 
 namespace QuantExt {
 
@@ -96,25 +92,26 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
 
     /* May need to adjust latestDate_ if you are projecting libor based
         on tenor length rather than from accrual date to accrual date. */
-#ifdef QL_USE_INDEXED_COUPON
-    Size numCashflows = swap_->leg(1).size();
-    Date endDate = latestDate_;
-    if (numCashflows > 0) {
-        for (Size i = numCashflows - 1; i >= 0; i--) {
-            boost::shared_ptr<FloatingRateCoupon> lastFloating =
-                boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(1)[i]);
-            if (!lastFloating)
-                continue;
-            else {
-                Date fixingValueDate = domesticCcyIndex_->valueDate(lastFloating->fixingDate());
-                endDate = domesticCcyIndex_->maturityDate(fixingValueDate);
-                Date endValueDate = domesticCcyIndex_->maturityDate(fixingValueDate);
-                latestDate_ = std::max(latestDate_, endValueDate);
-                break;
+    if (!IborCoupon::Settings::instance().usingAtParCoupons()) {
+        Size numCashflows = swap_->leg(1).size();
+        Date endDate = latestDate_;
+        if (numCashflows > 0) {
+            for(Size i = numCashflows; i > 0; i--) {
+                Size pos = i - 1;
+                boost::shared_ptr<FloatingRateCoupon> lastFloating =
+                    boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(1)[pos]);
+                if (!lastFloating)
+                    continue;
+                else {
+                    Date fixingValueDate = index_->valueDate(lastFloating->fixingDate());
+                    endDate = index_->maturityDate(fixingValueDate);
+                    Date endValueDate = index_->maturityDate(fixingValueDate);
+                    latestDate_ = std::max(latestDate_, endValueDate);
+                    break;
+                }
             }
         }
     }
-#endif
 }
 
 void CrossCcyFixFloatMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {

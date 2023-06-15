@@ -27,6 +27,7 @@
       <xs:element type="SobolRsgDirectionIntegers" name="DirectionIntegers" minOccurs="0"/>
       <xs:element type="xs:string" name="CloseOutLag" minOccurs="0"/>
       <xs:element type="mporMode" name="MporMode" minOccurs="0"/>
+       <xs:element type="mporCashFlowMode" name="MporCashFlowMode" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -34,6 +35,15 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="ActualDate"/>
       <xs:enumeration value="StickyDate"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="mporCashFlowMode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="NonePay"/>
+      <xs:enumeration value="BothPay"/>
+      <xs:enumeration value="WePay"/>
+      <xs:enumeration value="TheyPay"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -171,6 +181,13 @@
         <xs:complexType>
           <xs:sequence>
             <xs:element type="commoditySchwartz" name="CommoditySchwartz" maxOccurs="unbounded" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="CreditStates" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:integer" name="NumberOfFactors"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -1390,6 +1407,20 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element name="AggregationScenarioDataCreditStates" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:integer" name="NumberOfFactors"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="AggregationScenarioDataSurvivalWeights" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="Name" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="BaseCorrelations"  minOccurs="0">
         <xs:complexType>
           <xs:sequence>
@@ -1434,6 +1465,13 @@
             </xs:element>
             <xs:element type="xs:string" name="Expiries"/>
           </xs:all>
+        </xs:complexType>
+      </xs:element> 
+      <xs:element name="CreditStates" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="NumberOfFactors"/>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
     </xs:all>
