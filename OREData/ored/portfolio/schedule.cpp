@@ -334,8 +334,10 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
         // handle special rules outside the QuantLib date generation rules
 
         if (data.rule() == "EveryThursday") {
-            return Schedule(everyThursdayDates(startDate, endDate, firstDate), calendar, bdc, bdcEnd, tenor, rule,
-                            endOfMonth);
+            auto dates = everyThursdayDates(startDate, endDate, firstDate);
+            for (auto& d : dates)
+                d = calendar.adjust(d, bdc);
+            return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth);
         }
     }
 
