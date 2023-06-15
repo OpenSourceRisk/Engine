@@ -1,0 +1,518 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue
+}
+
+% Avoid warning about missing font for \textbackslash character.
+\usepackage[T1]{fontenc}
+
+% For nicer paragraph spacing
+\usepackage{parskip}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{longtable}
+\usepackage{floatrow}
+\usepackage{makecell}
+
+% Use \setminted here to get horizontal line above and below listings
+\usepackage{minted}
+\setminted{
+   frame=lines,
+   framesep=2mm
+}
+
+\usepackage{textcomp}
+\usepackage{color,soul}
+\usepackage[font={small,it}]{caption}
+\floatsetup[listing]{style=Plaintop}    
+\floatsetup[longlisting]{style=Plaintop}    
+
+% Turn off indentation but allow \indent command to still work.
+\newlength\tindent
+\setlength{\tindent}{\parindent}
+\setlength{\parindent}{0pt}
+\renewcommand{\indent}{\hspace*{\tindent}}
+
+\addtolength{\textwidth}{0.8in}
+\addtolength{\oddsidemargin}{-.4in}
+\addtolength{\evensidemargin}{-.4in}
+\addtolength{\textheight}{1.6in}
+\addtolength{\topmargin}{-.8in}
+
+\usepackage{longtable,supertabular}
+\usepackage{listings}
+\lstset{
+  frame=top,frame=bottom,
+  basicstyle=\ttfamily,
+  language=XML,
+  tabsize=2,
+  belowskip=2\medskipamount
+}
+
+\usepackage{tabu}
+\tabulinesep=1.0mm
+\restylefloat{table}
+
+\usepackage{siunitx}
+\usepackage{tablefootnote}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{footmisc}
+\newenvironment{longlisting}{\captionsetup{type=listing}}{}
+
+% Inline code fragments can run over the page boundary without ragged right.
+\AtBeginDocument{\raggedright}
+
+\begin{document}
+
+\title{ORE Credit Migration Model}
+\author{Acadia Inc.}
+\date{4 May 2023}
+\maketitle
+
+\newpage
+
+%-------------------------------------------------------------------------------
+\section*{Document History}
+
+\begin{center}
+\begin{supertabular}{|l|l|p{9cm}|}
+\hline
+Date & Author & Comment \\
+\hline
+4 May 2023 & Acadia & initial release\\
+\hline
+\end{supertabular}
+\end{center}
+
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+This paper summarizes the methodology of the Credit Migation Model provided in ORE, its parametrization and
+implementation details.
+
+\section{Methodology}
+
+
+\subsection{Credit-worthiness model and transition matrices}
+
+We model the credit-worthiness $X_i$ of an ``entity'' $i$. Here, an entity represents either a {\em counterparty} in a
+(derivative) trade or an {\em issuer} referenced in a funded position exposed to credit risk (e.g. a Bond, Loan) or
+credit derivative trade (e.g. CDS). The credit-worthiness $X_i$ is modelled as
+
+\begin{equation}
+dX_i = dY_i + dZ_i, \qquad  dY_i = \sum_{j=1}^n \beta_{ij}\,dG_j , \qquad dZ_i = \sigma_i dW_i
+\end{equation}
+
+Here:
+
+\begin{itemize}
+\item $Y_i$ is the systematic part of the credit risk driven by global credit factors $G_j$ (shared between entities),
+  which are standard Brownian motions with correlation $dG_k\,dG_l = \rho_{kl}\,dt$. The $\beta_{ij}$ are entity-specifc
+  loadings.
+\item $Z_i$ is the idiosyncratic part of the credit risk of entity $i$, driven by standard Brownian motions $W_i$ which are independent of all
+  global factors $G_j$
+\item $\beta_{ij}$ and $\sigma_i$ are chosen such that $X_i$ is a standard brownian motion, i.e. it generates variance
+  $t$ up to time $t$
+\end{itemize}
+
+The systemic/global factors $G_i$ are evolved in ORE's standard exposure simulation. Conditional on the systematic factors
+the credit worthiness indices $X_i$ are independent.
+
+Input to the credit migration model is an {\em unconditional} annual transition matrix $M_i$ that can be entity
+dependent. For $n$ rating states including the default state $M_i$ is an $n \times n$ matrix. The $k$th row and $j$th
+column of $M_i$ contains the probability $p_{kj}$ to migrate from rating state $k$ to state $j$, where the states are
+ordered from highest to lowest quality. A typical matrix is given in \ref{credit_simulation_config}.
+
+To derive (unconditional) transition matrices $M_i(t)$ for arbitrary time horizons $t \in (0,\infty)$ we use the
+algorithm QOG in \cite{Kreinin2001}.
+
+Writing
+
+\begin{equation}
+ P_{kf} = \sum_{j=1}^f p_{kj}
+\end{equation}
+
+for the probability to migrate from initial state $k$ to some final state better or equal in quality than $f$, it is
+straightforward to construct the migration matrix $M_i(t)\,|\,Y_i$ conditional on the realisation of the systematic part
+$Y_i$ as
+
+\begin{equation}
+P_{kf}\,|\, Y_i := \Phi\left( \frac{\Phi^{-1}(P_{kf}) - Y_i(t) / \sqrt{t}}{\sigma_i} \right)
+\end{equation}
+
+\subsection{PnL Distributions}
+
+We generate a PnL distribution for a subset of the exposure simulation time steps. For a fixed time step the
+total PnL is given by the sum of
+
+\begin{itemize}
+\item the market risk PnL (if active in the credit simulation config, see \ref{credit_simulation_config})
+\item the credit migration risk PnL (if active, again see \ref{credit_simulation_config})
+\end{itemize}
+
+\subsubsection{Market Risk PnL}
+
+The market risk PnL is a single number per exposure simulation path and computed as
+
+\begin{equation}
+-\nu_0 + \sum_{l=1}^L c(l) + \nu_L
+\end{equation}
+
+where $\nu_0$ is the NPV of the simulated portfolio at the T0 valuation date, $c(l)$ is the NPV of the cashflows between
+simulation time step $l-1$ (first future simulation time step has index 0) and $l$ and $\nu_L$ is the NPV of the
+simulated portfolio at the simulation time step for which the PnL distribution is generated.
+
+The market risk PnL is computed for the full simulated portfolio.
+
+\subsubsection{Credit Migration PnL}
+
+The credit migration PnL is itself computed as a distribution conditional on a single exposure simulation path. The path-wise distributions are averaged over all exposure simulation paths to get the final credit migration PnL distribution.
+
+The credit migration PnL splits into
+
+\begin{itemize}
+\item credit migration PnL from counterparty risk for trades that are in a specified netting set (NettingSetIds in \ref{credit_simulation_config})
+\item credit migration PnL from issuer risk for trades that are exposed to issuer risk (Bonds, CDS etc.\footnote{current
+coverage: trade types CreditDefaultSwap, Bond}) {\em and} the issuer is specified under Entities in
+  \ref{credit_simulation_config}
+\end{itemize}
+
+The former part of the credit migration PnL is determined as the default risk of the netted exposure (after
+collateralisation) from the usual exposure post-processing. No migration risk is considered here.
+
+The latter part of the credit migration PnL is generated in different ways depending on the evaluation mode (see
+\ref{credit_simulation_config}) as follows:
+
+{\em Analytic}: In this mode we do not simulate the idiosyncratic factors.  We exploit the fact that the credit-worthiness indicators $X_i$ are conditionally independent given the
+systematic state $Y_i$. We use a multi-state Hull-White bucketing algorithm to generate the distribution. Each entity
+contributes a probability / PnL vector of size $n$ where $n$ is the number of rating states to the bucketing
+algorithm. The PnL vector is based on the conditional transition matrix.
+
+{\em TerminalSimulation}: Based on the conditional transition matrix for an outer exposure simulation path we run an
+inner Monte Carlo simulation to generate realisations of the idiosyncratic risk for each entity at the terminal/horizon
+date $t_n$. The number of paths for this inner simulation is specified in \ref{credit_simulation_config}. For each inner
+path we get a final migration state for an entity and from that a PnL contribution.
+
+\section{Parametrisation}
+
+\subsection{General settings in ore.xml}\label{general_settings}
+
+There is a credit-model specific entry for Analytic type {\em simulation} that determines that multiple market values
+are stored in the NPV cube corresponding to the rating states at a simulation point. The number given should be equal to
+the number of rating states including the default state that are considered in the credit-model run. If omitted, no
+credit-state dependent market values are stored in the NPV cube, which will generally let the post-processing step for
+the credit-model fail. The following setting is suitable for e.g. rating states Aaa, Aa, A, Baa, Ba, B, C, Default.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <Analytic type="simulation">
+      <Parameter name="storeCreditStateNPVs">8</Parameter>
+      ...
+\end{minted}
+
+There are several parameters in the Analytic type {\em XVA} relevant for the post-processing step of the credit-model:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <Analytic type="xva">
+      <Parameter name="creditMigration">Y</Parameter>
+      <Parameter name="creditMigrationDistributionGrid">-2E7,1E7,300</Parameter>
+      <Parameter name="creditMigrationTimeSteps">3,11</Parameter>
+      <Parameter name="creditMigrationConfig">creditsimulation.xml</Parameter>
+      <Parameter name="creditMigrationOutputFiles">credit_migration_bond1</Parameter>
+      ...
+\end{minted}
+
+The meaning of the parameters are as follows:
+
+\begin{itemize}
+\item creditMigration: Y to activate the credit-model post-processing step, N to deactivate this step
+\item creditMigrationDistributionGrid: parameter triple min, max, steps that defines the binning of the PnL distribution
+\item creditMigrationTimeSteps: simulation time steps to evaluate, 0 refers to the first future simulation time
+\item creditMigrationConfig: credit simulation config, described in \ref{credit_simulation_config}
+\item creditMigrationOutputFiles: prefix for output PnL distribution files, the time step and file extension csv will be
+  appended to that name
+\end{itemize}
+
+\subsection{Simulation settings in simulation.xml}
+
+The cross asset model section should contain the number of systematic credit factors $Z_i$ to evolve in the cross asset
+model.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CrossAssetModel>
+    <CreditStates>
+      <NumberOfFactors>1</NumberOfFactors>
+    </CreditStates>
+    ...
+\end{minted}
+
+The market section should contain the same entry \footnote{This is redundant, but technically more transparent: The former entry determines the number of credit factors used to evolve the cross asset model while the latter entry determines the number of credit factors to include in a scenario in the simulation market.}
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Market>
+    <CreditStates>
+      <NumberOfFactors>1</NumberOfFactors>
+    </CreditStates>
+    ...
+\end{minted}
+
+The market section should also include a similar entry for the aggregation scenario data generation (since the systematic credit states are stored in the aggregation scenario data)
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Market>
+    <AggregationScenarioDataCreditStates>
+      <NumberOfFactors>1</NumberOfFactors>
+    </AggregationScenarioDataCreditStates>
+    ...
+\end{minted}
+
+and entries that specify credit curve ids that are used in the postprocessing. For each credit curve id the survival probability up to the simulation point on each path are stored. The following stores this information for $7$ credit curves labelled ``Bond'' plus rating (excluding default in this case):
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Market>
+    <AggregationScenarioDataSurvivalWeights>
+      <Name>BOND_AAA</Name>
+      <Name>BOND_AA</Name>
+      <Name>BOND_A</Name>
+      <Name>BOND_BBB</Name>
+      <Name>BOND_BB</Name>
+      <Name>BOND_B</Name>
+      <Name>BOND_C</Name>
+    </AggregationScenarioDataSurvivalWeights>
+    ...
+\end{minted}
+
+\subsection{Pricing engine config in pricingengine.xml}\label{pricing_engine_config}
+
+If multiple credit state NPVs should be stored during the simulation run (see \ref{general_settings}), suitable pricing
+engines have to be used that allow for the computation of several rating state NPVs. By convention, those pricing
+engines store the state NPVs in an additional result with label ``stateNPVs''. If this additional result is not provided
+for a trade, the multi-state valuation calculator will populate all state npvs in the NPV cube with the same value as
+the usual npv valuation calculator does. The ``stateNPVs'' result contains a default value as well, i.e. if there are
+e.g. $8$ rating states in total including a default state, the result will be a vector of length 8.
+
+Currently there are multi-state pricing engines for bond and cds. Example config for bond:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngineMultiState</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+      <Parameter name="Rule_0">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_AAA</Parameter>
+      <Parameter name="Rule_1">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_AA</Parameter>
+      <Parameter name="Rule_2">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_A</Parameter>
+      <Parameter name="Rule_3">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_BBB</Parameter>
+      <Parameter name="Rule_4">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_BB</Parameter>
+      <Parameter name="Rule_5">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_B</Parameter>
+      <Parameter name="Rule_6">(_AAA$|_AA$|_A$|_BBB$|_BB$|_B$|_C$),_C</Parameter>
+    </EngineParameters>
+  </Product>
+\end{minted}
+
+The parameters Rule\_0, ..., Rule\_6 are rules how to substitute a regex within a credit curve id of a bond (left
+parameter) with a new string (right parameter). If the bond contains a credit curve id containing one of the rating
+states like e.g.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <BondData>
+      <IssuerId>CPTY_C</IssuerId>
+      <CreditCurveId>BOND_BB</CreditCurveId>
+      ...
+\end{minted}
+
+this ensures that the bond will be priced using the credit curves with id BOND\_AAA, ..., BOND\_C.
+
+\subsection{Credit simulation config in creditsimulation.xml}\label{credit_simulation_config}
+
+This is the configuration of the credit-model postprocessing step.
+
+The central object of the credit simulation are ``entities'' that stand for either counterparties of (derivative) trades
+or issuers referenced from bonds or credit default swaps.
+
+The config contains one or several definition of (annual) transition matrices that define the overall migration
+probabilities for the entities. Example:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <TransitionMatrices>
+    <TransitionMatrix>
+      <Name>TransitionMatrix_1</Name>
+      <Data t0="0.0" t1="1.0">
+    <!--   Aaa     Aa      A       Baa     Ba      B       C    Default  -->
+	0.8588, 0.0976, 0.0048, 0.0000, 0.0003, 0.0000, 0.0000, 0.0000, 
+	0.0092, 0.8487, 0.0964, 0.0036, 0.0015, 0.0002, 0.0000, 0.0004, 
+	0.0008, 0.0224, 0.8624, 0.0609, 0.0077, 0.0021, 0.0000, 0.0002, 
+	0.0008, 0.0037, 0.0602, 0.7916, 0.0648, 0.0130, 0.0011, 0.0019, 
+	0.0003, 0.0008, 0.0046, 0.0402, 0.7676, 0.0788, 0.0047, 0.0140, 
+	0.0001, 0.0004, 0.0016, 0.0053, 0.0586, 0.7607, 0.0274, 0.0660, 
+	0.0000, 0.0000, 0.0000, 0.0100, 0.0279, 0.0538, 0.5674, 0.2535, 
+	0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 1.0000  
+      </Data>
+    </TransitionMatrix>
+  </TransitionMatrices>
+\end{minted}
+
+The parameters t0, t1 can be used to define a term structure of transition matrices (not supported at the moment). The
+transition matrices are references from the entities definitions that follow next. Here, the entity identified by
+\verb+CPTY_A+ uses the migration matrix \verb+TransitionMatrix_1+. The is a single factor loading $\beta$ defined here,
+i.e. the assumption is that one systemic credit factor $Z_i$ is evolved. Several factor loading for multifactor models
+are specified as a comma separated list. The initial state define the T0 rating state. This should be consistent with
+the credit curve setup in the trades / reference data, i.e. bonds or cds referencing \verb+CPTY_A+ should use a default
+curve \verb+CPTY_A_Baa+, since Baa is the 4th credit state and numbering of the initial states starts at $0$.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Entities>
+    <Entity>
+      <Name>CPTY_A</Name>
+      <FactorLoadings>0.4898979485566356</FactorLoadings>
+      <TransitionMatrix>TransitionMatrix_1</TransitionMatrix>
+      <InitialState>3</InitialState>
+    </Entity>
+    ...
+\end{minted}
+
+The netting set id entry determines which netting sets are considered in the calculation of default risk for derivative
+exposure. This uses the netted exposure (i.e. after collateral) with zero recovery (hardcoded assumption at the moment).
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <NettingSetIds>
+    CPTY_B,CPTY_C
+  </NettingSetIds>
+\end{minted}
+
+Finally the risk section defines how and which risks are considered in the postprocessing step:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Risk>
+    <Market>N</Market>
+    <Credit>Y</Credit>
+    <ZeroMarketPnl>N</ZeroMarketPnl>
+    <Evaluation>ForwardSimulationB</Evaluation>
+    <CreditMode>Migration</CreditMode>
+    <LoanExposureMode>Value</LoanExposureMode>
+    <DoubleDefault>Y</DoubleDefault>
+    <Paths>1000</Paths>
+    <Seed>42</Seed>
+  </Risk>
+\end{minted}
+
+The meanings of the parameters are:
+
+\begin{itemize}
+\item Market: Include market risk pnl, this is derived from the simulated market values (in the initial state only) and
+  cashflows in the NPV cube
+\item Credit: Include credit risk pnl, this is derived from
+  \begin{itemize}
+    \item migration / default risk for counterparty derivative exposure (specified via NettingSetIds)
+    \item migration / default risk for issuer exposure (bond, cds)
+  \end{itemize}
+\item ZeroMarketPnl: If Y the market pnl of a credit-risk relevant trade (typically a CDS) is weighted with the survival
+  probability until the simulation point.
+\item Evaluation: the method to compute the credit risk pnl:
+  \begin{itemize}
+  \item Analytic: Simulation of systematic credit factors only. Exploit conditional independency of entity defaults and Hull-White bucketing to generate credit risk pnl.
+  \item TerminalSimulation: Simulation of systematic credit risk factors using a large step from $t=0$ to the current
+    analyzed time step and conditioning on the systematic credit risk factors at the terminal time step
+  \end{itemize}
+\item CreditMode: Migration or Default, indicating whether to consider all rating migrations or only the migration to default in the credit pnl
+\item LoanExposureMode: Notional or Value, indicating whether to consider the market value or the notional as a substitute for the market value in the credit pnl
+\item DoubleDefault: Consider double default risk for CDS (simultaneous default of both issuer and counterparty), this
+  is only supported for Evaluation = Analytic.
+\item Paths: Number of ``inner'' simulation paths for ForwardSimulationA, ForwardSimulationB, TerminalSimulation. For
+    each ``outer'' exposure simulation path, this number of inner paths are simulated to get the credit migration pnl
+    distribution for the outer path
+\item Seed: Seed used to generate the inner simulation paths. A Mersenne Twister RNG is used for inner path generation.  
+\end{itemize}
+
+\section{Implementation Details}
+
+\subsection{Matrix Utilities}
+
+\subsubsection{Exponential and Logarithm of a matrix}
+
+The exponential and logarithm of a matrix is provided in \verb+matrixfunctions.hpp+ as \verb+Logm()+ and \verb+Expm()+. The implementation depends on the availabilty of the Eigen library \cite{Eigen} during the build of ORE:
+
+\begin{itemize}
+\item Eigen is available: The Eigen implementation of the matrix exponential and logarithm are used. See \url{https://eigen.tuxfamily.org/dox/unsupported/group__MatrixFunctions__Module.html#matrixbase_exp} and \url{https://eigen.tuxfamily.org/dox/unsupported/group__MatrixFunctions__Module.html#matrixbase_log}.
+\item Eigen is not available: The QuantLib implementation of the matrix exponential is used. The matrix logarithm is not implemented and will throw an error when called. The credit model will in general not work in this case, i.e. the Eigen installation is required to ensure full functionality.
+\end{itemize}
+
+\subsubsection{Transition matrix utilities}
+
+\verb+transitionmatrix.hpp+ contains some utilities related to transition matrices:
+
+\begin{itemize}
+\item \verb+checkTransitionMatrix()+ checks whether a given (quadratic) matrix is a transition matrix, i.e. all entries are in $[0,1]$ and row sums are $1$.
+\item \verb+checkGeneratorMatrix()+ checks whether a given (quadratic) matrix is a generator matrix, i.e. all entries
+  are non-negative and row sums are $0$
+\item \verb+sanitiseTransitionMatrix()+ modifies a matrix such that the result is a valid transition matrix. The function simply caps resp. floors the matrix entries at $1$ resp. $0$. If after that
+  operation a row sum $s$ excluding the diagonal element is $\leq 1$ the diagonal element for that row is overwritten
+  with $1-s$. If the row sum $s$ excluding the diagonal element is $>1$, all elements in the row are divided by $s$. In
+  both cases the resulting row entries will sum up to $1$.
+\item \verb+generator()+ computes a generator for a given transition matrix and time horizon $T$ following the algorithm
+  QOG in \cite{Kreinin2001}.
+\end{itemize}
+
+\subsection{CreditMigrationHelper}
+
+This class produces the pnl distributions. The main functions are:
+
+\begin{itemize}
+\item \verb+build()+: given a set of trades (usually the whole simulation portfolio), identify
+  \begin{itemize}
+    \item trades that reference a credit name which is also a configured entity, those contribute to the {\em issuer
+      risk} within the credit migration pnl (current coverage: trade types bond, cds)
+    \item trades that fall into a netting set configured under NettingSetIds, those contribute to the {\em counterparty
+      risk} within the credit migration pnl
+  \end{itemize}
+\item \verb+pnlDistribution()+: build the aggregated market and credit migration pnl for a given time step. This breaks down as follows
+  \begin{itemize}
+  \item Scale unconditional transition matrices to the given time step (using QOG in \cite{Kreinin2001}, i.e. a regularized generator)
+  \item For each (outer) exposure simulation path, compute the market risk pnl
+  \item Compute the credit migration pnl as described below.
+  \end{itemize}
+\end{itemize}
+
+The computation of the credit migration pnl in the last step is done as follows:
+
+\begin{itemize}
+\item Evaluation = Analytic: generate the credit-risk pnl using \verb+generateConditionalMigrationPnl()+. This includes
+  \begin{itemize}
+  \item computing the conditional transition matrices
+  \item generating the issuer-risk pnl at the simulation horizon based on the conditional matrices and the NPVs for all
+    credit states computed with multi-state pricing engines
+  \item generating the counterparty-risk pnl at the simulation horizon based on the conditional migration probabilty to
+    default and the usual NPV for relevant derivative trades
+  \end{itemize}
+\item Evaluation $\neq$ Analytic: generate the credit-risk pnl using calls to
+  \begin{itemize}
+  \item \verb+initEntityStateSimulation()+: Compute conditional transition matrices for large step (TerminalSimulation)
+  \item for each ``inner'' simulation path: simulate the entity state using \verb+simulateEntityStates()+
+  \item for each ``inner'' simulation path: generate credit-risk pnl using \verb+generateMigrationPnl()+ based on the
+    simulated entity state at the terminal time step and for issuer and counterparty risk (this is donw similar to
+    Evaluation = Analytic described above)
+  \end{itemize}
+\end{itemize}
+
+\begin{thebibliography}{*}
+
+\bibitem{Eigen} Eigen library \url{https://eigen.tuxfamily.org}
+  
+\bibitem{Kreinin2001} Alexander Kreinin and Marina Sidelnikova, {\em Regularization Algorithms for Transition Matrices}, Algo Research Quaterly, Vol. 4, Nos. 1/2 March/June 2001
+
+\end{thebibliography}
+
+\end{document}

@@ -499,6 +499,8 @@ private:
     Category category_;
     Group group_;
     string message_;
+
+protected:
     std::map<string, string> subFields_;
 };
 

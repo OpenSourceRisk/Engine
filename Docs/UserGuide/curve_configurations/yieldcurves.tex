@@ -143,12 +143,13 @@ described in section \ref{sec:conventions}. The \lstinline!Conventions! node ass
 When the node name is \lstinline!Simple!, the \lstinline!Type! node has the value \emph{Deposit}, \emph{FRA},
 \emph{Future}, \emph{OIS}, \emph{Swap} or \emph{BMA Basis Swap} and the node has the structure shown in Listing
 \ref{lst:simple_segment}. This segment holds quotes for a set of deposit, FRA, Future, OIS or swap instruments
-corresponding to the value in the \lstinline!Type! node. These quotes will be used by the bootstrap algorithm to imply
-a discount factor, or equivalently a zero rate, curve. The only difference between this segment and the direct segment
-is that there is a \lstinline!ProjectionCurve! node. This node allows us to specify the CurveId of another curve to
-project floating rates on the instruments underlying the quotes listed in the \lstinline!Quote! nodes during the
-bootstrap procedure. This is an optional node. If it is left blank or omitted, then the projection curve is assumed to
-equal the curve being bootstrapped i.e.\ the current CurveId.
+corresponding to the value in the \lstinline!Type! node. These quotes will be used by the bootstrap algorithm to imply a
+discount factor, or equivalently a zero rate, curve. The only difference between this segment and the direct segment is
+that there is a \lstinline!ProjectionCurve! node. This node allows us to specify the CurveId of another curve to project
+floating rates on the instruments underlying the quotes listed in the \lstinline!Quote! nodes during the bootstrap
+procedure. This is an optional node. If it is left blank or omitted, then the projection curve is assumed to equal the
+curve being bootstrapped i.e.\ the current CurveId. The \lstinline!PillarChoice! node determines the bootstrap pillars
+that are used (MaturityDate, LastRelevantDate).
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -161,6 +162,7 @@ equal the curve being bootstrapped i.e.\ the current CurveId.
     <!--...-->
   </Quotes>
   <Conventions> </Conventions>
+  <PillarChoice> </PillarChoice>
   <ProjectionCurve> </ProjectionCurve>
 </Simple>
 \end{minted}
@@ -175,7 +177,8 @@ swap instruments. The \lstinline!Quotes! node has the structure shown in Listing
 quote for an Average OIS instrument (a typical example in a USD Overnight Index Swap) consists of two quotes, a vanilla
 IRS quote and an OIS-LIBOR basis swap spread quote.  The IDs of these two quotes are stored in the
 \lstinline!CompositeQuote! node. The \lstinline!RateQuote! node holds the ID of the vanilla IRS quote and the
-\lstinline!SpreadQuote! node holds the ID of the OIS-LIBOR basis swap spread quote.
+\lstinline!SpreadQuote! node holds the ID of the OIS-LIBOR basis swap spread quote. The \lstinline!PillarChoice! node
+determines the bootstrap pillars that are used (MaturityDate, LastRelevantDate).
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -188,6 +191,7 @@ IRS quote and an OIS-LIBOR basis swap spread quote.  The IDs of these two quotes
     <!--...-->
   </Quotes>
   <Conventions> </Conventions>
+  <PillarChoice> </PillarChoice>
   <ProjectionCurve> </ProjectionCurve>
 </AverageOIS>
 \end{minted}
@@ -224,7 +228,8 @@ the short tenor index. Similarly, there is a \lstinline!ProjectionCurveLong! nod
 tenor. This node holds the CurveId of a curve for projecting the floating rates on the long tenor index. These are
 optional nodes. If they are left blank or omitted, then the projection curve is assumed to equal the curve being
 bootstrapped i.e.\ the current CurveId. However, at least one of the nodes needs to be populated to allow the bootstrap
-to proceed.
+to proceed. The \lstinline!PillarChoice! node determines the bootstrap pillars that are used (MaturityDate,
+LastRelevantDate).
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -237,6 +242,7 @@ to proceed.
     <!--...-->
   </Quotes>
   <Conventions> </Conventions>
+  <PillarChoice> </PillarChoice>
   <ProjectionCurveLong> </ProjectionCurveLong>
   <ProjectionCurveShort> </ProjectionCurveShort>
 </TenorBasis>
@@ -246,13 +252,14 @@ to proceed.
 \end{listing}
 
 \subsubsection*{Cross Currency Segment}
-When the node name is \lstinline!CrossCurrency!, the \lstinline!Type! node has the value \emph{FX Forward},
-\emph{Cross Currency Basis Swap} or \emph{Cross Currency Fix Float Swap}. When the \lstinline!Type! node has the value
-\emph{FX Forward}, the node has the structure shown in Listing \ref{lst:fx_forward_segment}. This segment is used to
-hold quotes for FX forward instruments. The \lstinline!DiscountCurve! node holds the CurveId of a curve used to
-discount cash flows in the other currency i.e.\ the currency in the currency pair that is not equal to the currency in
-Listing \ref{lst:top_level_yc}. The \lstinline!SpotRate! node holds the ID of a spot FX quote for the currency pair that
-is looked up in the {\tt market.txt} file.
+When the node name is \lstinline!CrossCurrency!, the \lstinline!Type! node has the value \emph{FX Forward}, \emph{Cross
+Currency Basis Swap} or \emph{Cross Currency Fix Float Swap}. When the \lstinline!Type! node has the value \emph{FX
+Forward}, the node has the structure shown in Listing \ref{lst:fx_forward_segment}. This segment is used to hold quotes
+for FX forward instruments. The \lstinline!DiscountCurve! node holds the CurveId of a curve used to discount cash flows
+in the other currency i.e.\ the currency in the currency pair that is not equal to the currency in Listing
+\ref{lst:top_level_yc}. The \lstinline!SpotRate! node holds the ID of a spot FX quote for the currency pair that is
+looked up in the {\tt market.txt} file. The \lstinline!PillarChoice! node determines the bootstrap pillars that are used
+(MaturityDate, LastRelevantDate).
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -265,6 +272,7 @@ is looked up in the {\tt market.txt} file.
           ...
   </Quotes>
   <Conventions> </Conventions>
+  <PillarChoice> </PillarChoice>
   <DiscountCurve> </DiscountCurve>
   <SpotRate> </SpotRate>
 </CrossCurrency>
@@ -297,6 +305,7 @@ the other currency. If it is left blank or omitted, then it is assumed to equal 
           ...
   </Quotes>
   <Conventions> </Conventions>
+  <PillarChoice> </PillarChoice>
   <DiscountCurve> </DiscountCurve>
   <SpotRate> </SpotRate>
   <ProjectionCurveDomestic> </ProjectionCurveDomestic>
@@ -407,6 +416,67 @@ The \lstinline!BootstrapConfig! has the following interpretation for a fitted bo
 \caption{Fitted bond yield curve segment}
 \label{lst:fitted_bond_segment}
 \end{listing}
+
+\subsubsection*{Bond Yield Shifted}
+\label{sec:bond_yield_shifted}
+
+When the node name is \lstinline!BondYieldShifted!, the \lstinline!Type! node has the only allowable value \emph{Bond Yield Shifted},
+and the node has the structure shown in Listing \ref{lst:bond_yield_shifted}. This segment is used to build yield
+curves which are adjusted by liquid bond yields. The adjustment is derived as an average of the spreads between the bond's
+yields-to-maturity and the reference curve level at the tenor points corresponding the bond durations.
+
+Compared to the fitted bond segment the shifted curve can be built with only one liquid bond. This approach is useful in
+cases of limited number of liquid comparable bonds and hence unstable fitting of Nelson Siegel. The average spread
+at the average duration point may be considered as a sensitivity point of a corresponding zero coupon bond.
+
+The segment has the following elements:
+
+\begin{itemize}
+  \item Quotes: a list of bond price quotes, for each security in the list, reference data must be available
+  \item ReferenceCurve: the curve which will be used to calculate the bond spread. This curve will also be shifted by the resulting spread
+  \item IborIndexCurves: for each Ibor index that is required by one of the bonds to which the curve is fitted, a mapping
+    to an estimation curve for that index must be provided
+  \item ExtrapolateFlat: if true, the parametric curve is extrapolated flat in the instantaneous forward rate before the
+    first and after the last maturity of the bonds in the calibration basket. This avoids unrealistic rates at the short
+    end or for long maturities in the resulting curve.
+  \end{itemize}
+
+  \begin{listing}[H]
+    %\hrule\medskip
+    \begin{minted}[fontsize=\footnotesize]{xml}
+        <YieldCurve>
+        <CurveId>USD.Benchmark.Curve_Shifted</CurveId>
+        <CurveDescription>Curve shifted with a bond's spreads at the bond duration tenors</CurveDescription>
+        <Currency>USD</Currency>
+        <DiscountCurve/>
+        <Segments>
+          <BondYieldShifted>
+            <Type>Bond Yield Shifted</Type>
+            <ReferenceCurve>USD1D</ReferenceCurve>
+            <Quotes>
+              <Quote>BOND/PRICE/EJ7706660</Quote>
+              <Quote>BOND/PRICE/ZR5330686</Quote>
+              <Quote>BOND/PRICE/AS0644417</Quote>
+            </Quotes>
+            <Conventions>BOND_CONVENTIONS</Conventions>
+            <ExtrapolateFlat>true</ExtrapolateFlat>
+            <IborIndexCurves>
+              <IborIndexCurve iborIndex="USD-LIBOR-3M">USD3M</IborIndexCurve>
+            </IborIndexCurves>
+          </BondYieldShifted>
+        </Segments>
+        <InterpolationVariable>Discount</InterpolationVariable>
+        <InterpolationMethod>Linear</InterpolationMethod>
+        <YieldCurveDayCounter>A365</YieldCurveDayCounter>
+        <Tolerance> </Tolerance>
+        <Extrapolation>true</Extrapolation>
+        <BootstrapConfig> </BootstrapConfig>
+    </YieldCurve>
+    \end{minted}
+    \caption{Bond Yield Shifted curve segment}
+    \label{lst:bond_yield_shifted}
+    \end{listing}
+
 
 \subsubsection*{Yield plus Default Segment}
 \label{sec:yield_plus_default}

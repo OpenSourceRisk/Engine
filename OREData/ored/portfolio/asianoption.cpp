@@ -104,7 +104,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(fxIndex->targetCurrency() == payCcy,
                    "FX domestic ccy " << fxIndex->targetCurrency() << " must match pay ccy " << payCcy);
         assetName_ = fxIndex->sourceCurrency().code();
-    } else if (auto eqIndex = boost::dynamic_pointer_cast<QuantExt::EquityIndex>(index)) {
+    } else if (auto eqIndex = boost::dynamic_pointer_cast<QuantExt::EquityIndex2>(index)) {
         // FIXME for EQ and COMM indices check whether EQ, COMM ccy = payCcy (in the engine builders probably)
         assetName_ = eqIndex->name();
     } else if (auto commIndex = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {

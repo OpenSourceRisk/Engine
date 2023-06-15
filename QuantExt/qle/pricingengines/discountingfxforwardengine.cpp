@@ -19,6 +19,7 @@
 #include <ql/event.hpp>
 
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 
 namespace QuantExt {
 
@@ -96,11 +97,53 @@ void DiscountingFxForwardEngine::calculate() const {
         Real fx1 = settleCcy1 ? 1.0 : fxfwd;
         Real fx2 = settleCcy1 ? 1 / fxfwd : 1.0;
 
-        if (!arguments_.isPhysicallySettled && arguments_.payDate > arguments_.fixingDate) {
+        QL_REQUIRE(!arguments_.isPhysicallySettled || arguments_.payDate <= arguments_.fixingDate ||
+                       arguments_.fxIndex != nullptr,
+                   "If pay date (" << arguments_.payDate << ") is strictly after fixing date (" << arguments_.fixingDate
+                                   << "), an FX Index must be given for a cash-settled FX Forward.");
+        if (!arguments_.isPhysicallySettled && arguments_.payDate >= arguments_.fixingDate &&
+            arguments_.fxIndex != nullptr) {
             fx1 = settleCcy1 ? 1.0 : arguments_.fxIndex->fixing(arguments_.fixingDate);
             fx2 = settleCcy1 ? arguments_.fxIndex->fixing(arguments_.fixingDate) : 1.0;
             fxfwd = arguments_.fxIndex->fixing(arguments_.fixingDate);
         }
+
+        // populate cashflow results
+        std::vector<CashFlowResults> cashFlowResults;
+        CashFlowResults cf1, cf2;
+        cf1.payDate = arguments_.payDate;
+        cf1.type = "Notional";
+        cf2.payDate = arguments_.payDate;
+        cf2.type = "Notional";
+        if (!arguments_.isPhysicallySettled) {
+            if (arguments_.payDate >= arguments_.fixingDate) {
+                cf1.fixingDate = arguments_.fixingDate;
+                cf2.fixingDate = arguments_.fixingDate;
+            }
+            cf1.fixingValue = 1.0 / fx1;
+            cf2.fixingValue = 1.0 / fx2;
+            cf1.amount = (tmpPayCurrency1 ? -1.0 : 1.0) * tmpNominal1 / fx1;
+            cf2.amount = (tmpPayCurrency1 ? -1.0 : 1.0) * (-tmpNominal2 / fx2);
+            cf1.currency = settleCcy.code();
+            cf2.currency = settleCcy.code();
+        } else {
+            cf1.amount = (tmpPayCurrency1 ? -1.0 : 1.0) * tmpNominal1;
+            cf2.amount = (tmpPayCurrency1 ? -1.0 : 1.0) * (-tmpNominal2);
+            cf1.currency = ccy1_.code();
+            cf2.currency = ccy2_.code();
+        }
+        if (ccy1_ == arguments_.currency1) {
+            cf1.legNumber = 0;
+            cf2.legNumber = 1;
+            cashFlowResults.push_back(cf1);
+            cashFlowResults.push_back(cf2);
+        } else {
+            cf1.legNumber = 1;
+            cf2.legNumber = 0;
+            cashFlowResults.push_back(cf2);
+            cashFlowResults.push_back(cf1);
+        }
+        results_.additionalResults["cashFlowResults"] = cashFlowResults;
 
         results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * discFar / discNear * (tmpNominal1 / fx1 - tmpNominal2 / fx2);
 

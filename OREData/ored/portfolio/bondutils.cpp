@@ -23,7 +23,8 @@
 namespace ore {
 namespace data {
 
-void populateFromBondReferenceData(std::string& issuerId, std::string& settlementDays, std::string& calendar,
+void populateFromBondReferenceData(std::string& subType,
+                                   std::string& issuerId, std::string& settlementDays, std::string& calendar,
                                    std::string& issueDate, std::string& priceQuoteMethod, string& priceQuoteBaseValue,
                                    std::string& creditCurveId, std::string& creditGroup, std::string& referenceCurveId,
                                    std::string& incomeCurveId, std::string& volatilityCurveId,
@@ -32,6 +33,10 @@ void populateFromBondReferenceData(std::string& issuerId, std::string& settlemen
                                    const std::string& startDate, const std::string& endDate) {
     DLOG("populating data bond from reference data");
     QL_REQUIRE(bondRefData, "populateFromBondReferenceData(): empty bond reference datum given");
+    if (subType.empty()) {
+        subType = bondRefData->bondData().subType;
+        TLOG("overwrite subType with '" << subType << "'");
+    }
     if (issuerId.empty()) {
         issuerId = bondRefData->bondData().issuerId;
         TLOG("overwrite issuerId with '" << issuerId << "'");

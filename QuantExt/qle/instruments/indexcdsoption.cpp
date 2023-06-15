@@ -36,14 +36,15 @@ namespace {
 class ImpliedVolHelper {
 public:
     ImpliedVolHelper(const IndexCdsOption& cdsoption, const Handle<DefaultProbabilityTermStructure>& probability,
-                     Real recoveryRate, const Handle<YieldTermStructure>& termStructure, Real targetValue)
+                     Real recoveryRate, const Handle<YieldTermStructure>& termStructureSwapCurrency,
+                     const Handle<YieldTermStructure>& termStructureTradeCollateral, Real targetValue)
         : targetValue_(targetValue) {
 
         vol_ = boost::shared_ptr<SimpleQuote>(new SimpleQuote(0.0));
         Handle<BlackVolTermStructure> h(
             boost::make_shared<BlackConstantVol>(0, NullCalendar(), Handle<Quote>(vol_), Actual365Fixed()));
         engine_ = boost::make_shared<QuantExt::BlackIndexCdsOptionEngine>(
-            probability, recoveryRate, termStructure,
+            probability, recoveryRate, termStructureSwapCurrency, termStructureTradeCollateral,
             Handle<CreditVolCurve>(boost::make_shared<CreditVolCurveWrapper>(h)));
         cdsoption.setupArguments(engine_->getArguments());
 
@@ -66,10 +67,10 @@ private:
 
 IndexCdsOption::IndexCdsOption(const boost::shared_ptr<IndexCreditDefaultSwap>& swap,
                                const boost::shared_ptr<Exercise>& exercise, Real strike,
-                               CdsOption::StrikeType strikeType, Real tradeDateNtl, Real realisedFep, bool knocksOut,
-                               const QuantLib::Period& indexTerm)
-    : Option(boost::shared_ptr<Payoff>(new NullPayoff), exercise), swap_(swap), strike_(strike),
-      strikeType_(strikeType), tradeDateNtl_(tradeDateNtl), realisedFep_(realisedFep), knocksOut_(knocksOut),
+                               CdsOption::StrikeType strikeType, const Settlement::Type settlementType,
+                               Real tradeDateNtl, Real realisedFep, bool knocksOut, const QuantLib::Period& indexTerm)
+    : Option(boost::make_shared<NullPayoff>(), exercise), swap_(swap), strike_(strike), strikeType_(strikeType),
+      settlementType_(settlementType), tradeDateNtl_(tradeDateNtl), realisedFep_(realisedFep), knocksOut_(knocksOut),
       indexTerm_(indexTerm), riskyAnnuity_(0.0) {
     registerWith(swap_);
 }
@@ -92,6 +93,7 @@ void IndexCdsOption::setupArguments(PricingEngine::arguments* args) const {
     arguments->swap = swap_;
     arguments->strike = strike_;
     arguments->strikeType = strikeType_;
+    arguments->settlementType = settlementType_;
     arguments->tradeDateNtl = tradeDateNtl_;
     arguments->realisedFep = realisedFep_;
     arguments->knocksOut = knocksOut_;
@@ -113,7 +115,9 @@ Real IndexCdsOption::riskyAnnuity() const {
     return riskyAnnuity_;
 }
 
-Volatility IndexCdsOption::impliedVolatility(Real targetValue, const Handle<YieldTermStructure>& termStructure,
+Volatility IndexCdsOption::impliedVolatility(Real targetValue,
+                                             const Handle<YieldTermStructure>& termStructureSwapCurrency,
+                                             const Handle<YieldTermStructure>& termStructureTradeCollateral,
                                              const Handle<DefaultProbabilityTermStructure>& probability,
                                              Real recoveryRate, Real accuracy, Size maxEvaluations, Volatility minVol,
                                              Volatility maxVol) const {
@@ -122,7 +126,8 @@ Volatility IndexCdsOption::impliedVolatility(Real targetValue, const Handle<Yiel
 
     Volatility guess = 0.10;
 
-    ImpliedVolHelper f(*this, probability, recoveryRate, termStructure, targetValue);
+    ImpliedVolHelper f(*this, probability, recoveryRate, termStructureSwapCurrency, termStructureTradeCollateral,
+                       targetValue);
     Brent solver;
     solver.setMaxEvaluations(maxEvaluations);
     return solver.solve(f, accuracy, guess, minVol, maxVol);

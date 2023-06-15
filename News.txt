@@ -1,3 +1,48 @@
+Changes for the 10th ORE release (1.8.10.0):
+============================================
+
+ORE 1.8.10.0 includes the following notable changes, details can be
+found in the commits between April and June 2022.
+
+INSTRUMENTS
+- roll out of Hybrid and Credit instruments, thanks to Acadia Inc., as announced in September 22:
+  * Collateralized Bond Obligation, see Examples 45
+  * Generic Total Return Swap and Contract For Difference framework, see Example 46,
+    referencing Bonds, Forward Bonds, Convertible Bonds, CBOs,
+    Equity and Equity Option positions, or any combination of derivatives covered in ORE
+  * Composite Trade, composites of any ORE trade types, see Example 47
+  * Convertible Bond and Asset Swapped Convertible Option Transaction (ASCOT), see example 48
+- support separate fixing and payment date schedules on floating legs
+- support capped/floored BMA/SIFMA legs
+- support FRAs on OIS
+
+MARKETS
+-
+
+ANALYTICS
+- Add a Credit Portfolio Model to construct portfolio loss distributions due to credit migration,
+  credit default and market moves across cash products and derivatives, see Example 43
+- Add the ISDA Standard Initial Margin Model (SIMM), all versions since inception, see Example 44
+- Expose par sensitivity conversion such that it can be applied to externally enerated sensitivities
+
+TEST
+- QuantExt: 267 test functions (vs 263 in the previous release)
+- OREData: 206 test functions (vs. 203 in the previous release)
+- OREAnalytics: 78 test functions (vs. 88 in the previous release)
+
+DOCUMENTATION
+- The user guide has grown from 486 to 533 pages, due to the migration of Hybrid instruments
+  into ORE, new analytics and examples 43ff.
+- A separate guide for the Credit Portfolio Model in ORE has been added,
+  see Docs/UserGuide/creditmodel.tex
+
+LANGUAGE BINDINGS
+- Upgrade to QuantLib-SWIG-1.30
+
+OTHER
+- Upgrade to QuantLib-1.30
+
+
 Changes for the 9th ORE release (1.8.9.0):
 ============================================
 

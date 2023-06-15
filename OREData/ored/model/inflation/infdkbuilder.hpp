@@ -25,8 +25,8 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/inflation/infdkdata.hpp>
-#include <ored/model/marketobserver.hpp>
-#include <ored/model/modelbuilder.hpp>
+#include <qle/models/marketobserver.hpp>
+#include <qle/models/modelbuilder.hpp>
 
 #include <map>
 #include <ostream>
@@ -42,7 +42,7 @@ namespace data {
 
     \ingroup models
 */
-class InfDkBuilder : public ModelBuilder {
+class InfDkBuilder : public QuantExt::ModelBuilder {
 public:
     /*! Constructor
         \param market                   Market object
@@ -109,7 +109,7 @@ private:
     bool dontCalibrate_ = false;
 
     // market observer
-    boost::shared_ptr<MarketObserver> marketObserver_;
+    boost::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 };
 
 } // namespace data

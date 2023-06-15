@@ -118,7 +118,9 @@ BOOST_AUTO_TEST_CASE(testConstructionWithExplicitCreditCurveId) {
     BOOST_CHECK_EQUAL(cdsData.recoveryRate(), xmlCdsData.recoveryRate());
     BOOST_CHECK_EQUAL(cdsData.referenceObligation(), xmlCdsData.referenceObligation());
     BOOST_CHECK_EQUAL(cdsData.creditCurveId(), xmlCdsData.creditCurveId());
-    BOOST_CHECK(!xmlCdsData.referenceInformation());
+    // The following check is removed because we initialize reference information from the curve id
+    // where possible because it has 4 tokens serparated by |
+    // BOOST_CHECK(!xmlCdsData.referenceInformation());
 }
 
 BOOST_AUTO_TEST_CASE(testConstructionWithCdsReferenceInformation) {

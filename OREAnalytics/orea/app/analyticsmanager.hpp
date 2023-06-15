@@ -67,7 +67,7 @@ private:
     std::map<std::string, boost::shared_ptr<Analytic>> analytics_;
     boost::shared_ptr<InputParameters> inputs_;
     boost::shared_ptr<MarketDataLoader> marketDataLoader_;
-    Analytic::analytic_reports marketDataReports_;
+    Analytic::analytic_reports reports_;
     std::set<std::string> validAnalytics_;
     std::set<std::string> requestedAnalytics_;
 };

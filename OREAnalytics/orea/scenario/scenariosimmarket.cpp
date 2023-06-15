@@ -89,6 +89,8 @@
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
+#include <qle/termstructures/commoditybasispricecurve.hpp>
+#include <qle/termstructures/commoditybasispricecurvewrapper.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/timer/timer.hpp>
@@ -541,7 +543,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // Get the nominal term structure from this scenario simulation market
                         Handle<YieldTermStructure> forecastTs =
                             getYieldCurve(forecastCurve, todaysMarketParams, Market::defaultConfiguration);
-                        Handle<EquityIndex> curve = initMarket->equityCurve(name, configuration);
+                        Handle<EquityIndex2> curve = initMarket->equityCurve(name, configuration);
 
                         // If forecast term structure is empty, fall back on this scenario simulation market's discount
                         // curve
@@ -551,11 +553,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                                  << ccy << "' for equity forecast curve '" << name << "'");
                             forecastTs = discountCurve(ccy);
                         }
-                        boost::shared_ptr<EquityIndex> ei(
+                        boost::shared_ptr<EquityIndex2> ei(
                             curve->clone(equitySpot(name, configuration), forecastTs,
                                          yieldCurve(YieldCurveType::EquityDividend, name, configuration)));
-                        Handle<EquityIndex> eh(ei);
-                        equityCurves_.insert(pair<pair<string, string>, Handle<EquityIndex>>(
+                        Handle<EquityIndex2> eh(ei);
+                        equityCurves_.insert(pair<pair<string, string>, Handle<EquityIndex2>>(
                             make_pair(Market::defaultConfiguration, name), eh));
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, param.first, simDataWritten);
@@ -2238,8 +2240,26 @@ ScenarioSimMarket::ScenarioSimMarket(
                 }
                 break;
 
-            case RiskFactorKey::KeyType::CommodityCurve:
+            case RiskFactorKey::KeyType::CommodityCurve: {
+
+                std::vector<std::string> curveNames;
+                std::vector<std::string> basisCurves;
                 for (const auto& name : param.second.second) {
+                    Handle<PriceTermStructure> initialCommodityCurve =
+                        initMarket->commodityPriceCurve(name, configuration);
+                    boost::shared_ptr<CommodityBasisPriceTermStructure> basisCurve =
+                        boost::dynamic_pointer_cast<QuantExt::CommodityBasisPriceTermStructure>(
+                            initialCommodityCurve.currentLink());
+                    if (basisCurve != nullptr) {
+                        basisCurves.push_back(name);
+                    } else {
+                        curveNames.push_back(name);
+                    }
+                }
+                curveNames.insert(curveNames.end(), basisCurves.begin(), basisCurves.end());
+
+                for (const auto& name : curveNames) {
+
                     bool simDataWritten = false;
                     try {
                         LOG("building commodity curve for " << name);
@@ -2247,6 +2267,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // Time zero initial market commodity curve
                         Handle<PriceTermStructure> initialCommodityCurve =
                             initMarket->commodityPriceCurve(name, configuration);
+
                         bool allowsExtrapolation = initialCommodityCurve->allowsExtrapolation();
 
                         // Get the configured simulation tenors. Simulation tenors being empty at this point means
@@ -2277,7 +2298,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         for (Size i = 0; i < simulationTenors.size(); i++) {
                             Date d = asof_ + simulationTenors[i];
                             Real price = initialCommodityCurve->price(d, allowsExtrapolation);
-			    TLOG("Commodity curve: price at " << io::iso_date(d) << " is " << price);
+                            TLOG("Commodity curve: price at " << io::iso_date(d) << " is " << price);
                             // if we simulate the factors and use spreaded ts, the quote should be zero
                             boost::shared_ptr<SimpleQuote> quote = boost::make_shared<SimpleQuote>(
                                 param.second.first && useSpreadedTermStructures_ ? 0.0 : price);
@@ -2296,11 +2317,9 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         writeSimData(simDataTmp, absoluteSimDataTmp);
                         simDataWritten = true;
+                        boost::shared_ptr<PriceTermStructure> priceCurve;
 
-                        Handle<PriceTermStructure> pts;
                         if (param.second.first && useSpreadedTermStructures_) {
-                            // Created spreaded commodity price curve if we simulate commodities and spreads should be
-                            // used
                             vector<Real> simulationTimes;
                             for (auto const& t : simulationTenors) {
                                 simulationTimes.push_back(commodityCurveDayCounter.yearFraction(asof_, asof_ + t));
@@ -2309,14 +2328,33 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 simulationTimes.insert(simulationTimes.begin(), 0.0);
                                 quotes.insert(quotes.begin(), quotes.front());
                             }
-                            pts = Handle<PriceTermStructure>(boost::make_shared<SpreadedPriceTermStructure>(
-                                initialCommodityCurve, simulationTimes, quotes));
+                            // Created spreaded commodity price curve if we simulate commodities and spreads should be
+                            // used
+                            priceCurve = boost::make_shared<SpreadedPriceTermStructure>(initialCommodityCurve,
+                                                                                        simulationTimes, quotes);
                         } else {
-                            // Create a commodity price curve with simulation tenors as pillars and store
-                            // Hard-coded linear flat interpolation here - may need to make this more dynamic
-                            pts = Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(
-                                simulationTenors, quotes, commodityCurveDayCounter, initialCommodityCurve->currency()));
+                            priceCurve= boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(
+                                simulationTenors, quotes, commodityCurveDayCounter, initialCommodityCurve->currency());
                         }
+                        
+                        auto orgBasisCurve =
+                            boost::dynamic_pointer_cast<QuantExt::CommodityBasisPriceTermStructure>(
+                                initialCommodityCurve.currentLink());
+
+                        Handle<PriceTermStructure> pts;  
+                        if (orgBasisCurve == nullptr) {
+                            pts = Handle<PriceTermStructure>(priceCurve);
+                        } else {
+                            auto baseIndex = commodityIndices_.find(
+                                {Market::defaultConfiguration, orgBasisCurve->baseIndex()->underlyingName()});
+                            QL_REQUIRE(baseIndex != commodityIndices_.end(),
+                                       "Internal error in scenariosimmarket: couldn't find underlying base curve '"
+                                           << orgBasisCurve->baseIndex()->underlyingName()
+                                           << "' while building commodity basis curve '" << name << "'");
+                            pts = Handle<PriceTermStructure>(boost::make_shared<CommodityBasisPriceCurveWrapper>(
+                                orgBasisCurve, baseIndex->second.currentLink(), priceCurve));
+                        } 
+
                         pts->enableExtrapolation(allowsExtrapolation);
 
                         Handle<CommodityIndex> commIdx(parseCommodityIndex(name, false, pts));
@@ -2328,7 +2366,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                     }
                 }
                 break;
-
+            }
             case RiskFactorKey::KeyType::CommodityVolatility:
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;

@@ -33,12 +33,15 @@ OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, co
                              const Calendar& fixedCalendar, Natural paymentLag, bool endOfMonth,
                              Frequency paymentFrequency, BusinessDayConvention fixedConvention,
                              BusinessDayConvention paymentAdjustment, DateGeneration::Rule rule,
-                             const Handle<YieldTermStructure>& discountingCurve, bool telescopicValueDates)
+                             const Handle<YieldTermStructure>& discountingCurve, bool telescopicValueDates,
+                             Pillar::Choice pillar, Date customPillarDate)
     : RelativeDateRateHelper(fixedRate), settlementDays_(settlementDays), swapTenor_(swapTenor),
       overnightIndex_(overnightIndex), fixedDayCounter_(fixedDayCounter), fixedCalendar_(fixedCalendar),
       paymentLag_(paymentLag), endOfMonth_(endOfMonth), paymentFrequency_(paymentFrequency),
       fixedConvention_(fixedConvention), paymentAdjustment_(paymentAdjustment), rule_(rule),
-      discountHandle_(discountingCurve), telescopicValueDates_(telescopicValueDates) {
+      discountHandle_(discountingCurve), telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar) {
+
+    pillarDate_ = customPillarDate;
 
     bool onIndexHasCurve = !overnightIndex_->forwardingTermStructure().empty();
     bool haveDiscountCurve = !discountHandle_.empty();
@@ -75,14 +78,36 @@ void OISRateHelper::initializeDates() {
     //..withFixedCalendar(fixedCalendar_)
 
     earliestDate_ = swap_->startDate();
-    latestDate_ = swap_->maturityDate();
+    maturityDate_ = swap_->maturityDate();
 
-    // Latest Date may need to be updated due to payment lag.
-    Date date;
-    if (paymentLag_ != 0) {
-        date = paymentCalendar_.advance(latestDate_, paymentLag_, Days, paymentAdjustment_, false);
-        latestDate_ = std::max(date, latestDate_);
+    Date lastPaymentDate = std::max(swap_->overnightLeg().back()->date(), swap_->fixedLeg().back()->date());
+    latestRelevantDate_ = std::max(maturityDate_, lastPaymentDate);
+
+    switch (pillarChoice_) {
+    case Pillar::MaturityDate:
+        pillarDate_ = maturityDate_;
+        break;
+    case Pillar::LastRelevantDate:
+        pillarDate_ = latestRelevantDate_;
+        break;
+    case Pillar::CustomDate:
+        // pillarDate_ already assigned at construction time
+        QL_REQUIRE(pillarDate_ >= earliestDate_, "pillar date (" << pillarDate_
+                                                                 << ") must be later "
+                                                                    "than or equal to the instrument's earliest date ("
+                                                                 << earliestDate_ << ")");
+        QL_REQUIRE(pillarDate_ <= latestRelevantDate_, "pillar date ("
+                                                           << pillarDate_
+                                                           << ") must be before "
+                                                              "or equal to the instrument's latest relevant date ("
+                                                           << latestRelevantDate_ << ")");
+        break;
+    default:
+        QL_FAIL("unknown Pillar::Choice(" << Integer(pillarChoice_) << ")");
     }
+
+    // for backwards compatibility
+    latestDate_ = pillarDate_;
 }
 
 void OISRateHelper::setTermStructure(YieldTermStructure* t) {
@@ -122,11 +147,13 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
                                        Natural paymentLag, Frequency paymentFrequency,
                                        BusinessDayConvention fixedConvention, BusinessDayConvention paymentAdjustment,
                                        DateGeneration::Rule rule, const Handle<YieldTermStructure>& discountingCurve,
-                                       bool telescopicValueDates)
+                                       bool telescopicValueDates, Pillar::Choice pillar, Date customPillarDate)
     : RateHelper(fixedRate), overnightIndex_(overnightIndex), fixedDayCounter_(fixedDayCounter),
       fixedCalendar_(fixedCalendar), paymentLag_(paymentLag), paymentFrequency_(paymentFrequency),
       fixedConvention_(fixedConvention), paymentAdjustment_(paymentAdjustment), rule_(rule),
-      discountHandle_(discountingCurve), telescopicValueDates_(telescopicValueDates) {
+      discountHandle_(discountingCurve), telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar) {
+
+    pillarDate_ = customPillarDate;
 
     bool onIndexHasCurve = !overnightIndex_->forwardingTermStructure().empty();
     bool haveDiscountCurve = !discountHandle_.empty();
@@ -157,7 +184,36 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
                 .withTelescopicValueDates(telescopicValueDates_);
 
     earliestDate_ = swap_->startDate();
-    latestDate_ = swap_->maturityDate();
+    maturityDate_ = swap_->maturityDate();
+
+    Date lastPaymentDate = std::max(swap_->overnightLeg().back()->date(), swap_->fixedLeg().back()->date());
+    latestRelevantDate_ = std::max(maturityDate_, lastPaymentDate);
+
+    switch (pillarChoice_) {
+    case Pillar::MaturityDate:
+        pillarDate_ = maturityDate_;
+        break;
+    case Pillar::LastRelevantDate:
+        pillarDate_ = latestRelevantDate_;
+        break;
+    case Pillar::CustomDate:
+        // pillarDate_ already assigned at construction time
+        QL_REQUIRE(pillarDate_ >= earliestDate_, "pillar date (" << pillarDate_
+                                                                 << ") must be later "
+                                                                    "than or equal to the instrument's earliest date ("
+                                                                 << earliestDate_ << ")");
+        QL_REQUIRE(pillarDate_ <= latestRelevantDate_, "pillar date ("
+                                                           << pillarDate_
+                                                           << ") must be before "
+                                                              "or equal to the instrument's latest relevant date ("
+                                                           << latestRelevantDate_ << ")");
+        break;
+    default:
+        QL_FAIL("unknown Pillar::Choice(" << Integer(pillarChoice_) << ")");
+    }
+
+    // for backwards compatibility
+    latestDate_ = pillarDate_;
 }
 
 void DatedOISRateHelper::setTermStructure(YieldTermStructure* t) {

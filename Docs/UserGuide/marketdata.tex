@@ -924,32 +924,40 @@ Example:
 \begin{table}[H]
 \centering
   \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-    \hline
-    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
-    Instrument Type & \emph{CAPFLOOR} & \\ \hline
-    Quote Type &  \emph{RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL, SHIFT} & Lognormal quoted volatility, normal quoted volatility, shifted lognormal quoted volatility, shift quote. \\ \hline
-    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the cap floor volatility. \\ \hline
-    Term & A valid tenor string & Period from start to cap or floor maturity. \\ \hline
-    IndexTenor & A valid tenor string & Underlying index tenor e.g.\ \lstinline!3M! for \lstinline!EUR-EURIBOR-3M!. \\ \hline
-    ATM & \lstinline!1! or \lstinline!0! & True, i.e.\ \lstinline!1!, for an ATM quote and false, i.e.\ \lstinline!0!, for a strike quote. \\ \hline
-    Relative & \lstinline!1! or \lstinline!0! & Should be set to \lstinline!1! for a quote relative to ATM  and to \lstinline!0! for an absolute strike quote. \\ \hline
-    Strike & Real number & Strike of cap or floor. Should be set to \lstinline!0! for an ATM quote. \\ \hline
-  \end{tabular}
+	\hline
+	{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+	Instrument Type & \emph{CAPFLOOR} & \\ \hline
+	Quote Type &  \emph{RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL, SHIFT, PRICE} & Lognormal quoted volatility, normal quoted volatility, shifted lognormal quoted volatility, shift quote, premium quote. \\ \hline
+	Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the cap floor quote. \\ \hline
+	Index Name & A string & (optional) An interest rate index name giving the index underlying the cap floor quotes. See Table \ref{tab:indices}. \\ \hline
+	Term & A valid tenor string & Period from start to cap or floor maturity. \\ \hline
+	Index Tenor & A valid tenor string & Underlying index tenor e.g.\ \lstinline!3M! for \lstinline!EUR-EURIBOR-3M!. \\ \hline
+	ATM & \lstinline!1! or \lstinline!0! & True, i.e.\ \lstinline!1!, for an ATM quote and false, i.e.\ \lstinline!0!, for a strike quote. \\ \hline
+	Relative & \lstinline!1! or \lstinline!0! & Should be set to \lstinline!1! for a quote relative to ATM  and to \lstinline!0! for an absolute strike quote. \\ \hline
+	Strike & Real number & Strike of cap or floor. Should be set to \lstinline!0! for an ATM quote. \\ \hline
+	Option Style & C or F & (optional) Valid for premium quotes only, indicates whether the datum is a cap or floor quote respectively. \\ \hline
+\end{tabular}
   \caption{Cap floor implied volatility quote}
   \label{tab:capfloor_implvol_quote}
 \end{table}
 
-If a cap floor shift quote needs to be provided, i.e. in the case of a shifted lognormal surface, the quote is of the form \lstinline!CAPFLOOR/SHIFT/Currency/IndexTenor! where the meaning of \lstinline!Currency! and \lstinline!IndexTenor! are given in Table \ref{tab:capfloor_implvol_quote}.
+An index name should be used where a currency has more than one index of a given tenor with an options surface. It must match \lstinline!IborIndex! in its corresponding \lstinline!CapFloorVolatility! configuration, see section \ref{sss:capfloorconfig}.
 
-We have the following examples of cap floor implied volatility quotes:
+If a cap floor shift quote needs to be provided, i.e. in the case of a shifted lognormal surface, the quote is of the form \lstinline!CAPFLOOR/SHIFT/Currency/Index Tenor! where the meaning of \lstinline!Currency! and \lstinline!Index Tenor! are given in Table \ref{tab:capfloor_implvol_quote}.
+
+We have the following examples of cap floor implied volatility, shift, and premium quotes:
 \begin{itemize}
 \item \lstinline!CAPFLOOR/RATE_LNVOL/EUR/10Y/6M/1/1/0!: 10Y ATM cap floor implied lognormal volatility quote where the index tenor is 6M.
 \item \lstinline!CAPFLOOR/RATE_LNVOL/EUR/10Y/6M/0/0/0.035!: 10Y 3.5\% strike cap floor implied lognormal volatility quote where the index tenor is 6M.
+\item \lstinline!CAPFLOOR/RATE_SLNVOL/EUR/EURIBOR/5Y/6M/0/0/0.03!: 5Y 3\% strike cap floor implied shifted lognormal volatility quote where the underlying rate is the EUR-EURIBOR-6M.
+\item \lstinline!CAPFLOOR/SHIFT/EUR/EURIBOR/6M!: Strike shift convention corresponding to shifted lognormal implied capfloor volatility quotes where the underlying rate is the EUR-EURIBOR-6M.
+\item \lstinline!CAPFLOOR/PRICE/EUR/EURIBOR/5Y/6M/0/0/0.03/C!: 5Y 3\% strike cap floor premium quote where the underlying rate is the EUR-EURIBOR-6M.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Swaption Implied Volatility}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\label{ss:swaptionvolatilitydata}
 
 \begin{table}[H]
 \centering
@@ -957,19 +965,22 @@ We have the following examples of cap floor implied volatility quotes:
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
     Instrument Type & \emph{SWAPTION} & \\ \hline
-    Quote Type & \emph{RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL, SHIFT} & Lognormal quoted volatility, Normal quoted volatility, shifted lognormal quoted volatility, shift quote.\\ \hline
+    Quote Type & \emph{RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL, SHIFT, PRICE} & Lognormal quoted volatility, Normal quoted volatility, shifted lognormal quoted volatility, shift, premium quote.\\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Swaption volatility\\ \hline
+    Quote Tag & A string & (optional) A tag to differentiate different sets of swaption data in a currency. See note below. \\ \hline
     Expiry & An integer followed by D, W, M or Y & Period from start to expiry \\ \hline
     Term & An integer followed by D, W, M or Y & Underlying Swap term \\ \hline
     Dimension & \emph{Smile, ATM}  & Whether volatility quote is a Smile or ATM \\ \hline
-    Strike & Real number & Strike rate - (not required for ATM), as deviation from the ATM strike\\ \hline
+    Strike & Real number & (not required for ATM), deviation from the ATM strike. Note that trailing 0s are not ignored.\\ \hline
+    Option Style & P or R & (optional) Valid for premium quotes only, indicates whether the datum represents a payer or receiver swaption premium respectively. \\ \hline
   \end{tabular}
   \caption{Swaption Implied Volatility}
   \label{tab:swaptimplvol_quote}
 \end{table}
 
+\medskip A quote tag should be used where a currency has more than one index with a swaption surface. It must match \lstinline!QuoteTag! in its corresponding \lstinline!SwaptionVolatility! configuration, see section \ref{sss:swaptionconfig}.
 
-\medskip Note: The volatility quote is expected to be an absolute volatility, and not the deviation from the
+Note: The volatility quote is expected to be an absolute volatility, and not the deviation from the
 at-the-money volatility (the latter is e.g. the quotation convention used by BGC partners).\\
 If a swaption shift quote needs to be provided, i.e. in the case of a shifted lognormal surface, the quote is of the form \lstinline!SWAPTION/SHIFT/Currency/Term! where the meaning of \lstinline!Currency! and \lstinline!Term! are given in Table \ref{tab:swaptimplvol_quote}.
 

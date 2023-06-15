@@ -103,8 +103,9 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     bool isStandard = true;
-    isStandard = isStandard && (legData_.size() == 2 && legTypes == std::set<std::string>{"Fixed", "Floating"} &&
-                                !isOis && !isBma && !isCrossCcy && legData_[0].isPayer() != legData_[1].isPayer());
+    isStandard = isStandard &&
+                 (legData_.size() == 2 && legTypes == std::set<std::string>{"Fixed", "Floating"} && !isOis && !isBma &&
+                  !isCrossCcy && legData_[0].isPayer() != legData_[1].isPayer() && optionData_.exerciseFees().empty());
     Real notional = Null<Real>(), fixedRate = Null<Real>(), gearing = Null<Real>(), spread = Null<Real>();
     for (auto const& l : underlying_->legs()) {
         for (auto const& c : l) {

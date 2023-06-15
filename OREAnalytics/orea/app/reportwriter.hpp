@@ -30,6 +30,8 @@
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/simm/crifrecord.hpp>
+#include <orea/simm/simmresults.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
@@ -122,6 +124,34 @@ public:
                            const std::map<std::string, std::string>& nettingSetMap = std::map<std::string, std::string>());
 
     const std::string& nullString() const { return nullString_; }
+
+    /*! Write out the SIMM results contained in the \p resultsMap and \p additionalMargin.
+        The parameter \p resultsMap is a map containing the SIMM results containers for a
+        set of portfolios. The key is the portfolio ID and the value is the SIMM results
+        container for that portfolio. Similarly, the parameter \p additionalMargin contains
+        the additional margin element for each portfolio.
+    */
+    virtual void
+    writeSIMMReport(const std::map<SimmConfiguration::SimmSide,
+                    std::map<NettingSetDetails, std::pair<std::string, SimmResults>>>& simmResultsMap,
+                    const boost::shared_ptr<ore::data::Report> report, const bool hasNettingSetDetails = false,
+                    const std::string& simmResultCcy = "", const std::string& reportCcy = "",
+                    QuantLib::Real fxSpot = 1.0, QuantLib::Real outputThreshold = 0.005);
+    virtual void
+    writeSIMMReport(const std::map<SimmConfiguration::SimmSide,
+                    std::map<NettingSetDetails, std::map<std::string, SimmResults>>>& simmResultsMap,
+                    const boost::shared_ptr<ore::data::Report> report, const bool hasNettingSetDetails = false,
+                    const std::string& simmResultCcy = "", const std::string& reportCcy = "",
+                    const bool isFinalSimm = true, QuantLib::Real fxSpot = 1.0, QuantLib::Real outputThreshold = 0.005);
+
+    //! Write the SIMM data report i.e. the netted CRIF records used in a SIMM calculation
+    virtual void writeSIMMData(const SimmNetSensitivities& simmData,
+                               const boost::shared_ptr<ore::data::Report>& dataReport,
+                               const bool hasNettingSetDetails = false);
+
+    //! Write out CRIF records to a report
+    virtual void writeCrifReport(const boost::shared_ptr<ore::data::Report>& report,
+                                 const SimmNetSensitivities& crifRecords);
 
 protected:
     std::string nullString_;

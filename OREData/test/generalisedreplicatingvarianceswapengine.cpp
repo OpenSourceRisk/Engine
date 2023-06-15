@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(testT0Pricing) {
     Handle<YieldTermStructure> discountingTS =
         Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.05, dc));
     boost::shared_ptr<Index> eqIndex =
-        boost::make_shared<EquityIndex>(equityName, cal, EURCurrency(), equityPrice, yieldTS, dividendTS);
+        boost::make_shared<EquityIndex2>(equityName, cal, EURCurrency(), equityPrice, yieldTS, dividendTS);
 
     boost::shared_ptr<GeneralizedBlackScholesProcess> stochProcess(
         new BlackScholesMertonProcess(equityPrice, dividendTS, discountingTS, volTS));
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(testSeasonedSwapPricing) {
     Handle<YieldTermStructure> discountingTS =
         Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, cal, 0.05, dc));
     boost::shared_ptr<Index> eqIndex =
-        boost::make_shared<EquityIndex>(equityName, cal, EURCurrency(), equityPrice, yieldTS, dividendTS);
+        boost::make_shared<EquityIndex2>(equityName, cal, EURCurrency(), equityPrice, yieldTS, dividendTS);
 
     boost::shared_ptr<GeneralizedBlackScholesProcess> stochProcess(
         new BlackScholesMertonProcess(equityPrice, dividendTS, yieldTS, volTS));
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(testForwardStartPricing) {
     Handle<YieldTermStructure> discountingTS =
         Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.05, dc));
     boost::shared_ptr<Index> eqIndex =
-        boost::make_shared<EquityIndex>(equityName, cal, EURCurrency(), equityPrice, yieldTS, dividendTS);
+        boost::make_shared<EquityIndex2>(equityName, cal, EURCurrency(), equityPrice, yieldTS, dividendTS);
 
     boost::shared_ptr<GeneralizedBlackScholesProcess> stochProcess(
         new BlackScholesMertonProcess(equityPrice, dividendTS, discountingTS, volTS));

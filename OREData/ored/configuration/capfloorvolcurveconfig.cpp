@@ -205,9 +205,8 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         // Tenors for ATM volatilities.
         atmTenors_ = XMLUtils::getChildrenValuesAsStrings(node, "AtmTenors", false);
         QL_REQUIRE(!tenors_.empty() || !atmTenors_.empty(), "Tenors and AtmTenors cannot both be empty");
-        if (includeAtm_ && atmTenors_.empty()) {
-            // swap so tenors_ is empty
-            atmTenors_.swap(tenors_);
+        if (atmTenors_.empty()) {
+            atmTenors_ = tenors_;
         }
 
         // Optional bootstrap configuration
@@ -375,8 +374,7 @@ void CapFloorVolatilityCurveConfig::configureVolatilityType(const std::string& t
 }
 
 void CapFloorVolatilityCurveConfig::configureType() {
-    type_ = tenors_.empty() ? Type::Atm : (includeAtm_ ? Type::SurfaceWithAtm : Type::Surface);
-    // type_ = strikes_.empty() ? Type::Atm : (includeAtm_ ? Type::SurfaceWithAtm : Type::Surface);
+    type_ = strikes_.empty() ? Type::Atm : (includeAtm_ ? Type::SurfaceWithAtm : Type::Surface);
 }
 
 void CapFloorVolatilityCurveConfig::validate() const {
@@ -387,8 +385,8 @@ void CapFloorVolatilityCurveConfig::validate() const {
     QL_REQUIRE(validInterps.count(strikeInterpolation_) == 1,
                "StrikeInterpolation, " << strikeInterpolation_ << ", not recognised");
     QL_REQUIRE(strikeInterpolation_ != "BackwardFlat", "BackwardFlat StrikeInterpolation is not allowed");
-    if (!tenors_.empty()) {
-        QL_REQUIRE(!strikes_.empty(), "Strikes cannot be empty when configuring a surface");
+    if (!strikes_.empty()) {
+        QL_REQUIRE(!tenors_.empty(), "Tenors must be given for a surface (strikes are given)");
     }
 }
 

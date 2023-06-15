@@ -36,18 +36,23 @@ using std::vector;
 namespace QuantExt {
 
 IndexCdsOptionBaseEngine::IndexCdsOptionBaseEngine(const Handle<DefaultProbabilityTermStructure>& probability,
-                                                     Real recovery, const Handle<YieldTermStructure>& discount,
-                                                     const Handle<QuantExt::CreditVolCurve>& volatility)
-    : probabilities_({probability}), recoveries_({recovery}), discount_(discount), volatility_(volatility),
-      indexRecovery_(recovery) {
+                                                   Real recovery,
+                                                   const Handle<YieldTermStructure>& discountSwapCurrency,
+                                                   const Handle<YieldTermStructure>& discountTradeCollateral,
+                                                   const Handle<QuantExt::CreditVolCurve>& volatility)
+    : probabilities_({probability}), recoveries_({recovery}), discountSwapCurrency_(discountSwapCurrency),
+      discountTradeCollateral_(discountTradeCollateral), volatility_(volatility), indexRecovery_(recovery) {
     registerWithMarket();
 }
 
-IndexCdsOptionBaseEngine::IndexCdsOptionBaseEngine(
-    const vector<Handle<DefaultProbabilityTermStructure>>& probabilities, const vector<Real>& recoveries,
-    const Handle<YieldTermStructure>& discount, const Handle<QuantExt::CreditVolCurve>& volatility, Real indexRecovery)
-    : probabilities_(probabilities), recoveries_(recoveries), discount_(discount), volatility_(volatility),
-      indexRecovery_(indexRecovery) {
+IndexCdsOptionBaseEngine::IndexCdsOptionBaseEngine(const vector<Handle<DefaultProbabilityTermStructure>>& probabilities,
+                                                   const vector<Real>& recoveries,
+                                                   const Handle<YieldTermStructure>& discountSwapCurrency,
+                                                   const Handle<YieldTermStructure>& discountTradeCollateral,
+                                                   const Handle<QuantExt::CreditVolCurve>& volatility,
+                                                   Real indexRecovery)
+    : probabilities_(probabilities), recoveries_(recoveries), discountSwapCurrency_(discountSwapCurrency),
+      discountTradeCollateral_(discountTradeCollateral), volatility_(volatility), indexRecovery_(indexRecovery) {
 
     QL_REQUIRE(!probabilities_.empty(), "IndexCdsOptionBaseEngine: need at least one probability curve.");
     QL_REQUIRE(probabilities_.size() == recoveries_.size(), "IndexCdsOptionBaseEngine: mismatch between size"
@@ -67,7 +72,13 @@ const vector<Handle<DefaultProbabilityTermStructure>>& IndexCdsOptionBaseEngine:
 
 const vector<Real>& IndexCdsOptionBaseEngine::recoveries() const { return recoveries_; }
 
-const Handle<YieldTermStructure> IndexCdsOptionBaseEngine::discount() const { return discount_; }
+const Handle<YieldTermStructure> IndexCdsOptionBaseEngine::discountSwapCurrency() const {
+    return discountSwapCurrency_;
+}
+
+const Handle<YieldTermStructure> IndexCdsOptionBaseEngine::discountTradeCollateral() const {
+    return discountTradeCollateral_;
+}
 
 const Handle<QuantExt::CreditVolCurve> IndexCdsOptionBaseEngine::volatility() const { return volatility_; }
 
@@ -114,8 +125,7 @@ Real IndexCdsOptionBaseEngine::fep() const {
     results_.additionalResults["FEP"] = fep;
 
     // Discounted FEP
-    Real discount = discount_->discount(exerciseDate);
-    fep *= discount;
+    fep *= discountTradeCollateral_->discount(exerciseDate);
     results_.additionalResults["discountedFEP"] = fep;
 
     return fep;
@@ -124,7 +134,8 @@ Real IndexCdsOptionBaseEngine::fep() const {
 void IndexCdsOptionBaseEngine::registerWithMarket() {
     for (const auto& p : probabilities_)
         registerWith(p);
-    registerWith(discount_);
+    registerWith(discountTradeCollateral_);
+    registerWith(discountSwapCurrency_);
     registerWith(volatility_);
 }
 

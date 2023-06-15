@@ -114,9 +114,10 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
     if (isCloseOut)
         return;
 
-    Real netFlow = 0;
+    Real netPositiveFlow = 0;
+    Real netNegativeFlow = 0;
 
-    QL_REQUIRE(dateGrid_->dates()[dateIndex] == date, "Date mixup, date is " << date << " but grid index is "
+    QL_REQUIRE(dateGrid_->valuationDates()[dateIndex] == date, "Date mixup, date is " << date << " but grid index is "
                                                                              << dateIndex << ", grid(dateIndex) is "
                                                                              << dateGrid_->dates()[dateIndex]);
     // Date startDate = dateIndex == 0 ? t0Date_ : dateGrid_->dates()[dateIndex - 1];
@@ -149,21 +150,28 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
                     // Do FX conversion and add to netFlow
                     Real fx = fxRates_[tradeAndLegCcyIndex_[tradeIndex][i]];
                     Real direction = trade->legPayers()[i] ? -1.0 : 1.0;
-                    netFlow += legFlow * direction * longShort * fx;
+                    legFlow *= direction * longShort * fx;
+                    if (legFlow > 0)
+                        netPositiveFlow += legFlow;
+                    else
+                        netNegativeFlow += legFlow;
                 }
             }
         }
     } catch (std::exception& e) {
         ALOG("Failed to calculate cashflows for trade " << trade->id() << " : " << e.what());
-        netFlow = 0;
+        netPositiveFlow = 0;
+        netNegativeFlow = 0;
     } catch (...) {
         ALOG("Failed to calculate cashflows for trade " << trade->id() << " : Unhandled Exception");
-        netFlow = 0;
+        netPositiveFlow = 0;
+        netNegativeFlow = 0;
     }
 
     Real numeraire = simMarket->numeraire();
 
-    outputCube->set(netFlow / numeraire, tradeIndex, dateIndex, sample, index_);
+    outputCube->set(netPositiveFlow / numeraire, tradeIndex, dateIndex, sample, index_);
+    outputCube->set(netNegativeFlow / numeraire, tradeIndex, dateIndex, sample, index_+1);
 }
 
 void NPVCalculatorFXT0::init(const boost::shared_ptr<Portfolio>& portfolio,

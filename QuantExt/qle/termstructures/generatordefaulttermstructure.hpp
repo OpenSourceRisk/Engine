@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file generatordefaultprobabilitytermstructure.hpp
+/*! \file generatordefaulttermstructure.hpp
     \brief Default curve implied from a single generator matrix
     \ingroup termstructures
 */
