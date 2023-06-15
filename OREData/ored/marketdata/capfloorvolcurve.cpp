@@ -738,6 +738,8 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         configTenors = parseVectorOfValues<Period>(config.tenors(), &parsePeriod);
     }
     if (includeAtm) {
+        QL_REQUIRE(boost::dynamic_pointer_cast<OvernightIndex>(iborIndex) == nullptr,
+                   "CapFloorVolCurve::transform(): OIS index not supported for ATM curve");
         if (config.atmTenors()[0] == "*") {
             atmWildcardTenor = true;
         } else {
