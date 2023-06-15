@@ -8,7 +8,7 @@ The \lstinline!CapFloorData! node contains a \lstinline!LongShort! sub-node whic
 is long or short, and a \lstinline!LegData!  sub-node where the
 LegType can be set to \emph{Floating}, \emph{CMS}, \emph{CMSSpread}, \emph{DurationAdjustedCMS}, \emph{CPI}
 or \emph{YY}, plus elements for the Cap and Floor rates. An example structure with Cap rates is shown in in Listing
-\ref{lst:capfloor_data}. 
+\ref{lst:capfloor_data}. The optional node \emph{PaymentDates} in the \lstinline!LegData! subnode is currently only used for OIS and IBOR indices (see \ref{ss:leg_data}).
 
 A \lstinline!CapFloorData! node must have either \lstinline!Caps! or \lstinline!Floors!
 elements, or both. In the case of both (I.e. a collar with long cap and short floor) the sequence is that  \lstinline!Caps! elements must be above the \lstinline!Floors! elements. Note that 

@@ -76,7 +76,7 @@ XMLNode* EquityMarginLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
-QuantExt::Leg makeEquityMarginLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equityCurve,
+QuantExt::Leg makeEquityMarginLeg(const LegData& data, const boost::shared_ptr<EquityIndex2>& equityCurve,
                                   const boost::shared_ptr<QuantExt::FxIndex>& fxIndex,
                                   const QuantLib::Date& openEndDateReplacement) {
     boost::shared_ptr<EquityMarginLegData> eqMarginLegData = boost::dynamic_pointer_cast<EquityMarginLegData>(data.concreteLegData());

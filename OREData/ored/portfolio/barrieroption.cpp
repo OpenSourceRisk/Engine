@@ -35,7 +35,7 @@
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <qle/indexes/fxindex.hpp>
-#include <ql/experimental/barrieroption/doublebarrieroption.hpp>
+#include <ql/instruments/doublebarrieroption.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;

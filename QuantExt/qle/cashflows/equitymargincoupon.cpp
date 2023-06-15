@@ -26,7 +26,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 EquityMarginCoupon::EquityMarginCoupon(const Date& paymentDate, Real nominal, Rate rate, Real marginFactor, const Date& startDate, const Date& endDate,
-                           Natural fixingDays, const boost::shared_ptr<EquityIndex>& equityCurve,
+                           Natural fixingDays, const boost::shared_ptr<EquityIndex2>& equityCurve,
                            const DayCounter& dayCounter, bool isTotalReturn, Real dividendFactor, bool notionalReset,
                            Real initialPrice, Real quantity, const Date& fixingStartDate, const Date& fixingEndDate,
                            const Date& refPeriodStart, const Date& refPeriodEnd, const Date& exCouponDate, Real multiplier,
@@ -123,7 +123,7 @@ Rate EquityMarginCoupon::rate() const {
     return pricer_->rate();
 }
 
-EquityMarginLeg::EquityMarginLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
+EquityMarginLeg::EquityMarginLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex2>& equityCurve,
                      const boost::shared_ptr<FxIndex>& fxIndex)
     : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex) {}
 

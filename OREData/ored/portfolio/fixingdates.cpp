@@ -33,10 +33,10 @@
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
+#include <qle/indexes/commoditybasisfutureindex.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
-
 #include <ql/cashflow.hpp>
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -64,17 +64,15 @@ using std::vector;
 namespace {
 
 // Generate lookback dates
-set<Date> generateLookbackDates(const Period& lookbackPeriod, const Calendar& calendar) {
+set<Date> generateLookbackDates(const Date& asof, const Period& lookbackPeriod, const Calendar& calendar) {
 
     set<Date> dates;
-
-    Date today = Settings::instance().evaluationDate();
-    Date lookback = calendar.advance(today, -lookbackPeriod);
+    Date lookback = calendar.advance(asof, -lookbackPeriod);
     do {
         TLOG("Adding date " << io::iso_date(lookback) << " to fixings.");
         dates.insert(lookback);
         lookback = calendar.advance(lookback, 1 * Days);
-    } while (lookback <= today);
+    } while (lookback <= asof);
 
     return dates;
 }
@@ -522,7 +520,7 @@ void FixingDateGetter::visit(EquityMarginCoupon& c) {
                                        IndexNameTranslator::instance().oreName(c.fxIndex()->name()), c.date());
 }
 
-void FixingDateGetter::visit(CommodityIndexedCashFlow& c) {
+void FixingDateGetter::visit(CommodityCashFlow& c) {
     auto indices = c.indices();
     for (const auto& kv : indices) {
         // see above, the ql and ORE index names are identical
@@ -531,17 +529,8 @@ void FixingDateGetter::visit(CommodityIndexedCashFlow& c) {
         if (auto d = kv.second->expiryDate(); d != Date() && d < kv.first) {
             requiredFixings_.addFixingDate(d, kv.second->name(), d);
         }
-    }
-}
-
-void FixingDateGetter::visit(CommodityIndexedAverageCashFlow& c) {
-    auto indices = c.indices();
-    for (const auto& kv : indices) {
-        // see above, the ql and ORE index names are identical
-        requiredFixings_.addFixingDate(kv.first, kv.second->name(), c.date());
-        // if the pricing date is > future expiry, add the future expiry itself as well
-        if (auto d = kv.second->expiryDate(); d != Date() && d < kv.first) {
-            requiredFixings_.addFixingDate(d, kv.second->name(), d);
+        if (auto baseFutureIndex = boost::dynamic_pointer_cast<CommodityBasisFutureIndex>(kv.second)) {
+            baseFutureIndex->baseCashflow(c.date())->accept(*this);
         }
     }
 }
@@ -577,7 +566,7 @@ void amendInflationFixingDates(map<string, set<Date>>& fixings) {
     }
 }
 
-void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketParameters& mktParams,
+void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, const TodaysMarketParameters& mktParams,
                           const Period& iborLookback, const Period& oisLookback, const Period& bmaLookback,
                           const Period& inflationLookback, const string& configuration) {
 
@@ -605,19 +594,19 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
                 if (isOvernightIndex(kv.first)) {
                     if (oisDates.empty()) {
                         TLOG("Generating fixing dates for overnight indices.");
-                        oisDates = generateLookbackDates(oisLookback, calendar);
+                        oisDates = generateLookbackDates(asof, oisLookback, calendar);
                     }
                     TLOG("Adding extra fixing dates for overnight index " << kv.first);
                     fixings[kv.first].insert(oisDates.begin(), oisDates.end());
                 } else if (isBmaIndex(kv.first)) {
                     if (bmaDates.empty()) {
                         TLOG("Generating fixing dates for bma/sifma indices.");
-                        bmaDates = generateLookbackDates(bmaLookback, calendar);
+                        bmaDates = generateLookbackDates(asof, bmaLookback, calendar);
                     }
                     fixings[kv.first].insert(bmaDates.begin(), bmaDates.end());
                     if (iborDates.empty()) {
                         TLOG("Generating fixing dates for ibor indices.");
-                        iborDates = generateLookbackDates(iborLookback, calendar);
+                        iborDates = generateLookbackDates(asof, iborLookback, calendar);
                     }
                     std::set<string> liborNames;
                     for (auto const& c : conventions->get(Convention::Type::BMABasisSwap)) {
@@ -635,7 +624,7 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
                 } else {
                     if (iborDates.empty()) {
                         TLOG("Generating fixing dates for ibor indices.");
-                        iborDates = generateLookbackDates(iborLookback, calendar);
+                        iborDates = generateLookbackDates(asof, iborLookback, calendar);
                     }
                     TLOG("Adding extra fixing dates for ibor index " << kv.first);
                     fixings[kv.first].insert(iborDates.begin(), iborDates.end());

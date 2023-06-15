@@ -49,14 +49,18 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
     Date exerciseDate = arguments_.exercise->dates().front();
     Real exerciseTime = volatility_->timeFromReference(exerciseDate);
     Real omega = arguments_.swap->side() == Protection::Buyer ? 1.0 : -1.0;
-    Real discToExercise = discount_->discount(exerciseDate);
+    Real discTradeCollToExercise = discountTradeCollateral_->discount(exerciseDate);
+    Real discSwapCurrToExercise = discountSwapCurrency_->discount(exerciseDate);
     Real maturityTime = volatility_->timeFromReference(arguments_.swap->maturity());
     Real underlyingNpv =
         arguments_.swap->side() == Protection::Buyer ? arguments_.swap->NPV() : -arguments_.swap->NPV();
 
     results_.additionalResults["runningSpread"] = arguments_.swap->runningSpread();
-    results_.additionalResults["discountToExercise"] = discToExercise;
-    results_.additionalResults["upfront"] = underlyingNpv;
+    results_.additionalResults["discountToExerciseTradeCollateral"] = discTradeCollToExercise;
+    results_.additionalResults["discountToExerciseSwapCurrency"] = discSwapCurrToExercise;
+    results_.additionalResults["upfront"] =
+        underlyingNpv *
+        (arguments_.settlementType == Settlement::Cash ? discTradeCollToExercise / discSwapCurrToExercise : 1.0);
     results_.additionalResults["valuationDateNotional"] = arguments_.swap->notional();
     results_.additionalResults["tradeDateNotional"] = arguments_.tradeDateNtl;
     results_.additionalResults["callPut"] =
@@ -75,10 +79,12 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         Real strikePrice;
         if (arguments_.strikeType == CdsOption::StrikeType::Price) {
-            strikePrice = arguments_.strike;
+            // strike is expressed w.r.t. trade date notional
+            strikePrice = 1.0 - arguments_.tradeDateNtl / arguments_.swap->notional() * (1.0 - arguments_.strike);
         } else {
             results_.additionalResults["strikeSpread"] = arguments_.strike;
-            strikePrice = 1.0 + forwardRiskyAnnuityStrike(arguments_.strike) *
+            strikePrice = 1.0 + arguments_.tradeDateNtl / arguments_.swap->notional() *
+                                    forwardRiskyAnnuityStrike(arguments_.strike) *
                                     (arguments_.swap->runningSpread() - arguments_.strike);
         }
 
@@ -94,14 +100,24 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         // calculate the default-adjusted forward price
 
-        Real forwardPrice = 1.0 - (underlyingNpv + fep()) / arguments_.swap->notional() / discToExercise;
+        Real forwardPriceExclFep = 1.0 - underlyingNpv / arguments_.swap->notional() /
+                                             (Settlement::Cash ? discSwapCurrToExercise : discTradeCollToExercise);
+        Real forwardPrice = forwardPriceExclFep - fep() / arguments_.swap->notional() / discTradeCollToExercise;
 
         results_.additionalResults["fepAdjustedForwardPrice"] = forwardPrice;
-        results_.additionalResults["forwardPrice"] = 1.0 - underlyingNpv / arguments_.swap->notional() / discToExercise;
+        results_.additionalResults["forwardPrice"] = forwardPriceExclFep;
+
+        // Check the inputs to the black formula before applying it
+        QL_REQUIRE(forwardPrice > 0.0 || close_enough(forwardPrice, 0.0),
+                   "NumericalIntegrationIndexCdsOptionEngine: FEP adjusted forward price ("
+                       << forwardPrice << ") is not positive, can not calculate a reasonable option price");
+        QL_REQUIRE(strikePrice > 0 || close_enough(strikePrice, 0.0),
+                   "NumericalIntegrationIndexCdsOptionEngine: Effective Strike price ("
+                       << strikePrice << ") is not positive, can not calculate a reasonable option price");
 
         results_.value = arguments_.swap->notional() *
                          blackFormula(arguments_.swap->side() == Protection::Buyer ? Option::Put : Option::Call,
-                                      strikePrice, forwardPrice, stdDev, discToExercise);
+                                      strikePrice, forwardPrice, stdDev, discTradeCollToExercise);
 
     } else {
 
@@ -111,33 +127,50 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         // compute average interest rate for underlying swap time interval
 
+        auto tmpDisc = arguments_.settlementType == Settlement::Cash ? discountSwapCurrency_ : discountTradeCollateral_;
         Real averageInterestRate =
-            -std::log(discount_->discount(arguments_.swap->maturity()) / discount_->discount(exerciseDate)) /
+            -std::log(tmpDisc->discount(arguments_.swap->maturity()) / tmpDisc->discount(exerciseDate)) /
             (maturityTime - exerciseTime);
 
-        // convert price strike to spread strike if necessary
+        // compute the strike adjustment, notice that the strike adjustment is scaled by trade date notional
+
+        Real strikeAdjustment;
+        if (arguments_.strikeType == CdsOption::StrikeType::Spread) {
+            strikeAdjustment = arguments_.tradeDateNtl / arguments_.swap->notional() *
+                               forwardRiskyAnnuityStrike(arguments_.strike) *
+                               (arguments_.swap->runningSpread() - arguments_.strike);
+        } else if (arguments_.strikeType == CdsOption::StrikeType::Price) {
+            strikeAdjustment = arguments_.tradeDateNtl / arguments_.swap->notional() * (arguments_.strike - 1.0);
+        }
+        results_.additionalResults["strikeAdjustment"] = strikeAdjustment;
+
+        // back out spread strike from strike adjustment if necessary
 
         Real strikeSpread;
-        if (arguments_.strikeType == CdsOption::StrikeType::Spread) {
+        if (arguments_.strikeType == CdsOption::StrikeType::Spread &&
+            QuantLib::close_enough(arguments_.tradeDateNtl, arguments_.swap->notional())) {
             strikeSpread = arguments_.strike;
         } else {
-            results_.additionalResults["strikePrice"] = arguments_.strike;
             Brent brent;
             brent.setLowerBound(1.0E-8);
-            auto strikeTarget = [this](Real strikeSpread) {
+            auto strikeTarget = [this, strikeAdjustment](Real strikeSpread) {
                 return forwardRiskyAnnuityStrike(strikeSpread) * (arguments_.swap->runningSpread() - strikeSpread) -
-                       (arguments_.strike - 1.0);
+                       strikeAdjustment;
             };
             try {
                 strikeSpread = brent.solve(strikeTarget, 1.0E-7, arguments_.swap->fairSpreadClean(), 0.0001);
                 // eval function at solution to make sure, add results are set correctly
                 forwardRiskyAnnuityStrike(strikeSpread);
-            } catch (const std::exception e) {
-                QL_FAIL("NumericalIntegrationIndexCdsOptionEngine::doCalc(): failed to imply spread-strike from "
-                        "price-strike ("
-                        << arguments_.strike << "): " << e.what());
+            } catch (const std::exception& e) {
+                QL_FAIL("NumericalIntegrationIndexCdsOptionEngine: can not compute strike spread: "
+                        << e.what() << ", strikeAdjustment=" << strikeAdjustment << ", trade strike "
+                        << arguments_.strike << ", trade strike type "
+                        << (arguments_.strikeType == CdsOption::StrikeType::Spread ? "Spread" : "Price"));
             }
         }
+
+        if (arguments_.strikeType == CdsOption::StrikeType::Price)
+            results_.additionalResults["strikePrice"] = arguments_.strike;
 
         results_.additionalResults["strikeSpread"] = strikeSpread;
 
@@ -151,10 +184,14 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         // calculate the default-adjusted forward price
 
-        Real forwardPrice = 1.0 - (underlyingNpv + fep()) / arguments_.swap->notional() / discToExercise;
+        Real forwardPriceExclFep = 1.0 -
+                            underlyingNpv / arguments_.swap->notional() /
+                                (Settlement::Cash ? discSwapCurrToExercise : discTradeCollToExercise);
+        Real forwardPrice = forwardPriceExclFep -
+                            fep() / arguments_.swap->notional() / discTradeCollToExercise;
 
         results_.additionalResults["fepAdjustedForwardPrice"] = forwardPrice;
-        results_.additionalResults["forwardPrice"] = 1.0 - underlyingNpv / arguments_.swap->notional() / discToExercise;
+        results_.additionalResults["forwardPrice"] = forwardPriceExclFep;
 
         // the default-adjusted index value Vc using a continuous annuity
 
@@ -197,18 +234,6 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
         results_.additionalResults["fepAdjustedForwardSpread"] = fepAdjustedForwardSpread;
         results_.additionalResults["forwardSpread"] = arguments_.swap->fairSpreadClean();
 
-        // compute the strike adjustment, notice that the strike adjustment is scaled by trade date notional
-
-        Real strikeAdjustment;
-        if (arguments_.strikeType == CdsOption::StrikeType::Spread) {
-            strikeAdjustment = arguments_.tradeDateNtl / arguments_.swap->notional() *
-                               forwardRiskyAnnuityStrike(arguments_.strike) *
-                               (arguments_.swap->runningSpread() - arguments_.strike);
-        } else if (arguments_.strikeType == CdsOption::StrikeType::Price) {
-            strikeAdjustment = arguments_.tradeDateNtl / arguments_.swap->notional() * (arguments_.strike - 1.0);
-        }
-        results_.additionalResults["strikeAdjustment"] = strikeAdjustment;
-
         // find the exercise boundary
 
         auto payoff = [this, &Vc, exerciseTime, maturityTime, averageInterestRate, stdDev, fepAdjustedForwardSpread,
@@ -240,7 +265,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
         }
 
         try {
-            results_.value = arguments_.swap->notional() * discToExercise *
+            results_.value = arguments_.swap->notional() * discTradeCollToExercise *
                              simpson(
                                  [exerciseTime, maturityTime, averageInterestRate, this, stdDev,
                                   fepAdjustedForwardSpread, omega, strikeAdjustment, &Vc](Real x) {
@@ -295,17 +320,19 @@ Real NumericalIntegrationIndexCdsOptionEngine::forwardRiskyAnnuityStrike(const R
 
     Real hazardRate;
     try {
-        hazardRate = strikeCds->impliedHazardRate(0.0, discount_, Actual365Fixed(), indexRecovery_, accuracy);
+        hazardRate =
+            strikeCds->impliedHazardRate(0.0, discountSwapCurrency_, Actual365Fixed(), indexRecovery_, accuracy);
     } catch (const std::exception& e) {
         QL_FAIL("can not imply fair hazard rate for CDS at option strike "
                 << strike << ". Is the strike correct? Exception: " << e.what());
     }
 
     Handle<DefaultProbabilityTermStructure> dph(
-        boost::make_shared<FlatHazardRate>(discount_->referenceDate(), hazardRate, Actual365Fixed()));
+        boost::make_shared<FlatHazardRate>(discountSwapCurrency_->referenceDate(), hazardRate, Actual365Fixed()));
 
     // Calculate the forward risky strike annuity.
-    strikeCds->setPricingEngine(boost::make_shared<QuantExt::MidPointCdsEngine>(dph, indexRecovery_, discount_));
+    strikeCds->setPricingEngine(
+        boost::make_shared<QuantExt::MidPointCdsEngine>(dph, indexRecovery_, discountSwapCurrency_));
     Real rpv01_K = std::abs(strikeCds->couponLegNPV() + strikeCds->accrualRebateNPV()) /
                    (strikeCds->notional() * strikeCds->runningSpread());
     results_.additionalResults["riskyAnnuityStrike"] = rpv01_K;
@@ -314,7 +341,7 @@ Real NumericalIntegrationIndexCdsOptionEngine::forwardRiskyAnnuityStrike(const R
     // Survival to exercise
     const Date& exerciseDate = arguments_.exercise->dates().front();
     Probability spToExercise = dph->survivalProbability(exerciseDate);
-    Real discToExercise = discount_->discount(exerciseDate);
+    Real discToExercise = discountSwapCurrency_->discount(exerciseDate);
     results_.additionalResults["strikeBasedSurvivalToExercise"] = spToExercise;
 
     // Forward risky annuity strike

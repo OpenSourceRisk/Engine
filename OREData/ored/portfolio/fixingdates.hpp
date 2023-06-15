@@ -186,8 +186,7 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantExt::NonStandardYoYInflationCoupon>,
                          public QuantLib::Visitor<QuantExt::CmbCoupon>,
                          public QuantLib::Visitor<QuantExt::EquityMarginCoupon>,
-                         public QuantLib::Visitor<QuantExt::CommodityIndexedCashFlow>,
-                         public QuantLib::Visitor<QuantExt::CommodityIndexedAverageCashFlow> {
+                         public QuantLib::Visitor<QuantExt::CommodityCashFlow> {
 
 public:
     //! Constructor
@@ -225,8 +224,7 @@ public:
     void visit(QuantExt::IndexWrappedCashFlow& c) override;
     void visit(QuantExt::CmbCoupon& c) override;
     void visit(QuantExt::EquityMarginCoupon& c) override;
-    void visit(QuantExt::CommodityIndexedCashFlow& c) override;
-    void visit(QuantExt::CommodityIndexedAverageCashFlow& c) override;
+    void visit(QuantExt::CommodityCashFlow& c) override;
     //@}
 
 protected:
@@ -269,7 +267,7 @@ void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& 
 
     The original \p fixings map may be empty.
 */
-void addMarketFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings,
+void addMarketFixingDates(const QuantLib::Date& asof, std::map<std::string, std::set<QuantLib::Date>>& fixings,
                           const TodaysMarketParameters& mktParams,
                           const QuantLib::Period& iborLookback = 5 * QuantLib::Days,
                           const QuantLib::Period& oisLookback = 4 * QuantLib::Months,

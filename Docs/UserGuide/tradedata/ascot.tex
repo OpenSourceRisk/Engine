@@ -1,0 +1,91 @@
+\subsubsection{Ascot}
+\label{ss:ascot}
+
+An Ascot is set up using an {\tt AscotData} block as shown in listing
+\ref{lst:ascotdata}. The bond details are read from reference data in this case.
+
+An Ascot or a Convertible Bond Option is an American style  option to buy back a convertible bond. The buyer of a Call Ascot can exercise the deal and get the underlying bond in
+exchange for paying the strike.
+
+The payout formula for a Call Ascot is:
+
+$$
+Payout = \max(0, convertiblePrice - Strike)
+$$
+
+And for a Put Ascot:
+
+$$
+Payout = \max(0, Strike - convertiblePrice)
+$$
+
+where: 
+$$
+Strike = bondQuantity \cdot (upfrontPayment + assetLeg - redemptionLeg) - fundingLeg
+$$
+
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Trade id="Ascot">
+    <TradeType>Ascot</TradeType>
+    <Envelope>...</Envelope>
+    <AscotData>
+      <ConvertibleBondData>
+        <BondData>
+          <SecurityId>ISIN:XY1000000000</SecurityId>
+          <BondNotional>1000000.00</BondNotional>
+        </BondData>
+      </ConvertibleBondData>
+      <OptionData>
+       <LongShort>Long</LongShort>
+       <OptionType>Call</OptionType>
+       <Style>American</Style>
+       <Settlement>Physical</Settlement>
+       <ExerciseDates>
+         <ExerciseDate>2029-02-03</ExerciseDate>
+       </ExerciseDates>  
+      </OptionData>
+      <ReferenceSwapData>
+        <LegData>
+          <LegType>Floating</LegType>
+          <Payer>false</Payer>
+          ...
+        </LegData>
+      </ReferenceSwapData>
+    <AscotData>
+  </Trade>
+\end{minted}
+\caption{Ascot set up using reference data}
+\label{lst:ascotdata}
+\end{listing}
+
+The meanings and allowable values of the elements in the block are as follows:
+
+\begin{itemize}
+  \item ConvertibleBondData: This describes the underlying convertible bond, see \ref{ss:convertible_bond}. 
+  \item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. The relevant fields in the \lstinline!OptionData! node for an Ascot are: 
+
+\begin{itemize}
+
+\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}. The LongShort flag multiplies the option price with +1 / -1. Call and Put payout formulas above are from the long perspective 
+
+\item \lstinline!OptionType! The allowable values are \emph{Call} or \emph{Put}. See payout formulas above.
+
+\item  \lstinline!Style! The Ascot type allows for \emph{American} option exercise style only.
+
+\item  \lstinline!Settlement! The allowable values are \emph{Cash} or \emph{Physical}.
+
+\item An \lstinline!ExerciseDates! node where exactly one \lstinline!ExerciseDate! date element must be given.
+
+\item \lstinline!Premiums! [Optional]: Option premium amounts paid by the option buyer to the option seller.
+
+Allowable values:  See section \ref{ss:premiums}
+
+\end{itemize}	
+	
+	
+	
+  \item ReferenceSwapData: Contains a single  \lstinline!LegData! node that describes the trade's reference swap funding leg. The asset leg is implied from the bond data. Payer should always be \emph{false}  i.e. the swap is entered from the viewpoint of the asset swap buyer.
+\end{itemize}
+

@@ -139,6 +139,10 @@ boost::shared_ptr<CashFlow> unpackIndexWrappedCashFlow(const boost::shared_ptr<C
 // get cumulated multiplier for indexed coupon or cashflow
 Real getIndexedCouponOrCashFlowMultiplier(const boost::shared_ptr<CashFlow>& c);
 
+// get all fixingDates / indices / multipliers for indexed coupon or index-wrapped cashflow
+std::vector<std::tuple<Date, boost::shared_ptr<Index>, Real>>
+getIndexedCouponOrCashFlowFixingDetails(const boost::shared_ptr<CashFlow>& c);
+
 //! indexed coupon leg
 /*!
     \ingroup cashflows

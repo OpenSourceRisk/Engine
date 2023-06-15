@@ -72,7 +72,7 @@ public:
                         const bool nonShiftedBaseCurrencyConversion = false,
                         const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                        const bool continueOnError = false, bool analyticFxSensis = false, bool dryRun = false);
+                        const bool continueOnError = false, bool dryRun = false);
 
     virtual ~SensitivityAnalysis() {}
 
@@ -124,9 +124,6 @@ protected:
     //! build valuation calculators for valuation engine
     virtual std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
 
-    //! Overwrite FX sensitivities in the cube with first order analytical values where possible.
-    virtual void addAnalyticFxSensitivities();
-
     boost::shared_ptr<ore::data::Market> market_;
     std::string marketConfiguration_;
     Date asof_;
@@ -151,15 +148,13 @@ protected:
     boost::shared_ptr<EngineData> engineData_;
     //! the portfolio (provided as input)
     boost::shared_ptr<Portfolio> portfolio_;
-    //! Extract analytic FX sensitivities on trades where possible.
-    bool analyticFxSensis_;
     //! do dry run
     bool dryRun_;
 
     //! initializationFlag
     bool initialized_, computed_;
     //! model builders
-    std::set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
+    std::set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
     //! sensitivityCube
     boost::shared_ptr<SensitivityCube> sensiCube_;
 };

@@ -104,6 +104,7 @@ public:
     virtual void buildPortfolio();
     virtual void marketCalibration(const boost::shared_ptr<MarketCalibrationReport>& mcr = nullptr);
     virtual void modifyPortfolio() {}
+    virtual void replaceTrades() {}
 
     //! Inspectors
     const std::string label() const;
@@ -157,9 +158,6 @@ protected:
     analytic_reports reports_;
     analytic_npvcubes npvCubes_;
     analytic_mktcubes mktCubes_;
-
-    //! flag to replace trades with schedule trades
-    bool replaceScheduleTrades_ = false;
 
     //! Whether to write intermediate reports or not.
     //! This would typically be used when the analytic is being called by another analytic

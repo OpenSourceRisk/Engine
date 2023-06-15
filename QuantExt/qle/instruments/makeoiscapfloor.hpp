@@ -30,8 +30,10 @@ namespace QuantExt {
 
 class MakeOISCapFloor {
 public:
+    // optional discount curve is used to determine ATM level (and only that)
     MakeOISCapFloor(CapFloor::Type type, const Period& tenor, const ext::shared_ptr<OvernightIndex>& index,
-                    const Period& rateComputationPeriod, Rate strike);
+                    const Period& rateComputationPeriod, Rate strike,
+                    const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
     operator Leg() const;
 
@@ -45,6 +47,7 @@ public:
     MakeOISCapFloor& withTelescopicValueDates(bool telescopicValueDates);
 
     MakeOISCapFloor& withCouponPricer(const ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& pricer);
+    MakeOISCapFloor& withDiscountCurve();
 
 private:
     CapFloor::Type type_;
@@ -63,9 +66,13 @@ private:
     bool telescopicValueDates_;
 
     ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> pricer_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
 };
 
 //! get the underlying ON coupons from an OIS cf
 Leg getOisCapFloorUnderlying(const Leg& oisCapFloor);
+
+//! get the (cap, floor) - strikes from an OIS cf
+std::vector<std::pair<Real, Real>> getOisCapFloorStrikes(const Leg& oisCapFloor);
 
 } // namespace QuantExt

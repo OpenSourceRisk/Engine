@@ -1,0 +1,37 @@
+\subsubsection{Bond Basket Data for Cashflow CDO}
+\label{ss:bondbasketdata} 
+This trade component node is used in a Cashflow CDO trade as explained in \ref{ss:CBOData}.
+An example structure of the \lstinline!BondBasketData! trade component node is shown in Listing \ref{lst:bondbasketdata2}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BondBasketData>
+    <Trade id="Bond_1">
+      <TradeType>Bond</TradeType>
+      <Envelope>
+        ...
+      </Envelope>
+      <BondData>
+        ...
+      </BondData>
+    </Trade>
+    <Trade id="Bond_2">
+      <TradeType>Bond</TradeType>
+      <Envelope>
+        ...
+      </Envelope>
+      <BondData>
+        ...
+      </BondData>
+    </Trade>
+</BondBasketData>
+\end{minted}
+\caption{Bond Basket Data for Cashflow CDO}
+\label{lst:bondbasketdata2}
+\end{listing}
+
+The usage of the BondBasketData is akin to a portfolio of bond trades, 
+but is embraced by the keyword \lstinline!BondBasketData! as opposed to \lstinline!Portfolio!.
+Compare the vanilla bond section \ref{ss:bond} for usage and allowable values. 
+

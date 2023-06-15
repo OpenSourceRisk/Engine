@@ -51,18 +51,21 @@ using namespace QuantExt;
  */
 class ScenarioGeneratorData : public XMLSerializable {
 public:
+
+    enum MporCashFlowMode { NonePay, BothPay, WePay, TheyPay };
+
     ScenarioGeneratorData()
         : grid_(boost::make_shared<DateGrid>()), sequenceType_(SobolBrownianBridge), seed_(0), samples_(0),
           ordering_(SobolBrownianGenerator::Steps), directionIntegers_(SobolRsg::JoeKuoD7), withCloseOutLag_(false),
-          withMporStickyDate_(false) {}
+          withMporStickyDate_(false), mporCashFlowMode_(MporCashFlowMode::BothPay) {}
 
     //! Constructor
     ScenarioGeneratorData(boost::shared_ptr<DateGrid> dateGrid, SequenceType sequenceType, long seed, Size samples,
                           SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                           SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
-                          bool withCloseOutLag = false, bool withMporStickyDate = false)
+                          bool withCloseOutLag = false, bool withMporStickyDate = false, MporCashFlowMode mporCashFlowMode = MporCashFlowMode::BothPay)
         : sequenceType_(sequenceType), seed_(seed), samples_(samples), ordering_(ordering),
-          directionIntegers_(directionIntegers), withCloseOutLag_(false), withMporStickyDate_(false) {
+          directionIntegers_(directionIntegers), withCloseOutLag_(false), withMporStickyDate_(false), mporCashFlowMode_(mporCashFlowMode) {
         setGrid(dateGrid);
     }
 
@@ -86,6 +89,7 @@ public:
     bool withCloseOutLag() const { return withCloseOutLag_; }
     bool withMporStickyDate() const { return withMporStickyDate_; }
     Period closeOutLag() const { return closeOutLag_; }
+    MporCashFlowMode mporCashFlowMode() const {  return mporCashFlowMode_; }
     //@}
 
     //! \name Setters
@@ -99,6 +103,7 @@ public:
     bool& withCloseOutLag() { return withCloseOutLag_; }
     bool& withMporStickyDate() { return withMporStickyDate_; }
     Period& closeOutLag() { return closeOutLag_; }
+    MporCashFlowMode& mporCashFlowMode() {  return mporCashFlowMode_; }
     //@}
 private:
     boost::shared_ptr<DateGrid> grid_;
@@ -111,9 +116,11 @@ private:
     bool withCloseOutLag_;
     bool withMporStickyDate_;
     Period closeOutLag_;
-
+    MporCashFlowMode mporCashFlowMode_;
     string gridString_;
 };
 
+//! Convert text representation to CollateralExposureHelper::CalculationType
+ScenarioGeneratorData::MporCashFlowMode parseMporCashFlowMode(const string& s);
 } // namespace analytics
 } // namespace ore

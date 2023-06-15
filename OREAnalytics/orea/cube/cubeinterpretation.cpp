@@ -41,7 +41,8 @@ CubeInterpretation::CubeInterpretation(const bool storeFlows, const bool withClo
     }
 
     if (storeFlows_) {
-        mporFlowsIndex_ = requiredCubeDepth_++;
+        mporFlowsIndex_ = requiredCubeDepth_;
+        requiredCubeDepth_ += 2;
     }
 
     if (storeCreditStateNPVs_ > 0) {
@@ -94,8 +95,8 @@ Real CubeInterpretation::getCloseOutNpv(const boost::shared_ptr<NPVCube>& cube, 
         return getGenericValue(cube, tradeIdx, dateIdx + 1, sampleIdx, defaultDateNpvIndex_);
 }
 
-Real CubeInterpretation::getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
-                                      Size sampleIdx) const {
+Real CubeInterpretation::getMporPositiveFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+                                             Size sampleIdx) const {
     Real aggMporFlowsVal = 0.0;
     try {
         aggMporFlowsVal = getGenericValue(cube, tradeIdx, dateIdx, sampleIdx, mporFlowsIndex_);
@@ -104,6 +105,23 @@ Real CubeInterpretation::getMporFlows(const boost::shared_ptr<NPVCube>& cube, Si
                                                         << "; " << e.what());
     }
     return aggMporFlowsVal;
+}
+
+Real CubeInterpretation::getMporNegativeFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+                                             Size sampleIdx) const {
+    Real aggMporFlowsVal = 0.0;
+    try {
+        aggMporFlowsVal = getGenericValue(cube, tradeIdx, dateIdx, sampleIdx, mporFlowsIndex_ + 1);
+    } catch (std::exception& e) {
+        DLOG("Unable to retrieve MPOR flows for trade " << tradeIdx << ", date " << dateIdx << ", sample " << sampleIdx
+                                                        << "; " << e.what());
+    }
+    return aggMporFlowsVal;
+}
+
+Real CubeInterpretation::getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+                                      Size sampleIdx) const {
+    return getMporPositiveFlows(cube, tradeIdx, dateIdx, sampleIdx) + getMporNegativeFlows(cube, tradeIdx, dateIdx, sampleIdx) ;
 }
 
 Real CubeInterpretation::getDefaultAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx,
