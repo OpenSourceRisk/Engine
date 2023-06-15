@@ -95,7 +95,8 @@ CapFloorVolCurve::CapFloorVolCurve(
                 termAtmOptCurve(asof, *config, loader, iborIndex, discountCurve, shift);
             } else if (config->type() == CfgType::TermSurface || config->type() == CfgType::TermSurfaceWithAtm) {
                 termOptSurface(asof, *config, loader, iborIndex, discountCurve, shift);
-            } else if (config->type() == CfgType::OptionletSurface) {
+            } else if (config->type() == CfgType::OptionletSurface ||
+                       config->type() == CfgType::OptionletSurfaceWithAtm) {
                 optOptSurface(asof, *config, loader, iborIndex, discountCurve, shift);
             } else if (config->type() == CfgType::OptionletAtm) {
                 optAtmOptCurve(asof, *config, loader, iborIndex, discountCurve, shift);
@@ -708,7 +709,6 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
                                      const Loader& loader, boost::shared_ptr<QuantLib::IborIndex> iborIndex,
                                      QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
                                      QuantLib::Real shift) {
-
     QL_REQUIRE(config.optionalQuotes() == false, "Optional quotes for optionlet volatilities are not supported.");
     // Load optionlet vol surface
     // Strike needs a custom comparator to avoid == with double
@@ -720,18 +720,30 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
     bool tenorRelevant = false;
     bool strikeRelevant = false;
     bool wildcardTenor = false;
+    bool atmTenorRelevant = false;
+    bool atmWildcardTenor = false;
 
     Period tenor = parsePeriod(config.indexTenor()); // 1D, 1M, 3M, 6M, 12M
+    bool includeAtm = config.includeAtm();
     string currency = config.currency();
     vector<Period> configTenors;
     std::map<Period, std::map<Real, Real>> capfloorVols;
+    vector<Period> atmConfigTenors;
+    std::map<Period, Real> atmCapFloorVols;
+    VolatilityType volType = volatilityType(config.volatilityType());
 
     if (config.tenors()[0] == "*") {
         wildcardTenor = true;
     } else {
         configTenors = parseVectorOfValues<Period>(config.tenors(), &parsePeriod);
     }
-
+    if (includeAtm) {
+        if (config.atmTenors()[0] == "*") {
+            atmWildcardTenor = true;
+        } else {
+            atmConfigTenors = parseVectorOfValues<Period>(config.atmTenors(), &parsePeriod);
+        }
+    }
     std::ostringstream ss;
     ss << MarketDatum::InstrumentType::CAPFLOOR << "/" << config.quoteType() << "/" << currency << "/";
     if (config.quoteIncludesIndexName())
@@ -744,78 +756,160 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         QL_REQUIRE(cfq, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CapFloorQuote");
         QL_REQUIRE(cfq->ccy() == currency,
                    "CapFloorQuote ccy '" << cfq->ccy() << "' <> config ccy '" << currency << "'");
-        if (cfq->underlying() == tenor && !cfq->atm()) {
-            auto findTenor = std::find(configTenors.begin(), configTenors.end(), cfq->term());
-            if (wildcardTenor) {
-                tenorRelevant = true;
-            } else {
-                tenorRelevant = findTenor != configTenors.end();
-            }
-
-            Real strike = cfq->strike();
-            auto i = std::find_if(config.strikes().begin(), config.strikes().end(),
-                                  [&strike](const std::string& x) { return close_enough(parseReal(x), strike); });
-            strikeRelevant = i != config.strikes().end();
-
-            quoteRelevant = strikeRelevant && tenorRelevant;
-
-            if (quoteRelevant) {
-                quoteCounter++;
-                // Check duplicate quotes
-                auto k = capfloorVols.find(cfq->term());
-                if (k != capfloorVols.end()) {
-                    if (k->second.find(cfq->strike()) != k->second.end()) {
-                        if (config.quoteIncludesIndexName())
-                            QL_FAIL("Duplicate optionlet vol quote in config "
-                                    << config.curveID() << ", with underlying tenor " << tenor << " ,currency "
-                                    << currency << " and index " << config.index() << ", for tenor " << cfq->term()
-                                    << " and strike " << cfq->strike());
-                        else
-                            QL_FAIL("Duplicate optionlet vol quote in config "
-                                    << config.curveID() << ", with underlying tenor " << tenor << " and currency "
-                                    << currency << ", for tenor " << cfq->term() << " and strike " << cfq->strike());
-                    }
+        if (cfq->underlying() == tenor) {
+            // Surface quotes
+            if (!cfq->atm()) {
+                auto findTenor = std::find(configTenors.begin(), configTenors.end(), cfq->term());
+                if (wildcardTenor) {
+                    tenorRelevant = true;
+                } else {
+                    tenorRelevant = findTenor != configTenors.end();
                 }
-                // Store the vols into a map to sort the wildcard tenors
-                capfloorVols[cfq->term()][cfq->strike()] = cfq->quote()->value();
-            }
+
+                Real strike = cfq->strike();
+                auto i = std::find_if(config.strikes().begin(), config.strikes().end(),
+                                      [&strike](const std::string& x) { return close_enough(parseReal(x), strike); });
+                strikeRelevant = i != config.strikes().end();
+
+                quoteRelevant = strikeRelevant && tenorRelevant;
+
+                if (quoteRelevant) {
+                    quoteCounter++;
+                    // Check duplicate quotes
+                    auto k = capfloorVols.find(cfq->term());
+                    if (k != capfloorVols.end()) {
+                        if (k->second.find(cfq->strike()) != k->second.end()) {
+                            if (config.quoteIncludesIndexName())
+                                QL_FAIL("Duplicate optionlet vol quote in config "
+                                        << config.curveID() << ", with underlying tenor " << tenor << " ,currency "
+                                        << currency << " and index " << config.index() << ", for tenor " << cfq->term()
+                                        << " and strike " << cfq->strike());
+                            else
+                                QL_FAIL("Duplicate optionlet vol quote in config "
+                                        << config.curveID() << ", with underlying tenor " << tenor << " and currency "
+                                        << currency << ", for tenor " << cfq->term() << " and strike "
+                                        << cfq->strike());
+                        }
+                    }
+                    // Store the vols into a map to sort the wildcard tenors
+                    capfloorVols[cfq->term()][cfq->strike()] = cfq->quote()->value();
+                }
+            } else if (includeAtm) {
+                // atm quotes
+                auto findTenor = std::find(atmConfigTenors.begin(), atmConfigTenors.end(), cfq->term());
+                if (atmWildcardTenor) {
+                    atmTenorRelevant = true;
+                } else {
+                    atmTenorRelevant = findTenor != atmConfigTenors.end();
+                }
+                if (tenorRelevant) {
+                    quoteCounter++;
+                    // Check duplicate quotes
+                    auto k = atmCapFloorVols.find(cfq->term());
+                    if (k != atmCapFloorVols.end()) {
+                        if (config.quoteIncludesIndexName())
+                            QL_FAIL("Duplicate optionlet atm vol quote in config "
+                                    << config.curveID() << ", with underlying tenor " << tenor << " ,currency "
+                                    << currency << " and index " << config.index() << ", for tenor " << cfq->term());
+                        else
+                            QL_FAIL("Duplicate optionlet atm vol quote in config "
+                                    << config.curveID() << ", with underlying tenor " << tenor << " and currency "
+                                    << currency << ", for tenor " << cfq->term());
+                    }
+                    // Store the vols into a map to sort the wildcard tenors
+                    atmCapFloorVols[cfq->term()] = cfq->quote()->value();
+                }
+            }   
         }
     }
-
     vector<Rate> strikes = parseVectorOfValues<Real>(config.strikes(), &parseReal);
-    vector<vector<Handle<Quote>>> vols_vec;
-    vector<Handle<Quote>> vols_tenor;
     auto tenor_itr = configTenors.begin();
     for (auto const& vols_outer: capfloorVols) {
-        // Check if all tenor is available
-        if (wildcardTenor) {
-            configTenors.push_back(vols_outer.first);
-        } else {
+        // Check if all tenors are available
+        if (!wildcardTenor) {
             QL_REQUIRE(*tenor_itr == vols_outer.first, "Quote with tenor " << *tenor_itr
                                                                              << " not loaded for optionlet vol config "
                                                                              << config.curveID());
             tenor_itr++;
         }
+        // Check if all strikes are available
         for (Size j = 0; j < strikes.size(); j++) {
             auto it = vols_outer.second.find(strikes[j]);
             QL_REQUIRE(it != vols_outer.second.end(),
                        "Quote with tenor " << vols_outer.first << " and strike " << strikes[j]
                                                                     << " not loaded for optionlet vol config "
                                                                     << config.curveID());
-            vols_tenor.push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(it->second)));
         }
+    }
+    if (includeAtm) {
+        // Check if all tenor for atm quotes exists
+        if (!atmWildcardTenor) {
+            auto tenor_itr = atmConfigTenors.begin();
+            for (auto const& vols_outer : atmCapFloorVols) {
+                QL_REQUIRE(*tenor_itr == vols_outer.first,
+                            "Quote with tenor " << *tenor_itr << " not loaded for optionlet vol config "
+                                                << config.curveID());
+                tenor_itr++;
+            }
+        }
+        // populate strikes
+        Rate atmStrike;
+        for (auto const& vols_outer : atmCapFloorVols) {
+            // Create a cap for each pillar point on ATM curve and attach relevant pricing engine
+            boost::shared_ptr<PricingEngine> engine;
+            if (volType == ShiftedLognormal) {
+                engine = boost::make_shared<BlackCapFloorEngine>(discountCurve, vols_outer.second, config.dayCounter(), shift);
+            } else if (volType == Normal) {
+                engine =
+                    boost::make_shared<BachelierCapFloorEngine>(discountCurve, vols_outer.second, config.dayCounter());
+            } else {
+                QL_FAIL("Unknown volatility type: " << volType);
+            }
+
+            // Using Null<Rate>() as strike => strike will be set to ATM rate. However, to calculate ATM rate, QL
+            // requires a BlackCapFloorEngine to be set (not a BachelierCapFloorEngine)! So, need a temp
+            // BlackCapFloorEngine with a dummy vol to calculate ATM rate. Needs to be fixed in QL.
+            boost::shared_ptr<PricingEngine> tempEngine = boost::make_shared<BlackCapFloorEngine>(discountCurve, 0.01);
+            boost::shared_ptr<QuantLib::CapFloor> caps =
+                MakeCapFloor(CapFloor::Cap, vols_outer.first, iborIndex, Null<Rate>(), 0 * Days).withPricingEngine(tempEngine);
+
+            // Now set correct engine and get the ATM rate
+            caps->setPricingEngine(engine);
+            atmStrike = caps->atmRate(**discountCurve);
+            if (capfloorVols.find(vols_outer.first) == capfloorVols.end()) {
+                capfloorVols[vols_outer.first][atmStrike] = vols_outer.second;
+            } else {
+                if (capfloorVols[vols_outer.first].find(atmStrike) == capfloorVols[vols_outer.first].end()) {
+                    capfloorVols[vols_outer.first][atmStrike] = vols_outer.second;
+                }
+            }
+        }
+    }
+    vector<vector<Rate>> strikes_vec;
+    vector<Rate> strikes_tenor;
+    vector<Period> tenors;
+    vector<vector<Handle<Quote>>> vols_vec;
+    vector<Handle<Quote>> vols_tenor;
+    for (auto const& vols_outer : capfloorVols) {
+        for (auto const& vols_inner : vols_outer.second) {
+            vols_tenor.push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(vols_inner.second)));
+            strikes_tenor.push_back(vols_inner.first);
+        }
+        tenors.push_back(vols_outer.first);
+        strikes_vec.push_back(strikes_tenor);
+        strikes_tenor.clear();
         vols_vec.push_back(vols_tenor);
         vols_tenor.clear();
     }
     // Find the fixing date of the term quotes
-    vector<Date> fixingDates = populateFixingDates(asof, config, iborIndex, configTenors);
+    vector<Date> fixingDates = populateFixingDates(asof, config, iborIndex, tenors);
     DLOG("Found " << quoteCounter << " quotes for optionlet vol surface " << config.curveID());
     boost::shared_ptr<StrippedOptionlet> optionletSurface;
 
     // Return for the cap floor term volatility surface
     optionletSurface = boost::make_shared<StrippedOptionlet>(
-        config.settleDays(), config.calendar(), config.businessDayConvention(), iborIndex, fixingDates, strikes,
-        vols_vec, config.dayCounter(), volatilityType(config.volatilityType()), shift);
+        config.settleDays(), config.calendar(), config.businessDayConvention(), iborIndex, fixingDates, strikes_vec,
+        vols_vec, config.dayCounter(), volType, shift);
 
     // This is not pretty but can't think of a better way (with template functions and or classes)
     if (config.timeInterpolation() == "Linear") {

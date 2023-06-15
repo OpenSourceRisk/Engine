@@ -46,7 +46,7 @@ public:
     enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
 
     //! The type of structure that has been configured
-    enum class Type { TermAtm, TermSurface, TermSurfaceWithAtm, OptionletAtm, OptionletSurface };
+    enum class Type { TermAtm, TermSurface, TermSurfaceWithAtm, OptionletAtm, OptionletSurface, OptionletSurfaceWithAtm };
 
     //! Default constructor
     CapFloorVolatilityCurveConfig() {}
