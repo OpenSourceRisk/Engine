@@ -13,8 +13,7 @@ INSTRUMENTS
   * Composite Trade, composites of any ORE trade types, see Example 47
   * Convertible Bond and Asset Swapped Convertible Option Transaction (ASCOT), see example 48
 - support separate fixing and payment date schedules on floating legs
-- support capped/floored BMA/SIFMA legs
-- support FRAs on OIS
+- support notional changes within calculation periods on fixed and floating legs
 
 MARKETS
 -
