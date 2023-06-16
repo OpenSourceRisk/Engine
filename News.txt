@@ -12,9 +12,8 @@ INSTRUMENTS
     Equity and Equity Option positions, or any combination of derivatives covered in ORE
   * Composite Trade, composites of any ORE trade types, see Example 47
   * Convertible Bond and Asset Swapped Convertible Option Transaction (ASCOT), see Example 48
-- Add support for separate fixing and payment date schedules on floating legs
-- Add support for capped/floored BMA/SIFMA legs
-- Add support for FRAs on OIS
+- support separate fixing and payment date schedules on floating legs
+- support notional changes within calculation periods on fixed and floating legs
 
 MARKETS
 - Add a new yield curve segment "Bond Yield Shifted", see Example 49
@@ -24,12 +23,12 @@ ANALYTICS
   credit migration, credit default and market moves across cash products and derivatives, see Example 43
 - Add the ISDA Standard Initial Margin Model (SIMM), all versions since inception, see Example 44
 - Fix the Windows builds with QL_ENABLE_SESSIONS=ON (to enable ORE multi-threading on Windows),
-  thanks to Steven van Haaren for reporting this issue and triggering this important fix. 
+  thanks to Steven van Haaren for reporting this issue and triggering this fix. 
 
 TEST
 - QuantExt: 267 test functions (vs 263 in the previous release)
 - OREData: 206 test functions (vs. 203 in the previous release)
-- OREAnalytics: 78 test functions (vs. 88 in the previous release)
+- OREAnalytics: 78 test functions (vs. 68 in the previous release)
 
 DOCUMENTATION
 - The user guide has grown from 486 to 537 pages, due to the migration of Hybrid instruments
