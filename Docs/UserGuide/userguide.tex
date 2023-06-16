@@ -232,14 +232,15 @@ In September 2022 Acadia announced to contribute a wide range of financial instr
 \begin{itemize}
 \item Commodity products (Swaps, Basis Swaps, Av. Price Options, Swaptions), released December 22 with ORE v8
 \item Credit products (Index CDS and Index CDS Options, Credit-Linked Swaps, Synthetic CDOs), released March 23 with ORE v9
-\item Bond products and Hybrids (Bond Options, Bond Repos, Bond TRS, Convertible Bonds, Generic TRS with mixed basket underlyings, CFDs), to be released in June 23
-\item Exotics (Scripted trade framework for modelling highly structured hybrid payoffs such as Accumulators, TARFs, PRDCs, etc.), to be released in September 23
+\item Bond products and Hybrids (Bond Options, Bond Repos, Bond TRS, Composite Trades, Convertible Bonds, Generic TRS with mixed basket underlyings, CFDs), to be released in June 23 with ORE v10
+\item Exotics (Scripted trade framework for modelling highly structured hybrid payoffs such as Accumulators, TARFs, PRDCs, etc.), to be released in September 23 with ORE v11
 \end{itemize}
 These contributions were (and will be) accompanied by analytics extensions to enhance ORE usability:
 \begin{itemize}
 \item Credit exposure including Commodity and American Monte Carlo for Exotics, released in December 22 with ORE v8
 \item Market Risk including multi-threaded sensitivities, par sensitivity, delta/gamma VaR, released in March 23 with ORE v9
-\item Portfolio Credit Model, to be released in June 23
+\item Portfolio Credit Model, to be released in June 23 with ORE v10
+\item ISDA's Standard Initial Margin Model (SIMM) , to be released in June 23 with ORE v10
 \end{itemize}
 
 \medskip 
@@ -303,6 +304,14 @@ Credit Linked Swaps & Y & Y & N & Y \\
 \hline
 Index Tranches, Synthetic CDOs & Y & Y & N & Y \\
 \hline
+Composite Trades & Y & Y & Y & Y \\
+\hline
+Total Return Swaps and Contracts for Difference & Y & Y & Y & Y \\
+\hline
+Convertible Bonds & Y & Y & Y & N \\
+\hline
+ASCOTs & Y & Y & Y & Y \\
+\hline
 \end{tabular}
 \caption{ORE product coverage. FX/Equity Exotics include Barrier, Digital, Digital Barrier (FX only), Double Barrier, European Barrier, KIKO Barrier (FX only), Touch and Double Touch Options.}
 \label{tab_coverage}
@@ -337,95 +346,80 @@ parametrisation and the structure of trade and market data input.
 \section{Release Notes}\label{sec:releasenotes}
 %========================================================
 
-This section summarises the notable changes between release 8 (December 2022) and 9 (March 2023).
+See the full history of release notes in {\tt News.txt} in the top level directory of the ORE's github repository.
+
+\medskip
+This section summarises the notable changes between release 9 (March 2023) and 10 (June 2022).
 
 \bigskip
 INSTRUMENTS 
 \begin{itemize}
-\item roll out of Credit derivatives, thanks to Acadia Inc., as announced in September 22:
+\item Roll out of Hybrid and Credit instruments, thanks to Acadia Inc., as announced in September 22:
   \begin{itemize}
-	\item Bond Option
-	\item Bond Repo
-  	\item Bond Total Return Swap
-  	\item Credit-Linked Swap
-  	\item Index Credit Default Swap
-  	\item Index Credit Default Swap Option
-  	\item Credit Index Tranche, Synthetic CDO
-  \end{itemize}
+	\item Collateralized Bond Obligation, see Examples 45
+	\item Generic Total Return Swap and Contract For Difference framework, see Example 46,
+    	referencing Bonds, Forward Bonds, Convertible Bonds, CBOs,
+    	Equity and Equity Option positions, or any combination of derivatives covered in ORE
+  	\item Composite Trade, composites of any ORE trade types, see Example 47
+  	\item Convertible Bond and Asset Swapped Convertible Option Transaction (ASCOT), see Example 48
+\end{itemize}	
  including related models and pricing engines    
-\item optimize performance for the analytical Commodity Swaption engine
-\item add missing FxIndex registrations in Commodity APO and Commodity Indexed Average Cashflows
-\item include leg NPVs in additional results of CDS products
-\item fix LGM Swaption pricing for cases where fixing date < exercise date
+\item Support separate fixing and payment date schedules on floating legs
+\item Support notional changes within calculation periods on fixed and floating legs
 \end{itemize}
 
 \bigskip
 MARKETS \& TERM STRUCTURES
 
 \begin{itemize}
-\item fix shifted lognormal Swaption vol surface (SwaptionVolCubeWithATM, add missing shift)
+\item Add a new yield curve segment "Bond Yield Shifted", see Example 49
 \end{itemize}
 
 \bigskip
 ANALYTICS
 
 \begin{itemize}
-\item integrate American Monte Carlo simulation, see the {\bf new Example 39}
-\item add Par Sensitivity Analysis, see the {\bf new Example 40}
-\item add more parametric VaR types (delta-gamma normal, delta-gamma Saddlepoint)
-\item support multi-threading in sensitivity analysis
-\item support multi-threading in exposure simulation, see the {\bf new Example 41}
-\item fix exposure/XVA analytics with simulation of fixings for ceased IBOR indices
+\item Add a proof-of-concept Credit Portfolio Model to construct portfolio loss distributions due to
+  credit migration, credit default and market moves across cash products and derivatives, see Example 43
+\item Add the ISDA Standard Initial Margin Model (SIMM), all versions since inception, see Example 44
+\item Fix the Windows builds with QL\_ENABLE\_SESSIONS=ON (to enable ORE multi-threading on Windows),
+  thanks to Steven van Haaren for reporting this issue and triggering this fix. 
 \end{itemize}
 
 \bigskip
 TESTS
 
 \begin{itemize}
-\item QuantExt: 263 test functions (vs 242 in the previous release)
-\item OREData: 203 test functions (vs. 199 in the previous release)
-\item OREAnalytics: 68 test functions (vs. 66 in the previous release)
+\item QuantExt: 267 test functions (vs 263 in the previous release)
+\item OREData: 206 test functions (vs. 203 in the previous release)
+\item OREAnalytics: 78 test functions (vs. 68 in the previous release)
 \end{itemize}
 
 \bigskip
 DOCUMENTATION
 
 \begin{itemize}
-\item The user guide has grown from 440 to 486 pages, mainly due to the
-  migration of Credit derivative instruments into ORE, as well as new examples 39 - 42.
+\item The user guide has grown from 486 to 536 pages, due to the migration of Hybrid instruments
+  into ORE, new analytics and examples 43ff.
+\item A separate guide for the Credit Portfolio Model in ORE has been added,
+  see Docs/UserGuide/creditmodel.tex
 \end{itemize}
 
 \bigskip
 LANGUAGE BINDINGS
 
 \begin{itemize}
-\item Upgrade to QuantLib-SWIG-1.29
-\item The SWIG wrapper has been extended to provide access to ORE input
-  construction in memory and to query in-memory results (reports etc), in line
-  with the refactoring mentioned below. See the new {\bf Example 42}. 
-\item To facilitate access to ORE Python, we are providing Python wheels for various
-  OS types and Python versions starting with this release, thanks to Eric Ehlers's
-  effort and Luigi Ballabio's support to get in up and running using github actions.
-  Build instructions for the Python wheels are included in this user guide, see sections  
-  \ref{sec:oreswig}, \ref{sec:win_wheel}, \ref{sec:nix_wheel}. 
-  See the new {\bf Example 42} on how to use the published wheels.
+\item Upgrade to QuantLib-SWIG-v1.30
+\item Added four of the Jupyter notebooks presented at the Acadia Quant Summit (London 
+  see oreswig/OREAnalytics-SWIG/Python/Examples/Notebooks
 \end{itemize}
 
 \bigskip
 OTHER
 
 \begin{itemize}
-\item Upgrade to QuantLib-1.29
-\item Refactor the serialization of NPV cube and market cube (aggregation scenario data)
-\item Refactor OREAnalytics/orea/app by separating input construction from processing
-  and persisting results. This is to faciliate re-using the processing element
-  (analyticsManager->runAnalytics(...)) in different applications, a command line
-  application such as ore[.exe] that reads/writes from/to files, an ORE Python wrapper
-  that receives input and provides results in memory (see language bindings above),
-  or a REST service built around ORE. Results (reports, cubes etc) are stored in
-  memory and only saved to files on demand. Inputs for the ORE processor can be
-  assembled in memory, or read from files.
-  \end{itemize}
+\item Upgrade to QuantLib-v1.30
+\end{itemize}
 
 %========================================================
 \section{ORE Data Flow}\label{sec:process}
