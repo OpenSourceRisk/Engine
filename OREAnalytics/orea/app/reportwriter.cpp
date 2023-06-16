@@ -262,7 +262,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                             boost::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
                                 boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(ptrFlow);
                             Date fixingDate;
-                            Real fixingValue;
+                            Real fixingValue = Null<Real>();
                             if (ptrBMA) {
                                 // We return the last fixing inside the coupon period
                                 fixingDate = ptrBMA->fixingDates().end()[-2];
@@ -271,7 +271,12 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                     flowType = "BMAaverage";
                             } else if (ptrFloat) {
                                 fixingDate = ptrFloat->fixingDate();
-                                fixingValue = ptrFloat-> index()->fixing(fixingDate);
+                                try {
+                                    fixingValue = ptrFloat->index()->fixing(fixingDate);
+                                } catch (...) {
+                                    // catch invalid fixing date, missing fixing, etc. and fall through with
+                                    // fixingValue = Null (which appears as NA in the report)
+                                }
                                 if (fixingDate > asof)
                                     flowType = "InterestProjected";
                                 if (auto c = boost::dynamic_pointer_cast<QuantLib::IborCoupon>(ptrFloat)) {
@@ -564,9 +569,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
             }
 
         } catch (std::exception& e) {
-            ALOG("Exception writing cashflow report : " << e.what());
-        } catch (...) {
-            ALOG("Exception writing cashflow report : Unknown Exception");
+            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during cashflow report generation",
+                                             e.what()));
         }
     }
     report.end();

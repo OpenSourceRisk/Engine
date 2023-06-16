@@ -293,4 +293,13 @@ If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \
 
  Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
 
+\item \lstinline!FixingSchedule! [Optional]: This node allows for the specification of an explicit fixing schedule, see
+  \ref{ss:schedule_data}. Supported for underlying IBOR / term rate index. A given fixing will become effective as
+  specified by FixingDays relative to the fixing schedule or by an explicit ResetSchedule.
+
+\item \lstinline!ResetSchedule! [Optional]: This node allows for the specification of an explicit reset schedule, see
+  \ref{ss:schedule_data}, i.e. the dates on which fixings become effective. Supported for underlying IBOR / term rate
+  index. Can be given together with FixingSchedule or FixingDays. In the latter case, the fixing dates are derived from
+  the reset schedule.
+
 \end{itemize}
