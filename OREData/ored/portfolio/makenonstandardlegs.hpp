@@ -28,16 +28,15 @@
 
 namespace ore::data {
 
-QuantLib::Leg
-makeNonStandardIborLeg(const boost::shared_ptr<QuantLib::IborIndex>& index,
-                       const std::vector<QuantLib::Date>& calcDates, const std::vector<QuantLib::Date>& payDates,
-                       const std::vector<QuantLib::Date>& fixingDates, const std::vector<QuantLib::Date>& resetDates,
-                       const QuantLib::Size fixingDays, const std::vector<QuantLib::Real>& notionals,
-                       const std::vector<QuantLib::Date>& notionalDates, const std::vector<QuantLib::Real>& spreads,
-                       const std::vector<QuantLib::Date>& spreadDates, const std::vector<QuantLib::Real>& gearings,
-                       const std::vector<QuantLib::Date>& gearingDates, const bool strictNotionalDates,
-                       const QuantLib::DayCounter& dayCounter, const QuantLib::Calendar& payCalendar,
-                       const QuantLib::BusinessDayConvention payConv, const QuantLib::Period& payLag);
+QuantLib::Leg makeNonStandardIborLeg(
+    const boost::shared_ptr<QuantLib::IborIndex>& index, const std::vector<QuantLib::Date>& calcDates,
+    const std::vector<QuantLib::Date>& payDates, const std::vector<QuantLib::Date>& fixingDates,
+    const std::vector<QuantLib::Date>& resetDates, const QuantLib::Size fixingDays,
+    const std::vector<QuantLib::Real>& notionals, const std::vector<QuantLib::Date>& notionalDates,
+    const std::vector<QuantLib::Real>& spreads, const std::vector<QuantLib::Date>& spreadDates,
+    const std::vector<QuantLib::Real>& gearings, const std::vector<QuantLib::Date>& gearingDates,
+    const bool strictNotionalDates, const QuantLib::DayCounter& dayCounter, const QuantLib::Calendar& payCalendar,
+    const QuantLib::BusinessDayConvention payConv, const QuantLib::Period& payLag, const bool isInArrears);
 
 QuantLib::Leg makeNonStandardFixedLeg(const std::vector<QuantLib::Date>& calcDates,
                                       const std::vector<QuantLib::Date>& payDates,
