@@ -32,7 +32,7 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
                            const std::vector<Real>& spreads, const std::vector<Date>& spreadDatesInput,
                            const std::vector<Real>& gearings, const std::vector<Date>& gearingDatesInput,
                            const bool strictNotionalDates, const DayCounter& dayCounter, const Calendar& payCalendar,
-                           const BusinessDayConvention payConv, const Period& payLag) {
+                           const BusinessDayConvention payConv, const Period& payLag, const bool isInArrears) {
 
     // checks
 
@@ -67,8 +67,8 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
     if (resetDates.empty() && fixingDates.empty()) {
         for (Size i = 0; i < calcDates.size() - 1; ++i) {
             resetDates.push_back(calcDates[i]);
-            fixingDates.push_back(
-                index->fixingCalendar().advance(resetDates.back(), -static_cast<int>(fixingDays) * Days, Preceding));
+            fixingDates.push_back(index->fixingCalendar().advance(isInArrears ? calcDates[i + 1] : calcDates[i],
+                                                                  -static_cast<int>(fixingDays) * Days, Preceding));
         }
     } else if (resetDates.empty()) {
         for (Size i = 0; i < fixingDates.size(); ++i) {

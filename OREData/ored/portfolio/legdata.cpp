@@ -1285,7 +1285,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                                         resetSchedule.dates(), fixingDays, data.notionals(), notionalDatesAsDates,
                                         floatData->spreads(), spreadDatesAsDates, floatData->gearings(),
                                         gearingDatesAsDates, data.strictNotionalDates(), dc, paymentCalendar, bdc,
-                                        boost::apply_visitor(PaymentLagPeriod(), paymentLag));
+                                        boost::apply_visitor(PaymentLagPeriod(), paymentLag), isInArrears);
 
         isNonStandard = true;
     }
