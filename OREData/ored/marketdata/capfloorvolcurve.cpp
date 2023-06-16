@@ -738,8 +738,6 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         configTenors = parseVectorOfValues<Period>(config.tenors(), &parsePeriod);
     }
     if (includeAtm) {
-        QL_REQUIRE(boost::dynamic_pointer_cast<OvernightIndex>(iborIndex) == nullptr,
-                   "CapFloorVolCurve::transform(): OIS index not supported for ATM curve");
         if (config.atmTenors()[0] == "*") {
             atmWildcardTenor = true;
         } else {
@@ -843,53 +841,45 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
                                                                     << config.curveID());
         }
     }
+    std::map<Date, Date> tenorMap; 
     if (includeAtm) {
         // Check if all tenor for atm quotes exists
         if (!atmWildcardTenor) {
             auto tenor_itr = atmConfigTenors.begin();
             for (auto const& vols_outer : atmCapFloorVols) {
-                QL_REQUIRE(*tenor_itr == vols_outer.first,
-                            "Quote with tenor " << *tenor_itr << " not loaded for optionlet vol config "
-                                                << config.curveID());
+                QL_REQUIRE(*tenor_itr == vols_outer.first, "Quote with tenor "
+                                                               << *tenor_itr << " not loaded for optionlet vol config "
+                                                               << config.curveID());
                 tenor_itr++;
             }
         }
-        // populate strikes
+        // Add tenor to the mapping
+        for (auto const& vols_outer : atmCapFloorVols) {
+            capfloorVols[vols_outer.first];
+        }
+    }
+    // Find the fixing date of the term quotes
+    vector<Period> tenors;
+    for (auto const& vols_outer : capfloorVols) {
+        tenors.push_back(vols_outer.first);
+    }
+    // Find the fixing date of the term quotes
+    vector<Date> fixingDates = populateFixingDates(asof, config, iborIndex, tenors);
+
+    // populate strikes for atm quotes
+    if (includeAtm){
         Rate atmStrike;
         for (auto const& vols_outer : atmCapFloorVols) {
-            // Create a cap for each pillar point on ATM curve and attach relevant pricing engine
-            boost::shared_ptr<PricingEngine> engine;
-            if (volType == ShiftedLognormal) {
-                engine = boost::make_shared<BlackCapFloorEngine>(discountCurve, vols_outer.second, config.dayCounter(), shift);
-            } else if (volType == Normal) {
-                engine =
-                    boost::make_shared<BachelierCapFloorEngine>(discountCurve, vols_outer.second, config.dayCounter());
-            } else {
-                QL_FAIL("Unknown volatility type: " << volType);
-            }
-
-            // Using Null<Rate>() as strike => strike will be set to ATM rate. However, to calculate ATM rate, QL
-            // requires a BlackCapFloorEngine to be set (not a BachelierCapFloorEngine)! So, need a temp
-            // BlackCapFloorEngine with a dummy vol to calculate ATM rate. Needs to be fixed in QL.
-            boost::shared_ptr<PricingEngine> tempEngine = boost::make_shared<BlackCapFloorEngine>(discountCurve, 0.01);
-            boost::shared_ptr<QuantLib::CapFloor> caps =
-                MakeCapFloor(CapFloor::Cap, vols_outer.first, iborIndex, Null<Rate>(), 0 * Days).withPricingEngine(tempEngine);
-
-            // Now set correct engine and get the ATM rate
-            caps->setPricingEngine(engine);
-            atmStrike = caps->atmRate(**discountCurve);
-            if (capfloorVols.find(vols_outer.first) == capfloorVols.end()) {
+            auto it = find(tenors.begin(), tenors.end(), vols_outer.first);
+            Size index = it - tenors.begin();
+            atmStrike = iborIndex->forecastFixing(fixingDates[index]);
+            if (capfloorVols[vols_outer.first].find(atmStrike) == capfloorVols[vols_outer.first].end()) {
                 capfloorVols[vols_outer.first][atmStrike] = vols_outer.second;
-            } else {
-                if (capfloorVols[vols_outer.first].find(atmStrike) == capfloorVols[vols_outer.first].end()) {
-                    capfloorVols[vols_outer.first][atmStrike] = vols_outer.second;
-                }
             }
         }
     }
     vector<vector<Rate>> strikes_vec;
     vector<Rate> strikes_tenor;
-    vector<Period> tenors;
     vector<vector<Handle<Quote>>> vols_vec;
     vector<Handle<Quote>> vols_tenor;
     for (auto const& vols_outer : capfloorVols) {
@@ -903,8 +893,6 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         vols_vec.push_back(vols_tenor);
         vols_tenor.clear();
     }
-    // Find the fixing date of the term quotes
-    vector<Date> fixingDates = populateFixingDates(asof, config, iborIndex, tenors);
     DLOG("Found " << quoteCounter << " quotes for optionlet vol surface " << config.curveID());
     boost::shared_ptr<StrippedOptionlet> optionletSurface;
 
