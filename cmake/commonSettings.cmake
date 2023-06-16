@@ -35,6 +35,11 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 endif()
 
+if(NOT DONT_SET_QL_INCLUDE_DIR_FIRST)
+   # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
+    include_directories("${PROJECT_BINARY_DIR}/QuantLib")
+endif()
+
 if(MSVC)
     set(BUILD_SHARED_LIBS OFF)
 
@@ -60,6 +65,8 @@ if(MSVC)
         endif()
     endif()
 
+
+
     IF(NOT Boost_USE_STATIC_LIBS)
         add_definitions(-DBOOST_ALL_DYN_LINK)
         add_definitions(-DBOOST_TEST_DYN_LINK)
@@ -71,9 +78,6 @@ if(MSVC)
     add_compile_definitions(_SCL_SECURE_NO_DEPRECATE)
     add_compile_definitions(_CRT_SECURE_NO_DEPRECATE)
     add_compile_definitions(BOOST_ENABLE_ASSERT_HANDLER)
-    if(ENABLE_SESSIONS)
-        add_compile_definitions(QL_ENABLE_SESSIONS)
-    endif()
     add_compile_options(/bigobj)
     add_compile_options(/W3)
     #add_compile_options(/we4265) #no-virtual-destructor
@@ -89,6 +93,11 @@ if(MSVC)
     # add_compiler_flag("/we4389" signed_compare_mscv)
     
     add_link_options(/LARGEADDRESSAWARE)
+
+    add_compile_options("$<$<CONFIG:Release>:/GF>")
+    add_compile_options("$<$<CONFIG:Release>:/Gy>")
+    add_compile_options("$<$<CONFIG:Release>:/Ot>")
+    add_compile_options("$<$<CONFIG:Release>:/GT>")
 
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/GF>")
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Gy>")
@@ -147,10 +156,10 @@ else()
     add_compiler_flag("--system-header-prefix=boost/" supportsSystemHeaderPrefixBoost)
 
     # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
-    include_directories("${PROJECT_BINARY_DIR}/QuantLib")
-
-    # similar if QuantLib is build separately
+    # if QuantLib is build separately
     include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
+
+   
 endif()
 
 # workaround when building with boost 1.81, see https://github.com/boostorg/phoenix/issues/111
