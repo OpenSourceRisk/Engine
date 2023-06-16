@@ -185,7 +185,7 @@ void MarketDataLoader::populateFixings(
                 addMarketFixingDates(d, fixings_, *tmp);
             LOG("Add fixing possibly required for equity index delta risk decomposition")
             additional_equity_fixings(fixings_, *tmp, inputs_->refDataManager(),
-                                  inputs_->curveConfigs().front());
+                                  inputs_->curveConfigs().get());
         }
 
         if (inputs_->eomInflationFixings()) {
@@ -273,7 +273,7 @@ void MarketDataLoader::populateLoader(
         for (auto c : tmp->configurations())
             configurations.insert(c.first);
 
-        for (const auto& curveConfig : inputs_->curveConfigs()) {
+        for (const auto& [_,curveConfig] : inputs_->curveConfigs().curveConfigurations()) {
             auto qs = curveConfig->quotes(tmp, configurations);
             quotes.insert(qs.begin(), qs.end());
         }
