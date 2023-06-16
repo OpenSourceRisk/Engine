@@ -259,6 +259,7 @@
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
+#include <ored/portfolio/makenonstandardlegs.hpp>
 #include <ored/portfolio/multilegoption.hpp>
 #include <ored/portfolio/nettingsetdefinition.hpp>
 #include <ored/portfolio/nettingsetdetails.hpp>
