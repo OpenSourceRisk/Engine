@@ -17,7 +17,6 @@
 */
 
 #include <ored/portfolio/bond.hpp>
-#include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
@@ -26,7 +25,9 @@
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
+#include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/makenonstandardlegs.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/types.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
@@ -35,8 +36,29 @@
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/vectorutils.hpp>
 
-#include <boost/make_shared.hpp>
-#include <boost/algorithm/string.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/brlcdicouponpricer.hpp>
+#include <qle/cashflows/cmbcoupon.hpp>
+#include <qle/cashflows/couponpricer.hpp>
+#include <qle/cashflows/cpicoupon.hpp>
+#include <qle/cashflows/cpicouponpricer.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
+#include <qle/cashflows/floatingannuitycoupon.hpp>
+#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
+#include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
+#include <qle/cashflows/subperiodscoupon.hpp>
+#include <qle/cashflows/subperiodscouponpricer.hpp>
+#include <qle/cashflows/yoyinflationcoupon.hpp>
+#include <qle/cashflows/zerofixedcoupon.hpp>
+#include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/indexes/bondindex.hpp>
+#include <qle/instruments/forwardbond.hpp>
+
 #include <ql/cashflow.hpp>
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -53,28 +75,10 @@
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/utilities/vectors.hpp>
 #include <ql/version.hpp>
-#include <qle/cashflows/averageonindexedcoupon.hpp>
-#include <qle/cashflows/averageonindexedcouponpricer.hpp>
-#include <qle/cashflows/brlcdicouponpricer.hpp>
-#include <qle/cashflows/couponpricer.hpp>
-#include <qle/cashflows/cpicoupon.hpp>
-#include <qle/cashflows/cpicouponpricer.hpp>
-#include <qle/cashflows/equitycoupon.hpp>
-#include <qle/cashflows/floatingannuitycoupon.hpp>
-#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
-#include <qle/cashflows/indexedcoupon.hpp>
-#include <qle/cashflows/zerofixedcoupon.hpp>
-#include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
-#include <qle/cashflows/overnightindexedcoupon.hpp>
-#include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
-#include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
-#include <qle/cashflows/subperiodscoupon.hpp>
-#include <qle/cashflows/subperiodscouponpricer.hpp>
-#include <qle/cashflows/yoyinflationcoupon.hpp>
-#include <qle/cashflows/cmbcoupon.hpp>
-#include <qle/indexes/bmaindexwrapper.hpp>
-#include <qle/instruments/forwardbond.hpp>
-#include <qle/indexes/bondindex.hpp>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -188,6 +192,13 @@ void FloatingLegData::fromXML(XMLNode* node) {
         localCapFloor_ = XMLUtils::getChildValueAsBool(node, "LocalCapFloor", false);
     else
         localCapFloor_ = false;
+
+    if (auto tmp = XMLUtils::getChildNode(node, "FixingSchedule")) {
+        fixingSchedule_.fromXML(tmp);
+    }
+    if (auto tmp = XMLUtils::getChildNode(node, "ResetSchedule")) {
+        resetSchedule_.fromXML(tmp);
+    }
 }
 
 XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
@@ -216,6 +227,16 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     if (localCapFloor_)
         XMLUtils::addChild(doc, node, "LocalCapFloor", localCapFloor_);
+    if (fixingSchedule_.hasData()) {
+        auto tmp = fixingSchedule_.toXML(doc);
+        XMLUtils::setNodeName(doc, tmp, "FixingSchedule");
+        XMLUtils::appendNode(node, tmp);
+    }
+    if (resetSchedule_.hasData()) {
+        auto tmp = resetSchedule_.toXML(doc);
+        XMLUtils::setNodeName(doc, tmp, "ResetSchedule");
+        XMLUtils::appendNode(node, tmp);
+    }
     return node;
 }
 
@@ -728,12 +749,11 @@ void LegData::fromXML(XMLNode* node) {
     // if not given, default of getChildValueAsBool is true, which fits our needs here
     notionals_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Notionals", "Notional", "startDate",
                                                                  notionalDates_, &parseReal);
-    XMLNode* tmp = XMLUtils::getChildNode(node, "Notionals");
     isNotResetXCCY_ = true;
     notionalInitialExchange_ = false;
     notionalFinalExchange_ = false;
     notionalAmortizingExchange_ = false;
-    if (tmp) {
+    if (auto tmp = XMLUtils::getChildNode(node, "Notionals")) {
         XMLNode* fxResetNode = XMLUtils::getChildNode(tmp, "FXReset");
         if (fxResetNode) {
             isNotResetXCCY_ = false;
@@ -770,14 +790,23 @@ void LegData::fromXML(XMLNode* node) {
         }
     }
 
-    tmp = XMLUtils::getChildNode(node, "ScheduleData");
-    if (tmp)
+    if (auto tmp = XMLUtils::getChildNode(node, "ScheduleData"))
         schedule_.fromXML(tmp);
 
     paymentDates_ = XMLUtils::getChildrenValues(node, "PaymentDates", "PaymentDate", false);
+    if (!paymentDates_.empty()) {
+        WLOG("Usage of PaymentDates is deprecated, use PaymentSchedule instead.");
+    }
 
-    tmp = XMLUtils::getChildNode(node, "Indexings");
-    if (tmp) {
+    strictNotionalDates_ = XMLUtils::getChildValueAsBool(node, "StrictNotionalDates", false, false);
+
+    if (auto tmp = XMLUtils::getChildNode(node, "PaymentSchedule")) {
+        paymentSchedule_.fromXML(tmp);
+        QL_REQUIRE(paymentDates_.empty(), "Both PaymentDates and PaymentSchedule is given. Remove one of them. "
+                                          "PaymentDates is deprecated, so preferably use PaymentSchedule.");
+    }
+
+    if (auto tmp = XMLUtils::getChildNode(node, "Indexings")) {
         if (auto n = XMLUtils::getChildNode(tmp, "FromAssetLeg")) {
             indexingFromAssetLeg_ = parseBool(XMLUtils::getNodeValue(n));
         } else {
@@ -851,6 +880,16 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(node, amortisationsParentNode);
     }
 
+    if (strictNotionalDates_) {
+        XMLUtils::addChild(doc, node, "StrictNotionalDates", strictNotionalDates_);
+    }
+
+    if (paymentSchedule_.hasData()) {
+        auto tmp = paymentSchedule_.toXML(doc);
+        XMLUtils::setNodeName(doc, tmp, "PaymentSchedule");
+        XMLUtils::appendNode(node, tmp);
+    }
+
     if (!indexing_.empty() || indexingFromAssetLeg_) {
         XMLNode* indexingsNode = doc.allocNode("Indexings");
         if (indexingFromAssetLeg_)
@@ -887,15 +926,26 @@ Leg makeSimpleLeg(const LegData& data) {
 }
 
 Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplacement) {
+
     boost::shared_ptr<FixedLegData> fixedLegData = boost::dynamic_pointer_cast<FixedLegData>(data.concreteLegData());
     QL_REQUIRE(fixedLegData, "Wrong LegType, expected Fixed, got " << data.legType());
 
-    Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
-    QL_REQUIRE(schedule.size() > 1, "FixedLeg:Schedule must have at least 2 dates.");
+    // build schedules
 
-    // Get explicit payment dates which in most cases should be empty
+    Schedule schedule;
+    Schedule paymentSchedule;
+    ScheduleBuilder scheduleBuilder;
+    scheduleBuilder.add(schedule, data.schedule());
+    scheduleBuilder.add(paymentSchedule, data.paymentSchedule());
+    scheduleBuilder.makeSchedules(openEndDateReplacement);
+
+    // Get explicit payment dates, if given
+
     vector<Date> paymentDates;
-    if (!data.paymentDates().empty()) {
+
+    if (!paymentSchedule.empty()) {
+        paymentDates = paymentSchedule.dates();
+    } else if (!data.paymentDates().empty()) {
         BusinessDayConvention paymentDatesConvention =
             data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
         Calendar paymentDatesCalendar =
@@ -905,30 +955,73 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
             paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
     }
 
+    // set payment calendar
+
+    Calendar paymentCalendar;
+    if (!data.paymentCalendar().empty())
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+    else if (!paymentSchedule.calendar().empty())
+        paymentCalendar = paymentSchedule.calendar();
+    else if (!schedule.calendar().empty())
+        paymentCalendar = schedule.calendar();
+
+    // set day counter and bdc
+
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
-    Calendar paymentCalendar;
-    if (data.paymentCalendar().empty())
-        paymentCalendar = schedule.calendar();
-    else
-        paymentCalendar = parseCalendar(data.paymentCalendar());
+    // build standard schedules (for non-strict notional dates)
 
     vector<double> rates = buildScheduledVector(fixedLegData->rates(), fixedLegData->rateDates(), schedule);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
-    applyAmortization(notionals, data, schedule, true, rates);
-    Leg leg = FixedRateLeg(schedule)
-                  .withNotionals(notionals)
-                  .withCouponRates(rates, dc)
-                  .withPaymentAdjustment(bdc)
-                  .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
-                  .withPaymentCalendar(paymentCalendar)
-                  .withLastPeriodDayCounter(
-                      data.lastPeriodDayCounter().empty() ? DayCounter() : parseDayCounter(data.lastPeriodDayCounter()))
-                  .withPaymentDates(paymentDates);
-    return leg;
 
+    // parse payment lag
+
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
+
+    // apply amortization
+
+    applyAmortization(notionals, data, schedule, true, rates);
+
+    // build leg
+
+    if (!data.strictNotionalDates()) {
+
+        // no strict notional dates
+
+        Leg leg = FixedRateLeg(schedule)
+                      .withNotionals(notionals)
+                      .withCouponRates(rates, dc)
+                      .withPaymentAdjustment(bdc)
+                      .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                      .withPaymentCalendar(paymentCalendar)
+                      .withLastPeriodDayCounter(data.lastPeriodDayCounter().empty()
+                                                    ? DayCounter()
+                                                    : parseDayCounter(data.lastPeriodDayCounter()))
+                      .withPaymentDates(paymentDates);
+        return leg;
+
+    } else {
+
+        // strict notional dates
+
+        std::vector<Date> notionalDatesAsDates;
+        std::vector<Date> rateDatesAsDates;
+
+        for (auto const& d : data.notionalDates()) {
+            if (!d.empty())
+                notionalDatesAsDates.push_back(parseDate(d));
+        }
+
+        for (auto const& d : fixedLegData->rateDates()) {
+            if (!d.empty())
+                rateDatesAsDates.push_back(parseDate(d));
+        }
+
+        return makeNonStandardFixedLeg(schedule.dates(), paymentDates, data.notionals(), notionalDatesAsDates,
+                                       fixedLegData->rates(), rateDatesAsDates, data.strictNotionalDates(), dc,
+                                       paymentCalendar, bdc, boost::apply_visitor(PaymentLagPeriod(), paymentLag));
+    }
 }
 
 Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplacement) {
@@ -985,14 +1078,30 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
 Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                 const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer,
                 const QuantLib::Date& openEndDateReplacement) {
+
     boost::shared_ptr<FloatingLegData> floatData = boost::dynamic_pointer_cast<FloatingLegData>(data.concreteLegData());
     QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << data.legType());
 
-    Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
+    // build schedules
 
-    // Get explicit payment dates which in most cases should be empty
+    Schedule schedule;
+    Schedule fixingSchedule;
+    Schedule resetSchedule;
+    Schedule paymentSchedule;
+    ScheduleBuilder scheduleBuilder;
+    scheduleBuilder.add(schedule, data.schedule());
+    scheduleBuilder.add(fixingSchedule, floatData->fixingSchedule());
+    scheduleBuilder.add(resetSchedule, floatData->resetSchedule());
+    scheduleBuilder.add(paymentSchedule, data.paymentSchedule());
+    scheduleBuilder.makeSchedules(openEndDateReplacement);
+
+    // Get explicit payment dates, if given
+
     vector<Date> paymentDates;
-    if (!data.paymentDates().empty()) {
+
+    if (!paymentSchedule.empty()) {
+        paymentDates = paymentSchedule.dates();
+    } else if (!data.paymentDates().empty()) {
         BusinessDayConvention paymentDatesConvention =
             data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
         Calendar paymentDatesCalendar =
@@ -1002,26 +1111,44 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
             paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
     }
 
+    // set payment calendar
+
     Calendar paymentCalendar;
-    if (data.paymentCalendar().empty())
-        paymentCalendar = schedule.calendar();
-    else
+    if (!data.paymentCalendar().empty())
         paymentCalendar = parseCalendar(data.paymentCalendar());
+    else if (!paymentSchedule.calendar().empty())
+        paymentCalendar = paymentSchedule.calendar();
+    else if (!schedule.calendar().empty())
+        paymentCalendar = schedule.calendar();
+
+    // set day counter and bdc
 
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
+    // flag whether caps / floors are present
+
     bool hasCapsFloors = floatData->caps().size() > 0 || floatData->floors().size() > 0;
+
+    // build standard schedules (for non-strict notional dates)
+
     vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
     vector<double> spreads =
         buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
     vector<double> gearings =
         buildScheduledVectorNormalised(floatData->gearings(), floatData->gearingDates(), schedule, 1.0);
+
+    // set fixing days and in arrears flag
+
     Size fixingDays = floatData->fixingDays() == Null<Size>() ? index->fixingDays() : floatData->fixingDays();
     bool isInArrears = floatData->isInArrears() ? *floatData->isInArrears() : false;
 
+    // apply amortization
+
     applyAmortization(notionals, data, schedule, true);
+
     // handle float annuity, which is not done in applyAmortization, for this we can only have one block
+
     if (!data.amortizationData().empty()) {
         AmortizationType amortizationType = parseAmortizationType(data.amortizationData().front().type());
         if (amortizationType == AmortizationType::Annuity) {
@@ -1077,6 +1204,8 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
         }
     }
 
+    // handle sub periods leg
+
     if (floatData->hasSubPeriods()) {
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "SubPeriodsLegs does not support caps or floors");
@@ -1094,55 +1223,89 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
         return leg;
     }
 
+    // parse payment lag
+
     PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
-    IborLeg iborLeg = IborLeg(schedule, index)
-                          .withNotionals(notionals)
-                          .withSpreads(spreads)
-                          .withPaymentCalendar(paymentCalendar)
-                          .withPaymentDayCounter(dc)
-                          .withPaymentAdjustment(bdc)
-                          .withFixingDays(fixingDays)
-                          .inArrears(isInArrears)
-                          .withGearings(gearings)
-                          .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
-                          .withPaymentDates(paymentDates);
 
-    // If no caps or floors or in arrears fixing, return the leg
-    if (!hasCapsFloors && !isInArrears)
-        return iborLeg;
+    // handle ibor leg
 
-    // If there are caps or floors or in arrears fixing, add them and set pricer
-    if (floatData->caps().size() > 0)
-        iborLeg.withCaps(buildScheduledVector(floatData->caps(), floatData->capDates(), schedule));
+    Leg tmpLeg;
+    bool isNonStandard;
 
-    if (floatData->floors().size() > 0)
-        iborLeg.withFloors(buildScheduledVector(floatData->floors(), floatData->floorDates(), schedule));
+    if (!data.strictNotionalDates() && fixingSchedule.empty() && resetSchedule.empty()) {
 
-    if (!attachPricer)
-        return iborLeg;
+        // no strict notional dates, no fixing or reset schedule
 
-    // Get a coupon pricer for the leg
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredIborLeg");
-    QL_REQUIRE(builder, "No builder found for CapFlooredIborLeg");
-    boost::shared_ptr<CapFlooredIborLegEngineBuilder> cappedFlooredIborBuilder =
-        boost::dynamic_pointer_cast<CapFlooredIborLegEngineBuilder>(builder);
-    boost::shared_ptr<FloatingRateCouponPricer> couponPricer =
-        cappedFlooredIborBuilder->engine(IndexNameTranslator::instance().oreName(index->name()));
+        IborLeg iborLeg = IborLeg(schedule, index)
+                              .withNotionals(notionals)
+                              .withSpreads(spreads)
+                              .withPaymentCalendar(paymentCalendar)
+                              .withPaymentDayCounter(dc)
+                              .withPaymentAdjustment(bdc)
+                              .withFixingDays(fixingDays)
+                              .inArrears(isInArrears)
+                              .withGearings(gearings)
+                              .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
+                              .withPaymentDates(paymentDates);
+        if (floatData->caps().size() > 0)
+            iborLeg.withCaps(buildScheduledVector(floatData->caps(), floatData->capDates(), schedule));
+        if (floatData->floors().size() > 0)
+            iborLeg.withFloors(buildScheduledVector(floatData->floors(), floatData->floorDates(), schedule));
 
-    // Loop over the coupons in the leg and set pricer
-    Leg tmpLeg = iborLeg;
-    QuantLib::setCouponPricer(tmpLeg, couponPricer);
+        tmpLeg = iborLeg;
+        isNonStandard = false;
+
+    } else {
+
+        // strict notional dates, fixing or reset schedule present
+
+        QL_REQUIRE(!hasCapsFloors, "Ibor leg with strict notional or reset dates, explicit fixing or reset schedule "
+                                   "does not support cap / floors");
+
+        std::vector<Date> notionalDatesAsDates;
+        std::vector<Date> spreadDatesAsDates;
+        std::vector<Date> gearingDatesAsDates;
+
+        for (auto const& d : data.notionalDates()) {
+            if (!d.empty())
+                notionalDatesAsDates.push_back(parseDate(d));
+        }
+
+        for (auto const& d : floatData->spreadDates()) {
+            if (!d.empty())
+                spreadDatesAsDates.push_back(parseDate(d));
+        }
+
+        for (auto const& d : floatData->gearingDates()) {
+            if (!d.empty())
+                gearingDatesAsDates.push_back(parseDate(d));
+        }
+
+        tmpLeg = makeNonStandardIborLeg(index, schedule.dates(), paymentDates, fixingSchedule.dates(),
+                                        resetSchedule.dates(), fixingDays, data.notionals(), notionalDatesAsDates,
+                                        floatData->spreads(), spreadDatesAsDates, floatData->gearings(),
+                                        gearingDatesAsDates, data.strictNotionalDates(), dc, paymentCalendar, bdc,
+                                        boost::apply_visitor(PaymentLagPeriod(), paymentLag), isInArrears);
+
+        isNonStandard = true;
+    }
+
+    if (attachPricer && (hasCapsFloors || isInArrears || isNonStandard)) {
+        auto builder = engineFactory->builder("CapFlooredIborLeg");
+        QL_REQUIRE(builder, "No builder found for CapFlooredIborLeg");
+        auto cappedFlooredIborBuilder = boost::dynamic_pointer_cast<CapFlooredIborLegEngineBuilder>(builder);
+        auto couponPricer = cappedFlooredIborBuilder->engine(IndexNameTranslator::instance().oreName(index->name()));
+        QuantLib::setCouponPricer(tmpLeg, couponPricer);
+    }
 
     // build naked option leg if required
+
     if (floatData->nakedOption()) {
         tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
-        // fix for missing registration in ql 1.13
-        for (auto const& t : tmpLeg) {
-            auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(t);
-            if (s != nullptr)
-                s->registerWith(s->underlying());
-        }
     }
+
+    // return the leg
+
     return tmpLeg;
 }
 
@@ -1404,7 +1567,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     else
         paymentCalendar = parseCalendar(data.paymentCalendar());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    
+
     boost::shared_ptr<InflationSwapConvention> cpiSwapConvention = nullptr;
 
     auto inflationConventions = InstrumentConventions::instance().conventions()->get(
@@ -1749,35 +1912,28 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     // build naked option leg if required
     if (cmsData->nakedOption()) {
         tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
-        // fix for missing registration in ql 1.13
-        for (auto const& t : tmpLeg) {
-            auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(t);
-            if (s != nullptr)
-                s->registerWith(s->underlying());
-        }
     }
     return tmpLeg;
 }
 
-Leg makeCMBLeg(const LegData& data, 
-               const boost::shared_ptr<EngineFactory>& engineFactory,
-	       const bool attachPricer,
+Leg makeCMBLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer,
                const QuantLib::Date& openEndDateReplacement) {
     boost::shared_ptr<CMBLegData> cmbData = boost::dynamic_pointer_cast<CMBLegData>(data.concreteLegData());
     QL_REQUIRE(cmbData, "Wrong LegType, expected CMB, got " << data.legType());
 
     std::string bondIndexName = cmbData->genericBond();
-    // Expected bondIndexName structure with at least two tokens, separated by "-", of the form FAMILY-TERM or FAMILY-MUN, for example:
-    // US-CMT-5Y, US-TIPS-10Y, UK-GILT-5Y, DE-BUND-10Y
+    // Expected bondIndexName structure with at least two tokens, separated by "-", of the form FAMILY-TERM or
+    // FAMILY-MUN, for example: US-CMT-5Y, US-TIPS-10Y, UK-GILT-5Y, DE-BUND-10Y
     std::vector<string> tokens;
     split(tokens, bondIndexName, boost::is_any_of("-"));
-    QL_REQUIRE(tokens.size() >= 2, "Generic Bond Index with at least two tokens separated by - expected, found " << bondIndexName);
+    QL_REQUIRE(tokens.size() >= 2,
+               "Generic Bond Index with at least two tokens separated by - expected, found " << bondIndexName);
     std::string securityFamily = tokens[0];
     for (Size i = 1; i < tokens.size() - 1; ++i)
         securityFamily = securityFamily + "-" + tokens[i];
     string underlyingTerm = tokens.back();
     Period underlyingPeriod = parsePeriod(underlyingTerm);
-    LOG("Generic bond id " << bondIndexName << " has family " << securityFamily << " and term " << underlyingPeriod); 
+    LOG("Generic bond id " << bondIndexName << " has family " << securityFamily << " and term " << underlyingPeriod);
 
     Schedule schedule = makeSchedule(data.schedule());
     Calendar calendar = schedule.calendar();
@@ -1966,10 +2122,6 @@ Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swa
 Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                      const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer,
                      const QuantLib::Date& openEndDateReplacement) {
-#if QL_HEX_VERSION < 0x011300f0
-    WLOG("The CMS Spread implementation in older QL versions has issues (found "
-         << QL_VERSION << "), consider upgrading to at least 1.13")
-#endif
     boost::shared_ptr<CMSSpreadLegData> cmsSpreadData =
         boost::dynamic_pointer_cast<CMSSpreadLegData>(data.concreteLegData());
     QL_REQUIRE(cmsSpreadData, "Wrong LegType, expected CMSSpread, got " << data.legType());
@@ -2033,12 +2185,6 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
     // build naked option leg if required
     if (cmsSpreadData->nakedOption()) {
         tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
-        // fix for missing registration in ql 1.13
-        for (auto const& t : tmpLeg) {
-            auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(t);
-            if (s != nullptr)
-                s->registerWith(s->underlying());
-        }
     }
     return tmpLeg;
 }
@@ -2046,10 +2192,6 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
 Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                             const boost::shared_ptr<EngineFactory>& engineFactory,
                             const QuantLib::Date& openEndDateReplacement) {
-#if QL_HEX_VERSION < 0x011300f0
-    WLOG("The CMS Spread implementation in older QL versions has issues (found "
-         << QL_VERSION << "), consider upgrading to at least 1.13")
-#endif
     auto digitalCmsSpreadData = boost::dynamic_pointer_cast<DigitalCMSSpreadLegData>(data.concreteLegData());
     QL_REQUIRE(digitalCmsSpreadData, "Wrong LegType, expected DigitalCMSSpread");
 

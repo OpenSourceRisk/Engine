@@ -237,6 +237,7 @@ portfolio/inflationswap.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
 portfolio/legdatafactory.cpp
+portfolio/makenonstandardlegs.cpp
 portfolio/multilegoption.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetdetails.cpp
@@ -550,6 +551,7 @@ portfolio/instrumentwrapper.hpp
 portfolio/legbuilders.hpp
 portfolio/legdata.hpp
 portfolio/legdatafactory.hpp
+portfolio/makenonstandardlegs.hpp
 portfolio/multilegoption.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetdetails.hpp
