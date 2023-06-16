@@ -19,6 +19,7 @@ cashflow.cpp
 commodityforward.cpp
 commodityschwartzmodel.cpp
 commodityspreadoption.cpp
+computeenvironment.cpp
 correlationtermstructure.cpp
 cpicapfloor.cpp
 crcirpp.cpp

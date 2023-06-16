@@ -30,6 +30,12 @@ endmacro()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS FALSE)
 
+# set compiler macro if open cl is enabled
+if (ORE_ENABLE_OPENCL)
+  add_compile_definitions(ORE_ENABLE_OPENCL)
+endif()
+
+
 # On single-configuration builds, select a default build type that gives the same compilation flags as a default autotools build.
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo")
