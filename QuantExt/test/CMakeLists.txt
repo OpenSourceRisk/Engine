@@ -20,6 +20,7 @@ commodityforward.cpp
 commodityschwartzmodel.cpp
 commodityspreadoption.cpp
 computeenvironment.cpp
+computeenvironment_tarf_sensi_ops.cpp
 correlationtermstructure.cpp
 cpicapfloor.cpp
 crcirpp.cpp
