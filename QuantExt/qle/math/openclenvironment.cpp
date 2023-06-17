@@ -291,11 +291,11 @@ OpenClContext::~OpenClContext() {
         }
 
         if (err = clReleaseCommandQueue(queue_); err != CL_SUCCESS) {
-            std::cerr << "OpenClContext: error during clReleaseCommandQueue" + errorText(err) << std::endl;
+            std::cerr << "OpenClContext: error during clReleaseCommandQueue: " + errorText(err) << std::endl;
         }
 
         if (err = clReleaseContext(context_); err != CL_SUCCESS) {
-            std::cerr << "OpenClContext: error during clReleaseContext" + errorText(err) << std::endl;
+            std::cerr << "OpenClContext: error during clReleaseContext: " + errorText(err) << std::endl;
         }
     }
 }
@@ -303,21 +303,21 @@ OpenClContext::~OpenClContext() {
 void OpenClContext::releaseMem(cl_mem& m) {
     cl_int err;
     if (err = clReleaseMemObject(m); err != CL_SUCCESS) {
-        std::cerr << "OpenClContext: error during clReleaseMemObject" + errorText(err) << std::endl;
+        std::cerr << "OpenClContext: error during clReleaseMemObject: " + errorText(err) << std::endl;
     }
 }
 
 void OpenClContext::releaseKernel(cl_kernel& k) {
     cl_int err;
     if (err = clReleaseKernel(k); err != CL_SUCCESS) {
-        std::cerr << "OpenClContext: error during clReleaseKernel" + errorText(err) << std::endl;
+        std::cerr << "OpenClContext: error during clReleaseKernel: " + errorText(err) << std::endl;
     }
 }
 
 void OpenClContext::releaseProgram(cl_program& p) {
     cl_int err;
     if (err = clReleaseProgram(p); err != CL_SUCCESS) {
-        std::cerr << "OpenClContext: error during clReleaseProgram" + errorText(err) << std::endl;
+        std::cerr << "OpenClContext: error during clReleaseProgram: " + errorText(err) << std::endl;
     }
 }
 
