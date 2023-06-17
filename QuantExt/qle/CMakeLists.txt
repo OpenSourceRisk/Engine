@@ -925,9 +925,10 @@ target_link_libraries(${QLE_LIB_NAME} ${QL_LIB_NAME} ${Boost_LIBRARIES})
 if(ORE_ENABLE_OPENCL)
   if(APPLE)
     target_link_libraries(${QLE_LIB_NAME} "-framework OpenCL")
-  else
+  else()
     find_package(OpenCL REQUIRED)
     target_link_libraries(${QLE_LIB_NAME} OpenCL::OpenCL)
+  endif()
 endif()
 
 install(DIRECTORY . DESTINATION include/qle
