@@ -42,6 +42,18 @@ struct ComputeEnvironmentCleanUp {
 };
 
 namespace {
+void outputTimings(const ComputeContext& c) {
+    BOOST_TEST_MESSAGE("  " << (float)c.debugInfo().numberOfOperations / c.debugInfo().nanoSecondsCalculation * 1.0E3
+                            << " MFLOPS (raw)");
+    BOOST_TEST_MESSAGE("  " << (float)c.debugInfo().numberOfOperations /
+                                   (c.debugInfo().nanoSecondsCalculation + c.debugInfo().nanoSecondsDataCopy) * 1.0E3
+                            << " MFLOPS (raw + data copy)");
+    BOOST_TEST_MESSAGE("  " << (float)c.debugInfo().numberOfOperations /
+                                   (c.debugInfo().nanoSecondsCalculation + c.debugInfo().nanoSecondsDataCopy +
+                                    c.debugInfo().nanoSecondsProgramBuild) *
+                                   1.0E3
+                            << " MFLOPS (raw + data copy + program build)");
+}
 
 float avg(const std::vector<float>& v) {
     boost::accumulators::accumulator_set<float, boost::accumulators::stats<boost::accumulators::tag::mean>> acc;
@@ -56,7 +68,7 @@ std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
     std::vector<std::vector<float>> output(1, std::vector<float>(n));
     std::vector<float> averages;
 
-    auto [id, _] = c.initiateCalculation(n);
+    auto [id, _] = c.initiateCalculation(n, 0, 0, true);
     c.createInputVariable(-200.000000f);
     c.createInputVariable(-100.000000f);
     c.createInputVariable(-2.000000f);
@@ -10328,7 +10340,7 @@ std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
     c.finalizeCalculation(output);
     averages.push_back(avg(output.front()));
     // --------------- init calculation -------------------
-    c.initiateCalculation(n, id, 0);
+    c.initiateCalculation(n, id, 0, true);
     c.createInputVariable(-200.000000f);
     c.createInputVariable(-100.000000f);
     c.createInputVariable(-2.000000f);
@@ -10560,7 +10572,7 @@ std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
     c.finalizeCalculation(output);
     averages.push_back(avg(output.front()));
     // --------------- init calculation -------------------
-    c.initiateCalculation(n, id, 0);
+    c.initiateCalculation(n, id, 0, true);
     c.createInputVariable(-200.000000f);
     c.createInputVariable(-100.000000f);
     c.createInputVariable(-2.000000f);
@@ -10792,7 +10804,7 @@ std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
     c.finalizeCalculation(output);
     averages.push_back(avg(output.front()));
     // --------------- init calculation -------------------
-    c.initiateCalculation(n, id, 0);
+    c.initiateCalculation(n, id, 0, true);
     c.createInputVariable(-200.000000f);
     c.createInputVariable(-100.000000f);
     c.createInputVariable(-2.000000f);
@@ -11024,7 +11036,7 @@ std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
     c.finalizeCalculation(output);
     averages.push_back(avg(output.front()));
     // --------------- init calculation -------------------
-    c.initiateCalculation(n, id, 0);
+    c.initiateCalculation(n, id, 0, true);
     c.createInputVariable(-200.000000f);
     c.createInputVariable(-100.000000f);
     c.createInputVariable(-2.000000f);
@@ -11256,7 +11268,7 @@ std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
     c.finalizeCalculation(output);
     averages.push_back(avg(output.front()));
     // --------------- init calculation -------------------
-    c.initiateCalculation(n, id, 0);
+    c.initiateCalculation(n, id, 0, true);
     c.createInputVariable(-200.000000f);
     c.createInputVariable(-100.000000f);
     c.createInputVariable(-2.000000f);
@@ -11488,7 +11500,7 @@ std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
     c.finalizeCalculation(output);
     averages.push_back(avg(output.front()));
     // --------------- init calculation -------------------
-    c.initiateCalculation(n, id, 0);
+    c.initiateCalculation(n, id, 0, true);
     c.createInputVariable(-200.000000f);
     c.createInputVariable(-100.000000f);
     c.createInputVariable(-2.000000f);
@@ -11720,7 +11732,7 @@ std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
     c.finalizeCalculation(output);
     averages.push_back(avg(output.front()));
     // --------------- init calculation -------------------
-    c.initiateCalculation(n, id, 0);
+    c.initiateCalculation(n, id, 0, true);
     c.createInputVariable(-200.000000f);
     c.createInputVariable(-100.000000f);
     c.createInputVariable(-2.000000f);
@@ -11952,7 +11964,7 @@ std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
     c.finalizeCalculation(output);
     averages.push_back(avg(output.front()));
     // --------------- init calculation -------------------
-    c.initiateCalculation(n, id, 0);
+    c.initiateCalculation(n, id, 0, true);
     c.createInputVariable(-200.000000f);
     c.createInputVariable(-100.000000f);
     c.createInputVariable(-2.000000f);
@@ -12184,7 +12196,7 @@ std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
     c.finalizeCalculation(output);
     averages.push_back(avg(output.front()));
     // --------------- init calculation -------------------
-    c.initiateCalculation(n, id, 0);
+    c.initiateCalculation(n, id, 0, true);
     c.createInputVariable(-200.000000f);
     c.createInputVariable(-100.000000f);
     c.createInputVariable(-2.000000f);
@@ -12416,7 +12428,7 @@ std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
     c.finalizeCalculation(output);
     averages.push_back(avg(output.front()));
     // --------------- init calculation -------------------
-    c.initiateCalculation(n, id, 0);
+    c.initiateCalculation(n, id, 0, true);
     c.createInputVariable(-200.000000f);
     c.createInputVariable(-100.000000f);
     c.createInputVariable(-2.000000f);
@@ -12648,7 +12660,7 @@ std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
     c.finalizeCalculation(output);
     averages.push_back(avg(output.front()));
     // --------------- init calculation -------------------
-    c.initiateCalculation(n, id, 0);
+    c.initiateCalculation(n, id, 0, true);
     c.createInputVariable(-200.000000f);
     c.createInputVariable(-100.000000f);
     c.createInputVariable(-2.000000f);
@@ -12880,7 +12892,7 @@ std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
     c.finalizeCalculation(output);
     averages.push_back(avg(output.front()));
     // --------------- init calculation -------------------
-    c.initiateCalculation(n, id, 0);
+    c.initiateCalculation(n, id, 0, true);
     c.createInputVariable(-200.000000f);
     c.createInputVariable(-100.000000f);
     c.createInputVariable(-2.000000f);
@@ -13112,7 +13124,7 @@ std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
     c.finalizeCalculation(output);
     averages.push_back(avg(output.front()));
     // --------------- init calculation -------------------
-    c.initiateCalculation(n, id, 0);
+    c.initiateCalculation(n, id, 0, true);
     c.createInputVariable(-200.000000f);
     c.createInputVariable(-100.000000f);
     c.createInputVariable(-2.000000f);
@@ -13354,14 +13366,13 @@ BOOST_AUTO_TEST_CASE(test_ScriptedTrade_FX_TaRF_XAUUSD_sensi_ops) {
     for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
         BOOST_TEST_MESSAGE("testing sensi_ops for 'ScriptedTrade_FX_TaRF_XAUUSD' on device '" << d << "'.");
         constexpr std::size_t n = 32768;
-        boost::timer::cpu_timer timer;
         ComputeEnvironment::instance().selectContext(d);
         auto& c = ComputeEnvironment::instance().context();
         auto averages = runTest(c, n);
-        BOOST_TEST_MESSAGE("finalized calculation in " << timer.elapsed().wall / 1E3 << " mus");
-        // for (auto const& a : averages) {
-        //     BOOST_TEST_MESSAGE(" got avg = " << a);
-        // }
+        outputTimings(c);
+        for (auto const& a : averages) {
+            BOOST_TEST_MESSAGE("  got avg = " << a);
+        }
     }
 }
 

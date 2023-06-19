@@ -41,6 +41,21 @@ struct ComputeEnvironmentCleanUp {
     ~ComputeEnvironmentCleanUp() { ComputeEnvironment::instance().reset(); }
 };
 
+namespace {
+void outputTimings(const ComputeContext& c) {
+    BOOST_TEST_MESSAGE("  " << (float)c.debugInfo().numberOfOperations / c.debugInfo().nanoSecondsCalculation * 1.0E3
+                            << " MFLOPS (raw)");
+    BOOST_TEST_MESSAGE("  " << (float)c.debugInfo().numberOfOperations /
+                                   (c.debugInfo().nanoSecondsCalculation + c.debugInfo().nanoSecondsDataCopy) * 1.0E3
+                            << " MFLOPS (raw + data copy)");
+    BOOST_TEST_MESSAGE("  " << (float)c.debugInfo().numberOfOperations /
+                                   (c.debugInfo().nanoSecondsCalculation + c.debugInfo().nanoSecondsDataCopy +
+                                    c.debugInfo().nanoSecondsProgramBuild) *
+                                   1.0E3
+                            << " MFLOPS (raw + data copy + program build)");
+}
+} // namespace
+
 BOOST_AUTO_TEST_CASE(testEnvironmentInit) {
     BOOST_TEST_MESSAGE("testing enviroment initialization");
     ComputeEnvironmentCleanUp cleanUp;
@@ -105,14 +120,11 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
         std::vector<std::size_t> values(m);
         std::vector<float> data(n, 0.9f);
         std::vector<std::vector<float>> output(1, std::vector<float>(n));
-        boost::timer::nanosecond_type t1;
 
         // first calc
 
-        boost::timer::cpu_timer timer;
-        auto [id, _] = c.initiateCalculation(n);
+        auto [id, _] = c.initiateCalculation(n, 0, 0, true);
         values[0] = c.createInputVariable(&data[0]);
-        t1 = timer.elapsed().wall;
         std::size_t val = values[0];
         for (std::size_t i = 0; i < m; ++i) {
             std::size_t val2 = c.applyOperation(RandomVariableOpCode::Add, {val, values[0]});
@@ -123,21 +135,18 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
         }
         c.declareOutputVariable(val);
         c.finalizeCalculation(output);
-        t1 = timer.elapsed().wall;
-        BOOST_TEST_MESSAGE("  " << 2.0 * (double)m * (double)n / (double)t1 * 1.0E3 << " MFlops");
-        BOOST_TEST_MESSAGE("  result = " << output.front()[0]);
+        BOOST_TEST_MESSAGE("  first calculation result = " << output.front()[0]);
         results.push_back(output.front()[0]);
 
         // second calculation
 
-        boost::timer::cpu_timer timer2;
-        c.initiateCalculation(n, id, 0);
+        c.initiateCalculation(n, id, 0, true);
         values[0] = c.createInputVariable(&data[0]);
         c.finalizeCalculation(output);
-        t1 = timer2.elapsed().wall;
-        BOOST_TEST_MESSAGE("  " << 2.0 * (double)m * (double)n / (double)t1 * 1.0E3 << " MFlops");
-        BOOST_TEST_MESSAGE("  result = " << output.front()[0]);
+        BOOST_TEST_MESSAGE("  second calculation result = " << output.front()[0]);
         results.push_back(output.front()[0]);
+
+        outputTimings(c);
     }
 
     std::vector<RandomVariable> values(m);
@@ -153,9 +162,9 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
         res *= values[0];
     }
     t1 = timer.elapsed().wall;
-    BOOST_TEST_MESSAGE("testing large calc locally (benchmark)");
-    BOOST_TEST_MESSAGE("  " << 2.0 * (double)m * (double)n / (double)(t1)*1.0E3 << " MFlops");
+    BOOST_TEST_MESSAGE("  testing large calc locally (benchmark)");
     BOOST_TEST_MESSAGE("  result = " << res.at(0));
+    BOOST_TEST_MESSAGE("  " << 2.0 * (double)m * (double)n / (double)(t1)*1.0E3 << " MFlops");
 
     for (auto const& r : results) {
         BOOST_CHECK_CLOSE(res.at(0), r, 1E-3);
@@ -169,7 +178,7 @@ BOOST_AUTO_TEST_CASE(testRngGeneration) {
         BOOST_TEST_MESSAGE("testing rng generation on device '" << d << "'.");
         ComputeEnvironment::instance().selectContext(d);
         auto& c = ComputeEnvironment::instance().context();
-        c.initiateCalculation(n);
+        c.initiateCalculation(n, 0, 0, true);
         auto vs = c.createInputVariates(3, 2, 42);
         for (auto const& d : vs) {
             for (auto const& r : d) {
@@ -178,6 +187,7 @@ BOOST_AUTO_TEST_CASE(testRngGeneration) {
         }
         std::vector<std::vector<float>> output(6, std::vector<float>(n));
         c.finalizeCalculation(output);
+        outputTimings(c);
         for (auto const& o : output) {
             boost::accumulators::accumulator_set<
                 float, boost::accumulators::stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance>>
@@ -185,7 +195,7 @@ BOOST_AUTO_TEST_CASE(testRngGeneration) {
             for (auto const& v : o) {
                 acc(v);
             }
-            BOOST_TEST_MESSAGE("mean = " << boost::accumulators::mean(acc)
+            BOOST_TEST_MESSAGE("  mean = " << boost::accumulators::mean(acc)
                                          << ", variance = " << boost::accumulators::variance(acc));
             BOOST_CHECK_SMALL(boost::accumulators::mean(acc), 0.05f);
             BOOST_CHECK_CLOSE(boost::accumulators::variance(acc), 1.0f, 1.0f);
