@@ -46,7 +46,7 @@ public:
         const DeltaVolQuote::AtmType at = DeltaVolQuote::AtmType::AtmDeltaNeutral,
         const Period& switchTenor = 2 * Years, const DeltaVolQuote::DeltaType ltdt = DeltaVolQuote::DeltaType::Fwd,
         const DeltaVolQuote::AtmType ltat = DeltaVolQuote::AtmType::AtmDeltaNeutral,
-        const SmileInterpolation smileInterpolation = SmileInterpolation::Cubic);
+        const SmileInterpolation smileInterpolation = SmileInterpolation::Cubic, const bool flatExtrapolation = true);
 
     Date maxDate() const override { return Date::maxDate(); }
     Real minStrike() const override { return 0; }
@@ -84,6 +84,7 @@ private:
     DeltaVolQuote::AtmType ltat_;
     SmileInterpolation smileInterpolation_;
     std::vector<boost::shared_ptr<Interpolation>> interpolation_;
+    bool flatExtrapolation_;
 
     mutable Real switchTime_, settlDomDisc_, settlForDisc_, settlLag_;
     mutable std::vector<Real> expiryTimes_;
