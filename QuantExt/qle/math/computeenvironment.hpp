@@ -57,11 +57,19 @@ public:
 
 class ComputeContext {
 public:
+    struct DebugInfo {
+        unsigned long numberOfOperations = 0;
+        unsigned long nanoSecondsDataCopy = 0;
+        unsigned long nanoSecondsProgramBuild = 0;
+        unsigned long nanoSecondsCalculation = 0;
+    };
+
     virtual ~ComputeContext() {}
     virtual void init() = 0;
 
     virtual std::pair<std::size_t, bool> initiateCalculation(const std::size_t n, const std::size_t id = 0,
-                                                             const std::size_t version = 0) = 0;
+                                                             const std::size_t version = 0,
+                                                             const bool debug = false) = 0;
 
     virtual std::size_t createInputVariable(float v) = 0;
     virtual std::size_t createInputVariable(float* v) = 0;
@@ -74,6 +82,10 @@ public:
     virtual void declareOutputVariable(const std::size_t id) = 0;
 
     virtual void finalizeCalculation(std::vector<float*>& output) = 0;
+
+    // debug info
+
+    virtual const DebugInfo& debugInfo() const = 0;
 
     // convenience methods
 

@@ -22,6 +22,9 @@
 #include <ql/errors.hpp>
 
 #include <boost/algorithm/string/join.hpp>
+#include <boost/timer/timer.hpp>
+
+#include <iostream>
 
 #ifdef ORE_ENABLE_OPENCL
 #ifdef __APPLE__
@@ -30,8 +33,6 @@
 #include <CL/cl.h>
 #endif
 #endif
-
-#include <iostream>
 
 #define MAX_N_PLATFORMS 4U
 #define MAX_N_DEVICES 8U
@@ -167,13 +168,6 @@ std::string errorText(cl_int err) {
         return "unknown cl error code " + std::to_string(err);
     }
 }
-
-const std::vector<std::pair<std::string, std::string>> kernelSources = {
-    {"sum",
-
-     "}\n"},
-};
-
 } // namespace
 
 class OpenClContext : public ComputeContext {
@@ -183,7 +177,8 @@ public:
     void init() override final;
 
     std::pair<std::size_t, bool> initiateCalculation(const std::size_t n, const std::size_t id = 0,
-                                                     const std::size_t version = 0) override final;
+                                                     const std::size_t version = 0,
+                                                     const bool debug = false) override final;
     std::size_t createInputVariable(float v) override final;
     std::size_t createInputVariable(float* v) override final;
     std::vector<std::vector<std::size_t>> createInputVariates(const std::size_t dim, const std::size_t steps,
@@ -193,6 +188,8 @@ public:
     void freeVariable(const std::size_t id) override final;
     void declareOutputVariable(const std::size_t id) override final;
     void finalizeCalculation(std::vector<float*>& output) override final;
+
+    const DebugInfo& debugInfo() const override final;
 
 private:
     cl_mem initLinearCongruentialRng(const std::size_t n, std::uint32_t& seedUpdate);
@@ -207,6 +204,9 @@ private:
     cl_device_id device_;
     cl_context context_;
     cl_command_queue queue_;
+
+    // will be accumulated over all calcs
+    ComputeContext::DebugInfo debugInfo_;
 
     // 1a vectors per current calc id
 
@@ -228,6 +228,7 @@ private:
     std::size_t currentId_ = 0;
     ComputeState currentState_ = ComputeState::idle;
     std::size_t nVars_;
+    bool debug_;
 
     // 2a indexed by var id
     std::vector<std::size_t> inputVarOffset_;
@@ -327,6 +328,11 @@ void OpenClContext::init() {
         return;
     }
 
+    debugInfo_.numberOfOperations = 0;
+    debugInfo_.nanoSecondsDataCopy = 0;
+    debugInfo_.nanoSecondsProgramBuild = 0;
+    debugInfo_.nanoSecondsCalculation = 0;
+
     cl_int err;
 
     // create context and command queue
@@ -365,11 +371,12 @@ cl_mem OpenClContext::initLinearCongruentialRng(const std::size_t n, std::uint32
 }
 
 std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_t n, const std::size_t id,
-                                                                const std::size_t version) {
+                                                                const std::size_t version, const bool debug) {
 
     QL_REQUIRE(n > 0, "OpenClContext::initiateCalculation(): n must not be zero");
 
     bool newCalc = false;
+    debug_ = debug;
 
     if (id == 0) {
 
@@ -480,6 +487,8 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
             variateSeed_.push_back(currentSeed);
             currentSeed *= seedUpdate_[size_[currentId_ - 1]];
             resultIds[i][j] = nVars_++;
+            if (debug_)
+                debugInfo_.numberOfOperations += 23 * size_[currentId_ - 1];
         }
     }
     return resultIds;
@@ -603,6 +612,11 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 
     currentSsa_ += "  " + ssaLine + "\n";
 
+    // update num of ops in debug info
+
+    if (debug_)
+        debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
+
     // return result id
 
     return resultId;
@@ -646,7 +660,14 @@ void OpenClContext::finalizeCalculation(std::vector<float*>& output) {
                "OpenClContext::finalizeCalculation(): output size ("
                    << output.size() << ") inconsistent to kernel output size (" << nOutputVars_[currentId_ - 1] << ")");
 
+    boost::timer::cpu_timer timer;
+    boost::timer::nanosecond_type timerBase;
+
     // create input and output buffers
+
+    if (debug_) {
+        timerBase = timer.elapsed().wall;
+    }
 
     std::size_t inputBufferSize = 0;
     if (!inputVarOffset_.empty())
@@ -667,6 +688,10 @@ void OpenClContext::finalizeCalculation(std::vector<float*>& output) {
         guard.mem.push_back(outputBuffer);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::finalizeCalculation(): creating output buffer fails: " << errorText(err));
+    }
+
+    if (debug_) {
+        debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
     }
 
     // build kernel if necessary
@@ -768,6 +793,10 @@ void OpenClContext::finalizeCalculation(std::vector<float*>& output) {
 
         // std::cerr << "generated kernel: \n" + kernelSource + "\n";
 
+        if (debug_) {
+            timerBase = timer.elapsed().wall;
+        }
+
         cl_int err;
         const char* kernelSourcePtr = kernelSource.c_str();
         program_[currentId_ - 1] = clCreateProgramWithSource(context_, 1, &kernelSourcePtr, NULL, &err);
@@ -788,6 +817,10 @@ void OpenClContext::finalizeCalculation(std::vector<float*>& output) {
 
         hasKernel_[currentId_ - 1] = true;
         inputBufferSize_[currentId_ - 1] = inputBufferSize;
+
+        if (debug_) {
+            debugInfo_.nanoSecondsProgramBuild += timer.elapsed().wall - timerBase;
+        }
     } else {
         QL_REQUIRE(inputBufferSize == inputBufferSize_[currentId_ - 1],
                    "OpenClContext::finalizeCalculation(): input buffer size ("
@@ -796,6 +829,10 @@ void OpenClContext::finalizeCalculation(std::vector<float*>& output) {
     }
 
     // write input data to input buffer (asynchronously)
+
+    if (debug_) {
+        timerBase = timer.elapsed().wall;
+    }
 
     std::vector<cl_event> inputBufferEvents;
     if (inputBufferSize > 0) {
@@ -808,6 +845,12 @@ void OpenClContext::finalizeCalculation(std::vector<float*>& output) {
             QL_REQUIRE(err == CL_SUCCESS,
                        "OpenClContext::finalizeCalculation(): writing to input buffer fails: " << errorText(err));
         }
+    }
+
+    if (debug_) {
+        err = clFinish(queue_);
+        QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::clFinish(): error in debug mode: " << errorText(err));
+        debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
     }
 
     // set kernel args
@@ -825,13 +868,27 @@ void OpenClContext::finalizeCalculation(std::vector<float*>& output) {
 
     // execute kernel
 
+    if (debug_) {
+        timerBase = timer.elapsed().wall;
+    }
+
     cl_event runEvent;
     err = clEnqueueNDRangeKernel(queue_, kernel_[currentId_ - 1], 1, NULL, &size_[currentId_ - 1], NULL,
                                  inputBufferEvents.size(), inputBufferEvents.empty() ? nullptr : &inputBufferEvents[0],
                                  &runEvent);
     QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): enqueue kernel fails: " << errorText(err));
 
+    if (debug_) {
+        err = clFinish(queue_);
+        QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::clFinish(): error in debug mode: " << errorText(err));
+        debugInfo_.nanoSecondsCalculation += timer.elapsed().wall - timerBase;
+    }
+
     // copy the results (asynchronously)
+
+    if (debug_) {
+        timerBase = timer.elapsed().wall;
+    }
 
     std::vector<cl_event> outputBufferEvents;
     if (outputBufferSize > 0) {
@@ -848,7 +905,16 @@ void OpenClContext::finalizeCalculation(std::vector<float*>& output) {
             err == CL_SUCCESS,
             "OpenClContext::finalizeCalculation(): wait for output buffer events to finish fails: " << errorText(err));
     }
+
+    if (debug_) {
+        err = clFinish(queue_);
+        QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::clFinish(): error in debug mode: " << errorText(err));
+        debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
+    }
 }
+
+const ComputeContext::DebugInfo& OpenClContext::debugInfo() const { return debugInfo_; }
+
 #endif
 
 #ifndef ORE_ENABLE_OPENCL
