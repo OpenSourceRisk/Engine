@@ -557,7 +557,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     if (params_->has("setup", "buildFailedTrades"))
         inputs->setBuildFailedTrades(parseBool(params_->get("setup", "buildFailedTrades")));
 
-    tmp = params_->get("setup", "portfolioFile");
+    tmp = params_->get("setup", "portfolioFile", false);
     if (tmp != "") {
         inputs->setPortfolioFromFile(tmp, inputPath);
     } else {
@@ -1221,8 +1221,39 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         
         tmp = params_->get("zeroToParSensiConversion", "sensitivityInputFile", false);
         if (tmp != "") {
-            inputs->setZeroToParSensiInputFile(tmp);
+            inputs->setParConversionInputFile(inputPath + "/" + tmp);
         }
+
+        tmp = params_->get("zeroToParSensiConversion", "marketConfigFile", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            LOG("Loading stress test scenario sim market parameters from file" << file);
+            inputs->setParConversionSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for stress testing not loaded");
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "stressConfigFile", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            LOG("Load stress test scenario data from file" << file);
+            inputs->setParConversionScenarioDataFromFile(file);
+        } else {
+            WLOG("Stress scenario data not loaded");
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "pricingEnginesFile", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            LOG("Load pricing engine data from file: " << file);
+            inputs->setParConversionPricingEngineFromFile(file);
+        } else {
+            WLOG("Pricing engine data not found for stress testing, using global");
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "outputThreshold", false);
+        if (tmp != "")
+            inputs->setParConversionThreshold(parseReal(tmp));
 
     }
 

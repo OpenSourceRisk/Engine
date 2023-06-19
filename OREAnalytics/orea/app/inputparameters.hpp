@@ -293,9 +293,7 @@ public:
     void setParConversionPricingEngine(const boost::shared_ptr<EngineData>& engineData) {
         parConversionPricingEngine_ = engineData;
     }
-
-
-    void parConversionInputFile(const std::string s) { parConversionInputFile_ = s; }
+    void setParConversionInputFile(const std::string s) { parConversionInputFile_ = s; }
 
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>

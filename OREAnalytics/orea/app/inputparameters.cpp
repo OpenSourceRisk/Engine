@@ -496,5 +496,35 @@ std::string OutputParameters::outputFileName(const std::string& internalName, co
         return it->second; // contains suffix
 }
 
+
+void InputParameters::setParConversionSimMarketParams(const std::string& xml) {
+    parConversionSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    parConversionSimMarketParams_->fromXMLString(xml);
+}
+
+void InputParameters::setParConversionSimMarketParamsFromFile(const std::string& fileName) {
+    parConversionSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    parConversionSimMarketParams_->fromFile(fileName);
+}
+
+void InputParameters::setParConversionScenarioData(const std::string& xml) {
+    parConversionScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    parConversionScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setParConversionScenarioDataFromFile(const std::string& fileName) {
+    parConversionScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    parConversionScenarioData_->fromFile(fileName);
+}
+void InputParameters::setParConversionPricingEngine(const std::string& xml) {
+    parConversionPricingEngine_ = boost::make_shared<EngineData>();
+    parConversionPricingEngine_->fromXMLString(xml);
+}
+
+void InputParameters::setParConversionPricingEngineFromFile(const std::string& fileName) {
+    parConversionPricingEngine_ = boost::make_shared<EngineData>();
+    parConversionPricingEngine_->fromFile(fileName);
+}
+
 } // namespace analytics
 } // namespace ore

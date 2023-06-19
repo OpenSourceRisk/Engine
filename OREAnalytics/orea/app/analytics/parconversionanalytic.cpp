@@ -26,6 +26,9 @@ namespace analytics {
 
 void ParConversionAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
+    analytic()->configurations().simMarketParams = inputs_->parConversionSimMarketParams();
+    analytic()->configurations().sensiScenarioData = inputs_->parConversionScenarioData();
+    analytic()->configurations().engineData = inputs_->parConversionPricingEngine();
 }
 
 void ParConversionAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,

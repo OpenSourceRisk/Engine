@@ -42,10 +42,12 @@ class ParConversionAnalytic : public Analytic {
 public:
     ParConversionAnalytic(const boost::shared_ptr<InputParameters>& inputs)
         : Analytic(std::make_unique<ParConversionAnalyticImpl>(inputs), {"PARCONVERSION"}, inputs, false, false, false,
-                   false) {}
+                   false) {
+        std::cout << "Build ParConvernsionAnalytic" << std::endl;
+    }
 
     std::map<std::string, std::vector<ZeroSensitivityLoader::ZeroSensitivity>> loadZeroSensitivities() const { 
-        ZeroSensitivityLoader loader(inputs_->zeroToParSensiInputFile());
+        ZeroSensitivityLoader loader(inputs_->parConversionInputFile());
         return loader.sensitivities();
     }
 
