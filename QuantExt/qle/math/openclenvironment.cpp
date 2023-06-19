@@ -487,8 +487,6 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
             variateSeed_.push_back(currentSeed);
             currentSeed *= seedUpdate_[size_[currentId_ - 1]];
             resultIds[i][j] = nVars_++;
-            if (debug_)
-                debugInfo_.numberOfOperations += 23 * size_[currentId_ - 1];
         }
     }
     return resultIds;
@@ -777,6 +775,8 @@ void OpenClContext::finalizeCalculation(std::vector<float*>& output) {
         for (std::size_t i = 0; i < variateSeed_.size(); ++i) {
             kernelSource += "  float v" + std::to_string(i + inputVarOffset_.size()) + " = ore_invCumN(" +
                             std::to_string(variateSeed_[i]) + "U * lcrng_mult[i]);\n";
+            if (debug_)
+                debugInfo_.numberOfOperations += 23 * size_[currentId_ - 1];
         }
 
         kernelSource += currentSsa_;
