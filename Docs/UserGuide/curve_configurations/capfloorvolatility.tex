@@ -487,7 +487,7 @@ Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinlin
 The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times. Otherwise, extrapolation is allowed and the type of extrapolation is determined by the \lstinline!TimeInterpolation! node value described below.
 
 \item \lstinline!IncludeAtm!:
-A boolean value indicating if an ATM curve should be used in combination with the surface. Allowable boolean values are given in the Table \ref{tab:boolean_allowable}. If set to \lstinline!true!, the \lstinline!AtmTenors! node needs to be populated with the ATM tenors to use. The ATM quotes that are searched for are as outlined in the previous sections above. The optionlet surface is amended by inserting the optionlet volatilities at the configured ATM strikes that reproduce the configured ATM optionlet volatilities.
+A boolean value indicating if an ATM curve should be used in combination with the surface. Allowable boolean values are given in the Table \ref{tab:boolean_allowable}. If set to \lstinline!true!, the \lstinline!AtmTenors! node needs to be populated with the ATM tenors to use. The ATM quotes that are searched for are as outlined in the previous sections above. The optionlet surface is amended by inserting the optionlet volatilities at the forecast fixings.
 
 \item \lstinline!DayCounter!:
 The day counter used to convert from dates to times in the underlying structure. Allowable values are given in the Table \ref{tab:daycount}.
