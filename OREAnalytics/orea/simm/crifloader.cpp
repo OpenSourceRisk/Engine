@@ -448,7 +448,7 @@ bool CrifLoader::process(const vector<string>& entries, Size maxIndex, Size curr
             // Remove delimiters between the two currencies
             if (cr.qualifier.size() == 7) {
                 vector<string> tokens;
-                tokens = boost::split(tokens, cr.qualifier, boost::is_any_of("/.-|; "));
+                tokens = boost::split(tokens, cr.qualifier, boost::is_any_of("/.,-_|;: "));
                 QL_REQUIRE(tokens.size() == 2, "Failed to parse Risk_FXVol qualifier (" << cr.qualifier << ").");
                 string ccy1 = tokens[0];
                 string ccy2 = tokens[1];
