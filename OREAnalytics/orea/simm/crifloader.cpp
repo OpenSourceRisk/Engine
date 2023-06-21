@@ -443,7 +443,19 @@ bool CrifLoader::process(const vector<string>& entries, Size maxIndex, Size curr
             // a qualifier in a minor ccy?
             if (!checkCurrency(cr.qualifier) && checkCurrency(ccyUpper))
                 cr.qualifier = ccyUpper;
-        } else if (cr.riskType == RiskType::FXVol && cr.qualifier.size() == 6) {
+        } else if (cr.riskType == RiskType::FXVol && (cr.qualifier.size() == 6 || cr.qualifier.size() == 7)) {
+
+            // Remove delimiters between the two currencies
+            if (cr.qualifier.size() == 7) {
+                vector<string> tokens;
+                tokens = boost::split(tokens, cr.qualifier, boost::is_any_of("/.,-_|;: "));
+                QL_REQUIRE(tokens.size() == 2, "Failed to parse Risk_FXVol qualifier (" << cr.qualifier << ").");
+                string ccy1 = tokens[0];
+                string ccy2 = tokens[1];
+                cr.qualifier = ccy1 + ccy2;
+            }
+
+            // Convert to uppercase
             string ccyPairUpper = boost::to_upper_copy(cr.qualifier);
             string ccy1Upper = ccyPairUpper.substr(0, 3);
             string ccy2Upper = ccyPairUpper.substr(3);
