@@ -100,12 +100,13 @@ Date & Author & Comment \\
 
 \section{Overview}
 
-This paper described how to implement the ORE compute framework Interface. An implementation of this interface can be
+This paper describes how to implement the ORE compute framework interface. An implementation of this interface can be
 used to do calculations on external devices like GPUs from ORE engines. For example, the scripted trade module supports
 this interface to speed up sensitivity or backtest calculations.
 
 The interface is defined in \verb+QuantExt/qle/math/computeenvironment.hpp+. A reference implementation is given in
-\verb+QuantExt/qle/math/openclenvironment.?pp+, which can can also be used as a template for new frameworks.
+\verb+QuantExt/qle/math/openclenvironment.hpp/cpp+. The latter can can also serve as a template for new framework
+implementations.
 
 The file \verb+QuantExt/qle/math/computeenvironment.hpp+ contains three class declarations:
 
@@ -114,11 +115,11 @@ The file \verb+QuantExt/qle/math/computeenvironment.hpp+ contains three class de
   framework. See \ref{implComputeFramework} for more details.
 \item \verb+ComputeContext+: This is the second interface that needs to be implemented to add a new compute
   framework. See \ref{implComputeContext} for more details.
-\item \verb+ComputeEnvironment+: This is a singleton exposing the compute frameworks ORE code that wishes to leverge an
-  external compute environment. See \ref{ComputeEnvironment} for more details.
+\item \verb+ComputeEnvironment+: This is a singleton exposing the compute frameworks to ORE . See
+  \ref{ComputeEnvironment} for more details.
 \end{itemize}
 
-To give more context the typical usage of these interfaces from ORE engines is described in \ref{usageFromORE}.
+The typical usage of these interfaces from ORE engines is described in \ref{usageFromORE}.
 
 \section{CMake setting to enable a compute framework}\label{cmakeSetting}
 
@@ -170,9 +171,9 @@ details on this.
 
 \section{The ComputeEnvironment singleton}\label{ComputeEnvironment}
 
-The \verb+ComputeEnvironment+ is a thread local singleton exposes external compute frameworks to ORE code. A new compute
-framework has to be registered to this singleton by instantiating a raw pointer the framework and adding it to the
-frameworks container:
+The \verb+ComputeEnvironment+ is a thread local singleton that exposes external compute frameworks to ORE code. A new
+compute framework has to be registered to this singleton by instantiating a raw pointer to the framework and adding it
+to the frameworks container:
 
 \begin{minted}[fontsize=\footnotesize]{xml}
 void ComputeEnvironment::reset() {
@@ -185,16 +186,16 @@ The \verb+ComputeEnvironment+ singleton provides the following methods:
 
 \begin{itemize}
 \item \verb+getAvailableDevices()+: returns a set of descriptions of available devices for all registered frameworks. A
-  description is a triplet \verb+OpenCL/Apple/AMD Radeon Pro 5500M Compute Engine+ where the first component identifies
-  the framework, and the second and third component the concrete compute device exposed by that framework. Here, the
-  second component is the name of the platform and the third the name of the device itself.
+  description is a triplet like e.g. \verb+OpenCL/Apple/AMD Radeon Pro 5500M Compute Engine+ where the first component
+  identifies the framework, and the second and third component the concrete compute device exposed by that
+  framework. The second component is the name of the platform and the third the name of the device itself.
 \item \verb+selectContext()+: selects a context to work with. A context corresponds one to one to a device within a
   framework.
 \item \verb+context()+: returns a reference to the currently selected context
 \item \verb+hasContext()+: returns true if a context was selected previously and can be accessed via \verb+context()+
 \end{itemize}
 
-The fact that \verb+ComputeEnvironment+ is thread local means that each thread will access different instances of a
+The fact that \verb+ComputeEnvironment+ is thread local means that each thread will access different instances of
 \verb+ComputeFramework+ and the \verb+ComputeContext+ instances within that framework. This means that the
 implementation of the methods in the latter two interfaces do not need to be thread-safe. However notice that calls into
 a lower level library (like OpenCL) have to be made thread-safe dependent on the specification of that lower level
@@ -218,8 +219,8 @@ The \verb+ComputeFramework+ interface requires the implementation of the followi
     \item \verb+Apple+ the name of the platform.
     \item \verb+AMD Radeon Pro 5500M Compute Engine+ the name of the actual device.
   \end{itemize}
-  Notice that the same device can appear under several frameworks, e.g. a GPU can be accessed both via an OpenCL driver
-  or via a CUDA driver.
+  Notice that the same device can appear under several frameworks, e.g. a GPU could be accessed both via an OpenCL
+  driver or via a CUDA driver.
 \item \verb+getContext()+ should return a raw pointer to a \verb+ComputeContext+ implementation for a given device label
   or throw an erro if the device label is not valid. See \ref{implComputeContext} for more details.
 \item \verb+Destructor+ The destructor of \verb+ComputeFramework+ is virtual and has an empty default implementation. It
@@ -227,8 +228,8 @@ The \verb+ComputeFramework+ interface requires the implementation of the followi
   raw pointers for each compute contexts that need to be deleted on destruction of the \verb+OpenClFramework+ instance.
 \end{itemize}
 
-If the build of a framework is {\em disabled} as described in \ref{cmakeSetting}, \verb+getAvailableDevices+ should
-return an empty set. A call to \verb+getContext()+ should always throw an error.
+If the build of a framework is {\em disabled} as described in \ref{cmakeSetting}, \verb+getAvailableDevices()+ should
+return an empty set. A call to \verb+getContext()+ should always throw a runtime exception in this case.
 
 \subsection{Implementation of the ComputeContext interface}\label{implComputeContext}
 
@@ -239,19 +240,20 @@ interface requires the implementation of the following methods:
 
 \begin{itemize}
 \item \verb+init()+ initialize the context. This method is called every time \verb+selectContext()+ is called in
-  \verb+ComputeEnvironment+ and should be used to do one-off set up work. For example \verb+OpenClContext+ will create
+  \verb+ComputeEnvironment+ and should be used to do one-off set up tasks. For example \verb+OpenClContext+ will create
   an OpenCL context and command queue for a device if this was not done before. If \verb+init()+ was already called,
   subsequent calls do nothing in that implementation.
-\item \verb+initiateCalculation()+: start a new calculation. The input parameter are:
+\item \verb+initiateCalculation()+: start a new calculation. The input parameters are:
   \begin{itemize}
   \item \verb+n+: The size of the vectors on which the calculations will be performed.
   \item \verb+id+: The id of the calculation. If \verb+id+ is not \verb+0+ the steps from a previous calculation
     identified by \verb+id+ will be replayed in the current calculation if the version of the calculation matches the
     previous calculation. In this case only the input variables and random variates (see below) need to be set to
-    retrieve the results of the calculation straight away calling \verb+finalizeCalculation+. If \verb+id+ is \verb+0+
-    on the other hand, a new calculation \verb+id+ will be generated and returned.
+    retrieve the results of the calculation calling \verb+finalizeCalculation()+. If \verb+id+ is \verb+0+ on the other
+    hand, a new calculation \verb+id+ will be generated and returned.
   \item \verb+version+: The version of a calculation.
-  \item \verb+debug+: A flag indicating whether debug information should be collected.
+  \item \verb+debug+: A flag indicating whether debug information on the number of performed operations and timings for
+    data copying, kernel building and calculations should be collected.
   \end{itemize}
   The output parameter is a pair consisting of
   \begin{itemize}
@@ -362,10 +364,11 @@ device as in
  }
 \end{minted}
 
+where \verb+externalComputeDevice_+ is a string identifying the device.
+
 \subsection{Initiation of a calculation}
 
-where \verb+externalComputeDevice_+ is a string identifying the device. Whenever a new computation i.e. the (re)pricing
-of a trade is requested a calculation is initiated
+Whenever a new computation i.e. the (re)pricing of a trade is requested a calculation is initiated
 
 \begin{minted}[fontsize=\footnotesize]{xml}
  std::tie(externalCalculationId_, newExternalCalc) =
