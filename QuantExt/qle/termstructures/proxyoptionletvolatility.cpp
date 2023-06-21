@@ -20,6 +20,7 @@
 #include <qle/termstructures/atmadjustedsmilesection.hpp>
 #include <qle/termstructures/proxyoptionletvolatility.hpp>
 #include <qle/utilities/time.hpp>
+#include <qle/utilities/cashflows.hpp>
 
 #include <ql/indexes/iborindex.hpp>
 #include <ql/termstructures/volatility/smilesection.hpp>
@@ -32,18 +33,6 @@ namespace {
 
 bool isOis(const boost::shared_ptr<IborIndex>& index) {
     return boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(index) != nullptr;
-}
-
-Real getOisAtmLevel(const boost::shared_ptr<OvernightIndex>& on, const Date& fixingDate,
-                    const Period& rateComputationPeriod) {
-    Date today = Settings::instance().evaluationDate();
-    Date start = on->valueDate(fixingDate);
-    Date end = on->fixingCalendar().advance(start, rateComputationPeriod);
-    Date adjStart = std::max(start, today);
-    Date adjEnd = std::max(adjStart + 1, end);
-    OvernightIndexedCoupon cpn(end, 1.0, adjStart, adjEnd, on);
-    cpn.setPricer(boost::make_shared<OvernightIndexedCouponPricer>());
-    return cpn.rate();
 }
 
 } // namespace

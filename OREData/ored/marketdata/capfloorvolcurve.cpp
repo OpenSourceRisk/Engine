@@ -38,6 +38,7 @@
 #include <qle/termstructures/proxyoptionletvolatility.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 #include <qle/instruments/makeoiscapfloor.hpp>
+#include <qle/utilities/cashflows.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
@@ -731,6 +732,7 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
     vector<Period> atmConfigTenors;
     std::map<Period, Real> atmCapFloorVols;
     VolatilityType volType = volatilityType(config.volatilityType());
+    bool isOis = boost::dynamic_pointer_cast<OvernightIndex>(iborIndex) != nullptr;
 
     if (config.tenors()[0] == "*") {
         wildcardTenor = true;
@@ -871,8 +873,13 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         Rate atmStrike;
         for (auto const& vols_outer : atmCapFloorVols) {
             auto it = find(tenors.begin(), tenors.end(), vols_outer.first);
-            Size index = it - tenors.begin();
-            atmStrike = iborIndex->forecastFixing(fixingDates[index]);
+            Size ind = it - tenors.begin();
+            if (isOis) {
+                atmStrike = getOisAtmLevel(boost::dynamic_pointer_cast<OvernightIndex>(iborIndex), fixingDates[ind],
+                                           config.rateComputationPeriod());
+            } else {
+                atmStrike = iborIndex->forecastFixing(fixingDates[ind]);
+            }
             if (capfloorVols[vols_outer.first].find(atmStrike) == capfloorVols[vols_outer.first].end()) {
                 capfloorVols[vols_outer.first][atmStrike] = vols_outer.second;
             }
