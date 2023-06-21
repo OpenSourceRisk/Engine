@@ -129,6 +129,8 @@ struct FxEqCommVolCalibrationInfo {
     std::vector<std::vector<double>> deltaGridStrikes;
     std::vector<std::vector<double>> deltaGridProb;
     std::vector<std::vector<double>> deltaGridImpliedVolatility;
+    std::vector<std::vector<double>> callPrices;
+    std::vector<std::vector<double>> putPrices;
     std::vector<std::vector<bool>> moneynessGridCallSpreadArbitrage;
     std::vector<std::vector<bool>> moneynessGridButterflyArbitrage;
     std::vector<std::vector<bool>> moneynessGridCalendarArbitrage;

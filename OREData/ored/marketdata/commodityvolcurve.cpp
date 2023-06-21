@@ -1775,6 +1775,10 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
         std::vector<std::vector<Real>> callPricesDelta(times.size(), std::vector<Real>(deltas.size(), 0.0));
         if (reportOnDeltaGrid) {
             info->deltas = deltas;
+            info->callPrices =
+                    std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            info->putPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             info->deltaGridStrikes =
                 std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             info->deltaGridProb = std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
@@ -1822,6 +1826,13 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
                         }
                         Real stddev = std::sqrt(volatility_->blackVariance(t, strike));
                         callPricesDelta[i][j] = QuantExt::blackFormula(Option::Call, strike, forwards[i], stddev);
+
+                        if (d.isPut()) {
+                            info->putPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev);
+                        } else {
+                            info->callPrices[i][j] = callPricesDelta[i][j];
+                        }
+
                         info->deltaGridStrikes[i][j] = strike;
                         info->deltaGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
                     } catch (const std::exception& e) {

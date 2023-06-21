@@ -1357,6 +1357,8 @@ void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& typ
             addRowMktCalReport(report, type, id, "strike", tStr, dStr, "", info->deltaGridStrikes.at(i).at(j));
             addRowMktCalReport(report, type, id, "vol", tStr, dStr, "", info->deltaGridImpliedVolatility.at(i).at(j));
             addRowMktCalReport(report, type, id, "prob", tStr, dStr, "", info->deltaGridProb.at(i).at(j));
+            addRowMktCalReport(report, type, id, "call_premium", tStr, dStr, "", info->callPrices.at(i).at(j));
+            addRowMktCalReport(report, type, id, "put_premium", tStr, dStr, "", info->putPrices.at(i).at(j));
             addRowMktCalReport(report, type, id, "callSpreadArb", tStr, dStr, "",
                                static_cast<bool>(info->deltaGridCallSpreadArbitrage.at(i).at(j)));
             addRowMktCalReport(report, type, id, "butterflyArb", tStr, dStr, "",
