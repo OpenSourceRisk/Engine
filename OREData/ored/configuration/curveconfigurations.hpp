@@ -177,5 +177,20 @@ public:
     void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName);
 };
 
+class CurveConfigurationsManager {
+public:
+    CurveConfigurationsManager() {}
+
+    // add a curve config, if no id provided it gets added as a default
+    void add(const QuantLib::ext::shared_ptr<CurveConfigurations>& config, std::string id = std::string());
+    const QuantLib::ext::shared_ptr<CurveConfigurations>& get(std::string id = std::string()) const;
+    const bool has(std::string id = std::string()) const;
+    const std::map<std::string, QuantLib::ext::shared_ptr<CurveConfigurations>>& curveConfigurations() const;
+    const bool empty() const;
+
+private:
+    std::map<std::string, QuantLib::ext::shared_ptr<CurveConfigurations>> configs_;
+};
+
 } // namespace data
 } // namespace ore
