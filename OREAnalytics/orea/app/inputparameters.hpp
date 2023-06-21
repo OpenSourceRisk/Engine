@@ -300,7 +300,7 @@ public:
     const boost::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() { return refDataManager_; }
     const boost::shared_ptr<ore::data::Conventions>& conventions() { return conventions_; }
     const boost::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig() const { return iborFallbackConfig_; }
-    const std::vector<boost::shared_ptr<ore::data::CurveConfigurations>>& curveConfigs() { return curveConfigs_; }
+    CurveConfigurationsManager& curveConfigs() { return curveConfigs_; }
     const boost::shared_ptr<ore::data::EngineData>& pricingEngine() { return pricingEngine_; }
     const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams() { return todaysMarketParams_; }
     const boost::shared_ptr<ore::data::Portfolio>& portfolio() { return portfolio_; }
@@ -536,7 +536,7 @@ protected:
     boost::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
     boost::shared_ptr<ore::data::Conventions> conventions_;
     boost::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
-    std::vector<boost::shared_ptr<ore::data::CurveConfigurations>> curveConfigs_;
+    CurveConfigurationsManager curveConfigs_;
     boost::shared_ptr<ore::data::EngineData> pricingEngine_;
     boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     boost::shared_ptr<ore::data::Portfolio> portfolio_;
