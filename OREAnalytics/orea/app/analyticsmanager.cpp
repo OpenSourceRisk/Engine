@@ -241,7 +241,7 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
         string analytic = rep.first;
         for (auto b : rep.second) {
             string reportName = b.first;
-            boost::shared_ptr<InMemoryReport> report = b.second;
+             boost::shared_ptr<InMemoryReport> report = b.second;
             string fileName;
             auto it = hits.find(reportName);
             QL_REQUIRE(it != hits.end(), "something wrong here");

@@ -23,26 +23,32 @@
 
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 namespace ore {
 namespace analytics {
-    class ZeroSensitivityLoader {
+class ZeroSensitivityLoader {
 public:
     struct ZeroSensitivity {
         std::string riskFactor;
         double delta;
-        };
-    
+        std::string currency;
+        double baseNpv;
+        double shiftSize;
+    };
+
     ZeroSensitivityLoader(const std::string& filename, const std::string& idColum = "TradeId",
-                              const std::string& riskFactorColumn = "Factor_1", const std::string& deltaColumn = "Delta");
+                          const std::string& riskFactorColumn = "Factor_1", const std::string& deltaColumn = "Delta",
+                          const std::string& currencyColumn = "Currency",
+                          const std::string& baseNpvColumn = "Base NPV",
+                          const std::string& shiftSizeColumn = "ShiftSize_1");
 
     std::map<std::string, std::vector<ZeroSensitivity>> sensitivities() { return sensitivities_; }
 
-    private:
-        std::map<std::string, std::vector<ZeroSensitivity>> sensitivities_;
-    };
-}
+private:
+    std::map<std::string, std::vector<ZeroSensitivity>> sensitivities_;
+};
+} // namespace analytics
 } // namespace ore

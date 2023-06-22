@@ -447,7 +447,8 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
     sensitivityScenarioFileName_ = params->get("sensitivity", "scenarioOutputFile", false);    
     stressTestFileName_ = params->get("stress", "scenarioOutputFile", false);    
     varFileName_ = params->get("parametricVar", "outputFile", false);
-    
+    parConversionOutputFileName_ = params->get("zeroToParSensiConversion", "outputFile", false);
+
     // map internal report name to output file name
     fileNameMap_["npv"] = npvOutputFileName_;
     fileNameMap_["cashflow"] = cashflowOutputFileName_;
@@ -465,6 +466,7 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
     fileNameMap_["jacobi_inverse"] = jacobiInverseFileName_;
     fileNameMap_["stress"] = stressTestFileName_;
     fileNameMap_["var"] = varFileName_;
+    fileNameMap_["parConversionSensitivity"] = parConversionOutputFileName_;
     
     vector<Size> dimOutputGridPoints;
     tmp = params->get("xva", "dimOutputGridPoints", false);

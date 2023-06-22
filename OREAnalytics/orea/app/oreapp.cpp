@@ -1227,19 +1227,19 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("zeroToParSensiConversion", "marketConfigFile", false);
         if (tmp != "") {
             string file = inputPath + "/" + tmp;
-            LOG("Loading stress test scenario sim market parameters from file" << file);
+            LOG("Loading par converions scenario sim market parameters from file" << file);
             inputs->setParConversionSimMarketParamsFromFile(file);
         } else {
-            WLOG("ScenarioSimMarket parameters for stress testing not loaded");
+            WLOG("ScenarioSimMarket parameters for par conversion testing not loaded");
         }
 
-        tmp = params_->get("zeroToParSensiConversion", "stressConfigFile", false);
+        tmp = params_->get("zeroToParSensiConversion", "sensitivityConfigFile", false);
         if (tmp != "") {
             string file = inputPath + "/" + tmp;
-            LOG("Load stress test scenario data from file" << file);
+            LOG("Load par conversion scenario data from file" << file);
             inputs->setParConversionScenarioDataFromFile(file);
         } else {
-            WLOG("Stress scenario data not loaded");
+            WLOG("Par conversion scenario data not loaded");
         }
 
         tmp = params_->get("zeroToParSensiConversion", "pricingEnginesFile", false);
@@ -1248,7 +1248,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
             LOG("Load pricing engine data from file: " << file);
             inputs->setParConversionPricingEngineFromFile(file);
         } else {
-            WLOG("Pricing engine data not found for stress testing, using global");
+            WLOG("Pricing engine data not found for par conversion, using global");
         }
 
         tmp = params_->get("zeroToParSensiConversion", "outputThreshold", false);

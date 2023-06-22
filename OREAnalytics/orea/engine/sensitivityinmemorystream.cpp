@@ -26,9 +26,6 @@ namespace analytics {
 
 SensitivityInMemoryStream::SensitivityInMemoryStream() : itCurrent_(records_.begin()) {}
 
-SensitivityInMemoryStream::SensitivityInMemoryStream(const set<SensitivityRecord>& records)
-    : records_(records), itCurrent_(records_.begin()) {}
-
 SensitivityRecord SensitivityInMemoryStream::next() {
     // If there are no more records, return the empty record
     if (itCurrent_ == records_.end())
@@ -44,12 +41,8 @@ void SensitivityInMemoryStream::reset() {
 }
 
 void SensitivityInMemoryStream::add(const SensitivityRecord& sr) {
-    // Try to insert the record
-    auto p = records_.insert(sr);
-
-    // Issue a warning if the record is already in the container and not inserted
-    if (!p.second)
-        WLOG("The duplicate sensitivity record was not inserted: " << sr);
+    // Insert the record
+    records_.push_back(sr);
 
     // Reset because itCurrent_ possibly invalidated by the insert
     reset();

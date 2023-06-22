@@ -24,17 +24,23 @@ namespace ore {
 namespace analytics {
 
 ZeroSensitivityLoader::ZeroSensitivityLoader(const std::string& filename, const std::string& idColumn,
-                                             const std::string& riskFactorColumn,
-                                             const std::string& deltaColumn) {
+                                             const std::string& riskFactorColumn, const std::string& deltaColumn,
+                                             const std::string& currencyColumn, const std::string& baseNpvColumn,
+                                             const std::string& shiftSizeColumn) {
     ore::data::CSVFileReader reader(filename, true);
     // TODO: Check if all columns in file
     while (reader.next()) {
+        QuantLib::Real shiftSize = QuantLib::Null<QuantLib::Real>();
+        QuantLib::Real baseNpv = QuantLib::Null<QuantLib::Real>();
+        QuantLib::Real delta = QuantLib::Null<QuantLib::Real>();
         std::string id = reader.get(idColumn);
         std::string key = reader.get(riskFactorColumn);
-        double delta;
+        std::string currency = reader.get(currencyColumn);
+        bool validNpv = ore::data::tryParseReal(reader.get(baseNpvColumn), baseNpv);
         bool validDelta = ore::data::tryParseReal(reader.get(deltaColumn), delta);
-        if (validDelta) {
-            sensitivities_[id].push_back({key, delta});
+        bool validShiftSize = ore::data::tryParseReal(reader.get(shiftSizeColumn), shiftSize);
+        if (validDelta && validNpv && validShiftSize && !QuantLib::close_enough(delta, 0.0)) {
+            sensitivities_[id].push_back({key, delta, currency, baseNpv, shiftSize});
         }
     }
 }

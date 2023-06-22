@@ -789,6 +789,7 @@ private:
     std::string jacobiInverseFileName_;
     std::string stressTestFileName_;
     std::string varFileName_;
+    std::string parConversionOutputFileName_;
 };
     
 } // namespace analytics
