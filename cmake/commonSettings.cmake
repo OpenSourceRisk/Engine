@@ -131,6 +131,10 @@ else()
         add_definitions(-DBOOST_UBLAS_NDEBUG)
     endif()
 
+    # add pthread flag
+    add_compiler_flag("-pthread" usePThreadCompilerFlag)
+    add_linker_flag("-pthread" usePThreadLinkerFlag)
+
     # enable boost assert handler
     add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)
 
