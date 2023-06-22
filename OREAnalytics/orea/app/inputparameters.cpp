@@ -80,13 +80,13 @@ void InputParameters::setConventionsFromFile(const std::string& fileName) {
 void InputParameters::setCurveConfigs(const std::string& xml) {
     auto curveConfig = boost::make_shared<CurveConfigurations>();
     curveConfig->fromXMLString(xml);
-    curveConfigs_.push_back(curveConfig);
+    curveConfigs_.add(curveConfig);
 }
 
 void InputParameters::setCurveConfigsFromFile(const std::string& fileName) {
     auto curveConfig = boost::make_shared<CurveConfigurations>();
     curveConfig->fromFile(fileName);
-    curveConfigs_.push_back(curveConfig);
+    curveConfigs_.add(curveConfig);
 }
 
 void InputParameters::setIborFallbackConfig(const std::string& xml) {
