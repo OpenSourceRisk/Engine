@@ -213,10 +213,12 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
         for (Date d = start; d <= expiryDate; d = fixingCal.advance(d, 1 * Days))
             requiredFixings_.addFixingDate(d, fxIndex_, payDate);
     }
-    
+
     // Check if the barrier has been triggered already. If payoff-at-hit, and barrier was touched in the past, then
     // create instrument again, with expiry date and pay date corresponding to that past barrier exercise date
-    if (barrierOptionWrapper->exercise()) {
+    if (auto rt = engineFactory->engineData()->globalParameters().find("RunType");
+        rt != engineFactory->engineData()->globalParameters().end() && rt->second != "PortfolioAnalyser" &&
+        barrierOptionWrapper->exercise()) {
         QL_REQUIRE(barrierOptionWrapper->exerciseDate() != Date(), "Option is exercised but exercise date was not defined");
         expiryDate = barrierOptionWrapper->exerciseDate();
         additionalData_["exerciseDate"] = expiryDate;
