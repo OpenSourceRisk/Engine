@@ -5,7 +5,7 @@ MAINTAINER Quaternion Risk Management
 LABEL Description="Provide a base environment for building in C++ with Boost"
 
 RUN apt-get update && apt-get upgrade -y \
- && apt-get install -f -y build-essential wget libbz2-dev autoconf libtool dos2unix cmake zlib1g-dev \
+ && apt-get install -f -y build-essential wget libbz2-dev autoconf libtool dos2unix cmake zlib1g-dev opencl-headers ocl-icd-opencl-dev \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
