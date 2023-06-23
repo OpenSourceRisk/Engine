@@ -1211,10 +1211,6 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
      * ZERO TO PAR SENSI CONVERSION
      *************/
 
-    // FIXME: The following are not loaded from params so far, relying on defaults
-    // xbsParConversion_ = false;
-    // analyticFxSensis_ = true;
-    // useSensiSpreadedTermStructures_ = true;
     tmp = params_->get("zeroToParSensiConversion", "active", false);
     if (!tmp.empty() && parseBool(tmp)) {
         inputs->insertAnalytic("PARCONVERSION");
@@ -1222,6 +1218,36 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("zeroToParSensiConversion", "sensitivityInputFile", false);
         if (tmp != "") {
             inputs->setParConversionInputFile(inputPath + "/" + tmp);
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "idColumn", false);
+        if (tmp != "") {
+            inputs->setParConversionInputIdColumn(tmp);
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "riskFactorColumn", false);
+        if (tmp != "") {
+            inputs->setParConversionInputRiskFactorColumn(tmp);
+        }
+        
+        tmp = params_->get("zeroToParSensiConversion", "deltaColumn", false);
+        if (tmp != "") {
+            inputs->setParConversionInputDeltaColumn(tmp);
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "currencyColumn", false);
+        if (tmp != "") {
+            inputs->setParConversionInputCurrencyColumn(tmp);
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "baseNpvColumn", false);
+        if (tmp != "") {
+            inputs->setParConversionInputBaseNpvColumn(tmp);
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "shiftSizeColumn", false);
+        if (tmp != "") {
+            inputs->setParConversionInputShiftSizeColumn(tmp);
         }
 
         tmp = params_->get("zeroToParSensiConversion", "marketConfigFile", false);
@@ -1254,6 +1280,10 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("zeroToParSensiConversion", "outputThreshold", false);
         if (tmp != "")
             inputs->setParConversionThreshold(parseReal(tmp));
+
+        tmp = params_->get("zeroToParSensiConversion", "outputJacobi", false);
+        if (tmp != "")
+            inputs->setParConversionOutputJacobi(parseBool(tmp));
 
     }
 

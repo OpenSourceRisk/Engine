@@ -293,7 +293,14 @@ public:
     void setParConversionPricingEngine(const boost::shared_ptr<EngineData>& engineData) {
         parConversionPricingEngine_ = engineData;
     }
-    void setParConversionInputFile(const std::string s) { parConversionInputFile_ = s; }
+    void setParConversionInputFile(const std::string& s) { parConversionInputFile_ = s; }
+    void setParConversionInputIdColumn(const std::string& s) { parConversionInputIdColumn_ = s; }
+    void setParConversionInputRiskFactorColumn(const std::string& s) { parConversionInputRiskFactorColumn_ = s; }
+    void setParConversionInputDeltaColumn(const std::string& s) { parConversionInputDeltaColumn_ = s; }
+    void setParConversionInputCurrencyColumn(const std::string& s) { parConversionInputCurrencyColumn_ = s; }
+    void setParConversionInputBaseNpvColumn(const std::string& s) { parConversionInputBaseNpvColumn_ = s; }
+    void setParConversionInputShiftSizeColumn(const std::string& s) { parConversionInputShiftSizeColumn_ = s; }
+
 
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>
@@ -529,7 +536,15 @@ public:
     }
     const boost::shared_ptr<ore::data::EngineData>& parConversionPricingEngine() { return parConversionPricingEngine_; }
     const std::string& parConversionInputFile() const { return parConversionInputFile_; }
-    
+    // Column Names in the input
+    const std::string& parConversionInputIdColumn() { return parConversionInputIdColumn_; }
+    const std::string& parConversionInputRiskFactorColumn() { return parConversionInputRiskFactorColumn_; }
+    const std::string& parConversionInputDeltaColumn() { return parConversionInputDeltaColumn_; }
+    const std::string& parConversionInputCurrencyColumn() { return parConversionInputCurrencyColumn_; }
+    const std::string& parConversionInputBaseNpvColumn() { return parConversionInputBaseNpvColumn_; }
+    const std::string& parConversionInputShiftSizeColumn() { return parConversionInputShiftSizeColumn_; }
+
+
     /*************************************
      * List of analytics that shall be run
      *************************************/
@@ -755,6 +770,12 @@ protected:
     boost::shared_ptr<ore::analytics::SensitivityScenarioData> parConversionScenarioData_;
     boost::shared_ptr<ore::data::EngineData> parConversionPricingEngine_;
     std::string parConversionInputFile_;
+    std::string parConversionInputIdColumn_ = "TradeId";
+    std::string parConversionInputRiskFactorColumn_ = "Factor_1";
+    std::string parConversionInputDeltaColumn_ = "Delta";
+    std::string parConversionInputCurrencyColumn_ = "Currency";
+    std::string parConversionInputBaseNpvColumn_ = "Base NPV";
+    std::string parConversionInputShiftSizeColumn_ = "ShiftSize_1";
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {
@@ -790,6 +811,8 @@ private:
     std::string stressTestFileName_;
     std::string varFileName_;
     std::string parConversionOutputFileName_;
+    std::string parConversionJacobiFileName_;
+    std::string parConversionJacobiInverseFileName_;
 };
     
 } // namespace analytics

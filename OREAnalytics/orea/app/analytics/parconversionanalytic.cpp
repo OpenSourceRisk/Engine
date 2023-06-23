@@ -26,12 +26,25 @@
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <orea/scenario/scenariosimmarketplus.hpp>
+#include <orea/engine/sensitivityanalysisplus.hpp>
 
 using namespace ore::data;
 using namespace boost::filesystem;
 
 namespace ore {
 namespace analytics {
+
+std::map<RiskFactorKey, std::string> getScenarioDescriptions(boost::shared_ptr<ScenarioGenerator> scenGen) {
+    std::map<RiskFactorKey, std::string> descriptions;
+    auto sensiScenGen = boost::dynamic_pointer_cast<SensitivityScenarioGenerator>(scenGen);
+    if (sensiScenGen) {
+        for (const auto& desc : sensiScenGen->scenarioDescriptions()) {
+            descriptions[desc.key1()] = desc.indexDesc1();
+        }
+    }
+    return descriptions;
+}
+
 
 void ParConversionAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
@@ -54,58 +67,54 @@ void ParConversionAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::I
     auto zeroSensis = parConversionAnalytic->loadZeroSensitivities();
 
     set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
+    
     auto parAnalysis = boost::make_shared<ParSensitivityAnalysis>(
         inputs_->asof(), analytic()->configurations().simMarketParams, *analytic()->configurations().sensiScenarioData,
         "", true, typesDisabled);
+    
     if (inputs_->parConversionAlignPillars()) {
         LOG("Sensi analysis - align pillars (for the par conversion or because alignPillars is enabled)");
         parAnalysis->alignPillars();
     } else {
         LOG("Sensi analysis - skip aligning pillars");
     }
-    auto curveConfigs = analytic()->configurations().curveConfig;
 
-    auto simMarket = boost::make_shared<ScenarioSimMarketPlus>(
-        analytic()->market(), analytic()->configurations().simMarketParams, inputs_->marketConfig("pricing"),
-        curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(),
-        analytic()->configurations().todaysMarketParams ? *analytic()->configurations().todaysMarketParams
-                                                        : TodaysMarketParameters(),
-        true, analytic()->configurations().sensiScenarioData->useSpreadedTermStructures(), false, false,
+    auto& configs = analytic()->configurations();
+
+    auto simMarket = buildScenarioSimMarketForSensitivityAnalysis(
+        analytic()->market(), configs.simMarketParams, configs.sensiScenarioData, configs.curveConfig,
+        configs.todaysMarketParams, nullptr, inputs_->marketConfig("pricing"), true, false,
         *inputs_->iborFallbackConfig());
 
-    auto scenarioFactory = boost::make_shared<DeltaScenarioFactory>(simMarket->baseScenario());
-    auto scenarioGenerator = boost::make_shared<SensitivityScenarioGenerator>(
-        analytic()->configurations().sensiScenarioData, simMarket->baseScenario(),
-        analytic()->configurations().simMarketParams, simMarket, scenarioFactory, true, true,
-        simMarket->baseScenarioAbsolute());
-
-    // Set simulation market's scenario generator
-    simMarket->scenarioGenerator() = scenarioGenerator;
-
     parAnalysis->computeParInstrumentSensitivities(simMarket);
+
     boost::shared_ptr<ParSensitivityConverter> parConverter =
         boost::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
 
     map<RiskFactorKey, Size> factorToIndex;
+
+    auto shiftSizes = parAnalysis->shiftSizes();
+
+    
 
     Size counter = 0;
     for (auto const& k : parConverter->rawKeys()) {
         factorToIndex[k] = counter++;
     }
 
-    std::map<std::string, std::set<SensitivityRecord>> records;
-
-    std::map<RiskFactorKey, std::string> descriptions;
-
-    for (const auto& desc : scenarioGenerator->scenarioDescriptions()) {
-        descriptions[desc.key1()] = desc.indexDesc1();
-    }
+    std::vector<SensitivityRecord> results;
+    std::map<RiskFactorKey, std::string> descriptions = getScenarioDescriptions(simMarket->scenarioGenerator());
 
     for (const auto& [id, sensis] : zeroSensis) {
         boost::numeric::ublas::vector<Real> zeroDeltas(parConverter->rawKeys().size(), 0.0);
-        // TODO par conversion
-        bool isPar = true;
+        std::vector<SensitivityRecord> excludedDeltas;
+        bool valid = true;
         for (const auto& zero : sensis) {
+            if (zero.currency != configs.simMarketParams->baseCcy()) {
+                valid = false;
+                ALOG("Currency in the sensitivity input and config aren't consistent. Skip trade " << id);
+                break;
+            }
             auto [rf, desc] = deconstructFactor(zero.riskFactor);
             descriptions[rf] = desc;
             if (rf.keytype != RiskFactorKey::KeyType::None) {
@@ -117,53 +126,70 @@ void ParConversionAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::I
                                                              "Par factor " + ore::data::to_string(rf) +
                                                                  " not found in factorToIndex map"));
                     } else {
-                        // Add deltas which don't need to be converted
                         SensitivityRecord sr;
                         sr.tradeId = id;
-                        sr.isPar = isPar;
+                        sr.isPar = true;
                         sr.key_1 = rf;
                         sr.desc_1 = desc;
                         sr.delta = zero.delta;
-                        sr.baseNpv = sensis.begin()->baseNpv;
-                        sr.currency = sensis.begin()->currency;
-                        // TODO Shift size
-                        sr.shift_1 = sensis.begin()->shiftSize;
+                        sr.baseNpv = zero.baseNpv;
+                        sr.currency = zero.currency;
+                        sr.shift_1 = zero.shiftSize;
                         sr.gamma = QuantLib::Null<QuantLib::Real>();
-                        records[id].insert(sr);
+                        excludedDeltas.push_back(sr);
                     }
                 } else {
+                    auto shiftSize = shiftSizes.find(rf);
+                    if (shiftSize == shiftSizes.end() || !close_enough(shiftSize->second.first, zero.shiftSize)) {
+                        valid = false;
+                        ALOG("Shift sizes in the sensitivity input and config aren't consistent. Skip trade " << id);
+                        break;
+                    }
+
                     zeroDeltas[it->second] = zero.delta;
                 }
             }
         }
-        boost::numeric::ublas::vector<Real> parDeltas = parConverter->convertSensitivity(zeroDeltas);
-        Size counter = 0;
-        for (const auto& key : parConverter->parKeys()) {
-            if (!close(parDeltas[counter], 0.0)) {
-                SensitivityRecord sr;
-                sr.tradeId = id;
-                sr.isPar = isPar;
-                sr.key_1 = key;
-                sr.desc_1 = descriptions[key];
-                sr.delta = parDeltas[counter];
-                sr.baseNpv = sensis.begin()->baseNpv;
-                sr.currency = sensis.begin()->currency;
-                sr.shift_1 = sensis.begin()->shiftSize;
-                sr.gamma = QuantLib::Null<QuantLib::Real>();
-                records[id].insert(sr);
+        if (!sensis.empty() && valid) {
+            boost::numeric::ublas::vector<Real> parDeltas = parConverter->convertSensitivity(zeroDeltas);
+            Size counter = 0;
+            for (const auto& key : parConverter->parKeys()) {
+                if (!close(parDeltas[counter], 0.0)) {
+                    SensitivityRecord sr;
+                    sr.tradeId = id;
+                    sr.isPar = true;
+                    sr.key_1 = key;
+                    sr.desc_1 = descriptions[key];
+                    sr.delta = parDeltas[counter];
+                    sr.baseNpv = sensis.begin()->baseNpv;
+                    sr.currency = sensis.begin()->currency;
+                    sr.shift_1 = shiftSizes[key].second;
+                    sr.gamma = QuantLib::Null<QuantLib::Real>();
+                    results.push_back(sr);
+                }
+                counter++;
             }
-            counter++;
+            results.insert(results.end(), excludedDeltas.begin(), excludedDeltas.end());
         }
+        
     }
-
-    std::vector<SensitivityRecord> results;
-    for (const auto& [id, recs] : records) {
-        results.insert(results.end(), recs.begin(), recs.end());
-    }
+    
     auto ss = boost::make_shared<SensitivityInMemoryStream>(results.begin(), results.end());
     boost::shared_ptr<InMemoryReport> report = boost::make_shared<InMemoryReport>();
-    ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
+    ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->parConversionThreshold());
     analytic()->reports()["PARCONVERSION"]["parConversionSensitivity"] = report;
+
+    if (inputs_->parConversionOutputJacobi()) {
+        boost::shared_ptr<InMemoryReport> jacobiReport = boost::make_shared<InMemoryReport>();
+        writeParConversionMatrix(parAnalysis->parSensitivities(), *jacobiReport);
+        analytic()->reports()["PARCONVERSION"]["parConversionJacobi"] = jacobiReport;
+
+        boost::shared_ptr<InMemoryReport> jacobiInverseReport = boost::make_shared<InMemoryReport>();
+        parConverter->writeConversionMatrix(*jacobiInverseReport);
+        analytic()->reports()["PARCONVERSION"]["parConversionJacobi_inverse"] = jacobiInverseReport;
+    }
+
+
     LOG("Sensi Analysis - Completed");
     CONSOLE("OK");
 }

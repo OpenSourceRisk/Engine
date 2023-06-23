@@ -448,6 +448,8 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
     stressTestFileName_ = params->get("stress", "scenarioOutputFile", false);    
     varFileName_ = params->get("parametricVar", "outputFile", false);
     parConversionOutputFileName_ = params->get("zeroToParSensiConversion", "outputFile", false);
+    parConversionJacobiFileName_ = params->get("zeroToParSensiConversion", "jacobiOutputFile", false);
+    parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);  
 
     // map internal report name to output file name
     fileNameMap_["npv"] = npvOutputFileName_;
@@ -467,6 +469,8 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
     fileNameMap_["stress"] = stressTestFileName_;
     fileNameMap_["var"] = varFileName_;
     fileNameMap_["parConversionSensitivity"] = parConversionOutputFileName_;
+    fileNameMap_["parConversionJacobi"] = parConversionJacobiFileName_;
+    fileNameMap_["parConversionJacobi_inverse"] = parConversionJacobiInverseFileName_;
     
     vector<Size> dimOutputGridPoints;
     tmp = params->get("xva", "dimOutputGridPoints", false);
@@ -527,6 +531,7 @@ void InputParameters::setParConversionPricingEngineFromFile(const std::string& f
     parConversionPricingEngine_ = boost::make_shared<EngineData>();
     parConversionPricingEngine_->fromFile(fileName);
 }
+
 
 } // namespace analytics
 } // namespace ore

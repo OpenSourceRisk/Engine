@@ -3259,6 +3259,115 @@ The relevant inputs in {\tt ore.xml} are
 
 The market data input and todays's market configuration required here is minimal - limited to FX rates for conversions from base/calculation currency into USD and into the result currency.
 
+
+%--------------------------------------------------------------------
+\subsection{Zero to Par sensitivity Conversion Analysis}% Example 48
+\label{example:40}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_48} demonstrates ORE's capability to convert external computed zero sensitivities (e.g Zero rates) to par sensitivities (e.g. to Swap rates) 
+that is implemented  by means of a Jacobi transformation of the "raw" sensitivities (e.g. to zero rates), see a sketch of the 
+methodology in appendix \ref{app:par_sensi} and section \ref{sec:sensitivity} for configuration details.
+
+To perform a par sensitivity analysis, the following required change in {\tt ore.xml} is required
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <Analytic type="zeroToParSensiConversion">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+	  <!-- Input file with the raw sensitivities -->
+      <Parameter name="sensitivityInputFile">sensitivity.csv</Parameter>
+      <Parameter name="idColumn">TradeId</Parameter>
+      <Parameter name="riskFactorColumn">Factor_1</Parameter>
+      <Parameter name="deltaColumn">Delta</Parameter>
+	  <Parameter name="currencyColumn">Currency</Parameter>
+	  <Parameter name="baseNpvColumn">Base NPV</Parameter>
+ 	  <Parameter name="shiftSizeColumn">ShiftSize_1</Parameter>
+      <Parameter name="outputThreshold">0.000001</Parameter>
+      <Parameter name="outputFile">parconversion_sensitivity.csv</Parameter>
+      <Parameter name="outputJacobi">Y</Parameter>
+      <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
+      <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
+    </Analytic>
+\end{minted}
+
+The portfolio used in this example includes zero sensitivities of 
+\begin{itemize}
+\item Discount and index curves
+\item Credit curves
+\item Inflation curves
+\item CapFloor volatilities
+\end{itemize}
+
+ORE reads the raw sensitivites from the csv input file *sensitivityInputFile*. The input file needs to have six mandatory columns, the name of the columns can be specified in the settings.
+
+\begin{enumerate}
+\item idColumn : Column with a unique identifier for a trade / nettingset / portfolio
+\item riskFactorColumn: Column with the identifier of the zero/raw sensitiviy. Need to follow the ORE naming convention, e.g. DiscountCurve/EUR/5/1Y (the 6th bucket in EUR discount curve as specified in the sensitivity.xml)
+\item deltaColumn: The raw sensitivity of the trade/nettingset / portfolio with respect to the risk factor
+\item currencyColumn: The currency in which the raw sensitivity is expressed, need to be the same as the BaseCurrency in the simulation settings.
+\item shiftSizeColumn: The shift size applied to compute the raw sensitivity, need to be consistent to the configuration.
+\item baseNpvColumn: The base npv of the trade/nettingset/portfolio in currency.
+\end{enumerate}
+
+This is followed by the Jacobi transformation that turns "raw" sensitivities  into sensitivities in the par domain (Deposit/FRA/Swap rates, FX Forwards, CC Basis Swap spreads, 
+CDS spreads, ZC and YOY Inflation Swap rates, flat Cap/Floor vols). The conversion is controlled by the additional {\tt ParConversion} data blocks 
+in {\tt sensitivity.xml} where the assumed par instruments and corresponding conventions are coded, as shown below for three types of discount curves.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <DiscountCurves>
+  
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+        <!--DEP, FRA, IRS, OIS, FXF, XBS -->
+	<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>   
+    
+    <DiscountCurve ccy="USD">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+	<Instruments>FXF,FXF,FXF,FXF,FXF,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="XBS">EUR-USD-XCCY-BASIS-CONVENTIONS</Convention>
+	  <Convention id="FXF">EUR-USD-FX-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+
+    <DiscountCurve ccy="GBP">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+	<Instruments>DEP,DEP,DEP,DEP,DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">GBP-DEPOSIT</Convention>
+	  <Convention id="IRS">GBP-6M-SWAP-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>
+  
+  </DiscountCurves>
+\end{minted}
+
+Finally note that par sensitivity analysis requires that the shift tenor grid in the sensitivity data above matches the corresponding grid in the simulation (market) configuration. 
+See also section \ref{sec:sensitivity}.
+
+
+
 %--------------------------------------------------------
 \subsection{Collateral Bond Obligation}% Example 45
 %--------------------------------------------------------
