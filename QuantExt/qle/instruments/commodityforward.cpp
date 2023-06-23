@@ -85,7 +85,7 @@ void CommodityForward::setupArguments(PricingEngine::arguments* args) const {
 
 void CommodityForward::arguments::validate() const {
     QL_REQUIRE(quantity > 0, "quantity should be positive: " << quantity);
-    QL_REQUIRE(strike >= 0, "strike should be greater than or equal to 0: " << strike);
+    QL_REQUIRE(strike > 0 || close_enough(strike, 0.0), "strike should be greater than or equal to 0: " << strike);
 }
 
 } // namespace QuantExt
