@@ -26,7 +26,6 @@
 #include <qle/pricingengines/midpointcdoengine.hpp>
 
 // avoid compile error from homogeneouspooldef.hpp
-#include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <qle/models/homogeneouspooldef.hpp>
