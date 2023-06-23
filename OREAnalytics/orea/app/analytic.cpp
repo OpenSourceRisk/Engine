@@ -55,7 +55,9 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
          bool scenarioGeneratorConfig,
          bool crossAssetModelConfig)
     : impl_(std::move(impl)), types_(analyticTypes), inputs_(inputs) {
-    
+
+    configurations().asofDate = inputs->asof();
+
     // set these here, can be overwritten in setUpConfigurations
     if (inputs->curveConfigs().has())
         configurations().curveConfig = inputs->curveConfigs().get();
