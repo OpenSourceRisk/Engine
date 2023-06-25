@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/bind/bind.hpp>
+
 #include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
 
 #include <ql/cashflows/fixedratecoupon.hpp>
@@ -96,7 +98,8 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
     Brent b;
     Real lambdaStar;
     try {
-        lambdaStar = b.solve(boost::bind(&AnalyticLgmCdsOptionEngine::lambdaStarHelper, this, _1), 1.0E-6, 0.0, 0.01);
+        lambdaStar = b.solve(boost::bind(&AnalyticLgmCdsOptionEngine::lambdaStarHelper, this, boost::placeholders::_1),
+                             1.0E-6, 0.0, 0.01);
     } catch (const std::exception& e) {
         QL_FAIL("AnalyticLgmCdsOptionEngine, failed to compute lambdaStar, " << e.what());
     }

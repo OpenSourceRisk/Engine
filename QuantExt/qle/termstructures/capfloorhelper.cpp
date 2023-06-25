@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
@@ -47,7 +47,7 @@ CapFloorHelper::CapFloorHelper(Type type, const Period& tenor, Rate strike, cons
                                bool endOfMonth, bool firstCapletExcluded)
     : RelativeDateBootstrapHelper<OptionletVolatilityStructure>(
           Handle<Quote>(boost::make_shared<DerivedQuote<boost::function<Real(Real)> > >(
-              quote, boost::bind(&CapFloorHelper::npv, this, _1)))),
+              quote, boost::bind(&CapFloorHelper::npv, this, boost::placeholders::_1)))),
       type_(type), tenor_(tenor), strike_(strike), iborIndex_(iborIndex), discountHandle_(discountingCurve),
       moving_(moving), effectiveDate_(effectiveDate), quoteType_(quoteType), quoteVolatilityType_(quoteVolatilityType),
       quoteDisplacement_(quoteDisplacement), endOfMonth_(endOfMonth), firstCapletExcluded_(firstCapletExcluded),

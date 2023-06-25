@@ -198,7 +198,7 @@ public:
 
         return integratedExpectedValue(boost::function<Real(const std::vector<Real>& v1)>(
             boost::bind(&DefaultLatentModel<copulaPolicy>::conditionalDefaultProbabilityInvP, this,
-                        inverseCumulativeY(pUncond, iName), iName, _1)));
+                        inverseCumulativeY(pUncond, iName), iName, boost::placeholders::_1)));
     }
     /*! Pearsons' default probability correlation.
         Users should consider specialization on the copula type for specific
@@ -213,7 +213,7 @@ public:
     */
     Probability probAtLeastNEvents(Size n, const Date& date) const {
         return integratedExpectedValue(boost::function<Real(const std::vector<Real>& v1)>(boost::bind(
-            &DefaultLatentModel<copulaPolicy>::conditionalProbAtLeastNEvents, this, n, boost::cref(date), _1)));
+            &DefaultLatentModel<copulaPolicy>::conditionalProbAtLeastNEvents, this, n, boost::cref(date), boost::placeholders::_1)));
     }
 };
 
@@ -235,7 +235,7 @@ template <class CP> Real DefaultLatentModel<CP>::defaultCorrelation(const Date& 
     Real E1i1j; // joint default covariance term
     if (iNamei != iNamej) {
         E1i1j = integratedExpectedValue(boost::function<Real(const std::vector<Real>& v1)>(
-            boost::bind(&DefaultLatentModel<CP>::condProbProduct, this, invPi, invPj, iNamei, iNamej, _1)));
+            boost::bind(&DefaultLatentModel<CP>::condProbProduct, this, invPi, invPj, iNamei, iNamej, boost::placeholders::_1)));
     } else {
         E1i1j = pi;
     }
