@@ -818,7 +818,7 @@ where the -G option allows choosing the desired build system generator.
   \medskip {\tt ctest -j4}
 \end{enumerate}
 
-For the best results, it is recommended, to compile ORE without the compiler flag \emph{QL_USE_INDEXED_COUPON}. Not all ORE classes (in particular coupons and rate helpers) support this functionality yet and the results might not always be what is expected.
+For the best results, it is recommended, to compile ORE without the compiler flag \emph{QL\_USE\_INDEXED\_COUPON}. Not all ORE classes (in particular coupons and rate helpers) support this functionality yet and the results might not always be what is expected.
 
 \subsubsection*{ZLIB support}
 
@@ -3260,9 +3260,62 @@ The relevant inputs in {\tt ore.xml} are
 The market data input and todays's market configuration required here is minimal - limited to FX rates for conversions from base/calculation currency into USD and into the result currency.
 
 
+%--------------------------------------------------------
+\subsection{Collateral Bond Obligation}% Example 45
+%--------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_45} demonstrates a Cashflow CDO or Collateral Bond Obligation (CBO) via ORE. Calling
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+will launch a single ORE run to process a CBO example, referencing underyling bond portfolio of 20 trades. 
+The CBO is represented by a CBO reference datum specified in the reference data file. 
+NPV results are calculated for the investment in the junior tranche. 
+
+%--------------------------------------------------------
+\subsection{TRS on CBO}% Example 46
+%--------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_46} demonstrates a Total Return Swap (TRS) referencing a CBO pricing via ORE. Calling
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+will launch a single ORE run to process a TRS example and to generate NPV and cash flows in the usual result files.
+As opposed to example 45, the CBO and its bondbasket are represented explicitly in the CBO node.
+
+%--------------------------------------------------------
+\subsection{Bond Yield Shifted}% Example 47
+\label{example:47}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_47} shows how to use a yield curve
+built from a BondYieldShifted segment, as described in section \ref{sec:bond_yield_shifted}.
+
+In particular, it builds the curve {\tt USD.BMK.GVN.CURVE\_SHIFTED} shifted by three liquid Bonds:
+
+\begin{itemize}
+\item Fixed rate USD Bond maturing in August 2023 with id {\tt EJ7706660}.
+\item Fixed rate USD Bond maturing in September 2049 with id {\tt ZR5330686}.
+\item Floating Rate Bond maturing in May 2025 with id {\tt AS064441}.
+\end{itemize}
+
+The resulting curve is exhibited in the {\tt curves.csv} output file.
+Moreover, the results can be crosschecked against the NPVs, i.e. prices, of the ZeroBonds comprised in the portfolio.
+\begin{itemize}
+\item {\tt ZeroBond\_long}, maturing 2052-06-03 shows a price of 0.2022 akin to the 0.2022 in the curves output at the same date.
+\item {\tt ZeroBond\_short}, maturing 2032-06-01 shows a price of 0.5754 aktin to the 0.5754 in the curves output at the same date.
+\end{itemize}
+
+The example can be run calling {\tt python run.py}.
+
+
 %--------------------------------------------------------------------
 \subsection{Zero to Par sensitivity Conversion Analysis}% Example 48
-\label{example:40}
+\label{example:48}
 %--------------------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_48} demonstrates ORE's capability to convert external computed zero sensitivities (e.g Zero rates) to par sensitivities (e.g. to Swap rates) 
@@ -3301,15 +3354,15 @@ The portfolio used in this example includes zero sensitivities of
 \item CapFloor volatilities
 \end{itemize}
 
-ORE reads the raw sensitivites from the csv input file *sensitivityInputFile*. The input file needs to have six mandatory columns, the name of the columns can be specified in the settings.
+ORE reads the raw sensitivites from the csv input file *sensitivityInputFile*. The input file needs to have six  columns, the column names can be user configured. Here is a description of each of the columns:
 
 \begin{enumerate}
-\item idColumn : Column with a unique identifier for a trade / nettingset / portfolio
-\item riskFactorColumn: Column with the identifier of the zero/raw sensitiviy. Need to follow the ORE naming convention, e.g. DiscountCurve/EUR/5/1Y (the 6th bucket in EUR discount curve as specified in the sensitivity.xml)
+\item idColumn : Column with a unique identifier for the trade / nettingset / portfolio.
+\item riskFactorColumn: Column with the identifier of the zero/raw sensitiviy. The risk factor name needs to follow the ORE naming convention, e.g. DiscountCurve/EUR/5/1Y (the 6th bucket in EUR discount curve as specified in the sensitivity.xml)\
 \item deltaColumn: The raw sensitivity of the trade/nettingset / portfolio with respect to the risk factor
 \item currencyColumn: The currency in which the raw sensitivity is expressed, need to be the same as the BaseCurrency in the simulation settings.
-\item shiftSizeColumn: The shift size applied to compute the raw sensitivity, need to be consistent to the configuration.
-\item baseNpvColumn: The base npv of the trade/nettingset/portfolio in currency.
+\item shiftSizeColumn: The shift size applied to compute the raw sensitivity, need to be consistent to the sensitivity configuration.
+\item baseNpvColumn: The base npv of the trade / nettingset / portfolio in currency.
 \end{enumerate}
 
 This is followed by the Jacobi transformation that turns "raw" sensitivities  into sensitivities in the par domain (Deposit/FRA/Swap rates, FX Forwards, CC Basis Swap spreads, 
@@ -3367,58 +3420,6 @@ Finally note that par sensitivity analysis requires that the shift tenor grid in
 See also section \ref{sec:sensitivity}.
 
 
-
-%--------------------------------------------------------
-\subsection{Collateral Bond Obligation}% Example 45
-%--------------------------------------------------------
-
-This example in folder {\tt Examples/Example\_45} demonstrates a Cashflow CDO or Collateral Bond Obligation (CBO) via ORE. Calling
-
-\medskip
-\centerline{\tt python run.py}
-
-\medskip
-will launch a single ORE run to process a CBO example, referencing underyling bond portfolio of 20 trades. 
-The CBO is represented by a CBO reference datum specified in the reference data file. 
-NPV results are calculated for the investment in the junior tranche. 
-
-%--------------------------------------------------------
-\subsection{TRS on CBO}% Example 46
-%--------------------------------------------------------
-
-This example in folder {\tt Examples/Example\_46} demonstrates a Total Return Swap (TRS) referencing a CBO pricing via ORE. Calling
-
-\medskip
-\centerline{\tt python run.py}
-
-\medskip
-will launch a single ORE run to process a TRS example and to generate NPV and cash flows in the usual result files.
-As opposed to example 45, the CBO and its bondbasket are represented explicitly in the CBO node.
-
-%--------------------------------------------------------
-\subsection{Bond Yield Shifted}% Example 47
-\label{example:47}
-%--------------------------------------------------------
-
-The example in folder {\tt Examples/Example\_47} shows how to use a yield curve
-built from a BondYieldShifted segment, as described in section \ref{sec:bond_yield_shifted}.
-
-In particular, it builds the curve {\tt USD.BMK.GVN.CURVE\_SHIFTED} shifted by three liquid Bonds:
-
-\begin{itemize}
-\item Fixed rate USD Bond maturing in August 2023 with id {\tt EJ7706660}.
-\item Fixed rate USD Bond maturing in September 2049 with id {\tt ZR5330686}.
-\item Floating Rate Bond maturing in May 2025 with id {\tt AS064441}.
-\end{itemize}
-
-The resulting curve is exhibited in the {\tt curves.csv} output file.
-Moreover, the results can be crosschecked against the NPVs, i.e. prices, of the ZeroBonds comprised in the portfolio.
-\begin{itemize}
-\item {\tt ZeroBond\_long}, maturing 2052-06-03 shows a price of 0.2022 akin to the 0.2022 in the curves output at the same date.
-\item {\tt ZeroBond\_short}, maturing 2032-06-01 shows a price of 0.5754 aktin to the 0.5754 in the curves output at the same date.
-\end{itemize}
-
-The example can be run calling {\tt python run.py}.
 
 \clearpage
 %========================================================
@@ -4049,6 +4050,64 @@ The parameters have the following interpretation:
 \item {\tt jacobiOutputFile}: Output file name for the Jacobi matrx
 \item {\tt jacobiInverseOutputFile}: Output file name for the inverse Jacobi matrix
 \end{itemize}
+
+
+The zero to par sensitivity conversion analytics configuration is similar to the one of the sensitivity calculation. Listing \ref{lst:ore_zerotoparconversion}
+shows an example.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+ <Analytic type="zeroToParSensiConversion">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="sensitivityInputFile">sensitivity.csv</Parameter>
+      <Parameter name="outputThreshold">0.000001</Parameter>
+      <Parameter name="outputFile">parconversion_sensitivity.csv</Parameter>
+      <Parameter name="outputJacobi">Y</Parameter>
+      <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
+      <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
+    </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: Zero to Par Sensitivity Conversion}
+\label{lst:ore_zerotoparconversion}
+\end{listing}
+
+The parameters have the same interpretation as for the sensitivity analytic. There is one new parameter *sensitivityInputFile* which points to a csv file with the raw (zero)sensitivites. Those raw sensitivites will be converted into par sensitivities, using the the same methodology described in \ref{app:par_sensi} and the configuration is described in \ref{sec:sensitivity}.
+
+The raw sensitivites csv input file *sensitivityInputFile* needs to have at least six columns, the column names can be user configured in the master input file. Here is a description of each of the columns:
+
+\begin{enumerate}
+\item idColumn : Column with a unique identifier for the trade / nettingset / portfolio.
+\item riskFactorColumn: Column with the identifier of the zero/raw sensitiviy. The risk factor name needs to follow the ORE naming convention, e.g. DiscountCurve/EUR/5/1Y (the 6th bucket in EUR discount curve as specified in the sensitivity.xml)\
+\item deltaColumn: The raw sensitivity of the trade/nettingset / portfolio with respect to the risk factor
+\item currencyColumn: The currency in which the raw sensitivity is expressed, need to be the same as the BaseCurrency in the simulation settings.
+\item shiftSizeColumn: The shift size applied to compute the raw sensitivity, need to be consistent to the sensitivity configuration.
+\item baseNpvColumn: The base npv of the trade / nettingset / portfolio in currency.
+\end{enumerate}
+
+Here is an example for an input file:
+
+\begin{table}[hbt]
+\scriptsize
+\begin{center}
+\begin{tabular}{lllrlrr}
+\hline
+{} & \#TradeId &                Factor\_1 &  ShiftSize\_1 & Currency &  Base NPV &  Delta \\
+\hline
+0 &     Swap &  DiscountCurve/EUR/3/6M &       0.0001 &      EUR &   1335.27 &   5.05 \\
+1 &     Swap &  DiscountCurve/EUR/4/9M &       0.0001 &      EUR &   1335.27 &   0.35 \\
+2 &     Swap &  DiscountCurve/EUR/5/1Y &       0.0001 &      EUR &   1335.27 &  -5.41 \\
+3 &     Swap &  DiscountCurve/EUR/6/2Y &       0.0001 &      EUR &   1335.27 &  -0.22 \\
+4 &     Swap &  DiscountCurve/EUR/7/3Y &       0.0001 &      EUR &   1335.27 &  -0.32 \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
 
 The stress analytics configuration is similar to the one of the sensitivity calculation. Listing \ref{lst:ore_stress}
 shows an example.
