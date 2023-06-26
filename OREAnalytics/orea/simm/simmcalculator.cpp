@@ -1641,7 +1641,7 @@ void SimmCalculator::add(const NettingSetDetails& nettingSetDetails, const strin
                            << ", " << pc << ", " << rc << ", " << mt << "] of " << margin);
     }
 
-    simmResults_[side][nettingSetDetails][regulation].add(pc, rc, mt, b, margin, "USD", overwrite);
+    simmResults_[side][nettingSetDetails][regulation].add(pc, rc, mt, b, margin, "USD", calculationCcy_, overwrite);
 }
 
 void SimmCalculator::add(const NettingSetDetails& nettingSetDetails, const string& regulation, const ProductClass& pc,
