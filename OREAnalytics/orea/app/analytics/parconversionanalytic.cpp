@@ -117,7 +117,6 @@ void ParConversionAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::I
                     break;
                 }
                 auto [rf, desc] = deconstructFactor(zero.riskFactor);
-                descriptions[rf] = desc;
                 if (rf.keytype != RiskFactorKey::KeyType::None) {
                     auto it = factorToIndex.find(rf);
                     if (it == factorToIndex.end()) {
