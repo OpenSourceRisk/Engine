@@ -117,9 +117,9 @@ public:
     }
     const boost::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; };
     void setMarket(const boost::shared_ptr<ore::data::Market>& market) { market_ = market; };
-    void setPortfolio(const boost::shared_ptr<ore::data::Portfolio>& portfolio) { portfolio_ = portfolio; };
-    std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
-    const boost::shared_ptr<ore::data::Loader>& loader() const { return loader_; };
+    void setPortfolio(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) { portfolio_ = portfolio; };
+    std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
+    const QuantLib::ext::shared_ptr<ore::data::Loader>& loader() const { return loader_; };
     Configurations& configurations() { return configurations_; }
 
     //! Result reports
@@ -137,7 +137,11 @@ public:
     }
 
     bool hasDependentAnalytic(const std::string& key) {  return dependentAnalytics_.find(key) != dependentAnalytics_.end(); }
-    template <class T> boost::shared_ptr<T> dependentAnalytic(const std::string& key) const;
+    template <class T> QuantLib::ext::shared_ptr<T> dependentAnalytic(const std::string& key) const;
+    const std::map<std::string, QuantLib::ext::shared_ptr<Analytic>>& dependentAnalytics() const {
+        return dependentAnalytics_;
+    }
+    std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
 
     virtual std::set<QuantLib::Date> marketDates() const { return {inputs_->asof()}; }
 
@@ -148,7 +152,7 @@ protected:
     //! list of analytic types run by this analytic
     std::set<std::string> types_;
     //! contains all the input parameters for the run
-    boost::shared_ptr<InputParameters> inputs_;
+    QuantLib::ext::shared_ptr<InputParameters> inputs_;
 
     Configurations configurations_;
     boost::shared_ptr<ore::data::Market> market_;
