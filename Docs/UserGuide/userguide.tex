@@ -131,7 +131,7 @@
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Acadia Inc.}
-\date{31 March 2023}
+\date{16 June 2023}
 \maketitle
 
 \newpage
@@ -153,6 +153,7 @@ Date & Author & Comment \\
 16 September 2022 & Acadia & updates for release 7\\
 6 December 2022 & Acadia & updates for release 8\\
 31 March 2023 & Acadia & updates for release 9\\
+16 June 2023 & Acadia & updates for release 10\\
 \hline
 \end{supertabular}
 \end{center}
@@ -231,14 +232,15 @@ In September 2022 Acadia announced to contribute a wide range of financial instr
 \begin{itemize}
 \item Commodity products (Swaps, Basis Swaps, Av. Price Options, Swaptions), released December 22 with ORE v8
 \item Credit products (Index CDS and Index CDS Options, Credit-Linked Swaps, Synthetic CDOs), released March 23 with ORE v9
-\item Bond products and Hybrids (Bond Options, Bond Repos, Bond TRS, Convertible Bonds, Generic TRS with mixed basket underlyings, CFDs), to be released in June 23
-\item Exotics (Scripted trade framework for modelling highly structured hybrid payoffs such as Accumulators, TARFs, PRDCs, etc.), to be released in September 23
+\item Bond products and Hybrids (Bond Options, Bond Repos, Bond TRS, Composite Trades, Convertible Bonds, Generic TRS with mixed basket underlyings, CFDs), to be released in June 23 with ORE v10
+\item Exotics (Scripted trade framework for modelling highly structured hybrid payoffs such as Accumulators, TARFs, PRDCs, etc.), to be released in September 23 with ORE v11
 \end{itemize}
 These contributions were (and will be) accompanied by analytics extensions to enhance ORE usability:
 \begin{itemize}
 \item Credit exposure including Commodity and American Monte Carlo for Exotics, released in December 22 with ORE v8
 \item Market Risk including multi-threaded sensitivities, par sensitivity, delta/gamma VaR, released in March 23 with ORE v9
-\item Portfolio Credit Model, to be released in June 23
+\item Portfolio Credit Model, to be released in June 23 with ORE v10
+\item ISDA's Standard Initial Margin Model (SIMM) , to be released in June 23 with ORE v10
 \end{itemize}
 
 \medskip 
@@ -302,6 +304,14 @@ Credit Linked Swaps & Y & Y & N & Y \\
 \hline
 Index Tranches, Synthetic CDOs & Y & Y & N & Y \\
 \hline
+Composite Trades & Y & Y & Y & Y \\
+\hline
+Total Return Swaps and Contracts for Difference & Y & Y & Y & Y \\
+\hline
+Convertible Bonds & Y & Y & Y & N \\
+\hline
+ASCOTs & Y & Y & Y & Y \\
+\hline
 \end{tabular}
 \caption{ORE product coverage. FX/Equity Exotics include Barrier, Digital, Digital Barrier (FX only), Double Barrier, European Barrier, KIKO Barrier (FX only), Touch and Double Touch Options.}
 \label{tab_coverage}
@@ -336,95 +346,80 @@ parametrisation and the structure of trade and market data input.
 \section{Release Notes}\label{sec:releasenotes}
 %========================================================
 
-This section summarises the notable changes between release 8 (December 2022) and 9 (March 2023).
+See the full history of release notes in {\tt News.txt} in the top level directory of the ORE's github repository.
+
+\medskip
+This section summarises the notable changes between release 9 (March 2023) and 10 (June 2022).
 
 \bigskip
 INSTRUMENTS 
 \begin{itemize}
-\item roll out of Credit derivatives, thanks to Acadia Inc., as announced in September 22:
+\item Roll out of Hybrid and Credit instruments, thanks to Acadia Inc., as announced in September 22:
   \begin{itemize}
-	\item Bond Option
-	\item Bond Repo
-  	\item Bond Total Return Swap
-  	\item Credit-Linked Swap
-  	\item Index Credit Default Swap
-  	\item Index Credit Default Swap Option
-  	\item Credit Index Tranche, Synthetic CDO
-  \end{itemize}
+	\item Collateralized Bond Obligation, see Examples 45
+	\item Generic Total Return Swap and Contract For Difference framework, see Example 46,
+    	referencing Bonds, Forward Bonds, Convertible Bonds, CBOs,
+    	Equity and Equity Option positions, or any combination of derivatives covered in ORE
+  	\item Composite Trade, composites of any ORE trade types, see Example 47
+  	\item Convertible Bond and Asset Swapped Convertible Option Transaction (ASCOT), see Example 48
+\end{itemize}	
  including related models and pricing engines    
-\item optimize performance for the analytical Commodity Swaption engine
-\item add missing FxIndex registrations in Commodity APO and Commodity Indexed Average Cashflows
-\item include leg NPVs in additional results of CDS products
-\item fix LGM Swaption pricing for cases where fixing date < exercise date
+\item Support separate fixing and payment date schedules on floating legs
+\item Support notional changes within calculation periods on fixed and floating legs
 \end{itemize}
 
 \bigskip
 MARKETS \& TERM STRUCTURES
 
 \begin{itemize}
-\item fix shifted lognormal Swaption vol surface (SwaptionVolCubeWithATM, add missing shift)
+\item Add a new yield curve segment "Bond Yield Shifted", see Example 49
 \end{itemize}
 
 \bigskip
 ANALYTICS
 
 \begin{itemize}
-\item integrate American Monte Carlo simulation, see the {\bf new Example 39}
-\item add Par Sensitivity Analysis, see the {\bf new Example 40}
-\item add more parametric VaR types (delta-gamma normal, delta-gamma Saddlepoint)
-\item support multi-threading in sensitivity analysis
-\item support multi-threading in exposure simulation, see the {\bf new Example 41}
-\item fix exposure/XVA analytics with simulation of fixings for ceased IBOR indices
+\item Add a proof-of-concept Credit Portfolio Model to construct portfolio loss distributions due to
+  credit migration, credit default and market moves across cash products and derivatives, see Example 43
+\item Add the ISDA Standard Initial Margin Model (SIMM), all versions since inception, see Example 44
+\item Fix the Windows builds with QL\_ENABLE\_SESSIONS=ON (to enable ORE multi-threading on Windows),
+  thanks to Steven van Haaren for reporting this issue and triggering this fix. 
 \end{itemize}
 
 \bigskip
 TESTS
 
 \begin{itemize}
-\item QuantExt: 263 test functions (vs 242 in the previous release)
-\item OREData: 203 test functions (vs. 199 in the previous release)
-\item OREAnalytics: 68 test functions (vs. 66 in the previous release)
+\item QuantExt: 267 test functions (vs 263 in the previous release)
+\item OREData: 206 test functions (vs. 203 in the previous release)
+\item OREAnalytics: 78 test functions (vs. 68 in the previous release)
 \end{itemize}
 
 \bigskip
 DOCUMENTATION
 
 \begin{itemize}
-\item The user guide has grown from 440 to 486 pages, mainly due to the
-  migration of Credit derivative instruments into ORE, as well as new examples 39 - 42.
+\item The user guide has grown from 486 to 536 pages, due to the migration of Hybrid instruments
+  into ORE, new analytics and examples 43ff.
+\item A separate guide for the Credit Portfolio Model in ORE has been added,
+  see Docs/UserGuide/creditmodel.tex
 \end{itemize}
 
 \bigskip
 LANGUAGE BINDINGS
 
 \begin{itemize}
-\item Upgrade to QuantLib-SWIG-1.29
-\item The SWIG wrapper has been extended to provide access to ORE input
-  construction in memory and to query in-memory results (reports etc), in line
-  with the refactoring mentioned below. See the new {\bf Example 42}. 
-\item To facilitate access to ORE Python, we are providing Python wheels for various
-  OS types and Python versions starting with this release, thanks to Eric Ehlers's
-  effort and Luigi Ballabio's support to get in up and running using github actions.
-  Build instructions for the Python wheels are included in this user guide, see sections  
-  \ref{sec:oreswig}, \ref{sec:win_wheel}, \ref{sec:nix_wheel}. 
-  See the new {\bf Example 42} on how to use the published wheels.
+\item Upgrade to QuantLib-SWIG-v1.30
+\item Added four of the Jupyter notebooks presented at the Acadia Quant Summit (London 
+  see oreswig/OREAnalytics-SWIG/Python/Examples/Notebooks
 \end{itemize}
 
 \bigskip
 OTHER
 
 \begin{itemize}
-\item Upgrade to QuantLib-1.29
-\item Refactor the serialization of NPV cube and market cube (aggregation scenario data)
-\item Refactor OREAnalytics/orea/app by separating input construction from processing
-  and persisting results. This is to faciliate re-using the processing element
-  (analyticsManager->runAnalytics(...)) in different applications, a command line
-  application such as ore[.exe] that reads/writes from/to files, an ORE Python wrapper
-  that receives input and provides results in memory (see language bindings above),
-  or a REST service built around ORE. Results (reports, cubes etc) are stored in
-  memory and only saved to files on demand. Inputs for the ORE processor can be
-  assembled in memory, or read from files.
-  \end{itemize}
+\item Upgrade to QuantLib-v1.30
+\end{itemize}
 
 %========================================================
 \section{ORE Data Flow}\label{sec:process}
@@ -704,7 +699,7 @@ C++ support under the Programming Languages features (disabled by default).
 \item Open a Visual Studio Tools Command Prompt
 \begin{itemize}
 \item 32-bit: VS2022/x86 Native Tools Command Prompt for VS 2022
-\item 64-bit: VS2022/x64 Native Tools   Command Prompt for VS 2022
+\item 64-bit: VS2022/x64 Native Tools Command Prompt for VS 2022
 \end{itemize}
 \item Navigate to the ORE root directory
 \item Run CMake command:
@@ -722,6 +717,19 @@ The solution and project files will be generated in the {\tt $\langle$ORE\_ROOT$
 
 \item or open the MSVC solution file {\tt build{\bs}ORE.sln} and build the entire solution with Visual Studio (again, make sure to select the correct platform in the configuration manager first).
 \end{enumerate}
+
+\subsubsection*{Use Visual Studio's CMake capabilities}
+
+Alternatively, from Visual Studio 2015 onward, you can use Visual Studios capability to parse the CMakeLists.txt in the ORE root directory, by first setting the CMake BOOST variables in the environment:
+
+{\tt set BOOST_INCLUDE_DIR=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
+{\tt set BOOST_LIBRARYDIR=} pointing to your Win32 or x64 boost lib directory, e.g {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} or {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0}
+{\tt set BOOST_ROOT=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
+
+Afterwards, start the development environment, e.g {\tt "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe"} and open the CMakeLists.txt file using File, Menu, CMake...
+Once the file has been parsed successfully and CMake generation has been finished (observable in the output window), you can switch in the solution explorer from the file view to the projects view, where the CMake Targets View can be selected. In this view, the various target projects can be seen below "ORE Project" and be used in a similar manner as the usual VS projects.
+
+The executables are built in the subfolder {\tt /build/TARGET/CONFIGURATION/EXECUTABLE}, e.g. {\tt /build/App/Release/ore.exe}, the debug and launch settings are set in launch.vs.json and not in the GUI.
 
 \subsubsection*{Unix}
 
@@ -817,6 +825,8 @@ where the -G option allows choosing the desired build system generator.
 \item Run all test suites by invoking \\
   \medskip {\tt ctest -j4}
 \end{enumerate}
+
+For the best results, it is recommended, to compile ORE without the compiler flag \emph{QL\_USE\_INDEXED\_COUPON}. Not all ORE classes (in particular coupons and rate helpers) support this functionality yet and the results might not always be what is expected.
 
 \subsubsection*{ZLIB support}
 
@@ -3257,11 +3267,17 @@ The relevant inputs in {\tt ore.xml} are
 
 The market data input and todays's market configuration required here is minimal - limited to FX rates for conversions from base/calculation currency into USD and into the result currency.
 
+\bigskip
+If the ORE Python module is installed, as shown in Example 42, then you can also run the SIMM example using
+
+\medskip
+\centerline{\tt python ore.py} 
+
 %--------------------------------------------------------
-\subsection{Collateral Bond Obligation}% Example 45
+\subsection{Collateralized Bond Obligation}% Example 45
 %--------------------------------------------------------
 
-This example in folder {\tt Examples/Example\_45} demonstrates a Cashflow CDO or Collateral Bond Obligation (CBO) via ORE. Calling
+This example in folder {\tt Examples/Example\_45} demonstrates a Cashflow CDO or Collateralized Bond Obligation (CBO) via ORE. Calling
 
 \medskip
 \centerline{\tt python run.py}
@@ -3272,10 +3288,11 @@ The CBO is represented by a CBO reference datum specified in the reference data 
 NPV results are calculated for the investment in the junior tranche. 
 
 %--------------------------------------------------------
-\subsection{TRS on CBO}% Example 46
+\subsection{Generic Total Return Swap}% Example 46
 %--------------------------------------------------------
 
-This example in folder {\tt Examples/Example\_46} demonstrates a Total Return Swap (TRS) referencing a CBO pricing via ORE. Calling
+This example in folder {\tt Examples/Example\_46} demonstrates ORE's generic Total Return Swap referencing a CBO. 
+Calling
 
 \medskip
 \centerline{\tt python run.py}
@@ -3285,11 +3302,43 @@ will launch a single ORE run to process a TRS example and to generate NPV and ca
 As opposed to example 45, the CBO and its bondbasket are represented explicitly in the CBO node.
 
 %--------------------------------------------------------
-\subsection{Bond Yield Shifted}% Example 47
-\label{example:47}
+\subsection{Composite Trade}% Example 47
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_47} shows how to use a yield curve
+This example in folder {\tt Examples/Example\_47} demonstrates the input of ORE's Composite Trade that can consist on any number 
+and type of products covered by ORE. In this case the composite consists of two Equity Swaps.
+Calling
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+runs ORE and generates an NPV report.
+
+%--------------------------------------------------------
+\subsection{Convertible Bond and ASCOT}% Example 48
+%--------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_48} demonstrates the input of 
+\begin{itemize}
+\item a ConvertibleBond  trade
+\item a related Asset Swapped Convertible Option Transaction (ASCOT)
+\item a vanilla Swap that represents the package of Convertible Bond position and ASCOT
+\end{itemize}
+
+Calling
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+runs ORE and generates an NPV report.
+
+%--------------------------------------------------------
+\subsection{Bond Yield Shifted}% Example 49
+\label{example:49}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_49} shows how to use a yield curve
 built from a BondYieldShifted segment, as described in section \ref{sec:bond_yield_shifted}.
 
 In particular, it builds the curve {\tt USD.BMK.GVN.CURVE\_SHIFTED} shifted by three liquid Bonds:
@@ -5976,7 +6025,6 @@ If a new calendar is added in this way and the schema is being used to validate 
 \input{tradedata/cbodata.tex}
 
 \input{tradedata/compositetrade}
-\input{tradedata/totalReturnSwap}
 
 \input{tradedata/creditdefaultswap}
 \input{tradedata/indexcds}
@@ -5992,6 +6040,8 @@ If a new calendar is added in this way and the schema is being used to validate 
 \input{tradedata/commodityoptionstrip}
 \input{tradedata/commodityvarianceswap}
 \input{tradedata/commodityposition}
+
+\input{tradedata/totalReturnSwap}
 
 %\include{tradecomponents}
 \input{tradecomponents/tradecomponentsintro}
