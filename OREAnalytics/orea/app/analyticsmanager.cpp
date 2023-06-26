@@ -16,11 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/app/analyticsmanager.hpp>
+#include <orea/app/analytics/parconversionanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/analyticsmanager.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 
@@ -54,6 +55,7 @@ AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inp
     addAnalytic("VAR", boost::make_shared<VarAnalytic>(inputs_));
     addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_));
     addAnalytic("SIMM", boost::make_shared<SimmAnalytic>(inputs_));
+    addAnalytic("PARCONVERSION", boost::make_shared<ParConversionAnalytic>(inputs_));
 }
 
 void AnalyticsManager::clear() {
@@ -239,7 +241,7 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
         string analytic = rep.first;
         for (auto b : rep.second) {
             string reportName = b.first;
-            boost::shared_ptr<InMemoryReport> report = b.second;
+             boost::shared_ptr<InMemoryReport> report = b.second;
             string fileName;
             auto it = hits.find(reportName);
             QL_REQUIRE(it != hits.end(), "something wrong here");
