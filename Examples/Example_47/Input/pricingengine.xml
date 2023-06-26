@@ -1,11 +1,8 @@
-<?xml version="1.0"?>
 <PricingEngines>
-  <Product type="Bond">
+  <Product type="Swap">
     <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingRiskyBondEngine</Engine>
-    <EngineParameters>
-      <Parameter name="TimestepPeriod">6M</Parameter>
-    </EngineParameters>
+    <ModelParameters />
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters />
   </Product>
 </PricingEngines>

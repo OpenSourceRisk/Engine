@@ -119,7 +119,7 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
             analytic()->configurations().simMarketParams,
             boost::make_shared<FixingManager>(inputs_->asof()),
             configuration,
-            *inputs_->curveConfigs()[0],
+            *inputs_->curveConfigs().get(),
             *analytic()->configurations().todaysMarketParams,
             inputs_->continueOnError(), 
             false, true, false,
@@ -347,7 +347,7 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
 
         MultiThreadedValuationEngine engine(
             inputs_->nThreads(), inputs_->asof(), grid_, samples_,  analytic()->loader(), scenarioGenerator_,
-            inputs_->simulationPricingEngine(), inputs_->curveConfigs()[0], analytic()->configurations().todaysMarketParams,
+            inputs_->simulationPricingEngine(), inputs_->curveConfigs().get(), analytic()->configurations().todaysMarketParams,
             inputs_->marketConfig("simulation"), analytic()->configurations().simMarketParams, false, false,
             boost::make_shared<ScenarioFilter>(), inputs_->refDataManager(),
             *inputs_->iborFallbackConfig(), true, false, cubeFactory, {}, cptyCubeFactory, "xva-simulation");
@@ -471,7 +471,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
             inputs_->nThreads(), inputs_->asof(), samples_,  analytic()->loader(), inputs_->scenarioGeneratorData(),
             inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
             inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(), inputs_->crossAssetModelData(),
-            inputs_->amcPricingEngine(), inputs_->curveConfigs()[0], analytic()->configurations().todaysMarketParams,
+            inputs_->amcPricingEngine(), inputs_->curveConfigs().get(), analytic()->configurations().todaysMarketParams,
             inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
             inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
             inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"), inputs_->refDataManager(),

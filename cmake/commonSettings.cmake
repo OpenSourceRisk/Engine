@@ -30,9 +30,20 @@ endmacro()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS FALSE)
 
+# set compiler macro if open cl is enabled
+if (ORE_ENABLE_OPENCL)
+  add_compile_definitions(ORE_ENABLE_OPENCL)
+endif()
+
+
 # On single-configuration builds, select a default build type that gives the same compilation flags as a default autotools build.
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+endif()
+
+if(NOT DONT_SET_QL_INCLUDE_DIR_FIRST)
+   # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
+    include_directories("${PROJECT_BINARY_DIR}/QuantLib")
 endif()
 
 if(MSVC)
@@ -60,6 +71,8 @@ if(MSVC)
         endif()
     endif()
 
+
+
     IF(NOT Boost_USE_STATIC_LIBS)
         add_definitions(-DBOOST_ALL_DYN_LINK)
         add_definitions(-DBOOST_TEST_DYN_LINK)
@@ -71,9 +84,6 @@ if(MSVC)
     add_compile_definitions(_SCL_SECURE_NO_DEPRECATE)
     add_compile_definitions(_CRT_SECURE_NO_DEPRECATE)
     add_compile_definitions(BOOST_ENABLE_ASSERT_HANDLER)
-    if(ENABLE_SESSIONS)
-        add_compile_definitions(QL_ENABLE_SESSIONS)
-    endif()
     add_compile_options(/bigobj)
     add_compile_options(/W3)
     #add_compile_options(/we4265) #no-virtual-destructor
@@ -89,6 +99,11 @@ if(MSVC)
     # add_compiler_flag("/we4389" signed_compare_mscv)
     
     add_link_options(/LARGEADDRESSAWARE)
+
+    add_compile_options("$<$<CONFIG:Release>:/GF>")
+    add_compile_options("$<$<CONFIG:Release>:/Gy>")
+    add_compile_options("$<$<CONFIG:Release>:/Ot>")
+    add_compile_options("$<$<CONFIG:Release>:/GT>")
 
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/GF>")
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Gy>")
@@ -115,6 +130,10 @@ else()
     if(NOT("${CMAKE_BUILD_TYPE}" STREQUAL "Debug"))
         add_definitions(-DBOOST_UBLAS_NDEBUG)
     endif()
+
+    # add pthread flag
+    add_compiler_flag("-pthread" usePThreadCompilerFlag)
+    add_linker_flag("-pthread" usePThreadLinkerFlag)
 
     # enable boost assert handler
     add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)
@@ -147,10 +166,10 @@ else()
     add_compiler_flag("--system-header-prefix=boost/" supportsSystemHeaderPrefixBoost)
 
     # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
-    include_directories("${PROJECT_BINARY_DIR}/QuantLib")
-
-    # similar if QuantLib is build separately
+    # if QuantLib is build separately
     include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
+
+   
 endif()
 
 # workaround when building with boost 1.81, see https://github.com/boostorg/phoenix/issues/111

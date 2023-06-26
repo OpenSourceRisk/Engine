@@ -37,7 +37,6 @@
 #include <qle/cashflows/cashflows.hpp>
 #include <qle/cashflows/cashflowtable.hpp>
 #include <qle/cashflows/cmbcoupon.hpp>
-#include <qle/cashflows/commoditybasiscashflow.hpp>
 #include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
@@ -212,6 +211,7 @@
 #include <qle/interpolators/optioninterpolator2d.hpp>
 #include <qle/math/blockmatrixinverse.hpp>
 #include <qle/math/bucketeddistribution.hpp>
+#include <qle/math/computeenvironment.hpp>
 #include <qle/math/constantinterpolation.hpp>
 #include <qle/math/covariancesalvage.hpp>
 #include <qle/math/deltagammavar.hpp>
@@ -224,10 +224,12 @@
 #include <qle/math/matrixfunctions.hpp>
 #include <qle/math/method_mt.hpp>
 #include <qle/math/nadarayawatson.hpp>
+#include <qle/math/openclenvironment.hpp>
 #include <qle/math/problem_mt.hpp>
 #include <qle/math/quadraticinterpolation.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_io.hpp>
+#include <qle/math/randomvariable_opcodes.hpp>
 #include <qle/math/stabilisedglls.hpp>
 #include <qle/math/trace.hpp>
 #include <qle/methods/brownianbridgepathinterpolator.hpp>

@@ -32,7 +32,6 @@ cashflows/brlcdicouponpricer.cpp
 cashflows/cashflows.cpp
 cashflows/cashflowtable.cpp
 cashflows/cmbcoupon.cpp
-
 cashflows/commoditycashflow.cpp
 cashflows/commodityindexedaveragecashflow.cpp
 cashflows/commodityindexedcashflow.cpp
@@ -139,13 +138,15 @@ instruments/subperiodsswap.cpp
 instruments/syntheticcdo.cpp
 instruments/tenorbasisswap.cpp
 instruments/varianceswap.cpp
-math/bucketeddistribution.cpp
 math/blockmatrixinverse.cpp
+math/bucketeddistribution.cpp
+math/computeenvironment.cpp
 math/deltagammavar.cpp
-math/discretedistribution.cpp
 math/differentialevolution_mt.cpp
+math/discretedistribution.cpp
 math/fillemptymatrix.cpp
 math/matrixfunctions.cpp
+math/openclenvironment.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
 methods/brownianbridgepathinterpolator.cpp
@@ -345,7 +346,6 @@ termstructures/proxyoptionletvolatility.cpp
 termstructures/proxyswaptionvolatility.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.cpp
-
 termstructures/spreadedcorrelationcurve.cpp
 termstructures/spreadedcpivolatilitysurface.cpp
 termstructures/spreadeddiscountcurve.cpp
@@ -407,7 +407,6 @@ cashflows/brlcdicouponpricer.hpp
 cashflows/cashflows.hpp
 cashflows/cashflowtable.hpp
 cashflows/cmbcoupon.hpp
-cashflows/commoditybasiscashflow.hpp
 cashflows/commoditycashflow.hpp
 cashflows/commodityindexedaveragecashflow.hpp
 cashflows/commodityindexedcashflow.hpp
@@ -582,6 +581,7 @@ instruments/varianceswap.hpp
 interpolators/optioninterpolator2d.hpp
 math/blockmatrixinverse.hpp
 math/bucketeddistribution.hpp
+math/computeenvironment.hpp
 math/constantinterpolation.hpp
 math/covariancesalvage.hpp
 math/deltagammavar.hpp
@@ -594,10 +594,12 @@ math/logquadraticinterpolation.hpp
 math/matrixfunctions.hpp
 math/method_mt.hpp
 math/nadarayawatson.hpp
+math/openclenvironment.hpp
 math/problem_mt.hpp
 math/quadraticinterpolation.hpp
 math/randomvariable.hpp
 math/randomvariable_io.hpp
+math/randomvariable_opcodes.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
 methods/brownianbridgepathinterpolator.hpp
@@ -919,6 +921,15 @@ version.hpp)
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
 add_library(${QLE_LIB_NAME} ${QuantExt_SRC})
 target_link_libraries(${QLE_LIB_NAME} ${QL_LIB_NAME} ${Boost_LIBRARIES})
+
+if(ORE_ENABLE_OPENCL)
+  if(APPLE)
+    target_link_libraries(${QLE_LIB_NAME} "-framework OpenCL")
+  else()
+    find_package(OpenCL REQUIRED)
+    target_link_libraries(${QLE_LIB_NAME} OpenCL::OpenCL)
+  endif()
+endif()
 
 install(DIRECTORY . DESTINATION include/qle
         FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
