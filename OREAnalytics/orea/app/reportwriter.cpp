@@ -1691,7 +1691,7 @@ typedef SimmConfiguration::SimmSide SimmSide;
 void ReportWriter::writeSIMMReport(
     const map<SimmSide, map<NettingSetDetails, pair<string, SimmResults>>>& finalSimmResultsMap,
     const boost::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
-    const string& reportCcy, Real fxSpot, Real outputThreshold) {
+    const string& simmCalcCcy, const string& reportCcy, Real fxSpot, Real outputThreshold) {
 
 
     // Transform final SIMM results
@@ -1707,14 +1707,14 @@ void ReportWriter::writeSIMMReport(
         }
     }
 
-    writeSIMMReport(finalSimmResults, report, hasNettingSetDetails, simmResultCcy, reportCcy, true, fxSpot,
+    writeSIMMReport(finalSimmResults, report, hasNettingSetDetails, simmResultCcy, simmCalcCcy, reportCcy, true, fxSpot,
                     outputThreshold);
 }
 
 void ReportWriter::writeSIMMReport(
     const map<SimmSide, map<NettingSetDetails, map<string, SimmResults>>>& simmResultsMap,
     const boost::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
-    const string& reportCcy, const bool isFinalSimm, Real fxSpot, Real outputThreshold) {
+    const string& simmCalcCcy, const string& reportCcy, const bool isFinalSimm, Real fxSpot, Real outputThreshold) {
 
     if (isFinalSimm) {
         LOG("Writing SIMM results report.");
@@ -1736,7 +1736,8 @@ void ReportWriter::writeSIMMReport(
         .addColumn("SimmSide", string())
         .addColumn("Regulation", string())
         .addColumn("InitialMargin", double(), 2)
-        .addColumn("Currency", string());
+        .addColumn("Currency", string())
+        .addColumn("CalculationCurrency", string());
     if (!reportCcy.empty()) {
         report->addColumn("InitialMargin(Report)", double(), 2).addColumn("ReportCurrency", string());
     }
@@ -1770,9 +1771,9 @@ void ReportWriter::writeSIMMReport(
                     if (isFinalSimm)
                         winningRegs.insert(regulation);
 
-                    QL_REQUIRE(results.currency() == simmResultCcy,
+                    QL_REQUIRE(results.resultCurrency() == simmResultCcy,
                                "writeSIMMReport(): SIMM results ("
-                                   << results.currency() << ") should be denominated in the SIMM result currency ("
+                                   << results.resultCurrency() << ") should be denominated in the SIMM result currency ("
                                    << simmResultCcy << ").");
 
                     // Loop over the results for this portfolio
@@ -1801,7 +1802,8 @@ void ReportWriter::writeSIMMReport(
                                 .add(sideString)
                                 .add(regulation)
                                 .add(result.second)
-                                .add(results.currency());
+                                .add(results.resultCurrency())
+                                .add(results.calculationCurrency());
                             if (!reportCcy.empty()) {
                                 simmReporting = result.second * fxSpot;
                                 report->add(simmReporting).add(reportCcy);
@@ -1836,7 +1838,8 @@ void ReportWriter::writeSIMMReport(
                 .add(sideString)
                 .add(finalWinningReg)
                 .add(sumSidePortfolios)
-                .add(simmResultCcy);
+                .add(simmResultCcy)
+                .add(simmCalcCcy);
 
             // Write out SIMM in reporting currency if we can
             if (!reportCcy.empty())
@@ -1932,8 +1935,7 @@ void ReportWriter::writeSIMMData(const SimmNetSensitivities& simmData, const boo
     LOG("SIMM data report written.");
 }
 
-void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report,
-                                   const SimmNetSensitivities& crifRecords) {
+void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, const SimmNetSensitivities& crifRecords) {
 
     // If we have SIMM parameters, check if at least one of them uses netting set details optional field/s
     // It is easier to check here than to pass the flag from other places, since otherwise we'd have to handle certain edge cases
@@ -1945,16 +1947,36 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report,
     }
 
     std::vector<string> addFields;
+    bool hasCollectRegulations = false;
+    bool hasPostRegulations = false;
+    bool hasScheduleTrades = false;
     for (const auto& cr : crifRecords) {
+        // Check which additional fields are being used/populated
         for (const auto& af : cr.additionalFields) {
             if (std::find(addFields.begin(), addFields.end(), af.first) == addFields.end()) {
                 addFields.push_back(af.first);
             }
         }
+
+        // Check if regulations are being used
+        if (!hasCollectRegulations)
+            hasCollectRegulations = !cr.collectRegulations.empty();
+        if (!hasPostRegulations)
+            hasPostRegulations = !cr.postRegulations.empty();
+
+        // Check if there are Schedule trades
+        if (!hasScheduleTrades) {
+            try {
+                hasScheduleTrades = parseIMModel(cr.imModel) == SimmConfiguration::IMModel::Schedule;
+            } catch (std::exception& e) {
+            }
+        }
     }
 
     // Add report headers
+
     report->addColumn("TradeID", string()).addColumn("PortfolioID", string());
+    
     // Add additional netting set fields if netting set details are being used instead of just the netting set ID
     if (hasNettingSetDetails) {
         for (const string& optionalField : NettingSetDetails::optionalFieldNames())
@@ -1972,6 +1994,15 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report,
         .addColumn("AmountUSD", double(), 2)
         .addColumn("IMModel", string())
         .addColumn("TradeType", string());
+
+    if (hasScheduleTrades)
+        report->addColumn("end_date", string());
+
+    if (hasCollectRegulations)
+        report->addColumn("collect_regulations", string());
+
+    if (hasPostRegulations)
+        report->addColumn("post_regulations", string());
 
     // Add additional CRIF fields
     for (const string& f : addFields) {
@@ -2001,15 +2032,24 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report,
             .add(cr.imModel)
             .add(cr.tradeType);
 
+        if (hasScheduleTrades)
+            report->add(cr.endDate);
+
+        if (hasCollectRegulations) {
+            string regString = escapeCommaSeparatedList(cr.collectRegulations, '\0');
+            report->add(regString);
+        }
+
+        if (hasPostRegulations) {
+            string regString = escapeCommaSeparatedList(cr.postRegulations, '\0');
+            report->add(regString);
+        }
+
         for (const string& af : addFields) {
             if (cr.additionalFields.find(af) == cr.additionalFields.end())
                 report->add("");
-            else {
-                string value = cr.additionalFields.at(af);
-                if (af == "collect_regulations" || af == "post_regulations")
-                    value = escapeCommaSeparatedList(value, '\0');
-                report->add(value);
-            }
+            else
+                report->add(cr.additionalFields.at(af));
         }
     }
 

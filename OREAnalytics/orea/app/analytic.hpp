@@ -237,5 +237,17 @@ template <class T> inline boost::shared_ptr<T> Analytic::dependentAnalytic(const
     return analytic;
 }
 
+template <class T> inline std::map<std::string, boost::shared_ptr<T>> Analytic::dependentAnalytics() const {
+    std::map<std::string, boost::shared_ptr<T>> dependentAnalytics;
+
+    for (const auto& kv : dependentAnalytics_) {
+        boost::shared_ptr<T> analytic = boost::dynamic_pointer_cast<T>(kv.second);
+        if (analytic)
+            dependentAnalytics[kv.first] = analytic;
+    }
+
+    return dependentAnalytics;
+}
+
 } // namespace analytics
 } // namespace oreplus
