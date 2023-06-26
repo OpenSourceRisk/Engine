@@ -219,10 +219,6 @@ void Analytic::buildPortfolio() {
  * MARKET Analytic
  *******************************************************************/
 
-void MarketDataAnalyticImpl::setUpConfigurations() {    
-    analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
-}
-
 void MarketDataAnalyticImpl::runAnalytic( 
     const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
     const std::set<std::string>& runTypes) {

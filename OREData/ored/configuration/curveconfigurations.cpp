@@ -604,7 +604,6 @@ const QuantLib::ext::shared_ptr<CurveConfigurations>& CurveConfigurationsManager
     return it->second;
 }
 
-
 const bool CurveConfigurationsManager::has(std::string id) const { 
     auto it = configs_.find(id); 
     return it != configs_.end();
