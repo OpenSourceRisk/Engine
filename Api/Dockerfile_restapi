@@ -1,0 +1,23 @@
+ARG python_version=3.7-rc-slim
+FROM python:${python_version}
+
+# Working directory
+WORKDIR /app
+
+# Copy everything
+COPY . ./
+
+RUN pip install urllib3==1.26.7
+RUN pip install --upgrade pip
+RUN pip install flask
+RUN pip install open-source-risk-engine
+RUN pip install pandas
+RUN pip install requests
+
+
+RUN mkdir -p Input
+RUN mkdir -p Output
+
+EXPOSE 3001/tcp
+
+ENTRYPOINT [ "/bin/bash", "/app/entrypoint-restapi.sh" ]

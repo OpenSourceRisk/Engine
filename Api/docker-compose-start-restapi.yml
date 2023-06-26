@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  simplefileserver:
+    image: restapi:latest
+    ports:
+      - "8081:5001"
+    volumes:
+      - C/Dev/oreplus/ore/app/Api/Input
+      - C/Dev/oreplus/ore/app/Api/Output
+

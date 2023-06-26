@@ -1,0 +1,18 @@
+ARG python_version=3.7-rc-slim
+FROM python:${python_version}
+
+# Working directory
+WORKDIR /app
+
+# Copy everything
+COPY . ./
+
+RUN pip install --upgrade pip
+RUN pip install flask
+
+RUN mkdir -p Input
+RUN mkdir -p Output
+
+EXPOSE 3000/tcp
+
+ENTRYPOINT [ "/bin/bash", "/app/entrypoint-simplefileserver.sh" ]
