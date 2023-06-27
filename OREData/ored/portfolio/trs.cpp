@@ -573,6 +573,12 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         fundingLegs.push_back(legBuilder->buildLeg(ld, engineFactory, requiredFixings_,
                                                    engineFactory->configuration(MarketContext::pricing)));
         fundingNotionalTypes.push_back(notionalType);
+
+        // if we have a CMB leg _and_ the credit risk ccy is empty, we set the credit risk ccy now
+        if (ld.legType() == "CMB" && creditRiskCurrency_.empty()) {
+            // same as in simm trade data / getTradeCurrency() for a swap on CMB leg:
+            creditRiskCurrency_ = ld.currency();
+        }
     }
 
     // add required fixings for funding legs with daily resets
