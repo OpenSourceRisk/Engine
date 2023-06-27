@@ -139,6 +139,7 @@ public:
 
     bool hasDependentAnalytic(const std::string& key) {  return dependentAnalytics_.find(key) != dependentAnalytics_.end(); }
     template <class T> QuantLib::ext::shared_ptr<T> dependentAnalytic(const std::string& key) const;
+    template <class T> const std::map<std::string, QuantLib::ext::shared_ptr<T>> dependentAnalytics() const;
     const std::map<std::string, QuantLib::ext::shared_ptr<Analytic>>& dependentAnalytics() const {
         return dependentAnalytics_;
     }
@@ -225,11 +226,11 @@ public:
 
 class MarketDataAnalytic : public Analytic {
 public:
-    MarketDataAnalytic(const boost::shared_ptr<InputParameters>& inputs)
+    MarketDataAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : Analytic(std::make_unique<MarketDataAnalyticImpl>(inputs), {"MARKETDATA"}, inputs) {}
 };
 
-template <class T> inline boost::shared_ptr<T> Analytic::dependentAnalytic(const std::string& key) const {
+template <class T> inline QuantLib::ext::shared_ptr<T> Analytic::dependentAnalytic(const std::string& key) const {
     auto it = dependentAnalytics_.find(key);
     QL_REQUIRE(it != dependentAnalytics_.end(), "Could not find dependent Analytic " << key);
     boost::shared_ptr<T> analytic = boost::dynamic_pointer_cast<T>(it->second);
@@ -237,8 +238,8 @@ template <class T> inline boost::shared_ptr<T> Analytic::dependentAnalytic(const
     return analytic;
 }
 
-template <class T> inline std::map<std::string, boost::shared_ptr<T>> Analytic::dependentAnalytics() const {
-    std::map<std::string, boost::shared_ptr<T>> dependentAnalytics;
+template <class T> const std::map<std::string, QuantLib::ext::shared_ptr<T>> Analytic::dependentAnalytics() const {
+    std::map<std::string, QuantLib::ext::shared_ptr<T>> dependentAnalytics;
 
     for (const auto& kv : dependentAnalytics_) {
         boost::shared_ptr<T> analytic = boost::dynamic_pointer_cast<T>(kv.second);
