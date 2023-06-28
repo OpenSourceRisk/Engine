@@ -1557,8 +1557,18 @@ Handle<PriceTermStructure> CommodityVolCurve::correctFuturePriceCurve(const Date
 
     // Add future price at option expiry to the curve i.e. override any interpolation between future option
     // expiry (oed) and future expiry (fed).
+    auto futureExpiryCalculator = expCalc_;
+    if (convention_ && !convention_->optionUnderlyingFutureConvention().empty()) {
+        boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+        auto [found, conv] =
+            conventions->get(convention_->optionUnderlyingFutureConvention(), Convention::Type::CommodityFuture);
+        if (found) {
+            futureExpiryCalculator = boost::make_shared<ConventionsBasedFutureExpiry>(
+                *boost::dynamic_pointer_cast<CommodityFutureConvention>(conv));
+        }
+    }
     for (const Date& oed : optionExpiries) {
-        Date fed = expCalc_->nextExpiry(true, oed, 0, false);
+        Date fed = futureExpiryCalculator->nextExpiry(true, oed, 0, false);
         // In general, expect that the future expiry date will already be in curveData but maybe not.
         auto it = curveData.find(fed);
         if (it != curveData.end()) {
