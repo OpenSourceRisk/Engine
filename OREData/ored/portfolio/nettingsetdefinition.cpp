@@ -21,6 +21,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/utilities/dataparsers.hpp>
+#include <utility>
 
 namespace ore {
 namespace data {
@@ -57,11 +58,11 @@ void CSA::invertCSA() {
     if (initialMarginType_ != Bilateral) {
         initialMarginType_ = (initialMarginType_ == CallOnly ? PostOnly : CallOnly);
     }
-    std::swap<Real>(collatSpreadPay_, collatSpreadRcv_);
-    std::swap<Real>(thresholdPay_, thresholdRcv_);
-    std::swap<Real>(mtaPay_, mtaRcv_);
+    std::swap(collatSpreadPay_, collatSpreadRcv_);
+    std::swap(thresholdPay_, thresholdRcv_);
+    std::swap(mtaPay_, mtaRcv_);
     iaHeld_ *= -1;
-    std::swap<Period>(marginCallFreq_, marginPostFreq_);
+    std::swap(marginCallFreq_, marginPostFreq_);
 }
 
 void CSA::validate() {
