@@ -28,4 +28,5 @@
 
    a) Install LibreOffice 5.0.6.3 (latest stable)
 
-   b) In this Example_1 directory launch Calc on sheet run.ods with ./launchCalc.sh
+   b) In this Example_1 directory launch Calc on sheet run.ods with
+      ./launchCalc.sh
