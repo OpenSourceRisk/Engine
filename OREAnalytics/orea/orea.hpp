@@ -21,6 +21,7 @@
 #include <orea/aggregation/staticcreditxvacalculator.hpp>
 #include <orea/aggregation/xvacalculator.hpp>
 #include <orea/app/analytic.hpp>
+#include <orea/app/analytics/parconversionanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
@@ -38,6 +39,7 @@
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/app/xvarunner.hpp>
+#include <orea/app/zerosensitivityloader.hpp>
 #include <orea/cube/cube_io.hpp>
 #include <orea/cube/cubecsvreader.hpp>
 #include <orea/cube/cubeinterpretation.hpp>

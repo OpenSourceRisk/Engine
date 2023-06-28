@@ -30,6 +30,12 @@ endmacro()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS FALSE)
 
+# set compiler macro if open cl is enabled
+if (ORE_ENABLE_OPENCL)
+  add_compile_definitions(ORE_ENABLE_OPENCL)
+endif()
+
+
 # On single-configuration builds, select a default build type that gives the same compilation flags as a default autotools build.
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo")
@@ -124,6 +130,10 @@ else()
     if(NOT("${CMAKE_BUILD_TYPE}" STREQUAL "Debug"))
         add_definitions(-DBOOST_UBLAS_NDEBUG)
     endif()
+
+    # add pthread flag
+    add_compiler_flag("-pthread" usePThreadCompilerFlag)
+    add_linker_flag("-pthread" usePThreadLinkerFlag)
 
     # enable boost assert handler
     add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)

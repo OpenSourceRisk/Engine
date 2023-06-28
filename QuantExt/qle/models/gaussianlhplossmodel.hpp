@@ -29,7 +29,6 @@
 //#include <ql/experimental/credit/defaultlossmodel.hpp>
 #include <qle/models/defaultlossmodel.hpp>
 //#include <ql/experimental/credit/basket.hpp>
-#include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <numeric>
 #include <ql/experimental/math/latentmodel.hpp>

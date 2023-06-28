@@ -33,35 +33,47 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-void SensitivityAnalysisPlus::initializeSimMarket(boost::shared_ptr<ore::analytics::ScenarioFactory> scenFact) {
-
-    LOG("Initialise sim market for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
-                                                                           << ")");
-    simMarket_ = boost::make_shared<ScenarioSimMarketPlus>(
-        market_, simMarketData_, marketConfiguration_,
-        curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
-        todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
-        sensitivityData_->useSpreadedTermStructures(), false, false, iborFallbackConfig_);
+boost::shared_ptr<ScenarioSimMarketPlus> buildScenarioSimMarketForSensitivityAnalysis(
+    const boost::shared_ptr<ore::data::Market>& market,
+    const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+    const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
+    const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+    const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+    const boost::shared_ptr<ScenarioFactory>& scenFactory, const std::string& marketConfiguration, bool continueOnError,
+    bool overrideTenors, IborFallbackConfig& iborFallback) {
+    LOG("Initialise sim market for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError << ")");
+    auto simMarket = boost::make_shared<ScenarioSimMarketPlus>(
+        market, simMarketData, marketConfiguration, curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(),
+        todaysMarketParams ? *todaysMarketParams : ore::data::TodaysMarketParameters(), continueOnError,
+        sensitivityData->useSpreadedTermStructures(), false, false, iborFallback);
     LOG("Sim market initialised for sensitivity analysis");
 
     LOG("Create scenario factory for sensitivity analysis");
     boost::shared_ptr<ScenarioFactory> scenarioFactory;
-    if (scenFact) {
-        scenarioFactory = scenFact;
-    } else {
-        scenarioFactory = boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario());
+    if (scenFactory == nullptr) {
+        scenarioFactory = boost::make_shared<DeltaScenarioFactory>(simMarket->baseScenario());
         LOG("DeltaScenario factory created for sensitivity analysis");
+    } else {
+        scenarioFactory = scenFactory;
     }
 
-    LOG("Create scenario generator for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
+    LOG("Create scenario generator for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError
                                                                                << ")");
-    scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
-        sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_, scenarioFactory, overrideTenors_,
-        continueOnError_, simMarket_->baseScenarioAbsolute());
+    auto scenarioGenerator = boost::make_shared<SensitivityScenarioGenerator>(
+        sensitivityData, simMarket->baseScenario(), simMarketData, simMarket, scenarioFactory, overrideTenors,
+        continueOnError, simMarket->baseScenarioAbsolute());
     LOG("Scenario generator created for sensitivity analysis");
 
     // Set simulation market's scenario generator
-    simMarket_->scenarioGenerator() = scenarioGenerator_;
+    simMarket->scenarioGenerator() = scenarioGenerator;
+    return simMarket;
+}
+
+void SensitivityAnalysisPlus::initializeSimMarket(boost::shared_ptr<ore::analytics::ScenarioFactory> scenFact) {
+    simMarket_ = buildScenarioSimMarketForSensitivityAnalysis(market_, simMarketData_, sensitivityData_, curveConfigs_,
+                                                              todaysMarketParams_, scenFact, marketConfiguration_,
+                                                              continueOnError_, overrideTenors_, iborFallbackConfig_);
+    scenarioGenerator_ = boost::dynamic_pointer_cast<SensitivityScenarioGenerator>(simMarket_->scenarioGenerator());
 }
 
 void SensitivityAnalysisPlus::initialize(boost::shared_ptr<ore::analytics::NPVSensiCube>& cube) {

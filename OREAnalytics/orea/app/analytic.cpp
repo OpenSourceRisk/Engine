@@ -58,8 +58,8 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
     : impl_(std::move(impl)), types_(analyticTypes), inputs_(inputs) {
     
     // set these here, can be overwritten in setUpConfigurations
-    if (inputs->curveConfigs().size() > 0)
-        configurations().curveConfig = inputs->curveConfigs()[0];
+    if (inputs->curveConfigs().has())
+        configurations().curveConfig = inputs->curveConfigs().get();
     if (inputs->pricingEngine())
         configurations().engineData = inputs->pricingEngine();
 
