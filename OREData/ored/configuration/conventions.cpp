@@ -1981,6 +1981,8 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
 
     balanceOfTheMonthPricingCalendarStr_ = XMLUtils::getChildValue(node, "BalanceOfTheMonthPricingCalendar", false, "");
 
+    optionUnderlyingFutureConvention_ = XMLUtils::getChildValue(node, "OptionUnderlyingFutureConvention", false, "");
+
     build();
 }
 
@@ -2106,7 +2108,11 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
     }
 
     if (balanceOfTheMonthPricingCalendar_ != Calendar()) {
-            XMLUtils::addChild(doc, node, "BalanceOfTheMonthPricingCalendar", to_string(balanceOfTheMonthPricingCalendar_));
+        XMLUtils::addChild(doc, node, "BalanceOfTheMonthPricingCalendar", to_string(balanceOfTheMonthPricingCalendar_));
+    }
+
+    if (!optionUnderlyingFutureConvention_.empty()) {
+        XMLUtils::addChild(doc, node, "OptionUnderlyingFutureConvention", optionUnderlyingFutureConvention_);
     }
 
     return node;
