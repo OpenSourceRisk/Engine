@@ -590,6 +590,43 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     return parent;
 }
 
+void CurveConfigurations::addAdditionalCurveConfigs(const CurveConfigurations& c) {
+
+    // add parsed configs
+
+    for (auto const& [curveType, configs] : c.configs_) {
+        for (auto const& [name, config] : configs) {
+            auto c1 = configs_.find(curveType);
+            if (c1 == configs_.end()) {
+                configs_[curveType] = {{name, config}};
+                continue;
+            }
+            auto c2 = c1->second.find(name);
+            if (c2 == c1->second.end()) {
+                c1->second[name] = config;
+                continue;
+            }
+        }
+    }
+
+    // add unparsed configs
+
+    for (auto const& [curveType, configs] : c.unparsed_) {
+        for (auto const& [name, config] : configs) {
+            auto c1 = unparsed_.find(curveType);
+            if (c1 == unparsed_.end()) {
+                unparsed_[curveType] = {{name, config}};
+                continue;
+            }
+            auto c2 = c1->second.find(name);
+            if (c2 == c1->second.end()) {
+                c1->second[name] = config;
+                continue;
+            }
+        }
+    }
+}
+
 void CurveConfigurationsManager::add(const QuantLib::ext::shared_ptr<CurveConfigurations>& config, std::string id) {
     configs_[id] = config;
 }
