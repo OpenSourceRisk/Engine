@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
 
     Date asof(7, July, 2019);
     Settings::instance().evaluationDate() = asof;
-    auto testMarket = boost::make_shared<TestMarket>(asof);
+    auto testMarket = boost::make_shared<OredTestMarket>(asof);
 
     // build IR-FX-EQ CAM
 

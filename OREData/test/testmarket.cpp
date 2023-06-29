@@ -44,7 +44,7 @@ using QuantExt::DefaultProbabilityHelper;
 using QuantExt::EquityIndex2;
 using QuantExt::SwaptionVolCubeWithATM;
 
-TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
+OredTestMarket::OredTestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
     asof_ = asof;
 
     boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
@@ -263,25 +263,25 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
         Handle<QuantExt::CreditVolCurve>(boost::make_shared<QuantExt::CreditVolCurveWrapper>(flatRateFxv(0.12)));
 }
 
-Handle<YieldTermStructure> TestMarket::flatRateYts(Real forward) {
+Handle<YieldTermStructure> OredTestMarket::flatRateYts(Real forward) {
     boost::shared_ptr<YieldTermStructure> yts(
         new FlatForward(Settings::instance().evaluationDate(), forward, ActualActual(ActualActual::ISDA)));
     return Handle<YieldTermStructure>(yts);
 }
 
-Handle<YieldTermStructure> TestMarket::flatRateDiv(Real dividend) {
+Handle<YieldTermStructure> OredTestMarket::flatRateDiv(Real dividend) {
     boost::shared_ptr<YieldTermStructure> yts(
         new FlatForward(Settings::instance().evaluationDate(), dividend, ActualActual(ActualActual::ISDA)));
     return Handle<YieldTermStructure>(yts);
 }
 
-Handle<BlackVolTermStructure> TestMarket::flatRateFxv(Volatility forward) {
+Handle<BlackVolTermStructure> OredTestMarket::flatRateFxv(Volatility forward) {
     boost::shared_ptr<BlackVolTermStructure> fxv(
         new BlackConstantVol(Settings::instance().evaluationDate(), NullCalendar(), forward, Actual365Fixed()));
     return Handle<BlackVolTermStructure>(fxv);
 }
 
-Handle<QuantLib::SwaptionVolatilityStructure> TestMarket::flatRateSvs(Volatility forward, VolatilityType type,
+Handle<QuantLib::SwaptionVolatilityStructure> OredTestMarket::flatRateSvs(Volatility forward, VolatilityType type,
                                                                           Real shift) {
     boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svs(
         new QuantLib::ConstantSwaptionVolatility(Settings::instance().evaluationDate(), NullCalendar(),
@@ -289,13 +289,13 @@ Handle<QuantLib::SwaptionVolatilityStructure> TestMarket::flatRateSvs(Volatility
     return Handle<QuantLib::SwaptionVolatilityStructure>(svs);
 }
 
-Handle<QuantExt::CreditCurve> TestMarket::flatRateDcs(Volatility forward) {
+Handle<QuantExt::CreditCurve> OredTestMarket::flatRateDcs(Volatility forward) {
     boost::shared_ptr<DefaultProbabilityTermStructure> dcs(new FlatHazardRate(asof_, forward, ActualActual(ActualActual::ISDA)));
     return Handle<QuantExt::CreditCurve>(
         boost::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(dcs)));
 }
 
-Handle<OptionletVolatilityStructure> TestMarket::flatRateCvs(Volatility vol, VolatilityType type, Real shift) {
+Handle<OptionletVolatilityStructure> OredTestMarket::flatRateCvs(Volatility vol, VolatilityType type, Real shift) {
     boost::shared_ptr<OptionletVolatilityStructure> ts(new QuantLib::ConstantOptionletVolatility(
         Settings::instance().evaluationDate(), NullCalendar(), ModifiedFollowing, vol, ActualActual(ActualActual::ISDA), type, shift));
     return Handle<OptionletVolatilityStructure>(ts);

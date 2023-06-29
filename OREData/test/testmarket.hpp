@@ -43,9 +43,9 @@ using std::vector;
 /*!
   \ingroup tests
 */
-class TestMarket : public ore::data::MarketImpl {
+class OredTestMarket : public ore::data::MarketImpl {
 public:
-    TestMarket(Date asof, bool swapVolCube = false);
+    OredTestMarket(Date asof, bool swapVolCube = false);
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward);
