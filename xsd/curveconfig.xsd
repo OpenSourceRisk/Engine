@@ -974,6 +974,7 @@
       <xs:element type="quoteType" name="Quotes"/>
       <xs:element type="xs:string" name="Conventions"/>
       <xs:element type="xs:string" name="ReferenceCurve"/>
+      <xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -1095,6 +1096,7 @@
       <xs:element type="xs:string" name="RfrCurve"/>
       <xs:element type="indexNameType" name="RfrIndex" minOccurs="0"/>
       <xs:element type="xs:float" name="Spread" minOccurs="0"/>
+      <xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
