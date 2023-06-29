@@ -29,6 +29,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/makenonstandardlegs.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/types.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
@@ -2817,6 +2818,55 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
     } else {
         return Leg();
     }
+}
+
+namespace {
+std::string getCmbLegSecurity(const std::string& genericBond) {
+    return genericBond.substr(0, genericBond.find_last_of('-'));
+}
+
+boost::shared_ptr<BondReferenceDatum> getCmbLegRefData(const CMBLegData& cmbData,
+                                                       const boost::shared_ptr<ReferenceDataManager>& refData) {
+    QL_REQUIRE(refData, "getCmbLegCreditQualifierMapping(): reference data is null");
+    std::string security = getCmbLegSecurity(cmbData.genericBond());
+    if (refData->hasData(ore::data::BondReferenceDatum::TYPE, security)) {
+        auto bondRefData = boost::dynamic_pointer_cast<ore::data::BondReferenceDatum>(
+            refData->getData(ore::data::BondReferenceDatum::TYPE, security));
+        QL_REQUIRE(bondRefData != nullptr, "getCmbLegRefData(): internal error, could not cast to BondReferenceDatum");
+        return bondRefData;
+    }
+    return nullptr;
+}
+} // namespace
+
+std::string getCmbLegCreditRiskCurrency(const CMBLegData& ld, const boost::shared_ptr<ReferenceDataManager>& refData) {
+    if (auto bondRefData = getCmbLegRefData(ld, refData)) {
+        std::string security = getCmbLegSecurity(ld.genericBond());
+        BondData bd(security, 1.0);
+        bd.populateFromBondReferenceData(bondRefData);
+        return bd.currency();
+    }
+    return std::string();
+}
+
+std::pair<std::string, SimmCreditQualifierMapping>
+getCmbLegCreditQualifierMapping(const CMBLegData& ld, const boost::shared_ptr<ReferenceDataManager>& refData,
+                                const std::string& tradeId, const std::string& tradeType) {
+    string source;
+    ore::data::SimmCreditQualifierMapping target;
+    std::string security = getCmbLegSecurity(ld.genericBond());
+    if (auto bondRefData = getCmbLegRefData(ld, refData)) {
+        source = ore::data::securitySpecificCreditCurveName(security, bondRefData->bondData().creditCurveId);
+        target.targetQualifier = security;
+        target.creditGroup = bondRefData->bondData().creditGroup;
+    }
+    if (source.empty() || target.targetQualifier.empty()) {
+        ALOG(ore::data::StructuredTradeErrorMessage(tradeId, tradeType, "getCmbLegCreditQualifierMapping()",
+                                                    "Could not set mapping for CMB Leg security '" +
+                                                        security +
+                                                        "'. Check security name and reference data."));
+    }
+    return std::make_pair(source, target);
 }
 
 } // namespace data
