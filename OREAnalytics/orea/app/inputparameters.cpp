@@ -532,6 +532,17 @@ void InputParameters::setParConversionPricingEngineFromFile(const std::string& f
     parConversionPricingEngine_->fromFile(fileName);
 }
 
+Date InputParameters::mporDate() {
+    if (mporDate_ == Date()) {
+        QL_REQUIRE(asof_ != Date(), "Asof date is required for mpor date");
+        QL_REQUIRE(!mporCalendar_.empty(), "MporCalendar or BaseCurrency is required for mpor date");
+        QL_REQUIRE(mporDays_ != Null<Size>(), "mporDays is required for mpor date");
 
+        int effectiveMporDays = mporForward_ ? mporDays_ : -static_cast<int>(mporDays_);
+
+        mporDate_ = mporCalendar_.advance(asof_, effectiveMporDays, QuantExt::Days);
+    }
+    return mporDate_;
+}
 } // namespace analytics
 } // namespace ore
