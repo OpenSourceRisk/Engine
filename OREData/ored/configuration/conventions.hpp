@@ -172,6 +172,7 @@ public:
     const boost::shared_ptr<ore::data::Conventions>& conventions(QuantLib::Date d = QuantLib::Date()) const;
     void setConventions(const boost::shared_ptr<ore::data::Conventions>& conventions,
                         QuantLib::Date d = QuantLib::Date());
+    void clear() { conventions_.clear(); }
 };
 
 //! Container for storing Zero Rate conventions
