@@ -58,8 +58,9 @@
 #include <ored/utilities/to_string.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <test/oreatoplevelfixture.hpp>
-#include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
+
+#include "testmarket.hpp"
 
 using namespace std;
 using namespace QuantLib;
