@@ -220,6 +220,7 @@ public:
     MarketDataAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
     void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
         const std::set<std::string>& runTypes = {}) override;
+    void setUpConfigurations() override;
 };
 
 class MarketDataAnalytic : public Analytic {
