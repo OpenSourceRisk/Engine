@@ -1677,7 +1677,11 @@ void SimmCalculator::addCrifRecord(const CrifRecord& crifRecord, const SimmSide&
             if (regSensitivities_[side][nettingSetDetails][r] == nullptr)
                 regSensitivities_[side][nettingSetDetails][r] = boost::make_shared<CrifLoader>(simmConfiguration_, CrifRecord::additionalHeaders, true, true);
 
-            regSensitivities_[side][nettingSetDetails][r]->add(newCrifRecord);
+            // We make sure to ignore amountCcy when aggregating the records, since we will only be using amountUsd,
+            // and we may have CRIF records that are equal everywhere except for the amountCcy, and this will fail
+            // in the case of Risk_XCcyBasis and Risk_Inflation.
+            const bool onDiffAmountCcy = true;
+            regSensitivities_[side][nettingSetDetails][r]->add(newCrifRecord, onDiffAmountCcy);
         }
 }
 
