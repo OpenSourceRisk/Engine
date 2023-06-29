@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
  */
 
-/*! \file ored/portfolio/autocallable01.hpp
+/*! \file ored/portfolio/autocallable_01.hpp
     \brief autocallable_01 wrapper for scripted trade
     \ingroup portfolio
 */

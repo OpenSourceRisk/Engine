@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/ad/cg.hpp
+/*! \file qle/ad/computationgraph.hpp
     \brief computation graph
 */
 

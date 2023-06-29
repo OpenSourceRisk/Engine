@@ -17,7 +17,7 @@
  */
 
 /*! \file ored/portfolio/europeanoptionbarrier.hpp
-    \european option with barrier wrapper for scripted trade
+    \brief European option with barrier wrapper for scripted trade
     \ingroup portfolio
 */
 

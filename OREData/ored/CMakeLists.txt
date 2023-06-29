@@ -344,7 +344,6 @@ utilities/marketdata.cpp
 utilities/osutils.cpp
 utilities/parsers.cpp
 utilities/progressbar.cpp
-#utilities/scriptingutilities.cpp
 utilities/strike.cpp
 utilities/to_string.cpp
 utilities/wildcard.cpp
@@ -725,7 +724,6 @@ utilities/marketdata.hpp
 utilities/osutils.hpp
 utilities/parsers.hpp
 utilities/progressbar.hpp
-#utilities/scriptingutilities.hpp
 utilities/serializationdate.hpp
 utilities/serializationdaycounter.hpp
 utilities/serializationperiod.hpp
