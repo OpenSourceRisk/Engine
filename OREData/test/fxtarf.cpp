@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(testNPV) {
         ~cleanup() { ore::data::ScriptLibraryStorage::instance().clear(); }
     } cleanup;
     ore::data::ScriptLibraryData library;
-    library.fromFile(TEST_INPUT_FILE("../../../../../Scripts/scriptlibrary.xml"));
+    library.fromFile(TEST_INPUT_FILE("../../../../Scripts/scriptlibrary.xml"));
     ore::data::ScriptLibraryStorage::instance().set(std::move(library));
 
     // Read in the trade
