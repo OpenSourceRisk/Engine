@@ -69,6 +69,7 @@ public:
         boost::shared_ptr<ore::analytics::CrossAssetModelData> crossAssetModelData;
         boost::shared_ptr<CurveConfigurations> curveConfig;
         boost::shared_ptr<ore::data::EngineData> engineData;
+        QuantLib::Date asofDate;
     };
 
     //! Constructors
