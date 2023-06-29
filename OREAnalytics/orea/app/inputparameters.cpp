@@ -534,13 +534,13 @@ void InputParameters::setParConversionPricingEngineFromFile(const std::string& f
 
 Date InputParameters::mporDate() {
     if (mporDate_ == Date()) {
-        QL_REQUIRE(asof_ != Date(), "Asof date is required for mpor date");
-        QL_REQUIRE(!mporCalendar_.empty(), "MporCalendar or BaseCurrency is required for mpor date");
-        QL_REQUIRE(mporDays_ != Null<Size>(), "mporDays is required for mpor date");
+        QL_REQUIRE(asof() != Date(), "Asof date is required for mpor date");
+        QL_REQUIRE(!mporCalendar().empty(), "MporCalendar or BaseCurrency is required for mpor date");
+        QL_REQUIRE(mporDays() != Null<Size>(), "mporDays is required for mpor date");
 
-        int effectiveMporDays = mporForward_ ? mporDays_ : -static_cast<int>(mporDays_);
+        int effectiveMporDays = mporForward() ? mporDays() : -static_cast<int>(mporDays());
 
-        mporDate_ = mporCalendar_.advance(asof_, effectiveMporDays, QuantExt::Days);
+        mporDate_ = mporCalendar().advance(asof(), effectiveMporDays, QuantExt::Days);
     }
     return mporDate_;
 }
