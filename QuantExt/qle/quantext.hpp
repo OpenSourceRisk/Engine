@@ -541,6 +541,7 @@
 #include <qle/time/dateutilities.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/utilities/cashflows.hpp>
 #include <qle/utilities/commodity.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
