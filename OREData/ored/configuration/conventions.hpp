@@ -160,20 +160,18 @@ class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions, 
 
 private:
     // may be empty but never uninitialised
-    InstrumentConventions() : conventions_(boost::make_shared<ore::data::Conventions>()) {}
+    InstrumentConventions() {
+        auto today = Settings::instance().evaluationDate();
+        conventions_[today] = boost::make_shared<ore::data::Conventions>();
+    }
 
-    boost::shared_ptr<ore::data::Conventions> conventions_;
+    mutable std::map<QuantLib::Date, boost::shared_ptr<ore::data::Conventions>> conventions_;
     mutable boost::shared_mutex mutex_;
 
 public:
-    const boost::shared_ptr<ore::data::Conventions>& conventions() const {
-        boost::shared_lock<boost::shared_mutex> lock(mutex_);
-        return conventions_;
-    }
-    void setConventions(const boost::shared_ptr<ore::data::Conventions>& conventions) {
-        boost::unique_lock<boost::shared_mutex> lock(mutex_);
-        conventions_ = conventions;
-    }
+    const boost::shared_ptr<ore::data::Conventions>& conventions(QuantLib::Date d = QuantLib::Date()) const;
+    void setConventions(const boost::shared_ptr<ore::data::Conventions>& conventions,
+                        QuantLib::Date d = QuantLib::Date());
 };
 
 //! Container for storing Zero Rate conventions
