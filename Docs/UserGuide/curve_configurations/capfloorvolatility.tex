@@ -70,6 +70,9 @@ The calendar used to advance dates by periods in the underlying structure. In pa
 \item \lstinline!BusinessDayConvention!:
 The business day convention used to advance dates by periods in the underlying structure. In particular, it is used in deriving the cap maturity dates from the configured cap tenors. Allowable values are given in the Table \ref{tab:allow_stand_data} under \lstinline!Roll Convention!.
 
+\item \lstinline!Tenors! [Optional]:
+A comma separated list of valid tenor strings giving the cap floor maturity tenors to be used in the ATM curve. If omitted, the tenors for the ATM curve must be provided in the \lstinline!AtmTenors! node instead. If the tenors are provided here, the \lstinline!AtmTenors! node may be omitted.
+
 \item \lstinline!OptionalQuotes! [Optional]:
 A boolean flag to indicate whether market data quotes for all tenors are required. If true, we attempt to build the curve from whatever quotes are provided. If false, the curve will fail to build if any quotes are missing. This also applies to quotes for the \lstinline!AtmTenors!. Default value is false.
 
@@ -79,8 +82,8 @@ A valid interest rate index name giving the index underlying the cap floor quote
 \item \lstinline!DiscountCurve!:
 A reference to a valid discount curve specification that will be used to discount cashflows during the stripping process. It should be of the form \lstinline!Yield/Currency/curve_name! where \lstinline!curve_name! is the name of a yield curve defined in the yield curve configurations.
 
-\item \lstinline!AtmTenors!:
-A comma separated list of valid tenor strings giving the cap floor maturities to be used in the ATM curve.
+\item \lstinline!AtmTenors! [Optional]:
+A comma separated list of valid tenor strings giving the cap floor maturities to be used in the ATM curve. If omitted, the tenors for the ATM curve must be provided in the \lstinline!Tenors! node instead. If the tenors are provided here, the \lstinline!Tenors! node may be omitted.
 
 \item \lstinline!SettlementDays! [Optional]:
 Any non-negative integer is allowed here. If omitted, it is assumed to be 0. If provided the reference date of the term volatility curve and the stripped optionlet volatility structure will be calculated by advancing the valuation date by this number of days using the configured calendar and business day convention. In general, this should be omitted or set to 0.
@@ -108,6 +111,7 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <DayCounter>...</DayCounter>
   <Calendar>...</Calendar>
   <BusinessDayConvention>...</BusinessDayConvention>
+  <Tenors>...</Tenors>
   <OptionalQuotes>...</OptionalQuotes>
   <IborIndex>...</IborIndex>
   <DiscountCurve>...</DiscountCurve>
@@ -149,6 +153,9 @@ The calendar used to advance dates by periods in the underlying structure. In pa
 \item \lstinline!BusinessDayConvention!:
 The business day convention used to advance dates by periods in the underlying structure. In particular, it is used in deriving the cap maturity dates from the configured cap tenors. Allowable values are given in the Table \ref{tab:allow_stand_data} under \lstinline!Roll Convention!.
 
+\item \lstinline!Tenors! [Optional]:
+A comma separated list of valid tenor strings giving the cap floor maturity tenors to be used in the ATM curve. If omitted, the tenors for the ATM curve must be provided in the \lstinline!AtmTenors! node instead. If the tenors are provided here, the \lstinline!AtmTenors! node may be omitted.
+
 \item \lstinline!OptionalQuotes! [Optional]:
 A boolean flag to indicate whether market data quotes for all tenors are required. If true, we attempt to build the curve from whatever quotes are provided. If false, the curve will fail to build if any quotes are missing. This also applies to quotes for the \lstinline!AtmTenors!. Default value is false.
 
@@ -158,8 +165,8 @@ A valid interest rate index name giving the index underlying the cap floor quote
 \item \lstinline!DiscountCurve!:
 A reference to a valid discount curve specification that will be used to discount cashflows during the stripping process. It should be of the form \lstinline!Yield/Currency/curve_name! where \lstinline!curve_name! is the name of a yield curve defined in the yield curve configurations.
 
-\item \lstinline!AtmTenors!:
-A comma separated list of valid tenor strings giving the cap floor maturities to be used in the ATM curve.
+\item \lstinline!AtmTenors! [Optional]:
+A comma separated list of valid tenor strings giving the cap floor maturities to be used in the ATM curve. If omitted, the tenors for the ATM curve must be provided in the \lstinline!Tenors! node instead. If the tenors are provided here, the \lstinline!Tenors! node may be omitted.
 
 \item \lstinline!SettlementDays! [Optional]:
 Any non-negative integer is allowed here. If omitted, it is assumed to be 0. If provided the reference date of the term volatility curve and the stripped optionlet volatility structure will be calculated by advancing the valuation date by this number of days using the configured calendar and business day convention. In general, this should be omitted or set to 0.
@@ -189,6 +196,7 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <DayCounter>...</DayCounter>
   <Calendar>...</Calendar>
   <BusinessDayConvention>...</BusinessDayConvention>
+  <Tenors>...</Tenors>
   <OptionalQuotes>...</OptionalQuotes>
   <IborIndex>...</IborIndex>
   <DiscountCurve>...</DiscountCurve>
@@ -412,6 +420,9 @@ The calendar used to advance dates by periods in the underlying structure. In pa
 \item \lstinline!BusinessDayConvention!:
 The business day convention used to advance dates by periods in the underlying structure. In particular, it is used in deriving the cap maturity dates from the configured cap tenors. Allowable values are given in the Table \ref{tab:allow_stand_data} under \lstinline!Roll Convention!.
 
+\item \lstinline!Tenors! [Optional]:
+A comma separated list of valid tenor strings giving the cap floor maturity tenors to be used in the tenor by strike surface. A single wildcard character, \lstinline!*!, can also be used for wildcard tenor. In this case, i.e.\ configuring a surface, they must be provided.
+
 \item \lstinline!OptionalQuotes! [Optional]:
 A boolean flag to indicate whether market data quotes for all tenors are required. Optionlet volatilities do not support optional quotes, so this node should be false or omitted. Default value is false.
 
@@ -421,8 +432,8 @@ A valid interest rate index name giving the index underlying the cap floor quote
 \item \lstinline!DiscountCurve!:
 A reference to a valid discount curve specification that will be used to discount cashflows. It should be of the form \lstinline!Yield/Currency/curve_name! where \lstinline!curve_name! is the name of a yield curve defined in the yield curve configurations.
 
-\item \lstinline!AtmTenors!:
-A comma separated list of valid tenor strings giving the cap floor maturities to be used in the ATM curve. A single wildcard character, \lstinline!*!, can also be used for wildcard tenor. In this case, all the tenors found in the market data input will be used to construct the ATM curve.
+\item \lstinline!AtmTenors! [Optional]:
+A comma separated list of valid tenor strings giving the cap floor maturities to be used in the ATM curve. A single wildcard character, \lstinline!*!, can also be used for wildcard tenor. In this case, all the tenors found in the market data input will be used to construct the ATM curve. If omitted, the tenors for the ATM curve must be provided in the \lstinline!Tenors! node instead. If the tenors are provided here, the \lstinline!Tenors! node may be omitted.
 
 \item \lstinline!SettlementDays! [Optional]:
 Any non-negative integer is allowed here. If omitted, it is assumed to be 0. If provided the reference date of the term volatility curve and the stripped optionlet volatility structure will be calculated by advancing the valuation date by this number of days using the configured calendar and business day convention. In general, this should be omitted or set to 0.
@@ -446,6 +457,7 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <DayCounter>...</DayCounter>
   <Calendar>...</Calendar>
   <BusinessDayConvention>...</BusinessDayConvention>
+  <Tenors>...</Tenors>
   <OptionalQuotes>false</OptionalQuotes>
   <IborIndex>...</IborIndex>
   <DiscountCurve>...</DiscountCurve>
