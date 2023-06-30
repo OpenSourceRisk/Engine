@@ -712,10 +712,6 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
                                      QuantLib::Real shift) {
     QL_REQUIRE(config.optionalQuotes() == false, "Optional quotes for optionlet volatilities are not supported.");
     // Load optionlet vol surface
-    // Strike needs a custom comparator to avoid == with double
-    auto comp = [](const pair<Period, Rate>& a, const pair<Period, Rate>& b) {
-        return (a.first < b.first) || (!(b.first < a.first) && (a.second < b.second && !close(a.second, b.second)));
-    };
     Size quoteCounter = 0;
     bool quoteRelevant = false;
     bool tenorRelevant = false;
@@ -804,7 +800,7 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
                 } else {
                     atmTenorRelevant = findTenor != atmConfigTenors.end();
                 }
-                if (tenorRelevant) {
+                if (atmTenorRelevant) {
                     quoteCounter++;
                     // Check duplicate quotes
                     auto k = atmCapFloorVols.find(cfq->term());
