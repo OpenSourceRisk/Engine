@@ -1196,14 +1196,6 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     if (tmp != "")
         inputs->setPortfolioFilterDate(tmp);
 
-    if (inputs->analytics().size() == 0) {
-        inputs->insertAnalytic("MARKETDATA");
-        inputs->setOutputTodaysMarketCalibration(true);
-        if (inputs->lazyMarketBuilding())
-            LOG("Lazy market build being overridden to \"false\" for MARKETDATA analytic.")
-        inputs->setLazyMarketBuilding(false);
-    }
-
     /*************
      * ZERO TO PAR SENSI CONVERSION
      *************/
@@ -1282,6 +1274,14 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         if (tmp != "")
             inputs->setParConversionOutputJacobi(parseBool(tmp));
 
+    }
+
+    if (inputs->analytics().size() == 0) {
+        inputs->insertAnalytic("MARKETDATA");
+        inputs->setOutputTodaysMarketCalibration(true);
+        if (inputs->lazyMarketBuilding())
+            LOG("Lazy market build being overridden to \"false\" for MARKETDATA analytic.")
+        inputs->setLazyMarketBuilding(false);
     }
 
     LOG("buildInputParameters done");
