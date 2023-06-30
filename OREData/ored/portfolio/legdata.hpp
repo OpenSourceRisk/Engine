@@ -27,6 +27,7 @@
 #include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <ored/portfolio/simmcreditqualifiermapping.hpp>
 #include <ored/portfolio/underlying.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -50,6 +51,7 @@ using std::string;
 class EngineFactory;
 class Market;
 class RequiredFixings;
+class ReferenceDataManager;
 
 //! Serializable Additional Leg Data
 /*!
@@ -987,6 +989,11 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityI
 Real currentNotional(const Leg& leg);
 Real originalNotional(const Leg& leg);
 
+std::string getCmbLegCreditRiskCurrency(const CMBLegData& ld, const boost::shared_ptr<ReferenceDataManager>& refData);
+
+std::pair<std::string, SimmCreditQualifierMapping>
+getCmbLegCreditQualifierMapping(const CMBLegData& ld, const boost::shared_ptr<ReferenceDataManager>& refData,
+                                const std::string& tradeId, const std::string& tradeType);
 //@}
 
 // Build a full vector of values from the given node.

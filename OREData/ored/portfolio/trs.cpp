@@ -574,10 +574,16 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                    engineFactory->configuration(MarketContext::pricing)));
         fundingNotionalTypes.push_back(notionalType);
 
-        // if we have a CMB leg _and_ the credit risk ccy is empty, we set the credit risk ccy now
-        if (ld.legType() == "CMB" && creditRiskCurrency_.empty()) {
-            // same as in simm trade data / getTradeCurrency() for a swap on CMB leg:
-            creditRiskCurrency_ = ld.currency();
+        // update credit risk currency and credit qualifier mapping for CMB leg
+        if (ld.legType() == "CMB") {
+            auto cmbData = boost::dynamic_pointer_cast<ore::data::CMBLegData>(ld.concreteLegData());
+            QL_REQUIRE(cmbData, "TRS::build(): internal error, could to cast to CMBLegData.");
+            if(creditRiskCurrency_.empty())
+                creditRiskCurrency_ = getCmbLegCreditRiskCurrency(*cmbData, engineFactory->referenceData());
+            auto [source, target] =
+                getCmbLegCreditQualifierMapping(*cmbData, engineFactory->referenceData(), id(), tradeType());
+            creditQualifierMapping_[source] = target;
+            creditQualifierMapping_[ore::data::creditCurveNameFromSecuritySpecificCreditCurveName(source)] = target;
         }
     }
 

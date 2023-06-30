@@ -89,6 +89,16 @@ void Analytic::setUpConfigurations() {
         impl_->setUpConfigurations();
 }
 
+std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::allDependentAnalytics() const {
+    std::vector<QuantLib::ext::shared_ptr<Analytic>> analytics;
+    for (const auto& [_, a] : dependentAnalytics_) {
+        analytics.push_back(a);
+        auto das = a->allDependentAnalytics();
+        analytics.insert(end(analytics), begin(das), end(das));
+    }
+    return analytics;
+}
+
 const std::string Analytic::label() const { 
     return impl_ ? impl_->label() : string(); 
 }
@@ -211,7 +221,7 @@ void Analytic::buildPortfolio() {
  * MARKET Analytic
  *******************************************************************/
 
-void MarketDataAnalyticImpl::setUpConfigurations() {    
+void MarketDataAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
 }
 
