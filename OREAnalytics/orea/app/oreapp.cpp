@@ -296,9 +296,6 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console,
     
     setupLog(outputPath, logFile, logMask, logRootPath);
 
-    auto conventions = boost::make_shared<Conventions>();
-    InstrumentConventions::instance().setConventions(conventions);
-
     // Log the input parameters
     params_->log();
 

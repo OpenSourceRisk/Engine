@@ -69,6 +69,33 @@ namespace data {
 
 Convention::Convention(const string& id, Type type) : type_(type), id_(id) {}
 
+const boost::shared_ptr<ore::data::Conventions>& 
+InstrumentConventions::conventions(QuantLib::Date d) const {
+    QL_REQUIRE(conventions_.size() > 0, "InstrumentConventions: No conventions provided.");
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    Date dt = d == Date() ? Settings::instance().evaluationDate() : d;
+    auto it = conventions_.find(dt);
+    if (it == conventions_.end()) {
+        auto mit = conventions_.upper_bound(dt);
+        if (mit == conventions_.begin())
+            QL_FAIL("InstrumentConventions: Could not find conventions for " << dt);
+        else {
+            mit--;
+            WLOG("InstrumentConventions: Could not find conventions for " << dt << ", using convetions from "
+                                                                          << mit->first);
+            // save the convention to avoid repeated calls
+            return mit->second;
+        }
+    }
+    return conventions_.at(dt);
+}
+
+void InstrumentConventions::setConventions(
+    const boost::shared_ptr<ore::data::Conventions>& conventions, QuantLib::Date d) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    conventions_[d] = conventions;
+}
+
 ZeroRateConvention::ZeroRateConvention(const string& id, const string& dayCounter, const string& compounding,
                                        const string& compoundingFrequency)
     : Convention(id, Type::Zero), tenorBased_(false), strDayCounter_(dayCounter), strCompounding_(compounding),
