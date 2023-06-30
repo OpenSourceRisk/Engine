@@ -84,7 +84,7 @@ InstrumentConventions::conventions(QuantLib::Date d) const {
             WLOG("InstrumentConventions: Could not find conventions for " << dt << ", using convetions from "
                                                                           << mit->first);
             // save the convention to avoid repeated calls
-            conventions_[dt] = mit->second;
+            return mit->second;
         }
     }
     return conventions_.at(dt);
@@ -93,8 +93,7 @@ InstrumentConventions::conventions(QuantLib::Date d) const {
 void InstrumentConventions::setConventions(
     const boost::shared_ptr<ore::data::Conventions>& conventions, QuantLib::Date d) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    Date dt = d == Date() ? Settings::instance().evaluationDate() : d;
-    conventions_[dt] = conventions;
+    conventions_[d] = conventions;
 }
 
 ZeroRateConvention::ZeroRateConvention(const string& id, const string& dayCounter, const string& compounding,

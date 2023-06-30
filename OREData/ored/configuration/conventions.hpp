@@ -160,9 +160,7 @@ class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions, 
 
 private:
     // may be empty but never uninitialised
-    InstrumentConventions() {
-        auto today = Settings::instance().evaluationDate();
-        conventions_[today] = boost::make_shared<ore::data::Conventions>();
+    InstrumentConventions() { conventions_[QuantLib::Date()] = boost::make_shared<ore::data::Conventions>();
     }
 
     mutable std::map<QuantLib::Date, boost::shared_ptr<ore::data::Conventions>> conventions_;
