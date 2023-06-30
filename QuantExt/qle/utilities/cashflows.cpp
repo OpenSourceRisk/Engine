@@ -35,7 +35,6 @@ Real getOisAtmLevel(const boost::shared_ptr<OvernightIndex>& on, const Date& fix
     Date adjEnd = std::max(adjStart + 1, end);
     OvernightIndexedCoupon cpn(end, 1.0, adjStart, adjEnd, on);
     cpn.setPricer(boost::make_shared<OvernightIndexedCouponPricer>());
-    std::cout << cpn.rate() << std::endl;
     return cpn.rate();
 }
 
