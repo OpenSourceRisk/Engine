@@ -143,6 +143,8 @@ public:
     const std::map<std::string, QuantLib::ext::shared_ptr<Analytic>>& dependentAnalytics() const {
         return dependentAnalytics_;
     }
+    template <class T> std::map<std::string, QuantLib::ext::shared_ptr<T>> dependentAnalytics() const;
+    template <class T> inline std::map<std::string, boost::shared_ptr<T>> Analytic::dependentAnalytics() const;
     std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
 
     virtual std::set<QuantLib::Date> marketDates() const { return {inputs_->asof()}; }
