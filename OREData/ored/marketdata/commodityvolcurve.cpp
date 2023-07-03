@@ -47,6 +47,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <qle/termstructures/blackvolsurfaceproxy.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <qle/termstructures/blackdeltautilities.hpp>
+#include <qle/termstructures/commodityblackvoladaptertermstructure.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <qle/models/carrmadanarbitragecheck.hpp>
 
@@ -300,7 +301,9 @@ void CommodityVolCurve::buildVolatility(const Date& asof, const CommodityVolatil
     Real quoteValue = q->quote()->value();
 
     DLOG("Creating BlackConstantVol structure");
-    volatility_ = boost::make_shared<BlackConstantVol>(asof, calendar_, quoteValue, dayCounter_);
+    auto vts = boost::make_shared<BlackConstantVol>(asof, calendar_, quoteValue, dayCounter_);
+
+    volatility_ = ext::make_shared<CommodityFutureBlackVolatilityAdapterTermStructure>(vts);
 
     LOG("CommodityVolCurve: finished building constant volatility structure");
 }
@@ -435,7 +438,7 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
     }
 
     // Set the volatility_ member after we have possibly updated the interpolation.
-    volatility_ = tmp;
+    volatility_ = boost::make_shared<CommodityFutureBlackVolatilityAdapterTermStructure>(tmp);
 
     // Set the extrapolation
     if (parseExtrapolation(vcc.extrapolation()) == Extrapolation::Flat) {
