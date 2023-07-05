@@ -227,6 +227,21 @@ XMLNode* ConvertibleBondData::ConversionData::ExchangeableData::toXML(XMLDocumen
     return node;
 }
 
+void ConvertibleBondData::ConversionData::FixedAmountConversionData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "FixedAmountConversion");
+    currency_ = XMLUtils::getChildValue(node, "Currency", true);
+    amounts_ = XMLUtils::getChildrenValuesWithAttributes<double>(node, "Amounts", "Amount", "startDate", amountDates_,
+                                                                 &parseReal, true);
+    initialised_ = true;
+}
+
+XMLNode* ConvertibleBondData::ConversionData::FixedAmountConversionData::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("FixedAmountConversion");
+    XMLUtils::addChild(doc, node, "Currency", currency_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Amounts", "Amount", amounts_, "startDate", amountDates_);
+    return node;
+}
+
 void ConvertibleBondData::ConversionData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ConversionData");
     if (auto tmp = XMLUtils::getChildNode(node, "ScheduleData"))
@@ -246,7 +261,9 @@ void ConvertibleBondData::ConversionData::fromXML(XMLNode* node) {
         if (!XMLUtils::getChildrenNodes(tmp, "").empty())
             conversionResetData_.fromXML(tmp);
     }
-    equityUnderlying_.fromXML(XMLUtils::getChildNode(node, "Underlying"));
+    if (auto tmp = XMLUtils::getChildNode(node, "Underlying")) {
+        equityUnderlying_.fromXML(tmp);
+    }
     fxIndex_ = XMLUtils::getChildValue(node, "FXIndex", false);
     if (XMLUtils::getChildNode(node, "FXIndexFixingDays")) {
         WLOG("ConvertibleBondData::fromXML, node FXIndexFixingDays has been deprecated, fixing days are "
