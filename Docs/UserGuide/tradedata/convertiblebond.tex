@@ -275,9 +275,9 @@ Allowable values: American, Bermudan
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
-  <!-- American issuer call between 2016-08-03 and 2020-08-03,
-       hard calls at 100 between 2016-08-03 and 2018-08-03,
-       soft calls at 102 between 2018-08-03 and 2019-08-03,
+  <!-- American issuer call between 2016-08-03 and 2020-08-03 (excl),
+       hard calls at 100 between 2016-08-03 and 2018-08-03 (excl),
+       soft calls at 102 between 2018-08-03 and 2019-08-03 (excl),
        soft calls at 103 between 2019-08-03 and 2020-08-03 -->
   <CallData>
     <Styles>
@@ -555,7 +555,7 @@ for examples of conversion schedules.
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
   <!-- American conversion between 2016-08-03 and 2020-08-03, with
-       conversion ratio 0.5 for 2016-08-03 through 2018-08-03 and
+       conversion ratio 0.5 for 2016-08-03 through 2018-08-03 (excl) and
        conversion ratio 0.6 for 2018-08-03 through 2020-08-03 -->
     <ConversionData>
       <Styles>
@@ -588,7 +588,7 @@ for examples of conversion schedules.
 \begin{minted}[fontsize=\footnotesize]{xml}
   <!-- American conversion between 2016-08-03 and 2018-08-03, with conversion
        ratio 0.5, the conversion is contingent on the parity being above 1.3
-       on 2016-08-03 for the conversion between 2016-08-03 and 2017-08-03
+       on 2016-08-03 for the conversion between 2016-08-03 and 2017-08-03 (excl)
        on 2017-08-03 for the conversion between 2017-08-03 and 2018-08-03 -->
     <ConversionData>
       <Styles>
@@ -668,7 +668,7 @@ for examples of conversion schedules.
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
   <!-- American conversion between 2016-08-03 and 2018-08-03 with CR 0.5.
-       The conversion ratio is reset on 2016-11-03, 2017-02-03, 2017-05-02
+       The conversion ratio is reset on 2016-11-03, 2017-02-03, 2018-05-03
        using T = 0.9, g = 0.8, f = 0.6, F = 0.6. -->
     <ConversionData>
       <Styles>
@@ -724,8 +724,8 @@ for examples of conversion schedules.
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
   <!-- American conversion between 2024-08-24 and 2027-05-13, with
-       conversion to 87,000 GBP cash for 2024-08-24 through 2024-11-23 and
-       conversion to 84,000 GBP cash for 2024-11-24 through 2027-05-13 -->
+       conversion to 87,000 GBP cash for 2024-08-24 through 2024-11-23 (excl) and
+       conversion to 75,000 GBP cash for 2024-11-23 through 2027-05-13 -->
     <ConversionData>
       <Styles>
         <Style>American</Style>
