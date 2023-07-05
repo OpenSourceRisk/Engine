@@ -150,7 +150,7 @@ buildConversionRatioData(const ConvertibleBondData::ConversionData& conversionDa
     return result;
 } // buildConversionRatioData()
 
-std::vector<ConvertibleBond2::ConversionFixedAmountData>
+std::vector<ConvertibleBond2::ConversionRatioData>
 buildConversionFixedAmountData(const ConvertibleBondData::ConversionData& conversionData) {
     std::vector<ConvertibleBond2::ConversionFixedAmountData> result;
     std::set<Date> tmp;
@@ -527,10 +527,11 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
     ConvertibleBond2::MakeWholeData makeWholeCrIncreaseData = buildMakeWholeData(data_.callData());
     std::vector<ConvertibleBond2::CallabilityData> putData =
         buildCallabilityData(data_.putData(), openEndDateReplacement);
+    // for fixed amounts the model will provide an equity with constant unit spot rate, so that
+    // we can treat the amount as a ratio
     std::vector<ConvertibleBond2::ConversionRatioData> conversionRatioData =
-        buildConversionRatioData(data_.conversionData());
-    std::vector<ConvertibleBond2::ConversionFixedAmountData> conversionFixedAmountData =
-        buildConversionFixedAmountData(data_.conversionData());
+        equity != nullptr ? buildConversionRatioData(data_.conversionData())
+                          : buildConversionFixedAmountData(data_.conversionData());
     std::vector<ConvertibleBond2::ConversionData> conversionData = buildConversionData(
         data_.conversionData(), requiredFixings_, equity, fx, data_.conversionData().fxIndex(), openEndDateReplacement);
     std::vector<ConvertibleBond2::MandatoryConversionData> mandatoryConversionData =
@@ -553,7 +554,7 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
     auto qlConvertible = boost::make_shared<ConvertibleBond2>(
         qlUnderlyingBond->settlementDays(), qlUnderlyingBond->calendar(), qlUnderlyingBond->issueDate(),
         qlUnderlyingBondCoupons, exchangeableData, callData, makeWholeCrIncreaseData, putData, conversionRatioData,
-        conversionFixedAmountData, conversionData, mandatoryConversionData, conversionResetData, dividendProtectionData,
+        conversionData, mandatoryConversionData, conversionResetData, dividendProtectionData,
         data_.detachable().empty() ? false : parseBool(data_.detachable()), isPerpetual);
     qlConvertible->setPricingEngine(builder->engine(
         id(), data_.bondData().currency(), data_.bondData().creditCurveId(), data_.bondData().hasCreditRisk(),

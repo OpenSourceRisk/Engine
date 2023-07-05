@@ -72,11 +72,6 @@ public:
         Real conversionRatio;
     };
 
-    struct ConversionFixedAmountData {
-        Date fromDate;
-        Real conversionFixedAmount;
-    };
-
     struct ConversionData {
         enum class ExerciseType { OnThisDate, FromThisDateOn };
         Date exerciseDate;
@@ -118,7 +113,6 @@ public:
                      const std::vector<CallabilityData>& callData = {}, const MakeWholeData& makeWholeData = {},
                      const std::vector<CallabilityData>& putData = {},
                      const std::vector<ConversionRatioData>& conversionRatioData = {},
-                     const std::vector<ConversionFixedAmountData>& conversionFixedAmountData = {},
                      const std::vector<ConversionData>& conversionData = {},
                      const std::vector<MandatoryConversionData>& mandatoryConversionData = {},
                      const std::vector<ConversionResetData>& conversionResetData = {},
@@ -136,7 +130,6 @@ private:
     std::vector<CallabilityData> putData_;
     std::vector<ConversionData> conversionData_;
     std::vector<ConversionRatioData> conversionRatioData_;
-    std::vector<ConversionFixedAmountData> conversionFixedAmountData_;
     std::vector<MandatoryConversionData> mandatoryConversionData_;
     std::vector<ConversionResetData> conversionResetData_;
     std::vector<DividendProtectionData> dividendProtectionData_;
@@ -155,7 +148,6 @@ public:
     std::vector<CallabilityData> putData;
     std::vector<ConversionData> conversionData;
     std::vector<ConversionRatioData> conversionRatioData;
-    std::vector<ConversionFixedAmountData> conversionFixedAmountData;
     std::vector<MandatoryConversionData> mandatoryConversionData;
     std::vector<ConversionResetData> conversionResetData;
     std::vector<DividendProtectionData> dividendProtectionData;
