@@ -18,7 +18,6 @@
 #include <qle/methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp>
 #include <qle/models/defaultableequityjumpdiffusionmodel.hpp>
 
-#include <ql/currencies/america.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/methods/finitedifferences/meshers/concentrating1dmesher.hpp>
@@ -60,7 +59,7 @@ DefaultableEquityJumpDiffusionModelBuilder::DefaultableEquityJumpDiffusionModelB
 
     if (equity_ == nullptr) {
         equity_ = boost::make_shared<QuantExt::EquityIndex2>(
-            "dummyFamily", NullCalendar(), USDCurrency(), Handle<Quote>(boost::make_shared<SimpleQuote>(1.0)),
+            "dummyFamily", NullCalendar(), Currency(), Handle<Quote>(boost::make_shared<SimpleQuote>(1.0)),
             Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed())),
             Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed())));
     }
