@@ -152,7 +152,7 @@ buildConversionRatioData(const ConvertibleBondData::ConversionData& conversionDa
 
 std::vector<ConvertibleBond2::ConversionRatioData>
 buildConversionFixedAmountData(const ConvertibleBondData::ConversionData& conversionData) {
-    std::vector<ConvertibleBond2::ConversionFixedAmountData> result;
+    std::vector<ConvertibleBond2::ConversionRatioData> result;
     std::set<Date> tmp;
     if (conversionData.initialised()) {
         for (Size i = 0; i < conversionData.fixedAmountConversionData().amounts().size(); ++i) {
