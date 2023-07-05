@@ -26,7 +26,6 @@ ConvertibleBond2::ConvertibleBond2(Size settlementDays, const Calendar& calendar
                                    const std::vector<CallabilityData>& callData, const MakeWholeData& makeWholeData,
                                    const std::vector<CallabilityData>& putData,
                                    const std::vector<ConversionRatioData>& conversionRatioData,
-                                   const std::vector<ConversionFixedAmountData>& conversionFixedAmountData,
                                    const std::vector<ConversionData>& conversionData,
                                    const std::vector<MandatoryConversionData>& mandatoryConversionData,
                                    const std::vector<ConversionResetData>& conversionResetData,
@@ -34,9 +33,9 @@ ConvertibleBond2::ConvertibleBond2(Size settlementDays, const Calendar& calendar
                                    const bool detachable, const bool perpetual)
     : Bond(settlementDays, calendar, issueDate, coupons), exchangeableData_(exchangeableData), callData_(callData),
       makeWholeData_(makeWholeData), putData_(putData), conversionData_(conversionData),
-      conversionRatioData_(conversionRatioData), conversionFixedAmountData_(conversionFixedAmountData),
-      mandatoryConversionData_(mandatoryConversionData), conversionResetData_(conversionResetData),
-      dividendProtectionData_(dividendProtectionData), detachable_(detachable), perpetual_(perpetual) {}
+      conversionRatioData_(conversionRatioData), mandatoryConversionData_(mandatoryConversionData),
+      conversionResetData_(conversionResetData), dividendProtectionData_(dividendProtectionData),
+      detachable_(detachable), perpetual_(perpetual) {}
 
 void ConvertibleBond2::setupArguments(PricingEngine::arguments* args) const {
     Bond::setupArguments(args);
@@ -49,7 +48,6 @@ void ConvertibleBond2::setupArguments(PricingEngine::arguments* args) const {
     arguments->makeWholeData = makeWholeData_;
     arguments->putData = putData_;
     arguments->conversionRatioData = conversionRatioData_;
-    arguments->conversionFixedAmountData = conversionFixedAmountData_;
     arguments->conversionData = conversionData_;
     arguments->mandatoryConversionData = mandatoryConversionData_;
     arguments->conversionResetData = conversionResetData_;
