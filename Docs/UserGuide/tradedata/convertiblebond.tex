@@ -447,8 +447,25 @@ for examples of conversion schedules.
   Allowable values: Any non-negative real number.
 
 \item FixedConversionAmounts: If this node is given, the conversion is specified to be conversion to fixed cash amounts
-  instead of equity. See \label{lst:convertiblebonddata_conversion_6} for an example. The nodes ConversionRatios,
-  MandatoryConversion, ConversionResets, Underlying, Exchangeable must not be given, if this node is present.
+  instead of equity. If the cash amount currency is different from the bond currency, the FXIndex node must be
+  given. See \label{lst:convertiblebonddata_conversion_6} for an example. The nodes
+\begin{itemize}
+  \item ConversionRatios
+  \item ContingentConversion
+  \item MandatoryConversion
+  \item ConversionResets
+  \item Underlying
+  \item Exchangeable
+\end{itemize}
+must {\em not} be given, if this node is present. Furthermore, the following nodes from other sections are not
+applicable if the conversion is specified to be fixed cash amounts, and must therefore not be given:
+\begin{itemize}
+\item CallData/Soft
+\item CallData/TriggerRatios
+\item CallData/NoMTriggers
+\item CallData/MakeWhole
+\item DividendProtectionData (including all subnodes)
+\end{itemize}
 
 \item ContingentConversion: This adds a condition $C^R_t S_t > B$ on the convertibility for the periods defined by the
   conversion dates. Optional.
