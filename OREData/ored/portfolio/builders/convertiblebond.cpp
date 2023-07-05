@@ -98,8 +98,13 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
 
     // get equity curve and volatility
 
-    std::string equityName = equity->name();
-    auto volatility = market_->equityVol(equityName, config);
+    std::string equityName;
+    Handle<BlackVolTermStructure> volatility;
+
+    if (equity != nullptr) {
+        equityName = equity->name();
+        volatility = market_->equityVol(equityName, config);
+    }
 
     // get bond related curves
 
@@ -194,7 +199,7 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
 
     // for cross currency, set up converted equity index and eq vol
 
-    if (fx != nullptr) {
+    if (fx != nullptr && equity != nullptr) {
         auto fxVol = market_->fxVol(equity->currency().code() + ccy, config);
         QuantLib::Handle<QuantExt::CorrelationTermStructure> corrCurve(
             boost::make_shared<FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
