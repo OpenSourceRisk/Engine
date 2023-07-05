@@ -156,9 +156,9 @@ buildConversionFixedAmountData(const ConvertibleBondData::ConversionData& conver
     std::set<Date> tmp;
     if (conversionData.initialised()) {
         for (Size i = 0; i < conversionData.fixedAmountConversionData().amounts().size(); ++i) {
-            Date d = conversionData.fixedAmountConversionData().amounts()[i].empty()
+            Date d = conversionData.fixedAmountConversionData().amountDates()[i].empty()
                          ? Date::minDate()
-                         : parseDate(conversionData.fixedAmountConversionData().amounts()[i]);
+                         : parseDate(conversionData.fixedAmountConversionData().amountDates()[i]);
             result.push_back({d, conversionData.fixedAmountConversionData().amounts()[i]});
             tmp.insert(d);
         }

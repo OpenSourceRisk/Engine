@@ -279,7 +279,7 @@ public:
 
             bool initialised() const { return initialised_; }
 
-            const std::string& currency() const { return curremcy_; }
+            const std::string& currency() const { return currency_; }
 
             const std::vector<double>& amounts() const { return amounts_; }
             const std::vector<std::string>& amountDates() const { return amountDates_; }

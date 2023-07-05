@@ -118,7 +118,7 @@ public:
                      const std::vector<CallabilityData>& callData = {}, const MakeWholeData& makeWholeData = {},
                      const std::vector<CallabilityData>& putData = {},
                      const std::vector<ConversionRatioData>& conversionRatioData = {},
-                     const std::vector<ConversionRatioData>& conversionFixedAmountData = {},
+                     const std::vector<ConversionFixedAmountData>& conversionFixedAmountData = {},
                      const std::vector<ConversionData>& conversionData = {},
                      const std::vector<MandatoryConversionData>& mandatoryConversionData = {},
                      const std::vector<ConversionResetData>& conversionResetData = {},
