@@ -6,3 +6,4 @@ services:
     build:
       context: .
       dockerfile: Dockerfile_simplefileserver
+

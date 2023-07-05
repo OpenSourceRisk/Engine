@@ -84,11 +84,8 @@ class oreApi():
             # Fetch xml url from the json
             lookup_value = data_dict[lookuplocation][lookupname]
 
-            # Decode the URL
-            decoded_url = urllib.parse.unquote(lookup_value)
-
             # Fetch the XML data
-            response = urllib.request.urlopen(decoded_url)
+            response = urllib.request.urlopen(lookup_value)
             xml_data = response.read().decode('utf-8')
 
             # Set parameter
@@ -277,18 +274,22 @@ class oreApi():
             self.setSimpleParameter(data_dict, "method", "parametricVar", params.setVarBreakDown)
             self.setSimpleParameter(data_dict, "mcSamples", "parametricVar", params.setVarBreakDown, int)
             self.setSimpleParameter(data_dict, "mcSeed", "parametricVar", params.setVarBreakDown, int)
-            # TODO: create param for Covariance and Sensitivity
+            # TODO: create param for Covariance and Sensitivity (754)
         if "Y" in data_dict["simm"]["active"]:
             print("Loading simm variables")
             params.insertAnalytic("SIMM")
-            # TODO: set params for version, crif, and currencys
+            # TODO: set params for version, crif, and currencys (775)
         if "Y" in data_dict["simulation"]["active"]:
             print("Loading simulation variables")
             params.insertAnalytic("EXPOSURE")
         if "Y" in data_dict["xva"]["active"]:
             print("Loading xva variables")
             params.insertAnalytic("XVA")
-            # TODO: set params for SalvageCorrelationMatrix, exposure pricing, base currency, and observation model
+        self.setSimpleParameter(data_dict, "observationModel", "setup", params.setExposureObservationModel)
+        response = urllib.request.urlopen(data_dict["setup"]["pricingEnginesUri"])
+        xml_data = response.read().decode('utf-8')
+        params.setSimulationPricingEngine(xml_data)
+        self.setSimpleParameter(data_dict, "salvageCorrelationMatrix", "simulation", params.setSalvageCovariance, bool)
         self.setSimpleParameter(data_dict, "amc", "simulation", params.setAmc, bool)
         self.setSimpleParameter(data_dict, "amcTradeTypes", "simulation", params.setAmc)
         if "Y" in data_dict["simulation"]["active"] or "Y" in data_dict["simulation"]["active"]:
@@ -297,7 +298,7 @@ class oreApi():
             self.setUriParameter(data_dict, "simulationConfigUri", "simulation", params.setScenarioGeneratorData)
         self.setUriParameter(data_dict, "pricingEnginesUri", "simulation", params.setSimulationPricingEngine)
         self.setUriParameter(data_dict, "amcPricingEnginesUri", "simulation", params.setAmcPricingEngine)
-        self.setSimpleParameter(data_dict,"baseCurrency", "simulation", params.setExposureBaseCurrency)
+        self.setSimpleParameter(data_dict, "baseCurrency", "simulation", params.setExposureBaseCurrency)
         if "observationModel" in data_dict["simulation"]:
             params.setExposureObservationModel(data_dict["simulation"]["observationModel"])
         else:
@@ -319,9 +320,8 @@ class oreApi():
         if "Y" in data_dict["simulation"]["active"] or "Y" in data_dict["xva"]["active"]:
             self.setUriParameter(data_dict, "csaUri", "xva", params.setNettingSetManager)
         if params.setLoadCube(True) and "nettingSetCubeUri" in data_dict["xva"]:
-            nettingSetCubeUri = data_dict["xva"]["nettingSetCubeUri"]
-            # TODO: create paramater for this if needed
-        # TODO: set CPTY and Market cube if needed
+            self.setUriParameter(data_dict, "nettingSetCubeUri", "xva", params.setNettingSetManager)
+        # TODO: CPTY and Market cube not needed for any of the runs (966)
         # Set Xva params
         self.setSimpleParameter(data_dict, "flipViewXVA", "xva", params.setFlipViewXVA, bool)
         self.setSimpleParameter(data_dict, "fullInitialCollateralisation", "xva", params.setFullInitialCollateralisation,
@@ -357,18 +357,8 @@ class oreApi():
         self.setSimpleParameter(data_dict, "flipViewLendingCurvePostfix", "xva", params.setFlipViewLendingCurvePostfix)
 
         # DIM variables
-        if "deterministicInitialMarginUri" in data_dict["xva"]:
-            # Fetch xml url from the json
-            deterministicInitialMarginUri = data_dict["xva"]["deterministicInitialMarginUri"]
-
-            # Decode the URL
-            decoded_url = urllib.parse.unquote(deterministicInitialMarginUri)
-
-            # Fetch the XML data
-            response = urllib.request.urlopen(decoded_url)
-            xml_data = response.read().decode('utf-8')
-            # TODO: set this parameter once added to swig: params.setDeterministicInitialMargin(xml_data)
-
+        #  Fill Time series param
+        self.setUriParameter(data_dict, "deterministicInitialMarginUri", "xva", params.setDeterministicInitialMargin)
         self.setSimpleParameter(data_dict, "dimQuantile", "xva", params.setDimQuantile, float)
         self.setSimpleParameter(data_dict, "dimHorizonCalendarDays", "xva", params.setDimHorizonCalendarDays, int)
         self.setSimpleParameter(data_dict, "dimRegressionOrder", "xva", params.setDimRegressionOrder, int)
@@ -390,7 +380,7 @@ class oreApi():
         self.setSimpleParameter(data_dict, "kvaTheirCvaRiskWeight", "xva", params.setKvaTheirCvaRiskWeight, float)
 
         # Credit Simulation Variables
-        # TODO: set credit simulation parameters once added to swig
+        # TODO: set credit simulation parameters once added to swig (1167)
         '''
         if "creditMigration" in data_dict["xva"]:
             params.setCreditMigrationAnalytic(bool(data_dict["xva"]["creditMigration"]))

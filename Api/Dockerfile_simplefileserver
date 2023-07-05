@@ -4,14 +4,14 @@ FROM python:${python_version}
 # Working directory
 WORKDIR /app
 
-# Copy everything
-COPY . ./
+# Copy needed files
+COPY simplefileserver.py entrypoint-simplefileserver.sh ./
 
-RUN pip install --upgrade pip
-RUN pip install flask
+RUN pip install --upgrade pip &&\
+    pip install flask &&\
+    mkdir -p Input &&\
+    mkdir -p Output
 
-RUN mkdir -p Input
-RUN mkdir -p Output
 
 EXPOSE 3000/tcp
 
