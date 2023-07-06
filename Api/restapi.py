@@ -1,6 +1,6 @@
 #!/usr/bin/env python3`
 import argparse
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from oreApi import oreApi
 
 app = Flask(__name__)
@@ -8,9 +8,15 @@ app = Flask(__name__)
 
 @app.route('/api/analytics', methods=['POST'])
 def handle_analytics_request():
-    ore_instance = oreApi(request)
-    ore_instance.buildInputParameters()
-    return "Success"
+    try:
+        ore_instance = oreApi(request)
+        ore_instance.buildInputParameters()
+        return "Success"
+    except Exception as e:
+        error_message = "Internal server error"
+        response = jsonify({'error': error_message})
+        response.status_code = 500
+        return response
 
 
 if __name__ == '__main__':
@@ -22,3 +28,4 @@ if __name__ == '__main__':
     main_args = argparser.parse_args()
 
     app.run(host=main_args.host, port=main_args.port)
+

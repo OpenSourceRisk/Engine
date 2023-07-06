@@ -4,7 +4,10 @@ import urllib.parse
 import ORE as ql
 import pandas as pd
 import requests
-
+import sys
+from flask import Flask, jsonify, request
+class PostmanError(Exception):
+    pass
 
 class oreApi():
     def __init__(self, request):
@@ -170,13 +173,25 @@ class oreApi():
         self.setSimpleParameter(data_dict, "implyTodaysFixings", "setup", params.setImplyTodaysFixings, bool)
 
         # Set referenceData
-        self.setUriParameter(data_dict, "referenceDataUri", "setup", params.setRefDataManager)
+        try:
+            self.setUriParameter(data_dict, "referenceDataUri", "setup", params.setRefDataManager)
+        except Exception as e:
+            error_message = "Error: reference data not found."
+            response = jsonify({'error': error_message})
+            response.status_code = 500
+            return response
+            # sys.exit(404)
+
 
         # Set iborFallbackConfig
         self.setUriParameter(data_dict, "iborFallbackConfigUri", "setup", params.setIborFallbackConfig)
 
         # Set CurveConfigs
-        self.setUriParameter(data_dict, "curveConfigUri", "setup", params.setCurveConfigs)
+        try:
+            self.setUriParameter(data_dict, "curveConfigUri", "setup", params.setCurveConfigs)
+        except Exception as e:
+            print("Error: Curve configs not found")
+            exit()
 
         # Set conventions
         self.setUriParameter(data_dict, "conventionsUri", "setup", params.setConventions)
@@ -435,7 +450,7 @@ class oreApi():
         fixings_data = fixings_data.splitlines()
 
         print("Running ORE process...")
-        ore.run(ql.StrVector(market_data), ql.StrVector(fixings_data))
+        ore.run(ql.StrVector(market_data), ql.StrVector(fixings_data))  # try catch error needed (500 error)
 
         # find local host to send to based on the json
         resultsUri = self.setInputName(data_dict, "resultsUri", "setup")
