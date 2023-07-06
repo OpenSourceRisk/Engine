@@ -1,6 +1,6 @@
 #!/usr/bin/env python3`
 import argparse
-from flask import Flask, request, jsonify
+from flask import Flask, request, make_response
 from oreApi import oreApi
 
 app = Flask(__name__)
@@ -19,7 +19,7 @@ def handle_analytics_request():
     except Exception as e:
         # Handle any exceptions raised by ore_instance.buildInputParameters()
         error_message = "Internal server error"
-        response = jsonify({'error': error_message})
+        response = make_response(f"error: {error_message}")
         response.status_code = 500
         return response
 

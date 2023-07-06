@@ -5,7 +5,7 @@ import ORE as ql
 import pandas as pd
 import requests
 import sys
-from flask import Flask, jsonify, request
+from flask import make_response
 class PostmanError(Exception):
     pass
 
@@ -178,7 +178,7 @@ class oreApi():
         except Exception as e:
             error_type = type(e).__name__
             error_message = str(e)
-            response = jsonify({'error_type': error_type, 'error_message': error_message})
+            response = make_response({'error_type': error_type, 'error_message': error_message})
             response.status_code = 500
             return response
 
@@ -189,11 +189,11 @@ class oreApi():
         try:
             self.setUriParameter(data_dict, "curveConfigUri", "setup", params.setCurveConfigs)
         except Exception as e:
-            error_message = "Error: Curve Config not found"
+            error_message = "Curve Config not found"
             print("Exception occurred:", str(e))
             print("Error message:", error_message)
-            response = jsonify({'error': error_message})
-            response.status_code = 300
+            response = make_response(f"error: {error_message}")
+            response.status_code = 404
             return response
 
         # Set conventions
