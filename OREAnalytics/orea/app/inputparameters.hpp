@@ -255,10 +255,11 @@ public:
     void setCreditSimulationParameters(const boost::shared_ptr<CreditSimulationParameters>& c) {
         creditSimulationParameters_ = c;
     }
+    void setCreditSimulationParametersFromBuffer(const std::string& xml);
     void setCreditSimulationParametersFromFile(const std::string& fileName);
     void setCreditMigrationOutputFiles(const std::string& s) { creditMigrationOutputFiles_ = s; }
     // Setters for cashflow npv and dynamic backtesting
-    void setCashflowHorizon(const std::string& s); // parse to Date
+    void setCashflowHorizon(const std::string& s); // parse to Date 
     void setPortfolioFilterDate(const std::string& s); // parse to Date
 
     // Setters for SIMM
