@@ -179,11 +179,14 @@ void CrifLoader::add(CrifRecord cr, const bool onDiffAmountCcy) {
                     DLOG("Updated net CRIF records: " << cr);
             } else if (it->riskType == RiskType::AddOnNotionalFactor ||
                        it->riskType == RiskType::ProductClassMultiplier) {
-                string errMsg = "Found more than one instance of risk type " + to_string(it->riskType) +
-                                ". Please check the SIMM parameters input. If enforceIMRegulations=False, then it "
-                                "is possible that multiple entries for different regulations now belong under the same "
-                                "'Unspecified' regulation.";
-                WLOG(ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters", errMsg));
+                // Only log warning if the values are not the same. If they are, then there is no material discrepancy.
+                if (cr.amount != it->amount) {
+                    string errMsg = "Found more than one instance of risk type " + to_string(it->riskType) +
+                                    ". Please check the SIMM parameters input. If enforceIMRegulations=False, then it "
+                                    "is possible that multiple entries for different regulations now belong under the same "
+                                    "'Unspecified' regulation.";
+                    WLOG(ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters", errMsg));
+                }
             } else {
                 // Handling in case new SIMM parameters are added in the future
                 WLOG(ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters",
