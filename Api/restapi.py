@@ -10,9 +10,14 @@ app = Flask(__name__)
 def handle_analytics_request():
     try:
         ore_instance = oreApi(request)
-        ore_instance.buildInputParameters()
-        return "Success"
+        message = ore_instance.buildInputParameters()
+        if message == True:
+            return "Success"
+        else:
+            return message
+
     except Exception as e:
+        # Handle any exceptions raised by ore_instance.buildInputParameters()
         error_message = "Internal server error"
         response = jsonify({'error': error_message})
         response.status_code = 500

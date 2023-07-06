@@ -176,12 +176,11 @@ class oreApi():
         try:
             self.setUriParameter(data_dict, "referenceDataUri", "setup", params.setRefDataManager)
         except Exception as e:
-            error_message = "Error: reference data not found."
-            response = jsonify({'error': error_message})
+            error_type = type(e).__name__
+            error_message = str(e)
+            response = jsonify({'error_type': error_type, 'error_message': error_message})
             response.status_code = 500
             return response
-            # sys.exit(404)
-
 
         # Set iborFallbackConfig
         self.setUriParameter(data_dict, "iborFallbackConfigUri", "setup", params.setIborFallbackConfig)
@@ -190,8 +189,12 @@ class oreApi():
         try:
             self.setUriParameter(data_dict, "curveConfigUri", "setup", params.setCurveConfigs)
         except Exception as e:
-            print("Error: Curve configs not found")
-            exit()
+            error_message = "Error: Curve Config not found"
+            print("Exception occurred:", str(e))
+            print("Error message:", error_message)
+            response = jsonify({'error': error_message})
+            response.status_code = 300
+            return response
 
         # Set conventions
         self.setUriParameter(data_dict, "conventionsUri", "setup", params.setConventions)
@@ -461,5 +464,7 @@ class oreApi():
         print("Run time: %.6f sec" % ore.getRunTime())
 
         print("ORE process done")
+
+        return True
 
 
