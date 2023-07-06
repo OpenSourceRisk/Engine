@@ -121,6 +121,12 @@ private:
     //! If true, no logging is written out
     bool quiet_;
 
+    //! For each netting set, whether all CRIF records' collect regulations are empty
+    std::map<ore::data::NettingSetDetails, bool> collectRegsIsEmpty_;
+
+    //! For each netting set, whether all CRIF records' post regulations are empty
+    std::map<ore::data::NettingSetDetails, bool> postRegsIsEmpty_;
+
     //! Regulation with highest initial margin for each given netting set
     //       side,              netting set details,          regulation
     std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::string>> winningRegulations_;
