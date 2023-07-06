@@ -200,6 +200,16 @@ void FloatingLegData::fromXML(XMLNode* node) {
     if (auto tmp = XMLUtils::getChildNode(node, "ResetSchedule")) {
         resetSchedule_.fromXML(tmp);
     }
+    vector<std::string> histFixingDates;
+    vector<QuantLib::Real> histFixingValues = XMLUtils::getChildrenValuesWithAttributes<Real>(
+        node, "HistoricalFixings", "Fixing", "fixingDate", histFixingDates,
+                                                  &parseReal);
+
+    QL_REQUIRE(histFixingDates.size() == histFixingValues.size(), "Mismatch Fixing values and dates");
+    for (size_t i = 0; i < histFixingDates.size(); ++i) {
+        auto dt = parseDate(histFixingDates[i]);
+        historicalFixings_[dt] = histFixingValues[i];
+    }
 }
 
 XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
@@ -237,6 +247,12 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
         auto tmp = resetSchedule_.toXML(doc);
         XMLUtils::setNodeName(doc, tmp, "ResetSchedule");
         XMLUtils::appendNode(node, tmp);
+    }
+    if (!historicalFixings_.empty()) {
+        auto histFixings = XMLUtils::addChild(doc, node, "HistoricalFixings");
+        for (const auto& [fixingDate, fixingValue] : historicalFixings_) {
+            XMLUtils::addChild(doc, histFixings, "Fixing", to_string(fixingValue), "fixingDate", to_string(fixingDate));
+        }
     }
     return node;
 }
