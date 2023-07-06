@@ -210,7 +210,7 @@ void OvernightIndexedCouponPricer::compute() const {
     Date today = Settings::instance().evaluationDate();
     while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
         // rate must have been fixed
-        Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+        Rate pastFixing = index->fixing(fixingDates[std::min(i, nCutoff)]);
         QL_REQUIRE(pastFixing != Null<Real>(),
                    "Missing " << index->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
         if (coupon_->includeSpread()) {
@@ -225,7 +225,7 @@ void OvernightIndexedCouponPricer::compute() const {
     if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
         // might have been fixed
         try {
-            Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+            Rate pastFixing = index->fixing(fixingDates[std::min(i, nCutoff)]);
             if (pastFixing != Null<Real>()) {
                 if (coupon_->includeSpread()) {
                     compoundFactorWithoutSpread *= (1.0 + pastFixing * dt[i]);

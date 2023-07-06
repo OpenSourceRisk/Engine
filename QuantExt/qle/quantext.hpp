@@ -152,6 +152,7 @@
 #include <qle/indexes/ibor/thor.hpp>
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
+#include <qle/indexes/iborindexfixingoverride.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>

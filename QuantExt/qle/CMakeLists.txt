@@ -467,6 +467,7 @@ indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/genericindex.hpp
+indexes/iborindexfixingoverride.hpp
 indexes/ibor/ambor.hpp
 indexes/ibor/ameribor.hpp
 indexes/ibor/audbbsw.hpp
