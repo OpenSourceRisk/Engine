@@ -141,7 +141,7 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     Date today = Settings::instance().evaluationDate();
     while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
         // rate must have been fixed
-        Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+        Rate pastFixing = index->fixing(fixingDates[std::min(i, nCutoff)]);
         QL_REQUIRE(pastFixing != Null<Real>(),
                    "Missing " << index->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
         if (coupon_->underlying()->includeSpread()) {
@@ -156,7 +156,8 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
         // might have been fixed
         try {
-            Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+            Rate pastFixing =
+                index->fixing(fixingDates[std::min(i, nCutoff)]);
             if (pastFixing != Null<Real>()) {
                 if (coupon_->underlying()->includeSpread()) {
                     pastFixing += coupon_->spread();
@@ -372,7 +373,7 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     Date today = Settings::instance().evaluationDate();
     while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
         // rate must have been fixed
-        Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+        Rate pastFixing = index->fixing(fixingDates[std::min(i, nCutoff)]);
         QL_REQUIRE(pastFixing != Null<Real>(),
                    "Missing " << index->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
         if (coupon_->includeSpread()) {
@@ -387,7 +388,7 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
         // might have been fixed
         try {
-            Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+            Rate pastFixing = index->fixing(fixingDates[std::min(i, nCutoff)]);
             if (pastFixing != Null<Real>()) {
                 if (coupon_->includeSpread()) {
                     pastFixing += coupon_->spread();
