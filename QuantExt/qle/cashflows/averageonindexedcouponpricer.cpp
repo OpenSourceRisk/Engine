@@ -57,7 +57,7 @@ Rate AverageONIndexedCouponPricer::swapletRate() const {
         }
         // Use valuation date's fixing also if available.
         if (i < numPeriods && fixingDates[std::min(i, nCutoff)] == valuationDate) {
-            Rate valuationDateFixing = IndexManager::instance().getHistory(overnightIndex_->name())[valuationDate];
+            Rate valuationDateFixing = overnightIndex_->fixing(valuationDate);
             if (valuationDateFixing != Null<Real>()) {
                 accumulatedRate += valuationDateFixing * accrualFractions[i];
                 ++i;
