@@ -2644,10 +2644,6 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
     bond.build(engineFactory);
 
     RequiredFixings bondRequiredFixings = bond.requiredFixings();
-    if (dirty) {
-        // dirty prices require accrueds on past dates
-        bondRequiredFixings.unsetPayDates();
-    }
     requiredFixings.addData(bondRequiredFixings);
 
     auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
