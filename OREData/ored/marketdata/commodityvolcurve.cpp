@@ -1830,9 +1830,9 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
                         callPricesDelta[i][j] = QuantExt::blackFormula(Option::Call, strike, forwards[i], stddev);
 
                         if (d.isPut()) {
-                            info->putPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev);
+                            info->putPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t));
                         } else {
-                            info->callPrices[i][j] = callPricesDelta[i][j];
+                            info->callPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t));
                         }
 
                         info->deltaGridStrikes[i][j] = strike;

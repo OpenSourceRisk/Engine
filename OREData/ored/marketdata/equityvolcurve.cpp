@@ -1186,9 +1186,9 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
                         callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
 
                         if (d.isPut()) {
-                            calibrationInfo_->putPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev);
+                            calibrationInfo_->putPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, rfDisc[i]);
                         } else {
-                            calibrationInfo_->callPrices[i][j] = callPricesDelta[i][j];
+                            calibrationInfo_->callPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, rfDisc[i]);
                         }
 
                         calibrationInfo_->deltaGridStrikes[i][j] = strike;

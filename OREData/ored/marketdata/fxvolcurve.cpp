@@ -1025,9 +1025,9 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                             callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
                             
                             if (d.isPut()) {
-                                calibrationInfo_->putPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev);
+                                calibrationInfo_->putPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, domDisc[i]);
                             } else {
-                                calibrationInfo_->callPrices[i][j] = callPricesDelta[i][j];
+                                calibrationInfo_->callPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, domDisc[i]);
                             }
                             
                             calibrationInfo_->deltaGridStrikes[i][j] = strike;
