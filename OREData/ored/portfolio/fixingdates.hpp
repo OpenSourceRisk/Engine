@@ -272,8 +272,7 @@ void addMarketFixingDates(const QuantLib::Date& asof, std::map<std::string, std:
                           const QuantLib::Period& iborLookback = 5 * QuantLib::Days,
                           const QuantLib::Period& oisLookback = 4 * QuantLib::Months,
                           const QuantLib::Period& bmaLookback = 2 * QuantLib::Weeks,
-                          const QuantLib::Period& inflationLookback = 1 * QuantLib::Years,
-                          const std::string& configuration = Market::defaultConfiguration);
+                          const QuantLib::Period& inflationLookback = 1 * QuantLib::Years);
 
 } // namespace data
 } // namespace ore
