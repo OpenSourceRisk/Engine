@@ -277,6 +277,10 @@ void ConvertibleBondData::ConversionData::fromXML(XMLNode* node) {
         if (!XMLUtils::getChildrenNodes(tmp, "").empty())
             exchangeableData_.fromXML(tmp);
     }
+    if (auto tmp = XMLUtils::getChildNode(node, "FixedAmountConversion")) {
+        if (!XMLUtils::getChildrenNodes(tmp, "").empty())
+            fixedAmountConversionData_.fromXML(tmp);
+    }
     initialised_ = true;
 }
 
@@ -297,6 +301,8 @@ XMLNode* ConvertibleBondData::ConversionData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "FXIndex", fxIndex_);
     if (exchangeableData_.initialised())
         XMLUtils::appendNode(node, exchangeableData_.toXML(doc));
+    if (fixedAmountConversionData_.initialised())
+        XMLUtils::appendNode(node, fixedAmountConversionData_.toXML(doc));
     return node;
 }
 
