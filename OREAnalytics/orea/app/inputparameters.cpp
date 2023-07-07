@@ -367,6 +367,11 @@ void InputParameters::setCreditSimulationParametersFromFile(const std::string& f
     creditSimulationParameters_->fromFile(fileName);
 }
 
+void InputParameters::setCreditSimulationParametersFromBuffer(const std::string& xml) {
+    creditSimulationParameters_ = boost::make_shared<CreditSimulationParameters>();
+    creditSimulationParameters_->fromXMLString(xml);
+} 
+
 void InputParameters::setCrifLoader() {
     if (!simmBucketMapper_)
         // setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>(simmVersion_));

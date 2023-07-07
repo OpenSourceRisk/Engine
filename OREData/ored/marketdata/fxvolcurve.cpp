@@ -969,6 +969,10 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
             if (reportOnDeltaGrid) {
                 calibrationInfo_->deltas = deltas;
+                calibrationInfo_->callPrices =
+                    std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+                calibrationInfo_->putPrices =
+                    std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
                 calibrationInfo_->deltaGridStrikes =
                     std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
                 calibrationInfo_->deltaGridProb =
@@ -1019,6 +1023,13 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                             }
                             Real stddev = std::sqrt(vol_->blackVariance(t, strike));
                             callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
+                            
+                            if (d.isPut()) {
+                                calibrationInfo_->putPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev);
+                            } else {
+                                calibrationInfo_->callPrices[i][j] = callPricesDelta[i][j];
+                            }
+                            
                             calibrationInfo_->deltaGridStrikes[i][j] = strike;
                             calibrationInfo_->deltaGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
                         } catch (const std::exception& e) {
