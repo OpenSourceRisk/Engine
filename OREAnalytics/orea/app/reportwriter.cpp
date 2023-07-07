@@ -1357,8 +1357,8 @@ void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& typ
             addRowMktCalReport(report, type, id, "strike", tStr, dStr, "", info->deltaGridStrikes.at(i).at(j));
             addRowMktCalReport(report, type, id, "vol", tStr, dStr, "", info->deltaGridImpliedVolatility.at(i).at(j));
             addRowMktCalReport(report, type, id, "prob", tStr, dStr, "", info->deltaGridProb.at(i).at(j));
-            addRowMktCalReport(report, type, id, "call_premium", tStr, dStr, "", info->callPrices.at(i).at(j));
-            addRowMktCalReport(report, type, id, "put_premium", tStr, dStr, "", info->putPrices.at(i).at(j));
+            addRowMktCalReport(report, type, id, "call_premium", tStr, dStr, "", info->deltaCallPrices.at(i).at(j));
+            addRowMktCalReport(report, type, id, "put_premium", tStr, dStr, "", info->deltaPutPrices.at(i).at(j));
             addRowMktCalReport(report, type, id, "callSpreadArb", tStr, dStr, "",
                                static_cast<bool>(info->deltaGridCallSpreadArbitrage.at(i).at(j)));
             addRowMktCalReport(report, type, id, "butterflyArb", tStr, dStr, "",
@@ -1374,6 +1374,8 @@ void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& typ
             addRowMktCalReport(report, type, id, "strike", tStr, mStr, "", info->moneynessGridStrikes.at(i).at(j));
             addRowMktCalReport(report, type, id, "vol", tStr, mStr, "",
                                info->moneynessGridImpliedVolatility.at(i).at(j));
+            addRowMktCalReport(report, type, id, "call_premium", tStr, mStr, "", info->moneynessCallPrices.at(i).at(j));
+            addRowMktCalReport(report, type, id, "put_premium", tStr, mStr, "", info->moneynessPutPrices.at(i).at(j));
             addRowMktCalReport(report, type, id, "prob", tStr, mStr, "", info->moneynessGridProb.at(i).at(j));
             addRowMktCalReport(report, type, id, "callSpreadArb", tStr, mStr, "",
                                static_cast<bool>(info->moneynessGridCallSpreadArbitrage.at(i).at(j)));

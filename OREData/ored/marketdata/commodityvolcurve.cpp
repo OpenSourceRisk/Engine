@@ -1777,9 +1777,9 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
         std::vector<std::vector<Real>> callPricesDelta(times.size(), std::vector<Real>(deltas.size(), 0.0));
         if (reportOnDeltaGrid) {
             info->deltas = deltas;
-            info->callPrices =
+            info->deltaCallPrices =
                     std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
-            info->putPrices =
+            info->deltaPutPrices =
                 std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             info->deltaGridStrikes =
                 std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
@@ -1830,9 +1830,9 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
                         callPricesDelta[i][j] = QuantExt::blackFormula(Option::Call, strike, forwards[i], stddev);
 
                         if (d.isPut()) {
-                            info->putPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t));
+                            info->deltaPutPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t));
                         } else {
-                            info->callPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t));
+                            info->deltaCallPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t));
                         }
 
                         info->deltaGridStrikes[i][j] = strike;
@@ -1867,6 +1867,10 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
         std::vector<std::vector<Real>> callPricesMoneyness(times.size(), std::vector<Real>(moneyness.size(), 0.0));
         if (reportOnMoneynessGrid) {
             info->moneyness = moneyness;
+            info->moneynessCallPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+            info->moneynessPutPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
             info->moneynessGridStrikes =
                 std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
             info->moneynessGridProb =
@@ -1888,6 +1892,11 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
                         Real stddev = std::sqrt(volatility_->blackVariance(t, strike));
                         callPricesMoneyness[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
                         info->moneynessGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
+                        if (moneyness[j] >= 1) {
+                            calibrationInfo_->moneynessCallPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t));
+                        } else {
+                            calibrationInfo_->moneynessPutPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t));
+                        };
                     } catch (const std::exception& e) {
                         TLOG("CommodityVolCurve: error for time " << t << " moneyness " << moneyness[j] << ": " << e.what());
                     }
