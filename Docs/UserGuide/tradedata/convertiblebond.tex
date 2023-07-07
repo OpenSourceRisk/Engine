@@ -743,8 +743,8 @@ applicable if the conversion is specified to be fixed cash amounts, and must the
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
   <!-- American conversion between 2024-08-24 and 2027-05-13, with
-       conversion to 87,000 GBP cash for 2024-08-24 through 2024-11-23 (excl) and
-       conversion to 75,000 GBP cash for 2024-11-23 through 2027-05-13 -->
+       conversion to 0.87 GBP cash for 2024-08-24 through 2024-11-23 (excl) and
+       conversion to 0.75 GBP cash for 2024-11-23 through 2027-05-13 -->
     <ConversionData>
       <Styles>
         <Style>American</Style>
@@ -761,8 +761,8 @@ applicable if the conversion is specified to be fixed cash amounts, and must the
       <FixedAmountConversion>
         <Currency>GBP</Currency>
         <Amounts>
-          <Amount>87000</Amount>
-          <Amount startDate="2024-11-24">75000</Amount>
+          <Amount>0.87</Amount>
+          <Amount startDate="2024-11-24">0.75</Amount>
         </Amounts>
       </FixedAmountConversion>
     </ConversionData>
