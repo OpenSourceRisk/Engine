@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
     TodaysMarketParameters mktParams;
     mktParams.addConfiguration(Market::defaultConfiguration, MarketConfiguration());
 
-    // Add discount curves. Will not influence the result bu should not cause a problem
+    // Add discount curves, we expect market fixings for EUR-EONIA
     map<string, string> m = {{"EUR", "Yield/EUR/EUR-EONIA"}, {"USD", "Yield/USD/USD-IN-EUR"}};
     mktParams.addMarketObject(MarketObject::DiscountCurve, Market::defaultConfiguration, m);
 
@@ -325,7 +325,8 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
 
     map<string, set<Date>> expectedFixings = {{"EUHICPXT", inflationDates}, {"USCPI", inflationDates},
                                               {"UKRPI", inflationDates},    {"EUR-EURIBOR-3M", iborDates},
-                                              {"USD-FedFunds", oisDates},   {"USD-LIBOR-3M", iborDates}};
+                                              {"USD-FedFunds", oisDates},   {"USD-LIBOR-3M", iborDates},
+                                              {"EUR-EONIA", oisDates}};
 
     // Populate empty fixings map using the function to be tested
     map<string, set<Date>> fixings;
