@@ -219,12 +219,15 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
 
     std::vector<Date> calibrationDates = DateGrid(engineParameter("Bootstrap.CalibrationGrid", {}, true)).dates();
     std::vector<Real> calibrationTimes;
+    Date today = Settings::instance().evaluationDate();
     for (Size i = 0; i < calibrationDates.size(); ++i) {
         if (calibrationDates[i] < maturityDate) {
-            calibrationTimes.push_back(volatility->timeFromReference(calibrationDates[i]));
+            calibrationTimes.push_back(!volatility.empty() ? volatility->timeFromReference(calibrationDates[i])
+                                                           : Actual365Fixed().yearFraction(today, calibrationDates[i]));
         }
     }
-    calibrationTimes.push_back(volatility->timeFromReference(maturityDate));
+    calibrationTimes.push_back(!volatility.empty() ? volatility->timeFromReference(maturityDate)
+                                                   : Actual365Fixed().yearFraction(today, maturityDate));
 
     // read global parameters
 
