@@ -26,8 +26,6 @@
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/timegrid.hpp>
@@ -54,20 +52,6 @@ DefaultableEquityJumpDiffusionModelBuilder::DefaultableEquityJumpDiffusionModelB
     QL_REQUIRE(!stepTimes.empty(), "DefaultableEquityJumpDiffusionModel: at least one step time required");
     QL_REQUIRE(close_enough(p_, 0.0) || adjustEquityVolatility_,
                "DefaultableEquityJumpDiffusionModel: for p != 0 (" << p_ << ") adjustEquityVolatility must be true");
-
-    // create dummy equity and zero volatility if either of these are left empty (which is allowed for this model)
-
-    if (equity_ == nullptr) {
-        equity_ = boost::make_shared<QuantExt::EquityIndex2>(
-            "dummyFamily", NullCalendar(), Currency(), Handle<Quote>(boost::make_shared<SimpleQuote>(1.0)),
-            Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed())),
-            Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed())));
-    }
-
-    if (volatility_.empty()) {
-        volatility_ = Handle<BlackVolTermStructure>(boost::make_shared<BlackConstantVol>(
-            0, NullCalendar(), Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)), Actual365Fixed()));
-    }
 
     // register with observables
 
@@ -326,6 +310,8 @@ void DefaultableEquityJumpDiffusionModel::bootstrap(
                 } catch (...) {
                 }
             }
+
+            impliedModelVol = std::max(1E-4, impliedModelVol);
 
             // 1.3 bootstrap the stepwise model sigma
 
