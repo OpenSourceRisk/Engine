@@ -55,7 +55,8 @@ void MarketDataCsvLoaderImpl::retrieveMarketData(
                         boost::shared_ptr<MarketDatum> datum = csvLoader_->get(q, d);
                         loader->add(d, datum->name(), datum->quote()->value());
                     } else {
-                        WLOG("Missing required quote " << q << " for date " << d);
+                        LOG("Requested quote " << q << " for date " << d
+                                               << " not in csv file. This is not necessarily an error.");
                     }
 
                 } else {
