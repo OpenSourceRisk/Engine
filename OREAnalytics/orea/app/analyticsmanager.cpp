@@ -185,6 +185,8 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
 
     if (marketCalibrationReport)
         marketCalibrationReport->outputCalibrationReport();
+
+    inputs_->writeOutParameters();
 }
 
 Analytic::analytic_reports const AnalyticsManager::reports() {
