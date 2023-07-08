@@ -84,6 +84,7 @@ InstrumentConventions::conventions(QuantLib::Date d) const {
             WLOG("InstrumentConventions: Could not find conventions for " << dt << ", using convetions from "
                                                                           << mit->first);
             // save the convention to avoid repeated calls
+            conventions_[dt] = mit->second;
             return mit->second;
         }
     }
