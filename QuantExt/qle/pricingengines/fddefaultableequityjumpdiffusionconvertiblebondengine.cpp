@@ -319,7 +319,8 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
                         }
                     }
                     Real exerciseValue = S[j] * cr * notional(grid[i]) / N0 + accrual(grid[i]);
-                    if (cocoTriggered && exerciseValue > value[plane][j]) {
+                    // see 11.9, if we do not exercise, we are entitled to receive the final redempion flow
+                    if (cocoTriggered && exerciseValue > value[plane][j] + events.getBondFinalRedemption(i)) {
                         value[plane][j] = exerciseValue;
                         conversionExercised[plane][j] = true;
                     }
