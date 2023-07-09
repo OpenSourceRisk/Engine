@@ -71,7 +71,7 @@ Convention::Convention(const string& id, Type type) : type_(type), id_(id) {}
 
 const boost::shared_ptr<ore::data::Conventions>& 
 InstrumentConventions::conventions(QuantLib::Date d) const {
-    QL_REQUIRE(conventions_.size() > 0, "InstrumentConventions: No conventions provided.");
+    QL_REQUIRE(!conventions_.empty(), "InstrumentConventions: No conventions provided.");
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     Date dt = d == Date() ? Settings::instance().evaluationDate() : d;
     auto it = conventions_.find(dt);
@@ -81,10 +81,15 @@ InstrumentConventions::conventions(QuantLib::Date d) const {
             QL_FAIL("InstrumentConventions: Could not find conventions for " << dt);
         else {
             mit--;
-            WLOG("InstrumentConventions: Could not find conventions for " << dt << ", using convetions from "
-                                                                          << mit->first);
-            // save the convention to avoid repeated calls
-            conventions_[dt] = mit->second;
+            constexpr std::size_t max_num_warnings = 10;
+            if (numberOfEmittedWarnings_ < max_num_warnings) {
+                ++numberOfEmittedWarnings_;
+                WLOG("InstrumentConventions: Could not find conventions for "
+                     << dt << ", using convetions from " << mit->first
+                     << (numberOfEmittedWarnings == max_num_warnings
+                             ? " (no more warnings of this type will be emitted)"
+                             : ""));
+            }
             return mit->second;
         }
     }

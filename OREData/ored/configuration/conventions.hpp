@@ -159,12 +159,11 @@ class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions, 
     friend class QuantLib::Singleton<InstrumentConventions, std::integral_constant<bool, true>>;
 
 private:
-    // may be empty but never uninitialised
-    InstrumentConventions() { conventions_[QuantLib::Date()] = boost::make_shared<ore::data::Conventions>();
-    }
+    InstrumentConventions() {}
 
     mutable std::map<QuantLib::Date, boost::shared_ptr<ore::data::Conventions>> conventions_;
     mutable boost::shared_mutex mutex_;
+    mutable std::size_t numberOfEmittedWarnings_ = 0;
 
 public:
     const boost::shared_ptr<ore::data::Conventions>& conventions(QuantLib::Date d = QuantLib::Date()) const;
