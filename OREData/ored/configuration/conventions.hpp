@@ -159,7 +159,7 @@ class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions, 
     friend class QuantLib::Singleton<InstrumentConventions, std::integral_constant<bool, true>>;
 
 private:
-    InstrumentConventions() {}
+    InstrumentConventions() { conventions_[Date()] = boost::make_shared<ore::data::Conventions>(); }
 
     mutable std::map<QuantLib::Date, boost::shared_ptr<ore::data::Conventions>> conventions_;
     mutable boost::shared_mutex mutex_;
