@@ -86,7 +86,7 @@ InstrumentConventions::conventions(QuantLib::Date d) const {
                 ++numberOfEmittedWarnings_;
                 WLOG("InstrumentConventions: Could not find conventions for "
                      << dt << ", using convetions from " << mit->first
-                     << (numberOfEmittedWarnings == max_num_warnings
+                     << (numberOfEmittedWarnings_ == max_num_warnings
                              ? " (no more warnings of this type will be emitted)"
                              : ""));
             }
