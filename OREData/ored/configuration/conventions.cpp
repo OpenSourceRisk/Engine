@@ -69,31 +69,24 @@ namespace data {
 
 Convention::Convention(const string& id, Type type) : type_(type), id_(id) {}
 
-const boost::shared_ptr<ore::data::Conventions>& 
-InstrumentConventions::conventions(QuantLib::Date d) const {
+const boost::shared_ptr<ore::data::Conventions>& InstrumentConventions::conventions(QuantLib::Date d) const {
     QL_REQUIRE(!conventions_.empty(), "InstrumentConventions: No conventions provided.");
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     Date dt = d == Date() ? Settings::instance().evaluationDate() : d;
-    auto it = conventions_.find(dt);
-    if (it == conventions_.end()) {
-        auto mit = conventions_.upper_bound(dt);
-        if (mit == conventions_.begin())
-            QL_FAIL("InstrumentConventions: Could not find conventions for " << dt);
-        else {
-            mit--;
-            constexpr std::size_t max_num_warnings = 10;
-            if (numberOfEmittedWarnings_ < max_num_warnings) {
-                ++numberOfEmittedWarnings_;
-                WLOG("InstrumentConventions: Could not find conventions for "
-                     << dt << ", using convetions from " << mit->first
-                     << (numberOfEmittedWarnings_ == max_num_warnings
-                             ? " (no more warnings of this type will be emitted)"
-                             : ""));
-            }
-            return mit->second;
-        }
+    auto it = conventions_.lower_bound(dt);
+    if(it != conventions_.end() && it->first == dt)
+        return it->second;
+    QL_REQUIRE(it != conventions_.begin(), "InstrumentConventions: Could not find conventions for " << dt);
+    --it;
+    constexpr std::size_t max_num_warnings = 10;
+    if (numberOfEmittedWarnings_ < max_num_warnings) {
+        ++numberOfEmittedWarnings_;
+        WLOG("InstrumentConventions: Could not find conventions for "
+             << dt << ", using convetions from " << it->first
+             << (numberOfEmittedWarnings_ == max_num_warnings ? " (no more warnings of this type will be emitted)"
+                                                              : ""));
     }
-    return conventions_.at(dt);
+    return it->second;
 }
 
 void InstrumentConventions::setConventions(
