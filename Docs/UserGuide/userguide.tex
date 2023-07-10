@@ -3466,6 +3466,12 @@ Finally note that par sensitivity analysis requires that the shift tenor grid in
 See also section \ref{sec:sensitivity}.
 
 
+%--------------------------------------------------------------------
+\subsection{Custom trade fixings}% Example 51
+\label{example:50}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_51} demonstrates ORE's capability to use custom trade specific fixings. For OIS and Ibor floating legs one can specify historical fixing on a trade level, see \ref{ss:floatingleg_data}. Those trade level fixings will be only use for the specific trade, all other trades will use the global fixings.
 
 \clearpage
 %========================================================
