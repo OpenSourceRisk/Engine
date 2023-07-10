@@ -174,8 +174,7 @@ protected:
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        return boost::make_shared<QuantExt::AnalyticEuropeanForwardEngine>(gbsp, discountCurve,
-                                                                           assetClassUnderlying == AssetClass::COM);
+        return boost::make_shared<QuantExt::AnalyticEuropeanForwardEngine>(gbsp, discountCurve);
     }
 };
 

@@ -807,7 +807,6 @@ termstructures/commodityaveragebasispricecurve.hpp
 termstructures/commoditybasispricecurve.hpp
 termstructures/commoditybasispricecurvewrapper.hpp
 termstructures/commoditybasispricetermstructure.hpp
-termstructures/commodityblackvoladaptertermstructure.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/credit/basecorrelationstructure.hpp
 termstructures/credit/spreadedbasecorrelationcurve.hpp

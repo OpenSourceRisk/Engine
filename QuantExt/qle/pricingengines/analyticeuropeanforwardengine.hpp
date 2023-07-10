@@ -56,8 +56,8 @@ namespace QuantExt {
             the risk-free rate in the given process is used for both
             forecasting and discounting.
         */
-        explicit AnalyticEuropeanForwardEngine(const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>&,
-                                               bool volUseFutureExpiry);
+        explicit AnalyticEuropeanForwardEngine(
+                    const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>&);
 
         /*! This constructor allows to use a different term structure
             for discounting the payoff. As usual, the risk-free rate
@@ -66,12 +66,11 @@ namespace QuantExt {
         */
         AnalyticEuropeanForwardEngine(
              const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process,
-             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve, bool volUseFutureExpiry);
+             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve);
         void calculate() const override;
       private:
         boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> process_;
         QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
-        bool volUseFutureExpiry_;
     };
 
 }
