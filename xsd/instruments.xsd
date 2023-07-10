@@ -395,6 +395,7 @@
         <xs:element type="xs:boolean" name="LocalCapFloor" minOccurs="0"/>
         <xs:element type="scheduleData" name="FixingSchedule" minOccurs="0"/>
         <xs:element type="scheduleData" name="ResetSchedule" minOccurs="0"/>
+        <xs:element type="tradeLevelFixings" name="HistoricalFixings" minOccurs="0"/>
       </xs:all>
     </xs:complexType>
   </xs:element>
@@ -1598,6 +1599,20 @@
   <xs:complexType name="floors">
     <xs:sequence>
       <xs:element type="floatWithAttribute" name="Floor" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="tradeLevelFixings">
+    <xs:sequence>
+      <xs:element name="Fixing" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:float">
+              <xs:attribute name="fixingDate" type="xs:string" />
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
 
