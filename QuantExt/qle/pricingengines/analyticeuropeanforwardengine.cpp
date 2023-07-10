@@ -58,15 +58,15 @@ using QuantLib::Error;
 namespace QuantExt {
 
     AnalyticEuropeanForwardEngine::AnalyticEuropeanForwardEngine(
-    const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process, bool volUseFutureExpiry)
-    : process_(process), volUseFutureExpiry_(volUseFutureExpiry){
+             const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process)
+    : process_(process) {
         registerWith(process_);
     }
 
     AnalyticEuropeanForwardEngine::AnalyticEuropeanForwardEngine(
              const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve, bool volUseFutureExpiry)
-        : process_(process), discountCurve_(discountCurve), volUseFutureExpiry_(volUseFutureExpiry) {
+             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve)
+    : process_(process), discountCurve_(discountCurve) {
         registerWith(process_);
         registerWith(discountCurve_);
     }
@@ -87,14 +87,10 @@ namespace QuantExt {
             boost::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
         QL_REQUIRE(payoff, "non-striked payoff given");
 
-        Time tte = process_->blackVolatility()->timeFromReference(arguments_.exercise->lastDate());
-        
-        Date volObsDate = volUseFutureExpiry_ ? arguments_.forwardDate : arguments_.exercise->lastDate();
-        
-        auto vol = process_->blackVolatility()->blackVol(volObsDate, payoff->strike());
-
-        Real variance = vol * vol * tte;
-
+        Real variance =
+            process_->blackVolatility()->blackVariance(
+                                              arguments_.exercise->lastDate(),
+                                              payoff->strike());
         DiscountFactor dividendDiscount =
             process_->dividendYield()->discount(
                                              arguments_.forwardDate);

@@ -436,7 +436,6 @@
 #include <qle/termstructures/commoditybasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurvewrapper.hpp>
 #include <qle/termstructures/commoditybasispricetermstructure.hpp>
-#include <qle/termstructures/commodityblackvoladaptertermstructure.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/credit/basecorrelationstructure.hpp>
 #include <qle/termstructures/credit/spreadedbasecorrelationcurve.hpp>
