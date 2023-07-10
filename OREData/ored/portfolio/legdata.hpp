@@ -24,6 +24,7 @@
 #pragma once
 
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
@@ -1147,6 +1148,21 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
                                                       const bool conditionalOnSurvival,
                                                       const boost::shared_ptr<EngineFactory>& engineFactory,
                                                       RequiredFixings& requiredFixings);
+
+class BondIndexBuilder {
+public:
+    BondIndexBuilder(const BondData& securityData, const bool dirty, const bool relative,
+                     const Calendar& fixingCalendar, const bool conditionalOnSurvival,
+                     const boost::shared_ptr<EngineFactory>& engineFactory);
+
+    boost::shared_ptr<QuantExt::BondIndex> bondIndex();
+    void addRequiredFixings(RequiredFixings& requiredFixings, Leg leg = {});
+
+private:
+    boost::shared_ptr<QuantExt::BondIndex> bondIndex_;
+    RequiredFixings fixings_;
+    const bool dirty_;
+};
 
 // join a vector of legs to a single leg, check if the legs have adjacent periods
 Leg joinLegs(const std::vector<Leg>& legs);

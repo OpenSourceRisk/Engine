@@ -2601,9 +2601,11 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                 QL_REQUIRE(!(boost::dynamic_pointer_cast<BondFuturesIndex>(bi)),
                            "BondFuture Legs are not yet supported");
                 BondData bondData(bi->securityName(), 1.0);
-                index = buildBondIndex(bondData, indexing.indexIsDirty(), indexing.indexIsRelative(),
+                BondIndexBuilder bondIndexBuilder(bondData, indexing.indexIsDirty(), indexing.indexIsRelative(),
                                        parseCalendar(indexing.fixingCalendar()),
-                                       indexing.indexIsConditionalOnSurvival(), engineFactory, requiredFixings);
+                                       indexing.indexIsConditionalOnSurvival(), engineFactory);
+                index = bondIndexBuilder.bondIndex();
+                bondIndexBuilder.addRequiredFixings(requiredFixings, leg);
             } else {
                 QL_FAIL("invalid index '" << indexing.index()
                                           << "' in indexing data, expected EQ-, FX-, COMM-, BOND- index");
@@ -2631,11 +2633,9 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
     }
 }
 
-boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
-                                                      const bool relative, const Calendar& fixingCalendar,
-                                                      const bool conditionalOnSurvival,
-                                                      const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                      RequiredFixings& requiredFixings) {
+BondIndexBuilder::BondIndexBuilder(const BondData& securityData, const bool dirty, const bool relative,
+                                   const Calendar& fixingCalendar, const bool conditionalOnSurvival,
+                                   const boost::shared_ptr<EngineFactory>& engineFactory) : dirty_(dirty) {
 
     // build the bond, we would not need a full build with a pricing engine attached, but this is the easiest
     BondData data = securityData;
@@ -2643,8 +2643,7 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
     Bond bond(Envelope(), data);
     bond.build(engineFactory);
 
-    RequiredFixings bondRequiredFixings = bond.requiredFixings();
-    requiredFixings.addData(bondRequiredFixings);
+    fixings_ = bond.requiredFixings();
 
     auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
     QL_REQUIRE(qlBond, "buildBondIndex(): could not cast to QuantLib::Bond, this is unexpected");
@@ -2691,9 +2690,37 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
 
     // build and return the index
 
-    return boost::make_shared<QuantExt::BondIndex>(
+    bondIndex_ = boost::make_shared<QuantExt::BondIndex>(
         securityId, dirty, relative, fixingCalendar, qlBond, discountCurve, defaultCurve, recovery, spread, incomeCurve,
         conditionalOnSurvival, data.priceQuoteMethod(), data.priceQuoteBaseValue(), data.isInflationLinked());
+}
+
+boost::shared_ptr<QuantExt::BondIndex> BondIndexBuilder::bondIndex() { return bondIndex_; }
+
+void BondIndexBuilder::addRequiredFixings(RequiredFixings& requiredFixings, Leg leg) {
+    if (dirty_) {
+        QL_REQUIRE(leg.size() > 0, "BondIndexBuild: Leg is required if dirty flag set to true");
+        RequiredFixings legFixings;
+        addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(legFixings));
+
+        auto fixingMap = legFixings.fixingDatesIndices();
+        if (fixingMap.size() > 0) {
+            std::map<std::string, std::set<Date>> indexFixings;
+            QL_REQUIRE(fixingMap.size() == 1, "BondTRS: Can only have fixings for one underlying.");
+            for (const auto& [_, dates] : fixingMap) {
+                for (const auto& d : dates) {
+                    auto tmp = fixings_.fixingDatesIndices(d);
+                    for (const auto& [i, ds] : tmp)
+                        indexFixings[i].insert(ds.begin(), ds.end());
+                }
+            }
+            for (const auto& [i, ds] : indexFixings) {
+                vector<Date> dates(ds.begin(), ds.end());
+                requiredFixings.addFixingDates(dates, i);
+            }
+        }
+    } else 
+        requiredFixings.addData(fixings_);
 }
 
 Leg joinLegs(const std::vector<Leg>& legs) {

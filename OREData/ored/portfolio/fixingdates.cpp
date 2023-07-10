@@ -23,6 +23,7 @@
 #include <ored/utilities/indexparser.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/bondtrscashflow.hpp>
 #include <qle/cashflows/cmbcoupon.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
@@ -533,6 +534,21 @@ void FixingDateGetter::visit(CommodityCashFlow& c) {
         if (auto baseFutureIndex = boost::dynamic_pointer_cast<CommodityBasisFutureIndex>(kv.second)) {
             baseFutureIndex->baseCashflow(c.date())->accept(*this);
         }
+    }
+}
+
+ void FixingDateGetter::visit(BondTRSCashFlow& bc) {
+    if (bc.initialPrice() == Null<Real>()) {
+        requiredFixings_.addFixingDate(bc.fixingStartDate(), bc.bondIndex()->name(), 
+            bc.date());
+    }
+    requiredFixings_.addFixingDate(bc.fixingEndDate(), bc.bondIndex()->name(),
+                                   bc.date());
+    if (bc.fxIndex()) {
+        requiredFixings_.addFixingDate(bc.fxIndex()->fixingCalendar().adjust(bc.fixingStartDate(), Preceding), 
+            IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());
+        requiredFixings_.addFixingDate(bc.fxIndex()->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
+            IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());
     }
 }
 
