@@ -119,9 +119,8 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     // build bond index (absolute prices, conditional on survival set to false)
-    RequiredFixings bondIndexFixings;
-    auto bondIndex =
-        buildBondIndex(bondData_, useDirtyPrices_, false, NullCalendar(), false, engineFactory, bondIndexFixings);
+    BondIndexBuilder bondIndexBuilder(bondData_, useDirtyPrices_, false, NullCalendar(), false, engineFactory);
+    auto bondIndex = bondIndexBuilder.bondIndex();
 
     // compute initial price taking into account the possible scaling with priceQuoteBaseValue and 100.0
     Real effectiveInitialPrice = Null<Real>();
@@ -205,41 +204,8 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legPayers_ = {};
 
     // add required bond and fx fixings for return calculation
-
-    RequiredFixings trsStartDateFixings;
-    for (auto const& c : bondTRS->returnLeg()) {
-        if (auto bc = boost::dynamic_pointer_cast<BondTRSCashFlow>(c)) {
-            if (bc->initialPrice() == Null<Real>()) {
-                requiredFixings_.addFixingDate(bc->fixingStartDate(), "BOND-" + bondData_.securityId(), bc->date());
-                trsStartDateFixings.addFixingDate(bc->fixingStartDate(), "BOND-" + bondData_.securityId(), bc->date());
-            }
-            requiredFixings_.addFixingDate(bc->fixingEndDate(), "BOND-" + bondData_.securityId(), bc->date());
-            if (!fxIndex_.empty()) {
-                requiredFixings_.addFixingDate(fxIndex->fixingCalendar().adjust(bc->fixingStartDate(), Preceding),
-                                               fxIndex_, bc->date());
-                requiredFixings_.addFixingDate(fxIndex->fixingCalendar().adjust(bc->fixingEndDate(), Preceding),
-                                               fxIndex_, bc->date());
-            }
-        }
-    }
-
-    auto fixingMap = trsStartDateFixings.fixingDatesIndices();
-    if (fixingMap.size() > 0) {
-        std::map<std::string, std::set<Date>> indexFixings;
-        QL_REQUIRE(fixingMap.size() == 1, "BondTRS: Can only have fixings for one underlying.");
-        for (const auto& [_, dates] : fixingMap) {
-            for (const auto& d : dates) {
-                auto tmp = bondIndexFixings.fixingDatesIndices(d);
-                for (const auto& [i, ds] : tmp) {
-                    indexFixings[i].insert(ds.begin(), ds.end());
-                }
-            }
-        }
-        for (const auto& [i, ds] : indexFixings) {
-            vector<Date> dates(ds.begin(), ds.end());
-            requiredFixings_.addFixingDates(dates, i);
-        }
-    }
+    addToRequiredFixings(bondTRS->returnLeg(), boost::make_shared<FixingDateGetter>(requiredFixings_));
+    bondIndexBuilder.addRequiredFixings(requiredFixings_, bondTRS->returnLeg());
 
     // add required fx fixings for bond cashflow conversion (see the engine for details)
 
