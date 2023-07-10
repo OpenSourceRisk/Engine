@@ -388,8 +388,8 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
         // might have been fixed
         try {
-            Rate pastFixing = index->fixing(fixingDates[std::min(i, nCutoff)]);
-            if (pastFixing != Null<Real>()) {
+            if (index->hasHistoricalFixing(today)) {
+                Rate pastFixing = index->fixing(today);
                 if (coupon_->includeSpread()) {
                     pastFixing += coupon_->spread();
                 }

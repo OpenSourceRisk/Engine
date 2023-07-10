@@ -225,8 +225,8 @@ void OvernightIndexedCouponPricer::compute() const {
     if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
         // might have been fixed
         try {
-            Rate pastFixing = index->fixing(fixingDates[std::min(i, nCutoff)]);
-            if (pastFixing != Null<Real>()) {
+            if (index->hasHistoricalFixing(today)) {
+                Rate pastFixing = index->fixing(fixingDates[std::min(i, nCutoff)]);
                 if (coupon_->includeSpread()) {
                     compoundFactorWithoutSpread *= (1.0 + pastFixing * dt[i]);
                     pastFixing += coupon_->spread();
