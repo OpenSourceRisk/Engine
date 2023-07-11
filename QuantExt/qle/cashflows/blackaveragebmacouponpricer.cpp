@@ -41,7 +41,7 @@ void BlackAverageBMACouponPricer::initialize(const FloatingRateCoupon& coupon) {
 }
 
 Real BlackAverageBMACouponPricer::optionletRate(Option::Type optionType, Real effStrike) const {
-    Date lastRelevantFixingDate = coupon_->underlying()->fixingDate();
+    Date lastRelevantFixingDate = coupon_->underlying()->fixingDates().back();
     if (lastRelevantFixingDate <= Settings::instance().evaluationDate()) {
         // the amount is determined
         Real a, b;
