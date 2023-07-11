@@ -49,7 +49,7 @@ Rate AverageONIndexedCouponPricer::swapletRate() const {
         Date valuationDate = Settings::instance().evaluationDate();
         // Deal with past fixings.
         while (i < numPeriods && fixingDates[std::min(i, nCutoff)] < valuationDate) {
-            Rate pastFixing = overnightIndex_->fixing(fixingDates[std::min(i, nCutoff)]);
+            Rate pastFixing = overnightIndex_->pastFixing(fixingDates[std::min(i, nCutoff)]);
             QL_REQUIRE(pastFixing != Null<Real>(),
                        "Missing " << overnightIndex_->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
             accumulatedRate += pastFixing * accrualFractions[i];
@@ -57,8 +57,8 @@ Rate AverageONIndexedCouponPricer::swapletRate() const {
         }
         // Use valuation date's fixing also if available.
         if (i < numPeriods && fixingDates[std::min(i, nCutoff)] == valuationDate) {
-            if (overnightIndex_->hasHistoricalFixing(valuationDate)) {
-                Rate valuationDateFixing = overnightIndex_->fixing(valuationDate);
+            Rate valuationDateFixing = overnightIndex_->pastFixing(valuationDate);
+            if (valuationDateFixing != Null<Real>()) {
                 accumulatedRate += valuationDateFixing * accrualFractions[i];
                 ++i;
             }
