@@ -139,11 +139,9 @@ public:
 
     bool hasDependentAnalytic(const std::string& key) {  return dependentAnalytics_.find(key) != dependentAnalytics_.end(); }
     template <class T> QuantLib::ext::shared_ptr<T> dependentAnalytic(const std::string& key) const;
-    template <class T> const std::map<std::string, QuantLib::ext::shared_ptr<T>> dependentAnalytics() const;
     const std::map<std::string, QuantLib::ext::shared_ptr<Analytic>>& dependentAnalytics() const {
         return dependentAnalytics_;
     }
-    template <class T> std::map<std::string, QuantLib::ext::shared_ptr<T>> dependentAnalytics() const;
     std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
 
     virtual std::set<QuantLib::Date> marketDates() const { return {inputs_->asof()}; }
@@ -237,18 +235,6 @@ template <class T> inline QuantLib::ext::shared_ptr<T> Analytic::dependentAnalyt
     boost::shared_ptr<T> analytic = boost::dynamic_pointer_cast<T>(it->second);
     QL_REQUIRE(analytic, "Could not cast analytic for key " << key);
     return analytic;
-}
-
-template <class T> const std::map<std::string, QuantLib::ext::shared_ptr<T>> Analytic::dependentAnalytics() const {
-    std::map<std::string, QuantLib::ext::shared_ptr<T>> dependentAnalytics;
-
-    for (const auto& kv : dependentAnalytics_) {
-        boost::shared_ptr<T> analytic = boost::dynamic_pointer_cast<T>(kv.second);
-        if (analytic)
-            dependentAnalytics[kv.first] = analytic;
-    }
-
-    return dependentAnalytics;
 }
 
 } // namespace analytics
