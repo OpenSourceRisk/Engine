@@ -2706,7 +2706,6 @@ void BondIndexBuilder::addRequiredFixings(RequiredFixings& requiredFixings, Leg 
         auto fixingMap = legFixings.fixingDatesIndices();
         if (fixingMap.size() > 0) {
             std::map<std::string, std::set<Date>> indexFixings;
-            QL_REQUIRE(fixingMap.size() == 1, "BondTRS: Can only have fixings for one underlying.");
             for (const auto& [_, dates] : fixingMap) {
                 for (const auto& d : dates) {
                     auto tmp = fixings_.fixingDatesIndices(d);
