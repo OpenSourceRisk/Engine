@@ -114,7 +114,6 @@ bool Analytic::match(const std::set<std::string>& runTypes) {
             return true;
         }
     }
-    WLOG("None of the requested analytics " << to_string(runTypes) << " are covered by the analytic class " << label());
     return false;
 }
 

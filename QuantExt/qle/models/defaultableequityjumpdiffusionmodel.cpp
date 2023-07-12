@@ -25,6 +25,9 @@
 #include <ql/methods/finitedifferences/meshers/uniform1dmesher.hpp>
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/pricingengines/blackformula.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/timegrid.hpp>
 
 namespace QuantExt {
@@ -307,6 +310,8 @@ void DefaultableEquityJumpDiffusionModel::bootstrap(
                 } catch (...) {
                 }
             }
+
+            impliedModelVol = std::max(1E-4, impliedModelVol);
 
             // 1.3 bootstrap the stepwise model sigma
 

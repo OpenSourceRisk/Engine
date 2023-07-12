@@ -159,12 +159,11 @@ class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions, 
     friend class QuantLib::Singleton<InstrumentConventions, std::integral_constant<bool, true>>;
 
 private:
-    // may be empty but never uninitialised
-    InstrumentConventions() { conventions_[QuantLib::Date()] = boost::make_shared<ore::data::Conventions>();
-    }
+    InstrumentConventions() { conventions_[Date()] = boost::make_shared<ore::data::Conventions>(); }
 
     mutable std::map<QuantLib::Date, boost::shared_ptr<ore::data::Conventions>> conventions_;
     mutable boost::shared_mutex mutex_;
+    mutable std::size_t numberOfEmittedWarnings_ = 0;
 
 public:
     const boost::shared_ptr<ore::data::Conventions>& conventions(QuantLib::Date d = QuantLib::Date()) const;
@@ -1595,6 +1594,7 @@ public:
     const std::set<QuantLib::Month>& validContractMonths() const { return validContractMonths_; }
     bool balanceOfTheMonth() const { return balanceOfTheMonth_; }
     Calendar balanceOfTheMonthPricingCalendar() const { return balanceOfTheMonthPricingCalendar_; }
+    const std::string& optionUnderlyingFutureConvention() const { return optionUnderlyingFutureConvention_; }
     //@}
 
     //! Serialisation
@@ -1669,6 +1669,8 @@ private:
     bool balanceOfTheMonth_;
     std::string balanceOfTheMonthPricingCalendarStr_;
     Calendar balanceOfTheMonthPricingCalendar_;
+    //! Option Underlying Future convention
+    std::string optionUnderlyingFutureConvention_;
     //! Populate and check frequency.
     Frequency parseAndValidateFrequency(const std::string& strFrequency);
 

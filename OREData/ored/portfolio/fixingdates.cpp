@@ -17,11 +17,13 @@
 */
 
 #include <ored/configuration/iborfallbackconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/bondtrscashflow.hpp>
 #include <qle/cashflows/cmbcoupon.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
@@ -535,6 +537,21 @@ void FixingDateGetter::visit(CommodityCashFlow& c) {
     }
 }
 
+ void FixingDateGetter::visit(BondTRSCashFlow& bc) {
+    if (bc.initialPrice() == Null<Real>()) {
+        requiredFixings_.addFixingDate(bc.fixingStartDate(), bc.bondIndex()->name(), 
+            bc.date());
+    }
+    requiredFixings_.addFixingDate(bc.fixingEndDate(), bc.bondIndex()->name(),
+                                   bc.date());
+    if (bc.fxIndex()) {
+        requiredFixings_.addFixingDate(bc.fxIndex()->fixingCalendar().adjust(bc.fixingStartDate(), Preceding), 
+            IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());
+        requiredFixings_.addFixingDate(bc.fxIndex()->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
+            IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());
+    }
+}
+
 void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<FixingDateGetter>& fixingDateGetter) {
     for (auto const& c : leg) {
         QL_REQUIRE(c, "addToRequiredFixings(), got null cashflow, this is unexpected");
@@ -568,9 +585,9 @@ void amendInflationFixingDates(map<string, set<Date>>& fixings) {
 
 void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, const TodaysMarketParameters& mktParams,
                           const Period& iborLookback, const Period& oisLookback, const Period& bmaLookback,
-                          const Period& inflationLookback, const string& configuration) {
+                          const Period& inflationLookback) {
 
-    if (mktParams.hasConfiguration(configuration)) {
+    for (auto const& [configuration, _] : mktParams.configurations()) {
 
         LOG("Start adding market fixing dates for configuration '" << configuration << "'");
 
@@ -589,21 +606,37 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
             set<Date> bmaDates;
             WeekendsOnly calendar;
 
+            std::set<std::string> indices;
+            for (auto const& [i, _] : mktParams.mapping(MarketObject::IndexCurve, configuration)) {
+                indices.insert(i);
+            }
+            for (auto const& [i, _] : mktParams.mapping(MarketObject::YieldCurve, configuration)) {
+                boost::shared_ptr<IborIndex> dummy;
+                if (tryParseIborIndex(i, dummy))
+                    indices.insert(i);
+            }
+            for (auto const& [_, s] : mktParams.mapping(MarketObject::DiscountCurve, configuration)) {
+                auto spec = parseCurveSpec(s);
+                boost::shared_ptr<IborIndex> dummy;
+                if (tryParseIborIndex(spec->curveConfigID(), dummy))
+                    indices.insert(spec->curveConfigID());
+            }
+
             // For each of the IR indices in market parameters, insert the dates
-            for (const auto& kv : mktParams.mapping(MarketObject::IndexCurve, configuration)) {
-                if (isOvernightIndex(kv.first)) {
+            for (const auto& i : indices) {
+                if (isOvernightIndex(i)) {
                     if (oisDates.empty()) {
                         TLOG("Generating fixing dates for overnight indices.");
                         oisDates = generateLookbackDates(asof, oisLookback, calendar);
                     }
-                    TLOG("Adding extra fixing dates for overnight index " << kv.first);
-                    fixings[kv.first].insert(oisDates.begin(), oisDates.end());
-                } else if (isBmaIndex(kv.first)) {
+                    TLOG("Adding extra fixing dates for overnight index " << i);
+                    fixings[i].insert(oisDates.begin(), oisDates.end());
+                } else if (isBmaIndex(i)) {
                     if (bmaDates.empty()) {
                         TLOG("Generating fixing dates for bma/sifma indices.");
                         bmaDates = generateLookbackDates(asof, bmaLookback, calendar);
                     }
-                    fixings[kv.first].insert(bmaDates.begin(), bmaDates.end());
+                    fixings[i].insert(bmaDates.begin(), bmaDates.end());
                     if (iborDates.empty()) {
                         TLOG("Generating fixing dates for ibor indices.");
                         iborDates = generateLookbackDates(asof, iborLookback, calendar);
@@ -613,12 +646,12 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
                         auto bma = boost::dynamic_pointer_cast<BMABasisSwapConvention>(c);
                         QL_REQUIRE(
                             bma, "internal error, could not cast to BMABasisSwapConvention in addMarketFixingDates()");
-                        if (bma->bmaIndexName() == kv.first) {
+                        if (bma->bmaIndexName() == i) {
                             liborNames.insert(bma->liborIndexName());
                         }
                     }
                     for (auto const& l : liborNames) {
-                        TLOG("Adding extra fixing dates for libor index " << l << " from bma/sifma index " << kv.first);
+                        TLOG("Adding extra fixing dates for libor index " << l << " from bma/sifma index " << i);
                         fixings[l].insert(iborDates.begin(), iborDates.end());
                     }
                 } else {
@@ -626,8 +659,8 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
                         TLOG("Generating fixing dates for ibor indices.");
                         iborDates = generateLookbackDates(asof, iborLookback, calendar);
                     }
-                    TLOG("Adding extra fixing dates for ibor index " << kv.first);
-                    fixings[kv.first].insert(iborDates.begin(), iborDates.end());
+                    TLOG("Adding extra fixing dates for ibor index " << i);
+                    fixings[i].insert(iborDates.begin(), iborDates.end());
                 }
             }
 
