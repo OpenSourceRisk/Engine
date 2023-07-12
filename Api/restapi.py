@@ -1,7 +1,7 @@
 #!/usr/bin/env python3`
 import argparse
 from flask import Flask, request, make_response
-from oreApi import oreApi
+from oreApi import oreApi, MyCustomException
 
 app = Flask(__name__)
 
@@ -15,10 +15,16 @@ def handle_analytics_request():
             return "Success"
         else:
             return message
+    except MyCustomException as e:
+        # Handle the custom exception MyCustomException
+        error_message = str(e.args[0])
+        response = make_response(f"{error_message}")
+        response.status_code = 404
+        return response
 
     except Exception as e:
         # Handle any exceptions raised by ore_instance.buildInputParameters()
-        error_message = "Internal server error"
+        error_message = "Internal server error from restapi failing"
         response = make_response(f"error: {error_message}")
         response.status_code = 500
         return response

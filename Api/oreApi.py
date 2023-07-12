@@ -4,9 +4,10 @@ import urllib.parse
 import ORE as ql
 import pandas as pd
 import requests
-import sys
 from flask import make_response
-class PostmanError(Exception):
+
+
+class MyCustomException(Exception):
     pass
 
 class oreApi():
@@ -82,17 +83,20 @@ class oreApi():
                 else:
                     param(lookup_value)
 
+
     def setUriParameter(self, data_dict, lookupname, lookuplocation, param):
         if lookupname in data_dict[lookuplocation]:
             # Fetch xml url from the json
             lookup_value = data_dict[lookuplocation][lookupname]
+            try:
+                response = requests.get(lookup_value)
+                response.raise_for_status()  # Raise an exception for non-2xx response codes
+                xml_data = response.text
+                param(xml_data)
 
-            # Fetch the XML data
-            response = urllib.request.urlopen(lookup_value)
-            xml_data = response.read().decode('utf-8')
-
-            # Set parameter
-            param(xml_data)
+            except Exception as e:
+                error_message = str(e)
+                raise MyCustomException(f"HTTPConnectionPool error: {error_message}") from e
 
     def setInputName(self, data_dict,lookupname, lookuplocation):
         if lookupname in data_dict[lookuplocation]:
@@ -188,11 +192,12 @@ class oreApi():
         # Set CurveConfigs
         try:
             self.setUriParameter(data_dict, "curveConfigUri", "setup", params.setCurveConfigs)
+
         except Exception as e:
             error_message = "Curve Config not found"
             print("Exception occurred:", str(e))
             print("Error message:", error_message)
-            response = make_response(f"error: {error_message}")
+            response = make_response(f"error: {str(e)}")
             response.status_code = 404
             return response
 
@@ -440,20 +445,26 @@ class oreApi():
 
         # load market data to run the app
         market_data = data_dict["setup"]["marketData"]
-        response = urllib.request.urlopen(market_data)
-        market_data = response.read().decode('utf-8')
+        response = requests.get(market_data)
+        market_data = response.text
         # Split by new line
         market_data = market_data.splitlines()
 
         # load market fixings data to run the app
         fixings_data = data_dict["setup"]["fixingsData"]
-        response = urllib.request.urlopen(fixings_data)
-        fixings_data = response.read().decode('utf-8')
+        response = requests.get(fixings_data)
+        fixings_data = response.text
         # Split by new line
         fixings_data = fixings_data.splitlines()
 
         print("Running ORE process...")
-        ore.run(ql.StrVector(market_data), ql.StrVector(fixings_data))  # try catch error needed (500 error)
+        try:
+            ore.run(ql.StrVector(market_data), ql.StrVector(fixings_data))  # try catch error needed (500 error)
+        except Exception as e:
+            error_message = "Internal server error from ore app failing"
+            response = make_response(f"error: {error_message}")
+            response.status_code = 500
+            return response
 
         # find local host to send to based on the json
         resultsUri = self.setInputName(data_dict, "resultsUri", "setup")
