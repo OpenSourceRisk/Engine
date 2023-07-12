@@ -19,6 +19,7 @@
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
@@ -646,6 +647,17 @@ void McMultiLegBaseEngine::calculate() const {
                             bmaIndex->forwardingTermStructure()),
                         bma->gearing(), bma->spread(), bma->referencePeriodStart(), bma->referencePeriodEnd(),
                         bma->dayCounter(), false, Date());
+                } else if (auto spc = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(cpn)) {
+                    auto iborIndex = boost::dynamic_pointer_cast<IborIndex>(spc->index());
+                    QL_REQUIRE(iborIndex, "McMultiLegBaseEngine: SubPeriodsCoupon with non-ibor index is not supported.");
+                    flr = boost::make_shared<IborCoupon>(
+                        spc->date(), spc->nominal(), spc->accrualStartDate(), spc->accrualEndDate(), spc->fixingDays(),
+                        boost::make_shared<IborIndex>(
+                            "proxy-ibor", (spc->accrualEndDate() - spc->accrualStartDate()) * Days, spc->fixingDays(),
+                            iborIndex->currency(), iborIndex->fixingCalendar(), Following, false, spc->dayCounter(),
+                            iborIndex->forwardingTermStructure()),
+                        spc->gearing(), spc->spread(), spc->referencePeriodStart(), spc->referencePeriodEnd(),
+                        spc->dayCounter(), false, Date());
                 }
 
                 // in arrears?
