@@ -117,6 +117,7 @@ public:
         return boost::dynamic_pointer_cast<MarketImpl>(market_);
     }
     const boost::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; };
+    void setInputs(const boost::shared_ptr<InputParameters>& inputs) { inputs_ = inputs; };
     void setMarket(const boost::shared_ptr<ore::data::Market>& market) { market_ = market; };
     void setPortfolio(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) { portfolio_ = portfolio; };
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
