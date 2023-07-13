@@ -117,8 +117,8 @@ public:
         return boost::dynamic_pointer_cast<MarketImpl>(market_);
     }
     const boost::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; };
-    void setInputs(const boost::shared_ptr<InputParameters>& inputs) { inputs_ = inputs; };
-    void setMarket(const boost::shared_ptr<ore::data::Market>& market) { market_ = market; };
+    void setInputs(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { inputs_ = inputs; }
+    void setMarket(const QuantLib::ext::shared_ptr<ore::data::Market>& market) { market_ = market; };
     void setPortfolio(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) { portfolio_ = portfolio; };
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
     const QuantLib::ext::shared_ptr<ore::data::Loader>& loader() const { return loader_; };
@@ -193,6 +193,7 @@ public:
 
     void setAnalytic(Analytic* analytic) { analytic_ = analytic; }
     Analytic* analytic() const { return analytic_; }
+    void setInputs(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { inputs_ = inputs; }
     
     bool generateAdditionalResults() const { return generateAdditionalResults_; }
     void setGenerateAdditionalResults(const bool generateAdditionalResults) {
@@ -200,7 +201,7 @@ public:
     }
 
 protected:
-    boost::shared_ptr<InputParameters> inputs_;
+    QuantLib::ext::shared_ptr<InputParameters> inputs_;
 
 private:
     Analytic* analytic_;
@@ -218,8 +219,10 @@ class MarketDataAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "MARKETDATA";
 
-    MarketDataAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    MarketDataAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+        setLabel(LABEL);
+    }
+    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
         const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 };
