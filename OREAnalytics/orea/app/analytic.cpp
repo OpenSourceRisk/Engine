@@ -189,12 +189,15 @@ void Analytic::marketCalibration(const boost::shared_ptr<MarketCalibrationReport
 }
 
 void Analytic::buildPortfolio() {
+    QuantLib::ext::shared_ptr<Portfolio> tmp = portfolio_ ? portfolio_ : inputs()->portfolio();
+        
     // create a new empty portfolio
     portfolio_ = boost::make_shared<Portfolio>(inputs()->buildFailedTrades());
 
-    inputs()->portfolio()->reset();
+    tmp->reset();
     // populate with trades
-    for (const auto& [tradeId, trade] : inputs()->portfolio()->trades())
+    for (const auto& [tradeId, trade] : tmp->trades())
+        // If portfolio was already provided to the analytic, make sure to only process those given trades.
         portfolio()->add(trade);
     
     if (market_) {
