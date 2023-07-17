@@ -34,6 +34,35 @@ CSVFileReader::CSVFileReader(const std::string& fileName, const bool firstLineCo
     : fileName_(fileName), hasHeaders_(firstLineContainsHeaders), eolMarker_(eolMarker), currentLine_(Null<Size>()),
       numberOfColumns_(Null<Size>()),
       tokenizer_(std::string(), boost::escaped_list_separator<char>(escapeCharacters, delimiters, quoteCharacters)) {
+
+    std::ifstream file_(fileName.c_str()); // Open the file using ifstream for error checking
+    std::ostringstream oss;
+    oss << file_.rdbuf(); // Read the file contents into an ostringstream
+
+    std::istringstream iss(oss.str()); // Create an istream from the ostringstream
+
+    // use iss as an istream to read from the file contents
+
+    QL_REQUIRE(iss, "CSVFileReader: error opening file " << fileName);
+
+    if (firstLineContainsHeaders) {
+        QL_REQUIRE(!iss.eof(), "CSVFileReader: file is empty: " << fileName);
+        std::string line;
+        getline(iss, line, eolMarker);
+        boost::trim(line);
+        tokenizer_.assign(line);
+        std::copy(tokenizer_.begin(), tokenizer_.end(), std::back_inserter(headers_));
+        numberOfColumns_ = headers_.size();
+    }
+}
+
+/*
+CSVFileReader::CSVFileReader(const std::string& fileName, const bool firstLineContainsHeaders,
+                             const std::string& delimiters, const std::string& escapeCharacters,
+                             const std::string& quoteCharacters, const char eolMarker)
+    : fileName_(fileName), hasHeaders_(firstLineContainsHeaders), eolMarker_(eolMarker), currentLine_(Null<Size>()),
+      numberOfColumns_(Null<Size>()),
+      tokenizer_(std::string(), boost::escaped_list_separator<char>(escapeCharacters, delimiters, quoteCharacters)) {
     file_.open(fileName);
     QL_REQUIRE(file_.is_open(), "CSVFileReader: error opening file " << fileName);
     if (firstLineContainsHeaders) {
@@ -46,7 +75,7 @@ CSVFileReader::CSVFileReader(const std::string& fileName, const bool firstLineCo
         numberOfColumns_ = headers_.size();
     }
 }
-
+*/
 const std::vector<std::string>& CSVFileReader::fields() const {
     QL_REQUIRE(hasHeaders_, "CSVFileReader: no headers were specified for \"" << fileName_ << "\"");
     return headers_;
@@ -62,14 +91,14 @@ Size CSVFileReader::numberOfColumns() const {
 }
 
 bool CSVFileReader::next() {
-    QL_REQUIRE(file_.is_open(), "CSVFileReader: file is not open, can not move to next line");
+    //QL_REQUIRE(file_->is_open(), "CSVFileReader: file is not open, can not move to next line");
     std::string line = "";
     // skip empty lines
-    while (line.size() == 0 && !file_.eof()) {
-        getline(file_, line, eolMarker_);
+    while (line.size() == 0 && !file_->eof()) {
+        getline(*file_, line, eolMarker_);
         boost::trim(line);
     }
-    if (file_.eof() && line.empty()) {
+    if (file_->eof() && line.empty()) {
         close();
         return false;
     }
@@ -113,7 +142,7 @@ std::string CSVFileReader::get(const Size column) const {
     return data_[column];
 }
 
-void CSVFileReader::close() { file_.close(); }
+//void CSVFileReader::close() { file_->close(); }
 
 } // namespace data
 } // namespace ore

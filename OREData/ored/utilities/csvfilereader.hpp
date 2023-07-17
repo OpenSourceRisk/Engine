@@ -26,18 +26,19 @@
 #include <ql/types.hpp>
 
 #include <boost/tokenizer.hpp>
-
+#include <iostream>
 #include <fstream>
+#include <sstream>
 #include <vector>
 
 namespace ore {
 namespace data {
 using QuantLib::Size;
 
-class CSVFileReader {
+class CSVReader {
 public:
     /*! Ctor */
-    CSVFileReader(const std::string& fileName, const bool firstLineContainsHeaders,
+    CSVReader(const std::string& fileName, const bool firstLineContainsHeaders,
                   const std::string& delimiters = ",;\t", const std::string& escapeCharacters = "\\",
                   const std::string& quoteCharacters = "\"", const char eolMarker = '\n');
 
@@ -56,17 +57,23 @@ public:
     /*! Get content of column in current data line, throws if column is out of range */
     std::string get(const Size column) const;
     /*! Close the file */
-    void close();
+    void close() {}
 
 private:
     const std::string fileName_;
     const bool hasHeaders_;
     const char eolMarker_;
-    std::ifstream file_;
+    std::istream *file_;
     Size currentLine_, numberOfColumns_;
     boost::tokenizer<boost::escaped_list_separator<char>> tokenizer_;
     std::vector<std::string> headers_, data_;
 };
 
+class CSVFileReader : public CSVReader {
+public:
+}
+
 } // namespace data
 } // namespace ore
+
+
