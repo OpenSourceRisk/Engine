@@ -26,8 +26,8 @@
 #include <ql/types.hpp>
 
 #include <boost/tokenizer.hpp>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <vector>
 
@@ -38,10 +38,12 @@ using QuantLib::Size;
 class CSVReader {
 public:
     /*! Ctor */
-    CSVReader(const std::string& fileName, const bool firstLineContainsHeaders,
-                  const std::string& delimiters = ",;\t", const std::string& escapeCharacters = "\\",
-                  const std::string& quoteCharacters = "\"", const char eolMarker = '\n');
-
+    CSVReader(std::istream* stream, const bool firstLineContainsHeaders, const std::string& delimiters = ",;\t",
+              const std::string& escapeCharacters = "\\", const std::string& quoteCharacters = "\"",
+              const char eolMarker = '\n');
+    /*! Set stream for function */
+    //void setStream(std::istream* stream);
+    void setStream(std::string);
     /*! Returns the fields, if a header line is present, otherwise throws */
     const std::vector<std::string>& fields() const;
     /*! Return true if a field is present */
@@ -60,10 +62,9 @@ public:
     void close() {}
 
 private:
-    const std::string fileName_;
     const bool hasHeaders_;
     const char eolMarker_;
-    std::istream *file_;
+    std::istream* stream_;
     Size currentLine_, numberOfColumns_;
     boost::tokenizer<boost::escaped_list_separator<char>> tokenizer_;
     std::vector<std::string> headers_, data_;
@@ -71,9 +72,17 @@ private:
 
 class CSVFileReader : public CSVReader {
 public:
+    /*! Ctor */
+    CSVFileReader(const std::string& fileName, const bool firstLineContainsHeaders,
+                  const std::string& delimiters = ",;\t", const std::string& escapeCharacters = "\\",
+                  const std::string& quoteCharacters = "\"", const char eolMarker = '\n');
+
+private:
+    const std::string fileName_;
 }
 
 } // namespace data
 } // namespace ore
+
 
 

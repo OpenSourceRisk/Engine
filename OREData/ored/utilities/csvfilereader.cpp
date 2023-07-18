@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2023 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -28,27 +28,28 @@ using QuantLib::Null;
 namespace ore {
 namespace data {
 
-CSVFileReader::CSVFileReader(const std::string& fileName, const bool firstLineContainsHeaders,
-                             const std::string& delimiters, const std::string& escapeCharacters,
-                             const std::string& quoteCharacters, const char eolMarker)
-    : fileName_(fileName), hasHeaders_(firstLineContainsHeaders), eolMarker_(eolMarker), currentLine_(Null<Size>()),
+CSVReader::CSVReader(std::istream* stream, const bool firstLineContainsHeaders, const std::string& delimiters,
+                     const std::string& escapeCharacters, const std::string& quoteCharacters, const char eolMarker)
+    : stream_(stream), hasHeaders_(firstLineContainsHeaders), eolMarker_(eolMarker), currentLine_(Null<Size>()),
       numberOfColumns_(Null<Size>()),
       tokenizer_(std::string(), boost::escaped_list_separator<char>(escapeCharacters, delimiters, quoteCharacters)) {
 
-    std::ifstream file_(fileName.c_str()); // Open the file using ifstream for error checking
-    std::ostringstream oss;
-    oss << file_.rdbuf(); // Read the file contents into an ostringstream
+    // create pointer to stream and call csvreader
 
-    std::istringstream iss(oss.str()); // Create an istream from the ostringstream
+    // std::ifstream file_(c_str()); // Open the file using ifstream for error checking
+    // std::ostringstream oss;
+    // oss << file_.rdbuf(); // Read the file contents into an ostringstream
+
+    // std::istringstream iss(oss.str()); // Create an istream from the ostringstream
 
     // use iss as an istream to read from the file contents
 
-    QL_REQUIRE(iss, "CSVFileReader: error opening file " << fileName);
+    // QL_REQUIRE(iss, "CSVFileReader: error opening file " << fileName);
 
     if (firstLineContainsHeaders) {
-        QL_REQUIRE(!iss.eof(), "CSVFileReader: file is empty: " << fileName);
+        QL_REQUIRE(!file_->eof(), "CSVReader: stream is empty");
         std::string line;
-        getline(iss, line, eolMarker);
+        getline(*stream_, line, eolMarker);
         boost::trim(line);
         tokenizer_.assign(line);
         std::copy(tokenizer_.begin(), tokenizer_.end(), std::back_inserter(headers_));
@@ -76,22 +77,32 @@ CSVFileReader::CSVFileReader(const std::string& fileName, const bool firstLineCo
     }
 }
 */
-const std::vector<std::string>& CSVFileReader::fields() const {
+void setStream(std::string stream) { 
+    //std::istream iss(stream);
+    std::istringstream iss(std::move(stream));
+    //std::istringstream iss(stream);
+    //std::string line;
+    //while (std::getline(stream, line)) {
+       // std::cout << line << std::endl;
+   // }
+    // std::istream* stream;
+}
+const std::vector<std::string>& CSVReader::fields() const {
     QL_REQUIRE(hasHeaders_, "CSVFileReader: no headers were specified for \"" << fileName_ << "\"");
     return headers_;
 }
 
-const bool CSVFileReader::hasField(const std::string& field) const {
+const bool CSVReader::hasField(const std::string& field) const {
     return std::find(fields().begin(), fields().end(), field) != fields().end();
 }
 
-Size CSVFileReader::numberOfColumns() const {
+Size CSVReader::numberOfColumns() const {
     QL_REQUIRE(numberOfColumns_ != Null<Size>(), "CSVFileReader: number of columns not known (need call to next())");
     return numberOfColumns_;
 }
 
-bool CSVFileReader::next() {
-    //QL_REQUIRE(file_->is_open(), "CSVFileReader: file is not open, can not move to next line");
+bool CSVReader::next() {
+    // QL_REQUIRE(file_->is_open(), "CSVFileReader: file is not open, can not move to next line");
     std::string line = "";
     // skip empty lines
     while (line.size() == 0 && !file_->eof()) {
@@ -118,12 +129,12 @@ bool CSVFileReader::next() {
     return true;
 }
 
-Size CSVFileReader::currentLine() const {
+Size CSVReader::currentLine() const {
     QL_REQUIRE(currentLine_ != Null<Size>(), "CSVFileReader: current line not known (need call to next())");
     return currentLine_;
 }
 
-std::string CSVFileReader::get(const std::string& field) const {
+std::string CSVReader::get(const std::string& field) const {
     QL_REQUIRE(hasHeaders_, "CSVFileReader: can not get data by field, file does not have headers");
     QL_REQUIRE(currentLine_ != Null<Size>(), "CSVFileReader: can not get data, need call to next() first");
     Size index = std::find(headers_.begin(), headers_.end(), field) - headers_.begin();
@@ -134,7 +145,7 @@ std::string CSVFileReader::get(const std::string& field) const {
     return data_[index];
 }
 
-std::string CSVFileReader::get(const Size column) const {
+std::string CSVReader::get(const Size column) const {
     QL_REQUIRE(column < numberOfColumns_,
                "CSVFileReader: column " << column << " out of bounds 0..." << (numberOfColumns_ - 1));
     QL_REQUIRE(column < data_.size(),
@@ -142,7 +153,37 @@ std::string CSVFileReader::get(const Size column) const {
     return data_[column];
 }
 
-//void CSVFileReader::close() { file_->close(); }
+// void CSVFileReader::close() { file_->close(); }
+CSVFileReader::CSVFileReader(const std::string& fileName, const bool firstLineContainsHeaders,
+                             const std::string& delimiters, const std::string& escapeCharacters,
+                             const std::string& quoteCharacters, const char eolMarker)
+    : fileName_(fileName), CSVReader(new std::istringstream(), firstLineContainsHeaders, delimiters, escapeCharacters,
+                                     quoteCharacters, eolMarker) {
+
+    // take file name, create the stream, pass to csvreader
+
+    std::ifstream file(fileName_.c_str()); // Open the file using ifstream for error checking
+    if (!file.is_open()) {
+        throw std::runtime_error("CSVFileReader: error opening file " + fileName);
+    }
+
+    // open file
+    fileName_.open(fileName_);
+
+    // pass stream to function set stream
+    setStream(fileName_);
+
+    /*
+
+    std::ostringstream oss;
+    oss << file.rdbuf(); // Read the file contents into an ostringstream
+
+    // std::istringstream iss(oss.str()); // Create an istream from the ostringstream
+
+    // Pass the file contents as a string to the CSVReader constructor
+    csvReader_ = CSVReader(new std::istringstream(oss.str()), hasHeaders_, delimiters, escapeCharacters,
+                           quoteCharacters, eolMarker_);
+    */
 
 } // namespace data
 } // namespace ore
