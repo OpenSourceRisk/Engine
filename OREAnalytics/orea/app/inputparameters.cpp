@@ -377,7 +377,7 @@ void InputParameters::setCrifLoader() {
         // setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>(simmVersion_));
         setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>());
     boost::shared_ptr<SimmConfiguration> configuration =
-        buildSimmConfiguration(simmVersion_, simmBucketMapper_);
+        buildSimmConfiguration(simmVersion_, simmBucketMapper_, mporDays());
     bool updateMappings = true;
     bool aggregateTrades = false;
     crifLoader_ =
