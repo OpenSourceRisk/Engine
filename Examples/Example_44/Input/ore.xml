@@ -26,9 +26,11 @@
     <Analytic type="simm">
       <Parameter name="active">Y</Parameter>
       <!-- 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.5A  -->
-      <Parameter name="version">2.1</Parameter>
+      <Parameter name="version">2.4</Parameter>
       <Parameter name="crif">crif.csv</Parameter>
       <Parameter name="calculationCurrency">USD</Parameter>
+      <Parameter name="enforceIMRegulations">Y</Parameter>
+      <Parameter name="mporDays">10</Parameter>
     </Analytic>
   </Analytics>
 </ORE>
