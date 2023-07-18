@@ -15,13 +15,10 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-#include <ored/portfolio/builders/commodityspreadoption.hpp>
-#include <ored/portfolio/commoditylegbuilder.hpp>
-#include <ored/portfolio/commodityspreadoption.hpp>
-#include <ored/utilities/marketdata.hpp>
-#include <qle/cashflows/commodityindexedcashflow.hpp>
-#include <qle/indexes/fxindex.hpp>
-#include <qle/instruments/commodityspreadoption.hpp>
+#include <ored/portfolio/commodityspreadoptionstrip.hpp>
+#include <ored/utilities/to_string.hpp>
+
+namespace ore::data {
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -29,15 +26,42 @@ using std::max;
 using std::string;
 using std::vector;
 
-namespace ore::data {
-
-void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+void CommoditySpreadOptionStrip::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
 
     DLOG("CommoditySpreadOption::build() called for trade " << id());
     reset();
     auto legData_ = csoData_.legData();
     auto optionData_ = csoData_.optionData();
     auto strike_ = csoData_.strike();
+
+    // Build Schedule for each leg
+    auto schedule = makeSchedule(scheduleData_);
+    QL_REQUIRE(schedule.size() >= 2, "Require min 2 dates");
+    
+    vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    vector<Real> additionalMultipliers;
+
+    for (size_t i = 0; i < schedule.size() - 1; i++) {
+        Date start = schedule[i];
+        Date end = schedule[i + 1];
+        ScheduleRules newScheduleRule(to_string(start), to_string(end), to_string(tenor_), to_string(cal_), to_string(bdc_),
+                      to_string(termBdc_), to_string(rule_));
+        for (auto& leg : legData_) {
+            leg.schedule() = ScheduleData(newScheduleRule);
+        }
+
+        CommoditySpreadOption option;
+        option.build(engineFactory);
+        
+
+        additionalInstruments.push_back(option.instrument()->qlInstrument());
+        additionalInstruments.insert(additionalInstruments.end(), option.instrument()->additionalInstruments().begin(),
+                                     option.instrument()->additionalInstruments().end()); 
+        additionalMultipliers.push_back(1.0);
+        additionalMultipliers.insert(additionalMultipliers.end(), option.instrument()->additionalMultipliers().begin(),
+                                     option.instrument()->additionalMultipliers().end()); 
+    }
+
 
     QL_REQUIRE(legData_.size() == 2, "Only two legs supported");
     QL_REQUIRE(legData_[0].currency() == legData_[1].currency(), "Both legs must have same currency");
@@ -145,7 +169,7 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
 
         QL_REQUIRE(quantity == shortFlow->periodQuantity(), "all cashflows must refer to the same quantity");
 
-        QuantLib::Date lastPricingDate = std::max(longFlow->lastPricingDate(),shortFlow->lastPricingDate());
+        QuantLib::Date lastPricingDate = std::max(longFlow->lastPricingDate(), shortFlow->lastPricingDate());
 
         QuantLib::Date paymentDate = longFlow->date();
 
@@ -210,52 +234,37 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
     additionalData_["isdaTransaction"] = std::string("");
     if (!optionData_.premiumData().premiumData().empty()) {
         auto premium = optionData_.premiumData().premiumData().front();
-        additionalData_["premiumAmount"] = - bsInd * premium.amount;
+        additionalData_["premiumAmount"] = -bsInd * premium.amount;
         additionalData_["premiumPaymentDate"] = premium.payDate;
         additionalData_["premiumCurrency"] = premium.ccy;
     }
 }
 
-void CommoditySpreadOption::fromXML(XMLNode* node) {
+void CommoditySpreadOptionStrip::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* csoNode = XMLUtils::getChildNode(node, "CommoditySpreadOptionData");
     csoData_.fromXML(csoNode);
+    XMLNode* premiumNode = XMLUtils::getChildNode(node, "Premiums");
+    if (premiumNode)
+        premiumData_.fromXML(premiumNode);
+    XMLNode* scheduleNode = XMLUtils::getChildNode(node, "Premiums");
+    scheduleData_.fromXML(scheduleNode);
+
+    tenor_ = XMLUtils::getChildValueAsPeriod(node, "OptionStripTenor", false, 1 * Days);
+    bdc_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "OptionStripConvention", false, "Unadjusted"));
+    termBdc_
+    = parseBusinessDayConvention(XMLUtils::getChildValue(node, "OptionStripTermConvention", false, "Unadjusted"));
+    rule_ = parseDateGenerationRule(XMLUtils::getChildValue(node, "OptionStripRule", false, "Backward"));
+    cal_ = parseCalendar(XMLUtils::getChildValue(node, "OptionStripCalendar", false, "NullCalendar"));
+    
+    
 }
-XMLNode* CommoditySpreadOption::toXML(XMLDocument& doc) { XMLNode* node = Trade::toXML(doc); 
+XMLNode* CommoditySpreadOptionStrip::toXML(XMLDocument& doc) {
+    XMLNode* node = Trade::toXML(doc);
     auto csoNode = csoData_.toXML(doc);
     XMLUtils::appendNode(node, csoNode);
     return node;
 }
 
-void CommoditySpreadOptionData::fromXML(XMLNode* csoNode) {
-    XMLUtils::checkNode(csoNode, "CommoditySpreadOptionData");
-
-    XMLNode* optionDataNode = XMLUtils::getChildNode(csoNode, "OptionData");
-    QL_REQUIRE(optionDataNode, "Invalid CommmoditySpreadOption trade xml: found no OptionData Node");
-
-    optionData_.fromXML(optionDataNode);
-    strike_ = XMLUtils::getChildValueAsDouble(csoNode, "SpreadStrike", true);
-
-    vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(csoNode, "LegData");
-    QL_REQUIRE(nodes.size() == 2, "CommoditySpreadOption: Exactly two LegData nodes expected");
-    for (auto& node : nodes) {
-        auto ld = createLegData();
-        ld->fromXML(node);
-        legData_.push_back(*ld);
-    }
-
-    QL_REQUIRE(legData_[0].isPayer() != legData_[1].isPayer(),
-               "CommoditySpreadOption: both a long and a short Assets are required.");
-}
-
-XMLNode* CommoditySpreadOptionData::toXML(XMLDocument& doc) {
-    XMLNode* csoNode = doc.allocNode("CommoditySpreadOptionData");
-    for (size_t i = 0; i < legData_.size(); ++i) {
-        XMLUtils::appendNode(csoNode, legData_[i].toXML(doc));
-    }
-    XMLUtils::appendNode(csoNode, optionData_.toXML(doc));
-    XMLUtils::addChild(doc, csoNode, "SpreadStrike", strike_);
-    return csoNode;
-}
 
 } // namespace ore::data

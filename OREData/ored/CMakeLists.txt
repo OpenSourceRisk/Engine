@@ -183,6 +183,7 @@ portfolio/commodityoption.cpp
 portfolio/commodityoptionstrip.cpp
 portfolio/commodityposition.cpp
 portfolio/commodityspreadoption.cpp
+portfolio/commodityspreadoptionstrip.cpp
 portfolio/commodityswap.cpp
 portfolio/commodityswaption.cpp
 portfolio/compositetrade.cpp
@@ -493,6 +494,7 @@ portfolio/commodityoption.hpp
 portfolio/commodityoptionstrip.hpp
 portfolio/commodityposition.hpp
 portfolio/commodityspreadoption.hpp
+portfolio/commodityspreadoptionstrip.hpp
 portfolio/commodityswap.hpp
 portfolio/commodityswaption.hpp
 portfolio/compositeinstrumentwrapper.hpp
