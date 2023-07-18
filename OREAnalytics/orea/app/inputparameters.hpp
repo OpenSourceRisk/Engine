@@ -759,6 +759,7 @@ protected:
     std::string simmResultCurrency_ = "";
     std::string simmReportingCurrency_ = "";
     bool enforceIMRegulations_ = false;
+    bool useSimmParameters_ = true;
 
     /***************
      * Zero to Par Conversion analytic
