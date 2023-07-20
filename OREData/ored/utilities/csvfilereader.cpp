@@ -33,21 +33,21 @@ CSVReader::CSVReader( const bool firstLineContainsHeaders, const std::string& de
     : hasHeaders_(firstLineContainsHeaders), eolMarker_(eolMarker), currentLine_(Null<Size>()),
       numberOfColumns_(Null<Size>()),
       tokenizer_(std::string(), boost::escaped_list_separator<char>(escapeCharacters, delimiters, quoteCharacters)) {
-
-    if (firstLineContainsHeaders) {
-        QL_REQUIRE(!stream_->eof(), "CSVReader: stream is empty");
-        std::string line;
-        getline(*stream_, line, eolMarker);
-        boost::trim(line);
-        tokenizer_.assign(line);
-        std::copy(tokenizer_.begin(), tokenizer_.end(), std::back_inserter(headers_));
-        numberOfColumns_ = headers_.size();
-    }
 }
 
 void CSVReader::setStream(std::istream* stream) { 
      // set stream 
      stream_ = stream;
+
+     if (hasHeaders_) {
+         QL_REQUIRE(!stream_->eof(), "CSVReader: stream is empty");
+         std::string line;
+         getline(*stream_, line, eolMarker_);
+         boost::trim(line);
+         tokenizer_.assign(line);
+         std::copy(tokenizer_.begin(), tokenizer_.end(), std::back_inserter(headers_));
+         numberOfColumns_ = headers_.size();
+     }
 }
 const std::vector<std::string>& CSVReader::fields() const {
     //QL_REQUIRE(hasHeaders_, "CSVFileReader: no headers were specified for \"" << fileName_ << "\"");
