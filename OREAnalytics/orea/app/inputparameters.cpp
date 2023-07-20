@@ -293,19 +293,20 @@ void InputParameters::setCovarianceDataFromFile(const std::string& fileName) {
     LOG("Read " << covarianceData_.size() << " valid covariance data lines from " << fileName);
 }
 
-//void InputParameters::setCovarianceDataFromBuffer(const std::string& xml) {
-    // csv file loader
-    //std::vector<std::string> dummy;
-   // std::istream string& xml;
-    //std::stringstream csvStream;
-    //csvStream << csvBuffer;
-    //loadFromStream(csvStream, eol, delim, quoteChar, escapeChar);
-    //while (reader.next()) {
-       // covarianceData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
-                                     //  *parseRiskFactorKey(reader.get(1), dummy))] =
-          //  ore::data::parseReal(reader.get(2));
-   // }
-//}
+void InputParameters::setCovarianceData(ore::data::CSVReader& reader) {
+    std::vector<std::string> dummy;
+    while (reader.next()) { 
+        covarianceData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
+                                       *parseRiskFactorKey(reader.get(1), dummy))] =
+            ore::data::parseReal(reader.get(2));
+    }
+    LOG("Read " << covarianceData_.size() << " valid covariance data lines");
+}
+
+void InputParameters::setCovarianceDataFromBuffer(const std::string& xml) {
+    ore::data::CSVBufferReader reader(xml, false);
+    setCovarianceData(reader);
+}
 
 
 void InputParameters::setSensitivityStreamFromFile(const std::string& fileName) {
