@@ -42,6 +42,8 @@ public:
               const std::string& escapeCharacters = "\\", const std::string& quoteCharacters = "\"",
               const char eolMarker = '\n');
 
+    virtual ~CSVReader() = default; // Declare virtual destructor
+
     /*! Set stream for function */
     void setStream(std::istream* stream);
     //void setStream(std::string);
@@ -60,7 +62,7 @@ public:
     /*! Get content of column in current data line, throws if column is out of range */
     std::string get(const Size column) const;
     /*! Close the file */
-    virtual void close() {}
+    virtual void close(); 
 
 private:
     std::istream* stream_;
