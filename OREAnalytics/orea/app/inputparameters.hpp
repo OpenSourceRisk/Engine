@@ -42,6 +42,7 @@
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/marketdata/csvloader.hpp>
+#include <ored/utilities/csvfilereader.hpp>
 #include <boost/filesystem/path.hpp>
 
 namespace ore {
@@ -147,7 +148,9 @@ public:
     void setVarMethod(const std::string& s) { varMethod_ = s; }
     void setMcVarSamples(Size s) { mcVarSamples_ = s; }
     void setMcVarSeed(long l) { mcVarSeed_ = l; }
+    void setCovarianceData(ore::data::CSVReader& reader);  
     void setCovarianceDataFromFile(const std::string& fileName);
+    void setCovarianceDataFromBuffer(const std::string& xml);
     void setSensitivityStreamFromFile(const std::string& fileName);
 
     // Setters for exposure simulation
