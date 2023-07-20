@@ -41,6 +41,7 @@
 #include <qle/indexes/behicp.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/cacpi.hpp>
+#include <qle/indexes/commoditybasisfutureindex.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/decpi.hpp>
 #include <qle/indexes/dkcpi.hpp>
@@ -107,6 +108,8 @@
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
 #include <qle/indexes/secpi.hpp>
+#include <qle/termstructures/commoditybasispricecurve.hpp>
+#include <qle/termstructures/spreadedpricetermstructure.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -225,12 +228,12 @@ boost::shared_ptr<FxIndex> parseFxIndex(const string& s, const Handle<Quote>& fx
     return index;
 }
 
-boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
+boost::shared_ptr<QuantExt::EquityIndex2> parseEquityIndex(const string& s) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
     QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
     QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
-    auto index = boost::make_shared<EquityIndex>(tokens[1], NullCalendar(), Currency());
+    auto index = boost::make_shared<QuantExt::EquityIndex2>(tokens[1], NullCalendar(), Currency());
     IndexNameTranslator::instance().add(index->name(), s);
     return index;
 }
@@ -888,7 +891,16 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
             cdr = convention->calendar();
         }
 
-        index = boost::make_shared<CommodityFuturesIndex>(indexName, expiry, cdr, keepDays, ts);
+        auto basisCurve = ts.empty() ? nullptr :
+            boost::dynamic_pointer_cast<CommodityBasisPriceTermStructure>(*ts);
+
+        if (basisCurve) {
+            index = boost::make_shared<CommodityBasisFutureIndex>(indexName, expiry, cdr, basisCurve);       
+        } else {
+            index = boost::make_shared<CommodityFuturesIndex>(indexName, expiry, cdr, keepDays, ts);
+        }
+
+        
 
     } else {
         index = boost::make_shared<CommoditySpotIndex>(commName, cal, ts);

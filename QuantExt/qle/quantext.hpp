@@ -62,6 +62,7 @@
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/quantocouponpricer.hpp>
+#include <qle/cashflows/scaledcoupon.hpp>
 #include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
@@ -79,6 +80,7 @@
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/bondindex.hpp>
 #include <qle/indexes/cacpi.hpp>
+#include <qle/indexes/commoditybasisfutureindex.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/compoequityindex.hpp>
 #include <qle/indexes/compositeindex.hpp>
@@ -157,12 +159,14 @@
 #include <qle/indexes/secpi.hpp>
 #include <qle/instruments/ascot.hpp>
 #include <qle/instruments/averageois.hpp>
+#include <qle/instruments/bondbasket.hpp>
 #include <qle/instruments/bondoption.hpp>
 #include <qle/instruments/bondrepo.hpp>
 #include <qle/instruments/bondtotalreturnswap.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
+#include <qle/instruments/cbo.hpp>
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/instruments/cliquetoption.hpp>
 #include <qle/instruments/commodityapo.hpp>
@@ -206,10 +210,13 @@
 #include <qle/instruments/varianceswap.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 #include <qle/math/blockmatrixinverse.hpp>
+#include <qle/math/bucketeddistribution.hpp>
+#include <qle/math/computeenvironment.hpp>
 #include <qle/math/constantinterpolation.hpp>
 #include <qle/math/covariancesalvage.hpp>
 #include <qle/math/deltagammavar.hpp>
 #include <qle/math/differentialevolution_mt.hpp>
+#include <qle/math/discretedistribution.hpp>
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/math/flatextrapolation2d.hpp>
@@ -217,10 +224,12 @@
 #include <qle/math/matrixfunctions.hpp>
 #include <qle/math/method_mt.hpp>
 #include <qle/math/nadarayawatson.hpp>
+#include <qle/math/openclenvironment.hpp>
 #include <qle/math/problem_mt.hpp>
 #include <qle/math/quadraticinterpolation.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_io.hpp>
+#include <qle/math/randomvariable_opcodes.hpp>
 #include <qle/math/stabilisedglls.hpp>
 #include <qle/math/trace.hpp>
 #include <qle/methods/brownianbridgepathinterpolator.hpp>
@@ -338,6 +347,8 @@
 #include <qle/pricingengines/blackbondoptionengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 #include <qle/pricingengines/blackindexcdsoptionengine.hpp>
+#include <qle/pricingengines/cboengine.hpp>
+#include <qle/pricingengines/cbomcengine.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
 #include <qle/pricingengines/commodityschwartzfutureoptionengine.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
@@ -415,6 +426,7 @@
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/blackvolsurfaceproxy.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
+#include <qle/termstructures/bondyieldshiftedcurvetermstructure.hpp>
 #include <qle/termstructures/brlcdiratehelper.hpp>
 #include <qle/termstructures/capfloorhelper.hpp>
 #include <qle/termstructures/capfloortermvolcurve.hpp>
@@ -422,6 +434,8 @@
 #include <qle/termstructures/capfloortermvolsurfacesparse.hpp>
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
+#include <qle/termstructures/commoditybasispricecurvewrapper.hpp>
+#include <qle/termstructures/commoditybasispricetermstructure.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/credit/basecorrelationstructure.hpp>
 #include <qle/termstructures/credit/spreadedbasecorrelationcurve.hpp>
@@ -527,6 +541,8 @@
 #include <qle/time/dateutilities.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/utilities/cashflows.hpp>
+#include <qle/utilities/commodity.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>

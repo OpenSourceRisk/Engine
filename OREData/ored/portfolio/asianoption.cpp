@@ -104,7 +104,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(fxIndex->targetCurrency() == payCcy,
                    "FX domestic ccy " << fxIndex->targetCurrency() << " must match pay ccy " << payCcy);
         assetName_ = fxIndex->sourceCurrency().code();
-    } else if (auto eqIndex = boost::dynamic_pointer_cast<QuantExt::EquityIndex>(index)) {
+    } else if (auto eqIndex = boost::dynamic_pointer_cast<QuantExt::EquityIndex2>(index)) {
         // FIXME for EQ and COMM indices check whether EQ, COMM ccy = payCcy (in the engine builders probably)
         assetName_ = eqIndex->name();
     } else if (auto commIndex = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
@@ -182,7 +182,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     notionalCurrency_ = currency_;
 
     // ISDA taxonomy
-    if (underlying_->type() == "EQ") {
+    if (underlying_->type() == "Equity") {
         additionalData_["isdaAssetClass"] = string("Equity");
         additionalData_["isdaBaseProduct"] = string("Option");
         additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
@@ -190,8 +190,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         additionalData_["isdaAssetClass"] = string("Foreign Exchange");
         additionalData_["isdaBaseProduct"] = string("Vanilla Option");
         additionalData_["isdaSubProduct"] = string("");
-        
-    } else if (underlying_->type() == "COM") {
+    } else if (underlying_->type() == "Commodity") {
         // guessing that Commodities are treated like Equity
         additionalData_["isdaAssetClass"] = string("Commodity");
         additionalData_["isdaBaseProduct"] = string("Option");

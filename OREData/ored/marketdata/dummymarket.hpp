@@ -121,8 +121,8 @@ public:
         return Handle<YieldTermStructure>();
     }
 
-    Handle<QuantExt::EquityIndex> equityCurve(const string& eqName, const string&) const override {
-        return Handle<QuantExt::EquityIndex>();
+    Handle<QuantExt::EquityIndex2> equityCurve(const string& eqName, const string&) const override {
+        return Handle<QuantExt::EquityIndex2>();
     }
 
     Handle<BlackVolTermStructure> equityVol(const string&, const string&) const override {

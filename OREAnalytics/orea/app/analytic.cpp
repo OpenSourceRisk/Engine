@@ -56,10 +56,12 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
          bool scenarioGeneratorConfig,
          bool crossAssetModelConfig)
     : impl_(std::move(impl)), types_(analyticTypes), inputs_(inputs) {
-    
+
+    configurations().asofDate = inputs->asof();
+
     // set these here, can be overwritten in setUpConfigurations
-    if (inputs->curveConfigs().size() > 0)
-        configurations().curveConfig = inputs->curveConfigs()[0];
+    if (inputs->curveConfigs().has())
+        configurations().curveConfig = inputs->curveConfigs().get();
     if (inputs->pricingEngine())
         configurations().engineData = inputs->pricingEngine();
 
@@ -87,6 +89,16 @@ void Analytic::setUpConfigurations() {
         impl_->setUpConfigurations();
 }
 
+std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::allDependentAnalytics() const {
+    std::vector<QuantLib::ext::shared_ptr<Analytic>> analytics;
+    for (const auto& [_, a] : dependentAnalytics_) {
+        analytics.push_back(a);
+        auto das = a->allDependentAnalytics();
+        analytics.insert(end(analytics), begin(das), end(das));
+    }
+    return analytics;
+}
+
 const std::string Analytic::label() const { 
     return impl_ ? impl_->label() : string(); 
 }
@@ -102,7 +114,6 @@ bool Analytic::match(const std::set<std::string>& runTypes) {
             return true;
         }
     }
-    WLOG("None of the requested analytics " << to_string(runTypes) << " are covered by the analytic class " << label());
     return false;
 }
 
@@ -209,7 +220,7 @@ void Analytic::buildPortfolio() {
  * MARKET Analytic
  *******************************************************************/
 
-void MarketDataAnalyticImpl::setUpConfigurations() {    
+void MarketDataAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
 }
 

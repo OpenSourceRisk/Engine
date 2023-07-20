@@ -86,6 +86,7 @@ public:
     // allows to iterate over results cleanly. Would be better to subclass
     // std::iterator in this class.
     const std::map<Key, QuantLib::Real>& data() const { return data_; }
+    std::map<Key, QuantLib::Real>& data() { return data_; }
 
     const std::string& currency() const { return ccy_; }
 

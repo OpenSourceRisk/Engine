@@ -51,6 +51,7 @@ class StrippedCappedFlooredCoupon;
 namespace QuantExt {
 class AverageONIndexedCoupon;
 class OvernightIndexedCoupon;
+class BondTRSCashFlow;
 class CappedFlooredAverageONIndexedCoupon;
 class CappedFlooredOvernightIndexedCoupon;
 class EquityCoupon;
@@ -186,8 +187,8 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantExt::NonStandardYoYInflationCoupon>,
                          public QuantLib::Visitor<QuantExt::CmbCoupon>,
                          public QuantLib::Visitor<QuantExt::EquityMarginCoupon>,
-                         public QuantLib::Visitor<QuantExt::CommodityIndexedCashFlow>,
-                         public QuantLib::Visitor<QuantExt::CommodityIndexedAverageCashFlow> {
+                         public QuantLib::Visitor<QuantExt::CommodityCashFlow>,
+                         public QuantLib::Visitor<QuantExt::BondTRSCashFlow> {
 
 public:
     //! Constructor
@@ -225,8 +226,8 @@ public:
     void visit(QuantExt::IndexWrappedCashFlow& c) override;
     void visit(QuantExt::CmbCoupon& c) override;
     void visit(QuantExt::EquityMarginCoupon& c) override;
-    void visit(QuantExt::CommodityIndexedCashFlow& c) override;
-    void visit(QuantExt::CommodityIndexedAverageCashFlow& c) override;
+    void visit(QuantExt::CommodityCashFlow& c) override;
+    void visit(QuantExt::BondTRSCashFlow& c) override;
     //@}
 
 protected:
@@ -274,8 +275,7 @@ void addMarketFixingDates(const QuantLib::Date& asof, std::map<std::string, std:
                           const QuantLib::Period& iborLookback = 5 * QuantLib::Days,
                           const QuantLib::Period& oisLookback = 4 * QuantLib::Months,
                           const QuantLib::Period& bmaLookback = 2 * QuantLib::Weeks,
-                          const QuantLib::Period& inflationLookback = 1 * QuantLib::Years,
-                          const std::string& configuration = Market::defaultConfiguration);
+                          const QuantLib::Period& inflationLookback = 1 * QuantLib::Years);
 
 } // namespace data
 } // namespace ore

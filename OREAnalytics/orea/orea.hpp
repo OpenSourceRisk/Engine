@@ -21,7 +21,9 @@
 #include <orea/aggregation/staticcreditxvacalculator.hpp>
 #include <orea/aggregation/xvacalculator.hpp>
 #include <orea/app/analytic.hpp>
+#include <orea/app/analytics/parconversionanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
@@ -37,6 +39,7 @@
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/app/xvarunner.hpp>
+#include <orea/app/zerosensitivityloader.hpp>
 #include <orea/cube/cube_io.hpp>
 #include <orea/cube/cubecsvreader.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
@@ -125,6 +128,7 @@
 #include <orea/simm/simmconcentrationisdav2_3_8.hpp>
 #include <orea/simm/simmconcentrationisdav2_5.hpp>
 #include <orea/simm/simmconcentrationisdav2_5a.hpp>
+#include <orea/simm/simmconcentrationisdav2_6.hpp>
 #include <orea/simm/simmconfiguration.hpp>
 #include <orea/simm/simmconfigurationbase.hpp>
 #include <orea/simm/simmconfigurationisdav1_0.hpp>
@@ -137,6 +141,7 @@
 #include <orea/simm/simmconfigurationisdav2_3_8.hpp>
 #include <orea/simm/simmconfigurationisdav2_5.hpp>
 #include <orea/simm/simmconfigurationisdav2_5a.hpp>
+#include <orea/simm/simmconfigurationisdav2_6.hpp>
 #include <orea/simm/simmnamemapper.hpp>
 #include <orea/simm/simmresults.hpp>
 #include <orea/simm/utilities.hpp>

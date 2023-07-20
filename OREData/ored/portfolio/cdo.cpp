@@ -488,6 +488,11 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
                 vector<Handle<Quote>> spreads(times.size());
                 std::transform(times.begin(), times.end(), spreads.begin(), [&baseCurve, &targetCurve](Time t) {
                     Probability spread = targetCurve->survivalProbability(t, true) / baseCurve->survivalProbability(t, true);
+                    // In case extrapolated survivalprob is 0, we set it to a small value because
+                    // the spreaded survival prob curve doesn't allow zero spreads 
+                    if (close_enough(spread, 0.0)) {
+                        spread = 1e-18;
+                    }
                     return Handle<Quote>(boost::make_shared<SimpleQuote>(spread));
                 });
                 clientCurve = Handle<DefaultProbabilityTermStructure>(

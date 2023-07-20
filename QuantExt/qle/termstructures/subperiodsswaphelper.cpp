@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ql/cashflows/iborcoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 
@@ -69,20 +70,20 @@ void SubPeriodsSwapHelper::initializeDates() {
 
     boost::shared_ptr<FloatingRateCoupon> lastFloating =
         boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->floatLeg().back());
-#ifdef QL_USE_INDEXED_COUPON
-    /* May need to adjust latestDate_ if you are projecting libor based
-    on tenor length rather than from accrual date to accrual date. */
-    Date fixingValueDate = iborIndex_->valueDate(lastFloating->fixingDate());
-    Date endValueDate = iborIndex_->maturityDate(fixingValueDate);
-    latestDate_ = std::max(latestDate_, endValueDate);
-#else
-    /* Subperiods coupons do not have a par approximation either... */
-    if (boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(lastFloating)) {
+    if (IborCoupon::Settings::instance().usingAtParCoupons()) {
+        /* Subperiods coupons do not have a par approximation either... */
+        if (boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(lastFloating)) {
+            Date fixingValueDate = iborIndex_->valueDate(lastFloating->fixingDate());
+            Date endValueDate = iborIndex_->maturityDate(fixingValueDate);
+            latestDate_ = std::max(latestDate_, endValueDate);
+        }
+    } else {
+        /* May need to adjust latestDate_ if you are projecting libor based
+        on tenor length rather than from accrual date to accrual date. */
         Date fixingValueDate = iborIndex_->valueDate(lastFloating->fixingDate());
         Date endValueDate = iborIndex_->maturityDate(fixingValueDate);
         latestDate_ = std::max(latestDate_, endValueDate);
     }
-#endif
 }
 
 void SubPeriodsSwapHelper::setTermStructure(YieldTermStructure* t) {

@@ -283,6 +283,29 @@ public:
     void setSimmReportingCurrency(const std::string& s) { simmReportingCurrency_ = s; }
     void setEnforceIMRegulations(bool b) { enforceIMRegulations_= b; }
 
+    // Setters for ZeroToParSensiConversion
+    void setParConversionXbsParConversion(bool b) { parConversionXbsParConversion_ = b; }
+    void setParConversionAlignPillars(bool b) { parConversionAlignPillars_ = b; }
+    void setParConversionOutputJacobi(bool b) { parConversionOutputJacobi_ = b; }
+    void setParConversionThreshold(Real r) { parConversionThreshold_ = r; }
+    void setParConversionSimMarketParams(const std::string& xml);
+    void setParConversionSimMarketParamsFromFile(const std::string& fileName);
+    void setParConversionScenarioData(const std::string& xml);
+    void setParConversionScenarioDataFromFile(const std::string& fileName);
+    void setParConversionPricingEngine(const std::string& xml);
+    void setParConversionPricingEngineFromFile(const std::string& fileName);
+    void setParConversionPricingEngine(const boost::shared_ptr<EngineData>& engineData) {
+        parConversionPricingEngine_ = engineData;
+    }
+    void setParConversionInputFile(const std::string& s) { parConversionInputFile_ = s; }
+    void setParConversionInputIdColumn(const std::string& s) { parConversionInputIdColumn_ = s; }
+    void setParConversionInputRiskFactorColumn(const std::string& s) { parConversionInputRiskFactorColumn_ = s; }
+    void setParConversionInputDeltaColumn(const std::string& s) { parConversionInputDeltaColumn_ = s; }
+    void setParConversionInputCurrencyColumn(const std::string& s) { parConversionInputCurrencyColumn_ = s; }
+    void setParConversionInputBaseNpvColumn(const std::string& s) { parConversionInputBaseNpvColumn_ = s; }
+    void setParConversionInputShiftSizeColumn(const std::string& s) { parConversionInputShiftSizeColumn_ = s; }
+
+
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>
     void insertAnalytic(const std::string& s); 
@@ -304,7 +327,7 @@ public:
     const boost::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() { return refDataManager_; }
     const boost::shared_ptr<ore::data::Conventions>& conventions() { return conventions_; }
     const boost::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig() const { return iborFallbackConfig_; }
-    const std::vector<boost::shared_ptr<ore::data::CurveConfigurations>>& curveConfigs() { return curveConfigs_; }
+    CurveConfigurationsManager& curveConfigs() { return curveConfigs_; }
     const boost::shared_ptr<ore::data::EngineData>& pricingEngine() { return pricingEngine_; }
     const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams() { return todaysMarketParams_; }
     const boost::shared_ptr<ore::data::Portfolio>& portfolio() { return portfolio_; }
@@ -324,7 +347,7 @@ public:
     char csvEscapeChar() const { return csvEscapeChar_; }
     bool dryRun() const { return dryRun_; }
     QuantLib::Size mporDays() { return mporDays_; }
-    QuantLib::Date mporDate() { return mporDate_; }
+    QuantLib::Date mporDate();
     const QuantLib::Calendar mporCalendar() {
         if (mporCalendar_.empty()) {
             QL_REQUIRE(!baseCurrency_.empty(), "mpor calendar or baseCurrency must be provided";);
@@ -501,7 +524,31 @@ public:
     const std::string& simmResultCurrency() { return simmResultCurrency_; }
     const std::string& simmReportingCurrency() { return simmReportingCurrency_; }
     bool enforceIMRegulations() { return enforceIMRegulations_; }
-    
+
+    /**************************************************
+     * Getters for Zero to Par Sensi conversion
+     **************************************************/
+    bool parConversionXbsParConversion() { return parConversionXbsParConversion_; }
+    bool parConversionAlignPillars() const { return parConversionAlignPillars_; };
+    bool parConversionOutputJacobi() const { return parConversionOutputJacobi_; };
+    QuantLib::Real parConversionThreshold() const { return parConversionThreshold_; }
+    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& parConversionSimMarketParams() {
+        return parConversionSimMarketParams_;
+    }
+    const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& parConversionScenarioData() {
+        return parConversionScenarioData_;
+    }
+    const boost::shared_ptr<ore::data::EngineData>& parConversionPricingEngine() { return parConversionPricingEngine_; }
+    const std::string& parConversionInputFile() const { return parConversionInputFile_; }
+    // Column Names in the input
+    const std::string& parConversionInputIdColumn() { return parConversionInputIdColumn_; }
+    const std::string& parConversionInputRiskFactorColumn() { return parConversionInputRiskFactorColumn_; }
+    const std::string& parConversionInputDeltaColumn() { return parConversionInputDeltaColumn_; }
+    const std::string& parConversionInputCurrencyColumn() { return parConversionInputCurrencyColumn_; }
+    const std::string& parConversionInputBaseNpvColumn() { return parConversionInputBaseNpvColumn_; }
+    const std::string& parConversionInputShiftSizeColumn() { return parConversionInputShiftSizeColumn_; }
+
+
     /*************************************
      * List of analytics that shall be run
      *************************************/
@@ -540,7 +587,7 @@ protected:
     boost::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
     boost::shared_ptr<ore::data::Conventions> conventions_;
     boost::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
-    std::vector<boost::shared_ptr<ore::data::CurveConfigurations>> curveConfigs_;
+    CurveConfigurationsManager curveConfigs_;
     boost::shared_ptr<ore::data::EngineData> pricingEngine_;
     boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     boost::shared_ptr<ore::data::Portfolio> portfolio_;
@@ -715,6 +762,25 @@ protected:
     std::string simmResultCurrency_ = "";
     std::string simmReportingCurrency_ = "";
     bool enforceIMRegulations_ = false;
+    bool useSimmParameters_ = true;
+
+    /***************
+     * Zero to Par Conversion analytic
+     ***************/
+    bool parConversionXbsParConversion_ = false;
+    bool parConversionOutputJacobi_ = false;
+    bool parConversionAlignPillars_ = false;
+    QuantLib::Real parConversionThreshold_ = 1e-6;
+    boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> parConversionSimMarketParams_;
+    boost::shared_ptr<ore::analytics::SensitivityScenarioData> parConversionScenarioData_;
+    boost::shared_ptr<ore::data::EngineData> parConversionPricingEngine_;
+    std::string parConversionInputFile_;
+    std::string parConversionInputIdColumn_ = "TradeId";
+    std::string parConversionInputRiskFactorColumn_ = "Factor_1";
+    std::string parConversionInputDeltaColumn_ = "Delta";
+    std::string parConversionInputCurrencyColumn_ = "Currency";
+    std::string parConversionInputBaseNpvColumn_ = "Base NPV";
+    std::string parConversionInputShiftSizeColumn_ = "ShiftSize_1";
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {
@@ -749,6 +815,9 @@ private:
     std::string jacobiInverseFileName_;
     std::string stressTestFileName_;
     std::string varFileName_;
+    std::string parConversionOutputFileName_;
+    std::string parConversionJacobiFileName_;
+    std::string parConversionJacobiInverseFileName_;
 };
     
 } // namespace analytics

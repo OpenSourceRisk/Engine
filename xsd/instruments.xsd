@@ -393,6 +393,8 @@
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="LocalCapFloor" minOccurs="0"/>
+        <xs:element type="scheduleData" name="FixingSchedule" minOccurs="0"/>
+        <xs:element type="scheduleData" name="ResetSchedule" minOccurs="0"/>
       </xs:all>
     </xs:complexType>
   </xs:element>
@@ -721,8 +723,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element type="scheduleData" name="ScheduleData" minOccurs="0">
-      </xs:element>
+      <xs:element type="scheduleData" name="ScheduleData" minOccurs="0"/>
       <xs:element name="PaymentDates" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
@@ -740,6 +741,8 @@
       </xs:element>
       <xs:element type="dayCounter" name="LastPeriodDayCounter" minOccurs="0"/>
       <xs:element ref="legDataType" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="StrictNotionalDates" minOccurs="0"/>
+      <xs:element type="scheduleData" name="PaymentSchedule" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -2494,10 +2497,32 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element name="FixedAmountConversion" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="Currency"/>
+            <xs:element name="Amounts">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Amount" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:float">
+                          <xs:attribute name="startDate" type="xs:string" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
       <xs:element type="cbContingentConversionData" name="ContingentConversion" minOccurs="0"/>
       <xs:element type="cbMandatoryConversionData" name="MandatoryConversion" minOccurs="0"/>
       <xs:element type="cbConversionResetData" name="ConversionResets" minOccurs="0"/>
-      <xs:element type="underlying" name="Underlying"/>
+      <xs:element type="underlying" name="Underlying" minOccurs="0"/>
       <xs:element type="xs:string" name="FXIndex" minOccurs="0"/>
       <xs:element type="calendar" name="FXIndexCalendar" minOccurs="0"/>
       <xs:element type="xs:integer" name="FXIndexFixingDays" minOccurs="0"/>

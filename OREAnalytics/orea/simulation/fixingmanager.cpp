@@ -72,7 +72,7 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, co
         for (auto const& [name, dates] : r.fixingDatesIndices(QuantLib::Date::maxDate())) {
             try {
                 auto rawIndex = parseIndex(name);
-                if (auto index = boost::dynamic_pointer_cast<EquityIndex>(rawIndex)) {
+                if (auto index = boost::dynamic_pointer_cast<EquityIndex2>(rawIndex)) {
                     fixingMap_[*market->equityCurve(index->familyName(), configuration)].insert(dates.begin(),
                                                                                                 dates.end());
                 } else if (auto index = boost::dynamic_pointer_cast<BondIndex>(rawIndex)) {

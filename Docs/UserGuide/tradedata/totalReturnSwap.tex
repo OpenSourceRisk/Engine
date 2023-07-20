@@ -52,6 +52,7 @@ indices.
   \item Bond: See \ref{ss:bond}, the trade data is given in a BondData sub node.
   \item ForwardBond: See \ref{ss:BondForward_refdata}, the trade data is given in a ForwardBondData sub node.
   \item CBO: See \ref{ss:CBOData}, the trade data is given in a CBOData sub node.
+  \item CommodityPosition: See \ref{ss:commodity_position}, the trade data is given in a CommodityPositionData sub node.
   \item ConvertibleBond: See \ref{ss:convertible_bond}, the trade data is given in a ConvertibleBondData sub
     node. When using reference data, a TRS on a convertible bond can also be captured as a TRS on a bond, i.e. there is
     no need to distinguish between a TRS on a Bond and a TRS on a convertible Bond in this case, the pricer will figure
@@ -62,11 +63,11 @@ indices.
   \item EquityOptionPosition: See \ref{ss:equity_option_position}, the trade data is given in a EquityOptionPositionData
     sub node.
   \item BondPosition: See \ref{ss:bond_position}, the trade data is given in a BondBasketData sub node.
-  \item Derivative: An arbitrary underlying derivative trade (swaption, variance swap). The derivative subnode has
+  \item Derivative: An arbitrary underlying derivative trade (of any type covered by ORE), allowing the set up of a so called Portfolio Swap with multiple underlying derivatives. The derivative subnode has
     exactly two subnodes
     \begin{itemize}
       \item Id: A unqiue identifier for the derivative position. Historical prices must be given under the fixing name
-        ``GENERIC-<Id>''.
+        ``GENERIC-$<Id>$''.
       \item Trade: The root node of a derivative trade.
     \end{itemize}
 
@@ -414,6 +415,33 @@ indices.
 \end{minted}
 \caption{Generic Total Return Swap on a derivative underlying}
 \label{lst:trsdata4}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <TotalReturnSwapData>
+      <UnderlyingData>
+        <Trade>
+          <TradeType>CommodityPosition</TradeType>
+          <CommodityPositionData>
+            <!-- basket price = quantity x sum_i ( weight_i x price_i x fx_i ) -->
+            <Quantity>1000</Quantity>
+            <Underlying>
+              <Type>Commodity</Type>
+              <Name>RIC:.BCOM</Name>
+              <Weight>1.0</Weight>
+              <PriceType>Spot</PriceType>
+            </Underlying>
+          </CommodityPositionData>
+        </Trade>
+      </UnderlyingData>
+      <!-- omitting ReturnData, FundingData, AdditionalCashflowData -->
+    </TotalReturnSwapData>
+  </Trade>
+\end{minted}
+\caption{Generic Total Return Swap on a commodity index underlying}
+\label{lst:trsdata5}
 \end{listing}
 
 \begin{listing}[H]

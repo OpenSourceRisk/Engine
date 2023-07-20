@@ -17,6 +17,7 @@
 */
 
 #include <qle/termstructures/blackvolsurfaceabsolute.hpp>
+#include <qle/math/flatextrapolation.hpp>
 
 #include <ql/experimental/fx/blackdeltacalculator.hpp>
 #include <ql/math/comparison.hpp>
@@ -28,17 +29,17 @@
 namespace QuantExt {
 
 BlackVolatilitySurfaceAbsolute::BlackVolatilitySurfaceAbsolute(
-    Date referenceDate, const std::vector<Date>& dates,
-    const std::vector<std::vector<Real>>& strikes, const std::vector<std::vector<Real>>& strikeQuotes,
-    const DayCounter& dayCounter, const Calendar& calendar,
+    Date referenceDate, const std::vector<Date>& dates, const std::vector<std::vector<Real>>& strikes,
+    const std::vector<std::vector<Real>>& strikeQuotes, const DayCounter& dayCounter, const Calendar& calendar,
     const Handle<Quote>& spot, const Size spotDays, const Calendar spotCalendar,
     const Handle<YieldTermStructure>& domesticTS, const Handle<YieldTermStructure>& foreignTS,
     const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at, const Period& switchTenor,
-    const DeltaVolQuote::DeltaType ltdt, const DeltaVolQuote::AtmType ltat, const SmileInterpolation smileInterpolation)
+    const DeltaVolQuote::DeltaType ltdt, const DeltaVolQuote::AtmType ltat, const SmileInterpolation smileInterpolation,
+    const bool flatExtrapolation)
     : BlackVolatilityTermStructure(referenceDate, calendar, Following, dayCounter), dates_(dates), strikes_(strikes),
-      strikeQuotes_(strikeQuotes), spot_(spot), spotDays_(spotDays),
-      spotCalendar_(spotCalendar), domesticTS_(domesticTS), foreignTS_(foreignTS), dt_(dt), at_(at),
-      switchTenor_(switchTenor), ltdt_(ltdt), ltat_(ltat), smileInterpolation_(smileInterpolation) {
+      strikeQuotes_(strikeQuotes), spot_(spot), spotDays_(spotDays), spotCalendar_(spotCalendar),
+      domesticTS_(domesticTS), foreignTS_(foreignTS), dt_(dt), at_(at), switchTenor_(switchTenor), ltdt_(ltdt),
+      ltat_(ltat), smileInterpolation_(smileInterpolation), flatExtrapolation_(flatExtrapolation) {
 
     // checks
 
@@ -91,6 +92,10 @@ BlackVolatilitySurfaceAbsolute::BlackVolatilitySurfaceAbsolute(
             } else {
                 QL_FAIL("BlackVolatilitySurfaceAbsolute: Invalid interpolation type.");
             }
+        }
+        if (flatExtrapolation_) {
+            interpolation_[i] = boost::make_shared<FlatExtrapolation>(interpolation_[i]);
+            interpolation_[i]->enableExtrapolation();
         }
     }
 

@@ -60,16 +60,16 @@ public:
     MockLoader();
     vector<boost::shared_ptr<MarketDatum>> loadQuotes(const Date&) const override { return data_; }
     set<Fixing> loadFixings() const override { return dummyFixings_; }
-    set<Dividend> loadDividends() const override { return dummyDividends_; }
+    set<QuantExt::Dividend> loadDividends() const override { return dummyDividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
     void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
-    void addDividend(const Dividend& dividend) {}
+    void addDividend(const QuantExt::Dividend& dividend) {}
 
 private:
     vector<boost::shared_ptr<MarketDatum>> data_;
     boost::shared_ptr<MarketDatum> dummyDatum_;
     set<Fixing> dummyFixings_;
-    set<Dividend> dummyDividends_;
+    set<QuantExt::Dividend> dummyDividends_;
 };
 
 MockLoader::MockLoader() {

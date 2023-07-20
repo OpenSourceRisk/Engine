@@ -179,11 +179,14 @@ void CrifLoader::add(CrifRecord cr, const bool onDiffAmountCcy) {
                     DLOG("Updated net CRIF records: " << cr);
             } else if (it->riskType == RiskType::AddOnNotionalFactor ||
                        it->riskType == RiskType::ProductClassMultiplier) {
-                string errMsg = "Found more than one instance of risk type " + to_string(it->riskType) +
-                                ". Please check the SIMM parameters input. If enforceIMRegulations=False, then it "
-                                "is possible that multiple entries for different regulations now belong under the same "
-                                "'Unspecified' regulation.";
-                WLOG(ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters", errMsg));
+                // Only log warning if the values are not the same. If they are, then there is no material discrepancy.
+                if (cr.amount != it->amount) {
+                    string errMsg = "Found more than one instance of risk type " + to_string(it->riskType) +
+                                    ". Please check the SIMM parameters input. If enforceIMRegulations=False, then it "
+                                    "is possible that multiple entries for different regulations now belong under the same "
+                                    "'Unspecified' regulation.";
+                    WLOG(ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters", errMsg));
+                }
             } else {
                 // Handling in case new SIMM parameters are added in the future
                 WLOG(ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters",
@@ -443,7 +446,19 @@ bool CrifLoader::process(const vector<string>& entries, Size maxIndex, Size curr
             // a qualifier in a minor ccy?
             if (!checkCurrency(cr.qualifier) && checkCurrency(ccyUpper))
                 cr.qualifier = ccyUpper;
-        } else if (cr.riskType == RiskType::FXVol && cr.qualifier.size() == 6) {
+        } else if (cr.riskType == RiskType::FXVol && (cr.qualifier.size() == 6 || cr.qualifier.size() == 7)) {
+
+            // Remove delimiters between the two currencies
+            if (cr.qualifier.size() == 7) {
+                vector<string> tokens;
+                tokens = boost::split(tokens, cr.qualifier, boost::is_any_of("/.,-_|;: "));
+                QL_REQUIRE(tokens.size() == 2, "Failed to parse Risk_FXVol qualifier (" << cr.qualifier << ").");
+                string ccy1 = tokens[0];
+                string ccy2 = tokens[1];
+                cr.qualifier = ccy1 + ccy2;
+            }
+
+            // Convert to uppercase
             string ccyPairUpper = boost::to_upper_copy(cr.qualifier);
             string ccy1Upper = ccyPairUpper.substr(0, 3);
             string ccy2Upper = ccyPairUpper.substr(3);

@@ -241,7 +241,7 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
             QL_REQUIRE(!capsOIS_[j].empty(),
                        "OptionletStripperWithAtm: internal error: empty cap for expiry " << atmTenors[j]);
             atmStrikes_[j] = getOisCapFloorStrikes(capsOIS_[j]).front().first;
-            atmPrices_[j] = CashFlows::npv(capsOIS_[j], **discountCurve, false);
+            atmPrices_[j] = QuantLib::CashFlows::npv(capsOIS_[j], **discountCurve, false);
 
         } else {
 
@@ -399,7 +399,7 @@ QuantLib::Real OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::Ob
     if (volSpread != spreadQuote_->value()) {
         spreadQuote_->setValue(volSpread);
     }
-    return CashFlows::npv(cap_, **discount_, false) - targetValue_;
+    return QuantLib::CashFlows::npv(cap_, **discount_, false) - targetValue_;
 }
 
 } // namespace QuantExt

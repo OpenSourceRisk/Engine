@@ -69,6 +69,32 @@ namespace data {
 
 Convention::Convention(const string& id, Type type) : type_(type), id_(id) {}
 
+const boost::shared_ptr<ore::data::Conventions>& InstrumentConventions::conventions(QuantLib::Date d) const {
+    QL_REQUIRE(!conventions_.empty(), "InstrumentConventions: No conventions provided.");
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    Date dt = d == Date() ? Settings::instance().evaluationDate() : d;
+    auto it = conventions_.lower_bound(dt);
+    if(it != conventions_.end() && it->first == dt)
+        return it->second;
+    QL_REQUIRE(it != conventions_.begin(), "InstrumentConventions: Could not find conventions for " << dt);
+    --it;
+    constexpr std::size_t max_num_warnings = 10;
+    if (numberOfEmittedWarnings_ < max_num_warnings) {
+        ++numberOfEmittedWarnings_;
+        WLOG("InstrumentConventions: Could not find conventions for "
+             << dt << ", using convetions from " << it->first
+             << (numberOfEmittedWarnings_ == max_num_warnings ? " (no more warnings of this type will be emitted)"
+                                                              : ""));
+    }
+    return it->second;
+}
+
+void InstrumentConventions::setConventions(
+    const boost::shared_ptr<ore::data::Conventions>& conventions, QuantLib::Date d) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    conventions_[d] = conventions;
+}
+
 ZeroRateConvention::ZeroRateConvention(const string& id, const string& dayCounter, const string& compounding,
                                        const string& compoundingFrequency)
     : Convention(id, Type::Zero), tenorBased_(false), strDayCounter_(dayCounter), strCompounding_(compounding),
@@ -1954,6 +1980,8 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
 
     balanceOfTheMonthPricingCalendarStr_ = XMLUtils::getChildValue(node, "BalanceOfTheMonthPricingCalendar", false, "");
 
+    optionUnderlyingFutureConvention_ = XMLUtils::getChildValue(node, "OptionUnderlyingFutureConvention", false, "");
+
     build();
 }
 
@@ -2079,7 +2107,11 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
     }
 
     if (balanceOfTheMonthPricingCalendar_ != Calendar()) {
-            XMLUtils::addChild(doc, node, "BalanceOfTheMonthPricingCalendar", to_string(balanceOfTheMonthPricingCalendar_));
+        XMLUtils::addChild(doc, node, "BalanceOfTheMonthPricingCalendar", to_string(balanceOfTheMonthPricingCalendar_));
+    }
+
+    if (!optionUnderlyingFutureConvention_.empty()) {
+        XMLUtils::addChild(doc, node, "OptionUnderlyingFutureConvention", optionUnderlyingFutureConvention_);
     }
 
     return node;

@@ -29,13 +29,13 @@ namespace analytics {
 
 /*! Class giving the SIMM configuration as outlined in the document
     <em>ISDA SIMM Methodology, version 2.5A.
-        Effective Date: <INSERT EFFECTIVE DATE>.</em>
+        Effective Date: 15 July 2023.</em>
 */
 class SimmConfiguration_ISDA_V2_5A : public SimmConfigurationBase {
 public:
     SimmConfiguration_ISDA_V2_5A(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                 const QuantLib::Size& mporDays = 10,
-                                const std::string& name = "SIMM ISDA 2.5A (<INSERT PUBLISHING DATE HERE>)",
+                                const std::string& name = "SIMM ISDA 2.5A (15 July 2023)",
                                 const std::string version = "2.5A");
 
     //! Return the SIMM <em>Label2</em> value for the given interest rate index

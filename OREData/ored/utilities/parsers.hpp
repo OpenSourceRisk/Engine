@@ -32,7 +32,7 @@
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
-#include <ql/experimental/barrieroption/doublebarriertype.hpp>
+#include <ql/instruments/doublebarriertype.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/instruments/averagetype.hpp>
 #include <ql/instruments/barriertype.hpp>

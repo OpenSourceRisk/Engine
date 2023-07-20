@@ -16,6 +16,7 @@ aggregation/postprocess.cpp
 aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
 app/analytic.cpp
+app/analytics/parconversionanalytic.cpp
 app/analytics/pricinganalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/varanalytic.cpp
@@ -31,6 +32,7 @@ app/parameters.cpp
 app/reportwriter.cpp
 app/sensitivityrunner.cpp
 app/xvarunner.cpp
+app/zerosensitivityloader.cpp
 cube/cube_io.cpp
 cube/cubecsvreader.cpp
 cube/cubeinterpretation.cpp
@@ -104,6 +106,7 @@ simm/simmconcentrationisdav2_3.cpp
 simm/simmconcentrationisdav2_3_8.cpp
 simm/simmconcentrationisdav2_5.cpp
 simm/simmconcentrationisdav2_5a.cpp
+simm/simmconcentrationisdav2_6.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
 simm/simmconfigurationisdav1_0.cpp
@@ -116,6 +119,7 @@ simm/simmconfigurationisdav2_3.cpp
 simm/simmconfigurationisdav2_3_8.cpp
 simm/simmconfigurationisdav2_5.cpp
 simm/simmconfigurationisdav2_5a.cpp
+simm/simmconfigurationisdav2_6.cpp
 simm/simmresults.cpp
 simm/utilities.cpp
 simulation/fixingmanager.cpp
@@ -139,6 +143,7 @@ aggregation/postprocess.hpp
 aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
 app/analytic.hpp
+app/analytics/parconversionanalytic.hpp
 app/analytics/pricinganalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/varanalytic.hpp
@@ -156,6 +161,7 @@ app/sensitivityrunner.hpp
 app/structuredanalyticserror.hpp
 app/structuredanalyticswarning.hpp
 app/xvarunner.hpp
+app/zerosensitivityloader.hpp
 auto_link.hpp
 cube/cube_io.hpp
 cube/cubecsvreader.hpp
@@ -245,6 +251,7 @@ simm/simmconcentrationisdav2_3.hpp
 simm/simmconcentrationisdav2_3_8.hpp
 simm/simmconcentrationisdav2_5.hpp
 simm/simmconcentrationisdav2_5a.hpp
+simm/simmconcentrationisdav2_6.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
 simm/simmconfigurationisdav1_0.hpp
@@ -257,6 +264,7 @@ simm/simmconfigurationisdav2_3.hpp
 simm/simmconfigurationisdav2_3_8.hpp
 simm/simmconfigurationisdav2_5.hpp
 simm/simmconfigurationisdav2_5a.hpp
+simm/simmconfigurationisdav2_6.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
 simm/utilities.hpp

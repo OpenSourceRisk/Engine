@@ -55,7 +55,7 @@ namespace ore {
 namespace data {
 
 EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader,
-                               const CurveConfigurations& curveConfigs, const Handle<EquityIndex>& eqIndex,
+                               const CurveConfigurations& curveConfigs, const Handle<EquityIndex2>& eqIndex,
                                const map<string, boost::shared_ptr<EquityCurve>>& requiredEquityCurves,
                                const map<string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves,
                                const map<string, boost::shared_ptr<FXVolCurve>>& requiredFxVolCurves,
@@ -320,7 +320,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 
 void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-                                     const QuantLib::Handle<EquityIndex>& eqIndex) {
+                                     const QuantLib::Handle<EquityIndex2>& eqIndex) {
     
     DLOG("EquityVolCurve: start building 2-D strike volatility surface");
    
@@ -566,7 +566,7 @@ vector<Real> checkMoneyness(const vector<string>& strMoneynessLevels) {
 
 void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilityMoneynessSurfaceConfig& vmsc, const Loader& loader,
-                                     const QuantLib::Handle<EquityIndex>& eqIndex) {
+                                     const QuantLib::Handle<EquityIndex2>& eqIndex) {
 
     LOG("EquityVolCurve: start building 2-D volatility moneyness strike surface");
     using boost::adaptors::transformed;
@@ -766,7 +766,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
 void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilityDeltaSurfaceConfig& vdsc, const Loader& loader,
-                                     const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex) {
+                                     const QuantLib::Handle<QuantExt::EquityIndex2>& eqIndex) {
 
     using boost::adaptors::transformed;
     using boost::algorithm::join;
@@ -1076,7 +1076,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
 
 void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const CurveConfigurations& curveConfigs,
                                           const EquityVolatilityCurveConfig& config,
-                                          const Handle<EquityIndex>& eqIndex) {
+                                          const Handle<EquityIndex2>& eqIndex) {
 
     DLOG("EquityVolCurve: Building calibration info for eq vol surface");
 
@@ -1131,6 +1131,10 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
 
         if (reportOnDeltaGrid) {
             calibrationInfo_->deltas = deltas;
+            calibrationInfo_->callPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            calibrationInfo_->putPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             calibrationInfo_->deltaGridStrikes =
                 std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             calibrationInfo_->deltaGridProb =
@@ -1180,6 +1184,13 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
                         }
                         Real stddev = std::sqrt(vol_->blackVariance(t, strike));
                         callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
+
+                        if (d.isPut()) {
+                            calibrationInfo_->putPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev);
+                        } else {
+                            calibrationInfo_->callPrices[i][j] = callPricesDelta[i][j];
+                        }
+
                         calibrationInfo_->deltaGridStrikes[i][j] = strike;
                         calibrationInfo_->deltaGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
                     } catch (const std::exception& e) {

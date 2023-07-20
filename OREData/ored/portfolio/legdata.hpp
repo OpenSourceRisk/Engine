@@ -24,9 +24,11 @@
 #pragma once
 
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <ored/portfolio/simmcreditqualifiermapping.hpp>
 #include <ored/portfolio/underlying.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -50,6 +52,7 @@ using std::string;
 class EngineFactory;
 class Market;
 class RequiredFixings;
+class ReferenceDataManager;
 
 //! Serializable Additional Leg Data
 /*!
@@ -176,9 +179,7 @@ private:
 class FloatingLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    FloatingLegData()
-        : LegAdditionalData("Floating"), fixingDays_(Null<Size>()), lookback_(0 * Days), rateCutoff_(Null<Size>()),
-          isAveraged_(false), hasSubPeriods_(false), includeSpread_(false), nakedOption_(false), telescopicValueDates_(false) {}
+    FloatingLegData() : LegAdditionalData("Floating") {}
     //! Constructor
     FloatingLegData(const string& index, QuantLib::Size fixingDays, bool isInArrears, const vector<double>& spreads,
                     const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
@@ -223,6 +224,8 @@ public:
     const boost::optional<Period>& lastRecentPeriod() const { return lastRecentPeriod_; }
     const std::string& lastRecentPeriodCalendar() const { return lastRecentPeriodCalendar_; }
     bool telescopicValueDates() const { return telescopicValueDates_; }
+    ScheduleData fixingSchedule() const { return fixingSchedule_; }
+    ScheduleData resetSchedule() const { return resetSchedule_; }
     //@}
 
     //! \name Modifiers
@@ -243,13 +246,13 @@ public:
     //@}
 private:
     string index_;
-    QuantLib::Size fixingDays_;
-    QuantLib::Period lookback_;
-    QuantLib::Size rateCutoff_;
+    QuantLib::Size fixingDays_ = Null<Size>();
+    QuantLib::Period lookback_ = 0 * Days;
+    QuantLib::Size rateCutoff_ = Null<Size>();
     boost::optional<bool> isInArrears_;
-    bool isAveraged_;
-    bool hasSubPeriods_;
-    bool includeSpread_;
+    bool isAveraged_ = false;
+    bool hasSubPeriods_ = false;
+    bool includeSpread_ = false;
     vector<double> spreads_;
     vector<string> spreadDates_;
     vector<double> caps_;
@@ -258,11 +261,13 @@ private:
     vector<string> floorDates_;
     vector<double> gearings_;
     vector<string> gearingDates_;
-    bool nakedOption_;
-    bool localCapFloor_;
+    bool nakedOption_ = false;
+    bool localCapFloor_ = false;
     boost::optional<Period> lastRecentPeriod_;
     std::string lastRecentPeriodCalendar_;
-    bool telescopicValueDates_;
+    bool telescopicValueDates_ = false;
+    ScheduleData fixingSchedule_;
+    ScheduleData resetSchedule_;
 };
 
 //! Serializable CPI Leg Data
@@ -836,10 +841,7 @@ private:
 class LegData : public XMLSerializable {
 public:
     //! Default constructor
-    LegData()
-        : isPayer_(true), notionalInitialExchange_(false), notionalFinalExchange_(false),
-          notionalAmortizingExchange_(false), isNotResetXCCY_(true), foreignAmount_(0.0),
-          indexingFromAssetLeg_(false) {}
+    LegData() {}
 
     //! Constructor with concrete leg data
     LegData(const boost::shared_ptr<LegAdditionalData>& innerLegData, bool isPayer, const string& currency,
@@ -887,6 +889,8 @@ public:
     const std::vector<Indexing>& indexing() const { return indexing_; }
     const bool indexingFromAssetLeg() const { return indexingFromAssetLeg_; }
     const string& lastPeriodDayCounter() const { return lastPeriodDayCounter_; }
+    const ScheduleData& paymentSchedule() const { return paymentSchedule_; }
+    bool strictNotionalDates() const { return strictNotionalDates_; }
     //@}
 
     //! \name modifiers
@@ -917,7 +921,7 @@ protected:
 
 private:
     boost::shared_ptr<LegAdditionalData> concreteLegData_;
-    bool isPayer_;
+    bool isPayer_ = true;
     string currency_;
     string legType_;
     ScheduleData schedule_;
@@ -925,20 +929,22 @@ private:
     vector<double> notionals_;
     vector<string> notionalDates_;
     string paymentConvention_;
-    bool notionalInitialExchange_;
-    bool notionalFinalExchange_;
-    bool notionalAmortizingExchange_;
-    bool isNotResetXCCY_;
+    bool notionalInitialExchange_ = false;
+    bool notionalFinalExchange_ = false;
+    bool notionalAmortizingExchange_ =false;
+    bool isNotResetXCCY_ = true;
     string foreignCurrency_;
-    double foreignAmount_;
+    double foreignAmount_ = 0.0;
     string fxIndex_;
     std::vector<AmortizationData> amortizationData_;
     string paymentLag_;
     std::string paymentCalendar_;
     std::vector<std::string> paymentDates_;
     std::vector<Indexing> indexing_;
-    bool indexingFromAssetLeg_;
+    bool indexingFromAssetLeg_ = false;
     string lastPeriodDayCounter_;
+    ScheduleData paymentSchedule_;
+    bool strictNotionalDates_ = false;
 };
 
 //! \name Utilities for building QuantLib Legs
@@ -978,12 +984,17 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
 Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                             const boost::shared_ptr<EngineFactory>& engineFactory,
                             const QuantLib::Date& openEndDateReplacement = Null<Date>());
-Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityIndex>& equityCurve,
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
                   const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
                   const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Real currentNotional(const Leg& leg);
 Real originalNotional(const Leg& leg);
 
+std::string getCmbLegCreditRiskCurrency(const CMBLegData& ld, const boost::shared_ptr<ReferenceDataManager>& refData);
+
+std::pair<std::string, SimmCreditQualifierMapping>
+getCmbLegCreditQualifierMapping(const CMBLegData& ld, const boost::shared_ptr<ReferenceDataManager>& refData,
+                                const std::string& tradeId, const std::string& tradeType);
 //@}
 
 // Build a full vector of values from the given node.
@@ -1137,6 +1148,21 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
                                                       const bool conditionalOnSurvival,
                                                       const boost::shared_ptr<EngineFactory>& engineFactory,
                                                       RequiredFixings& requiredFixings);
+
+class BondIndexBuilder {
+public:
+    BondIndexBuilder(const BondData& securityData, const bool dirty, const bool relative,
+                     const Calendar& fixingCalendar, const bool conditionalOnSurvival,
+                     const boost::shared_ptr<EngineFactory>& engineFactory);
+
+    boost::shared_ptr<QuantExt::BondIndex> bondIndex();
+    void addRequiredFixings(RequiredFixings& requiredFixings, Leg leg = {});
+
+private:
+    boost::shared_ptr<QuantExt::BondIndex> bondIndex_;
+    RequiredFixings fixings_;
+    const bool dirty_;
+};
 
 // join a vector of legs to a single leg, check if the legs have adjacent periods
 Leg joinLegs(const std::vector<Leg>& legs);

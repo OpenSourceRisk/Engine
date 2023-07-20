@@ -26,6 +26,7 @@
 #include <orea/engine/sensitivityanalysis.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <orea/scenario/scenariosimmarketplus.hpp>
 
 namespace ore {
 namespace analytics {
@@ -40,6 +41,16 @@ using namespace ore::data;
 
   \ingroup simulation
 */
+
+boost::shared_ptr<ore::analytics::ScenarioSimMarketPlus>
+buildScenarioSimMarketForSensitivityAnalysis(const boost::shared_ptr<ore::data::Market>& market,
+                           const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                           const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
+                           const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+                           const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+                           const boost::shared_ptr<ScenarioFactory>& scenFactory,
+                           const std::string& marketConfiguration, bool continueOnError, bool overrideTenors,
+                           IborFallbackConfig& iborFallback);
 
 class SensitivityAnalysisPlus : public SensitivityAnalysis {
 public:

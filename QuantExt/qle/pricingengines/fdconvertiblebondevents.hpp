@@ -99,7 +99,7 @@ public:
     };
 
     FdConvertibleBondEvents(const Date& today, const DayCounter& dc, const Real N0,
-                            const boost::shared_ptr<EquityIndex>& equity,
+                            const boost::shared_ptr<QuantExt::EquityIndex2>& equity,
                             const boost::shared_ptr<FxIndex>& fxConversion);
 
     // The intended workflow is as follows:
@@ -165,7 +165,7 @@ private:
     Date today_;
     DayCounter dc_;
     Real N0_;
-    boost::shared_ptr<EquityIndex> equity_;
+    boost::shared_ptr<QuantExt::EquityIndex2> equity_;
     boost::shared_ptr<FxIndex> fxConversion_;
 
     std::set<Real> times_;
