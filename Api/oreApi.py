@@ -76,7 +76,7 @@ class oreApi():
     def setSimpleParameter(self, data_dict, lookupname, lookuplocation, param=None, paramtype=None):
         if lookupname in data_dict[lookuplocation]:
             lookup_value = data_dict[lookuplocation][lookupname]
-            # Set Parameter
+            # Set Parameter and check for types
             if param is not None:
                 if paramtype is not None:
                     param(paramtype(lookup_value))

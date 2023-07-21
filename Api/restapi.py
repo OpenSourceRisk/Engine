@@ -16,7 +16,7 @@ def handle_analytics_request():
         else:
             return message
     except MyCustomException as e:
-        # Handle the custom exception MyCustomException
+        # Handle any custom exceptions via MyCustomException
         error_message = str(e.args[0])
         response = make_response(f"{error_message}")
         response.status_code = 404

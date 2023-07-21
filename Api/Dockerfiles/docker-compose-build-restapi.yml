@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  restapi:
+    image: restapi:latest
+    build:
+      context: ..
+      dockerfile: Dockerfiles/Dockerfile_restapi
+
+
