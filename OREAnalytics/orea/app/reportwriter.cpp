@@ -1147,7 +1147,19 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
             auto additionalData = trade->additionalData();
             for (const auto& kv : additionalData) {
                 auto p = parseBoostAny(kv.second, 6);
-                report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
+                if (boost::starts_with(p.first, "vector")) {
+                    vector<std::string> tokens;
+                    boost::split(tokens, p.second, boost::is_any_of(","));
+                    for (Size i = 0; i < tokens.size(); i++) {
+                        boost::trim(tokens[i]);
+                        report.next()
+                            .add(tradeId)
+                            .add(kv.first + "[" + to_string(i) + "]")
+                            .add(p.first.substr(7))
+                            .add(tokens[i]);
+                    }
+                } else
+                    report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
             }
             // if the 'notional[2]' has been provided convert it to base currency
             if (additionalData.count("notional[2]") != 0 && additionalData.count("notionalCurrency[2]") != 0) {
@@ -1210,7 +1222,19 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                         addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
                     } else {
                         auto p = parseBoostAny(kv.second, 6);
-                        report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
+                        if (boost::starts_with(p.first, "vector")) {
+                            vector<std::string> tokens;
+                            boost::split(tokens, p.second, boost::is_any_of(","));
+                            for (Size i = 0; i < tokens.size(); i++) {
+                                boost::trim(tokens[i]);
+                                report.next()
+                                    .add(tradeId)
+                                    .add(kv.first + "[" + to_string(i) + "]")
+                                    .add(p.first.substr(7))
+                                    .add(tokens[i]);
+                            }
+                        } else
+                            report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
                     }
                 }
             }
