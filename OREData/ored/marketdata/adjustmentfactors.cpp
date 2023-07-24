@@ -42,7 +42,7 @@ Real AdjustmentFactors::getFactor(const string& name, const QuantLib::Date& d) c
         if (d < f.first && asof_ > f.first) {
             baseFactor = baseFactor * f.second;
         }
-        if (asof_ < f.first && f.first < d) {
+        if (asof_ < f.first && f.first <= d) {
             baseFactor = baseFactor / f.second;
         }
     }
