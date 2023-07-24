@@ -31,20 +31,20 @@ namespace QuantExt {
 class IborIndexWithFixingOverride : public QuantLib::IborIndex {
 public:
     IborIndexWithFixingOverride(const boost::shared_ptr<QuantLib::IborIndex>& index,
-                                const std::map<QuantLib::Date, double>& fixings)
+                                const std::map<QuantLib::Date, double>& fixingOverrides)
         : IborIndexWithFixingOverride(index->familyName(), index->tenor(), index->fixingDays(), index->currency(),
                                       index->fixingCalendar(), index->businessDayConvention(), index->endOfMonth(),
-                                      index->dayCounter(), index->forwardingTermStructure(), fixings) {}
+                                      index->dayCounter(), index->forwardingTermStructure(), fixingOverrides) {}
 
     IborIndexWithFixingOverride(const std::string& familyName, const QuantLib::Period& tenor,
                                 QuantLib::Natural settlementDays, const QuantLib::Currency& currency,
                                 const QuantLib::Calendar& fixingCalendar, QuantLib::BusinessDayConvention convention,
-                                bool endOfMonth, const DayCounter& dayCounter,
+                                bool endOfMonth, const QuantLib::DayCounter& dayCounter,
                                 QuantLib::Handle<QuantLib::YieldTermStructure> h,
-                                const std::map<QuantLib::Date, double>& fixings)
+                                const std::map<QuantLib::Date, double>& fixingOverrides)
         : QuantLib::IborIndex(familyName, tenor, settlementDays, currency, fixingCalendar, convention, endOfMonth,
                               dayCounter, h),
-          overrides_(fixings) {}
+          fixingOverrides_(fixingOverrides) {}
     //! \name InterestRateIndex interface
     //@{
 
@@ -52,14 +52,13 @@ public:
     clone(const QuantLib::Handle<QuantLib::YieldTermStructure>& forwarding) const override {
         return ext::make_shared<IborIndexWithFixingOverride>(familyName(), tenor(), fixingDays(), currency(),
                                                              fixingCalendar(), businessDayConvention(), endOfMonth(),
-                                                             dayCounter(), forwarding, overrides_);
+                                                             dayCounter(), forwarding, fixingOverrides_);
     }
     // @}
 protected:
-    // overload pastFixing method
     QuantLib::Rate pastFixing(const QuantLib::Date& fixingDate) const override {
-        auto histFixing = overrides_.find(fixingDate);
-        if (histFixing != overrides_.end()) {
+        auto histFixing = fixingOverrides_.find(fixingDate);
+        if (histFixing != fixingOverrides_.end()) {
             return histFixing->second;
         } else {
             return QuantLib::IborIndex::pastFixing(fixingDate);
@@ -67,35 +66,35 @@ protected:
     }
 
 private:
-    std::map<QuantLib::Date, double> overrides_;
+    std::map<QuantLib::Date, double> fixingOverrides_;
 };
 
 class OvernightIndexWithFixingOverride : public QuantLib::OvernightIndex {
 public:
     OvernightIndexWithFixingOverride(const boost::shared_ptr<QuantLib::OvernightIndex>& index,
-                                     const std::map<QuantLib::Date, double>& fixings)
+                                     const std::map<QuantLib::Date, double>& fixingOverrides)
         : OvernightIndexWithFixingOverride(index->familyName(), index->fixingDays(), index->currency(),
                                            index->fixingCalendar(), index->dayCounter(),
-                                           index->forwardingTermStructure(), fixings) {}
+                                           index->forwardingTermStructure(), fixingOverrides) {}
 
-    OvernightIndexWithFixingOverride(const std::string& familyName, Natural settlementDays, const Currency& currency,
-                                     const Calendar& fixingCalendar, const DayCounter& dayCounter,
-                                     const Handle<YieldTermStructure>& h,
-                                     const std::map<QuantLib::Date, double>& fixings)
+    OvernightIndexWithFixingOverride(const std::string& familyName, QuantLib::Natural settlementDays,
+                                     const QuantLib::Currency& currency, const QuantLib::Calendar& fixingCalendar,
+                                     const QuantLib::DayCounter& dayCounter,
+                                     const QuantLib::Handle<QuantLib::YieldTermStructure>& h,
+                                     const std::map<QuantLib::Date, double>& fixingOverrides)
         : QuantLib::OvernightIndex(familyName, settlementDays, currency, fixingCalendar, dayCounter, h),
-          overrides_(fixings) {}
+          fixingOverrides_(fixingOverrides) {}
 
     boost::shared_ptr<QuantLib::IborIndex>
     clone(const QuantLib::Handle<QuantLib::YieldTermStructure>& forwarding) const override {
         return ext::make_shared<OvernightIndexWithFixingOverride>(
-            familyName(), fixingDays(), currency(), fixingCalendar(), dayCounter(), forwarding, overrides_);
+            familyName(), fixingDays(), currency(), fixingCalendar(), dayCounter(), forwarding, fixingOverrides_);
     }
 
 protected:
-    // overload pastFixing method
     QuantLib::Rate pastFixing(const QuantLib::Date& fixingDate) const override {
-        auto histFixing = overrides_.find(fixingDate);
-        if (histFixing != overrides_.end()) {
+        auto histFixing = fixingOverrides_.find(fixingDate);
+        if (histFixing != fixingOverrides_.end()) {
             return histFixing->second;
         } else {
             return QuantLib::IborIndex::pastFixing(fixingDate);
@@ -103,6 +102,6 @@ protected:
     }
 
 private:
-    std::map<QuantLib::Date, double> overrides_;
+    std::map<QuantLib::Date, double> fixingOverrides_;
 };
 } // namespace QuantExt

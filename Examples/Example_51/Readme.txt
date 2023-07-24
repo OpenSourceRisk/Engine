@@ -1,6 +1,7 @@
 1) Portfolio
 
-   Vanilla Swap, EUR, 10k notional, 20Y maturity, rec. fixed 0.99851% (ATM), pay 6m Euribor
+   Vanilla Swap, EUR, 10k notional, 20Y maturity, rec. fixed 0.99851%, pay 6m Euribor with custom trade specific fixings
+   OIS Swap, EUR, 10k notional, 20Y maturity, rec. fixed 0.99851%, pay EONIA with custom trade specific fixings
 
 2) Market
 
@@ -12,7 +13,7 @@
 
 4) Analytics
 
-   EPE and ENE, compared to European payer and receiver swaption prices 
+   NPV, Cashflows
 
 5) Run Example
 
