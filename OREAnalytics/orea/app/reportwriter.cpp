@@ -1151,7 +1151,9 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                 auto p = parseBoostAny(kv.second, 6);
                 if (boost::starts_with(p.first, "vector")) {
                     vector<std::string> tokens;
-                    boost::split(tokens, p.second, boost::is_any_of(","));
+                    string vect = p.second;
+                    vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
+                    boost::split(tokens, vect, boost::is_any_of(","));
                     for (Size i = 0; i < tokens.size(); i++) {
                         boost::trim(tokens[i]);
                         report.next()
@@ -1226,7 +1228,9 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                         auto p = parseBoostAny(kv.second, 6);
                         if (boost::starts_with(p.first, "vector")) {
                             vector<std::string> tokens;
-                            boost::split(tokens, p.second, boost::is_any_of(","));
+                            string vect = p.second;
+                            vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
+                            boost::split(tokens, vect, boost::is_any_of(","));
                             for (Size i = 0; i < tokens.size(); i++) {
                                 boost::trim(tokens[i]);
                                 report.next()
