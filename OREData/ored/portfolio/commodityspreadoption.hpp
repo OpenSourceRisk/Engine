@@ -23,9 +23,12 @@
 
 namespace ore::data {
 
-
 class CommoditySpreadOptionData : public XMLSerializable {
 public:
+    CommoditySpreadOptionData() {}
+    CommoditySpreadOptionData(const std::vector<ore::data::LegData>& legData, const ore::data::OptionData& optionData,
+                              QuantLib::Real strike)
+        : legData_(legData), optionData_(optionData), strike_(strike) {}
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
@@ -35,7 +38,7 @@ public:
     const std::vector<ore::data::LegData>& legData() const { return legData_; }
     const ore::data::OptionData& optionData() const { return optionData_; }
     QuantLib::Real strike() const { return strike_; }
-    
+
 private:
     boost::shared_ptr<ore::data::LegData> createLegData() const { return boost::make_shared<ore::data::LegData>(); }
 
@@ -46,7 +49,9 @@ private:
 
 class CommoditySpreadOption : public ore::data::Trade {
 public:
-    CommoditySpreadOption() : ore::data::Trade("CommoditySpreadOption"){}
+    CommoditySpreadOption() : ore::data::Trade("CommoditySpreadOption") {}
+    CommoditySpreadOption(const CommoditySpreadOptionData& data)
+        : ore::data::Trade("CommoditySpreadOption"), csoData_(data) {}
 
     //! Implement the build method
     void build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
@@ -59,7 +64,7 @@ public:
 
     //! \name Inspectors
     //@{
-    std::vector<std::string> const& fxIndex() const {return fxIndex_; }
+    std::vector<std::string> const& fxIndex() const { return fxIndex_; }
     const ore::data::OptionData& option() const { return csoData_.optionData(); }
     QuantLib::Real strike() const { return csoData_.strike(); }
 
@@ -70,4 +75,4 @@ private:
     std::vector<std::string> fxIndex_;
     QuantLib::Date expiryDate_;
 };
-}
+} // namespace ore::data

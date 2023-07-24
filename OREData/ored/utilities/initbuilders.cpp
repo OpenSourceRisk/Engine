@@ -111,6 +111,7 @@
 #include <ored/portfolio/commodityoptionstrip.hpp>
 #include <ored/portfolio/commodityposition.hpp>
 #include <ored/portfolio/commodityspreadoption.hpp>
+#include <ored/portfolio/commodityspreadoptionstrip.hpp>
 #include <ored/portfolio/commodityswap.hpp>
 #include <ored/portfolio/commodityswaption.hpp>
 #include <ored/portfolio/compositeinstrumentwrapper.hpp>
@@ -228,6 +229,7 @@ void initBuilders() {
 
     ORE_REGISTER_TRADE_BUILDER("CrossCurrencySwap", CrossCurrencySwap, false)
     ORE_REGISTER_TRADE_BUILDER("CommoditySpreadOption", CommoditySpreadOption, false)
+    ORE_REGISTER_TRADE_BUILDER("CommoditySpreadOptionStrip", CommoditySpreadOptionStrip, false)
     ORE_REGISTER_TRADE_BUILDER("EquityFutureOption", EquityFutureOption, false)
     ORE_REGISTER_TRADE_BUILDER("BondTRS", BondTRS, false)
     ORE_REGISTER_TRADE_BUILDER("CommodityOption", CommodityOption, false)
