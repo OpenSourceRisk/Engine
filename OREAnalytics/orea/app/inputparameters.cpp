@@ -293,6 +293,21 @@ void InputParameters::setCovarianceDataFromFile(const std::string& fileName) {
     LOG("Read " << covarianceData_.size() << " valid covariance data lines from " << fileName);
 }
 
+void InputParameters::setCovarianceData(ore::data::CSVReader& reader) {
+    std::vector<std::string> dummy;
+    while (reader.next()) { 
+        covarianceData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
+                                       *parseRiskFactorKey(reader.get(1), dummy))] =
+            ore::data::parseReal(reader.get(2));
+    }
+    LOG("Read " << covarianceData_.size() << " valid covariance data lines");
+}
+
+void InputParameters::setCovarianceDataFromBuffer(const std::string& xml) {
+    ore::data::CSVBufferReader reader(xml, false);
+    setCovarianceData(reader);
+}
+
 void InputParameters::setSensitivityStreamFromFile(const std::string& fileName) {
     sensitivityStream_ = boost::make_shared<SensitivityFileStream>(fileName);
 }
@@ -377,7 +392,7 @@ void InputParameters::setCrifLoader() {
         // setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>(simmVersion_));
         setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>());
     boost::shared_ptr<SimmConfiguration> configuration =
-        buildSimmConfiguration(simmVersion_, simmBucketMapper_);
+        buildSimmConfiguration(simmVersion_, simmBucketMapper_, mporDays());
     bool updateMappings = true;
     bool aggregateTrades = false;
     crifLoader_ =

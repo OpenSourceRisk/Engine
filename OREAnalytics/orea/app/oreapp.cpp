@@ -773,11 +773,14 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         if (tmp != "")
             inputs->setSimmVersion(tmp);
 
+        tmp = params_->get("simm", "mporDays", false);
+        if (tmp != "")
+            inputs->setMporDays(static_cast<Size>(parseInteger(tmp)));
+
         tmp = params_->get("simm", "crif", false);
         if (tmp != "") {
             string file = inputPath + "/" + tmp;
-            inputs->setCrifFromFile(file, inputs->csvEolChar(), inputs->csvSeparator(),
-                                    inputs->csvQuoteChar(), inputs->csvEscapeChar());
+            inputs->setCrifFromFile(file, inputs->csvEolChar(), inputs->csvSeparator(), '\"', inputs->csvEscapeChar());
         }
         
         tmp = params_->get("simm", "calculationCurrency", false);
@@ -798,6 +801,10 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("simm", "reportingCurrency", false);
         if (tmp != "")
             inputs->setSimmReportingCurrency(tmp);
+
+        tmp = params_->get("simm", "enforceIMRegulations", false);
+        if (tmp != "")
+            inputs->setEnforceIMRegulations(parseBool(tmp));
     }
     
     /************
