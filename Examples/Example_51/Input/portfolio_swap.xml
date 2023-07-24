@@ -126,11 +126,9 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <HistoricalFixings>
-            <Fixing fixingDate="2016-02-01">0.2</Fixing>
-            <Fixing fixingDate="2016-02-02">0.2</Fixing>
-            <Fixing fixingDate="2016-02-03">0.2</Fixing>
-            <Fixing fixingDate="2016-02-04">0.2</Fixing>
-            <Fixing fixingDate="2016-02-05">0.2</Fixing>
+            <Fixing fixingDate="2016-02-01">0.01</Fixing>
+            <Fixing fixingDate="2016-02-02">0.005</Fixing>
+            <Fixing fixingDate="2016-02-03">0.001</Fixing>            
           </HistoricalFixings>
         </FloatingLegData>
         <ScheduleData>
