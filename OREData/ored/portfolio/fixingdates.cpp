@@ -641,15 +641,14 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
             QL_REQUIRE(inflationLookback >= 0 * Days, "Inflation lookback period must be non-negative");
 
             // Dates that will be used for each of the inflation indices
-            Date today = Settings::instance().evaluationDate();
-            Date lookback = NullCalendar().advance(today, -inflationLookback);
+            Date lookback = NullCalendar().advance(asof, -inflationLookback);
             lookback = Date(1, lookback.month(), lookback.year());
             set<Date> dates;
             do {
                 TLOG("Adding date " << io::iso_date(lookback) << " to fixings for inflation indices");
                 dates.insert(lookback);
                 lookback = NullCalendar().advance(lookback, 1 * Months);
-            } while (lookback <= today);
+            } while (lookback <= asof);
 
             // For each of the inflation indices in market parameters, insert the dates
             if (mktParams.hasMarketObject(MarketObject::ZeroInflationCurve)) {
@@ -673,22 +672,21 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
 
             // "Fixing" dates for commodities.
             Period commodityLookback = 2 * Months;
-            Date today = Settings::instance().evaluationDate();
-            Date lookback = today - commodityLookback;
+            Date lookback = asof - commodityLookback;
             lookback = Date(1, lookback.month(), lookback.year());
             set<Date> dates;
             do {
                 TLOG("Adding date " << io::iso_date(lookback) << " to fixings for commodities");
                 dates.insert(lookback++);
-            } while (lookback <= today);
+            } while (lookback <= asof);
 
             // Expiry months and years for which we require future contract fixings. For our purposes here, using the
             // 1st of the month does not matter. We will just use the date to get the appropriate commodity future
             // index name below when adding the dates and the "-01" will be removed (for non-daily contracts).
             Size numberMonths = 2;
             vector<Date> contractExpiries;
-            Date startContract = today - numberMonths * Months;
-            Date endContract = today + numberMonths * Months;
+            Date startContract = asof - numberMonths * Months;
+            Date endContract = asof + numberMonths * Months;
             do {
                 Month m = startContract.month();
                 Year y = startContract.year();
