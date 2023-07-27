@@ -103,7 +103,7 @@ public:
     virtual void buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const bool marketRequired = true);
     virtual void buildPortfolio();
-    virtual void marketCalibration(const boost::shared_ptr<MarketCalibrationReport>& mcr = nullptr);
+    virtual void marketCalibration(const boost::shared_ptr<MarketCalibrationReportBase>& mcr = nullptr);
     virtual void modifyPortfolio() {}
     virtual void replaceTrades() {}
 
