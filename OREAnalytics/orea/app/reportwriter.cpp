@@ -1149,7 +1149,21 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
             auto additionalData = trade->additionalData();
             for (const auto& kv : additionalData) {
                 auto p = parseBoostAny(kv.second, 6);
-                report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
+                if (boost::starts_with(p.first, "vector")) {
+                    vector<std::string> tokens;
+                    string vect = p.second;
+                    vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
+                    boost::split(tokens, vect, boost::is_any_of(","));
+                    for (Size i = 0; i < tokens.size(); i++) {
+                        boost::trim(tokens[i]);
+                        report.next()
+                            .add(tradeId)
+                            .add(kv.first + "[" + to_string(i) + "]")
+                            .add(p.first.substr(7))
+                            .add(tokens[i]);
+                    }
+                } else
+                    report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
             }
             // if the 'notional[2]' has been provided convert it to base currency
             if (additionalData.count("notional[2]") != 0 && additionalData.count("notionalCurrency[2]") != 0) {
@@ -1212,7 +1226,21 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                         addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
                     } else {
                         auto p = parseBoostAny(kv.second, 6);
-                        report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
+                        if (boost::starts_with(p.first, "vector")) {
+                            vector<std::string> tokens;
+                            string vect = p.second;
+                            vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
+                            boost::split(tokens, vect, boost::is_any_of(","));
+                            for (Size i = 0; i < tokens.size(); i++) {
+                                boost::trim(tokens[i]);
+                                report.next()
+                                    .add(tradeId)
+                                    .add(kv.first + "[" + to_string(i) + "]")
+                                    .add(p.first.substr(7))
+                                    .add(tokens[i]);
+                            }
+                        } else
+                            report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
                     }
                 }
             }
@@ -1357,8 +1385,8 @@ void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& typ
             addRowMktCalReport(report, type, id, "strike", tStr, dStr, "", info->deltaGridStrikes.at(i).at(j));
             addRowMktCalReport(report, type, id, "vol", tStr, dStr, "", info->deltaGridImpliedVolatility.at(i).at(j));
             addRowMktCalReport(report, type, id, "prob", tStr, dStr, "", info->deltaGridProb.at(i).at(j));
-            addRowMktCalReport(report, type, id, "call_premium", tStr, dStr, "", info->callPrices.at(i).at(j));
-            addRowMktCalReport(report, type, id, "put_premium", tStr, dStr, "", info->putPrices.at(i).at(j));
+            addRowMktCalReport(report, type, id, "call_premium", tStr, dStr, "", info->deltaCallPrices.at(i).at(j));
+            addRowMktCalReport(report, type, id, "put_premium", tStr, dStr, "", info->deltaPutPrices.at(i).at(j));
             addRowMktCalReport(report, type, id, "callSpreadArb", tStr, dStr, "",
                                static_cast<bool>(info->deltaGridCallSpreadArbitrage.at(i).at(j)));
             addRowMktCalReport(report, type, id, "butterflyArb", tStr, dStr, "",
@@ -1374,6 +1402,8 @@ void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& typ
             addRowMktCalReport(report, type, id, "strike", tStr, mStr, "", info->moneynessGridStrikes.at(i).at(j));
             addRowMktCalReport(report, type, id, "vol", tStr, mStr, "",
                                info->moneynessGridImpliedVolatility.at(i).at(j));
+            addRowMktCalReport(report, type, id, "call_premium", tStr, mStr, "", info->moneynessCallPrices.at(i).at(j));
+            addRowMktCalReport(report, type, id, "put_premium", tStr, mStr, "", info->moneynessPutPrices.at(i).at(j));
             addRowMktCalReport(report, type, id, "prob", tStr, mStr, "", info->moneynessGridProb.at(i).at(j));
             addRowMktCalReport(report, type, id, "callSpreadArb", tStr, mStr, "",
                                static_cast<bool>(info->moneynessGridCallSpreadArbitrage.at(i).at(j)));

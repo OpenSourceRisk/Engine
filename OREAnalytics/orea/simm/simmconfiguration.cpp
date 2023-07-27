@@ -237,6 +237,7 @@ const map<string, SimmConfiguration::ProductClass> tradeScheduleProductClassMap 
     {"CommodityOptionStrip", SimmConfiguration::ProductClass::Commodity},
     {"CommodityRainbowOption", SimmConfiguration::ProductClass::Commodity},
     {"CommodityWorstOfBasketSwap", SimmConfiguration::ProductClass::Commodity},
+    {"CommoditySpreadOption", SimmConfiguration::ProductClass::Commodity},
     {"CommoditySwap", SimmConfiguration::ProductClass::Commodity},
     {"CommoditySwaption", SimmConfiguration::ProductClass::Commodity},
     {"CommodityTaRF", SimmConfiguration::ProductClass::Commodity},
