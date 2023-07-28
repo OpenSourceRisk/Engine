@@ -600,11 +600,12 @@ boost::shared_ptr<OvernightIndex> AverageOisConvention::index() const {
 }
 
 TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex,
-                                                   const string& shortPayTenor, const string& spreadOnShort,
-                                                   const string& includeSpread, const string& subPeriodsCouponType)
+                                                   const string& shortPayTenor, const string& longPayTenor,
+                                                   const string& spreadOnShort, const string& includeSpread, 
+                                                   const string& subPeriodsCouponType)
     : Convention(id, Type::TenorBasisSwap), strLongIndex_(longIndex), strShortIndex_(shortIndex),
-      strShortPayTenor_(shortPayTenor), strSpreadOnShort_(spreadOnShort), strIncludeSpread_(includeSpread),
-      strSubPeriodsCouponType_(subPeriodsCouponType) {
+      strShortPayTenor_(shortPayTenor), strLongPayTenor_(longPayTenor), strSpreadOnShort_(spreadOnShort),
+      strIncludeSpread_(includeSpread), strSubPeriodsCouponType_(subPeriodsCouponType) {
     build();
 }
 
@@ -612,6 +613,7 @@ void TenorBasisSwapConvention::build() {
     parseIborIndex(strLongIndex_);
     parseIborIndex(strShortIndex_);
     shortPayTenor_ = strShortPayTenor_.empty() ? shortIndex()->tenor() : parsePeriod(strShortPayTenor_);
+    longPayTenor_ = strLongPayTenor_.empty() ? longIndex()->tenor() : parsePeriod(strLongPayTenor_);
     spreadOnShort_ = strSpreadOnShort_.empty() ? true : parseBool(strSpreadOnShort_);
     includeSpread_ = strIncludeSpread_.empty() ? false : parseBool(strIncludeSpread_);
     subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? SubPeriodsCoupon1::Compounding
@@ -628,6 +630,7 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     strLongIndex_ = XMLUtils::getChildValue(node, "LongIndex", true);
     strShortIndex_ = XMLUtils::getChildValue(node, "ShortIndex", true);
     strShortPayTenor_ = XMLUtils::getChildValue(node, "ShortPayTenor", false);
+    strLongPayTenor_ = XMLUtils::getChildValue(node, "LongPayTenor", false);
     strSpreadOnShort_ = XMLUtils::getChildValue(node, "SpreadOnShort", false);
     strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
     strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
@@ -643,6 +646,8 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "ShortIndex", strShortIndex_);
     if (!strShortPayTenor_.empty())
         XMLUtils::addChild(doc, node, "ShortPayTenor", strShortPayTenor_);
+    if (!strLongPayTenor_.empty())
+        XMLUtils::addChild(doc, node, "LongPayTenor", strLongPayTenor_);
     if (!strSpreadOnShort_.empty())
         XMLUtils::addChild(doc, node, "SpreadOnShort", strSpreadOnShort_);
     if (!strIncludeSpread_.empty())
