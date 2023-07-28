@@ -49,6 +49,7 @@
 #include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
+#include <qle/termstructures/doubleoibasisswaphelper.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/oibasisswaphelper.hpp>
@@ -1911,19 +1912,30 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
             Period basisSwapTenor = basisSwapQuote->maturity();
             boost::shared_ptr<RateHelper> basisSwapHelper;
             if (boost::dynamic_pointer_cast<OvernightIndex>(shortIndex) != nullptr) {
-                // is it OIS vs Libor...
-                basisSwapHelper.reset(
-                    new OIBSHelper(longIndex->fixingDays(), basisSwapTenor, basisSwapQuote->quote(),
-                                   boost::static_pointer_cast<OvernightIndex>(shortIndex), longIndex,
-                                   discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true));
-            } else {
+                if (boost::dynamic_pointer_cast<OvernightIndex>(longIndex) != nullptr) {
+                    // is it OI vs OI...
+                    basisSwapHelper.reset(
+                        new DoubleOIBSHelper(longIndex->fixingDays(), basisSwapTenor, basisSwapQuote->quote(),
+                            boost::static_pointer_cast<OvernightIndex>(shortIndex), boost::static_pointer_cast<OvernightIndex>(longIndex),
+                            discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), basisSwapConvention->spreadOnShort(), 
+                            basisSwapConvention->shortPayTenor(), basisSwapConvention->longPayTenor(), true));
+                }
+                else {
+                    // is it OI vs Libor...
+                    basisSwapHelper.reset(
+                        new OIBSHelper(longIndex->fixingDays(), basisSwapTenor, basisSwapQuote->quote(),
+                            boost::static_pointer_cast<OvernightIndex>(shortIndex), longIndex,
+                            discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true));
+                }
+            }
+            else {
                 // ...or Libor vs Libor?
                 basisSwapHelper.reset(
                     new TenorBasisSwapHelper(basisSwapQuote->quote(), basisSwapTenor, longIndex, shortIndex,
-                                             basisSwapConvention->shortPayTenor(),
-                                             discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
-                                             basisSwapConvention->spreadOnShort(), basisSwapConvention->includeSpread(),
-                                             basisSwapConvention->subPeriodsCouponType()));
+                        basisSwapConvention->shortPayTenor(),
+                        discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
+                        basisSwapConvention->spreadOnShort(), basisSwapConvention->includeSpread(),
+                        basisSwapConvention->subPeriodsCouponType()));
             }
             instruments.push_back(basisSwapHelper);
         }
