@@ -24,7 +24,7 @@
   <xs:simpleType name="period">
     <!-- period can be 1D, 5M, 10w, 20Y etc -->
     <xs:restriction base="xs:string">
-      <xs:pattern value="(\d*(d|D|m|M|y|Y))?"/>
+      <xs:pattern value="(\d*(d|D|w|W|m|M|y|Y))?"/>
     </xs:restriction>
   </xs:simpleType>
   
