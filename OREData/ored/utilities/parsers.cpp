@@ -285,6 +285,10 @@ Currency parseMinorCurrency(const string& s) { return CurrencyParser::instance()
 
 Currency parseCurrencyWithMinors(const string& s) { return CurrencyParser::instance().parseCurrencyWithMinors(s); }
 
+pair<Currency, Currency> parseCurrencyPair(const string& s, const string& delimiters) {
+    return CurrencyParser::instance().parseCurrencyPair(s, delimiters);
+}
+
 bool checkCurrency(const string& code) { return CurrencyParser::instance().isValidCurrency(code); }
 
 bool isPseudoCurrency(const string& code) { return CurrencyParser::instance().isPseudoCurrency(code); }
