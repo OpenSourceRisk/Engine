@@ -185,8 +185,10 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
 
     if (marketCalibrationReport) {
         auto report = marketCalibrationReport->outputCalibrationReport();
-        if (auto rpt = boost::dynamic_pointer_cast<InMemoryReport>(report))
-            reports_["MARKET"]["todaysmarketcalibration"] = rpt;
+        if (report) {
+            if (auto rpt = boost::dynamic_pointer_cast<InMemoryReport>(report))
+                reports_["MARKET"]["todaysmarketcalibration"] = rpt;
+        }
     }
 
     inputs_->writeOutParameters();

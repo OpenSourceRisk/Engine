@@ -147,7 +147,7 @@ MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationF
         .addColumn("ResultValue", string());
 }
 
-const boost::shared_ptr<Report>& MarketCalibrationReport::outputCalibrationReport() { 
+boost::shared_ptr<Report> MarketCalibrationReport::outputCalibrationReport() { 
     report_->end();
     return report_;
 }

@@ -99,7 +99,7 @@ public:
                                 const std::string& label = std::string());
 
     // write out to file, should be overwritten in derived classes
-    virtual const boost::shared_ptr<ore::data::Report>& outputCalibrationReport() = 0;
+    virtual boost::shared_ptr<ore::data::Report> outputCalibrationReport() = 0;
 
 private:
     CalibrationFilters calibrationFilters_;
@@ -110,7 +110,7 @@ public:
     MarketCalibrationReport(const std::string& calibrationFilter,
                             const boost::shared_ptr<ore::data::Report>& report);
     
-    const boost::shared_ptr<ore::data::Report>& outputCalibrationReport() override;
+    boost::shared_ptr<ore::data::Report> outputCalibrationReport() override;
 
     void addYieldCurve(const QuantLib::Date& refdate, boost::shared_ptr<ore::data::YieldCurveCalibrationInfo> yts,
                        const std::string& name, bool isDiscount, const std::string& label) override;
