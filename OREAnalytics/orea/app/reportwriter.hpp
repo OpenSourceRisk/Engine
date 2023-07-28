@@ -107,10 +107,6 @@ public:
     virtual void writeAdditionalResultsReport(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
                                         boost::shared_ptr<Market> market, const std::string& baseCurrency);
 
-    virtual void
-    writeTodaysMarketCalibrationReport(ore::data::Report& report,
-                                       boost::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo);
-
     virtual void writeMarketData(ore::data::Report& report, const boost::shared_ptr<ore::data::Loader>& loader, const QuantLib::Date& asof,
         const set<string>& quoteNames, bool returnAll);
 

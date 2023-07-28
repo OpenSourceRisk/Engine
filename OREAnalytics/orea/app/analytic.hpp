@@ -97,13 +97,13 @@ public:
                              const std::set<std::string>& runTypes = {});
 
     // we can build configurations here (today's market params, scenario sim market params, sensitivity scenasrio data)
-    virtual void buildConfigurations() {};
+    virtual void buildConfigurations(const bool = false){};
     virtual void setUpConfigurations();
     
     virtual void buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const bool marketRequired = true);
     virtual void buildPortfolio();
-    virtual void marketCalibration(const boost::shared_ptr<MarketCalibrationReport>& mcr = nullptr);
+    virtual void marketCalibration(const boost::shared_ptr<MarketCalibrationReportBase>& mcr = nullptr);
     virtual void modifyPortfolio() {}
     virtual void replaceTrades() {}
 
