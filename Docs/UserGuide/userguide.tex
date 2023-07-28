@@ -722,11 +722,11 @@ The solution and project files will be generated in the {\tt $\langle$ORE\_ROOT$
 
 Alternatively, from Visual Studio 2015 onward, you can use Visual Studios capability to parse the CMakeLists.txt in the ORE root directory, by first setting the CMake BOOST variables in the environment:
 
-{\tt set BOOST_INCLUDE_DIR=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
-{\tt set BOOST_LIBRARYDIR=} pointing to your Win32 or x64 boost lib directory, e.g {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} or {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0}
-{\tt set BOOST_ROOT=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
+{\tt set BOOST\_INCLUDE\_DIR=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
+{\tt set BOOST\_LIBRARYDIR=} pointing to your Win32 or x64 boost lib directory, e.g {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} or {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0}
+{\tt set BOOST\_ROOT=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
 
-Afterwards, start the development environment, e.g {\tt "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe"} and open the CMakeLists.txt file using File, Menu, CMake...
+Afterwards, start the development environment, e.g {\tt "C:{\bs}Program Files (x86){\bs}Microsoft Visual Studio{\bs}2019{\bs}Community{\bs}Common7{\bs}IDE{\bs}devenv.exe"} and open the CMakeLists.txt file using File, Menu, CMake...
 Once the file has been parsed successfully and CMake generation has been finished (observable in the output window), you can switch in the solution explorer from the file view to the projects view, where the CMake Targets View can be selected. In this view, the various target projects can be seen below "ORE Project" and be used in a similar manner as the usual VS projects.
 
 The executables are built in the subfolder {\tt /build/TARGET/CONFIGURATION/EXECUTABLE}, e.g. {\tt /build/App/Release/ore.exe}, the debug and launch settings are set in launch.vs.json and not in the GUI.
