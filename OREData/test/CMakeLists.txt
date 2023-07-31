@@ -71,7 +71,7 @@ representativeswaption.cpp
 riskparticipationagreement.cpp
 scriptengine.cpp
 scriptparser.cpp
-testmarket.cpp
+oredtestmarket.cpp
 value.cpp
 )
 

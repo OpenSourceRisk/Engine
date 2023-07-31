@@ -21,7 +21,7 @@
 #include <boost/test/data/test_case.hpp>
 // clang-format on
 
-#include "testmarket.hpp"
+#include "oredtestmarket.hpp"
 
 #include <ored/scripting/scriptengine.hpp>
 #include <ored/scripting/models/blackscholes.hpp>

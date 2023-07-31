@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "testmarket.hpp"
+#include <test/oredtestmarket.hpp>
 
 #include <boost/make_shared.hpp>
 #include <boost/test/unit_test.hpp>
