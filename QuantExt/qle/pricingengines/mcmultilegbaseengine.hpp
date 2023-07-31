@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <qle/indexes/fxindex.hpp>
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
@@ -96,6 +97,7 @@ protected:
     mutable std::vector<std::vector<std::vector<Size>>> trappedCoupons_;
     mutable std::vector<std::vector<boost::shared_ptr<LgmImpliedYieldTermStructure>>> indexFwdCurve_, indexDscCurve_;
     mutable std::vector<std::vector<boost::shared_ptr<InterestRateIndex>>> modelIndex_;
+    mutable std::vector<std::vector<boost::shared_ptr<FxIndex>>> fxLinkedNotionalIndex_;
     mutable std::vector<std::vector<Size>> observationTimeIndex_;
     mutable std::vector<std::vector<Date>> fixingDate_;
     mutable std::vector<std::vector<Real>> gearing_, spread_, accrualTime_, nominal_, payTime_, cappedRate_,
@@ -104,6 +106,8 @@ protected:
     mutable std::vector<std::vector<boost::shared_ptr<Index>>> couponIndex_;
     mutable std::vector<std::vector<Date>> couponIndexFixingDate_;
     mutable std::vector<std::vector<Real>> couponIndexQuantity_;
+    mutable std::vector<std::vector<Real>> fxLinkedNotionalForeignAmount_;
+    mutable std::vector<std::vector<Date>> fxLinkedNotionalFixingDate_;
     mutable Size maxUndValDirtyIdx_;
     mutable std::vector<Date> pathDates_; // dates coresponding to path times
 
