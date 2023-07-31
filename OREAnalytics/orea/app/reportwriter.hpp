@@ -107,10 +107,6 @@ public:
     virtual void writeAdditionalResultsReport(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
                                         boost::shared_ptr<Market> market, const std::string& baseCurrency);
 
-    virtual void
-    writeTodaysMarketCalibrationReport(ore::data::Report& report,
-                                       boost::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo);
-
     virtual void writeMarketData(ore::data::Report& report, const boost::shared_ptr<ore::data::Loader>& loader, const QuantLib::Date& asof,
         const set<string>& quoteNames, bool returnAll);
 
@@ -131,18 +127,18 @@ public:
         container for that portfolio. Similarly, the parameter \p additionalMargin contains
         the additional margin element for each portfolio.
     */
-    virtual void
-    writeSIMMReport(const std::map<SimmConfiguration::SimmSide,
-                    std::map<NettingSetDetails, std::pair<std::string, SimmResults>>>& simmResultsMap,
-                    const boost::shared_ptr<ore::data::Report> report, const bool hasNettingSetDetails = false,
-                    const std::string& simmResultCcy = "", const std::string& reportCcy = "",
-                    QuantLib::Real fxSpot = 1.0, QuantLib::Real outputThreshold = 0.005);
-    virtual void
-    writeSIMMReport(const std::map<SimmConfiguration::SimmSide,
-                    std::map<NettingSetDetails, std::map<std::string, SimmResults>>>& simmResultsMap,
-                    const boost::shared_ptr<ore::data::Report> report, const bool hasNettingSetDetails = false,
-                    const std::string& simmResultCcy = "", const std::string& reportCcy = "",
-                    const bool isFinalSimm = true, QuantLib::Real fxSpot = 1.0, QuantLib::Real outputThreshold = 0.005);
+    virtual void writeSIMMReport(
+        const std::map<SimmConfiguration::SimmSide, std::map<NettingSetDetails, std::pair<std::string, SimmResults>>>&
+            simmResultsMap,
+        const boost::shared_ptr<ore::data::Report> report, const bool hasNettingSetDetails = false,
+        const std::string& simmResultCcy = "", const std::string& simmCalcCcy = "", const std::string& reportCcy = "",
+        QuantLib::Real fxSpot = 1.0, QuantLib::Real outputThreshold = 0.005);
+    virtual void writeSIMMReport(
+        const std::map<SimmConfiguration::SimmSide, std::map<NettingSetDetails, std::map<std::string, SimmResults>>>&
+            simmResultsMap,
+        const boost::shared_ptr<ore::data::Report> report, const bool hasNettingSetDetails = false,
+        const std::string& simmResultCcy = "", const std::string& simmCalcCcy = "", const std::string& reportCcy = "",
+        const bool isFinalSimm = true, QuantLib::Real fxSpot = 1.0, QuantLib::Real outputThreshold = 0.005);
 
     //! Write the SIMM data report i.e. the netted CRIF records used in a SIMM calculation
     virtual void writeSIMMData(const SimmNetSensitivities& simmData,

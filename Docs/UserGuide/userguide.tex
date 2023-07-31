@@ -722,11 +722,11 @@ The solution and project files will be generated in the {\tt $\langle$ORE\_ROOT$
 
 Alternatively, from Visual Studio 2015 onward, you can use Visual Studios capability to parse the CMakeLists.txt in the ORE root directory, by first setting the CMake BOOST variables in the environment:
 
-{\tt set BOOST_INCLUDE_DIR=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
-{\tt set BOOST_LIBRARYDIR=} pointing to your Win32 or x64 boost lib directory, e.g {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} or {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0}
-{\tt set BOOST_ROOT=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
+{\tt set BOOST\_INCLUDE\_DIR=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
+{\tt set BOOST\_LIBRARYDIR=} pointing to your Win32 or x64 boost lib directory, e.g {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} or {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0}
+{\tt set BOOST\_ROOT=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
 
-Afterwards, start the development environment, e.g {\tt "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe"} and open the CMakeLists.txt file using File, Menu, CMake...
+Afterwards, start the development environment, e.g {\tt "C:{\bs}Program Files (x86){\bs}Microsoft Visual Studio{\bs}2019{\bs}Community{\bs}Common7{\bs}IDE{\bs}devenv.exe"} and open the CMakeLists.txt file using File, Menu, CMake...
 Once the file has been parsed successfully and CMake generation has been finished (observable in the output window), you can switch in the solution explorer from the file view to the projects view, where the CMake Targets View can be selected. In this view, the various target projects can be seen below "ORE Project" and be used in a similar manner as the usual VS projects.
 
 The executables are built in the subfolder {\tt /build/TARGET/CONFIGURATION/EXECUTABLE}, e.g. {\tt /build/App/Release/ore.exe}, the debug and launch settings are set in launch.vs.json and not in the GUI.
@@ -3466,6 +3466,12 @@ Finally note that par sensitivity analysis requires that the shift tenor grid in
 See also section \ref{sec:sensitivity}.
 
 
+%--------------------------------------------------------------------
+\subsection{Custom trade fixings}% Example 51
+\label{example:51}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_51} demonstrates ORE's capability to use custom trade specific fixings. For OIS and Ibor floating legs one can specify historical fixing on a trade level, see \ref{ss:floatingleg_data}. Those trade level fixings will be only use for the specific trade, all other trades will use the global fixings.
 
 \clearpage
 %========================================================
@@ -4233,6 +4239,8 @@ The parameters have the following interpretation:
       <Parameter name="crif">crif.csv</Parameter>
       <Parameter name="calculationCurrency">USD</Parameter>
       <Parameter name="resultCurrency">USD</Parameter>
+      <Parameter name="enforceIMRegulations">true</Parameter>
+      <Parameter name="mporDays">1</Parameter>
     </Analytic>
 <Analytics>
 \end{minted}
@@ -4247,8 +4255,14 @@ The parameters have the following interpretation:
 Allowable values: 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.5A  \\
 Note that any new SIMM model versions are integrated into ORE with each release, tested against the official ISDA SIMM unit tests.
 \item {\tt crif:} Name of the CRIF file to be loaded
-\item {\tt calculationCurrency:} Determines the {\tt Risk\_FX} CRIF entry that is ignored in ISDA SIMM calculation
-\item {\tt resultCurrency} (optional): Currency for expressing the amounts in the resulting SIMM report, by default set to the calculationCurrency.
+\item {\tt calculationCurrency:} Determines the {\tt Risk\_FX} CRIF entry that is ignored in ISDA SIMM calculation \\
+Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+\item {\tt resultCurrency} (optional): Currency for expressing the amounts in the resulting SIMM report, by default set to the calculationCurrency. \\
+Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+\item {\tt enforceIMRegulations} (optional): Whether to take collect/post regulations into account. \\
+Allowable values: Allowable boolean values are given in Table \ref{tab:boolean_allowable}. Defaults to \emph{False} if omitted.
+\item {\tt mporDays} (optional): Currency for expressing the amounts in the resulting SIMM report, by default set to the calculationCurrency. \\
+Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 \end{itemize}
 
 The SIMM analytic requires minimal market data input and today's market configuration - FX rates for conversions calculation currency, USD and result currency.
@@ -4950,10 +4964,10 @@ In addition to product specific settings there is also a block with global param
   but only used internally to improve the performance for processes which only rely on the NPV as a result from pricing
   engines, e.g. when repricing trades under sensitivity or stress scenarios. Option, defaults to false.
 \item RunType: Set automatically. One of NPV, SensitivityDelta, SensitivityDeltaGamma, Stress, Exposure, Capital,
-  TradeDetails, PortfolioAnalyser, HistoricalPnL, depending on the context for which a portfolio was built. Might also
-  be left empty. This is used by some pricing engines to adapt to certain run types. E.g. a first order sensitivity pnl
-  expansion might be used for a SensitivityDelta run by an engine which is able to compute analytical or AAD first order
-  sensitivities.
+  TradeDetails, PortfolioAnalyser, HistoricalPnL, BondSpreadImply, AbsMaturityUpdate depending on the context for which
+  a portfolio was built. Might also be left empty. This is used by some pricing engines to adapt to certain run
+  types. E.g. a first order sensitivity pnl expansion might be used for a SensitivityDelta run by an engine which is
+  able to compute analytical or AAD first order sensitivities.
 \end{itemize}
 
 %--------------------------------------------------------

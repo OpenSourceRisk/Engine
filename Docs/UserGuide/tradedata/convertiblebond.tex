@@ -275,9 +275,9 @@ Allowable values: American, Bermudan
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
-  <!-- American issuer call between 2016-08-03 and 2020-08-03,
-       hard calls at 100 between 2016-08-03 and 2018-08-03,
-       soft calls at 102 between 2018-08-03 and 2019-08-03,
+  <!-- American issuer call between 2016-08-03 and 2020-08-03 (excl),
+       hard calls at 100 between 2016-08-03 and 2018-08-03 (excl),
+       soft calls at 102 between 2018-08-03 and 2019-08-03 (excl),
        soft calls at 103 between 2019-08-03 and 2020-08-03 -->
   <CallData>
     <Styles>
@@ -424,7 +424,8 @@ schedule dates list or using the attribute \verb+startDate+. The ConversionRatio
 start dates are interpreted independently of these schedule dates.
 
 See listings \ref{lst:convertiblebonddata_conversion_1},
-\ref{lst:convertiblebonddata_conversion_2},\ref{lst:convertiblebonddata_conversion_3},\ref{lst:convertiblebonddata_conversion_4},\ref{lst:convertiblebonddata_conversion_5}
+\ref{lst:convertiblebonddata_conversion_2},\ref{lst:convertiblebonddata_conversion_3},\ref{lst:convertiblebonddata_conversion_4},
+\ref{lst:convertiblebonddata_conversion_5},\ref{lst:convertiblebonddata_conversion_6}
 for examples of conversion schedules.
 
 \begin{itemize}
@@ -444,6 +445,29 @@ for examples of conversion schedules.
   next date in the defined schedule. If no startDate is given for a ratio, this ratio is interpreted as the initial
   ratio. \\
   Allowable values: Any non-negative real number.
+
+\item FixedConversionAmounts: If this node is given, the conversion is specified to be conversion to fixed cash amounts
+  instead of equity. If the cash amount currency is different from the bond currency, the FXIndex node must be
+  given. See \ref{lst:convertiblebonddata_conversion_6} for an example. As for ConversionRatios the attribute
+  \verb+startDate+ can be used to specify a date from which the amount is valid and this date is interpreted ``as is'',
+  i.e. not mapped onto the next date in the defined schedule. The nodes
+\begin{itemize}
+  \item ConversionRatios
+  \item ContingentConversion
+  \item MandatoryConversion
+  \item ConversionResets
+  \item Underlying
+  \item Exchangeable
+\end{itemize}
+must {\em not} be given, if this node is present. Furthermore, the following nodes from other sections are not
+applicable if the conversion is specified to be fixed cash amounts, and must therefore not be given:
+\begin{itemize}
+\item CallData/Soft
+\item CallData/TriggerRatios
+\item CallData/NoMTriggers
+\item CallData/MakeWhole
+\item DividendProtectionData (including all subnodes)
+\end{itemize}
 
 \item ContingentConversion: This adds a condition $C^R_t S_t > B$ on the convertibility for the periods defined by the
   conversion dates. Optional.
@@ -550,7 +574,7 @@ for examples of conversion schedules.
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
   <!-- American conversion between 2016-08-03 and 2020-08-03, with
-       conversion ratio 0.5 for 2016-08-03 through 2018-08-03 and
+       conversion ratio 0.5 for 2016-08-03 through 2018-08-03 (excl) and
        conversion ratio 0.6 for 2018-08-03 through 2020-08-03 -->
     <ConversionData>
       <Styles>
@@ -583,7 +607,7 @@ for examples of conversion schedules.
 \begin{minted}[fontsize=\footnotesize]{xml}
   <!-- American conversion between 2016-08-03 and 2018-08-03, with conversion
        ratio 0.5, the conversion is contingent on the parity being above 1.3
-       on 2016-08-03 for the conversion between 2016-08-03 and 2017-08-03
+       on 2016-08-03 for the conversion between 2016-08-03 and 2017-08-03 (excl)
        on 2017-08-03 for the conversion between 2017-08-03 and 2018-08-03 -->
     <ConversionData>
       <Styles>
@@ -663,7 +687,7 @@ for examples of conversion schedules.
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
   <!-- American conversion between 2016-08-03 and 2018-08-03 with CR 0.5.
-       The conversion ratio is reset on 2016-11-03, 2017-02-03, 2017-05-02
+       The conversion ratio is reset on 2016-11-03, 2017-02-03, 2018-05-03
        using T = 0.9, g = 0.8, f = 0.6, F = 0.6. -->
     <ConversionData>
       <Styles>
@@ -714,6 +738,37 @@ for examples of conversion schedules.
 \end{minted}
 \caption{Convertible bond conversion example 5}
 \label{lst:convertiblebonddata_conversion_5}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <!-- American conversion between 2024-08-24 and 2027-05-13, with
+       conversion to 0.87 GBP cash for 2024-08-24 through 2024-11-23 (excl) and
+       conversion to 0.75 GBP cash for 2024-11-23 through 2027-05-13 -->
+    <ConversionData>
+      <Styles>
+        <Style>American</Style>
+      </Styles>
+      <ScheduleData>
+        <Dates>
+          <Dates>
+            <Date>2024-08-24</Date>
+            <Date>2024-11-23</Date>
+            <Date>2027-05-13</Date>
+          </Dates>
+        </Dates>
+      </ScheduleData>
+      <FixedAmountConversion>
+        <Currency>GBP</Currency>
+        <Amounts>
+          <Amount>0.87</Amount>
+          <Amount startDate="2024-11-24">0.75</Amount>
+        </Amounts>
+      </FixedAmountConversion>
+    </ConversionData>
+\end{minted}
+\caption{Convertible bond conversion example 6}
+\label{lst:convertiblebonddata_conversion_6}
 \end{listing}
 
 \underline{Specification of DividendProtectionData:}

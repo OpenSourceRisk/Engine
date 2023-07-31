@@ -106,19 +106,26 @@ const boost::shared_ptr<Analytic>& AnalyticsManager::getAnalytic(const std::stri
     QL_FAIL("analytic type " << type << " not found, check validAnalytics()");
 }
 
+std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> AnalyticsManager::todaysMarketParams() {
+    std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
+    for (const auto& a : analytics_) {
+        std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> atmps = a.second->todaysMarketParams();
+        tmps.insert(end(tmps), begin(atmps), end(atmps));
+    }
+    return tmps;
+}
+
 void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
-                                    const boost::shared_ptr<MarketCalibrationReport>& marketCalibrationReport) {
+                                    const boost::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport) {
 
     requestedAnalytics_ = analyticTypes;
     
     if (analytics_.size() == 0)
         return;
 
-    std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
+    std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> tmps = todaysMarketParams();
     std::set<Date> marketDates;
     for (const auto& a : analytics_) {
-        std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> atmps = a.second->todaysMarketParams();
-        tmps.insert(end(tmps), begin(atmps), end(atmps));
         auto mdates = a.second->marketDates();
         marketDates.insert(mdates.begin(), mdates.end());
     }
@@ -176,8 +183,15 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
         reports_["STATS"]["pricingstats"] = pricingStatsReport;
     }
 
-    if (marketCalibrationReport)
-        marketCalibrationReport->outputCalibrationReport();
+    if (marketCalibrationReport) {
+        auto report = marketCalibrationReport->outputCalibrationReport();
+        if (report) {
+            if (auto rpt = boost::dynamic_pointer_cast<InMemoryReport>(report))
+                reports_["MARKET"]["todaysmarketcalibration"] = rpt;
+        }
+    }
+
+    inputs_->writeOutParameters();
 }
 
 Analytic::analytic_reports const AnalyticsManager::reports() {

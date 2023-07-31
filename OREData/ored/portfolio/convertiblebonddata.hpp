@@ -271,6 +271,30 @@ public:
             bool secured_;
         };
 
+        // 2.5 Fixed Amount Conversion Data
+
+        class FixedAmountConversionData : public ore::data::XMLSerializable {
+        public:
+            FixedAmountConversionData() : initialised_(false) {}
+
+            bool initialised() const { return initialised_; }
+
+            const std::string& currency() const { return currency_; }
+
+            const std::vector<double>& amounts() const { return amounts_; }
+            const std::vector<std::string>& amountDates() const { return amountDates_; }
+
+            void fromXML(ore::data::XMLNode* node) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+        private:
+            bool initialised_;
+
+            std::string currency_;
+            std::vector<double> amounts_;
+            std::vector<std::string> amountDates_;
+        };
+
         // Conversion Data
 
         ConversionData() : initialised_(false) {}
@@ -289,6 +313,7 @@ public:
         const ore::data::EquityUnderlying equityUnderlying() const { return equityUnderlying_; }
         const std::string fxIndex() const { return fxIndex_; }
         const ExchangeableData& exchangeableData() const { return exchangeableData_; }
+        const FixedAmountConversionData& fixedAmountConversionData() const { return fixedAmountConversionData_; }
         ExchangeableData& modifyExchangeableData() { return exchangeableData_; }
 
         void fromXML(ore::data::XMLNode* node) override;
@@ -309,6 +334,7 @@ public:
         ore::data::EquityUnderlying equityUnderlying_;
         std::string fxIndex_;
         ExchangeableData exchangeableData_;
+        FixedAmountConversionData fixedAmountConversionData_;
     };
 
     // 3 Dividend Protection Data

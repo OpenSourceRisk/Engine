@@ -50,8 +50,7 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
 
     if (analytic()->getWriteIntermediateReports()) {
         boost::shared_ptr<InMemoryReport> crifReport = boost::make_shared<InMemoryReport>();
-        ReportWriter(inputs_->reportNaString())
-            .writeCrifReport(crifReport, *simmAnalytic->crifRecords());
+        ReportWriter(inputs_->reportNaString()).writeCrifReport(crifReport, *simmAnalytic->crifRecords());
         analytic()->reports()[LABEL]["crif"] = crifReport;
         LOG("CRIF report generated");
 
@@ -86,7 +85,8 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
     boost::shared_ptr<InMemoryReport> simmRegulationBreakdownReport = boost::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
         .writeSIMMReport(simm->simmResults(), simmRegulationBreakdownReport, simmAnalytic->hasNettingSetDetails(),
-                         inputs_->simmResultCurrency(), inputs_->simmReportingCurrency(), false, fxSpot);
+                         inputs_->simmResultCurrency(), inputs_->simmCalculationCurrency(),
+                         inputs_->simmReportingCurrency(), false, fxSpot);
     LOG("SIMM regulation breakdown report generated");
     analytic()->reports()[LABEL]["regulation_breakdown_simm"] = simmRegulationBreakdownReport;
 
@@ -94,7 +94,8 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
     boost::shared_ptr<InMemoryReport> simmReport = boost::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
         .writeSIMMReport(simm->finalSimmResults(), simmReport, simmAnalytic->hasNettingSetDetails(),
-                         inputs_->simmResultCurrency(), inputs_->simmReportingCurrency(), fxSpot);
+                         inputs_->simmResultCurrency(), inputs_->simmCalculationCurrency(),
+                         inputs_->simmReportingCurrency(), fxSpot);
     analytic()->reports()[LABEL]["simm"] = simmReport;
     LOG("SIMM report generated");
     MEM_LOG;

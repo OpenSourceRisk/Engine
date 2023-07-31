@@ -293,6 +293,21 @@ void InputParameters::setCovarianceDataFromFile(const std::string& fileName) {
     LOG("Read " << covarianceData_.size() << " valid covariance data lines from " << fileName);
 }
 
+void InputParameters::setCovarianceData(ore::data::CSVReader& reader) {
+    std::vector<std::string> dummy;
+    while (reader.next()) { 
+        covarianceData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
+                                       *parseRiskFactorKey(reader.get(1), dummy))] =
+            ore::data::parseReal(reader.get(2));
+    }
+    LOG("Read " << covarianceData_.size() << " valid covariance data lines");
+}
+
+void InputParameters::setCovarianceDataFromBuffer(const std::string& xml) {
+    ore::data::CSVBufferReader reader(xml, false);
+    setCovarianceData(reader);
+}
+
 void InputParameters::setSensitivityStreamFromFile(const std::string& fileName) {
     sensitivityStream_ = boost::make_shared<SensitivityFileStream>(fileName);
 }
@@ -367,12 +382,17 @@ void InputParameters::setCreditSimulationParametersFromFile(const std::string& f
     creditSimulationParameters_->fromFile(fileName);
 }
 
+void InputParameters::setCreditSimulationParametersFromBuffer(const std::string& xml) {
+    creditSimulationParameters_ = boost::make_shared<CreditSimulationParameters>();
+    creditSimulationParameters_->fromXMLString(xml);
+} 
+
 void InputParameters::setCrifLoader() {
     if (!simmBucketMapper_)
         // setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>(simmVersion_));
         setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>());
     boost::shared_ptr<SimmConfiguration> configuration =
-        buildSimmConfiguration(simmVersion_, simmBucketMapper_);
+        buildSimmConfiguration(simmVersion_, simmBucketMapper_, mporDays());
     bool updateMappings = true;
     bool aggregateTrades = false;
     crifLoader_ =
@@ -532,6 +552,17 @@ void InputParameters::setParConversionPricingEngineFromFile(const std::string& f
     parConversionPricingEngine_->fromFile(fileName);
 }
 
+Date InputParameters::mporDate() {
+    if (mporDate_ == Date()) {
+        QL_REQUIRE(asof() != Date(), "Asof date is required for mpor date");
+        QL_REQUIRE(!mporCalendar().empty(), "MporCalendar or BaseCurrency is required for mpor date");
+        QL_REQUIRE(mporDays() != Null<Size>(), "mporDays is required for mpor date");
 
+        int effectiveMporDays = mporForward() ? mporDays() : -static_cast<int>(mporDays());
+
+        mporDate_ = mporCalendar().advance(asof(), effectiveMporDays, QuantExt::Days);
+    }
+    return mporDate_;
+}
 } // namespace analytics
 } // namespace ore

@@ -42,7 +42,8 @@ public:
     typedef SimmConfiguration::MarginType MarginType;
     typedef std::tuple<ProductClass, RiskClass, MarginType, std::string> Key;
 
-    SimmResults(const std::string& ccy = "") : ccy_(ccy){};
+    SimmResults(const std::string& resultCcy = "", const std::string& calcCcy = "")
+        : resultCcy_(resultCcy), calcCcy_(calcCcy){};
 
     /*! Add initial margin value \p im to the results container for the given combination of
         SIMM <em>product class</em>, <em>risk class</em> and <em>margin type</em>
@@ -53,7 +54,7 @@ public:
     */
     void add(const SimmConfiguration::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
              const SimmConfiguration::MarginType& mt, const std::string& b, QuantLib::Real im,
-             const std::string& calculationCurrency, const bool overwrite);
+             const std::string& resultCurrency, const std::string& calculationCurrency, const bool overwrite);
 
     //! Convert SIMM amounts to a different currency
     void convert(const boost::shared_ptr<ore::data::Market>& market, const std::string& currency);
@@ -86,14 +87,18 @@ public:
     // allows to iterate over results cleanly. Would be better to subclass
     // std::iterator in this class.
     const std::map<Key, QuantLib::Real>& data() const { return data_; }
+    std::map<Key, QuantLib::Real>& data() { return data_; }
 
-    const std::string& currency() const { return ccy_; }
+    std::string& resultCurrency() { return resultCcy_; }
+    const std::string& resultCurrency() const { return resultCcy_; }
 
-    std::string& currency() { return ccy_; }
+    std::string& calculationCurrency() { return calcCcy_; }
+    const std::string& calculationCurrency() const { return calcCcy_; }
 
 private:
     std::map<Key, QuantLib::Real> data_;
-    std::string ccy_;
+    std::string resultCcy_;
+    std::string calcCcy_;
 };
 
 //! Enable writing of Key

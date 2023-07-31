@@ -33,6 +33,8 @@
 #include <ql/math/functional.hpp>
 #include <ql/quotes/derivedquote.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 
 namespace ore {
 namespace data {
@@ -98,8 +100,24 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
 
     // get equity curve and volatility
 
-    std::string equityName = equity->name();
-    auto volatility = market_->equityVol(equityName, config);
+    std::string equityName;
+    Handle<BlackVolTermStructure> volatility;
+
+    if (equity != nullptr) {
+        equityName = equity->name();
+        volatility = market_->equityVol(equityName, config);
+    } else {
+        // create dummy equity and zero volatility if either of these are left empty (this is used for fixed amount
+        // conversion)
+        equity = boost::make_shared<QuantExt::EquityIndex2>(
+            "dummyFamily", NullCalendar(), fx == nullptr ? parseCurrency(ccy) : fx->sourceCurrency(),
+            Handle<Quote>(boost::make_shared<SimpleQuote>(1.0)),
+            Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed())),
+            Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed())));
+
+        volatility = Handle<BlackVolTermStructure>(boost::make_shared<BlackConstantVol>(
+            0, NullCalendar(), Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)), Actual365Fixed()));
+    }
 
     // get bond related curves
 
@@ -214,12 +232,15 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
 
     std::vector<Date> calibrationDates = DateGrid(engineParameter("Bootstrap.CalibrationGrid", {}, true)).dates();
     std::vector<Real> calibrationTimes;
+    Date today = Settings::instance().evaluationDate();
     for (Size i = 0; i < calibrationDates.size(); ++i) {
         if (calibrationDates[i] < maturityDate) {
-            calibrationTimes.push_back(volatility->timeFromReference(calibrationDates[i]));
+            calibrationTimes.push_back(!volatility.empty() ? volatility->timeFromReference(calibrationDates[i])
+                                                           : Actual365Fixed().yearFraction(today, calibrationDates[i]));
         }
     }
-    calibrationTimes.push_back(volatility->timeFromReference(maturityDate));
+    calibrationTimes.push_back(!volatility.empty() ? volatility->timeFromReference(maturityDate)
+                                                   : Actual365Fixed().yearFraction(today, maturityDate));
 
     // read global parameters
 

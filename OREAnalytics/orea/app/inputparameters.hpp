@@ -42,6 +42,7 @@
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/marketdata/csvloader.hpp>
+#include <ored/utilities/csvfilereader.hpp>
 #include <boost/filesystem/path.hpp>
 
 namespace ore {
@@ -147,7 +148,9 @@ public:
     void setVarMethod(const std::string& s) { varMethod_ = s; }
     void setMcVarSamples(Size s) { mcVarSamples_ = s; }
     void setMcVarSeed(long l) { mcVarSeed_ = l; }
+    void setCovarianceData(ore::data::CSVReader& reader);  
     void setCovarianceDataFromFile(const std::string& fileName);
+    void setCovarianceDataFromBuffer(const std::string& xml);
     void setSensitivityStreamFromFile(const std::string& fileName);
 
     // Setters for exposure simulation
@@ -255,10 +258,11 @@ public:
     void setCreditSimulationParameters(const boost::shared_ptr<CreditSimulationParameters>& c) {
         creditSimulationParameters_ = c;
     }
+    void setCreditSimulationParametersFromBuffer(const std::string& xml);
     void setCreditSimulationParametersFromFile(const std::string& fileName);
     void setCreditMigrationOutputFiles(const std::string& s) { creditMigrationOutputFiles_ = s; }
     // Setters for cashflow npv and dynamic backtesting
-    void setCashflowHorizon(const std::string& s); // parse to Date
+    void setCashflowHorizon(const std::string& s); // parse to Date 
     void setPortfolioFilterDate(const std::string& s); // parse to Date
 
     // Setters for SIMM
@@ -343,7 +347,7 @@ public:
     char csvEscapeChar() const { return csvEscapeChar_; }
     bool dryRun() const { return dryRun_; }
     QuantLib::Size mporDays() { return mporDays_; }
-    QuantLib::Date mporDate() { return mporDate_; }
+    QuantLib::Date mporDate();
     const QuantLib::Calendar mporCalendar() {
         if (mporCalendar_.empty()) {
             QL_REQUIRE(!baseCurrency_.empty(), "mpor calendar or baseCurrency must be provided";);
@@ -758,6 +762,7 @@ protected:
     std::string simmResultCurrency_ = "";
     std::string simmReportingCurrency_ = "";
     bool enforceIMRegulations_ = false;
+    bool useSimmParameters_ = true;
 
     /***************
      * Zero to Par Conversion analytic

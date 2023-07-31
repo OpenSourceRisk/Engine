@@ -631,12 +631,16 @@ void CurveConfigurationsManager::add(const QuantLib::ext::shared_ptr<CurveConfig
     configs_[id] = config;
 }
 
-const QuantLib::ext::shared_ptr<CurveConfigurations>& CurveConfigurationsManager::get(std::string id) const { 
+const QuantLib::ext::shared_ptr<CurveConfigurations>& CurveConfigurationsManager::get(std::string id) const {
     auto it = configs_.find(id);
-    QL_REQUIRE(it != configs_.end(), "CurveConfigurationsManager: could not find CurveConfiguration for id " << id);
+    if (it == configs_.end()) {
+        WLOG("CurveConfigurationsManager: could not find CurveConfiguration for id "
+             << id << ", attempting to get default curveConfig.");
+        it = configs_.find("");
+        QL_REQUIRE(it != configs_.end(), "CurveConfigurationsManager: could not find CurveConfiguration for id " << id);
+    }
     return it->second;
 }
-
 
 const bool CurveConfigurationsManager::has(std::string id) const { 
     auto it = configs_.find(id); 
