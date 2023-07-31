@@ -1,0 +1,265 @@
+<?xml version="1.0"?>
+<!-- Copyright (C) 2019 Quaternion Risk Management -->
+<!-- All Rights Reserved -->
+<ScriptLibrary>
+  <!-- Only officially supported ORE+ scripts go here -->
+
+  <!-- Accumulator01
+
+       Input Data:
+       Strike                          option strike
+       FixingAmount                    unleveraged amount paid on each fixing date
+       LongShort                       1 for a long, -1 for a short position
+       Underlying                      underlying index
+       PayCcy                          payment currency
+       StartDate                       start date (only needed if AmericanKO = 1)
+       FixingDates                     fixing valuation dates
+       SettlementDates                 settlement dates
+       RangeUpperBounds                upper bounds of fixing ranges
+       RangeLowerBounds                lower bounds of fixing ranges
+       RangeLeverages                  leverage amounts of fixing ranges
+       KnockOutLevel                   knock out level
+       KnockOutType                    barrier type 3=DownOut, 4=UpOut
+       AmericanKO                      1 for American KO style, -1 for European KO style
+       GuaranteedFixings               the number of fixings guaranteed regardless of knockout level
+
+       Result Data:
+       value                            npv of the option
+       currentNotional                 current notional
+       notionalCurrency                notional currency
+  -->
+  <Script>
+    <Name>Accumulator01</Name>
+    <ProductTag>SingleAssetOption({AssetClass})</ProductTag>
+    <Script>
+      <Code><![CDATA[
+            REQUIRE KnockOutType == 3 OR KnockOutType == 4;
+            NUMBER Payoff, fix, d, r, Alive, currentNotional, Factor, ThisPayout, Fixing[SIZE(FixingDates)];
+            Alive = 1;
+            FOR d IN (1, SIZE(FixingDates), 1) DO
+                fix = Underlying(FixingDates[d]);
+                Fixing[d] = fix;
+
+                IF AmericanKO == 1 THEN
+                  IF KnockOutType == 4 THEN
+                    IF FixingDates[d] >= StartDate THEN
+                       IF d == 1 OR FixingDates[d-1] <= StartDate THEN
+                          Alive = Alive * (1 - ABOVEPROB(Underlying, StartDate, FixingDates[d], KnockOutLevel));
+		       ELSE
+                          Alive = Alive * (1 - ABOVEPROB(Underlying, FixingDates[d-1], FixingDates[d], KnockOutLevel));
+		       END;
+                    END;
+                  ELSE
+                    IF FixingDates[d] >= StartDate THEN
+                       IF d == 1 OR FixingDates[d-1] <= StartDate THEN
+                          Alive = Alive * (1 - BELOWPROB(Underlying, StartDate, FixingDates[d], KnockOutLevel));
+		       ELSE
+                          Alive = Alive * (1 - BELOWPROB(Underlying, FixingDates[d-1], FixingDates[d], KnockOutLevel));
+		       END;
+                    END;
+                  END;
+                ELSE
+                  IF {KnockOutType == 4 AND fix >= KnockOutLevel} OR
+                     {KnockOutType == 3 AND fix <= KnockOutLevel} THEN
+                    Alive = 0;
+                  END;
+                END;
+
+                IF d <= GuaranteedFixings THEN
+                  Factor = 1;
+                ELSE
+                  Factor = Alive;
+                END;
+
+                FOR r IN (1, SIZE(RangeUpperBounds), 1) DO
+                  IF fix > RangeLowerBounds[r] AND fix <= RangeUpperBounds[r] THEN
+                    ThisPayout = RangeLeverages[r] * FixingAmount * (fix - Strike) * Factor;
+                    IF d > GuaranteedFixings OR ThisPayout >= 0 THEN
+                      Payoff = Payoff + LOGPAY(RangeLeverages[r] * FixingAmount * (fix - Strike) * Factor,
+                                               FixingDates[d], SettlementDates[d], PayCcy);
+                    END;
+                  END;
+                END;
+            END;
+            value = LongShort * Payoff;
+            currentNotional = FixingAmount * Strike;
+        ]]></Code>
+      <NPV>value</NPV>
+      <Results>
+        <Result>currentNotional</Result>
+        <Result rename="notionalCurrency">PayCcy</Result>
+        <Result>Alive</Result>
+        <Result>Fixing</Result>
+      </Results>
+      <CalibrationSpec>
+        <Calibration>
+          <Index>Underlying</Index>
+          <Strikes>
+            <Strike>Strike</Strike>
+            <Strike>KnockOutLevel</Strike>
+          </Strikes>
+        </Calibration>
+      </CalibrationSpec>
+    </Script>
+  </Script>
+  <!-- Accumulator02
+
+       Input Data:
+       Strike                          option strike
+       FixingAmount                    number of shares per day (EQ), foreign amount (FX)
+       LongShort                       1 for a long, -1 for a short position
+       Underlying                      underlying index
+       PayCcy                          payment currency
+       ObservationDates                observation dates
+       KnockOutSettlementDates         knock out settlement dates
+       ObservationPeriodEndDates       end dates of observation periods
+       last of these dates should be >= last observation date
+       SettlementDates                 settlement dates
+       RangeUpperBounds                upper bounds of fixing ranges
+       RangeLowerBounds                lower bounds of fixing ranges
+       RangeLeverages                  leverage amounts of fixing ranges
+       Default Range                   default range index for guaranteed period
+       KnockOutLevel                   knock out level
+       KnockOutType                    barrier type 3=DownOut, 4=UpOut
+       GuaranteedPeriodEndDate         end of guarateed period
+
+       Result Data:
+       value                           npv of the option
+       currentNotional                 current notional
+       notionalCurrency                notional currency
+  -->
+  <Script>
+    <Name>Accumulator02</Name>
+    <ProductTag>SingleAssetOptionBwd({AssetClass})</ProductTag>
+    <Script>
+      <Code><![CDATA[
+            REQUIRE SIZE(ObservationDates) == SIZE(KnockOutSettlementDates);
+            REQUIRE SIZE(ObservationPeriodEndDates) == SIZE(SettlementDates);
+            REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLowerBounds);
+            REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLeverages);
+            REQUIRE ObservationPeriodEndDates[SIZE(ObservationPeriodEndDates)] >= ObservationDates[SIZE(ObservationDates)];
+            NUMBER Payoff, fix, d, dd, KnockedOut, currentNotional, Days[SIZE(RangeUpperBounds)], knockOutDays, Fixing[SIZE(ObservationPeriodEndDates)];
+            NUMBER currentPeriod, r;
+            currentPeriod = 1;
+            FOR d IN (1, SIZE(ObservationDates), 1) DO
+              fix = Underlying(ObservationDates[d]);
+
+              knockOutDays = max(DATEINDEX(GuaranteedPeriodEndDate, ObservationDates, GT) - 1 - d, 0);
+
+              IF KnockedOut == 0 THEN
+                IF {KnockOutType == 4 AND fix >= KnockOutLevel} OR
+                   {KnockOutType == 3 AND fix <= KnockOutLevel} THEN
+                   KnockedOut = 1;
+                   Days[DefaultRange] = Days[DefaultRange] + knockOutDays;
+                   FOR r IN (1, SIZE(RangeUpperBounds), 1) DO
+                     value = value + PAY( LongShort * FixingAmount * RangeLeverages[r] * Days[r] * ( fix - Strike ),
+                                          ObservationDates[d], KnockOutSettlementDates[d], PayCcy );
+                   END;
+                END;
+              END;
+
+              IF KnockedOut == 0 THEN
+                FOR r IN (1, SIZE(RangeUpperBounds), 1) DO
+                  IF fix > RangeLowerBounds[r] AND fix <= RangeUpperBounds[r] THEN
+                    Days[r] = Days[r] + 1;
+                  END;
+                END;
+                IF ObservationDates[d] >= ObservationPeriodEndDates[currentPeriod] THEN
+                  FOR r IN (1, SIZE(RangeUpperBounds), 1) DO
+                    value = value + LOGPAY( LongShort * FixingAmount * RangeLeverages[r] * Days[r] * ( fix - Strike ),
+                                            ObservationDates[d], SettlementDates[currentPeriod], PayCcy );
+                  END;
+                END;
+              END;
+              IF ObservationDates[d] >= ObservationPeriodEndDates[currentPeriod] THEN
+                Fixing[currentPeriod] = fix;
+                currentPeriod = currentPeriod + 1;
+                FOR r IN (1, SIZE(RangeUpperBounds), 1) DO
+                  Days[r] = 0;
+                END;
+              END;
+            END;
+            currentNotional = FixingAmount *  Strike;
+        ]]></Code>
+      <NPV>value</NPV>
+      <Results>
+        <Result>currentNotional</Result>
+        <Result rename="notionalCurrency">PayCcy</Result>
+        <Result>KnockedOut</Result>
+        <Result>Fixing</Result>
+      </Results>
+      <CalibrationSpec>
+        <Calibration>
+          <Index>Underlying</Index>
+          <Strikes>
+            <Strike>Strike</Strike>
+            <Strike>KnockOutLevel</Strike>
+          </Strikes>
+        </Calibration>
+      </CalibrationSpec>
+    </Script>
+    <Script purpose="FD">
+      <Code><![CDATA[
+            REQUIRE SIZE(ObservationDates) == SIZE(KnockOutSettlementDates);
+            REQUIRE SIZE(ObservationPeriodEndDates) == SIZE(SettlementDates);
+            REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLowerBounds);
+            REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLeverages);
+            REQUIRE ObservationPeriodEndDates[SIZE(ObservationPeriodEndDates)] >= ObservationDates[SIZE(ObservationDates)];
+
+            NUMBER currentPeriod, referencePayout, fix, d, r, dd, currentNotional, Fixing[SIZE(ObservationPeriodEndDates)];
+
+            currentPeriod = DATEINDEX(ObservationDates[SIZE(ObservationDates)], ObservationPeriodEndDates, GEQ);
+            referencePayout = PAY( LongShort * FixingAmount * ( Underlying(ObservationDates[SIZE(ObservationDates)]) - Strike ),
+                                      ObservationDates[SIZE(ObservationDates)], SettlementDates[currentPeriod], PayCcy );
+            value = 0 * referencePayout;
+
+            FOR d IN (SIZE(ObservationDates), 1, -1) DO
+
+              IF ObservationDates[d] >= TODAY THEN
+                value = NPV(value, ObservationDates[d]);
+                referencePayout = NPV(referencePayout, ObservationDates[d]);
+              ELSE
+                value = NPV(value, TODAY);
+                referencePayout = NPV(referencePayout, TODAY);
+              END;
+
+              fix = Underlying(ObservationDates[d]);
+
+              IF d > 1 AND currentPeriod > 0 AND ObservationDates[d-1] < ObservationPeriodEndDates[currentPeriod] THEN
+                referencePayout = PAY( LongShort * FixingAmount * ( fix - Strike ), ObservationDates[d], SettlementDates[currentPeriod], PayCcy );
+                Fixing[currentPeriod] = fix;
+                currentPeriod = currentPeriod - 1;
+              END;
+
+              IF {KnockOutType == 4 AND fix >= KnockOutLevel} OR
+                 {KnockOutType == 3 AND fix <= KnockOutLevel} THEN
+                referencePayout = PAY( LongShort * FixingAmount * ( fix - Strike ), ObservationDates[d], KnockOutSettlementDates[d], PayCcy );
+                value = referencePayout * RangeLeverages[DefaultRange] * max(DATEINDEX(GuaranteedPeriodEndDate, ObservationDates, GT) - 1 - d, 0);
+              ELSE
+                FOR r IN (1, SIZE(RangeUpperBounds), 1) DO
+                  IF fix > RangeLowerBounds[r] AND fix <= RangeUpperBounds[r] THEN
+                    value = value + RangeLeverages[r] * referencePayout;
+                  END;
+                END;
+              END;
+            END;
+            currentNotional = FixingAmount *  Strike;
+        ]]></Code>
+      <NPV>value</NPV>
+      <Results>
+        <Result>currentNotional</Result>
+        <Result rename="notionalCurrency">PayCcy</Result>
+        <Result>Fixing</Result>
+      </Results>
+      <CalibrationSpec>
+        <Calibration>
+          <Index>Underlying</Index>
+          <Strikes>
+            <Strike>Strike</Strike>
+            <Strike>KnockOutLevel</Strike>
+          </Strikes>
+        </Calibration>
+      </CalibrationSpec>
+    </Script>
+  </Script>
+</ScriptLibrary>

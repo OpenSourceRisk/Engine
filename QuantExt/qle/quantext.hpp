@@ -5,6 +5,13 @@
 #include <qle/auto_link.hpp>
 #endif
 
+#include <qle/ad/backwardderivatives.hpp>
+#include <qle/ad/computationgraph.hpp>
+#include <qle/ad/external_randomvariable_ops.hpp>
+#include <qle/ad/forwardderivatives.hpp>
+#include <qle/ad/forwardevaluation.hpp>
+#include <qle/ad/randomvariable_ops.hpp>
+#include <qle/ad/ssaform.hpp>
 #include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/austria.hpp>
 #include <qle/calendars/belgium.hpp>
@@ -222,6 +229,7 @@
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/math/flatextrapolation2d.hpp>
+#include <qle/math/kendallrankcorrelation.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/matrixfunctions.hpp>
 #include <qle/math/method_mt.hpp>
@@ -232,11 +240,15 @@
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_io.hpp>
 #include <qle/math/randomvariable_opcodes.hpp>
+#include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/math/stabilisedglls.hpp>
 #include <qle/math/trace.hpp>
 #include <qle/methods/brownianbridgepathinterpolator.hpp>
+#include <qle/methods/fdmblackscholesmesher.hpp>
+#include <qle/methods/fdmblackscholesop.hpp>
 #include <qle/methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp>
 #include <qle/methods/fdmdefaultableequityjumpdiffusionop.hpp>
+#include <qle/methods/fdmquantohelper.hpp>
 #include <qle/methods/interpolatedvariatemultipathgenerator.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
@@ -293,6 +305,7 @@
 #include <qle/models/hwmodel.hpp>
 #include <qle/models/hwparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
+#include <qle/models/infdkvectorised.hpp>
 #include <qle/models/infjyparameterization.hpp>
 #include <qle/models/inhomogeneouspooldef.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
@@ -323,6 +336,8 @@
 #include <qle/models/poollossmodel.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/models/pseudoparameter.hpp>
+#include <qle/models/representativefxoption.hpp>
+#include <qle/models/representativeswaption.hpp>
 #include <qle/models/transitionmatrix.hpp>
 #include <qle/models/yoycapfloorhelper.hpp>
 #include <qle/models/yoyinflationmodeltermstructure.hpp>

@@ -4,10 +4,11 @@
 */
 
 #include <oret/toplevelfixture.hpp>
-#include <test/testmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
+
+#include "testmarket.hpp"
 
 using namespace std;
 using namespace ore;
