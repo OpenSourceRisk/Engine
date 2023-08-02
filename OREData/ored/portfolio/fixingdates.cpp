@@ -179,6 +179,65 @@ void RequiredFixings::unsetPayDates() {
     yoyInflationFixingDates_ = newYoYInflationFixingDates;
 }
 
+RequiredFixings RequiredFixings::filteredFixingDates(const Date& settlementDate) { 
+    RequiredFixings rf; 
+    // If settlement date is an empty date, update to evaluation date.
+    Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
+    // handle the general case
+    for (auto f : fixingDates_) {
+        // get the data
+        std::string indexName = std::get<0>(f);
+        Date fixingDate = std::get<1>(f);
+        Date payDate = std::get<2>(f);
+        bool alwaysAddIfPaysOnSettlement = std::get<3>(f);
+        // add to result
+        if (fixingDate > d)
+            continue;
+        SimpleCashFlow dummyCf(0.0, payDate);
+        if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
+            std::get<2>(f) = Date::maxDate();
+            std::get<3>(f) = true;
+            rf.addFixingDate(f);
+        }
+    }
+
+    // handle zero inflation index based coupons
+    for (auto f : zeroInflationFixingDates_) {
+        // get the data
+        InflationFixingEntry inflationFixingEntry = std::get<0>(f);
+        FixingEntry fixingEntry = std::get<0>(inflationFixingEntry);
+        std::string indexName = std::get<0>(fixingEntry);
+        Date fixingDate = std::get<1>(fixingEntry);
+        Date payDate = std::get<2>(fixingEntry);
+        bool alwaysAddIfPaysOnSettlement = std::get<3>(fixingEntry);
+        // add to result
+        SimpleCashFlow dummyCf(0.0, payDate);
+        if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
+            std::get<2>(std::get<0>(std::get<0>(f))) = Date::maxDate();
+            std::get<3>(std::get<0>(std::get<0>(f))) = true;
+            rf.addZeroInflationFixingDate(f);
+        }
+    }
+
+    // handle yoy inflation index based coupons
+    for (auto f : yoyInflationFixingDates_) {
+        // get the data
+        FixingEntry fixingEntry = std::get<0>(f);
+        std::string indexName = std::get<0>(fixingEntry);
+        Date fixingDate = std::get<1>(fixingEntry);
+        Date payDate = std::get<2>(fixingEntry);
+        bool alwaysAddIfPaysOnSettlement = std::get<3>(fixingEntry);
+        // add to result
+        SimpleCashFlow dummyCf(0.0, payDate);
+        if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
+            std::get<2>(std::get<0>(f)) = Date::maxDate();
+            std::get<3>(std::get<0>(f)) = true;
+            rf.addYoYInflationFixingDate(f);
+        }
+    }
+    return rf;
+}
+
 std::map<std::string, std::set<Date>> RequiredFixings::fixingDatesIndices(const Date& settlementDate) const {
 
     // If settlement date is an empty date, update to evaluation date.
@@ -260,6 +319,10 @@ void RequiredFixings::addFixingDate(const QuantLib::Date& fixingDate, const std:
         std::make_tuple(indexName, fixingDate, payDate, payDate == Date::maxDate() || alwaysAddIfPaysOnSettlement));
 }
 
+void RequiredFixings::addFixingDate(const FixingEntry& fixingEntry) { 
+    fixingDates_.insert(fixingEntry); 
+}
+
 void RequiredFixings::addFixingDates(const std::vector<QuantLib::Date>& fixingDates, const std::string& indexName,
                                      const QuantLib::Date& payDate, const bool alwaysAddIfPaysOnSettlement) {
     for (auto const& d : fixingDates) {
@@ -279,6 +342,10 @@ void RequiredFixings::addZeroInflationFixingDate(const QuantLib::Date& fixingDat
                         couponInterpolation, couponFrequency));
 }
 
+void RequiredFixings::addZeroInflationFixingDate(const ZeroInflationFixingEntry& fixingEntry) {
+    zeroInflationFixingDates_.insert(fixingEntry);
+}
+
 void RequiredFixings::addYoYInflationFixingDate(const QuantLib::Date& fixingDate, const std::string& indexName,
                                                 const bool indexInterpolated, const Frequency indexFrequency,
                                                 const Period& indexAvailabilityLag, const QuantLib::Date& payDate,
@@ -286,6 +353,10 @@ void RequiredFixings::addYoYInflationFixingDate(const QuantLib::Date& fixingDate
     yoyInflationFixingDates_.insert(
         std::make_tuple(std::make_tuple(indexName, fixingDate, payDate, alwaysAddIfPaysOnSettlement), indexInterpolated,
                         indexFrequency, indexAvailabilityLag));
+}
+
+void RequiredFixings::addYoYInflationFixingDate(const InflationFixingEntry& fixingEntry) {
+    yoyInflationFixingDates_.insert(fixingEntry);
 }
 
 std::ostream& operator<<(std::ostream& out, const RequiredFixings& requiredFixings) {
@@ -538,7 +609,7 @@ void FixingDateGetter::visit(CommodityCashFlow& c) {
 }
 
  void FixingDateGetter::visit(BondTRSCashFlow& bc) {
-    if (bc.initialPrice() == Null<Real>()) {
+    if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_) {
         requiredFixings_.addFixingDate(bc.fixingStartDate(), bc.bondIndex()->name(), 
             bc.date());
     }
