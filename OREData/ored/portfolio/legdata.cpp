@@ -2717,21 +2717,20 @@ void BondIndexBuilder::addRequiredFixings(RequiredFixings& requiredFixings, Leg 
     if (dirty_) {
         QL_REQUIRE(leg.size() > 0, "BondIndexBuild: Leg is required if dirty flag set to true");
         RequiredFixings legFixings;
-        addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(legFixings));
+        auto fixingGetter = boost::make_shared<FixingDateGetter>(legFixings);
+        fixingGetter->setRequireFixingStartDates(true);
+        addToRequiredFixings(leg, fixingGetter);
+
+        set<Date> fixingDates;
 
         auto fixingMap = legFixings.fixingDatesIndices();
         if (fixingMap.size() > 0) {
             std::map<std::string, std::set<Date>> indexFixings;
             for (const auto& [_, dates] : fixingMap) {
                 for (const auto& d : dates) {
-                    auto tmp = fixings_.fixingDatesIndices(d);
-                    for (const auto& [i, ds] : tmp)
-                        indexFixings[i].insert(ds.begin(), ds.end());
+                    auto tmp = fixings_.filteredFixingDates(d);
+                    requiredFixings.addData(tmp);
                 }
-            }
-            for (const auto& [i, ds] : indexFixings) {
-                vector<Date> dates(ds.begin(), ds.end());
-                requiredFixings.addFixingDates(dates, i);
             }
         }
     } else 
