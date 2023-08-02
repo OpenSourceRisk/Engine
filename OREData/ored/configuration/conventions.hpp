@@ -635,8 +635,9 @@ public:
     TenorBasisSwapConvention() {}
     //! Detailed constructor
     TenorBasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex,
-                             const string& shortPayTenor = "", const string& spreadOnShort = "",
-                             const string& includeSpread = "", const string& subPeriodsCouponType = "");
+                             const string& shortPayTenor = "", const string& longPayTenor = "",
+                             const string& spreadOnShort = "", const string& includeSpread = "", 
+                             const string& subPeriodsCouponType = "");
     //@}
 
     //! \name Inspectors
@@ -646,6 +647,7 @@ public:
     const string& longIndexName() const { return strLongIndex_; }
     const string& shortIndexName() const { return strShortIndex_; }
     const Period& shortPayTenor() const { return shortPayTenor_; }
+    const Period& longPayTenor() const { return longPayTenor_; }
     bool spreadOnShort() const { return spreadOnShort_; }
     bool includeSpread() const { return includeSpread_; }
     SubPeriodsCoupon1::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
@@ -660,6 +662,7 @@ public:
 
 private:
     Period shortPayTenor_;
+    Period longPayTenor_;
     bool spreadOnShort_;
     bool includeSpread_;
     SubPeriodsCoupon1::Type subPeriodsCouponType_;
@@ -668,6 +671,7 @@ private:
     string strLongIndex_;
     string strShortIndex_;
     string strShortPayTenor_;
+    string strLongPayTenor_;
     string strSpreadOnShort_;
     string strIncludeSpread_;
     string strSubPeriodsCouponType_;

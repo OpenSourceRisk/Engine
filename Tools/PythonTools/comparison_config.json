@@ -226,6 +226,9 @@
           "IMModel",
           "TradeType"
         ],
+        "optional_cols": [
+          "BaseCurrency"
+        ],
         "optional_keys": [
           "collect_regulations",
           "post_regulations"
@@ -256,6 +259,7 @@
           },
           {
             "names": [
+              "BaseCurrency",
               "IMModel",
               "TradeType"
             ],
@@ -612,7 +616,8 @@
         "use_cols": [
           "InitialMargin",
           "Regulation",
-          "Currency"
+          "Currency",
+          "CalculationCurrency"
         ],
         "optional_cols": [
           "InitialMargin(Report)",
@@ -631,6 +636,7 @@
             "names": [
               "Regulation",
               "Currency",
+              "CalculationCurrency",
               "ReportCurrency"
             ],
             "abs_tol": null,

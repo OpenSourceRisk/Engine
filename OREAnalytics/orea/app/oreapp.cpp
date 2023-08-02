@@ -236,8 +236,14 @@ void OREApp::analytics() {
         CONSOLE(to_string(inputs_->analytics()));
         LOG("Requested analytics: " << to_string(inputs_->analytics()));
 
+        boost::shared_ptr<MarketCalibrationReportBase> mcr;
+        if (inputs_->outputTodaysMarketCalibration()) {
+            auto marketCalibrationReport = boost::make_shared<ore::data::InMemoryReport>();
+            mcr = boost::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
+        }
+
         // Run the requested analytics
-        analyticsManager_->runAnalytics(inputs_->analytics());
+        analyticsManager_->runAnalytics(inputs_->analytics(), mcr);
 
         // Write reports to files in the results path
         Analytic::analytic_reports reports = analyticsManager_->reports();
@@ -377,8 +383,14 @@ void OREApp::run(const std::vector<std::string>& marketData,
         CONSOLE(to_string(inputs_->analytics()));
         LOG("Requested analytics: " << to_string(inputs_->analytics()));
 
+        boost::shared_ptr<MarketCalibrationReportBase> mcr;
+        if (inputs_->outputTodaysMarketCalibration()) {
+            auto marketCalibrationReport = boost::make_shared<ore::data::InMemoryReport>();
+            mcr = boost::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
+        }
+
         // Run the requested analytics
-        analyticsManager_->runAnalytics(inputs_->analytics());
+        analyticsManager_->runAnalytics(inputs_->analytics(), mcr);
 
         // Leave any report writing to the calling aplication
     }

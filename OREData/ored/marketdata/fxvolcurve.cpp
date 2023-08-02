@@ -969,9 +969,9 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
             if (reportOnDeltaGrid) {
                 calibrationInfo_->deltas = deltas;
-                calibrationInfo_->callPrices =
+                calibrationInfo_->deltaCallPrices =
                     std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
-                calibrationInfo_->putPrices =
+                calibrationInfo_->deltaPutPrices =
                     std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
                 calibrationInfo_->deltaGridStrikes =
                     std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
@@ -1025,9 +1025,9 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                             callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
                             
                             if (d.isPut()) {
-                                calibrationInfo_->putPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev);
+                                calibrationInfo_->deltaPutPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, domDisc[i]);
                             } else {
-                                calibrationInfo_->callPrices[i][j] = callPricesDelta[i][j];
+                                calibrationInfo_->deltaCallPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, domDisc[i]);
                             }
                             
                             calibrationInfo_->deltaGridStrikes[i][j] = strike;
@@ -1062,6 +1062,10 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
             if (reportOnMoneynessGrid) {
                 calibrationInfo_->moneyness = moneyness;
+                calibrationInfo_->moneynessCallPrices =
+                    std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+                calibrationInfo_->moneynessPutPrices =
+                    std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
                 calibrationInfo_->moneynessGridStrikes =
                     std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
                 calibrationInfo_->moneynessGridProb =
@@ -1083,6 +1087,11 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                             Real stddev = std::sqrt(vol_->blackVariance(t, strike));
                             callPricesMoneyness[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
                             calibrationInfo_->moneynessGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
+                            if (moneyness[j] >= 1) {
+                                calibrationInfo_->moneynessCallPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, domDisc[i]);
+                            } else {
+                                calibrationInfo_->moneynessPutPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, domDisc[i]);
+                            };
                         } catch (const std::exception& e) {
                             TLOG("error for time " << t << " moneyness " << moneyness[j] << ": " << e.what());
                         }

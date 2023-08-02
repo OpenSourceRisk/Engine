@@ -152,6 +152,7 @@
 #include <qle/indexes/ibor/thor.hpp>
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
+#include <qle/indexes/iborindexfixingoverride.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
@@ -182,6 +183,7 @@
 #include <qle/instruments/crossccyswap.hpp>
 #include <qle/instruments/currencyswap.hpp>
 #include <qle/instruments/deposit.hpp>
+#include <qle/instruments/doubleoibasisswap.hpp>
 #include <qle/instruments/equityforward.hpp>
 #include <qle/instruments/fixedbmaswap.hpp>
 #include <qle/instruments/forwardbond.hpp>
@@ -450,6 +452,7 @@
 #include <qle/termstructures/datedstrippedoptionletadapter.hpp>
 #include <qle/termstructures/datedstrippedoptionletbase.hpp>
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
+#include <qle/termstructures/doubleoibasisswaphelper.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamiccpivolatilitystructure.hpp>
 #include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>

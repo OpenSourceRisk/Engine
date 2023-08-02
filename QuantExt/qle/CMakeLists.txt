@@ -114,6 +114,7 @@ instruments/crossccyfixfloatswap.cpp
 instruments/crossccyswap.cpp
 instruments/currencyswap.cpp
 instruments/deposit.cpp
+instruments/doubleoibasisswap.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/forwardbond.cpp
@@ -316,6 +317,7 @@ termstructures/crosscurrencypricetermstructure.cpp
 termstructures/datedstrippedoptionlet.cpp
 termstructures/datedstrippedoptionletadapter.cpp
 termstructures/discountratiomodifiedcurve.cpp
+termstructures/doubleoibasisswaphelper.cpp
 termstructures/dynamiccpivolatilitystructure.cpp
 termstructures/dynamicoptionletvolatilitystructure.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
@@ -467,6 +469,7 @@ indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/genericindex.hpp
+indexes/iborindexfixingoverride.hpp
 indexes/ibor/ambor.hpp
 indexes/ibor/ameribor.hpp
 indexes/ibor/audbbsw.hpp
@@ -553,6 +556,7 @@ instruments/crossccyfixfloatswap.hpp
 instruments/crossccyswap.hpp
 instruments/currencyswap.hpp
 instruments/deposit.hpp
+instruments/doubleoibasisswap.hpp
 instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
 instruments/forwardbond.hpp
@@ -821,6 +825,7 @@ termstructures/datedstrippedoptionlet.hpp
 termstructures/datedstrippedoptionletadapter.hpp
 termstructures/datedstrippedoptionletbase.hpp
 termstructures/discountratiomodifiedcurve.hpp
+termstructures/doubleoibasisswaphelper.hpp
 termstructures/dynamicblackvoltermstructure.hpp
 termstructures/dynamiccpivolatilitystructure.hpp
 termstructures/dynamicoptionletvolatilitystructure.hpp

@@ -183,18 +183,21 @@ void Analytic::buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& l
     LOG("Market Build time " << setprecision(2) << mtimer.format(default_places, "%w") << " sec");
 }
 
-void Analytic::marketCalibration(const boost::shared_ptr<MarketCalibrationReport>& mcr) {
+void Analytic::marketCalibration(const boost::shared_ptr<MarketCalibrationReportBase>& mcr) {
     if (mcr)
         mcr->populateReport(market_, configurations().todaysMarketParams);
 }
 
 void Analytic::buildPortfolio() {
+    QuantLib::ext::shared_ptr<Portfolio> tmp = portfolio_ ? portfolio_ : inputs()->portfolio();
+        
     // create a new empty portfolio
     portfolio_ = boost::make_shared<Portfolio>(inputs()->buildFailedTrades());
 
-    inputs()->portfolio()->reset();
+    tmp->reset();
     // populate with trades
-    for (const auto& [tradeId, trade] : inputs()->portfolio()->trades())
+    for (const auto& [tradeId, trade] : tmp->trades())
+        // If portfolio was already provided to the analytic, make sure to only process those given trades.
         portfolio()->add(trade);
     
     if (market_) {
@@ -234,18 +237,6 @@ void MarketDataAnalyticImpl::runAnalytic(
     CONSOLEW("Build Market");
     analytic()->buildMarket(loader);
     CONSOLE("OK");
-
-    if (inputs_->outputTodaysMarketCalibration()) {
-        CONSOLEW("Market Calibration");
-        LOG("Write todays market calibration report");
-        auto t = boost::dynamic_pointer_cast<TodaysMarket>(analytic()->market());
-        QL_REQUIRE(t != nullptr, "expected todays market instance");
-        boost::shared_ptr<InMemoryReport> mktReport = boost::make_shared<InMemoryReport>();
-        ore::analytics::ReportWriter(inputs_->reportNaString())
-            .writeTodaysMarketCalibrationReport(*mktReport, t->calibrationInfo());
-        analytic()->reports()["MARKET"]["todaysmarketcalibration"] = mktReport;
-        CONSOLE("OK");
-    }
 }
 
 } // namespace analytics
