@@ -132,7 +132,7 @@ Note that Cross Currency Swaps having legs in non-deliverable currencies with pa
 
 The Indexings node includes a mandatory fx Index field defining the deliverable and non-deliverable currency pair, and an optional InitialNotionalFixing field for the contractual fx rate to be applied to the initial notional exchange. Notice that the InitialNotionalFixing rate has to be expressed as amount in deliverable or payment currency per unit of non-deliverable currency, and if omitted defaults to a projected (if in the future) or an fx fixing from market data (if in the past).  The Indexing node can also include optional FixingCalendar, IsInArrears and FixingDays fields to determine the date(s) of the fx fixing(s).
 
- Listing \ref{lst:ndir_xccy_swap} includes an example USD-CLP non-deliverable cross currency swap where one leg is in CLP which is a non–deliverable
+ Listing \ref{lst:ndir_xccy_swap} includes an example USD-CLP non-deliverable cross currency swap where one leg is in CLP which is a non-deliverable
 currency, and the other is in USD which is deliverable. Note that it is possible for both legs to be in different non-deliverable currencies.
 
 \begin{listing}[H]
