@@ -207,7 +207,6 @@ RequiredFixings RequiredFixings::filteredFixingDates(const Date& settlementDate)
         InflationFixingEntry inflationFixingEntry = std::get<0>(f);
         FixingEntry fixingEntry = std::get<0>(inflationFixingEntry);
         std::string indexName = std::get<0>(fixingEntry);
-        Date fixingDate = std::get<1>(fixingEntry);
         Date payDate = std::get<2>(fixingEntry);
         bool alwaysAddIfPaysOnSettlement = std::get<3>(fixingEntry);
         // add to result
@@ -224,7 +223,6 @@ RequiredFixings RequiredFixings::filteredFixingDates(const Date& settlementDate)
         // get the data
         FixingEntry fixingEntry = std::get<0>(f);
         std::string indexName = std::get<0>(fixingEntry);
-        Date fixingDate = std::get<1>(fixingEntry);
         Date payDate = std::get<2>(fixingEntry);
         bool alwaysAddIfPaysOnSettlement = std::get<3>(fixingEntry);
         // add to result
