@@ -152,6 +152,12 @@ QuantLib::Currency parseMinorCurrency(const string& s);
  */
 QuantLib::Currency parseCurrencyWithMinors(const string& s);
 
+//! Convert text to std::pair<QuantLib::Currency, QuantLib::Currency>
+/*!
+  \ingroup utilities
+ */
+std::pair<QuantLib::Currency, QuantLib::Currency> parseCurrencyPair(const string& s, const string& delimiters);
+
 //! check for vaid currency code, including minors and pseudo currencies
 /*!
   \ingroup utilities
