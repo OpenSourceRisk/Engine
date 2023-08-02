@@ -38,6 +38,7 @@
 #include <qle/indexes/commoditybasisfutureindex.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
+#include <qle/indexes/fallbackovernightindex.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
 #include <ql/cashflow.hpp>
 #include <ql/cashflows/averagebmacoupon.hpp>
@@ -393,7 +394,7 @@ void FixingDateGetter::visit(CashFlow& c) {
     // Do nothing if we fall through to here
 }
 
-void FixingDateGetter::visit(FloatingRateCoupon& c) {
+void FixingDateGetter::visit(FloatingRateCoupon& c) {        
     // Enforce fixing to be added even if coupon pays on settlement.
     requiredFixings_.addFixingDate(c.fixingDate(), IndexNameTranslator::instance().oreName(c.index()->name()), c.date(),
                                    true);
@@ -483,7 +484,13 @@ void FixingDateGetter::visit(QuantLib::OvernightIndexedCoupon& c) {
 }
 
 void FixingDateGetter::visit(QuantExt::OvernightIndexedCoupon& c) {
-    requiredFixings_.addFixingDates(c.fixingDates(), IndexNameTranslator::instance().oreName(c.index()->name()),
+    auto fallback = boost::dynamic_pointer_cast<FallbackOvernightIndex>(c.index());
+    string indexName;
+    if (fallback && c.fixingDate() >= fallback->switchDate())
+        indexName = fallback->rfrIndex()->name();
+    else
+        indexName = c.index()->name();
+    requiredFixings_.addFixingDates(c.fixingDates(), IndexNameTranslator::instance().oreName(indexName),
                                     c.date());
 }
 
