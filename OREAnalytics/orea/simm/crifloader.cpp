@@ -139,7 +139,7 @@ void CrifLoader::add(CrifRecord cr, const bool onDiffAmountCcy) {
                    "The qualifier " << cr.qualifier << " should parse to a valid product class for risk type "
                                     << cr.riskType);
         // Check that the amount is a number >= 1.0
-        QL_REQUIRE(cr.amount >= 1.0, "Expected an amount greater than or equal to 1.0 "
+        QL_REQUIRE(cr.amount >= 0.0, "Expected an amount greater than or equal to 0 "
                                          << "for risk type " << cr.riskType << " and qualifier " << cr.qualifier
                                          << " but got " << cr.amount);
         break;
