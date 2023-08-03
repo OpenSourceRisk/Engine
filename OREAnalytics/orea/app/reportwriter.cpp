@@ -174,8 +174,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
 
         bool useAdditionalResults = false;
         try {
-            useAdditionalResults = trade->instrument()->additionalResults().find("cashFlowResults") !=
-                                   trade->instrument()->additionalResults().end();
+            const auto& addResults = trade->instrument()->additionalResults();
+            useAdditionalResults = addResults.find("cashFlowResults") != addResults.end();
         } catch (const std::exception& e) {
             ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(),
                                              "Error during cashflow reporting / checking for cashFlowResults",
