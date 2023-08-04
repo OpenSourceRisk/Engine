@@ -64,11 +64,10 @@ Real BarrierOptionWrapper::NPV() const {
         // Handling the edge case where barrier = strike, is KO, and underlying is only ITM when inside KO barrier.
         // NPV should then be zero, but the pricing engine might not necessarily be pricing it as zero at the boundary.
         auto vanillaOption = boost::dynamic_pointer_cast<VanillaOption>(activeUnderlyingInstrument_);
-        auto payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(vanillaOption->payoff());
-        if (vanillaOption && payoff &&
-            ((barrierType_ == Barrier::DownOut && payoff->optionType() == Option::Put) ||
-             (barrierType_ == Barrier::UpOut && payoff->optionType() == Option::Call))) {
-            if (payoff) {
+        if (vanillaOption) {
+            auto payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(vanillaOption->payoff());
+            if (payoff && ((barrierType_ == Barrier::DownOut && payoff->optionType() == Option::Put) ||
+                           (barrierType_ == Barrier::UpOut && payoff->optionType() == Option::Call))) {
                 const bool isTouchingOnly = true;
                 if (checkBarrier(payoff->strike(), isTouchingOnly))
                     npv = 0;
@@ -88,11 +87,10 @@ const std::map<std::string, boost::any>& BarrierOptionWrapper::additionalResults
             return emptyMap;
     } else {
         auto vanillaOption = boost::dynamic_pointer_cast<VanillaOption>(activeUnderlyingInstrument_);
-        auto payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(vanillaOption->payoff());
-        if (vanillaOption && payoff &&
-            ((barrierType_ == Barrier::DownOut && payoff->optionType() == Option::Put) ||
-             (barrierType_ == Barrier::UpOut && payoff->optionType() == Option::Call))) {
-            if (payoff) {
+        if (vanillaOption) {
+            auto payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(vanillaOption->payoff());
+            if (payoff && ((barrierType_ == Barrier::DownOut && payoff->optionType() == Option::Put) ||
+                           (barrierType_ == Barrier::UpOut && payoff->optionType() == Option::Call))) {
                 const bool isTouchingOnly = true;
                 if (checkBarrier(payoff->strike(), isTouchingOnly))
                     return emptyMap;
