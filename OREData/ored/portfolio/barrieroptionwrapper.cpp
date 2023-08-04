@@ -61,17 +61,17 @@ Real BarrierOptionWrapper::NPV() const {
         // if not exercised we just return the original option's NPV
         Real npv = multiplier2() * getTimedNPV(instrument_) * multiplier_;
 
-        // Handling the edge case where barrier = strike and barrierType is KO. NPV should then be zero,
-        // but the pricing engine might not necessarily be pricing it as zero at the boundary.
-        if (barrierType_ == Barrier::DownOut || barrierType_ == Barrier::UpOut) {
-            auto vanillaOption = boost::dynamic_pointer_cast<VanillaOption>(activeUnderlyingInstrument_);
-            if (vanillaOption) {
-                auto payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(vanillaOption->payoff());
-                if (payoff) {
-                    const bool isTouchingOnly = true;
-                    if (checkBarrier(payoff->strike(), isTouchingOnly))
-                        npv = 0;
-                }
+        // Handling the edge case where barrier = strike, is KO, and underlying is only ITM when inside KO barrier.
+        // NPV should then be zero, but the pricing engine might not necessarily be pricing it as zero at the boundary.
+        auto vanillaOption = boost::dynamic_pointer_cast<VanillaOption>(activeUnderlyingInstrument_);
+        auto payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(vanillaOption->payoff());
+        if (vanillaOption && payoff &&
+            ((barrierType_ == Barrier::DownOut && payoff->optionType() == Option::Put) ||
+             (barrierType_ == Barrier::UpOut && payoff->optionType() == Option::Call))) {
+            if (payoff) {
+                const bool isTouchingOnly = true;
+                if (checkBarrier(payoff->strike(), isTouchingOnly))
+                    npv = 0;
             }
         }
         return npv + addNPV;
@@ -87,15 +87,15 @@ const std::map<std::string, boost::any>& BarrierOptionWrapper::additionalResults
         else
             return emptyMap;
     } else {
-        if (barrierType_ == Barrier::DownOut || barrierType_ == Barrier::UpOut) {
-            auto vanillaOption = boost::dynamic_pointer_cast<VanillaOption>(activeUnderlyingInstrument_);
-            if (vanillaOption) {
-                auto payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(vanillaOption->payoff());
-                if (payoff) {
-                    const bool isTouchingOnly = true;
-                    if (checkBarrier(payoff->strike(), isTouchingOnly))
-                        return emptyMap;
-                }
+        auto vanillaOption = boost::dynamic_pointer_cast<VanillaOption>(activeUnderlyingInstrument_);
+        auto payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(vanillaOption->payoff());
+        if (vanillaOption && payoff &&
+            ((barrierType_ == Barrier::DownOut && payoff->optionType() == Option::Put) ||
+             (barrierType_ == Barrier::UpOut && payoff->optionType() == Option::Call))) {
+            if (payoff) {
+                const bool isTouchingOnly = true;
+                if (checkBarrier(payoff->strike(), isTouchingOnly))
+                    return emptyMap;
             }
         }
 
