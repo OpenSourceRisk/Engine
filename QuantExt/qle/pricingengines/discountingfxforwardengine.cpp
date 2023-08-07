@@ -97,7 +97,7 @@ void DiscountingFxForwardEngine::calculate() const {
         Real fx1 = settleCcy1 ? 1.0 : fxfwd;
         Real fx2 = settleCcy1 ? 1 / fxfwd : 1.0;
 
-        QL_REQUIRE(!arguments_.isPhysicallySettled || arguments_.payDate <= arguments_.fixingDate ||
+        QL_REQUIRE(arguments_.isPhysicallySettled || arguments_.payDate <= arguments_.fixingDate ||
                        arguments_.fxIndex != nullptr,
                    "If pay date (" << arguments_.payDate << ") is strictly after fixing date (" << arguments_.fixingDate
                                    << "), an FX Index must be given for a cash-settled FX Forward.");

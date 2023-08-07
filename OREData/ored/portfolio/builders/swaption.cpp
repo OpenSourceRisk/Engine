@@ -73,6 +73,7 @@ boost::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineImpl(const
         return boost::make_shared<BachelierSwaptionEngine>(yts, svts);
     default:
         QL_FAIL("Swaption volatility type " << svts->volatilityType() << "not covered in EngineFactory");
+        return nullptr; // avoid gcc warning
         break;
     }
 }
