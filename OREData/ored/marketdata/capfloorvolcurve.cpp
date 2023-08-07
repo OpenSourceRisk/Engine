@@ -76,6 +76,11 @@ CapFloorVolCurve::CapFloorVolCurve(
     const bool buildCalibrationInfo)
     : spec_(spec) {
 
+    QL_REQUIRE(boost::dynamic_pointer_cast<BMAIndexWrapper>(iborIndex) == nullptr,
+               "CapFloorVolCurve: BMA/SIFMA index in '"
+                   << spec_.curveConfigID()
+                   << " not allowed  - vol surfaces for SIFMA can only be proxied from Ibor / OIS");
+
     try {
         // The configuration
         const boost::shared_ptr<CapFloorVolatilityCurveConfig>& config =
