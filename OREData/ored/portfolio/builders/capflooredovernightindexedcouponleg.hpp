@@ -32,7 +32,7 @@ namespace ore {
 namespace data {
 
 //! CouponPricer Builder for CapFlooredOvernightIndexedCouponLeg
-/*! The coupon pricers are cached by currency
+/*! The coupon pricers are cached by index / rate comp period
  \ingroup builders
  */
 class CapFlooredOvernightIndexedCouponLegEngineBuilder
