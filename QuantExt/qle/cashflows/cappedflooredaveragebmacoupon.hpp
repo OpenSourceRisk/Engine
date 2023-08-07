@@ -32,8 +32,7 @@ using namespace QuantLib;
 class CappedFlooredAverageBMACoupon : public FloatingRateCoupon {
 public:
     CappedFlooredAverageBMACoupon(const ext::shared_ptr<AverageBMACoupon>& underlying, Real cap = Null<Real>(),
-                                  Real floor = Null<Real>(), bool nakedOption = false, bool localCapFloor = false,
-                                  bool includeSpread = false);
+                                  Real floor = Null<Real>(), bool nakedOption = false, bool includeSpread = false);
 
     //! \name Observer interface
     //@{
@@ -75,14 +74,12 @@ public:
 
     ext::shared_ptr<AverageBMACoupon> underlying() const { return underlying_; }
     bool nakedOption() const { return nakedOption_; }
-    bool localCapFloor() const { return localCapFloor_; }
     bool includeSpread() const { return includeSpread_; }
 
 protected:
     ext::shared_ptr<AverageBMACoupon> underlying_;
     Rate cap_, floor_;
     bool nakedOption_;
-    bool localCapFloor_;
     bool includeSpread_;
     mutable Real effectiveCapletVolatility_;
     mutable Real effectiveFloorletVolatility_;
