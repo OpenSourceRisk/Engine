@@ -38,4 +38,15 @@ Real getOisAtmLevel(const boost::shared_ptr<OvernightIndex>& on, const Date& fix
     return cpn.rate();
 }
 
+Real getBMAAtmLevel(const boost::shared_ptr<BMAIndex>& bma, const Date& fixingDate,
+                    const Period& rateComputationPeriod) {
+    Date today = Settings::instance().evaluationDate();
+    Date start = bma->valueDate(fixingDate);
+    Date end = bma->fixingCalendar().advance(start, rateComputationPeriod);
+    Date adjStart = std::max(start, today);
+    Date adjEnd = std::max(adjStart + 1, end);
+    AverageBMACoupon cpn(end, 1.0, adjStart, adjEnd, bma);
+    return cpn.rate();
+}
+
 } // namespace QuantExt

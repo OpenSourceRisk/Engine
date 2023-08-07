@@ -29,7 +29,7 @@
 
 namespace QuantExt {
 
-/*! Utility function for calculating the atm strike level to a given \p ixingDate based on a given ois index,
+/*! Utility function for calculating the atm strike level to a given \p fixingDate based on a given ois index,
     \p on, and a given irate computation period, \p rateComputationPeriod. 
 
 \ingroup utilities
@@ -38,5 +38,13 @@ namespace QuantExt {
 Real getOisAtmLevel(const boost::shared_ptr<OvernightIndex>& on, const Date& fixingDate,
                     const Period& rateComputationPeriod);
 }
+
+/*! Utility function for calculating the atm strike level to a given \p fixingDate based on a given BMA index,
+    \p on, and a given irate computation period, \p rateComputationPeriod.
+
+\ingroup utilities
+*/
+Real getBMAAtmLevel(const boost::shared_ptr<BMAIndex>& bma, const Date& fixingDate,
+                    const Period& rateComputationPeriod) {
 
 #endif
