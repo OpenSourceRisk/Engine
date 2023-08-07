@@ -111,14 +111,12 @@ void CappedFlooredAverageBMACoupon::accept(AcyclicVisitor& v) {
 }
 
 CappedFlooredAverageBMACoupon::CappedFlooredAverageBMACoupon(const ext::shared_ptr<AverageBMACoupon>& underlying,
-                                                             Real cap, Real floor, bool nakedOption, bool localCapFloor,
-                                                             bool includeSpread)
+                                                             Real cap, Real floor, bool nakedOption, bool includeSpread)
     : FloatingRateCoupon(underlying->date(), underlying->nominal(), underlying->accrualStartDate(),
                          underlying->accrualEndDate(), underlying->fixingDays(), underlying->index(),
                          underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(),
                          underlying->referencePeriodEnd(), underlying->dayCounter(), false),
-      underlying_(underlying), cap_(cap), floor_(floor), nakedOption_(nakedOption), localCapFloor_(localCapFloor),
-      includeSpread_(includeSpread) {
+      underlying_(underlying), cap_(cap), floor_(floor), nakedOption_(nakedOption), includeSpread_(includeSpread) {
     QL_REQUIRE(!includeSpread_ || close_enough(underlying_->gearing(), 1.0),
                "CappedFlooredAverageBMACoupon: if include spread = true, only a gearing 1.0 is allowed - scale "
                "the notional in this case instead.");
