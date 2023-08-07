@@ -1489,9 +1489,6 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
     QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << data.legType());
     boost::shared_ptr<BMAIndex> index = indexWrapper->bma();
 
-    if (floatData->caps().size() > 0 || floatData->floors().size() > 0)
-        QL_FAIL("Caps and floors are not supported for BMA legs");
-
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
@@ -1503,8 +1500,14 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
         paymentCalendar = parseCalendar(data.paymentCalendar());
 
     vector<Real> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
-    vector<Real> spreads = buildScheduledVector(floatData->spreads(), floatData->spreadDates(), schedule);
-    vector<Real> gearings = buildScheduledVector(floatData->gearings(), floatData->gearingDates(), schedule);
+    vector<Real> spreads =
+        buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
+    vector<Real> gearings =
+        buildScheduledVectorNormalised(floatData->gearings(), floatData->gearingDates(), schedule, 1.0);
+    vector<Real> caps =
+        buildScheduledVectorNormalised(floatData->caps(), floatData->capDates(), schedule, Null<Real>());
+    vector<Real> floors =
+        buildScheduledVectorNormalised(floatData->floors(), floatData->floorDates(), schedule, Null<Real>());
 
     applyAmortization(notionals, data, schedule, false);
 
@@ -1515,6 +1518,39 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
                             .withPaymentCalendar(paymentCalendar)
                             .withPaymentAdjustment(bdc)
                             .withGearings(gearings);
+
+    // try to set the rate computation period based on the schedule tenor
+
+    Period rateComputationPeriod = 0 * Days;
+    if (!tmp.rules().empty() && !tmp.rules().front().tenor().empty())
+        rateComputationPeriod = parsePeriod(tmp.rules().front().tenor());
+    else if (!tmp.dates().empty() && !tmp.dates().front().tenor().empty())
+        rateComputationPeriod = parsePeriod(tmp.dates().front().tenor());
+
+    // handle caps / floors
+
+    if (floatData->caps().size() > 0 || floatData->floors().size() > 0) {
+
+        boost::shared_ptr<QuantExt::CapFlooredAverageBMACouponPricer> cfCouponPricer;
+        auto builder = boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponLegEngineBuilder>(
+            engineFactory->builder("CapFlooredAverageBMACouponLeg"));
+        QL_REQUIRE(builder, "No builder found for CapFlooredAverageBMACouponLeg");
+        cfCouponPricer = boost::dynamic_pointer_cast<CapFlooredAverageBMACouponPricer>(
+            builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod));
+        QL_REQUIRE(cfCouponPricer, "internal error, could not cast to CapFlooredAverageBMACouponPricer");
+
+        for (Size i = 0; i < leg.size(); ++i) {
+            auto bmaCpn = boost::dynamic_pointer_cast<AverageBMACoupon>(leg[i]);
+            QL_REQUIREQ(bmaCpn, "makeBMALeg(): internal error, exepcted AverageBMACoupon. Contact dev.");
+            if (caps[i] != Null<Real> || floors[i] != Null<Real>()) {
+                leg[i] = boost::make_shared<CappedFlooredAVerageBMACoupon>(
+                    leg[i], caps[i], floors[i], floatData->nakedOption[i], floatData->includeSpread());
+                leg[i]->setPricer(cfCouponPricer);
+            }
+        }
+    }
+
+    // return the leg
 
     return leg;
 }
