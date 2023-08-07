@@ -42,6 +42,7 @@
 #include <ql/cashflows/cashflowvectors.hpp>
 #include <ql/cashflows/couponpricer.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/utilities/vectors.hpp>
 
 using std::vector;
