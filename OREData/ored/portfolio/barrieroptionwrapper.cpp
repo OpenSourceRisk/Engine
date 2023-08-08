@@ -103,7 +103,7 @@ const std::map<std::string, boost::any>& BarrierOptionWrapper::additionalResults
 
 bool SingleBarrierOptionWrapper::checkBarrier(Real spot, bool isTouchingOnly) const {
     if (isTouchingOnly)
-        return spot == barrier_;
+        return close_enough(spot, barrier_);
     else {
         switch (barrierType_) {
         case Barrier::DownIn:
@@ -172,7 +172,7 @@ bool SingleBarrierOptionWrapper::exercise() const {
 
 bool DoubleBarrierOptionWrapper::checkBarrier(Real spot, bool isTouchingOnly) const {
     if (isTouchingOnly)
-        return spot == barrierLow_ || spot == barrierHigh_;
+        return close_enough(spot, barrierLow_) || close_enough(spot, barrierHigh_);
     else
         return spot <= barrierLow_ || spot >= barrierHigh_;
 }
