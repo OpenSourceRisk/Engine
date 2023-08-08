@@ -19,21 +19,14 @@
 */
 
 #include <orea/app/reportwriter.hpp>
-
-// FIXME: including all is slow and bad
-#include <boost/range/adaptor/indexed.hpp>
-#include <boost/lexical_cast.hpp>
 #include <orea/orea.hpp>
+
 #include <ored/ored.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
-#include <ostream>
-#include <ql/cashflows/averagebmacoupon.hpp>
-#include <ql/cashflows/indexedcashflow.hpp>
-#include <ql/cashflows/inflationcoupon.hpp>
+
+#include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
-#include <ql/errors.hpp>
-#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
@@ -41,8 +34,18 @@
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
-#include <stdio.h>
 
+#include <ql/cashflows/averagebmacoupon.hpp>
+#include <ql/cashflows/indexedcashflow.hpp>
+#include <ql/cashflows/inflationcoupon.hpp>
+#include <ql/errors.hpp>
+#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
+
+#include <boost/range/adaptor/indexed.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <ostream>
+#include <stdio.h>
 
 using ore::data::to_string;
 using QuantLib::Date;
@@ -207,15 +210,18 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                             if (payer)
                                 amount *= -1.0;
                             std::string ccy = trade->legCurrencies()[i];
+
                             boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
                                 boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
                             boost::shared_ptr<QuantExt::CommodityCashFlow> ptrCommCf =
                                 boost::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(ptrFlow);
+
                             Real coupon;
                             Real accrual;
                             Real notional;
                             Date accrualStartDate, accrualEndDate;
                             Real accruedAmount;
+
                             if (ptrCoupon) {
                                 coupon = ptrCoupon->rate();
                                 accrual = ptrCoupon->accrualPeriod();
@@ -229,7 +235,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                             } else if (ptrCommCf) {
                                 coupon = Null<Real>();
                                 accrual = Null<Real>();
-                                notional = ptrCommCf->periodQuantity(); // this is measured in units, e.g. barrels for oil
+                                notional =
+                                    ptrCommCf->periodQuantity(); // this is measured in units, e.g. barrels for oil
                                 accrualStartDate = accrualEndDate = Null<Date>();
                                 accruedAmount = Null<Real>();
                                 flowType = "Notional (units)";
@@ -241,16 +248,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                 accruedAmount = Null<Real>();
                                 flowType = "Notional";
                             }
-                            // This BMA part here (and below) is necessary because the fixingDay() method of
-                            // AverageBMACoupon returns an exception rather than the last fixing day of the period.
 
-                            boost::shared_ptr<QuantLib::Coupon> cpn =
-                                boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
-                            if (cpn) {
+                            if (auto cpn = boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow)) {
                                 ptrFlow = unpackIndexedCoupon(cpn);
                             }
-                            boost::shared_ptr<AverageBMACoupon> ptrBMA =
-                                boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFlow);
+
                             boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                                 boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
                             boost::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
@@ -261,44 +263,47 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                 boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
                             boost::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
                                 boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(ptrFlow);
+
                             Date fixingDate;
                             Real fixingValue = Null<Real>();
-                            if (ptrBMA) {
-                                // We return the last fixing inside the coupon period
-                                fixingDate = ptrBMA->fixingDates().end()[-2];
-                                fixingValue = ptrBMA->pricer()->swapletRate();
-                                if (fixingDate > asof)
-                                    flowType = "BMAaverage";
-                            } else if (ptrFloat) {
+                            if (ptrFloat) {
                                 fixingDate = ptrFloat->fixingDate();
+                                if (fixingDate > asof)
+                                    flowType = "InterestProjected";
+
                                 try {
                                     fixingValue = ptrFloat->index()->fixing(fixingDate);
                                 } catch (...) {
-                                    // catch invalid fixing date, missing fixing, etc. and fall through with
-                                    // fixingValue = Null (which appears as NA in the report)
                                 }
-                                if (fixingDate > asof)
-                                    flowType = "InterestProjected";
+
                                 if (auto c = boost::dynamic_pointer_cast<QuantLib::IborCoupon>(ptrFloat)) {
                                     fixingValue = (c->rate() - c->spread()) / c->gearing();
                                 }
+
                                 if (auto c = boost::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(ptrFloat)) {
                                     fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
-                                                   c->underlying()->gearing();
+                                                  c->underlying()->gearing();
                                 }
-                                if (auto sc = boost::dynamic_pointer_cast<QuantLib::StrippedCappedFlooredCoupon>(ptrFloat)) {
-                                    if (auto c = boost::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(sc->underlying())) {
+
+                                if (auto sc =
+                                        boost::dynamic_pointer_cast<QuantLib::StrippedCappedFlooredCoupon>(ptrFloat)) {
+                                    if (auto c = boost::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(
+                                            sc->underlying())) {
                                         fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
-                                                       c->underlying()->gearing();
+                                                      c->underlying()->gearing();
                                     }
                                 }
-                                // for ON coupons the fixing value is the compounded / averaged rate, not the last
-                                // single ON fixing
+
+                                // for (capped-floored) BMA / ON / subperiod coupons the fixing value is the
+                                // compounded / averaged rate, not a single index fixing
+
                                 if (auto on = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(ptrFloat)) {
                                     fixingValue = (on->rate() - on->spread()) / on->gearing();
                                 } else if (auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(
                                                ptrFloat)) {
                                     fixingValue = (on->rate() - on->effectiveSpread()) / on->gearing();
+                                } else if (auto c = boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFloat)) {
+                                    fixingValue = (c->rate() - c->spread()) / c->gearing();
                                 } else if (auto c = boost::dynamic_pointer_cast<
                                                QuantExt::CappedFlooredAverageONIndexedCoupon>(ptrFloat)) {
                                     fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
@@ -307,9 +312,13 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                                QuantExt::CappedFlooredOvernightIndexedCoupon>(ptrFloat)) {
                                     fixingValue = (c->underlying()->rate() - c->underlying()->effectiveSpread()) /
                                                   c->underlying()->gearing();
-                                }
-                                // similar treatment of sub period coupons
-                                if (auto sp = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(ptrFloat)) {
+                                } else if (auto c =
+                                               boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(
+                                                   ptrFloat)) {
+                                    fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
+                                                  c->underlying()->gearing();
+                                } else if (auto sp =
+                                               boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(ptrFloat)) {
                                     fixingValue = (sp->rate() - sp->spread()) / sp->gearing();
                                 }
                             } else if (ptrInfl) {
@@ -390,8 +399,6 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                     qlIndexName = tmp->index()->name();
                                     usesCapVol = true;
                                     // for now we output the stripped caplet vol, not the effective one
-                                    // capVolatility = tmp->effectiveCapletVolatility();
-                                    // floorVolatility = tmp->effectiveFloorletVolatility();
                                 } else if (auto tmp =
                                                boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
@@ -399,9 +406,14 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                     volFixingDate = tmp->underlying()->fixingDates().front();
                                     qlIndexName = tmp->index()->name();
                                     usesCapVol = true;
-                                    // capVolatility = tmp->effectiveCapletVolatility();
                                     // for now we output the stripped caplet vol, not the effective one
-                                    // floorVolatility = tmp->effectiveFloorletVolatility();
+                                } else if (auto tmp =
+                                               boost::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(c)) {
+                                    floorStrike = tmp->effectiveFloor();
+                                    capStrike = tmp->effectiveCap();
+                                    volFixingDate = tmp->underlying()->fixingDates().front();
+                                    qlIndexName = tmp->index()->name();
+                                    usesCapVol = true;
                                 }
 
                                 // get market volaility for cap / floor
