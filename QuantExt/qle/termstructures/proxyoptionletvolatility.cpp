@@ -54,10 +54,10 @@ ProxyOptionletVolatility::ProxyOptionletVolatility(const Handle<OptionletVolatil
 
     QL_REQUIRE(baseIndex != nullptr, "ProxyOptionletVolatility: no base index given.");
     QL_REQUIRE(targetIndex != nullptr, "ProxyOptionletVolatility: no target index given.");
-    QL_REQUIRE(isOis(targetIndex_) || isBMA(targetIndex) || targetRateComputationPeriod != 0 * Days,
+    QL_REQUIRE((!isOis(targetIndex_) && !isBMA(targetIndex)) || targetRateComputationPeriod != 0 * Days,
                "ProxyOptionletVolatility: target index is OIS or BMA/SIFMA ("
                    << targetIndex->name() << "), so targetRateComputationPeriod must be given and != 0D.");
-    QL_REQUIRE(isOis(baseIndex_) || isBMA(baseIndex_) || baseRateComputationPeriod != 0 * Days,
+    QL_REQUIRE((!isOis(baseIndex_) && !isBMA(baseIndex_)) || baseRateComputationPeriod != 0 * Days,
                "ProxyOptionletVolatility: base index is OIS or BMA/SIFMA ("
                    << baseIndex->name() << "), so baseRateComputationPeriod must be given and != 0D.");
     registerWith(baseVol_);
