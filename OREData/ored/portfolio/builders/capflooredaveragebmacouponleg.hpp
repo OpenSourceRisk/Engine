@@ -39,8 +39,7 @@ class CapFlooredAverageBMACouponLegEngineBuilder
     : public CachingCouponPricerBuilder<string, const std::string&, const QuantLib::Period&> {
 public:
     CapFlooredAverageBMACouponLegEngineBuilder()
-        : CachingEngineBuilder("BlackOrBachelier", "BlackOvernightIndexedCouponPricer",
-                               {"CapFlooredOvernightIndexedCouponLeg"}) {}
+        : CachingEngineBuilder("BlackOrBachelier", "BlackAverageBMACouponPricer", {"CapFlooredAverageBMACouponLeg"}) {}
 
 protected:
     string keyImpl(const string& index, const QuantLib::Period& rateComputationPeriod) override;
