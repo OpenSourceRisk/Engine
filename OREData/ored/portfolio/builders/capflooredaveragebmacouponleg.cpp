@@ -29,8 +29,8 @@ namespace ore {
 namespace data {
 
 boost::shared_ptr<FloatingRateCouponPricer>
-CapFlooredOvernightIndexedCouponLegEngineBuilder::engineImpl(const std::string& index,
-                                                             const QuantLib::Period& rateComputationPeriod) {
+CapFlooredAverageBMACouponLegEngineBuilder::engineImpl(const std::string& index,
+                                                       const QuantLib::Period& rateComputationPeriod) {
     std::string ccyCode = parseIborIndex(index)->currency().code();
     Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
     QL_REQUIRE(!yts.empty(), "engineFactory error: yield term structure not found for currency " << ccyCode);
@@ -51,8 +51,8 @@ CapFlooredOvernightIndexedCouponLegEngineBuilder::engineImpl(const std::string& 
     return boost::make_shared<QuantExt::BlackAverageBMACouponPricer>(ovs);
 }
 
-string CapFlooredOvernightIndexedCouponLegEngineBuilder::keyImpl(const string& index,
-                                                                 const QuantLib::Period& rateComputationPeriod) {
+string CapFlooredAverageBMACouponLegEngineBuilder::keyImpl(const string& index,
+                                                           const QuantLib::Period& rateComputationPeriod) {
     return index + "_" + ore::data::to_string(rateComputationPeriod);
 }
 
