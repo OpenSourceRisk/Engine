@@ -41,7 +41,7 @@ Real getOisAtmLevel(const boost::shared_ptr<OvernightIndex>& on, const Date& fix
 Real getBMAAtmLevel(const boost::shared_ptr<BMAIndex>& bma, const Date& fixingDate,
                     const Period& rateComputationPeriod) {
     Date today = Settings::instance().evaluationDate();
-    Date start = bma->valueDate(fixingDate);
+    Date start = bma->fixingCalendar().advance(fixingDate, 1 * Days);
     Date end = bma->fixingCalendar().advance(start, rateComputationPeriod);
     Date adjStart = std::max(start, today);
     Date adjEnd = std::max(adjStart + 1, end);
