@@ -1505,9 +1505,9 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
     vector<Real> gearings =
         buildScheduledVectorNormalised(floatData->gearings(), floatData->gearingDates(), schedule, 1.0);
     vector<Real> caps =
-        buildScheduledVectorNormalised(floatData->caps(), floatData->capDates(), schedule, Null<Real>());
+        buildScheduledVectorNormalised(floatData->caps(), floatData->capDates(), schedule, (Real)Null<Real>());
     vector<Real> floors =
-        buildScheduledVectorNormalised(floatData->floors(), floatData->floorDates(), schedule, Null<Real>());
+        buildScheduledVectorNormalised(floatData->floors(), floatData->floorDates(), schedule, (Real)Null<Real>());
 
     applyAmortization(notionals, data, schedule, false);
 
