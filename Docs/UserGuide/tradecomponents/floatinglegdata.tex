@@ -250,7 +250,7 @@ If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \
 
 \item Caps [Optional]: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is
   capped at the given rate (after applying gearing and spread, if any). The mode of specification is analogous to
-  spreads, see above. Caps / Floors are supported for Ibor and compounded / averaged OIS coupons, but not for coupons
+  spreads, see above. Caps / Floors are supported for Ibor, SIFMA, compounded / averaged OIS coupons, but not for coupons
   with subperiods.
 
   For OIS coupons notice how the gearing $g$ and spread $s$ enter the calculation of the coupon amount $A$ dependent on
