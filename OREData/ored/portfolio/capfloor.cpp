@@ -63,7 +63,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     legs_.clear();
     boost::shared_ptr<EngineBuilder> builder;
-    std::string underlyingIndex, qlIndexName;
+    std::string underlyingIndex;
     boost::shared_ptr<QuantLib::Instrument> qlInstrument;
 
     // Account for long / short multiplier. In the following we expect the qlInstrument to be set up
@@ -82,7 +82,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             engineFactory->market()->iborIndex(underlyingIndex, engineFactory->configuration(MarketContext::pricing));
         QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << underlyingIndex << " in market.");
         boost::shared_ptr<IborIndex> index = hIndex.currentLink();
-        qlIndexName = index->name();
 
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "CapFloor build error, Floating leg section must not have caps and floors");
@@ -169,7 +168,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(!hIndex.empty(), "Could not find swap index " << underlyingIndex << " in market.");
 
         boost::shared_ptr<SwapIndex> index = hIndex.currentLink();
-        qlIndexName = index->name();
 
         LegData tmpLegData = legData_;
         boost::shared_ptr<CMSLegData> tmpFloatData = boost::make_shared<CMSLegData>(*cmsData);
@@ -239,7 +237,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         underlyingIndex = cpiData->index();
         Handle<ZeroInflationIndex> zeroIndex = engineFactory->market()->zeroInflationIndex(
             underlyingIndex, builder->configuration(MarketContext::pricing));
-        qlIndexName = zeroIndex->name();
 
         // the cpi leg uses the first schedule date as the start date, which only makes sense if there are at least
         // two dates in the schedule, otherwise the only date in the schedule is the pay date of the cf and a a separate
@@ -371,7 +368,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // look for yoy inflation index
         yoyIndex =
             engineFactory->market()->yoyInflationIndex(underlyingIndex, builder->configuration(MarketContext::pricing));
-        qlIndexName = yoyIndex->name();
 
         // we must have either an yoy or a zero inflation index in the market, if no yoy curve, get the zero
         // and create a yoy index from it
@@ -449,12 +445,10 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     instrument_ =
         boost::make_shared<VanillaInstrument>(qlInstrument, multiplier, additionalInstruments, additionalMultipliers);
 
-    // add required fixings
-    if (!qlIndexName.empty() && !underlyingIndex.empty()) {
-        auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_);
-        for (auto const& l : legs_)
-            addToRequiredFixings(l, fdg);
-    }
+    // axdd required fixings
+    auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_);
+    for (auto const& l : legs_)
+        xaddToRequiredFixings(l, fdg);
 
     Date startDate = Date::maxDate();
     for (auto const& l : legs_) {
