@@ -89,7 +89,7 @@ protected:
 class CapFlooredAverageBMACouponPricer : public FloatingRateCouponPricer {
 public:
     CapFlooredAverageBMACouponPricer(const Handle<OptionletVolatilityStructure>& v,
-                                     const bool effectiveVolatilityInput);
+                                     const bool effectiveVolatilityInput = false);
     Handle<OptionletVolatilityStructure> capletVolatility() const;
     bool effectiveVolatilityInput() const;
     Real effectiveCapletVolatility() const;   // only available after capletRate() was called

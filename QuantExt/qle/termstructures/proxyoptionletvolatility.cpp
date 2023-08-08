@@ -22,6 +22,7 @@
 #include <qle/utilities/cashflows.hpp>
 #include <qle/utilities/time.hpp>
 
+#include <ql/cashflows/avaeragebmacoupon.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/termstructures/volatility/smilesection.hpp>
 

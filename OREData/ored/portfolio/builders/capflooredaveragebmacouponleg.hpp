@@ -35,10 +35,10 @@ namespace data {
 /*! The coupon pricers are cached by index / rate comp period
  \ingroup builders
  */
-class CapFlooredOvernightIndexedCouponLegEngineBuilder
+class CapFlooredAverageBMACouponLegEngineBuilder
     : public CachingCouponPricerBuilder<string, const std::string&, const QuantLib::Period&> {
 public:
-    CapFlooredOvernightIndexedCouponLegEngineBuilder()
+    CapFlooredAverageBMACouponLegEngineBuilder()
         : CachingEngineBuilder("BlackOrBachelier", "BlackOvernightIndexedCouponPricer",
                                {"CapFlooredOvernightIndexedCouponLeg"}) {}
 
