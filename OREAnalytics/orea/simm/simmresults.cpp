@@ -50,8 +50,9 @@ void SimmResults::add(const SimmConfiguration::ProductClass& pc, const SimmConfi
         QL_REQUIRE(calculationCurrency == calcCcy_, "Cannot add value to SimmResults in a different calculation currency ("
                                                       << calculationCurrency << "). Expected " << calcCcy_ << ".");
 
-    QL_REQUIRE(im >= 0.0, "Cannot add negative IM " << im << " result to SimmResults for RiskClass=" << rc
-                                                    << ", MarginType=" << mt << ", and Bucket=" << b);
+    if (!(mt == SimmConfiguration::MarginType::AdditionalIM || mt == SimmConfiguration::MarginType::All))
+        QL_REQUIRE(im >= 0.0, "Cannot add negative IM " << im << " result to SimmResults for RiskClass=" << rc
+                                                        << ", MarginType=" << mt << ", and Bucket=" << b);
 
     const auto key = make_tuple(pc, rc, mt, b);
     const bool hasResults = data_.find(key) != data_.end();
