@@ -65,7 +65,7 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
     } else {
         auto bma = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index);
         if (bma != nullptr)
-            result = makeBMALeg(data, bma, openEndDateReplacement);
+            result = makeBMALeg(data, bma, engineFactory, openEndDateReplacement);
         else {
             boost::shared_ptr<IborIndex> idx = index;
             if (!floatData->historicalFixings().empty())

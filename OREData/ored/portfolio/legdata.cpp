@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/builders/capflooredaveragebmacouponleg.hpp>
 #include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
@@ -40,6 +41,7 @@
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/brlcdicouponpricer.hpp>
+#include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/cmbcoupon.hpp>
 #include <qle/cashflows/couponpricer.hpp>
 #include <qle/cashflows/cpicoupon.hpp>
@@ -1484,7 +1486,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
 }
 
 Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper,
-               const QuantLib::Date& openEndDateReplacement) {
+               const boost::shared_ptr<EngineFactory>& engineFactory, const QuantLib::Date& openEndDateReplacement) {
     boost::shared_ptr<FloatingLegData> floatData = boost::dynamic_pointer_cast<FloatingLegData>(data.concreteLegData());
     QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << data.legType());
     boost::shared_ptr<BMAIndex> index = indexWrapper->bma();
@@ -1511,28 +1513,28 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
 
     applyAmortization(notionals, data, schedule, false);
 
-    AverageBMALeg leg = AverageBMALeg(schedule, index)
-                            .withNotionals(notionals)
-                            .withSpreads(spreads)
-                            .withPaymentDayCounter(dc)
-                            .withPaymentCalendar(paymentCalendar)
-                            .withPaymentAdjustment(bdc)
-                            .withGearings(gearings);
+    Leg leg = AverageBMALeg(schedule, index)
+                  .withNotionals(notionals)
+                  .withSpreads(spreads)
+                  .withPaymentDayCounter(dc)
+                  .withPaymentCalendar(paymentCalendar)
+                  .withPaymentAdjustment(bdc)
+                  .withGearings(gearings);
 
     // try to set the rate computation period based on the schedule tenor
 
     Period rateComputationPeriod = 0 * Days;
-    if (!tmp.rules().empty() && !tmp.rules().front().tenor().empty())
-        rateComputationPeriod = parsePeriod(tmp.rules().front().tenor());
-    else if (!tmp.dates().empty() && !tmp.dates().front().tenor().empty())
-        rateComputationPeriod = parsePeriod(tmp.dates().front().tenor());
+    if (!data.schedule().rules().empty() && !data.schedule().rules().front().tenor().empty())
+        rateComputationPeriod = parsePeriod(data.schedule().rules().front().tenor());
+    else if (!data.schedule().dates().empty() && !data.schedule().dates().front().tenor().empty())
+        rateComputationPeriod = parsePeriod(data.schedule().dates().front().tenor());
 
     // handle caps / floors
 
     if (floatData->caps().size() > 0 || floatData->floors().size() > 0) {
 
         boost::shared_ptr<QuantExt::CapFlooredAverageBMACouponPricer> cfCouponPricer;
-        auto builder = boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponLegEngineBuilder>(
+        auto builder = boost::dynamic_pointer_cast<CapFlooredAverageBMACouponLegEngineBuilder>(
             engineFactory->builder("CapFlooredAverageBMACouponLeg"));
         QL_REQUIRE(builder, "No builder found for CapFlooredAverageBMACouponLeg");
         cfCouponPricer = boost::dynamic_pointer_cast<CapFlooredAverageBMACouponPricer>(
@@ -1541,11 +1543,12 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
 
         for (Size i = 0; i < leg.size(); ++i) {
             auto bmaCpn = boost::dynamic_pointer_cast<AverageBMACoupon>(leg[i]);
-            QL_REQUIREQ(bmaCpn, "makeBMALeg(): internal error, exepcted AverageBMACoupon. Contact dev.");
-            if (caps[i] != Null<Real> || floors[i] != Null<Real>()) {
-                leg[i] = boost::make_shared<CappedFlooredAVerageBMACoupon>(
-                    leg[i], caps[i], floors[i], floatData->nakedOption[i], floatData->includeSpread());
-                leg[i]->setPricer(cfCouponPricer);
+            QL_REQUIRE(bmaCpn, "makeBMALeg(): internal error, exepcted AverageBMACoupon. Contact dev.");
+            if (caps[i] != Null<Real>() || floors[i] != Null<Real>()) {
+                auto cpn = boost::make_shared<CappedFlooredAverageBMACoupon>(
+                    bmaCpn, caps[i], floors[i], floatData->nakedOption(), floatData->includeSpread());
+                cpn->setPricer(cfCouponPricer);
+                leg[i] = cpn;
             }
         }
     }

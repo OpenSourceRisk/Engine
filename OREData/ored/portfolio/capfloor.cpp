@@ -86,8 +86,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "CapFloor build error, Floating leg section must not have caps and floors");
 
-        bool isBmaIndex = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index) != nullptr;
-
         if (!floatData->hasSubPeriods()) {
             // For the cases where we support caps and floors in the regular way, we build a floating leg with
             // the nakedOption flag set to true, this avoids maintaining all features in legs with associated
@@ -448,7 +446,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // axdd required fixings
     auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_);
     for (auto const& l : legs_)
-        xaddToRequiredFixings(l, fdg);
+        addToRequiredFixings(l, fdg);
 
     Date startDate = Date::maxDate();
     for (auto const& l : legs_) {
