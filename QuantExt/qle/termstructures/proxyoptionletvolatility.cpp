@@ -17,12 +17,13 @@
 */
 
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/termstructures/atmadjustedsmilesection.hpp>
 #include <qle/termstructures/proxyoptionletvolatility.hpp>
 #include <qle/utilities/cashflows.hpp>
 #include <qle/utilities/time.hpp>
 
-#include <ql/cashflows/avaeragebmacoupon.hpp>
+#include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/termstructures/volatility/smilesection.hpp>
 
