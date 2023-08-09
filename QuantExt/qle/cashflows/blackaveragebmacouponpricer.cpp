@@ -59,7 +59,7 @@ Real BlackAverageBMACouponPricer::optionletRate(Option::Type optionType, Real ef
         std::vector<Date> fixingDates = coupon_->underlying()->fixingDates();
         QL_REQUIRE(!fixingDates.empty(),
                    "BlackAverageBMACouponPricer: internal error, got empty fixingDates, contact dev.");
-        fixingDates.erase(fixingDates.back()); // there is one additional date returned!
+        fixingDates.erase(std::next(fixingDates.end(), -1)); // there is one additional date returned!
         QL_REQUIRE(!fixingDates.empty(), "BlackAverageBMACouponPricer: empty fixing dates");
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
         Real shift = capletVolatility()->displacement();
