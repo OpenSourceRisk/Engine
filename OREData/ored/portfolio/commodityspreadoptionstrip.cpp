@@ -45,20 +45,27 @@ void CommoditySpreadOptionStrip::build(const boost::shared_ptr<ore::data::Engine
     vector<Real> additionalMultipliers;
     Currency ccy;
     std::string configuration;
-    Position::Type positionType = parsePositionType(optionData_.longShort());
-
-    
+    Position::Type positionType = parsePositionType(optionData_.longShort());  
 
     for (size_t i = 0; i < schedule.size() - 1; i++) {
         Date start = schedule[i];
         Date end = schedule[i + 1];
         ScheduleRules newScheduleRule(to_string(start), to_string(end), to_string(tenor_), to_string(cal_),
                                       to_string(bdc_), to_string(termBdc_), to_string(rule_));
+
         for (auto& leg : legData_) {
             leg.schedule() = ScheduleData(newScheduleRule);
         }
-
-        CommoditySpreadOption option(CommoditySpreadOptionData(legData_, csoData_.optionData(), csoData_.strike()));
+        auto optData = csoData_.optionData();
+        if (paymentRelativeTo_ == LastExpiryInStrip) {
+            auto newSchedule = makeSchedule(ScheduleData(newScheduleRule));
+            Date lastExpiry = newSchedule.dates().back();
+            Date paymentDate = paymentCalendar_.advance(lastExpiry, paymentLag_, QuantLib::Preceding);
+            optData.setPaymentData(OptionPaymentData({to_string(paymentDate)}));
+        } else {
+            optData.setPaymentData(OptionPaymentData(to_string(paymentLag_), to_string(paymentCalendar_), "Preceding");
+        }
+        CommoditySpreadOption option(CommoditySpreadOptionData(legData_, optData, csoData_.strike()));
         option.build(engineFactory);
         // To retrieve the config, there should be a easier way to do this
         boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(option.tradeType());
@@ -120,6 +127,15 @@ void CommoditySpreadOptionStrip::fromXML(XMLNode* node) {
         parseBusinessDayConvention(XMLUtils::getChildValue(node, "OptionStripTermConvention", false, "Unadjusted"));
     rule_ = parseDateGenerationRule(XMLUtils::getChildValue(node, "OptionStripRule", false, "Backward"));
     cal_ = parseCalendar(XMLUtils::getChildValue(node, "OptionStripCalendar", false, "NullCalendar"));
+    
+    std::string payRelative = XMLUtils::getChildValue(node, "OptionStripPaymentRelativeTo", false, "ExpiryDate");
+    if (payRelative == "LastExpiryInStrip") {
+        paymentRelativeTo_ = LastExpiryInStrip;
+    } else {
+        paymentRelativeTo_ = Expiry;
+    }
+    paymentLag_ =  XMLUtils::getChildValueAsPeriod(node, "OptionStripPaymentLag", false, 0 * Days);
+    paymentCalendar_ = parseCalendar(XMLUtils::getChildValue(node, "OptionStripPaymentCalendar", false, "NullCalendar"));
 }
 XMLNode* CommoditySpreadOptionStrip::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
@@ -134,6 +150,10 @@ XMLNode* CommoditySpreadOptionStrip::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "OptionStripConvention", to_string(bdc_));
     XMLUtils::addChild(doc, node, "OptionStripTermConvention", to_string(termBdc_));
     XMLUtils::addChild(doc, node, "OptionStripRule", to_string(rule_));
+    XMLUtils::addChild(doc, node, "OptionStripPaymentRelativeTo",
+                       paymentRelativeTo_ == LastExpiryInStrip ? "LastExpiryInStrip" : "Expiry");
+    XMLUtils::addChild(doc, node, "OptionStripPaymentLag", to_string(paymentLag_));
+    XMLUtils::addChild(doc, node, "OptionStripPaymentCalendar", to_string(paymentCalendar_));
     return node;
 }
 

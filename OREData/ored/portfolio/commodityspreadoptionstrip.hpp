@@ -25,6 +25,8 @@ namespace ore::data {
 
 class CommoditySpreadOptionStrip : public ore::data::Trade {
 public:
+    enum PayRelativeTo {Expiry, LastExpiryInStrip};
+    
     CommoditySpreadOptionStrip()
         : ore::data::Trade("CommoditySpreadOptionStrip"), tenor_(1 * QuantLib::Days), bdc_(QuantLib::Unadjusted),
           termBdc_(QuantLib::Unadjusted), rule_(QuantLib::DateGeneration::Backward), cal_(QuantLib::NullCalendar()) {}
@@ -52,5 +54,10 @@ private:
     Calendar cal_;
     ScheduleData scheduleData_;
     PremiumData premiumData_;
+    PayRelativeTo paymentRelativeTo_;
+    QuantLib::Period paymentLag_;
+    QuantLib::Calendar paymentCalendar_;
+
+
 };
 }
