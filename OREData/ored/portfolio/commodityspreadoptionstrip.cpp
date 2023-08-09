@@ -63,7 +63,7 @@ void CommoditySpreadOptionStrip::build(const boost::shared_ptr<ore::data::Engine
             Date paymentDate = paymentCalendar_.advance(lastExpiry, paymentLag_, QuantLib::Preceding);
             optData.setPaymentData(OptionPaymentData({to_string(paymentDate)}));
         } else {
-            optData.setPaymentData(OptionPaymentData(to_string(paymentLag_), to_string(paymentCalendar_), "Preceding");
+            optData.setPaymentData(OptionPaymentData(to_string(paymentLag_), to_string(paymentCalendar_), "Preceding"));
         }
         CommoditySpreadOption option(CommoditySpreadOptionData(legData_, optData, csoData_.strike()));
         option.build(engineFactory);
