@@ -41,7 +41,7 @@ void BlackAverageBMACouponPricer::initialize(const FloatingRateCoupon& coupon) {
 }
 
 Real BlackAverageBMACouponPricer::optionletRate(Option::Type optionType, Real effStrike) const {
-    Date lastRelevantFixingDate = coupon_->underlying()->fixingDates().back();
+    Date lastRelevantFixingDate = coupon_->underlying()->fixingDate();
     if (lastRelevantFixingDate <= Settings::instance().evaluationDate()) {
         // the amount is determined
         Real a, b;
@@ -57,6 +57,9 @@ Real BlackAverageBMACouponPricer::optionletRate(Option::Type optionType, Real ef
         // not yet determined, use Black model
         QL_REQUIRE(!capletVolatility().empty(), "BlackAverageBMACouponPricer: missing optionlet volatility");
         std::vector<Date> fixingDates = coupon_->underlying()->fixingDates();
+        QL_REQUIRE(!fixingDates.empty(),
+                   "BlackAverageBMACouponPricer: internal error, got empty fixingDates, contact dev.");
+        fixingDates.erase(fixingDates.back()); // there is one additional date returned!
         QL_REQUIRE(!fixingDates.empty(), "BlackAverageBMACouponPricer: empty fixing dates");
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
         Real shift = capletVolatility()->displacement();
