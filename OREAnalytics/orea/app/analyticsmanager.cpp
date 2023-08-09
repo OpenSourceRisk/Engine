@@ -116,7 +116,7 @@ std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analyt
 }
 
 void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
-                                    const boost::shared_ptr<MarketCalibrationReport>& marketCalibrationReport) {
+                                    const boost::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport) {
 
     requestedAnalytics_ = analyticTypes;
     
@@ -183,8 +183,13 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
         reports_["STATS"]["pricingstats"] = pricingStatsReport;
     }
 
-    if (marketCalibrationReport)
-        marketCalibrationReport->outputCalibrationReport();
+    if (marketCalibrationReport) {
+        auto report = marketCalibrationReport->outputCalibrationReport();
+        if (report) {
+            if (auto rpt = boost::dynamic_pointer_cast<InMemoryReport>(report))
+                reports_["MARKET"]["todaysmarketcalibration"] = rpt;
+        }
+    }
 
     inputs_->writeOutParameters();
 }

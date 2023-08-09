@@ -26,21 +26,27 @@
 #include <ql/types.hpp>
 
 #include <boost/tokenizer.hpp>
-
 #include <fstream>
+#include <iostream>
+#include <sstream>
 #include <vector>
 
 namespace ore {
 namespace data {
 using QuantLib::Size;
 
-class CSVFileReader {
+class CSVReader {
 public:
     /*! Ctor */
-    CSVFileReader(const std::string& fileName, const bool firstLineContainsHeaders,
-                  const std::string& delimiters = ",;\t", const std::string& escapeCharacters = "\\",
-                  const std::string& quoteCharacters = "\"", const char eolMarker = '\n');
+    CSVReader( const bool firstLineContainsHeaders, const std::string& delimiters = ",;\t",
+              const std::string& escapeCharacters = "\\", const std::string& quoteCharacters = "\"",
+              const char eolMarker = '\n');
 
+    virtual ~CSVReader() {} // Declare virtual destructor
+
+    /*! Set stream for function */
+    void setStream(std::istream* stream);
+    //void setStream(std::string);
     /*! Returns the fields, if a header line is present, otherwise throws */
     const std::vector<std::string>& fields() const;
     /*! Return true if a field is present */
@@ -56,17 +62,45 @@ public:
     /*! Get content of column in current data line, throws if column is out of range */
     std::string get(const Size column) const;
     /*! Close the file */
-    void close();
+    virtual void close() {}
 
 private:
-    const std::string fileName_;
+    std::istream* stream_;
     const bool hasHeaders_;
     const char eolMarker_;
-    std::ifstream file_;
     Size currentLine_, numberOfColumns_;
     boost::tokenizer<boost::escaped_list_separator<char>> tokenizer_;
     std::vector<std::string> headers_, data_;
 };
 
+class CSVFileReader : public CSVReader {
+public:
+    /*! Ctor */
+    CSVFileReader(const std::string& fileName, const bool firstLineContainsHeaders,
+                  const std::string& delimiters = ",;\t", const std::string& escapeCharacters = "\\",
+                  const std::string& quoteCharacters = "\"", const char eolMarker = '\n');
+    /*! Close the file */
+    void close() override;
+
+private:
+    const std::string fileName_;
+    std::ifstream* file_;
+};
+
+class CSVBufferReader : public CSVReader {
+public:
+    /*! Ctor */
+    CSVBufferReader(const std::string& CSVBuffer, const bool firstLineContainsHeaders,
+                  const std::string& delimiters = ",;\t", const std::string& escapeCharacters = "\\",
+                  const std::string& quoteCharacters = "\"", const char eolMarker = '\n');
+
+private:
+    const std::string bufferName_;
+    
+};
+
 } // namespace data
 } // namespace ore
+
+
+

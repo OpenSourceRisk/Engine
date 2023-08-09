@@ -190,14 +190,15 @@ public:
                     bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false,
                     QuantLib::Period lookback = 0 * Days, const Size rateCutoff = Null<Size>(),
                     bool localCapFloor = false, const boost::optional<Period>& lastRecentPeriod = boost::none,
-                    const std::string& lastRecentPeriodCalendar = std::string(),
-                    bool telescopicValueDates = false)
+                    const std::string& lastRecentPeriodCalendar = std::string(), bool telescopicValueDates = false,
+                    const std::map<QuantLib::Date, double>& historicalFixings = {})
         : LegAdditionalData("Floating"), index_(ore::data::internalIndexName(index)), fixingDays_(fixingDays),
           lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears), isAveraged_(isAveraged),
           hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads), spreadDates_(spreadDates),
           caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings),
           gearingDates_(gearingDates), nakedOption_(nakedOption), localCapFloor_(localCapFloor),
-          lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar), telescopicValueDates_(telescopicValueDates) {
+          lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar), telescopicValueDates_(telescopicValueDates),
+          historicalFixings_(historicalFixings) {
         indices_.insert(index_);
     }
 
@@ -226,6 +227,7 @@ public:
     bool telescopicValueDates() const { return telescopicValueDates_; }
     ScheduleData fixingSchedule() const { return fixingSchedule_; }
     ScheduleData resetSchedule() const { return resetSchedule_; }
+    const std::map<QuantLib::Date, double>& historicalFixings() const { return historicalFixings_; }
     //@}
 
     //! \name Modifiers
@@ -268,6 +270,7 @@ private:
     bool telescopicValueDates_ = false;
     ScheduleData fixingSchedule_;
     ScheduleData resetSchedule_;
+    std::map<QuantLib::Date, double> historicalFixings_;
 };
 
 //! Serializable CPI Leg Data

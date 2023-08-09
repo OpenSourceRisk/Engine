@@ -24,6 +24,7 @@
 
 #include <ql/patterns/singleton.hpp>
 
+#include <cstdint>
 #include <set>
 
 namespace QuantExt {

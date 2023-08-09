@@ -1299,8 +1299,8 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
         if (results.has(qpc, RiskClass::All, MarginType::All, "All")) {
             Real im = results.get(qpc, RiskClass::All, MarginType::All, "All");
             Real factor = pIt.first->amount;
-            QL_REQUIRE(factor >= 1.0, "SIMM Calculator: Amount for risk type "
-                                          << rt << " must be greater than or equal to 1.0 but we got " << factor);
+            QL_REQUIRE(factor >= 0.0, "SIMM Calculator: Amount for risk type "
+                << rt << " must be greater than or equal to 0 but we got " << factor);
             Real pcmMargin = (factor - 1.0) * im;
             add(nettingSetDetails, regulation, qpc, RiskClass::All, MarginType::AdditionalIM, "All", pcmMargin, side,
                 overwrite);
@@ -1641,7 +1641,7 @@ void SimmCalculator::add(const NettingSetDetails& nettingSetDetails, const strin
                            << ", " << pc << ", " << rc << ", " << mt << "] of " << margin);
     }
 
-    simmResults_[side][nettingSetDetails][regulation].add(pc, rc, mt, b, margin, "USD", overwrite);
+    simmResults_[side][nettingSetDetails][regulation].add(pc, rc, mt, b, margin, "USD", calculationCcy_, overwrite);
 }
 
 void SimmCalculator::add(const NettingSetDetails& nettingSetDetails, const string& regulation, const ProductClass& pc,

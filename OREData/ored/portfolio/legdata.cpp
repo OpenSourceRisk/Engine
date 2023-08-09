@@ -200,6 +200,16 @@ void FloatingLegData::fromXML(XMLNode* node) {
     if (auto tmp = XMLUtils::getChildNode(node, "ResetSchedule")) {
         resetSchedule_.fromXML(tmp);
     }
+    vector<std::string> histFixingDates;
+    vector<QuantLib::Real> histFixingValues = XMLUtils::getChildrenValuesWithAttributes<Real>(
+        node, "HistoricalFixings", "Fixing", "fixingDate", histFixingDates,
+                                                  &parseReal);
+
+    QL_REQUIRE(histFixingDates.size() == histFixingValues.size(), "Mismatch Fixing values and dates");
+    for (size_t i = 0; i < histFixingDates.size(); ++i) {
+        auto dt = parseDate(histFixingDates[i]);
+        historicalFixings_[dt] = histFixingValues[i];
+    }
 }
 
 XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
@@ -237,6 +247,12 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
         auto tmp = resetSchedule_.toXML(doc);
         XMLUtils::setNodeName(doc, tmp, "ResetSchedule");
         XMLUtils::appendNode(node, tmp);
+    }
+    if (!historicalFixings_.empty()) {
+        auto histFixings = XMLUtils::addChild(doc, node, "HistoricalFixings");
+        for (const auto& [fixingDate, fixingValue] : historicalFixings_) {
+            XMLUtils::addChild(doc, histFixings, "Fixing", to_string(fixingValue), "fixingDate", to_string(fixingDate));
+        }
     }
     return node;
 }
@@ -2701,21 +2717,20 @@ void BondIndexBuilder::addRequiredFixings(RequiredFixings& requiredFixings, Leg 
     if (dirty_) {
         QL_REQUIRE(leg.size() > 0, "BondIndexBuild: Leg is required if dirty flag set to true");
         RequiredFixings legFixings;
-        addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(legFixings));
+        auto fixingGetter = boost::make_shared<FixingDateGetter>(legFixings);
+        fixingGetter->setRequireFixingStartDates(true);
+        addToRequiredFixings(leg, fixingGetter);
+
+        set<Date> fixingDates;
 
         auto fixingMap = legFixings.fixingDatesIndices();
         if (fixingMap.size() > 0) {
             std::map<std::string, std::set<Date>> indexFixings;
             for (const auto& [_, dates] : fixingMap) {
                 for (const auto& d : dates) {
-                    auto tmp = fixings_.fixingDatesIndices(d);
-                    for (const auto& [i, ds] : tmp)
-                        indexFixings[i].insert(ds.begin(), ds.end());
+                    auto tmp = fixings_.filteredFixingDates(d);
+                    requiredFixings.addData(tmp);
                 }
-            }
-            for (const auto& [i, ds] : indexFixings) {
-                vector<Date> dates(ds.begin(), ds.end());
-                requiredFixings.addFixingDates(dates, i);
             }
         }
     } else 
