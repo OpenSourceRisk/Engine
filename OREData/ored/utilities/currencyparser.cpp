@@ -82,6 +82,31 @@ QuantLib::Currency CurrencyParser::parseCurrencyWithMinors(const std::string& na
     return parseMinorCurrency(name);
 }
 
+std::pair<QuantLib::Currency, QuantLib::Currency>
+CurrencyParser::parseCurrencyPair(const std::string& name, const std::string& delimiters) const {
+    std::vector<std::string> tokens;
+    tokens = boost::split(tokens, name, boost::is_any_of(delimiters));
+    if (tokens.size() == 1) {
+        if (tokens[0].size() > 6) {
+            QL_FAIL("Failed to parse currency pair (" << tokens[0] << ")");
+        }
+
+        QuantLib::Currency ccy1 = parseCurrency(tokens[0].substr(0, 3));
+        QuantLib::Currency ccy2 = parseCurrency(tokens[0].substr(3));
+        return std::make_pair(ccy1, ccy2);
+    } else if (tokens.size() == 2) {
+        try {
+            QuantLib::Currency ccy1 = parseCurrency(tokens[0]);
+            QuantLib::Currency ccy2 = parseCurrency(tokens[1]);
+            return std::make_pair(ccy1, ccy2);
+        } catch (const std::exception& e) {
+            QL_FAIL("Failed to parse currency pair (" << name << "): " << e.what());
+        }
+    } else {
+        QL_FAIL("Failed to parse currency pair (" << name << ")");
+    }
+}
+
 bool CurrencyParser::isValidCurrency(const std::string& name) const {
     try {
         parseCurrencyWithMinors(name);

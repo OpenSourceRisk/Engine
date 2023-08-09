@@ -236,8 +236,14 @@ void OREApp::analytics() {
         CONSOLE(to_string(inputs_->analytics()));
         LOG("Requested analytics: " << to_string(inputs_->analytics()));
 
+        boost::shared_ptr<MarketCalibrationReportBase> mcr;
+        if (inputs_->outputTodaysMarketCalibration()) {
+            auto marketCalibrationReport = boost::make_shared<ore::data::InMemoryReport>();
+            mcr = boost::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
+        }
+
         // Run the requested analytics
-        analyticsManager_->runAnalytics(inputs_->analytics());
+        analyticsManager_->runAnalytics(inputs_->analytics(), mcr);
 
         // Write reports to files in the results path
         Analytic::analytic_reports reports = analyticsManager_->reports();
@@ -295,9 +301,6 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console,
     }
     
     setupLog(outputPath, logFile, logMask, logRootPath);
-
-    auto conventions = boost::make_shared<Conventions>();
-    InstrumentConventions::instance().setConventions(conventions);
 
     // Log the input parameters
     params_->log();
@@ -380,8 +383,14 @@ void OREApp::run(const std::vector<std::string>& marketData,
         CONSOLE(to_string(inputs_->analytics()));
         LOG("Requested analytics: " << to_string(inputs_->analytics()));
 
+        boost::shared_ptr<MarketCalibrationReportBase> mcr;
+        if (inputs_->outputTodaysMarketCalibration()) {
+            auto marketCalibrationReport = boost::make_shared<ore::data::InMemoryReport>();
+            mcr = boost::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
+        }
+
         // Run the requested analytics
-        analyticsManager_->runAnalytics(inputs_->analytics());
+        analyticsManager_->runAnalytics(inputs_->analytics(), mcr);
 
         // Leave any report writing to the calling aplication
     }
@@ -557,7 +566,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     if (params_->has("setup", "buildFailedTrades"))
         inputs->setBuildFailedTrades(parseBool(params_->get("setup", "buildFailedTrades")));
 
-    tmp = params_->get("setup", "portfolioFile");
+    tmp = params_->get("setup", "portfolioFile", false);
     if (tmp != "") {
         inputs->setPortfolioFromFile(tmp, inputPath);
     } else {
@@ -776,11 +785,14 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         if (tmp != "")
             inputs->setSimmVersion(tmp);
 
+        tmp = params_->get("simm", "mporDays", false);
+        if (tmp != "")
+            inputs->setMporDays(static_cast<Size>(parseInteger(tmp)));
+
         tmp = params_->get("simm", "crif", false);
         if (tmp != "") {
             string file = inputPath + "/" + tmp;
-            inputs->setCrifFromFile(file, inputs->csvEolChar(), inputs->csvSeparator(),
-                                    inputs->csvQuoteChar(), inputs->csvEscapeChar());
+            inputs->setCrifFromFile(file, inputs->csvEolChar(), inputs->csvSeparator(), '\"', inputs->csvEscapeChar());
         }
         
         tmp = params_->get("simm", "calculationCurrency", false);
@@ -801,6 +813,10 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("simm", "reportingCurrency", false);
         if (tmp != "")
             inputs->setSimmReportingCurrency(tmp);
+
+        tmp = params_->get("simm", "enforceIMRegulations", false);
+        if (tmp != "")
+            inputs->setEnforceIMRegulations(parseBool(tmp));
     }
     
     /************
@@ -1198,13 +1214,93 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     tmp = params_->get("cashflow", "portfolioFilterDate", false);
     if (tmp != "")
         inputs->setPortfolioFilterDate(tmp);
-    
+
+    /*************
+     * ZERO TO PAR SENSI CONVERSION
+     *************/
+
+    tmp = params_->get("zeroToParSensiConversion", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        inputs->insertAnalytic("PARCONVERSION");
+        
+        tmp = params_->get("zeroToParSensiConversion", "sensitivityInputFile", false);
+        if (tmp != "") {
+            inputs->setParConversionInputFile(inputPath + "/" + tmp);
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "idColumn", false);
+        if (tmp != "") {
+            inputs->setParConversionInputIdColumn(tmp);
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "riskFactorColumn", false);
+        if (tmp != "") {
+            inputs->setParConversionInputRiskFactorColumn(tmp);
+        }
+        
+        tmp = params_->get("zeroToParSensiConversion", "deltaColumn", false);
+        if (tmp != "") {
+            inputs->setParConversionInputDeltaColumn(tmp);
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "currencyColumn", false);
+        if (tmp != "") {
+            inputs->setParConversionInputCurrencyColumn(tmp);
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "baseNpvColumn", false);
+        if (tmp != "") {
+            inputs->setParConversionInputBaseNpvColumn(tmp);
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "shiftSizeColumn", false);
+        if (tmp != "") {
+            inputs->setParConversionInputShiftSizeColumn(tmp);
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "marketConfigFile", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            LOG("Loading par converions scenario sim market parameters from file" << file);
+            inputs->setParConversionSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for par conversion testing not loaded");
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            LOG("Load par conversion scenario data from file" << file);
+            inputs->setParConversionScenarioDataFromFile(file);
+        } else {
+            WLOG("Par conversion scenario data not loaded");
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "pricingEnginesFile", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            LOG("Load pricing engine data from file: " << file);
+            inputs->setParConversionPricingEngineFromFile(file);
+        } else {
+            WLOG("Pricing engine data not found for par conversion, using global");
+        }
+
+        tmp = params_->get("zeroToParSensiConversion", "outputThreshold", false);
+        if (tmp != "")
+            inputs->setParConversionThreshold(parseReal(tmp));
+
+        tmp = params_->get("zeroToParSensiConversion", "outputJacobi", false);
+        if (tmp != "")
+            inputs->setParConversionOutputJacobi(parseBool(tmp));
+
+    }
+
     if (inputs->analytics().size() == 0) {
         inputs->insertAnalytic("MARKETDATA");
         inputs->setOutputTodaysMarketCalibration(true);
         if (inputs->lazyMarketBuilding())
             LOG("Lazy market build being overridden to \"false\" for MARKETDATA analytic.")
-            inputs->setLazyMarketBuilding(false);
+        inputs->setLazyMarketBuilding(false);
     }
 
     LOG("buildInputParameters done");

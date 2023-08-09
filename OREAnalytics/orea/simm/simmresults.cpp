@@ -33,19 +33,26 @@ namespace ore {
 namespace analytics {
 
 void SimmResults::add(const SimmConfiguration::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
-                      const SimmConfiguration::MarginType& mt, const string& b, Real im,
+                      const SimmConfiguration::MarginType& mt, const string& b, Real im, const string& resultCurrency,
                       const string& calculationCurrency, const bool overwrite) {
 
     // Add the value as long as the currencies are matching. If the SimmResults container does not yet have
     // a currency, we set it to be that of the incoming value
-    if (ccy_.empty())
-        ccy_ = calculationCurrency;
+    if (resultCcy_.empty())
+        resultCcy_ = resultCurrency;
     else
-        QL_REQUIRE(calculationCurrency == ccy_, "Cannot add value to SimmResults in a different currency ("
-                                                    << calculationCurrency << "). Expected " << ccy_ << ".");
+        QL_REQUIRE(resultCurrency == resultCcy_, "Cannot add value to SimmResults with a different result currency ("
+                                                    << resultCurrency << "). Expected " << resultCcy_ << ".");
 
-    QL_REQUIRE(im >= 0.0, "Cannot add negative IM " << im << " result to SimmResults for RiskClass=" << rc
-                                                    << ", MarginType=" << mt << ", and Bucket=" << b);
+    if (calcCcy_.empty())
+        calcCcy_ = calculationCurrency;
+    else
+        QL_REQUIRE(calculationCurrency == calcCcy_, "Cannot add value to SimmResults in a different calculation currency ("
+                                                      << calculationCurrency << "). Expected " << calcCcy_ << ".");
+
+    if (!(mt == SimmConfiguration::MarginType::AdditionalIM || mt == SimmConfiguration::MarginType::All))
+        QL_REQUIRE(im >= 0.0, "Cannot add negative IM " << im << " result to SimmResults for RiskClass=" << rc
+                                                        << ", MarginType=" << mt << ", and Bucket=" << b);
 
     const auto key = make_tuple(pc, rc, mt, b);
     const bool hasResults = data_.find(key) != data_.end();
@@ -57,7 +64,7 @@ void SimmResults::add(const SimmConfiguration::ProductClass& pc, const SimmConfi
 
 void SimmResults::convert(const boost::shared_ptr<ore::data::Market>& market, const string& currency) {
     // Get corresponding FX spot rate
-    Real fxSpot = market->fxRate(ccy_ + currency)->value();
+    Real fxSpot = market->fxRate(resultCcy_ + currency)->value();
 
     convert(fxSpot, currency);
 }
@@ -68,7 +75,7 @@ void SimmResults::convert(Real fxSpot, const string& currency) {
                                                        << currency << ") must be a valid ISO currency code");
 
     // Skip if already in target currency
-    if (ccy_ == currency)
+    if (resultCcy_ == currency)
         return;
 
     // Convert SIMM results to target currency
@@ -76,7 +83,7 @@ void SimmResults::convert(Real fxSpot, const string& currency) {
         sr.second *= fxSpot;
 
     // Update currency
-    ccy_ = currency;
+    resultCcy_ = currency;
 }
 
 Real SimmResults::get(const SimmConfiguration::ProductClass& pc, const SimmConfiguration::RiskClass& rc,

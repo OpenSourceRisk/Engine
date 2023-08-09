@@ -722,11 +722,11 @@ The solution and project files will be generated in the {\tt $\langle$ORE\_ROOT$
 
 Alternatively, from Visual Studio 2015 onward, you can use Visual Studios capability to parse the CMakeLists.txt in the ORE root directory, by first setting the CMake BOOST variables in the environment:
 
-{\tt set BOOST_INCLUDE_DIR=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
-{\tt set BOOST_LIBRARYDIR=} pointing to your Win32 or x64 boost lib directory, e.g {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} or {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0}
-{\tt set BOOST_ROOT=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
+{\tt set BOOST\_INCLUDE\_DIR=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
+{\tt set BOOST\_LIBRARYDIR=} pointing to your Win32 or x64 boost lib directory, e.g {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} or {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0}
+{\tt set BOOST\_ROOT=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
 
-Afterwards, start the development environment, e.g {\tt "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe"} and open the CMakeLists.txt file using File, Menu, CMake...
+Afterwards, start the development environment, e.g {\tt "C:{\bs}Program Files (x86){\bs}Microsoft Visual Studio{\bs}2019{\bs}Community{\bs}Common7{\bs}IDE{\bs}devenv.exe"} and open the CMakeLists.txt file using File, Menu, CMake...
 Once the file has been parsed successfully and CMake generation has been finished (observable in the output window), you can switch in the solution explorer from the file view to the projects view, where the CMake Targets View can be selected. In this view, the various target projects can be seen below "ORE Project" and be used in a similar manner as the usual VS projects.
 
 The executables are built in the subfolder {\tt /build/TARGET/CONFIGURATION/EXECUTABLE}, e.g. {\tt /build/App/Release/ore.exe}, the debug and launch settings are set in launch.vs.json and not in the GUI.
@@ -2803,6 +2803,7 @@ FX Option pricing with the risk factor evolution model.
 \end{figure}
 
 \subsubsection*{Analytic Configuration}
+\label{sec:amc_applicationconfig}
 
 To use the AMC engine for an XVA simulation the following needs to be added to the {\tt simulation} analytic in {\tt ore.xml}:
 
@@ -2901,6 +2902,7 @@ engine types. The engine parameters are the same for all products:
 \end{table}
 
 \subsubsection*{Additional Features}
+\label{sec:amc_sideproducts}
 
 As a side product the AMC module provides plain MC pricing engines for Bermudan Swaptions and a new trade type
 \verb+MultiLegOption+ with a corresponding MC pricing engine.
@@ -3357,6 +3359,121 @@ Moreover, the results can be crosschecked against the NPVs, i.e. prices, of the 
 \end{itemize}
 
 The example can be run calling {\tt python run.py}.
+
+
+%--------------------------------------------------------------------
+\subsection{Zero to Par sensitivity Conversion Analysis}% Example 50
+\label{example:50}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_50} demonstrates ORE's capability to convert external computed zero sensitivities (e.g Zero rates) to par sensitivities (e.g. to Swap rates) 
+that is implemented  by means of a Jacobi transformation of the "raw" sensitivities (e.g. to zero rates), see a sketch of the 
+methodology in appendix \ref{app:par_sensi} and section \ref{sec:sensitivity} for configuration details.
+
+To perform a par sensitivity analysis, the following required change in {\tt ore.xml} is required
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <Analytic type="zeroToParSensiConversion">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+	  <!-- Input file with the raw sensitivities -->
+      <Parameter name="sensitivityInputFile">sensitivity.csv</Parameter>
+      <Parameter name="idColumn">TradeId</Parameter>
+      <Parameter name="riskFactorColumn">Factor_1</Parameter>
+      <Parameter name="deltaColumn">Delta</Parameter>
+	  <Parameter name="currencyColumn">Currency</Parameter>
+	  <Parameter name="baseNpvColumn">Base NPV</Parameter>
+ 	  <Parameter name="shiftSizeColumn">ShiftSize_1</Parameter>
+      <Parameter name="outputThreshold">0.000001</Parameter>
+      <Parameter name="outputFile">parconversion_sensitivity.csv</Parameter>
+      <Parameter name="outputJacobi">Y</Parameter>
+      <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
+      <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
+    </Analytic>
+\end{minted}
+
+The portfolio used in this example includes zero sensitivities of 
+\begin{itemize}
+\item Discount and index curves
+\item Credit curves
+\item Inflation curves
+\item CapFloor volatilities
+\end{itemize}
+
+ORE reads the raw sensitivites from the csv input file *sensitivityInputFile*. The input file needs to have six  columns, the column names can be user configured. Here is a description of each of the columns:
+
+\begin{enumerate}
+\item idColumn : Column with a unique identifier for the trade / nettingset / portfolio.
+\item riskFactorColumn: Column with the identifier of the zero/raw sensitiviy. The risk factor name needs to follow the ORE naming convention, e.g. DiscountCurve/EUR/5/1Y (the 6th bucket in EUR discount curve as specified in the sensitivity.xml)\
+\item deltaColumn: The raw sensitivity of the trade/nettingset / portfolio with respect to the risk factor
+\item currencyColumn: The currency in which the raw sensitivity is expressed, need to be the same as the BaseCurrency in the simulation settings.
+\item shiftSizeColumn: The shift size applied to compute the raw sensitivity, need to be consistent to the sensitivity configuration.
+\item baseNpvColumn: The base npv of the trade / nettingset / portfolio in currency.
+\end{enumerate}
+
+This is followed by the Jacobi transformation that turns "raw" sensitivities  into sensitivities in the par domain (Deposit/FRA/Swap rates, FX Forwards, CC Basis Swap spreads, 
+CDS spreads, ZC and YOY Inflation Swap rates, flat Cap/Floor vols). The conversion is controlled by the additional {\tt ParConversion} data blocks 
+in {\tt sensitivity.xml} where the assumed par instruments and corresponding conventions are coded, as shown below for three types of discount curves.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <DiscountCurves>
+  
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+        <!--DEP, FRA, IRS, OIS, FXF, XBS -->
+	<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>   
+    
+    <DiscountCurve ccy="USD">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+	<Instruments>FXF,FXF,FXF,FXF,FXF,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="XBS">EUR-USD-XCCY-BASIS-CONVENTIONS</Convention>
+	  <Convention id="FXF">EUR-USD-FX-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+
+    <DiscountCurve ccy="GBP">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+	<Instruments>DEP,DEP,DEP,DEP,DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">GBP-DEPOSIT</Convention>
+	  <Convention id="IRS">GBP-6M-SWAP-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>
+  
+  </DiscountCurves>
+\end{minted}
+
+Finally note that par sensitivity analysis requires that the shift tenor grid in the sensitivity data above matches the corresponding grid in the simulation (market) configuration. 
+See also section \ref{sec:sensitivity}.
+
+
+%--------------------------------------------------------------------
+\subsection{Custom trade fixings}% Example 51
+\label{example:51}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_51} demonstrates ORE's capability to use custom trade specific fixings. For OIS and Ibor floating legs one can specify historical fixing on a trade level, see \ref{ss:floatingleg_data}. Those trade level fixings will be only use for the specific trade, all other trades will use the global fixings.
 
 \clearpage
 %========================================================
@@ -3988,6 +4105,64 @@ The parameters have the following interpretation:
 \item {\tt jacobiInverseOutputFile}: Output file name for the inverse Jacobi matrix
 \end{itemize}
 
+
+The zero to par sensitivity conversion analytics configuration is similar to the one of the sensitivity calculation. Listing \ref{lst:ore_zerotoparconversion}
+shows an example.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+ <Analytic type="zeroToParSensiConversion">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="sensitivityInputFile">sensitivity.csv</Parameter>
+      <Parameter name="outputThreshold">0.000001</Parameter>
+      <Parameter name="outputFile">parconversion_sensitivity.csv</Parameter>
+      <Parameter name="outputJacobi">Y</Parameter>
+      <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
+      <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
+    </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: Zero to Par Sensitivity Conversion}
+\label{lst:ore_zerotoparconversion}
+\end{listing}
+
+The parameters have the same interpretation as for the sensitivity analytic. There is one new parameter *sensitivityInputFile* which points to a csv file with the raw (zero)sensitivites. Those raw sensitivites will be converted into par sensitivities, using the the same methodology described in \ref{app:par_sensi} and the configuration is described in \ref{sec:sensitivity}.
+
+The raw sensitivites csv input file *sensitivityInputFile* needs to have at least six columns, the column names can be user configured in the master input file. Here is a description of each of the columns:
+
+\begin{enumerate}
+\item idColumn : Column with a unique identifier for the trade / nettingset / portfolio.
+\item riskFactorColumn: Column with the identifier of the zero/raw sensitiviy. The risk factor name needs to follow the ORE naming convention, e.g. DiscountCurve/EUR/5/1Y (the 6th bucket in EUR discount curve as specified in the sensitivity.xml)\
+\item deltaColumn: The raw sensitivity of the trade/nettingset / portfolio with respect to the risk factor
+\item currencyColumn: The currency in which the raw sensitivity is expressed, need to be the same as the BaseCurrency in the simulation settings.
+\item shiftSizeColumn: The shift size applied to compute the raw sensitivity, need to be consistent to the sensitivity configuration.
+\item baseNpvColumn: The base npv of the trade / nettingset / portfolio in currency.
+\end{enumerate}
+
+Here is an example for an input file:
+
+\begin{table}[hbt]
+\scriptsize
+\begin{center}
+\begin{tabular}{lllrlrr}
+\hline
+{} & \#TradeId &                Factor\_1 &  ShiftSize\_1 & Currency &  Base NPV &  Delta \\
+\hline
+0 &     Swap &  DiscountCurve/EUR/3/6M &       0.0001 &      EUR &   1335.27 &   5.05 \\
+1 &     Swap &  DiscountCurve/EUR/4/9M &       0.0001 &      EUR &   1335.27 &   0.35 \\
+2 &     Swap &  DiscountCurve/EUR/5/1Y &       0.0001 &      EUR &   1335.27 &  -5.41 \\
+3 &     Swap &  DiscountCurve/EUR/6/2Y &       0.0001 &      EUR &   1335.27 &  -0.22 \\
+4 &     Swap &  DiscountCurve/EUR/7/3Y &       0.0001 &      EUR &   1335.27 &  -0.32 \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
 The stress analytics configuration is similar to the one of the sensitivity calculation. Listing \ref{lst:ore_stress}
 shows an example.
 
@@ -4066,6 +4241,8 @@ The parameters have the following interpretation:
       <Parameter name="crif">crif.csv</Parameter>
       <Parameter name="calculationCurrency">USD</Parameter>
       <Parameter name="resultCurrency">USD</Parameter>
+      <Parameter name="enforceIMRegulations">true</Parameter>
+      <Parameter name="mporDays">1</Parameter>
     </Analytic>
 <Analytics>
 \end{minted}
@@ -4080,8 +4257,14 @@ The parameters have the following interpretation:
 Allowable values: 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.5A  \\
 Note that any new SIMM model versions are integrated into ORE with each release, tested against the official ISDA SIMM unit tests.
 \item {\tt crif:} Name of the CRIF file to be loaded
-\item {\tt calculationCurrency:} Determines the {\tt Risk\_FX} CRIF entry that is ignored in ISDA SIMM calculation
-\item {\tt resultCurrency} (optional): Currency for expressing the amounts in the resulting SIMM report, by default set to the calculationCurrency.
+\item {\tt calculationCurrency:} Determines the {\tt Risk\_FX} CRIF entry that is ignored in ISDA SIMM calculation \\
+Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+\item {\tt resultCurrency} (optional): Currency for expressing the amounts in the resulting SIMM report, by default set to the calculationCurrency. \\
+Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+\item {\tt enforceIMRegulations} (optional): Whether to take collect/post regulations into account. \\
+Allowable values: Allowable boolean values are given in Table \ref{tab:boolean_allowable}. Defaults to \emph{False} if omitted.
+\item {\tt mporDays} (optional): Currency for expressing the amounts in the resulting SIMM report, by default set to the calculationCurrency. \\
+Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 \end{itemize}
 
 The SIMM analytic requires minimal market data input and today's market configuration - FX rates for conversions calculation currency, USD and result currency.
@@ -4783,10 +4966,10 @@ In addition to product specific settings there is also a block with global param
   but only used internally to improve the performance for processes which only rely on the NPV as a result from pricing
   engines, e.g. when repricing trades under sensitivity or stress scenarios. Option, defaults to false.
 \item RunType: Set automatically. One of NPV, SensitivityDelta, SensitivityDeltaGamma, Stress, Exposure, Capital,
-  TradeDetails, PortfolioAnalyser, HistoricalPnL, depending on the context for which a portfolio was built. Might also
-  be left empty. This is used by some pricing engines to adapt to certain run types. E.g. a first order sensitivity pnl
-  expansion might be used for a SensitivityDelta run by an engine which is able to compute analytical or AAD first order
-  sensitivities.
+  TradeDetails, PortfolioAnalyser, HistoricalPnL, BondSpreadImply, AbsMaturityUpdate depending on the context for which
+  a portfolio was built. Might also be left empty. This is used by some pricing engines to adapt to certain run
+  types. E.g. a first order sensitivity pnl expansion might be used for a SensitivityDelta run by an engine which is
+  able to compute analytical or AAD first order sensitivities.
 \end{itemize}
 
 %--------------------------------------------------------
@@ -6672,7 +6855,7 @@ engine and the classic engine produce the same paths, hence can be combined to a
 checked, that a non-zero seed for the random number generation is used.
 
 The portfolio that the AMC engine consumes is build against an engine factory set up by a pricing engine configuration
-given in the amc analytics type (see \ref{sec:application_config}). This configuration should select special AMC engine
+given in the amc analytics type (see \ref{sec:amc_applicationconfig}). This configuration should select special AMC engine
 builders which (by a pure naming convention) have the engine type ``AMC''. These engine builders are retrieved from
 \verb+getAmcEngineBuilders()+ in \verb+oreappplus.cpp+ and are special in that unlike usual engine builders they take
 two parameters
@@ -6690,7 +6873,7 @@ The AMC engine builders build a smaller version of the global cross asset model 
 required to price the specific trade. Note that no deal specific calibration of the model is performed.
 
 The AMC pricing engines perform a T0 pricing and - as a side product - can be used as usual T0 pricing engines if a
-corresponding engine builder is supplied, see \ref{sec:side_products}.
+corresponding engine builder is supplied, see \ref{sec:amc_sideproducts}.
 
 In addition the AMC pricing engines perform the necessary calculations to yield conditional NPVs on the given global
 simulation grid. How these calcuations are performed is completely the responsibility of the pricing engines, altough
@@ -6808,7 +6991,7 @@ analysis run. Therefore the sensitivities calculated by this engine are not vali
 \subsubsection*{Basis Function Selection}
 
 Currently the basis function system is generated by specifying the type of the functions and the order, see
-\ref{sec:pricing_engine_config}. The number of independent variables varies by product type and details. Depending on
+\ref{sec:amc_pricingengineconfig}. The number of independent variables varies by product type and details. Depending on
 the number of independent variables and the order the number of generated basis functions can get quite big which slows
 down the computation of regression coefficients. It would be desirable to have the option to filter the full set of
 basis functions, e.g. by explicitly enumerating them in the configuration, so that a high order can be chosen even for

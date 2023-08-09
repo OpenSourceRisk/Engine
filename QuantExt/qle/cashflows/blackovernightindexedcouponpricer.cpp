@@ -141,7 +141,7 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     Date today = Settings::instance().evaluationDate();
     while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
         // rate must have been fixed
-        Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+        Rate pastFixing = index->pastFixing(fixingDates[std::min(i, nCutoff)]);
         QL_REQUIRE(pastFixing != Null<Real>(),
                    "Missing " << index->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
         if (coupon_->underlying()->includeSpread()) {
@@ -156,7 +156,7 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
         // might have been fixed
         try {
-            Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+            Rate pastFixing = index->pastFixing(today);
             if (pastFixing != Null<Real>()) {
                 if (coupon_->underlying()->includeSpread()) {
                     pastFixing += coupon_->spread();
@@ -288,18 +288,15 @@ Real BlackAverageONIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
         // the amount is determined
         Real a, b;
         if (optionType == Option::Call) {
-            a = swapletRate_;
+            a = forwardRate_;
             b = effStrike;
         } else {
             a = effStrike;
-            b = swapletRate_;
+            b = forwardRate_;
         }
         return gearing_ * std::max(a - b, 0.0);
     } else {
         // not yet determined, use Black model
-        // for the standard deviation see Lyashenko, Mercurio, Looking forward to backward looking rates, section 6.3.
-        // the idea is to dampen the average volatility sigma between the fixing start and fixing end date by a
-        // linear function going from (fixing start, 1) to (fixing end, 0)
         QL_REQUIRE(!capletVolatility().empty(), "BlackAverageONIndexedCouponPricer: missing optionlet volatility");
         std::vector<Date> fixingDates = coupon_->underlying()->fixingDates();
         QL_REQUIRE(!fixingDates.empty(), "BlackAverageONIndexedCouponPricer: empty fixing dates");
@@ -312,15 +309,17 @@ Real BlackAverageONIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
             stdDev = capletVolatility()->volatility(fixingDates.back(), effStrike) * std::sqrt(effectiveTime);
         } else {
             // vol input is not effective:
+            // for the standard deviation see Lyashenko, Mercurio, Looking forward to backward looking rates,
+            // section 6.3. the idea is to dampen the average volatility sigma between the fixing start and fixing end
+            // date by a linear function going from (fixing start, 1) to (fixing end, 0)
             Real fixingStartTime = capletVolatility()->timeFromReference(fixingDates.front());
             Real fixingEndTime = capletVolatility()->timeFromReference(fixingDates.back());
-            QL_REQUIRE(!close_enough(fixingEndTime, fixingStartTime),
-                       "BlackAverageONIndexedCouponPricer: fixingStartTime = fixingEndTime = " << fixingStartTime);
             Real sigma = capletVolatility()->volatility(
                 std::max(fixingDates.front(), capletVolatility()->referenceDate() + 1), effStrike);
-            stdDev = sigma * std::sqrt(std::max(fixingStartTime, 0.0) +
-                                       std::pow(fixingEndTime - std::max(fixingStartTime, 0.0), 3.0) /
-                                           std::pow(fixingEndTime - fixingStartTime, 2.0) / 3.0);
+            Real T = std::max(fixingStartTime, 0.0);
+            if (!close_enough(fixingEndTime, T))
+                T += std::pow(fixingEndTime - T, 3.0) / std::pow(fixingEndTime - fixingStartTime, 2.0) / 3.0;
+            stdDev = sigma * std::sqrt(T);
         }
         if (optionType == Option::Type::Call)
             effectiveCapletVolatility_ = stdDev / std::sqrt(effectiveTime);
@@ -373,7 +372,7 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     Date today = Settings::instance().evaluationDate();
     while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
         // rate must have been fixed
-        Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+        Rate pastFixing = index->pastFixing(fixingDates[std::min(i, nCutoff)]);
         QL_REQUIRE(pastFixing != Null<Real>(),
                    "Missing " << index->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
         if (coupon_->includeSpread()) {
@@ -388,7 +387,7 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
         // might have been fixed
         try {
-            Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+            Rate pastFixing = index->pastFixing(today);
             if (pastFixing != Null<Real>()) {
                 if (coupon_->includeSpread()) {
                     pastFixing += coupon_->spread();

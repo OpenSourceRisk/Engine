@@ -52,7 +52,7 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
                                                                         securitySpread, 6 * Months, boost::none);
 }
 
-std::string BondIndex::name() const { return "BondIndex-" + securityName_; }
+std::string BondIndex::name() const { return "BOND-" + securityName_; }
 
 Calendar BondIndex::fixingCalendar() const { return fixingCalendar_; }
 

@@ -24,9 +24,11 @@
 #pragma once
 
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <ored/portfolio/simmcreditqualifiermapping.hpp>
 #include <ored/portfolio/underlying.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -50,6 +52,7 @@ using std::string;
 class EngineFactory;
 class Market;
 class RequiredFixings;
+class ReferenceDataManager;
 
 //! Serializable Additional Leg Data
 /*!
@@ -187,14 +190,15 @@ public:
                     bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false,
                     QuantLib::Period lookback = 0 * Days, const Size rateCutoff = Null<Size>(),
                     bool localCapFloor = false, const boost::optional<Period>& lastRecentPeriod = boost::none,
-                    const std::string& lastRecentPeriodCalendar = std::string(),
-                    bool telescopicValueDates = false)
+                    const std::string& lastRecentPeriodCalendar = std::string(), bool telescopicValueDates = false,
+                    const std::map<QuantLib::Date, double>& historicalFixings = {})
         : LegAdditionalData("Floating"), index_(ore::data::internalIndexName(index)), fixingDays_(fixingDays),
           lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears), isAveraged_(isAveraged),
           hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads), spreadDates_(spreadDates),
           caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings),
           gearingDates_(gearingDates), nakedOption_(nakedOption), localCapFloor_(localCapFloor),
-          lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar), telescopicValueDates_(telescopicValueDates) {
+          lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar), telescopicValueDates_(telescopicValueDates),
+          historicalFixings_(historicalFixings) {
         indices_.insert(index_);
     }
 
@@ -223,6 +227,7 @@ public:
     bool telescopicValueDates() const { return telescopicValueDates_; }
     ScheduleData fixingSchedule() const { return fixingSchedule_; }
     ScheduleData resetSchedule() const { return resetSchedule_; }
+    const std::map<QuantLib::Date, double>& historicalFixings() const { return historicalFixings_; }
     //@}
 
     //! \name Modifiers
@@ -265,6 +270,7 @@ private:
     bool telescopicValueDates_ = false;
     ScheduleData fixingSchedule_;
     ScheduleData resetSchedule_;
+    std::map<QuantLib::Date, double> historicalFixings_;
 };
 
 //! Serializable CPI Leg Data
@@ -987,6 +993,11 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityI
 Real currentNotional(const Leg& leg);
 Real originalNotional(const Leg& leg);
 
+std::string getCmbLegCreditRiskCurrency(const CMBLegData& ld, const boost::shared_ptr<ReferenceDataManager>& refData);
+
+std::pair<std::string, SimmCreditQualifierMapping>
+getCmbLegCreditQualifierMapping(const CMBLegData& ld, const boost::shared_ptr<ReferenceDataManager>& refData,
+                                const std::string& tradeId, const std::string& tradeType);
 //@}
 
 // Build a full vector of values from the given node.
@@ -1140,6 +1151,21 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
                                                       const bool conditionalOnSurvival,
                                                       const boost::shared_ptr<EngineFactory>& engineFactory,
                                                       RequiredFixings& requiredFixings);
+
+class BondIndexBuilder {
+public:
+    BondIndexBuilder(const BondData& securityData, const bool dirty, const bool relative,
+                     const Calendar& fixingCalendar, const bool conditionalOnSurvival,
+                     const boost::shared_ptr<EngineFactory>& engineFactory);
+
+    boost::shared_ptr<QuantExt::BondIndex> bondIndex();
+    void addRequiredFixings(RequiredFixings& requiredFixings, Leg leg = {});
+
+private:
+    boost::shared_ptr<QuantExt::BondIndex> bondIndex_;
+    RequiredFixings fixings_;
+    const bool dirty_;
+};
 
 // join a vector of legs to a single leg, check if the legs have adjacent periods
 Leg joinLegs(const std::vector<Leg>& legs);

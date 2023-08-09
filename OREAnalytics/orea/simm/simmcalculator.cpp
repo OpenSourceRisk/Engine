@@ -77,13 +77,25 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
 
     SimmNetSensitivities tmp;
     for (const CrifRecord& cr : simmNetSensitivities_) {
+        // Remove Schedule-only CRIF records
         const bool isSchedule = cr.imModel == "Schedule";
-
         if (isSchedule) {
             if (!quiet_ && determineWinningRegulations) {
                 WLOG(ore::data::StructuredTradeWarningMessage(cr.tradeId, cr.tradeType, "SIMM calculator", "Skipping over Schedule CRIF record"));
             } 
             continue;
+        }
+
+        // Check for each netting set whether post/collect regs are populated at all
+        if (collectRegsIsEmpty_.find(cr.nettingSetDetails) == collectRegsIsEmpty_.end()) {
+            collectRegsIsEmpty_[cr.nettingSetDetails] = cr.collectRegulations.empty();
+        } else if (collectRegsIsEmpty_.at(cr.nettingSetDetails) && !cr.collectRegulations.empty()) {
+            collectRegsIsEmpty_.at(cr.nettingSetDetails) = false;
+        }
+        if (postRegsIsEmpty_.find(cr.nettingSetDetails) == postRegsIsEmpty_.end()) {
+            postRegsIsEmpty_[cr.nettingSetDetails] = cr.postRegulations.empty();
+        } else if (postRegsIsEmpty_.at(cr.nettingSetDetails) && !cr.postRegulations.empty()) {
+            postRegsIsEmpty_.at(cr.nettingSetDetails) = false;
         }
 
         tmp.insert(cr);
@@ -106,7 +118,7 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
 
     // Some additional processing depending on the regulations applicable to each netting set
     for (auto& sv : regSensitivities_) {
-        
+
         for (auto& s : sv.second) {
             // Where there is SEC and CFTC in the portfolio, we add the CFTC trades to SEC,
             // but still continue with CFTC calculations
@@ -134,20 +146,6 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
             if (s.second.count("Unspecified") > 0 && s.second.size() > 1)
                 s.second.erase("Unspecified");
         }
-    }
-
-    // For each netting set, if only one side's regulations are populated, the other side's sensis should be excluded.
-    for (auto& ns : regSensitivities_.at(SimmSide::Call)) {
-        auto& netSetCollect = ns.second;
-        bool collectRegsIsEmpty = netSetCollect.size() == 1 && netSetCollect.count("Unspecified") == 1;
-
-        auto& netSetPost = regSensitivities_.at(SimmSide::Post).at(ns.first);
-        bool postRegsIsEmpty = netSetPost.size() == 1 && netSetPost.count("Unspecified") == 1;
-
-        if (collectRegsIsEmpty && !postRegsIsEmpty)
-            netSetCollect.erase("Unspecified");
-        else if (!collectRegsIsEmpty && postRegsIsEmpty)
-            netSetPost.erase("Unspecified");
     }
 
     // Calculate SIMM call and post for each regulation under each netting set
@@ -1301,8 +1299,8 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
         if (results.has(qpc, RiskClass::All, MarginType::All, "All")) {
             Real im = results.get(qpc, RiskClass::All, MarginType::All, "All");
             Real factor = pIt.first->amount;
-            QL_REQUIRE(factor >= 1.0, "SIMM Calculator: Amount for risk type "
-                                          << rt << " must be greater than or equal to 1.0 but we got " << factor);
+            QL_REQUIRE(factor >= 0.0, "SIMM Calculator: Amount for risk type "
+                << rt << " must be greater than or equal to 0 but we got " << factor);
             Real pcmMargin = (factor - 1.0) * im;
             add(nettingSetDetails, regulation, qpc, RiskClass::All, MarginType::AdditionalIM, "All", pcmMargin, side,
                 overwrite);
@@ -1643,7 +1641,7 @@ void SimmCalculator::add(const NettingSetDetails& nettingSetDetails, const strin
                            << ", " << pc << ", " << rc << ", " << mt << "] of " << margin);
     }
 
-    simmResults_[side][nettingSetDetails][regulation].add(pc, rc, mt, b, margin, "USD", overwrite);
+    simmResults_[side][nettingSetDetails][regulation].add(pc, rc, mt, b, margin, "USD", calculationCcy_, overwrite);
 }
 
 void SimmCalculator::add(const NettingSetDetails& nettingSetDetails, const string& regulation, const ProductClass& pc,
@@ -1659,6 +1657,13 @@ void SimmCalculator::addCrifRecord(const CrifRecord& crifRecord, const SimmSide&
 
     const NettingSetDetails& nettingSetDetails = crifRecord.nettingSetDetails;
 
+    bool collectRegsIsEmpty = false;
+    bool postRegsIsEmpty = false;
+    if (collectRegsIsEmpty_.find(crifRecord.nettingSetDetails) != collectRegsIsEmpty_.end())
+        collectRegsIsEmpty = collectRegsIsEmpty_.at(crifRecord.nettingSetDetails);
+    if (postRegsIsEmpty_.find(crifRecord.nettingSetDetails) != postRegsIsEmpty_.end())
+        postRegsIsEmpty = postRegsIsEmpty_.at(crifRecord.nettingSetDetails);
+
     string regsString;
     if (enforceIMRegulations)
         regsString = side == SimmSide::Call ? crifRecord.collectRegulations : crifRecord.postRegulations;
@@ -1668,7 +1673,10 @@ void SimmCalculator::addCrifRecord(const CrifRecord& crifRecord, const SimmSide&
     newCrifRecord.collectRegulations.clear();
     newCrifRecord.postRegulations.clear();
     for (const string& r : regs)
-        if (r != "Excluded") {
+        if (r == "Excluded" ||
+            (r == "Unspecified" && enforceIMRegulations && !(collectRegsIsEmpty && postRegsIsEmpty))) {
+            continue;
+        } else if (r != "Excluded") {
             // Keep a record of trade IDs for each regulation
             if (!newCrifRecord.isSimmParameter())
                 tradeIds_[side][nettingSetDetails][r].insert(newCrifRecord.tradeId);
@@ -1677,7 +1685,11 @@ void SimmCalculator::addCrifRecord(const CrifRecord& crifRecord, const SimmSide&
             if (regSensitivities_[side][nettingSetDetails][r] == nullptr)
                 regSensitivities_[side][nettingSetDetails][r] = boost::make_shared<CrifLoader>(simmConfiguration_, CrifRecord::additionalHeaders, true, true);
 
-            regSensitivities_[side][nettingSetDetails][r]->add(newCrifRecord);
+            // We make sure to ignore amountCcy when aggregating the records, since we will only be using amountUsd,
+            // and we may have CRIF records that are equal everywhere except for the amountCcy, and this will fail
+            // in the case of Risk_XCcyBasis and Risk_Inflation.
+            const bool onDiffAmountCcy = true;
+            regSensitivities_[side][nettingSetDetails][r]->add(newCrifRecord, onDiffAmountCcy);
         }
 }
 

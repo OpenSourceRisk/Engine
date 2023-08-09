@@ -24,6 +24,8 @@
 
 #include <qle/math/computeenvironment.hpp>
 
+#include <map>
+
 namespace QuantExt {
 
 class OpenClFramework : public ComputeFramework {

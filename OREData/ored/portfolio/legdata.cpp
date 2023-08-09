@@ -29,6 +29,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/makenonstandardlegs.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/types.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
@@ -199,6 +200,16 @@ void FloatingLegData::fromXML(XMLNode* node) {
     if (auto tmp = XMLUtils::getChildNode(node, "ResetSchedule")) {
         resetSchedule_.fromXML(tmp);
     }
+    vector<std::string> histFixingDates;
+    vector<QuantLib::Real> histFixingValues = XMLUtils::getChildrenValuesWithAttributes<Real>(
+        node, "HistoricalFixings", "Fixing", "fixingDate", histFixingDates,
+                                                  &parseReal);
+
+    QL_REQUIRE(histFixingDates.size() == histFixingValues.size(), "Mismatch Fixing values and dates");
+    for (size_t i = 0; i < histFixingDates.size(); ++i) {
+        auto dt = parseDate(histFixingDates[i]);
+        historicalFixings_[dt] = histFixingValues[i];
+    }
 }
 
 XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
@@ -236,6 +247,12 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
         auto tmp = resetSchedule_.toXML(doc);
         XMLUtils::setNodeName(doc, tmp, "ResetSchedule");
         XMLUtils::appendNode(node, tmp);
+    }
+    if (!historicalFixings_.empty()) {
+        auto histFixings = XMLUtils::addChild(doc, node, "HistoricalFixings");
+        for (const auto& [fixingDate, fixingValue] : historicalFixings_) {
+            XMLUtils::addChild(doc, histFixings, "Fixing", to_string(fixingValue), "fixingDate", to_string(fixingDate));
+        }
     }
     return node;
 }
@@ -2600,9 +2617,11 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                 QL_REQUIRE(!(boost::dynamic_pointer_cast<BondFuturesIndex>(bi)),
                            "BondFuture Legs are not yet supported");
                 BondData bondData(bi->securityName(), 1.0);
-                index = buildBondIndex(bondData, indexing.indexIsDirty(), indexing.indexIsRelative(),
+                BondIndexBuilder bondIndexBuilder(bondData, indexing.indexIsDirty(), indexing.indexIsRelative(),
                                        parseCalendar(indexing.fixingCalendar()),
-                                       indexing.indexIsConditionalOnSurvival(), engineFactory, requiredFixings);
+                                       indexing.indexIsConditionalOnSurvival(), engineFactory);
+                index = bondIndexBuilder.bondIndex();
+                bondIndexBuilder.addRequiredFixings(requiredFixings, leg);
             } else {
                 QL_FAIL("invalid index '" << indexing.index()
                                           << "' in indexing data, expected EQ-, FX-, COMM-, BOND- index");
@@ -2630,11 +2649,9 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
     }
 }
 
-boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
-                                                      const bool relative, const Calendar& fixingCalendar,
-                                                      const bool conditionalOnSurvival,
-                                                      const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                      RequiredFixings& requiredFixings) {
+BondIndexBuilder::BondIndexBuilder(const BondData& securityData, const bool dirty, const bool relative,
+                                   const Calendar& fixingCalendar, const bool conditionalOnSurvival,
+                                   const boost::shared_ptr<EngineFactory>& engineFactory) : dirty_(dirty) {
 
     // build the bond, we would not need a full build with a pricing engine attached, but this is the easiest
     BondData data = securityData;
@@ -2642,12 +2659,7 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
     Bond bond(Envelope(), data);
     bond.build(engineFactory);
 
-    RequiredFixings bondRequiredFixings = bond.requiredFixings();
-    if (dirty) {
-        // dirty prices require accrueds on past dates
-        bondRequiredFixings.unsetPayDates();
-    }
-    requiredFixings.addData(bondRequiredFixings);
+    fixings_ = bond.requiredFixings();
 
     auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
     QL_REQUIRE(qlBond, "buildBondIndex(): could not cast to QuantLib::Bond, this is unexpected");
@@ -2694,9 +2706,35 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
 
     // build and return the index
 
-    return boost::make_shared<QuantExt::BondIndex>(
+    bondIndex_ = boost::make_shared<QuantExt::BondIndex>(
         securityId, dirty, relative, fixingCalendar, qlBond, discountCurve, defaultCurve, recovery, spread, incomeCurve,
         conditionalOnSurvival, data.priceQuoteMethod(), data.priceQuoteBaseValue(), data.isInflationLinked());
+}
+
+boost::shared_ptr<QuantExt::BondIndex> BondIndexBuilder::bondIndex() { return bondIndex_; }
+
+void BondIndexBuilder::addRequiredFixings(RequiredFixings& requiredFixings, Leg leg) {
+    if (dirty_) {
+        QL_REQUIRE(leg.size() > 0, "BondIndexBuild: Leg is required if dirty flag set to true");
+        RequiredFixings legFixings;
+        auto fixingGetter = boost::make_shared<FixingDateGetter>(legFixings);
+        fixingGetter->setRequireFixingStartDates(true);
+        addToRequiredFixings(leg, fixingGetter);
+
+        set<Date> fixingDates;
+
+        auto fixingMap = legFixings.fixingDatesIndices();
+        if (fixingMap.size() > 0) {
+            std::map<std::string, std::set<Date>> indexFixings;
+            for (const auto& [_, dates] : fixingMap) {
+                for (const auto& d : dates) {
+                    auto tmp = fixings_.filteredFixingDates(d);
+                    requiredFixings.addData(tmp);
+                }
+            }
+        }
+    } else 
+        requiredFixings.addData(fixings_);
 }
 
 Leg joinLegs(const std::vector<Leg>& legs) {
@@ -2817,6 +2855,55 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
     } else {
         return Leg();
     }
+}
+
+namespace {
+std::string getCmbLegSecurity(const std::string& genericBond) {
+    return genericBond.substr(0, genericBond.find_last_of('-'));
+}
+
+boost::shared_ptr<BondReferenceDatum> getCmbLegRefData(const CMBLegData& cmbData,
+                                                       const boost::shared_ptr<ReferenceDataManager>& refData) {
+    QL_REQUIRE(refData, "getCmbLegCreditQualifierMapping(): reference data is null");
+    std::string security = getCmbLegSecurity(cmbData.genericBond());
+    if (refData->hasData(ore::data::BondReferenceDatum::TYPE, security)) {
+        auto bondRefData = boost::dynamic_pointer_cast<ore::data::BondReferenceDatum>(
+            refData->getData(ore::data::BondReferenceDatum::TYPE, security));
+        QL_REQUIRE(bondRefData != nullptr, "getCmbLegRefData(): internal error, could not cast to BondReferenceDatum");
+        return bondRefData;
+    }
+    return nullptr;
+}
+} // namespace
+
+std::string getCmbLegCreditRiskCurrency(const CMBLegData& ld, const boost::shared_ptr<ReferenceDataManager>& refData) {
+    if (auto bondRefData = getCmbLegRefData(ld, refData)) {
+        std::string security = getCmbLegSecurity(ld.genericBond());
+        BondData bd(security, 1.0);
+        bd.populateFromBondReferenceData(bondRefData);
+        return bd.currency();
+    }
+    return std::string();
+}
+
+std::pair<std::string, SimmCreditQualifierMapping>
+getCmbLegCreditQualifierMapping(const CMBLegData& ld, const boost::shared_ptr<ReferenceDataManager>& refData,
+                                const std::string& tradeId, const std::string& tradeType) {
+    string source;
+    ore::data::SimmCreditQualifierMapping target;
+    std::string security = getCmbLegSecurity(ld.genericBond());
+    if (auto bondRefData = getCmbLegRefData(ld, refData)) {
+        source = ore::data::securitySpecificCreditCurveName(security, bondRefData->bondData().creditCurveId);
+        target.targetQualifier = security;
+        target.creditGroup = bondRefData->bondData().creditGroup;
+    }
+    if (source.empty() || target.targetQualifier.empty()) {
+        ALOG(ore::data::StructuredTradeErrorMessage(tradeId, tradeType, "getCmbLegCreditQualifierMapping()",
+                                                    "Could not set mapping for CMB Leg security '" +
+                                                        security +
+                                                        "'. Check security name and reference data."));
+    }
+    return std::make_pair(source, target);
 }
 
 } // namespace data
