@@ -55,8 +55,9 @@ private:
     ScheduleData scheduleData_;
     PremiumData premiumData_;
     PayRelativeTo paymentRelativeTo_;
-    QuantLib::Period paymentLag_;
+    int paymentLag_;
     QuantLib::Calendar paymentCalendar_;
+    QuantLib::BusinessDayConvention paymentConvention_;
 
 
 };
