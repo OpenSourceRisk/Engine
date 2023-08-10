@@ -122,8 +122,8 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
         for (auto& s : sv.second) {
             // Where there is SEC and CFTC in the portfolio, we add the CFTC trades to SEC,
             // but still continue with CFTC calculations
-            const bool hasCFTC = s.second.count("CFTC") > 0;
-            const bool hasSEC = s.second.count("SEC") > 0;
+            const bool hasCFTC = s.second.find("CFTC") != s.second.end();
+            const bool hasSEC = s.second.find("SEC") != s.second.end();
             if (hasCFTC && hasSEC) {
                 const SimmNetSensitivities& netRecordsCFTC = s.second.at("CFTC")->netRecords(true);
                 const SimmNetSensitivities& netRecordsSEC = s.second.at("SEC")->netRecords(true);
@@ -139,6 +139,11 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
                     }
                 }
             }
+            // The CrifLoader was set initially without aggregation, so make sure to aggregate this now
+            if (hasCFTC)
+                s.second.at("CFTC")->aggregate();
+            if (hasSEC)
+                s.second.at("SEC")->aggregate();
 
             // If netting set has "Unspecified" plus other regulations, the "Unspecified" sensis are to be excluded.
             // If netting set only has "Unspecified", then no regulations were ever specified, so all trades are
@@ -1682,8 +1687,11 @@ void SimmCalculator::addCrifRecord(const CrifRecord& crifRecord, const SimmSide&
                 tradeIds_[side][nettingSetDetails][r].insert(newCrifRecord.tradeId);
 
             // Add CRIF record to the appropriate regulations
-            if (regSensitivities_[side][nettingSetDetails][r] == nullptr)
-                regSensitivities_[side][nettingSetDetails][r] = boost::make_shared<CrifLoader>(simmConfiguration_, CrifRecord::additionalHeaders, true, true);
+            if (regSensitivities_[side][nettingSetDetails][r] == nullptr) {
+                // We aggregate SEC/CFTC CRIF records later because we do not want to lose trade ID data until we have combined these later.
+                const bool aggregateTrades = r == "SEC" || r == "CFTC" ? false : true;
+                regSensitivities_[side][nettingSetDetails][r] = boost::make_shared<CrifLoader>(simmConfiguration_, CrifRecord::additionalHeaders, true, aggregateTrades);
+            }
 
             // We make sure to ignore amountCcy when aggregating the records, since we will only be using amountUsd,
             // and we may have CRIF records that are equal everywhere except for the amountCcy, and this will fail
