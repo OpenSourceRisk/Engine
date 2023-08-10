@@ -38,6 +38,10 @@ public:
     const std::vector<ore::data::LegData>& legData() const { return legData_; }
     const ore::data::OptionData& optionData() const { return optionData_; }
     QuantLib::Real strike() const { return strike_; }
+    ScheduleData optionStripSchedule() const { return optionStripSchedule_; }
+    BusinessDayConvention optionStripPaymentDateAdjustmentConvention() const { return optionStripPaymentDateAdjustmentConvention_; }
+    int optionStripPaymentDateAdjustmentLag() const { return optionStripPaymentDateAdjustmentLag_; }
+    Calendar optionStripPaymentDateAdjustmentCalendar() const { return optionStripPaymentDateAdjustmentCalendar_; }
 
 private:
     boost::shared_ptr<ore::data::LegData> createLegData() const { return boost::make_shared<ore::data::LegData>(); }
@@ -45,6 +49,11 @@ private:
     std::vector<ore::data::LegData> legData_;
     ore::data::OptionData optionData_;
     QuantLib::Real strike_;
+
+    ScheduleData optionStripSchedule_;
+    BusinessDayConvention optionStripPaymentDateAdjustmentConvention_;
+    int optionStripPaymentDateAdjustmentLag_;
+    Calendar optionStripPaymentDateAdjustmentCalendar_;
 };
 
 class CommoditySpreadOption : public ore::data::Trade {
@@ -72,7 +81,6 @@ public:
 
 private:
     CommoditySpreadOptionData csoData_;
-    std::vector<std::string> fxIndex_;
-    QuantLib::Date expiryDate_;
+    std::vector<std::string> fxIndex_;    
 };
 } // namespace ore::data
