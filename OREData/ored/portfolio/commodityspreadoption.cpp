@@ -19,6 +19,7 @@
 #include <ored/portfolio/commoditylegbuilder.hpp>
 #include <ored/portfolio/commodityspreadoption.hpp>
 #include <ored/utilities/marketdata.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/instruments/commodityspreadoption.hpp>
@@ -34,13 +35,14 @@ namespace ore::data {
 class OptionPaymentDateAdjuster {
 public:
     virtual void updatePaymentDate(const QuantLib::Date& exiryDate, Date& paymentDate) const {
-        // unadjusted
+    // unadjusted
     }
 };
 
-class OptionDataPaymentAdjuster : public OptionPaymentDateAdjuster {
+
+class OptionPaymentDataAdjuster : public OptionPaymentDateAdjuster {
 public:
-    OptionDataPaymentAdjuster(const OptionPaymentData& opd) : opd_(opd) {}
+    OptionPaymentDataAdjuster(const OptionPaymentData& opd) : opd_(opd) {}
 
     void updatePaymentDate(const QuantLib::Date& expiryDate, Date& paymentDate) const override {
         if (opd_.rulesBased()) {
@@ -60,26 +62,27 @@ private:
 
 class OptionStripPaymentDateAdjuster : public OptionPaymentDateAdjuster {
 public:
-    OptionStripPaymentDateAdjuster(const std::vector<Date>& expiryDates, const Schedule& optionStripSchedule,
-                                   const Calendar& calendar, const BusinessDayConvention& bdc, int lag)
-        : latestExpiryDateInStrip_(optionStripSchedule.size(), Date()), optionStripSchedule_(optionStripSchedule),
-          calendar_(calendar), bdc_(bdc), lag_(lag) {
-        QL_REQUIRE(optionStripSchedule.size() >= 2,
+    OptionStripPaymentDateAdjuster(const std::vector<Date>& expiryDates,
+                                   const CommoditySpreadOptionData::OptionStripData& stripData)
+        : calendar_(stripData.calendar()), bdc_(stripData.bdc()), lag_(stripData.lag()) {
+        optionStripSchedule_ = makeSchedule(stripData.schedule());
+        latestExpiryDateInStrip_.resize(optionStripSchedule_.size(), Date());
+        QL_REQUIRE(optionStripSchedule_.size() >= 2,
                    "Need at least a start and end date in the optionstripschedule. Please check the trade xml");
         // Check if the optionstrip definition include all expiries
         Date minExpiryDate = *std::min_element(expiryDates.begin(), expiryDates.end());
         Date maxExpiryDate = *std::max_element(expiryDates.begin(), expiryDates.end());
         Date minOptionStripDate =
-            *std::min_element(optionStripSchedule.dates().begin(), optionStripSchedule.dates().end());
+            *std::min_element(optionStripSchedule_.dates().begin(), optionStripSchedule_.dates().end());
         Date maxOptionStripDate =
-            *std::max_element(optionStripSchedule.dates().begin(), optionStripSchedule.dates().end());
+            *std::max_element(optionStripSchedule_.dates().begin(), optionStripSchedule_.dates().end());
         QL_REQUIRE(
             minOptionStripDate <= minExpiryDate && maxOptionStripDate > maxExpiryDate,
             "optionStrips ending before latest expiry date, please check the optionstrip definition in the trade xml");
         for (const auto& e : expiryDates) {
-            auto it = std::upper_bound(optionStripSchedule.begin(), optionStripSchedule.end(), e);
-            if (it != optionStripSchedule.end()) {
-                auto idx = std::distance(optionStripSchedule.begin(), it);
+            auto it = std::upper_bound(optionStripSchedule_.begin(), optionStripSchedule_.end(), e);
+            if (it != optionStripSchedule_.end()) {
+                auto idx = std::distance(optionStripSchedule_.begin(), it);
                 if (e > latestExpiryDateInStrip_[idx])
                     latestExpiryDateInStrip_[idx] = e;
             }
@@ -107,13 +110,11 @@ private:
 
 boost::shared_ptr<OptionPaymentDateAdjuster> makeOptionPaymentDateAdjuster(CommoditySpreadOptionData& optionData,
                                                                            const std::vector<Date>& expiryDates) {
-    auto schedule = makeSchedule(optionData.optionStripSchedule());
-    if (!schedule.empty()) {
-        return boost::make_shared<OptionStripPaymentDateAdjuster>(
-            expiryDates, schedule, optionData.optionStripPaymentDateAdjustmentCalendar(),
-            optionData.optionStripPaymentDateAdjustmentConvention(), optionData.optionStripPaymentDateAdjustmentLag());
+
+    if (optionData.optionStrip()) {
+        return boost::make_shared<OptionStripPaymentDateAdjuster>(expiryDates, optionData.optionStrip().get());
     } else if (optionData.optionData().paymentData()) {
-        return boost::make_shared<OptionDataPaymentAdjuster>(optionData.optionData().paymentData().get());
+        return boost::make_shared<OptionPaymentDataAdjuster>(optionData.optionData().paymentData().get());
     } else {
         return boost::make_shared<OptionPaymentDateAdjuster>();
     }
@@ -331,20 +332,10 @@ void CommoditySpreadOptionData::fromXML(XMLNode* csoNode) {
         legData_.push_back(*ld);
     }
 
-    XMLNode* payDateOverrideNode = XMLUtils::getChildNode(csoNode, "PaymentAdjustmentForOptionStrips");
-    if (payDateOverrideNode) {
-        XMLNode* optionStripScheduleNode = XMLUtils::getChildNode(payDateOverrideNode, "OptionStripSchedule");
-
-        if (optionStripScheduleNode) {
-
-            optionStripSchedule_.fromXML(optionStripScheduleNode);
-        }
-        optionStripPaymentDateAdjustmentCalendar_ =
-            parseCalendar(XMLUtils::getChildValue(payDateOverrideNode, "AdjustmentCalendar", false, "NullCalendar"));
-        optionStripPaymentDateAdjustmentLag_ =
-            parseInteger(XMLUtils::getChildValue(payDateOverrideNode, "AdjustmentLag", false, "0"));
-        optionStripPaymentDateAdjustmentConvention_ = parseBusinessDayConvention(
-            XMLUtils::getChildValue(payDateOverrideNode, "AdjustmentConvention", false, "MF"));
+    XMLNode* optionStripNode = XMLUtils::getChildNode(csoNode, "OptionStripPaymentDateAdjustment");
+    if (optionStripNode) {
+        optionStrip_ = OptionStripData();
+        optionStrip_->fromXML(optionStripNode);
     }
 
     QL_REQUIRE(legData_[0].isPayer() != legData_[1].isPayer(),
@@ -358,7 +349,29 @@ XMLNode* CommoditySpreadOptionData::toXML(XMLDocument& doc) {
     }
     XMLUtils::appendNode(csoNode, optionData_.toXML(doc));
     XMLUtils::addChild(doc, csoNode, "SpreadStrike", strike_);
+    if (optionStrip_) {
+        XMLUtils::appendNode(csoNode, optionStrip_->toXML(doc));
+    }
     return csoNode;
+}
+
+void CommoditySpreadOptionData::OptionStripData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "OptionStripPaymentDateAdjustment");
+    XMLNode* optionStripScheduleNode = XMLUtils::getChildNode(node, "OptionStripSchedule");
+    QL_REQUIRE(optionStripScheduleNode, "Schedule required to define the option strips");
+    schedule_.fromXML(optionStripScheduleNode);
+    calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", false, "NullCalendar"));
+    lag_ = parseInteger(XMLUtils::getChildValue(node, "AdjustmentLag", false, "0"));
+    bdc_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "AdjustmentConvention", false, "MF"));
+}
+
+XMLNode* CommoditySpreadOptionData::OptionStripData::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("OptionStripPaymentDateAdjustment");
+    XMLUtils::appendNode(node, schedule_.toXML(doc));
+    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
+    XMLUtils::addChild(doc, node, "Lag", to_string(lag_));
+    XMLUtils::addChild(doc, node, "Convention", to_string(bdc_));
+    return node;
 }
 
 } // namespace ore::data

@@ -25,6 +25,25 @@ namespace ore::data {
 
 class CommoditySpreadOptionData : public XMLSerializable {
 public:
+
+    class OptionStripData : public XMLSerializable {
+    public:
+        ScheduleData schedule() const { return schedule_; }
+        BusinessDayConvention bdc() const { return bdc_; }
+        int lag() const { return lag_; }
+        Calendar calendar() const { return calendar_; }
+        //! \name Serialisation
+        //@{
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) override;
+        //@}
+    private:
+        ScheduleData schedule_;
+        BusinessDayConvention bdc_;
+        int lag_;
+        Calendar calendar_;
+    };
+
     CommoditySpreadOptionData() {}
     CommoditySpreadOptionData(const std::vector<ore::data::LegData>& legData, const ore::data::OptionData& optionData,
                               QuantLib::Real strike)
@@ -38,10 +57,7 @@ public:
     const std::vector<ore::data::LegData>& legData() const { return legData_; }
     const ore::data::OptionData& optionData() const { return optionData_; }
     QuantLib::Real strike() const { return strike_; }
-    ScheduleData optionStripSchedule() const { return optionStripSchedule_; }
-    BusinessDayConvention optionStripPaymentDateAdjustmentConvention() const { return optionStripPaymentDateAdjustmentConvention_; }
-    int optionStripPaymentDateAdjustmentLag() const { return optionStripPaymentDateAdjustmentLag_; }
-    Calendar optionStripPaymentDateAdjustmentCalendar() const { return optionStripPaymentDateAdjustmentCalendar_; }
+    boost::optional<OptionStripData> optionStrip() { return optionStrip_; }
 
 private:
     boost::shared_ptr<ore::data::LegData> createLegData() const { return boost::make_shared<ore::data::LegData>(); }
@@ -50,10 +66,8 @@ private:
     ore::data::OptionData optionData_;
     QuantLib::Real strike_;
 
-    ScheduleData optionStripSchedule_;
-    BusinessDayConvention optionStripPaymentDateAdjustmentConvention_;
-    int optionStripPaymentDateAdjustmentLag_;
-    Calendar optionStripPaymentDateAdjustmentCalendar_;
+    boost::optional<OptionStripData> optionStrip_;
+    
 };
 
 class CommoditySpreadOption : public ore::data::Trade {
