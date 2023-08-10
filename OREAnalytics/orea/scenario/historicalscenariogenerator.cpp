@@ -147,12 +147,13 @@ void ReturnConfiguration::check(const RiskFactorKey& key) const {
 
 HistoricalScenarioGenerator::HistoricalScenarioGenerator(
     const boost::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
-    const boost::shared_ptr<ScenarioFactory>& scenarioFactory, const QuantLib::Calendar& cal, const Size mporDays,
+    const boost::shared_ptr<ScenarioFactory>& scenarioFactory, const QuantLib::Calendar& cal,
+    const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const Size mporDays,
     const bool overlapping, const ReturnConfiguration& returnConfiguration,
-    const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const std::string& labelPrefix)
-    : i_(0), historicalScenarioLoader_(historicalScenarioLoader), scenarioFactory_(scenarioFactory), cal_(cal),
-      mporDays_(mporDays), overlapping_(overlapping), returnConfiguration_(returnConfiguration),
-      adjFactors_(adjFactors), labelPrefix_(labelPrefix) {
+    const std::string& labelPrefix)
+    : i_(0), historicalScenarioLoader_(historicalScenarioLoader), scenarioFactory_(scenarioFactory), 
+      cal_(cal), adjFactors_(adjFactors), mporDays_(mporDays), overlapping_(overlapping),
+      returnConfiguration_(returnConfiguration), labelPrefix_(labelPrefix) {
 
     QL_REQUIRE(mporDays > 0, "Invalid mpor days of 0");
 
@@ -369,8 +370,8 @@ void HistoricalScenarioGeneratorTransform::reset() { hsg_->reset(); }
 
 HistoricalScenarioGeneratorWithFilteredDates::HistoricalScenarioGeneratorWithFilteredDates(
     const std::vector<TimePeriod>& filter, const boost::shared_ptr<HistoricalScenarioGenerator>& gen)
-    : HistoricalScenarioGenerator(gen->scenarioLoader(), gen->scenarioFactory(), gen->cal(), gen->mporDays(),
-        gen->overlapping(), gen->returnConfiguration(), gen->adjFactors(), gen->labelPrefix()),
+    : HistoricalScenarioGenerator(gen->scenarioLoader(), gen->scenarioFactory(), gen->cal(), gen->adjFactors(),
+                                  gen->mporDays(), gen->overlapping(), gen->returnConfiguration(), gen->labelPrefix()),
       gen_(gen), i_orig_(0) {
 
     // set base scenario

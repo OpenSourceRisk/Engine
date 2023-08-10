@@ -113,7 +113,7 @@ Real EquityCoupon::quantity() const {
     if (notionalReset_ && quantity_ == Null<Real>()) {
         QL_REQUIRE(legInitialNotional_ != Null<Real>() && legFixingDate_ != Date(),
 		   "leg initial notional and fixing date required to compute the missing quantity in case of a resetting equity leg");
-	quantity_ = legInitialNotional_ / equityCurve_->fixing(legFixingDate_, false, false);
+	    quantity_ = legInitialNotional_ / equityCurve_->fixing(legFixingDate_, false, false);
     }
     return quantity_;
 }
@@ -169,7 +169,8 @@ std::vector<Date> EquityCoupon::fixingDates() const {
 
     fixingDates.push_back(fixingStartDate_);
     fixingDates.push_back(fixingEndDate_);
-
+    if (initialPrice_ == Null<Real>())
+        fixingDates.push_back(legFixingDate_);
     return fixingDates;
 };
 

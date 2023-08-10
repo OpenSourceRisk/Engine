@@ -28,6 +28,8 @@
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <ql/instruments/barriertype.hpp>
+#include <ql/instruments/vanillaoption.hpp>
+#include <ql/instruments/barrieroption.hpp>
 #include <ql/settings.hpp>
 
 using namespace QuantLib;
@@ -58,6 +60,19 @@ Real BarrierOptionWrapper::NPV() const {
     } else {
         // if not exercised we just return the original option's NPV
         Real npv = multiplier2() * getTimedNPV(instrument_) * multiplier_;
+
+        // Handling the edge case where barrier = strike, is KO, and underlying is only ITM when inside KO barrier.
+        // NPV should then be zero, but the pricing engine might not necessarily be pricing it as zero at the boundary.
+        auto vanillaOption = boost::dynamic_pointer_cast<VanillaOption>(activeUnderlyingInstrument_);
+        if (vanillaOption) {
+            auto payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(vanillaOption->payoff());
+            if (payoff && ((barrierType_ == Barrier::DownOut && payoff->optionType() == Option::Put) ||
+                           (barrierType_ == Barrier::UpOut && payoff->optionType() == Option::Call))) {
+                const bool isTouchingOnly = true;
+                if (checkBarrier(payoff->strike(), isTouchingOnly))
+                    npv = 0;
+            }
+        }
         return npv + addNPV;
     }
 }
@@ -71,20 +86,35 @@ const std::map<std::string, boost::any>& BarrierOptionWrapper::additionalResults
         else
             return emptyMap;
     } else {
+        auto vanillaOption = boost::dynamic_pointer_cast<VanillaOption>(activeUnderlyingInstrument_);
+        if (vanillaOption) {
+            auto payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(vanillaOption->payoff());
+            if (payoff && ((barrierType_ == Barrier::DownOut && payoff->optionType() == Option::Put) ||
+                           (barrierType_ == Barrier::UpOut && payoff->optionType() == Option::Call))) {
+                const bool isTouchingOnly = true;
+                if (checkBarrier(payoff->strike(), isTouchingOnly))
+                    return emptyMap;
+            }
+        }
+
         return instrument_->additionalResults();
     }
 }
 
-bool SingleBarrierOptionWrapper::checkBarrier(Real spot, Barrier::Type type, Real barrier) const {
-    switch (type) {
-    case Barrier::DownIn:
-    case Barrier::DownOut:
-        return spot <= barrier;
-    case Barrier::UpIn:
-    case Barrier::UpOut:
-        return spot >= barrier;
-    default:
-        QL_FAIL("unknown barrier type " << type);
+bool SingleBarrierOptionWrapper::checkBarrier(Real spot, bool isTouchingOnly) const {
+    if (isTouchingOnly)
+        return close_enough(spot, barrier_);
+    else {
+        switch (barrierType_) {
+        case Barrier::DownIn:
+        case Barrier::DownOut:    
+            return spot <= barrier_;
+        case Barrier::UpIn:
+        case Barrier::UpOut:
+            return spot >= barrier_;
+        default:
+            QL_FAIL("unknown barrier type " << barrierType_);
+        }
     }
 }
 
@@ -117,7 +147,8 @@ bool SingleBarrierOptionWrapper::exercise() const {
                         // consistent with previous implemention, however maybe we should use fixing
                         // and be strict on needed fixings being present
                         auto fxInd = boost::dynamic_pointer_cast<QuantExt::FxIndex>(eqfxIndex);
-                        trigger = checkBarrier(fixing, barrierType_, barrier_);
+                        const bool isTouchingOnly = false;
+                        trigger = checkBarrier(fixing, isTouchingOnly);
                         if (trigger)
                             exerciseDate_ = d;
                     }
@@ -129,7 +160,8 @@ bool SingleBarrierOptionWrapper::exercise() const {
 
     // check todays spot, if triggered today set the exerciseDate, may have to pay a rebate
     if (!trigger) {
-        trigger = checkBarrier(spot_->value(), barrierType_, barrier_);
+        const bool isTouchingOnly = false;
+        trigger = checkBarrier(spot_->value(), isTouchingOnly);
         if (trigger)
             exerciseDate_ = today;
     }
@@ -138,8 +170,11 @@ bool SingleBarrierOptionWrapper::exercise() const {
     return trigger;
 }
 
-bool DoubleBarrierOptionWrapper::checkBarrier(Real spot, Real barrierLow, Real barrierHigh) const {
-    return spot <= barrierLow || spot >= barrierHigh;
+bool DoubleBarrierOptionWrapper::checkBarrier(Real spot, bool isTouchingOnly) const {
+    if (isTouchingOnly)
+        return close_enough(spot, barrierLow_) || close_enough(spot, barrierHigh_);
+    else
+        return spot <= barrierLow_ || spot >= barrierHigh_;
 }
 
 bool DoubleBarrierOptionWrapper::exercise() const {
@@ -168,7 +203,8 @@ bool DoubleBarrierOptionWrapper::exercise() const {
                                 ", Skipping this date, assuming no trigger",
                             std::map<string, string>({{"exceptionType", "Invalid or missing fixings"}})));
                     } else {
-                        trigger = checkBarrier(fixing, barrierLow_, barrierHigh_);
+                        const bool isTouchingOnly = false;
+                        trigger = checkBarrier(fixing, isTouchingOnly);
                     }
                     d = calendar_.advance(d, 1, Days);
                 }
@@ -178,7 +214,8 @@ bool DoubleBarrierOptionWrapper::exercise() const {
 
     // check todays spot, if triggered today set the exerciseDate, may have to pay a rebate
     if (!trigger) {
-        trigger = checkBarrier(spot_->value(), barrierLow_, barrierHigh_);
+        const bool isTouchingOnly = false;
+        trigger = checkBarrier(spot_->value(), isTouchingOnly);
         exerciseDate_ = today;
     }
 

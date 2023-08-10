@@ -58,14 +58,14 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const BusinessDayConvention& businessDayConvention, const std::string& index,
     const QuantLib::Period& rateComputationPeriod, const Size onCapSettlementDays, const string& discountCurve,
     const string& interpolationMethod, const string& interpolateOn, const string& timeInterpolation,
-    const string& strikeInterpolation, const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig)
+    const string& strikeInterpolation, const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig, const string& inputType)
     : CurveConfig(curveID, curveDescription), volatilityType_(volatilityType), extrapolate_(extrapolate),
       flatExtrapolation_(flatExtrapolation), includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes),
       dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index_(index), rateComputationPeriod_(rateComputationPeriod),
       onCapSettlementDays_(onCapSettlementDays), discountCurve_(discountCurve),
       interpolationMethod_(interpolationMethod), interpolateOn_(interpolateOn), timeInterpolation_(timeInterpolation),
-      strikeInterpolation_(strikeInterpolation), atmTenors_(atmTenors), bootstrapConfig_(bootstrapConfig) {
+      strikeInterpolation_(strikeInterpolation), atmTenors_(atmTenors), bootstrapConfig_(bootstrapConfig), inputType_(inputType) {
 
     // Set extrapolation string. "Linear" just means extrapolation allowed and non-flat.
     extrapolation_ = !extrapolate_ ? "None" : (flatExtrapolation_ ? "Flat" : "Linear");
@@ -214,6 +214,12 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
             bootstrapConfig_.fromXML(n);
         }
 
+		// Optional Input Type
+        inputType_ = "TermVolatilities";
+        if (XMLNode* n = XMLUtils::getChildNode(node, "InputType")) {
+            inputType_ = XMLUtils::getNodeValue(n);
+        }
+
         // Set type_
         configureType();
 
@@ -278,6 +284,7 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "StrikeInterpolation", strikeInterpolation_);
         XMLUtils::addChild(doc, node, "QuoteIncludesIndexName", quoteIncludesIndexName_);
         XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
+		XMLUtils::addChild(doc, node, "InputType", inputType_);
     }
 
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
@@ -347,7 +354,7 @@ void CapFloorVolatilityCurveConfig::populateQuotes() {
     }
 
     // ATM quotes. So, ATM flag is true i.e. 1 and RELATIVE flag is true with strike set to 0.
-    if (type_ == Type::Atm || type_ == Type::SurfaceWithAtm) {
+    if (type_ == Type::TermAtm || type_ == Type::TermSurfaceWithAtm) {
         for (const string& t : atmTenors_) {
             quotes_.push_back(stem + t + "/" + tenor + "/1/1/0");
         }
@@ -374,7 +381,12 @@ void CapFloorVolatilityCurveConfig::configureVolatilityType(const std::string& t
 }
 
 void CapFloorVolatilityCurveConfig::configureType() {
-    type_ = strikes_.empty() ? Type::Atm : (includeAtm_ ? Type::SurfaceWithAtm : Type::Surface);
+    if (inputType_ == "TermVolatilities")
+        type_ = strikes_.empty() ? Type::TermAtm : (includeAtm_ ? Type::TermSurfaceWithAtm : Type::TermSurface);
+    else if (inputType_ == "OptionletVolatilities")
+        type_ = strikes_.empty() ? Type::OptionletAtm : (includeAtm_ ? Type::OptionletSurfaceWithAtm : Type::OptionletSurface);
+    else
+        QL_FAIL("InputType  " << inputType_ << " not supported");
 }
 
 void CapFloorVolatilityCurveConfig::validate() const {

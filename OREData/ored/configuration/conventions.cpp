@@ -69,6 +69,32 @@ namespace data {
 
 Convention::Convention(const string& id, Type type) : type_(type), id_(id) {}
 
+const boost::shared_ptr<ore::data::Conventions>& InstrumentConventions::conventions(QuantLib::Date d) const {
+    QL_REQUIRE(!conventions_.empty(), "InstrumentConventions: No conventions provided.");
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    Date dt = d == Date() ? Settings::instance().evaluationDate() : d;
+    auto it = conventions_.lower_bound(dt);
+    if(it != conventions_.end() && it->first == dt)
+        return it->second;
+    QL_REQUIRE(it != conventions_.begin(), "InstrumentConventions: Could not find conventions for " << dt);
+    --it;
+    constexpr std::size_t max_num_warnings = 10;
+    if (numberOfEmittedWarnings_ < max_num_warnings) {
+        ++numberOfEmittedWarnings_;
+        WLOG("InstrumentConventions: Could not find conventions for "
+             << dt << ", using convetions from " << it->first
+             << (numberOfEmittedWarnings_ == max_num_warnings ? " (no more warnings of this type will be emitted)"
+                                                              : ""));
+    }
+    return it->second;
+}
+
+void InstrumentConventions::setConventions(
+    const boost::shared_ptr<ore::data::Conventions>& conventions, QuantLib::Date d) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    conventions_[d] = conventions;
+}
+
 ZeroRateConvention::ZeroRateConvention(const string& id, const string& dayCounter, const string& compounding,
                                        const string& compoundingFrequency)
     : Convention(id, Type::Zero), tenorBased_(false), strDayCounter_(dayCounter), strCompounding_(compounding),
@@ -574,11 +600,12 @@ boost::shared_ptr<OvernightIndex> AverageOisConvention::index() const {
 }
 
 TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex,
-                                                   const string& shortPayTenor, const string& spreadOnShort,
-                                                   const string& includeSpread, const string& subPeriodsCouponType)
+                                                   const string& shortPayTenor, const string& longPayTenor,
+                                                   const string& spreadOnShort, const string& includeSpread, 
+                                                   const string& subPeriodsCouponType)
     : Convention(id, Type::TenorBasisSwap), strLongIndex_(longIndex), strShortIndex_(shortIndex),
-      strShortPayTenor_(shortPayTenor), strSpreadOnShort_(spreadOnShort), strIncludeSpread_(includeSpread),
-      strSubPeriodsCouponType_(subPeriodsCouponType) {
+      strShortPayTenor_(shortPayTenor), strLongPayTenor_(longPayTenor), strSpreadOnShort_(spreadOnShort),
+      strIncludeSpread_(includeSpread), strSubPeriodsCouponType_(subPeriodsCouponType) {
     build();
 }
 
@@ -586,6 +613,7 @@ void TenorBasisSwapConvention::build() {
     parseIborIndex(strLongIndex_);
     parseIborIndex(strShortIndex_);
     shortPayTenor_ = strShortPayTenor_.empty() ? shortIndex()->tenor() : parsePeriod(strShortPayTenor_);
+    longPayTenor_ = strLongPayTenor_.empty() ? longIndex()->tenor() : parsePeriod(strLongPayTenor_);
     spreadOnShort_ = strSpreadOnShort_.empty() ? true : parseBool(strSpreadOnShort_);
     includeSpread_ = strIncludeSpread_.empty() ? false : parseBool(strIncludeSpread_);
     subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? SubPeriodsCoupon1::Compounding
@@ -602,6 +630,7 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     strLongIndex_ = XMLUtils::getChildValue(node, "LongIndex", true);
     strShortIndex_ = XMLUtils::getChildValue(node, "ShortIndex", true);
     strShortPayTenor_ = XMLUtils::getChildValue(node, "ShortPayTenor", false);
+    strLongPayTenor_ = XMLUtils::getChildValue(node, "LongPayTenor", false);
     strSpreadOnShort_ = XMLUtils::getChildValue(node, "SpreadOnShort", false);
     strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
     strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
@@ -617,6 +646,8 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "ShortIndex", strShortIndex_);
     if (!strShortPayTenor_.empty())
         XMLUtils::addChild(doc, node, "ShortPayTenor", strShortPayTenor_);
+    if (!strLongPayTenor_.empty())
+        XMLUtils::addChild(doc, node, "LongPayTenor", strLongPayTenor_);
     if (!strSpreadOnShort_.empty())
         XMLUtils::addChild(doc, node, "SpreadOnShort", strSpreadOnShort_);
     if (!strIncludeSpread_.empty())
@@ -1954,6 +1985,8 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
 
     balanceOfTheMonthPricingCalendarStr_ = XMLUtils::getChildValue(node, "BalanceOfTheMonthPricingCalendar", false, "");
 
+    optionUnderlyingFutureConvention_ = XMLUtils::getChildValue(node, "OptionUnderlyingFutureConvention", false, "");
+
     build();
 }
 
@@ -2079,7 +2112,11 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
     }
 
     if (balanceOfTheMonthPricingCalendar_ != Calendar()) {
-            XMLUtils::addChild(doc, node, "BalanceOfTheMonthPricingCalendar", to_string(balanceOfTheMonthPricingCalendar_));
+        XMLUtils::addChild(doc, node, "BalanceOfTheMonthPricingCalendar", to_string(balanceOfTheMonthPricingCalendar_));
+    }
+
+    if (!optionUnderlyingFutureConvention_.empty()) {
+        XMLUtils::addChild(doc, node, "OptionUnderlyingFutureConvention", optionUnderlyingFutureConvention_);
     }
 
     return node;

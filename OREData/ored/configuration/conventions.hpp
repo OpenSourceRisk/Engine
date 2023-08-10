@@ -159,21 +159,17 @@ class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions, 
     friend class QuantLib::Singleton<InstrumentConventions, std::integral_constant<bool, true>>;
 
 private:
-    // may be empty but never uninitialised
-    InstrumentConventions() : conventions_(boost::make_shared<ore::data::Conventions>()) {}
+    InstrumentConventions() { conventions_[Date()] = boost::make_shared<ore::data::Conventions>(); }
 
-    boost::shared_ptr<ore::data::Conventions> conventions_;
+    mutable std::map<QuantLib::Date, boost::shared_ptr<ore::data::Conventions>> conventions_;
     mutable boost::shared_mutex mutex_;
+    mutable std::size_t numberOfEmittedWarnings_ = 0;
 
 public:
-    const boost::shared_ptr<ore::data::Conventions>& conventions() const {
-        boost::shared_lock<boost::shared_mutex> lock(mutex_);
-        return conventions_;
-    }
-    void setConventions(const boost::shared_ptr<ore::data::Conventions>& conventions) {
-        boost::unique_lock<boost::shared_mutex> lock(mutex_);
-        conventions_ = conventions;
-    }
+    const boost::shared_ptr<ore::data::Conventions>& conventions(QuantLib::Date d = QuantLib::Date()) const;
+    void setConventions(const boost::shared_ptr<ore::data::Conventions>& conventions,
+                        QuantLib::Date d = QuantLib::Date());
+    void clear() { conventions_.clear(); }
 };
 
 //! Container for storing Zero Rate conventions
@@ -639,8 +635,9 @@ public:
     TenorBasisSwapConvention() {}
     //! Detailed constructor
     TenorBasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex,
-                             const string& shortPayTenor = "", const string& spreadOnShort = "",
-                             const string& includeSpread = "", const string& subPeriodsCouponType = "");
+                             const string& shortPayTenor = "", const string& longPayTenor = "",
+                             const string& spreadOnShort = "", const string& includeSpread = "", 
+                             const string& subPeriodsCouponType = "");
     //@}
 
     //! \name Inspectors
@@ -650,6 +647,7 @@ public:
     const string& longIndexName() const { return strLongIndex_; }
     const string& shortIndexName() const { return strShortIndex_; }
     const Period& shortPayTenor() const { return shortPayTenor_; }
+    const Period& longPayTenor() const { return longPayTenor_; }
     bool spreadOnShort() const { return spreadOnShort_; }
     bool includeSpread() const { return includeSpread_; }
     SubPeriodsCoupon1::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
@@ -664,6 +662,7 @@ public:
 
 private:
     Period shortPayTenor_;
+    Period longPayTenor_;
     bool spreadOnShort_;
     bool includeSpread_;
     SubPeriodsCoupon1::Type subPeriodsCouponType_;
@@ -672,6 +671,7 @@ private:
     string strLongIndex_;
     string strShortIndex_;
     string strShortPayTenor_;
+    string strLongPayTenor_;
     string strSpreadOnShort_;
     string strIncludeSpread_;
     string strSubPeriodsCouponType_;
@@ -1598,6 +1598,7 @@ public:
     const std::set<QuantLib::Month>& validContractMonths() const { return validContractMonths_; }
     bool balanceOfTheMonth() const { return balanceOfTheMonth_; }
     Calendar balanceOfTheMonthPricingCalendar() const { return balanceOfTheMonthPricingCalendar_; }
+    const std::string& optionUnderlyingFutureConvention() const { return optionUnderlyingFutureConvention_; }
     //@}
 
     //! Serialisation
@@ -1672,6 +1673,8 @@ private:
     bool balanceOfTheMonth_;
     std::string balanceOfTheMonthPricingCalendarStr_;
     Calendar balanceOfTheMonthPricingCalendar_;
+    //! Option Underlying Future convention
+    std::string optionUnderlyingFutureConvention_;
     //! Populate and check frequency.
     Frequency parseAndValidateFrequency(const std::string& strFrequency);
 

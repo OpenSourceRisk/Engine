@@ -103,18 +103,6 @@ void PricingAnalyticImpl::runAnalytic(
                 analytic()->reports()[type]["additional_results"] = addReport;
                 CONSOLE("OK");
             }
-            // FIXME: Leave this here as additional output within the NPV analytic, or store report as separate analytic?
-            if (inputs_->outputTodaysMarketCalibration()) {
-                CONSOLEW("Pricing: Market Calibration");
-                LOG("Write todays market calibration report");
-                auto t = boost::dynamic_pointer_cast<TodaysMarket>(analytic()->market());
-                QL_REQUIRE(t != nullptr, "expected todays market instance");
-                boost::shared_ptr<InMemoryReport> mktReport = boost::make_shared<InMemoryReport>();
-                ReportWriter(inputs_->reportNaString())
-                    .writeTodaysMarketCalibrationReport(*mktReport, t->calibrationInfo());
-                analytic()->reports()[type]["todaysmarketcalibration"] = mktReport;
-                CONSOLE("OK");
-            }
             if (inputs_->outputCurves()) {
                 CONSOLEW("Pricing: Curves Report");
                 LOG("Write curves report");

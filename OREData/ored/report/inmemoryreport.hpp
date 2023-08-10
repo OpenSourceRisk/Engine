@@ -67,6 +67,29 @@ public:
         return *this;
     }
 
+    Report& add(const InMemoryReport& report) {
+        QL_REQUIRE(columns() == report.columns(),
+                   "Cannot combine reports of different sizes (" << columns() << " vs " << report.columns() << ").");
+        end();
+        for (Size i = 0; i < columns(); i++) {
+            string h1 = headers_[i];
+            string h2 = report.header(i);
+            QL_REQUIRE(h1 == h2, "Cannot combine reports with different headers (\"" << h1 << "\" and \"" << h2 << "\")");
+        }
+
+        if (i_ == headers_.size())
+            next();
+        
+        for (Size rowIdx = 0; rowIdx < report.rows(); rowIdx++) {
+            for (Size columnIdx = 0; columnIdx < report.columns(); columnIdx++) {
+                add(report.data(columnIdx)[rowIdx]);
+            }
+            next();
+        }
+        
+        return *this;
+    }
+
     void end() override {
         QL_REQUIRE(i_ == headers_.size() || i_ == 0,
                    "report is finalized with incomplete row, got data for " << i_ << " columns out of " << columns());
@@ -74,7 +97,7 @@ public:
 
     // InMemoryInterface
     Size columns() const { return headers_.size(); }
-    Size rows() const { return data_[0].size(); }
+    Size rows() const { return columns() == 0 ? 0 : data_[0].size(); }
     const string& header(Size i) const { return headers_[i]; }
     bool hasHeader(string h) const { return std::find(headers_.begin(), headers_.end(), h) != headers_.end(); }
     ReportType columnType(Size i) const { return columnTypes_[i]; }

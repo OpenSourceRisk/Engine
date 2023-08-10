@@ -151,6 +151,9 @@ public:
     const boost::shared_ptr<CurveConfig>& get(const CurveSpec::CurveType& type, const string& curveId) const;
     void parseAll();
 
+    /*! add curve configs from given container that are not present in this container */
+    void addAdditionalCurveConfigs(const CurveConfigurations& c);
+
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;

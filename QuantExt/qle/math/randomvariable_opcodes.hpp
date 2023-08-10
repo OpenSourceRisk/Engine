@@ -18,6 +18,9 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 namespace QuantExt {
 
 struct RandomVariableOpCode {

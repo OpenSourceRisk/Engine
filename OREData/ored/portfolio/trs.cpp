@@ -573,6 +573,18 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         fundingLegs.push_back(legBuilder->buildLeg(ld, engineFactory, requiredFixings_,
                                                    engineFactory->configuration(MarketContext::pricing)));
         fundingNotionalTypes.push_back(notionalType);
+
+        // update credit risk currency and credit qualifier mapping for CMB leg
+        if (ld.legType() == "CMB") {
+            auto cmbData = boost::dynamic_pointer_cast<ore::data::CMBLegData>(ld.concreteLegData());
+            QL_REQUIRE(cmbData, "TRS::build(): internal error, could to cast to CMBLegData.");
+            if(creditRiskCurrency_.empty())
+                creditRiskCurrency_ = getCmbLegCreditRiskCurrency(*cmbData, engineFactory->referenceData());
+            auto [source, target] =
+                getCmbLegCreditQualifierMapping(*cmbData, engineFactory->referenceData(), id(), tradeType());
+            creditQualifierMapping_[source] = target;
+            creditQualifierMapping_[ore::data::creditCurveNameFromSecuritySpecificCreditCurveName(source)] = target;
+        }
     }
 
     // add required fixings for funding legs with daily resets

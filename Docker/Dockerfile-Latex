@@ -8,7 +8,7 @@ RUN cd / \
  && apt-get install -f -y wget \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
- && wget http://personal.psu.edu/jcc8//software/latexmk-jcc/latexmk-469a.zip \
+ && wget https://www.cantab.net/users/johncollins/software/latexmk-jcc/latexmk-469a.zip \
  && unzip latexmk-469a.zip \
  && rm -f latexmk-469a.zip \
  && mv /usr/bin/latexmk /usr/bin/latexmk_base \

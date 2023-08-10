@@ -89,7 +89,8 @@ void CommodityOptionStrip::build(const boost::shared_ptr<EngineFactory>& engineF
     auto legBuilder = engineFactory->legBuilder(legData_.legType());
     auto cflb = boost::dynamic_pointer_cast<CommodityFloatingLegBuilder>(legBuilder);
     QL_REQUIRE(cflb, "Expected a CommodityFloatingLegBuilder for leg type " << legData_.legType());
-    Leg leg = cflb->buildLeg(legData_, engineFactory, requiredFixings_, "");
+    Leg leg =
+        cflb->buildLeg(legData_, engineFactory, requiredFixings_, engineFactory->configuration(MarketContext::pricing));
 
     // Perform checks
     check(leg.size());

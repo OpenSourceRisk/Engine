@@ -141,8 +141,9 @@
     <xs:all>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="LongIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="period" name="LongPayTenor" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="ShortIndex" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="ShortPayTenor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="period" name="ShortPayTenor" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="SpreadOnShort" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="IncludeSpread" minOccurs="0" maxOccurs="1"/>
       <xs:element type="subPeriodsCouponType" name="SubPeriodsCouponType" minOccurs="0" maxOccurs="1"/>
@@ -443,6 +444,7 @@
       <xs:element type="xs:string" name="SavingsTime" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="BalanceOfTheMonth" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="BalanceOfTheMonthPricingCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="OptionUnderlyingFutureConvention" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
