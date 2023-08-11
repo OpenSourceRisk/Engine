@@ -329,6 +329,8 @@ SimmConfiguration::IMModel parseIMModel(const std::string& pc);
 
 SimmConfiguration::Regulation parseRegulation(const std::string& regulation);
 
+std::string combineRegulations(const std::string&, const std::string&);
+
 //! Reads a string containing regulations applicable for a given CRIF record
 std::set<std::string> parseRegulationString(const std::string& regsString,
                                             const std::set<std::string>& valueIfEmpty = {"Unspecified"});

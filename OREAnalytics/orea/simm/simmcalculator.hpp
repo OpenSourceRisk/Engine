@@ -211,7 +211,7 @@ private:
              const bool overwrite = true);
 
     //! Add CRIF record to the CRIF records container that correspondsd to the given regulation/s and portfolio ID
-    void addCrifRecord(const CrifRecord& crifRecord, const SimmSide& side, const bool enforceIMRegulations);
+    void addCrifRecord(const CrifRecord& crifRecord, const bool enforceIMRegulations);
 
     //! Give the \f$\lambda\f$ used in the curvature margin calculation
     QuantLib::Real lambda(QuantLib::Real theta) const;
