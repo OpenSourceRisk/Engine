@@ -382,33 +382,27 @@ CPILeg::operator Leg() const {
                 BusinessDayConvention bdc = schedule_.businessDayConvention();
                 refEnd = schedule_.calendar().adjust(start + schedule_.tenor(), bdc);
             }
-            if (detail::get(fixedRates_, i, 1.0) == 0.0) { // fixed coupon
-                leg.push_back(ext::shared_ptr<CashFlow>(
-                    new FixedRateCoupon(paymentDate, detail::get(notionals_, i, 0.0),
-                                        detail::effectiveFixedRate(spreads_, caps_, floors_, i), paymentDayCounter_,
-                                        start, end, refStart, refEnd, exCouponDate)));
-            } else { // zero inflation coupon
-                ext::shared_ptr<CPICoupon> coup;
 
-                coup = ext::make_shared<CPICoupon>(
-                    baseCPI_, // all have same base for ratio
-                    baseDate,
-                    paymentDate, detail::get(notionals_, i, 0.0), start, end, index_,
-                    observationLag_, observationInterpolation_, paymentDayCounter_, detail::get(fixedRates_, i, 0.0),
-                    detail::get(spreads_, i, 0.0), refStart, refEnd, exCouponDate, subtractInflationNominalAllCoupons_);
+            ext::shared_ptr<CPICoupon> coup;
 
-                // set a pricer for the underlying coupon straight away because it only provides computation - not data
-                ext::shared_ptr<CPICouponPricer> pricer(new CPICouponPricer(Handle<YieldTermStructure>(rateCurve_)));
-                coup->setPricer(pricer);
+            coup = ext::make_shared<CPICoupon>(
+                baseCPI_, // all have same base for ratio
+                baseDate,
+                paymentDate, detail::get(notionals_, i, 0.0), start, end, index_,
+                observationLag_, observationInterpolation_, paymentDayCounter_, detail::get(fixedRates_, i, 0.0),
+                detail::get(spreads_, i, 0.0), refStart, refEnd, exCouponDate, subtractInflationNominalAllCoupons_);
 
-                if (detail::noOption(caps_, floors_, i)) { // just swaplet
-                    leg.push_back(ext::dynamic_pointer_cast<CashFlow>(coup));
-                } else { // cap/floorlet
-                    ext::shared_ptr<CappedFlooredCPICoupon> cfCoup = ext::make_shared<CappedFlooredCPICoupon>(
-                        coup, startDate_, detail::get(caps_, i, Null<Rate>()), detail::get(floors_, i, Null<Rate>()));
-                    // in this case we need to set the "outer" pricer later that handles cap and floor
-                    leg.push_back(ext::dynamic_pointer_cast<CashFlow>(cfCoup));
-                }
+            // set a pricer for the underlying coupon straight away because it only provides computation - not data
+            ext::shared_ptr<CPICouponPricer> pricer(new CPICouponPricer(Handle<YieldTermStructure>(rateCurve_)));
+            coup->setPricer(pricer);
+
+            if (detail::noOption(caps_, floors_, i)) { // just swaplet
+                leg.push_back(ext::dynamic_pointer_cast<CashFlow>(coup));
+            } else { // cap/floorlet
+                ext::shared_ptr<CappedFlooredCPICoupon> cfCoup = ext::make_shared<CappedFlooredCPICoupon>(
+                    coup, startDate_, detail::get(caps_, i, Null<Rate>()), detail::get(floors_, i, Null<Rate>()));
+                // in this case we need to set the "outer" pricer later that handles cap and floor
+                leg.push_back(ext::dynamic_pointer_cast<CashFlow>(cfCoup));
             }
         }
     }
