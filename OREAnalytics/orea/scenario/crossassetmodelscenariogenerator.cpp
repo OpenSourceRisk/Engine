@@ -205,9 +205,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // Cache CrState keys
-    Size n_crstates = simMarketConfig_->numberOfCreditStates();
-    crStateKeys_.reserve(n_crstates);
-    for (Size j = 0; j < n_crstates; ++j) {
+    crStateKeys_.reserve(n_crstates_);
+    for (Size j = 0; j < n_crstates_; ++j) {
         ostringstream numStr;
         numStr << j;
         crStateKeys_.emplace_back(RiskFactorKey::KeyType::CreditState, numStr.str());
