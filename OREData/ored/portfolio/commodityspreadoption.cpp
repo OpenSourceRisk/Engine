@@ -111,9 +111,9 @@ private:
 boost::shared_ptr<OptionPaymentDateAdjuster> makeOptionPaymentDateAdjuster(CommoditySpreadOptionData& optionData,
                                                                            const std::vector<Date>& expiryDates) {
 
-    if (optionData.optionStrip()) {
+    if (optionData.optionStrip().has_value()) {
         return boost::make_shared<OptionStripPaymentDateAdjuster>(expiryDates, optionData.optionStrip().get());
-    } else if (optionData.optionData().paymentData()) {
+    } else if (optionData.optionData().paymentData().has_value()) {
         return boost::make_shared<OptionPaymentDataAdjuster>(optionData.optionData().paymentData().get());
     } else {
         return boost::make_shared<OptionPaymentDateAdjuster>();
@@ -332,7 +332,7 @@ void CommoditySpreadOptionData::fromXML(XMLNode* csoNode) {
         legData_.push_back(*ld);
     }
 
-    XMLNode* optionStripNode = XMLUtils::getChildNode(csoNode, "OptionStripPaymentDateAdjustment");
+    XMLNode* optionStripNode = XMLUtils::getChildNode(csoNode, "OptionStripPaymentDates");
     if (optionStripNode) {
         optionStrip_ = OptionStripData();
         optionStrip_->fromXML(optionStripNode);
@@ -349,28 +349,30 @@ XMLNode* CommoditySpreadOptionData::toXML(XMLDocument& doc) {
     }
     XMLUtils::appendNode(csoNode, optionData_.toXML(doc));
     XMLUtils::addChild(doc, csoNode, "SpreadStrike", strike_);
-    if (optionStrip_) {
+    if (optionStrip_.has_value()) {
         XMLUtils::appendNode(csoNode, optionStrip_->toXML(doc));
     }
     return csoNode;
 }
 
 void CommoditySpreadOptionData::OptionStripData::fromXML(XMLNode* node) {
-    XMLUtils::checkNode(node, "OptionStripPaymentDateAdjustment");
-    XMLNode* optionStripScheduleNode = XMLUtils::getChildNode(node, "OptionStripSchedule");
+    XMLUtils::checkNode(node, "OptionStripPaymentDates");
+    XMLNode* optionStripScheduleNode = XMLUtils::getChildNode(node, "OptionStripDefinition");
     QL_REQUIRE(optionStripScheduleNode, "Schedule required to define the option strips");
     schedule_.fromXML(optionStripScheduleNode);
-    calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", false, "NullCalendar"));
-    lag_ = parseInteger(XMLUtils::getChildValue(node, "AdjustmentLag", false, "0"));
-    bdc_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "AdjustmentConvention", false, "MF"));
+    calendar_ = parseCalendar(XMLUtils::getChildValue(node, "PaymentCalendar", false, "NullCalendar"));
+    lag_ = parseInteger(XMLUtils::getChildValue(node, "PaymentLag", false, "0"));
+    bdc_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "PaymentConvention", false, "MF"));
 }
 
 XMLNode* CommoditySpreadOptionData::OptionStripData::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("OptionStripPaymentDateAdjustment");
-    XMLUtils::appendNode(node, schedule_.toXML(doc));
-    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
-    XMLUtils::addChild(doc, node, "Lag", to_string(lag_));
-    XMLUtils::addChild(doc, node, "Convention", to_string(bdc_));
+    XMLNode* node = doc.allocNode("OptionStripPaymentDates");
+    auto tmp = schedule_.toXML(doc);
+    XMLUtils::setNodeName(doc, tmp, "OptionStripDefinition");
+    XMLUtils::appendNode(node, tmp);
+    XMLUtils::addChild(doc, node, "PaymentCalendar", to_string(calendar_));
+    XMLUtils::addChild(doc, node, "PaymentLag", to_string(lag_));
+    XMLUtils::addChild(doc, node, "PaymentConvention", to_string(bdc_));
     return node;
 }
 
