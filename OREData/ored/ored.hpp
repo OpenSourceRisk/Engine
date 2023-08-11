@@ -201,7 +201,6 @@
 #include <ored/portfolio/commodityoptionstrip.hpp>
 #include <ored/portfolio/commodityposition.hpp>
 #include <ored/portfolio/commodityspreadoption.hpp>
-#include <ored/portfolio/commodityspreadoptionstrip.hpp>
 #include <ored/portfolio/commodityswap.hpp>
 #include <ored/portfolio/commodityswaption.hpp>
 #include <ored/portfolio/compositeinstrumentwrapper.hpp>
