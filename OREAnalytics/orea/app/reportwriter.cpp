@@ -906,59 +906,71 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
         .addColumn("BaselEPE", double(), precision)
         .addColumn("BaselEEPE", double(), precision);
 
-    for (const auto& [n,_] : postProcess->nettingSetIds()) {
-        report.next()
-            .add("")
-            .add(n)
-            .add(postProcess->nettingSetCVA(n))
-            .add(postProcess->nettingSetDVA(n))
-            .add(postProcess->nettingSetFBA(n))
-            .add(postProcess->nettingSetFCA(n))
-            .add(postProcess->nettingSetFBA_exOwnSP(n))
-            .add(postProcess->nettingSetFCA_exOwnSP(n))
-            .add(postProcess->nettingSetFBA_exAllSP(n))
-            .add(postProcess->nettingSetFCA_exAllSP(n))
-            .add(postProcess->nettingSetCOLVA(n))
-            .add(postProcess->nettingSetMVA(n))
-            .add(postProcess->nettingSetOurKVACCR(n))
-            .add(postProcess->nettingSetTheirKVACCR(n))
-            .add(postProcess->nettingSetOurKVACVA(n))
-            .add(postProcess->nettingSetTheirKVACVA(n))
-            .add(postProcess->nettingSetCollateralFloor(n))
-            .add(postProcess->nettingSetCVA(n))
-            .add(postProcess->nettingSetDVA(n))
-            .add(allocationMethod)
-            .add(postProcess->netEPE_B(n))
-            .add(postProcess->netEEPE_B(n));
+    for (const auto& [n, _] : postProcess->nettingSetIds()) {
+        try {
+            postProcess->nettingSetCVA(n);
+            report.next()
+                .add("")
+                .add(n)
+                .add(postProcess->nettingSetCVA(n))
+                .add(postProcess->nettingSetDVA(n))
+                .add(postProcess->nettingSetFBA(n))
+                .add(postProcess->nettingSetFCA(n))
+                .add(postProcess->nettingSetFBA_exOwnSP(n))
+                .add(postProcess->nettingSetFCA_exOwnSP(n))
+                .add(postProcess->nettingSetFBA_exAllSP(n))
+                .add(postProcess->nettingSetFCA_exAllSP(n))
+                .add(postProcess->nettingSetCOLVA(n))
+                .add(postProcess->nettingSetMVA(n))
+                .add(postProcess->nettingSetOurKVACCR(n))
+                .add(postProcess->nettingSetTheirKVACCR(n))
+                .add(postProcess->nettingSetOurKVACVA(n))
+                .add(postProcess->nettingSetTheirKVACVA(n))
+                .add(postProcess->nettingSetCollateralFloor(n))
+                .add(postProcess->nettingSetCVA(n))
+                .add(postProcess->nettingSetDVA(n))
+                .add(allocationMethod)
+                .add(postProcess->netEPE_B(n))
+                .add(postProcess->netEEPE_B(n));
+        } catch (const std::exception& e) {
+            ALOG(StructuredAnalyticsErrorMessage("XVA Report", "Error during writing xva for netting set.", e.what(),
+                                                 {{"nettingSetId", n}}));
+        }
 
         for (auto& [tid, trade] : portfolio->trades()) {
-            
+
             string nid = trade->envelope().nettingSetId();
             if (nid != n)
                 continue;
-            report.next()
-                .add(tid)
-                .add(nid)
-                .add(postProcess->tradeCVA(tid))
-                .add(postProcess->tradeDVA(tid))
-                .add(postProcess->tradeFBA(tid))
-                .add(postProcess->tradeFCA(tid))
-                .add(postProcess->tradeFBA_exOwnSP(tid))
-                .add(postProcess->tradeFCA_exOwnSP(tid))
-                .add(postProcess->tradeFBA_exAllSP(tid))
-                .add(postProcess->tradeFCA_exAllSP(tid))
-                .add(Null<Real>())
-                .add(Null<Real>())
-                .add(Null<Real>())
-                .add(Null<Real>())
-                .add(Null<Real>())
-                .add(Null<Real>())
-                .add(Null<Real>())
-                .add(postProcess->allocatedTradeCVA(tid))
-                .add(postProcess->allocatedTradeDVA(tid))
-                .add(allocationMethod)
-                .add(postProcess->tradeEPE_B(tid))
-                .add(postProcess->tradeEEPE_B(tid));
+            try {
+                postProcess->tradeCVA(tid);
+                report.next()
+                    .add(tid)
+                    .add(nid)
+                    .add(postProcess->tradeCVA(tid))
+                    .add(postProcess->tradeDVA(tid))
+                    .add(postProcess->tradeFBA(tid))
+                    .add(postProcess->tradeFCA(tid))
+                    .add(postProcess->tradeFBA_exOwnSP(tid))
+                    .add(postProcess->tradeFCA_exOwnSP(tid))
+                    .add(postProcess->tradeFBA_exAllSP(tid))
+                    .add(postProcess->tradeFCA_exAllSP(tid))
+                    .add(Null<Real>())
+                    .add(Null<Real>())
+                    .add(Null<Real>())
+                    .add(Null<Real>())
+                    .add(Null<Real>())
+                    .add(Null<Real>())
+                    .add(Null<Real>())
+                    .add(postProcess->allocatedTradeCVA(tid))
+                    .add(postProcess->allocatedTradeDVA(tid))
+                    .add(allocationMethod)
+                    .add(postProcess->tradeEPE_B(tid))
+                    .add(postProcess->tradeEEPE_B(tid));
+            } catch (const std::exception& e) {
+                ALOG(StructuredAnalyticsErrorMessage("XVA Report", "Error during writing xva for trade.", e.what(),
+                                                     {{"tradeId", n}}));
+            }
         }
     }
     report.end();
