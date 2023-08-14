@@ -125,7 +125,7 @@ public:
         QL_REQUIRE(barrierLow < barrierHigh, "barrierLow has to be less than barrierHigh");
     }
         
-    bool checkBarrier(Real spot, bool isTouchingOnly) const;
+    bool checkBarrier(Real spot, bool isTouchingOnly) const override;
     bool exercise() const override;
 
 protected:

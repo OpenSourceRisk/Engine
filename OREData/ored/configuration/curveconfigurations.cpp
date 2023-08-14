@@ -259,13 +259,12 @@ std::set<string> CurveConfigurations::quotes() const {
 std::set<string> CurveConfigurations::conventions(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
                                                   const set<string>& configurations) const {
     set<string> conventions = minimalCurveConfig(todaysMarketParams, configurations)->conventions();
+
     // Checking for any swapIndices
-
     if (todaysMarketParams->hasMarketObject(MarketObject::SwapIndexCurve)) {
-        auto mapping = todaysMarketParams->mapping(MarketObject::SwapIndexCurve, Market::defaultConfiguration);
-
-        for (auto m : mapping)
+        for (const auto& m : todaysMarketParams->mapping(MarketObject::SwapIndexCurve, Market::defaultConfiguration)) {
             conventions.insert(m.first);
+        }
     }
 
     return conventions;
@@ -279,7 +278,8 @@ std::set<string> CurveConfigurations::conventions() const {
                 auto ycc = boost::dynamic_pointer_cast<YieldCurveConfig>(c.second);
                 if (ycc) {
                     for (auto& s : ycc->curveSegments())
-                        conventions.insert(s->conventionsID());
+                        if (!s->conventionsID().empty())
+                            conventions.insert(s->conventionsID());
                 }
             }
         }

@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(testHistoricalScenarioGeneratorTransform) {
     histScenariosLoader->historicalScenarios() = scenarios;
     histScenariosLoader->dates() = vector<Date>{d1, d2};
     boost::shared_ptr<HistoricalScenarioGenerator> histScenarios = boost::make_shared<HistoricalScenarioGenerator>(
-        histScenariosLoader, boost::make_shared<SimpleScenarioFactory>(), TARGET(), 1);
+        histScenariosLoader, boost::make_shared<SimpleScenarioFactory>(), TARGET(), nullptr, 1);
     histScenarios->baseScenario() = s1;
 
     // Init market

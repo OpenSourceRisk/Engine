@@ -20,23 +20,30 @@
     \brief some cashflow related utilities.
 */
 
-#ifndef quantext_utilities_cashflows_hpp
-#define quantext_utilities_cashflows_hpp
+#pragma once
 
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/utilities/time.hpp>
 
+#include <ql/cashflows/averagebmacoupon.hpp>
 
 namespace QuantExt {
 
-/*! Utility function for calculating the atm strike level to a given \p ixingDate based on a given ois index,
-    \p on, and a given irate computation period, \p rateComputationPeriod. 
+/*! Utility function for calculating the atm strike level to a given \p fixingDate based on a given ois index,
+    \p on, and a given irate computation period, \p rateComputationPeriod.
 
 \ingroup utilities
 */
 
 Real getOisAtmLevel(const boost::shared_ptr<OvernightIndex>& on, const Date& fixingDate,
                     const Period& rateComputationPeriod);
-}
 
-#endif
+/*! Utility function for calculating the atm strike level to a given \p fixingDate based on a given BMA index,
+    \p on, and a given irate computation period, \p rateComputationPeriod.
+
+\ingroup utilities
+*/
+Real getBMAAtmLevel(const boost::shared_ptr<BMAIndex>& bma, const Date& fixingDate,
+                    const Period& rateComputationPeriod);
+
+} // namespace QuantExt

@@ -215,6 +215,7 @@ void OREApp::analytics() {
 
     try {
         LOG("ORE analytics starting");
+        MEM_LOG_USING_LEVEL(ORE_WARNING)
 
         QL_REQUIRE(params_, "ORE input parameters not set");
                 
@@ -277,10 +278,12 @@ void OREApp::analytics() {
         ostringstream oss;
         oss << "Error in ORE analytics: " << e.what();
         ALOG(oss.str());
+        MEM_LOG_USING_LEVEL(ORE_WARNING)
         CONSOLE(oss.str());
         QL_FAIL(oss.str());
     }
 
+    MEM_LOG_USING_LEVEL(ORE_WARNING)
     LOG("ORE analytics done");
 }
 
@@ -359,6 +362,7 @@ void OREApp::run(const std::vector<std::string>& marketData,
 
     try {
         LOG("ORE analytics starting");
+        MEM_LOG_USING_LEVEL(ORE_WARNING)
 
         QL_REQUIRE(inputs_, "ORE input parameters not set");
         
@@ -392,12 +396,14 @@ void OREApp::run(const std::vector<std::string>& marketData,
         // Run the requested analytics
         analyticsManager_->runAnalytics(inputs_->analytics(), mcr);
 
+        MEM_LOG_USING_LEVEL(ORE_WARNING)
         // Leave any report writing to the calling aplication
     }
     catch (std::exception& e) {
         ostringstream oss;
         oss << "Error in ORE analytics: " << e.what();
         ALOG(StructuredAnalyticsWarningMessage("OREApp::run()", oss.str(), e.what()));
+        MEM_LOG_USING_LEVEL(ORE_WARNING)
         CONSOLE(oss.str());
         QL_FAIL(oss.str());
         return;

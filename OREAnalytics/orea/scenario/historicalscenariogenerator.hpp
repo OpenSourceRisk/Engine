@@ -86,14 +86,14 @@ public:
         const boost::shared_ptr<ScenarioFactory>& scenarioFactory,
         //! Calendar to use
         const QuantLib::Calendar& cal,
+        //! optional adjustment factors for stock splits etc
+        const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors = nullptr,
         //! Mpor days or step size
         const Size mporDays = 10,
         //! overlapping scenarios
         const bool overlapping = true,
         //! return configuration
         const ReturnConfiguration& returnConfiguration = ReturnConfiguration(),
-        //! optional adjustment factors for stock splits etc
-        const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors = nullptr,
         //! string prepended to label of all scenarios generated
         const std::string& labelPrefix = "");
 
@@ -176,10 +176,10 @@ protected:
 
 private:
     QuantLib::Calendar cal_;
+    boost::shared_ptr<ore::data::AdjustmentFactors> adjFactors_;
     QuantLib::Size mporDays_;
     bool overlapping_;
     ReturnConfiguration returnConfiguration_;
-    boost::shared_ptr<ore::data::AdjustmentFactors> adjFactors_;
     std::string labelPrefix_;
 };
 
@@ -193,14 +193,16 @@ public:
         const boost::shared_ptr<ScenarioFactory>& scenarioFactory,
         //! Calendar to use
         const QuantLib::Calendar& cal,
+        //! optional adjustment factors for stock splits etc
+        const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors = nullptr,
         //! MPOR days
         const QuantLib::Size mporDays = 10,
         //! overlapping scenarios
         const bool overlapping = true,
         //! return configuration
         const ReturnConfiguration& returnConfiguration = ReturnConfiguration())
-        : HistoricalScenarioGenerator(historicalScenarioLoader, scenarioFactory, cal, mporDays, overlapping,
-                                      returnConfiguration) {
+        : HistoricalScenarioGenerator(historicalScenarioLoader, scenarioFactory, cal, adjFactors, 
+            mporDays, overlapping, returnConfiguration) {
         normalrng_ = boost::make_shared<QuantLib::PseudoRandom::rng_type>(MersenneTwisterUniformRng(42));
     };
 
