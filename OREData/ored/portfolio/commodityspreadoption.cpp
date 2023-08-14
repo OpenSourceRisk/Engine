@@ -34,6 +34,7 @@ namespace ore::data {
 
 class OptionPaymentDateAdjuster {
 public:
+    virtual ~OptionPaymentDateAdjuster() = default;
     virtual void updatePaymentDate(const QuantLib::Date& exiryDate, Date& paymentDate) const {
     // unadjusted
     }
