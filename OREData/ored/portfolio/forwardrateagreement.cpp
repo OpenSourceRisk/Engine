@@ -34,12 +34,13 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     Date startDate = parseDate(startDate_);
     Date endDate = parseDate(endDate_);
     Position::Type positionType = parsePositionType(longShort_);
-
-    Handle<YieldTermStructure> discountTS = market->discountCurve(currency_);
-    Handle<QuantLib::IborIndex> index = market->iborIndex(index_);
-
-    boost::shared_ptr<QuantExt::ForwardRateAgreement> fra(
-        new QuantExt::ForwardRateAgreement(startDate, endDate, positionType, strike_, amount_, *index, discountTS));
+    auto idx = market->iborIndex(index_);
+    if (auto oisIndex = boost::dynamic_pointer_cast<OvernightIndex>(*idx)) {
+        oisIndex->
+    }
+        
+   
+   
 
     Currency npvCcy = parseCurrency(currency_);
     if (engineFactory->engineData()->hasProduct("ForwardRateAgreement")) {
