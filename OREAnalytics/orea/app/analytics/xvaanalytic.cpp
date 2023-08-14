@@ -19,6 +19,7 @@
 #include <orea/aggregation/dimregressioncalculator.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/jointnpvcube.hpp>
 #include <orea/engine/amcvaluationengine.hpp>
@@ -747,28 +748,47 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
         if (inputs_->exposureProfilesByTrade()) {
             for (const auto& [tradeId, tradeIdCubePos] : postProcess_->tradeIds()) {
                 auto report = boost::make_shared<InMemoryReport>();
-                ReportWriter(inputs_->reportNaString())
-                    .writeTradeExposures(*report, postProcess_, tradeId);
-                analytic()->reports()["XVA"]["exposure_trade_" + tradeId] = report;
+                try {
+                    ReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_, tradeId);
+                    analytic()->reports()["XVA"]["exposure_trade_" + tradeId] = report;
+                } catch (const std::exception& e) {
+                    ALOG(StructuredAnalyticsErrorMessage("Trade Exposure Report", "Error processing trade.", e.what(),
+                                                         {{"tradeId", tradeId}}));
+                }
             }
         }
 
         if (inputs_->exposureProfiles()) {
             for (auto [nettingSet, nettingSetPosInCube] : postProcess_->nettingSetIds()) {
                 auto exposureReport = boost::make_shared<InMemoryReport>();
-                ReportWriter(inputs_->reportNaString())
-                    .writeNettingSetExposures(*exposureReport, postProcess_, nettingSet);
-                analytic()->reports()["XVA"]["exposure_nettingset_" + nettingSet] = exposureReport;
+                try {
+                    ReportWriter(inputs_->reportNaString())
+                        .writeNettingSetExposures(*exposureReport, postProcess_, nettingSet);
+                    analytic()->reports()["XVA"]["exposure_nettingset_" + nettingSet] = exposureReport;
+                } catch (const std::exception& e) {
+                    ALOG(StructuredAnalyticsErrorMessage("Netting Set Exposure Report", "Error processing netting set.",
+                                                         e.what(), {{"nettingSetId", nettingSet}}));
+                }
 
                 auto colvaReport = boost::make_shared<InMemoryReport>();
-                ReportWriter(inputs_->reportNaString())
-                    .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
-                analytic()->reports()["XVA"]["colva_nettingset_" + nettingSet] = colvaReport;
+                try {
+                    ReportWriter(inputs_->reportNaString())
+                        .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
+                    analytic()->reports()["XVA"]["colva_nettingset_" + nettingSet] = colvaReport;
+                } catch (const std::exception& e) {
+                    ALOG(StructuredAnalyticsErrorMessage("Netting Set Colva Report", "Error processing netting set.",
+                                                         e.what(), {{"nettingSetId", nettingSet}}));
+                }
 
                 auto cvaSensiReport = boost::make_shared<InMemoryReport>();
-                ReportWriter(inputs_->reportNaString())
-                    .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
-                analytic()->reports()["XVA"]["cva_sensitivity_nettingset_" + nettingSet] = cvaSensiReport;
+                try {
+                    ReportWriter(inputs_->reportNaString())
+                        .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
+                    analytic()->reports()["XVA"]["cva_sensitivity_nettingset_" + nettingSet] = cvaSensiReport;
+                } catch (const std::exception& e) {
+                    ALOG(StructuredAnalyticsErrorMessage("Cva Sensi Report", "Error processing netting set.", e.what(),
+                                                         {{"nettingSetId", nettingSet}}));
+                }
             }
         }
 
