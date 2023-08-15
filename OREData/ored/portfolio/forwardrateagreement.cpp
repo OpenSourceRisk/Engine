@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2017, 2023 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,11 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
-#include <ored/portfolio/builders/forwardrateagreement.hpp>
-
-#include <qle/indexes/fallbackiborindex.hpp>
-#include <qle/instruments/forwardrateagreement.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <qle/cashflows/iborfracoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -35,36 +35,32 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     Date endDate = parseDate(endDate_);
     Position::Type positionType = parsePositionType(longShort_);
     auto idx = market->iborIndex(index_);
-    if (auto oisIndex = boost::dynamic_pointer_cast<OvernightIndex>(*idx)) {
-        oisIndex->
+
+    boost::shared_ptr<FloatingRateCoupon> cpn;
+    if (auto overnightIndex = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(*idx)) {
+        cpn = boost::make_shared<QuantExt::OvernightIndexedCoupon>(endDate, amount_, startDate, endDate, overnightIndex, 1.0, -strike_);
+        cpn->setPricer(boost::make_shared<QuantExt::OvernightIndexedCouponPricer>());
+    } else {
+        cpn= boost::make_shared<QuantExt::IborFraCoupon>(startDate, endDate, amount_, *idx, strike_);
+        cpn->setPricer(boost::make_shared<BlackIborCouponPricer>());
     }
-        
-   
-   
+    legs_.push_back({cpn});
 
     Currency npvCcy = parseCurrency(currency_);
-    if (engineFactory->engineData()->hasProduct("ForwardRateAgreement")) {
-        // engine is optional for FRA instrument
-        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("ForwardRateAgreement");
-        boost::shared_ptr<FraEngineBuilderBase> fraBuilder =
-            boost::dynamic_pointer_cast<FraEngineBuilderBase>(builder);
-        QL_REQUIRE(fraBuilder, "No Builder found for ForwardRateAgreement " << id());
-        fra->setPricingEngine(fraBuilder->engine(npvCcy));
-    }
-
-    instrument_.reset(new VanillaInstrument(fra));
-    npvCurrency_ = currency_;
-    maturity_ = endDate;
-    instrument_->qlInstrument()->update();
+    legCurrencies_.push_back(npvCcy.code());
+    legPayers_ = vector<bool>(1, positionType == Position::Type::Short);
+    isXCCY_ = false;
     notional_ = amount_;
-    notionalCurrency_ = currency_;
-    // the QL instrument reads the fixing in setupExpired() (bug?), so we don't add a payment date here to be safe
-    requiredFixings_.addFixingDate(fra->fixingDate(), index_);
-    // add required fixings for an Ibor fallback index
-    if (auto fallback = boost::dynamic_pointer_cast<QuantExt::FallbackIborIndex>(*index)) {
-        requiredFixings_.addFixingDates(fallback->onCoupon(fra->fixingDate())->fixingDates(),
-                                        engineFactory->iborFallbackConfig().fallbackData(index_).rfrIndex);
-    }
+    npvCurrency_ = npvCcy.code();
+    notionalCurrency_ = npvCcy.code();
+
+    boost::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(legs_, legPayers_));
+    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Swap");
+    boost::shared_ptr<SwapEngineBuilderBase> swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+    QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
+    swap->setPricingEngine(swapBuilder->engine(npvCcy));
+    instrument_.reset(new VanillaInstrument(swap));
+    maturity_ = endDate;
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Interest Rate");
