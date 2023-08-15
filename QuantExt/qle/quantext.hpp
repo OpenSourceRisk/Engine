@@ -385,7 +385,6 @@
 #include <qle/pricingengines/mccamcurrencyswapengine.hpp>
 #include <qle/pricingengines/mccamfxforwardengine.hpp>
 #include <qle/pricingengines/mccamfxoptionengine.hpp>
-#include <qle/pricingengines/mclgmfraengine.hpp>
 #include <qle/pricingengines/mclgmswapengine.hpp>
 #include <qle/pricingengines/mclgmswaptionengine.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>

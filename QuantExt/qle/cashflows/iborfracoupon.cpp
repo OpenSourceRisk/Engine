@@ -25,13 +25,8 @@ IborFraCoupon::IborFraCoupon(const QuantLib::Date& startDate, const QuantLib::Da
     : QuantLib::IborCoupon(startDate, nominal, startDate, endDate, index->fixingDays(), index, 1.0, -strikeRate) {}
 
 QuantLib::Real IborFraCoupon::amount() const {
-    double amt = QuantLib::IborCoupon::amount() /
+    return QuantLib::IborCoupon::amount() /
                  (1 + QuantLib::IborCoupon::accrualPeriod() * QuantLib::IborCoupon::indexFixing());
-    std::cout << "Forward " << QuantLib::IborCoupon::indexFixing() << std::endl;
-    std::cout << "TTM " << QuantLib::IborCoupon::accrualPeriod() << std::endl;
-    std::cout << "Amount " << QuantLib::IborCoupon::amount() << std::endl;
-    std::cout << "Amount ibordisc" << amt << std::endl;
-    return amt;
 }
 
 } // namespace QuantExt
