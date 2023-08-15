@@ -41,6 +41,7 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
+#include <ored/portfolio/builders/capflooredaveragebmacouponleg.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/capfloorednonstandardyoyleg.hpp>
@@ -449,6 +450,7 @@ void initBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(CommodityApoMonteCarloEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BlackCdsOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(YoYCapFloorEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(CapFlooredAverageBMACouponLegEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredAverageONIndexedCouponLegEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(DiscountingForwardBondEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityDoubleTouchOptionAnalyticEngineBuilder, false)

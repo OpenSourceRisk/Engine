@@ -38,9 +38,11 @@
 #include <qle/calendars/wmr.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/blackaveragebmacouponpricer.hpp>
 #include <qle/cashflows/blackovernightindexedcouponpricer.hpp>
 #include <qle/cashflows/bondtrscashflow.hpp>
 #include <qle/cashflows/brlcdicouponpricer.hpp>
+#include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/cashflows.hpp>
 #include <qle/cashflows/cashflowtable.hpp>
 #include <qle/cashflows/cmbcoupon.hpp>

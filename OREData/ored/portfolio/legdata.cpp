@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/builders/capflooredaveragebmacouponleg.hpp>
 #include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
@@ -40,6 +41,7 @@
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/brlcdicouponpricer.hpp>
+#include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/cmbcoupon.hpp>
 #include <qle/cashflows/couponpricer.hpp>
 #include <qle/cashflows/cpicoupon.hpp>
@@ -1484,13 +1486,10 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
 }
 
 Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper,
-               const QuantLib::Date& openEndDateReplacement) {
+               const boost::shared_ptr<EngineFactory>& engineFactory, const QuantLib::Date& openEndDateReplacement) {
     boost::shared_ptr<FloatingLegData> floatData = boost::dynamic_pointer_cast<FloatingLegData>(data.concreteLegData());
     QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << data.legType());
     boost::shared_ptr<BMAIndex> index = indexWrapper->bma();
-
-    if (floatData->caps().size() > 0 || floatData->floors().size() > 0)
-        QL_FAIL("Caps and floors are not supported for BMA legs");
 
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
@@ -1503,18 +1502,58 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
         paymentCalendar = parseCalendar(data.paymentCalendar());
 
     vector<Real> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
-    vector<Real> spreads = buildScheduledVector(floatData->spreads(), floatData->spreadDates(), schedule);
-    vector<Real> gearings = buildScheduledVector(floatData->gearings(), floatData->gearingDates(), schedule);
+    vector<Real> spreads =
+        buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
+    vector<Real> gearings =
+        buildScheduledVectorNormalised(floatData->gearings(), floatData->gearingDates(), schedule, 1.0);
+    vector<Real> caps =
+        buildScheduledVectorNormalised(floatData->caps(), floatData->capDates(), schedule, (Real)Null<Real>());
+    vector<Real> floors =
+        buildScheduledVectorNormalised(floatData->floors(), floatData->floorDates(), schedule, (Real)Null<Real>());
 
     applyAmortization(notionals, data, schedule, false);
 
-    AverageBMALeg leg = AverageBMALeg(schedule, index)
-                            .withNotionals(notionals)
-                            .withSpreads(spreads)
-                            .withPaymentDayCounter(dc)
-                            .withPaymentCalendar(paymentCalendar)
-                            .withPaymentAdjustment(bdc)
-                            .withGearings(gearings);
+    Leg leg = AverageBMALeg(schedule, index)
+                  .withNotionals(notionals)
+                  .withSpreads(spreads)
+                  .withPaymentDayCounter(dc)
+                  .withPaymentCalendar(paymentCalendar)
+                  .withPaymentAdjustment(bdc)
+                  .withGearings(gearings);
+
+    // try to set the rate computation period based on the schedule tenor
+
+    Period rateComputationPeriod = 0 * Days;
+    if (!data.schedule().rules().empty() && !data.schedule().rules().front().tenor().empty())
+        rateComputationPeriod = parsePeriod(data.schedule().rules().front().tenor());
+    else if (!data.schedule().dates().empty() && !data.schedule().dates().front().tenor().empty())
+        rateComputationPeriod = parsePeriod(data.schedule().dates().front().tenor());
+
+    // handle caps / floors
+
+    if (floatData->caps().size() > 0 || floatData->floors().size() > 0) {
+
+        boost::shared_ptr<QuantExt::CapFlooredAverageBMACouponPricer> cfCouponPricer;
+        auto builder = boost::dynamic_pointer_cast<CapFlooredAverageBMACouponLegEngineBuilder>(
+            engineFactory->builder("CapFlooredAverageBMACouponLeg"));
+        QL_REQUIRE(builder, "No builder found for CapFlooredAverageBMACouponLeg");
+        cfCouponPricer = boost::dynamic_pointer_cast<CapFlooredAverageBMACouponPricer>(
+            builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod));
+        QL_REQUIRE(cfCouponPricer, "internal error, could not cast to CapFlooredAverageBMACouponPricer");
+
+        for (Size i = 0; i < leg.size(); ++i) {
+            auto bmaCpn = boost::dynamic_pointer_cast<AverageBMACoupon>(leg[i]);
+            QL_REQUIRE(bmaCpn, "makeBMALeg(): internal error, exepcted AverageBMACoupon. Contact dev.");
+            if (caps[i] != Null<Real>() || floors[i] != Null<Real>()) {
+                auto cpn = boost::make_shared<CappedFlooredAverageBMACoupon>(
+                    bmaCpn, caps[i], floors[i], floatData->nakedOption(), floatData->includeSpread());
+                cpn->setPricer(cfCouponPricer);
+                leg[i] = cpn;
+            }
+        }
+    }
+
+    // return the leg
 
     return leg;
 }
@@ -2717,21 +2756,20 @@ void BondIndexBuilder::addRequiredFixings(RequiredFixings& requiredFixings, Leg 
     if (dirty_) {
         QL_REQUIRE(leg.size() > 0, "BondIndexBuild: Leg is required if dirty flag set to true");
         RequiredFixings legFixings;
-        addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(legFixings));
+        auto fixingGetter = boost::make_shared<FixingDateGetter>(legFixings);
+        fixingGetter->setRequireFixingStartDates(true);
+        addToRequiredFixings(leg, fixingGetter);
+
+        set<Date> fixingDates;
 
         auto fixingMap = legFixings.fixingDatesIndices();
         if (fixingMap.size() > 0) {
             std::map<std::string, std::set<Date>> indexFixings;
             for (const auto& [_, dates] : fixingMap) {
                 for (const auto& d : dates) {
-                    auto tmp = fixings_.fixingDatesIndices(d);
-                    for (const auto& [i, ds] : tmp)
-                        indexFixings[i].insert(ds.begin(), ds.end());
+                    auto tmp = fixings_.filteredFixingDates(d);
+                    requiredFixings.addData(tmp);
                 }
-            }
-            for (const auto& [i, ds] : indexFixings) {
-                vector<Date> dates(ds.begin(), ds.end());
-                requiredFixings.addFixingDates(dates, i);
             }
         }
     } else 

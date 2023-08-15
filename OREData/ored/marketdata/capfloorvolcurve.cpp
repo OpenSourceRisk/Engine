@@ -85,6 +85,11 @@ CapFloorVolCurve::CapFloorVolCurve(
             // handle proxy vol surfaces
             buildProxyCurve(*config, sourceIndex, targetIndex, requiredCapFloorVolCurves);
         } else {
+            QL_REQUIRE(boost::dynamic_pointer_cast<BMAIndexWrapper>(iborIndex) == nullptr,
+                       "CapFloorVolCurve: BMA/SIFMA index in '"
+                           << spec_.curveConfigID()
+                           << " not allowed  - vol surfaces for SIFMA can only be proxied from Ibor / OIS");
+
             // Read the shift early if the configured volatility type is shifted lognormal
             Real shift = 0.0;
             if (config->volatilityType() == CfgVolType::ShiftedLognormal) {

@@ -49,6 +49,7 @@ class StrippedCappedFlooredCoupon;
 } // namespace QuantLib
 
 namespace QuantExt {
+class CappedFlooredAverageBMACoupon;
 class AverageONIndexedCoupon;
 class OvernightIndexedCoupon;
 class BondTRSCashFlow;
@@ -76,7 +77,14 @@ class FixingDateGetter;
 
 /*! Class holding the information on the fixings required to price a trade (or a portfolio of trades). */
 class RequiredFixings {
-public:
+public:    
+    // FixingEntry = indexName, fixingDate, payDate, alwaysAddIfPaysOnSettlement
+    using FixingEntry = std::tuple<std::string, QuantLib::Date, QuantLib::Date, bool>;
+    // InflationFixingEntry = FixingEntry, indexInterpolated, indexFrequency, indexAvailabilityLag
+    using InflationFixingEntry = std::tuple<FixingEntry, bool, Frequency, Period>;
+    // ZeroInflationFixingEntry = InflationFixingEntry, couponInterpolation, couponFrequency
+    using ZeroInflationFixingEntry = std::tuple<InflationFixingEntry, CPI::InterpolationType, Frequency>;
+
     /*! Gives back the dates for which fixings will be required to price the trade assuming a given \p settlementDate.
         If the \p settlementDate is not provided or is set equal to \c QuantLib::Date(), the settlement date in the
         implementation is assumed to be the \c Settings::instance().evaluationDate().
@@ -99,6 +107,7 @@ public:
        meaning that the added fixing is relevant unconditional on a pay date */
     void addFixingDate(const QuantLib::Date& fixingDate, const std::string& indexName,
                        const QuantLib::Date& payDate = Date::maxDate(), const bool alwaysAddIfPaysOnSettlement = false);
+    void addFixingDate(const FixingEntry& fixingEntry);
 
     /*! adds a vector of fixings dates \p fixingDates for an index given by is ORE index name \p indexName arising from
        a coupon with payment date \p payDate */
@@ -114,6 +123,7 @@ public:
                                     const CPI::InterpolationType coupopnInterpolation, const Frequency couponFrequency,
                                     const QuantLib::Date& payDate = Date::maxDate(),
                                     const bool alwaysAddIfPaysOnSettlement = false);
+    void addZeroInflationFixingDate(const ZeroInflationFixingEntry& fixingEntry);
 
     /*! add a single fixing date \p fixingDate for a coupon based on a yoy inflation index given by its ORE index name
         \p indexName with payment date \p payDate */
@@ -121,6 +131,7 @@ public:
                                    const bool indexInterpolated, const Frequency indexFrequency,
                                    const Period& indexAvailabilityLag, const QuantLib::Date& payDate = Date::maxDate(),
                                    const bool alwaysAddIfPaysOnSettlement = false);
+    void addYoYInflationFixingDate(const InflationFixingEntry& fixingEntry);
 
     /*! clear all data */
     void clear();
@@ -133,14 +144,9 @@ public:
       past payment date can still be relevant for the payment of the current return period. */
     void unsetPayDates();
 
-private:
-    // FixingEntry = indexName, fixingDate, payDate, alwaysAddIfPaysOnSettlement
-    using FixingEntry = std::tuple<std::string, QuantLib::Date, QuantLib::Date, bool>;
-    // InflationFixingEntry = FixingEntry, indexInterpolated, indexFrequency, indexAvailabilityLag
-    using InflationFixingEntry = std::tuple<FixingEntry, bool, Frequency, Period>;
-    // ZeroInflationFixingEntry = InflationFixingEntry, couponInterpolation, couponFrequency
-    using ZeroInflationFixingEntry = std::tuple<InflationFixingEntry, CPI::InterpolationType, Frequency>;
+    RequiredFixings filteredFixingDates(const QuantLib::Date& settlementDate = QuantLib::Date());
 
+private:
     // maps an ORE index name to a pair (fixing date, pay date, alwaysAddIfPaysOnSettlment)
     std::set<FixingEntry> fixingDates_;
     // same as above, but for zero inflation index based coupons
@@ -172,6 +178,7 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantExt::OvernightIndexedCoupon>,
                          public QuantLib::Visitor<QuantExt::CappedFlooredOvernightIndexedCoupon>,
                          public QuantLib::Visitor<QuantLib::AverageBMACoupon>,
+                         public QuantLib::Visitor<QuantExt::CappedFlooredAverageBMACoupon>,
                          public QuantLib::Visitor<QuantLib::CmsSpreadCoupon>,
                          public QuantLib::Visitor<QuantLib::DigitalCoupon>,
                          public QuantLib::Visitor<QuantLib::StrippedCappedFlooredCoupon>,
@@ -212,6 +219,7 @@ public:
     void visit(QuantExt::OvernightIndexedCoupon& c) override;
     void visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c) override;
     void visit(QuantLib::AverageBMACoupon& c) override;
+    void visit(QuantExt::CappedFlooredAverageBMACoupon& c) override;
     void visit(QuantLib::CmsSpreadCoupon& c) override;
     void visit(QuantLib::DigitalCoupon& c) override;
     void visit(QuantLib::StrippedCappedFlooredCoupon& c) override;
@@ -229,10 +237,16 @@ public:
     void visit(QuantExt::CommodityCashFlow& c) override;
     void visit(QuantExt::BondTRSCashFlow& c) override;
     //@}
+        
+    void setRequireFixingStartDates(const bool b) { requireFixingStartDates_ = b; }
 
 protected:
     std::string oreIndexName(const std::string& qlIndexName) const;
     RequiredFixings& requiredFixings_;
+
+private:
+    // flag to indicate id we coupon start date fixings are always required, even if initial prices provided
+    bool requireFixingStartDates_ = false;
 };
 
 /*! Populates a RequiredFixings instance based on a given QuantLib::Leg */
