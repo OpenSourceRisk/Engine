@@ -1346,7 +1346,7 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
     // and "Notional" risk types, for the portfolio.
 
     // Index on SIMM sensitivities in to risk type level
-    auto& ssQualifierIndex = netRecords.get<QualifierTag>();
+    auto& ssQualifierIndex = netRecords.get<NoProductClassQualifierTag>();
 
     rt = RiskType::AddOnNotionalFactor;
     key = make_tuple(nettingSetDetails, pc, rt);
@@ -1355,7 +1355,7 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
         // We should have a single corresponding CrifRecord with risk type
         // "Notional" and the same qualifier. Search for it.
         auto pQualifierIt = ssQualifierIndex.equal_range(
-            make_tuple(nettingSetDetails, pc, RiskType::Notional, pIt.first->qualifier));
+            make_tuple(nettingSetDetails, RiskType::Notional, pIt.first->qualifier));
         auto count = distance(pQualifierIt.first, pQualifierIt.second);
         QL_REQUIRE(count < 2, "Expected either 0 or 1 elements for risk type "
                                     << RiskType::Notional << " and qualifier " << pIt.first->qualifier
