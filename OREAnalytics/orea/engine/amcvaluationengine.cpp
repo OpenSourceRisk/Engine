@@ -33,6 +33,7 @@
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
+#include <qle/models/lgmimpliedyieldtermstructure.hpp>
 
 #include <ql/instruments/compositeinstrument.hpp>
 
