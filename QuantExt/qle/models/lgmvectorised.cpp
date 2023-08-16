@@ -31,7 +31,7 @@ namespace QuantExt {
 
 RandomVariable LgmVectorised::numeraire(const Time t, const RandomVariable& x,
                                         const Handle<YieldTermStructure> discountCurve) const {
-    QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGM::numeraire");
+    QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGMVectorised::numeraire");
     RandomVariable Ht(x.size(), p_->H(t));
     return exp(Ht * x + RandomVariable(x.size(), 0.5 * p_->zeta(t)) * Ht * Ht) /
            RandomVariable(x.size(),
@@ -42,7 +42,7 @@ RandomVariable LgmVectorised::discountBond(const Time t, const Time T, const Ran
                                            Handle<YieldTermStructure> discountCurve) const {
     if (QuantLib::close_enough(t, T))
         return RandomVariable(x.size(), 1.0);
-    QL_REQUIRE(T >= t && t >= 0.0, "T(" << T << ") >= t(" << t << ") >= 0 required in LGM::discountBond");
+    QL_REQUIRE(T >= t && t >= 0.0, "T(" << T << ") >= t(" << t << ") >= 0 required in LGMVectorised::discountBond");
     RandomVariable Ht(x.size(), p_->H(t));
     RandomVariable HT(x.size(), p_->H(T));
     return RandomVariable(x.size(),
@@ -55,23 +55,46 @@ RandomVariable LgmVectorised::reducedDiscountBond(const Time t, const Time T, co
                                                   const Handle<YieldTermStructure> discountCurve) const {
     if (QuantLib::close_enough(t, T))
         return RandomVariable(x.size(), 1.0) / numeraire(t, x, discountCurve);
-    QL_REQUIRE(T >= t && t >= 0.0, "T(" << T << ") >= t(" << t << ") >= 0 required in LGM::reducedDiscountBond");
+    QL_REQUIRE(T >= t && t >= 0.0,
+               "T(" << T << ") >= t(" << t << ") >= 0 required in LGMVectorised::reducedDiscountBond");
     RandomVariable HT(x.size(), p_->H(T));
     return RandomVariable(x.size(),
                           (discountCurve.empty() ? p_->termStructure()->discount(T) : discountCurve->discount(T))) *
            exp(-HT * x - RandomVariable(x.size(), 0.5 * p_->zeta(t)) * HT * HT);
 }
 
+RandomVariable LgmVectorised::discountBondOption(Option::Type type, const Real K, const Time t, const Time S,
+                                                 const Time T, const RandomVariable& x,
+                                                 const Handle<YieldTermStructure> discountCurve) const {
+    QL_REQUIRE(T > S && S >= t && t >= 0.0,
+               "T(" << T << ") > S(" << S << ") >= t(" << t << ") >= 0 required in LGMVectorised::discountBondOption");
+    RandomVariable w(x.size(), type == Option::Call ? 1.0 : -1.0);
+    RandomVariable pS = discountBond(t, S, x, discountCurve);
+    RandomVariable pT = discountBond(t, T, x, discountCurve);
+    // slight generalization of Lichters, Stamm, Gallagher 11.2.1
+    // with t < S, SSRN: https://ssrn.com/abstract=2246054
+    RandomVariable sigma(x.size(), std::sqrt(p_->zeta(t)) * (p_->H(T) - p_->H(S)));
+    RandomVariable dp =
+        log(pT / (RandomVariable(x.size(), K) * pS)) / sigma + RandomVariable(x.size(), 0.5) * sigma * sigma;
+    RandomVariable dm = dp - sigma;
+    return w * (pT * normalCdf(w * dp) - pS * RandomVariable(x.size(), K) * normalCdf(w * dm));
+}
+
 RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate,
                                      const Time t, const RandomVariable& x) const {
 
     // handle case where fixing is deterministic
+
     Date today = Settings::instance().evaluationDate();
     if (fixingDate <= today)
         return RandomVariable(x.size(), index->fixing(fixingDate));
 
     // handle stochastic fixing
+
     if (auto ibor = boost::dynamic_pointer_cast<IborIndex>(index)) {
+
+        // Ibor Index
+
         Date d1 = ibor->valueDate(fixingDate);
         Date d2 = ibor->maturityDate(d1);
         Time T1 = std::max(t, p_->termStructure()->timeFromReference(d1));
@@ -82,6 +105,9 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
         RandomVariable disc2 = reducedDiscountBond(t, T2, x, ibor->forwardingTermStructure());
         return (disc1 / disc2 - RandomVariable(x.size(), 1.0)) / RandomVariable(x.size(), dt);
     } else if (auto swap = boost::dynamic_pointer_cast<SwapIndex>(index)) {
+
+        // Swap Index
+
         auto swapDiscountCurve =
             swap->exogenousDiscount() ? swap->discountingTermStructure() : swap->forwardingTermStructure();
         Leg floatingLeg, fixedLeg;
@@ -154,6 +180,7 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
                 reducedDiscountBond(t, T, x, swapDiscountCurve) * RandomVariable(x.size(), cpn->accrualPeriod());
         }
         return numerator / denominator;
+
     } else {
         QL_FAIL("LgmVectorised::fixing(): index ('" << index->name() << "') must be ibor or swap index");
     }
@@ -392,7 +419,12 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
 
 RandomVariable LgmVectorised::averagedBmaRate(const boost::shared_ptr<BMAIndex>& index,
                                               const std::vector<Date>& fixingDates, const Date& accrualStartDate,
-                                              const Date& accrualEndDate, const Time t, const RandomVariable& x) const {
+                                              const Date& accrualEndDate, const Real spread, const Real gearing,
+                                              const Real cap, const Real floor, const bool nakedOption, const Time t,
+                                              const RandomVariable& x) const {
+
+    QL_REQUIRE(cap == Null<Real>() && floor == Null<Real>() && nakedOption == false && spread == 0.0 && gearing == 1.0,
+               "LgmVectorised::averagedBmaRate(): implementation of cap, floor, naked option not finished.");
 
     // similar to AverageBMACouponPricer
 
@@ -471,6 +503,14 @@ RandomVariable LgmVectorised::averagedBmaRate(const boost::shared_ptr<BMAIndex>&
     avgBMA /= RandomVariable(x.size(), (endDate - startDate));
 
     return avgBMA;
+}
+
+RandomVariable LgmVectorised::subPeriodsRate(const boost::shared_ptr<IborIndex>& index,
+                                             const std::vector<Date>& fixingDates, const Date& accrualStartDate,
+                                             const Date& accrualEndDate, const Real spread, const Real gearing,
+                                             const Real cap, const Real floor, const bool nakedOption, const Time t,
+                                             const RandomVariable& x) const {
+    QL_FAIL("not implemented yet.");
 }
 
 } // namespace QuantExt
