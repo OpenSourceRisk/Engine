@@ -28,6 +28,7 @@
 
 #include <ql/indexes/bmaindex.hpp>
 #include <ql/indexes/iborindex.hpp>
+#include <ql/option.hpp>
 
 namespace QuantExt {
 
@@ -36,6 +37,7 @@ using namespace QuantExt;
 
 class LgmVectorised {
 public:
+    LgmVectorised() = default;
     LgmVectorised(const boost::shared_ptr<IrLgm1fParametrization>& p) : p_(p) {}
 
     boost::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_; }
@@ -50,9 +52,14 @@ public:
     reducedDiscountBond(const Time t, const Time T, const RandomVariable& x,
                         const Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
+    RandomVariable discountBondOption(Option::Type type, const Real K, const Time t, const Time S, const Time T,
+                                      const RandomVariable& x, const Handle<YieldTermStructure> discountCurve) const;
+
+    /* Handles IborIndex and SwapIndex. Requires observation time t <= fixingDate */
     RandomVariable fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Time t,
                           const RandomVariable& x) const;
 
+    /*! Handles observation time > first value date by applying an approximation. */
     RandomVariable compoundedOnRate(const boost::shared_ptr<OvernightIndex>& index,
                                     const std::vector<Date>& fixingDates, const std::vector<Date>& valueDates,
                                     const std::vector<Real>& dt, const Natural rateCutoff, const bool includeSpread,
@@ -61,6 +68,7 @@ public:
                                     const bool localCapFloor, const bool nakedOption, const Time t,
                                     const RandomVariable& x) const;
 
+    /*! Handles observation time > first value date by applying an approximation. */
     RandomVariable averagedOnRate(const boost::shared_ptr<OvernightIndex>& index, const std::vector<Date>& fixingDates,
                                   const std::vector<Date>& valueDates, const std::vector<Real>& dt,
                                   const Natural rateCutoff, const bool includeSpread, const Real spread,
@@ -68,12 +76,20 @@ public:
                                   const Real cap, const Real floor, const bool localCapFloor, const bool nakedOption,
                                   const Time t, const RandomVariable& x) const;
 
+    /*! Handles observation time > first value date by applying an approximation. */
     RandomVariable averagedBmaRate(const boost::shared_ptr<BMAIndex>& index, const std::vector<Date>& fixingDates,
-                                   const Date& accrualStartDate, const Date& accrualEndDate, const Time t,
-                                   const RandomVariable& x) const;
+                                   const Date& accrualStartDate, const Date& accrualEndDate, const Real spread,
+                                   const Real gearing, const Real cap, const Real floor, const bool nakedOption,
+                                   const Time t, const RandomVariable& x) const;
+
+    /*! Handles observation time > first value date by applying an approximation. */
+    RandomVariable subPeriodsRate(const boost::shared_ptr<IborIndex>& index, const std::vector<Date>& fixingDates,
+                                  const Date& accrualStartDate, const Date& accrualEndDate, const Real spread,
+                                  const Real gearing, const Real cap, const Real floor, const bool nakedOption,
+                                  const Time t, const RandomVariable& x) const;
 
 private:
-    const boost::shared_ptr<IrLgm1fParametrization> p_;
+    boost::shared_ptr<IrLgm1fParametrization> p_;
 };
 
 } // namespace QuantExt
