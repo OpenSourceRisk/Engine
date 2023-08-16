@@ -34,15 +34,21 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     Date startDate = parseDate(startDate_);
     Date endDate = parseDate(endDate_);
     Position::Type positionType = parsePositionType(longShort_);
-    auto idx = market->iborIndex(index_);
+    auto index = market->iborIndex(index_);
+    
+    endDate = index->fixingCalendar().adjust(endDate, index->businessDayConvention());
 
     boost::shared_ptr<FloatingRateCoupon> cpn;
-    if (auto overnightIndex = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(*idx)) {
-        cpn = boost::make_shared<QuantExt::OvernightIndexedCoupon>(endDate, amount_, startDate, endDate, overnightIndex, 1.0, -strike_);
+    if (auto overnightIndex = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(*index)) {
+        cpn = boost::make_shared<QuantExt::OvernightIndexedCoupon>(endDate, amount_, startDate, endDate, overnightIndex,
+                                                                   1.0, -strike_);
         cpn->setPricer(boost::make_shared<QuantExt::OvernightIndexedCouponPricer>());
     } else {
-        cpn= boost::make_shared<QuantExt::IborFraCoupon>(startDate, endDate, amount_, *idx, strike_);
-        cpn->setPricer(boost::make_shared<BlackIborCouponPricer>());
+        bool useIndexedCoupon = true;
+        cpn = boost::make_shared<QuantExt::IborFraCoupon>(startDate, endDate, amount_, *index, strike_);
+        cpn->setPricer(boost::make_shared<BlackIborCouponPricer>(
+            Handle<OptionletVolatilityStructure>(), BlackIborCouponPricer::TimingAdjustment::Black76,
+            Handle<Quote>(ext::shared_ptr<Quote>(new SimpleQuote(1.0))), useIndexedCoupon));
     }
     legs_.push_back({cpn});
 
