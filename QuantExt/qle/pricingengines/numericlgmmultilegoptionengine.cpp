@@ -117,9 +117,9 @@ RandomVariable getUnderlyingCashflowPv(const LgmVectorised& lgm, const Real t, c
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto bma = boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(cpn)) {
             return (RandomVariable(x.size(), bma->gearing()) *
-                        lgm.averagedBmaRate(boost::dynamic_pointer_cast<BMAIndex>(bma->index()), bma->fixingDates(),
-                                            bma->accrualStartDate(), bma->accrualEndDate(), t, x) +
-                    RandomVariable(x.size(), bma->spread())) *
+                    lgm.averagedBmaRate(boost::dynamic_pointer_cast<BMAIndex>(bma->index()), bma->fixingDates(),
+                                        bma->accrualStartDate(), bma->accrualEndDate(), bma->spread(), bma->gearing(),
+                                        Null<Real>(), Null<Real>(), false, t, x)) *
                    RandomVariable(x.size(), bma->accrualPeriod() * bma->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto cf = boost::dynamic_pointer_cast<QuantLib::CappedFlooredCoupon>(cpn)) {
