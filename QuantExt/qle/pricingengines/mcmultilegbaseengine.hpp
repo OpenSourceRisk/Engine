@@ -26,22 +26,21 @@
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
-#include <qle/models/lgmimpliedyieldtermstructure.hpp>
+#include <qle/models/lgmvectorised.hpp>
 #include <qle/pricingengines/amccalculator.hpp>
 
 #include <ql/indexes/interestrateindex.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
-#include <ql/version.hpp>
 
 namespace QuantExt {
 
 class McMultiLegBaseEngine {
 
 protected:
-    /*! The npv is computed in the model's base currency, discounting curves are taken
-      from the model. simulationDates are additional simulation dates.
-      The cross asset model here must be consistent with the multi path that is input in AmcCalculator */
+    /*! The npv is computed in the model's base currency, discounting curves are taken from the model. simulationDates
+        are additional simulation dates. The cross asset model here must be consistent with the multi path that is the
+        input to AmcCalculator::simulatePath(). */
     McMultiLegBaseEngine(
         const Handle<CrossAssetModel>& model, const SequenceType calibrationPathGenerator,
         const SequenceType pricingPathGenerator, const Size calibrationSamples, const Size pricingSamples,
@@ -53,13 +52,10 @@ protected:
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
         const bool regressionOnExerciseOnly = false);
 
-    // compute path exercise into and (dirty) simulation underlying values
-    void computePath(const MultiPath& p) const;
-    // rollback for calibration or pricing
-    void rollback(const bool calibration) const;
-    // run calibration and pricing
+    // run calibration and pricing (called from derived engines)
     void calculate() const;
-    // return AmcCalculator instance (calculate must be called before)
+
+    // return AmcCalculator instance (called from derived engines, calculate must be called before)
     boost::shared_ptr<AmcCalculator> amcCalculator() const;
 
     // input data from the derived pricing engines, to be set in these engines
@@ -70,113 +66,66 @@ protected:
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
 
     // data members
-    const Handle<CrossAssetModel> model_;
-    const SequenceType calibrationPathGenerator_, pricingPathGenerator_;
-    const Size calibrationSamples_, pricingSamples_, calibrationSeed_, pricingSeed_;
-    std::vector<Handle<YieldTermStructure>> discountCurves_;
-    const std::vector<Date> simulationDates_;
-    const std::vector<Size> externalModelIndices_;
-#if QL_HEX_VERSION > 0x01150000
-    const std::vector<ext::function<Real(Array)>> basisFns_;
-#else
-    const std::vector<boost::function1<Real, Array>> basisFns_;
-#endif
-    const SobolBrownianGenerator::Ordering ordering_;
+    Handle<CrossAssetModel> model_;
+    SequenceType calibrationPathGenerator_, pricingPathGenerator_;
+    Size calibrationSamples_, pricingSamples_, calibrationSeed_, pricingSeed_;
+    Size polynomOrder_;
+    LsmBasisSystem::PolynomialType polynomType_;
+    SobolBrownianGenerator::Ordering ordering_;
     SobolRsg::DirectionIntegers directionIntegers_;
-    const bool minimalObsDate_, regressionOnExerciseOnly_;
+    std::vector<Handle<YieldTermStructure>> discountCurves_;
+    std::vector<Date> simulationDates_;
+    std::vector<Size> externalModelIndices_;
+    bool minimalObsDate_, regressionOnExerciseOnly_;
 
-    // precomputed values for simulation
-    mutable std::vector<Real> times_;
-    mutable std::vector<Size> indexes_;
-    mutable std::vector<Size> exerciseIdx_, simulationIdx_;
-    mutable std::vector<bool> isTrappedDate_;
-    mutable Size numEx_, numSim_;
-    mutable std::vector<Real> pathUndEx_, pathUndDirty_, pathUndTrapped_;
-    mutable std::vector<std::vector<Size>> indexCcyIndex_, payCcyNum_, payCcyIndex_, payFxIndex_, maxExerciseIndex_,
-        maxDirtyNpvIndex_;
-    mutable std::vector<std::vector<std::vector<Size>>> trappedCoupons_;
-    mutable std::vector<std::vector<boost::shared_ptr<LgmImpliedYieldTermStructure>>> indexFwdCurve_, indexDscCurve_;
-    mutable std::vector<std::vector<boost::shared_ptr<InterestRateIndex>>> modelIndex_;
-    mutable std::vector<std::vector<boost::shared_ptr<FxIndex>>> fxLinkedNotionalIndex_;
-    mutable std::vector<std::vector<Size>> observationTimeIndex_;
-    mutable std::vector<std::vector<Date>> fixingDate_;
-    mutable std::vector<std::vector<Real>> gearing_, spread_, accrualTime_, nominal_, payTime_, cappedRate_,
-        flooredRate_;
-    mutable std::vector<std::vector<bool>> isNakedOption_;
-    mutable std::vector<std::vector<boost::shared_ptr<Index>>> couponIndex_;
-    mutable std::vector<std::vector<Date>> couponIndexFixingDate_;
-    mutable std::vector<std::vector<Real>> couponIndexQuantity_;
-    mutable std::vector<std::vector<Real>> fxLinkedNotionalForeignAmount_;
-    mutable std::vector<std::vector<Date>> fxLinkedNotionalFixingDate_;
-    mutable Size maxUndValDirtyIdx_;
-    mutable std::vector<Date> pathDates_; // dates coresponding to path times
+    // the generated amc calculator
+    mutable boost::shared_ptr<AmcCalculator> amcCalculator_;
 
-    // pathGenerators
-    mutable boost::shared_ptr<MultiPathGeneratorBase> pathGeneratorCalibration_, pathGeneratorPricing_;
-
-    // regression coefficients
-    mutable std::vector<Array> coeffsItm_;
-    mutable std::vector<Array> coeffsUndEx_;
-    mutable std::vector<Array> coeffsFull_;
-    mutable std::vector<Array> coeffsUndTrapped_;
-    mutable std::vector<Array> coeffsUndDirty_;
-
-    // results
+    // results, these are read from derived engines
     mutable Real resultUnderlyingNpv_, resultValue_;
+
+private:
+    // data structure storing info needed to generate the amount for a cashflow
+    struct CashflowInfo {
+        Real payTime = Null<Real>();
+        Size payCcyIndex = Null<Size>();
+        Real payer = 1.0;
+        bool isFixed = false;
+        Real fixedAmount = Null<Real>();
+        std::vector<Real> simulationTimes;
+        std::vector<std::vector<Size>> modelIndices;
+        std::function<RandomVariable(const std::vector<std::vector<const RandomVariable*>>&)> amountCalculator;
+    };
+
+    // convert a date to a time w.r.t. the valuation date
+    Real time(const Date& d) const;
+
+    // create the info for a given flow
+    CashflowInfo createCashflowInfo(const boost::shared_ptr<CashFlow>& flow, const Currency& payCcy, Real payer,
+                                    Size legNo, Size cashflowNo) const;
+
+    // get the index of a time in the given simulation times set
+    Size timeIndex(const Time t, const std::set<Real>& simulationTimes) const;
+
+    // compute a cashflow path value (in model base ccy)
+    RandomVariable cashflowPathValue(const CashflowInfo& cf, const std::vector<std::vector<RandomVariable>>& pathValues,
+                                     const std::set<Real>& simulationTimes) const;
+
+    // valuation date
+    mutable Date today_;
+
+    // lgm vectorised instances for each ccy
+    mutable std::vector<LgmVectorised> lgmVectorised_;
 };
 
 class MultiLegBaseAmcCalculator : public AmcCalculator {
 public:
-    MultiLegBaseAmcCalculator(const Currency& baseCurrency, const Array& x0,
-                              const std::vector<Size>& externalModelIndices, const bool hasExercise,
-                              const bool isPhysicalSettlement, const std::vector<Real>& times,
-                              const std::vector<Size>& indexes, const std::vector<Size>& exerciseIdx,
-                              const std::vector<Size>& simulationIdx, const std::vector<bool>& isTrappedDate,
-                              const Size numSim, const Real resultValue, const std::vector<Array> coeffsItm,
-                              const std::vector<Array>& coeffsUndEx, const std::vector<Array>& coeffsFull,
-                              const std::vector<Array>& coeffsUndTrapped, const std::vector<Array>& coeffsUndDirty,
-#if QL_HEX_VERSION > 0x01150000
-                              const std::vector<ext::function<Real(Array)>>& basisFns)
-#else
-                              const std::vector<boost::function1<Real, Array>>& basisFns)
-#endif
-        : baseCurrency_(baseCurrency), x0_(x0), externalModelIndices_(externalModelIndices), hasExercise_(hasExercise),
-          isPhysicalSettlement_(isPhysicalSettlement), times_(times), indexes_(indexes), exerciseIdx_(exerciseIdx),
-          simulationIdx_(simulationIdx), isTrappedDate_(isTrappedDate), numSim_(numSim), resultValue_(resultValue),
-          coeffsItm_(coeffsItm), coeffsUndEx_(coeffsUndEx), coeffsFull_(coeffsFull),
-          coeffsUndTrapped_(coeffsUndTrapped), coeffsUndDirty_(coeffsUndDirty), basisFns_(basisFns) {
-    }
-    Currency npvCurrency() override { return baseCurrency_; }
+    MultiLegBaseAmcCalculator();
 
-    std::vector<QuantExt::RandomVariable>
-    simulatePath(const std::vector<QuantLib::Real>& pathTimes,
-                 std::vector<std::vector<QuantExt::RandomVariable>>& paths, const std::vector<bool>& isRelevantTime,
-                 const bool stickyCloseOutRun) override;
-
-private:
-    Array simulatePath(const MultiPath& path, const bool reuseLastEvents, const Size sample);
-    const Currency baseCurrency_;
-    const Array x0_;
-    const std::vector<Size> externalModelIndices_;
-    const bool hasExercise_;
-    const bool isPhysicalSettlement_;
-    const std::vector<Real> times_;
-    const std::vector<Size> indexes_;
-    const std::vector<Size> exerciseIdx_, simulationIdx_;
-    const std::vector<bool> isTrappedDate_;
-    const Size numSim_;
-    const Real resultValue_;
-    const std::vector<Array> coeffsItm_;
-    const std::vector<Array> coeffsUndEx_;
-    const std::vector<Array> coeffsFull_;
-    const std::vector<Array> coeffsUndTrapped_;
-    const std::vector<Array> coeffsUndDirty_;
-#if QL_HEX_VERSION > 0x01150000
-    const std::vector<ext::function<Real(Array)>> basisFns_;
-#else
-    const std::vector<boost::function1<Real, Array>> basisFns_;
-#endif
-    std::vector<Size> storedExerciseIndex_;
+    std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
+                                                       std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+                                                       const std::vector<bool>& isRelevantTime,
+                                                       const bool stickyCloseOutRun) override;
 };
 
 } // namespace QuantExt
