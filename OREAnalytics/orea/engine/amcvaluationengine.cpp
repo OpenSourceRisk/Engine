@@ -711,7 +711,7 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
                 ore::data::CrossAssetModelBuilder modelBuilder(
                     initMarket, crossAssetModelData_, configurationLgmCalibration_, configurationFxCalibration_,
                     configurationEqCalibration_, configurationInfCalibration_, configurationCrCalibration_,
-                    configurationFinalModel_, false, true);
+                    configurationFinalModel_, false, true, "", SalvagingAlgorithm::Spectral, "xva/amc cam building");
 
                 auto cam = *modelBuilder.model();
 
