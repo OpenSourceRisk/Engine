@@ -85,7 +85,7 @@ void XvaRunner::buildCamModel(const boost::shared_ptr<ore::data::Market>& market
     CrossAssetModelBuilder modelBuilder(
         market, crossAssetModelData_, Market::defaultConfiguration, Market::defaultConfiguration,
         Market::defaultConfiguration, Market::defaultConfiguration, Market::defaultConfiguration,
-        Market::defaultConfiguration, false, continueOnErr, "", SalvagingAlgorithm::Spectral, "xva cam building");
+        Market::defaultConfiguration, false, continueOnErr, "", SalvagingAlgorithm::None, "xva cam building");
     model_ = *modelBuilder.model();
 }
 
