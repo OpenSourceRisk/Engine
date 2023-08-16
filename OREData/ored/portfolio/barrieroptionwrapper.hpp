@@ -61,6 +61,7 @@ public:
     }
 
     const std::map<std::string, boost::any>& additionalResults() const override;
+    virtual bool checkBarrier(Real, bool) const = 0;
 
 protected:
     QuantLib::Real NPV() const override;
@@ -92,7 +93,7 @@ public:
                                ccy, startDate, index, calendar, multiplier, undMultiplier, additionalInstruments, additionalMultipliers),
           barrier_(barrier) {}
 
-    bool checkBarrier(Real spot, Barrier::Type type, Real barrier) const;
+    bool checkBarrier(Real spot, bool isTouchingOnly) const override;
     bool exercise() const override;
 
 protected:
@@ -124,7 +125,7 @@ public:
         QL_REQUIRE(barrierLow < barrierHigh, "barrierLow has to be less than barrierHigh");
     }
         
-    bool checkBarrier(Real spot, Real barrierLow, Real barrierHigh) const;
+    bool checkBarrier(Real spot, bool isTouchingOnly) const override;
     bool exercise() const override;
 
 protected:

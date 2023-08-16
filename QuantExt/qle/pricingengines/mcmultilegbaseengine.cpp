@@ -17,6 +17,9 @@
 */
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
@@ -122,7 +125,12 @@ void McMultiLegBaseEngine::computePath(const MultiPath& p) const {
                 rate -= std::min(underlying_rate, cappedRate_[i][j]);
             else
                 rate = std::min(rate, cappedRate_[i][j]);
-            Real amount = rate * accrualTime_[i][j] * nominal_[i][j];
+            Real nominal = nominal_[i][j];
+            if (fxLinkedNotionalIndex_[i][j]) {
+                Real fxFixing = fxLinkedNotionalIndex_[i][j]->fixing(fxLinkedNotionalFixingDate_[i][j]);
+                nominal = fxLinkedNotionalForeignAmount_[i][j] * fxFixing;
+            }
+            Real amount = rate * accrualTime_[i][j] * nominal;
 
             if (couponIndex_[i][j])
                 amount *= couponIndexQuantity_[i][j] * couponIndex_[i][j]->fixing(couponIndexFixingDate_[i][j]);
@@ -314,6 +322,9 @@ boost::shared_ptr<FloatingRateCoupon> flrcpn(const boost::shared_ptr<CashFlow>& 
     auto ic = boost::dynamic_pointer_cast<IndexedCoupon>(c);
     if (ic)
         return flrcpn(ic->underlying());
+    auto frfxlnc = boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(c);
+    if (frfxlnc)
+        return flrcpn(frfxlnc->underlying());
     return boost::dynamic_pointer_cast<FloatingRateCoupon>(c);
 }
 
@@ -325,7 +336,8 @@ bool isFixedCoupon(const boost::shared_ptr<CashFlow>& c, const Date& today) {
     if (flc != nullptr)
         return flc->fixingDate() <= today;
     else if (boost::dynamic_pointer_cast<FixedRateCoupon>(c) != nullptr ||
-             boost::dynamic_pointer_cast<SimpleCashFlow>(c) != nullptr)
+             boost::dynamic_pointer_cast<SimpleCashFlow>(c) != nullptr ||
+             boost::dynamic_pointer_cast<FXLinkedCashFlow>(c) != nullptr)
         return true;
     else if (auto indexed = boost::dynamic_pointer_cast<IndexedCoupon>(c))
         return isFixedCoupon(indexed->underlying(), today);
@@ -468,6 +480,9 @@ void McMultiLegBaseEngine::calculate() const {
     couponIndex_.clear();
     couponIndexFixingDate_.clear();
     couponIndexQuantity_.clear();
+    fxLinkedNotionalIndex_.clear();
+    fxLinkedNotionalForeignAmount_.clear();
+    fxLinkedNotionalFixingDate_.clear();
     //
     indexCcyIndex_.resize(times_.size());
     payCcyNum_.resize(times_.size());
@@ -491,6 +506,9 @@ void McMultiLegBaseEngine::calculate() const {
     couponIndex_.resize(times_.size());
     couponIndexFixingDate_.resize(times_.size());
     couponIndexQuantity_.resize(times_.size());
+    fxLinkedNotionalIndex_.resize(times_.size());
+    fxLinkedNotionalForeignAmount_.resize(times_.size());
+    fxLinkedNotionalFixingDate_.resize(times_.size());
     //
     trappedCoupons_.clear();
     trappedCoupons_.resize(times_.size());
@@ -752,6 +770,19 @@ void McMultiLegBaseEngine::calculate() const {
             couponIndex_[index].push_back(couponIndex);
             couponIndexFixingDate_[index].push_back(couponIndexFixingDate);
             couponIndexQuantity_[index].push_back(couponIndexQuantity);
+
+            // fx linked notional coupons
+            boost::shared_ptr<FxIndex> fxLinkedNotionalIndex = nullptr;
+            Real fxLinkedNotionalForeignAmount = Null<Real>();
+            Date fxLinkedNotionalFixingDate = Null<Date>();
+            if (auto fxl = boost::dynamic_pointer_cast<FXLinked>(leg_[i][j])) {
+                fxLinkedNotionalIndex = fxl->fxIndex();
+                fxLinkedNotionalForeignAmount = multiplier * fxl->foreignAmount();
+                fxLinkedNotionalFixingDate = fxl->fxFixingDate();
+            }
+            fxLinkedNotionalIndex_[index].push_back(fxLinkedNotionalIndex);
+            fxLinkedNotionalForeignAmount_[index].push_back(fxLinkedNotionalForeignAmount);
+            fxLinkedNotionalFixingDate_[index].push_back(fxLinkedNotionalFixingDate);
 
             // other data
             payCcyNum_[index].push_back(model_->ccyIndex(currency_[i]));

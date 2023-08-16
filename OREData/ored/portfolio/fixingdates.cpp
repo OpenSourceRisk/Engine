@@ -24,6 +24,7 @@
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/bondtrscashflow.hpp>
+#include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/cmbcoupon.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
@@ -500,6 +501,8 @@ void FixingDateGetter::visit(AverageBMACoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), IndexNameTranslator::instance().oreName(c.index()->name()),
                                     c.date());
 }
+
+void FixingDateGetter::visit(CappedFlooredAverageBMACoupon& c) { c.underlying()->accept(*this); }
 
 void FixingDateGetter::visit(CmsSpreadCoupon& c) {
     // Enforce fixing to be added even if coupon pays on settlement.
