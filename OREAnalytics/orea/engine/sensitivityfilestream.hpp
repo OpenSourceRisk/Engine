@@ -31,20 +31,23 @@ namespace ore {
 namespace analytics {
 
 //! Class for streaming SensitivityRecords from csv file
-class SensitivityFileStream : public SensitivityStream {
+class SensitivityInputStream : public SensitivityStream {
 public:
-    //! Constructor providing path to csv file \p fileName
-    SensitivityFileStream(const std::string& fileName, char delim = ',', const std::string& comment = "#");
-    //! Destructor
-    ~SensitivityFileStream() override;
+    //! Constructor
+    SensitivityInputStream(char delim = ',', const std::string& comment = "#") 
+        : delim_(delim), comment_(comment), lineNo_(0) {}
+    virtual ~SensitivityInputStream() {} // Declare virtual destructor
+        
+    /*! Set stream for function */
+    void setStream(std::istream* stream);
     //! Returns the next SensitivityRecord in the stream
     SensitivityRecord next() override;
     //! Resets the stream so that SensitivityRecord objects can be streamed again
     void reset() override;
 
 private:
-    //! Handle on the csv file
-    std::ifstream file_;
+    //! Handle on the stram
+    std::istream* stream_;
     //! Csv file delimiter
     char delim_;
     //! Csv file comment string
@@ -54,6 +57,23 @@ private:
 
     //! Create a record from a collection of strings
     SensitivityRecord processRecord(const std::vector<std::string>& entries) const;
+};
+
+class SensitivityFileStream : public SensitivityInputStream {
+public:
+    //! Constructor providing path to csv file \p fileName
+    SensitivityFileStream(const std::string& fileName, char delim = ',', const std::string& comment = "#");
+
+    ~SensitivityFileStream() override;
+    
+private:
+    std::ifstream* file_;
+};
+
+class SensitivityBufferStream : public SensitivityInputStream {
+public:
+    //! Constructor providing path to csv file \p fileName
+    SensitivityBufferStream(const std::string& buffer, char delim = ',', const std::string& comment = "#");
 };
 
 } // namespace analytics
