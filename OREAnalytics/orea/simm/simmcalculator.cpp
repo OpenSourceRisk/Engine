@@ -111,10 +111,8 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
     if (!quiet_) {
         LOG("SimmCalculator: Splitting up original CRIF records into their respective collect/post regulations");
     }
-    for (const CrifRecord& crifRecord : simmNetSensitivities_) {
-        addCrifRecord(crifRecord, SimmSide::Call, enforceIMRegulations);
-        addCrifRecord(crifRecord, SimmSide::Post, enforceIMRegulations);
-    }
+    for (const CrifRecord& crifRecord : simmNetSensitivities_)
+        addCrifRecord(crifRecord, enforceIMRegulations);
 
     // Some additional processing depending on the regulations applicable to each netting set
     for (auto& sv : regSensitivities_) {
@@ -122,8 +120,8 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
         for (auto& s : sv.second) {
             // Where there is SEC and CFTC in the portfolio, we add the CFTC trades to SEC,
             // but still continue with CFTC calculations
-            const bool hasCFTC = s.second.count("CFTC") > 0;
-            const bool hasSEC = s.second.count("SEC") > 0;
+            const bool hasCFTC = s.second.find("CFTC") != s.second.end();
+            const bool hasSEC = s.second.find("SEC") != s.second.end();
             if (hasCFTC && hasSEC) {
                 const SimmNetSensitivities& netRecordsCFTC = s.second.at("CFTC")->netRecords(true);
                 const SimmNetSensitivities& netRecordsSEC = s.second.at("SEC")->netRecords(true);
@@ -139,6 +137,11 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
                     }
                 }
             }
+            // The CrifLoader was set initially without aggregation, so make sure to aggregate this now
+            if (hasCFTC)
+                s.second.at("CFTC")->aggregate();
+            if (hasSEC)
+                s.second.at("SEC")->aggregate();
 
             // If netting set has "Unspecified" plus other regulations, the "Unspecified" sensis are to be excluded.
             // If netting set only has "Unspecified", then no regulations were ever specified, so all trades are
@@ -1652,45 +1655,49 @@ void SimmCalculator::add(const NettingSetDetails& nettingSetDetails, const strin
         add(nettingSetDetails, regulation, pc, rc, mt, kv.first, kv.second, side, overwrite);
 }
 
-void SimmCalculator::addCrifRecord(const CrifRecord& crifRecord, const SimmSide& side,
-                                   const bool enforceIMRegulations) {
+void SimmCalculator::addCrifRecord(const CrifRecord& crifRecord, const bool enforceIMRegulations) {
 
-    const NettingSetDetails& nettingSetDetails = crifRecord.nettingSetDetails;
+    for (const auto& side : {SimmSide::Call, SimmSide::Post}) {
+        const NettingSetDetails& nettingSetDetails = crifRecord.nettingSetDetails;
 
-    bool collectRegsIsEmpty = false;
-    bool postRegsIsEmpty = false;
-    if (collectRegsIsEmpty_.find(crifRecord.nettingSetDetails) != collectRegsIsEmpty_.end())
-        collectRegsIsEmpty = collectRegsIsEmpty_.at(crifRecord.nettingSetDetails);
-    if (postRegsIsEmpty_.find(crifRecord.nettingSetDetails) != postRegsIsEmpty_.end())
-        postRegsIsEmpty = postRegsIsEmpty_.at(crifRecord.nettingSetDetails);
+        bool collectRegsIsEmpty = false;
+        bool postRegsIsEmpty = false;
+        if (collectRegsIsEmpty_.find(crifRecord.nettingSetDetails) != collectRegsIsEmpty_.end())
+            collectRegsIsEmpty = collectRegsIsEmpty_.at(crifRecord.nettingSetDetails);
+        if (postRegsIsEmpty_.find(crifRecord.nettingSetDetails) != postRegsIsEmpty_.end())
+            postRegsIsEmpty = postRegsIsEmpty_.at(crifRecord.nettingSetDetails);
 
-    string regsString;
-    if (enforceIMRegulations)
-        regsString = side == SimmSide::Call ? crifRecord.collectRegulations : crifRecord.postRegulations;
-    set<string> regs = parseRegulationString(regsString);
+        string regsString;
+        if (enforceIMRegulations)
+            regsString = side == SimmSide::Call ? crifRecord.collectRegulations : crifRecord.postRegulations;
+        set<string> regs = parseRegulationString(regsString);
 
-    auto newCrifRecord = crifRecord;
-    newCrifRecord.collectRegulations.clear();
-    newCrifRecord.postRegulations.clear();
-    for (const string& r : regs)
-        if (r == "Excluded" ||
-            (r == "Unspecified" && enforceIMRegulations && !(collectRegsIsEmpty && postRegsIsEmpty))) {
-            continue;
-        } else if (r != "Excluded") {
-            // Keep a record of trade IDs for each regulation
-            if (!newCrifRecord.isSimmParameter())
-                tradeIds_[side][nettingSetDetails][r].insert(newCrifRecord.tradeId);
+        auto newCrifRecord = crifRecord;
+        newCrifRecord.collectRegulations.clear();
+        newCrifRecord.postRegulations.clear();
+        for (const string& r : regs)
+            if (r == "Excluded" ||
+                (r == "Unspecified" && enforceIMRegulations && !(collectRegsIsEmpty && postRegsIsEmpty))) {
+                continue;
+            } else if (r != "Excluded") {
+                // Keep a record of trade IDs for each regulation
+                if (!newCrifRecord.isSimmParameter())
+                    tradeIds_[side][nettingSetDetails][r].insert(newCrifRecord.tradeId);
 
             // Add CRIF record to the appropriate regulations
-            if (regSensitivities_[side][nettingSetDetails][r] == nullptr)
-                regSensitivities_[side][nettingSetDetails][r] = boost::make_shared<CrifLoader>(simmConfiguration_, CrifRecord::additionalHeaders, true, true);
+            if (regSensitivities_[side][nettingSetDetails][r] == nullptr) {
+                // We aggregate SEC/CFTC CRIF records later because we do not want to lose trade ID data until we have combined these later.
+                const bool aggregateTrades = r == "SEC" || r == "CFTC" ? false : true;
+                regSensitivities_[side][nettingSetDetails][r] = boost::make_shared<CrifLoader>(simmConfiguration_, CrifRecord::additionalHeaders, true, aggregateTrades);
+            }
 
-            // We make sure to ignore amountCcy when aggregating the records, since we will only be using amountUsd,
-            // and we may have CRIF records that are equal everywhere except for the amountCcy, and this will fail
-            // in the case of Risk_XCcyBasis and Risk_Inflation.
-            const bool onDiffAmountCcy = true;
-            regSensitivities_[side][nettingSetDetails][r]->add(newCrifRecord, onDiffAmountCcy);
-        }
+                // We make sure to ignore amountCcy when aggregating the records, since we will only be using amountUsd,
+                // and we may have CRIF records that are equal everywhere except for the amountCcy, and this will fail
+                // in the case of Risk_XCcyBasis and Risk_Inflation.
+                const bool onDiffAmountCcy = true;
+                regSensitivities_[side][nettingSetDetails][r]->add(newCrifRecord, onDiffAmountCcy);
+            }
+    }
 }
 
 Real SimmCalculator::lambda(Real theta) const {
