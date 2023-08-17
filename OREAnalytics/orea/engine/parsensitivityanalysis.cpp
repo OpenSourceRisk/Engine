@@ -1744,14 +1744,14 @@ ParSensitivityAnalysis::makeCrossCcyBasisSwap(const boost::shared_ptr<Market>& m
     }
 
     if (isBaseDiscount)
-        parHelperDependencies_.emplace(RiskFactorKey::KeyType::DiscountCurve, baseCcy, 0);
-    else
         parHelperDependencies_.emplace(RiskFactorKey::KeyType::YieldCurve, baseCcy, 0);
+    else
+        parHelperDependencies_.emplace(RiskFactorKey::KeyType::DiscountCurve, baseCcy, 0);
 
     if (isNonBaseDiscount)
-        parHelperDependencies_.emplace(RiskFactorKey::KeyType::DiscountCurve, ccy, 0);
-    else
         parHelperDependencies_.emplace(RiskFactorKey::KeyType::YieldCurve, ccy, 0);
+    else
+        parHelperDependencies_.emplace(RiskFactorKey::KeyType::DiscountCurve, ccy, 0);
 
     parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, baseIndexName, 0);
     parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, indexName, 0);
