@@ -79,9 +79,12 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
 }
 
 void Analytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-                         const std::set<std::string>& runTypes) {
-    if (impl_)
+                           const std::set<std::string>& runTypes) {
+    MEM_LOG_USING_LEVEL(ORE_WARNING)
+    if (impl_) {
         impl_->runAnalytic(loader, runTypes);
+        MEM_LOG_USING_LEVEL(ORE_WARNING)
+    }
 }
 
 void Analytic::setUpConfigurations() {

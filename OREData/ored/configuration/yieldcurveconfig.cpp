@@ -478,7 +478,8 @@ XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(node, quotesNode);
     }
 
-    XMLUtils::addChild(doc, node, "Conventions", conventionsID_);
+    if (!conventionsID_.empty())
+        XMLUtils::addChild(doc, node, "Conventions", conventionsID_);
     XMLUtils::addChild(doc, node, "PillarChoice", ore::data::to_string(pillarChoice_));
     return node;
 }
