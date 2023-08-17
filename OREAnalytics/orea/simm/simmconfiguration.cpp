@@ -497,6 +497,15 @@ SimmConfiguration::Regulation parseRegulation(const string& regulation) {
     }
 }
 
+string combineRegulations(const string& regs1, const string& regs2) {
+    if (regs1.empty())
+        return regs2;
+    if (regs2.empty())
+        return regs1;
+
+    return regs1 + ',' + regs2;
+}
+
 set<string> parseRegulationString(const string& regsString, const set<string>& valueIfEmpty) {
     set<string> uniqueRegNames;
 
