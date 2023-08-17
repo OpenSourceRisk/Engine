@@ -36,8 +36,6 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     Position::Type positionType = parsePositionType(longShort_);
     auto index = market->iborIndex(index_);
     
-    endDate = index->fixingCalendar().adjust(endDate, index->businessDayConvention());
-
     boost::shared_ptr<FloatingRateCoupon> cpn;
     if (auto overnightIndex = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(*index)) {
         cpn = boost::make_shared<QuantExt::OvernightIndexedCoupon>(endDate, amount_, startDate, endDate, overnightIndex,

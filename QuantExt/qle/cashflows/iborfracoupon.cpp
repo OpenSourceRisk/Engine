@@ -22,11 +22,13 @@ namespace QuantExt {
 
 IborFraCoupon::IborFraCoupon(const QuantLib::Date& startDate, const QuantLib::Date& endDate, QuantLib::Real nominal,
                              const boost::shared_ptr<QuantLib::IborIndex>& index, const double strikeRate)
-    : QuantLib::IborCoupon(startDate, nominal, startDate, endDate, index->fixingDays(), index, 1.0, -strikeRate) {}
+    : QuantLib::IborCoupon(startDate, nominal, startDate,
+                           index->fixingCalendar().adjust(endDate, index->businessDayConvention()),
+                           index->fixingDate(startDate), index, 1.0, -strikeRate) {}
 
 QuantLib::Real IborFraCoupon::amount() const {
     return QuantLib::IborCoupon::amount() /
-                 (1 + QuantLib::IborCoupon::accrualPeriod() * QuantLib::IborCoupon::indexFixing());
+           (1 + QuantLib::IborCoupon::accrualPeriod() * QuantLib::IborCoupon::indexFixing());
 }
 
 } // namespace QuantExt
