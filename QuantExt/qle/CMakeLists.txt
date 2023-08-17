@@ -26,9 +26,11 @@ calendars/unitedarabemirates.cpp
 calendars/wmr.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
+cashflows/blackaveragebmacouponpricer.cpp
 cashflows/blackovernightindexedcouponpricer.cpp
 cashflows/bondtrscashflow.cpp
 cashflows/brlcdicouponpricer.cpp
+cashflows/cappedflooredaveragebmacoupon.cpp
 cashflows/cashflows.cpp
 cashflows/cashflowtable.cpp
 cashflows/cmbcoupon.cpp
@@ -404,9 +406,11 @@ calendars/unitedarabemirates.hpp
 calendars/wmr.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
+cashflows/blackaveragebmacouponpricer.hpp
 cashflows/blackovernightindexedcouponpricer.hpp
 cashflows/bondtrscashflow.hpp
 cashflows/brlcdicouponpricer.hpp
+cashflows/cappedflooredaveragebmacoupon.hpp
 cashflows/cashflows.hpp
 cashflows/cashflowtable.hpp
 cashflows/cmbcoupon.hpp

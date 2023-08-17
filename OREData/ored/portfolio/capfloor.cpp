@@ -63,7 +63,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     legs_.clear();
     boost::shared_ptr<EngineBuilder> builder;
-    std::string underlyingIndex, qlIndexName;
+    std::string underlyingIndex;
     boost::shared_ptr<QuantLib::Instrument> qlInstrument;
 
     // Account for long / short multiplier. In the following we expect the qlInstrument to be set up
@@ -82,21 +82,15 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             engineFactory->market()->iborIndex(underlyingIndex, engineFactory->configuration(MarketContext::pricing));
         QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << underlyingIndex << " in market.");
         boost::shared_ptr<IborIndex> index = hIndex.currentLink();
-        qlIndexName = index->name();
 
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "CapFloor build error, Floating leg section must not have caps and floors");
 
-        bool isBmaIndex = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index) != nullptr;
-
-        if (!isBmaIndex && !floatData->hasSubPeriods()) {
+        if (!floatData->hasSubPeriods()) {
             // For the cases where we support caps and floors in the regular way, we build a floating leg with
             // the nakedOption flag set to true, this avoids maintaining all features in legs with associated
             // coupon pricers and at the same time in the QuaantLib::CapFloor instrument and pricing engine.
-            // Supported cases are
-            // - Ibor coupon without sub periods (hasSubPeriods = false)
-            // - compounded ON coupon, averaged ON coupon
-            // The other cases are handled below.
+            // The only remaining unsupported case are ibor coupons with sub periods
             LegData tmpLegData = legData_;
             boost::shared_ptr<FloatingLegData> tmpFloatData = boost::make_shared<FloatingLegData>(*floatData);
             tmpFloatData->floors() = floors_;
@@ -124,12 +118,11 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             maturity_ = CashFlows::maturityDate(legs_.front());
         } else {
             // For the cases where we don't have regular cap / floor support we treat the index approximately as an Ibor
-            // index and build an QuantLib::CapFloor with associated pricing engine. These cases comprise:
-            // - BMA coupons
-            // - Ibor coupons with sub periods (hasSubPeriods = true)
+            // index and build an QuantLib::CapFloor with associated pricing engine. The only remaining case where this
+            // is done are Ibor subperiod coupons
 
-            ALOG("CapFloor trade " << id() << " on a) BMA or b) sub periods Ibor (index = '" << underlyingIndex
-                                   << "') built, will treat the index approximately as an ibor index");
+            ALOG("CapFloor trade " << id() << " on sub periods Ibor (index = '" << underlyingIndex
+                                   << "') built, will ignore sub periods feature");
             builder = engineFactory->builder(tradeType_);
             legs_.push_back(makeIborLeg(legData_, index, engineFactory));
 
@@ -173,7 +166,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(!hIndex.empty(), "Could not find swap index " << underlyingIndex << " in market.");
 
         boost::shared_ptr<SwapIndex> index = hIndex.currentLink();
-        qlIndexName = index->name();
 
         LegData tmpLegData = legData_;
         boost::shared_ptr<CMSLegData> tmpFloatData = boost::make_shared<CMSLegData>(*cmsData);
@@ -243,7 +235,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         underlyingIndex = cpiData->index();
         Handle<ZeroInflationIndex> zeroIndex = engineFactory->market()->zeroInflationIndex(
             underlyingIndex, builder->configuration(MarketContext::pricing));
-        qlIndexName = zeroIndex->name();
 
         // the cpi leg uses the first schedule date as the start date, which only makes sense if there are at least
         // two dates in the schedule, otherwise the only date in the schedule is the pay date of the cf and a a separate
@@ -375,7 +366,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // look for yoy inflation index
         yoyIndex =
             engineFactory->market()->yoyInflationIndex(underlyingIndex, builder->configuration(MarketContext::pricing));
-        qlIndexName = yoyIndex->name();
 
         // we must have either an yoy or a zero inflation index in the market, if no yoy curve, get the zero
         // and create a yoy index from it
@@ -453,12 +443,10 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     instrument_ =
         boost::make_shared<VanillaInstrument>(qlInstrument, multiplier, additionalInstruments, additionalMultipliers);
 
-    // add required fixings
-    if (!qlIndexName.empty() && !underlyingIndex.empty()) {
-        auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_);
-        for (auto const& l : legs_)
-            addToRequiredFixings(l, fdg);
-    }
+    // axdd required fixings
+    auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_);
+    for (auto const& l : legs_)
+        addToRequiredFixings(l, fdg);
 
     Date startDate = Date::maxDate();
     for (auto const& l : legs_) {

@@ -135,6 +135,9 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     Date exerciseDate = parseDate(exerciseDates.front());
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
 
+    QL_REQUIRE(parseDate(legData.schedule().rules().front().endDate()) > exerciseDate, 
+        "IndexCreditDefaultSwapOption: ExerciseDate must be before EndDate");
+
     // We apply an automatic correction to a common mistake in the input data, where the full index underlying
     // is provided and not only the part of the underlying into which we exercise.
     if (legData.schedule().rules().size() == 1 && legData.schedule().dates().empty()) {
