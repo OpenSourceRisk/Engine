@@ -43,17 +43,17 @@ public:
     boost::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_; }
 
     RandomVariable numeraire(const Time t, const RandomVariable& x,
-                             const Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
+                             const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const;
 
     RandomVariable discountBond(const Time t, const Time T, const RandomVariable& x,
-                                Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
+                                const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const;
 
     RandomVariable
     reducedDiscountBond(const Time t, const Time T, const RandomVariable& x,
-                        const Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
+                        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const;
 
     RandomVariable discountBondOption(Option::Type type, const Real K, const Time t, const Time S, const Time T,
-                                      const RandomVariable& x, const Handle<YieldTermStructure> discountCurve) const;
+                                      const RandomVariable& x, const Handle<YieldTermStructure>& discountCurve) const;
 
     /* Handles IborIndex and SwapIndex. Requires observation time t <= fixingDate */
     RandomVariable fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Time t,

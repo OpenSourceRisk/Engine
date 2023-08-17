@@ -30,7 +30,7 @@
 namespace QuantExt {
 
 RandomVariable LgmVectorised::numeraire(const Time t, const RandomVariable& x,
-                                        const Handle<YieldTermStructure> discountCurve) const {
+                                        const Handle<YieldTermStructure>& discountCurve) const {
     QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGMVectorised::numeraire");
     RandomVariable Ht(x.size(), p_->H(t));
     return exp(Ht * x + RandomVariable(x.size(), 0.5 * p_->zeta(t)) * Ht * Ht) /
@@ -39,7 +39,7 @@ RandomVariable LgmVectorised::numeraire(const Time t, const RandomVariable& x,
 }
 
 RandomVariable LgmVectorised::discountBond(const Time t, const Time T, const RandomVariable& x,
-                                           Handle<YieldTermStructure> discountCurve) const {
+                                           const Handle<YieldTermStructure>& discountCurve) const {
     if (QuantLib::close_enough(t, T))
         return RandomVariable(x.size(), 1.0);
     QL_REQUIRE(T >= t && t >= 0.0, "T(" << T << ") >= t(" << t << ") >= 0 required in LGMVectorised::discountBond");
@@ -52,7 +52,7 @@ RandomVariable LgmVectorised::discountBond(const Time t, const Time T, const Ran
 }
 
 RandomVariable LgmVectorised::reducedDiscountBond(const Time t, const Time T, const RandomVariable& x,
-                                                  const Handle<YieldTermStructure> discountCurve) const {
+                                                  const Handle<YieldTermStructure>& discountCurve) const {
     if (QuantLib::close_enough(t, T))
         return RandomVariable(x.size(), 1.0) / numeraire(t, x, discountCurve);
     QL_REQUIRE(T >= t && t >= 0.0,
@@ -65,7 +65,7 @@ RandomVariable LgmVectorised::reducedDiscountBond(const Time t, const Time T, co
 
 RandomVariable LgmVectorised::discountBondOption(Option::Type type, const Real K, const Time t, const Time S,
                                                  const Time T, const RandomVariable& x,
-                                                 const Handle<YieldTermStructure> discountCurve) const {
+                                                 const Handle<YieldTermStructure>& discountCurve) const {
     QL_REQUIRE(T > S && S >= t && t >= 0.0,
                "T(" << T << ") > S(" << S << ") >= t(" << t << ") >= 0 required in LGMVectorised::discountBondOption");
     RandomVariable w(x.size(), type == Option::Call ? 1.0 : -1.0);
