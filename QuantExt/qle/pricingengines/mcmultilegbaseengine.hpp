@@ -88,6 +88,7 @@ private:
     // data structure storing info needed to generate the amount for a cashflow
     struct CashflowInfo {
         Real payTime = Null<Real>();
+        Real exIntoCriterionTime = Null<Real>();
         Size payCcyIndex = Null<Size>();
         Real payer = 1.0;
         bool isFixed = false;

@@ -23,8 +23,8 @@
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
-#include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
+#include <qle/pricingengines/mcmultilegbaseengine.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -77,6 +77,12 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(cons
     info.payCcyIndex = model_->ccyIndex(payCcy);
     info.payer = payer;
 
+    if (auto cpn = boost::dynamic_pointer_cast<Coupon>(flow)) {
+        info.exIntoCriterionTime = time(cpn->accrualStartDate());
+    } else {
+        info.exIntoCriterionTime = info.payTime;
+    }
+
     if (boost::dynamic_pointer_cast<FixedRateCoupon>(flow) != nullptr ||
         boost::dynamic_pointer_cast<SimpleCashFlow>(flow) != nullptr) {
         info.isFixed = true;
@@ -97,7 +103,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(cons
             info.amountCalculator = [this, indexCcyIdx, ibor,
                                      simTime](const std::vector<std::vector<const RandomVariable*>>& states) {
                 return lgmVectorised_[indexCcyIdx].fixing(ibor->index(), ibor->fixingDate(), simTime,
-                                                          *states.at(0).at(0));
+                                                          *states.at(0).at(0)) *
+                       RandomVariable(states.at(0).at(0)->size(), ibor->nominal() * ibor->accrualPeriod());
             };
         }
         return info;
@@ -108,9 +115,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(cons
 
 Size McMultiLegBaseEngine::timeIndex(const Time t, const std::set<Real>& times) const {
     auto it = times.find(t);
-    QL_REQUIRE(it != times.end(),
-               "McMultiLegBaseEngine::cashflowPathValue(): time ("
-                   << t << ") not found in simulation times. This is an internal error. Contact dev.");
+    QL_REQUIRE(it != times.end(), "McMultiLegBaseEngine::cashflowPathValue(): time ("
+                                      << t
+                                      << ") not found in simulation times. This is an internal error. Contact dev.");
     return std::distance(times.begin(), it);
 }
 
@@ -134,12 +141,12 @@ RandomVariable McMultiLegBaseEngine::cashflowPathValue(const CashflowInfo& cf,
                   lgmVectorised_[0].numeraire(
                       cf.payTime, pathValues[simTimesPayIdx][model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
                       discountCurves_[0]);
-    
+
     if (cf.payCcyIndex > 0) {
         amount *= exp(pathValues[simTimesPayIdx][model_->pIdx(CrossAssetModel::AssetType::FX, cf.payCcyIndex - 1)]);
     }
 
-    return amount;
+    return amount * RandomVariable(pathValues[0][0].size(), cf.payer);
 }
 
 void McMultiLegBaseEngine::calculate() const {
@@ -197,12 +204,12 @@ void McMultiLegBaseEngine::calculate() const {
        - exercise times
        - xva simulation times */
 
-    std::set<Real> simulationTimes;
-    std::set<Real> exerciseXvaTimes;
-
     std::set<Real> cashflowGenTimes;
     std::set<Real> exerciseTimes;
     std::set<Real> xvaTimes;
+
+    std::set<Real> exerciseXvaTimes; // = exercise + xva times
+    std::set<Real> simulationTimes;  // = cashflowGen + exercise + xva times
 
     for (auto const& info : cashflowInfo) {
         cashflowGenTimes.insert(info.simulationTimes.begin(), info.simulationTimes.end());
@@ -253,16 +260,25 @@ void McMultiLegBaseEngine::calculate() const {
 
     std::cout << "calibration path build " << timer.elapsed().wall / 1E6 << "ms" << std::endl;
 
-    // for each xva sim time collect the relevant cashflow amounts and train a model on them
+    // for each xva and exercise time collect the relevant cashflow amounts and train a model on them
 
-    std::vector<Array> coeffs(exerciseXvaTimes.size());
+    std::vector<Array> coeffsUndDirty(exerciseXvaTimes.size());  // available on xva times
+    std::vector<Array> coeffsUndExInto(exerciseXvaTimes.size()); // available on ex times
+    std::vector<Array> coeffsOption(exerciseXvaTimes.size());    // available on xva and ex times
 
     auto basisFns = RandomVariableLsmBasisSystem::multiPathBasisSystem(model_->stateProcess()->size(), polynomOrder_);
 
-    std::vector<bool> cfDone(cashflowInfo.size(), false);
+    enum class CfStatus { open, cached, done };
+    std::vector<CfStatus> cfStatus(cashflowInfo.size(), CfStatus::open);
+
     std::vector<const RandomVariable*> regressor(model_->stateProcess()->size());
 
-    RandomVariable cumulatedAmount(calibrationSamples_);
+    RandomVariable pathValueUndDirty(calibrationSamples_);
+    RandomVariable pathValueUndExInto(calibrationSamples_);
+    RandomVariable pathValueOption(calibrationSamples_);
+
+    std::vector<RandomVariable> amountCache(exerciseXvaTimes.size());
+
     Size counter = exerciseXvaTimes.size() - 1;
 
     std::cout << "got " << simulationTimes.size() << " simulation times and " << exerciseXvaTimes.size()
@@ -270,36 +286,79 @@ void McMultiLegBaseEngine::calculate() const {
 
     for (auto t = exerciseXvaTimes.rbegin(); t != exerciseXvaTimes.rend(); ++t) {
 
+        bool isExerciseTime = exerciseTimes.find(*t) != exerciseTimes.end();
+        bool isXvaTime = xvaTimes.find(*t) != xvaTimes.end();
+
         for (Size i = 0; i < cashflowInfo.size(); ++i) {
-
-            if (cfDone[i])
-                continue;
-
-            if (cashflowInfo[i].payTime > *t) {
-                cumulatedAmount += cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
-                cfDone[i] = true;
+            if (cfStatus[i] == CfStatus::open) {
+                auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
+                if (cashflowInfo[i].exIntoCriterionTime > *t) {
+                    pathValueUndDirty += tmp;
+                    pathValueUndExInto += tmp;
+                    cfStatus[i] = CfStatus::done;
+                } else if (cashflowInfo[i].payTime > *t) {
+                    pathValueUndDirty += tmp;
+                    amountCache[i] = tmp;
+                    cfStatus[i] = CfStatus::cached;
+                }
+            } else if (cfStatus[i] == CfStatus::cached) {
+                if (cashflowInfo[i].exIntoCriterionTime > *t) {
+                    pathValueUndExInto += amountCache[i];
+                    cfStatus[i] = CfStatus::done;
+                    amountCache[i].clear();
+                }
             }
         }
+
+        /* possible refinement: do the regression on pairs
+           ( std::min(cashflowSimTime, t) , modelIndex state at this time )
+           taken from the cf info sim times, model indices */
 
         for (Size i = 0; i < model_->stateProcess()->size(); ++i) {
             regressor[i] = &pathValues[timeIndex(*t, simulationTimes)][i];
         }
 
-        coeffs[counter] = regressionCoefficients(cumulatedAmount, regressor, basisFns);
-        if (getenv("DEBUG")) {
-            std::cout << "trained coeffs at " << counter << ": " << coeffs[counter] << std::endl;
+        if (isExerciseTime) {
+            coeffsUndExInto[counter] = regressionCoefficients(pathValueUndExInto, regressor, basisFns);
+            auto exerciseValue = conditionalExpectation(regressor, basisFns, coeffsUndExInto[counter]);
+            auto coeffsContinuationValue = regressionCoefficients(
+                pathValueOption, regressor, basisFns, exerciseValue > RandomVariable(calibrationSamples_, 0));
+            auto continuationValue = conditionalExpectation(regressor, basisFns, coeffsContinuationValue);
+            pathValueOption = conditionalResult(exerciseValue > continuationValue &&
+                                                    exerciseValue > RandomVariable(calibrationSamples_, 0),
+                                                pathValueUndExInto, pathValueOption);
+            coeffsOption[counter] = regressionCoefficients(pathValueOption, regressor, basisFns);
         }
+
+        if (isXvaTime) {
+            coeffsUndDirty[counter] = regressionCoefficients(pathValueUndDirty, regressor, basisFns);
+            if (!isExerciseTime && exercise_ != nullptr)
+                coeffsOption[counter] = regressionCoefficients(pathValueOption, regressor, basisFns);
+        }
+
+        if (getenv("DEBUG")) {
+            std::cout << "trained und dirty coeffs at " << counter << ": " << coeffsUndDirty[counter] << std::endl;
+            std::cout << "trained und ex into coeffs at " << counter << ": " << coeffsUndExInto[counter] << std::endl;
+            std::cout << "trained option coeffs at " << counter << ": " << coeffsOption[counter] << std::endl;
+        }
+
         --counter;
     }
 
     // add the remaining live cashflows to get the underlying value
 
     for (Size i = 0; i < cashflowInfo.size(); ++i) {
-        if (!cfDone[i])
-            cumulatedAmount += cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
+        if (cfStatus[i] == CfStatus::open)
+            pathValueUndDirty += cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
     }
 
     // set the result value (= underlying value if no exercise is given, otherwise option value)
+
+    resultUnderlyingNpv_ = expectation(pathValueUndDirty).at(0) * model_->numeraire(0, 0.0, 0.0, discountCurves_[0]);
+    resultValue_ = exercise_ == nullptr ? resultUnderlyingNpv_ : expectation(pathValueOption).at(0);
+
+    std::cout << "underlying npv = " << resultUnderlyingNpv_ << std::endl;
+    std::cout << "option npv     = " << resultValue_ << std::endl;
 
     std::cout << "total    " << timer.elapsed().wall / 1E6 << "ms" << std::endl;
 }
