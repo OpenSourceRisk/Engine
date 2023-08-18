@@ -312,6 +312,10 @@ void InputParameters::setSensitivityStreamFromFile(const std::string& fileName) 
     sensitivityStream_ = boost::make_shared<SensitivityFileStream>(fileName);
 }
 
+void InputParameters::setSensitivityStreamFromBuffer(const std::string& buffer) {
+    sensitivityStream_ = boost::make_shared<SensitivityBufferStream>(buffer);
+}
+
 void InputParameters::setAmcTradeTypes(const std::string& s) {
     // parse to set<string>
     auto v = parseListOfValues(s);

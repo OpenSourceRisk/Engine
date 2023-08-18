@@ -168,7 +168,6 @@
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/equitytouchoption.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
-#include <ored/portfolio/builders/forwardrateagreement.hpp>
 #include <ored/portfolio/builders/fxasianoption.hpp>
 #include <ored/portfolio/builders/fxbarrieroption.hpp>
 #include <ored/portfolio/builders/fxdigitalbarrieroption.hpp>
