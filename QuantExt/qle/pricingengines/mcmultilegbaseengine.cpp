@@ -456,9 +456,13 @@ MultiLegBaseAmcCalculator::simulatePath(const std::vector<QuantLib::Real>& pathT
             QL_REQUIRE(ind < exerciseXvaTimes_.size(),
                        "MultiLegBaseAmcCalculator::simulatePath(): internal error, xva time "
                            << t << " not found in exerciseXvaTimes vector.");
+            if (getenv("DEBUG")) {
+                std::cout << "conditional expectation " << coeffsUndDirty_[ind] << std::endl;
+            }
             result[counter + 1] = conditionalExpectation(effPaths[counter], basisFns_, coeffsUndDirty_[ind]);
             ++counter;
         }
+        return result;
     }
 
     /* if we have an exercise we need to determine the exercise indicators except for a sticky run
