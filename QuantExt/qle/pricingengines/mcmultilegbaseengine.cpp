@@ -199,22 +199,10 @@ void McMultiLegBaseEngine::calculate() const {
 
     std::cout << "cashflow init " << timer.elapsed().wall / 1E6 << "ms" << std::endl;
 
-    /* build the vector of required path simulation times which are given by
-       - cashflow generation times
-       - exercise times
-       - xva simulation times */
+    /* build exercise times and xva times */
 
-    std::set<Real> cashflowGenTimes;
     std::set<Real> exerciseTimes;
     std::set<Real> xvaTimes;
-
-    std::set<Real> exerciseXvaTimes; // = exercise + xva times
-    std::set<Real> simulationTimes;  // = cashflowGen + exercise + xva times
-
-    for (auto const& info : cashflowInfo) {
-        cashflowGenTimes.insert(info.simulationTimes.begin(), info.simulationTimes.end());
-        cashflowGenTimes.insert(info.payTime);
-    }
 
     if (exercise_ != nullptr) {
         for (auto const& d : exercise_->dates()) {
@@ -228,12 +216,26 @@ void McMultiLegBaseEngine::calculate() const {
         xvaTimes.insert(time(d));
     }
 
-    simulationTimes.insert(cashflowGenTimes.begin(), cashflowGenTimes.end());
-    simulationTimes.insert(exerciseTimes.begin(), exerciseTimes.end());
-    simulationTimes.insert(xvaTimes.begin(), xvaTimes.end());
+    /* build cashflow generation times */
+
+    std::set<Real> cashflowGenTimes;
+
+    for (auto const& info : cashflowInfo) {
+        cashflowGenTimes.insert(info.simulationTimes.begin(), info.simulationTimes.end());
+        cashflowGenTimes.insert(info.payTime);
+    }
+
+    /* build combined time sets */
+
+    std::set<Real> exerciseXvaTimes; // = exercise + xva times
+    std::set<Real> simulationTimes;  // = cashflowGen + exercise + xva times
 
     exerciseXvaTimes.insert(exerciseTimes.begin(), exerciseTimes.end());
     exerciseXvaTimes.insert(xvaTimes.begin(), xvaTimes.end());
+
+    simulationTimes.insert(cashflowGenTimes.begin(), cashflowGenTimes.end());
+    simulationTimes.insert(exerciseTimes.begin(), exerciseTimes.end());
+    simulationTimes.insert(xvaTimes.begin(), xvaTimes.end());
 
     std::cout << "sim times build " << timer.elapsed().wall / 1E6 << "ms" << std::endl;
 
@@ -262,9 +264,10 @@ void McMultiLegBaseEngine::calculate() const {
 
     // for each xva and exercise time collect the relevant cashflow amounts and train a model on them
 
-    std::vector<Array> coeffsUndDirty(exerciseXvaTimes.size());  // available on xva times
-    std::vector<Array> coeffsUndExInto(exerciseXvaTimes.size()); // available on ex times
-    std::vector<Array> coeffsOption(exerciseXvaTimes.size());    // available on xva and ex times
+    std::vector<Array> coeffsUndDirty(exerciseXvaTimes.size());          // available on xva times
+    std::vector<Array> coeffsUndExInto(exerciseXvaTimes.size());         // available on xva and ex times
+    std::vector<Array> coeffsContinuationValue(exerciseXvaTimes.size()); // available on ex times
+    std::vector<Array> coeffsOption(exerciseXvaTimes.size());            // available on xva and ex times
 
     auto basisFns = RandomVariableLsmBasisSystem::multiPathBasisSystem(model_->stateProcess()->size(), polynomOrder_);
 
@@ -318,12 +321,14 @@ void McMultiLegBaseEngine::calculate() const {
             regressor[i] = &pathValues[timeIndex(*t, simulationTimes)][i];
         }
 
-        if (isExerciseTime) {
+        if (exercise_ != nullptr)
             coeffsUndExInto[counter] = regressionCoefficients(pathValueUndExInto, regressor, basisFns);
+
+        if (isExerciseTime) {
             auto exerciseValue = conditionalExpectation(regressor, basisFns, coeffsUndExInto[counter]);
-            auto coeffsContinuationValue = regressionCoefficients(
+            coeffsContinuationValue[counter] = regressionCoefficients(
                 pathValueOption, regressor, basisFns, exerciseValue > RandomVariable(calibrationSamples_, 0));
-            auto continuationValue = conditionalExpectation(regressor, basisFns, coeffsContinuationValue);
+            auto continuationValue = conditionalExpectation(regressor, basisFns, coeffsContinuationValue[counter]);
             pathValueOption = conditionalResult(exerciseValue > continuationValue &&
                                                     exerciseValue > RandomVariable(calibrationSamples_, 0),
                                                 pathValueUndExInto, pathValueOption);
@@ -332,9 +337,10 @@ void McMultiLegBaseEngine::calculate() const {
 
         if (isXvaTime) {
             coeffsUndDirty[counter] = regressionCoefficients(pathValueUndDirty, regressor, basisFns);
-            if (!isExerciseTime && exercise_ != nullptr)
-                coeffsOption[counter] = regressionCoefficients(pathValueOption, regressor, basisFns);
         }
+
+        if (exercise_ != nullptr)
+            coeffsOption[counter] = regressionCoefficients(pathValueOption, regressor, basisFns);
 
         if (getenv("DEBUG")) {
             std::cout << "trained und dirty coeffs at " << counter << ": " << coeffsUndDirty[counter] << std::endl;
@@ -357,6 +363,13 @@ void McMultiLegBaseEngine::calculate() const {
     resultUnderlyingNpv_ = expectation(pathValueUndDirty).at(0) * model_->numeraire(0, 0.0, 0.0, discountCurves_[0]);
     resultValue_ = exercise_ == nullptr ? resultUnderlyingNpv_ : expectation(pathValueOption).at(0);
 
+    // construct the amc calculator
+
+    amcCalculator_ = boost::make_shared<MultiLegBaseAmcCalculator>(
+        externalModelIndices_, optionSettlement_, exerciseXvaTimes, exerciseTimes, xvaTimes, coeffsUndDirty,
+        coeffsUndExInto, coeffsContinuationValue, coeffsOption, basisFns, resultValue_,
+        model_->stateProcess()->initialValues(), model_->irlgm1f(0)->currency());
+
     std::cout << "underlying npv = " << resultUnderlyingNpv_ << std::endl;
     std::cout << "option npv     = " << resultValue_ << std::endl;
 
@@ -365,17 +378,202 @@ void McMultiLegBaseEngine::calculate() const {
 
 boost::shared_ptr<AmcCalculator> McMultiLegBaseEngine::amcCalculator() const { return amcCalculator_; }
 
+MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
+    const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
+    const std::set<Real>& exerciseXvaTimes, const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
+    const std::vector<Array>& coeffsUndDirty, const std::vector<Array>& coeffsUndExInto,
+    const std::vector<Array>& coeffsContinuationValue, const std::vector<Array>& coeffsOption,
+    const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFns,
+    const Real resultValue, const Array& initialState, const Currency& baseCurrency)
+    : externalModelIndices_(externalModelIndices), settlement_(settlement), exerciseXvaTimes_(exerciseXvaTimes),
+      exerciseTimes_(exerciseTimes), xvaTimes_(xvaTimes), coeffsUndDirty_(coeffsUndDirty),
+      coeffsUndExInto_(coeffsUndExInto), coeffsContinuationValue_(coeffsContinuationValue), coeffsOption_(coeffsOption),
+      basisFns_(basisFns), resultValue_(resultValue), initialState_(initialState), baseCurrency_(baseCurrency) {}
+
 std::vector<QuantExt::RandomVariable>
 MultiLegBaseAmcCalculator::simulatePath(const std::vector<QuantLib::Real>& pathTimes,
                                         std::vector<std::vector<QuantExt::RandomVariable>>& paths,
                                         const std::vector<bool>& isRelevantTime, const bool stickyCloseOutRun) {
 
-    QL_REQUIRE(!paths.empty(), "MultiLegBaseAmcCalculator: no future path times, this is not allowed.");
-    QL_REQUIRE(pathTimes.size() == paths.size(), "MultiLegBaseAmcCalculator: inconsistent pathTimes size ("
-                                                     << pathTimes.size() << ") and paths size (" << paths.size()
-                                                     << ") - internal error.");
+    // check input path consistency
 
-    return {};
+    QL_REQUIRE(!paths.empty(), "MultiLegBaseAmcCalculator::simulatePath(): no future path times, this is not allowed.");
+    QL_REQUIRE(pathTimes.size() == paths.size(),
+               "MultiLegBaseAmcCalculator::simulatePath(): inconsistent pathTimes size ("
+                   << pathTimes.size() << ") and paths size (" << paths.size() << ") - internal error.");
+
+    /* put together the relevant simulation times on the input paths and check for consistency with xva times,
+       also put together the effective paths by filtering on relevant simulation times and model indices */
+
+    std::vector<std::vector<const RandomVariable*>> effPaths(
+        xvaTimes_.size(), std::vector<const RandomVariable*>(externalModelIndices_.size()));
+
+    std::vector<Real> simTimes;
+    Size timeIndex = 0;
+    for (Size i = 0; i < pathTimes.size(); ++i) {
+        if (isRelevantTime[i]) {
+
+            int ind = stickyCloseOutRun ? i - 1 : i;
+            QL_REQUIRE(ind >= 0,
+                       "MultiLegBaseAmcCalculator: sticky close out run time index is negative - internal error.");
+            simTimes.push_back(pathTimes[ind]);
+
+            for (Size j = 0; j < externalModelIndices_.size(); ++j) {
+                effPaths[timeIndex][j] = &paths[i][externalModelIndices_[j]];
+            }
+            ++timeIndex;
+        }
+    }
+
+    QL_REQUIRE(simTimes.size() == xvaTimes_.size(),
+               "MultiLegBaseAmcCalculator::simulatePath(): expected input path size "
+                   << xvaTimes_.size() << ", but got " << simTimes.size());
+
+    // init result vector
+
+    Size samples = paths.front().front().size();
+    std::vector<RandomVariable> result(simTimes.size() + 1, RandomVariable(paths.front().front().size(), 0.0));
+
+    // simulate the path: result at first time index is simply the reference date npv
+
+    result[0] = RandomVariable(samples, resultValue_);
+
+    // create the initial state as a vector of pointers to rvs for interpolating states below
+
+    std::vector<RandomVariable> initialState;
+    std::vector<const RandomVariable*> initialStatePointer;
+    for (Size j = 0; j < externalModelIndices_.size(); ++j) {
+        initialState.push_back(RandomVariable(samples, initialState_[j]));
+        initialStatePointer.push_back(&initialState.back());
+    }
+
+    // if we don't have an exercise, we return the dirty npv of the underlying at all times
+
+    if (exerciseTimes_.empty()) {
+        Size counter = 0;
+        for (auto t : xvaTimes_) {
+            Size ind = std::distance(exerciseXvaTimes_.begin(), exerciseXvaTimes_.find(t));
+            QL_REQUIRE(ind < exerciseXvaTimes_.size(),
+                       "MultiLegBaseAmcCalculator::simulatePath(): internal error, xva time "
+                           << t << " not found in exerciseXvaTimes vector.");
+            result[counter + 1] = conditionalExpectation(effPaths[counter], basisFns_, coeffsUndDirty_[ind]);
+            ++counter;
+        }
+    }
+
+    /* if we have an exercise we need to determine the exercise indicators except for a sticky run
+       where we reuse the last saved indicators */
+
+    if (!stickyCloseOutRun) {
+
+        exercised_ = std::vector<Filter>(exerciseTimes_.size() + 1, Filter(samples, false));
+        Size counter = 0;
+
+        for (auto t : exerciseTimes_) {
+
+            // find the time in the exerciseXvaTimes vector
+            Size ind = std::distance(exerciseXvaTimes_.begin(), exerciseXvaTimes_.find(t));
+            QL_REQUIRE(ind != exerciseXvaTimes_.size(),
+                       "MultiLegBaseAmcCalculator::simulatePath(): internal error, exercise time "
+                           << t << " not found in exerciseXvaTimes vector.");
+
+            // find the sim times and model states before and after the exercise time
+
+            auto t2 = std::lower_bound(xvaTimes_.begin(), xvaTimes_.end(), t);
+
+            // exercise time is after last simulation time => we never exercise on such a path
+
+            if (t2 == xvaTimes_.end())
+                break;
+
+            Real time2 = *t2;
+            std::vector<const RandomVariable*> s2 = effPaths[std::distance(xvaTimes_.begin(), t2)];
+
+            Real time1;
+            std::vector<const RandomVariable*> s1;
+            if (t2 == xvaTimes_.begin()) {
+                time1 = 0.0;
+                s1 = initialStatePointer;
+            } else {
+                time1 = *std::next(t2, -1);
+                s1 = effPaths[std::distance(xvaTimes_.begin(), std::next(t2, -1))];
+            }
+
+            // compute the interpolated state (brownian bridge would be better)
+
+            std::vector<RandomVariable> s(externalModelIndices_.size());
+            std::vector<const RandomVariable*> sp(externalModelIndices_.size());
+            for (Size j = 0; j < externalModelIndices_.size(); ++j) {
+                RandomVariable alpha1(samples, (time2 - t) / (time2 - time1));
+                RandomVariable alpha2(samples, (t - time1) / (time2 - time1));
+                s[j] = alpha1 * *s1[j] + alpha2 * *s2[j];
+                sp[j] = &s[j];
+            }
+
+            // make the exercise decision
+
+            RandomVariable exerciseValue = conditionalExpectation(sp, basisFns_, coeffsUndExInto_[ind]);
+            RandomVariable continuationValue = conditionalExpectation(sp, basisFns_, coeffsContinuationValue_[ind]);
+
+            exercised_[counter + 1] = !exercised_[counter] && exerciseValue > continuationValue &&
+                                      exerciseValue > RandomVariable(samples, 0.0);
+
+            ++counter;
+        }
+    }
+
+    // now we can populate the result using the exercise indicators
+
+    Size counter = 0;
+    Size xvaCounter = 0;
+    Size exerciseCounter = 0;
+
+    Filter cashExerciseValueWasAccountedForOnXvaTime(samples, false);
+    Filter wasExercised(samples, false);
+
+    for (auto t : exerciseXvaTimes_) {
+
+        if (auto it = exerciseTimes_.find(t); it != exerciseTimes_.end()) {
+            ++exerciseCounter;
+            wasExercised = wasExercised || exercised_[exerciseCounter];
+        }
+
+        if (xvaTimes_.find(t) != xvaTimes_.end()) {
+
+            RandomVariable optionValue =
+                conditionalExpectation(effPaths[xvaCounter], basisFns_, coeffsOption_[counter]);
+
+            /* Exercise value is "undExInto" if we are in the period between the date on which the exercise happend and
+               the next exercise date after that, otherwise it is the full dirty npv. This assumes that two exercise
+               dates d1, d2 are not so close together that a coupon
+
+               - pays after d1, d2
+               - but does not belong to the exercise-into underlying for both d1 and d2
+
+               This assumption seems reasonable, since we would never exercise on d1 but wait until d2 since the
+               underlying which we exercise into is the same in both cases.
+               We don't introduce a hard check for this, but we rather assume that the exercise dates are set up
+               appropriately adjusted to the coupon periods. The worst that can happen is that the exercised value
+               uses the full dirty npv at a too early time. */
+
+            RandomVariable exercisedValue =
+                conditionalResult(exercised_[exerciseCounter],
+                                  conditionalExpectation(effPaths[xvaCounter], basisFns_, coeffsUndExInto_[counter]),
+                                  conditionalExpectation(effPaths[xvaCounter], basisFns_, coeffsUndDirty_[counter]));
+
+            if (settlement_ == Settlement::Type::Cash) {
+                exercisedValue = applyInverseFilter(exercisedValue, cashExerciseValueWasAccountedForOnXvaTime);
+                cashExerciseValueWasAccountedForOnXvaTime = cashExerciseValueWasAccountedForOnXvaTime || wasExercised;
+            }
+
+            result[xvaCounter + 1] = conditionalResult(wasExercised, exercisedValue, optionValue);
+            ++xvaCounter;
+        }
+
+        ++counter;
+    }
+
+    return result;
 }
 
 } // namespace QuantExt
