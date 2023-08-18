@@ -244,7 +244,9 @@ boost::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engineImpl(
     auto builder = boost::make_shared<CrossAssetModelBuilder>(
         market_, boost::make_shared<CrossAssetModelData>(irData, fxData, corr, tolerance), configurationInCcy,
         configurationXois, configurationXois, configurationInCcy, configurationInCcy, configurationXois, !calibrate,
-        continueOnCalibrationError);
+        continueOnCalibrationError, "", SalvagingAlgorithm::Spectral, id);
+
+    modelBuilders_.insert(std::make_pair(id, builder));
 
     // build the pricing engine
 

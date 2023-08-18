@@ -63,6 +63,7 @@
 #include <qle/cashflows/floatingannuitynominal.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/cashflows/iborfracoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
@@ -399,7 +400,6 @@
 #include <qle/pricingengines/mccamcurrencyswapengine.hpp>
 #include <qle/pricingengines/mccamfxforwardengine.hpp>
 #include <qle/pricingengines/mccamfxoptionengine.hpp>
-#include <qle/pricingengines/mclgmfraengine.hpp>
 #include <qle/pricingengines/mclgmswapengine.hpp>
 #include <qle/pricingengines/mclgmswaptionengine.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>

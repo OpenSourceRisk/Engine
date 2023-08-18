@@ -53,7 +53,7 @@ public:
     LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
                const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
-               const bool setCalibrationInfo = false);
+               const bool setCalibrationInfo = false, const std::string& id = "unknwon");
     //! Return calibration error
     Real error() const;
 
@@ -93,6 +93,7 @@ private:
     const bool continueOnError_;
     const std::string referenceCalibrationGrid_;
     const bool setCalibrationInfo_;
+    const std::string id_;
     bool requiresCalibration_ = false;
     std::string currency_; // derived from data->qualifier()
 

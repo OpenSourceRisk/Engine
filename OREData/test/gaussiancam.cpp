@@ -151,9 +151,7 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
     cmb.addCorrelation("FX:EURUSD", "EQ:SP5", Handle<Quote>(boost::make_shared<SimpleQuote>(0.4)));
 
     auto camBuilder = boost::make_shared<CrossAssetModelBuilder>(
-        testMarket, boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, cmb.correlations()),
-        Market::defaultConfiguration, Market::defaultConfiguration, Market::defaultConfiguration,
-        Market::defaultConfiguration, Market::defaultConfiguration, Market::defaultConfiguration, false, 1E-6);
+        testMarket, boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, cmb.correlations()));
     auto model = camBuilder->model();
 
     //  set up gaussian cam adapter with simulation dates = calibration expiries

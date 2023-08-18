@@ -288,10 +288,10 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
                 }
                 Date firstFixingDate = o->fixingDates().front();
                 if (firstFixingDate < today) {
-                    Date firstValueDate = o->index()->valueDate(firstFixingDate);
+                    Date firstValueDate = valueDate(firstFixingDate, o);
                     Date lastFixingDateBeforeToday =
                         *std::next(std::lower_bound(o->fixingDates().begin(), o->fixingDates().end(), today), -1);
-                    Date lastValueDateBeforeToday = o->index()->valueDate(lastFixingDateBeforeToday);
+                    Date lastValueDateBeforeToday = valueDate(lastFixingDateBeforeToday, o);
                     if (lastValueDateBeforeToday > firstValueDate) {
                         auto tmp = boost::make_shared<OvernightIndexedCoupon>(
                             o->date(), o->nominal() * accrualToRatePeriodRatio, firstValueDate,
@@ -305,8 +305,8 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
                 if (o->fixingDates().back() >= today) {
                     Date firstFixingDateGeqToday =
                         *std::lower_bound(o->fixingDates().begin(), o->fixingDates().end(), today);
-                    Date firstValueDateGeqToday = o->index()->valueDate(firstFixingDateGeqToday);
-                    Date lastValueDate = o->index()->valueDate(o->fixingDates().back());
+                    Date firstValueDateGeqToday = valueDate(firstFixingDateGeqToday, o);
+                    Date lastValueDate =  valueDate(o->fixingDates().back(), o);
                     Date startDate = o->index()->fixingCalendar().adjust(exerciseDate);
                     Date endDate = std::max(lastValueDate, startDate + 1);
                     Real factor = o->dayCounter().yearFraction(firstValueDateGeqToday, lastValueDate) /
@@ -340,10 +340,10 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
                 }
                 Date firstFixingDate = o->fixingDates().front();
                 if (firstFixingDate < today) {
-                    Date firstValueDate = o->index()->valueDate(firstFixingDate);
+                    Date firstValueDate = valueDate(firstFixingDate, o);
                     Date lastFixingDateBeforeToday =
                         *std::next(std::lower_bound(o->fixingDates().begin(), o->fixingDates().end(), today), -1);
-                    Date lastValueDateBeforeToday = o->index()->valueDate(lastFixingDateBeforeToday);
+                    Date lastValueDateBeforeToday = valueDate(lastFixingDateBeforeToday, o);
                     if (lastValueDateBeforeToday > firstValueDate) {
                         auto tmp = boost::make_shared<AverageONIndexedCoupon>(
                             o->date(), o->nominal() * accrualToRatePeriodRatio, firstValueDate,
@@ -356,8 +356,8 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
                 if (o->fixingDates().back() >= today) {
                     Date firstFixingDateGeqToday =
                         *std::lower_bound(o->fixingDates().begin(), o->fixingDates().end(), today);
-                    Date firstValueDateGeqToday = o->index()->valueDate(firstFixingDateGeqToday);
-                    Date lastValueDate = o->index()->valueDate(o->fixingDates().back());
+                    Date firstValueDateGeqToday = valueDate(firstFixingDateGeqToday, o);
+                    Date lastValueDate = valueDate(o->fixingDates().back(), o);
                     Date startDate = o->index()->fixingCalendar().adjust(exerciseDate);
                     Date endDate = std::max(lastValueDate, startDate + 1);
                     Real factor = o->dayCounter().yearFraction(firstValueDateGeqToday, lastValueDate) /
@@ -583,4 +583,9 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
     return boost::make_shared<Swaption>(underlying, boost::make_shared<EuropeanExercise>(exerciseDate));
 }
 
+QuantLib::Date
+RepresentativeSwaptionMatcher::valueDate(const QuantLib::Date& fixingDate,
+                                         const boost::shared_ptr<QuantLib::FloatingRateCoupon>& cpn) const {
+    return cpn->index()->fixingCalendar().advance(fixingDate, cpn->fixingDays(), Days, Following);
+}
 } // namespace QuantExt

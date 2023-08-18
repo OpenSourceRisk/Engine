@@ -217,9 +217,9 @@ RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const st
 
     // Build model
     DLOG("Build LGM model");
-    boost::shared_ptr<LgmBuilder> calib =
-        boost::make_shared<LgmBuilder>(market_, data, configuration(MarketContext::irCalibration), tolerance,
-                                       continueOnCalibrationError, referenceCalibrationGrid, generateAdditionalResults);
+    boost::shared_ptr<LgmBuilder> calib = boost::make_shared<LgmBuilder>(
+        market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
+        referenceCalibrationGrid, generateAdditionalResults, id);
 
     // In some cases, we do not want to calibrate the model
     boost::shared_ptr<QuantExt::LGM> model;
@@ -275,7 +275,7 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
             Date mid = gridDates[i] + (gridDates[i + 1] - gridDates[i]) / 2;
             // mid might be = reference date degenerate cases where the first two discretisation points
             // are only one day apart from each other
-            if (mid > today)
+            if (mid > today && ((calibrationMaturity - mid) >= 90 || expiries.empty()))
                 expiries.push_back(mid);
         }
 
@@ -365,7 +365,8 @@ RiskParticipationAgreementTLockLGMGridEngineBuilder::engineImpl(const std::strin
     if (rpa->protectionEnd() > today && qlInstr->terminationDate() > today) {
         Date calibrationDate = today + spacing;
         while (calibrationDate < qlInstr->terminationDate()) {
-            expiries.push_back(calibrationDate);
+            if (expiries.empty() || (calibrationMaturity - calibrationDate) >= 90)
+                expiries.push_back(calibrationDate);
             calibrationDate += spacing;
         }
         expiries.push_back(qlInstr->terminationDate());

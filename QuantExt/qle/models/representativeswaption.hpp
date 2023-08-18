@@ -26,6 +26,7 @@
 #include <qle/models/lgm.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 
+#include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/indexes/swapindex.hpp>
 #include <ql/instruments/swaption.hpp>
 
@@ -66,6 +67,8 @@ public:
                            const InclusionCriterion criterion = InclusionCriterion::AccrualStartGeqExercise);
 
 private:
+    QuantLib::Date valueDate(const QuantLib::Date& fixingDate, const boost::shared_ptr<QuantLib::FloatingRateCoupon>& cpn) const;
+    
     const std::vector<Leg> underlying_;
     const std::vector<bool> isPayer_;
     const boost::shared_ptr<SwapIndex> swapIndexBase_;

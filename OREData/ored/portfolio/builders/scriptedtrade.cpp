@@ -1447,7 +1447,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
                                                 comConfigs, 0, camCorrelations, bootstrapTolerance_),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
-        SalvagingAlgorithm::Spectral);
+        SalvagingAlgorithm::Spectral, id);
 
     // TODO hardcode timeStepsPerYear to 0 and exact discretisation (we might want Euler for AD...)
     model_ = boost::make_shared<GaussianCam>(camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_,

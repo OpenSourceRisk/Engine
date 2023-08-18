@@ -304,7 +304,7 @@ def compare_files_df(name, file_1, file_2, config):
             return False
 
     # We check for columns that would be used as keys but are not always necessary, 
-    # e.g. netting set details, collect_regulations, post_regualtions
+    # e.g. netting set details, collect_regulations, post_regulations
     if 'optional_keys' in config:
         optional_keys = config['optional_keys']
 
@@ -320,10 +320,19 @@ def compare_files_df(name, file_1, file_2, config):
             logger.warning('The keys, %s, contain duplicates, %s.', str(combined_keys), str(dup_keys))
             return False
 
-        # For each optional key, check whether it is found in at each DataFrame. If so, add it to the keys.
+        # For each optional key, check whether it is found in each DataFrame. If so, add it to the keys.
+        missing_okeys = []
         for okey in optional_keys:
             if okey in df_1.columns and okey in df_2.columns:
                 keys.append(okey)
+            elif (okey in df_1.columns and not okey in df_2.columns) or (okey not in df_1.columns and okey in df_2.columns):
+                missing_okeys.append(okey)
+
+        # Check that each optional key either exists in both DataFrames, or is missing in both. Otherwise, we fail the test.
+        if missing_okeys:
+            logger.warning('The keys, %s, are in one Dataframe but not the other.', str(missing_okeys))
+            return False
+
 
     # If we are told to use only certain columns, drop the others in each DataFrame. We first check that both
     # DataFrames have all of the explicitly listed columns to use.
