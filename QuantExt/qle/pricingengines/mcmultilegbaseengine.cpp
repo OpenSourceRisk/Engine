@@ -295,7 +295,7 @@ void McMultiLegBaseEngine::calculate() const {
         for (Size i = 0; i < cashflowInfo.size(); ++i) {
             if (cfStatus[i] == CfStatus::open) {
                 auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
-                if (cashflowInfo[i].exIntoCriterionTime > *t) {
+                if (cashflowInfo[i].exIntoCriterionTime >= *t) {
                     pathValueUndDirty += tmp;
                     pathValueUndExInto += tmp;
                     cfStatus[i] = CfStatus::done;
@@ -305,7 +305,7 @@ void McMultiLegBaseEngine::calculate() const {
                     cfStatus[i] = CfStatus::cached;
                 }
             } else if (cfStatus[i] == CfStatus::cached) {
-                if (cashflowInfo[i].exIntoCriterionTime > *t) {
+                if (cashflowInfo[i].exIntoCriterionTime >= *t) {
                     pathValueUndExInto += amountCache[i];
                     cfStatus[i] = CfStatus::done;
                     amountCache[i].clear();
@@ -570,7 +570,8 @@ MultiLegBaseAmcCalculator::simulatePath(const std::vector<QuantLib::Real>& pathT
                 cashExerciseValueWasAccountedForOnXvaTime = cashExerciseValueWasAccountedForOnXvaTime || wasExercised;
             }
 
-            result[xvaCounter + 1] = conditionalResult(wasExercised, exercisedValue, optionValue);
+            result[xvaCounter + 1] =
+                max(RandomVariable(samples, 0.0), conditionalResult(wasExercised, exercisedValue, optionValue));
             ++xvaCounter;
         }
 
