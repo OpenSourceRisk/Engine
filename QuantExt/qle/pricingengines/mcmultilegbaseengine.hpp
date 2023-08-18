@@ -121,12 +121,36 @@ private:
 
 class MultiLegBaseAmcCalculator : public AmcCalculator {
 public:
-    MultiLegBaseAmcCalculator();
+    MultiLegBaseAmcCalculator(
+        const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
+        const std::set<Real>& exerciseXvaTimes, const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
+        const std::vector<Array>& coeffsUndDirty, const std::vector<Array>& coeffsUndExInto,
+        const std::vector<Array>& coeffsContinuationValue, const std::vector<Array>& coeffsOption,
+        const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFns,
+        const Real resultValue, const Array& initialState, const Currency& baseCurrency);
 
+    Currency npvCurrency() override { return baseCurrency_; }
     std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
                                                        std::vector<std::vector<QuantExt::RandomVariable>>& paths,
                                                        const std::vector<bool>& isRelevantTime,
                                                        const bool stickyCloseOutRun) override;
+
+private:
+    std::vector<Size> externalModelIndices_;
+    Settlement::Type settlement_;
+    std::set<Real> exerciseXvaTimes_;
+    std::set<Real> exerciseTimes_;
+    std::set<Real> xvaTimes_;
+    std::vector<Array> coeffsUndDirty_;
+    std::vector<Array> coeffsUndExInto_;
+    std::vector<Array> coeffsContinuationValue_;
+    std::vector<Array> coeffsOption_;
+    std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;
+    Real resultValue_;
+    Array initialState_;
+    Currency baseCurrency_;
+
+    std::vector<Filter> exercised_;
 };
 
 } // namespace QuantExt
