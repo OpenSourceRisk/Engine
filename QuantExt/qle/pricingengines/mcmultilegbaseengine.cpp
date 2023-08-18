@@ -255,7 +255,7 @@ void McMultiLegBaseEngine::calculate() const {
         MultiPath path = pathGenerator->next().value;
         for (Size j = 0; j < simulationTimes.size(); ++j) {
             for (Size k = 0; k < model_->stateProcess()->size(); ++k) {
-                pathValues[j][k].set(i, path[k][j]);
+                pathValues[j][k].set(i, path[k][j + 1]);
             }
         }
     }
