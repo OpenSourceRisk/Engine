@@ -250,7 +250,7 @@ inline Real LinearGaussMarkovModel::discountBondOption(Option::Type type, const 
     // slight generalization of Lichters, Stamm, Gallagher 11.2.1
     // with t < S, SSRN: https://ssrn.com/abstract=2246054
     Real sigma = std::sqrt(parametrization_->zeta(t)) * (parametrization_->H(T) - parametrization_->H(S));
-    Real dp = (std::log(pT / (K * pS)) / sigma + 0.5 * sigma);
+    Real dp = std::log(pT / (K * pS)) / sigma + 0.5 * sigma * sigma;
     Real dm = dp - sigma;
     CumulativeNormalDistribution N;
     return w * (pT * N(w * dp) - pS * K * N(w * dm));

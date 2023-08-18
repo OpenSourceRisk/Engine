@@ -152,6 +152,7 @@ public:
     void setCovarianceDataFromFile(const std::string& fileName);
     void setCovarianceDataFromBuffer(const std::string& xml);
     void setSensitivityStreamFromFile(const std::string& fileName);
+    void setSensitivityStreamFromBuffer(const std::string& buffer);
 
     // Setters for exposure simulation
     void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }

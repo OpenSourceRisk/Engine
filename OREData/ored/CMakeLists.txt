@@ -152,7 +152,6 @@ portfolio/builders/equityfuturesoption.cpp
 portfolio/builders/equityoption.cpp
 portfolio/builders/equitytouchoption.cpp
 portfolio/builders/forwardbond.cpp
-portfolio/builders/forwardrateagreement.cpp
 portfolio/builders/fxasianoption.cpp
 portfolio/builders/fxbarrieroption.cpp
 portfolio/builders/fxdigitalbarrieroption.cpp
@@ -461,7 +460,6 @@ portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
 portfolio/builders/equitytouchoption.hpp
 portfolio/builders/forwardbond.hpp
-portfolio/builders/forwardrateagreement.hpp
 portfolio/builders/fxasianoption.hpp
 portfolio/builders/fxbarrieroption.hpp
 portfolio/builders/fxdigitalbarrieroption.hpp
