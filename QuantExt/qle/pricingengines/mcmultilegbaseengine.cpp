@@ -79,9 +79,14 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(cons
     info.payer = payer;
 
     if (auto cpn = boost::dynamic_pointer_cast<Coupon>(flow)) {
+        QL_REQUIRE(cpn->accrualStartDate() < flow->date(),
+                   "McMultiLegBaseEngine::createCashflowInfo(): coupon leg "
+                       << legNo << " cashflow " << cashflowNo << " has accrual start date (" << cpn->accrualStartDate()
+                       << ") >= pay date (" << flow->date()
+                       << "), which breaks an assumption in the engine. This situation is unexpected.");
         info.exIntoCriterionTime = time(cpn->accrualStartDate()) + tinyTime;
     } else {
-        info.exIntoCriterionTime = info.payTime + tinyTime;
+        info.exIntoCriterionTime = info.payTime;
     }
 
     if (boost::dynamic_pointer_cast<FixedRateCoupon>(flow) != nullptr ||
@@ -281,6 +286,9 @@ void McMultiLegBaseEngine::calculate() const {
         bool isXvaTime = xvaTimes.find(*t) != xvaTimes.end();
 
         for (Size i = 0; i < cashflowInfo.size(); ++i) {
+
+            // we assume here that exIntoCriterionTime > t implies payTime > t
+
             if (cfStatus[i] == CfStatus::open) {
                 auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
                 if (cashflowInfo[i].exIntoCriterionTime > *t) {

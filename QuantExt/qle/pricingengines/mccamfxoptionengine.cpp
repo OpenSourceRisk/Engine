@@ -49,7 +49,8 @@ void McCamFxOptionEngine::calculate() const {
     QL_REQUIRE(arguments_.exercise->type() == Exercise::European, "McCamFxOptionEngine: not an European option");
     QL_REQUIRE(!arguments_.exercise->dates().empty(), "McCamFxOptionEngine: exercise dates are empty");
 
-    Date payDate = arguments_.exercise->dates().front();
+    Date payDate = arguments_.exercise->dates().front() + 1;
+
     Real w = payoff->optionType() == Option::Call ? 1.0 : -1.0;
     Leg domesticLeg{boost::make_shared<SimpleCashFlow>(-w * payoff->strike(), payDate)};
     Leg foreignLeg{boost::make_shared<SimpleCashFlow>(w, payDate)};
