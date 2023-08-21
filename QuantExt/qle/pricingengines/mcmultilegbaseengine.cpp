@@ -68,7 +68,7 @@ Real McMultiLegBaseEngine::time(const Date& d) const {
 
 McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boost::shared_ptr<CashFlow> flow,
                                                                             const Currency& payCcy, Real payer,
-                                                                            Size legNo, Size cashflowNo) const {
+                                                                            Size legNo, Size cfNo) const {
 
     constexpr Real tinyTime = 1E-10;
 
@@ -76,6 +76,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
 
     // set some common info: pay time, pay ccy index in the model, payer, exercise into decision time
 
+    info.legNo = legNo;
+    info.cfNo = cfNo;
     info.payTime = time(flow->date());
     info.payCcyIndex = model_->ccyIndex(payCcy);
     info.payer = payer;
@@ -83,7 +85,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
     if (auto cpn = boost::dynamic_pointer_cast<Coupon>(flow)) {
         QL_REQUIRE(cpn->accrualStartDate() < flow->date(),
                    "McMultiLegBaseEngine::createCashflowInfo(): coupon leg "
-                       << legNo << " cashflow " << cashflowNo << " has accrual start date (" << cpn->accrualStartDate()
+                       << legNo << " cashflow " << cfNo << " has accrual start date (" << cpn->accrualStartDate()
                        << ") >= pay date (" << flow->date()
                        << "), which breaks an assumption in the engine. This situation is unexpected.");
         info.exIntoCriterionTime = time(cpn->accrualStartDate()) + tinyTime;
@@ -237,8 +239,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                 effectiveRate = RandomVariable(n, ibor->gearing()) * fixing + RandomVariable(n, ibor->spread());
             }
 
-            return RandomVariable(states.at(0).at(0)->size(), ibor->nominal() * ibor->accrualPeriod()) * effectiveRate *
-                   fxFixing;
+            return RandomVariable(n, ibor->nominal() * ibor->accrualPeriod()) * effectiveRate * fxFixing;
         };
         return info;
     }
@@ -267,7 +268,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
     // if (auto cms = boost::dynamic_pointer_cast<CmsCoupon>(flow)) {
     // }
 
-    QL_FAIL("McMultiLegBaseEngine::createCashflowInfo(): unhandled coupon leg " << legNo << " cashflow " << cashflowNo);
+    QL_FAIL("McMultiLegBaseEngine::createCashflowInfo(): unhandled coupon leg " << legNo << " cashflow " << cfNo);
 } // createCashflowInfo()
 
 Size McMultiLegBaseEngine::timeIndex(const Time t, const std::set<Real>& times) const {
@@ -334,10 +335,11 @@ void McMultiLegBaseEngine::calculate() const {
 
     std::vector<CashflowInfo> cashflowInfo;
 
-    Size legNo = 0, cashflowNo = 0;
+    Size legNo = 0;
     for (auto const& leg : leg_) {
         Currency currency = currency_[legNo];
         Real payer = payer_[legNo];
+        Size cashflowNo = 0;
         for (auto const& cashflow : leg) {
             // we can skip cashflows that are paid
             if (cashflow->date() <= today_)
