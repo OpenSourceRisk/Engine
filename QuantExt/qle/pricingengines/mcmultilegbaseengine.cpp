@@ -288,10 +288,16 @@ RandomVariable McMultiLegBaseEngine::cashflowPathValue(const CashflowInfo& cf,
 
     std::vector<std::vector<const RandomVariable*>> states(cf.simulationTimes.size());
     for (Size i = 0; i < cf.simulationTimes.size(); ++i) {
-        auto simTimesIdx = timeIndex(cf.simulationTimes[i], simulationTimes);
         std::vector<const RandomVariable*> tmp(cf.modelIndices[i].size());
-        for (Size j = 0; j < cf.modelIndices[i].size(); ++j) {
-            tmp[j] = &pathValues[simTimesIdx][cf.modelIndices[i][j]];
+        if (cf.simulationTimes[i] == 0.0) {
+            for (Size j = 0; j < cf.modelIndices[i].size(); ++j) {
+                tmp[j] = model_->stateProcess->initialValues()[j];
+            }
+        } else {
+            auto simTimesIdx = timeIndex(cf.simulationTimes[i], simulationTimes);
+            for (Size j = 0; j < cf.modelIndices[i].size(); ++j) {
+                tmp[j] = &pathValues[simTimesIdx][cf.modelIndices[i][j]];
+            }
         }
         states[i] = tmp;
     }
@@ -377,6 +383,8 @@ void McMultiLegBaseEngine::calculate() const {
         cashflowGenTimes.insert(info.simulationTimes.begin(), info.simulationTimes.end());
         cashflowGenTimes.insert(info.payTime);
     }
+
+    cashflowGenTimes.remove(0.0); // handled separately, if it is set by a cashflow
 
     /* build combined time sets */
 
