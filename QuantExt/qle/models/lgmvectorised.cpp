@@ -505,11 +505,9 @@ RandomVariable LgmVectorised::averagedBmaRate(const boost::shared_ptr<BMAIndex>&
     return avgBMA;
 }
 
-RandomVariable LgmVectorised::subPeriodsRate(const boost::shared_ptr<IborIndex>& index,
-                                             const std::vector<Date>& fixingDates, const Date& accrualStartDate,
-                                             const Date& accrualEndDate, const Real spread, const Real gearing,
-                                             const Real cap, const Real floor, const bool nakedOption, const Time t,
-                                             const RandomVariable& x) const {
+RandomVariable LgmVectorised::subPeriodsRate(const boost::shared_ptr<InterestRateIndex>& index,
+                                             const std::vector<Date>& fixingDates, const Real cap, const Real floor,
+                                             const bool nakedOption, const Time t, const RandomVariable& x) const {
     QL_FAIL("not implemented yet.");
 }
 

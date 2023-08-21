@@ -59,7 +59,8 @@ public:
     RandomVariable fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Time t,
                           const RandomVariable& x) const;
 
-    /*! Handles observation time > first value date by applying an approximation. */
+    /* Exact if no cap/floors are present and t <= first value date.
+       Approximations are applied for t > first value date or when cap / floors are present. */
     RandomVariable compoundedOnRate(const boost::shared_ptr<OvernightIndex>& index,
                                     const std::vector<Date>& fixingDates, const std::vector<Date>& valueDates,
                                     const std::vector<Real>& dt, const Natural rateCutoff, const bool includeSpread,
@@ -68,7 +69,8 @@ public:
                                     const bool localCapFloor, const bool nakedOption, const Time t,
                                     const RandomVariable& x) const;
 
-    /*! Handles observation time > first value date by applying an approximation. */
+    /* Exact if no cap/floors are present and t <= first value date.
+       Approximations are applied for t > first value date or when cap / floors are present. */
     RandomVariable averagedOnRate(const boost::shared_ptr<OvernightIndex>& index, const std::vector<Date>& fixingDates,
                                   const std::vector<Date>& valueDates, const std::vector<Real>& dt,
                                   const Natural rateCutoff, const bool includeSpread, const Real spread,
@@ -76,17 +78,18 @@ public:
                                   const Real cap, const Real floor, const bool localCapFloor, const bool nakedOption,
                                   const Time t, const RandomVariable& x) const;
 
-    /*! Handles observation time > first value date by applying an approximation. */
+    /* Exact if no cap/floors are present and t <= first value date.
+       Approximations are applied for t > first value date or when cap / floors are present. */
     RandomVariable averagedBmaRate(const boost::shared_ptr<BMAIndex>& index, const std::vector<Date>& fixingDates,
                                    const Date& accrualStartDate, const Date& accrualEndDate, const Real spread,
                                    const Real gearing, const Real cap, const Real floor, const bool nakedOption,
                                    const Time t, const RandomVariable& x) const;
 
-    /*! Handles observation time > first value date by applying an approximation. */
-    RandomVariable subPeriodsRate(const boost::shared_ptr<IborIndex>& index, const std::vector<Date>& fixingDates,
-                                  const Date& accrualStartDate, const Date& accrualEndDate, const Real spread,
-                                  const Real gearing, const Real cap, const Real floor, const bool nakedOption,
-                                  const Time t, const RandomVariable& x) const;
+    /* Exact if no cap/floors are present and t <= first fixing date.
+       Approximations are applied for t > first value date or when cap / floors are present. */
+    RandomVariable subPeriodsRate(const boost::shared_ptr<InterestRateIndex>& index,
+                                  const std::vector<Date>& fixingDates, const Real cap, const Real floor,
+                                  const bool nakedOption, const Time t, const RandomVariable& x) const;
 
 private:
     boost::shared_ptr<IrLgm1fParametrization> p_;
