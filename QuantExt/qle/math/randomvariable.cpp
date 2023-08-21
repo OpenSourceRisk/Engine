@@ -736,7 +736,7 @@ Array regressionCoefficients(
     else
         r.copyToArray(b);
 
-    if (regressionMethod == RandomVariableRegeressionMethod::SVI) {
+    if (regressionMethod == RandomVariableRegressionMethod::SVI) {
         SVD svd(A);
         const Matrix& V = svd.V();
         const Matrix& U = svd.U();
