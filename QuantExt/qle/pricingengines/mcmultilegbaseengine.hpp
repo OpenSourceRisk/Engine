@@ -91,19 +91,18 @@ private:
         Real exIntoCriterionTime = Null<Real>();
         Size payCcyIndex = Null<Size>();
         Real payer = 1.0;
-        bool isFixed = false;
-        Real fixedAmount = Null<Real>();
         std::vector<Real> simulationTimes;
         std::vector<std::vector<Size>> modelIndices;
-        std::function<RandomVariable(const std::vector<std::vector<const RandomVariable*>>&)> amountCalculator;
+        std::function<RandomVariable(const Size n, const std::vector<std::vector<const RandomVariable*>>&)>
+            amountCalculator;
     };
 
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
 
     // create the info for a given flow
-    CashflowInfo createCashflowInfo(const boost::shared_ptr<CashFlow>& flow, const Currency& payCcy, Real payer,
-                                    Size legNo, Size cashflowNo) const;
+    CashflowInfo createCashflowInfo(boost::shared_ptr<CashFlow> flow, const Currency& payCcy, Real payer, Size legNo,
+                                    Size cashflowNo) const;
 
     // get the index of a time in the given simulation times set
     Size timeIndex(const Time t, const std::set<Real>& simulationTimes) const;
