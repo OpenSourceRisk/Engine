@@ -700,13 +700,20 @@ RandomVariable applyInverseFilter(RandomVariable x, const Filter& f) {
 Array regressionCoefficients(
     RandomVariable r, const std::vector<const RandomVariable*>& regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
-    const Filter& filter) {
+    const Filter& filter, const RandomVariableRegressionMethod regressionMethod) {
+
     for (auto const reg : regressor) {
         QL_REQUIRE(reg->size() == r.size(),
                    "regressor size (" << reg->size() << ") must match regressand size (" << r.size() << ")");
     }
+
     QL_REQUIRE(filter.size() == 0 || filter.size() == r.size(),
                "filter size (" << filter.size() << ") must match regressand size (" << r.size() << ")");
+
+    QL_REQUIRE(r.size() >= basisFn.size(), "regressionCoefficients(): sample size ("
+                                               << r.size() << ") must be geq basis fns size (" << basisFn.size()
+                                               << ")");
+
     Matrix A(r.size(), basisFn.size());
     for (Size j = 0; j < basisFn.size(); ++j) {
         RandomVariable a = basisFn[j](regressor);
@@ -722,13 +729,35 @@ Array regressionCoefficients(
     if (filter.size() > 0) {
         r = applyFilter(r, filter);
     }
+
     Array b(r.size());
     if (r.deterministic())
         std::fill(b.begin(), b.end(), r[0]);
     else
         r.copyToArray(b);
-    Array res = qrSolve(A, b);
-    return res;
+
+    if (regressionMethod == RandomVariableRegeressionMethod::SVI) {
+        SVD svd(A);
+        const Matrix& V = svd.V();
+        const Matrix& U = svd.U();
+        const Array& w = svd.singularValues();
+        Real threshold = r.size() * QL_EPSILON * svd.singularValues()[0];
+        Array res(basisFn.size(), 0.0);
+        for (Size i = 0; i < basisFn.size(); ++i) {
+            if (w[i] > threshold) {
+                Real u = std::inner_product(U.column_begin(i), U.column_end(i), b.begin(), Real(0.0)) / w[i];
+                for (Size j = 0; j < basisFn.size(); ++j) {
+                    res[j] += u * V[j][i];
+                }
+            }
+        }
+        return res;
+    } else if (regressionMethod == RandomVariableRegressionMethod::QR) {
+        Array res = qrSolve(A, b);
+        return res;
+    } else {
+        QL_FAIL("regressionCoefficients(): unknown regression method, expected SVI or QR.");
+    }
 }
 
 RandomVariable conditionalExpectation(
@@ -753,10 +782,10 @@ RandomVariable conditionalExpectation(
 RandomVariable conditionalExpectation(
     const RandomVariable& r, const std::vector<const RandomVariable*>& regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
-    const Filter& filter) {
+    const Filter& filter, const RandomVariableRegressionMethod regressionMethod) {
     if (r.deterministic())
         return r;
-    auto coeff = regressionCoefficients(r, regressor, basisFn, filter);
+    auto coeff = regressionCoefficients(r, regressor, basisFn, filter, regressionMethod);
     return conditionalExpectation(regressor, basisFn, coeff);
 }
 
