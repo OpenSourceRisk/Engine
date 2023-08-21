@@ -28,8 +28,6 @@
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
 
-#include <ql/methods/montecarlo/lsmbasissystem.hpp>
-
 namespace QuantExt {
 
 class McCamCurrencySwapEngine : public McMultiLegBaseEngine, public CurrencySwap::engine {
