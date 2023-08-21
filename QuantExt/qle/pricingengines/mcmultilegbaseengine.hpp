@@ -87,6 +87,7 @@ protected:
 private:
     // data structure storing info needed to generate the amount for a cashflow
     struct CashflowInfo {
+        Size legNo = Null<Size>(), cfNo = Null<Size>();
         Real payTime = Null<Real>();
         Real exIntoCriterionTime = Null<Real>();
         Size payCcyIndex = Null<Size>();
@@ -102,7 +103,7 @@ private:
 
     // create the info for a given flow
     CashflowInfo createCashflowInfo(boost::shared_ptr<CashFlow> flow, const Currency& payCcy, Real payer, Size legNo,
-                                    Size cashflowNo) const;
+                                    Size cfNo) const;
 
     // get the index of a time in the given simulation times set
     Size timeIndex(const Time t, const std::set<Real>& simulationTimes) const;
