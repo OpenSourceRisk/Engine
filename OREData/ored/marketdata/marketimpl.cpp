@@ -624,5 +624,15 @@ void MarketImpl::refresh(const string& configuration) {
 
 } // refresh
 
+void MarketImpl::addSecuritySpread(const string securityID, const Real value, const string& configuration) {
+    securitySpreads_[std::make_pair(configuration, securityID)] =
+        Handle<Quote>(boost::make_shared<QuantLib::SimpleQuote>(value));
+}
+
+void MarketImpl::addRecoveryRate(const string securityID, const Real value, const string& configuration) {
+    recoveryRates_[std::make_pair(configuration, securityID)] =
+        Handle<Quote>(boost::make_shared<QuantLib::SimpleQuote>(value));
+}
+
 } // namespace data
 } // namespace ore
