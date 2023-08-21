@@ -28,7 +28,6 @@
 #include <qle/models/crossassetmodel.hpp>
 
 #include <ql/instruments/vanillaoption.hpp>
-#include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
 namespace QuantExt {
 
