@@ -287,7 +287,8 @@ void McMultiLegBaseEngine::calculate() const {
 
         for (Size i = 0; i < cashflowInfo.size(); ++i) {
 
-            // we assume here that exIntoCriterionTime > t implies payTime > t
+            /* we assume here that exIntoCriterionTime > t implies payTime > t
+               this must be ensured by the createCashflowInfo method */
 
             if (cfStatus[i] == CfStatus::open) {
                 auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
