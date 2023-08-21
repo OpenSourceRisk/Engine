@@ -36,8 +36,6 @@
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/indexes/swapindex.hpp>
 
-#include <boost/timer/timer.hpp>
-
 namespace QuantExt {
 
 McMultiLegBaseEngine::McMultiLegBaseEngine(
@@ -71,6 +69,9 @@ Real McMultiLegBaseEngine::time(const Date& d) const {
 McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(const boost::shared_ptr<CashFlow>& flow,
                                                                             const Currency& payCcy, Real payer,
                                                                             Size legNo, Size cashflowNo) const {
+
+    constexpr Real tinyTime = 1E-10;
+
     CashflowInfo info;
 
     info.payTime = time(flow->date());
@@ -78,9 +79,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(cons
     info.payer = payer;
 
     if (auto cpn = boost::dynamic_pointer_cast<Coupon>(flow)) {
-        info.exIntoCriterionTime = time(cpn->accrualStartDate());
+        info.exIntoCriterionTime = time(cpn->accrualStartDate()) + tinyTime;
     } else {
-        info.exIntoCriterionTime = info.payTime;
+        info.exIntoCriterionTime = info.payTime + tinyTime;
     }
 
     if (boost::dynamic_pointer_cast<FixedRateCoupon>(flow) != nullptr ||
@@ -102,8 +103,11 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(cons
             info.modelIndices.push_back({model_->pIdx(CrossAssetModel::AssetType::IR, indexCcyIdx)});
             info.amountCalculator = [this, indexCcyIdx, ibor,
                                      simTime](const std::vector<std::vector<const RandomVariable*>>& states) {
-                return lgmVectorised_[indexCcyIdx].fixing(ibor->index(), ibor->fixingDate(), simTime,
-                                                          *states.at(0).at(0)) *
+                Size n = states.at(0).at(0)->size();
+                return (RandomVariable(n, ibor->gearing()) *
+                            lgmVectorised_[indexCcyIdx].fixing(ibor->index(), ibor->fixingDate(), simTime,
+                                                               *states.at(0).at(0)) +
+                        RandomVariable(n, ibor->spread())) *
                        RandomVariable(states.at(0).at(0)->size(), ibor->nominal() * ibor->accrualPeriod());
             };
         }
@@ -151,9 +155,6 @@ RandomVariable McMultiLegBaseEngine::cashflowPathValue(const CashflowInfo& cf,
 
 void McMultiLegBaseEngine::calculate() const {
 
-    std::cout << "McMultiLegBaseEngine::calculate()" << std::endl;
-    boost::timer::cpu_timer timer;
-
     // check data set by derived engines
 
     QL_REQUIRE(currency_.size() == leg_.size(), "McMultiLegBaseEngine: number of legs ("
@@ -175,8 +176,6 @@ void McMultiLegBaseEngine::calculate() const {
         }
     }
 
-    std::cout << "init " << timer.elapsed().wall / 1E6 << "ms" << std::endl;
-
     // populate the info to generate the (alive) cashflow amounts
 
     std::vector<CashflowInfo> cashflowInfo;
@@ -196,8 +195,6 @@ void McMultiLegBaseEngine::calculate() const {
         }
         ++legNo;
     }
-
-    std::cout << "cashflow init " << timer.elapsed().wall / 1E6 << "ms" << std::endl;
 
     /* build exercise times and xva times */
 
@@ -237,15 +234,11 @@ void McMultiLegBaseEngine::calculate() const {
     simulationTimes.insert(exerciseTimes.begin(), exerciseTimes.end());
     simulationTimes.insert(xvaTimes.begin(), xvaTimes.end());
 
-    std::cout << "sim times build " << timer.elapsed().wall / 1E6 << "ms" << std::endl;
-
     // simulate the paths for the calibration
 
     std::vector<std::vector<RandomVariable>> pathValues(
         simulationTimes.size(),
         std::vector<RandomVariable>(model_->stateProcess()->size(), RandomVariable(calibrationSamples_)));
-
-    std::cout << "calibration path alloc " << timer.elapsed().wall / 1E6 << "ms" << std::endl;
 
     TimeGrid timeGrid(simulationTimes.begin(), simulationTimes.end());
     auto pathGenerator = makeMultiPathGenerator(calibrationPathGenerator_, model_->stateProcess(), timeGrid,
@@ -259,8 +252,6 @@ void McMultiLegBaseEngine::calculate() const {
             }
         }
     }
-
-    std::cout << "calibration path build " << timer.elapsed().wall / 1E6 << "ms" << std::endl;
 
     // for each xva and exercise time collect the relevant cashflow amounts and train a model on them
 
@@ -284,9 +275,6 @@ void McMultiLegBaseEngine::calculate() const {
 
     Size counter = exerciseXvaTimes.size() - 1;
 
-    std::cout << "got " << simulationTimes.size() << " simulation times and " << exerciseXvaTimes.size()
-              << " exercise/XVA times." << std::endl;
-
     for (auto t = exerciseXvaTimes.rbegin(); t != exerciseXvaTimes.rend(); ++t) {
 
         bool isExerciseTime = exerciseTimes.find(*t) != exerciseTimes.end();
@@ -295,7 +283,7 @@ void McMultiLegBaseEngine::calculate() const {
         for (Size i = 0; i < cashflowInfo.size(); ++i) {
             if (cfStatus[i] == CfStatus::open) {
                 auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
-                if (cashflowInfo[i].exIntoCriterionTime >= *t) {
+                if (cashflowInfo[i].exIntoCriterionTime > *t) {
                     pathValueUndDirty += tmp;
                     pathValueUndExInto += tmp;
                     cfStatus[i] = CfStatus::done;
@@ -305,7 +293,7 @@ void McMultiLegBaseEngine::calculate() const {
                     cfStatus[i] = CfStatus::cached;
                 }
             } else if (cfStatus[i] == CfStatus::cached) {
-                if (cashflowInfo[i].exIntoCriterionTime >= *t) {
+                if (cashflowInfo[i].exIntoCriterionTime > *t) {
                     pathValueUndExInto += amountCache[i];
                     cfStatus[i] = CfStatus::done;
                     amountCache[i].clear();
@@ -342,12 +330,6 @@ void McMultiLegBaseEngine::calculate() const {
         if (exercise_ != nullptr)
             coeffsOption[counter] = regressionCoefficients(pathValueOption, regressor, basisFns);
 
-        if (getenv("DEBUG")) {
-            std::cout << "trained und dirty coeffs at " << counter << ": " << coeffsUndDirty[counter] << std::endl;
-            std::cout << "trained und ex into coeffs at " << counter << ": " << coeffsUndExInto[counter] << std::endl;
-            std::cout << "trained option coeffs at " << counter << ": " << coeffsOption[counter] << std::endl;
-        }
-
         --counter;
     }
 
@@ -369,11 +351,6 @@ void McMultiLegBaseEngine::calculate() const {
         externalModelIndices_, optionSettlement_, exerciseXvaTimes, exerciseTimes, xvaTimes, coeffsUndDirty,
         coeffsUndExInto, coeffsContinuationValue, coeffsOption, basisFns, resultValue_,
         model_->stateProcess()->initialValues(), model_->irlgm1f(0)->currency());
-
-    std::cout << "underlying npv = " << resultUnderlyingNpv_ << std::endl;
-    std::cout << "option npv     = " << resultValue_ << std::endl;
-
-    std::cout << "total    " << timer.elapsed().wall / 1E6 << "ms" << std::endl;
 }
 
 boost::shared_ptr<AmcCalculator> McMultiLegBaseEngine::amcCalculator() const { return amcCalculator_; }
@@ -456,9 +433,6 @@ MultiLegBaseAmcCalculator::simulatePath(const std::vector<QuantLib::Real>& pathT
             QL_REQUIRE(ind < exerciseXvaTimes_.size(),
                        "MultiLegBaseAmcCalculator::simulatePath(): internal error, xva time "
                            << t << " not found in exerciseXvaTimes vector.");
-            if (getenv("DEBUG")) {
-                std::cout << "conditional expectation " << coeffsUndDirty_[ind] << std::endl;
-            }
             result[counter + 1] = conditionalExpectation(effPaths[counter], basisFns_, coeffsUndDirty_[ind]);
             ++counter;
         }
