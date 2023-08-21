@@ -271,7 +271,7 @@ void McMultiLegBaseEngine::calculate() const {
     RandomVariable pathValueUndExInto(calibrationSamples_);
     RandomVariable pathValueOption(calibrationSamples_);
 
-    std::vector<RandomVariable> amountCache(exerciseXvaTimes.size());
+    std::vector<RandomVariable> amountCache(cashflowInfo.size());
 
     Size counter = exerciseXvaTimes.size() - 1;
 
