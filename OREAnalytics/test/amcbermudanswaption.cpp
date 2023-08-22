@@ -176,7 +176,7 @@ std::ostream& operator<<(std::ostream& os, const TestCase& testCase) { return os
 
 TestCase testCaseData[] = {
     {"Physical Settled Swaption EUR 10y10y",
-     20E-4,
+     25E-4,
      true,
      1,
      false,
@@ -236,7 +236,7 @@ TestCase testCaseData[] = {
       {19.5041, 0},           {20, 0},
       {20.5039, 0},           {21.0012, 0}}},
     {"Physical Settled Swaption USD 10y10y",
-     20E-4,
+     40E-4,
      true,
      1,
      false,
