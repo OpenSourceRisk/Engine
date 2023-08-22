@@ -34,7 +34,7 @@ using namespace QuantLib;
 
 #define THROW_ERROR_CPN_NOT_SUPPORTED                                                                                  \
     QL_FAIL("NumericLgmMultiLegOptionEngineBase: coupon type not handled, supported coupon types: Fix, (capfloored) "  \
-            "Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA")
+            "Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA, subperiod")
 
 /* For a given cashflow and option exercise date, return the simulation date on which we determine the coupon amout.
    - If the pay date is <= today, null is returned.
@@ -65,6 +65,8 @@ Date getSimulationDates(const Date& today, const Date& latestOptionDate, const b
             return std::max(minDate, cfon->underlying()->fixingDates().front());
         } else if (auto cfav = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(cpn)) {
             return std::max(minDate, cfav->underlying()->fixingDates().front());
+        } else if( auto sub = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon>(cpn)) {
+            return std::max(minDate, sub->fixingDates().front());
         }
         THROW_ERROR_CPN_NOT_SUPPORTED;
     } else {
@@ -150,6 +152,10 @@ RandomVariable getUnderlyingCashflowPv(const LgmVectorised& lgm, const Real t, c
                                       und->dayCounter(), cfav->cap(), cfav->floor(), cfav->localCapFloor(),
                                       cfav->nakedOption(), t, x) *
                    RandomVariable(x.size(), cfav->accrualPeriod() * cfav->nominal()) *
+                   lgm.reducedDiscountBond(t, T, x, discountCurve);
+        } else if (auto sub = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(cpn)) {
+            return lgm.subperiodsRate(sub->index(), sub->fixingDates(), t, x) *
+                   RandomVariable(x.size(), cfon->accrualPeriod() * cfon->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         }
         THROW_ERROR_CPN_NOT_SUPPORTED;
