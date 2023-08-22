@@ -38,8 +38,8 @@ QuantLib::Size SimmConfiguration_ISDA_V2_6::group(const string& qualifier,
 }
 
 QuantLib::Real SimmConfiguration_ISDA_V2_6::weight(const RiskType& rt, boost::optional<string> qualifier,
-                                                     boost::optional<std::string> label_1,
-                                                     const std::string& calculationCurrency) const {
+                                                   boost::optional<std::string> label_1,
+                                                   const std::string& calculationCurrency) const {
 
     if (rt == RiskType::FX) {
         QL_REQUIRE(calculationCurrency != "", "no calculation currency provided weight");
@@ -80,7 +80,7 @@ QuantLib::Real SimmConfiguration_ISDA_V2_6::correlation(const RiskType& firstRt,
 SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                                          const QuantLib::Size& mporDays, const std::string& name,
                                                          const std::string version)
-     : SimmConfigurationBase(simmBucketMapper, name, version, mporDays) {
+    : SimmConfigurationBase(simmBucketMapper, name, version, mporDays) {
 
     // The differences in methodology for 1 Day horizon is described in
     // Standard Initial Margin Model: Technical Paper, ISDA SIMM Governance Forum, Version 10:
@@ -162,7 +162,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
         rwBucket_ = {
             { RiskType::CreditQ, { 75, 90, 84, 54, 62, 48, 185, 343, 255, 250, 214, 173, 343 } },
             { RiskType::CreditNonQ, { 280, 1300, 1300 } },
-            { RiskType::Equity, { 26, 28, 33, 27, 23, 25, 31, 27, 30, 29, 18, 18, 33 } },
+            { RiskType::Equity, { 30, 33, 36, 29, 26, 25, 34, 28, 36, 50, 19, 19, 50 } },
             { RiskType::Commodity, { 48, 29, 33, 25, 35, 30, 60, 52, 68, 63, 21, 21, 15, 16, 13, 68, 17 } },
             { RiskType::EquityVol, { 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.96, 0.45 } },
         };
@@ -233,7 +233,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
         rwBucket_ = {
             { RiskType::CreditQ, { 20, 27, 17, 12, 13, 12, 50, 93, 51, 57, 43, 37, 93 } },
             { RiskType::CreditNonQ, { 66, 280, 280 } },
-            { RiskType::Equity, { 9.1, 9.8, 10.0, 9.0, 7.7, 8.5, 9.9, 9.8, 9.9, 10, 6.1, 6.1, 10.0 } },
+            { RiskType::Equity, { 8.8, 9.6, 10, 9.0, 8.6, 8.6, 11, 10, 9.8, 14, 6.1, 6.1, 14 } },
             { RiskType::Commodity, { 11, 9.1, 8.3, 7.4, 10, 9.3, 17, 12, 14, 18, 6.6, 6.7, 5.0, 4.8, 3.8, 18, 5.2 } },
             { RiskType::EquityVol, { 0.093, 0.093, 0.093, 0.093, 0.093, 0.093, 0.093, 0.093, 0.093, 0.093, 0.093, 0.23, 0.093 } },
         };
@@ -367,17 +367,17 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
      // Equity inter-bucket correlations
      temp = {
         1.0, 0.18, 0.19, 0.19, 0.14, 0.16, 0.15, 0.16, 0.18, 0.12, 0.19, 0.19,
-        0.18, 1.0, 0.22, 0.21, 0.15, 0.18, 0.18, 0.19, 0.2, 0.14, 0.21, 0.21,
-        0.19, 0.22, 1.0, 0.22, 0.13, 0.17, 0.19, 0.17, 0.22, 0.13, 0.19, 0.19,
-        0.19, 0.21, 0.22, 1.0, 0.18, 0.22, 0.22, 0.23, 0.22, 0.17, 0.25, 0.25,
-        0.14, 0.15, 0.13, 0.18, 1.0, 0.29, 0.26, 0.29, 0.14, 0.24, 0.31, 0.31,
-        0.16, 0.18, 0.17, 0.22, 0.29, 1.0, 0.33, 0.36, 0.17, 0.29, 0.38, 0.38,
-        0.15, 0.18, 0.19, 0.22, 0.26, 0.33, 1.0, 0.33, 0.17, 0.28, 0.36, 0.36,
-        0.16, 0.19, 0.17, 0.23, 0.29, 0.36, 0.33, 1.0, 0.18, 0.29, 0.39, 0.39,
-        0.18, 0.2, 0.22, 0.22, 0.14, 0.17, 0.17, 0.18, 1.0, 0.13, 0.21, 0.21,
-        0.12, 0.14, 0.13, 0.17, 0.24, 0.29, 0.28, 0.29, 0.13, 1.0, 0.3, 0.3,
-        0.19, 0.21, 0.19, 0.25, 0.31, 0.38, 0.36, 0.39, 0.21, 0.3, 1.0, 0.44,
-        0.19, 0.21, 0.19, 0.25, 0.31, 0.38, 0.36, 0.39, 0.21, 0.3, 0.44, 1.0
+        0.18, 1.0, 0.22, 0.21, 0.15, 0.18, 0.17, 0.19, 0.2, 0.14, 0.21, 0.21,
+        0.19, 0.22, 1.0, 0.22, 0.13, 0.16, 0.18, 0.17, 0.22, 0.13, 0.2, 0.2,
+        0.19, 0.21, 0.22, 1.0, 0.17, 0.22, 0.22, 0.23, 0.22, 0.17, 0.26, 0.26,
+        0.14, 0.15, 0.13, 0.17, 1.0, 0.29, 0.26, 0.29, 0.14, 0.24, 0.32, 0.32,
+        0.16, 0.18, 0.16, 0.22, 0.29, 1.0, 0.34, 0.36, 0.17, 0.3, 0.39, 0.39,
+        0.15, 0.17, 0.18, 0.22, 0.26, 0.34, 1.0, 0.33, 0.16, 0.28, 0.36, 0.36,
+        0.16, 0.19, 0.17, 0.23, 0.29, 0.36, 0.33, 1.0, 0.17, 0.29, 0.4, 0.4,
+        0.18, 0.2, 0.22, 0.22, 0.14, 0.17, 0.16, 0.17, 1.0, 0.13, 0.21, 0.21,
+        0.12, 0.14, 0.13, 0.17, 0.24, 0.3, 0.28, 0.29, 0.13, 1.0, 0.3, 0.3,
+        0.19, 0.21, 0.2, 0.26, 0.32, 0.39, 0.36, 0.4, 0.21, 0.3, 1.0, 0.45,
+        0.19, 0.21, 0.2, 0.26, 0.32, 0.39, 0.36, 0.4, 0.21, 0.3, 0.45, 1.0
     };
     interBucketCorrelation_[RiskType::Equity] = Matrix(12, 12, temp.begin(), temp.end());
 
@@ -404,7 +404,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
     interBucketCorrelation_[RiskType::Commodity] = Matrix(17, 17, temp.begin(), temp.end());
 
     // Equity intra-bucket correlations (exclude Residual and deal with it in the method - it is 0%) - changed
-   intraBucketCorrelation_[RiskType::Equity] = { 0.18, 0.2, 0.28, 0.24, 0.25, 0.35, 0.35, 0.37, 0.23, 0.26, 0.44, 0.44 };
+   intraBucketCorrelation_[RiskType::Equity] = { 0.18, 0.2, 0.28, 0.24, 0.25, 0.36, 0.35, 0.37, 0.23, 0.27, 0.45, 0.45 };
 
     // Commodity intra-bucket correlations
    intraBucketCorrelation_[RiskType::Commodity] = { 0.83, 0.97, 0.93, 0.97, 0.98, 0.9, 0.98, 0.49, 0.8, 0.46, 0.58, 0.53, 0.62, 0.16, 0.18, 0, 0.38 };
