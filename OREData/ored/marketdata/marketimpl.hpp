@@ -182,14 +182,6 @@ public:
     //! Send an explicit update() call to all term structures
     void refresh(const string& configuration = Market::defaultConfiguration) override;
 
-    //! Adds a security spread to this market instance
-    void addSecuritySpread(const string securityID, const Real value,
-                           const string& configuration = Market::defaultConfiguration);
-
-    //! Adds a security recovery to this market instance
-    void addRecoveryRate(const string securityID, const Real value,
-                         const string& configuration = Market::defaultConfiguration);
-
 protected:
     /*! Require a market object, this can be used in derived classes to build objects lazily. If the
         method is not overwritten in a derived class, it is assumed that the class builds all market

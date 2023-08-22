@@ -909,7 +909,6 @@ public:
     string& paymentConvention() { return paymentConvention_; }
     std::vector<std::string>& paymentDates() { return paymentDates_; }
     string& lastPeriodDayCounter() { return lastPeriodDayCounter_; }
-    bool& strictNotionalDates() { return strictNotionalDates_; }
     //@}
 
     virtual boost::shared_ptr<LegAdditionalData> initialiseConcreteLegData(const string&);

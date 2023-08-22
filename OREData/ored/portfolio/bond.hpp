@@ -102,9 +102,6 @@ public:
     const string& maturityDate() const { return maturityDate_; }
     const string& subType() const { return subType_; }
 
-    //! Modifier
-    void setSecurityId (const string& securityId) { securityId_ = securityId; }
-
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
@@ -167,9 +164,6 @@ public:
 
     //! inspectors
     const BondData& bondData() const { return bondData_; }
-
-    //! Modifier
-    void setSecurityId (const string& securityId) { bondData_.setSecurityId(securityId); }
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>
