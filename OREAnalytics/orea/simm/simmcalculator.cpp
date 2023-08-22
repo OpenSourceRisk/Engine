@@ -1675,7 +1675,7 @@ void SimmCalculator::addCrifRecord(const CrifRecord& crifRecord, const bool enfo
         auto newCrifRecord = crifRecord;
         newCrifRecord.collectRegulations.clear();
         newCrifRecord.postRegulations.clear();
-        for (const string& r : regs)
+        for (const string& r : regs) {
             if (r == "Excluded" ||
                 (r == "Unspecified" && enforceIMRegulations && !(collectRegsIsEmpty && postRegsIsEmpty))) {
                 continue;
@@ -1684,12 +1684,14 @@ void SimmCalculator::addCrifRecord(const CrifRecord& crifRecord, const bool enfo
                 if (!newCrifRecord.isSimmParameter())
                     tradeIds_[side][nettingSetDetails][r].insert(newCrifRecord.tradeId);
 
-            // Add CRIF record to the appropriate regulations
-            if (regSensitivities_[side][nettingSetDetails][r] == nullptr) {
-                // We aggregate SEC/CFTC CRIF records later because we do not want to lose trade ID data until we have combined these later.
-                const bool aggregateTrades = r == "SEC" || r == "CFTC" ? false : true;
-                regSensitivities_[side][nettingSetDetails][r] = boost::make_shared<CrifLoader>(simmConfiguration_, CrifRecord::additionalHeaders, true, aggregateTrades);
-            }
+                // Add CRIF record to the appropriate regulations
+                if (regSensitivities_[side][nettingSetDetails][r] == nullptr) {
+                    // We aggregate SEC/CFTC CRIF records later because we do not want to lose trade ID data until we
+                    // have combined these later.
+                    const bool aggregateTrades = r == "SEC" || r == "CFTC" ? false : true;
+                    regSensitivities_[side][nettingSetDetails][r] = boost::make_shared<CrifLoader>(
+                        simmConfiguration_, CrifRecord::additionalHeaders, true, aggregateTrades);
+                }
 
                 // We make sure to ignore amountCcy when aggregating the records, since we will only be using amountUsd,
                 // and we may have CRIF records that are equal everywhere except for the amountCcy, and this will fail
@@ -1697,6 +1699,7 @@ void SimmCalculator::addCrifRecord(const CrifRecord& crifRecord, const bool enfo
                 const bool onDiffAmountCcy = true;
                 regSensitivities_[side][nettingSetDetails][r]->add(newCrifRecord, onDiffAmountCcy);
             }
+        }
     }
 }
 
