@@ -658,7 +658,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
         void build(const boost::shared_ptr<EngineFactory>&) override {}
     };
     AMCValuationEngine amcValEngine(model, sgd, boost::shared_ptr<Market>(), std::vector<string>(),
-                                    std::vector<string>());
+                                    std::vector<string>(), 0);
     auto trade = boost::make_shared<TestTrade>("BermudanSwaption", testCase.inBaseCcy ? "EUR" : "USD",
                                                boost::make_shared<VanillaInstrument>(swaption));
     trade->id() = "DummyTradeId";

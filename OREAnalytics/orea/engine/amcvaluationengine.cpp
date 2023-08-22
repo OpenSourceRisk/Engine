@@ -141,7 +141,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                    const boost::shared_ptr<ore::data::Market>& market,
                    const boost::shared_ptr<ore::analytics::ScenarioGeneratorData>& sgd,
                    const std::vector<string>& aggDataIndices, const std::vector<string>& aggDataCurrencies,
-                   boost::shared_ptr<ore::analytics::AggregationScenarioData> asd,
+                   const Size aggDataNumberCreditStates, boost::shared_ptr<ore::analytics::AggregationScenarioData> asd,
                    boost::shared_ptr<NPVCube> outputCube, boost::shared_ptr<ProgressIndicator> progressIndicator) {
 
     progressIndicator->updateProgress(0, portfolio->size() + 1);
@@ -358,6 +358,11 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                     asd->set(dateIndex, i, index->fixing(index->fixingCalendar().adjust(d)),
                              AggregationScenarioDataType::IndexFixing, asdIndexName[j]);
                 }
+                // set credit states
+                for (Size j = 0; j < aggDataNumberCreditStates; ++j) {
+                    asd->set(dateIndex, i, path[model->pIdx(CrossAssetModel::AssetType::CrState, j)][k],
+                             AggregationScenarioDataType::CreditState, std::to_string(j));
+                }
                 ++dateIndex;
             }
             timer.stop();
@@ -508,7 +513,8 @@ AMCValuationEngine::AMCValuationEngine(
     const QuantLib::Size nThreads, const QuantLib::Date& today, const QuantLib::Size nSamples,
     const boost::shared_ptr<ore::data::Loader>& loader,
     const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData, const std::vector<string>& aggDataIndices,
-    const std::vector<string>& aggDataCurrencies, const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
+    const std::vector<string>& aggDataCurrencies, const Size aggDataNumberCreditStates,
+    const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
     const boost::shared_ptr<ore::data::EngineData>& engineData,
     const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
@@ -521,8 +527,9 @@ AMCValuationEngine::AMCValuationEngine(
                                                                    const std::vector<QuantLib::Date>&,
                                                                    const QuantLib::Size)>& cubeFactory)
     : useMultithreading_(true), aggDataIndices_(aggDataIndices), aggDataCurrencies_(aggDataCurrencies),
-      scenarioGeneratorData_(scenarioGeneratorData), nThreads_(nThreads), today_(today), nSamples_(nSamples),
-      loader_(loader), crossAssetModelData_(crossAssetModelData), engineData_(engineData), curveConfigs_(curveConfigs),
+      aggDataNumberCreditStates_(aggDataNumberCreditStates), scenarioGeneratorData_(scenarioGeneratorData),
+      nThreads_(nThreads), today_(today), nSamples_(nSamples), loader_(loader),
+      crossAssetModelData_(crossAssetModelData), engineData_(engineData), curveConfigs_(curveConfigs),
       todaysMarketParams_(todaysMarketParams), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
@@ -547,9 +554,11 @@ AMCValuationEngine::AMCValuationEngine(const boost::shared_ptr<QuantExt::CrossAs
                                        const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
                                        const boost::shared_ptr<Market>& market,
                                        const std::vector<string>& aggDataIndices,
-                                       const std::vector<string>& aggDataCurrencies)
+                                       const std::vector<string>& aggDataCurrencies,
+                                       const Size aggDataNumberCreditStates)
     : useMultithreading_(false), aggDataIndices_(aggDataIndices), aggDataCurrencies_(aggDataCurrencies),
-      scenarioGeneratorData_(scenarioGeneratorData), model_(model), market_(market) {
+      aggDataNumberCreditStates_(aggDataNumberCreditStates), scenarioGeneratorData_(scenarioGeneratorData),
+      model_(model), market_(market) {
 
     QL_REQUIRE((aggDataIndices.empty() && aggDataCurrencies.empty()) || market != nullptr,
                "AMCValuationEngine: market is required for asd generation");
@@ -587,8 +596,8 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
 
     try {
         // we can use the mt progress indicator here although we are running on a single thread
-        runCoreEngine(portfolio, model_, market_, scenarioGeneratorData_, aggDataIndices_, aggDataCurrencies_, asd_,
-                      outputCube,
+        runCoreEngine(portfolio, model_, market_, scenarioGeneratorData_, aggDataIndices_, aggDataCurrencies_,
+                      aggDataNumberCreditStates_, asd_, outputCube,
                       boost::make_shared<ore::analytics::MultiThreadedProgressIndicator>(this->progressIndicators()));
     } catch (const std::exception& e) {
         QL_FAIL("Error during amc val engine run: " << e.what());
@@ -737,7 +746,7 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
                 // run core engine code (asd is written for thread id 0 only)
 
                 runCoreEngine(portfolio, cam, initMarket, scenarioGeneratorData_, aggDataIndices_, aggDataCurrencies_,
-                              id == 0 ? asd_ : nullptr, miniCubes_[id], progressIndicator);
+                              aggDataNumberCreditStates_, id == 0 ? asd_ : nullptr, miniCubes_[id], progressIndicator);
 
                 // return code 0 = ok
 
