@@ -40,7 +40,13 @@ class McMultiLegBaseEngine {
 protected:
     /*! The npv is computed in the model's base currency, discounting curves are taken from the model. simulationDates
         are additional simulation dates. The cross asset model here must be consistent with the multi path that is the
-        input to AmcCalculator::simulatePath(). */
+        input to AmcCalculator::simulatePath().
+
+        Current limitations:
+        - the parameter minimalObsDate is ignored, the corresponding optimization is not implemented yet
+        - polynomType is ignored, Mononimal is used always
+        - prixingSamples are ignored, the npv from the training phase is used alway
+    */
     McMultiLegBaseEngine(
         const Handle<CrossAssetModel>& model, const SequenceType calibrationPathGenerator,
         const SequenceType pricingPathGenerator, const Size calibrationSamples, const Size pricingSamples,
@@ -49,8 +55,7 @@ protected:
         const SobolRsg::DirectionIntegers directionIntegers,
         const std::vector<Handle<YieldTermStructure>>& discountCurves = std::vector<Handle<YieldTermStructure>>(),
         const std::vector<Date>& simulationDates = std::vector<Date>(),
-        const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
-        const bool regressionOnExerciseOnly = false);
+        const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true);
 
     // run calibration and pricing (called from derived engines)
     void calculate() const;
@@ -76,7 +81,7 @@ protected:
     std::vector<Handle<YieldTermStructure>> discountCurves_;
     std::vector<Date> simulationDates_;
     std::vector<Size> externalModelIndices_;
-    bool minimalObsDate_, regressionOnExerciseOnly_;
+    bool minimalObsDate_;
 
     // the generated amc calculator
     mutable boost::shared_ptr<AmcCalculator> amcCalculator_;

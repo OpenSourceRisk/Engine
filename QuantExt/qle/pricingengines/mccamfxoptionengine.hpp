@@ -44,8 +44,7 @@ public:
         const SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
         const std::vector<Handle<YieldTermStructure>>& discountCurves = std::vector<Handle<YieldTermStructure>>(),
         const std::vector<Date>& simulationDates = std::vector<Date>(),
-        const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
-        const bool regressionOnExerciseOnly = false);
+        const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true);
 
     void calculate() const override;
     const Handle<CrossAssetModel>& model() const { return model_; }

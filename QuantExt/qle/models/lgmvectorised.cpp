@@ -191,7 +191,7 @@ RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<Overnight
                                                const std::vector<Date>& valueDates, const std::vector<Real>& dt,
                                                const Natural rateCutoff, const bool includeSpread, const Real spread,
                                                const Real gearing, const Period lookback,
-                                               const DayCounter& accrualDayCounter, const Real cap, const Real floor,
+                                               const DayCounter& accrualDayCounter, Real cap, Real floor,
                                                const bool localCapFloor, const bool nakedOption, const Time t,
                                                const RandomVariable& x) const {
 
@@ -299,7 +299,7 @@ RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<Overnight
     Rate tau = accrualDayCounter.yearFraction(valueDates.front(), valueDates.back());
     RandomVariable rate = (compoundFactorLgm - RandomVariable(x.size(), 1.0)) / RandomVariable(x.size(), tau);
     RandomVariable swapletRate = RandomVariable(x.size(), gearing) * rate;
-    // RandomVariable effectiveSpread, effectiveIndexFixing;
+    RandomVariable effectiveSpread, effectiveIndexFixing;
     if (!includeSpread) {
         swapletRate += RandomVariable(x.size(), spread);
         effectiveSpread = RandomVariable(x.size(), spread);
@@ -307,7 +307,7 @@ RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<Overnight
     } else {
         effectiveSpread =
             rate - (compoundFactorWithoutSpreadLgm - RandomVariable(x.size(), 1.0)) / RandomVariable(x.size(), tau);
-        effectiveIndexFixing = rate - effectiveSpread_;
+        effectiveIndexFixing = rate - effectiveSpread;
     }
 
     if (cap == Null<Real>() && floor == Null<Real>())
@@ -349,9 +349,9 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
                                              const std::vector<Date>& fixingDates, const std::vector<Date>& valueDates,
                                              const std::vector<Real>& dt, const Natural rateCutoff,
                                              const bool includeSpread, const Real spread, const Real gearing,
-                                             const Period lookback, const DayCounter& accrualDayCounter, const Real cap,
-                                             const Real floor, const bool localCapFloor, const bool nakedOption,
-                                             const Time t, const RandomVariable& x) const {
+                                             const Period lookback, const DayCounter& accrualDayCounter, Real cap,
+                                             Real floor, const bool localCapFloor, const bool nakedOption, const Time t,
+                                             const RandomVariable& x) const {
 
     QL_REQUIRE(!includeSpread || QuantLib::close_enough(gearing, 1.0),
                "LgmVectorised::averageOnRate(): if include spread = true, only a gearing 1.0 is allowed - scale "
@@ -473,8 +473,8 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
 RandomVariable LgmVectorised::averagedBmaRate(const boost::shared_ptr<BMAIndex>& index,
                                               const std::vector<Date>& fixingDates, const Date& accrualStartDate,
                                               const Date& accrualEndDate, const bool includeSpread, const Real spread,
-                                              const Real gearing, const Real cap, const Real floor,
-                                              const bool nakedOption, const Time t, const RandomVariable& x) const {
+                                              const Real gearing, Real cap, Real floor, const bool nakedOption,
+                                              const Time t, const RandomVariable& x) const {
 
     // similar to AverageBMACouponPricer
 
@@ -563,7 +563,7 @@ RandomVariable LgmVectorised::averagedBmaRate(const boost::shared_ptr<BMAIndex>&
     }
 
     if (nakedOption)
-        rate = RandomVariable(x.size(), 0.0);
+        avgBMA = RandomVariable(x.size(), 0.0);
 
     RandomVariable forwardRate = (avgBMA - RandomVariable(x.size(), spread)) / RandomVariable(x.size(), gearing);
     RandomVariable floorletRate(x.size(), 0.0);
@@ -584,12 +584,12 @@ RandomVariable LgmVectorised::averagedBmaRate(const boost::shared_ptr<BMAIndex>&
             capletRate = -capletRate;
     }
 
-    return rate + floorletRate - capletRate;
+    return avgBMA + floorletRate - capletRate;
 }
 
 RandomVariable LgmVectorised::subPeriodsRate(const boost::shared_ptr<InterestRateIndex>& index,
-                                             const std::vector<Date>& fixingDates, const Real cap, const Real floor,
-                                             const bool nakedOption, const Time t, const RandomVariable& x) const {
+                                             const std::vector<Date>& fixingDates, const Time t,
+                                             const RandomVariable& x) const {
 
     return fixing(index, fixingDates.front(), t, x);
 }

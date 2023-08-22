@@ -45,14 +45,12 @@ McMultiLegBaseEngine::McMultiLegBaseEngine(
     const Size calibrationSeed, const Size pricingSeed, const Size polynomOrder,
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
     SobolRsg::DirectionIntegers directionIntegers, const std::vector<Handle<YieldTermStructure>>& discountCurves,
-    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices, const bool minimalObsDate,
-    const bool regressionOnExerciseOnly)
+    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices, const bool minimalObsDate)
     : model_(model), calibrationPathGenerator_(calibrationPathGenerator), pricingPathGenerator_(pricingPathGenerator),
       calibrationSamples_(calibrationSamples), pricingSamples_(pricingSamples), calibrationSeed_(calibrationSeed),
       pricingSeed_(pricingSeed), polynomOrder_(polynomOrder), polynomType_(polynomType), ordering_(ordering),
       directionIntegers_(directionIntegers), discountCurves_(discountCurves), simulationDates_(simulationDates),
-      externalModelIndices_(externalModelIndices), minimalObsDate_(minimalObsDate),
-      regressionOnExerciseOnly_(regressionOnExerciseOnly) {
+      externalModelIndices_(externalModelIndices), minimalObsDate_(minimalObsDate) {
 
     if (discountCurves_.empty())
         discountCurves_.resize(model_->components(CrossAssetModel::AssetType::IR));
@@ -477,8 +475,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
              fxLinkedFixedFxRate](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
                 RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].averagedBmaRate(
                     boost::dynamic_pointer_cast<BMAIndex>(bma->index()), bma->fixingDates(), bma->accrualStartDate(),
-                    bma->accrualEndDate(), bma->includeSpread(), bma->spread(), bma->gearing(), Null<Real>(),
-                    Null<Real>(), false, simTime, *states.at(0).at(0));
+                    bma->accrualEndDate(), false, bma->spread(), bma->gearing(), Null<Real>(), Null<Real>(), false,
+                    simTime, *states.at(0).at(0));
                 RandomVariable fxFixing(n, 1.0);
                 if (isFxLinked) {
                     if (fxLinkedFixedFxRate != Null<Real>()) {
@@ -515,7 +513,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].averagedBmaRate(
                 boost::dynamic_pointer_cast<BMAIndex>(cfbma->underlying()->index()), cfbma->underlying()->fixingDates(),
-                cfbma->underlying()->accrualStartDate(), cfbma->underlying()->accrualEndDate(),
+                cfbma->underlying()->accrualStartDate(), cfbma->underlying()->accrualEndDate(), cfbma->includeSpread(),
                 cfbma->underlying()->spread(), cfbma->underlying()->gearing(), cfbma->cap(), cfbma->floor(),
                 cfbma->nakedOption(), simTime, *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
