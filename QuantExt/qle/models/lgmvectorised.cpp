@@ -195,9 +195,6 @@ RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<Overnight
                                                const bool localCapFloor, const bool nakedOption, const Time t,
                                                const RandomVariable& x) const {
 
-    QL_REQUIRE(!localCapFloor, "LgmVectorised::compoundedOnRate(): localCapFloor = true is not supported");
-    QL_REQUIRE(!nakedOption, "LgmVectorised::compoundedOnRate(): nakedOption = true is not supported");
-
     QL_REQUIRE(!includeSpread || QuantLib::close_enough(gearing, 1.0),
                "LgmVectorised::compoundedOnRate(): if include spread = true, only a gearing 1.0 is allowed - scale "
                "the notional in this case instead.");
@@ -305,18 +302,47 @@ RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<Overnight
     // RandomVariable effectiveSpread, effectiveIndexFixing;
     if (!includeSpread) {
         swapletRate += RandomVariable(x.size(), spread);
-        // effectiveSpread = RandomVariable(x.size(), spread);
-        // effectiveIndexFixing = RandomVaraible(x, rate);
+        effectiveSpread = RandomVariable(x.size(), spread);
+        effectiveIndexFixing = rate;
     } else {
-        // effectiveSpread =
-        //     rate - (compoundFactorWithoutSpreadLgm - RandomVariable(x.size() 1.0)) / RandomVariable(x.size(), tau);
-        // effectiveIndexFixing = rate - effectiveSpread_;
+        effectiveSpread =
+            rate - (compoundFactorWithoutSpreadLgm - RandomVariable(x.size(), 1.0)) / RandomVariable(x.size(), tau);
+        effectiveIndexFixing = rate - effectiveSpread_;
     }
 
-    RandomVariable floorVal(x.size(), floor == Null<Real>() ? -QL_MAX_REAL : floor);
-    RandomVariable capVal(x.size(), cap == Null<Real>() ? QL_MAX_REAL : cap);
+    if (cap == Null<Real>() && floor == Null<Real>())
+        return swapletRate;
 
-    return max(floorVal, min(capVal, swapletRate));
+    // handle cap / floor - we compute the intrinsic value only
+
+    if (gearing < 0.0) {
+        std::swap(cap, floor);
+    }
+
+    if (nakedOption)
+        swapletRate = RandomVariable(x.size(), 0.0);
+
+    RandomVariable floorletRate(x.size(), 0.0);
+    RandomVariable capletRate(x.size(), 0.0);
+
+    if (floor != Null<Real>()) {
+        // ignore localCapFloor, treat as global
+        RandomVariable effectiveStrike =
+            (RandomVariable(x.size(), floor) - effectiveSpread) / RandomVariable(x.size(), gearing);
+        floorletRate = RandomVariable(x.size(), gearing) *
+                       max(RandomVariable(x.size(), 0.0), effectiveStrike - effectiveIndexFixing);
+    }
+
+    if (cap != Null<Real>()) {
+        RandomVariable effectiveStrike =
+            (RandomVariable(x.size(), cap) - effectiveSpread) / RandomVariable(x.size(), gearing);
+        capletRate = RandomVariable(x.size(), gearing) *
+                     max(RandomVariable(x.size(), 0.0), effectiveIndexFixing - effectiveStrike);
+        if (nakedOption && floor == Null<Real>())
+            capletRate = -capletRate;
+    }
+
+    return swapletRate + floorletRate - capletRate;
 }
 
 RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIndex>& index,
@@ -326,9 +352,6 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
                                              const Period lookback, const DayCounter& accrualDayCounter, const Real cap,
                                              const Real floor, const bool localCapFloor, const bool nakedOption,
                                              const Time t, const RandomVariable& x) const {
-
-    QL_REQUIRE(!localCapFloor, "LgmVectorised::averageOnRate(): localCapFloor = true is not supported");
-    QL_REQUIRE(!nakedOption, "LgmVectorised::averagedOnRate(): nakedOption = true is not supported");
 
     QL_REQUIRE(!includeSpread || QuantLib::close_enough(gearing, 1.0),
                "LgmVectorised::averageOnRate(): if include spread = true, only a gearing 1.0 is allowed - scale "
@@ -412,19 +435,46 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
     Rate tau = accrualDayCounter.yearFraction(valueDates.front(), valueDates.back());
     RandomVariable rate =
         RandomVariable(x.size(), gearing / tau) * accumulatedRateLgm + RandomVariable(x.size(), spread);
-    RandomVariable floorVal(x.size(), floor == Null<Real>() ? -QL_MAX_REAL : floor);
-    RandomVariable capVal(x.size(), cap == Null<Real>() ? QL_MAX_REAL : cap);
-    return max(floorVal, min(capVal, rate));
+
+    if (cap == Null<Real>() && floor == Null<Real>())
+        return rate;
+
+    // handle cap / floor - we compute the intrinsic value only
+
+    if (gearing < 0.0) {
+        std::swap(cap, floor);
+    }
+
+    if (nakedOption)
+        rate = RandomVariable(x.size(), 0.0);
+
+    RandomVariable forwardRate = (rate - RandomVariable(x.size(), spread)) / RandomVariable(x.size(), gearing);
+    RandomVariable floorletRate(x.size(), 0.0);
+    RandomVariable capletRate(x.size(), 0.0);
+
+    if (floor != Null<Real>()) {
+        // ignore localCapFloor, treat as global
+        RandomVariable effectiveStrike = RandomVariable(x.size(), (floor - spread) / gearing);
+        floorletRate =
+            RandomVariable(x.size(), gearing) * max(RandomVariable(x.size(), 0.0), effectiveStrike - forwardRate);
+    }
+
+    if (cap != Null<Real>()) {
+        RandomVariable effectiveStrike = RandomVariable(x.size(), (cap - spread) / gearing);
+        capletRate =
+            RandomVariable(x.size(), gearing) * max(RandomVariable(x.size(), 0.0), forwardRate - effectiveStrike);
+        if (nakedOption && floor == Null<Real>())
+            capletRate = -capletRate;
+    }
+
+    return rate + floorletRate - capletRate;
 }
 
 RandomVariable LgmVectorised::averagedBmaRate(const boost::shared_ptr<BMAIndex>& index,
                                               const std::vector<Date>& fixingDates, const Date& accrualStartDate,
-                                              const Date& accrualEndDate, const Real spread, const Real gearing,
-                                              const Real cap, const Real floor, const bool nakedOption, const Time t,
-                                              const RandomVariable& x) const {
-
-    QL_REQUIRE(cap == Null<Real>() && floor == Null<Real>() && nakedOption == false && spread == 0.0 && gearing == 1.0,
-               "LgmVectorised::averagedBmaRate(): implementation of cap, floor, naked option not finished.");
+                                              const Date& accrualEndDate, const bool includeSpread, const Real spread,
+                                              const Real gearing, const Real cap, const Real floor,
+                                              const bool nakedOption, const Time t, const RandomVariable& x) const {
 
     // similar to AverageBMACouponPricer
 
@@ -500,15 +550,48 @@ RandomVariable LgmVectorised::averagedBmaRate(const boost::shared_ptr<BMAIndex>&
         d1 = d2;
     }
 
-    avgBMA /= RandomVariable(x.size(), (endDate - startDate));
+    avgBMA *= RandomVariable(x.size(), gearing / (endDate - startDate));
+    avgBMA += RandomVariable(x.size(), spread);
 
-    return avgBMA;
+    if (cap == Null<Real>() && floor == Null<Real>())
+        return avgBMA;
+
+    // handle cap / floor - we compute the intrinsic value only
+
+    if (gearing < 0.0) {
+        std::swap(cap, floor);
+    }
+
+    if (nakedOption)
+        rate = RandomVariable(x.size(), 0.0);
+
+    RandomVariable forwardRate = (avgBMA - RandomVariable(x.size(), spread)) / RandomVariable(x.size(), gearing);
+    RandomVariable floorletRate(x.size(), 0.0);
+    RandomVariable capletRate(x.size(), 0.0);
+
+    if (floor != Null<Real>()) {
+        // ignore localCapFloor, treat as global
+        RandomVariable effectiveStrike = RandomVariable(x.size(), (floor - spread) / gearing);
+        floorletRate =
+            RandomVariable(x.size(), gearing) * max(RandomVariable(x.size(), 0.0), effectiveStrike - forwardRate);
+    }
+
+    if (cap != Null<Real>()) {
+        RandomVariable effectiveStrike = RandomVariable(x.size(), (cap - spread) / gearing);
+        capletRate =
+            RandomVariable(x.size(), gearing) * max(RandomVariable(x.size(), 0.0), forwardRate - effectiveStrike);
+        if (nakedOption && floor == Null<Real>())
+            capletRate = -capletRate;
+    }
+
+    return rate + floorletRate - capletRate;
 }
 
 RandomVariable LgmVectorised::subPeriodsRate(const boost::shared_ptr<InterestRateIndex>& index,
                                              const std::vector<Date>& fixingDates, const Real cap, const Real floor,
                                              const bool nakedOption, const Time t, const RandomVariable& x) const {
-    QL_FAIL("not implemented yet.");
+
+    return fixing(index, fixingDates.front(), t, x);
 }
 
 } // namespace QuantExt
