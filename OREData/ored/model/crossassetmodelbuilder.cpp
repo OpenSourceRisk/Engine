@@ -80,14 +80,15 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
     const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
     const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
     const std::string& configurationCrCalibration, const std::string& configurationFinalModel, const bool dontCalibrate,
-    const bool continueOnError, const std::string& referenceCalibrationGrid, const SalvagingAlgorithm::Type salvaging)
+    const bool continueOnError, const std::string& referenceCalibrationGrid, const SalvagingAlgorithm::Type salvaging,
+    const std::string& id)
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
       configurationCrCalibration_(configurationCrCalibration),
       configurationComCalibration_(Market::defaultConfiguration), configurationFinalModel_(configurationFinalModel),
       dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
-      referenceCalibrationGrid_(referenceCalibrationGrid), salvaging_(salvaging),
+      referenceCalibrationGrid_(referenceCalibrationGrid), salvaging_(salvaging), id_(id),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
     buildModel();
@@ -228,10 +229,10 @@ void CrossAssetModelBuilder::buildModel() const {
         DLOG("IR Parametrization " << i << " qualifier " << irConfig->qualifier());
         
         if (auto ir = boost::dynamic_pointer_cast<IrLgmData>(irConfig)) {
-        
-            auto builder = boost::make_shared<LgmBuilder>(market_, ir, configurationLgmCalibration_,
-                                                   config_->bootstrapTolerance(),
-                                               continueOnError_, referenceCalibrationGrid_);
+
+            auto builder =
+                boost::make_shared<LgmBuilder>(market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance(),
+                                               continueOnError_, referenceCalibrationGrid_, false, id_);
             if (dontCalibrate_)
                 builder->freeze();
             lgmBuilder.push_back(builder);
@@ -525,7 +526,7 @@ void CrossAssetModelBuilder::buildModel() const {
                                                    std::to_string(fxOptionCalibrationErrors_[i]) +
                                                    " exceeds tolerance " +
                                                    std::to_string(config_->bootstrapTolerance());
-                    WLOG(StructuredModelErrorMessage("Failed to calibrate FX BS Model", exceptionMessage));
+                    WLOG(StructuredModelErrorMessage("Failed to calibrate FX BS Model", exceptionMessage, id_));
                     WLOGGERSTREAM("Calibration details:");
                     WLOGGERSTREAM(
                         getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]));
@@ -587,7 +588,7 @@ void CrossAssetModelBuilder::buildModel() const {
                                                    std::to_string(eqOptionCalibrationErrors_[i]) +
                                                    " exceeds tolerance " +
                                                    std::to_string(config_->bootstrapTolerance());
-                    WLOG(StructuredModelErrorMessage("Failed to calibrate EQ BS Model", exceptionMessage));
+                    WLOG(StructuredModelErrorMessage("Failed to calibrate EQ BS Model", exceptionMessage, id_));
                     WLOGGERSTREAM("Calibration details:");
                     WLOGGERSTREAM(
                         getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]));
@@ -710,7 +711,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
             string exceptionMessage = "INF (DK) " + std::to_string(modelIdx) + " calibration error " +
                                       std::to_string(inflationCalibrationErrors_[modelIdx]) + " exceeds tolerance " +
                                       std::to_string(config_->bootstrapTolerance());
-            WLOG(StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage));
+            WLOG(StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage, id_));
             WLOGGERSTREAM("Calibration details:");
             WLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
             WLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
@@ -852,7 +853,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
             ss << "INF (JY) " << modelIdx << " calibration error " << std::scientific
                << inflationCalibrationErrors_[modelIdx] << " exceeds tolerance " << cc.rmseTolerance();
             string exceptionMessage = ss.str();
-            WLOG(StructuredModelErrorMessage("Failed to calibrate INF JY Model", exceptionMessage));
+            WLOG(StructuredModelErrorMessage("Failed to calibrate INF JY Model", exceptionMessage, id_));
             WLOGGERSTREAM("Calibration details:");
             WLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
             WLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);

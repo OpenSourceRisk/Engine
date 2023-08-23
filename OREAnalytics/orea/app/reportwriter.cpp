@@ -1737,7 +1737,7 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
         if (!hasScheduleTrades) {
             try {
                 hasScheduleTrades = parseIMModel(cr.imModel) == SimmConfiguration::IMModel::Schedule;
-            } catch (std::exception& e) {
+            } catch (std::exception&) {
             }
         }
     }
