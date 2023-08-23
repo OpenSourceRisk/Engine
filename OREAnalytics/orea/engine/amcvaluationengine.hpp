@@ -45,7 +45,7 @@ public:
     AMCValuationEngine(const boost::shared_ptr<QuantExt::CrossAssetModel>& model,
                        const boost::shared_ptr<ore::analytics::ScenarioGeneratorData>& scenarioGeneratorData,
                        const boost::shared_ptr<ore::data::Market>& market, const std::vector<string>& aggDataIndices,
-                       const std::vector<string>& aggDataCurrencies);
+                       const std::vector<string>& aggDataCurrencies, const Size aggDataNumberCreditStates);
 
     //! Constructor for multi threaded runs
     AMCValuationEngine(
@@ -53,7 +53,7 @@ public:
         const boost::shared_ptr<ore::data::Loader>& loader,
         const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
         const std::vector<string>& aggDataIndices, const std::vector<string>& aggDataCurrencies,
-        const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
+        const Size aggDataNumberCreditStates, const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
         const boost::shared_ptr<ore::data::EngineData>& engineData,
         const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
         const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
@@ -92,6 +92,7 @@ private:
 
     // shared inputs
     const std::vector<string> aggDataIndices_, aggDataCurrencies_;
+    const Size aggDataNumberCreditStates_;
     boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
 
     // inputs for single-threaded run
