@@ -159,6 +159,7 @@ struct RiskTypeTag {};
 struct BucketTag {};
 struct BucketQualifierTag {};
 struct QualifierTag {};
+struct NoProductClassQualifierTag {};
 
 /*! A structure that we can use to aggregate CrifRecords across trades in a portfolio
     to provide the net sensitivities that we need to perform a downstream SIMM calculation.
@@ -197,6 +198,13 @@ typedef boost::multi_index_container<
                 CrifRecord,
                 boost::multi_index::member<CrifRecord, NettingSetDetails, &CrifRecord::nettingSetDetails>,
                 boost::multi_index::member<CrifRecord, SimmConfiguration::ProductClass, &CrifRecord::productClass>,
+                boost::multi_index::member<CrifRecord, SimmConfiguration::RiskType, &CrifRecord::riskType>,
+                boost::multi_index::member<CrifRecord, std::string, &CrifRecord::qualifier>>>,
+        boost::multi_index::ordered_non_unique<
+            boost::multi_index::tag<NoProductClassQualifierTag>,
+            boost::multi_index::composite_key<
+                CrifRecord,
+                boost::multi_index::member<CrifRecord, NettingSetDetails, &CrifRecord::nettingSetDetails>,
                 boost::multi_index::member<CrifRecord, SimmConfiguration::RiskType, &CrifRecord::riskType>,
                 boost::multi_index::member<CrifRecord, std::string, &CrifRecord::qualifier>>>,
         boost::multi_index::ordered_non_unique<
