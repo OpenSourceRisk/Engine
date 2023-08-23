@@ -2,7 +2,7 @@
  Copyright (C) 2023 Quaternion Risk Management Ltd
  All rights reserved.
 */
-/*! \file orea/simm/simmconcentrationisdav2_6.hpp
+/*! \file orepsimm/orea/simmconcentrationisdav2_6.hpp
     \brief SIMM concentration thresholds for SIMM version 2.6
 */
 
@@ -15,12 +15,12 @@
 #include <set>
 #include <string>
 
-namespace ore {
+namespace ore{
 namespace analytics {
 
 /*! Class giving the SIMM concentration thresholds as outlined in the document
-    <em>ISDA SIMM Methodology, version 2.6.
-        Effective Date: December 3, 2022.</em>
+    <em>ISDA SIMM Methodology, version 2.6 .
+        Effective Date: December 2, 2023.</em>
 */
 class SimmConcentration_ISDA_V2_6 : public SimmConcentrationBase {
 public:
