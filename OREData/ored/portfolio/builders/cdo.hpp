@@ -53,6 +53,9 @@ using namespace std;
     \ingroup portfolio
 */
 
+std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>>
+buildPerformanceOptimizedDefaultCurves(const std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>>& curves);
+
 class CdoEngineBuilder
     : public CachingPricingEngineBuilder<vector<string>, const Currency&, bool, const vector<string>&,
                                          const boost::shared_ptr<QuantLib::SimpleQuote>&,

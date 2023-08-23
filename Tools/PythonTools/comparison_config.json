@@ -530,7 +530,10 @@
               "Exceptions",
               "GreenUpTo",
               "AmberUpTo",
-              "Zone"
+              "Zone",
+              "Currency",
+              "SIMMResultCurrency",
+              "SIMMCalculationCurrency"
             ],
             "abs_tol": null,
             "rel_tol": null
