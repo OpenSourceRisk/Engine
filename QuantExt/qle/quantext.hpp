@@ -235,6 +235,7 @@
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_io.hpp>
 #include <qle/math/randomvariable_opcodes.hpp>
+#include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/math/stabilisedglls.hpp>
 #include <qle/math/trace.hpp>
 #include <qle/methods/brownianbridgepathinterpolator.hpp>
