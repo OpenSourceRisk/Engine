@@ -1141,6 +1141,22 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     LOG("Sensitivity report finished");
 }
 
+void ReportWriter::writeSensitivityConfigReport(ore::data::Report& report,
+                                                const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes,
+                                                const std::map<RiskFactorKey, QuantLib::Real>& baseValues) {
+    LOG("Writing Sensitivity Config report");
+
+    report.addColumn("Key", string()).addColumn("BaseValue", double(), 8).addColumn("ShiftSize", double(), 8);
+
+    for (auto const& [key, shift] : shiftSizes) {
+        report.next();
+        report.add(ore::data::to_string(key)).add(baseValues.at(key)).add(shift);
+    }
+
+    report.end();
+    LOG("Sensitivity Config report finished.");
+}
+
 template <class T>
 void addMapResults(boost::any resultMap, const std::string& tradeId, const std::string& resultName, Report& report) {
     T map = boost::any_cast<T>(resultMap);
