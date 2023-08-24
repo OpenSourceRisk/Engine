@@ -137,6 +137,23 @@ Real ReturnConfiguration::applyReturn(const RiskFactorKey& key, const Real baseV
     return value;
 }
 
+const std::map<RiskFactorKey::KeyType, ReturnConfiguration::ReturnType> ReturnConfiguration::returnTypes() const {
+    return returnType_;
+}
+
+std::ostream& operator<<(std::ostream& out, const ReturnConfiguration::ReturnType t) {
+    switch (t) {
+    case ReturnConfiguration::ReturnType::Absolute:
+        return out << "Absolute";
+    case ReturnConfiguration::ReturnType::Relative:
+        return out << "Relative";
+    case ReturnConfiguration::ReturnType::Log:
+        return out << "Log";
+    default:
+        return out << "Unknown ReturnType (" << static_cast<int>(t) << ")";
+    }
+}
+
 void ReturnConfiguration::check(const RiskFactorKey& key) const {
 
     auto keyType = key.keytype;
@@ -223,6 +240,8 @@ boost::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date& d) {
     boost::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, "", 1.0);
 
     // loop over all keys
+    calculationDetails_.resize(baseScenario_->keys().size());
+    Size calcDetailsCounter = 0;
     for (auto key : baseScenario_->keys()) {
         Real base = baseScenario_->get(key);
         Real v1 = 1.0, v2 = 1.0;
@@ -238,7 +257,8 @@ boost::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date& d) {
         // Calculate the returned value
         Real returnVal = returnConfiguration_.returnValue(key, v1, v2, s1->asof(), s2->asof());
         // Adjust return for any scaling
-        returnVal = returnVal * scaling(key, returnVal);
+        Real scaling = this->scaling(key, returnVal);
+        returnVal = returnVal * scaling;
         // Calculate the shifted value
         value = returnConfiguration_.applyReturn(key, base, returnVal);
         if (std::isinf(value)) {
@@ -246,6 +266,20 @@ boost::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date& d) {
         }
         // Add it
         scen->add(key, value);
+        // Populate calculation details
+        calculationDetails_[calcDetailsCounter].scenarioDate1 = s1->asof();
+        calculationDetails_[calcDetailsCounter].scenarioDate2 = s2->asof();
+        calculationDetails_[calcDetailsCounter].key = key;
+        calculationDetails_[calcDetailsCounter].baseValue = base;
+        calculationDetails_[calcDetailsCounter].adjustmentFactor1 = adjFactors_->getFactor(key.name, s1->asof());
+        calculationDetails_[calcDetailsCounter].adjustmentFactor2 = adjFactors_->getFactor(key.name, s2->asof());
+        calculationDetails_[calcDetailsCounter].scenarioValue1 = v1;
+        calculationDetails_[calcDetailsCounter].scenarioValue2 = v2;
+        calculationDetails_[calcDetailsCounter].returnType = returnConfiguration_.returnTypes().at(key.keytype);
+        calculationDetails_[calcDetailsCounter].scaling = scaling;
+        calculationDetails_[calcDetailsCounter].returnValue = returnVal;
+        calculationDetails_[calcDetailsCounter].scenarioValue = value;
+        ++calcDetailsCounter;
     }
 
     // Label the scenario
@@ -256,6 +290,11 @@ boost::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date& d) {
     // return it.
     ++i_;
     return scen;
+}
+
+const std::vector<HistoricalScenarioGenerator::HistoricalScenarioCalculationDetails>&
+HistoricalScenarioGenerator::lastHistoricalScenarioCalculationDetails() const {
+    return calculationDetails_;
 }
 
 Size HistoricalScenarioGenerator::numScenarios() const {
