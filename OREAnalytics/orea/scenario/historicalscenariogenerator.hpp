@@ -245,19 +245,21 @@ private:
  *  WARNING: This transform function should only be used for backtesting statistics reports requiring the transforms
  *  listed above.
  */
-class HistoricalScenarioGeneratorTransform : public ScenarioGenerator {
+class HistoricalScenarioGeneratorTransform : public HistoricalScenarioGenerator {
 public:
     HistoricalScenarioGeneratorTransform(boost::shared_ptr<HistoricalScenarioGenerator>& hsg,
                                          const boost::shared_ptr<ScenarioSimMarket>& simMarket,
                                          const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketConfig)
-        : hsg_(hsg), simMarket_(simMarket), simMarketConfig_(simMarketConfig) {}
+        : HistoricalScenarioGenerator(hsg->scenarioLoader(), hsg->scenarioFactory(), hsg->cal(), hsg->adjFactors(),
+                                      hsg->mporDays(), hsg->overlapping(), hsg->returnConfiguration(),
+                                      hsg->labelPrefix()),
+          simMarket_(simMarket), simMarketConfig_(simMarketConfig) {
+        baseScenario_ = hsg->baseScenario();
+    }
 
     boost::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
 
-    void reset() override;
-
 private:
-    boost::shared_ptr<HistoricalScenarioGenerator> hsg_;
     boost::shared_ptr<ScenarioSimMarket> simMarket_;
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
 };
