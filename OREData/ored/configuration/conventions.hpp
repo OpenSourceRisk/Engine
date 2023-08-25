@@ -104,6 +104,8 @@ protected:
     string id_;
 };
 
+std::ostream& operator<<(std::ostream& out, Convention::Type type);
+
 //! Repository for currency dependent market conventions
 /*!
   \ingroup market
@@ -149,7 +151,10 @@ public:
     //@}
 
 private:
-    map<string, boost::shared_ptr<Convention>> data_;
+    void addInternal(const boost::shared_ptr<Convention>& convention) const;
+
+    mutable map<string, boost::shared_ptr<Convention>> data_;
+    mutable map<string, std::pair<string, string>> unparsed_;
     mutable boost::shared_mutex mutex_;
 };
 
@@ -1820,12 +1825,6 @@ private:
     QuantLib::Size maxEvaluations_;
     QuantLib::Real guess_;
 };
-
-/*! 
-  Flips the first two tokens in a string like CCY1-CCY2-TEXT,
-  only used in the context of CrossCcyBasisSwap convention IDs 
-*/
-std::string flip(const std::string& id, const std::string& sep = "-");
 
 } // namespace data
 } // namespace ore
