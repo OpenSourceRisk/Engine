@@ -106,7 +106,8 @@ public:
 
     virtual void writeSensitivityConfigReport(ore::data::Report& report,
                                               const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes,
-                                              const std::map<RiskFactorKey, QuantLib::Real>& baseValues);
+                                              const std::map<RiskFactorKey, QuantLib::Real>& baseValues,
+                                              const std::map<RiskFactorKey, std::string>& keyToFactor);
 
     virtual void writeAdditionalResultsReport(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
                                         boost::shared_ptr<Market> market, const std::string& baseCurrency);

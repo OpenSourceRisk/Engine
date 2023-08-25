@@ -1143,14 +1143,25 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
 
 void ReportWriter::writeSensitivityConfigReport(ore::data::Report& report,
                                                 const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes,
-                                                const std::map<RiskFactorKey, QuantLib::Real>& baseValues) {
+                                                const std::map<RiskFactorKey, QuantLib::Real>& baseValues,
+                                                const std::map<RiskFactorKey, std::string>& keyToFactor) {
     LOG("Writing Sensitivity Config report");
 
-    report.addColumn("Key", string()).addColumn("BaseValue", double(), 8).addColumn("ShiftSize", double(), 8);
+    report.addColumn("Key", string())
+        .addColumn("Factor", string())
+        .addColumn("BaseValue", double(), 8)
+        .addColumn("ShiftSize", double(), 8);
 
     for (auto const& [key, shift] : shiftSizes) {
         report.next();
-        report.add(ore::data::to_string(key)).add(baseValues.at(key)).add(shift);
+        std::string keyStr = "na", factorStr = "na";
+        Real baseValue = Null<Real>();
+        keyStr = ore::data::to_string(key);
+        if (auto it = keyToFactor.find(key); it != keyToFactor.end())
+            factorStr = it->second;
+        if (auto it = baseValues.find(key); it != baseValues.end())
+            baseValue = it->second;
+        report.add(keyStr).add(factorStr).add(baseValue).add(shift);
     }
 
     report.end();
