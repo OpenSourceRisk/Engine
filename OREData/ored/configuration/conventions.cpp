@@ -2413,87 +2413,57 @@ XMLNode* ZeroInflationIndexConvention::toXML(XMLDocument& doc) {
 }
 
 void Conventions::fromXML(XMLNode* node) {
-
     XMLUtils::checkNode(node, "Conventions");
 
     for (XMLNode* child = XMLUtils::getChildNode(node); child; child = XMLUtils::getNextSibling(child)) {
 
+        string type = XMLUtils::getNodeName(child);
         boost::shared_ptr<Convention> convention;
-        string childName = XMLUtils::getNodeName(child);
 
-        // Some conventions depend on the already read conventions, since they parse an ibor or overnight
-        // index which may be convention based. In this case we require the index convention to appear
-        // before the convention that depends on it in the input.
+        /* we need to build conventions of type
 
-        if (childName == "Zero") {
-            convention.reset(new ZeroRateConvention());
-        } else if (childName == "Deposit") {
-            convention.reset(new DepositConvention());
-        } else if (childName == "Future") {
-            convention.reset(new FutureConvention());
-        } else if (childName == "FRA") {
-            convention.reset(new FraConvention());
-        } else if (childName == "OIS") {
-            convention.reset(new OisConvention());
-        } else if (childName == "Swap") {
-            convention.reset(new IRSwapConvention());
-        } else if (childName == "AverageOIS") {
-            convention.reset(new AverageOisConvention());
-        } else if (childName == "TenorBasisSwap") {
-            convention.reset(new TenorBasisSwapConvention());
-        } else if (childName == "TenorBasisTwoSwap") {
-            convention.reset(new TenorBasisTwoSwapConvention());
-        } else if (childName == "BMABasisSwap") {
-            convention.reset(new BMABasisSwapConvention());
-        } else if (childName == "FX") {
-            convention.reset(new FXConvention());
-        } else if (childName == "CrossCurrencyBasis") {
-            convention.reset(new CrossCcyBasisSwapConvention());
-        } else if (childName == "CrossCurrencyFixFloat") {
-            convention.reset(new CrossCcyFixFloatSwapConvention());
-        } else if (childName == "CDS") {
-            convention.reset(new CdsConvention());
-        } else if (childName == "SwapIndex") {
-            convention.reset(new SwapIndexConvention());
-        } else if (childName == "InflationSwap") {
-            convention.reset(new InflationSwapConvention());
-        } else if (childName == "CmsSpreadOption") {
-            convention.reset(new CmsSpreadOptionConvention());
-        } else if (childName == "CommodityForward") {
-            convention = boost::make_shared<CommodityForwardConvention>();
-        } else if (childName == "CommodityFuture") {
-            convention = boost::make_shared<CommodityFutureConvention>();
-        } else if (childName == "FxOption") {
-            convention = boost::make_shared<FxOptionConvention>();
-        } else if (childName == "IborIndex") {
+           - IborIndex
+           - OvernightIndex
+           - FX
+
+           immediately because
+
+           - for IborIndex other conventions depend on it via parseIborIndex() calls
+           - the id of IborIndex convention is changed during build (period is normalized)
+           - FX conventions are searched by currencies, not id */
+
+        if (type == "IborIndex") {
             convention = boost::make_shared<IborIndexConvention>();
-        } else if (childName == "OvernightIndex") {
+        } else if (type == "FX") {
+            convention = boost::make_shared<FXConvention>();
+        } else if (type == "OvernightIndex") {
             convention = boost::make_shared<OvernightIndexConvention>();
-        } else if (childName == "ZeroInflationIndex") {
-            convention = boost::make_shared<ZeroInflationIndexConvention>();
-        } else if (childName == "BondYield") {
-	    convention = boost::make_shared<BondYieldConvention>();
-        } else {
-            // No need to QL_FAIL here, just go to the next one
-            WLOG("Convention name, " << childName << ", not recognized.");
-            continue;
         }
 
-        string id = XMLUtils::getChildValue(child, "Id", true);
-
-        try {
-            DLOG("Loading Convention " << id);
-            convention->fromXML(child);
-            add(convention);
-        } catch (exception& e) {
-            WLOG("Exception parsing convention "
-                 "XML Node (id = "
-                 << id << ") : " << e.what());
+        string id = "unknown";
+        if (convention) {
+            try {
+                id = XMLUtils::getChildValue(child, "Id", true);
+                convention->fromXML(child);
+                add(convention);
+            } catch (const std::exception& e) {
+                WLOG("Exception parsing convention "
+                     << id << ": " << e.what() << ". This is only a problem if this convention is used later on.");
+            }
+        } else {
+            try {
+                id = XMLUtils::getChildValue(child, "Id", true);
+                unparsed_[id] = std::make_pair(type, XMLUtils::toString(child));
+            } catch (const std::exception& e) {
+                WLOG("Exception during retrieval of convention "
+                     << id << ": " << e.what() << ". This is only a problem if this convention is used later on.");
+            }
         }
     }
 }
 
 XMLNode* Conventions::toXML(XMLDocument& doc) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
 
     XMLNode* conventionsNode = doc.allocNode("Conventions");
 
@@ -2509,33 +2479,109 @@ void Conventions::clear() {
     data_.clear();
 }
 
-std::string flip(const std::string& id, const std::string& sep) {
-    boost::tokenizer<boost::escaped_list_separator<char>> tokenSplit(id, boost::escaped_list_separator<char>("\\", sep, "\""));
+namespace {
+std::string flip(const std::string& id, const std::string& sep = "-") {
+    boost::tokenizer<boost::escaped_list_separator<char>> tokenSplit(
+        id, boost::escaped_list_separator<char>("\\", sep, "\""));
     std::vector<std::string> tokens(tokenSplit.begin(), tokenSplit.end());
-    if (tokens.size() >= 2 && tokens[0].size() == 3 && tokens[1].size() == 3) {
-      std::string id2 = tokens[1] + sep + tokens[0];
-      for (Size i = 2; i < tokens.size(); ++i)
-	  id2 += sep + tokens[i];
-      return id2; // flipped id
+
+    bool eligible = false;
+    for (auto const& t : tokens) {
+        eligible = eligible || (t == "XCCY" || t == "FX" || t == "FXOPTION");
     }
-    else return id; // original id
+
+    if (eligible && (tokens.size() > 2 && tokens[0].size() == 3 && tokens[1].size() == 3)) {
+        std::string id2 = tokens[1] + sep + tokens[0];
+        for (Size i = 2; i < tokens.size(); ++i)
+            id2 += sep + tokens[i];
+        return id2;
+    }
+
+    return id;
 }
-  
+}
+
 boost::shared_ptr<Convention> Conventions::get(const string& id) const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
-    auto it = data_.find(id);
-    if (it != data_.end())
-        return it->second;
-    else {
-        std::string id2 = flip(id);
-	auto it = data_.find(id2);
-	if (it != data_.end() && boost::dynamic_pointer_cast<CrossCcyBasisSwapConvention>(it->second)) {
-	    return it->second;
-	}
-	else {
-	  QL_FAIL("Cannot find conventions for id " << id);
-	}
+
+    {
+        boost::shared_lock<boost::shared_mutex> lock(mutex_);
+        if (auto it = data_.find(id); it != data_.end())
+            return it->second;
+        if (auto it = data_.find(flip(id)); it != data_.end())
+            return it->second;
     }
+
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+
+    std::string type, unparsed;
+    if (auto it = unparsed_.find(id); it != unparsed_.end()) {
+        std::tie(type, unparsed) = it->second;
+        unparsed_.erase(id);
+    } else if (auto it = unparsed_.find(flip(id)); it != unparsed_.end()) {
+        std::tie(type, unparsed) = it->second;
+        unparsed_.erase(flip(id));
+    }
+
+    if (unparsed.empty()) {
+        QL_FAIL("Required convention '" << id << "' not found.");
+    }
+
+    boost::shared_ptr<Convention> convention;
+    if (type == "Zero") {
+        convention = boost::make_shared<ZeroRateConvention>();
+    } else if (type == "Deposit") {
+        convention = boost::make_shared<DepositConvention>();
+    } else if (type == "Future") {
+        convention = boost::make_shared<FutureConvention>();
+    } else if (type == "FRA") {
+        convention = boost::make_shared<FraConvention>();
+    } else if (type == "OIS") {
+        convention = boost::make_shared<OisConvention>();
+    } else if (type == "Swap") {
+        convention = boost::make_shared<IRSwapConvention>();
+    } else if (type == "AverageOIS") {
+        convention = boost::make_shared<AverageOisConvention>();
+    } else if (type == "TenorBasisSwap") {
+        convention = boost::make_shared<TenorBasisSwapConvention>();
+    } else if (type == "TenorBasisTwoSwap") {
+        convention=boost::make_shared<TenorBasisTwoSwapConvention>();
+    } else if (type == "BMABasisSwap") {
+        convention = boost::make_shared<BMABasisSwapConvention>();
+    } else if (type == "CrossCurrencyBasis") {
+        convention=boost::make_shared<CrossCcyBasisSwapConvention>();
+    } else if (type == "CrossCurrencyFixFloat") {
+        convention=boost::make_shared<CrossCcyFixFloatSwapConvention>();
+    } else if (type == "CDS") {
+        convention=boost::make_shared<CdsConvention>();
+    } else if (type == "SwapIndex") {
+        convention=boost::make_shared<SwapIndexConvention>();
+    } else if (type == "InflationSwap") {
+        convention=boost::make_shared<InflationSwapConvention>();
+    } else if (type == "CmsSpreadOption") {
+        convention=boost::make_shared<CmsSpreadOptionConvention>();
+    } else if (type == "CommodityForward") {
+        convention = boost::make_shared<CommodityForwardConvention>();
+    } else if (type == "CommodityFuture") {
+        convention = boost::make_shared<CommodityFutureConvention>();
+    } else if (type == "FxOption") {
+        convention = boost::make_shared<FxOptionConvention>();
+    } else if (type == "ZeroInflationIndex") {
+        convention = boost::make_shared<ZeroInflationIndexConvention>();
+    } else if (type == "BondYield") {
+        convention = boost::make_shared<BondYieldConvention>();
+    } else {
+        QL_FAIL("Required convention '" << id << "' has unknown type '" + type + "' not recognized.");
+    }
+
+    try {
+        DLOG("Loading Convention " << id);
+        convention->fromXMLString(unparsed);
+        addInternal(convention);
+    } catch (exception& e) {
+        QL_FAIL("Required convention '" << id << "' could not be built: " << e.what());
+    }
+
+    return convention;
 }
 
 boost::shared_ptr<Convention> Conventions::getFxConvention(const string& ccy1, const string& ccy2) const {
@@ -2549,39 +2595,44 @@ boost::shared_ptr<Convention> Conventions::getFxConvention(const string& ccy1, c
                 return fxCon;
         }
     }
-    QL_FAIL("Cannot find FX conventions for ccys " << ccy1 << " and " << ccy2);
+    QL_FAIL("Required FX convention for ccys '" << ccy1 << "' and '" << ccy2 << "' not found.");
 }
 
 pair<bool, boost::shared_ptr<Convention>> Conventions::get(const string& id, const Convention::Type& type) const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
-    auto c = data_.find(id);
-    if (c == data_.end() || c->second->type() != type)
-        return make_pair(false, nullptr);
-    else
-        return make_pair(true, c->second);
+    try {
+        auto c = get(id);
+        if (c->type() == type)
+            return std::make_pair(true, c);
+    } catch (...) {
+    }
+    return make_pair(false, nullptr);
 }
 
 std::set<boost::shared_ptr<Convention>> Conventions::get(const Convention::Type& type) const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     std::set<boost::shared_ptr<Convention>> result;
-    for (auto const& d : data_) {
-        if (d.second->type() == type)
-            result.insert(d.second);
+    std::set<std::string> unparsedIds;
+    std::string typeStr = ore::data::to_string(type);
+    {
+        boost::shared_lock<boost::shared_mutex> lock(mutex_);
+        for (auto const& d : data_) {
+            if (d.second->type() == type)
+                result.insert(d.second);
+        }
+        for (auto const& u : unparsed_) {
+            if (u.second.first == typeStr)
+                unparsedIds.insert(u.first);
+        }
+    }
+    for (auto const& id : unparsedIds) {
+        result.insert(get(id));
     }
     return result;
 }
 
 bool Conventions::has(const string& id) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
-    if (data_.find(id) != data_.end())
-        return true;
-    else {
-        std::string id2 = flip(id);
-	if (data_.find(id2) != data_.end())
-	    return true;
-	else
-	    return false;
-    }
+    return data_.find(id) != data_.end() || unparsed_.find(id) != unparsed_.end() ||
+           data_.find(flip(id)) != data_.end() || unparsed_.find(flip(id)) != unparsed_.end();
 }
 
 bool Conventions::has(const std::string& id, const Convention::Type& type) const {
@@ -2590,9 +2641,70 @@ bool Conventions::has(const std::string& id, const Convention::Type& type) const
 
 void Conventions::add(const boost::shared_ptr<Convention>& convention) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    addInternal(convention);
+}
+
+void Conventions::addInternal(const boost::shared_ptr<Convention>& convention) const {
     const string& id = convention->id();
     QL_REQUIRE(data_.find(id) == data_.end(), "Convention already exists for id " << id);
     data_[id] = convention;
+}
+
+std::ostream& operator<<(std::ostream& out, Convention::Type type) {
+    switch (type) {
+    case Zero:
+        return out << "Zero";
+    case Deposit:
+        return out << "Deposit";
+    case Future:
+        return out << "Future";
+    case FRA:
+        return out << "FRA";
+    case OIS:
+        return out << "OIS";
+    case Swap:
+        return out << "Swap";
+    case AverageOIS:
+        return out << "AverageOIS";
+    case TenorBasisSwap:
+        return out << "TenorBasisSwap";
+    case TenorBasisTwoSwap:
+        return out << "TenorBasisTwoSwap";
+    case BMABasisSwap:
+        return out << "BMABasisSwap";
+    case FX:
+        return out << "FX";
+    case CrossCcyBasis:
+        return out << "CrossCcyBasis";
+    case CrossCcyFixFloat:
+        return out << "CrossCcyFixFloat";
+    case CDS:
+        return out << "CDS";
+    case IborIndex:
+        return out << "IborIndex";
+    case OvernightIndex:
+        return out << "OvernightIndex";
+    case SwapIndex:
+        return out << "SwapIndex";
+    case ZeroInflationIndex:
+        return out << "ZeroInflationIndex";
+    case InflationSwap:
+        return out << "InflationSwap";
+    case SecuritySpread:
+        return out << "SecuritySpread";
+    case CMSSpreadOption:
+        return out << "CMSSpreadOption";
+    case CommodityForward:
+        return out << "CommodityForward";
+    case CommodityFuture:
+        return out << "CommodityFuture";
+    case FxOption:
+        return out << "FxOption";
+    case BondYield:
+        return out << "BondYield";
+    default:
+        return out << "unknown convention type (" << static_cast<int>(type) << ")";
+    }
 }
 
 } // namespace data
