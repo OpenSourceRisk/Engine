@@ -2652,55 +2652,55 @@ void Conventions::addInternal(const boost::shared_ptr<Convention>& convention) c
 
 std::ostream& operator<<(std::ostream& out, Convention::Type type) {
     switch (type) {
-    case Zero:
+    case Convention::Type::Zero:
         return out << "Zero";
-    case Deposit:
+    case Convention::Type::Deposit:
         return out << "Deposit";
-    case Future:
+    case Convention::Type::Future:
         return out << "Future";
-    case FRA:
+    case Convention::Type::FRA:
         return out << "FRA";
-    case OIS:
+    case Convention::Type::OIS:
         return out << "OIS";
-    case Swap:
+    case Convention::Type::Swap:
         return out << "Swap";
-    case AverageOIS:
+    case Convention::Type::AverageOIS:
         return out << "AverageOIS";
-    case TenorBasisSwap:
+    case Convention::Type::TenorBasisSwap:
         return out << "TenorBasisSwap";
-    case TenorBasisTwoSwap:
+    case Convention::Type::TenorBasisTwoSwap:
         return out << "TenorBasisTwoSwap";
-    case BMABasisSwap:
+    case Convention::Type::BMABasisSwap:
         return out << "BMABasisSwap";
-    case FX:
+    case Convention::Type::FX:
         return out << "FX";
-    case CrossCcyBasis:
+    case Convention::Type::CrossCcyBasis:
         return out << "CrossCcyBasis";
-    case CrossCcyFixFloat:
+    case Convention::Type::CrossCcyFixFloat:
         return out << "CrossCcyFixFloat";
-    case CDS:
+    case Convention::Type::CDS:
         return out << "CDS";
-    case IborIndex:
+    case Convention::Type::IborIndex:
         return out << "IborIndex";
-    case OvernightIndex:
+    case Convention::Type::OvernightIndex:
         return out << "OvernightIndex";
-    case SwapIndex:
+    case Convention::Type::SwapIndex:
         return out << "SwapIndex";
-    case ZeroInflationIndex:
+    case Convention::Type::ZeroInflationIndex:
         return out << "ZeroInflationIndex";
-    case InflationSwap:
+    case Convention::Type::InflationSwap:
         return out << "InflationSwap";
-    case SecuritySpread:
+    case Convention::Type::SecuritySpread:
         return out << "SecuritySpread";
-    case CMSSpreadOption:
+    case Convention::Type::CMSSpreadOption:
         return out << "CMSSpreadOption";
-    case CommodityForward:
+    case Convention::Type::CommodityForward:
         return out << "CommodityForward";
-    case CommodityFuture:
+    case Convention::Type::CommodityFuture:
         return out << "CommodityFuture";
-    case FxOption:
+    case Convention::Type::FxOption:
         return out << "FxOption";
-    case BondYield:
+    case Convention::Type::BondYield:
         return out << "BondYield";
     default:
         return out << "unknown convention type (" << static_cast<int>(type) << ")";
