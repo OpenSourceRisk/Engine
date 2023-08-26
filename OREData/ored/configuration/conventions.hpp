@@ -138,11 +138,11 @@ public:
     bool has(const std::string& id, const Convention::Type& type) const;
 
     /*! Clear all conventions */
-    void clear();
+    void clear() const;
 
     /*! Add a convention. This will overwrite an existing convention
         with the same id */
-    void add(const boost::shared_ptr<Convention>& convention);
+    void add(const boost::shared_ptr<Convention>& convention) const;
 
     //! \name Serialisation
     //@{0
@@ -151,8 +151,6 @@ public:
     //@}
 
 private:
-    void addInternal(const boost::shared_ptr<Convention>& convention) const;
-
     mutable map<string, boost::shared_ptr<Convention>> data_;
     mutable map<string, std::pair<string, string>> unparsed_;
     mutable boost::shared_mutex mutex_;
