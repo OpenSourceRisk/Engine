@@ -153,7 +153,7 @@ public:
 private:
     mutable map<string, boost::shared_ptr<Convention>> data_;
     mutable map<string, std::pair<string, string>> unparsed_;
-    std::set<string> used_;
+    mutable std::set<string> used_;
     mutable boost::shared_mutex mutex_;
 };
 
