@@ -2471,7 +2471,8 @@ XMLNode* Conventions::toXML(XMLDocument& doc) {
 
     map<string, boost::shared_ptr<Convention>>::const_iterator it;
     for (it = data_.begin(); it != data_.end(); ++it) {
-        XMLUtils::appendNode(conventionsNode, data_[it->first]->toXML(doc));
+        if (used_.find(it->first) != used_.end())
+            XMLUtils::appendNode(conventionsNode, it->second->toXML(doc));
     }
     return conventionsNode;
 }
@@ -2507,10 +2508,14 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
 
     {
         boost::shared_lock<boost::shared_mutex> lock(mutex_);
-        if (auto it = data_.find(id); it != data_.end())
+        if (auto it = data_.find(id); it != data_.end()) {
+            used_.insert(id);
             return it->second;
-        if (auto it = data_.find(flip(id)); it != data_.end())
+        }
+        if (auto it = data_.find(flip(id)); it != data_.end()) {
+            used_.insert(flip(id));
             return it->second;
+        }
     }
 
     std::string type, unparsed;
@@ -2580,6 +2585,7 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
         DLOG("Building Convention " << id);
         convention->fromXMLString(unparsed);
         add(convention);
+        used_.insert(id);
     } catch (exception& e) {
         QL_FAIL("Required convention '" << id << "' could not be built: " << e.what());
     }
@@ -2594,8 +2600,10 @@ boost::shared_ptr<Convention> Conventions::getFxConvention(const string& ccy1, c
         if (fxCon) {
             string source = fxCon->sourceCurrency().code();
             string target = fxCon->targetCurrency().code();
-            if ((source == ccy1 && target == ccy2) || (target == ccy1 && source == ccy2))
+            if ((source == ccy1 && target == ccy2) || (target == ccy1 && source == ccy2)) {
+                used_.insert(c.first);
                 return fxCon;
+            }
         }
     }
     QL_FAIL("Required FX convention for ccys '" << ccy1 << "' and '" << ccy2 << "' not found.");
@@ -2604,8 +2612,10 @@ boost::shared_ptr<Convention> Conventions::getFxConvention(const string& ccy1, c
 pair<bool, boost::shared_ptr<Convention>> Conventions::get(const string& id, const Convention::Type& type) const {
     try {
         auto c = get(id);
-        if (c->type() == type)
+        if (c->type() == type) {
+            used_.insert(id);
             return std::make_pair(true, c);
+        }
     } catch (...) {
     }
     return make_pair(false, nullptr);
@@ -2618,8 +2628,10 @@ std::set<boost::shared_ptr<Convention>> Conventions::get(const Convention::Type&
     {
         boost::shared_lock<boost::shared_mutex> lock(mutex_);
         for (auto const& d : data_) {
-            if (d.second->type() == type)
+            if (d.second->type() == type) {
+                used_.insert(d.first);
                 result.insert(d.second);
+            }
         }
         for (auto const& u : unparsed_) {
             if (u.second.first == typeStr)
