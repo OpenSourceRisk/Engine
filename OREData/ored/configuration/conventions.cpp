@@ -2444,6 +2444,7 @@ void Conventions::fromXML(XMLNode* node) {
         if (convention) {
             try {
                 id = XMLUtils::getChildValue(child, "Id", true);
+                DLOG("Building Convention " << id);
                 convention->fromXML(child);
                 add(convention);
             } catch (const std::exception& e) {
@@ -2453,6 +2454,7 @@ void Conventions::fromXML(XMLNode* node) {
         } else {
             try {
                 id = XMLUtils::getChildValue(child, "Id", true);
+                DLOG("Reading Convention " << id);
                 unparsed_[id] = std::make_pair(type, XMLUtils::toString(child));
             } catch (const std::exception& e) {
                 WLOG("Exception during retrieval of convention "
@@ -2474,7 +2476,7 @@ XMLNode* Conventions::toXML(XMLDocument& doc) {
     return conventionsNode;
 }
 
-void Conventions::clear() {
+void Conventions::clear() const {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     data_.clear();
 }
@@ -2511,15 +2513,16 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
             return it->second;
     }
 
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
-
     std::string type, unparsed;
-    if (auto it = unparsed_.find(id); it != unparsed_.end()) {
-        std::tie(type, unparsed) = it->second;
-        unparsed_.erase(id);
-    } else if (auto it = unparsed_.find(flip(id)); it != unparsed_.end()) {
-        std::tie(type, unparsed) = it->second;
-        unparsed_.erase(flip(id));
+    {
+        boost::unique_lock<boost::shared_mutex> lock(mutex_);
+        if (auto it = unparsed_.find(id); it != unparsed_.end()) {
+            std::tie(type, unparsed) = it->second;
+            unparsed_.erase(id);
+        } else if (auto it = unparsed_.find(flip(id)); it != unparsed_.end()) {
+            std::tie(type, unparsed) = it->second;
+            unparsed_.erase(flip(id));
+        }
     }
 
     if (unparsed.empty()) {
@@ -2574,9 +2577,9 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
     }
 
     try {
-        DLOG("Loading Convention " << id);
+        DLOG("Building Convention " << id);
         convention->fromXMLString(unparsed);
-        addInternal(convention);
+        add(convention);
     } catch (exception& e) {
         QL_FAIL("Required convention '" << id << "' could not be built: " << e.what());
     }
@@ -2639,12 +2642,8 @@ bool Conventions::has(const std::string& id, const Convention::Type& type) const
     return get(id, type).first;
 }
 
-void Conventions::add(const boost::shared_ptr<Convention>& convention) {
+void Conventions::add(const boost::shared_ptr<Convention>& convention) const {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    addInternal(convention);
-}
-
-void Conventions::addInternal(const boost::shared_ptr<Convention>& convention) const {
     const string& id = convention->id();
     QL_REQUIRE(data_.find(id) == data_.end(), "Convention already exists for id " << id);
     data_[id] = convention;
