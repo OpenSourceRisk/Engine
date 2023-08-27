@@ -2531,7 +2531,7 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
     }
 
     if (unparsed.empty()) {
-        QL_FAIL("Required convention '" << id << "' not found.");
+        QL_FAIL("Convention '" << id << "' not found.");
     }
 
     boost::shared_ptr<Convention> convention;
@@ -2578,7 +2578,7 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
     } else if (type == "BondYield") {
         convention = boost::make_shared<BondYieldConvention>();
     } else {
-        QL_FAIL("Required convention '" << id << "' has unknown type '" + type + "' not recognized.");
+        QL_FAIL("Convention '" << id << "' has unknown type '" + type + "' not recognized.");
     }
 
     try {
@@ -2587,7 +2587,8 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
         add(convention);
         used_.insert(id);
     } catch (exception& e) {
-        QL_FAIL("Required convention '" << id << "' could not be built: " << e.what());
+        WLOG("Convention '" << id << "' could not be built: " << e.what());
+        QL_FAIL("Convention '" << id << "' could not be built: " << e.what());
     }
 
     return convention;
@@ -2606,7 +2607,7 @@ boost::shared_ptr<Convention> Conventions::getFxConvention(const string& ccy1, c
             }
         }
     }
-    QL_FAIL("Required FX convention for ccys '" << ccy1 << "' and '" << ccy2 << "' not found.");
+    QL_FAIL("FX convention for ccys '" << ccy1 << "' and '" << ccy2 << "' not found.");
 }
 
 pair<bool, boost::shared_ptr<Convention>> Conventions::get(const string& id, const Convention::Type& type) const {
@@ -2616,7 +2617,7 @@ pair<bool, boost::shared_ptr<Convention>> Conventions::get(const string& id, con
             used_.insert(id);
             return std::make_pair(true, c);
         }
-    } catch (...) {
+    } catch (const std::exception& e) {
     }
     return make_pair(false, nullptr);
 }
@@ -2645,6 +2646,11 @@ std::set<boost::shared_ptr<Convention>> Conventions::get(const Convention::Type&
 }
 
 bool Conventions::has(const string& id) const {
+    try {
+        get(id);
+    } catch (const std::exception& e) {
+        return false;
+    }
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return data_.find(id) != data_.end() || unparsed_.find(id) != unparsed_.end() ||
            data_.find(flip(id)) != data_.end() || unparsed_.find(flip(id)) != unparsed_.end();
