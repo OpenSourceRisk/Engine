@@ -153,6 +153,7 @@ math/matrixfunctions.cpp
 math/openclenvironment.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
+math/randomvariablelsmbasissystem.cpp
 methods/brownianbridgepathinterpolator.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
@@ -610,6 +611,7 @@ math/quadraticinterpolation.hpp
 math/randomvariable.hpp
 math/randomvariable_io.hpp
 math/randomvariable_opcodes.hpp
+math/randomvariablelsmbasissystem.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
 methods/brownianbridgepathinterpolator.hpp

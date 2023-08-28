@@ -3,7 +3,7 @@
  All rights reserved.
 */
 
-/*! \file orea/simm/simmconfigurationisdav2_6.hpp
+/*! \file orepsimm/orea/simmconfigurationisdav2_6.hpp
     \brief SIMM configuration for SIMM version 2.6
 */
 
@@ -16,13 +16,13 @@ namespace analytics {
 
 /*! Class giving the SIMM configuration as outlined in the document
     <em>ISDA SIMM Methodology, version 2.6.
-        Effective Date: 3 December 2023.</em>
+        Effective Date: December 2, 2023.</em>
 */
-class SimmConfiguration_ISDA_V2_6: public SimmConfigurationBase {
+class SimmConfiguration_ISDA_V2_6 : public SimmConfigurationBase {
 public:
     SimmConfiguration_ISDA_V2_6(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                 const QuantLib::Size& mporDays = 10,
-                                const std::string& name = "SIMM ISDA 2.6 (3 December 2023)",
+                                const std::string& name = "SIMM ISDA 2.6 (<INSERT PUBLISHING DATE HERE>)",
                                 const std::string version = "2.6");
 
     //! Return the SIMM <em>Label2</em> value for the given interest rate index

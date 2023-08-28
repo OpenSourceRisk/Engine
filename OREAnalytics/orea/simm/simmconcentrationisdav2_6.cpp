@@ -31,31 +31,31 @@ SimmConcentration_ISDA_V2_6::SimmConcentration_ISDA_V2_6(const boost::shared_ptr
     // clang-format off
 
     // Populate flat thresholds
-    flatThresholds_[RiskType::CreditVol] = 260;
-    flatThresholds_[RiskType::CreditVolNonQ] = 145;
+    flatThresholds_[RiskType::CreditVol] = 360;
+    flatThresholds_[RiskType::CreditVolNonQ] = 70;
 
     // Populate bucketed thresholds
     bucketedThresholds_[RiskType::IRCurve] = {
-        { "1", 33 },
-        { "2", 230 },
-        { "3", 44 },
-        { "4", 70 }
+        { "1", 30 },
+        { "2", 330 },
+        { "3", 130 },
+        { "4", 61 }
     };
 
     bucketedThresholds_[RiskType::CreditQ] = {
-        { "1", 0.91 },
-        { "2", 0.19 },
-        { "3", 0.19 },
-        { "4", 0.19 },
-        { "5", 0.19 },
-        { "6", 0.19 },
-        { "7", 0.91 },
-        { "8", 0.19 },
-        { "9", 0.19 },
-        { "10", 0.19 },
-        { "11", 0.19 },
-        { "12", 0.19 },
-        { "Residual", 0.19 }
+        { "1", 1 },
+        { "2", 0.17 },
+        { "3", 0.17 },
+        { "4", 0.17 },
+        { "5", 0.17 },
+        { "6", 0.17 },
+        { "7", 1 },
+        { "8", 0.17 },
+        { "9", 0.17 },
+        { "10", 0.17 },
+        { "11", 0.17 },
+        { "12", 0.17 },
+        { "Residual", 0.17 }
     };
 
     bucketedThresholds_[RiskType::CreditNonQ] = {
@@ -65,19 +65,19 @@ SimmConcentration_ISDA_V2_6::SimmConcentration_ISDA_V2_6(const boost::shared_ptr
     };
 
     bucketedThresholds_[RiskType::Equity] = {
-        { "1", 10 },
-        { "2", 10 },
-        { "3", 10 },
-        { "4", 10 },
-        { "5", 21 },
-        { "6", 21 },
-        { "7", 21 },
-        { "8", 21 },
-        { "9", 1.4 },
-        { "10", 0.6 },
-        { "11", 2100 },
-        { "12", 2100 },
-        { "Residual", 0.6 }
+        { "1", 3 },
+        { "2", 3 },
+        { "3", 3 },
+        { "4", 3 },
+        { "5", 12 },
+        { "6", 12 },
+        { "7", 12 },
+        { "8", 12 },
+        { "9", 0.64 },
+        { "10", 0.37 },
+        { "11", 810 },
+        { "12", 810 },
+        { "Residual", 0.37 }
     };
 
     bucketedThresholds_[RiskType::Commodity] = {
@@ -86,13 +86,13 @@ SimmConcentration_ISDA_V2_6::SimmConcentration_ISDA_V2_6(const boost::shared_ptr
         { "3", 1700 },
         { "4", 1700 },
         { "5", 1700 },
-        { "6", 3200 },
-        { "7", 3200 },
+        { "6", 2800 },
+        { "7", 2800 },
         { "8", 2700 },
         { "9", 2700 },
         { "10", 52 },
         { "11", 530 },
-        { "12", 1600 },
+        { "12", 1300 },
         { "13", 100 },
         { "14", 100 },
         { "15", 100 },
@@ -101,16 +101,16 @@ SimmConcentration_ISDA_V2_6::SimmConcentration_ISDA_V2_6(const boost::shared_ptr
     };
 
     bucketedThresholds_[RiskType::FX] = {
-        { "1", 5100 },
-        { "2", 1200 },
-        { "3", 190 }
+        { "1", 3300 },
+        { "2", 880 },
+        { "3", 170 }
     };
 
     bucketedThresholds_[RiskType::IRVol] = {
-        { "1", 120 },
-        { "2", 3300 },
-        { "3", 470 },
-        { "4", 570 }
+        { "1", 74 },
+        { "2", 4900 },
+        { "3", 520 },
+        { "4", 970 }
     };
 
     bucketedThresholds_[RiskType::EquityVol] = {
@@ -122,40 +122,40 @@ SimmConcentration_ISDA_V2_6::SimmConcentration_ISDA_V2_6(const boost::shared_ptr
         { "6", 1300 },
         { "7", 1300 },
         { "8", 1300 },
-        { "9", 40 },
-        { "10", 200 },
-        { "11", 5900 },
-        { "12", 5900 },
-        { "Residual", 40 }
+        { "9", 39 },
+        { "10", 190 },
+        { "11", 6400 },
+        { "12", 6400 },
+        { "Residual", 39 }
     };
 
     bucketedThresholds_[RiskType::CommodityVol] = {
-        { "1", 210 },
-        { "2", 2700 },
-        { "3", 290 },
-        { "4", 290 },
-        { "5", 290 },
-        { "6", 5000 },
-        { "7", 5000 },
-        { "8", 920 },
-        { "9", 920 },
-        { "10", 100 },
-        { "11", 350 },
-        { "12", 720 },
-        { "13", 500 },
-        { "14", 500 },
-        { "15", 500 },
-        { "16", 65 },
-        { "17", 65 }
+        { "1", 390 },
+        { "2", 2900 },
+        { "3", 310 },
+        { "4", 310 },
+        { "5", 310 },
+        { "6", 6300 },
+        { "7", 6300 },
+        { "8", 1200 },
+        { "9", 1200 },
+        { "10", 120 },
+        { "11", 390 },
+        { "12", 1300 },
+        { "13", 590 },
+        { "14", 590 },
+        { "15", 590 },
+        { "16", 69 },
+        { "17", 69 }
     };
 
     bucketedThresholds_[RiskType::FXVol] = {
         { "1", 2800 },
-        { "2", 1300 },
-        { "3", 550 },
-        { "4", 490 },
-        { "5", 310 },
-        { "6", 200 }
+        { "2", 1400 },
+        { "3", 590 },
+        { "4", 520 },
+        { "5", 340 },
+        { "6", 210 }
     };
 
     // clang-format on

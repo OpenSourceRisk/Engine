@@ -67,6 +67,7 @@ pricetermstructureadapter.cpp
 qle_calendars.cpp
 quadraticinterpolation.cpp
 randomvariable.cpp
+randomvariablelsmbasissystem.cpp
 ratehelpers.cpp
 stabilisedglls.cpp
 staticallycorrectedyieldtermstructure.cpp

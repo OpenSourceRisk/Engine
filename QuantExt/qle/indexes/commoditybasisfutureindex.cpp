@@ -38,7 +38,8 @@ CommodityBasisFutureIndex::CommodityBasisFutureIndex(const std::string& underlyi
     QL_REQUIRE(baseFec_ != nullptr,
                "non-null future expiry calculator for the base conventions CommodityBasisFutureIndex");
     registerWith(baseIndex);
-    cashflow_ = baseCashflow();
+    if (priceAsHistoricalFixing_ == false)
+        cashflow_ = baseCashflow();
 }
 
 CommodityBasisFutureIndex::CommodityBasisFutureIndex(
@@ -61,9 +62,13 @@ CommodityBasisFutureIndex::clone(const QuantLib::Date& expiry,
 }
 
 boost::shared_ptr<QuantLib::CashFlow> CommodityBasisFutureIndex::baseCashflow(const QuantLib::Date& paymentDate) const {
-    auto contractDate = basisFec_->contractDate(expiryDate_);
+    // Fail-safe if expiryDate_ is not a future expiry date 
+    auto nextFutureExpiry = basisFec_->nextExpiry(true, expiryDate_);
+    // Imply the contract month from the future expiry data
+    auto contractDate = basisFec_->contractDate(nextFutureExpiry);
     Date periodStart = Date(1,contractDate.month(), contractDate.year()) - monthOffset_ * Months;
     Date periodEnd = (periodStart + 1 * Months) - 1 * Days;
+    // Build the corresponding base-future casflow
     return makeCommodityCashflowForBasisFuture(periodStart, periodEnd, baseIndex_, baseFec_, baseIsAveraging_,
                                                paymentDate);
 }

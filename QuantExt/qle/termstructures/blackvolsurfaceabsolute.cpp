@@ -134,7 +134,7 @@ Volatility BlackVolatilitySurfaceAbsolute::blackVolImpl(Time t, Real strike) con
         index_p = Null<Size>();
 
     /* build the smiles on the indices, if we do not have them yet */
-    Volatility vol_p, vol_m;
+    Volatility vol_p = 0, vol_m = 0;
     if (index_p != Null<Size>()) {
         if (strikeQuotes_[index_p].size() == 1) {
             vol_p = strikeQuotes_[index_p][0];

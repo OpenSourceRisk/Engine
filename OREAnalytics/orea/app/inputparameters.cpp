@@ -392,11 +392,8 @@ void InputParameters::setCreditSimulationParametersFromBuffer(const std::string&
 } 
 
 void InputParameters::setCrifLoader() {
-    if (!simmBucketMapper_)
-        // setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>(simmVersion_));
-        setSimmBucketMapper(boost::make_shared<SimmBucketMapperBase>());
     boost::shared_ptr<SimmConfiguration> configuration =
-        buildSimmConfiguration(simmVersion_, simmBucketMapper_, mporDays());
+        buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(), mporDays());
     bool updateMappings = true;
     bool aggregateTrades = false;
     crifLoader_ =

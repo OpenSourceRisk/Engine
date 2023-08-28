@@ -98,6 +98,11 @@ public:
     void setAutomaticExercise(bool automaticExercise) { automaticExercise_ = automaticExercise; }
     void setPaymentData(const OptionPaymentData& paymentData) { paymentData_ = paymentData; }
     void setCallPut(const string& callPut) { callPut_ = callPut; }
+    void setLongShort(const std::string& longShort) { longShort_ = longShort; }
+    void setStyle(const std::string& style) { style_ = style; }
+    void setPayoffAtExpiry(const bool payoffAtExpiry) { payoffAtExpiry_ = payoffAtExpiry; }
+    void setNoticePeriod(const std::string& noticePeriod) { noticePeriod_ = noticePeriod; }
+    void setSettlement(const std::string& settlement) { settlement_ = settlement; }
     //@}
 
     //! \name Serialisation
