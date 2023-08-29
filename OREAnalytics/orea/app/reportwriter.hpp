@@ -32,6 +32,7 @@
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <orea/simm/simmresults.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
@@ -148,6 +149,16 @@ public:
     //! Write out CRIF records to a report
     virtual void writeCrifReport(const boost::shared_ptr<ore::data::Report>& report,
                                  const SimmNetSensitivities& crifRecords);
+
+    virtual void writeScenarioStatistics(const boost::shared_ptr<ore::analytics::ScenarioGenerator>& generator,
+                                         const std::vector<ore::analytics::RiskFactorKey>& keys,
+                                         QuantLib::Size numPaths, const std::vector<QuantLib::Date>& dates,
+                                         ore::data::Report& report);
+
+    virtual void writeScenarioDistributions(const boost::shared_ptr<ore::analytics::ScenarioGenerator>& generator,
+                                            const std::vector<ore::analytics::RiskFactorKey>& keys,
+                                            QuantLib::Size numPaths, const std::vector<QuantLib::Date>& dates,
+                                            QuantLib::Size distSteps, ore::data::Report& report);
 
 protected:
     std::string nullString_;
