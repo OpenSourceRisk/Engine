@@ -262,7 +262,7 @@ public:
      */
     void removeAllLoggers();
 
-    void addExcludeFilter(const std::string&, const std::function<bool(std::string)>&);
+    void addExcludeFilter(const std::string&, const std::function<bool(const std::string&)>);
 
     void removeExcludeFilter(const std::string&);
 
@@ -344,7 +344,7 @@ private:
 
     mutable boost::shared_mutex mutex_;
 
-    std::map<std::string, std::function<bool(std::string)>> excludeFilters_;
+    std::map<std::string, std::function<bool(const std::string&)>> excludeFilters_;
 };
 
 /*!

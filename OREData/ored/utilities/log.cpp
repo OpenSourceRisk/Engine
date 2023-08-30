@@ -106,7 +106,7 @@ void Log::removeAllLoggers() {
     loggers_.clear();
 }
 
-void Log::addExcludeFilter(const string& key, const std::function<bool(std::string)>& func) {
+void Log::addExcludeFilter(const string& key, const std::function<bool(const std::string&)> func) {
     excludeFilters_[key] = func;
 }
 
