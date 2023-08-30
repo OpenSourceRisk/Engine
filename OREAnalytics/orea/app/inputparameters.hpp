@@ -332,6 +332,9 @@ public:
     const boost::shared_ptr<ore::data::EngineData>& pricingEngine() { return pricingEngine_; }
     const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams() { return todaysMarketParams_; }
     const boost::shared_ptr<ore::data::Portfolio>& portfolio() { return portfolio_; }
+    const boost::shared_ptr<ore::data::Portfolio>& useCounterpartyOriginalPortfolio() {
+        return useCounterpartyOriginalPortfolio_;
+    }
 
     QuantLib::Size maxRetries() const { return maxRetries_; }
     QuantLib::Size nThreads() const { return nThreads_; }
@@ -591,7 +594,7 @@ protected:
     CurveConfigurationsManager curveConfigs_;
     boost::shared_ptr<ore::data::EngineData> pricingEngine_;
     boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
-    boost::shared_ptr<ore::data::Portfolio> portfolio_;
+    boost::shared_ptr<ore::data::Portfolio> portfolio_, useCounterpartyOriginalPortfolio_;
     QuantLib::Size maxRetries_ = 7;
     QuantLib::Size nThreads_ = 1;
    
