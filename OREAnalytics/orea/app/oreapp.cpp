@@ -1301,6 +1301,26 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
     }
 
+    /**********************
+     * Scenario_Statistics
+     **********************/
+
+    tmp = params_->get("scenarioStatistics", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        inputs->insertAnalytic("SCENARIO_STATISTICS");
+        tmp = params_->get("scenarioStatistics", "distributionBuckets", false);
+        if (tmp != "")
+            inputs->setScenarioDistributionSteps(parseInteger(tmp));
+
+        tmp = params_->get("scenarioStatistics", "distributionOutputFileName", false);
+        if (tmp != "")
+            inputs->setScenarioDistributionOutputReport(tmp);
+
+        tmp = params_->get("scenarioStatistics", "statisticsOutputFileName", false);
+        if (tmp != "")
+            inputs->setScenarioStatisticsOutputReport(tmp);
+    }
+
     if (inputs->analytics().size() == 0) {
         inputs->insertAnalytic("MARKETDATA");
         inputs->setOutputTodaysMarketCalibration(true);

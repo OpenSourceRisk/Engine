@@ -306,6 +306,11 @@ public:
     void setParConversionInputBaseNpvColumn(const std::string& s) { parConversionInputBaseNpvColumn_ = s; }
     void setParConversionInputShiftSizeColumn(const std::string& s) { parConversionInputShiftSizeColumn_ = s; }
 
+    // Setters for ScenarioStatistics
+    void setScenarioDistributionSteps(const Size s) { scenarioDistributionSteps_ = s; }
+    void setScenarioDistributionOutputReport(const std::string& s) { scenarioDistributionOutputReport_ = s; }
+    void setScenarioStatisticsOutputReport(const std::string& s) { scenarioStatisticsOutputReport_ = s; }
+
 
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>
@@ -549,6 +554,10 @@ public:
     const std::string& parConversionInputBaseNpvColumn() { return parConversionInputBaseNpvColumn_; }
     const std::string& parConversionInputShiftSizeColumn() { return parConversionInputShiftSizeColumn_; }
 
+    // Getters for ScenarioStatistics
+    const Size& scenarioDistributionSteps() { return scenarioDistributionSteps_; }
+    const std::string& scenarioDistributionOutputReport() { return scenarioDistributionOutputReport_; }
+    const std::string& scenarioStatisticsOutputReport() { return scenarioStatisticsOutputReport_; }
 
     /*************************************
      * List of analytics that shall be run
@@ -782,6 +791,13 @@ protected:
     std::string parConversionInputCurrencyColumn_ = "Currency";
     std::string parConversionInputBaseNpvColumn_ = "Base NPV";
     std::string parConversionInputShiftSizeColumn_ = "ShiftSize_1";
+
+    /***************
+     * Scenario Statistics analytic
+     ***************/
+    Size scenarioDistributionSteps_ = 20;
+    std::string scenarioDistributionOutputReport_ = "scenario_distribution.csv";
+    std::string scenarioStatisticsOutputReport_ = "scenario_statistics.csv";
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {

@@ -18,6 +18,7 @@
 
 #include <orea/app/analytics/parconversionanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
@@ -56,6 +57,7 @@ AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inp
     addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_));
     addAnalytic("SIMM", boost::make_shared<SimmAnalytic>(inputs_));
     addAnalytic("PARCONVERSION", boost::make_shared<ParConversionAnalytic>(inputs_));
+    addAnalytic("SCENARIO_STATISTICS", boost::make_shared<ScenarioAnalytic>(inputs_));
 }
 
 void AnalyticsManager::clear() {
@@ -65,6 +67,7 @@ void AnalyticsManager::clear() {
 }
     
 void AnalyticsManager::addAnalytic(const std::string& label, const boost::shared_ptr<Analytic>& analytic) {
+    std::cout << "addAnalytic: " << label << std::endl; 
     // Allow overriding, but warn 
     if (analytics_.find(label) != analytics_.end()) {
         WLOG("Overwriting analytic with label " << label);
@@ -81,6 +84,7 @@ void AnalyticsManager::addAnalytic(const std::string& label, const boost::shared
 const std::set<std::string>& AnalyticsManager::validAnalytics() {
     if (validAnalytics_.size() == 0) {
         for (auto a : analytics_) {
+            std::cout << "validAnalytics: " << a.first << std::endl;
             const std::set<std::string>& types = a.second->analyticTypes();
             validAnalytics_.insert(types.begin(), types.end());
         }
@@ -166,6 +170,7 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
 
     // run requested analytics
     for (auto a : analytics_) {
+        std::cout << a.first << std::endl;
         if (matches(analyticTypes, a.second->analyticTypes()) > 0) {
             LOG("run analytic with label '" << a.first << "'");
             a.second->runAnalytic(marketDataLoader_->loader(), analyticTypes);
