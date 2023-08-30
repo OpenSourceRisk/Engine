@@ -432,9 +432,8 @@
       },
       "frtbcrif.csv": {
         "keys": [
-            "CapitalRequirement",
-            "RiskClass",
-            "RiskFactor",
+            "RiskType",
+            "Qualifier",
             "Bucket",
             "Label1",
             "Label2",
