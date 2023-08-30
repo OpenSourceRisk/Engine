@@ -456,8 +456,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates());
         amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);
-        // We only need to generate asd, if this does not happen in the classic run
-        if (!doClassicRun)
+        if (!scenarioData_.empty())
             amcEngine.aggregationScenarioData() = *scenarioData_;
         amcEngine.buildCube(amcPortfolio_, amcCube_);
     } else {
@@ -484,8 +483,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
         amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);
-        // as for the single-threaded case, we only need to generate asd, if this does not happen in the classic run
-        if (!doClassicRun)
+        if (!scenarioData_.empty())
             amcEngine.aggregationScenarioData() = *scenarioData_;
         amcEngine.buildCube(amcPortfolio_);
         amcCube_ = boost::make_shared<JointNPVCube>(amcEngine.outputCubes());
