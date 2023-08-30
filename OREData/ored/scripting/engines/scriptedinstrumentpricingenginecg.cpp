@@ -151,7 +151,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         // calculate NPV and Sensis ("base scenario"), store base npv + sensis + base model params
 
-        bool newExternalCalc;
+        bool newExternalCalc = false;
         if (useExternalComputeFramework_) {
             QL_REQUIRE(ComputeEnvironment::instance().hasContext(),
                        "ScriptedInstrumentPricingEngineCG::calculate(): no compute enviroment context selected.");

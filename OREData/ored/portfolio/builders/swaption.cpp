@@ -51,8 +51,7 @@ boost::shared_ptr<PricingEngine> buildMcEngine(const std::function<string(string
         parsePolynomType(engineParameters("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameters("BrownianBridgeOrdering")),
         parseSobolRsgDirectionIntegers(engineParameters("SobolDirectionIntegers")), discountCurve, simulationDates,
-        externalModelIndices, parseBool(engineParameters("MinObsDate")),
-        parseBool(engineParameters("RegressionOnExerciseOnly")));
+        externalModelIndices, parseBool(engineParameters("MinObsDate")));
 }
 } // namespace
 

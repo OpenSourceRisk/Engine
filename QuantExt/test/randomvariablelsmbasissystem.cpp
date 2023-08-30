@@ -16,23 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-// clang-format off
-#include <boost/test/unit_test.hpp>
-#include <boost/test/data/test_case.hpp>
-// clang-format on
-
 #include <qle/math/randomvariablelsmbasissystem.hpp>
-
-#include "toplevelfixture.hpp"
 
 #include <ql/time/date.hpp>
 
-#include <iostream>
-#include <iomanip>
+#include <boost/test/unit_test.hpp>
 
 using namespace QuantExt;
 
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
+BOOST_AUTO_TEST_SUITE(QuantExtTestSuite)
 
 BOOST_AUTO_TEST_SUITE(RandomVariableLsmBasisSystemTest)
 

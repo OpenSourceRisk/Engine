@@ -79,6 +79,8 @@ struct SqrtCovCalculator : public QuantLib::LazyObject {
         // setup members
 
         sqrtCov_ = std::vector<Matrix>(effectiveSimulationDates_.size() - 1);
+        covariance_ =
+            std::vector<Matrix>(effectiveSimulationDates_.size() - 1, Matrix(indices_.size(), indices_.size()));
         lastCovariance_ = std::vector<Matrix>(effectiveSimulationDates_.size() - 1);
     }
 
@@ -135,11 +137,10 @@ struct SqrtCovCalculator : public QuantLib::LazyObject {
             }
         }
 
-        std::vector<Matrix> covariance(effectiveSimulationDates_.size() - 1,
-                                       Matrix(indices_.size(), indices_.size(), 0.0));
         Array variance(indices_.size(), 0.0), discountRatio(indices_.size(), 1.0);
         Size tidx = 1; // index in the refined time grid
         for (Size i = 1; i < effectiveSimulationDates_.size(); ++i) {
+            std::fill(covariance_[i - 1].begin(), covariance_[i - 1].end(), 0.0);
             // covariance
             while (tidx <= positionInTimeGrid_[i]) {
                 Array d_variance(indices_.size());
@@ -154,11 +155,11 @@ struct SqrtCovCalculator : public QuantLib::LazyObject {
                     variance[j] = tmp;
                 }
                 for (Size j = 0; j < indices_.size(); ++j) {
-                    covariance[i - 1][j][j] += d_variance[j];
+                    covariance_[i - 1][j][j] += d_variance[j];
                     for (Size k = 0; k < j; ++k) {
                         Real tmp = correlation[k][j] * std::sqrt(d_variance[j] * d_variance[k]);
-                        covariance[i - 1][k][j] += tmp;
-                        covariance[i - 1][j][k] += tmp;
+                        covariance_[i - 1][k][j] += tmp;
+                        covariance_[i - 1][j][k] += tmp;
                     }
                 }
                 ++tidx;
@@ -172,7 +173,7 @@ struct SqrtCovCalculator : public QuantLib::LazyObject {
             bool covarianceHasChanged = lastCovariance_[i].rows() == 0;
             for (Size r = 0; r < lastCovariance_[i].rows() && !covarianceHasChanged; ++r) {
                 for (Size c = 0; c < lastCovariance_[i].columns(); ++c) {
-                    if (!close_enough(lastCovariance_[i](r, c), covariance[i](r, c))) {
+                    if (!close_enough(lastCovariance_[i](r, c), covariance_[i](r, c))) {
                         covarianceHasChanged = true;
                         break;
                     }
@@ -180,29 +181,29 @@ struct SqrtCovCalculator : public QuantLib::LazyObject {
             }
 
             if (covarianceHasChanged) {
-                lastCovariance_[i] = covariance[i];
+                lastCovariance_[i] = covariance_[i];
 
                 // salvage matrix using spectral method if not positive semidefinite
 
-                SymmetricSchurDecomposition jd(covariance[i]);
+                SymmetricSchurDecomposition jd(covariance_[i]);
 
                 bool needsSalvaging = false;
-                for (Size k = 0; k < covariance[i].rows(); ++k) {
+                for (Size k = 0; k < covariance_[i].rows(); ++k) {
                     if (jd.eigenvalues()[k] < -1E-16)
                         needsSalvaging = true;
                 }
 
                 if (needsSalvaging) {
-                    Matrix diagonal(covariance[i].rows(), covariance[i].rows(), 0.0);
+                    Matrix diagonal(covariance_[i].rows(), covariance_[i].rows(), 0.0);
                     for (Size k = 0; k < jd.eigenvalues().size(); ++k) {
                         diagonal[k][k] = std::sqrt(std::max<Real>(jd.eigenvalues()[k], 0.0));
                     }
-                    covariance[i] = jd.eigenvectors() * diagonal * transpose(jd.eigenvectors());
+                    covariance_[i] = jd.eigenvectors() * diagonal * transpose(jd.eigenvectors());
                 }
 
                 // compute the _unique_ pos semidefinite square root
 
-                sqrtCov_[i] = CholeskyDecomposition(covariance[i], true);
+                sqrtCov_[i] = CholeskyDecomposition(covariance_[i], true);
             }
         }
     }
@@ -212,7 +213,13 @@ struct SqrtCovCalculator : public QuantLib::LazyObject {
         return sqrtCov_[i][j][k];
     }
 
+    Real cov(Size i, Size j, Size k) {
+        calculate();
+        return covariance_[i][j][k];
+    }
+
     mutable std::vector<Matrix> sqrtCov_;
+    mutable std::vector<Matrix> covariance_;
     mutable std::vector<Matrix> lastCovariance_;
 
     // refs to members of BlackScholesCG and its base classes that are needed in the calculator
@@ -285,7 +292,7 @@ void BlackScholesCG::performCalculations() const {
         std::vector<std::vector<std::size_t>>(indices_.size(),
                                               std::vector<std::size_t>(indices_.size(), ComputationGraph::nan)));
 
-    // precompute sqrtCov nodes
+    // precompute sqrtCov nodes and add model parameters for covariance (needed in futureBarrierProbability())
 
     for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
         for (Size j = 0; j < indices_.size(); ++j) {
@@ -293,6 +300,8 @@ void BlackScholesCG::performCalculations() const {
                 std::string id = "__sqrtCov_" + std::to_string(j) + "_" + std::to_string(k) + "_" + std::to_string(i);
                 addModelParameter(id, [sqrtCovCalc, i, j, k] { return sqrtCovCalc->sqrtCov(i, j, k); });
                 sqrtCov[i][j][k] = cg_var(*g_, id);
+                id = "__cov_" + std::to_string(j) + "_" + std::to_string(k) + "_" + std::to_string(i);
+                addModelParameter(id, [sqrtCovCalc, i, j, k] { return sqrtCovCalc->cov(i, j, k); });
             }
         }
     }
@@ -399,160 +408,170 @@ void BlackScholesCG::performCalculations() const {
 } // performCalculations()
 
 namespace {
-// struct comp {
-//     comp(const std::string& indexInput) : indexInput_(indexInput) {}
-//     template <typename T> bool operator()(const std::pair<IndexInfo, boost::shared_ptr<T>>& p) const {
-//         return p.first.name() == indexInput_;
-//     }
-//     const std::string indexInput_;
-// };
+struct comp {
+    comp(const std::string& indexInput) : indexInput_(indexInput) {}
+    template <typename T> bool operator()(const std::pair<IndexInfo, boost::shared_ptr<T>>& p) const {
+        return p.first.name() == indexInput_;
+    }
+    const std::string indexInput_;
+};
 } // namespace
 
 std::size_t BlackScholesCG::getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
                                                  const std::size_t barrier, const bool above) const {
 
-    QL_FAIL("BlackScholesCG::getFutureBarrierProb() not implemented");
+    // get the underlying values at the start and end points of the period
 
-    // // get the underlying values at the start and end points of the period
+    std::size_t v1 = eval(index, obsdate1, Null<Date>());
+    std::size_t v2 = eval(index, obsdate2, Null<Date>());
 
-    // RandomVariable v1 = eval(index, obsdate1, Null<Date>());
-    // RandomVariable v2 = eval(index, obsdate2, Null<Date>());
+    // check the barrier at the two endpoints
 
-    // // check the barrier at the two endpoints
+    std::size_t barrierHit = cg_const(*g_, 0.0);
+    if (above) {
+        barrierHit = cg_min(*g_, cg_const(*g_, 1.0), cg_add(*g_, barrierHit, cg_indicatorGeq(*g_, v1, barrier)));
+        barrierHit = cg_min(*g_, cg_const(*g_, 1.0), cg_add(*g_, barrierHit, cg_indicatorGeq(*g_, v2, barrier)));
+    } else {
+        barrierHit =
+            cg_min(*g_, cg_const(*g_, 1.0),
+                   cg_add(*g_, barrierHit, cg_subtract(*g_, cg_const(*g_, 1.0), cg_indicatorGt(*g_, v1, barrier))));
+        barrierHit =
+            cg_min(*g_, cg_const(*g_, 1.0),
+                   cg_add(*g_, barrierHit, cg_subtract(*g_, cg_const(*g_, 1.0), cg_indicatorGt(*g_, v2, barrier))));
+    }
 
-    // Filter barrierHit(barrier.size(), false);
-    // if (above) {
-    //     barrierHit = barrierHit || v1 >= barrier;
-    //     barrierHit = barrierHit || v2 >= barrier;
-    // } else {
-    //     barrierHit = barrierHit || v1 <= barrier;
-    //     barrierHit = barrierHit || v2 <= barrier;
-    // }
+    // for IR / INF indices we have to check each date, this is fast though, since the index values are deteministic
+    // here
 
-    // // for IR / INF indices we have to check each date, this is fast though, since the index values are deteministic
-    // // here
+    auto ir = std::find_if(irIndices_.begin(), irIndices_.end(), comp(index));
+    auto inf = std::find_if(infIndices_.begin(), infIndices_.end(), comp(index));
+    if (ir != irIndices_.end() || inf != infIndices_.end()) {
+        Date d = obsdate1 + 1;
+        while (d < obsdate2) {
+            std::size_t res;
+            if (ir != irIndices_.end())
+                res = getIrIndexValue(std::distance(irIndices_.begin(), ir), d);
+            else
+                res = getInfIndexValue(std::distance(infIndices_.begin(), inf), d);
 
-    // auto ir = std::find_if(irIndices_.begin(), irIndices_.end(), comp(index));
-    // auto inf = std::find_if(infIndices_.begin(), infIndices_.end(), comp(index));
-    // if (ir != irIndices_.end() || inf != infIndices_.end()) {
-    //     Date d = obsdate1 + 1;
-    //     while (d < obsdate2) {
-    //         RandomVariable res;
-    //         if (ir != irIndices_.end())
-    //             res = getIrIndexValue(std::distance(irIndices_.begin(), ir), d);
-    //         else
-    //             res = getInfIndexValue(std::distance(infIndices_.begin(), inf), d);
-    //         if (res.initialised()) {
-    //             if (above) {
-    //                 barrierHit = barrierHit || res >= barrier;
-    //             } else {
-    //                 barrierHit = barrierHit || res <= barrier;
-    //             }
-    //         }
-    //         ++d;
-    //     }
-    // }
+            if (above) {
+                barrierHit =
+                    cg_min(*g_, cg_const(*g_, 1.0), cg_add(*g_, barrierHit, cg_indicatorGeq(*g_, res, barrier)));
+            } else {
+                barrierHit = cg_min(
+                    *g_, cg_const(*g_, 1.0),
+                    cg_add(*g_, barrierHit, cg_subtract(*g_, cg_const(*g_, 1.0), cg_indicatorGt(*g_, res, barrier))));
+            }
+            ++d;
+        }
+    }
 
-    // // Convert the bool result we have obtained so far to 1 / 0
+    // return the result if we have an IR / INF index
 
-    // RandomVariable result(barrierHit, 1.0, 0.0);
+    if (ir != irIndices_.end() || inf != infIndices_.end())
+        return barrierHit;
 
-    // // return the result if we have an IR / INF index
+    // Now handle the dynamic indices in this model
 
-    // if (ir != irIndices_.end() || inf != infIndices_.end())
-    //     return result;
+    // first make sure that v1 is not a historical fixing to avoid differences to a daily MC simulation where
+    // the process starts to evolve at the market data spot (only matters if the two values differ, which they
+    // should not too much anyway)
 
-    // // Now handle the dynamic indices in this model
+    if (obsdate1 == referenceDate()) {
+        v1 = eval(index, obsdate1, Null<Date>(), false, true);
+    }
 
-    // // first make sure that v1 is not a historical fixing to avoid differences to a daily MC simulation where
-    // // the process starts to evolve at the market data spot (only matters if the two values differ, which they
-    // // should not too much anyway)
+    IndexInfo indexInfo(index);
 
-    // if (obsdate1 == referenceDate()) {
-    //     v1 = eval(index, obsdate1, Null<Date>(), false, true);
-    // }
+    // if we have an FX index, we "normalise" the tag by GENERIC (since it does not matter for projections), this
+    // is the same as in ModelImpl::eval()
 
-    // IndexInfo indexInfo(index);
+    if (indexInfo.isFx())
+        indexInfo = IndexInfo("FX-GENERIC-" + indexInfo.fx()->sourceCurrency().code() + "-" +
+                              indexInfo.fx()->targetCurrency().code());
 
-    // // if we have an FX index, we "normalise" the tag by GENERIC (since it does not matter for projections), this
-    // // is the same as in ModelImpl::eval()
+    // get the average volatility over the period for the underlying, this is an approximation that could be refined
+    // by sampling more points in the interval and doing the below calculation for each subinterval - this would
+    // be slower though, so probably in the end we want this to be configurable in the model settings
 
-    // if (indexInfo.isFx())
-    //     indexInfo = IndexInfo("FX-GENERIC-" + indexInfo.fx()->sourceCurrency().code() + "-" +
-    //                           indexInfo.fx()->targetCurrency().code());
+    // We might have one or two indices contributing to the desired volatility, since FX indices might require a
+    // triangulation. We look for the indices ind1 and ind2 so that the index is the quotient of the two.
 
-    // // get the average volatility over the period for the underlying, this is an approximation that could be refined
-    // // by sampling more points in the interval and doing the below calculation for each subinterval - this would
-    // // be slower though, so probably in the end we want this to be configurable in the model settings
+    Size ind1 = Null<Size>(), ind2 = Null<Size>();
 
-    // // We might have one or two indices contributing to the desired volatility, since FX indices might require a
-    // // triangulation. We look for the indices ind1 and ind2 so that the index is the quotient of the two.
+    auto i = std::find(indices_.begin(), indices_.end(), indexInfo);
+    if (i != indices_.end()) {
+        // we find the index directly in the index list
+        ind1 = std::distance(indices_.begin(), i);
+    } else {
+        // we can maybe triangulate an FX index (again, this is similar to ModelImpl::eval())
+        // if not, we can only try something else for FX indices
+        QL_REQUIRE(indexInfo.isFx(), "BlackScholes::getFutureBarrierProb(): index " << index << " not handled");
+        // is it a trivial fx index (CCY-CCY) or can we triangulate it?
+        if (indexInfo.fx()->sourceCurrency() == indexInfo.fx()->targetCurrency()) {
+            // pseudo FX index FX-GENERIC-CCY-CCY, leave ind1 and ind2 both set to zero
+        } else {
+            // if not, we can only try something else for FX indices
+            QL_REQUIRE(indexInfo.isFx(), "BlackScholes::getFutureBarrierProb(): index " << index << " not handled");
+            if (indexInfo.fx()->sourceCurrency() == indexInfo.fx()->targetCurrency()) {
+                // nothing to do, leave ind1 and ind2 = null
+            } else {
+                for (Size i = 0; i < indexCurrencies_.size(); ++i) {
+                    if (indices_[i].isFx()) {
+                        if (indexInfo.fx()->sourceCurrency().code() == indexCurrencies_[i])
+                            ind1 = i;
+                        if (indexInfo.fx()->targetCurrency().code() == indexCurrencies_[i])
+                            ind2 = i;
+                    }
+                }
+            }
+        }
+    }
 
-    // Size ind1 = Null<Size>(), ind2 = Null<Size>();
+    // accumulate the variance contributions over [obsdate1, obsdate2]
 
-    // auto i = std::find(indices_.begin(), indices_.end(), indexInfo);
-    // if (i != indices_.end()) {
-    //     // we find the index directly in the index list
-    //     ind1 = std::distance(indices_.begin(), i);
-    // } else {
-    //     // we can maybe triangulate an FX index (again, this is similar to ModelImpl::eval())
-    //     // if not, we can only try something else for FX indices
-    //     QL_REQUIRE(indexInfo.isFx(), "BlackScholes::getFutureBarrierProb(): index " << index << " not handled");
-    //     // is it a trivial fx index (CCY-CCY) or can we triangulate it?
-    //     RandomVariable fx1(size(), 1.0), fx2(size(), 1.0);
-    //     if (indexInfo.fx()->sourceCurrency() == indexInfo.fx()->targetCurrency()) {
-    //         // pseudo FX index FX-GENERIC-CCY-CCY, leave ind1 and ind2 both set to zero
-    //     } else {
-    //         // if not, we can only try something else for FX indices
-    //         QL_REQUIRE(indexInfo.isFx(), "BlackScholes::getFutureBarrierProb(): index " << index << " not handled");
-    //         if (indexInfo.fx()->sourceCurrency() == indexInfo.fx()->targetCurrency()) {
-    //             // nothing to do, leave ind1 and ind2 = null
-    //         } else {
-    //             for (Size i = 0; i < indexCurrencies_.size(); ++i) {
-    //                 if (indices_[i].isFx()) {
-    //                     if (indexInfo.fx()->sourceCurrency().code() == indexCurrencies_[i])
-    //                         ind1 = i;
-    //                     if (indexInfo.fx()->targetCurrency().code() == indexCurrencies_[i])
-    //                         ind2 = i;
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+    std::size_t variance = cg_const(*g_, 0.0);
 
-    // // accumulate the variance contributions over [obsdate1, obsdate2]
+    for (Size i = 1; i < effectiveSimulationDates_.size(); ++i) {
 
-    // Real variance = 0.0;
+        Date d1 = *std::next(effectiveSimulationDates_.begin(), i - 1);
+        Date d2 = *std::next(effectiveSimulationDates_.begin(), i);
 
-    // for (Size i = 1; i < effectiveSimulationDates_.size(); ++i) {
+        if (obsdate1 <= d1 && d2 <= obsdate2) {
+            if (ind1 != Null<Size>()) {
+                std::string id =
+                    "__cov_" + std::to_string(ind1) + "_" + std::to_string(ind1) + "_" + std::to_string(i - 1);
+                variance = cg_add(*g_, variance, cg_var(*g_, id));
+            }
+            if (ind2 != Null<Size>()) {
+                std::string id =
+                    "__cov_" + std::to_string(ind2) + "_" + std::to_string(ind2) + "_" + std::to_string(i - 1);
+                variance = cg_add(*g_, variance, cg_var(*g_, id));
+            }
+            if (ind1 != Null<Size>() && ind2 != Null<Size>()) {
+                std::string id =
+                    "__cov_" + std::to_string(ind1) + "_" + std::to_string(ind2) + "_" + std::to_string(i - 1);
+                variance = cg_subtract(*g_, variance, cg_mult(*g_, cg_const(*g_, 2.0), cg_var(*g_, id)));
+            }
+        }
+    }
 
-    //     Date d1 = *std::next(effectiveSimulationDates_.begin(), i - 1);
-    //     Date d2 = *std::next(effectiveSimulationDates_.begin(), i);
+    // compute the hit probability
+    // see e.g. formulas 2, 4 in Emmanuel Gobet, Advanced Monte Carlo methods for barrier and related exotic options
 
-    //     if (obsdate1 <= d1 && d2 <= obsdate2) {
-    //         if (ind1 != Null<Size>()) {
-    //             variance += covariance_[i - 1][ind1][ind1];
-    //         }
-    //         if (ind2 != Null<Size>()) {
-    //             variance += covariance_[i - 1][ind2][ind2];
-    //         }
-    //         if (ind1 != Null<Size>() && ind2 != Null<Size>()) {
-    //             variance -= 2.0 * covariance_[i - 1][ind1][ind2];
-    //         }
-    //     }
-    // }
+    std::size_t eps = cg_const(*g_, 1E-14);
 
-    // // compute the hit probability
-    // // see e.g. formulas 2, 4 in Emmanuel Gobet, Advanced Monte Carlo methods for barrier and related exotic options
+    variance = cg_max(*g_, variance, eps);
+    std::size_t adjBarrier = cg_max(*g_, barrier, eps);
 
-    // if (!QuantLib::close_enough(variance, 0.0)) {
-    //     static RandomVariable eps = RandomVariable(barrier.size(), 1E-14);
-    //     RandomVariable hitProb = exp(RandomVariable(barrier.size(), -2.0 / variance) * log(v1 / max(barrier, eps)) *
-    //                                  log(v2 / max(barrier, eps)));
-    //     result = result + applyInverseFilter(hitProb, barrierHit);
-    // }
+    std::size_t hitProb = cg_exp(
+        *g_,
+        cg_mult(*g_, cg_mult(*g_, cg_div(*g_, cg_const(*g_, -2.0), variance), cg_log(*g_, cg_div(*g_, v1, adjBarrier))),
+                cg_log(*g_, cg_div(*g_, v2, adjBarrier))));
 
-    // return result;
+    barrierHit = cg_add(*g_, barrierHit, cg_mult(*g_, cg_subtract(*g_, cg_const(*g_, 1.0), barrierHit), hitProb));
+
+    return barrierHit;
 } // getFutureBarrierProb()
 
 } // namespace data

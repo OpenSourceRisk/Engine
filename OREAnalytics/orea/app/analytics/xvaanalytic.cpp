@@ -452,7 +452,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
         AMCValuationEngine amcEngine(model_, inputs_->scenarioGeneratorData(), analytic()->market(),
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
-                                     inputs_->exposureSimMarketParams()->additionalScenarioDataCcys());
+                                     inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(),
+                                     inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates());
         amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);
         // We only need to generate asd, if this does not happen in the classic run
@@ -469,15 +470,17 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
                 return boost::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples,
                                                                                         cubeDepth_, 0.0f);
         };
-        AMCValuationEngine amcEngine(
-            inputs_->nThreads(), inputs_->asof(), samples_,  analytic()->loader(), inputs_->scenarioGeneratorData(),
-            inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
-            inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(), inputs_->crossAssetModelData(),
-            inputs_->amcPricingEngine(), inputs_->curveConfigs().get(), analytic()->configurations().todaysMarketParams,
-            inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
-            inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
-            inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"), inputs_->refDataManager(),
-            *inputs_->iborFallbackConfig(), true, cubeFactory);
+        AMCValuationEngine amcEngine(inputs_->nThreads(), inputs_->asof(), samples_, analytic()->loader(),
+                                     inputs_->scenarioGeneratorData(),
+                                     inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
+                                     inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(),
+                                     inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates(),
+                                     inputs_->crossAssetModelData(), inputs_->amcPricingEngine(),
+                                     inputs_->curveConfigs().get(), analytic()->configurations().todaysMarketParams,
+                                     inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
+                                     inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
+                                     inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"),
+                                     inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory);
 
         amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);

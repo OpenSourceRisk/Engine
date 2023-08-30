@@ -25,7 +25,7 @@
 
 #include <ored/scripting/ast.hpp>
 
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/support_line_pos_iterator.hpp>
 

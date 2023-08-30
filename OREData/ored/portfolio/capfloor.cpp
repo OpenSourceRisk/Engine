@@ -82,11 +82,13 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             engineFactory->market()->iborIndex(underlyingIndex, engineFactory->configuration(MarketContext::pricing));
         QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << underlyingIndex << " in market.");
         boost::shared_ptr<IborIndex> index = hIndex.currentLink();
+        bool isBma = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index) != nullptr;
+        bool isOis = boost::dynamic_pointer_cast<QuantExt::OvernightIndex>(index) != nullptr;
 
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "CapFloor build error, Floating leg section must not have caps and floors");
 
-        if (!floatData->hasSubPeriods()) {
+        if (!floatData->hasSubPeriods() || isOis || isBma) {
             // For the cases where we support caps and floors in the regular way, we build a floating leg with
             // the nakedOption flag set to true, this avoids maintaining all features in legs with associated
             // coupon pricers and at the same time in the QuaantLib::CapFloor instrument and pricing engine.

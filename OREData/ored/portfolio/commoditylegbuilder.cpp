@@ -510,7 +510,13 @@ Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const boost::shar
          
     // Get explicit payment dates which in most cases should be empty
     vector<Date> paymentDates;
-    if (!data.paymentDates().empty()) {
+
+    
+    Schedule paymentSchedule = makeSchedule(data.paymentSchedule(), openEndDateReplacement);
+   
+    if (!paymentSchedule.empty()) {
+        paymentDates = paymentSchedule.dates();
+    } else if (!data.paymentDates().empty()) {
         BusinessDayConvention paymentDatesConvention =
             data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
         Calendar paymentDatesCalendar =

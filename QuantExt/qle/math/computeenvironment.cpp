@@ -23,16 +23,6 @@
 
 #include <ql/errors.hpp>
 
-#include <iostream>
-
-#ifdef ORE_ENABLE_OPENCL
-#ifdef __APPLE__
-#include <OpenCL/cl.h>
-#else
-#include <CL/cl.h>
-#endif
-#endif
-
 namespace QuantExt {
 
 ComputeEnvironment::ComputeEnvironment() { reset(); }

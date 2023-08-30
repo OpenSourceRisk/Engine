@@ -143,9 +143,15 @@ public:
         value.push(op(left, right));
         auto right_node = value_node.pop();
         auto left_node = value_node.pop();
-        auto node = op_cg(left_node, right_node);
-        if (negateOp) {
-            node = cg_subtract(g_, cg_const(g_, 1.0), node);
+        std::size_t node = ComputationGraph::nan;
+        if (left_node != ComputationGraph::nan && right_node != ComputationGraph::nan) {
+            node = op_cg(left_node, right_node);
+            if (negateOp) {
+                node = cg_subtract(g_, cg_const(g_, 1.0), node);
+            }
+        } else {
+            QL_REQUIRE(left_node == ComputationGraph::nan && right_node == ComputationGraph::nan,
+                       "internal error: binaryOp '" << name << "' got one non-number and one number argument.");
         }
         value_node.push(node);
         TRACE(name << "( " << left << " (#" << left_node << "), " << right << " (#" << right_node << "))", n);
@@ -160,11 +166,13 @@ public:
         value.push(op(arg));
         auto arg_node = value_node.pop();
         std::size_t tmp = arg_node;
-        if (op_cg) {
-            tmp = op_cg(arg_node);
-        }
-        if (negate) {
-            tmp = cg_subtract(g_, cg_const(g_, 1.0), tmp);
+        if (arg_node != ComputationGraph::nan) {
+            if (op_cg) {
+                tmp = op_cg(arg_node);
+            }
+            if (negate) {
+                tmp = cg_subtract(g_, cg_const(g_, 1.0), tmp);
+            }
         }
         value_node.push(tmp);
         TRACE(name << "( " << arg << " (#" << tmp << "))", n);
@@ -236,7 +244,7 @@ public:
             long arraySizeL = std::lround(arraySize.at(0));
             QL_REQUIRE(arraySizeL >= 0, "expected non-negative array size, got " << arraySizeL);
             context_.arrays[v->name] = std::vector<ValueType>(arraySizeL, val);
-            std::size_t node_id;
+            std::size_t node_id = 0;
             for (long i = 0; i < arraySizeL; ++i) {
                 node_id = cg_const(g_, 0.0);
                 g_.setVariable(v->name + "_" + std::to_string(i), node_id);
@@ -1374,34 +1382,37 @@ public:
     void visit(FunctionFwdAvgNode& n) override { processFwdCompAvgNode(n, true); }
 
     void processProbNode(ASTNode& n, const bool above) {
-        QL_FAIL("Prob not supported by ComputationGraphBuilder");
-
-        // checkpoint(n);
-        // QL_REQUIRE(model_, "model is null");
-        // n.args[0]->accept(*this);
-        // n.args[1]->accept(*this);
-        // n.args[2]->accept(*this);
-        // n.args[3]->accept(*this);
-        // auto barrier = value.pop();
-        // auto obsdate2 = value.pop();
-        // auto obsdate1 = value.pop();
-        // auto underlying = value.pop();
-        // checkpoint(n);
-        // QL_REQUIRE(underlying.which() == ValueTypeWhich::Index, "underlying must be INDEX");
-        // QL_REQUIRE(obsdate1.which() == ValueTypeWhich::Event, "obsdate1 must be EVENT");
-        // QL_REQUIRE(obsdate2.which() == ValueTypeWhich::Event, "obsdate2 must be EVENT");
-        // QL_REQUIRE(barrier.which() == ValueTypeWhich::Number, "barrier must be NUMBER");
-        // std::string und = boost::get<IndexVec>(underlying).value;
-        // Date obs1 = boost::get<EventVec>(obsdate1).value;
-        // Date obs2 = boost::get<EventVec>(obsdate2).value;
-        // RandomVariable barrierValue = boost::get<RandomVariable>(barrier);
-        // if (obs1 > obs2)
-        //     value.push(RandomVariable(model_->size(), 0.0));
-        // else
-        //     value.push(model_->barrierProbability(und, obs1, obs2, barrierValue, above));
-        // TRACE((above ? "above" : "below")
-        //           << "prob(" << underlying << " , " << obsdate1 << " , " << obsdate2 << " , " << barrier << ")",
-        //       n);
+        checkpoint(n);
+        QL_REQUIRE(model_, "model is null");
+        n.args[0]->accept(*this);
+        n.args[1]->accept(*this);
+        n.args[2]->accept(*this);
+        n.args[3]->accept(*this);
+        auto barrier = value.pop();
+        auto obsdate2 = value.pop();
+        auto obsdate1 = value.pop();
+        auto underlying = value.pop();
+        auto barrierNode = value_node.pop();
+        value_node.pop();
+        value_node.pop();
+        value_node.pop();
+        QL_REQUIRE(underlying.which() == ValueTypeWhich::Index, "underlying must be INDEX");
+        QL_REQUIRE(obsdate1.which() == ValueTypeWhich::Event, "obsdate1 must be EVENT");
+        QL_REQUIRE(obsdate2.which() == ValueTypeWhich::Event, "obsdate2 must be EVENT");
+        QL_REQUIRE(barrier.which() == ValueTypeWhich::Number, "barrier must be NUMBER");
+        std::string und = boost::get<IndexVec>(underlying).value;
+        Date obs1 = boost::get<EventVec>(obsdate1).value;
+        Date obs2 = boost::get<EventVec>(obsdate2).value;
+        if (obs1 > obs2) {
+            value.push(RandomVariable(model_->size(), 0.0));
+            value_node.push(cg_const(g_,0.0));
+        } else {
+            value.push(RandomVariable());
+            value_node.push(model_->barrierProbability(und, obs1, obs2, barrierNode, above));
+        }
+        TRACE((above ? "above" : "below") << "prob(" << underlying << " , " << obsdate1 << " , " << obsdate2 << " , "
+                                          << barrier << " (#" << barrierNode << "))",
+              n);
     }
 
     void visit(FunctionAboveProbNode& n) override { processProbNode(n, true); }

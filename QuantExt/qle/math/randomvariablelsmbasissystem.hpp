@@ -32,9 +32,8 @@ namespace QuantExt {
 
 class RandomVariableLsmBasisSystem {
 public:
-    // if reduceOrderUntilSystemSizeIsBelow is not null, the order is decreased until the system size
-    // will be <= the given bound or the order is 1
     static std::vector<std::function<RandomVariable(const RandomVariable&)>> pathBasisSystem(Size order);
+
     static std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
     multiPathBasisSystem(Size dim, Size order);
 

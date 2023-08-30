@@ -332,8 +332,7 @@ boost::shared_ptr<PricingEngine> CamAmcMultiLegOptionEngineBuilder::engineImpl(
         parsePolynomType(engineParameter("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurves, simulationDates_,
-        externalModelIndices, parseBool(engineParameter("MinObsDate")),
-        parseBool(engineParameter("RegressionOnExerciseOnly")));
+        externalModelIndices, parseBool(engineParameter("MinObsDate")));
 
     return engine;
 }

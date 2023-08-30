@@ -356,7 +356,6 @@ RandomVariable BlackScholes::getFutureBarrierProb(const std::string& index, cons
         // if not, we can only try something else for FX indices
         QL_REQUIRE(indexInfo.isFx(), "BlackScholes::getFutureBarrierProb(): index " << index << " not handled");
         // is it a trivial fx index (CCY-CCY) or can we triangulate it?
-        RandomVariable fx1(size(), 1.0), fx2(size(), 1.0);
         if (indexInfo.fx()->sourceCurrency() == indexInfo.fx()->targetCurrency()) {
             // pseudo FX index FX-GENERIC-CCY-CCY, leave ind1 and ind2 both set to zero
         } else {

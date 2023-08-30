@@ -274,7 +274,7 @@ void Accumulator::build(const boost::shared_ptr<EngineFactory>& factory) {
         }
     }
 
-    bool initPositive;
+    bool initPositive = false;
     for (Size i = 0; i < rangeLeverages.size(); i++) {
         Real rl = parseReal(rangeLeverages.at(i));
         if (i == 0)

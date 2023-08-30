@@ -183,10 +183,11 @@ RandomVariable applyFilter(RandomVariable, const Filter&);
 RandomVariable applyInverseFilter(RandomVariable, const Filter&);
 
 // compute regression coefficients
+enum class RandomVariableRegressionMethod { QR, SVI };
 Array regressionCoefficients(
     RandomVariable r, const std::vector<const RandomVariable*>& regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
-    const Filter& filter = Filter());
+    const Filter& filter = Filter(), const RandomVariableRegressionMethod = RandomVariableRegressionMethod::QR);
 
 // evaluate regression function
 RandomVariable conditionalExpectation(
@@ -198,7 +199,7 @@ RandomVariable conditionalExpectation(
 RandomVariable conditionalExpectation(
     const RandomVariable& r, const std::vector<const RandomVariable*>& regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
-    const Filter& filter = Filter());
+    const Filter& filter = Filter(), const RandomVariableRegressionMethod = RandomVariableRegressionMethod::QR);
 
 // time zero expectation
 RandomVariable expectation(const RandomVariable& r);
