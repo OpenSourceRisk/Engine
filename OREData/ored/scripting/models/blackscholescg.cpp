@@ -564,10 +564,11 @@ std::size_t BlackScholesCG::getFutureBarrierProb(const std::string& index, const
     variance = cg_max(*g_, variance, eps);
     std::size_t adjBarrier = cg_max(*g_, barrier, eps);
 
-    std::size_t hitProb = cg_exp(
-        *g_,
-        cg_mult(*g_, cg_mult(*g_, cg_div(*g_, cg_const(*g_, -2.0), variance), cg_log(*g_, cg_div(*g_, v1, adjBarrier))),
-                cg_log(*g_, cg_div(*g_, v2, adjBarrier))));
+    std::size_t hitProb = cg_min(*g_, cg_const(*g_, 1.0),
+                                 cg_exp(*g_, cg_mult(*g_,
+                                                     cg_mult(*g_, cg_div(*g_, cg_const(*g_, -2.0), variance),
+                                                             cg_log(*g_, cg_div(*g_, v1, adjBarrier))),
+                                                     cg_log(*g_, cg_div(*g_, v2, adjBarrier)))));
 
     barrierHit = cg_add(*g_, barrierHit, cg_mult(*g_, cg_subtract(*g_, cg_const(*g_, 1.0), barrierHit), hitProb));
 

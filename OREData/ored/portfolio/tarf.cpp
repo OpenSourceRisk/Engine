@@ -401,7 +401,7 @@ void TaRF::build(const boost::shared_ptr<EngineFactory>& factory) {
 
     // 5 set product tag
 
-    productTag_ = "SingleAssetOption({AssetClass})";
+    productTag_ = "SingleAssetOptionCG({AssetClass})";
 
     // 6 set script
 

@@ -382,7 +382,7 @@ void Accumulator::build(const boost::shared_ptr<EngineFactory>& factory) {
 
     // set product tag
 
-    productTag_ = scriptToUse == AccumulatorScript::Accumulator01 ? "SingleAssetOption({AssetClass})"
+    productTag_ = scriptToUse == AccumulatorScript::Accumulator01 ? "SingleAssetOptionCG({AssetClass})"
                                                                   : "SingleAssetOptionBwd({AssetClass})";
 
     // set script
