@@ -208,69 +208,80 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     Size progressCounter = 0;
 
     auto extractAmcCalculator = [&amcCalculators, &tradeId, &tradeLabel, &tradeType, &effectiveMultiplier,
-                            &currencyIndex, &tradeFees, &model, &outputCube](
-        const std::pair<std::string, boost::shared_ptr<Trade>>& trade,
-        boost::shared_ptr<AmcCalculator> amcCalc, Real multiplier) {
+                                 &currencyIndex, &tradeFees, &model,
+                                 &outputCube](const std::pair<std::string, boost::shared_ptr<Trade>>& trade,
+                                              boost::shared_ptr<AmcCalculator> amcCalc, Real multiplier, bool addFees) {
         LOG("AMCCalculator extracted for \"" << trade.first << "\"");
         amcCalculators.push_back(amcCalc);
         effectiveMultiplier.push_back(multiplier);
         currencyIndex.push_back(model->ccyIndex(amcCalc->npvCurrency()));
-
         if (auto id = outputCube->idsAndIndexes().find(trade.first); id != outputCube->idsAndIndexes().end()) {
             tradeId.push_back(id->second);
         } else {
             QL_FAIL("AMCValuationEngine: trade id '" << trade.first
                                                     << "' is not present in output cube - internal error.");
         }
-
         tradeLabel.push_back(trade.first);
         tradeType.push_back(trade.second->tradeType());
         tradeFees.push_back({});
-        for (Size i = 0; i < trade.second->instrument()->additionalInstruments().size(); ++i) {
-            if (auto p = boost::dynamic_pointer_cast<QuantExt::Payment>(
-                    trade.second->instrument()->additionalInstruments()[i])) {
-                tradeFees.back().push_back(std::make_tuple(model->ccyIndex(p->currency()), p->cashFlow()->amount(),
-                                                        p->cashFlow()->date()));
-            } else {
-                ALOG(StructuredTradeErrorMessage(trade.second, "Additional instrument is ignored in AMC simulation",
-                                                "only QuantExt::Payment is handled as additional instrument."));
+        if (addFees) {
+            for (Size i = 0; i < trade.second->instrument()->additionalInstruments().size(); ++i) {
+                if (auto p = boost::dynamic_pointer_cast<QuantExt::Payment>(
+                        trade.second->instrument()->additionalInstruments()[i])) {
+                    tradeFees.back().push_back(std::make_tuple(model->ccyIndex(p->currency()), p->cashFlow()->amount(),
+                                                               p->cashFlow()->date()));
+                } else {
+                    ALOG(StructuredTradeErrorMessage(trade.second, "Additional instrument is ignored in AMC simulation",
+                                                     "only QuantExt::Payment is handled as additional instrument."));
+                }
             }
         }
     };
+
     for (auto const& trade : portfolio->trades()) {
         boost::shared_ptr<AmcCalculator> amcCalc;
         try {
             auto inst = trade.second->instrument()->qlInstrument(true);
             Real multiplier = trade.second->instrument()->multiplier() *
                 trade.second->instrument()->multiplier2();
+
+            // handle composite trades
             if (auto cInst = boost::dynamic_pointer_cast<CompositeInstrument>(inst)) {
                 auto addResults = cInst->additionalResults();
                 std::vector<Real> multipliers;
-                while(true) {
+                while (true) {
                     std::stringstream ss;
                     ss << multipliers.size() + 1 << "_multiplier";
                     if (addResults.find(ss.str()) == addResults.end())
                         break;
                     multipliers.push_back(inst->result<Real>(ss.str()));
                 }
+                std::vector<boost::shared_ptr<AmcCalculator>> amcCalcs;
                 for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
                     std::stringstream ss;
                     ss << cmpIdx + 1 << "_amcCalculator";
                     if (addResults.find(ss.str()) != addResults.end()) {
-                        amcCalc = inst->result<boost::shared_ptr<AmcCalculator>>(ss.str());
-                        extractAmcCalculator(trade, amcCalc, multiplier * multipliers[cmpIdx]);
+                        amcCalcs.push_back(inst->result<boost::shared_ptr<AmcCalculator>>(ss.str()));
                     }
+                }
+                QL_REQUIRE(amcCalcs.size() == multipliers.size(),
+                           "Did not find amc calculators for all components of composite trade.");
+                for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
+                    extractAmcCalculator(trade, amcCalc, multiplier * multipliers[cmpIdx], cmpIdx == 0);
                 }
                 continue;
             }
-            amcCalc = inst->result<boost::shared_ptr<AmcCalculator>>(
-                "amcCalculator");
-            extractAmcCalculator(trade, amcCalc, multiplier);
+
+            // handle non-composite trades
+            amcCalc = inst->result<boost::shared_ptr<AmcCalculator>>("amcCalculator");
+            extractAmcCalculator(trade, amcCalc, multiplier, true);
+
         } catch (const std::exception& e) {
             ALOG(StructuredTradeErrorMessage(trade.second, "Error building trade for AMC simulation", e.what()));
         }
         progressIndicator->updateProgress(++progressCounter, portfolio->size() + 1);
     }
+
     timer.stop();
     calibrationTime += timer.elapsed().wall * 1e-9;
     LOG("Extracted " << amcCalculators.size() << " AMCCalculators for " << portfolio->size() << " source trades");
