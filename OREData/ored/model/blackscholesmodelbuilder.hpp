@@ -44,8 +44,9 @@ public:
                              const Size timeStepsPerYear = 0, const std::string& calibration = "ATM",
                              const std::vector<Real>& calibrationStrikes = {});
 
-protected:
     std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const override;
+
+protected:
     std::vector<std::vector<Real>> getCurveTimes() const override;
     std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const override;
 

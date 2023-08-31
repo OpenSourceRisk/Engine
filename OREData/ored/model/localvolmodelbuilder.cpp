@@ -38,7 +38,7 @@ namespace data {
 
 LocalVolModelBuilder::LocalVolModelBuilder(
     const std::vector<Handle<YieldTermStructure>>& curves,
-    const std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+    const std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
     const Type lvType, const std::vector<Real>& calibrationMoneyness, const bool dontCalibrate)
     : BlackScholesModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear), lvType_(lvType),
@@ -56,6 +56,8 @@ std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuil
 
     QL_REQUIRE(lvType_ != Type::AndreasenHuge || !calibrationMoneyness_.empty(), "no calibration moneyness provided");
 
+    calculate();
+    
     std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> processes;
 
     for (Size l = 0; l < processes_.size(); ++l) {
@@ -124,16 +126,18 @@ std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuil
                 AndreasenHugeVolatilityInterpl::CubicSpline, AndreasenHugeVolatilityInterpl::Call, 500, Null<Real>(),
                 Null<Real>());
             localVol = Handle<LocalVolTermStructure>(boost::make_shared<AndreasenHugeLocalVolAdapter>(ah));
+            //localVol->enableExtrapolation();
             DLOG("Andreasen-Huge local vol calibration for process #"
                  << l
                  << ": "
                     "calibration error min="
                  << std::scientific << std::setprecision(6) << boost::get<0>(ah->calibrationError()) << " max="
                  << boost::get<1>(ah->calibrationError()) << " avg=" << boost::get<2>(ah->calibrationError()));
-        } else if (lvType_ == Type::Dupire) {
+        } else if (lvType_ == Type::Dupire || lvType_ == Type::DupireFloored) {
             localVol = Handle<LocalVolTermStructure>(
                 boost::make_shared<LocalVolSurface>(processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(),
-                                                    processes_[l]->dividendYield(), processes_[l]->stateVariable()));
+                                                    processes_[l]->dividendYield(), processes_[l]->stateVariable(),
+                                                    lvType_ == Type::DupireFloored ? true : false));
         } else {
             QL_FAIL("unexpected local vol type");
         }
