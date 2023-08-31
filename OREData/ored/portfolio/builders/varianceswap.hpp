@@ -103,24 +103,24 @@ protected:
             QL_FAIL("Asset class of " + underlyingName + " not recognized.");
         }
 
-        QuantExt::GeneralisedReplicatingVarianceSwapEngine::Settings settings;
+        QuantExt::GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings settings;
 
         std::string schemeStr = engineParameter("Scheme", {}, false, "GaussLobatto");
         std::string boundsStr = engineParameter("Bounds", {}, false, "PriceThreshold");
 
         if (schemeStr == "GaussLobatto")
-            settings.scheme = QuantExt::GeneralisedReplicatingVarianceSwapEngine::Settings::Scheme::GaussLobatto;
+            settings.scheme = QuantExt::GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings::Scheme::GaussLobatto;
         else if (schemeStr == "Segment")
-            settings.scheme = QuantExt::GeneralisedReplicatingVarianceSwapEngine::Settings::Scheme::Segment;
+            settings.scheme = QuantExt::GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings::Scheme::Segment;
         else {
             QL_FAIL("invalid var swap pricing engine parameter Scheme (" << schemeStr
                                                                          << "), expected GaussLobatto, Segment");
         }
 
         if (boundsStr == "Fixed")
-            settings.bounds = QuantExt::GeneralisedReplicatingVarianceSwapEngine::Settings::Bounds::Fixed;
+            settings.bounds = QuantExt::GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings::Bounds::Fixed;
         else if (boundsStr == "PriceThreshold")
-            settings.bounds = QuantExt::GeneralisedReplicatingVarianceSwapEngine::Settings::Bounds::PriceThreshold;
+            settings.bounds = QuantExt::GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings::Bounds::PriceThreshold;
         else {
             QL_FAIL("invalid var swap pricing engine parameter Bounds (" << boundsStr
                                                                          << "), expected Fixed, PriceThreshold");
