@@ -36,8 +36,9 @@ using namespace QuantLib;
 
 struct Filter {
     // ctors
-    Filter() : n_(0), deterministic_(false) {}
-    explicit Filter(const Size n, const bool value = false) : n_(n), data_(1, value), deterministic_(true) {}
+    ~Filter();
+    Filter();
+    explicit Filter(const Size n, const bool value = false);
     // modifiers
     void clear();
     void set(const Size i, const bool v);
@@ -150,7 +151,7 @@ struct RandomVariable {
 private:
     void checkTimeConsistencyAndUpdate(const Real t);
     Size n_;
-    double data0_;
+    double constantData_;
     double* data_;
     bool deterministic_;
     Real time_;
