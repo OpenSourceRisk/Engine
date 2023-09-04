@@ -79,9 +79,14 @@ Filter operator!(Filter);
 
 struct RandomVariable {
     // ctors
-    RandomVariable() : n_(0), deterministic_(false), time_(Null<Real>()) {}
-    explicit RandomVariable(const Size n, const Real value = 0.0, const Real time = Null<Real>())
-        : n_(n), data_(1, value), deterministic_(true), time_(time) {}
+    ~RandomVariable();
+    RandomVariable();
+    RandomVariable(const RandomVariable& r);
+    RandomVariable(RandomVariable&& r);
+    RandomVariable& operator=(const RandomVariable& r);
+    RandomVariable& operator=(RandomVariable&& r);
+
+    explicit RandomVariable(const Size n, const Real value = 0.0, const Real time = Null<Real>());
     explicit RandomVariable(const Filter& f, const Real valueTrue = 1.0, const Real valueFalse = 0.0,
                             const Real time = Null<Real>());
     // interop with ql classes
@@ -145,7 +150,8 @@ struct RandomVariable {
 private:
     void checkTimeConsistencyAndUpdate(const Real t);
     Size n_;
-    std::vector<Real> data_;
+    double data0_;
+    double* data_;
     bool deterministic_;
     Real time_;
 };
@@ -190,7 +196,8 @@ enum class RandomVariableRegressionMethod { QR, SVI };
 Array regressionCoefficients(
     RandomVariable r, const std::vector<const RandomVariable*>& regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
-    const Filter& filter = Filter(), const RandomVariableRegressionMethod = RandomVariableRegressionMethod::QR);
+    const Filter& filter = Filter(), const RandomVariableRegressionMethod = RandomVariableRegressionMethod::QR,
+    const std::string& debugLabel = std::string());
 
 // evaluate regression function
 RandomVariable conditionalExpectation(
