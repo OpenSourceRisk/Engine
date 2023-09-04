@@ -184,7 +184,6 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
             .writePricingStats(*pricingStatsReport, inputs_->portfolio());
         reports_["STATS"]["pricingstats"] = pricingStatsReport;
     }
-    std::cout << "AnalyticsManager::runAnalytic()" << std::endl;
 
     if (marketCalibrationReport) {
         auto report = marketCalibrationReport->outputCalibrationReport();
@@ -253,7 +252,6 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
                               const std::map<std::string, std::string>& reportNames, const char sep,
                               const bool commentCharacter, char quoteChar, const string& nullString,
                               const std::set<std::string>& lowerHeaderReportNames) {
-    std::cout << "start toFile()" << std::endl;
     std::map<std::string, Size> hits = checkReportNames(rpts);    
     for (const auto& rep : rpts) {
         string analytic = rep.first;
@@ -284,7 +282,6 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
             LOG("report " << reportName << " written to " << fullFileName); 
         }
     }
-    std::cout << "end toFile()" << std::endl;
 }
 }
 }

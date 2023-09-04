@@ -30,8 +30,6 @@
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <ql/time/date.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/timegrid.hpp>
 
 #include <iostream>
 

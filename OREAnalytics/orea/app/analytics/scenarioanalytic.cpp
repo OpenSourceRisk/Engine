@@ -16,17 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/aggregation/dimregressioncalculator.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/jointnpvcube.hpp>
-#include <orea/engine/amcvaluationengine.hpp>
 #include <orea/engine/mporcalculator.hpp>
 #include <orea/engine/multistatenpvcalculator.hpp>
 #include <orea/engine/multithreadedvaluationengine.hpp>
-#include <orea/engine/observationmode.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>

@@ -17,13 +17,6 @@
 */
 
 #include <orea/scenario/scenariogeneratortransform.hpp>
-#include <orea/scenario/simplescenario.hpp>
-#include <ored/utilities/csvfilereader.hpp>
-#include <ored/utilities/log.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/to_string.hpp>
-
-#include <boost/algorithm/string/find.hpp>
 
 using namespace QuantLib;
 
