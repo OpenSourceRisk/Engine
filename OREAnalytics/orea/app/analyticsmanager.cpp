@@ -67,7 +67,6 @@ void AnalyticsManager::clear() {
 }
     
 void AnalyticsManager::addAnalytic(const std::string& label, const boost::shared_ptr<Analytic>& analytic) {
-    std::cout << "addAnalytic: " << label << std::endl; 
     // Allow overriding, but warn 
     if (analytics_.find(label) != analytics_.end()) {
         WLOG("Overwriting analytic with label " << label);
@@ -84,7 +83,6 @@ void AnalyticsManager::addAnalytic(const std::string& label, const boost::shared
 const std::set<std::string>& AnalyticsManager::validAnalytics() {
     if (validAnalytics_.size() == 0) {
         for (auto a : analytics_) {
-            std::cout << "validAnalytics: " << a.first << std::endl;
             const std::set<std::string>& types = a.second->analyticTypes();
             validAnalytics_.insert(types.begin(), types.end());
         }
@@ -170,7 +168,6 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
 
     // run requested analytics
     for (auto a : analytics_) {
-        std::cout << a.first << std::endl;
         if (matches(analyticTypes, a.second->analyticTypes()) > 0) {
             LOG("run analytic with label '" << a.first << "'");
             a.second->runAnalytic(marketDataLoader_->loader(), analyticTypes);
@@ -187,6 +184,7 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
             .writePricingStats(*pricingStatsReport, inputs_->portfolio());
         reports_["STATS"]["pricingstats"] = pricingStatsReport;
     }
+    std::cout << "AnalyticsManager::runAnalytic()" << std::endl;
 
     if (marketCalibrationReport) {
         auto report = marketCalibrationReport->outputCalibrationReport();
@@ -255,6 +253,7 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
                               const std::map<std::string, std::string>& reportNames, const char sep,
                               const bool commentCharacter, char quoteChar, const string& nullString,
                               const std::set<std::string>& lowerHeaderReportNames) {
+    std::cout << "start toFile()" << std::endl;
     std::map<std::string, Size> hits = checkReportNames(rpts);    
     for (const auto& rep : rpts) {
         string analytic = rep.first;
@@ -285,6 +284,7 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
             LOG("report " << reportName << " written to " << fullFileName); 
         }
     }
+    std::cout << "end toFile()" << std::endl;
 }
 }
 }

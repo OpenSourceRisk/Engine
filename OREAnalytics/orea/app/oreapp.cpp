@@ -246,12 +246,16 @@ void OREApp::analytics() {
         // Run the requested analytics
         analyticsManager_->runAnalytics(inputs_->analytics(), mcr);
 
+        std::cout << "analyticManager->runAnalytics() Done" << std::endl;
+
         // Write reports to files in the results path
         Analytic::analytic_reports reports = analyticsManager_->reports();
         analyticsManager_->toFile(reports,
                                   inputs_->resultsPath().string(), outputs_->fileNameMap(),
                                   inputs_->csvSeparator(), inputs_->csvCommentCharacter(),
                                   inputs_->csvQuoteChar(), inputs_->reportNaString());
+
+        std::cout << "analyticManager->toFile() Done" << std::endl;
 
         // Write npv cube(s)
         for (auto a : analyticsManager_->npvCubes()) {
@@ -1312,13 +1316,39 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         if (tmp != "")
             inputs->setScenarioDistributionSteps(parseInteger(tmp));
 
-        tmp = params_->get("scenarioStatistics", "distributionOutputFileName", false);
+        tmp = params_->get("scenarioStatistics", "outputZeroRate", false);
         if (tmp != "")
-            inputs->setScenarioDistributionOutputReport(tmp);
+            inputs->setScenarioOutputZeroRate(parseBool(tmp));
 
-        tmp = params_->get("scenarioStatistics", "statisticsOutputFileName", false);
+        inputs->setSimulationPricingEngine(inputs->pricingEngine());
+
+        tmp = params_->get("scenarioStatistics", "simulationConfigFile", false);
+        if (tmp != "") {
+            string simulationConfigFile = inputPath + "/" + tmp;
+            LOG("Loading simulation config from file" << simulationConfigFile);
+            inputs->setExposureSimMarketParamsFromFile(simulationConfigFile);
+            inputs->setCrossAssetModelDataFromFile(simulationConfigFile);
+            inputs->setScenarioGeneratorDataFromFile(simulationConfigFile);
+            auto grid = inputs->scenarioGeneratorData()->getGrid();
+            DLOG("grid size=" << grid->size() << ", dates=" << grid->dates().size()
+                                << ", valuationDates=" << grid->valuationDates().size()
+                                << ", closeOutDates=" << grid->closeOutDates().size());
+        } else {
+            ALOG("Simulation market, model and scenario generator data not loaded");
+        }
+
+        tmp = params_->get("scenarioStatistics", "pricingEnginesFile", false);
+        if (tmp != "") {
+            string pricingEnginesFile = inputPath + "/" + tmp;
+            LOG("Load simulation pricing engine data from file: " << pricingEnginesFile);
+            inputs->setSimulationPricingEngineFromFile(pricingEnginesFile);
+        } else {
+            WLOG("Simulation pricing engine data not found, using standard pricing engines");
+        }
+
+        tmp = params_->get("scenarioStatistics", "scenariodump", false);
         if (tmp != "")
-            inputs->setScenarioStatisticsOutputReport(tmp);
+            inputs->setWriteScenarios(true);
     }
 
     if (inputs->analytics().size() == 0) {

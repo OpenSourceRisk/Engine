@@ -46,32 +46,20 @@ protected:
     void buildCrossAssetModel(bool continueOnError);
     void buildScenarioGenerator(bool continueOnError);
 
-    //void initCubeDepth();
-    //void initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth);    
+    void initCubeDepth();
+    void initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth);    
 
-    //void initClassicRun(const boost::shared_ptr<Portfolio>& portfolio);
-    //void buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio);
-    //boost::shared_ptr<Portfolio> classicRun(const boost::shared_ptr<Portfolio>& portfolio);
-
-    //boost::shared_ptr<EngineFactory> amcEngineFactory(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
-    //                                                  const std::vector<Date>& grid);
-    //void buildAmcPortfolio();
-    //void amcRun(bool doClassicRun);
-
-    //void runPostProcessor();
-
-    //Matrix creditStateCorrelationMatrix() const;
+    void initRun(const boost::shared_ptr<Portfolio>& portfolio);
+    void buildCube(const boost::shared_ptr<Portfolio>& portfolio);
 
     boost::shared_ptr<ScenarioSimMarket> simMarket_;
     boost::shared_ptr<EngineFactory> engineFactory_;
     boost::shared_ptr<CrossAssetModel> model_;
     boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
-    boost::shared_ptr<Portfolio> amcPortfolio_, classicPortfolio_;
-    boost::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_, amcCube_;
+    boost::shared_ptr<Portfolio> portfolio_;
+    boost::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_;
     QuantLib::RelinkableHandle<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
-    boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
-    boost::shared_ptr<PostProcess> postProcess_;
     
     Size cubeDepth_ = 0;
     boost::shared_ptr<DateGrid> grid_;

@@ -101,6 +101,7 @@
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariogeneratordata.hpp>
+#include <orea/scenario/scenariogeneratortransform.hpp>
 #include <orea/scenario/scenarioshiftcalculator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>

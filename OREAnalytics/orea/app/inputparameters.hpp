@@ -308,8 +308,7 @@ public:
 
     // Setters for ScenarioStatistics
     void setScenarioDistributionSteps(const Size s) { scenarioDistributionSteps_ = s; }
-    void setScenarioDistributionOutputReport(const std::string& s) { scenarioDistributionOutputReport_ = s; }
-    void setScenarioStatisticsOutputReport(const std::string& s) { scenarioStatisticsOutputReport_ = s; }
+    void setScenarioOutputZeroRate(const bool b) { scenarioOutputZeroRate_ = b; }
 
 
     // Set list of analytics that shall be run
@@ -556,8 +555,7 @@ public:
 
     // Getters for ScenarioStatistics
     const Size& scenarioDistributionSteps() { return scenarioDistributionSteps_; }
-    const std::string& scenarioDistributionOutputReport() { return scenarioDistributionOutputReport_; }
-    const std::string& scenarioStatisticsOutputReport() { return scenarioStatisticsOutputReport_; }
+    const bool& scenrioOutputZeroRate() { return scenarioOutputZeroRate_; }
 
     /*************************************
      * List of analytics that shall be run
@@ -796,8 +794,7 @@ protected:
      * Scenario Statistics analytic
      ***************/
     Size scenarioDistributionSteps_ = 20;
-    std::string scenarioDistributionOutputReport_ = "scenario_distribution.csv";
-    std::string scenarioStatisticsOutputReport_ = "scenario_statistics.csv";
+    bool scenarioOutputZeroRate_ = false;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {
