@@ -30,7 +30,7 @@ namespace QuantExt {
 
 Filter::~Filter() { clear(); }
 
-Filter::Filter() : n_(0), data_(nullptr), deterministic_(false) {}
+Filter::Filter() : n_(0), constantData_(false), data_(nullptr), deterministic_(false) {}
 
 Filter::Filter(const Filter& r) {
     n_ = r.n_;
@@ -92,7 +92,7 @@ Filter& Filter::operator=(Filter&& r) {
     return *this;
 }
 
-Filter::Filter(const Size n, const bool value) : n_(n), constantData_(value), deterministic_(true) {}
+Filter::Filter(const Size n, const bool value) : n_(n), constantData_(value), data_(nullptr), deterministic_(true) {}
 
 void Filter::clear() {
     n_ = 0;
@@ -244,7 +244,8 @@ Filter operator!(Filter x) {
 
 RandomVariable::~RandomVariable() { clear(); }
 
-RandomVariable::RandomVariable() : n_(0), data_(nullptr), deterministic_(false), time_(Null<Real>()) {}
+RandomVariable::RandomVariable()
+    : n_(0), constantData_(0.0), data_(nullptr), deterministic_(false), time_(Null<Real>()) {}
 
 RandomVariable::RandomVariable(const RandomVariable& r) {
     n_ = r.n_;
