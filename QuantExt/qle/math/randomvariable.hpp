@@ -38,6 +38,11 @@ struct Filter {
     // ctors
     ~Filter();
     Filter();
+    Filter(const Filter& r);
+    Filter(Filter&& r);
+    Filter& operator=(const Filter& r);
+    Filter& operator=(Filter&& r);
+
     explicit Filter(const Size n, const bool value = false);
     // modifiers
     void clear();
@@ -64,7 +69,8 @@ struct Filter {
 
 private:
     Size n_;
-    std::vector<bool> data_;
+    bool constantData_;
+    bool* data_;
     bool deterministic_;
 };
 
