@@ -330,7 +330,7 @@ void RandomVariable::expand() {
         return;
     deterministic_ = false;
     data_ = new double[n_];
-    std::fill(data_, data_ + n_ * sizeof(double), data0_);
+    std::fill(data_, data_ + n_, data0_);
 }
 
 void RandomVariable::checkTimeConsistencyAndUpdate(const Real t) {
