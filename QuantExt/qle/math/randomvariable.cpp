@@ -24,6 +24,8 @@
 
 #include <boost/math/distributions/normal.hpp>
 
+#include <iostream>
+
 namespace QuantExt {
 
 void Filter::clear() {
@@ -853,7 +855,7 @@ Array regressionCoefficients(
             a.copyToMatrixCol(A, j);
     }
 
-    if (debugLabel.empty()) {
+    if (!debugLabel.empty()) {
         for (Size i = 0; i < r.size(); ++i) {
             std::cout << debugLabel << "," << r[i] << ",";
             for (Size j = 0; j < regressor.size(); ++j) {
