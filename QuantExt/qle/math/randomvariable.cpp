@@ -28,16 +28,78 @@
 
 namespace QuantExt {
 
-Filter::~Filter() {}
+Filter::~Filter() { clear(); }
 
-Filter::Filter() : n_(0), deterministic_(false) {}
+Filter::Filter() : n_(0), data_(nullptr), deterministic_(false) {}
 
-Filter::Filter(const Size n, const bool value) : n_(n), data_(1, value), deterministic_(true) {}
+Filter::Filter(const Filter& r) {
+    n_ = r.n_;
+    constantData_ = r.constantData_;
+    if (r.data_) {
+        data_ = new bool[n_];
+        std::memcpy(r.data_, data_, n_ * sizeof(bool));
+    } else {
+        data_ = nullptr;
+    }
+    deterministic_ = r.deterministic_;
+}
+
+Filter::Filter(Filter&& r) {
+    n_ = r.n_;
+    constantData_ = r.constantData_;
+    data_ = r.data_;
+    r.data_ = nullptr;
+    deterministic_ = r.deterministic_;
+}
+
+Filter& Filter::operator=(const Filter& r) {
+    if (r.deterministic_) {
+        deterministic_ = true;
+        if (data_) {
+            delete[] data_;
+            data_ = nullptr;
+        }
+    } else {
+        deterministic_ = false;
+        if (r.n_ != 0) {
+            if (n_ != r.n_) {
+                if (data_)
+                    delete[] data_;
+                data_ = new bool[r.n_];
+            }
+            std::memcpy(r.data_, data_, r.n_ * sizeof(bool));
+        } else {
+            if (data_) {
+                delete[] data_;
+                data_ = nullptr;
+            }
+        }
+    }
+    n_ = r.n_;
+    constantData_ = r.constantData_;
+    return *this;
+}
+
+Filter& Filter::operator=(Filter&& r) {
+    n_ = r.n_;
+    constantData_ = r.constantData_;
+    if (data_) {
+        delete[] data_;
+    }
+    data_ = r.data_;
+    r.data_ = nullptr;
+    deterministic_ = r.deterministic_;
+    return *this;
+}
+
+Filter::Filter(const Size n, const bool value) : n_(n), constantData_(value), deterministic_(true) {}
 
 void Filter::clear() {
     n_ = 0;
-    data_.clear();
-    data_.shrink_to_fit();
+    if (data_) {
+        delete[] data_;
+        data_ = nullptr;
+    }
     deterministic_ = false;
 }
 
@@ -45,16 +107,16 @@ void Filter::updateDeterministic() {
     if (deterministic_ || !initialised())
         return;
     for (Size i = 1; i < n_; ++i) {
-        if (data_[i] != data_.front())
+        if (data_[i] != constantData_)
             return;
     }
-    setAll(data_.front());
+    setAll(constantData_);
 }
 
 void Filter::set(const Size i, const bool v) {
     QL_REQUIRE(i < n_, "Filter::set(" << i << "): out of bounds, size is " << n_);
     if (deterministic_) {
-        if (v != data_.front())
+        if (v != constantData_)
             expand();
         else
             return;
@@ -63,13 +125,18 @@ void Filter::set(const Size i, const bool v) {
 }
 
 void Filter::setAll(const bool v) {
-    data_ = std::vector<bool>(1, v);
+    QL_REQUIRE(n_ > 0, "Filter::setAll(): dimension is zero");
+    if (data_) {
+        delete[] data_;
+        data_ = nullptr;
+    }
+    constantData_ = v;
     deterministic_ = true;
 }
 
 bool Filter::operator[](const Size i) const {
     if (deterministic_)
-        return data_.front();
+        return constantData_ != 0;
     else
         return data_[i];
 }
@@ -77,7 +144,7 @@ bool Filter::operator[](const Size i) const {
 bool Filter::at(const Size i) const {
     QL_REQUIRE(n_ > 0, "Filter::at(" << i << "): dimension is zero");
     if (deterministic_)
-        return data_.front();
+        return constantData_ != 0;
     QL_REQUIRE(i < n_, "Filter::at(" << i << "): out of bounds, size is " << n_);
     return operator[](i);
 }
@@ -86,15 +153,20 @@ void Filter::expand() {
     if (!deterministic_)
         return;
     deterministic_ = false;
-    data_.resize(size(), data_.front());
+    data_ = new bool[n_];
+    std::fill(data_, data_ + n_, constantData_);
 }
 
 bool operator==(const Filter& a, const Filter& b) {
     if (a.size() != b.size())
         return false;
-    for (Size j = 0; j < a.size(); ++j)
-        if (a[j] != b[j])
-            return false;
+    if (a.deterministic_ && b.deterministic_) {
+        return a.constantData_ == b.constantData_;
+    } else {
+        for (Size j = 0; j < a.size(); ++j)
+            if (a[j] != b[j])
+                return false;
+    }
     return true;
 }
 
@@ -103,20 +175,20 @@ bool operator!=(const Filter& a, const Filter& b) { return !(a == b); }
 Filter operator&&(Filter x, const Filter& y) {
     QL_REQUIRE(!x.initialised() || !y.initialised() || x.size() == y.size(),
                "RandomVariable: x && y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
-    if (x.deterministic() && !x.data_.front())
+    if (x.deterministic() && x.constantData_ == 0)
         return Filter(x.size(), false);
-    if (y.deterministic() && !y.data_.front())
+    if (y.deterministic() && y.constantData_ == 0)
         return Filter(y.size(), false);
     if (!x.initialised() || !y.initialised())
         return Filter();
     if (!y.deterministic_)
         x.expand();
-    else if (y.data_.front())
-        return x;
-    else
-        return Filter(x.size(), false);
-    for (Size i = 0; i < x.data_.size(); ++i) {
-        x.data_[i] = x.data_[i] && y[i];
+    if (x.deterministic_) {
+        x.constantData_ = x.constantData_ && y.constantData_;
+    } else {
+        for (Size i = 0; i < x.size(); ++i) {
+            x.data_[i] = x.data_[i] && y[i];
+        }
     }
     return x;
 }
@@ -124,20 +196,20 @@ Filter operator&&(Filter x, const Filter& y) {
 Filter operator||(Filter x, const Filter& y) {
     QL_REQUIRE(!x.initialised() || !y.initialised() || x.size() == y.size(),
                "RandomVariable: x || y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
-    if (x.deterministic() && x.data_.front())
+    if (x.deterministic() && x.constantData_)
         return Filter(x.size(), true);
-    if (y.deterministic() && y.data_.front())
+    if (y.deterministic() && y.constantData_)
         return Filter(y.size(), true);
     if (!x.initialised() || !y.initialised())
         return Filter();
     if (!y.deterministic_)
         x.expand();
-    else if (!y.data_.front())
-        return x;
-    else
-        return Filter(x.size(), true);
-    for (Size i = 0; i < x.data_.size(); ++i) {
-        x.data_[i] = x.data_[i] || y[i];
+    if (x.deterministic_) {
+        x.constantData_ = x.constantData_ || y.constantData_;
+    } else {
+        for (Size i = 0; i < x.size(); ++i) {
+            x.data_[i] = x.data_[i] || y[i];
+        }
     }
     return x;
 }
@@ -149,23 +221,28 @@ Filter equal(Filter x, const Filter& y) {
                "RandomVariable: equal(x,y): x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
     if (!y.deterministic_)
         x.expand();
-    for (Size i = 0; i < x.data_.size(); ++i) {
-        x.data_[i] = x.data_[i] == y[i];
+    if (x.deterministic_) {
+        x.constantData_ = x.constantData_ == y.constantData_;
+    } else {
+        for (Size i = 0; i < x.size(); ++i) {
+            x.data_[i] = x.data_[i] == y[i];
+        }
     }
     return x;
 }
 
 Filter operator!(Filter x) {
-    for (Size i = 0; i < x.data_.size(); ++i) {
-        x.data_[i] = !x.data_[i];
+    if (x.deterministic_)
+        x.constantData_ = !x.constantData_;
+    else {
+        for (Size i = 0; i < x.size(); ++i) {
+            x.data_[i] = !x.data_[i];
+        }
     }
     return x;
 }
 
 RandomVariable::~RandomVariable() { clear(); }
-
-RandomVariable::RandomVariable(const Size n, const Real value, const Real time)
-    : n_(n), constantData_(value), data_(nullptr), deterministic_(true), time_(time) {}
 
 RandomVariable::RandomVariable() : n_(0), data_(nullptr), deterministic_(false), time_(Null<Real>()) {}
 
@@ -194,9 +271,10 @@ RandomVariable::RandomVariable(RandomVariable&& r) {
 RandomVariable& RandomVariable::operator=(const RandomVariable& r) {
     if (r.deterministic_) {
         deterministic_ = true;
-        if (data_)
+        if (data_) {
             delete[] data_;
-        data_ = nullptr;
+            data_ = nullptr;
+        }
     } else {
         deterministic_ = false;
         if (r.n_ != 0) {
@@ -207,9 +285,10 @@ RandomVariable& RandomVariable::operator=(const RandomVariable& r) {
             }
             std::memcpy(r.data_, data_, r.n_ * sizeof(double));
         } else {
-            if (data_)
+            if (data_) {
                 delete[] data_;
-            data_ = nullptr;
+                data_ = nullptr;
+            }
         }
     }
     n_ = r.n_;
@@ -223,7 +302,6 @@ RandomVariable& RandomVariable::operator=(RandomVariable&& r) {
     constantData_ = r.constantData_;
     if (data_) {
         delete[] data_;
-        data_ = nullptr;
     }
     data_ = r.data_;
     r.data_ = nullptr;
@@ -231,6 +309,9 @@ RandomVariable& RandomVariable::operator=(RandomVariable&& r) {
     time_ = r.time_;
     return *this;
 }
+
+RandomVariable::RandomVariable(const Size n, const Real value, const Real time)
+    : n_(n), constantData_(value), data_(nullptr), deterministic_(true), time_(time) {}
 
 RandomVariable::RandomVariable(const Filter& f, const Real valueTrue, const Real valueFalse, const Real time) {
     if (!f.initialised()) {
