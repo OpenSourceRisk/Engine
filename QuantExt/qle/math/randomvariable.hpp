@@ -68,6 +68,7 @@ private:
 };
 
 bool operator==(const Filter& a, const Filter& b);
+bool operator!=(const Filter& a, const Filter& b);
 
 Filter operator&&(Filter, const Filter&);
 Filter operator||(Filter, const Filter&);
@@ -107,6 +108,7 @@ struct RandomVariable {
     RandomVariable& operator-=(const RandomVariable&);
     RandomVariable& operator*=(const RandomVariable&);
     RandomVariable& operator/=(const RandomVariable&);
+    friend bool operator==(const RandomVariable&, const RandomVariable&);
     friend RandomVariable operator+(RandomVariable, const RandomVariable&);
     friend RandomVariable operator-(RandomVariable, const RandomVariable&);
     friend RandomVariable operator*(RandomVariable, const RandomVariable&);
@@ -149,6 +151,7 @@ private:
 };
 
 bool operator==(const RandomVariable& a, const RandomVariable& b);
+bool operator!=(const RandomVariable& a, const RandomVariable& b);
 
 RandomVariable operator+(RandomVariable, const RandomVariable&);
 RandomVariable operator-(RandomVariable, const RandomVariable&);
