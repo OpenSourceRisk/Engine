@@ -90,6 +90,8 @@ bool operator==(const Filter& a, const Filter& b) {
     return true;
 }
 
+bool operator!=(const Filter& a, const Filter& b) { return !(a == b); }
+
 Filter operator&&(Filter x, const Filter& y) {
     QL_REQUIRE(!x.initialised() || !y.initialised() || x.size() == y.size(),
                "RandomVariable: x && y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
@@ -278,11 +280,17 @@ void checkTimeConsistency(const RandomVariable& x, const RandomVariable& y) {
 bool operator==(const RandomVariable& a, const RandomVariable& b) {
     if (a.size() != b.size())
         return false;
-    for (Size j = 0; j < a.size(); ++j)
-        if (a[j] != b[j])
-            return false;
+    if (a.deterministic_ && b.deterministic_) {
+        return a.data_.front() == b.data_.front();
+    } else {
+        for (Size j = 0; j < a.size(); ++j)
+            if (a[j] != b[j])
+                return false;
+    }
     return QuantLib::close_enough(a.time(), b.time());
 }
+
+bool operator!=(const RandomVariable& a, const RandomVariable b) { return !(a == b); }
 
 RandomVariable& RandomVariable::operator+=(const RandomVariable& y) {
     if (!y.initialised())
