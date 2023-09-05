@@ -1316,8 +1316,6 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         if (tmp != "")
             inputs->setScenarioOutputZeroRate(parseBool(tmp));
 
-        inputs->setSimulationPricingEngine(inputs->pricingEngine());
-
         tmp = params_->get("scenarioStatistics", "simulationConfigFile", false);
         if (tmp != "") {
             string simulationConfigFile = inputPath + "/" + tmp;
@@ -1331,15 +1329,6 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
                                 << ", closeOutDates=" << grid->closeOutDates().size());
         } else {
             ALOG("Simulation market, model and scenario generator data not loaded");
-        }
-
-        tmp = params_->get("scenarioStatistics", "pricingEnginesFile", false);
-        if (tmp != "") {
-            string pricingEnginesFile = inputPath + "/" + tmp;
-            LOG("Load simulation pricing engine data from file: " << pricingEnginesFile);
-            inputs->setSimulationPricingEngineFromFile(pricingEnginesFile);
-        } else {
-            WLOG("Simulation pricing engine data not found, using standard pricing engines");
         }
 
         tmp = params_->get("scenarioStatistics", "scenariodump", false);
