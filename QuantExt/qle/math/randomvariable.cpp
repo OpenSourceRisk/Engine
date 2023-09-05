@@ -37,7 +37,7 @@ Filter::Filter(const Filter& r) {
     constantData_ = r.constantData_;
     if (r.data_) {
         data_ = new bool[n_];
-        std::memcpy(r.data_, data_, n_ * sizeof(bool));
+        std::copy(r.data_, r.data_ + n_, data_);
     } else {
         data_ = nullptr;
     }
@@ -67,7 +67,7 @@ Filter& Filter::operator=(const Filter& r) {
                     delete[] data_;
                 data_ = new bool[r.n_];
             }
-            std::memcpy(r.data_, data_, r.n_ * sizeof(bool));
+            std::copy(r.data_, r.data_ + n_, data_);
         } else {
             if (data_) {
                 delete[] data_;
@@ -96,6 +96,7 @@ Filter::Filter(const Size n, const bool value) : n_(n), constantData_(value), da
 
 void Filter::clear() {
     n_ = 0;
+    constantData_ = false;
     if (data_) {
         delete[] data_;
         data_ = nullptr;
@@ -106,7 +107,7 @@ void Filter::clear() {
 void Filter::updateDeterministic() {
     if (deterministic_ || !initialised())
         return;
-    for (Size i = 1; i < n_; ++i) {
+    for (Size i = 0; i < n_; ++i) {
         if (data_[i] != constantData_)
             return;
     }
@@ -136,7 +137,7 @@ void Filter::setAll(const bool v) {
 
 bool Filter::operator[](const Size i) const {
     if (deterministic_)
-        return constantData_ != 0;
+        return constantData_;
     else
         return data_[i];
 }
@@ -144,7 +145,7 @@ bool Filter::operator[](const Size i) const {
 bool Filter::at(const Size i) const {
     QL_REQUIRE(n_ > 0, "Filter::at(" << i << "): dimension is zero");
     if (deterministic_)
-        return constantData_ != 0;
+        return constantData_;
     QL_REQUIRE(i < n_, "Filter::at(" << i << "): out of bounds, size is " << n_);
     return operator[](i);
 }
@@ -175,9 +176,9 @@ bool operator!=(const Filter& a, const Filter& b) { return !(a == b); }
 Filter operator&&(Filter x, const Filter& y) {
     QL_REQUIRE(!x.initialised() || !y.initialised() || x.size() == y.size(),
                "RandomVariable: x && y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
-    if (x.deterministic() && x.constantData_ == 0)
+    if (x.deterministic() && !x.constantData_)
         return Filter(x.size(), false);
-    if (y.deterministic() && y.constantData_ == 0)
+    if (y.deterministic() && !y.constantData_)
         return Filter(y.size(), false);
     if (!x.initialised() || !y.initialised())
         return Filter();
@@ -252,7 +253,7 @@ RandomVariable::RandomVariable(const RandomVariable& r) {
     constantData_ = r.constantData_;
     if (r.data_) {
         data_ = new double[n_];
-        std::memcpy(r.data_, data_, n_ * sizeof(double));
+        std::copy(r.data_, r.data_ + n_, data_);
     } else {
         data_ = nullptr;
     }
@@ -284,7 +285,7 @@ RandomVariable& RandomVariable::operator=(const RandomVariable& r) {
                     delete[] data_;
                 data_ = new double[r.n_];
             }
-            std::memcpy(r.data_, data_, r.n_ * sizeof(double));
+            std::copy(r.data_, r.data_ + n_, data_);
         } else {
             if (data_) {
                 delete[] data_;
@@ -323,6 +324,7 @@ RandomVariable::RandomVariable(const Filter& f, const Real valueTrue, const Real
     if (f.deterministic())
         setAll(f.at(0) ? valueTrue : valueFalse);
     else {
+        constantData_ = 0.0;
         deterministic_ = false;
         data_ = new double[n_];
         for (Size i = 0; i < n_; ++i)
@@ -337,8 +339,9 @@ RandomVariable::RandomVariable(const QuantLib::Array& array, const Real time) {
     time_ = time;
     if (n_ != 0) {
         data_ = new double[n_];
-        std::memcpy((void*)array.begin(), data_, n_ * sizeof(double));
+        std::copy(array.begin(), array.end(), data_);
     }
+    constantData_ = 0.0;
 }
 
 void RandomVariable::copyToMatrixCol(QuantLib::Matrix& m, const Size j) const {
@@ -353,12 +356,13 @@ void RandomVariable::copyToArray(QuantLib::Array& array) const {
     if (deterministic_)
         std::fill(array.begin(), array.end(), constantData_);
     else if (n_ != 0) {
-        std::memcpy(data_, array.begin(), n_ * sizeof(double));
+        std::copy(data_, data_ + n_, array.begin());
     }
 }
 
 void RandomVariable::clear() {
     n_ = 0;
+    constantData_ = 0.0;
     if (data_) {
         delete[] data_;
         data_ = nullptr;
@@ -370,7 +374,7 @@ void RandomVariable::clear() {
 void RandomVariable::updateDeterministic() {
     if (deterministic_ || !initialised())
         return;
-    for (Size i = 1; i < n_; ++i) {
+    for (Size i = 0; i < n_; ++i) {
         if (!QuantLib::close_enough(data_[i], constantData_))
             return;
     }
@@ -463,10 +467,11 @@ RandomVariable& RandomVariable::operator+=(const RandomVariable& y) {
         return *this;
     if (deterministic_)
         constantData_ += y.constantData_;
-    else
+    else {
         for (Size i = 0; i < n_; ++i) {
             data_[i] += y[i];
         }
+    }
     return *this;
 }
 
@@ -484,10 +489,11 @@ RandomVariable& RandomVariable::operator-=(const RandomVariable& y) {
         return *this;
     if (deterministic_)
         constantData_ -= y.constantData_;
-    else
+    else {
         for (Size i = 0; i < n_; ++i) {
             data_[i] -= y[i];
         }
+    }
     return *this;
 }
 
@@ -505,10 +511,11 @@ RandomVariable& RandomVariable::operator*=(const RandomVariable& y) {
         return *this;
     if (deterministic_)
         constantData_ *= y.constantData_;
-    else
+    else {
         for (Size i = 0; i < n_; ++i) {
             data_[i] *= y[i];
         }
+    }
     return *this;
 }
 
@@ -526,10 +533,11 @@ RandomVariable& RandomVariable::operator/=(const RandomVariable& y) {
         return *this;
     if (deterministic_)
         constantData_ /= y.constantData_;
-    else
+    else {
         for (Size i = 0; i < n_; ++i) {
             data_[i] /= y[i];
         }
+    }
     return *this;
 }
 
@@ -571,10 +579,11 @@ RandomVariable max(RandomVariable x, const RandomVariable& y) {
         x.expand();
     if (x.deterministic())
         x.constantData_ = std::max(x.constantData_, y.constantData_);
-    else
+    else {
         for (Size i = 0; i < x.size(); ++i) {
             x.data_[i] = std::max(x.data_[i], y[i]);
         }
+    }
     return x;
 }
 
@@ -588,10 +597,11 @@ RandomVariable min(RandomVariable x, const RandomVariable& y) {
         x.expand();
     if (x.deterministic())
         x.constantData_ = std::min(x.constantData_, y.constantData_);
-    else
+    else {
         for (Size i = 0; i < x.size(); ++i) {
             x.data_[i] = std::min(x.data_[i], y[i]);
         }
+    }
     return x;
 }
 
@@ -607,40 +617,44 @@ RandomVariable pow(RandomVariable x, const RandomVariable& y) {
         return x;
     if (x.deterministic())
         x.constantData_ = std::pow(x.constantData_, y.constantData_);
-    else
+    else {
         for (Size i = 0; i < x.size(); ++i) {
             x.data_[i] = std::pow(x.data_[i], y[i]);
         }
+    }
     return x;
 }
 
 RandomVariable operator-(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = -x.constantData_;
-    else
+    else {
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = -x.data_[i];
         }
+    }
     return x;
 }
 
 RandomVariable abs(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = std::abs(x.constantData_);
-    else
+    else {
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = std::abs(x.data_[i]);
         }
+    }
     return x;
 }
 
 RandomVariable exp(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = std::exp(x.constantData_);
-    else
+    else {
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = std::exp(x.data_[i]);
         }
+    }
     return x;
 }
 
@@ -657,30 +671,33 @@ RandomVariable log(RandomVariable x) {
 RandomVariable sqrt(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = std::sqrt(x.constantData_);
-    else
+    else {
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = std::sqrt(x.data_[i]);
         }
+    }
     return x;
 }
 
 RandomVariable sin(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = std::sin(x.constantData_);
-    else
+    else {
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = std::sin(x.data_[i]);
         }
+    }
     return x;
 }
 
 RandomVariable cos(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = std::cos(x.constantData_);
-    else
+    else {
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = std::cos(x.data_[i]);
         }
+    }
     return x;
 }
 
@@ -688,10 +705,11 @@ RandomVariable normalCdf(RandomVariable x) {
     static const boost::math::normal_distribution<double> n;
     if (x.deterministic_)
         x.constantData_ = boost::math::cdf(n, x.constantData_);
-    else
+    else {
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = boost::math::cdf(n, x.data_[i]);
         }
+    }
     return x;
 }
 
@@ -699,10 +717,11 @@ RandomVariable normalPdf(RandomVariable x) {
     static const boost::math::normal_distribution<double> n;
     if (x.deterministic_)
         x.constantData_ = boost::math::pdf(n, x.constantData_);
-    else
+    else {
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = boost::math::pdf(n, x.data_[i]);
         }
+    }
     return x;
 }
 
@@ -762,8 +781,12 @@ RandomVariable indicatorEq(RandomVariable x, const RandomVariable& y, const Real
     x.checkTimeConsistencyAndUpdate(y.time());
     if (!y.deterministic_)
         x.expand();
-    for (Size i = 0; i < x.n_; ++i) {
-        x.data_[i] = QuantLib::close_enough(x.data_[i], y[i]) ? trueVal : falseVal;
+    if (x.deterministic()) {
+        x.constantData_ = QuantLib::close_enough(x.constantData_, y.constantData_) ? trueVal : falseVal;
+    } else {
+        for (Size i = 0; i < x.n_; ++i) {
+            x.data_[i] = QuantLib::close_enough(x.data_[i], y[i]) ? trueVal : falseVal;
+        }
     }
     return x;
 }
@@ -776,14 +799,15 @@ RandomVariable indicatorGt(RandomVariable x, const RandomVariable& y, const Real
     x.checkTimeConsistencyAndUpdate(y.time());
     if (!y.deterministic_)
         x.expand();
-    if (x.deterministic())
+    if (x.deterministic()) {
         x.constantData_ =
             (x.constantData_ > y.constantData_ && !QuantLib::close_enough(x.constantData_, y.constantData_)) ? trueVal
                                                                                                              : falseVal;
-    else
+    } else {
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = (x.data_[i] > y[i] && !QuantLib::close_enough(x.data_[i], y[i])) ? trueVal : falseVal;
         }
+    }
     return x;
 }
 
@@ -795,14 +819,15 @@ RandomVariable indicatorGeq(RandomVariable x, const RandomVariable& y, const Rea
     x.checkTimeConsistencyAndUpdate(y.time());
     if (!y.deterministic_)
         x.expand();
-    if (x.deterministic())
+    if (x.deterministic()) {
         x.constantData_ =
             (x.constantData_ > y.constantData_ || QuantLib::close_enough(x.constantData_, y.constantData_)) ? trueVal
                                                                                                             : falseVal;
-    else
+    } else {
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = (x.data_[i] > y[i] || QuantLib::close_enough(x.data_[i], y[i])) ? trueVal : falseVal;
         }
+    }
     return x;
 }
 
