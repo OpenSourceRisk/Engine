@@ -8,4 +8,6 @@ services:
       dockerfile: Docker/Dockerfile-QuantLib
       args:
         - boost_version=${BOOST_TAG}
+        - boost_variant=${BOOST_VARIANT}
+        - cmake_build_type=${CMAKE_BUILD_TYPE}
         - num_cores=${NUM_CORES}
