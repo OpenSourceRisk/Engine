@@ -36,43 +36,25 @@ public:
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 
-    void checkConfigurations(const boost::shared_ptr<Portfolio>& portfolio);
-
     boost::shared_ptr<ScenarioGenerator> scenarioGenerator() { return scenarioGenerator_; }
     
 protected:
-    boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;
     void buildScenarioSimMarket();
     void buildCrossAssetModel(bool continueOnError);
     void buildScenarioGenerator(bool continueOnError);
 
-    void initCubeDepth();
-    void initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth);    
-
-    void initRun(const boost::shared_ptr<Portfolio>& portfolio);
-    void buildCube(const boost::shared_ptr<Portfolio>& portfolio);
-
     boost::shared_ptr<ScenarioSimMarket> simMarket_;
-    boost::shared_ptr<EngineFactory> engineFactory_;
     boost::shared_ptr<CrossAssetModel> model_;
     boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
-    boost::shared_ptr<Portfolio> portfolio_;
-    boost::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_;
-    QuantLib::RelinkableHandle<AggregationScenarioData> scenarioData_;
-    boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
     
-    Size cubeDepth_ = 0;
     boost::shared_ptr<DateGrid> grid_;
     Size samples_ = 0;
-
-    bool runSimulation_ = false;
-    bool runXva_ = false;
 };
 
 class ScenarioAnalytic : public Analytic {
 public:
     ScenarioAnalytic(const boost::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<ScenarioAnalyticImpl>(inputs), {"SCENARIO_STATISTICS"}, inputs, false, false, false, false) {}
+        : Analytic(std::make_unique<ScenarioAnalyticImpl>(inputs), {"SCENARIO_STATISTICS"}, inputs, true, false, true, true) {}
 };
 
 } // namespace analytics

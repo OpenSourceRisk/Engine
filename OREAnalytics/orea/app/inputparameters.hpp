@@ -555,7 +555,7 @@ public:
 
     // Getters for ScenarioStatistics
     const Size& scenarioDistributionSteps() { return scenarioDistributionSteps_; }
-    const bool& scenrioOutputZeroRate() { return scenarioOutputZeroRate_; }
+    const bool& scenarioOutputZeroRate() { return scenarioOutputZeroRate_; }
 
     /*************************************
      * List of analytics that shall be run
