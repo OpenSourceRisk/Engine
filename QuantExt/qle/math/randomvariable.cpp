@@ -37,7 +37,7 @@ Filter::Filter(const Filter& r) {
     constantData_ = r.constantData_;
     if (r.data_) {
         data_ = new bool[n_];
-        std::copy(r.data_, r.data_ + n_, data_);
+        std::memcpy(data_, r.data_, n_ * sizeof(bool));
     } else {
         data_ = nullptr;
     }
@@ -67,7 +67,7 @@ Filter& Filter::operator=(const Filter& r) {
                     delete[] data_;
                 data_ = new bool[r.n_];
             }
-            std::copy(r.data_, r.data_ + n_, data_);
+            std::memcpy(data_, r.data_, n_ * sizeof(bool));
         } else {
             if (data_) {
                 delete[] data_;
@@ -253,7 +253,7 @@ RandomVariable::RandomVariable(const RandomVariable& r) {
     constantData_ = r.constantData_;
     if (r.data_) {
         data_ = new double[n_];
-        std::copy(r.data_, r.data_ + n_, data_);
+        std::memcpy(data_, r.data_, n_ * sizeof(double));
     } else {
         data_ = nullptr;
     }
@@ -285,7 +285,7 @@ RandomVariable& RandomVariable::operator=(const RandomVariable& r) {
                     delete[] data_;
                 data_ = new double[r.n_];
             }
-            std::copy(r.data_, r.data_ + n_, data_);
+            std::memcpy(data_, r.data_, n_ * sizeof(double));
         } else {
             if (data_) {
                 delete[] data_;
@@ -339,7 +339,7 @@ RandomVariable::RandomVariable(const QuantLib::Array& array, const Real time) {
     time_ = time;
     if (n_ != 0) {
         data_ = new double[n_];
-        std::copy(array.begin(), array.end(), data_);
+        std::memcpy(data_, array.begin(), n_ * sizeof(double));
     }
     constantData_ = 0.0;
 }
@@ -356,7 +356,7 @@ void RandomVariable::copyToArray(QuantLib::Array& array) const {
     if (deterministic_)
         std::fill(array.begin(), array.end(), constantData_);
     else if (n_ != 0) {
-        std::copy(data_, data_ + n_, array.begin());
+        std::memcpy(array.begin(), data_, n_ * sizeof(double));
     }
 }
 
