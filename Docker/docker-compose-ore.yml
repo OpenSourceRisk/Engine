@@ -10,4 +10,5 @@ services:
       dockerfile: Docker/Dockerfile-ORE
       args:
         - quantlib_version=${QL_TAG}
+        - cmake_build_type=${CMAKE_BUILD_TYPE}
         - num_cores=${NUM_CORES}
