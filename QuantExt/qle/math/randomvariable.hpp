@@ -55,8 +55,8 @@ struct Filter {
 
     bool initialised() const { return n_ != 0; }
     Size size() const { return n_; }
-    bool operator[](const Size i) const; // no bound check
-    bool at(const Size i) const;         // with bound check
+    bool operator[](const Size i) const; // undefined if uninitialized or i out of bounds
+    bool at(const Size i) const;         // with checks for initialized, i within bounds
     //
     friend Filter operator&&(Filter, const Filter&);
     friend Filter operator||(Filter, const Filter&);
@@ -68,6 +68,7 @@ struct Filter {
     void expand();
 
 private:
+    // for invariants see the corresponding section below in class RandomVariable
     Size n_;
     bool constantData_;
     bool* data_;
@@ -113,8 +114,8 @@ struct RandomVariable {
     void updateDeterministic();
     bool initialised() const { return n_ != 0; }
     Size size() const { return n_; }
-    Real operator[](const Size i) const; // no bound check
-    Real at(const Size i) const;         // with bound check
+    Real operator[](const Size i) const; // undefined if uninitialized or i out of bounds
+    Real at(const Size i) const;         // with checks for initialized, i within bounds
     Real time() const { return time_; }
     RandomVariable& operator+=(const RandomVariable&);
     RandomVariable& operator-=(const RandomVariable&);
@@ -156,6 +157,21 @@ struct RandomVariable {
 
 private:
     void checkTimeConsistencyAndUpdate(const Real t);
+    /* Invariants that hold at all times for instances of this class:
+
+       n_ = 0 means uninitialized, n_ > 0 means initialized.
+
+       For an uninitialized instance:
+       - constantData_ = 0.0, data_ = nullptr, deterministic_ = false, time_ = Null<Real>()
+
+       For an initialized instance:
+       - if deterministic = true a constant value is represented with
+         - constantData_ the constant value
+         - data_ = nullptr
+       - if deterministic = false a possibly non-constant value is represented with
+         - constantData_ initialized with last constant value that was set
+         - data_ an array of size n_
+    */
     Size n_;
     double constantData_;
     double* data_;
