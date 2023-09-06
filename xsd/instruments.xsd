@@ -949,12 +949,21 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="commoditySpreadOptionStripPaymentData">
+    <xs:all>
+      <xs:element type="scheduleData" name="OptionStripDefinition"/>
+      <xs:element type="xs:integer" name="PaymentLag"/>
+      <xs:element type="businessDayConvention" name="PaymentConvention"/>
+      <xs:element type="calendar" name="PaymentCalendar"/>
+    </xs:all> 
+  </xs:complexType>
+
   <xs:complexType name="commoditySpreadOptionData">
     <xs:sequence>
       <xs:element type="legData" name="LegData" minOccurs="2" maxOccurs="2"/>
       <xs:element type="optionData" name="OptionData" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:double" name="SpreadStrike" minOccurs="1" maxOccurs="1"/>
-      
+      <xs:element type="commoditySpreadOptionStripPaymentData" name="OptionStripPaymentDates" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>  
   </xs:complexType>
 

@@ -26,9 +26,11 @@ calendars/unitedarabemirates.cpp
 calendars/wmr.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
+cashflows/blackaveragebmacouponpricer.cpp
 cashflows/blackovernightindexedcouponpricer.cpp
 cashflows/bondtrscashflow.cpp
 cashflows/brlcdicouponpricer.cpp
+cashflows/cappedflooredaveragebmacoupon.cpp
 cashflows/cashflows.cpp
 cashflows/cashflowtable.cpp
 cashflows/cmbcoupon.cpp
@@ -48,6 +50,7 @@ cashflows/fixedratefxlinkednotionalcoupon.cpp
 cashflows/floatingannuitycoupon.cpp
 cashflows/floatingannuitynominal.cpp
 cashflows/fxlinkedcashflow.cpp
+cashflows/iborfracoupon.cpp
 cashflows/indexedcoupon.cpp
 cashflows/jyyoyinflationcouponpricer.cpp
 cashflows/lognormalcmsspreadpricer.cpp
@@ -150,6 +153,7 @@ math/matrixfunctions.cpp
 math/openclenvironment.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
+math/randomvariablelsmbasissystem.cpp
 methods/brownianbridgepathinterpolator.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
@@ -264,7 +268,6 @@ pricingengines/lgmconvolutionsolver.cpp
 pricingengines/mccamcurrencyswapengine.cpp
 pricingengines/mccamfxforwardengine.cpp
 pricingengines/mccamfxoptionengine.cpp
-pricingengines/mclgmfraengine.cpp
 pricingengines/mclgmswapengine.cpp
 pricingengines/mclgmswaptionengine.cpp
 pricingengines/mcmultilegbaseengine.cpp
@@ -404,9 +407,11 @@ calendars/unitedarabemirates.hpp
 calendars/wmr.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
+cashflows/blackaveragebmacouponpricer.hpp
 cashflows/blackovernightindexedcouponpricer.hpp
 cashflows/bondtrscashflow.hpp
 cashflows/brlcdicouponpricer.hpp
+cashflows/cappedflooredaveragebmacoupon.hpp
 cashflows/cashflows.hpp
 cashflows/cashflowtable.hpp
 cashflows/cmbcoupon.hpp
@@ -427,6 +432,7 @@ cashflows/floatingannuitycoupon.hpp
 cashflows/floatingannuitynominal.hpp
 cashflows/floatingratefxlinkednotionalcoupon.hpp
 cashflows/fxlinkedcashflow.hpp
+cashflows/iborfracoupon.hpp
 cashflows/indexedcoupon.hpp
 cashflows/jyyoyinflationcouponpricer.hpp
 cashflows/lognormalcmsspreadpricer.hpp
@@ -604,6 +610,7 @@ math/quadraticinterpolation.hpp
 math/randomvariable.hpp
 math/randomvariable_io.hpp
 math/randomvariable_opcodes.hpp
+math/randomvariablelsmbasissystem.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
 methods/brownianbridgepathinterpolator.hpp
@@ -754,7 +761,6 @@ pricingengines/lgmconvolutionsolver.hpp
 pricingengines/mccamcurrencyswapengine.hpp
 pricingengines/mccamfxforwardengine.hpp
 pricingengines/mccamfxoptionengine.hpp
-pricingengines/mclgmfraengine.hpp
 pricingengines/mclgmswapengine.hpp
 pricingengines/mclgmswaptionengine.hpp
 pricingengines/mcmultilegbaseengine.hpp

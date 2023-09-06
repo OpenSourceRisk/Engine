@@ -115,6 +115,7 @@ portfolio/builders/bondoption.cpp
 portfolio/builders/bondrepo.cpp
 portfolio/builders/bondtotalreturnswap.cpp
 portfolio/builders/capfloor.cpp
+portfolio/builders/capflooredaveragebmacouponleg.cpp
 portfolio/builders/capflooredaverageonindexedcouponleg.cpp
 portfolio/builders/capflooredcpileg.cpp
 portfolio/builders/capfloorediborleg.cpp
@@ -151,7 +152,6 @@ portfolio/builders/equityfuturesoption.cpp
 portfolio/builders/equityoption.cpp
 portfolio/builders/equitytouchoption.cpp
 portfolio/builders/forwardbond.cpp
-portfolio/builders/forwardrateagreement.cpp
 portfolio/builders/fxasianoption.cpp
 portfolio/builders/fxbarrieroption.cpp
 portfolio/builders/fxdigitalbarrieroption.cpp
@@ -422,6 +422,7 @@ portfolio/builders/bondrepo.hpp
 portfolio/builders/bondtotalreturnswap.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
+portfolio/builders/capflooredaveragebmacouponleg.hpp
 portfolio/builders/capflooredaverageonindexedcouponleg.hpp
 portfolio/builders/capflooredcpileg.hpp
 portfolio/builders/capfloorediborleg.hpp
@@ -459,7 +460,6 @@ portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
 portfolio/builders/equitytouchoption.hpp
 portfolio/builders/forwardbond.hpp
-portfolio/builders/forwardrateagreement.hpp
 portfolio/builders/fxasianoption.hpp
 portfolio/builders/fxbarrieroption.hpp
 portfolio/builders/fxdigitalbarrieroption.hpp

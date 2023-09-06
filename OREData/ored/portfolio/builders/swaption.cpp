@@ -51,8 +51,7 @@ boost::shared_ptr<PricingEngine> buildMcEngine(const std::function<string(string
         parsePolynomType(engineParameters("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameters("BrownianBridgeOrdering")),
         parseSobolRsgDirectionIntegers(engineParameters("SobolDirectionIntegers")), discountCurve, simulationDates,
-        externalModelIndices, parseBool(engineParameters("MinObsDate")),
-        parseBool(engineParameters("RegressionOnExerciseOnly")));
+        externalModelIndices, parseBool(engineParameters("MinObsDate")));
 }
 } // namespace
 
@@ -183,9 +182,9 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
 
     // Build and calibrate model
     DLOG("Build LGM model");
-    boost::shared_ptr<LgmBuilder> calib =
-        boost::make_shared<LgmBuilder>(market_, data, configuration(MarketContext::irCalibration), tolerance,
-                                       continueOnCalibrationError, referenceCalibrationGrid, generateAdditionalResults);
+    boost::shared_ptr<LgmBuilder> calib = boost::make_shared<LgmBuilder>(
+        market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
+        referenceCalibrationGrid, generateAdditionalResults, id);
 
     // In some cases, we do not want to calibrate the model
     boost::shared_ptr<QuantExt::LGM> model;

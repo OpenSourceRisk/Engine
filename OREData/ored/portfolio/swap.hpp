@@ -38,6 +38,8 @@ public:
     //! Default constructor
     Swap(const string swapType = "Swap") : Trade(swapType) {}
 
+    Swap(const Envelope& env, const string swapType = "Swap") : Trade(swapType, env) {}
+
     //! Constructor with vector of LegData
     Swap(const Envelope& env, const vector<LegData>& legData, const string swapType = "Swap",
          const std::string settlement = "Physical")

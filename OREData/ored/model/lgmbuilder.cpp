@@ -164,10 +164,11 @@ namespace data {
 
 LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
                        const std::string& configuration, const Real bootstrapTolerance, const bool continueOnError,
-                       const std::string& referenceCalibrationGrid, const bool setCalibrationInfo)
+                       const std::string& referenceCalibrationGrid, const bool setCalibrationInfo,
+                       const std::string& id)
     : market_(market), configuration_(configuration), data_(data), bootstrapTolerance_(bootstrapTolerance),
       continueOnError_(continueOnError), referenceCalibrationGrid_(referenceCalibrationGrid),
-      setCalibrationInfo_(setCalibrationInfo),
+      setCalibrationInfo_(setCalibrationInfo), id_(id),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)),
       calibrationErrorType_(BlackCalibrationHelper::RelativePriceError) {
@@ -346,6 +347,10 @@ void LgmBuilder::performCalculations() const {
 
     LgmCalibrationInfo calibrationInfo;
     error_ = QL_MAX_REAL;
+    std::string errorTemplate =
+        std::string("Failed to calibrate LGM Model. ") +
+        (continueOnError_ ? std::string("Calculation will proceed anyway - using the calibration as is!")
+                          : std::string("Calculation will aborted."));
     try {
         if (data_->calibrateA() && !data_->calibrateH() && data_->calibrationType() == CalibrationType::Bootstrap) {
             DLOG("call calibrateVolatilitiesIterative for volatility calibration (bootstrap)");
@@ -373,7 +378,7 @@ void LgmBuilder::performCalculations() const {
         error_ = getCalibrationError(swaptionBasket_);
     } catch (const std::exception& e) {
         // just log a warning, we check below if we meet the bootstrap tolerance and handle the result there
-        WLOG(StructuredModelErrorMessage("Error during LGM calibration: ", e.what()));
+        WLOG(StructuredModelErrorMessage(errorTemplate, e.what(), id_));
     }
     calibrationInfo.rmse = error_;
     if (fabs(error_) < bootstrapTolerance_ ||
@@ -402,7 +407,7 @@ void LgmBuilder::performCalculations() const {
     } else {
         std::string exceptionMessage = "LGM (" + data_->qualifier() + ") calibration error " + std::to_string(error_) +
                                        " exceeds tolerance " + std::to_string(bootstrapTolerance_);
-        WLOG(StructuredModelErrorMessage("Failed to calibrate LGM Model", exceptionMessage));
+        WLOG(StructuredModelErrorMessage(errorTemplate, exceptionMessage, id_));
         WLOGGERSTREAM("Basket details:");
         try {
 	    auto d = getBasketDetails(calibrationInfo);

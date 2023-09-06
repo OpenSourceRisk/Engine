@@ -17,6 +17,7 @@
 */
 
 #include <orea/aggregation/xvacalculator.hpp>
+#include <orea/app/structuredanalyticserror.hpp>
 
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/log.hpp>
@@ -280,157 +281,169 @@ void ValueAdjustmentCalculator::build() {
 
     string origDvaName = dvaName_;
     // Trade XVA
-    for (const auto& [tid, trade]:  portfolio_->trades()) {
-        LOG("Update XVA for trade " << tid << (flipViewXVA_ ? ", inverted (flipViewXVA = Y)" : ", regular (flipViewXVA = N)"));
-        string cid; 
-        if (flipViewXVA_) {
-            cid = origDvaName;
-            dvaName_ = trade->envelope().counterparty();
-            fvaBorrowingCurve_ = dvaName_ + flipViewBorrowingCurvePostfix_;
-            fvaLendingCurve_ = dvaName_ + flipViewLendingCurvePostfix_;
-        } else {
-            cid = trade->envelope().counterparty();
-        }
-        if (fvaBorrowingCurve_ != "")
-            borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
-        if (fvaLendingCurve_ != "")
-            lendingCurve = market_->yieldCurve(fvaLendingCurve_, configuration_);
-
-        if (!borrowingCurve.empty() || !lendingCurve.empty()) {
-            QL_REQUIRE(baseCurrency_ != "", "baseCurrency required for FVA calculation");
-        }
-        string nid = trade->envelope().nettingSetId();
-        Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
-        Real dvaRR = 0.0;
-        if (dvaName_ != "")
-            dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
-
-        tradeCva_[tid] = 0.0;
-        tradeDva_[tid] = 0.0;
-        tradeFca_[tid] = 0.0;
-        tradeFca_exOwnSp_[tid] = 0.0;
-        tradeFca_exAllSp_[tid] = 0.0;
-        tradeFba_[tid] = 0.0;
-        tradeFba_exOwnSp_[tid] = 0.0;
-        tradeFba_exAllSp_[tid] = 0.0;
-        tradeMva_[tid] = 0.0;
-        for (Size j = 0; j < numDates; ++j) {
-
-            // CVA / DVA
-            Date d0 = j == 0 ? today : dates()[j - 1];
-            Date d1 = dates()[j];
-            Real cvaIncrement = calculateCvaIncrement(tid, cid, d0, d1, cvaRR);
-            Real dvaIncrement = dvaName_ != "" ? calculateDvaIncrement(tid, d0, d1, dvaRR) : 0;
-            tradeCva_[tid] += cvaIncrement;
-            tradeDva_[tid] += dvaIncrement;
-
-            // FCA
-            if (!borrowingCurve.empty()) {
-                Real dcf = borrowingCurve->discount(d0) / borrowingCurve->discount(d1) -
-                           oisCurve->discount(d0) / oisCurve->discount(d1);
-                Real fcaIncrement = calculateFcaIncrement(tid, cid, dvaName_, d0, d1, dcf);
-                Real fcaIncrement_exOwnSP = calculateFcaIncrement(tid, cid, "", d0, d1, dcf);
-                Real fcaIncrement_exAllSP = calculateFcaIncrement(tid, "", "", d0, d1, dcf);
-                tradeFca_[tid] += fcaIncrement;
-                tradeFca_exOwnSp_[tid] += fcaIncrement_exOwnSP;
-                tradeFca_exAllSp_[tid] += fcaIncrement_exAllSP;
-               
+    for (const auto& [tid, trade] : portfolio_->trades()) {
+        try {
+            LOG("Update XVA for trade " << tid
+                                        << (flipViewXVA_ ? ", inverted (flipViewXVA = Y)"
+                                                         : ", regular (flipViewXVA = N)"));
+            string cid;
+            if (flipViewXVA_) {
+                cid = origDvaName;
+                dvaName_ = trade->envelope().counterparty();
+                fvaBorrowingCurve_ = dvaName_ + flipViewBorrowingCurvePostfix_;
+                fvaLendingCurve_ = dvaName_ + flipViewLendingCurvePostfix_;
+            } else {
+                cid = trade->envelope().counterparty();
             }
+            if (fvaBorrowingCurve_ != "")
+                borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
+            if (fvaLendingCurve_ != "")
+                lendingCurve = market_->yieldCurve(fvaLendingCurve_, configuration_);
 
-            // FBA
-            if (!lendingCurve.empty()) {
-                Real dcf = lendingCurve->discount(d0) / lendingCurve->discount(d1) -
-                           oisCurve->discount(d0) / oisCurve->discount(d1);
-                Real fbaIncrement = calculateFbaIncrement(tid, cid, dvaName_, d0, d1, dcf);
-                Real fbaIncrement_exOwnSP = calculateFbaIncrement(tid, cid, "", d0, d1, dcf);
-                Real fbaIncrement_exAllSP = calculateFbaIncrement(tid, "", "", d0, d1, dcf);
-                tradeFba_[tid] += fbaIncrement;
-                tradeFba_exOwnSp_[tid] += fbaIncrement_exOwnSP;
-                tradeFba_exAllSp_[tid] += fbaIncrement_exAllSP;
+            if (!borrowingCurve.empty() || !lendingCurve.empty()) {
+                QL_REQUIRE(baseCurrency_ != "", "baseCurrency required for FVA calculation");
             }
+            string nid = trade->envelope().nettingSetId();
+            Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
+            Real dvaRR = 0.0;
+            if (dvaName_ != "")
+                dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+
+            tradeCva_[tid] = 0.0;
+            tradeDva_[tid] = 0.0;
+            tradeFca_[tid] = 0.0;
+            tradeFca_exOwnSp_[tid] = 0.0;
+            tradeFca_exAllSp_[tid] = 0.0;
+            tradeFba_[tid] = 0.0;
+            tradeFba_exOwnSp_[tid] = 0.0;
+            tradeFba_exAllSp_[tid] = 0.0;
+            tradeMva_[tid] = 0.0;
+            for (Size j = 0; j < numDates; ++j) {
+
+                // CVA / DVA
+                Date d0 = j == 0 ? today : dates()[j - 1];
+                Date d1 = dates()[j];
+                Real cvaIncrement = calculateCvaIncrement(tid, cid, d0, d1, cvaRR);
+                Real dvaIncrement = dvaName_ != "" ? calculateDvaIncrement(tid, d0, d1, dvaRR) : 0;
+                tradeCva_[tid] += cvaIncrement;
+                tradeDva_[tid] += dvaIncrement;
+
+                // FCA
+                if (!borrowingCurve.empty()) {
+                    Real dcf = borrowingCurve->discount(d0) / borrowingCurve->discount(d1) -
+                               oisCurve->discount(d0) / oisCurve->discount(d1);
+                    Real fcaIncrement = calculateFcaIncrement(tid, cid, dvaName_, d0, d1, dcf);
+                    Real fcaIncrement_exOwnSP = calculateFcaIncrement(tid, cid, "", d0, d1, dcf);
+                    Real fcaIncrement_exAllSP = calculateFcaIncrement(tid, "", "", d0, d1, dcf);
+                    tradeFca_[tid] += fcaIncrement;
+                    tradeFca_exOwnSp_[tid] += fcaIncrement_exOwnSP;
+                    tradeFca_exAllSp_[tid] += fcaIncrement_exAllSP;
+                }
+
+                // FBA
+                if (!lendingCurve.empty()) {
+                    Real dcf = lendingCurve->discount(d0) / lendingCurve->discount(d1) -
+                               oisCurve->discount(d0) / oisCurve->discount(d1);
+                    Real fbaIncrement = calculateFbaIncrement(tid, cid, dvaName_, d0, d1, dcf);
+                    Real fbaIncrement_exOwnSP = calculateFbaIncrement(tid, cid, "", d0, d1, dcf);
+                    Real fbaIncrement_exAllSP = calculateFbaIncrement(tid, "", "", d0, d1, dcf);
+                    tradeFba_[tid] += fbaIncrement;
+                    tradeFba_exOwnSp_[tid] += fbaIncrement_exOwnSP;
+                    tradeFba_exAllSp_[tid] += fbaIncrement_exAllSP;
+                }
+            }
+            if (nettingSetSumCva_.find(nid) == nettingSetSumCva_.end()) {
+                nettingSetSumCva_[nid] = 0.0;
+                nettingSetSumDva_[nid] = 0.0;
+            }
+            nettingSetSumCva_[nid] += tradeCva_[tid];
+            nettingSetSumDva_[nid] += tradeDva_[tid];
+        } catch (const std::exception& e) {
+            ALOG(StructuredAnalyticsErrorMessage("ValueAdjustmentCalculator", "Error processing trade.", e.what(),
+                                                 {{"tradeId", tid}}));
         }
-        if (nettingSetSumCva_.find(nid) == nettingSetSumCva_.end()) {
-            nettingSetSumCva_[nid] = 0.0;
-            nettingSetSumDva_[nid] = 0.0;
-        }
-        nettingSetSumCva_[nid] += tradeCva_[tid];
-        nettingSetSumDva_[nid] += tradeDva_[tid];
     }
 
     // Netting Set XVA
     for (const auto& pair : nettingSetCpty_) {
         string nid = pair.first;
-        LOG("Update XVA for netting set " << nid << (flipViewXVA_ ? ", inverted (flipViewXVA = Y)" : ", regular (flipViewXVA = N)"));
-        string cid;
-        if (flipViewXVA_) {
-            cid = origDvaName;
-            dvaName_ = pair.second;
-            fvaBorrowingCurve_ = dvaName_ + flipViewBorrowingCurvePostfix_;
-            fvaLendingCurve_ = dvaName_ + flipViewLendingCurvePostfix_;
-        } else {
-            cid = pair.second;
-        }
-        Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
-        Real dvaRR = 0.0;
-        if (dvaName_ != "") {
-            dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
-        }
-        if (fvaBorrowingCurve_ != "")
-            borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
-        if (fvaLendingCurve_ != "")
-            lendingCurve = market_->yieldCurve(fvaLendingCurve_, configuration_);
+        LOG("Update XVA for netting set "
+            << nid << (flipViewXVA_ ? ", inverted (flipViewXVA = Y)" : ", regular (flipViewXVA = N)"));
+        try {
+            string cid;
+            if (flipViewXVA_) {
+                cid = origDvaName;
+                dvaName_ = pair.second;
+                fvaBorrowingCurve_ = dvaName_ + flipViewBorrowingCurvePostfix_;
+                fvaLendingCurve_ = dvaName_ + flipViewLendingCurvePostfix_;
+            } else {
+                cid = pair.second;
+            }
+            Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
+            Real dvaRR = 0.0;
+            if (dvaName_ != "") {
+                dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+            }
+            if (fvaBorrowingCurve_ != "")
+                borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
+            if (fvaLendingCurve_ != "")
+                lendingCurve = market_->yieldCurve(fvaLendingCurve_, configuration_);
 
-        if (!borrowingCurve.empty() || !lendingCurve.empty()) {
-            QL_REQUIRE(baseCurrency_ != "", "baseCurrency required for FVA calculation");
-        }
+            if (!borrowingCurve.empty() || !lendingCurve.empty()) {
+                QL_REQUIRE(baseCurrency_ != "", "baseCurrency required for FVA calculation");
+            }
 
-        nettingSetCva_[nid] = 0.0;
-        nettingSetDva_[nid] = 0.0;
-        nettingSetFca_[nid] = 0.0;
-        nettingSetFca_exOwnSp_[nid] = 0.0;
-        nettingSetFca_exAllSp_[nid] = 0.0;
-        nettingSetFba_[nid] = 0.0;
-        nettingSetFba_exOwnSp_[nid] = 0.0;
-        nettingSetFba_exAllSp_[nid] = 0.0;
-        nettingSetMva_[nid] = 0.0;
-        for (Size j = 0; j < numDates; ++j) {
-            // CVA / DVA
-            Date d0 = j == 0 ? today : dates()[j - 1];
-            Date d1 = dates()[j];
-            Real cvaIncrement = calculateNettingSetCvaIncrement(nid, cid, d0, d1, cvaRR);
-            Real dvaIncrement = dvaName_ != "" ? calculateNettingSetDvaIncrement(nid, d0, d1, dvaRR) : 0;
-            nettingSetCva_[nid] += cvaIncrement;
-            nettingSetDva_[nid] += dvaIncrement;
+            nettingSetCva_[nid] = 0.0;
+            nettingSetDva_[nid] = 0.0;
+            nettingSetFca_[nid] = 0.0;
+            nettingSetFca_exOwnSp_[nid] = 0.0;
+            nettingSetFca_exAllSp_[nid] = 0.0;
+            nettingSetFba_[nid] = 0.0;
+            nettingSetFba_exOwnSp_[nid] = 0.0;
+            nettingSetFba_exAllSp_[nid] = 0.0;
+            nettingSetMva_[nid] = 0.0;
+            for (Size j = 0; j < numDates; ++j) {
+                // CVA / DVA
+                Date d0 = j == 0 ? today : dates()[j - 1];
+                Date d1 = dates()[j];
+                Real cvaIncrement = calculateNettingSetCvaIncrement(nid, cid, d0, d1, cvaRR);
+                Real dvaIncrement = dvaName_ != "" ? calculateNettingSetDvaIncrement(nid, d0, d1, dvaRR) : 0;
+                nettingSetCva_[nid] += cvaIncrement;
+                nettingSetDva_[nid] += dvaIncrement;
 
-            // FCA
-            if (!borrowingCurve.empty()) {
-                Real dcf = borrowingCurve->discount(d0) / borrowingCurve->discount(d1) -
-                           oisCurve->discount(d0) / oisCurve->discount(d1);
-                Real fcaIncrement = calculateNettingSetFcaIncrement(nid, cid, dvaName_, d0, d1, dcf);
-                Real fcaIncrement_exOwnSP = calculateNettingSetFcaIncrement(nid, cid, "", d0, d1, dcf);
-                Real fcaIncrement_exAllSP = calculateNettingSetFcaIncrement(nid, "", "", d0, d1, dcf);
-                nettingSetFca_[nid] += fcaIncrement;
-                nettingSetFca_exOwnSp_[nid] += fcaIncrement_exOwnSP;
-                nettingSetFca_exAllSp_[nid] += fcaIncrement_exAllSP;
+                // FCA
+                if (!borrowingCurve.empty()) {
+                    Real dcf = borrowingCurve->discount(d0) / borrowingCurve->discount(d1) -
+                               oisCurve->discount(d0) / oisCurve->discount(d1);
+                    Real fcaIncrement = calculateNettingSetFcaIncrement(nid, cid, dvaName_, d0, d1, dcf);
+                    Real fcaIncrement_exOwnSP = calculateNettingSetFcaIncrement(nid, cid, "", d0, d1, dcf);
+                    Real fcaIncrement_exAllSP = calculateNettingSetFcaIncrement(nid, "", "", d0, d1, dcf);
+                    nettingSetFca_[nid] += fcaIncrement;
+                    nettingSetFca_exOwnSp_[nid] += fcaIncrement_exOwnSP;
+                    nettingSetFca_exAllSp_[nid] += fcaIncrement_exAllSP;
 
-                // MVA
-                if (dimCalculator_) {
-                    Real mvaIncrement = calculateNettingSetMvaIncrement(nid, cid, d0, d1, dcf);
-                    nettingSetMva_[nid] += mvaIncrement;
+                    // MVA
+                    if (dimCalculator_) {
+                        Real mvaIncrement = calculateNettingSetMvaIncrement(nid, cid, d0, d1, dcf);
+                        nettingSetMva_[nid] += mvaIncrement;
+                    }
+                }
+
+                // FBA
+                if (!lendingCurve.empty()) {
+                    Real dcf = lendingCurve->discount(d0) / lendingCurve->discount(d1) -
+                               oisCurve->discount(d0) / oisCurve->discount(d1);
+                    Real fbaIncrement = calculateNettingSetFbaIncrement(nid, cid, dvaName_, d0, d1, dcf);
+                    Real fbaIncrement_exOwnSP = calculateNettingSetFbaIncrement(nid, cid, "", d0, d1, dcf);
+                    Real fbaIncrement_exAllSP = calculateNettingSetFbaIncrement(nid, "", "", d0, d1, dcf);
+                    nettingSetFba_[nid] += fbaIncrement;
+                    nettingSetFba_exOwnSp_[nid] += fbaIncrement_exOwnSP;
+                    nettingSetFba_exAllSp_[nid] += fbaIncrement_exAllSP;
                 }
             }
-
-            // FBA
-            if (!lendingCurve.empty()) {
-                Real dcf = lendingCurve->discount(d0) / lendingCurve->discount(d1) -
-                           oisCurve->discount(d0) / oisCurve->discount(d1);
-                Real fbaIncrement = calculateNettingSetFbaIncrement(nid, cid, dvaName_, d0, d1, dcf);
-                Real fbaIncrement_exOwnSP = calculateNettingSetFbaIncrement(nid, cid, "", d0, d1, dcf);
-                Real fbaIncrement_exAllSP = calculateNettingSetFbaIncrement(nid, "", "", d0, d1, dcf);
-                nettingSetFba_[nid] += fbaIncrement;
-                nettingSetFba_exOwnSp_[nid] += fbaIncrement_exOwnSP;
-                nettingSetFba_exAllSp_[nid] += fbaIncrement_exAllSP;
-            }
+        } catch (const std::exception& e) {
+            ALOG(StructuredAnalyticsErrorMessage("ValueAdjustmentCalculator", "Error processing netting set.", e.what(),
+                                                 {{"nettingSetId", nid}}));
         }
     }
 }
