@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/app/analytics/scenarioanalytic.hpp>
+#include <orea/app/analytics/scenariostatisticsanalytic.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
