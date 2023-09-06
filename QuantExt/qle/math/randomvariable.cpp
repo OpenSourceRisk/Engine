@@ -67,7 +67,7 @@ Filter& Filter::operator=(const Filter& r) {
                     delete[] data_;
                 data_ = new bool[r.n_];
             }
-            std::memcpy(data_, r.data_, n_ * sizeof(bool));
+            std::memcpy(data_, r.data_, r.n_ * sizeof(bool));
         } else {
             if (data_) {
                 delete[] data_;
@@ -285,7 +285,7 @@ RandomVariable& RandomVariable::operator=(const RandomVariable& r) {
                     delete[] data_;
                 data_ = new double[r.n_];
             }
-            std::memcpy(data_, r.data_, n_ * sizeof(double));
+            std::memcpy(data_, r.data_, r.n_ * sizeof(double));
         } else {
             if (data_) {
                 delete[] data_;
@@ -348,7 +348,7 @@ void RandomVariable::copyToMatrixCol(QuantLib::Matrix& m, const Size j) const {
     if (deterministic_)
         std::fill(m.column_begin(j), std::next(m.column_end(j), n_), constantData_);
     else if (n_ != 0) {
-        std::copy(data_, data_ + sizeof(double) * n_, m.column_begin(j));
+        std::copy(data_, data_ + n_, m.column_begin(j));
     }
 }
 
