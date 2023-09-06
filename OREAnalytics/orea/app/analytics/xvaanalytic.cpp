@@ -304,7 +304,7 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
     // set up progress indicators
 
     auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), ConsoleLog::instance().width(), ConsoleLog::instance().progressBarWidth());
-    auto progressLog = boost::make_shared<ProgressLog>("Building cube", 100, ORE_NOTICE);
+    auto progressLog = boost::make_shared<ProgressLog>("Building cube", 100, oreSeverity::notice);
 
     if(inputs_->nThreads() == 1) {
 
@@ -446,7 +446,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
     std::string message = "XVA: Build AMC Cube " + std::to_string(amcPortfolio_->size()) + " x " +
                           std::to_string(grid_->valuationDates().size()) + " x " + std::to_string(samples_) + "... ";
     auto progressBar = boost::make_shared<SimpleProgressBar>(message, ConsoleLog::instance().width(), ConsoleLog::instance().progressBarWidth());
-    auto progressLog = boost::make_shared<ProgressLog>("Building AMC Cube...", 100, ORE_NOTICE);
+    auto progressLog = boost::make_shared<ProgressLog>("Building AMC Cube...", 100, oreSeverity::notice);
 
     if (inputs_->nThreads() == 1) {
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
@@ -579,6 +579,7 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                               const std::set<std::string>& runTypes) {
     
     LOG("XVA analytic called with asof " << io::iso_date(inputs_->asof()));
+    ProgressMessage("Running XVA Analytic", 0, 1).log();
 
     if (runTypes.find("EXPOSURE") != runTypes.end() || runTypes.empty())
         runSimulation_ = true;
@@ -852,6 +853,7 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
 
     // reset that mode
     ObservationMode::instance().setMode(inputs_->observationModel());
+    ProgressMessage("Running XVA Analytic", 1, 1).log();
 }
 
 Matrix XvaAnalyticImpl::creditStateCorrelationMatrix() const {

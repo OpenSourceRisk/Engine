@@ -86,6 +86,17 @@ void Parameters::fromXML(XMLNode* node) {
     }
     data_["setup"] = setupMap;
 
+    XMLNode* loggingNode = XMLUtils::getChildNode(node, "Logging");
+    if (loggingNode) {
+        map<string, string> loggingMap;
+        for (XMLNode* child = XMLUtils::getChildNode(loggingNode); child; child = XMLUtils::getNextSibling(child)) {
+            string key = XMLUtils::getAttribute(child, "name");
+            string value = XMLUtils::getNodeValue(child);
+            loggingMap[key] = value;
+        }
+        data_["logging"] = loggingMap;
+    }
+
     XMLNode* marketsNode = XMLUtils::getChildNode(node, "Markets");
     if (marketsNode) {
         map<string, string> marketsMap;
