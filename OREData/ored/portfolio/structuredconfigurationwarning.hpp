@@ -39,8 +39,7 @@ public:
                             std::map<std::string, std::string>({{"warningType", warningType},
                                                                 {"configurationType", configurationType},
                                                                 {"configurationId", configurationId}})) {
-        if (!subFields.empty())
-            subFields_.insert(subFields.begin(), subFields.end());
+        addSubFields(subFields);
     }
 };
 
