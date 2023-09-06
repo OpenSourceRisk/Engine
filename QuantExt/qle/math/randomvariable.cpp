@@ -317,13 +317,15 @@ RandomVariable::RandomVariable(const Size n, const Real value, const Real time)
 
 RandomVariable::RandomVariable(const Filter& f, const Real valueTrue, const Real valueFalse, const Real time) {
     if (!f.initialised()) {
+        data_ = nullptr;
         clear();
         return;
     }
     n_ = f.size();
-    if (f.deterministic())
+    if (f.deterministic()) {
+        data_ = nullptr;
         setAll(f.at(0) ? valueTrue : valueFalse);
-    else {
+    } else {
         constantData_ = 0.0;
         deterministic_ = false;
         data_ = new double[n_];
@@ -340,6 +342,8 @@ RandomVariable::RandomVariable(const QuantLib::Array& array, const Real time) {
     if (n_ != 0) {
         data_ = new double[n_];
         std::memcpy(data_, array.begin(), n_ * sizeof(double));
+    } else {
+        data_ = nullptr;
     }
     constantData_ = 0.0;
 }
