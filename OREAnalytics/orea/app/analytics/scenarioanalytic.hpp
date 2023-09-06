@@ -17,7 +17,7 @@
 */
 
 /*! \file orea/app/scenarioanalytic.hpp
-    \brief ORE Scenario Analytics
+    \brief ORE Scenario Statistics Analytics
 */
 
 #pragma once
@@ -27,11 +27,11 @@
 namespace ore {
 namespace analytics {
 
-class ScenarioAnalyticImpl : public Analytic::Impl {
+class ScenarioStatisticsAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SCENARIO_STATISTICS";
 
-    ScenarioAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
+    ScenarioStatisticsAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
     virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
@@ -51,10 +51,10 @@ protected:
     Size samples_ = 0;
 };
 
-class ScenarioAnalytic : public Analytic {
+class ScenarioStatisticsAnalytic : public Analytic {
 public:
-    ScenarioAnalytic(const boost::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<ScenarioAnalyticImpl>(inputs), {"SCENARIO_STATISTICS"}, inputs, true, false, true, true) {}
+    ScenarioStatisticsAnalytic(const boost::shared_ptr<InputParameters>& inputs)
+        : Analytic(std::make_unique<ScenarioStatisticsAnalyticImpl>(inputs), {"SCENARIO_STATISTICS"}, inputs, true, false, true, true) {}
 };
 
 } // namespace analytics

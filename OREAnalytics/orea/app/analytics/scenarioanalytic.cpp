@@ -35,18 +35,18 @@ namespace ore {
 namespace analytics {
 
 /******************************************************************************
- * Scenario Analytic: Scenario_Statistics
+ * ScenarioStatistics Analytic: Scenario_Statistics
  ******************************************************************************/
 
-void ScenarioAnalyticImpl::setUpConfigurations() {
-    LOG("ScenarioAnalytic::setUpConfigurations() called");
+void ScenarioStatisticsAnalyticImpl::setUpConfigurations() {
+    LOG("ScenarioStatisticsAnalytic::setUpConfigurations() called");
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->exposureSimMarketParams();
     analytic()->configurations().scenarioGeneratorData = inputs_->scenarioGeneratorData();
     analytic()->configurations().crossAssetModelData = inputs_->crossAssetModelData();
 }
 
-void ScenarioAnalyticImpl::buildScenarioSimMarket() {
+void ScenarioStatisticsAnalyticImpl::buildScenarioSimMarket() {
     
     std::string configuration = inputs_->marketConfig("simulation");
     simMarket_ = boost::make_shared<ScenarioSimMarket>(
@@ -62,7 +62,7 @@ void ScenarioAnalyticImpl::buildScenarioSimMarket() {
             false);
 }
 
-void ScenarioAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError) {
+void ScenarioStatisticsAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError) {
     if (!model_)
         buildCrossAssetModel(continueOnCalibrationError);
     ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
@@ -84,7 +84,7 @@ void ScenarioAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrati
     }
 }
 
-void ScenarioAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError) {
+void ScenarioStatisticsAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError) {
     LOG("SCENARIO_STATISTICS: Build Simulation Model (continueOnCalibrationError = "
         << std::boolalpha << continueOnCalibrationError << ")");
     CrossAssetModelBuilder modelBuilder(
@@ -97,7 +97,7 @@ void ScenarioAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibration
     model_ = *modelBuilder.model();
 }
 
-void ScenarioAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void ScenarioStatisticsAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                                   const std::set<std::string>& runTypes) {
 
     LOG("Scenario analytic called with asof " << io::iso_date(inputs_->asof()));

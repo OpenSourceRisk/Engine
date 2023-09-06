@@ -57,7 +57,7 @@ AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inp
     addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_));
     addAnalytic("SIMM", boost::make_shared<SimmAnalytic>(inputs_));
     addAnalytic("PARCONVERSION", boost::make_shared<ParConversionAnalytic>(inputs_));
-    addAnalytic("SCENARIO_STATISTICS", boost::make_shared<ScenarioAnalytic>(inputs_));
+    addAnalytic("SCENARIO_STATISTICS", boost::make_shared<ScenarioStatisticsAnalytic>(inputs_));
 }
 
 void AnalyticsManager::clear() {
