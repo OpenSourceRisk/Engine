@@ -124,10 +124,6 @@ void ScenarioAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemo
     LOG("SCENARIO_STATISTICS: Attach Scenario Generator to ScenarioSimMarket");
     simMarket_->scenarioGenerator() = scenarioGenerator_;
 
-    analytic()->buildPortfolio();
-
-    LOG("NPV cube generation completed");
-
     MEM_LOG;
 
     // Output scenario statistics and distribution reports
