@@ -319,7 +319,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"CHF-TOIS", boost::make_shared<CHFTois>()},
         {"CHF-SARON", boost::make_shared<CHFSaron>()},
         {"USD-FedFunds", boost::make_shared<FedFunds>()},
-        {"USD-SOFR", boost::make_shared<QuantExt::Sofr>()},
+        {"USD-SOFR", boost::make_shared<Sofr>()},
         {"USD-Prime", boost::make_shared<PrimeIndex>()},
         {"USD-AMERIBOR", boost::make_shared<USDAmeribor>()},
         {"AUD-AONIA", boost::make_shared<Aonia>()},

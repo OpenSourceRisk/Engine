@@ -58,7 +58,6 @@
 #include <qle/indexes/ibor/sgdsibor.hpp>
 #include <qle/indexes/ibor/sgdsor.hpp>
 #include <qle/indexes/ibor/skkbribor.hpp>
-#include <qle/indexes/ibor/sofr.hpp>
 #include <qle/indexes/ibor/sora.hpp>
 #include <qle/indexes/ibor/thbbibor.hpp>
 #include <qle/indexes/ibor/tonar.hpp>
@@ -122,7 +121,6 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
         { MYRKlibor(pd), "MYR-KLIBOR", Malaysia().name(), MYRCurrency().name() },
         { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() },
         { Ester(), "Ester", TARGET().name(), EURCurrency().name() },
-        { Sofr(), "SOFR", UnitedStates(UnitedStates::GovernmentBond).name(), USDCurrency().name() },
         { CNYRepoFix(pd), "CNY-REPOFIX", China(China::IB).name(), CNYCurrency().name() }
     };
 
