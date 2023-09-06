@@ -106,6 +106,21 @@ void Log::removeAllLoggers() {
     loggers_.clear();
 }
 
+void Log::addExcludeFilter(const string& key, const std::function<bool(const std::string&)> func) {
+    excludeFilters_[key] = func;
+}
+
+void Log::removeExcludeFilter(const string& key) { excludeFilters_.erase(key); }
+
+bool Log::checkExcludeFilters(const std::string& msg) {
+    for (const auto& f : excludeFilters_) {
+        if (f.second(msg))
+            return true;
+    }
+
+    return false;
+}
+
 void Log::header(unsigned m, const char* filename, int lineNo) {
     // 1. Reset stringstream
     ls_.str(string());

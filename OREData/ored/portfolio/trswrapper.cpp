@@ -384,6 +384,8 @@ void TRSWrapperAccrualEngine::calculate() const {
 
     results_.additionalResults["returnCurrency"] = arguments_.returnCurrency_.code();
     results_.additionalResults["fundingCurrency"] = arguments_.fundingCurrency_.code();
+    results_.additionalResults["returnLegInitialPrice"] = arguments_.initialPrice_;
+    results_.additionalResults["returnLegInitialPriceCurrency"] = arguments_.initialPriceCurrency_.code();
 
     // asset leg valuation (accrual method)
 

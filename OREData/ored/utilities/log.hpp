@@ -262,6 +262,12 @@ public:
      */
     void removeAllLoggers();
 
+    void addExcludeFilter(const std::string&, const std::function<bool(const std::string&)>);
+
+    void removeExcludeFilter(const std::string&);
+
+    bool checkExcludeFilters(const std::string&);
+
     //! macro utility function - do not use directly
     void header(unsigned m, const char* filename, int lineNo);
     //! macro utility function - do not use directly
@@ -337,6 +343,8 @@ private:
     int pid_ = 0;
 
     mutable boost::shared_mutex mutex_;
+
+    std::map<std::string, std::function<bool(const std::string&)>> excludeFilters_;
 };
 
 /*!
@@ -347,10 +355,12 @@ private:
         if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(mask)) {                         \
             std::ostringstream __ore_mlog_tmp_stringstream__;                                                          \
             __ore_mlog_tmp_stringstream__ << text;                                                                     \
-            boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                          \
-            ore::data::Log::instance().header(mask, __FILE__, __LINE__);                                               \
-            ore::data::Log::instance().logStream() << __ore_mlog_tmp_stringstream__.str();                             \
-            ore::data::Log::instance().log(mask);                                                                      \
+            if (!ore::data::Log::instance().checkExcludeFilters(__ore_mlog_tmp_stringstream__.str())) {                \
+                boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                      \
+                ore::data::Log::instance().header(mask, __FILE__, __LINE__);                                           \
+                ore::data::Log::instance().logStream() << __ore_mlog_tmp_stringstream__.str();                         \
+                ore::data::Log::instance().log(mask);                                                                  \
+            }                                                                                                          \
         }                                                                                                              \
     }
 

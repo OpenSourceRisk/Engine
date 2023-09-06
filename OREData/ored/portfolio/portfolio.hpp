@@ -66,6 +66,8 @@ public:
     //! Portfolio size
     QuantLib::Size size() const { return trades_.size(); }
 
+    bool empty() const { return trades_.empty(); }
+
     //! XMLSerializable interface
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
