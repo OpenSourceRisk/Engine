@@ -22,7 +22,6 @@
 #include <ql/index.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/calendars/unitedstates.hpp>
-#include <qle/indexes/ibor/audbbsw.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/indexes/ibor/chfsaron.hpp>
 #include <qle/indexes/ibor/chftois.hpp>
@@ -91,7 +90,6 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
     Period pd(3, Months);
 
     IndTestData data[] = {
-        { AUDbbsw(pd), "AUD-BBSW", Australia().name(), AUDCurrency().name() },
         { CHFTois(), "CHF-TOIS", Switzerland().name(), CHFCurrency().name() },
         { CHFSaron(), "CHF-SARON", Switzerland().name(), CHFCurrency().name() },
         { CORRA(), "CORRA", Canada().name(), CADCurrency().name() },
