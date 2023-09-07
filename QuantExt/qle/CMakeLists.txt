@@ -512,7 +512,6 @@ indexes/ibor/nowa.hpp
 indexes/ibor/nzdbkbm.hpp
 indexes/ibor/phpphiref.hpp
 indexes/ibor/plnpolonia.hpp
-indexes/ibor/plnwibor.hpp
 indexes/ibor/primeindex.hpp
 indexes/ibor/rubkeyrate.hpp
 indexes/ibor/rubmosprime.hpp

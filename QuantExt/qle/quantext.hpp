@@ -135,7 +135,6 @@
 #include <qle/indexes/ibor/nzdbkbm.hpp>
 #include <qle/indexes/ibor/phpphiref.hpp>
 #include <qle/indexes/ibor/plnpolonia.hpp>
-#include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/primeindex.hpp>
 #include <qle/indexes/ibor/rubkeyrate.hpp>
 #include <qle/indexes/ibor/rubmosprime.hpp>

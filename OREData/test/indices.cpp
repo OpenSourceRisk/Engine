@@ -305,7 +305,7 @@ static struct test_data index_data[] = {
     {"MXN-TIIE-4W", "MXN-TIIE4W Actual/360", 4 * Weeks},
     {"MXN-TIIE-91D", "MXN-TIIE3M Actual/360", 3 * Months},
     {"MXN-TIIE-3M", "MXN-TIIE3M Actual/360", 3 * Months},
-    {"PLN-WIBOR-6M", "PLN-WIBOR6M Actual/365 (Fixed)", 6 * Months},
+    {"PLN-WIBOR-6M", "WIBOR6M Actual/365 (Fixed)", 6 * Months},
     {"SKK-BRIBOR-6M", "SKK-BRIBOR6M Actual/360", 6 * Months},
     {"THB-THBFIX-6M", "THBFIX6M Actual/365 (Fixed)", 6 * Months},
 

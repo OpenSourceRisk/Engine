@@ -87,7 +87,6 @@
 #include <qle/indexes/ibor/nzdbkbm.hpp>
 #include <qle/indexes/ibor/phpphiref.hpp>
 #include <qle/indexes/ibor/plnpolonia.hpp>
-#include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/primeindex.hpp>
 #include <qle/indexes/ibor/rubmosprime.hpp>
 #include <qle/indexes/ibor/rubkeyrate.hpp>
@@ -374,7 +373,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"ILS-TELBOR", boost::make_shared<IborIndexParserWithPeriod<ILSTelbor>>()},
         {"INR-MIFOR", boost::make_shared<IborIndexParserWithPeriod<INRMifor>>()},
         {"MXN-TIIE", boost::make_shared<IborIndexParserWithPeriod<MXNTiie>>()},
-        {"PLN-WIBOR", boost::make_shared<IborIndexParserWithPeriod<PLNWibor>>()},
+        {"PLN-WIBOR", boost::make_shared<IborIndexParserWithPeriod<Wibor>>()},
         {"SKK-BRIBOR", boost::make_shared<IborIndexParserWithPeriod<SKKBribor>>()},
         {"NZD-BKBM", boost::make_shared<IborIndexParserWithPeriod<NZDBKBM>>()},
         {"TRY-TRLIBOR", boost::make_shared<IborIndexParserWithPeriod<TRLibor>>()},

@@ -50,7 +50,6 @@
 #include <qle/indexes/ibor/noknibor.hpp>
 #include <qle/indexes/ibor/nzdbkbm.hpp>
 #include <qle/indexes/ibor/phpphiref.hpp>
-#include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/rubmosprime.hpp>
 #include <qle/indexes/ibor/seksior.hpp>
 #include <qle/indexes/ibor/sekstibor.hpp>
@@ -107,7 +106,6 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
         { MXNTiie(pd), "MXN-TIIE", Mexico().name(), MXNCurrency().name() },
         { NOKNibor(pd), "NOK-NIBOR", Norway().name(), NOKCurrency().name() },
         { NZDBKBM(pd), "NZD-BKBM", NewZealand().name(), NZDCurrency().name() },
-        { PLNWibor(pd), "PLN-WIBOR", Poland().name(), PLNCurrency().name() },
         { SEKStibor(pd), "SEK-STIBOR", Sweden().name(), SEKCurrency().name() },
         { SEKStina(), "SEK-STINA", Sweden().name(), SEKCurrency().name() },
         { SEKSior(), "SEK-SIOR", Sweden().name(), SEKCurrency().name() },
