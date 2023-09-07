@@ -22,14 +22,11 @@
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/quotes/derivedquote.hpp>
+#include <ql/utilities/null_deleter.hpp>
 #include <qle/termstructures/capfloorhelper.hpp>
 
 using namespace QuantLib;
 using std::ostream;
-
-namespace {
-void no_deletion(OptionletVolatilityStructure*) {}
-} // namespace
 
 namespace QuantExt {
 
@@ -132,7 +129,7 @@ void CapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
     }
 
     // Set this helper's optionlet volatility structure
-    boost::shared_ptr<OptionletVolatilityStructure> temp(ovts, no_deletion);
+    boost::shared_ptr<OptionletVolatilityStructure> temp(ovts, null_deleter());
     ovtsHandle_.linkTo(temp, false);
 
     // Set the term structure pointer member variable in the base class
