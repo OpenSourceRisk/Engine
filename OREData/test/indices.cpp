@@ -103,7 +103,7 @@ struct test_data_inf {
 static struct test_data index_data[] = {
     // parsing string,     index name,                     tenor
     {"EUR-EONIA-1D", "EoniaON Actual/360", 1 * Days},
-    {"EUR-ESTER", "EsterON Actual/360", 1 * Days},
+    {"EUR-ESTER", "ESTRON Actual/360", 1 * Days},
     {"GBP-SONIA-1D", "SoniaON Actual/365 (Fixed)", 1 * Days},
     {"JPY-TONAR-1D", "TONARON Actual/365 (Fixed)", 1 * Days},
     {"CHF-TOIS", "CHF-TOISTN Actual/360", 1 * Days},

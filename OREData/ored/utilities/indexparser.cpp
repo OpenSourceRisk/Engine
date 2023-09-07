@@ -68,7 +68,6 @@
 #include <qle/indexes/ibor/dkkcibor.hpp>
 #include <qle/indexes/ibor/dkkcita.hpp>
 #include <qle/indexes/ibor/dkkois.hpp>
-#include <qle/indexes/ibor/ester.hpp>
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hkdhonia.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
@@ -311,7 +310,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     // Map from our _unique internal name_ to an overnight index
     static map<string, boost::shared_ptr<OvernightIndex>> onIndices = {
         {"EUR-EONIA", boost::make_shared<Eonia>()},
-        {"EUR-ESTER", boost::make_shared<Ester>()},
+        {"EUR-ESTER", boost::make_shared<Estr>()},
         {"GBP-SONIA", boost::make_shared<Sonia>()},
         {"JPY-TONAR", boost::make_shared<Tonar>()},
         {"SGD-SORA", boost::make_shared<Sora>()},

@@ -34,7 +34,6 @@
 #include <qle/indexes/ibor/dkkcibor.hpp>
 #include <qle/indexes/ibor/dkkcita.hpp>
 #include <qle/indexes/ibor/dkkois.hpp>
-#include <qle/indexes/ibor/ester.hpp>
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
 #include <qle/indexes/ibor/idridrfix.hpp>
@@ -118,7 +117,6 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
         { KRWKoribor(pd), "KRW-KORIBOR", SouthKorea(SouthKorea::Settlement).name(), KRWCurrency().name() },
         { MYRKlibor(pd), "MYR-KLIBOR", Malaysia().name(), MYRCurrency().name() },
         { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() },
-        { Ester(), "Ester", TARGET().name(), EURCurrency().name() },
         { CNYRepoFix(pd), "CNY-REPOFIX", China(China::IB).name(), CNYCurrency().name() }
     };
 
