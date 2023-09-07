@@ -1,7 +1,7 @@
 # syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
 ARG boost_version=latest
 ARG boost_variant=release
-FROM build_env_boost_${boost_variant}:${boost_version}
+FROM build_env_boost:${boost_version}
 
 MAINTAINER Quaternion Risk Management
 LABEL Description="Build QuantLib and add to the Boost build environment"
