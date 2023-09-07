@@ -13,7 +13,7 @@ The top level XML elements for each \lstinline!YieldCurve! node are shown in Lis
   <Segments> </Segments>
   <InterpolationVariable> </InterpolationVariable>
   <InterpolationMethod> </InterpolationMethod>
-  <ZeroDayCounter> </ZeroDayCounter>
+  <YieldCurveDayCounter> </YieldCurveDayCounter>
   <Tolerance> </Tolerance>
   <Extrapolation> </Extrapolation>
   <BootstrapConfig>
@@ -40,7 +40,7 @@ given in Table \ref{tab:allow_interp_variables}. If the element is omitted or le
 \emph{Discount}.
 \item InterpolationMethod [Optional]: The interpolation method to use. The allowable values are given in Table
 \ref{tab:allow_interp_methods}. If the element is omitted or left blank, then it defaults to \emph{LogLinear}.
-\item ZeroDayCounter [Optional]: The day count basis used internally by the yield curve to calculate the time between
+\item YieldCurveDayCounter [Optional]: The day count basis used internally by the yield curve to calculate the time between
 dates. In particular, if the curve is queried for a zero rate without specifying the day count basis, the zero rate that
 is returned has this basis. If the element is omitted or left blank, then it defaults to \emph{A365}.
 
