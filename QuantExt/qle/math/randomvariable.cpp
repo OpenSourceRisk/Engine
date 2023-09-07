@@ -346,7 +346,7 @@ RandomVariable::RandomVariable(const QuantLib::Array& array, const Real time) {
     if (n_ != 0) {
         data_ = new double[n_];
         // std::memcpy(data_, array.begin(), n_ * sizeof(double));
-        std::copy(array.begin(),array.end(), data_);
+        std::copy(array.begin(), array.end(), data_);
     } else {
         data_ = nullptr;
     }
@@ -366,7 +366,7 @@ void RandomVariable::copyToArray(QuantLib::Array& array) const {
         std::fill(array.begin(), array.end(), constantData_);
     else if (n_ != 0) {
         // std::memcpy(array.begin(), data_, n_ * sizeof(double));
-        std::copy(array.begin(),array.end(), data_);
+        std::copy(data_, data_ + n_, array.begin());
     }
 }
 
