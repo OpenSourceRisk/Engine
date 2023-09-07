@@ -19,6 +19,7 @@
 #include <boost/make_shared.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/math/comparison.hpp>
+#include <ql/utilities/null_deleter.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 
@@ -28,10 +29,6 @@ using QuantLib::FixedRateCoupon;
 using QuantLib::YieldTermStructure;
 
 namespace QuantExt {
-
-namespace {
-void no_deletion(YieldTermStructure*) {}
-} // namespace
 
 CrossCcyFixFloatSwapHelper::CrossCcyFixFloatSwapHelper(
     const Handle<Quote>& rate, const Handle<Quote>& spotFx, Natural settlementDays, const Calendar& paymentCalendar,
@@ -76,7 +73,7 @@ Real CrossCcyFixFloatSwapHelper::impliedQuote() const {
 }
 
 void CrossCcyFixFloatSwapHelper::setTermStructure(YieldTermStructure* yts) {
-    boost::shared_ptr<YieldTermStructure> temp(yts, no_deletion);
+    boost::shared_ptr<YieldTermStructure> temp(yts, null_deleter());
     termStructureHandle_.linkTo(temp, false);
     RelativeDateRateHelper::setTermStructure(yts);
 }

@@ -19,16 +19,13 @@
 #include <ql/math/optimization/problem.hpp>
 #include <ql/math/optimization/projectedconstraint.hpp>
 #include <ql/math/optimization/projection.hpp>
+#include <ql/utilities/null_deleter.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 
 using boost::shared_ptr;
 using std::vector;
 
 namespace QuantExt {
-
-namespace {
-void no_deletion(void*) {}
-} // namespace
 
 LinkableCalibratedModel::LinkableCalibratedModel()
     : constraint_(new PrivateConstraint(arguments_)), endCriteria_(EndCriteria::None) {}
@@ -37,7 +34,7 @@ class LinkableCalibratedModel::CalibrationFunction : public CostFunction {
 public:
     CalibrationFunction(LinkableCalibratedModel* model, const vector<shared_ptr<CalibrationHelper> >& h,
                         const vector<Real>& weights, const Projection& projection)
-        : model_(model, no_deletion), instruments_(h), weights_(weights), projection_(projection) {}
+        : model_(model, null_deleter()), instruments_(h), weights_(weights), projection_(projection) {}
 
     virtual ~CalibrationFunction() {}
 
