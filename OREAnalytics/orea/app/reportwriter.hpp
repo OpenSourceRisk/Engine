@@ -32,6 +32,7 @@
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <orea/simm/simmresults.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
@@ -104,6 +105,11 @@ public:
     virtual void writeSensitivityReport(ore::data::Report& report, const boost::shared_ptr<SensitivityStream>& ss,
                                         QuantLib::Real outputThreshold = 0.0, QuantLib::Size outputPrecision = 2);
 
+    virtual void writeSensitivityConfigReport(ore::data::Report& report,
+                                              const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes,
+                                              const std::map<RiskFactorKey, QuantLib::Real>& baseValues,
+                                              const std::map<RiskFactorKey, std::string>& keyToFactor);
+
     virtual void writeAdditionalResultsReport(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
                                         boost::shared_ptr<Market> market, const std::string& baseCurrency);
 
@@ -148,6 +154,16 @@ public:
     //! Write out CRIF records to a report
     virtual void writeCrifReport(const boost::shared_ptr<ore::data::Report>& report,
                                  const SimmNetSensitivities& crifRecords);
+
+    virtual void writeScenarioStatistics(const boost::shared_ptr<ore::analytics::ScenarioGenerator>& generator,
+                                         const std::vector<ore::analytics::RiskFactorKey>& keys,
+                                         QuantLib::Size numPaths, const std::vector<QuantLib::Date>& dates,
+                                         ore::data::Report& report);
+
+    virtual void writeScenarioDistributions(const boost::shared_ptr<ore::analytics::ScenarioGenerator>& generator,
+                                            const std::vector<ore::analytics::RiskFactorKey>& keys,
+                                            QuantLib::Size numPaths, const std::vector<QuantLib::Date>& dates,
+                                            QuantLib::Size distSteps, ore::data::Report& report);
 
 protected:
     std::string nullString_;

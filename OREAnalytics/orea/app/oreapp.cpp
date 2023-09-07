@@ -1301,6 +1301,41 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
     }
 
+    /**********************
+     * Scenario_Statistics
+     **********************/
+
+    tmp = params_->get("scenarioStatistics", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        inputs->insertAnalytic("SCENARIO_STATISTICS");
+        tmp = params_->get("scenarioStatistics", "distributionBuckets", false);
+        if (tmp != "")
+            inputs->setScenarioDistributionSteps(parseInteger(tmp));
+
+        tmp = params_->get("scenarioStatistics", "outputZeroRate", false);
+        if (tmp != "")
+            inputs->setScenarioOutputZeroRate(parseBool(tmp));
+
+        tmp = params_->get("scenarioStatistics", "simulationConfigFile", false);
+        if (tmp != "") {
+            string simulationConfigFile = inputPath + "/" + tmp;
+            LOG("Loading simulation config from file" << simulationConfigFile);
+            inputs->setExposureSimMarketParamsFromFile(simulationConfigFile);
+            inputs->setCrossAssetModelDataFromFile(simulationConfigFile);
+            inputs->setScenarioGeneratorDataFromFile(simulationConfigFile);
+            auto grid = inputs->scenarioGeneratorData()->getGrid();
+            DLOG("grid size=" << grid->size() << ", dates=" << grid->dates().size()
+                                << ", valuationDates=" << grid->valuationDates().size()
+                                << ", closeOutDates=" << grid->closeOutDates().size());
+        } else {
+            ALOG("Simulation market, model and scenario generator data not loaded");
+        }
+
+        tmp = params_->get("scenarioStatistics", "scenariodump", false);
+        if (tmp != "")
+            inputs->setWriteScenarios(true);
+    }
+
     if (inputs->analytics().size() == 0) {
         inputs->insertAnalytic("MARKETDATA");
         inputs->setOutputTodaysMarketCalibration(true);

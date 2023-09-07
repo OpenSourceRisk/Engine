@@ -171,7 +171,7 @@ SimmVersion parseSimmVersion(const string& version) {
                                                   {"2.3.8", SimmVersion::V2_3_8},
                                                   {"2.5", SimmVersion::V2_5},
                                                   {"2.5A", SimmVersion::V2_5A},
-                                                  {"2.5.3", SimmVersion::V2_6},
+                                                  {"2.5.6", SimmVersion::V2_6},
 						                          // alias
                                                   {"2.4", SimmVersion::V2_3_8},
                                                   {"2.6", SimmVersion::V2_6},

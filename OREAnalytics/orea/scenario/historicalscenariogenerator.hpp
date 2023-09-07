@@ -58,12 +58,17 @@ public:
     QuantLib::Real applyReturn(const RiskFactorKey& key, const QuantLib::Real baseValue,
         const QuantLib::Real returnValue) const;
 
+    //! get return types
+    const std::map<RiskFactorKey::KeyType, ReturnType> returnTypes() const;
+
 private:
     const std::map<RiskFactorKey::KeyType, ReturnType> returnType_;
 
     //! Perform checks on key
     void check(const RiskFactorKey& key) const;
 };
+
+std::ostream& operator<<(std::ostream& out, const ReturnConfiguration::ReturnType t);
 
 //! Historical Scenario Generator
 /*! A Scenario Generator that takes historical scenarios and builds new scenarios by applying historical shifts to the
@@ -78,6 +83,21 @@ private:
  */
 class HistoricalScenarioGenerator : public ScenarioGenerator {
 public:
+    struct HistoricalScenarioCalculationDetails {
+        Date scenarioDate1;
+        Date scenarioDate2;
+        RiskFactorKey key;
+        double baseValue;
+        double adjustmentFactor1;
+        double adjustmentFactor2;
+        double scenarioValue1;
+        double scenarioValue2;
+        ReturnConfiguration::ReturnType returnType;
+        double scaling;
+        double returnValue;
+        double scenarioValue;
+    };
+
     //! Default constructor
     HistoricalScenarioGenerator(
         //! Historical Scenario Loader containing all scenarios
@@ -124,6 +144,9 @@ public:
         If Mpor > 1 than the scenarios will overlap.
     */
     boost::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
+
+    //! Return the calculation details of the last generated scenario */
+    const std::vector<HistoricalScenarioCalculationDetails>& lastHistoricalScenarioCalculationDetails() const;
 
     //! Reset the generator so calls to next() return the first scenario.
     /*! This allows re-generation of scenarios if required. */
@@ -174,6 +197,9 @@ protected:
         Only handles equity spot adjustments at the moment */
     QuantLib::Real adjustedPrice(RiskFactorKey key, QuantLib::Date d, QuantLib::Real price);
 
+    // details on the last generated scenario
+    std::vector<HistoricalScenarioCalculationDetails> calculationDetails_;
+
 private:
     QuantLib::Calendar cal_;
     boost::shared_ptr<ore::data::AdjustmentFactors> adjFactors_;
@@ -219,19 +245,21 @@ private:
  *  WARNING: This transform function should only be used for backtesting statistics reports requiring the transforms
  *  listed above.
  */
-class HistoricalScenarioGeneratorTransform : public ScenarioGenerator {
+class HistoricalScenarioGeneratorTransform : public HistoricalScenarioGenerator {
 public:
     HistoricalScenarioGeneratorTransform(boost::shared_ptr<HistoricalScenarioGenerator>& hsg,
                                          const boost::shared_ptr<ScenarioSimMarket>& simMarket,
                                          const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketConfig)
-        : hsg_(hsg), simMarket_(simMarket), simMarketConfig_(simMarketConfig) {}
+        : HistoricalScenarioGenerator(hsg->scenarioLoader(), hsg->scenarioFactory(), hsg->cal(), hsg->adjFactors(),
+                                      hsg->mporDays(), hsg->overlapping(), hsg->returnConfiguration(),
+                                      hsg->labelPrefix()),
+          simMarket_(simMarket), simMarketConfig_(simMarketConfig) {
+        baseScenario_ = hsg->baseScenario();
+    }
 
     boost::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
 
-    void reset() override;
-
 private:
-    boost::shared_ptr<HistoricalScenarioGenerator> hsg_;
     boost::shared_ptr<ScenarioSimMarket> simMarket_;
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
 };
