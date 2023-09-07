@@ -2,7 +2,7 @@ version: '3'
 
 services:
   build_env_boost:
-    image: build_env_boost_${BOOST_VARIANT}:${BOOST_TAG}
+    image: build_env_boost:${BOOST_TAG}
     build:
       context: .
       dockerfile: Dockerfile-Boost
