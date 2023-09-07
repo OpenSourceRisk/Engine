@@ -147,7 +147,7 @@ void DiscountingFxForwardEngine::calculate() const {
 
         results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * discFar / discNear * (tmpNominal1 / fx1 - tmpNominal2 / fx2);
 
-        results_.npv = Money(arguments_.payCcy, results_.value);
+        results_.npv = Money(settleCcy, results_.value);
 
         results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, fxfwd);
         results_.additionalResults["fairForwardRate"] = fxfwd;
