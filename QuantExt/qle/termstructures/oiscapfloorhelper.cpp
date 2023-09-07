@@ -24,16 +24,13 @@
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/quotes/derivedquote.hpp>
 #include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
+#include <ql/utilities/null_deleter.hpp>
 
 #include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 
 using namespace QuantLib;
 using std::ostream;
-
-namespace {
-void no_deletion(OptionletVolatilityStructure*) {}
-} // namespace
 
 namespace QuantExt {
 
@@ -130,7 +127,7 @@ void OISCapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
         }
     }
 
-    boost::shared_ptr<OptionletVolatilityStructure> temp(ovts, no_deletion);
+    boost::shared_ptr<OptionletVolatilityStructure> temp(ovts, null_deleter());
     ovtsHandle_.linkTo(temp, false);
     RelativeDateBootstrapHelper<OptionletVolatilityStructure>::setTermStructure(ovts);
 
