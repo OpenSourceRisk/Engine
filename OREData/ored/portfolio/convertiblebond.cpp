@@ -20,7 +20,7 @@
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/convertiblebondreferencedata.hpp>
 #include <ored/portfolio/bondutils.hpp>
-#include <ored/utilities/bondIndexBuilder.hpp>
+#include <ored/utilities/bondindexbuilder.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 
