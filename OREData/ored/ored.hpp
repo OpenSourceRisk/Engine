@@ -298,6 +298,7 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/report/report.hpp>
+#include <ored/utilities/bondindexbuilder.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>

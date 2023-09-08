@@ -38,6 +38,7 @@
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/indexes/commoditybasisfutureindex.hpp>
 #include <qle/indexes/commodityindex.hpp>
+#include <qle/indexes/compositeindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/fallbackovernightindex.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
@@ -618,16 +619,61 @@ void FixingDateGetter::visit(CommodityCashFlow& c) {
 
  void FixingDateGetter::visit(BondTRSCashFlow& bc) {
     if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_) {
-        requiredFixings_.addFixingDate(bc.fixingStartDate(), bc.bondIndex()->name(), 
+        requiredFixings_.addFixingDate(bc.fixingStartDate(), bc.index()->name(), 
             bc.date());
     }
-    requiredFixings_.addFixingDate(bc.fixingEndDate(), bc.bondIndex()->name(),
+    requiredFixings_.addFixingDate(bc.fixingEndDate(), bc.index()->name(),
                                    bc.date());
     if (bc.fxIndex()) {
         requiredFixings_.addFixingDate(bc.fxIndex()->fixingCalendar().adjust(bc.fixingStartDate(), Preceding), 
             IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());
         requiredFixings_.addFixingDate(bc.fxIndex()->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
             IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());
+    }
+}
+
+void FixingDateGetter::visit(TRSCashFlow& bc) {
+    vector<QuantLib::ext::shared_ptr<Index>> indexes;
+    vector<QuantLib::ext::shared_ptr<FxIndex>> fxIndexes;
+
+    if (auto e = boost::dynamic_pointer_cast<QuantExt::CompositeIndex>(bc.index())) {
+        indexes = e->indices();
+        fxIndexes = e->fxConversion();
+
+        // Dividends date can require FX fixings for conversion, add any required fixing
+        std::vector<std::pair<QuantLib::Date, std::string>> fixings =
+            e->dividendFixingDates(bc.fixingStartDate(), bc.fixingEndDate());
+
+        for (const auto& f : fixings)
+            requiredFixings_.addFixingDate(f.first, ore::data::IndexNameTranslator::instance().oreName(f.second));    
+    } else {
+        indexes.push_back(bc.index());
+        fxIndexes.push_back(bc.fxIndex());
+    }
+
+    for (const auto& ind : indexes) {
+        if (ind) {
+            if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_)
+                requiredFixings_.addFixingDate(bc.fixingStartDate(), ind->name(), bc.date());
+
+            requiredFixings_.addFixingDate(bc.fixingEndDate(), ind->name(), bc.date());
+        }
+    }
+
+    for (const auto& fx : fxIndexes) {
+        if (fx) {
+            requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(bc.fixingStartDate(), Preceding),
+                                           IndexNameTranslator::instance().oreName(fx->name()), bc.date());
+            requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
+                                           IndexNameTranslator::instance().oreName(fx->name()), bc.date());
+
+            // also add using the underlyingIndex calendar, as FX Conversion is done within a CompositeIndex
+            // for a basket of underlyings
+            requiredFixings_.addFixingDate(bc.index()->fixingCalendar().adjust(bc.fixingStartDate(), Preceding),
+                                           IndexNameTranslator::instance().oreName(fx->name()), bc.date(), false);
+            requiredFixings_.addFixingDate(bc.index()->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
+                                           IndexNameTranslator::instance().oreName(fx->name()), bc.date(), false);
+        }
     }
 }
 

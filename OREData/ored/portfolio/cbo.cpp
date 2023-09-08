@@ -247,6 +247,7 @@ CBO::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceD
 
 void CBOTrsUnderlyingBuilder::build(
     const std::string& parentId, const boost::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates,
+    const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
     const boost::shared_ptr<EngineFactory>& engineFactory, boost::shared_ptr<QuantLib::Index>& underlyingIndex,
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
     std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
@@ -265,6 +266,8 @@ void CBOTrsUnderlyingBuilder::build(
     underlyingMultiplier = t->underlyingMultiplier();
     assetCurrency = t->npvCurrency();
     creditRiskCurrency = t->npvCurrency();
+
+    returnLegs.push_back(QuantExt::TRSLeg(valuationDates, paymentDates, underlyingMultiplier, underlyingIndex));
 
     //fill the SimmCreditQualifierMapping
     auto bonds = t->bondBasketData().bonds();

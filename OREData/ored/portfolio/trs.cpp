@@ -401,13 +401,16 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         auto builder = TrsUnderlyingBuilderFactory::instance().getBuilder(
             underlyingDerivativeId_[i].empty() ? underlying_[i]->tradeType() : "Derivative");
-        builder->build(id(), underlying_[i], valuationDates, engineFactory, underlyingIndex[i], underlyingMultiplier[i],
+        builder->build(id(), underlying_[i], valuationDates, paymentDates, fundingCurrency,
+                       engineFactory, underlyingIndex[i], underlyingMultiplier[i],
                        localIndexNamesAndQuantities, localFxIndices,
                        underlying_.size() == 1 ? initialPrice : dummyInitialPrice,
                        assetCurrency[i], localCreditRiskCurrency, creditQualifierMapping_, localMaturity,
                        std::bind(&TRS::getFxIndex, this, std::placeholders::_1, std::placeholders::_2,
                                  std::placeholders::_3, std::placeholders::_4, std::placeholders::_5),
                        underlyingDerivativeId_[i]);
+
+        requiredFixings_.addData(builder->requiredFixings());
 
         // update global credit risk currency
 
@@ -431,59 +434,7 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         fxIndexAsset[i] = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
                                      assetCurrency[i], fundingCurrency, localFxIndices);
         DLOG("underlying #" << (i + 1) << " index (" << underlyingIndex[i]->name() << ") built.");
-        DLOG("underlying #" << (i + 1) << " multiplier is " << underlyingMultiplier[i]);
-
-        // add required fixings for return leg and fx conversion if required
-
-        DLOG("add required fixings for return leg from underlying #" << (i + 1));
-
-        // Dividends date can require FX fixings for conversion, add any required fixing
-        for (const auto& ind : underlyingIndex) {
-            if (auto e = boost::dynamic_pointer_cast<QuantExt::CompositeIndex>(ind)){ 
-                if (!valuationDates.empty()) {
-                    std::vector<std::pair<QuantLib::Date, std::string>> fixings =
-                        e->dividendFixingDates(valuationDates.front(), valuationDates.back());
-
-                    for (const auto& f : fixings) {
-                        requiredFixings_.addFixingDate(f.first,
-                                                       ore::data::IndexNameTranslator::instance().oreName(f.second));
-                    }
-                }
-            }
-        }
-
-        for (Size ii = 0; ii < valuationDates.size() - 1; ++ii) {
-
-            // add required fixings for all underlying indices
-            if (ii > 0 || initialPrice == Null<Real>()) {
-                for (auto const& [n, _] : localIndexNamesAndQuantities) {
-                    requiredFixings_.addFixingDate(
-                        underlyingIndex[i]->fixingCalendar().adjust(valuationDates[ii], Preceding), n, paymentDates[ii],
-                        false);
-                }
-            }
-            for (auto const& [n, _] : localIndexNamesAndQuantities) {
-                requiredFixings_.addFixingDate(
-                    underlyingIndex[i]->fixingCalendar().adjust(valuationDates[ii + 1], Preceding), n, paymentDates[i],
-                    false);
-            }
-
-            // add required fixings for the indices used for fx conversion
-            for (auto const& n : localFxIndices) {
-                requiredFixings_.addFixingDate(n.second->fixingCalendar().adjust(valuationDates[ii], Preceding),
-                                               n.first, paymentDates[ii], false);
-                requiredFixings_.addFixingDate(n.second->fixingCalendar().adjust(valuationDates[ii + 1], Preceding),
-                                               n.first, paymentDates[ii], false);
-                // also add using the underlyingIndex calendar, as FX Conversion is done within a CompositeIndex
-                // for a basket of underlyings
-                requiredFixings_.addFixingDate(
-                    underlyingIndex[i]->fixingCalendar().adjust(valuationDates[ii], Preceding), n.first,
-                    paymentDates[ii], false);
-                requiredFixings_.addFixingDate(
-                    underlyingIndex[i]->fixingCalendar().adjust(valuationDates[ii + 1], Preceding),
-                                               n.first, paymentDates[ii], false);
-            }
-        }
+        DLOG("underlying #" << (i + 1) << " multiplier is " << underlyingMultiplier[i]);      
 
         // update global indexNames and  fxIndices
 
