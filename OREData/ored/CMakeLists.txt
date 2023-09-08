@@ -268,6 +268,7 @@ portfolio/underlying.cpp
 portfolio/vanillaoption.cpp
 portfolio/varianceswap.cpp
 report/csvreport.cpp
+utilities/bondindexbuilder.cpp
 utilities/calendaradjustmentconfig.cpp
 utilities/calendarparser.cpp
 utilities/conventionsbasedfutureexpiry.cpp
@@ -590,6 +591,7 @@ portfolio/varianceswap.hpp
 report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
+utilities/bondindexbuilder.hpp
 utilities/calendaradjustmentconfig.hpp
 utilities/calendarparser.hpp
 utilities/conventionsbasedfutureexpiry.hpp
