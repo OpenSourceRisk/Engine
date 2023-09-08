@@ -640,10 +640,6 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
     }
 
-    // we don't really know which asset fixings are required for which funding leg payments, so we just unset all paydates
-    // this can be refined obviously
-    requiredFixings_.unsetPayDates();
-
     // propagate additional data from underlyings to trs trade
     for (Size i = 0; i < underlying_.size(); ++i) {
         for (auto const& [key, value] : underlying_[i]->additionalData()) {
