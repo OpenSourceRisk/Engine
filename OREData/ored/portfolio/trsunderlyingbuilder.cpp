@@ -165,7 +165,10 @@ void ForwardBondTrsUnderlyingBuilder::build(
         initialPrice = initialPrice * qlBond->underlying()->notional(valuationDates.front()) * adj;
     assetCurrency = t->bondData().currency();
 
-    returnLegs.push_back(QuantExt::BondTRSLeg(valuationDates, paymentDates, underlyingMultiplier, futuresIndex));
+    auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
+                              assetCurrency, fundingCurrency, fxIndices);
+
+    returnLegs.push_back(QuantExt::BondTRSLeg(valuationDates, paymentDates, underlyingMultiplier, futuresIndex, fxIndex));
 
     if (!t->bondData().creditCurveId().empty())
         creditRiskCurrency = t->bondData().currency();
@@ -220,7 +223,10 @@ void AssetPositionTrsUnderlyingBuilder<T>::build(
     DLOG("underlying equity index built with " << indices.size() << " constituents.");
     underlyingMultiplier = t->data().quantity();
     
-    returnLegs.push_back(QuantExt::TRSLeg(valuationDates, paymentDates, underlyingMultiplier, underlyingIndex));
+    auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
+                              assetCurrency, fundingCurrency, fxIndices);
+    returnLegs.push_back(
+        QuantExt::TRSLeg(valuationDates, paymentDates, underlyingMultiplier, underlyingIndex, fxIndex));
 }
 
 template <>
@@ -308,8 +314,11 @@ void EquityOptionPositionTrsUnderlyingBuilder::build(
         boost::make_shared<QuantExt::CompositeIndex>("Composite Index trade id " + parentId, indices, w, fxConversion);
     DLOG("underlying equity option historical price index built with " << indices.size() << " constituents.");
     underlyingMultiplier = t->data().quantity();
-        
-    returnLegs.push_back(QuantExt::TRSLeg(valuationDates, paymentDates, underlyingMultiplier, underlyingIndex));
+    
+    auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
+                              assetCurrency, fundingCurrency, fxIndices);
+
+    returnLegs.push_back(QuantExt::TRSLeg(valuationDates, paymentDates, underlyingMultiplier, underlyingIndex, fxIndex));
 }
 
 void BondPositionTrsUnderlyingBuilder::build(
@@ -407,8 +416,10 @@ void DerivativeTrsUnderlyingBuilder::build(
     // FIXME same question as for single bond underlying: shouldn't we leave that empty and let TRS determine the
     // maturity date based on valuation / funding dates?
     maturity = underlying->maturity();
-        
-    returnLegs.push_back(QuantExt::TRSLeg(valuationDates, paymentDates, underlyingMultiplier, underlyingIndex));
+    
+    auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
+                              assetCurrency, fundingCurrency, fxIndices);
+    returnLegs.push_back(QuantExt::TRSLeg(valuationDates, paymentDates, underlyingMultiplier, underlyingIndex, fxIndex));
 }
 
 template struct AssetPositionTrsUnderlyingBuilder<ore::data::EquityPosition>;

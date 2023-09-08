@@ -267,7 +267,9 @@ void CBOTrsUnderlyingBuilder::build(
     assetCurrency = t->npvCurrency();
     creditRiskCurrency = t->npvCurrency();
 
-    returnLegs.push_back(QuantExt::TRSLeg(valuationDates, paymentDates, underlyingMultiplier, underlyingIndex));
+    auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
+                              assetCurrency, fundingCurrency, fxIndices);
+    returnLegs.push_back(QuantExt::TRSLeg(valuationDates, paymentDates, underlyingMultiplier, underlyingIndex, fxIndex));
 
     //fill the SimmCreditQualifierMapping
     auto bonds = t->bondBasketData().bonds();

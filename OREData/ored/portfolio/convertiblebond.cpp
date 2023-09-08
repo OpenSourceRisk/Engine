@@ -623,8 +623,9 @@ void ConvertibleBondTrsUnderlyingBuilder::build(
         initialPrice = qlBond->notional(valuationDates.front()) * bondIndexBuilder.priceAdjustment(initialPrice);
 
     assetCurrency = t->data().bondData().currency();
-    
-    auto returnLeg = makeBondTRSLeg(valuationDates, paymentDates, bondIndexBuilder);
+    auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
+                              assetCurrency, fundingCurrency, fxIndices);
+    auto returnLeg = makeBondTRSLeg(valuationDates, paymentDates, bondIndexBuilder, fxIndex);
 
     // add required bond and fx fixings for bondIndex
     returnLegs.push_back(returnLeg);
