@@ -93,4 +93,19 @@ public:
     void finalizeCalculation(std::vector<std::vector<float>>& output);
 };
 
+template <class T> T* createComputeFrameworkCreator() { return new T; }
+
+class ComputeFrameworkRegistry : public QuantLib::Singleton<ComputeFrameworkRegistry, std::true_type> {
+public:
+    ComputeFrameworkRegistry() {}
+    void add(const std::string& name, std::function<ComputeFramework*(void)> creator,
+             const bool allowOverwrite = false);
+    const std::vector<std::function<ComputeFramework*(void)>>& getAll() const;
+
+private:
+    mutable boost::shared_mutex mutex_;
+    std::vector<std::string> names_;
+    std::vector<std::function<ComputeFramework*(void)>> creators_;
+};
+
 } // namespace QuantExt

@@ -57,6 +57,9 @@
 #define ORE_REGISTER_TRS_UNDERLYING_BUILDER(NAME, CLASS, OVERWRITE)                                                    \
     ore::data::TrsUnderlyingBuilderFactory::instance().addBuilder(NAME, boost::make_shared<CLASS>(), OVERWRITE);
 
+#define ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR(NAME, CLASS, OVERWRITE)                                                 \
+    QuantExt::ComputeFrameworkRegistry::instance().add(NAME, &QuantExt::createComputeFrameworkCreator<CLASS>, OVERWRITE);
+
 namespace ore::data {
 
 void initBuilders();
