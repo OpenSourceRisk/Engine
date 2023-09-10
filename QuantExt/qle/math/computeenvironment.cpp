@@ -17,7 +17,6 @@
 */
 
 #include <qle/math/computeenvironment.hpp>
-#include <qle/math/openclenvironment.hpp>
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -38,7 +37,8 @@ void ComputeEnvironment::releaseFrameworks() {
 void ComputeEnvironment::reset() {
     currentContext_ = nullptr;
     releaseFrameworks();
-    frameworks_.push_back(new OpenClFramework());
+    for (auto& c : ComputeFrameworkRegistry::instance().getAll())
+        frameworks_.push_back(c());
 }
 
 std::set<std::string> ComputeEnvironment::getAvailableDevices() const {
@@ -71,6 +71,21 @@ void ComputeContext::finalizeCalculation(std::vector<std::vector<float>>& output
     std::transform(output.begin(), output.end(), outputPtr.begin(),
                    [](std::vector<float>& v) -> float* { return &v[0]; });
     finalizeCalculation(outputPtr);
+}
+
+void ComputeFrameworkRegistry::add(const std::string& name, std::function<ComputeFramework*(void)> creator,
+                                   const bool allowOverwrite) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    QL_REQUIRE(allowOverwrite || std::find(names_.begin(), names_.end(), name) == names_.end(),
+               "FrameworkRegistry::add(): creator for '"
+                   << name << "' already exists and allowOverwrite is false, can't add it.");
+    names_.push_back(name);
+    creators_.push_back(creator);
+}
+
+const std::vector<std::function<ComputeFramework*(void)>>& ComputeFrameworkRegistry::getAll() const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    return creators_;
 }
 
 }; // namespace QuantExt
