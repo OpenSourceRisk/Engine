@@ -55,18 +55,18 @@ void outputTimings(const ComputeContext& c) {
                             << " MFLOPS (raw + data copy + program build)");
 }
 
-float avg(const std::vector<float>& v) {
-    boost::accumulators::accumulator_set<float, boost::accumulators::stats<boost::accumulators::tag::mean>> acc;
+double avg(const std::vector<double>& v) {
+    boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::mean>> acc;
     for (auto const& x : v) {
         acc(x);
     }
     return boost::accumulators::mean(acc);
 }
 
-std::vector<float> runTest(ComputeContext& c, const std::size_t n) {
+std::vector<double> runTest(ComputeContext& c, const std::size_t n) {
 
-    std::vector<std::vector<float>> output(1, std::vector<float>(n));
-    std::vector<float> averages;
+    std::vector<std::vector<double>> output(1, std::vector<double>(n));
+    std::vector<double> averages;
 
     auto [id, _] = c.initiateCalculation(n, 0, 0, true);
     c.createInputVariable(-200.000000f);
