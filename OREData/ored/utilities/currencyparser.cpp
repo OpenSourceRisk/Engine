@@ -181,6 +181,22 @@ void CurrencyParser::addCurrency(const std::string& newName, const QuantLib::Cur
     addMinorCurrencyCodes(currency);
 }
 
+void CurrencyParser::addMetal(const std::string& newName, const QuantLib::Currency& currency) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    if (currencies_.find(newName) != currencies_.end() || preciousMetals_.find(newName) != preciousMetals_.end() ||
+        cryptoCurrencies_.find(newName) != cryptoCurrencies_.end())
+        return;
+    preciousMetals_[newName] = currency;
+}
+
+void CurrencyParser::addCrypto(const std::string& newName, const QuantLib::Currency& currency) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    if (currencies_.find(newName) != currencies_.end() || preciousMetals_.find(newName) != preciousMetals_.end() ||
+        cryptoCurrencies_.find(newName) != cryptoCurrencies_.end())
+        return;
+    cryptoCurrencies_[newName] = currency;
+}
+
 void CurrencyParser::addMinorCurrencyCodes(const QuantLib::Currency& currency) {
     for (auto const& c : currency.minorUnitCodes()) {
         minorCurrencies_[c] = currency;

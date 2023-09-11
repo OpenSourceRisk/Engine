@@ -57,6 +57,7 @@ public:
 
 private:
     vector<Currency> currencies_;
+    vector<Currency> pseudoCurrencies_;
 };
 
 } // namespace data

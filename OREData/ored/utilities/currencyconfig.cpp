@@ -49,15 +49,27 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
             // the digit where we switch form roundng down to rounding up, typically 5 and used across all
             // Integer digit = parseInteger(XMLUtils::getChildValue(node, "Digit", false));
             string format = XMLUtils::getChildValue(node, "Format", false);
+            QuantExt::ConfigurableCurrency::Type currencyType = parseCurrencyType(XMLUtils::getChildValue(node, "CurrencyType", false));
             Rounding rounding(precision, roundingType);
 
             QuantExt::ConfigurableCurrency c(name, isoCode, numericCode, symbol, fractionSymbol, fractionsPerUnit,
                                              rounding, format, minorUnitCodes);
-            currencies_.push_back(c);
-
+            
             DLOG("loading configuration for currency code " << isoCode);
 
-            CurrencyParser::instance().addCurrency(c.code(), c);
+            if (currencyType == QuantExt::ConfigurableCurrency::Crypto) {
+                pseudoCurrencies_.push_back(c);
+                CurrencyParser::instance().addCrypto(c.code(), c);
+            } else if
+                (currencyType == QuantExt::ConfigurableCurrency::Metal) { 
+                pseudoCurrencies_.push_back(c);
+                CurrencyParser::instance().addMetal(c.code(), c);
+            }
+            else {
+                currencies_.push_back(c);
+                CurrencyParser::instance().addCurrency(c.code(), c);
+            }
+
 
         } catch (std::exception&) {
             ALOG("error loading currency config for name " << name << " iso code " << isoCode);
