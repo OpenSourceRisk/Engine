@@ -304,7 +304,7 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
     // set up progress indicators
 
     auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), ConsoleLog::instance().width(), ConsoleLog::instance().progressBarWidth());
-    auto progressLog = boost::make_shared<ProgressLog>("Building cube", 100, ORE_NOTICE);
+    auto progressLog = boost::make_shared<ProgressLog>("Building cube", 100, oreSeverity::notice);
 
     if(inputs_->nThreads() == 1) {
 
@@ -446,7 +446,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
     std::string message = "XVA: Build AMC Cube " + std::to_string(amcPortfolio_->size()) + " x " +
                           std::to_string(grid_->valuationDates().size()) + " x " + std::to_string(samples_) + "... ";
     auto progressBar = boost::make_shared<SimpleProgressBar>(message, ConsoleLog::instance().width(), ConsoleLog::instance().progressBarWidth());
-    auto progressLog = boost::make_shared<ProgressLog>("Building AMC Cube...", 100, ORE_NOTICE);
+    auto progressLog = boost::make_shared<ProgressLog>("Building AMC Cube...", 100, oreSeverity::notice);
 
     if (inputs_->nThreads() == 1) {
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
@@ -456,8 +456,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates());
         amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);
-        // We only need to generate asd, if this does not happen in the classic run
-        if (!doClassicRun)
+        if (!scenarioData_.empty())
             amcEngine.aggregationScenarioData() = *scenarioData_;
         amcEngine.buildCube(amcPortfolio_, amcCube_);
     } else {
@@ -484,8 +483,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
         amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);
-        // as for the single-threaded case, we only need to generate asd, if this does not happen in the classic run
-        if (!doClassicRun)
+        if (!scenarioData_.empty())
             amcEngine.aggregationScenarioData() = *scenarioData_;
         amcEngine.buildCube(amcPortfolio_);
         amcCube_ = boost::make_shared<JointNPVCube>(amcEngine.outputCubes());
@@ -581,6 +579,7 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                               const std::set<std::string>& runTypes) {
     
     LOG("XVA analytic called with asof " << io::iso_date(inputs_->asof()));
+    ProgressMessage("Running XVA Analytic", 0, 1).log();
 
     if (runTypes.find("EXPOSURE") != runTypes.end() || runTypes.empty())
         runSimulation_ = true;
@@ -854,6 +853,7 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
 
     // reset that mode
     ObservationMode::instance().setMode(inputs_->observationModel());
+    ProgressMessage("Running XVA Analytic", 1, 1).log();
 }
 
 Matrix XvaAnalyticImpl::creditStateCorrelationMatrix() const {

@@ -430,6 +430,26 @@
           }
         ]
       },
+      "frtbcrif.csv": {
+        "keys": [
+            "RiskType",
+            "Qualifier",
+            "Bucket",
+            "Label1",
+            "Label2",
+            "AmountCurrency"
+            
+        ],
+        "column_settings": [
+          {
+            "names": [
+                "AmountUSD"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "frtb.csv": {
         "keys": [
             "CorrelationScenario",

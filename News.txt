@@ -16,7 +16,7 @@ INSTRUMENTS
 - support notional changes within calculation periods on fixed and floating legs
 
 MARKETS
-- Add a new yield curve segment "Bond Yield Shifted", see Example 49
+- Add a new yield curve segment "Bond Yield Shifted", see Example 49, thanks to Oleg Kulkov
 
 ANALYTICS
 - Add a proof-of-concept Credit Portfolio Model to construct portfolio loss distributions due to

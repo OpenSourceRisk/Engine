@@ -36,8 +36,14 @@ using namespace QuantLib;
 
 struct Filter {
     // ctors
-    Filter() : n_(0), deterministic_(false) {}
-    explicit Filter(const Size n, const bool value = false) : n_(n), data_(1, value), deterministic_(true) {}
+    ~Filter();
+    Filter();
+    Filter(const Filter& r);
+    Filter(Filter&& r);
+    Filter& operator=(const Filter& r);
+    Filter& operator=(Filter&& r);
+
+    explicit Filter(const Size n, const bool value = false);
     // modifiers
     void clear();
     void set(const Size i, const bool v);
@@ -49,8 +55,8 @@ struct Filter {
 
     bool initialised() const { return n_ != 0; }
     Size size() const { return n_; }
-    bool operator[](const Size i) const; // no bound check
-    bool at(const Size i) const;         // with bound check
+    bool operator[](const Size i) const; // undefined if uninitialized or i out of bounds
+    bool at(const Size i) const;         // with checks for initialized, i within bounds
     //
     friend Filter operator&&(Filter, const Filter&);
     friend Filter operator||(Filter, const Filter&);
@@ -62,12 +68,15 @@ struct Filter {
     void expand();
 
 private:
+    // for invariants see the corresponding section below in class RandomVariable
     Size n_;
-    std::vector<bool> data_;
+    bool constantData_;
+    bool* data_;
     bool deterministic_;
 };
 
 bool operator==(const Filter& a, const Filter& b);
+bool operator!=(const Filter& a, const Filter& b);
 
 Filter operator&&(Filter, const Filter&);
 Filter operator||(Filter, const Filter&);
@@ -78,9 +87,14 @@ Filter operator!(Filter);
 
 struct RandomVariable {
     // ctors
-    RandomVariable() : n_(0), deterministic_(false), time_(Null<Real>()) {}
-    explicit RandomVariable(const Size n, const Real value = 0.0, const Real time = Null<Real>())
-        : n_(n), data_(1, value), deterministic_(true), time_(time) {}
+    ~RandomVariable();
+    RandomVariable();
+    RandomVariable(const RandomVariable& r);
+    RandomVariable(RandomVariable&& r);
+    RandomVariable& operator=(const RandomVariable& r);
+    RandomVariable& operator=(RandomVariable&& r);
+
+    explicit RandomVariable(const Size n, const Real value = 0.0, const Real time = Null<Real>());
     explicit RandomVariable(const Filter& f, const Real valueTrue = 1.0, const Real valueFalse = 0.0,
                             const Real time = Null<Real>());
     // interop with ql classes
@@ -100,13 +114,14 @@ struct RandomVariable {
     void updateDeterministic();
     bool initialised() const { return n_ != 0; }
     Size size() const { return n_; }
-    Real operator[](const Size i) const; // no bound check
-    Real at(const Size i) const;         // with bound check
+    Real operator[](const Size i) const; // undefined if uninitialized or i out of bounds
+    Real at(const Size i) const;         // with checks for initialized, i within bounds
     Real time() const { return time_; }
     RandomVariable& operator+=(const RandomVariable&);
     RandomVariable& operator-=(const RandomVariable&);
     RandomVariable& operator*=(const RandomVariable&);
     RandomVariable& operator/=(const RandomVariable&);
+    friend bool operator==(const RandomVariable&, const RandomVariable&);
     friend RandomVariable operator+(RandomVariable, const RandomVariable&);
     friend RandomVariable operator-(RandomVariable, const RandomVariable&);
     friend RandomVariable operator*(RandomVariable, const RandomVariable&);
@@ -142,13 +157,30 @@ struct RandomVariable {
 
 private:
     void checkTimeConsistencyAndUpdate(const Real t);
+    /* Invariants that hold at all times for instances of this class:
+
+       n_ = 0 means uninitialized, n_ > 0 means initialized.
+
+       For an uninitialized instance:
+       - constantData_ = 0.0, data_ = nullptr, deterministic_ = false, time_ = Null<Real>()
+
+       For an initialized instance:
+       - if deterministic = true a constant value is represented with
+         - constantData_ the constant value
+         - data_ = nullptr
+       - if deterministic = false a possibly non-constant value is represented with
+         - constantData_ initialized with last constant value that was set
+         - data_ an array of size n_
+    */
     Size n_;
-    std::vector<Real> data_;
+    double constantData_;
+    double* data_;
     bool deterministic_;
     Real time_;
 };
 
 bool operator==(const RandomVariable& a, const RandomVariable& b);
+bool operator!=(const RandomVariable& a, const RandomVariable& b);
 
 RandomVariable operator+(RandomVariable, const RandomVariable&);
 RandomVariable operator-(RandomVariable, const RandomVariable&);
@@ -187,7 +219,8 @@ enum class RandomVariableRegressionMethod { QR, SVI };
 Array regressionCoefficients(
     RandomVariable r, const std::vector<const RandomVariable*>& regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
-    const Filter& filter = Filter(), const RandomVariableRegressionMethod = RandomVariableRegressionMethod::QR);
+    const Filter& filter = Filter(), const RandomVariableRegressionMethod = RandomVariableRegressionMethod::QR,
+    const std::string& debugLabel = std::string());
 
 // evaluate regression function
 RandomVariable conditionalExpectation(

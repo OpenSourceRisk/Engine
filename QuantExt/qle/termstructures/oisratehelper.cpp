@@ -19,14 +19,11 @@
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/instruments/makeois.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/utilities/null_deleter.hpp>
 
 #include <qle/termstructures/oisratehelper.hpp>
 
 namespace QuantExt {
-
-namespace {
-void no_deletion(YieldTermStructure*) {}
-} // namespace
 
 OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, const Handle<Quote>& fixedRate,
                              const boost::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
@@ -115,7 +112,7 @@ void OISRateHelper::setTermStructure(YieldTermStructure* t) {
     // force recalculation when needed
     bool observer = false;
 
-    boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
+    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
     if (discountHandle_.empty())
@@ -221,7 +218,7 @@ void DatedOISRateHelper::setTermStructure(YieldTermStructure* t) {
     // force recalculation when needed
     bool observer = false;
 
-    boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
+    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
     if (discountHandle_.empty())
