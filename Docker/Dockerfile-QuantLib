@@ -1,5 +1,6 @@
 # syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
 ARG boost_version=latest
+ARG boost_variant=release
 FROM build_env_boost:${boost_version}
 
 MAINTAINER Quaternion Risk Management
@@ -7,6 +8,9 @@ LABEL Description="Build QuantLib and add to the Boost build environment"
 
 # Argument for number of cores to use while building
 ARG num_cores
+
+# Argument that chooses cmake build type
+ARG cmake_build_type
 
 # Exclusions are performed by .dockerignore
 COPY QuantLib /ore/QuantLib
@@ -23,7 +27,7 @@ ENV CCACHE_DIR="/ccache"
 RUN cd /ore/QuantLib \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && mkdir -p build.ql && cd build.ql \
-  && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER -mavx2" -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON
+  && cmake .. -DCMAKE_BUILD_TYPE=${cmake_build_type} -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER -mavx2" -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON
  
 WORKDIR /ore/QuantLib/build.ql
 RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \

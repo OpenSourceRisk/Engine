@@ -181,10 +181,9 @@ private:
 
 struct BondBuilder {
     struct Result {
+        std::string builderLabel;
         boost::shared_ptr<QuantLib::Bond> bond;
         boost::shared_ptr<QuantExt::ModelBuilder> modelBuilder; // might be nullptr
-
-        
         bool isInflationLinked = false;
         bool hasCreditRisk = true;
         std::string currency;

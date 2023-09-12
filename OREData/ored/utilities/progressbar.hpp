@@ -102,7 +102,7 @@ private:
  */
 class ProgressLog : public ProgressIndicator {
 public:
-    ProgressLog(const std::string& message, const unsigned int numberOfMessages = 100, const int logLevel = ORE_DEBUG);
+    ProgressLog(const std::string& message, const unsigned int numberOfMessages = 100, const oreSeverity logLevel = oreSeverity::debug);
 
     //! ProgressIndicator interface
     void updateProgress(const unsigned long progress, const unsigned long total) override;
@@ -111,7 +111,7 @@ public:
 private:
     std::string message_;
     unsigned int numberOfMessages_;
-    int logLevel_;
+    oreSeverity logLevel_;
     unsigned int messageCounter_;
 };
 
