@@ -349,9 +349,5 @@ std::string filterRegulations(const std::string& regsString, const std::vector<s
 //! From a vector of regulations, determine the winning regulation based on order of priority
 SimmConfiguration::Regulation getWinningRegulation(const std::vector<std::string>& winningRegulations);
 
-SimmConfiguration::ProductClass simmProductClassFromOreTradeType(const std::string& tradeType);
-
-SimmConfiguration::ProductClass scheduleProductClassFromOreTradeType(const std::string& tradeType);
-
 } // namespace analytics
 } // namespace ore

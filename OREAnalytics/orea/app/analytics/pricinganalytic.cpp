@@ -209,7 +209,7 @@ void PricingAnalyticImpl::runAnalytic(
             }
 
             LOG("Sensi analysis - generate");
-            sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities", 100, ORE_NOTICE));
+            sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities", 100, oreSeverity::notice));
             sensiAnalysis->generateSensitivities();
 
             LOG("Sensi analysis - write sensitivity report in memory");

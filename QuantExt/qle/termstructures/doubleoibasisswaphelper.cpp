@@ -17,6 +17,7 @@
 */
 
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/utilities/null_deleter.hpp>
 #include <qle/termstructures/doubleoibasisswaphelper.hpp>
 
 using boost::shared_ptr;
@@ -24,10 +25,6 @@ using boost::shared_ptr;
 using namespace QuantLib;
 
 namespace QuantExt {
-
-namespace {
-void no_deletion(YieldTermStructure*) {}
-} // namespace
 
 DoubleOIBSHelper::DoubleOIBSHelper(Natural settlementDays,
     const Period& swapTenor, const Handle<Quote>& spread, const boost::shared_ptr<OvernightIndex>& payIndex, 
@@ -134,7 +131,7 @@ void DoubleOIBSHelper::initializeDates() {
 void DoubleOIBSHelper::setTermStructure(YieldTermStructure* t) {
     // do not set the relinkable handle as an observer -
     // force recalculation when needed
-    termStructureHandle_.linkTo(shared_ptr<YieldTermStructure>(t, no_deletion), false);
+    termStructureHandle_.linkTo(shared_ptr<YieldTermStructure>(t, null_deleter()), false);
     RelativeDateRateHelper::setTermStructure(t);
 }
 

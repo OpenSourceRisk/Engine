@@ -3580,6 +3580,7 @@ as the selection and configuration of analytics. The file has an opening and clo
   </ORE>} with three sections
 \begin{itemize}
 \item Setup
+\item Logging
 \item Markets
 \item Analytics
 \end{itemize}
@@ -3678,6 +3679,41 @@ If not given, the parameter defaults to {\tt false}.
 
 \medskip If the parameter {\tt nThreads} is given, multiple threads will be used for valuation engine runs where
 applicable (Sensitivity, Exposure Classic, Exposure AMC). If not given, the parameter defaults to $1$.
+
+\subsubsection{Logging}\label{sec:master_input_logging}
+
+The {\tt Logging} section (see listing \ref{lst:ore_logging}) is used to configure some ORE logging options.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Logging>
+  <Parameter name="logFile">log.txt</Parameter>
+  <Parameter name="logMask">31</Parameter>
+  <Parameter name="progressLogFile">my_log_progress_%N.json</Parameter>
+  <Parameter name="progressLogRotationSize">102400</Parameter>
+  <Parameter name="progressLogToConsole">false</Parameter>
+  <Parameter name="structuredLogFile">my_structured_logs_%N.txt</Parameter>
+  <Parameter name="structuredLogRotationSize">102400</Parameter>
+</Logging>
+\end{minted}
+%\hrule
+\caption{ORE logging}
+\label{lst:ore_logging}
+\end{listing}
+
+Parameter {\tt logFile} and {\tt logMask} will override the same parameters in the {\tt Setup} section.
+
+Parameters {\tt progressLogFile} and {\tt structuredLogFile} are the filename where progress log messages
+and structured log messages are written out to, respectively, which supports Boost string patterns.This defaults to ``log\_progress\_\%N.json'' and ``log\_structured\_\%N.json'', respectively, where {\tt N} will be an integer (beginning at 0) used for log file rotation.
+
+Parameters {\tt progressLogRotationSize} and {\tt structuredLogRotationSize} are the size limit (in bytes)
+of each log file before applying log file rotation to the progress log file and structured log message file,
+respectively.. For example, $10 * 1024 * 1024 = 10 \text{MiB}$. Defaults to 100 MiB.
+
+If the parameter {\tt progressLogToConsole} is set to true, then progress logs will be written to std::cout.
+This can be used simultaneously with {\tt progressLogFile}, i.e.\ progress logs can be written out
+to both file and std::cout.
 
 \subsubsection{Markets}\label{sec:master_input_markets}
 
