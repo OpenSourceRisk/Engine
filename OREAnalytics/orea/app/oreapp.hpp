@@ -75,6 +75,10 @@ public:
 
     //! time for executing run(...) in seconds
     Real getRunTime();
+
+    std::string version() {
+        return std::string(OPEN_SOURCE_RISK_VERSION);
+    }
     
 protected:
     virtual void analytics();
