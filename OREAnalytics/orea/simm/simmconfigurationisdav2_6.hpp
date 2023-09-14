@@ -3,7 +3,7 @@
  All rights reserved.
 */
 
-/*! \file orepsimm/orea/simmconfigurationisdav2_6.hpp
+/*! \file orea/simm/simmconfigurationisdav2_6.hpp
     \brief SIMM configuration for SIMM version 2.6
 */
 

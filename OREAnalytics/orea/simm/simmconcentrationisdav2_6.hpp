@@ -2,7 +2,7 @@
  Copyright (C) 2023 Quaternion Risk Management Ltd
  All rights reserved.
 */
-/*! \file orepsimm/orea/simmconcentrationisdav2_6.hpp
+/*! \file orea/simm/simmconcentrationisdav2_6.hpp
     \brief SIMM concentration thresholds for SIMM version 2.6
 */
 
