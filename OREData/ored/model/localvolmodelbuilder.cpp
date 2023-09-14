@@ -30,6 +30,7 @@
 #include <ql/termstructures/volatility/equityfx/andreasenhugevolatilityinterpl.hpp>
 #include <ql/termstructures/volatility/equityfx/localconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/localvolsurface.hpp>
+#include <ql/termstructures/volatility/equityfx/noexceptlocalvolsurface.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 
@@ -133,11 +134,15 @@ std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuil
                     "calibration error min="
                  << std::scientific << std::setprecision(6) << boost::get<0>(ah->calibrationError()) << " max="
                  << boost::get<1>(ah->calibrationError()) << " avg=" << boost::get<2>(ah->calibrationError()));
-        } else if (lvType_ == Type::Dupire || lvType_ == Type::DupireFloored) {
+        } else if (lvType_ == Type::Dupire) {
             localVol = Handle<LocalVolTermStructure>(
                 boost::make_shared<LocalVolSurface>(processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(),
-                                                    processes_[l]->dividendYield(), processes_[l]->stateVariable(),
-                                                    lvType_ == Type::DupireFloored ? true : false));
+                                                    processes_[l]->dividendYield(), processes_[l]->stateVariable()));
+        } else if (lvType_ == Type::DupireFloored) {
+            localVol = Handle<LocalVolTermStructure>(
+                boost::make_shared<NoExceptLocalVolSurface>(processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(),
+                                                            processes_[l]->dividendYield(), processes_[l]->stateVariable(),
+                                                            0.0));
         } else {
             QL_FAIL("unexpected local vol type");
         }
