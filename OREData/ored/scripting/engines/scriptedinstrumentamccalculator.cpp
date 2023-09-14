@@ -86,8 +86,7 @@ ScriptedInstrumentAmcCalculator::simulatePath(const std::vector<QuantLib::Real>&
     // set up script engine and run it
 
     ScriptEngine engine(ast_, workingContext, model_);
-    auto paylog = boost::make_shared<PayLog>();
-    engine.run(script_, interactive_, paylog);
+    engine.run(script_, interactive_, nullptr);
 
     // extract AMC Exposure result and return them
 

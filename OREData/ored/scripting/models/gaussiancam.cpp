@@ -535,10 +535,15 @@ RandomVariable GaussianCam::npv(const RandomVariable& amount, const Date& obsdat
         }
     }
 
+    Size nModelStates = state.size();
+
+    // if memSlot is given we have to make sure the state always has the same size
     if (addRegressor1.initialised() && (memSlot || !addRegressor1.deterministic()))
         state.push_back(&addRegressor1);
     if (addRegressor2.initialised() && (memSlot || !addRegressor2.deterministic()))
         state.push_back(&addRegressor2);
+
+    Size nAddReg = state.size() - nModelStates;
 
     // if the state is empty, return the plain expectation (no conditioning)
 
@@ -569,7 +574,11 @@ RandomVariable GaussianCam::npv(const RandomVariable& amount, const Date& obsdat
     // otherwise compute coefficients and store them if a memSlot is given
 
     if (coeff.size() == 0) {
-        coeff = regressionCoefficients(amount, state, basisFns_.at(state.size()), filter);
+        coeff = regressionCoefficients(amount, state, basisFns_.at(state.size()), filter,
+                                       RandomVariableRegressionMethod::QR);
+        DLOG("GaussianCam::npv(" << ore::data::to_string(obsdate) << "): regression coefficients are " << coeff
+                                 << " (got model state size " << nModelStates << " and " << nAddReg
+                                 << " additional regressors)");
         if (memSlot) {
             storedRegressionCoeff_[*memSlot] = std::make_pair(coeff, state.size());
         }

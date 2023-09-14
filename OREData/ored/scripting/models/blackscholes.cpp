@@ -166,26 +166,25 @@ void BlackScholes::performCalculations() const {
             for (Size k = 0; k < jd.eigenvalues().size(); ++k) {
                 diagonal[k][k] = std::sqrt(std::max<Real>(jd.eigenvalues()[k], 0.0));
             }
-            covariance_[i - 1] = jd.eigenvectors() * diagonal * transpose(jd.eigenvectors());
+            covariance_[i - 1] = jd.eigenvectors() * diagonal * diagonal * transpose(jd.eigenvectors());
         }
 
         // compute the _unique_ pos semidefinite square root
 
         sqrtCov.push_back(CholeskyDecomposition(covariance_[i - 1], true));
 
-        // drift, using square of root of covariance
+        // drift
 
         Date d = *std::next(effectiveSimulationDates_.begin(), i);
-        Matrix cov = sqrtCov.back() * sqrtCov.back();
         for (Size j = 0; j < indices_.size(); ++j) {
             Real tmp = model_->processes()[j]->riskFreeRate()->discount(d) /
                        model_->processes()[j]->dividendYield()->discount(d);
-            drift[i - 1][j] = -std::log(tmp / discountRatio[j]) - 0.5 * cov[j][j];
+            drift[i - 1][j] = -std::log(tmp / discountRatio[j]) - 0.5 * covariance_[i - 1][j][j];
             discountRatio[j] = tmp;
 
             // drift adjustment for eq / com indices that are not in base ccy
             if (forCcyDaIndex[j] != Null<Size>()) {
-                drift[i - 1][j] -= cov[forCcyDaIndex[j]][j];
+                drift[i - 1][j] -= covariance_[i - 1][forCcyDaIndex[j]][j];
             }
         }
     }

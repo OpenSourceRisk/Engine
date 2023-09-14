@@ -198,7 +198,7 @@ struct SqrtCovCalculator : public QuantLib::LazyObject {
                     for (Size k = 0; k < jd.eigenvalues().size(); ++k) {
                         diagonal[k][k] = std::sqrt(std::max<Real>(jd.eigenvalues()[k], 0.0));
                     }
-                    covariance_[i] = jd.eigenvectors() * diagonal * transpose(jd.eigenvectors());
+                    covariance_[i] = jd.eigenvectors() * diagonal * diagonal * transpose(jd.eigenvectors());
                 }
 
                 // compute the _unique_ pos semidefinite square root
@@ -291,6 +291,10 @@ void BlackScholesCG::performCalculations() const {
         effectiveSimulationDates_.size() - 1,
         std::vector<std::vector<std::size_t>>(indices_.size(),
                                               std::vector<std::size_t>(indices_.size(), ComputationGraph::nan)));
+    std::vector<std::vector<std::vector<std::size_t>>> cov(
+        effectiveSimulationDates_.size() - 1,
+        std::vector<std::vector<std::size_t>>(indices_.size(),
+                                              std::vector<std::size_t>(indices_.size(), ComputationGraph::nan)));
 
     // precompute sqrtCov nodes and add model parameters for covariance (needed in futureBarrierProbability())
 
@@ -302,6 +306,7 @@ void BlackScholesCG::performCalculations() const {
                 sqrtCov[i][j][k] = cg_var(*g_, id);
                 id = "__cov_" + std::to_string(j) + "_" + std::to_string(k) + "_" + std::to_string(i);
                 addModelParameter(id, [sqrtCovCalc, i, j, k] { return sqrtCovCalc->cov(i, j, k); });
+                cov[i][j][k] = cg_var(*g_, id);
             }
         }
     }
@@ -331,13 +336,11 @@ void BlackScholesCG::performCalculations() const {
             addModelParameter("__div_" + id, [p, d]() { return p->dividendYield()->discount(d); });
             addModelParameter("__rfr_" + id, [p, d]() { return p->riskFreeRate()->discount(d); });
             std::size_t tmp = cg_div(*g_, cg_var(*g_, "__rfr_" + id), cg_var(*g_, "__div_" + id));
-            drift[i][j] =
-                cg_subtract(*g_, cg_negative(*g_, cg_log(*g_, cg_div(*g_, tmp, discountRatio[j]))),
-                            cg_mult(*g_, cg_const(*g_, 0.5), cg_mult(*g_, sqrtCov[i][j][j], sqrtCov[i][j][j])));
+            drift[i][j] = cg_subtract(*g_, cg_negative(*g_, cg_log(*g_, cg_div(*g_, tmp, discountRatio[j]))),
+                                      cg_mult(*g_, cg_const(*g_, 0.5), cov[i][j][j]));
             discountRatio[j] = tmp;
             if (forCcyDaIndex[j] != Null<Size>()) {
-                drift[i][j] = cg_subtract(
-                    *g_, drift[i][j], cg_mult(*g_, sqrtCov[i][forCcyDaIndex[j]][j], sqrtCov[i][forCcyDaIndex[j]][j]));
+                drift[i][j] = cg_subtract(*g_, drift[i][j], cov[i][forCcyDaIndex[j]][j]);
             }
         }
     }

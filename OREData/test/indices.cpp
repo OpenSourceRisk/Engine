@@ -103,7 +103,7 @@ struct test_data_inf {
 static struct test_data index_data[] = {
     // parsing string,     index name,                     tenor
     {"EUR-EONIA-1D", "EoniaON Actual/360", 1 * Days},
-    {"EUR-ESTER", "EsterON Actual/360", 1 * Days},
+    {"EUR-ESTER", "ESTRON Actual/360", 1 * Days},
     {"GBP-SONIA-1D", "SoniaON Actual/365 (Fixed)", 1 * Days},
     {"JPY-TONAR-1D", "TONARON Actual/365 (Fixed)", 1 * Days},
     {"CHF-TOIS", "CHF-TOISTN Actual/360", 1 * Days},
@@ -125,13 +125,13 @@ static struct test_data index_data[] = {
     {"AUD-LIBOR-12M", "AUDLibor1Y Actual/360", 1 * Years},
     {"AUD-LIBOR-1Y", "AUDLibor1Y Actual/360", 1 * Years},
 
-    {"AUD-BBSW-1W", "AUD-BBSW1W Actual/365 (Fixed)", 1 * Weeks},
-    {"AUD-BBSW-1M", "AUD-BBSW1M Actual/365 (Fixed)", 1 * Months},
-    {"AUD-BBSW-2M", "AUD-BBSW2M Actual/365 (Fixed)", 2 * Months},
-    {"AUD-BBSW-3M", "AUD-BBSW3M Actual/365 (Fixed)", 3 * Months},
-    {"AUD-BBSW-6M", "AUD-BBSW6M Actual/365 (Fixed)", 6 * Months},
-    {"AUD-BBSW-12M", "AUD-BBSW1Y Actual/365 (Fixed)", 1 * Years},
-    {"AUD-BBSW-1Y", "AUD-BBSW1Y Actual/365 (Fixed)", 1 * Years},
+    {"AUD-BBSW-1W", "Bbsw1W Actual/365 (Fixed)", 1 * Weeks},
+    {"AUD-BBSW-1M", "Bbsw1M Actual/365 (Fixed)", 1 * Months},
+    {"AUD-BBSW-2M", "Bbsw2M Actual/365 (Fixed)", 2 * Months},
+    {"AUD-BBSW-3M", "Bbsw3M Actual/365 (Fixed)", 3 * Months},
+    {"AUD-BBSW-6M", "Bbsw6M Actual/365 (Fixed)", 6 * Months},
+    {"AUD-BBSW-12M", "Bbsw1Y Actual/365 (Fixed)", 1 * Years},
+    {"AUD-BBSW-1Y", "Bbsw1Y Actual/365 (Fixed)", 1 * Years},
 
     {"EUR-EURIBOR-1W", "Euribor1W Actual/360", 1 * Weeks},
     {"EUR-EURIBOR-2W", "Euribor2W Actual/360", 2 * Weeks},
@@ -305,7 +305,7 @@ static struct test_data index_data[] = {
     {"MXN-TIIE-4W", "MXN-TIIE4W Actual/360", 4 * Weeks},
     {"MXN-TIIE-91D", "MXN-TIIE3M Actual/360", 3 * Months},
     {"MXN-TIIE-3M", "MXN-TIIE3M Actual/360", 3 * Months},
-    {"PLN-WIBOR-6M", "PLN-WIBOR6M Actual/365 (Fixed)", 6 * Months},
+    {"PLN-WIBOR-6M", "WIBOR6M Actual/365 (Fixed)", 6 * Months},
     {"SKK-BRIBOR-6M", "SKK-BRIBOR6M Actual/360", 6 * Months},
     {"THB-THBFIX-6M", "THBFIX6M Actual/365 (Fixed)", 6 * Months},
 

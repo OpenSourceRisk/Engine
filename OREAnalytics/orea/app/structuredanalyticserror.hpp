@@ -37,8 +37,7 @@ public:
               Category::Error, Group::Analytics, exceptionWhat,
               std::map<std::string, std::string>({{"exceptionType", exceptionType}, {"analyticType", analyticType}})) {
 
-        if (!subFields.empty())
-            subFields_.insert(subFields.begin(), subFields.end());
+        addSubFields(subFields);
     }
 };
 
