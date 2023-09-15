@@ -8,7 +8,5 @@ services:
       dockerfile: Docker/Dockerfile-multistage
       args:
         - debian_tag=${DEBIAN_TAG}
-        - boost_tag=${BOOST_TAG}
-        - boost_dir=${BOOST_DIR}
-        - boost_variant=${BOOST_VARIANT}
         - num_cores=${NUM_CORES}
+        - cmake_build_type=${CMAKE_BUILD_TYPE}
