@@ -210,6 +210,7 @@
 #include <qle/instruments/vanillaforwardoption.hpp>
 #include <qle/instruments/varianceswap.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
+#include <qle/math/basiccpuenvironment.hpp>
 #include <qle/math/blockmatrixinverse.hpp>
 #include <qle/math/bucketeddistribution.hpp>
 #include <qle/math/computeenvironment.hpp>
@@ -231,6 +232,7 @@
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_io.hpp>
 #include <qle/math/randomvariable_opcodes.hpp>
+#include <qle/math/randomvariable_ops.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/math/stabilisedglls.hpp>
 #include <qle/math/trace.hpp>
