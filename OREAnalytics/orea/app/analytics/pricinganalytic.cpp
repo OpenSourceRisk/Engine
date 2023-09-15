@@ -226,6 +226,14 @@ void PricingAnalyticImpl::runAnalytic(
                                      inputs_->sensiThreshold());
             analytic()->reports()[type]["sensitivity_scenario"] = scenarioReport;
 
+            auto simmSensitivityConfigReport = boost::make_shared<InMemoryReport>();
+            ReportWriter(inputs_->reportNaString())
+                .writeSensitivityConfigReport(*simmSensitivityConfigReport,
+                                              sensiAnalysis->scenarioGenerator()->shiftSizes(),
+                                              sensiAnalysis->scenarioGenerator()->baseValues(),
+                                              sensiAnalysis->scenarioGenerator()->keyToFactor());
+            analytic()->reports()[type]["sensitivity_config"] = simmSensitivityConfigReport;
+
             if (inputs_->parSensi()) {
                 LOG("Sensi analysis - par conversion");
                 parAnalysis->computeParInstrumentSensitivities(sensiAnalysis->simMarket());
