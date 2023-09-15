@@ -174,6 +174,8 @@
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/portfolio/varianceswap.hpp>
 
+#include <qle/math/openclenvironment.hpp>
+
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
@@ -430,6 +432,7 @@ void initBuilders() {
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("ConvertibleBond", ConvertibleBondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("CBO", CBOTrsUnderlyingBuilder, false)
 
+    ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR("OpenCL", QuantExt::OpenClFramework, false);
 }
 
 } // namespace ore::data
