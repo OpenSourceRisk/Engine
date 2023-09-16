@@ -47,12 +47,14 @@ public:
     */
     SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
                    const boost::shared_ptr<SimmConfiguration>& simmConfiguration,
-                   const std::string& calculationCcy = "USD",
-                   const std::string& resultCcy = "",
+                   const std::string& calculationCcy = "USD", const std::string& resultCcy = "",
                    const boost::shared_ptr<ore::data::Market> market = nullptr,
-                   const bool determineWinningRegulations = true,
-                   const bool enforceIMRegulations = false,
-                   const bool quiet = false);
+                   const bool determineWinningRegulations = true, const bool enforceIMRegulations = false,
+                   const bool quiet = false,
+                   const std::map<SimmSide, std::set<NettingSetDetails>> hasSEC =
+                       std::map<SimmSide, std::set<NettingSetDetails>>(),
+                   const std::map<SimmSide, std::set<NettingSetDetails>> hasCFTC =
+                       std::map<SimmSide, std::set<NettingSetDetails>>());
 
     //! Calculates SIMM for a given regulation under a given netting set
     const void calculateRegulationSimm(const SimmNetSensitivities& netRecords, const ore::data::NettingSetDetails& nsd,
@@ -120,6 +122,8 @@ private:
 
     //! If true, no logging is written out
     bool quiet_;
+
+    std::map<SimmSide, std::set<NettingSetDetails>> hasSEC_, hasCFTC_;
 
     //! For each netting set, whether all CRIF records' collect regulations are empty
     std::map<ore::data::NettingSetDetails, bool> collectRegsIsEmpty_;

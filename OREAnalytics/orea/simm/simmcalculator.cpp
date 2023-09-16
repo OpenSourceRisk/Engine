@@ -63,12 +63,23 @@ typedef SimmConfiguration::SimmSide SimmSide;
 
 SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
                                const boost::shared_ptr<SimmConfiguration>& simmConfiguration,
-                               const string& calculationCcy, const string& resultCcy, const boost::shared_ptr<Market> market,
-                               const bool determineWinningRegulations,
-                               const bool enforceIMRegulations, const bool quiet)
+                               const string& calculationCcy, const string& resultCcy,
+                               const boost::shared_ptr<Market> market, const bool determineWinningRegulations,
+                               const bool enforceIMRegulations, const bool quiet,
+                               const map<SimmSide, set<NettingSetDetails>> hasSEC,
+                               const map<SimmSide, set<NettingSetDetails>> hasCFTC)
     : simmNetSensitivities_(simmNetSensitivities), simmConfiguration_(simmConfiguration),
       calculationCcy_(calculationCcy), resultCcy_(resultCcy.empty() ? calculationCcy_ : resultCcy), market_(market),
-      quiet_(quiet) {
+      quiet_(quiet), hasSEC_(hasSEC), hasCFTC_(hasCFTC) {
+
+    if (hasSEC_.find(SimmSide::Call) == hasSEC_.end())
+        hasSEC_[SimmSide::Call] = set<NettingSetDetails>();
+    if (hasSEC_.find(SimmSide::Post) == hasSEC_.end())
+        hasSEC_[SimmSide::Post] = set<NettingSetDetails>();
+    if (hasCFTC_.find(SimmSide::Call) == hasCFTC_.end())
+        hasCFTC_[SimmSide::Call] = set<NettingSetDetails>();
+    if (hasCFTC_.find(SimmSide::Post) == hasCFTC_.end())
+        hasCFTC_[SimmSide::Post] = set<NettingSetDetails>();
 
     QL_REQUIRE(checkCurrency(calculationCcy_),
                "SIMM Calculator: The calculation currency (" << calculationCcy_ << ") must be a valid ISO currency code");
@@ -116,31 +127,49 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
 
     // Some additional processing depending on the regulations applicable to each netting set
     for (auto& sv : regSensitivities_) {
+        const SimmSide& side = sv.first;
 
         for (auto& s : sv.second) {
+            const NettingSetDetails& nettingDetails = s.first;
+
             // Where there is SEC and CFTC in the portfolio, we add the CFTC trades to SEC,
             // but still continue with CFTC calculations
-            const bool hasCFTC = s.second.find("CFTC") != s.second.end();
-            const bool hasSEC = s.second.find("SEC") != s.second.end();
-            if (hasCFTC && hasSEC) {
-                const SimmNetSensitivities& netRecordsCFTC = s.second.at("CFTC")->netRecords(true);
-                const SimmNetSensitivities& netRecordsSEC = s.second.at("SEC")->netRecords(true);
-                for (const auto& cr : netRecordsCFTC) {
-                    // Only add CFTC records to SEC if the record was not already in SEC,
-                    // i.e. we skip over CRIF records with regulations specified as e.g. "..., CFTC, SEC, ..."
-                    if (netRecordsSEC.find(cr) == netRecordsSEC.end()) {
-                        if (!quiet_) {
-                            DLOG("SimmCalculator: Inserting CRIF record with CFTC "
-                                << s.first << " regulation into SEC CRIF records: " << cr);
-                        }
-                        s.second.at("SEC")->add(cr);
+            const bool hasCFTCGlobal = hasCFTC_.at(side).find(nettingDetails) != hasCFTC_.at(side).end();
+            const bool hasSECGlobal = hasSEC_.at(side).find(nettingDetails) != hasSEC_.at(side).end();
+            const bool hasSECLocal = s.second.find("SEC") != s.second.end();
+            const bool hasCFTCLocal = s.second.find("CFTC") != s.second.end();
+
+            if ((hasSECLocal && hasCFTCLocal) || (hasCFTCGlobal && hasSECGlobal)) {
+                if (!hasSECLocal) {
+                    if (!hasCFTCLocal) {
+                        continue;
+                    } else {
+                        s.second["SEC"] = boost::make_shared<CrifLoader>(simmConfiguration_,
+                                                                         CrifRecord::additionalHeaders, true, false);
                     }
                 }
+                
+                if (hasCFTCLocal) {
+                    const SimmNetSensitivities& netRecordsCFTC = s.second.at("CFTC")->netRecords(true);
+                    const SimmNetSensitivities& netRecordsSEC = s.second.at("SEC")->netRecords(true);
+                    for (const auto& cr : netRecordsCFTC) {
+                        // Only add CFTC records to SEC if the record was not already in SEC,
+                        // i.e. we skip over CRIF records with regulations specified as e.g. "..., CFTC, SEC, ..."
+                        if (netRecordsSEC.find(cr) == netRecordsSEC.end()) {
+                            if (!quiet_) {
+                                DLOG("SimmCalculator: Inserting CRIF record with CFTC "
+                                     << s.first << " regulation into SEC CRIF records: " << cr);
+                            }
+                            s.second.at("SEC")->add(cr);
+                        }
+                    }
+                }
+
             }
             // The CrifLoader was set initially without aggregation, so make sure to aggregate this now
-            if (hasCFTC)
+            if (hasCFTCLocal)
                 s.second.at("CFTC")->aggregate();
-            if (hasSEC)
+            if (hasSECLocal)
                 s.second.at("SEC")->aggregate();
 
             // If netting set has "Unspecified" plus other regulations, the "Unspecified" sensis are to be excluded.
