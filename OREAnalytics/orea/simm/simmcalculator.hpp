@@ -51,9 +51,9 @@ public:
                    const boost::shared_ptr<ore::data::Market> market = nullptr,
                    const bool determineWinningRegulations = true, const bool enforceIMRegulations = false,
                    const bool quiet = false,
-                   const std::map<SimmSide, std::set<NettingSetDetails>> hasSEC =
+                   const std::map<SimmSide, std::set<NettingSetDetails>>& hasSEC =
                        std::map<SimmSide, std::set<NettingSetDetails>>(),
-                   const std::map<SimmSide, std::set<NettingSetDetails>> hasCFTC =
+                   const std::map<SimmSide, std::set<NettingSetDetails>>& hasCFTC =
                        std::map<SimmSide, std::set<NettingSetDetails>>());
 
     //! Calculates SIMM for a given regulation under a given netting set

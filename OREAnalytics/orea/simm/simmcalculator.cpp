@@ -66,20 +66,11 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
                                const string& calculationCcy, const string& resultCcy,
                                const boost::shared_ptr<Market> market, const bool determineWinningRegulations,
                                const bool enforceIMRegulations, const bool quiet,
-                               const map<SimmSide, set<NettingSetDetails>> hasSEC,
-                               const map<SimmSide, set<NettingSetDetails>> hasCFTC)
+                               const map<SimmSide, set<NettingSetDetails>>& hasSEC,
+                               const map<SimmSide, set<NettingSetDetails>>& hasCFTC)
     : simmNetSensitivities_(simmNetSensitivities), simmConfiguration_(simmConfiguration),
       calculationCcy_(calculationCcy), resultCcy_(resultCcy.empty() ? calculationCcy_ : resultCcy), market_(market),
       quiet_(quiet), hasSEC_(hasSEC), hasCFTC_(hasCFTC) {
-
-    if (hasSEC_.find(SimmSide::Call) == hasSEC_.end())
-        hasSEC_[SimmSide::Call] = set<NettingSetDetails>();
-    if (hasSEC_.find(SimmSide::Post) == hasSEC_.end())
-        hasSEC_[SimmSide::Post] = set<NettingSetDetails>();
-    if (hasCFTC_.find(SimmSide::Call) == hasCFTC_.end())
-        hasCFTC_[SimmSide::Call] = set<NettingSetDetails>();
-    if (hasCFTC_.find(SimmSide::Post) == hasCFTC_.end())
-        hasCFTC_[SimmSide::Post] = set<NettingSetDetails>();
 
     QL_REQUIRE(checkCurrency(calculationCcy_),
                "SIMM Calculator: The calculation currency (" << calculationCcy_ << ") must be a valid ISO currency code");
@@ -134,8 +125,8 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
 
             // Where there is SEC and CFTC in the portfolio, we add the CFTC trades to SEC,
             // but still continue with CFTC calculations
-            const bool hasCFTCGlobal = hasCFTC_.at(side).find(nettingDetails) != hasCFTC_.at(side).end();
-            const bool hasSECGlobal = hasSEC_.at(side).find(nettingDetails) != hasSEC_.at(side).end();
+            const bool hasCFTCGlobal = hasCFTC_[side].find(nettingDetails) != hasCFTC_[side].end();
+            const bool hasSECGlobal = hasSEC_[side].find(nettingDetails) != hasSEC_[side].end();
             const bool hasSECLocal = s.second.find("SEC") != s.second.end();
             const bool hasCFTCLocal = s.second.find("CFTC") != s.second.end();
 
@@ -150,6 +141,7 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
                 }
                 
                 if (hasCFTCLocal) {
+                    // At this point, we expect to have both SEC and CFTC sensitivities for the netting set
                     const SimmNetSensitivities& netRecordsCFTC = s.second.at("CFTC")->netRecords(true);
                     const SimmNetSensitivities& netRecordsSEC = s.second.at("SEC")->netRecords(true);
                     for (const auto& cr : netRecordsCFTC) {
