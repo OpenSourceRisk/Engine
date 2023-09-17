@@ -42,7 +42,7 @@ public:
               Spread spread = 0.0, const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
               const Date& exCouponDate = Date(), bool subtractInflationNominal = false)
         : QuantLib::CPICoupon(baseCPI, paymentDate, nominal, startDate, endDate, index, observationLag,
-                              observationInterpolation, dayCounter, fixedRate, spread, refPeriodStart,
+                              observationInterpolation, dayCounter, fixedRate, refPeriodStart,
                               refPeriodEnd, exCouponDate),
           subtractInflationNominal_(subtractInflationNominal){};
 
@@ -56,7 +56,7 @@ public:
               const Date& exCouponDate = Date(), bool subtractInflationNominal = false)
         : QuantLib::CPICoupon(baseCPI, baseDate, paymentDate, nominal, startDate, endDate, index,
                               observationLag,
-                              observationInterpolation, dayCounter, fixedRate, spread, refPeriodStart, refPeriodEnd,
+                              observationInterpolation, dayCounter, fixedRate, refPeriodStart, refPeriodEnd,
                               exCouponDate),
           subtractInflationNominal_(subtractInflationNominal){};
 

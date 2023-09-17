@@ -43,7 +43,8 @@ StrippedCappedFlooredCPICoupon::StrippedCappedFlooredCPICoupon(
     : CPICoupon(underlying->baseCPI(), underlying->date(), underlying->nominal(), underlying->accrualStartDate(),
                 underlying->accrualEndDate(), underlying->cpiIndex(),
                 underlying->observationLag(), underlying->observationInterpolation(), underlying->dayCounter(),
-                underlying->fixedRate(), underlying->spread(), underlying->referencePeriodStart(),
+                underlying->fixedRate(), 0.0, underlying->referencePeriodStart(),
+                // underlying->fixedRate(), underlying->spread(), underlying->referencePeriodStart(),
                 underlying->referencePeriodEnd(), underlying->exCouponDate()),
       underlying_(underlying) {
     registerWith(underlying_);

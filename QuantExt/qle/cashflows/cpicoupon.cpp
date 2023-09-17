@@ -31,11 +31,13 @@
 
 namespace QuantExt {
 
-    Rate CPICoupon::rate() const {
+Rate CPICoupon::rate() const {
     Rate r = QuantLib::CPICoupon::rate() ;
         if (subtractInflationNominal_) {
-            Rate adjusted_r = r / fixedRate_ - spread_;
-            r = (adjusted_r - 1) * fixedRate_ + spread_;
+            // Rate adjusted_r = r / fixedRate_ - spread_;
+            // r = (adjusted_r - 1) * fixedRate_ + spread_;
+            Rate adjusted_r = r / fixedRate_;
+            r = (adjusted_r - 1) * fixedRate_;
         }
         return r;
     }
@@ -74,7 +76,8 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
     : CPICoupon(underlying->baseCPI(), underlying->baseDate(), underlying->date(), underlying->nominal(), underlying->accrualStartDate(),
                 underlying->accrualEndDate(), underlying->cpiIndex(),
                 underlying->observationLag(), underlying->observationInterpolation(), underlying->dayCounter(),
-                underlying->fixedRate(), underlying->spread(), underlying->referencePeriodStart(),
+                // underlying->fixedRate(), underlying->spread(), underlying->referencePeriodStart(),
+                underlying->fixedRate(), 0.0, underlying->referencePeriodStart(),
                 underlying->referencePeriodEnd(), underlying->exCouponDate(), underlying->subtractInflationNotional()),
       underlying_(underlying), startDate_(startDate), isFloored_(false), isCapped_(false) {
 
