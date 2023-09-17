@@ -24,7 +24,7 @@ namespace QuantExt {
 
 ExternalRandomVariable::ExternalRandomVariable(std::size_t id) : initialized_(true), id_(id) {}
 
-ExternalRandomVariable::ExternalRandomVariable(float v) : initialized_(true), v_(v) {
+ExternalRandomVariable::ExternalRandomVariable(double v) : initialized_(true), v_(v) {
     id_ = ComputeEnvironment::instance().context().createInputVariable(v);
 }
 

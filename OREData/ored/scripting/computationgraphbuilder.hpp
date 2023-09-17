@@ -28,7 +28,7 @@
 #include <ored/scripting/context.hpp>
 #include <ored/scripting/paylog.hpp>
 
-#include <qle/ad/randomvariable_ops.hpp>
+#include <qle/math/randomvariable_ops.hpp>
 
 namespace ore {
 namespace data {

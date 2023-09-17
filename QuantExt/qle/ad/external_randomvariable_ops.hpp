@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <qle/ad/randomvariable_ops.hpp>
+#include <qle/math/randomvariable_ops.hpp>
 
 namespace QuantExt {
 
@@ -30,7 +30,7 @@ class ExternalRandomVariable {
 public:
     ExternalRandomVariable() {}
     explicit ExternalRandomVariable(std::size_t id);
-    explicit ExternalRandomVariable(float v);
+    explicit ExternalRandomVariable(double v);
     ExternalRandomVariable(const std::size_t randomVariableOpCode,
                            const std::vector<const ExternalRandomVariable*>& args);
     void clear();
@@ -41,7 +41,7 @@ public:
 
 private:
     bool initialized_ = false;
-    float v_;
+    double v_;
     std::size_t id_;
 };
 

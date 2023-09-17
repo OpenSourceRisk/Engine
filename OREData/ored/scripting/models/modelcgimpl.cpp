@@ -18,13 +18,11 @@
 
 #include <ored/scripting/models/modelcgimpl.hpp>
 #include <ored/scripting/utilities.hpp>
-
-#include <qle/ad/randomvariable_ops.hpp>
-
 #include <ored/utilities/indexparser.hpp>
 
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/math/randomvariable_ops.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/quotes/simplequote.hpp>

@@ -18,10 +18,10 @@
 
 #include <ored/scripting/models/blackscholescg.hpp>
 
-#include <qle/ad/randomvariable_ops.hpp>
-
 #include <ored/utilities/to_string.hpp>
 #include <ored/model/utilities.hpp>
+
+#include <qle/math/randomvariable_ops.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrixutilities/choleskydecomposition.hpp>

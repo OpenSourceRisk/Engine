@@ -24,9 +24,8 @@
 #pragma once
 
 #include <qle/ad/computationgraph.hpp>
-#include <qle/ad/randomvariable_ops.hpp>
-
 #include <qle/math/randomvariable.hpp>
+#include <qle/math/randomvariable_ops.hpp>
 
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/settings.hpp>

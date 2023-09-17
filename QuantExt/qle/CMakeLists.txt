@@ -3,7 +3,6 @@
 set(QuantExt_SRC
 ad/computationgraph.cpp
 ad/external_randomvariable_ops.cpp
-ad/randomvariable_ops.cpp
 ad/ssaform.cpp
 calendars/amendedcalendar.cpp
 calendars/austria.cpp
@@ -146,6 +145,7 @@ instruments/subperiodsswap.cpp
 instruments/syntheticcdo.cpp
 instruments/tenorbasisswap.cpp
 instruments/varianceswap.cpp
+math/basiccpuenvironment.cpp
 math/blockmatrixinverse.cpp
 math/bucketeddistribution.cpp
 math/computeenvironment.cpp
@@ -157,6 +157,7 @@ math/matrixfunctions.cpp
 math/openclenvironment.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
+math/randomvariable_ops.cpp
 math/randomvariablelsmbasissystem.cpp
 methods/brownianbridgepathinterpolator.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
@@ -396,7 +397,6 @@ ad/computationgraph.hpp
 ad/external_randomvariable_ops.hpp
 ad/forwardderivatives.hpp
 ad/forwardevaluation.hpp
-ad/randomvariable_ops.hpp
 ad/ssaform.hpp
 auto_link.hpp
 calendars/amendedcalendar.hpp
@@ -493,7 +493,6 @@ indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/genericindex.hpp
-indexes/iborindexfixingoverride.hpp
 indexes/ibor/ambor.hpp
 indexes/ibor/ameribor.hpp
 indexes/ibor/boebaserate.hpp
@@ -546,6 +545,7 @@ indexes/ibor/thbbibor.hpp
 indexes/ibor/thor.hpp
 indexes/ibor/tonar.hpp
 indexes/ibor/twdtaibor.hpp
+indexes/iborindexfixingoverride.hpp
 indexes/inflationindexobserver.hpp
 indexes/inflationindexwrapper.hpp
 indexes/offpeakpowerindex.hpp
@@ -604,6 +604,7 @@ instruments/tenorbasisswap.hpp
 instruments/vanillaforwardoption.hpp
 instruments/varianceswap.hpp
 interpolators/optioninterpolator2d.hpp
+math/basiccpuenvironment.hpp
 math/blockmatrixinverse.hpp
 math/bucketeddistribution.hpp
 math/computeenvironment.hpp
@@ -626,6 +627,7 @@ math/quadraticinterpolation.hpp
 math/randomvariable.hpp
 math/randomvariable_io.hpp
 math/randomvariable_opcodes.hpp
+math/randomvariable_ops.hpp
 math/randomvariablelsmbasissystem.hpp
 math/stabilisedglls.hpp
 math/trace.hpp

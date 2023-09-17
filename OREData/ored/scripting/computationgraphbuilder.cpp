@@ -24,12 +24,13 @@
 #include <ored/scripting/utilities.hpp>
 
 #include <qle/ad/computationgraph.hpp>
-#include <qle/ad/randomvariable_ops.hpp>
 #include <qle/ad/ssaform.hpp>
 
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+
+#include <qle/math/randomvariable_ops.hpp>
 
 #include <ql/errors.hpp>
 #include <ql/indexes/indexmanager.hpp>

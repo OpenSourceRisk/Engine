@@ -18,9 +18,6 @@
 
 #include <ored/scripting/models/blackscholescgbase.hpp>
 
-#include <qle/ad/randomvariable_ops.hpp>
-#include <qle/math/randomvariablelsmbasissystem.hpp>
-
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -28,6 +25,7 @@
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
+#include <qle/math/randomvariable_ops.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrixutilities/pseudosqrt.hpp>

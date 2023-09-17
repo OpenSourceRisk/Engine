@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2021 Quaternion Risk Management Ltd
+ Copyright (C) 2023 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,8 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/ad/randomvariable_ops.hpp>
-#include <qle/ad/computationgraph.hpp>
+#include <qle/math/randomvariable_ops.hpp>
 
 #include <ql/math/comparison.hpp>
 

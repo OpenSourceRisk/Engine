@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2021 Quaternion Risk Management Ltd
+ Copyright (C) 2023 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,16 +16,16 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/ad/randomvariable_ops.hpp
+/*! \file qle/math/randomvariable_ops.hpp
     \brief ops for type randomvariable
 */
 
 #pragma once
 
-#include <qle/ad/computationgraph.hpp>
-
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_opcodes.hpp>
+
+#include <map>
 
 namespace QuantExt {
 

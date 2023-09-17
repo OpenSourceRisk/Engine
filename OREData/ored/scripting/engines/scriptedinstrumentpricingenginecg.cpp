@@ -53,8 +53,8 @@ struct anyGetter : public boost::static_visitor<boost::any> {
 
 boost::any valueToAny(const ValueType& v) { return boost::apply_visitor(anyGetter(), v); }
 
-float externalAverage(const std::vector<float>& v) {
-    boost::accumulators::accumulator_set<float, boost::accumulators::stats<boost::accumulators::tag::mean>> acc;
+double externalAverage(const std::vector<double>& v) {
+    boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::mean>> acc;
     for (auto const& x : v) {
         acc(x);
     }
@@ -173,7 +173,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         for (auto const& c : g->constants()) {
             if (useExternalComputeFramework_) {
-                valuesExternal[c.second] = ExternalRandomVariable((float)c.first);
+                valuesExternal[c.second] = ExternalRandomVariable(c.first);
             } else {
                 values[c.second] = RandomVariable(model_->size(), c.first);
             }
@@ -183,9 +183,9 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         baseModelParams_ = model_->modelParameters();
         for (auto const& p : baseModelParams_) {
-            TLOG("setting model parameter at node " << p.first << " to value " << p.second);
+            TLOG("setting model parameter at node " << p.first << " to value " << std::setprecision(16) << p.second);
             if (useExternalComputeFramework_) {
-                valuesExternal[p.first] = ExternalRandomVariable((float)p.second);
+                valuesExternal[p.first] = ExternalRandomVariable(p.second);
             } else {
                 values[p.first] = RandomVariable(model_->size(), p.second);
             }
@@ -254,8 +254,8 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                 forwardEvaluation(*g, valuesExternal, opsExternal_, ExternalRandomVariable::deleter, useCachedSensis_,
                                   opNodeRequirements_, keepNodes);
                 valuesExternal[baseNpvNode].declareAsOutput();
-                externalOutput_ = std::vector<std::vector<float>>(1, std::vector<float>(model_->size()));
-                externalOutputPtr_ = std::vector<float*>(1, &externalOutput_.front()[0]);
+                externalOutput_ = std::vector<std::vector<double>>(1, std::vector<double>(model_->size()));
+                externalOutputPtr_ = std::vector<double*>(1, &externalOutput_.front()[0]);
                 DLOG("ran forward evaluation");
             }
         } else {

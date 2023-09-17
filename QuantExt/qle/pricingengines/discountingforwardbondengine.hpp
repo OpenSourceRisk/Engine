@@ -31,6 +31,8 @@
 #include <ql/time/period.hpp>
 #include <qle/instruments/forwardbond.hpp>
 
+#include <boost/tuple/tuple.hpp>
+
 namespace QuantExt {
 
 //! Discounting Forward Bond Engine

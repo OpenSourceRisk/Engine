@@ -292,7 +292,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
             script.npv(), script.results(), modelCG_, ast_, context, script.code(), interactive_, amcCam_ != nullptr,
             std::set<std::string>(script.stickyCloseOutStates().begin(), script.stickyCloseOutStates().end()),
             generateAdditionalResults, useCachedSensis, useExternalDev);
-        if (useExternalDev && !ComputeEnvironment::instance().hasContext()) {
+        if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
         }
     }

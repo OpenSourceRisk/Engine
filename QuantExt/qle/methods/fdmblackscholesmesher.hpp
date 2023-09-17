@@ -29,6 +29,8 @@
 #include <ql/handle.hpp>
 #include <ql/quote.hpp>
 
+#include <boost/tuple/tuple.hpp>
+
 namespace QuantLib {
 class FdmQuantoHelper;
 class YieldTermStructure;

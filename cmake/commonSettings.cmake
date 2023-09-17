@@ -30,6 +30,16 @@ endmacro()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS FALSE)
 
+# If available, use PIC for shared libs and PIE for executables
+if (NOT DEFINED CMAKE_POSITION_INDEPENDENT_CODE)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+if (CMAKE_POSITION_INDEPENDENT_CODE)
+    # cmake policy CMP0083: add PIE support if possible (need cmake 3.14)
+    include(CheckPIESupported)
+    check_pie_supported()
+endif()
+
 # set compiler macro if open cl is enabled
 if (ORE_ENABLE_OPENCL)
   add_compile_definitions(ORE_ENABLE_OPENCL)

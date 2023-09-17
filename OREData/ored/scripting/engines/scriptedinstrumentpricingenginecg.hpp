@@ -69,8 +69,8 @@ private:
     // external compute framework calculation id and results
 
     mutable std::size_t externalCalculationId_ = 0;
-    mutable std::vector<std::vector<float>> externalOutput_;
-    mutable std::vector<float*> externalOutputPtr_;
+    mutable std::vector<std::vector<double>> externalOutput_;
+    mutable std::vector<double*> externalOutputPtr_;
 
     // variables populated during cg building
 

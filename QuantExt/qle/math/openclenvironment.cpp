@@ -179,15 +179,15 @@ public:
     std::pair<std::size_t, bool> initiateCalculation(const std::size_t n, const std::size_t id = 0,
                                                      const std::size_t version = 0,
                                                      const bool debug = false) override final;
-    std::size_t createInputVariable(float v) override final;
-    std::size_t createInputVariable(float* v) override final;
+    std::size_t createInputVariable(double v) override final;
+    std::size_t createInputVariable(double* v) override final;
     std::vector<std::vector<std::size_t>> createInputVariates(const std::size_t dim, const std::size_t steps,
                                                               const std::uint32_t seed) override final;
     std::size_t applyOperation(const std::size_t randomVariableOpCode,
                                const std::vector<std::size_t>& args) override final;
     void freeVariable(const std::size_t id) override final;
     void declareOutputVariable(const std::size_t id) override final;
-    void finalizeCalculation(std::vector<float*>& output) override final;
+    void finalizeCalculation(std::vector<double*>& output) override final;
 
     const DebugInfo& debugInfo() const override final;
 
@@ -235,6 +235,7 @@ private:
     std::vector<bool> inputVarIsScalar_;
     std::vector<float> inputVarValue_;
     std::vector<float*> inputVarPtr_;
+    std::vector<std::vector<float>> inputVarPtrVal_;
 
     // 2b collection of variable ids
     std::vector<std::size_t> freedVariables_;
@@ -425,6 +426,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
     inputVarIsScalar_.clear();
     inputVarValue_.clear();
     inputVarPtr_.clear();
+    inputVarPtrVal_.clear();
 
     freedVariables_.clear();
     outputVariables_.clear();
@@ -444,7 +446,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
     return std::make_pair(currentId_, newCalc);
 }
 
-std::size_t OpenClContext::createInputVariable(float v) {
+std::size_t OpenClContext::createInputVariable(double v) {
     QL_REQUIRE(currentState_ == ComputeState::createInput,
                "OpenClContext::createInputVariable(): not in state createInput (" << static_cast<int>(currentState_)
                                                                                   << ")");
@@ -454,12 +456,13 @@ std::size_t OpenClContext::createInputVariable(float v) {
     }
     inputVarOffset_.push_back(nextOffset);
     inputVarIsScalar_.push_back(true);
-    inputVarValue_.push_back(v);
+    inputVarValue_.push_back((float)v);
     inputVarPtr_.push_back(nullptr);
+    inputVarPtrVal_.push_back({});
     return nVars_++;
 }
 
-std::size_t OpenClContext::createInputVariable(float* v) {
+std::size_t OpenClContext::createInputVariable(double* v) {
     QL_REQUIRE(currentState_ == ComputeState::createInput,
                "OpenClContext::createInputVariable(): not in state createInput (" << static_cast<int>(currentState_)
                                                                                   << ")");
@@ -470,7 +473,9 @@ std::size_t OpenClContext::createInputVariable(float* v) {
     inputVarOffset_.push_back(nextOffset);
     inputVarIsScalar_.push_back(false);
     inputVarValue_.push_back(0.0f);
-    inputVarPtr_.push_back(v);
+    inputVarPtrVal_.push_back(std::vector<float>(size_[currentId_-1]));
+    std::copy(v, v + size_[currentId_ - 1], inputVarPtrVal_.back().begin());
+    inputVarPtr_.push_back(&inputVarPtrVal_.back()[0]);
     return nVars_++;
 }
 
@@ -639,7 +644,7 @@ void OpenClContext::declareOutputVariable(const std::size_t id) {
     nOutputVars_[currentId_ - 1]++;
 }
 
-void OpenClContext::finalizeCalculation(std::vector<float*>& output) {
+void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     struct exitGuard {
         exitGuard() {}
         ~exitGuard() {
@@ -892,13 +897,18 @@ void OpenClContext::finalizeCalculation(std::vector<float*>& output) {
 
     std::vector<cl_event> outputBufferEvents;
     if (outputBufferSize > 0) {
+        std::vector<std::vector<float>> outputFloat(output.size(), std::vector<float>(size_[currentId_ - 1]));
         for (std::size_t i = 0; i < output.size(); ++i) {
             outputBufferEvents.push_back(cl_event());
             err = clEnqueueReadBuffer(queue_, outputBuffer, CL_FALSE, i * size_[currentId_ - 1],
-                                      sizeof(float) * size_[currentId_ - 1], output[i], 1, &runEvent,
+                                      sizeof(float) * size_[currentId_ - 1], &outputFloat[i][0], 1, &runEvent,
                                       &outputBufferEvents.back());
             QL_REQUIRE(err == CL_SUCCESS,
                        "OpenClContext::finalizeCalculation(): writing to output buffer fails: " << errorText(err));
+        }
+        // copy from float to double
+        for (std::size_t i = 0; i < output.size(); ++i) {
+            std::copy(outputFloat[i].begin(), outputFloat[i].end(), output[i]);
         }
         err = clWaitForEvents(outputBufferEvents.size(), outputBufferEvents.empty() ? nullptr : &outputBufferEvents[0]);
         QL_REQUIRE(
