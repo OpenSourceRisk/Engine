@@ -300,7 +300,6 @@ public:
     void setFileLog(const std::string& filepath, const boost::filesystem::path& dir, QuantLib::Size rotationSize);
 
 private:
-    bool coutLog_ = false;
     boost::shared_ptr<file_sink> fileSink_;
     boost::shared_ptr<cout_sink> coutSink_;
 };

@@ -20,14 +20,14 @@
 
 namespace QuantExt {
 
-VarianceSwap::VarianceSwap(Position::Type position, Real strike, Real notional, const Date& startDate,
-                           const Date& maturityDate, const Calendar& calendar, bool addPastDividends)
+VarianceSwap2::VarianceSwap2(Position::Type position, Real strike, Real notional, const Date& startDate,
+                             const Date& maturityDate, const Calendar& calendar, bool addPastDividends)
     : QuantLib::VarianceSwap(position, strike, notional, startDate, maturityDate), calendar_(calendar),
       addPastDividends_(addPastDividends) {}
 
-void VarianceSwap::setupArguments(PricingEngine::arguments* args) const {
+void VarianceSwap2::setupArguments(PricingEngine::arguments* args) const {
     QuantLib::VarianceSwap::setupArguments(args);
-    QuantExt::VarianceSwap::arguments* arguments = dynamic_cast<QuantExt::VarianceSwap::arguments*>(args);
+    QuantExt::VarianceSwap2::arguments* arguments = dynamic_cast<QuantExt::VarianceSwap2::arguments*>(args);
     QL_REQUIRE(arguments != 0, "wrong argument type");
 
     arguments->calendar = calendar_;

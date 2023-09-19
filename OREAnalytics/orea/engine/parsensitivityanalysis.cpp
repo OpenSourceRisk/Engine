@@ -738,6 +738,12 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
     boost::shared_ptr<ShiftScenarioGenerator> scenarioGenerator = 
         boost::dynamic_pointer_cast<ShiftScenarioGenerator>(simMarketScenGen);
     
+    struct SimMarketResetter {
+        SimMarketResetter(boost::shared_ptr<SimMarket> simMarket) : simMarket_(simMarket) {}
+        ~SimMarketResetter() { simMarket_->reset(); }
+        boost::shared_ptr<SimMarket> simMarket_;
+    } simMarketResetter(simMarket);
+
     simMarket->reset();
     scenarioGenerator->reset();
     simMarket->update(asof_);

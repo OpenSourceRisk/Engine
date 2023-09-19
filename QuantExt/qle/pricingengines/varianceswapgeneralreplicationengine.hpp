@@ -40,11 +40,30 @@ using namespace QuantLib;
 /* Reference:
    - Variance Swaps, European Equity Derivatives Research, JPMorgan, 4.5
    - https://en.wikipedia.org/wiki/Variance_swap */
-class GeneralisedReplicatingVarianceSwapEngine : public QuantExt::VarianceSwap::engine {
+class GeneralisedReplicatingVarianceSwapEngine : public QuantExt::VarianceSwap2::engine {
 public:
-    struct Settings {
+    /*
+    struct VarSwapSettings {
         enum class Scheme { GaussLobatto, Segment };
         enum class Bounds { Fixed, PriceThreshold };
+        Scheme scheme = Scheme::GaussLobatto;
+        Bounds bounds = Bounds::PriceThreshold;
+        Real accuracy = 1E-5;
+        Size maxIterations = 1000;
+        Size steps = 100;
+        Real priceThreshold = 1E-10;
+        Size maxPriceThresholdSteps = 100;
+        Real priceThresholdStep = 0.1;
+        Real fixedMinStdDevs = -5.0;
+        Real fixedMaxStdDevs = 5.0;
+    };
+    */
+    // Renamed from Settings to avoid conflicts during the Python wrapping
+    class VarSwapSettings {
+    public:
+        enum class Scheme { GaussLobatto, Segment };
+        enum class Bounds { Fixed, PriceThreshold };
+        VarSwapSettings() {}
         Scheme scheme = Scheme::GaussLobatto;
         Bounds bounds = Bounds::PriceThreshold;
         Real accuracy = 1E-5;
@@ -59,7 +78,8 @@ public:
 
     GeneralisedReplicatingVarianceSwapEngine(const boost::shared_ptr<QuantLib::Index>& index,
                                              const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
-                                             const Handle<YieldTermStructure>& discountingTS, const Settings settings,
+                                             const Handle<YieldTermStructure>& discountingTS,
+                                             const VarSwapSettings settings = VarSwapSettings(),
                                              const bool staticTodaysSpot = true);
 
     void calculate() const override;
@@ -71,7 +91,7 @@ protected:
     boost::shared_ptr<Index> index_;
     boost::shared_ptr<GeneralizedBlackScholesProcess> process_;
     Handle<YieldTermStructure> discountingTS_;
-    Settings settings_;
+    VarSwapSettings settings_;
     bool staticTodaysSpot_;
 
     mutable Real cachedTodaysSpot_ = Null<Real>();

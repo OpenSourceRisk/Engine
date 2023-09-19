@@ -286,7 +286,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     // determine strikes for calibration basket (simple approach, a la summit)
     // also determine the ibor index (if several, chose the first) to get the engine
     std::vector<Real> strikes(exerciseBuilder_->noticeDates().size(), Null<Real>());
-    boost::shared_ptr<IborIndex> index;
+    boost::shared_ptr<InterestRateIndex> index;
     for (Size i = 0; i < exerciseBuilder_->noticeDates().size(); ++i) {
         Real firstFixedRate = Null<Real>();
         Real firstFloatSpread = Null<Real>();
@@ -305,6 +305,9 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
                             DLOG("found cms index " << tmp->name() << ", use key '" << tmp->iborIndex()->name()
                                                     << "' to look up vol");
                             index = tmp->iborIndex();
+                        } else if (auto tmp = boost::dynamic_pointer_cast<BMAIndex>(cpn->index())) {
+                            DLOG("found bma/sifma index '" << tmp->name() << "'");
+                            index = tmp;
                         }
                     }
                 }
@@ -324,7 +327,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     }
 
     if (index == nullptr) {
-        DLOG("no ibor, ois, cms index found, use ccy key to look up vol");
+        DLOG("no ibor, ois, bma/sifma, cms index found, use ccy key to look up vol");
     }
 
     auto builder = engineFactory->builder("BermudanSwaption");
