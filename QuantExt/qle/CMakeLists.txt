@@ -86,7 +86,6 @@ indexes/genericiborindex.cpp
 indexes/ibor/ameribor.cpp
 indexes/ibor/boebaserate.cpp
 indexes/ibor/brlcdi.cpp
-indexes/ibor/ester.cpp
 indexes/ibor/primeindex.cpp
 indexes/ibor/sofr.cpp
 indexes/ibor/sonia.cpp
@@ -143,6 +142,7 @@ instruments/subperiodsswap.cpp
 instruments/syntheticcdo.cpp
 instruments/tenorbasisswap.cpp
 instruments/varianceswap.cpp
+math/basiccpuenvironment.cpp
 math/blockmatrixinverse.cpp
 math/bucketeddistribution.cpp
 math/computeenvironment.cpp
@@ -154,6 +154,7 @@ math/matrixfunctions.cpp
 math/openclenvironment.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
+math/randomvariable_ops.cpp
 math/randomvariablelsmbasissystem.cpp
 methods/brownianbridgepathinterpolator.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
@@ -477,10 +478,8 @@ indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/genericindex.hpp
-indexes/iborindexfixingoverride.hpp
 indexes/ibor/ambor.hpp
 indexes/ibor/ameribor.hpp
-indexes/ibor/audbbsw.hpp
 indexes/ibor/boebaserate.hpp
 indexes/ibor/brlcdi.hpp
 indexes/ibor/chfsaron.hpp
@@ -496,7 +495,6 @@ indexes/ibor/demlibor.hpp
 indexes/ibor/dkkcibor.hpp
 indexes/ibor/dkkcita.hpp
 indexes/ibor/dkkois.hpp
-indexes/ibor/ester.hpp
 indexes/ibor/hkdhibor.hpp
 indexes/ibor/hkdhonia.hpp
 indexes/ibor/hufbubor.hpp
@@ -515,10 +513,8 @@ indexes/ibor/nowa.hpp
 indexes/ibor/nzdbkbm.hpp
 indexes/ibor/phpphiref.hpp
 indexes/ibor/plnpolonia.hpp
-indexes/ibor/plnwibor.hpp
 indexes/ibor/primeindex.hpp
 indexes/ibor/rubkeyrate.hpp
-indexes/ibor/rubmosprime.hpp
 indexes/ibor/saibor.hpp
 indexes/ibor/seksior.hpp
 indexes/ibor/sekstibor.hpp
@@ -534,6 +530,7 @@ indexes/ibor/thbbibor.hpp
 indexes/ibor/thor.hpp
 indexes/ibor/tonar.hpp
 indexes/ibor/twdtaibor.hpp
+indexes/iborindexfixingoverride.hpp
 indexes/inflationindexobserver.hpp
 indexes/inflationindexwrapper.hpp
 indexes/offpeakpowerindex.hpp
@@ -592,6 +589,7 @@ instruments/tenorbasisswap.hpp
 instruments/vanillaforwardoption.hpp
 instruments/varianceswap.hpp
 interpolators/optioninterpolator2d.hpp
+math/basiccpuenvironment.hpp
 math/blockmatrixinverse.hpp
 math/bucketeddistribution.hpp
 math/computeenvironment.hpp
@@ -613,6 +611,7 @@ math/quadraticinterpolation.hpp
 math/randomvariable.hpp
 math/randomvariable_io.hpp
 math/randomvariable_opcodes.hpp
+math/randomvariable_ops.hpp
 math/randomvariablelsmbasissystem.hpp
 math/stabilisedglls.hpp
 math/trace.hpp

@@ -186,6 +186,11 @@ BusinessDayConvention parseBusinessDayConvention(const string& s) {
                                                    {"U", Unadjusted},
                                                    {"Unadjusted", Unadjusted},
                                                    {"INDIFF", Unadjusted},
+                                                   {"HalfMonthModifiedFollowing", HalfMonthModifiedFollowing},
+                                                   {"HMMF", HalfMonthModifiedFollowing},
+                                                   {"Half Month Modified Following", HalfMonthModifiedFollowing},
+                                                   {"HALFMONTHMF", HalfMonthModifiedFollowing},
+                                                   {"HalfMonthMF", HalfMonthModifiedFollowing},
                                                    {"NEAREST", Nearest},
                                                    {"NONE", Unadjusted},
                                                    {"NotApplicable", Unadjusted}};
