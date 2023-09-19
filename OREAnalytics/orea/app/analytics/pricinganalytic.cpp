@@ -209,7 +209,7 @@ void PricingAnalyticImpl::runAnalytic(
             }
 
             LOG("Sensi analysis - generate");
-            sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities", 100, ORE_NOTICE));
+            sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities", 100, oreSeverity::notice));
             sensiAnalysis->generateSensitivities();
 
             LOG("Sensi analysis - write sensitivity report in memory");
@@ -225,6 +225,14 @@ void PricingAnalyticImpl::runAnalytic(
                 .writeScenarioReport(*scenarioReport, sensiAnalysis->sensiCube(),
                                      inputs_->sensiThreshold());
             analytic()->reports()[type]["sensitivity_scenario"] = scenarioReport;
+
+            auto simmSensitivityConfigReport = boost::make_shared<InMemoryReport>();
+            ReportWriter(inputs_->reportNaString())
+                .writeSensitivityConfigReport(*simmSensitivityConfigReport,
+                                              sensiAnalysis->scenarioGenerator()->shiftSizes(),
+                                              sensiAnalysis->scenarioGenerator()->baseValues(),
+                                              sensiAnalysis->scenarioGenerator()->keyToFactor());
+            analytic()->reports()[type]["sensitivity_config"] = simmSensitivityConfigReport;
 
             if (inputs_->parSensi()) {
                 LOG("Sensi analysis - par conversion");

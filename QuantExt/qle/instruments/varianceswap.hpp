@@ -33,13 +33,13 @@ using namespace QuantLib;
 
     \ingroup instruments
 */
-class VarianceSwap : public QuantLib::VarianceSwap {
+class VarianceSwap2 : public QuantLib::VarianceSwap {
 public:
     class arguments;
     class results;
     class engine;
-    VarianceSwap(Position::Type position, Real strike, Real notional, const Date& startDate, const Date& maturityDate,
-                 const Calendar& calendar, bool addPastDividends);
+    VarianceSwap2(Position::Type position, Real strike, Real notional, const Date& startDate, const Date& maturityDate,
+                  const Calendar& calendar, bool addPastDividends);
     //! \name Additional interface
     //@{
     // inspectors
@@ -56,7 +56,7 @@ protected:
 };
 
 //! %Arguments for forward fair-variance calculation
-class VarianceSwap::arguments : public virtual QuantLib::VarianceSwap::arguments {
+class VarianceSwap2::arguments : public virtual QuantLib::VarianceSwap::arguments {
 public:
     arguments() : calendar(NullCalendar()), addPastDividends(false) {}
     Calendar calendar;
@@ -64,16 +64,16 @@ public:
 };
 
 //! %Results from variance-swap calculation
-class VarianceSwap::results : public QuantLib::VarianceSwap::results {};
+class VarianceSwap2::results : public QuantLib::VarianceSwap::results {};
 
 //! base class for variance-swap engines
-class VarianceSwap::engine : public GenericEngine<QuantExt::VarianceSwap::arguments, QuantExt::VarianceSwap::results> {
+class VarianceSwap2::engine : public GenericEngine<QuantExt::VarianceSwap2::arguments, QuantExt::VarianceSwap2::results> {
 };
 
 // inline definitions
 
-inline Calendar VarianceSwap::calendar() const { return calendar_; }
+inline Calendar VarianceSwap2::calendar() const { return calendar_; }
 
-inline bool VarianceSwap::addPastDividends() const { return addPastDividends_; }
+inline bool VarianceSwap2::addPastDividends() const { return addPastDividends_; }
 
 } // namespace QuantExt

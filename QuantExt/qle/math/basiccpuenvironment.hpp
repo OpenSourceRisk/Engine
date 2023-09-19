@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2023 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,15 +16,27 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/indexes/ibor/ester.hpp>
+/*! \file qle/math/basiccpuenvironment.hpp
+    \brief basic compute env implementation using the cpu
+*/
 
-#include <ql/currencies/europe.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/time/daycounters/actual360.hpp>
+#pragma once
+
+#include <qle/math/computeenvironment.hpp>
+
+#include <map>
 
 namespace QuantExt {
 
-Ester::Ester(const Handle<YieldTermStructure>& h)
-    : OvernightIndex("Ester", 0, EURCurrency(), TARGET(), Actual360(), h) {}
+class BasicCpuFramework : public ComputeFramework {
+public:
+    BasicCpuFramework();
+    ~BasicCpuFramework() override final;
+    std::set<std::string> getAvailableDevices() const override final;
+    ComputeContext* getContext(const std::string& deviceName) override final;
+
+private:
+    std::map<std::string, ComputeContext*> contexts_;
+};
 
 } // namespace QuantExt

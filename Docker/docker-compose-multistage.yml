@@ -5,7 +5,8 @@ services:
     image: ore_app:${ORE_TAG}
     build:
       context: ../
-      dockerfile: Docker/Dockerfile-ORE-App
+      dockerfile: Docker/Dockerfile-multistage
       args:
-        - ore_version=${ORE_TAG}
+        - debian_tag=${DEBIAN_TAG}
+        - num_cores=${NUM_CORES}
         - cmake_build_type=${CMAKE_BUILD_TYPE}

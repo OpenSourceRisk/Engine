@@ -333,7 +333,9 @@ BondBuilder::Result BondFactory::build(const boost::shared_ptr<EngineFactory>& e
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (auto const& b : builders_) {
         if (referenceData->hasData(b.first, securityId)) {
-            return b.second->build(engineFactory, referenceData, securityId);
+            auto tmp = b.second->build(engineFactory, referenceData, securityId);
+            tmp.builderLabel = b.first;
+            return tmp;
         }
     }
 
