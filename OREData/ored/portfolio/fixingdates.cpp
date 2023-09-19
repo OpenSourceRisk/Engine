@@ -635,7 +635,7 @@ void FixingDateGetter::visit(CommodityCashFlow& c) {
 void FixingDateGetter::visit(TRSCashFlow& bc) {
     vector<QuantLib::ext::shared_ptr<Index>> indexes;
     vector<QuantLib::ext::shared_ptr<FxIndex>> fxIndexes;
-
+    
     if (auto e = boost::dynamic_pointer_cast<QuantExt::CompositeIndex>(bc.index())) {
         indexes = e->indices();
         fxIndexes = e->fxConversion();
@@ -647,9 +647,12 @@ void FixingDateGetter::visit(TRSCashFlow& bc) {
         for (const auto& f : fixings)
             requiredFixings_.addFixingDate(f.first, ore::data::IndexNameTranslator::instance().oreName(f.second));    
     } else {
-        indexes.push_back(bc.index());
-        fxIndexes.push_back(bc.fxIndex());
+        indexes.push_back(bc.index());        
     }
+
+    // always add the top level fxIndex, for a CompositeIndex we may need to convert underlyings to the CompositeIndex ccy
+    // and then to the leg currency
+    fxIndexes.push_back(bc.fxIndex());
 
     for (const auto& ind : indexes) {
         if (ind) {
