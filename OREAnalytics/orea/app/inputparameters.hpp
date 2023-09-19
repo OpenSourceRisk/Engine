@@ -29,12 +29,14 @@
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
+#include <orea/scenario/historicalscenarioreader.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmcalibration.hpp>
 #include <orea/simm/crif.hpp>
@@ -165,6 +167,8 @@ public:
     void setCovarianceDataFromFile(const std::string& fileName);
     void setCovarianceDataFromBuffer(const std::string& xml);
     void setSensitivityStreamFromFile(const std::string& fileName);
+    void setBenchmarkVarPeriod(const std::string& period);
+    void setHistoricalScenarioReader(const std::string& fileName);
     void setSensitivityStreamFromBuffer(const std::string& buffer);
 
     // Setters for exposure simulation
@@ -447,6 +451,8 @@ public:
     long mcVarSeed() { return mcVarSeed_; }
     const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& covarianceData() { return covarianceData_; }
     const boost::shared_ptr<SensitivityStream>& sensitivityStream() { return sensitivityStream_; }
+    std::string benchmarkVarPeriod() const { return benchmarkVarPeriod_; }
+    QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader() const { return historicalScenarioReader_; };
     
     /*********************************
      * Getters for exposure simulation 
@@ -715,6 +721,9 @@ protected:
     long mcVarSeed_ = 0;
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarianceData_;
     boost::shared_ptr<SensitivityStream> sensitivityStream_;
+    std::string benchmarkVarPeriod_;
+    QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader_;
+    std::string baseScenarioLoc_;
     
     /*******************
      * EXPOSURE analytic

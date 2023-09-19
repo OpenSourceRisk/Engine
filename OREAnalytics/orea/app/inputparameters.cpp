@@ -21,7 +21,9 @@
 #include <orea/cube/cube_io.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityfilestream.hpp>
+#include <orea/scenario/historicalscenariofilereader.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
+#include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
@@ -353,6 +355,19 @@ void InputParameters::setSensitivityStreamFromFile(const std::string& fileName) 
 
 void InputParameters::setSensitivityStreamFromBuffer(const std::string& buffer) {
     sensitivityStream_ = boost::make_shared<SensitivityBufferStream>(buffer);
+}
+
+void InputParameters::setBenchmarkVarPeriod(const std::string& period) { 
+    benchmarkVarPeriod_ = period;
+}
+
+void InputParameters::setHistoricalScenarioReader(const std::string& fileName) {
+    boost::filesystem::path baseScenarioPath(fileName);
+    QL_REQUIRE(exists(baseScenarioPath), "The provided base scenario file, " << baseScenarioPath << ", does not exist");
+    QL_REQUIRE(is_regular_file(baseScenarioPath),
+               "The provided base scenario file, " << baseScenarioPath << ", is not a file");
+    historicalScenarioReader_ =
+        QuantLib::ext::make_shared<HistoricalScenarioFileReader>(fileName, boost::make_shared<SimpleScenarioFactory>());
 }
 
 void InputParameters::setAmcTradeTypes(const std::string& s) {

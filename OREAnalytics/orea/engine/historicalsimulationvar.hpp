@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <orea/engine/historicalpnlgenerator.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/engine/varcalculator.hpp>
@@ -57,6 +58,44 @@ public:
 
 private:
     const std::vector<QuantLib::Real>& pnls_;
+};
+
+//! HistoricalSimulation VaR Calculator
+/*! This class takes sensitivity data and a covariance matrix as an input and computes a Historical Simulation value at risk. The
+ * output can be broken down by portfolios, risk classes (IR, FX, EQ, ...) and risk types (delta-gamma, vega, ...). */
+class HistoricalSimulationVarReport : public VarReport {
+public:
+    virtual ~HistoricalSimulationVarReport() {}
+
+    HistoricalSimulationVarReport(
+        const std::string& baseCurrency,
+        const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
+        const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const std::string& portfolioFilter, 
+        const std::vector<QuantLib::Real>& p, const boost::optional<ore::data::TimePeriod>& period,
+        const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
+        const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+        const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
+        const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig = nullptr);
+
+    void calculate(QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report) override;
+
+    typedef std::pair<RiskFactorKey, RiskFactorKey> CrossPair;
+
+protected:
+    std::string baseCurrency_;
+    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
+    QuantLib::ext::shared_ptr<ore::data::EngineData> engineData_;
+    QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
+        
+    //! Historical P&L generator
+    QuantLib::ext::shared_ptr<ore::analytics::HistoricalPnlGenerator> histPnlGen_;
+
+    void createVarCalculator() override {};
+    void handleSensiResults(QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
+                                    const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup,
+                                    const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup) override {};
 };
 
 } // namespace analytics

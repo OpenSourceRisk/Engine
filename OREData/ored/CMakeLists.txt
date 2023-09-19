@@ -22,6 +22,7 @@ configuration/onedimsolverconfig.cpp
 configuration/reportconfig.cpp
 configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
+marketdata/adjustedinmemoryloader.cpp
 marketdata/adjustmentfactors.cpp
 marketdata/basecorrelationcurve.cpp
 marketdata/capfloorvolcurve.cpp
@@ -384,6 +385,7 @@ configuration/swaptionvolcurveconfig.hpp
 configuration/volatilityconfig.hpp
 configuration/yieldcurveconfig.hpp
 configuration/yieldvolcurveconfig.hpp
+marketdata/adjustedinmemoryloader.hpp
 marketdata/adjustmentfactors.hpp
 marketdata/basecorrelationcurve.hpp
 marketdata/capfloorvolcurve.hpp
