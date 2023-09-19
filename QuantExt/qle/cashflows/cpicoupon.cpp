@@ -34,8 +34,6 @@ namespace QuantExt {
 Rate CPICoupon::rate() const {
     Rate r = QuantLib::CPICoupon::rate() ;
         if (subtractInflationNominal_) {
-            // Rate adjusted_r = r / fixedRate_ - spread_;
-            // r = (adjusted_r - 1) * fixedRate_ + spread_;
             Rate adjusted_r = r / fixedRate_;
             r = (adjusted_r - 1) * fixedRate_;
         }
@@ -76,8 +74,7 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
     : CPICoupon(underlying->baseCPI(), underlying->baseDate(), underlying->date(), underlying->nominal(), underlying->accrualStartDate(),
                 underlying->accrualEndDate(), underlying->cpiIndex(),
                 underlying->observationLag(), underlying->observationInterpolation(), underlying->dayCounter(),
-                // underlying->fixedRate(), underlying->spread(), underlying->referencePeriodStart(),
-                underlying->fixedRate(), 0.0, underlying->referencePeriodStart(),
+                underlying->fixedRate(), underlying->referencePeriodStart(),
                 underlying->referencePeriodEnd(), underlying->exCouponDate(), underlying->subtractInflationNotional()),
       underlying_(underlying), startDate_(startDate), isFloored_(false), isCapped_(false) {
 
@@ -112,7 +109,7 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
 }
 
 Rate CappedFlooredCPICoupon::rate() const {
-    // rate = spread + fixedRate * capped/floored index
+    // rate =  fixedRate * capped/floored index
     boost::shared_ptr<CappedFlooredCPICouponPricer> blackPricer =
         boost::dynamic_pointer_cast<CappedFlooredCPICouponPricer>(pricer_);
     QL_REQUIRE(blackPricer, "BlackCPICouponPricer or BachelierCPICouponPricer expected");
@@ -230,7 +227,7 @@ CPILeg::CPILeg(const Schedule& schedule, const ext::shared_ptr<ZeroInflationInde
     : schedule_(schedule), index_(index), rateCurve_(rateCurve), baseCPI_(baseCPI), observationLag_(observationLag),
       paymentDayCounter_(Thirty360(Thirty360::BondBasis)), paymentAdjustment_(ModifiedFollowing), paymentCalendar_(schedule.calendar()),
       fixingDays_(std::vector<Natural>(1, 0)), observationInterpolation_(CPI::AsIndex), subtractInflationNominal_(true),
-      spreads_(std::vector<Real>(1, 0)), finalFlowCap_(Null<Real>()), finalFlowFloor_(Null<Real>()), subtractInflationNominalAllCoupons_(false),
+      finalFlowCap_(Null<Real>()), finalFlowFloor_(Null<Real>()), subtractInflationNominalAllCoupons_(false),
       startDate_(schedule_.dates().front()) {
     QL_REQUIRE(schedule_.dates().size() > 0, "empty schedule passed to CPILeg");
 }
@@ -287,16 +284,6 @@ CPILeg& CPILeg::withFixingDays(Natural fixingDays) {
 
 CPILeg& CPILeg::withFixingDays(const std::vector<Natural>& fixingDays) {
     fixingDays_ = fixingDays;
-    return *this;
-}
-
-CPILeg& CPILeg::withSpreads(Spread spread) {
-    spreads_ = std::vector<Spread>(1, spread);
-    return *this;
-}
-
-CPILeg& CPILeg::withSpreads(const std::vector<Spread>& spreads) {
-    spreads_ = spreads;
     return *this;
 }
 
@@ -362,7 +349,7 @@ CPILeg::operator Leg() const {
     leg.reserve(n + 1); // +1 for notional, we always have some sort ...
     Date baseDate = baseDate_ == Date() ? startDate_ - observationLag_ : baseDate_;
     if (n > 0) {
-        QL_REQUIRE(!fixedRates_.empty() || !spreads_.empty(), "no fixedRates or spreads given");
+        QL_REQUIRE(!fixedRates_.empty(), "no fixedRates given");
 
         Date refStart, start, refEnd, end;
 
@@ -390,7 +377,7 @@ CPILeg::operator Leg() const {
                 baseCPI_, // all have same base for ratio
                 baseDate, paymentDate, detail::get(notionals_, i, 0.0), start, end, index_, observationLag_,
                 observationInterpolation_, paymentDayCounter_, detail::get(fixedRates_, i, 0.0),
-                detail::get(spreads_, i, 0.0), refStart, refEnd, exCouponDate, subtractInflationNominalAllCoupons_);
+                refStart, refEnd, exCouponDate, subtractInflationNominalAllCoupons_);
 
             // set a pricer for the underlying coupon straight away because it only provides computation - not data
             auto pricer = ext::make_shared<CPICouponPricer>(Handle<YieldTermStructure>(rateCurve_));
