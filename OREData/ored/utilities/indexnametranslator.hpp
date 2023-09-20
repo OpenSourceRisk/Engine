@@ -26,8 +26,8 @@
 #include <ql/patterns/singleton.hpp>
 
 #include <boost/bimap.hpp>
-#include <boost/thread/shared_mutex.hpp>
-#include <boost/thread/lock_types.hpp>
+#include <shared_mutex>
+
 
 #include <string>
 
@@ -52,7 +52,7 @@ public:
 
 private:
     boost::bimap<std::string, std::string> data_;
-    mutable boost::shared_mutex mutex_;
+    mutable std::shared_mutex mutex_;
 };
 
 } // namespace data

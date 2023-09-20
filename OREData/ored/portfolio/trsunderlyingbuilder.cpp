@@ -32,7 +32,7 @@ namespace ore {
 namespace data {
 
 boost::shared_ptr<TrsUnderlyingBuilder> TrsUnderlyingBuilderFactory::getBuilder(const std::string& tradeType) const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     auto b = builders_.find(tradeType);
     QL_REQUIRE(b != builders_.end(), "TrsUnderlyingBuilderFactory::getBuilder(" << tradeType << "): no builder found");
     return b->second;
@@ -41,7 +41,7 @@ boost::shared_ptr<TrsUnderlyingBuilder> TrsUnderlyingBuilderFactory::getBuilder(
 void TrsUnderlyingBuilderFactory::addBuilder(const std::string& tradeType,
                                              const boost::shared_ptr<TrsUnderlyingBuilder>& builder,
                                              const bool allowOverwrite) {
-    boost::unique_lock<boost::shared_mutex> locK(mutex_);
+    std::unique_lock<std::shared_mutex> locK(mutex_);
     QL_REQUIRE(builders_.insert(std::make_pair(tradeType, builder)).second || allowOverwrite,
                "TrsUnderlyingBuidlerFactory::addBuilder(" << tradeType << "): builder for key already exists.");
 }
