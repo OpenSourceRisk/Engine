@@ -20,6 +20,7 @@
 #include <ored/portfolio/cbo.hpp>
 #include <qle/instruments/bondbasket.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <qle/indexes/genericindex.hpp>
@@ -261,6 +262,7 @@ void CBOTrsUnderlyingBuilder::build(
     auto t = boost::dynamic_pointer_cast<ore::data::CBO>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::CBO, this is unexpected");
     string indexName = "GENERIC-" + t->investedTrancheName();
+    IndexNameTranslator::instance().add(indexName, indexName);
     indexQuantities[indexName] = t->underlyingMultiplier();
     underlyingIndex = boost::make_shared<QuantExt::GenericIndex>(indexName);
     underlyingMultiplier = t->underlyingMultiplier();
@@ -269,7 +271,8 @@ void CBOTrsUnderlyingBuilder::build(
 
     auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
                               assetCurrency, fundingCurrency, fxIndices);
-    returnLegs.push_back(QuantExt::TRSLeg(valuationDates, paymentDates, underlyingMultiplier, underlyingIndex, fxIndex));
+    returnLegs.push_back(QuantExt::TRSLeg(valuationDates, paymentDates, underlyingMultiplier, underlyingIndex, fxIndex)
+        .withInitialPrice(initialPrice));
 
     //fill the SimmCreditQualifierMapping
     auto bonds = t->bondBasketData().bonds();

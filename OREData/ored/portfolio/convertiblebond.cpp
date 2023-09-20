@@ -625,7 +625,8 @@ void ConvertibleBondTrsUnderlyingBuilder::build(
     assetCurrency = t->data().bondData().currency();
     auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
                               assetCurrency, fundingCurrency, fxIndices);
-    auto returnLeg = makeBondTRSLeg(valuationDates, paymentDates, bondIndexBuilder, fxIndex);
+    auto returnLeg =
+        makeBondTRSLeg(valuationDates, paymentDates, bondIndexBuilder, initialPrice, fxIndex);
 
     // add required bond and fx fixings for bondIndex
     returnLegs.push_back(returnLeg);

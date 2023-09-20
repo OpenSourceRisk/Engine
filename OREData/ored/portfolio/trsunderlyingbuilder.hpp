@@ -45,7 +45,7 @@ struct TrsUnderlyingBuilder {
           const std::string& underlyingDerivativeId) const = 0;
     virtual void updateUnderlying(const boost::shared_ptr<ReferenceDataManager>& refData,
                                   boost::shared_ptr<Trade>& underlying, const std::string& parentId) const {}
-    const RequiredFixings& requiredFixings() const;
+    const RequiredFixings& requiredFixings(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& ind = nullptr) const;
     mutable RequiredFixings fixings;
     mutable std::vector<Leg> returnLegs;
 };
@@ -179,6 +179,7 @@ struct DerivativeTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
 void modifyBondTRSLeg(QuantLib::Leg& leg, QuantLib::Date issueDate);
 Leg makeBondTRSLeg(const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
                    const BondIndexBuilder& bondIndexBuilder,
+                   QuantLib::Real initialPrice = QuantLib::Null<QuantLib::Real>(),
                    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr);
 
 } // namespace data

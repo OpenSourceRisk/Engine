@@ -410,7 +410,7 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                  std::placeholders::_3, std::placeholders::_4, std::placeholders::_5),
                        underlyingDerivativeId_[i]);
 
-        requiredFixings_.addData(builder->requiredFixings());
+        requiredFixings_.addData(builder->requiredFixings(fxIndexReturn));
 
         // update global credit risk currency
 

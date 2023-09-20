@@ -76,7 +76,7 @@ protected:
     Date paymentDate_, fixingStartDate_, fixingEndDate_;
     Real notional_;
     boost::shared_ptr<Index> index_;
-    Real initialPrice_;
+    Real initialPrice_ = QuantLib::Null<Real>();
     boost::shared_ptr<FxIndex> fxIndex_;
 };
 

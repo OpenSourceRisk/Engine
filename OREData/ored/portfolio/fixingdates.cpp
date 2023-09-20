@@ -653,13 +653,15 @@ void FixingDateGetter::visit(TRSCashFlow& bc) {
     // always add the top level fxIndex, for a CompositeIndex we may need to convert underlyings to the CompositeIndex ccy
     // and then to the leg currency
     fxIndexes.push_back(bc.fxIndex());
+    if (additionalFxIndex_)
+        fxIndexes.push_back(additionalFxIndex_);
 
     for (const auto& ind : indexes) {
         if (ind) {
             if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_)
-                requiredFixings_.addFixingDate(bc.fixingStartDate(), ind->name(), bc.date());
+                requiredFixings_.addFixingDate(bc.fixingStartDate(), IndexNameTranslator::instance().oreName(ind->name()), bc.date());
 
-            requiredFixings_.addFixingDate(bc.fixingEndDate(), ind->name(), bc.date());
+            requiredFixings_.addFixingDate(bc.fixingEndDate(), IndexNameTranslator::instance().oreName(ind->name()), bc.date());
         }
     }
 
