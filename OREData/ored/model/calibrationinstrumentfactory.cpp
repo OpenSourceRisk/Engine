@@ -25,7 +25,7 @@ namespace ore {
 namespace data {
 
 boost::shared_ptr<CalibrationInstrument> CalibrationInstrumentFactory::build(const string& instrumentType) {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     auto it = map_.find(instrumentType);
     if (it == map_.end())
         return nullptr;
@@ -35,7 +35,7 @@ boost::shared_ptr<CalibrationInstrument> CalibrationInstrumentFactory::build(con
 void CalibrationInstrumentFactory::addBuilder(const string& instrumentType,
                                               function<boost::shared_ptr<CalibrationInstrument>()> builder,
                                               const bool allowOverwrite) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     QL_REQUIRE(map_.insert(std::make_pair(instrumentType, builder)).second,
                "CalibrationInstrumentFactory::addBuilder(" << instrumentType << "): builder for key already exists.");
 }
