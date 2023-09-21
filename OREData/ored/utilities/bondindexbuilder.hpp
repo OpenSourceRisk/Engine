@@ -31,16 +31,19 @@ namespace data {
 class BondIndexBuilder {
 public:
     BondIndexBuilder(BondData bondData, const bool dirty, const bool relative,
-                     const Calendar& fixingCalendar, const bool conditionalOnSurvival,
-                     const boost::shared_ptr<EngineFactory>& engineFactory);
+                     const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
+                     const boost::shared_ptr<EngineFactory>& engineFactory,
+                     QuantLib::Real bidAskAdjustment = QuantLib::Null<QuantLib::Real>());
 
     BondIndexBuilder(const Bond& bond, const bool dirty, const bool relative,
-                     const Calendar& fixingCalendar, const bool conditionalOnSurvival,
-                     const boost::shared_ptr<EngineFactory>& engineFactory);
+                     const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
+                     const boost::shared_ptr<EngineFactory>& engineFactory,
+                     QuantLib::Real bidAskAdjustment = QuantLib::Null<QuantLib::Real>());
 
     BondIndexBuilder(const std::string& securityId, const bool dirty, const bool relative, 
                      const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
-                     const boost::shared_ptr<EngineFactory>& engineFactory);
+                     const boost::shared_ptr<EngineFactory>& engineFactory,
+                     QuantLib::Real bidAskAdjustment = QuantLib::Null<QuantLib::Real>());
 
     boost::shared_ptr<QuantExt::BondIndex> bondIndex() const;
     void addRequiredFixings(RequiredFixings& requiredFixings, Leg leg = {});
@@ -53,8 +56,9 @@ private:
     RequiredFixings fixings_;
     const bool dirty_;
 
-    void buildIndex(const bool relative, const Calendar& fixingCalendar, const bool conditionalOnSurvival,
-                    const boost::shared_ptr<EngineFactory>& engineFactory);
+    void buildIndex(const bool relative, const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
+        const boost::shared_ptr<EngineFactory>& engineFactory, 
+        QuantLib::Real bidAskAdjustment = QuantLib::Null<QuantLib::Real>());
 };
 
 } // namespace data

@@ -361,7 +361,7 @@ void BondPositionTrsUnderlyingBuilder::build(
         // relative index, because weights are supposed to include any amortization factors
 
         BondIndexBuilder bondIndexBuilder(t->data().underlyings()[i].name(), true, false, 
-            NullCalendar(), true, engineFactory);
+            NullCalendar(), true, engineFactory, t->data().underlyings()[i].bidAskAdjustment());
 
         auto assetCurr = bondIndexBuilder.bond().bondData().currency();
         auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),

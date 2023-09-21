@@ -24,35 +24,35 @@ namespace data {
 
 BondIndexBuilder::BondIndexBuilder(BondData securityData, const bool dirty, const bool relative,
                                    const Calendar& fixingCalendar, const bool conditionalOnSurvival,
-                                   const boost::shared_ptr<EngineFactory>& engineFactory)
+                                   const boost::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment)
     : dirty_(dirty) {
 
     securityData.populateFromBondReferenceData(engineFactory->referenceData());
     bond_ = Bond(Envelope(), securityData);
     bond_.build(engineFactory);
-    buildIndex(relative, fixingCalendar, conditionalOnSurvival, engineFactory);
+    buildIndex(relative, fixingCalendar, conditionalOnSurvival, engineFactory, bidAskAdjustment);
 }
 
 BondIndexBuilder::BondIndexBuilder(const Bond& bond, const bool dirty, const bool relative,
                                    const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
-                                   const boost::shared_ptr<EngineFactory>& engineFactory)
+                                   const boost::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment)
     : bond_(bond), dirty_(dirty) {
-    buildIndex(relative, fixingCalendar, conditionalOnSurvival, engineFactory);
+    buildIndex(relative, fixingCalendar, conditionalOnSurvival, engineFactory, bidAskAdjustment);
 }
 
 BondIndexBuilder::BondIndexBuilder(const std::string& securityId, const bool dirty, const bool relative,
                                    const Calendar& fixingCalendar, const bool conditionalOnSurvival,
-                                   const boost::shared_ptr<EngineFactory>& engineFactory)
+                                   const boost::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment)
     : dirty_(dirty) {
     BondData bondData(securityId, 100.0);
     bondData.populateFromBondReferenceData(engineFactory->referenceData());
     bond_ = Bond(Envelope(), bondData);
     bond_.build(engineFactory);
-    buildIndex(relative, fixingCalendar, conditionalOnSurvival, engineFactory);
+    buildIndex(relative, fixingCalendar, conditionalOnSurvival, engineFactory, bidAskAdjustment);
 }
 
 void BondIndexBuilder::buildIndex(const bool relative, const Calendar& fixingCalendar, const bool conditionalOnSurvival,
-                                  const boost::shared_ptr<EngineFactory>& engineFactory) {
+                                  const boost::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment) {
 
     fixings_ = bond_.requiredFixings();
 
@@ -102,7 +102,7 @@ void BondIndexBuilder::buildIndex(const bool relative, const Calendar& fixingCal
     // build and return the index
     bondIndex_ = boost::make_shared<QuantExt::BondIndex>(securityId, dirty_, relative, fixingCalendar, qlBond,
         discountCurve, defaultCurve, recovery, spread, incomeCurve, conditionalOnSurvival, parseDate(bondData.issueDate()), bondData.priceQuoteMethod(),
-        bondData.priceQuoteBaseValue(), bondData.isInflationLinked());
+        bondData.priceQuoteBaseValue(), bondData.isInflationLinked(), bidAskAdjustment);
 }
 
 boost::shared_ptr<QuantExt::BondIndex> BondIndexBuilder::bondIndex() const { return bondIndex_; }
