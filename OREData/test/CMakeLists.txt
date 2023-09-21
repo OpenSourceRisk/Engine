@@ -37,43 +37,41 @@ equitytrades.cpp
 expiry.cpp
 fittedbondcurve.cpp
 fixings.cpp
+fxaccumulator.cpp
 fxasianoption.cpp
 fxexotics.cpp
 fxoption.cpp
 fxswap.cpp
+fxtarf.cpp
 fxtriangulation.cpp
 fxvolcurve.cpp
+gaussiancam.cpp
 generalisedreplicatingvarianceswapengine.cpp
 indices.cpp
 inflationcapfloor.cpp
 inflationcurve.cpp
 legdata.cpp
+localvol.cpp
 mxnircurves.cpp
 optionpaymentdata.cpp
 ored_commodityforward.cpp
+oredtestmarket.cpp
 parser.cpp
 portfolio.cpp
+representativefxoption.cpp
+representativeswaption.cpp
+riskparticipationagreement.cpp
 schedule.cpp
+scriptengine.cpp
+scriptparser.cpp
 strike.cpp
 swaption.cpp
 testsuite.cpp
 todaysmarket.cpp
+value.cpp
 xmlmanipulation.cpp
 yieldcurve.cpp
-zerocouponswap.cpp
-# scripted trade
-fxaccumulator.cpp
-fxtarf.cpp
-gaussiancam.cpp
-localvol.cpp
-representativefxoption.cpp
-representativeswaption.cpp
-riskparticipationagreement.cpp
-scriptengine.cpp
-scriptparser.cpp
-oredtestmarket.cpp
-value.cpp
-)
+zerocouponswap.cpp)
 
 add_executable(ored-test-suite ${OREData-Test_SRC})
 target_link_libraries(ored-test-suite ${ORED_LIB_NAME})

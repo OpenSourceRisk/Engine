@@ -10,7 +10,6 @@
 #include <qle/ad/external_randomvariable_ops.hpp>
 #include <qle/ad/forwardderivatives.hpp>
 #include <qle/ad/forwardevaluation.hpp>
-#include <qle/ad/randomvariable_ops.hpp>
 #include <qle/ad/ssaform.hpp>
 #include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/austria.hpp>
