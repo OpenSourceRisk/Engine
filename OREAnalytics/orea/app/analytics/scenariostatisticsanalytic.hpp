@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/scenariostatisticsanalytic.hpp
+/*! \file orea/app/analytics/scenariostatisticsanalytic.hpp
     \brief ORE Scenario Statistics Analytics
 */
 

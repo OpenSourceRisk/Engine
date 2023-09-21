@@ -668,22 +668,22 @@ XMLNode* ScriptLibraryData::toXML(XMLDocument& doc) {
 }
 
 const ScriptLibraryData& ScriptLibraryStorage::get() const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return data_;
 }
 
 void ScriptLibraryStorage::set(const ScriptLibraryData& data) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     data_ = data;
 }
 
 void ScriptLibraryStorage::set(ScriptLibraryData&& data) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     data_ = std::move(data);
 }
 
 void ScriptLibraryStorage::clear() {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     data_ = ScriptLibraryData();
 }
 

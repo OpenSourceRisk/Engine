@@ -27,8 +27,8 @@
 
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
-
 #include <ql/time/period.hpp>
+
 #include <qle/instruments/forwardbond.hpp>
 
 #include <boost/tuple/tuple.hpp>

@@ -68,6 +68,12 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                                 boost::shared_ptr<analytics::NPVCube> outputCptyCube,
                                 vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators, bool dryRun) {
 
+    struct SimMarketResetter {
+        SimMarketResetter(boost::shared_ptr<SimMarket> simMarket) : simMarket_(simMarket) {}
+        ~SimMarketResetter() { simMarket_->reset(); }
+        boost::shared_ptr<SimMarket> simMarket_;
+    } simMarketResetter(simMarket_);
+
     LOG("Build cube with mporStickyDate=" << mporStickyDate << ", dryRun=" << std::boolalpha << dryRun);
 
     QL_REQUIRE(portfolio->size() > 0, "ValuationEngine: Error portfolio is empty");
@@ -265,7 +271,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         }
     }
 
-    simMarket_->reset();
     updateProgress(outputCube->samples(), outputCube->samples());
     loopTimer.stop();
     LOG("ValuationEngine completed: loop " << setprecision(2) << loopTimer.format(2, "%w") << " sec, "

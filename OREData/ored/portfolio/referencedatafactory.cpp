@@ -26,7 +26,7 @@ namespace ore {
 namespace data {
 
 boost::shared_ptr<ReferenceDatum> ReferenceDatumFactory::build(const string& refDatumType) {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     auto it = map_.find(refDatumType);
     if (it == map_.end())
         return nullptr;
@@ -36,7 +36,7 @@ boost::shared_ptr<ReferenceDatum> ReferenceDatumFactory::build(const string& ref
 void ReferenceDatumFactory::addBuilder(const string& refDatumType,
                                        std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder,
                                        const bool allowOverwrite) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     QL_REQUIRE(map_.insert(std::make_pair(refDatumType, builder)).second,
                "ReferenceDatumFactory::addBuilder(" << refDatumType << "): builder for key already exists.");
 }
