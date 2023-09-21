@@ -79,7 +79,7 @@ void ComputeContext::finalizeCalculation(std::vector<std::vector<double>>& outpu
 
 void ComputeFrameworkRegistry::add(const std::string& name, std::function<ComputeFramework*(void)> creator,
                                    const bool allowOverwrite) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     QL_REQUIRE(allowOverwrite || std::find(names_.begin(), names_.end(), name) == names_.end(),
                "FrameworkRegistry::add(): creator for '"
                    << name << "' already exists and allowOverwrite is false, can't add it.");
@@ -88,7 +88,7 @@ void ComputeFrameworkRegistry::add(const std::string& name, std::function<Comput
 }
 
 const std::vector<std::function<ComputeFramework*(void)>>& ComputeFrameworkRegistry::getAll() const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return creators_;
 }
 

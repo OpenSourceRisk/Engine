@@ -26,7 +26,7 @@
 
 #include <cstdint>
 #include <set>
-
+#include <shared_mutex>
 namespace QuantExt {
 
 class ComputeContext;
@@ -104,7 +104,7 @@ public:
     const std::vector<std::function<ComputeFramework*(void)>>& getAll() const;
 
 private:
-    mutable boost::shared_mutex mutex_;
+    mutable std::shared_mutex mutex_;
     std::vector<std::string> names_;
     std::vector<std::function<ComputeFramework*(void)>> creators_;
 };

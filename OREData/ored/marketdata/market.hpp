@@ -48,7 +48,7 @@
 #include <qle/termstructures/creditvolcurve.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 
-#include <boost/thread/shared_mutex.hpp>
+#include <shared_mutex>
 #include <boost/thread/locks.hpp>
 
 namespace ore {
@@ -130,16 +130,16 @@ class GlobalPseudoCurrencyMarketParameters
 
 public:
     const PseudoCurrencyMarketParameters& get() const {
-        boost::shared_lock<boost::shared_mutex> lock(mutex_);
+        std::shared_lock<std::shared_mutex> lock(mutex_);
         return params_;
     }
 
     void set(const PseudoCurrencyMarketParameters& params) {
-        boost::unique_lock<boost::shared_mutex> lock(mutex_);
+        std::unique_lock<std::shared_mutex> lock(mutex_);
         params_ = params;
     }
     void set(const std::map<string, string>& pegp) {
-        boost::unique_lock<boost::shared_mutex> lock(mutex_);
+        std::unique_lock<std::shared_mutex> lock(mutex_);
         params_ = buildPseudoCurrencyMarketParameters(pegp);
     }
 
@@ -150,7 +150,7 @@ private:
     };
 
     PseudoCurrencyMarketParameters params_;
-    mutable boost::shared_mutex mutex_;
+    mutable std::shared_mutex mutex_;
 };
     
 //! Market

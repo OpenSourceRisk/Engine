@@ -39,10 +39,10 @@ public:
               const ext::shared_ptr<ZeroInflationIndex>& index, const Period& observationLag,
               CPI::InterpolationType observationInterpolation, const DayCounter& dayCounter,
               Real fixedRate, // aka gearing
-              Spread spread = 0.0, const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
+              const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
               const Date& exCouponDate = Date(), bool subtractInflationNominal = false)
         : QuantLib::CPICoupon(baseCPI, paymentDate, nominal, startDate, endDate, index, observationLag,
-                              observationInterpolation, dayCounter, fixedRate, spread, refPeriodStart,
+                              observationInterpolation, dayCounter, fixedRate, refPeriodStart,
                               refPeriodEnd, exCouponDate),
           subtractInflationNominal_(subtractInflationNominal){};
 
@@ -52,11 +52,11 @@ public:
               const ext::shared_ptr<ZeroInflationIndex>& index, const Period& observationLag,
               CPI::InterpolationType observationInterpolation, const DayCounter& dayCounter,
               Real fixedRate, // aka gearing
-              Spread spread = 0.0, const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
+              const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
               const Date& exCouponDate = Date(), bool subtractInflationNominal = false)
         : QuantLib::CPICoupon(baseCPI, baseDate, paymentDate, nominal, startDate, endDate, index,
                               observationLag,
-                              observationInterpolation, dayCounter, fixedRate, spread, refPeriodStart, refPeriodEnd,
+                              observationInterpolation, dayCounter, fixedRate, refPeriodStart, refPeriodEnd,
                               exCouponDate),
           subtractInflationNominal_(subtractInflationNominal){};
 
@@ -150,8 +150,6 @@ public:
     CPILeg& withFixingDays(const std::vector<Natural>& fixingDays);
     CPILeg& withObservationInterpolation(CPI::InterpolationType);
     CPILeg& withSubtractInflationNominal(bool);
-    CPILeg& withSpreads(Spread spread);
-    CPILeg& withSpreads(const std::vector<Spread>& spreads);
     CPILeg& withCaps(Rate cap);
     CPILeg& withCaps(const std::vector<Rate>& caps);
     CPILeg& withFloors(Rate floor);
@@ -179,7 +177,6 @@ private:
     std::vector<Natural> fixingDays_;
     CPI::InterpolationType observationInterpolation_;
     bool subtractInflationNominal_;
-    std::vector<Spread> spreads_;
     std::vector<Rate> caps_, floors_;
     double finalFlowCap_, finalFlowFloor_;
     Period exCouponPeriod_;

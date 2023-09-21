@@ -91,7 +91,7 @@ public:
                     const bool allowOverwrite = false);
 
 private:
-    boost::shared_mutex mutex_;
+    std::shared_mutex mutex_;
     map_type map_;
 };
 
