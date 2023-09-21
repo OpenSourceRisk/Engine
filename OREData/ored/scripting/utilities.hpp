@@ -108,7 +108,7 @@ public:
     // get parsed version of index, or null if na
     boost::shared_ptr<FxIndex> fx() const { return fx_; }
     boost::shared_ptr<EquityIndex2> eq() const { return eq_; }
-    boost::shared_ptr<CommodityIndex>
+    boost::shared_ptr<QuantExt::CommodityIndex>
     // requires obsDate + conventions for forms 3-6 below, throws otherwise
     comm(const Date& obsDate = Date()) const;
     boost::shared_ptr<InterestRateIndex> ir() const { return ir_; }
