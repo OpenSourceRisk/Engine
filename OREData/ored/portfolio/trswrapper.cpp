@@ -121,7 +121,7 @@ TRSWrapper::TRSWrapper(
     // compute last payment date, after this date the TRS is considered expired
 
     lastDate_ = Date::minDate();
-    for (auto const& d : paymentSchedule_.dates())
+    for (auto const& d : paymentSchedule_)
         lastDate_ = std::max(lastDate_, d);
     for (auto const& l : fundingLegs_)
         for (auto const& c : l)
