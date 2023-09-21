@@ -60,7 +60,20 @@ testsuite.cpp
 todaysmarket.cpp
 xmlmanipulation.cpp
 yieldcurve.cpp
-zerocouponswap.cpp)
+zerocouponswap.cpp
+# scripted trade
+fxaccumulator.cpp
+fxtarf.cpp
+gaussiancam.cpp
+localvol.cpp
+representativefxoption.cpp
+representativeswaption.cpp
+riskparticipationagreement.cpp
+scriptengine.cpp
+scriptparser.cpp
+oredtestmarket.cpp
+value.cpp
+)
 
 add_executable(ored-test-suite ${OREData-Test_SRC})
 target_link_libraries(ored-test-suite ${ORED_LIB_NAME})

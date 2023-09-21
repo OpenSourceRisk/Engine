@@ -51,9 +51,10 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/testmarket.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <test/oreatoplevelfixture.hpp>
+
+#include "testmarket.hpp"
 
 using namespace ore::analytics;
 using namespace boost::unit_test_framework;

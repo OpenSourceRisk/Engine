@@ -25,6 +25,8 @@
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/vanillaoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/builders/cliquetoption.hpp>
+#include <ored/portfolio/scriptedtrade.hpp>
 
 namespace ore {
 namespace data {
@@ -67,6 +69,15 @@ class EquityCliquetOptionEngineBuilder : public CliquetOptionEngineBuilder {
 public:
     EquityCliquetOptionEngineBuilder(const std::string& model, const std::string& engine)
         : CliquetOptionEngineBuilder(model, engine, {"EquityCliquetOption"}, ore::data::AssetClass::EQ) {}
+};
+
+class EquityCliquetOptionMcScriptEngineBuilder : public EquityCliquetOptionEngineBuilder {
+public:
+    EquityCliquetOptionMcScriptEngineBuilder() : EquityCliquetOptionEngineBuilder("BlackScholes", "MCScript") {}
+
+protected:
+    boost::shared_ptr<PricingEngine> engineImpl(const std::string& assetName, const QuantLib::Currency& ccy,
+                                                const ore::data::AssetClass& assetClass) override;
 };
 
 } // namespace data
