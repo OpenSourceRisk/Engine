@@ -495,7 +495,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                 // additional result based cashflow reporting
 
                 QL_REQUIRE(cashFlowResults->second.type() == typeid(std::vector<CashFlowResults>),
-                           "internal error: cashflowResults type does not match CashFlowReusults: '"
+                           "internal error: cashflowResults type does not match CashFlowResults: '"
                                << cashFlowResults->second.type().name() << "'");
                 std::vector<CashFlowResults> cfResults =
                     boost::any_cast<std::vector<CashFlowResults>>(cashFlowResults->second);
