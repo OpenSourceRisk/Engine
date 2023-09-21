@@ -1,6 +1,10 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt_SRC calendars/amendedcalendar.cpp
+set(QuantExt_SRC
+ad/computationgraph.cpp
+ad/external_randomvariable_ops.cpp
+ad/ssaform.cpp
+calendars/amendedcalendar.cpp
 calendars/austria.cpp
 calendars/belgium.cpp
 calendars/cme.cpp
@@ -164,6 +168,9 @@ methods/multipathgeneratorbase.cpp
 methods/multipathvariategenerator.cpp
 methods/projectedbufferedmultipathgenerator.cpp
 methods/projectedvariatemultipathgenerator.cpp
+methods/fdmblackscholesmesher.cpp
+methods/fdmblackscholesop.cpp
+methods/fdmquantohelper.cpp
 models/annuitymapping.cpp
 models/basket.cpp
 models/carrmadanarbitragecheck.cpp
@@ -217,6 +224,9 @@ models/yoycapfloorhelper.cpp
 models/yoyinflationmodeltermstructure.cpp
 models/yoyswaphelper.cpp
 models/zeroinflationmodeltermstructure.cpp
+models/infdkvectorised.cpp
+models/representativefxoption.cpp
+models/representativeswaption.cpp
 pricingengines/accrualbondrepoengine.cpp
 pricingengines/analyticbarrierengine.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
@@ -382,7 +392,14 @@ utilities/time.cpp)
 
 # hpp files, this list is maintained manually
 
-set(QuantExt_HDR auto_link.hpp
+set(QuantExt_HDR
+ad/backwardderivatives.hpp
+ad/computationgraph.hpp
+ad/external_randomvariable_ops.hpp
+ad/forwardderivatives.hpp
+ad/forwardevaluation.hpp
+ad/ssaform.hpp
+auto_link.hpp
 calendars/amendedcalendar.hpp
 calendars/austria.hpp
 calendars/belgium.hpp
@@ -601,6 +618,7 @@ math/discretedistribution.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
 math/flatextrapolation2d.hpp
+math/kendallrankcorrelation.hpp
 math/logquadraticinterpolation.hpp
 math/matrixfunctions.hpp
 math/method_mt.hpp
@@ -626,6 +644,9 @@ methods/projectedbufferedmultipathgenerator.hpp
 methods/projectedbufferedmultipathgeneratorfactory.hpp
 methods/projectedvariatemultipathgenerator.hpp
 methods/projectedvariatepathgeneratorfactory.hpp
+methods/fdmblackscholesmesher.hpp
+methods/fdmblackscholesop.hpp
+methods/fdmquantohelper.hpp
 models/annuitymapping.hpp
 models/basket.hpp
 models/blackscholesmodelwrapper.hpp
@@ -709,6 +730,9 @@ models/yoycapfloorhelper.hpp
 models/yoyinflationmodeltermstructure.hpp
 models/yoyswaphelper.hpp
 models/zeroinflationmodeltermstructure.hpp
+models/infdkvectorised.hpp
+models/representativefxoption.hpp
+models/representativeswaption.hpp
 pricingengines/accrualbondrepoengine.hpp
 pricingengines/amccalculator.hpp
 pricingengines/analyticbarrierengine.hpp

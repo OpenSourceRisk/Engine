@@ -33,17 +33,17 @@ public:
     BondIndexBuilder(BondData bondData, const bool dirty, const bool relative,
                      const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
                      const boost::shared_ptr<EngineFactory>& engineFactory,
-                     QuantLib::Real bidAskAdjustment = QuantLib::Null<QuantLib::Real>());
+                     QuantLib::Real bidAskAdjustment = 0.0);
 
     BondIndexBuilder(const Bond& bond, const bool dirty, const bool relative,
                      const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
                      const boost::shared_ptr<EngineFactory>& engineFactory,
-                     QuantLib::Real bidAskAdjustment = QuantLib::Null<QuantLib::Real>());
+                     QuantLib::Real bidAskAdjustment = 0.0);
 
     BondIndexBuilder(const std::string& securityId, const bool dirty, const bool relative, 
                      const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
                      const boost::shared_ptr<EngineFactory>& engineFactory,
-                     QuantLib::Real bidAskAdjustment = QuantLib::Null<QuantLib::Real>());
+                     QuantLib::Real bidAskAdjustment = 0.0);
 
     boost::shared_ptr<QuantExt::BondIndex> bondIndex() const;
     void addRequiredFixings(RequiredFixings& requiredFixings, Leg leg = {});
@@ -58,7 +58,7 @@ private:
 
     void buildIndex(const bool relative, const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
         const boost::shared_ptr<EngineFactory>& engineFactory, 
-        QuantLib::Real bidAskAdjustment = QuantLib::Null<QuantLib::Real>());
+        QuantLib::Real bidAskAdjustment);
 };
 
 } // namespace data

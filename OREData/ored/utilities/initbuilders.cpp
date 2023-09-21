@@ -173,6 +173,27 @@
 #include <ored/portfolio/trswrapper.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/portfolio/varianceswap.hpp>
+// scripted products
+#include <ored/portfolio/accumulator.hpp>
+#include <ored/portfolio/autocallable_01.hpp>
+#include <ored/portfolio/basketoption.hpp>
+#include <ored/portfolio/basketvarianceswap.hpp>
+#include <ored/portfolio/bestentryoption.hpp>
+#include <ored/portfolio/builders/asianoption.hpp>
+#include <ored/portfolio/builders/cliquetoption.hpp>
+#include <ored/portfolio/builders/riskparticipationagreement.hpp>
+#include <ored/portfolio/builders/scriptedtrade.hpp>
+#include <ored/portfolio/doubledigitaloption.hpp>
+#include <ored/portfolio/europeanoptionbarrier.hpp>
+#include <ored/portfolio/genericbarrieroption.hpp>
+#include <ored/portfolio/knockoutswap.hpp>
+#include <ored/portfolio/performanceoption_01.hpp>
+#include <ored/portfolio/rainbowoption.hpp>
+#include <ored/portfolio/riskparticipationagreement.hpp>
+#include <ored/portfolio/scriptedtrade.hpp>
+#include <ored/portfolio/tarf.hpp>
+#include <ored/portfolio/windowbarrieroption.hpp>
+#include <ored/portfolio/worstofbasketswap.hpp>
 
 #include <qle/math/openclenvironment.hpp>
 #include <qle/math/basiccpuenvironment.hpp>
@@ -298,6 +319,41 @@ void initBuilders() {
     ORE_REGISTER_TRADE_BUILDER("Ascot", Ascot, false)
     ORE_REGISTER_TRADE_BUILDER("ConvertibleBond", ConvertibleBond, false)
 
+    ORE_REGISTER_TRADE_BUILDER("ScriptedTrade", ScriptedTrade, false)
+    ORE_REGISTER_TRADE_BUILDER("Autocallable_01", Autocallable_01, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityWindowBarrierOption", EquityWindowBarrierOption, false)
+    ORE_REGISTER_TRADE_BUILDER("FxWindowBarrierOption", FxWindowBarrierOption, false)
+    ORE_REGISTER_TRADE_BUILDER("CommodityWindowBarrierOption", CommodityWindowBarrierOption, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityRainbowOption", EquityRainbowOption, false)
+    ORE_REGISTER_TRADE_BUILDER("FxRainbowOption", FxRainbowOption, false)
+    ORE_REGISTER_TRADE_BUILDER("CommodityRainbowOption", CommodityRainbowOption, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityGenericBarrierOption", EquityGenericBarrierOption, false)
+    ORE_REGISTER_TRADE_BUILDER("FxGenericBarrierOption", FxGenericBarrierOption, false)
+    ORE_REGISTER_TRADE_BUILDER("CommodityGenericBarrierOption", CommodityGenericBarrierOption, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityBestEntryOption", EquityBestEntryOption, false)
+    ORE_REGISTER_TRADE_BUILDER("FxBestEntryOption", FxBestEntryOption, false)
+    ORE_REGISTER_TRADE_BUILDER("CommodityBestEntryOption", CommodityBestEntryOption, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityAccumulator", EquityAccumulator, false)
+    ORE_REGISTER_TRADE_BUILDER("FxAccumulator", FxAccumulator, false)
+    ORE_REGISTER_TRADE_BUILDER("CommodityAccumulator", CommodityAccumulator, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityBasketVarianceSwap", EquityBasketVarianceSwap, false)
+    ORE_REGISTER_TRADE_BUILDER("FxBasketVarianceSwap", FxBasketVarianceSwap, false)
+    ORE_REGISTER_TRADE_BUILDER("CommodityBasketVarianceSwap", CommodityBasketVarianceSwap, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityTaRF", EquityTaRF, false)
+    ORE_REGISTER_TRADE_BUILDER("FxTaRF", FxTaRF, false)
+    ORE_REGISTER_TRADE_BUILDER("CommodityTaRF", CommodityTaRF, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityWorstOfBasketSwap", EquityWorstOfBasketSwap, false)
+    ORE_REGISTER_TRADE_BUILDER("FxWorstOfBasketSwap", FxWorstOfBasketSwap, false)
+    ORE_REGISTER_TRADE_BUILDER("CommodityWorstOfBasketSwap", CommodityWorstOfBasketSwap, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityBasketOption", EquityBasketOption, false)
+    ORE_REGISTER_TRADE_BUILDER("FxBasketOption", FxBasketOption, false)
+    ORE_REGISTER_TRADE_BUILDER("CommodityBasketOption", CommodityBasketOption, false)
+    ORE_REGISTER_TRADE_BUILDER("EuropeanOptionBarrier", EuropeanOptionBarrier, false)
+    ORE_REGISTER_TRADE_BUILDER("KnockOutSwap", KnockOutSwap, false)
+    ORE_REGISTER_TRADE_BUILDER("DoubleDigitalOption", DoubleDigitalOption, false)
+    ORE_REGISTER_TRADE_BUILDER("PerformanceOption_01", PerformanceOption_01, false)
+    ORE_REGISTER_TRADE_BUILDER("RiskParticipationAgreement", RiskParticipationAgreement, false)
+        
     ORE_REGISTER_LEGBUILDER("CommodityFixedLegBuilder", CommodityFixedLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("CommodityFloatingLegBuilder", CommodityFloatingLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("DurationAdjustedCmsLegBuilder", DurationAdjustedCmsLegBuilder, false)
@@ -320,6 +376,7 @@ void initBuilders() {
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcSwapEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxOptionEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxForwardEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
 
     ORE_REGISTER_ENGINE_BUILDER(CommoditySpreadOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CpiCapFloorEngineBuilder, false)
@@ -422,6 +479,14 @@ void initBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(AscotIntrinsicEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(ConvertibleBondFDDefaultableEquityJumpDiffusionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CboMCEngineBuilder, false)
+
+    ORE_REGISTER_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(AsianOptionScriptedEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(RiskParticipationAgreementBlackEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(RiskParticipationAgreementXCcyBlackEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(RiskParticipationAgreementSwapLGMGridEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(RiskParticipationAgreementTLockLGMGridEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(EquityCliquetOptionMcScriptEngineBuilder, false)
 
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Bond", BondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("ForwardBond", ForwardBondTrsUnderlyingBuilder, false)
