@@ -127,8 +127,8 @@ Array FdmBlackScholesOp::preconditioner(const Array& r, Real dt) const {
 }
 
 #if !defined(QL_NO_UBLAS_SUPPORT)
-std::vector<SparseMatrix> FdmBlackScholesOp::toMatrixDecomp() const {
-    std::vector<SparseMatrix> retVal(1, mapT_.toMatrix());
+    std::vector<QuantLib::SparseMatrix> FdmBlackScholesOp::toMatrixDecomp() const {
+        std::vector<QuantLib::SparseMatrix> retVal(1, mapT_.toMatrix());
     return retVal;
 }
 #endif

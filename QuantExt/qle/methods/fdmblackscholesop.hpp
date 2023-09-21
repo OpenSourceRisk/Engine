@@ -62,7 +62,7 @@ public:
     Array preconditioner(const Array& r, Real s) const override;
 
 #if !defined(QL_NO_UBLAS_SUPPORT)
-    std::vector<SparseMatrix> toMatrixDecomp() const override;
+    std::vector<QuantLib::SparseMatrix> toMatrixDecomp() const override;
 #endif
 private:
     const ext::shared_ptr<FdmMesher> mesher_;
