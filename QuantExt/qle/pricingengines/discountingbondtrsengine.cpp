@@ -144,14 +144,17 @@ void DiscountingBondTRSEngine::calculate() const {
 
     // 5 handle bond cashflows (leg #1)
 
-    Date start = arguments_.valuationDates.front();
-    Date end = arguments_.valuationDates.back();
+    boost::shared_ptr<Bond> bd = arguments_.bondIndex->bond();
+
+    Date settlementDate = bd->settlementDate(today);
+    Date start = bd->settlementDate(arguments_.valuationDates.front());
+    Date end = bd->settlementDate(arguments_.valuationDates.back());
 
     Real bondPayments = 0.0, bondRecovery = 0.0;
     bool hasLiveCashFlow = false;
     Size numCoupons = 0;
 
-    boost::shared_ptr<Bond> bd = arguments_.bondIndex->bond();
+    
 
     for (Size i = 0; i < bd->cashflows().size(); i++) {
 
@@ -192,7 +195,7 @@ void DiscountingBondTRSEngine::calculate() const {
 
         // 5c skip cashflows that are paid <= today
 
-        if (bondFlowPayDate <= today)
+        if (bondFlowPayDate <= settlementDate)
             continue;
 
         hasLiveCashFlow = true;
