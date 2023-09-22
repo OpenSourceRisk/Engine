@@ -16,6 +16,7 @@
   <xs:include schemaLocation="calendaradjustment.xsd"/>
   <xs:include schemaLocation="currencyconfig.xsd"/>
   <xs:include schemaLocation="iborfallbackconfig.xsd"/>
+  <xs:include schemaLocation="scriptlibrary.xsd"/>
 
   <xs:element type="portfolio" name="Portfolio"/>
 

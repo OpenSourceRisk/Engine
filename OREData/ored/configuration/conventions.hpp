@@ -36,8 +36,8 @@
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/commodityindex.hpp>
 
-#include <boost/thread/shared_mutex.hpp>
-#include <boost/thread/lock_types.hpp>
+#include <shared_mutex>
+
 
 namespace ore {
 namespace data {
@@ -154,7 +154,7 @@ private:
     mutable map<string, boost::shared_ptr<Convention>> data_;
     mutable map<string, std::pair<string, string>> unparsed_;
     mutable std::set<string> used_;
-    mutable boost::shared_mutex mutex_;
+    mutable std::shared_mutex mutex_;
 };
 
 //! Singleton to hold conventions
@@ -166,7 +166,7 @@ private:
     InstrumentConventions() { conventions_[Date()] = boost::make_shared<ore::data::Conventions>(); }
 
     mutable std::map<QuantLib::Date, boost::shared_ptr<ore::data::Conventions>> conventions_;
-    mutable boost::shared_mutex mutex_;
+    mutable std::shared_mutex mutex_;
     mutable std::size_t numberOfEmittedWarnings_ = 0;
 
 public:

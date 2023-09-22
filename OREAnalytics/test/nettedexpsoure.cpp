@@ -42,7 +42,8 @@
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <test/oreatoplevelfixture.hpp>
-#include <test/testmarket.hpp>
+
+#include "testmarket.hpp"
 
 #include <orea/aggregation/exposurecalculator.hpp>
 #include <orea/aggregation/nettedexposurecalculator.hpp>

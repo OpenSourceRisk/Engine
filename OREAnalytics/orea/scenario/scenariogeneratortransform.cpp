@@ -33,13 +33,15 @@ boost::shared_ptr<Scenario> ScenarioGeneratorTransform::next(const Date& d) {
 
     for (Size k = 0; k < keys.size(); ++k) {
         if ((keys[k].keytype == RiskFactorKey::KeyType::DiscountCurve) ||
-            (keys[k].keytype == RiskFactorKey::KeyType::IndexCurve)) {
+            (keys[k].keytype == RiskFactorKey::KeyType::IndexCurve) ||
+            (keys[k].keytype == RiskFactorKey::KeyType::YieldCurve)) {
             Real df = scenario->get(keys[k]);
             Real compound = 1 / df;
             if ((keys[k].keytype == RiskFactorKey::KeyType::DiscountCurve)) {
                 dc = simMarket_->discountCurve(keys[k].name)->dayCounter();
                 tenors = simMarketConfig_->yieldCurveTenors(keys[k].name);
-            } else if (keys[k].keytype == RiskFactorKey::KeyType::IndexCurve) {
+            } else if (keys[k].keytype == RiskFactorKey::KeyType::IndexCurve ||
+                       keys[k].keytype == RiskFactorKey::KeyType::YieldCurve) {
                 dc = simMarket_->iborIndex(keys[k].name)->dayCounter();
                 tenors = simMarketConfig_->yieldCurveTenors(keys[k].name);
             }
