@@ -1,7 +1,6 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt_SRC
-ad/computationgraph.cpp
+set(QuantExt_SRC ad/computationgraph.cpp
 ad/external_randomvariable_ops.cpp
 ad/ssaform.cpp
 calendars/amendedcalendar.cpp
@@ -161,16 +160,16 @@ math/randomvariable_io.cpp
 math/randomvariable_ops.cpp
 math/randomvariablelsmbasissystem.cpp
 methods/brownianbridgepathinterpolator.cpp
+methods/fdmblackscholesmesher.cpp
+methods/fdmblackscholesop.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
+methods/fdmquantohelper.cpp
 methods/interpolatedvariatemultipathgenerator.cpp
 methods/multipathgeneratorbase.cpp
 methods/multipathvariategenerator.cpp
 methods/projectedbufferedmultipathgenerator.cpp
 methods/projectedvariatemultipathgenerator.cpp
-methods/fdmblackscholesmesher.cpp
-methods/fdmblackscholesop.cpp
-methods/fdmquantohelper.cpp
 models/annuitymapping.cpp
 models/basket.cpp
 models/carrmadanarbitragecheck.cpp
@@ -201,6 +200,7 @@ models/gaussian1dcrossassetadaptor.cpp
 models/gaussianlhplossmodel.cpp
 models/hullwhitebucketing.cpp
 models/hwmodel.cpp
+models/infdkvectorised.cpp
 models/infjyparameterization.cpp
 models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
@@ -219,14 +219,13 @@ models/normalsabrsmilesection.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
 models/projectedcrossassetmodel.cpp
+models/representativefxoption.cpp
+models/representativeswaption.cpp
 models/transitionmatrix.cpp
 models/yoycapfloorhelper.cpp
 models/yoyinflationmodeltermstructure.cpp
 models/yoyswaphelper.cpp
 models/zeroinflationmodeltermstructure.cpp
-models/infdkvectorised.cpp
-models/representativefxoption.cpp
-models/representativeswaption.cpp
 pricingengines/accrualbondrepoengine.cpp
 pricingengines/analyticbarrierengine.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
@@ -392,8 +391,7 @@ utilities/time.cpp)
 
 # hpp files, this list is maintained manually
 
-set(QuantExt_HDR
-ad/backwardderivatives.hpp
+set(QuantExt_HDR ad/backwardderivatives.hpp
 ad/computationgraph.hpp
 ad/external_randomvariable_ops.hpp
 ad/forwardderivatives.hpp
@@ -634,8 +632,11 @@ math/randomvariablelsmbasissystem.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
 methods/brownianbridgepathinterpolator.hpp
+methods/fdmblackscholesmesher.hpp
+methods/fdmblackscholesop.hpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
 methods/fdmdefaultableequityjumpdiffusionop.hpp
+methods/fdmquantohelper.hpp
 methods/interpolatedvariatemultipathgenerator.hpp
 methods/multipathgeneratorbase.hpp
 methods/multipathvariategenerator.hpp
@@ -644,9 +645,6 @@ methods/projectedbufferedmultipathgenerator.hpp
 methods/projectedbufferedmultipathgeneratorfactory.hpp
 methods/projectedvariatemultipathgenerator.hpp
 methods/projectedvariatepathgeneratorfactory.hpp
-methods/fdmblackscholesmesher.hpp
-methods/fdmblackscholesop.hpp
-methods/fdmquantohelper.hpp
 models/annuitymapping.hpp
 models/basket.hpp
 models/blackscholesmodelwrapper.hpp
@@ -695,6 +693,7 @@ models/hwconstantparametrization.hpp
 models/hwmodel.hpp
 models/hwparametrization.hpp
 models/infdkparametrization.hpp
+models/infdkvectorised.hpp
 models/infjyparameterization.hpp
 models/inhomogeneouspooldef.hpp
 models/irlgm1fconstantparametrization.hpp
@@ -725,14 +724,13 @@ models/piecewiseconstanthelper.hpp
 models/poollossmodel.hpp
 models/projectedcrossassetmodel.hpp
 models/pseudoparameter.hpp
+models/representativefxoption.hpp
+models/representativeswaption.hpp
 models/transitionmatrix.hpp
 models/yoycapfloorhelper.hpp
 models/yoyinflationmodeltermstructure.hpp
 models/yoyswaphelper.hpp
 models/zeroinflationmodeltermstructure.hpp
-models/infdkvectorised.hpp
-models/representativefxoption.hpp
-models/representativeswaption.hpp
 pricingengines/accrualbondrepoengine.hpp
 pricingengines/amccalculator.hpp
 pricingengines/analyticbarrierengine.hpp
