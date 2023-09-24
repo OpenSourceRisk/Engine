@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#pragma once
+
 #include <boost/make_shared.hpp>
 
 #include <orea/scenario/scenariosimmarketparameters.hpp>
