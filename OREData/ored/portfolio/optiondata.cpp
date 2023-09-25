@@ -248,7 +248,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
                 for (auto const& l : legs) {
                     for (auto const& c : l) {
                         if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
-                            if (cpn->accrualStartDate() >= exerciseDates_[i])
+                            if (cpn->accrualStartDate() >= sortedExerciseDates[i])
                                 notionals.insert(std::make_pair(cpn->accrualStartDate(), cpn->nominal()));
                         }
                     }
