@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+
+  <Product type="EquityOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+    
+  <Product type="EquityBarrierOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters />
+    <Engine>AnalyticBarrierEngine</Engine>
+    <EngineParameters />
+  </Product>
+
+  <Product type="EquityOptionAmerican">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
+      <Parameter name="XGrid">100</Parameter>
+      <Parameter name="DampingSteps">0</Parameter>
+    </EngineParameters>
+  </Product>
+
+  <Product type="ScriptedTrade">
+    <Model>Generic</Model>
+    <ModelParameters>
+      <!-- shared parameters -->
+      <Parameter name="BaseCcy">EUR</Parameter>
+      <Parameter name="EnforceBaseCcy">false</Parameter>
+      <Parameter name="FullDynamicFx">false</Parameter>
+      <Parameter name="GridCoarsening">3M(1W),1Y(1M),5Y(3M),10Y(1Y),50Y(5Y)</Parameter>
+      <Parameter name="Model">BlackScholes</Parameter>
+      <!-- model selection -->
+      <Parameter name="Model_SingleAssetOption(EQ)">BlackScholes</Parameter>
+    </ModelParameters>
+    <Engine>Generic</Engine>
+    <EngineParameters>
+      <!-- shared parameters -->
+      <Parameter name="Interactive">false</Parameter>
+      <Parameter name="BootstrapTolerance">0.1</Parameter>
+      <!-- default parameters-->
+      <Parameter name="Engine">MC</Parameter>
+      <Parameter name="Samples">10000</Parameter>
+      <Parameter name="StateGridPoints">100</Parameter>
+      <Parameter name="RegressionOrder">2</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <!-- asset class specific choices -->
+      <Parameter name="Engine_SingleAssetOption(EQ)">MC</Parameter>
+      <Parameter name="Engine_SingleAssetOptionBwd(EQ)">FD</Parameter>
+      <Parameter name="Engine_SingleAssetOptionBwd(FX)">FD</Parameter>
+      <Parameter name="Engine_SingleAssetOptionBwd(COMM)">FD</Parameter>
+    </EngineParameters>
+  </Product>
+
+</PricingEngines>
