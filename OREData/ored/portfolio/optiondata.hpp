@@ -140,22 +140,41 @@ private:
     boost::optional<OptionPaymentData> paymentData_;
 };
 
-/* Helper class to build an exercise instance for Bermudan swaptions and related instruments from given option data.
-   Only future exercise dates that exercise into a whole future accrual period of the underlying are kept.
-   If no exercise dates are left, exercise() will return a nullptr. */
+// Helper class to build an exercise instance for Bermudan swaptions and related instruments from given option data.
 
 class ExerciseBuilder {
 public:
     ExerciseBuilder(const OptionData& optionData, const std::vector<QuantLib::Leg> legs);
 
+    // null if exercsied or no alive exercise dates
     boost::shared_ptr<QuantLib::Exercise> exercise() const { return exercise_; }
+    // exercise dates associated to alive notice dates
     const std::vector<QuantLib::Date>& exerciseDates() const { return exerciseDates_; }
+    // alive notice dates (w.r.t. global eval date), only dates exercising into whole periods are kept
     const std::vector<QuantLib::Date>& noticeDates() const { return noticeDates_; }
+
+    // true if exercised
+    bool isExercised() const { return isExercised_; }
+    // only for exercised option: The applicable exercise date
+    const QuantLib::Date& exerciseDate() const { return exerciseDate_; }
+    // only for exercised options: cash settlement amount or null
+    boost::shared_ptr<QuantLib::CashFlow> cashSettlement() const { return cashSettlement_; }
+    // only for exercised options: exercise fee amount or null
+    boost::shared_ptr<QuantLib::CashFlow> feeSettlement() const { return feeSettlement_; }
 
 private:
     boost::shared_ptr<QuantLib::Exercise> exercise_;
+
     std::vector<QuantLib::Date> exerciseDates_;
     std::vector<QuantLib::Date> noticeDates_;
+
+    bool isExercised_ = false;
+    QuantLib::Date exerciseDate_;
+    boost::shared_ptr<QuantLib::CashFlow> cashSettlement_;
+    boost::shared_ptr<QuantLib::CashFlow> feeSettlement_;
+
+    // index in all exercise date vector if exercised
+    Size exerciseDateIndex_ = QuantLib::Null<QuantLib::Size>();
 };
 
 } // namespace data
