@@ -37,20 +37,22 @@ OptionExerciseData::OptionExerciseData(const string& date, const string& price) 
 void OptionExerciseData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ExerciseData");
     strDate_ = XMLUtils::getChildValue(node, "Date", true);
-    strPrice_ = XMLUtils::getChildValue(node, "Price", true);
+    strPrice_ = XMLUtils::getChildValue(node, "Price", false);
     init();
 }
 
 XMLNode* OptionExerciseData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("ExerciseData");
     XMLUtils::addChild(doc, node, "Date", strDate_);
-    XMLUtils::addChild(doc, node, "Price", strPrice_);
+    if (!strPrice_.empty())
+        XMLUtils::addChild(doc, node, "Price", strPrice_);
     return node;
 }
 
 void OptionExerciseData::init() {
     date_ = parseDate(strDate_);
-    price_ = parseReal(strPrice_);
+    if (!strPrice_.empty())
+        price_ = parseReal(strPrice_);
 }
 
 } // namespace data

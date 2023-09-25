@@ -206,7 +206,8 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
                             cashSettlementDate = *nextDate;
                     }
                 }
-                cashSettlement_ = boost::make_shared<QuantLib::SimpleCashFlow>(p, cashSettlementDate);
+                if (p != Null<Real>())
+                    cashSettlement_ = boost::make_shared<QuantLib::SimpleCashFlow>(p, cashSettlementDate);
                 DLOG("Option is cash settled, amount " << p << " paid on " << cashSettlementDate);
             }
         }
