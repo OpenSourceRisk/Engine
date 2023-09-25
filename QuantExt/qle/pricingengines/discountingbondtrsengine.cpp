@@ -167,13 +167,12 @@ void DiscountingBondTRSEngine::calculate() const {
 
         Date bondFlowPayDate;
         Date bondFlowValuationDate;
-        if (arguments_.payBondCashFlowsImmediately) {
+        bool paymentAfterMaturityButWithinBondSettlement =
+            bd->cashflows()[i]->date() > arguments_.valuationDates.back() && bd->cashflows()[i]->date() <= end;
+        if (arguments_.payBondCashFlowsImmediately || paymentAfterMaturityButWithinBondSettlement) {
             bondFlowPayDate = bd->cashflows()[i]->date();
             bondFlowValuationDate = bd->cashflows()[i]->date();
-        } else if (bd->cashflows()[i]->date() > arguments_.valuationDates.back() && bd->cashflows()[i]->date() <= end) {
-            bondFlowPayDate = bd->cashflows()[i]->date();
-            bondFlowValuationDate = bd->cashflows()[i]->date();
-        }else{
+        } else {
             const auto& payDates = arguments_.paymentDates;
             auto nextPayDate = std::lower_bound(payDates.begin(), payDates.end(), bd->cashflows()[i]->date());
             QL_REQUIRE(nextPayDate != payDates.end(), "DiscountingBondTRSEngine::calculate(): unexpected, could "
