@@ -314,6 +314,7 @@ scripting/models/gaussiancam.cpp
 scripting/models/localvol.cpp
 scripting/models/modelcgimpl.cpp
 scripting/models/modelimpl.cpp
+utilities/bondindexbuilder.cpp
 scripting/paylog.cpp
 scripting/randomastgenerator.cpp
 scripting/scriptedinstrument.cpp
@@ -663,6 +664,7 @@ portfolio/worstofbasketswap.hpp
 report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
+utilities/bondindexbuilder.hpp
 scripting/ast.hpp
 scripting/astprinter.hpp
 scripting/astresetter.hpp

@@ -1092,7 +1092,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     }
 
     // Strike interpolation
-    InterpolatedSmileSection::InterpolationMethod im;
+    QuantExt::InterpolatedSmileSection::InterpolationMethod im;
     if (vdsc.strikeInterpolation() == "Linear") {
         im = InterpolatedSmileSection::InterpolationMethod::Linear;
     } else if (vdsc.strikeInterpolation() == "NaturalCubic") {

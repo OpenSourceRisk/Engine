@@ -132,7 +132,7 @@ void OIBSHelper::initializeDates() {
 void OIBSHelper::setTermStructure(YieldTermStructure* t) {
     // do not set the relinkable handle as an observer -
     // force recalculation when needed
-    termStructureHandle_.linkTo(shared_ptr<YieldTermStructure>(t, null_deleter()), false);
+    termStructureHandle_.linkTo(boost::shared_ptr<YieldTermStructure>(t, null_deleter()), false);
     RelativeDateRateHelper::setTermStructure(t);
 }
 

@@ -16,30 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/lexical_cast.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
-#include <ql/errors.hpp>
-#include <ql/instruments/makeois.hpp>
-#include <ql/instruments/makevanillaswap.hpp>
-#include <ql/math/solvers1d/newtonsafe.hpp>
-#include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
-#include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
-#include <ql/pricingengines/swap/discountingswapengine.hpp>
-#include <ql/termstructures/yield/oisratehelper.hpp>
-#include <qle/instruments/crossccybasisswap.hpp>
-#include <qle/instruments/deposit.hpp>
-#include <qle/instruments/forwardrateagreement.hpp>
-#include <qle/instruments/fxforward.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
-#include <qle/pricingengines/depositengine.hpp>
-#include <qle/pricingengines/discountingfxforwardengine.hpp>
 
-#include <iomanip>
-#include <iostream>
+#include <ql/errors.hpp>
+
+#include <boost/lexical_cast.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
