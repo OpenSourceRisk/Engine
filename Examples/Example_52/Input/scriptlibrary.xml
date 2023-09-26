@@ -21,18 +21,14 @@
     <Script>
       <Code>
         <![CDATA[
-          NUMBER Payoff, ExerciseProbability, currentNotional;
+          NUMBER Payoff, CurrentNotional;
           Payoff = PutCall * (Underlying(Expiry) - Strike);
           Option = LOGPAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy, 1, OptionFlow);
-          IF Payoff > 0.0 THEN
-            ExerciseProbability = 1;
-          END;
-          currentNotional = Strike * Quantity;
+          CurrentNotional = Strike * Quantity;
         ]]></Code>
       <NPV>Option</NPV>
       <Results>
-        <Result>ExerciseProbability</Result>
-        <Result>currentNotional</Result>
+        <Result>CurrentNotional</Result>
         <Result rename="notionalCurrency">PayCcy</Result>
       </Results>
       <CalibrationSpec>
@@ -44,23 +40,17 @@
         </Calibration>
       </CalibrationSpec>
     </Script>
-    <Script pupose = "FD">
+    <Script purpose = "FD">
       <Code>
         <![CDATA[
-          NUMBER Payoff, ExerciseProbability, currentNotional;
+          NUMBER Payoff, CurrentNotional;
           Payoff = PutCall * (Underlying(Expiry) - Strike);
           Option = LOGPAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy, 1, OptionFlow);
-          IF Payoff > 0.0 THEN
-            ExerciseProbability = 1;
-          END;
-          currentNotional = Strike * Quantity;
+          CurrentNotional = Strike * Quantity;
         ]]></Code>
       <NPV>Option</NPV>
       <Results>
-        <!--Returning the ExerciseProbability causes an error with the FD engine-->
-        <!--Todo: Compute exercise probability via digital payoff-->
-        <!--<Result>ExerciseProbability</Result>-->
-        <Result>currentNotional</Result>
+        <Result>CurrentNotional</Result>
         <Result rename="notionalCurrency">PayCcy</Result>
       </Results>
       <CalibrationSpec>
@@ -106,8 +96,8 @@
     <Script>
       <Code><![CDATA[
         REQUIRE PayoffType == 0 OR PayoffType == 1;
-        NUMBER KnockedIn, KnockedOut, Active, rebate;
-        NUMBER U, i, d, currentNotional;
+        NUMBER KnockedIn, KnockedOut, Active, Rebate;
+        NUMBER U, i, d, CurrentNotional;
 
         FOR d IN (1, SIZE(BarrierMonitoringDates), 1) DO
 
@@ -124,9 +114,9 @@
              {BarrierType == 4 AND U > BarrierLevel} THEN
             IF KnockedOut == 0 THEN
               IF BarrierRebatePayTime == 0 THEN
-                rebate = PAY( LongShort * BarrierRebate, BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrency );
+                Rebate = PAY( LongShort * BarrierRebate, BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrency );
               ELSE
-                rebate = PAY( LongShort * BarrierRebate, BarrierMonitoringDates[d], Settlement, BarrierRebateCurrency );
+                Rebate = PAY( LongShort * BarrierRebate, BarrierMonitoringDates[d], Settlement, BarrierRebateCurrency );
               END;
             END;
             KnockedOut = 1;
@@ -142,26 +132,26 @@
         Active = max(Active, KnockedIn) * (1 - KnockedOut);
 
 	IF BarrierRebate != 0 THEN
-	  rebate = (1 - Active) * PAY( LongShort * BarrierRebate, Settlement, Settlement, BarrierRebateCurrency );
+	  Rebate = (1 - Active) * PAY( LongShort * BarrierRebate, Settlement, Settlement, BarrierRebateCurrency );
 	END;
 
         IF PayoffType == 0 THEN
 	  value = Active * PAY( LongShort * Quantity * max(0, PutCall * (Underlying(Expiry) - Strike)), Expiry, Settlement, PayCcy ) +
-                  rebate;
+                  Rebate;
 	ELSE
 	  value = Active * PAY( LongShort * Amount, Expiry, Settlement, PayCcy ) +
-                  rebate;
+                  Rebate;
 	END;
 
         IF PayoffType == 0 THEN
-          currentNotional = Quantity * Strike;
+          CurrentNotional = Quantity * Strike;
         ELSE
-          currentNotional = Amount;
+          CurrentNotional = Amount;
         END;
         ]]></Code>
       <NPV>value</NPV>
       <Results>
-        <Result>currentNotional</Result>
+        <Result>CurrentNotional</Result>
         <Result rename="notionalCurrency">PayCcy</Result>
 	<Result>Active</Result>
       </Results>
@@ -183,8 +173,8 @@
     <Script>
       <Code><![CDATA[
         REQUIRE PayoffType == 0 OR PayoffType == 1;
-        NUMBER KnockedIn, KnockedOut, Active, rebate;
-        NUMBER U, i, d, currentNotional, Alive;
+        NUMBER KnockedIn, KnockedOut, Active, Rebate;
+        NUMBER U, i, d, CurrentNotional, Alive;
         Alive = 1;
 
         FOR d IN (1, SIZE(BarrierMonitoringDates), 1) DO
@@ -202,9 +192,9 @@
              {BarrierType == 4 AND U > BarrierLevel} THEN
             IF KnockedOut == 0 THEN
               IF BarrierRebatePayTime == 0 THEN
-                rebate = PAY( LongShort * BarrierRebate, BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrency );
+                Rebate = PAY( LongShort * BarrierRebate, BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrency );
               ELSE
-                rebate = PAY( LongShort * BarrierRebate, BarrierMonitoringDates[d], Settlement, BarrierRebateCurrency );
+                Rebate = PAY( LongShort * BarrierRebate, BarrierMonitoringDates[d], Settlement, BarrierRebateCurrency );
               END;
             END;
             KnockedOut = 1;
@@ -236,26 +226,26 @@
         Active = max(Active, KnockedIn) * (1 - KnockedOut);
 
 	IF BarrierRebate != 0 THEN
-	  rebate = (1 - Active) * PAY( LongShort * BarrierRebate, Settlement, Settlement, BarrierRebateCurrency );
+	  Rebate = (1 - Active) * PAY( LongShort * BarrierRebate, Settlement, Settlement, BarrierRebateCurrency );
 	END;
 
         IF PayoffType == 0 THEN
 	  value = Active * Alive * PAY( LongShort * Quantity * max(0, PutCall * (Underlying(Expiry) - Strike)), Expiry, Settlement, PayCcy ) +
-                  rebate;
+                  Rebate;
 	ELSE
 	  value = Active * Alive * PAY( LongShort * Amount, Expiry, Settlement, PayCcy ) +
-                  rebate;
+                  Rebate;
 	END;
 
         IF PayoffType == 0 THEN
-          currentNotional = Quantity * Strike;
+          CurrentNotional = Quantity * Strike;
         ELSE
-          currentNotional = Amount;
+          CurrentNotional = Amount;
         END;
         ]]></Code>
       <NPV>value</NPV>
       <Results>
-        <Result>currentNotional</Result>
+        <Result>CurrentNotional</Result>
         <Result rename="notionalCurrency">PayCcy</Result>
 	<Result>Active</Result>
       </Results>
@@ -291,8 +281,8 @@
        GuaranteedFixings               the number of fixings guaranteed regardless of knockout level
 
        Results:
-       value                            npv of the option
-       currentNotional                 current notional
+       value                           npv of the option
+       CurrentNotional                 current notional
        notionalCurrency                notional currency
   -->
   <Script>
@@ -301,7 +291,7 @@
     <Script>
       <Code><![CDATA[
             REQUIRE KnockOutType == 3 OR KnockOutType == 4;
-            NUMBER Payoff, fix, d, r, Alive, currentNotional, Factor, ThisPayout, Fixing[SIZE(FixingDates)];
+            NUMBER Payoff, fix, d, r, Alive, CurrentNotional, Factor, ThisPayout, Fixing[SIZE(FixingDates)];
             Alive = 1;
             FOR d IN (1, SIZE(FixingDates), 1) DO
                 fix = Underlying(FixingDates[d]);
@@ -349,11 +339,11 @@
                 END;
             END;
             value = LongShort * Payoff;
-            currentNotional = FixingAmount * Strike;
+            CurrentNotional = FixingAmount * Strike;
         ]]></Code>
       <NPV>value</NPV>
       <Results>
-        <Result>currentNotional</Result>
+        <Result>CurrentNotional</Result>
         <Result rename="notionalCurrency">PayCcy</Result>
         <Result>Alive</Result>
         <Result>Fixing</Result>
