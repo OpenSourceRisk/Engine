@@ -37,6 +37,7 @@
 #include <ql/errors.hpp>
 #include <ql/indexes/ibor/libor.hpp>
 #include <ql/instruments/creditdefaultswap.hpp>
+#include <ql/instruments/forwardrateagreement.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/instruments/makeois.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
@@ -55,7 +56,6 @@
 #include <qle/instruments/crossccybasisswap.hpp>
 #include <qle/instruments/crossccybasismtmresetswap.hpp>
 #include <qle/instruments/deposit.hpp>
-#include <qle/instruments/forwardrateagreement.hpp>
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/makecds.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
@@ -83,8 +83,8 @@ Real impliedQuote(const boost::shared_ptr<Instrument>& i) {
         return boost::dynamic_pointer_cast<VanillaSwap>(i)->fairRate();
     if (boost::dynamic_pointer_cast<Deposit>(i))
         return boost::dynamic_pointer_cast<Deposit>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<QuantExt::ForwardRateAgreement>(i))
-        return boost::dynamic_pointer_cast<QuantExt::ForwardRateAgreement>(i)->forwardRate();
+    if (boost::dynamic_pointer_cast<QuantLib::ForwardRateAgreement>(i))
+        return boost::dynamic_pointer_cast<QuantLib::ForwardRateAgreement>(i)->forwardRate();
     if (boost::dynamic_pointer_cast<OvernightIndexedSwap>(i))
         return boost::dynamic_pointer_cast<OvernightIndexedSwap>(i)->fairRate();
     if (boost::dynamic_pointer_cast<CrossCcyBasisMtMResetSwap>(i))
@@ -1320,7 +1320,7 @@ ParSensitivityAnalysis::makeFRA(const boost::shared_ptr<Market>& market, string 
         fraConvIdx = fraConvIdx->clone(ytsTmp);
     }
     auto helper =
-        boost::make_shared<QuantExt::ForwardRateAgreement>(valueDate, maturityDate, Position::Long, 0.0, 1.0, fraConvIdx, ytsTmp);
+        boost::make_shared<QuantLib::ForwardRateAgreement>(fraConvIdx, valueDate, Position::Long, 0.0, 1.0, ytsTmp);
     // set pillar date
     // yieldCurvePillars_[indexName == "" ? ccy : indexName].push_back((maturityDate - asof_) *
     // Days);

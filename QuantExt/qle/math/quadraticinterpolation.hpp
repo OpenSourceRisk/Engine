@@ -132,7 +132,7 @@
                  // Error will be thrown when calling value or
                  // derivative functions
                  for(Size i=0; i < n_; ++i) {
-                     if(x_[i] <= 0 || close_enough(y_[i], 0.0)) {
+                     if(x_[i] <= 0 || QuantLib::close_enough(y_[i], 0.0)) {
                          p_ = Null<Real>();
                          return;
                      }

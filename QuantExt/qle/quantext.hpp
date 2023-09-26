@@ -76,6 +76,7 @@
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
+#include <qle/cashflows/trscashflow.hpp>
 #include <qle/cashflows/yoyinflationcoupon.hpp>
 #include <qle/cashflows/zerofixedcoupon.hpp>
 #include <qle/currencies/africa.hpp>
@@ -192,7 +193,6 @@
 #include <qle/instruments/equityforward.hpp>
 #include <qle/instruments/fixedbmaswap.hpp>
 #include <qle/instruments/forwardbond.hpp>
-#include <qle/instruments/forwardrateagreement.hpp>
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/genericswaption.hpp>
 #include <qle/instruments/impliedbondspread.hpp>

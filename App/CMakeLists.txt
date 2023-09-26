@@ -4,7 +4,6 @@ project(App CXX)
 
 include("../cmake/commonSettings.cmake")
 
-get_library_name("OREPlusSensitivity" OREPSENSITIVITY_LIB_NAME)
 get_library_name("OREPlusBase" OREPBASE_LIB_NAME)
 get_library_name("OREAnalytics" OREA_LIB_NAME)
 get_library_name("OREData" ORED_LIB_NAME)

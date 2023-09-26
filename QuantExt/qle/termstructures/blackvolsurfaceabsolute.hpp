@@ -86,7 +86,6 @@ private:
     std::vector<boost::shared_ptr<Interpolation>> interpolation_;
     bool flatExtrapolation_;
 
-    mutable Real switchTime_, settlDomDisc_, settlForDisc_, settlLag_;
     mutable std::vector<Real> expiryTimes_;
     mutable std::vector<Date> settlementDates_;
     mutable std::map<std::pair<Real, Real>, Real> cachedInterpolatedVols_;

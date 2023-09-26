@@ -66,6 +66,7 @@ cashflows/strippedcapflooredcpicoupon.cpp
 cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/subperiodscoupon.cpp
 cashflows/subperiodscouponpricer.cpp
+cashflows/trscashflow.cpp
 cashflows/yoyinflationcoupon.cpp
 cashflows/zerofixedcoupon.cpp
 currencies/africa.cpp
@@ -123,7 +124,6 @@ instruments/doubleoibasisswap.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/forwardbond.cpp
-instruments/forwardrateagreement.cpp
 instruments/fxforward.cpp
 instruments/genericswaption.cpp
 instruments/impliedbondspread.cpp
@@ -462,6 +462,7 @@ cashflows/strippedcapflooredcpicoupon.hpp
 cashflows/strippedcapflooredyoyinflationcoupon.hpp
 cashflows/subperiodscoupon.hpp
 cashflows/subperiodscouponpricer.hpp
+cashflows/trscashflow.hpp
 cashflows/yoyinflationcoupon.hpp
 cashflows/zerofixedcoupon.hpp
 currencies/africa.hpp
@@ -578,7 +579,6 @@ instruments/doubleoibasisswap.hpp
 instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
 instruments/forwardbond.hpp
-instruments/forwardrateagreement.hpp
 instruments/fxforward.hpp
 instruments/genericswaption.hpp
 instruments/impliedbondspread.hpp
