@@ -194,6 +194,7 @@ portfolio/commodityposition.cpp
 portfolio/commodityspreadoption.cpp
 portfolio/commodityswap.cpp
 portfolio/commodityswaption.cpp
+portfolio/compositeinstrumentwrapper.cpp
 portfolio/compositetrade.cpp
 portfolio/convertiblebond.cpp
 portfolio/convertiblebonddata.cpp
@@ -246,6 +247,7 @@ portfolio/indexcreditdefaultswapdata.cpp
 portfolio/indexcreditdefaultswapoption.cpp
 portfolio/indexing.cpp
 portfolio/inflationswap.cpp
+portfolio/instrumentwrapper.cpp
 portfolio/knockoutswap.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
