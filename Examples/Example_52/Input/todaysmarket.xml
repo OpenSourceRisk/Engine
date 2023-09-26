@@ -48,22 +48,20 @@
     <Index name="EUR-ESTER">Yield/EUR/EUR-ESTER</Index>
     <Index name="USD-SOFR">Yield/USD/USD-SOFR</Index>
   </IndexForwardingCurves>
-  <SwapIndexCurves id="default">
-  </SwapIndexCurves>
+  <SwapIndexCurves id="default"/>
   <FxSpots id="default">
     <FxSpot pair="USDEUR">FX/USD/EUR</FxSpot>
   </FxSpots>
+  <!--
+  <FxVolatilities id="default"/>
+  <SwaptionVolatilities id="default"/>
+  <DefaultCurves id="default"/>
+  -->
   <EquityCurves id="default">
     <EquityCurve name="RIC:.STOXX50E">Equity/EUR/RIC:.STOXX50E</EquityCurve>
   </EquityCurves>
   <EquityVolatilities id="default">
     <EquityVolatility name="RIC:.STOXX50E">EquityVolatility/EUR/RIC:.STOXX50E</EquityVolatility>
   </EquityVolatilities>
-  <FxVolatilities id="default">
-  </FxVolatilities>
-  <SwaptionVolatilities id="default">
-  </SwaptionVolatilities>
-  <DefaultCurves id="default">
-  </DefaultCurves>
 </TodaysMarket>
 

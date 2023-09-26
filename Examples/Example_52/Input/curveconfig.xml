@@ -365,7 +365,6 @@
       <DayCounter>A365</DayCounter>
       <StrikeSurface>
         <QuoteType>Premium</QuoteType>
-        <QuoteType>Price</QuoteType>
         <ExerciseType>European</ExerciseType>
         <Strikes>*</Strikes>
         <Expiries>*</Expiries>
