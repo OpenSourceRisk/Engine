@@ -307,11 +307,11 @@
       <xs:enumeration value="U"/>
       <xs:enumeration value="Unadjusted"/>
       <xs:enumeration value="INDIFF"/>
-<xs:enumeration value="HMMF"/>
-<xs:enumeration value="HalfMonthModifiedFollowing"	/>
-<xs:enumeration value="HalfMonthMF" />
-<xs:enumeration value="Half Month Modified Following" />
-<xs:enumeration value="HALFMONTHMF" />
+      <xs:enumeration value="HMMF"/>
+      <xs:enumeration value="HalfMonthModifiedFollowing"/>
+      <xs:enumeration value="HalfMonthMF"/>
+      <xs:enumeration value="Half Month Modified Following"/>
+      <xs:enumeration value="HALFMONTHMF"/>
       <xs:enumeration value="NEAREST"/>
       <xs:enumeration value="NONE"/>
       <xs:enumeration value="NotApplicable"/>
