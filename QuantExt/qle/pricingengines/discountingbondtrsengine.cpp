@@ -128,17 +128,17 @@ void DiscountingBondTRSEngine::calculate() const {
         cfResults.back().type = "Return";
         if (auto bc = boost::dynamic_pointer_cast<BondTRSCashFlow>(c)) {
             cfResults.back().fixingDate = bc->fixingEndDate();
-            cfResults.back().fixingValue = bc->bondEnd();
+            cfResults.back().fixingValue = bc->assetEnd();
             cfResults.back().accrualStartDate = bc->fixingStartDate();
             cfResults.back().accrualEndDate = bc->fixingEndDate();
-            cfResults.back().notional = bc->bondNotional();
+            cfResults.back().notional = bc->notional();
             returnStartDates.push_back(bc->fixingStartDate());
             returnEndDates.push_back(bc->fixingEndDate());
             returnFxStarts.push_back(bc->fxStart());
             returnFxEnds.push_back(bc->fxEnd());
-            returnBondStarts.push_back(bc->bondStart());
-            returnBondEnds.push_back(bc->bondEnd());
-            returnBondNotionals.push_back(bc->bondNotional());
+            returnBondStarts.push_back(bc->assetStart());
+            returnBondEnds.push_back(bc->assetEnd());
+            returnBondNotionals.push_back(bc->notional());
         }
     }
 

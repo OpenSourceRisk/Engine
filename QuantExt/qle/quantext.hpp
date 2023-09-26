@@ -76,6 +76,7 @@
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
+#include <qle/cashflows/trscashflow.hpp>
 #include <qle/cashflows/yoyinflationcoupon.hpp>
 #include <qle/cashflows/zerofixedcoupon.hpp>
 #include <qle/currencies/africa.hpp>

@@ -20,9 +20,11 @@
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/convertiblebondreferencedata.hpp>
 #include <ored/portfolio/bondutils.hpp>
+#include <ored/utilities/bondindexbuilder.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 
+#include <qle/cashflows/bondtrscashflow.hpp>
 #include <qle/instruments/convertiblebond2.hpp>
 
 #include <ql/cashflows/cashflows.hpp>
@@ -594,6 +596,7 @@ XMLNode* ConvertibleBond::toXML(XMLDocument& doc) {
 
 void ConvertibleBondTrsUnderlyingBuilder::build(
     const std::string& parentId, const boost::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates,
+    const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
     const boost::shared_ptr<EngineFactory>& engineFactory, boost::shared_ptr<QuantLib::Index>& underlyingIndex,
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
     std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
@@ -608,20 +611,27 @@ void ConvertibleBondTrsUnderlyingBuilder::build(
     QL_REQUIRE(t, "could not cast to ore::data::Bond, this is unexpected");
     auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(underlying->instrument()->qlInstrument());
     QL_REQUIRE(qlBond, "expected QuantLib::Bond, could not cast");
-    underlyingIndex = boost::make_shared<QuantExt::BondIndex>(
-        t->data().bondData().securityId(), true, false, NullCalendar(), qlBond, Handle<YieldTermStructure>(),
-        Handle<DefaultProbabilityTermStructure>(), Handle<Quote>(), Handle<Quote>(), Handle<YieldTermStructure>(), true,
-        t->data().bondData().priceQuoteMethod(), t->data().bondData().priceQuoteBaseValue(), false, 0.0);
+
+    BondIndexBuilder bondIndexBuilder(t->bondData(), true, false, NullCalendar(), true, engineFactory);
+    underlyingIndex = bondIndexBuilder.bondIndex();
+
+    underlyingIndex = bondIndexBuilder.bondIndex();
     underlyingMultiplier = t->data().bondData().bondNotional();
-    indexQuantities["BOND-" + t->data().bondData().securityId()] = underlyingMultiplier;
-    Real adj = t->data().bondData().priceQuoteMethod() == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit
-                   ? 1.0 / t->bondData().priceQuoteBaseValue()
-                   : 1.0;
-    DLOG("ConvertibleBondTrsUnderlyingBuilder: price quote method adjustment for " << t->bondData().securityId()
-                                                                                   << " is " << adj);
+
+    indexQuantities[underlyingIndex->name()] = underlyingMultiplier;
     if (initialPrice != Null<Real>())
-        initialPrice = initialPrice * qlBond->notional(valuationDates.front()) * adj;
+        initialPrice = qlBond->notional(valuationDates.front()) * bondIndexBuilder.priceAdjustment(initialPrice);
+
     assetCurrency = t->data().bondData().currency();
+    auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
+                              assetCurrency, fundingCurrency, fxIndices);
+    auto returnLeg =
+        makeBondTRSLeg(valuationDates, paymentDates, bondIndexBuilder, initialPrice, fxIndex);
+
+    // add required bond and fx fixings for bondIndex
+    returnLegs.push_back(returnLeg);
+    bondIndexBuilder.addRequiredFixings(fixings, returnLeg);
+
     creditRiskCurrency = t->data().bondData().currency();
     creditQualifierMapping[securitySpecificCreditCurveName(t->bondData().securityId(), t->bondData().creditCurveId())] =
         SimmCreditQualifierMapping(t->data().bondData().securityId(), t->data().bondData().creditGroup());
