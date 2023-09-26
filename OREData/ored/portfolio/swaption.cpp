@@ -181,9 +181,11 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
             // 7.1 if physical exercise, inlcude the "exercise-into" cashflows of the underlying
 
-            for (auto const& l : underlying_->legs()) {
+            for (Size i = 0; i < underlying_->legs().size(); ++i) {
                 legs_.push_back(Leg());
-                for (auto const& c : l) {
+                legCurrencies_.push_back(underlying_->legCurrencies()[i]);
+                legPayers_.push_back(underlying_->legPayers()[i]);
+                for (auto const& c : underlying_->legs()[i]) {
                     if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
                         if (exerciseDate <= cpn->accrualStartDate()) {
                             legs_.back().push_back(c);
@@ -197,6 +199,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                     }
                 }
             }
+
         } else {
 
             // 7.2 if cash exercise, include the cashSettlement payment
@@ -227,8 +230,11 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(),
                                            positionType_ == Position::Long ? -1.0 : 1.0, parseCurrency(npvCurrency_),
                                            engineFactory, engineFactory->configuration(MarketContext::pricing));
-        instrument_ = boost::make_shared<VanillaInstrument>(boost::make_shared<QuantLib::Swap>(legs_, legPayers_),
-                                                            positionType_ == Position::Long ? 1.0 : -1.0,
+        auto builder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
+        QL_REQUIRE(builder, "could not get swap builder to build exercised swaption instrument.");
+        auto swap = boost::make_shared<QuantLib::Swap>(legs_, legPayers_);
+        swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_)));
+        instrument_ = boost::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
         maturity_ = std::max(maturity_, lastPremiumDate);
         DLOG("Building exercised swaption done.");
@@ -248,8 +254,11 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(),
                                            positionType_ == Position::Long ? -1.0 : 1.0, parseCurrency(npvCurrency_),
                                            engineFactory, engineFactory->configuration(MarketContext::pricing));
-        instrument_ = boost::make_shared<VanillaInstrument>(boost::make_shared<QuantLib::Swap>(legs_, legPayers_),
-                                                            positionType_ == Position::Long ? 1.0 : -1.0,
+        auto builder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
+        QL_REQUIRE(builder, "could not get swap builder to build expired swaption instrument.");
+        auto swap = boost::make_shared<QuantLib::Swap>(legs_, legPayers_);
+        swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_)));
+        instrument_ = boost::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
         maturity_ = std::max(maturity_, lastPremiumDate);
         DLOG("Building (non-exercised) swaption without alive exercise dates done.");
@@ -565,6 +574,8 @@ QuantLib::Real Swaption::notional() const {
     }
     return tmp;
 }
+
+bool Swaption::isExercised() const { return exerciseBuilder_->isExercised(); }
 
 const std::map<std::string, boost::any>& Swaption::additionalData() const {
     // use the build time as of date to determine current notionals
