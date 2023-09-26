@@ -1146,29 +1146,6 @@ typename vector<T>::const_iterator checkAllValuesAppearInScheduledVector(const v
     return i;
 }
 
-// build a Bond Index needed by legbuilders (populates bond data from bond reference data if required)
-class BondData;
-boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
-                                                      const bool relative, const Calendar& fixingCalendar,
-                                                      const bool conditionalOnSurvival,
-                                                      const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                      RequiredFixings& requiredFixings);
-
-class BondIndexBuilder {
-public:
-    BondIndexBuilder(const BondData& securityData, const bool dirty, const bool relative,
-                     const Calendar& fixingCalendar, const bool conditionalOnSurvival,
-                     const boost::shared_ptr<EngineFactory>& engineFactory);
-
-    boost::shared_ptr<QuantExt::BondIndex> bondIndex();
-    void addRequiredFixings(RequiredFixings& requiredFixings, Leg leg = {});
-
-private:
-    boost::shared_ptr<QuantExt::BondIndex> bondIndex_;
-    RequiredFixings fixings_;
-    const bool dirty_;
-};
-
 // join a vector of legs to a single leg, check if the legs have adjacent periods
 Leg joinLegs(const std::vector<Leg>& legs);
 

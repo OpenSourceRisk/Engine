@@ -368,9 +368,8 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
     } catch (const std::exception&) {
         if (adjustedDate == today)
             return arguments_.underlying_[i]->instrument()->NPV() / arguments_.underlyingMultiplier_[i];
-        else {
+        else
             throw;
-        }
     }
 }
 

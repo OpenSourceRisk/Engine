@@ -23,6 +23,7 @@
 #pragma once
 
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <qle/indexes/fxindex.hpp>
 
 #include <ql/patterns/visitor.hpp>
 #include <ql/time/date.hpp>
@@ -68,6 +69,7 @@ class CommodityIndex;
 class CommodityIndexedAverageCashFlow;
 class CommodityIndexedCashFlow;
 class EquityMarginCoupon;
+class TRSCashFlow;
 } // namespace QuantExt
 
 namespace ore {
@@ -195,7 +197,8 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantExt::CmbCoupon>,
                          public QuantLib::Visitor<QuantExt::EquityMarginCoupon>,
                          public QuantLib::Visitor<QuantExt::CommodityCashFlow>,
-                         public QuantLib::Visitor<QuantExt::BondTRSCashFlow> {
+                         public QuantLib::Visitor<QuantExt::BondTRSCashFlow>,
+                         public QuantLib::Visitor<QuantExt::TRSCashFlow> {
 
 public:
     //! Constructor
@@ -236,17 +239,21 @@ public:
     void visit(QuantExt::EquityMarginCoupon& c) override;
     void visit(QuantExt::CommodityCashFlow& c) override;
     void visit(QuantExt::BondTRSCashFlow& c) override;
+    void visit(QuantExt::TRSCashFlow& c) override;
     //@}
         
     void setRequireFixingStartDates(const bool b) { requireFixingStartDates_ = b; }
+    void setAdditionalFxIndex(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& i) { additionalFxIndex_ = i; }
 
 protected:
     std::string oreIndexName(const std::string& qlIndexName) const;
     RequiredFixings& requiredFixings_;
 
 private:
-    // flag to indicate id we coupon start date fixings are always required, even if initial prices provided
+    // flag to indicate if coupon start date fixings are always required, even if initial prices provided
     bool requireFixingStartDates_ = false;
+    // We may need fixings for an additional FX Index at every fixing date
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> additionalFxIndex_;
 };
 
 /*! Populates a RequiredFixings instance based on a given QuantLib::Leg */
