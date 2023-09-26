@@ -355,6 +355,7 @@
 #include <ored/scripting/staticanalyser.hpp>
 #include <ored/scripting/utilities.hpp>
 #include <ored/scripting/value.hpp>
+#include <ored/utilities/bondindexbuilder.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
