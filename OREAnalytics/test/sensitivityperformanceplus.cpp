@@ -18,8 +18,8 @@
 
 #include "sensitivityperformanceplus.hpp"
 #include <test/oreatoplevelfixture.hpp>
-#include <test/testmarket.hpp>
-#include <test/testportfolio.hpp>
+#include "testmarket.hpp"
+#include "testportfolio.hpp"
 
 #include <boost/timer/timer.hpp>
 #include <orea/app/reportwriter.hpp>

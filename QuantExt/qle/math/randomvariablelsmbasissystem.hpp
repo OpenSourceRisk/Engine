@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file lsmbasissystem.hpp
+/*! \file qle/math/randomvariablelsmbasissystem.hpp
     \brief ql utility class for random variables
 */
 

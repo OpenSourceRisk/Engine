@@ -64,7 +64,7 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
-#include <test/testmarket.hpp>
+#include "testmarket.hpp"
 
 #include <boost/timer/timer.hpp>
 

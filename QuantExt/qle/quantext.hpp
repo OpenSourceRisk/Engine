@@ -5,6 +5,12 @@
 #include <qle/auto_link.hpp>
 #endif
 
+#include <qle/ad/backwardderivatives.hpp>
+#include <qle/ad/computationgraph.hpp>
+#include <qle/ad/external_randomvariable_ops.hpp>
+#include <qle/ad/forwardderivatives.hpp>
+#include <qle/ad/forwardevaluation.hpp>
+#include <qle/ad/ssaform.hpp>
 #include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/austria.hpp>
 #include <qle/calendars/belgium.hpp>
@@ -70,6 +76,7 @@
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
+#include <qle/cashflows/trscashflow.hpp>
 #include <qle/cashflows/yoyinflationcoupon.hpp>
 #include <qle/cashflows/zerofixedcoupon.hpp>
 #include <qle/currencies/africa.hpp>
@@ -186,7 +193,6 @@
 #include <qle/instruments/equityforward.hpp>
 #include <qle/instruments/fixedbmaswap.hpp>
 #include <qle/instruments/forwardbond.hpp>
-#include <qle/instruments/forwardrateagreement.hpp>
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/genericswaption.hpp>
 #include <qle/instruments/impliedbondspread.hpp>
@@ -222,6 +228,7 @@
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/math/flatextrapolation2d.hpp>
+#include <qle/math/kendallrankcorrelation.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/matrixfunctions.hpp>
 #include <qle/math/method_mt.hpp>
@@ -237,8 +244,11 @@
 #include <qle/math/stabilisedglls.hpp>
 #include <qle/math/trace.hpp>
 #include <qle/methods/brownianbridgepathinterpolator.hpp>
+#include <qle/methods/fdmblackscholesmesher.hpp>
+#include <qle/methods/fdmblackscholesop.hpp>
 #include <qle/methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp>
 #include <qle/methods/fdmdefaultableequityjumpdiffusionop.hpp>
+#include <qle/methods/fdmquantohelper.hpp>
 #include <qle/methods/interpolatedvariatemultipathgenerator.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
@@ -295,6 +305,7 @@
 #include <qle/models/hwmodel.hpp>
 #include <qle/models/hwparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
+#include <qle/models/infdkvectorised.hpp>
 #include <qle/models/infjyparameterization.hpp>
 #include <qle/models/inhomogeneouspooldef.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
@@ -325,6 +336,8 @@
 #include <qle/models/poollossmodel.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/models/pseudoparameter.hpp>
+#include <qle/models/representativefxoption.hpp>
+#include <qle/models/representativeswaption.hpp>
 #include <qle/models/transitionmatrix.hpp>
 #include <qle/models/yoycapfloorhelper.hpp>
 #include <qle/models/yoyinflationmodeltermstructure.hpp>

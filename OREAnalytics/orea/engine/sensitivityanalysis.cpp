@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/cube/cubewriter.hpp>
 #include <orea/cube/sensicube.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
 #include <orea/engine/valuationengine.hpp>
@@ -26,24 +25,7 @@
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
-#include <ql/instruments/makeois.hpp>
-#include <ql/instruments/makevanillaswap.hpp>
-#include <ql/instruments/vanillaoption.hpp>
 #include <ql/math/comparison.hpp>
-#include <ql/math/solvers1d/newtonsafe.hpp>
-#include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
-#include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
-#include <ql/pricingengines/swap/discountingswapengine.hpp>
-#include <ql/termstructures/yield/oisratehelper.hpp>
-#include <qle/currencies/metals.hpp>
-#include <qle/instruments/crossccybasisswap.hpp>
-#include <qle/instruments/deposit.hpp>
-#include <qle/instruments/forwardrateagreement.hpp>
-#include <qle/instruments/fxforward.hpp>
-#include <qle/instruments/payment.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
-#include <qle/pricingengines/depositengine.hpp>
-#include <qle/pricingengines/discountingfxforwardengine.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;

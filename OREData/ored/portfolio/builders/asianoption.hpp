@@ -1,5 +1,6 @@
 /*
   Copyright (C) 2020 Skandinaviska Enskilda Banken AB (publ)
+  Copyright (C) 2022 Quaternion Risk Management Ltd
   All rights reserved.
 
   This file is part of ORE, a free-software/open-source library
@@ -35,6 +36,8 @@
  #include <ql/pricingengines/asian/mc_discr_arith_av_strike.hpp>
  #include <ql/pricingengines/asian/turnbullwakemanasianengine.hpp>
  #include <ql/utilities/null.hpp>
+ #include <ored/portfolio/basketoption.hpp>
+ #include <ored/portfolio/enginefactory.hpp>
 
  namespace ore {
  namespace data {
@@ -286,6 +289,21 @@
          return boost::make_shared<TurnbullWakemanAsianEngine>(gbsp);
      }
  };
+
+class AsianOptionScriptedEngineBuilder : public DelegatingEngineBuilder {
+public:
+    AsianOptionScriptedEngineBuilder()
+        : DelegatingEngineBuilder("ScriptedTrade", "ScriptedTrade",
+                                  {"EquityAsianOptionArithmeticPrice", "EquityAsianOptionArithmeticStrike",
+                                   "EquityAsianOptionGeometricPrice", "EquityAsianOptionGeometricStrike",
+                                   "FxAsianOptionArithmeticPrice", "FxAsianOptionArithmeticStrike",
+                                   "FxAsianOptionGeometricPrice", "FxAsianOptionGeometricStrike",
+                                   "CommodityAsianOptionArithmeticPrice", "CommodityAsianOptionArithmeticStrike",
+                                   "CommodityAsianOptionGeometricPrice", "CommodityAsianOptionGeometricStrike"}) {}
+    boost::shared_ptr<ore::data::Trade> build(const Trade* trade,
+                                              const boost::shared_ptr<EngineFactory>& engineFactory) override;
+    std::string effectiveTradeType() const override { return "ScriptedTrade"; }
+};
 
  } // namespace data
  } // namespace ore

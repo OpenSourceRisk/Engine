@@ -32,6 +32,7 @@
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/types.hpp>
+#include <ored/utilities/bondindexbuilder.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
@@ -2686,94 +2687,6 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             leg = indLeg;
         }
     }
-}
-
-BondIndexBuilder::BondIndexBuilder(const BondData& securityData, const bool dirty, const bool relative,
-                                   const Calendar& fixingCalendar, const bool conditionalOnSurvival,
-                                   const boost::shared_ptr<EngineFactory>& engineFactory) : dirty_(dirty) {
-
-    // build the bond, we would not need a full build with a pricing engine attached, but this is the easiest
-    BondData data = securityData;
-    data.populateFromBondReferenceData(engineFactory->referenceData());
-    Bond bond(Envelope(), data);
-    bond.build(engineFactory);
-
-    fixings_ = bond.requiredFixings();
-
-    auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
-    QL_REQUIRE(qlBond, "buildBondIndex(): could not cast to QuantLib::Bond, this is unexpected");
-
-    // get the curves
-
-    string securityId = data.securityId();
-
-    Handle<YieldTermStructure> discountCurve = engineFactory->market()->yieldCurve(
-        data.referenceCurveId(), engineFactory->configuration(MarketContext::pricing));
-
-    Handle<DefaultProbabilityTermStructure> defaultCurve;
-    if (!data.creditCurveId().empty())
-        defaultCurve = securitySpecificCreditCurve(engineFactory->market(), securityId, data.creditCurveId(),
-                                                   engineFactory->configuration(MarketContext::pricing))->curve();
-
-    Handle<YieldTermStructure> incomeCurve;
-    if (!data.incomeCurveId().empty())
-        incomeCurve = engineFactory->market()->yieldCurve(data.incomeCurveId(),
-                                                          engineFactory->configuration(MarketContext::pricing));
-
-    Handle<Quote> recovery;
-    try {
-        recovery =
-            engineFactory->market()->recoveryRate(securityId, engineFactory->configuration(MarketContext::pricing));
-    } catch (...) {
-        WLOG("security specific recovery rate not found for security ID "
-             << securityId << ", falling back on the recovery rate for credit curve Id " << data.creditCurveId());
-        if (!data.creditCurveId().empty())
-            recovery = engineFactory->market()->recoveryRate(data.creditCurveId(),
-                                                             engineFactory->configuration(MarketContext::pricing));
-    }
-
-    Handle<Quote> spread(boost::make_shared<SimpleQuote>(0.0));
-    try {
-        spread =
-            engineFactory->market()->securitySpread(securityId, engineFactory->configuration(MarketContext::pricing));
-    } catch (...) {
-    }
-
-    if (!data.hasCreditRisk()) {
-        defaultCurve = Handle<DefaultProbabilityTermStructure>();
-    }
-
-    // build and return the index
-
-    bondIndex_ = boost::make_shared<QuantExt::BondIndex>(
-        securityId, dirty, relative, fixingCalendar, qlBond, discountCurve, defaultCurve, recovery, spread, incomeCurve,
-        conditionalOnSurvival, data.priceQuoteMethod(), data.priceQuoteBaseValue(), data.isInflationLinked());
-}
-
-boost::shared_ptr<QuantExt::BondIndex> BondIndexBuilder::bondIndex() { return bondIndex_; }
-
-void BondIndexBuilder::addRequiredFixings(RequiredFixings& requiredFixings, Leg leg) {
-    if (dirty_) {
-        QL_REQUIRE(leg.size() > 0, "BondIndexBuild: Leg is required if dirty flag set to true");
-        RequiredFixings legFixings;
-        auto fixingGetter = boost::make_shared<FixingDateGetter>(legFixings);
-        fixingGetter->setRequireFixingStartDates(true);
-        addToRequiredFixings(leg, fixingGetter);
-
-        set<Date> fixingDates;
-
-        auto fixingMap = legFixings.fixingDatesIndices();
-        if (fixingMap.size() > 0) {
-            std::map<std::string, std::set<Date>> indexFixings;
-            for (const auto& [_, dates] : fixingMap) {
-                for (const auto& d : dates) {
-                    auto tmp = fixings_.filteredFixingDates(d);
-                    requiredFixings.addData(tmp);
-                }
-            }
-        }
-    } else 
-        requiredFixings.addData(fixings_);
 }
 
 Leg joinLegs(const std::vector<Leg>& legs) {
