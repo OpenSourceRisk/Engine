@@ -1,0 +1,93 @@
+A script is described by
+
+\begin{itemize}
+\item the script code (in the \verb+Code+ node)
+\item the name of the variable used to populate the instrument's NPV result field (in the \verb+NPV+ node)
+\item an optional list of variables used to populate the additional result map in an instrument
+\item an optional specification of calibration strikes, see \ref{calibration} for details
+\item an optional ScheduleCoarsening node specifying which schedules can be coarsened, see \ref{grid_coarsening} for details
+  on this
+\item an optional NewSchedules node specifying new schedules should be created before the script execution, this node
+  contains
+  \begin{itemize}
+  \item Name: a name for the new schedule to be created
+  \item Operation: an operation to perform, only Join is supported currently
+  \item Schedules: a list of source schedules
+  \end{itemize}
+\item an optional StickyCloseOutStates node specifying variables that should be held constant during an AMC exposure run
+  with sticky close-out mpor mode, usually a list of exercise / barrier hit indicators, see \ref{scripting_amc} for more
+  details on this
+\item an optional ConditionalExpectation node specifying a filter on model states to be used in NPV() and NPVMEM()
+  functions. The filter is specified as a subnode ModelStates with one or several ModelState subnodes ``Asset'' (use EQ,
+  FX, COMM components), ``IR'' (use interest rate states), ``INF'' (use inflation states). Applies to GaussianCam model
+  only. If left empty, the full model state is used for conditional npv calculation.
+\end{itemize}
+
+Several script nodes can be used in parallel and are distinguished by an optional \verb+purpose+ attribute then. There
+must always be a script with empty purpose. Special purposes are
+
+\begin{itemize}
+  \item \verb+FD+: If a script with purpose FD is available this is preferred over the default script when an FD engine
+    is built (as opposed to an MC engine)
+  \item \verb+AMC+: If a script with purpose AMC is available this is preferred over the default script when an AMC
+    engine is built, i.e. an engine used within the AMC analytics type. See \ref{scripting_amc} for more details.
+\end{itemize}
+
+The keys in the instrument's additional results map are by default identical to the variable names used to populate
+them. They can be given a different name using the optional rename attribute. The variables can be scalars or arrays of
+any type which will be translated to QuantLib instrument result types \verb+double+ (for NUMBER), \verb+QuantLib::Date+
+(for EVENT), \verb+string+ (for INDEX, CURRENCY, DAYCOUNTER) for scalars or vectors thereof for arrays.
+
+The following additional results have a special meaning.
+
+\begin{itemize}
+\item \verb+currentNotional+ a number representing the current notional of a trade, if given this is displayed in the
+  NPV report and - importantly - required as an input for trades which fall under the IM Schedule approach
+\item \verb+notionalCurrency+ the currency in which the currentNotional is given
+\end{itemize}
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <Script purpose="">
+      <Code><![CDATA[
+             NUMBER Payoff, ExerciseProbability;
+             Payoff = PutCall * (Underlying(Expiry) - Strike);
+             Option = LongShort * Quantity * PAY( max( Payoff, 0 ), Expiry, Settlement, PayCcy);
+             IF Payoff > 0.0 THEN
+                 ExerciseProbability = 1;
+             END;
+        ]]></Code>
+      <NPV>Option</NPV>
+      <Results>
+        <Result>ExerciseProbability</Result>
+        <Result>currentNotional</Result>
+        <Result rename="notionalCurrency">PayCcy</Result>
+      </Results>
+      <CalibrationSpec>
+        <Calibration>
+          <Index>Underlying</Index>
+          <Strikes>
+            <Strike>Strike</Strike>
+          </Strikes>
+        </Calibration>
+      </CalibrationSpec>
+      <ScheduleCoarsening/>
+      <NewSchedules>
+        <NewSchedule>
+          <Name>ExerciseAndSimDates</Name>
+          <Operation>Join</Operation>
+          <Schedules>
+            <Schedule>_AMC_SimDates</Schedule>
+            <Schedule>ExerciseDates</Schedule>
+          </Schedules>
+        </NewSchedule>
+      </Newschedules>
+      <StickyCloseOutStates>
+        <StickyCLoseOutState>ExerciseIndicator</StickyCloseOutState>
+      </StickyCloseOutstates>
+      <ConditionalExpectation>
+        <ModelStates>
+          <ModelState>Asset</ModelState>
+        </ModelStates>
+      </ConditionalExpectation>
+    </Script>
+\end{minted}

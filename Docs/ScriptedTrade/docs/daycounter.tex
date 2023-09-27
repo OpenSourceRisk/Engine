@@ -1,0 +1,20 @@
+A scalar day count convention variable is defined as
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Daycounter>
+        <Name>AccrualDayCounter</Name>
+        <Value>Actual/360</Value>
+      </Daycounter>
+\end{minted}
+
+and an array of day counters as
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Daycounter>
+        <Name>LegAccrualDayCounters</Name>
+        <Values>
+          <Value>30/360</Value>
+          <Value>Actual/360</Value>
+        </Value>
+      </Currency>
+\end{minted}

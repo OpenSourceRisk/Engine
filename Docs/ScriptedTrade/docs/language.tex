@@ -1,0 +1,650 @@
+% no subsection numberings in product catalogue
+\ifdefined\STModuleDoc
+\newcommand{\stsubsection}{\subsection}
+\else
+\newcommand{\stsubsection}{\subsection*}
+\fi
+
+% ====================================================
+\stsubsection{Whitespace}
+% ====================================================
+
+Whitespace (space, tab, return, newline) is ignored during the parsing. All variable identifiers and keywords are case
+sensitive.
+
+% ====================================================
+\stsubsection{Keywords}\label{keywords}
+% ====================================================
+
+The language uses keywords and predefined function names as listed in table \ref{tab:keywords} which may may not be used as
+variable identifiers.
+
+\begin{table}[!htbp]
+  \begin{tabular}{l | l}
+    Keyword & Context\\ \hline
+    \verb+IF+ & Control Flow \\
+    \verb+THEN+ & \\
+    \verb+ELSE+ & \\
+    \verb+END+ & \\
+    \verb+FOR+ & \\
+    \verb+IN+ & \\
+    \verb+DO+ & \\ \hline
+    \verb+NUMBER+ & Type Identifiers \\ \hline
+    \verb+OR+ & Logical Operators \\
+    \verb+AND+ & \\ \hline
+    \verb+abs+ & Functions\\
+    \verb+exp+ & \\
+    \verb+ln+ & \\
+    \verb+sqrt+ & \\
+    \verb+normalCdf+ & \\
+    \verb+normalPdf+ & \\
+    \verb+max+ & \\
+    \verb+min+ & \\
+    \verb+pow+ & \\
+    \verb+black+ & \\
+    \verb+dcf+ & \\
+    \verb+days+ & \\ \hline
+    \verb+PAY+ & Model dependent functions\\
+    \verb+LOGPAY+ & \\
+    \verb+NPV+ & \\
+    \verb+NPVMEM+ & \\
+    \verb+HISTFIXING+ & \\
+    \verb+DISCOUNT+ & \\
+    \verb+FWDCOMP+ & \\
+    \verb+FWDAVG+ & \\
+    \verb+ABOVEPROB+ & \\
+    \verb+BELOWPORB+ & \\ \hline
+    \verb+SIZE+ & Other Statements \\
+    \verb+DATEINDEX+ & \\
+    \verb+REQUIRE+ & \\
+    \verb+SORT+ & \\
+    \verb+PERMUTE+ & \\
+  \end{tabular}
+  \caption{Reserved keywords.}
+  \label{tab:keywords}
+\end{table}
+
+In addition the following variable identifiers are automatically populated with special values when running the script
+engine on a trade:
+
+\begin{itemize}
+\item \verb+TODAY+: the current evaluation date
+\end{itemize}
+
+% ====================================================
+\stsubsection{Variables}
+% ====================================================
+
+Variables that can be used in the script are either
+
+\begin{itemize}
+\item externally defined variables, defined in the data node of the trade xml representation
+\item variables local to the script, declared within the script
+\end{itemize}
+
+Externally defined variables are protected from being modified by the script. All variables used within the script must
+be either externally defined or declared at the top of the script using
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  NUMBER continuationValue, exerciseValue, x[10];
+\end{minted}
+
+which declares two scalars \verb+continuationValue+ and \verb+exerciseValue+ and an array \verb+x+ of size $10$ (see
+\ref{arrays} for more details on arrays). The only exemption to this rule is the variable declared in the \verb+NPV+
+node of the script, which is definied implicitly as a scalar number.
+
+Notice that within the script only variables of type Number can be declared.\footnote{this restriction allows the static
+  analysis of the script\ifdefined\STModuleDoc, see \ref{static_analysis}\fi
+} All variables are initialised with $0$. The scope of a variable
+declaration is always global to the script, multiple declarations of the same variable name are forbidden.
+
+Variable identifiers are subject to the following restrictions
+
+\begin{itemize}
+\item must start with a character, then characters or numbers or underscores may follow
+\item no other special characters, no keywords or predefined functions allowed (see \ref{keywords})
+\item e.g. {\tt x} or {\tt x\_23}, {\tt aValue} are valid identifiers
+\item identifiers starting with an underscore are technically allowed as well, but reserved for special use cases (e.g
+  \verb+_AMC_SimDates+ and \verb+_AMC_NPV+ for AMC exposure generation)
+\end{itemize}
+
+% ====================================================
+\stsubsection{Arrays, SIZE operator}\label{arrays}
+% ====================================================
+
+Arrays are declared by specifying the size of the array in sqaure brackets, e.g.
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  NUMBER x[10], y[SIZE(ObservationDates)], z[5+3*v];
+\end{minted}
+
+declares arrays
+
+\begin{itemize}
+\item \verb+x+ of size $10$
+\item \verb+y+ with the same size as the array \verb+ObservationDates+
+\item \verb+z+ with size $5+3v$ where v is a number variable
+\end{itemize}
+
+Once an array is delcared its size can not be changed. The $i$th element of an array $a$ is accessed by \verb+a[i]+,
+where $i$ is an expression evaluating to a number. Here $i=1,2,3,\ldots,n$, where $n$ is the fixed size of the array,
+i.e. the subscripts start at $1$ (as opposed to $0$ as in some other languages).
+
+The size of an array \verb+a+ can be evaluated by \verb+SIZE(a)+. Only one dimensional arrays are supported. The array
+subscript must be {\em deterministic}, e.g.
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  IF Underlying > Strike THEN
+    i = 1;
+  ELSE
+    i = 2;
+  END;
+  Payoff = y[i];
+\end{minted}
+  
+is illegal since $i$ in general will be path-dependent, but
+  
+\begin{minted}[fontsize=\footnotesize]{text}
+  IF Underlying > Strike THEN
+    Payoff = y[1];
+  ELSE
+    Payoff = y[2];
+  END;
+\end{minted}
+
+is valid.\footnote{the background is the simplicity and performance of the engine implementation}
+
+% ====================================================
+\stsubsection{Sorting Arrays: SORT and PERMUTE instructions}\label{sorting_arrays}
+% ====================================================
+
+Given an array \verb+x+ of number type the statement
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  SORT (x);
+\end{minted}
+
+will sort the array (pathwise) in ascending order. The statement
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  SORT (x, y);
+\end{minted}
+
+will write a sorted version of \verb+x+ to \verb+y+ and leave \verb+x+ unchanged. The array \verb+y+ must be of number
+type and have the same size as \verb+x+. The array \verb+y+ can also be equal to \verb+x+, the statement
+\verb+SORT(x,x);+ is equivalent to \verb+SORT(x);+. Finally the statement
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  SORT (x, y, p);
+\end{minted}
+
+will write a sorted version of \verb+x+ to \verb+y+ and populate another array \verb+p+ with indices $1,\ldots,\verb+SIZE+(x)$
+such that $x[p[1]], \ldots, x[p[n]]$ is sorted. Here \verb+p+ must be an array with the same size as \verb+x+ and of
+number type.
+
+A permutation \verb+p+ generated as above (or set up otherwise) can be used to sort an unrelated array \verb+z+ using
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  PERMUTE (z, p);
+\end{minted}
+
+which will reorder the values of \verb+z+ as $z[1] \rightarrow z[p[1]]$, $z[2] \rightarrow z[p[2]]$ ... etc. The statement
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  PERMUTE (z, w, p);
+\end{minted}
+
+will do the same, but write the result to \verb+w+ and leave \verb+z+ untouched.
+
+% ====================================================
+\stsubsection{Function {\tt DATEINDEX}}\label{function_dateindex}
+% ====================================================
+
+Given an array \verb+a+ and a single date \verb+d+, the expression
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  DATEINDEX(d, a, EQ)
+\end{minted}
+
+returns $0$ if the date $d$ is not found in the array $a$ and otherwise the (first) index $i$ for which \verb+a[i]+
+equals \verb+d+. The variable $d$ is required to be of type event. The variable $a$ is only required to be an array, if
+the type of its elements are not event, the return value will always be zero indicating that $d$ was not found in
+$a$. Similarly,
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  DATEINDEX(d, a, GEQ)
+\end{minted}
+
+returns the index of the earliest date in $a$ that is greater or equal than $d$, and
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  DATEINDEX(d, a, GT)
+\end{minted}
+
+returns the index of the earliest date in $a$ that is greater than $d$. If no such dates exists for \verb+GEQ+ or
+\verb+GT+, the size of $a$ plus 1 will be returned.
+
+% ====================================================
+\stsubsection{Instructions}
+% ====================================================
+
+A typical script comprises a sequence of instructions, each one terminated by {\tt ;}.
+
+% ====================================================
+\stsubsection{Index evaluation}\label{index_evalop}
+% ====================================================
+
+Given an variable \verb+index+ of type Index its historical or projected fixing at a date $d$ is evaluated using the
+expression \verb+index(d)+. This is applicable to all index types. For example
+
+\begin{minted}[fontsize=\footnotesize]{text}
+ Underlying(ObservationDate)
+\end{minted}
+
+evaluates the index assigned to the variable Underlying at the date assigned to the variable ObservationDate. For FX,
+EQ, IR and COMM Spot indices this corresponds to a a fixing at the observation date in the usual sense. For COMM Future
+indices it is the observed future price at the observation date.
+
+For INF indices the argument is the actual fixing date, which due to availability lags is observed at a later simulation
+time in models with dynamical inflation simulation. For example in the GaussianCam model, this lag is defined as the
+number of calendar days from the zero inflation term structure base date to its reference date (adjusted to the first
+date of the inflation period to be consistent with the same adjustment applied to the base date). This means that when
+observing an inflation index at a fixing date $d$, the model state at $d+\text{lag}$ is used to make this observation.
+
+The extended syntax
+
+\begin{minted}[fontsize=\footnotesize]{text}
+ Underlying(ObservationDate, ForwardDate)
+\end{minted}
+
+evaluates the projected fixing for ForwardDate as seen from ObservationDate.
+
+This is applicable to FX, EQ, IR, INF and COMM Spot indices, but not to COMM Future indices, since for the latter the
+two concepts coincide (for ForwardDate < FutureExpiry). If a forward date is given for the observation of a COMM future
+index, no error is thrown, but it will be ignored.
+
+For inflation indices, the ForwardDate will be the actual fixing date again and the ObservationDate will be using a
+lagged state as explained above.
+
+The ForwardDate must be greater or equal than the ObservationDate. If the ForwardDate is strictly greater than the
+ObservationDate the ObservationDate must not be a past date (for inflation indices it must not lie before the inflation
+term structure's base date), since the computation of projected fixings for past dates would involve the knowledge of
+past curves, i.e. past market data.
+
+Notice also the further specifics of commodity and inflation indices in \ref{data_index}.
+
+% ====================================================
+\stsubsection{Comparisons {\tt==} and {\tt!=}}
+% ====================================================
+
+Compares two values, e.g. {\tt x==y} or {\tt x!=y}. This is applicable to all types. For a number the interpretation is
+``numerically equal''.
+
+% ====================================================
+\stsubsection{Comparisons {\tt<}, {\tt<=}, {\tt>}, {\tt>=}}
+% ====================================================
+
+Compares two values {\tt x<y}, {\tt x<=y}, {\tt x>y}, {\tt x>=y}. Applicable to numbers and events, but not to
+currencies or indices. For numbers the interpretation is ``less than, but not numerically equal'', ``less than or
+numerically equal'', etc.
+
+% ====================================================
+\stsubsection{Operations {\tt+}, {\tt-}, {\tt*}, {\tt/}}
+% ====================================================
+
+Arithmetic operations {\tt x+y}, {\tt x-y}, {\tt x*y}, {\tt x/y}, applicable to numbers only.
+
+% ====================================================
+\stsubsection{Assignment {\tt =}}
+% ====================================================
+
+Assignment {\tt x = y}, only allowed for numbers within the script.
+
+% ====================================================
+\stsubsection{Logical Operators AND, OR, NOT}
+% ====================================================
+
+Connects results of comparisons or other logical expressions:
+
+\begin{itemize}
+\item {\tt x<y AND z!=0}
+\item {\tt x<y OR z!=0}
+\item {\tt NOT(x==y)}
+\item AND has higher precedence than OR, e.g.
+\item {\tt x<y AND y<z OR z!=0} same as {\tt \{x<y AND y<z\} OR z!=0}, but
+\item {\tt x<y AND \{y<z OR z!=0\}} requires parenthesis
+\item better always use parenthesis when mixing {\tt AND} / {\tt OR}
+\end{itemize}
+
+% ====================================================
+\stsubsection{Conditionals: IF ... THEN ... ELSE ...}
+% ====================================================
+
+Conditional execution can be written as
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  IF condition THEN
+      ... if-body ...
+  ELSE
+      ... else-body ...
+  END
+\end{minted}
+
+Examples:
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  IF x == y THEN
+    z = PAY(X,d,p,ccy);
+    w = 1;
+  END;
+\end{minted}
+  
+\begin{minted}[fontsize=\footnotesize]{text}
+  IF x == y THEN
+    z = PAY(X,d,p,ccy);
+  ELSE
+    z = 0;
+    w = 0;
+  END;
+\end{minted}
+
+where the \verb+ELSE+ part is optional. The body can comprise one ore more instructions, each of which must be
+terminated by {\tt ;}.
+
+% ====================================================
+\stsubsection{Loops: FOR ... IN ... DO}
+% ====================================================
+
+Loops are written as
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  FOR i IN (a,b,s) DO
+  ... body ...
+  END
+\end{minted}
+
+where \verb+i+ is a number variable identifier, and \verb+a+, \verb+b+, \verb+s+ are expressions that yield a result of
+type Number. The variable \verb+i+ must have been declared in the script before it can be used as a loop variable. The
+code in the body is executed for the values $i=a, a+s, \ldots$ until $a+ks>b$ if $s>0$ or $a+ks<b$ if $s<0$ for some
+integer $k>0$. All values $a,b,s$ must be integers and $s\neq 0$.
+
+Example:
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  NUMBER i,x;
+  FOR i IN (1,100.1) DO x = x + i; END;
+\end{minted}
+
+Here {\tt a, b} must be deterministic, {\tt i} must not be modified in the loop body. If a or b are modified in the loop
+body, still the initial values read at the start of the loop are used. The loop body can comprise one or more
+instructions, each of which must be terminated by {\tt ;}.
+
+% ====================================================
+\stsubsection{Special variable: TODAY}\label{todayvar}
+% ====================================================
+
+A constant event variable, set to the current evaluation date. This can e.g. be used to restrict exercise decisions to
+future dates, see \ref{function_npv} for an example.
+
+% ====================================================
+\stsubsection{Checks: REQUIRE}
+% ====================================================
+
+If the condition {\tt C} is not true, a runtime error is thrown. Examples:
+ 
+\begin{itemize}
+\item {\tt REQUIRE SIZE(ExerciseDates) == SIZE(SettlementDates);}
+\item {\tt REQUIRE SIZE(Underlyings) == 2;}
+\item {\tt REQUIRE Strike >= 0;}
+\end{itemize}
+
+% ====================================================
+\stsubsection{Functions {\tt min}, {\tt max}, {\tt pow}}
+% ====================================================
+
+Binary functions {\tt min(x,y)}, {\tt max(x,y)}, {\tt pow(x,y)}, applicable to numbers only.
+
+% ====================================================
+\stsubsection{Functions {\tt -}, abs, exp, ln, sqrt}
+% ====================================================
+
+Unary functions {\tt -x}, {\tt abs(x)}, {\tt exp(x)}, {\tt ln(x)}, {\tt sqrt(x)}, applicable to numbers only.
+
+% ====================================================
+\stsubsection{Functions {\tt normalPdf}, {\tt normalCdf}}
+% ====================================================
+
+Returns the standard normal pdf $\phi(x)$ resp. cdf $\Phi(x)$, applicable to numbers only.
+
+% ====================================================
+\stsubsection{Function {\tt black}}
+% ====================================================
+
+Implements the black formula {\tt black(omega, obs, expiry, k, f, sigma)} with
+
+\begin{eqnarray*}
+  \text{black} &=&  \omega\cdot(f \Phi(\omega d_1) -k \Phi(\omega d_2)) \\
+  d_{1,2} &=& \frac{\ln(f/k) \pm \frac{1}{2} \sigma^2t}{\sigma\sqrt{t}}
+\end{eqnarray*}
+    
+where $t$ is the (model's) year fraction between obs and expiry date, i.e.:
+\begin{itemize}
+\item {\tt omega} is $1$ (call) or $-1$ (put)
+\item {\tt obs, expiry} are the observation / expiry dates
+\item {\tt k, f} are the strike and the forward
+\item {\tt sigma} is the implied volatility
+\item notice that no discounting is applied
+\end{itemize}
+
+% ====================================================
+\stsubsection{Function {\tt dcf}}
+% ====================================================
+
+The expression \verb+dcf(dc, d1, d2)+ returns the day count fraction for a day count convention \verb+dc+ and a period
+defined by dates \verb+d1+ and \verb+d2+.
+
+% ====================================================
+\stsubsection{Function {\tt days}}
+% ====================================================
+
+The expression \verb+days(dc, d1, d2)+ returns the number of days between \verb+d1+ and \verb+d2+ for a day count
+convention \verb+dc+.
+
+% ====================================================
+\stsubsection{Function {\tt PAY}}\label{function_pay}
+% ====================================================
+
+The expression {\tt PAY(X, d, p, ccy)} calculates a discounted payoff for an amount $X$ observed at a date $d$, paid at a
+date $p$ in currency ccy, i.e.
+  
+\begin{equation}
+  \frac{X P_{ccy}(d,p) FX_{\text{ccy},\text{base}}(d)}{N(d)}
+\end{equation}
+
+where
+\begin{itemize}
+\item here $P_{ccy}$ is the discount factor in currency ccy, $FX$ is the FX spot from ccy to base and $N$ is the model
+  numeraire
+\item $d\leq p$ must hold
+\item if $p$ lies on or before the evaluation date, the result is zero; $X$ is not evaluated in this case
+\item avoids reading non-relevant past fixings from the index history
+\item if $d$ lies before (but $p$ after) the evaluation date, it is set to the evaluation date, i.e. the result is
+  computed as of the evaluation date
+\end{itemize}
+
+% ====================================================
+\stsubsection{Function {\tt LOGPAY}}\label{function_logpay}
+% ====================================================
+
+The expression {\tt LOGPAY(X, d, p, ccy)} has the same meaning as {\tt PAY(X, d, p, ccy)} (see \ref{function_pay}) but
+as a side effect populates an internal cashflow log that is used to generate expected flows. The generated flow is
+
+\begin{equation}
+  \frac{ N(0) E\left(\frac{X P_{ccy}(d,p) FX_{\text{ccy},\text{base}}(d)}{N(d)}\right) }{ FX_{\text{ccy},\text{base}}(0) P_{ccy}(0,p) }
+\end{equation}
+
+which ensures that the flows discounted on T0 curves and converted with T0 FX Spots reproduce the NPV generated from
+\verb+LOGPAY+ expressions.
+
+There is a second form {\tt LOGPAY(X, d, p, ccy, legNo, type)} taking in addition
+
+\begin{itemize}
+\item a leg number \verb+legNo+, which must evaluate to a determinisitc number
+\item a cashflow type \verb+type+, which is an arbitrary string meeting the conventions for variable names
+\end{itemize}
+
+This additional information is used to populate the ORE cashflow report. If not given, \verb+legNo+ is set to $0$ and
+type is set to \verb+Unspecified+. Notice that cashflows will equal pay dates, pay currencies, leg numbers and types are
+aggregated to one number in the cashflow report.
+
+A third form {\tt LOGPAY(X, d, p, ccy, legNo, type, slot)} takes an additional parameter \verb+slot+ which must evaluate
+to a whole positive and deterministic number $1,2,3,\ldots$. If several cashflows are logged into the same slot,
+previous results are overwritten. This is useful for scripts where tentative cashflows are generated that are later on
+superseded by other cashflows (e.g. for an American option).
+
+Examples for the three forms are given below:
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  Payoff1 = LOGPAY( Notional * fixedRate, PayDate, PayDate, PayCcy);
+  Payoff2 = LOGPAY( Notional * fixedRate, PayDate, PayDate, PayCcy, 2, Interest);
+  Payoff3 = LOGPAY( Notional * fixedRate, PayDate, PayDate, PayCcy, 2, Interest, 3);
+\end{minted}
+
+Here, Payoff1 will appear under leg number $0$ and flow type ``Unspecified'' in the cashflow report. Payoff2 will appear
+under leg number $2$ and flow Type ``Interest''. The same holds for Payoff3, but if any amounts were booked using the
+slot parameter $3$ previously they will be overwritten with the current amount.
+
+% ====================================================
+\stsubsection{Function {\tt NPV, NPVMEM}}\label{function_npv}
+% ====================================================
+
+The expression {\tt NPV(X, d, [C], [R1], [R2])} calculates a conditional NPV of an amount $X$ conditional on a date $d$, i.e.
+
+\begin{equation}\label{condexp}
+  E( X\: | \mathcal{F}_d \cap \mathcal{F}_C )
+\end{equation}
+
+where $\mathcal{F}_d$ is the sigma algebra representing the information generated by the model up to $d$ and
+$\mathcal{F}_C$ represents the additional condition $C$ (if given). In an MC model \ref{condexp} is computed using a
+regression against the model state at $d$. $C$ can be used to filter the training paths, e.g. on ITM paths only. $d$
+must not lie before the evaluation date, but for convenience the scipt engines will treat $d$ as if it were equal to the
+evaluation date in this case for the purpose of the NPV function evaluation.
+
+The regressor can be enriched by (at most 2) additional variables $R_i$. A typical usage is the accumulated coupon in a
+target redemption feature which heavily influences the future conditional NPV but is not captured in the model state.
+
+A typical usage of the NPV function is to decide on early exercises in the Longstaff-Schwartz algorithm:
+
+\begin{minted}[fontsize=\footnotesize]{text}
+NUMBER Payoff, d;
+FOR d IN (SIZE(ExerciseDates), 1) DO
+    IF ExerciseDates[d] > TODAY THEN
+      Payoff = PAY( PutCall * (Underlying(ExerciseDates[d]) - Strike),
+                    ExerciseDates[d], ExerciseDates[d], PayCcy);
+      IF Payoff > 0 AND Payoff > NPV( Option, ExerciseDates[d], Payoff > 0) THEN
+        Option = Payoff;
+      END;
+    END;
+END;
+Option = LongShort * Quantity * Option;
+\end{minted}
+
+Here \verb+TODAY+ represents the evaluation date to ensure that only future exercise dates are evaluated, see
+\ref{todayvar}.
+
+{\em Note: It is the users responsibility to use NPV() correctly to a certain extend: An example would be that $X$ is
+  composed from both past and future fixings w.r.t. the observation time $t$. In that case only the future fixings
+  should be included in the argument of NPV(), whereas the past fixings are known and should just be added to the result
+  of NPV().}
+
+The variant {\tt NPVMEM(X, d, s, [C], [R1], [R2])} works exactly like {\tt NPV(X, d, [C], [R1], [R2])} except that it
+takes an additional parameter \verb+s+ that must be an integer. If \verb+NPVMEM()+ is called more than once for the same
+parameter \verb+s+ a regression model representing the conditional npv will only be trained once and after that the
+trained model will be reused. The usual use case is for scripts used in combination with the AMC module where a
+regression model will be trained on a relative large number of paths (specified in the pricing engine configuration) and
+then reused in the global exposure simulation on a relatively small number of paths (specified in the xva simulation
+setup).
+
+% ====================================================
+\stsubsection{Function {\tt HISTFIXING}}\label{function_histfixing}
+% ====================================================
+
+The expression {\tt HISTFIXING(Underlying, d)} returns $1$ if $d$ lies on or before the reference date {\em and} the
+underlying has a historical fixing as of the date $d$ and $0$ otherwise.
+
+% ====================================================
+\stsubsection{Function {\tt DISCOUNT}}\label{function_discount}
+% ====================================================
+
+The expression {\tt DISCOUNT(d, p, ccy)} calculates a discount factor $P_{ccy}(d,p)$ as of $d$ for $p$ in currency
+$ccy$. Here $d$ must not be a past date and $d\leq p$ must hold.
+
+% ====================================================
+\stsubsection{Functions {\tt FWDCOMP} and {\tt FWDAVG}}\label{function_fwdcomp}
+% ====================================================
+
+The {\tt FWDCOMP()} and {\tt FWDAVG()} functions are used to calculate a daily compounded or averaged rate over a
+certain period based on an overnight index such as USD-SOFR, GBP-SONIA, EUR-ESTER etc..
+
+The rate is estimated as seen from an observation date looking {\em forward} from that date, even if fixings relevant
+for the rate lie in the past w.r.t. the observation date. In the latter case, an approximation to the true rate which is
+then dependent on the path leading from TODAY to the current model state at the observation date is calculated. This
+approximation is model-dependent. The only exception to this mechanics are historical fixings that are {\em known} as of
+TODAY. Such fixings are always taken into consideration with their true value.
+
+More specifically, the {\tt FWDCOMP()} and {\tt FWDAVG()} functions take the following parameters. The parameters must
+be given in that order, and all parameters must be given in sequence up to the parameter ``end'' (last mandatory
+parameter) or the end of an optional parameter group (i.e. an optional parameter group must be given as a
+whole). Furthermore, all parameters must be deterministic.
+
+\begin{itemize}
+\item index [mandatory]: an overnight index \verb+index+, e.g. EUR-EONIA, USD-SOFR, ...
+\item obs [mandatory]: an observation date obs $\leq$ start; if obs is $<$ TODAY it is set to TODAY, i.e. the result is
+  as of TODAY in this case
+\item start [mandatory]: the value start date, this might be modified by a non-zero lookback
+\item end [mandatory]: the value end date, this might be modified by a non-zero lookback
+\item spread [optional group 1]: a spread, defaults to $0$ if not given
+\item gearing [optional group 1]: a gearing, defaults to $1$ if not given
+\item lookback [optional group 2]: a lookback period given as number of days, defaults to $0$ if not given. This
+  argument must be given as either a constant number or a plain variable, i.e. not as a more complex expression than
+  either of these.
+\item rateCutoff [optional group 2]: a rate cutoff given as number of days, defaults to $0$ if not given
+\item fixingDays [optional group 2]: the fixing lag given as number of days, defaults to $0$ if not given. This argument
+  must be given as either a constant number or a plain variable, i.e. not as a more complex expression than either of
+  these.
+\item includeSpread [optional group 2]: a flag indicating whether to include the spread in the compounding, a value equal to $1$ indicates 'true', $-1$ false, defaults to 'false' if not given
+\item cap [optional group 3]: a cap value, defaults to $999999$ (no cap) if not given
+\item floor [optional group 3]: a floor value, defaults to $-999999$ (no floor) if not given
+\item nakedOption [optional group 3]: a flag indicating whether the embedded cap / floor should be estimated, a value equal to $-1$ indicates 'false' (capped / floored coupon rate is estimated), $1$ 'true' (embedded cap / floor rate is estimated), defaults to 'false' if not given
+\item localCapFloor [optional group3]: a flag indicating whether the cap / floor is local, a value equal to $-1$ indicates 'false', $1$ 'true', defaults to 'false' if not given.
+\end{itemize}
+
+Based on these parameters a rate corresponding to that computed for a vanilla floating leg is estimated, see the
+description in section ``Floating Leg Data, Spreads, Gearings, Caps and Floors'' for more details on this.
+
+% ====================================================
+\stsubsection{Functions {\tt ABOVEPROB, BELOWPROB}}\label{function_aboveprob}
+% ====================================================
+
+These functions are only available in Monte Carlo engines. The expression
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  ABOVEPROB(underlying, d1, d2, U)
+\end{minted}
+
+returns the pathwise probability that the value of an index \verb+underlying+ lies at or above a number $U$ for at least
+one time $t$ between dates $d1$ and $d2$ conditional on the underlying taking the simulated path values at $d1$ and
+$d2$. The probability is by definition computed assuming a continuous monitoring. Similarly,
+
+\begin{minted}[fontsize=\footnotesize]{text}
+  BELOWPROB(underlying, d1, d2, D)
+\end{minted}
+
+returns the probability that the value of the underlying lies at or below $D$. Notice that $d1$ and $d2$ should be
+adjacent simulation dates to ensure that the results computed in the script are meaningful. This means the script should
+not evaluate the underlying at a date $d$ with $d1 < d < d2$.
+
+We note that $U$ and $D$ are not required to be deterministic quantities, although the common use case will probably be
+to have path-independent inputs.
+
+Finally, if $d1>d2$ both functions return $0$.
