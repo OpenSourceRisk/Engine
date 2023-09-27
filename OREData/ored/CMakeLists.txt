@@ -345,6 +345,7 @@ utilities/osutils.cpp
 utilities/parsers.cpp
 utilities/progressbar.cpp
 utilities/strike.cpp
+utilities/timeperiod.cpp
 utilities/to_string.cpp
 utilities/wildcard.cpp
 utilities/xmlutils.cpp)

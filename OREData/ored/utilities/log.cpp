@@ -359,7 +359,12 @@ string JSONMessage::jsonify(const boost::any& obj) {
         arrayStr += " ]";
         return arrayStr;
     } else if (obj.type() == typeid(string)) {
-        return '\"' + boost::any_cast<string>(obj) + '\"';
+        string str = boost::any_cast<string>(obj);
+        boost::replace_all(str, "\\", "\\\\"); // do this before the below otherwise we get \\"
+        boost::replace_all(str, "\"", "\\\"");
+        boost::replace_all(str, "\r", "\\r");
+        boost::replace_all(str, "\n", "\\n");
+        return '\"' + str + '\"';
     } else if (obj.type() == typeid(StructuredMessage::Category)) {
         return to_string(boost::any_cast<StructuredMessage::Category>(obj));
     } else if (obj.type() == typeid(StructuredMessage::Group)) {
