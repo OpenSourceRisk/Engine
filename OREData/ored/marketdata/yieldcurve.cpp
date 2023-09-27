@@ -1701,9 +1701,16 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
                         oisSegment->pillarChoice());
                 else {
                     LOG("Using DatedOISRateHelper for " << oisQuote->name());
-                    oisHelper = boost::make_shared<QuantLib::DatedOISRateHelper>(oisQuote->startDate(),
-                        oisQuote->maturityDate(), oisQuote->quote(), onIndex,
-                        discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>());
+                    // oisHelper = boost::make_shared<QuantLib::DatedOISRateHelper>(oisQuote->startDate(),
+                    //     oisQuote->maturityDate(), oisQuote->quote(), onIndex,
+                    //     discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>());
+                    oisHelper = boost::make_shared<QuantExt::DatedOISRateHelper>(oisQuote->startDate(),
+                        oisQuote->maturityDate(), oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
+                        oisConvention->fixedCalendar(), oisConvention->paymentLag(),
+                        oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
+                        oisConvention->fixedPaymentConvention(), oisConvention->rule(),
+                        discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true,
+                        oisSegment->pillarChoice());
                 }
             }
             instruments.push_back(oisHelper);
