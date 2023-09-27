@@ -1690,15 +1690,22 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
                     oisTenor, oisQuote->quote(), brlCdiIndex,
                     discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
             } else {
-                oisHelper = boost::make_shared<QuantExt::OISRateHelper>(
-                    oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
-                    oisConvention->fixedCalendar(), oisConvention->paymentLag(), oisConvention->eom(),
-                    oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
-                    oisConvention->fixedPaymentConvention(), oisConvention->rule(),
-                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true,
-                    oisSegment->pillarChoice());
+                
+                if (oisQuote->startDate() == Null<Date>() || oisQuote->maturityDate() == Null<Date>())
+                    oisHelper = boost::make_shared<QuantExt::OISRateHelper>(
+                        oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
+                        oisConvention->fixedCalendar(), oisConvention->paymentLag(), oisConvention->eom(),
+                        oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
+                        oisConvention->fixedPaymentConvention(), oisConvention->rule(),
+                        discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true,
+                        oisSegment->pillarChoice());
+                else {
+                    LOG("Using DatedOISRateHelper for " << oisQuote->name());
+                    oisHelper = boost::make_shared<QuantLib::DatedOISRateHelper>(oisQuote->startDate(),
+                        oisQuote->maturityDate(), oisQuote->quote(), onIndex,
+                        discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>());
+                }
             }
-
             instruments.push_back(oisHelper);
         }
     }

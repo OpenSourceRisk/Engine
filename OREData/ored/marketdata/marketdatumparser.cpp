@@ -46,6 +46,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"FRA", MarketDatum::InstrumentType::FRA},
         {"IMM_FRA", MarketDatum::InstrumentType::IMM_FRA},
         {"IR_SWAP", MarketDatum::InstrumentType::IR_SWAP},
+        // {"IR_DATED_SWAP", MarketDatum::InstrumentType::IR_DATED_SWAP},
         {"BASIS_SWAP", MarketDatum::InstrumentType::BASIS_SWAP},
         {"CC_BASIS_SWAP", MarketDatum::InstrumentType::CC_BASIS_SWAP},
         {"CC_FIX_FLOAT_SWAP", MarketDatum::InstrumentType::CC_FIX_FLOAT_SWAP},
@@ -316,10 +317,16 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
             indexName = tokens[3];
             offset = 1;
         }
-        Period fwdStart = parsePeriod(tokens[3 + offset]);
         Period tenor = parsePeriod(tokens[4 + offset]);
-        Period term = parsePeriod(tokens[5 + offset]);
-        return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term, tenor, indexName);
+        try {
+            Period fwdStart = parsePeriod(tokens[3 + offset]);
+            Period term = parsePeriod(tokens[5 + offset]);
+            return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term, tenor, indexName);
+        } catch(...) {
+            Date startDate = parseDate(tokens[3 + offset]);
+            Date maturityDate = parseDate(tokens[5 + offset]);
+            return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, startDate, maturityDate, tenor, indexName);
+        }
     }
 
     case MarketDatum::InstrumentType::BASIS_SWAP: {

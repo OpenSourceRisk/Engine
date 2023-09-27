@@ -356,6 +356,14 @@ template <class Archive> void SwapQuote::serialize(Archive& ar, const unsigned i
     ar& tenor_;
 }
 
+// template <class Archive> void DatedSwapQuote::serialize(Archive& ar, const unsigned int version) {
+//     ar& boost::serialization::base_object<MarketDatum>(*this);
+//     ar& ccy_;
+//     ar& startDate_;
+//     ar& maturityDate_;
+//     ar& tenor_;
+// }
+
 template <class Archive> void ZeroQuote::serialize(Archive& ar, const unsigned int version) {
     ar& boost::serialization::base_object<MarketDatum>(*this);
     ar& ccy_;
@@ -661,6 +669,8 @@ template void ImmFraQuote::serialize(boost::archive::binary_oarchive& ar, const 
 template void ImmFraQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void SwapQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void SwapQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+// template void DatedSwapQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+// template void DatedSwapQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void ZeroQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void ZeroQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void DiscountQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
@@ -749,6 +759,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::MoneyMarketQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::FRAQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::ImmFraQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::SwapQuote);
+// BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::DatedSwapQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::ZeroQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::DiscountQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::MMFutureQuote);

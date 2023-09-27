@@ -88,6 +88,7 @@ public:
         FRA,
         IMM_FRA,
         IR_SWAP,
+        // IR_DATED_SWAP,
         BASIS_SWAP,
         BMA_SWAP,
         CC_BASIS_SWAP,
@@ -309,7 +310,8 @@ private:
   This class holds single market points of type
   - IR_SWAP
 
-  Specific data comprise currency, fwdStart, tenor, term
+  Specific data comprise currency, fwdStart, tenor, term, startDate, maturityDate
+  The constructoir accepts either fwdStart/term or startDate/maturityDate
 
   \ingroup marketdata
 */
@@ -320,11 +322,18 @@ public:
     SwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period fwdStart,
               Period term, Period tenor, const std::string& indexName = "")
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IR_SWAP), ccy_(ccy), fwdStart_(fwdStart),
-          term_(term), tenor_(tenor), indexName_(indexName) {}
+          term_(term), tenor_(tenor), indexName_(indexName), startDate_(Null<Date>()), maturityDate_(Null<Date>()) {}
+    SwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Date startDate,
+              Date maturityDate, Period tenor, const std::string& indexName = "")
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IR_SWAP), ccy_(ccy), fwdStart_(Period()),
+          term_(Period()), tenor_(tenor), indexName_(indexName), startDate_(startDate), maturityDate_(maturityDate) {}
 
     //! Make a copy of the market datum
     boost::shared_ptr<MarketDatum> clone() override {
-        return boost::make_shared<SwapQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, fwdStart_, term_, tenor_);
+        if (startDate_ == Null<Date>() && maturityDate_ == Null<Date>())
+            return boost::make_shared<SwapQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, fwdStart_, term_, tenor_);
+        else
+            return boost::make_shared<SwapQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, startDate_, maturityDate_, tenor_);
     }
 
     //! \name Inspectors
@@ -334,6 +343,8 @@ public:
     const Period& term() const { return term_; }
     const Period& tenor() const { return tenor_; }
     const std::string& indeName() const { return indexName_; }
+    const Date& startDate() const { return startDate_; }
+    const Date& maturityDate() const { return maturityDate_; }
     //@}
 private:
     string ccy_;
@@ -341,10 +352,57 @@ private:
     Period term_;
     Period tenor_;
     std::string indexName_;
+    Date startDate_;
+    Date maturityDate_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
+
+
+//! Swap market data class with concrete dates rather than periods
+/*!
+  This class holds single market points of type
+  - IR_DATED_SWAP
+
+  Specific data comprise currency, startDate, maturityDate, term
+
+  \ingroup marketdata
+*/
+/*
+class DatedSwapQuote : public SwapQuote {
+public:
+    DatedSwapQuote() {}
+    //! Constructor
+    DatedSwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Date startDate,
+                   Date maturityDate, Period tenor, const std::string& indexName = "")
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IR_SWAP), ccy_(ccy), startDate_(startDate),
+          maturityDate_(maturityDate), tenor_(tenor), indexName_(indexName) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() override {
+        return boost::make_shared<DatedSwapQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, startDate_, maturityDate_, tenor_);
+    }
+
+    //! \name Inspectors
+    //@{
+    const string& ccy() const { return ccy_; }
+    const Date& startDate() const { return startDate_; }
+    const Date& maturityDate() const { return maturityDate_; }
+    const Period& tenor() const { return tenor_; }
+    const std::string& indeName() const { return indexName_; }
+    //@}
+private:
+    string ccy_;
+    Date startDate_;
+    Date maturityDate_;
+    Period tenor_;
+    std::string indexName_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+*/
 
 //! Zero market data class
 /*!
