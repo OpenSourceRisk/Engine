@@ -180,30 +180,23 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
 
     for (auto [tradeId, trade]: trades) {
 
-        // if trade is marked as not having cashflows, we skip it
-
-        if (!trade->hasCashflows()) {
-            WLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
-            continue;
-        }
-
-        // if trade provides cashflows as additional results, we use that information instead of the legs
-
-        bool useAdditionalResults = false;
         try {
-            const auto& addResults = trade->instrument()->additionalResults();
-            useAdditionalResults = addResults.find("cashFlowResults") != addResults.end();
-        } catch (const std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(),
-                                             "Error during cashflow reporting / checking for cashFlowResults",
-                                             e.what()));
-        }
 
-        try {
+            // if trade is marked as not having cashflows, we skip it
+
+            if (!trade->hasCashflows()) {
+                WLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
+                continue;
+            }
+
+            // if trade provides cashflows as additional results, we use that information instead of the legs
+
+            auto addResults = trade->instrument()->additionalResults();
+            auto cashFlowResults = addResults.find("cashFlowResults");
 
             const Real multiplier = trade->instrument()->multiplier();
 
-            if (!useAdditionalResults) {
+            if (cashFlowResults == addResults.end()) {
 
                 // leg based cashflow reporting
 
@@ -501,13 +494,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
 
                 // additional result based cashflow reporting
 
-                auto tmp = trade->instrument()->additionalResults().find("cashFlowResults");
-                QL_REQUIRE(
-                    tmp != trade->instrument()->additionalResults().end(),
-                    "internal error: expected cashFlowResults in additional results when writing cashflow report");
-                QL_REQUIRE(tmp->second.type() == typeid(std::vector<CashFlowResults>),
-                           "cashflowResults type not handlded");
-                std::vector<CashFlowResults> cfResults = boost::any_cast<std::vector<CashFlowResults>>(tmp->second);
+                QL_REQUIRE(cashFlowResults->second.type() == typeid(std::vector<CashFlowResults>),
+                           "internal error: cashflowResults type does not match CashFlowResults: '"
+                               << cashFlowResults->second.type().name() << "'");
+                std::vector<CashFlowResults> cfResults =
+                    boost::any_cast<std::vector<CashFlowResults>>(cashFlowResults->second);
                 std::map<Size, Size> cashflowNumber;
                 for (auto const& cf : cfResults) {
                     string ccy = "";

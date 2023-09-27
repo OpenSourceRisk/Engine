@@ -31,12 +31,12 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
                      const Handle<YieldTermStructure>& discountCurve,
                      const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
                      const Handle<Quote>& securitySpread, const Handle<YieldTermStructure>& incomeCurve,
-                     const bool conditionalOnSurvival, const PriceQuoteMethod priceQuoteMethod,
+                     const bool conditionalOnSurvival, const Date& issueDate, const PriceQuoteMethod priceQuoteMethod,
                      const double priceQuoteBaseValue, const bool isInflationLinked, const double bidAskAdjustment)
     : securityName_(securityName), dirty_(dirty), relative_(relative), fixingCalendar_(fixingCalendar), bond_(bond),
       discountCurve_(discountCurve), defaultCurve_(defaultCurve), recoveryRate_(recoveryRate),
       securitySpread_(securitySpread), incomeCurve_(incomeCurve), conditionalOnSurvival_(conditionalOnSurvival),
-      priceQuoteMethod_(priceQuoteMethod), priceQuoteBaseValue_(priceQuoteBaseValue),
+      issueDate_(issueDate), priceQuoteMethod_(priceQuoteMethod), priceQuoteBaseValue_(priceQuoteBaseValue),
       isInflationLinked_(isInflationLinked), bidAskAdjustment_(bidAskAdjustment) {
 
     registerWith(Settings::instance().evaluationDate());
@@ -157,9 +157,9 @@ BondFuturesIndex::BondFuturesIndex(const QuantLib::Date& expiryDate, const std::
                                    const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                    const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
                                    const Handle<YieldTermStructure>& incomeCurve, const bool conditionalOnSurvival,
-                                   const PriceQuoteMethod priceQuoteMethod, const double priceQuoteBaseValue)
+                                   const Date& issueDate, const PriceQuoteMethod priceQuoteMethod, const double priceQuoteBaseValue)
     : BondIndex(securityName, dirty, relative, fixingCalendar, bond, discountCurve, defaultCurve, recoveryRate,
-                securitySpread, incomeCurve, conditionalOnSurvival, priceQuoteMethod, priceQuoteBaseValue),
+                securitySpread, incomeCurve, conditionalOnSurvival, issueDate, priceQuoteMethod, priceQuoteBaseValue),
       expiryDate_(expiryDate) {}
 
 std::string BondFuturesIndex::name() const {

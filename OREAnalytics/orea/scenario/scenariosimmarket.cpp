@@ -2245,14 +2245,18 @@ ScenarioSimMarket::ScenarioSimMarket(
                 std::vector<std::string> curveNames;
                 std::vector<std::string> basisCurves;
                 for (const auto& name : param.second.second) {
-                    Handle<PriceTermStructure> initialCommodityCurve =
-                        initMarket->commodityPriceCurve(name, configuration);
-                    boost::shared_ptr<CommodityBasisPriceTermStructure> basisCurve =
-                        boost::dynamic_pointer_cast<QuantExt::CommodityBasisPriceTermStructure>(
-                            initialCommodityCurve.currentLink());
-                    if (basisCurve != nullptr) {
-                        basisCurves.push_back(name);
-                    } else {
+                    try {
+                        Handle<PriceTermStructure> initialCommodityCurve =
+                            initMarket->commodityPriceCurve(name, configuration);
+                        boost::shared_ptr<CommodityBasisPriceTermStructure> basisCurve =
+                            boost::dynamic_pointer_cast<QuantExt::CommodityBasisPriceTermStructure>(
+                                initialCommodityCurve.currentLink());
+                        if (basisCurve != nullptr) {
+                            basisCurves.push_back(name);
+                        } else {
+                            curveNames.push_back(name);
+                        }
+                    } catch (...) {
                         curveNames.push_back(name);
                     }
                 }
@@ -2666,7 +2670,10 @@ ScenarioSimMarket::ScenarioSimMarket(
             }
 
         } catch (const std::exception& e) {
-            ALOG("ScenarioSimMarket::ScenarioSimMarket() top level catch " << e.what());
+            ALOG(StructuredMessage(ore::data::StructuredMessage::Category::Error,
+                                   ore::data::StructuredMessage::Group::Curve, e.what(),
+                                   {{"exceptionType", "ScenarioSimMarket top level catch - this should never happen, "
+                                                      "contact dev. Results are likely wrong or incomplete."}}));
             processException(continueOnError, e);
         }
     }
@@ -2977,3 +2984,4 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const string& yieldS
 
 } // namespace analytics
 } // namespace ore
+

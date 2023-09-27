@@ -18,8 +18,8 @@
 
 #include "parsensitivityanalysismanual.hpp"
 #include <test/oreatoplevelfixture.hpp>
-#include <test/testmarket.hpp>
-#include <test/testportfolio.hpp>
+#include "testmarket.hpp"
+#include "testportfolio.hpp"
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
