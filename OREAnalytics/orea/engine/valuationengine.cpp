@@ -16,9 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/cube/npvcube.hpp>
+#include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
 #include <orea/simulation/simmarket.hpp>
+
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -26,9 +30,11 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/dategrid.hpp>
+
+#include <ql/errors.hpp>
 
 #include <boost/timer/timer.hpp>
-#include <ql/errors.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
