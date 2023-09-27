@@ -73,7 +73,7 @@ SensitivityAnalysis::SensitivityAnalysis(
       overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError),
       engineData_(engineData), portfolio_(portfolio), dryRun_(dryRun), initialized_(false),
-      useSingleThreadedEngine_(false) {}
+      useSingleThreadedEngine_(false), nThreads_(nThreads), loader_(loader), context_(context) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
