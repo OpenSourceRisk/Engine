@@ -72,7 +72,6 @@
 #include <orea/engine/riskfilter.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
-#include <orea/engine/sensitivityanalysisplus.hpp>
 #include <orea/engine/sensitivitycubestream.hpp>
 #include <orea/engine/sensitivityfilestream.hpp>
 #include <orea/engine/sensitivityinmemorystream.hpp>
@@ -105,7 +104,6 @@
 #include <orea/scenario/scenarioshiftcalculator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/scenario/scenariosimmarketplus.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>

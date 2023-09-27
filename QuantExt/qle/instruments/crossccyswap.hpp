@@ -37,7 +37,7 @@ using namespace QuantLib;
 
             \ingroup instruments
 */
-class CrossCcySwap : public Swap {
+class CrossCcySwap : public QuantLib::Swap {
 public:
     class arguments;
     class results;

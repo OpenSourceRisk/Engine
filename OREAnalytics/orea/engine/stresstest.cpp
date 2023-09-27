@@ -18,8 +18,10 @@
 
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/stresstest.hpp>
+#include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
+
 #include <ored/utilities/log.hpp>
 
 #include <ql/errors.hpp>
