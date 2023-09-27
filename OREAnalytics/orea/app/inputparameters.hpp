@@ -70,6 +70,8 @@ public:
     void setMarketConfig(const std::string& config, const std::string& context);
     void setRefDataManager(const std::string& xml);
     void setRefDataManagerFromFile(const std::string& fileName);
+    void setScriptLibrary(const std::string& xml);
+    void setScriptLibraryFromFile(const std::string& fileName);
     void setConventions(const std::string& xml);
     void setConventionsFromFile(const std::string& fileName);
     void setIborFallbackConfig(const std::string& xml);

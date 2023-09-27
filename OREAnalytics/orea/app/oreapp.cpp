@@ -564,6 +564,16 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         WLOG("Reference data not found");
     }
 
+    tmp = params_->get("setup", "scriptLibrary", false);
+    if (tmp != "") {
+        string scriptFile = inputPath + "/" + tmp;
+        LOG("Loading script library from file: " << scriptFile);
+        inputs->setScriptLibraryFromFile(scriptFile);        
+    }
+    else {
+        WLOG("Script library not loaded");
+    }
+    
     if (params_->has("setup", "conventionsFile") && params_->get("setup", "conventionsFile") != "") {
         string conventionsFile = inputPath + "/" + params_->get("setup", "conventionsFile");
         LOG("Loading conventions from file: " << conventionsFile);

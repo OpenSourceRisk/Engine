@@ -27,6 +27,7 @@
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/portfolio/scriptedtrade.hpp>
 
 namespace ore {
 namespace analytics {
@@ -65,6 +66,18 @@ void InputParameters::setRefDataManager(const std::string& xml) {
 
 void InputParameters::setRefDataManagerFromFile(const std::string& fileName) {
     refDataManager_ = boost::make_shared<BasicReferenceDataManager>(fileName);
+}
+
+void InputParameters::setScriptLibrary(const std::string& xml) {
+    ScriptLibraryData data;
+    data.fromXMLString(xml);
+    ScriptLibraryStorage::instance().set(std::move(data));
+}
+
+void InputParameters::setScriptLibraryFromFile(const std::string& fileName) {
+    ScriptLibraryData data;
+    data.fromFile(fileName);
+    ScriptLibraryStorage::instance().set(std::move(data));
 }
 
 void InputParameters::setConventions(const std::string& xml) {

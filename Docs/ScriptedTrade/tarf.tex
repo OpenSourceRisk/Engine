@@ -1,0 +1,77 @@
+\subsection{Target Redemption Forward}
+
+We assume the following unless specified
+
+\begin{itemize}
+\item Today: 2018-12-31
+\item Spot Level: 1.1469
+\item Fixing Amount: 1,000,000
+\item Knock Out Level: 100,000
+\item Knock Out Type: Exact
+\item Strike: 1.10
+\item Fixing Dates: 2017-03-01, 2020-03-01, 2025-03-01, 2029-03-01
+\item Range 1 Lower Bound: 0
+\item Range 1 Upper Bound: 1.1
+\item Range 1 Leverage: 2
+\item Range 2 Lower Bound: 1.1
+\item Range 2 Upper Bound: 10000
+\item Range 2 Leverage: 1
+\item Sample Size: 100,000
+\end{itemize}
+
+
+\subsubsection{Convergence of NPV}
+We test the convergence of the NPV when sample size grows. As we can see in Table \ref{tarf_npv_sample_convergence},
+standard error of NPV decreases by a factor of $n$ when Sample Size increases by a factor of $n^2$. For this particular trade,
+in order to achieve standard error less than 1 bps of Notional, a minimum of 250,000 samples are required.
+
+\begin{table}[!htbp]
+  \centering
+  \begin{tabular}{l | r | r | r}
+    Sample Size ('000) & NPV & Run Time (s) & Std. Error bps of Notional \\ \hline
+    1 & 18,491 & 0.16 & 15.38 \\
+    5 & 17,470 & 0.33 & 7.02 \\
+    10 & 17,342 & 0.62 & 5.02 \\
+    50 & 17,022 & 2.53 & 2.25 \\
+    100 & 16,937 & 4.58 & 1.60 \\
+  \end{tabular}
+  \caption{NPV of TaRF for different sample size}
+  \label{tarf_npv_sample_convergence}
+\end{table}
+
+\subsubsection{Convergence to Forwards}
+We want to know if the NPV from the ScriptedTrade engine is consistent with the analytical NPV.
+Since we do not have an analytical pricer for TaRF implemented in ORE, we can only compare
+the results to the analytical NPV of Forwards. We have illustrated the results in
+Table \ref{tarf_npv_ko_level_convergence} and Table \ref{tarf_analytical_npv}. If we increase
+Knout Out Level, NPV of TaRF gets closer to the sum of the forwards NPV and this is expected.
+
+\begin{table}[!htbp]
+  \centering
+  \begin{tabular}{r | r | r | r | r}
+    KO Level & Range 1 Leverage & NPV & Run Time (s) & Std. Error bps of Notional \\ \hline
+    0 & 2 & -35,335 & 4.67 & 1.21 \\
+    10000 & 2 & -29,878 & 4.88 & 1.26 \\
+    50000 & 2 & -8,988 & 4.82 & 1.43 \\
+    100000 & 2 & 16,937 & 4.58 & 1.60 \\
+    500000 & 2 & 211,778 & 4.92 & 2.22 \\
+    1000000 & 2 & 346,956 & 4.40 & 2.79 \\
+    10000000 & 2 & 420,893 & 4.01 & 3.34 \\
+    10000000 & 1 & 455,682 & 3.80 & 2.74 \\
+  \end{tabular}
+  \caption{NPV of TaRF for different Knock Out Level.}
+  \label{tarf_npv_ko_level_convergence}
+\end{table}
+
+\begin{table}[!htbp]
+  \centering
+  \begin{tabular}{r | r}
+    Type & Analytical NPV \\ \hline
+    Forward 2020-03-01 & 74,784 \\
+    Forward 2025-03-01 & 171,573\\
+    Forward 2029-03-01 & 209,316 \\ \hline \\
+    Sum of Forwards & 455,673 \\ \hline \\
+  \end{tabular}
+  \caption{Analytical NPV of Forwards.}
+  \label{tarf_analytical_npv}
+\end{table}
