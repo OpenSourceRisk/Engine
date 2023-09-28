@@ -48,10 +48,10 @@ void AnalyticEuropeanEngine::calculate() const {
         Real rfDiscount = Null<Real>();
         Real divDiscount = Null<Real>();
 
-        if(auto tmp = results_.additionalResults.find("riskFreeDiscount"))
-            rfDiscount = tmp->second;
-        if(auto tmp = results_.additionalResults.find("dividendDiscount"))
-            divDiscount = tmp->second;
+        if (auto tmp = results_.additionalResults.find("riskFreeDiscount"); tmp != results_.additionalResults.end())
+            rfDiscount = boost::any_cast<Real>(tmp->second);
+        if (auto tmp = results_.additionalResults.find("dividendDiscount"); tmp != results_.additionalResults.end())
+            divDiscount = boost::any_cast<Real>(tmp->second);
 
        results_.additionalResults["riskFreeDiscount"] = divDiscount;
        results_.additionalResults["divDiscount"] = rfDiscount;
