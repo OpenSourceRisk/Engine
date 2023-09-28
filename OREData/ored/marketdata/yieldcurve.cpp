@@ -1818,12 +1818,12 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
         // Firstly, the rate quote.
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(averageOisQuoteIDs[i], asofDate_);
         boost::shared_ptr<SwapQuote> swapQuote;
-        QL_REQUIRE(swapQuote->startDate() == Null<Date>(),
-                   "swap quote with fixed start date is not supported for average ois instrument");
         if (marketQuote) {
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::IR_SWAP,
                        "Market quote not of type swap.");
             swapQuote = boost::dynamic_pointer_cast<SwapQuote>(marketQuote);
+            QL_REQUIRE(swapQuote->startDate() == Null<Date>(),
+                       "swap quote with fixed start date is not supported for average ois instrument");
 
             // Secondly, the basis spread quote.
             marketQuote = loader_.get(averageOisQuoteIDs[i + 1], asofDate_);
