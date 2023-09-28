@@ -54,7 +54,7 @@ void AnalyticEuropeanEngine::calculate() const {
             divDiscount = boost::any_cast<Real>(tmp->second);
 
        results_.additionalResults["riskFreeDiscount"] = divDiscount;
-       results_.additionalResults["divDiscount"] = rfDiscount;
+       results_.additionalResults["dividendDiscount"] = rfDiscount;
 
     }
 }
