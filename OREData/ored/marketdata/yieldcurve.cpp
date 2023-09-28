@@ -1700,10 +1700,6 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
                         discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true,
                         oisSegment->pillarChoice());
                 else {
-                    LOG("Using DatedOISRateHelper for " << oisQuote->name());
-                    // oisHelper = boost::make_shared<QuantLib::DatedOISRateHelper>(oisQuote->startDate(),
-                    //     oisQuote->maturityDate(), oisQuote->quote(), onIndex,
-                    //     discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>());
                     oisHelper = boost::make_shared<QuantExt::DatedOISRateHelper>(oisQuote->startDate(),
                         oisQuote->maturityDate(), oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
                         oisConvention->fixedCalendar(), oisConvention->paymentLag(),
@@ -1747,7 +1743,8 @@ void YieldCurve::addSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::IR_SWAP,
                        "Market quote not of type swap.");
             swapQuote = boost::dynamic_pointer_cast<SwapQuote>(marketQuote);
-
+            QL_REQUIRE(swapQuote->startDate() == Null<Date>(),
+                       "swap quote with fixed start date is not supported for ibor / subperiods swap instruments");
             // Create a swap helper if we do.
             Period swapTenor = swapQuote->term();
             boost::shared_ptr<RateHelper> swapHelper;
@@ -1821,6 +1818,8 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
         // Firstly, the rate quote.
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(averageOisQuoteIDs[i], asofDate_);
         boost::shared_ptr<SwapQuote> swapQuote;
+        QL_REQUIRE(swapQuote->startDate() == Null<Date>(),
+                   "swap quote with fixed start date is not supported for average ois instrument");
         if (marketQuote) {
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::IR_SWAP,
                        "Market quote not of type swap.");

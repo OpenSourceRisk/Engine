@@ -321,19 +321,17 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         boost::variant<QuantLib::Date, QuantLib::Period> start = parseDateOrPeriod(tokens[3 + offset]);
         boost::variant<QuantLib::Date, QuantLib::Period> end = parseDateOrPeriod(tokens[5 + offset]);
 
-        if (start.type() == typeid(QuantLib::Period) &&
-            end.type() == typeid(QuantLib::Period)) {
+        if (start.type() == typeid(QuantLib::Period) && end.type() == typeid(QuantLib::Period)) {
             Period fwdStart = boost::get<QuantLib::Period>(start);
             Period term = boost::get<QuantLib::Period>(end);
-            return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term, tenor, indexName);
-        }
-        else if (start.type() == typeid(QuantLib::Date) &&
-                 end.type() == typeid(QuantLib::Date)) {
+            return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term, tenor,
+                                                 indexName);
+        } else if (start.type() == typeid(QuantLib::Date) && end.type() == typeid(QuantLib::Date)) {
             Date startDate = boost::get<QuantLib::Date>(start);
             Date maturityDate = boost::get<QuantLib::Date>(end);
-            return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, startDate, maturityDate, tenor, indexName);
-        }
-        else {
+            return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, startDate, maturityDate, tenor,
+                                                 indexName);
+        } else {
             QL_FAIL("Expect swap quote with start/end as either periods or dates");
         }
     }
