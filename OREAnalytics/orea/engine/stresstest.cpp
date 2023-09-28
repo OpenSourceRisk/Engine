@@ -96,15 +96,20 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     shiftedNPV_.clear();
     delta_.clear();
     labels_.clear();
-    size_t i = 0;
-    for (auto tradeIt = portfolio->trades().begin(); tradeIt != portfolio->trades().end(); ++tradeIt, ++i) {
-        string tradeId = tradeIt->first;
-        Real npv0 = cube->getT0(i, 0);
+    trades_.clear();
+    for (auto const& [tradeId, trade] : portfolio->trades()) {
+        auto index = cube->idsAndIndexes().find(tradeId);
+        if (index == cube->idsAndIndexes().end()) {
+            ALOG("cube does not contain tradeId '" << tradeId << "'");
+            continue;
+        }
+        Real npv0 = cube->getT0(index->second, 0);
         trades_.insert(tradeId);
         baseNPV_[tradeId] = npv0;
         for (Size j = 0; j < scenarioGenerator->samples(); ++j) {
-            string label = scenarioGenerator->scenarios()[j]->label();
-            Real npv = cube->get(i, 0, j, 0);
+            const string& label = scenarioGenerator->scenarios()[j]->label();
+            TLOG("Adding stress test result for trade '" << tradeId << "' and scenario #" << j << " '" << label << "'");
+            Real npv = cube->get(index->second, 0, j, 0);
             pair<string, string> p(tradeId, label);
             shiftedNPV_[p] = npv;
             delta_[p] = npv - npv0;
@@ -122,15 +127,16 @@ void StressTest::writeReport(const boost::shared_ptr<ore::data::Report>& report,
     report->addColumn("Scenario NPV", double(), 2);
     report->addColumn("Sensitivity", double(), 2);
 
-    for (auto data : shiftedNPV_) {
-        string id = data.first.first;
-        string factor = data.first.second;
-        Real npv = data.second;
-        Real base = baseNPV_[id];
+    for (auto const& [id, npv] : shiftedNPV_) {
+        string tradeId = id.first;
+        string factor = id.second;
+        Real base = baseNPV_[tradeId];
         Real sensi = npv - base;
-        if (fabs(sensi) > outputThreshold) {
+        TLOG("Adding stress report result for tradeId '" << tradeId << "' and scenario '" << factor << ": sensi = "
+                                                         << sensi << ", threshold = " << outputThreshold);
+        if (fabs(sensi) > outputThreshold || QuantLib::close_enough(sensi, outputThreshold)) {
             report->next();
-            report->add(id);
+            report->add(tradeId);
             report->add(factor);
             report->add(base);
             report->add(npv);
