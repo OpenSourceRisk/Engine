@@ -171,6 +171,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     // e.g. MC convergence tests
     for (Size sample = 0; sample < (dryRun ? std::min<Size>(1, outputCube->samples()) : outputCube->samples());
          ++sample) {
+        TLOG("ValuationEngine: apply scenario sample #" << sample);
         updateProgress(sample, outputCube->samples());
 
         for (auto& [tradeId, trade] : portfolio->trades())
