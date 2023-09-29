@@ -70,6 +70,8 @@ public:
     void setMarketConfig(const std::string& config, const std::string& context);
     void setRefDataManager(const std::string& xml);
     void setRefDataManagerFromFile(const std::string& fileName);
+    void setScriptLibrary(const std::string& xml);
+    void setScriptLibraryFromFile(const std::string& fileName);
     void setConventions(const std::string& xml);
     void setConventionsFromFile(const std::string& fileName);
     void setIborFallbackConfig(const std::string& xml);
@@ -305,6 +307,10 @@ public:
     void setParConversionInputCurrencyColumn(const std::string& s) { parConversionInputCurrencyColumn_ = s; }
     void setParConversionInputBaseNpvColumn(const std::string& s) { parConversionInputBaseNpvColumn_ = s; }
     void setParConversionInputShiftSizeColumn(const std::string& s) { parConversionInputShiftSizeColumn_ = s; }
+
+    // Setters for ScenarioStatistics
+    void setScenarioDistributionSteps(const Size s) { scenarioDistributionSteps_ = s; }
+    void setScenarioOutputZeroRate(const bool b) { scenarioOutputZeroRate_ = b; }
 
 
     // Set list of analytics that shall be run
@@ -552,6 +558,9 @@ public:
     const std::string& parConversionInputBaseNpvColumn() { return parConversionInputBaseNpvColumn_; }
     const std::string& parConversionInputShiftSizeColumn() { return parConversionInputShiftSizeColumn_; }
 
+    // Getters for ScenarioStatistics
+    const Size& scenarioDistributionSteps() { return scenarioDistributionSteps_; }
+    const bool& scenarioOutputZeroRate() { return scenarioOutputZeroRate_; }
 
     /*************************************
      * List of analytics that shall be run
@@ -785,6 +794,12 @@ protected:
     std::string parConversionInputCurrencyColumn_ = "Currency";
     std::string parConversionInputBaseNpvColumn_ = "Base NPV";
     std::string parConversionInputShiftSizeColumn_ = "ShiftSize_1";
+
+    /***************
+     * Scenario Statistics analytic
+     ***************/
+    Size scenarioDistributionSteps_ = 20;
+    bool scenarioOutputZeroRate_ = false;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {

@@ -23,29 +23,8 @@
 
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/deltascenario.hpp>
 #include <orea/scenario/simplescenario.hpp>
-#include <qle/termstructures/credit/basecorrelationstructure.hpp>
-#include <qle/termstructures/proxyoptionletvolatility.hpp>
-#include <qle/termstructures/proxyswaptionvolatility.hpp>
-#include <ql/instruments/makecapfloor.hpp>
-#include <ql/math/interpolations/loginterpolation.hpp>
-#include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
-#include <ql/termstructures/defaulttermstructure.hpp>
-#include <ql/termstructures/volatility/capfloor/capfloortermvolatilitystructure.hpp>
-#include <ql/termstructures/volatility/capfloor/capfloortermvolsurface.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-#include <ql/termstructures/volatility/optionlet/strippedoptionlet.hpp>
-#include <ql/termstructures/volatility/optionlet/strippedoptionletadapter.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolcube.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
-#include <ql/termstructures/yield/discountcurve.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/time/calendars/weekendsonly.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
 
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
@@ -54,21 +33,33 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/fallbackovernightindex.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/instruments/makeoiscapfloor.hpp>
+#include <qle/termstructures/blackinvertedvoltermstructure.hpp>
+#include <qle/termstructures/blackvariancecurve3.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
 #include <qle/termstructures/blackvolconstantspread.hpp>
+#include <qle/termstructures/commoditybasispricecurvewrapper.hpp>
+#include <qle/termstructures/credit/basecorrelationstructure.hpp>
 #include <qle/termstructures/credit/spreadedbasecorrelationcurve.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamiccpivolatilitystructure.hpp>
+#include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
+#include <qle/termstructures/dynamicyoyoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
+#include <qle/termstructures/interpolateddiscountcurve.hpp>
+#include <qle/termstructures/interpolateddiscountcurve2.hpp>
 #include <qle/termstructures/pricecurve.hpp>
+#include <qle/termstructures/pricetermstructureadapter.hpp>
+#include <qle/termstructures/proxyoptionletvolatility.hpp>
+#include <qle/termstructures/proxyswaptionvolatility.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
 #include <qle/termstructures/spreadedcorrelationcurve.hpp>
@@ -89,8 +80,27 @@
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
-#include <qle/termstructures/commoditybasispricecurve.hpp>
-#include <qle/termstructures/commoditybasispricecurvewrapper.hpp>
+
+#include <ql/instruments/makecapfloor.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/termstructures/volatility/capfloor/capfloortermvolatilitystructure.hpp>
+#include <ql/termstructures/volatility/capfloor/capfloortermvolsurface.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/volatility/optionlet/strippedoptionlet.hpp>
+#include <ql/termstructures/volatility/optionlet/strippedoptionletadapter.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolcube.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
+#include <ql/termstructures/yield/discountcurve.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <ql/quotes/compositequote.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/timer/timer.hpp>
@@ -2245,14 +2255,18 @@ ScenarioSimMarket::ScenarioSimMarket(
                 std::vector<std::string> curveNames;
                 std::vector<std::string> basisCurves;
                 for (const auto& name : param.second.second) {
-                    Handle<PriceTermStructure> initialCommodityCurve =
-                        initMarket->commodityPriceCurve(name, configuration);
-                    boost::shared_ptr<CommodityBasisPriceTermStructure> basisCurve =
-                        boost::dynamic_pointer_cast<QuantExt::CommodityBasisPriceTermStructure>(
-                            initialCommodityCurve.currentLink());
-                    if (basisCurve != nullptr) {
-                        basisCurves.push_back(name);
-                    } else {
+                    try {
+                        Handle<PriceTermStructure> initialCommodityCurve =
+                            initMarket->commodityPriceCurve(name, configuration);
+                        boost::shared_ptr<CommodityBasisPriceTermStructure> basisCurve =
+                            boost::dynamic_pointer_cast<QuantExt::CommodityBasisPriceTermStructure>(
+                                initialCommodityCurve.currentLink());
+                        if (basisCurve != nullptr) {
+                            basisCurves.push_back(name);
+                        } else {
+                            curveNames.push_back(name);
+                        }
+                    } catch (...) {
                         curveNames.push_back(name);
                     }
                 }
@@ -2666,7 +2680,10 @@ ScenarioSimMarket::ScenarioSimMarket(
             }
 
         } catch (const std::exception& e) {
-            ALOG("ScenarioSimMarket::ScenarioSimMarket() top level catch " << e.what());
+            ALOG(StructuredMessage(ore::data::StructuredMessage::Category::Error,
+                                   ore::data::StructuredMessage::Group::Curve, e.what(),
+                                   {{"exceptionType", "ScenarioSimMarket top level catch - this should never happen, "
+                                                      "contact dev. Results are likely wrong or incomplete."}}));
             processException(continueOnError, e);
         }
     }
@@ -2727,6 +2744,8 @@ void ScenarioSimMarket::reset() {
     cachedSimDataActive_.clear();
     // reset term structures
     applyScenario(baseScenario_);
+    // clear delta scenario keys
+    diffToBaseKeys_.clear();
     // see the comment in update() for why this is necessary...
     if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
         boost::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
@@ -2742,8 +2761,42 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
 
     currentScenario_ = scenario;
 
-    // apply scenario based on cached indices for simData_ for a SimpleScenario
-    // this assumes that all scenarios have an identical key structure in their data map
+    // 1 handle delta scenario
+
+    auto deltaScenario = boost::dynamic_pointer_cast<DeltaScenario>(scenario);
+
+    /*! our assumption is that either all or none of the scenarios we apply are 
+        delta scenarios  or the base scenario */
+
+    if (deltaScenario != nullptr) {
+        for (auto const& key : diffToBaseKeys_) {
+            auto it = simData_.find(key);
+            if (it != simData_.end()) {
+                it->second->setValue(baseScenario_->get(key));
+            }
+        }
+        diffToBaseKeys_.clear();
+        auto delta = deltaScenario->delta();
+        bool missingPoint = false;
+        for (auto const& key : delta->keys()) {
+            auto it = simData_.find(key);
+            if (it == simData_.end()) {
+                ALOG("simulation data point missing for key " << key);
+                missingPoint = true;
+            } else {
+                if (filter_->allow(key)) {
+                    it->second->setValue(delta->get(key));
+                    diffToBaseKeys_.insert(key);
+                }
+            }
+        }
+        QL_REQUIRE(!missingPoint, "simulation data points missing from scenario, exit.");
+
+        return;
+    }
+
+    // 2 apply scenario based on cached indices for simData_ for a SimpleScenario
+    //   this assumes that all scenarios have an identical key structure in their data map
 
     if (cacheSimData_) {
         if (auto s = boost::dynamic_pointer_cast<SimpleScenario>(scenario)) {
@@ -2786,6 +2839,8 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
             return;
         }
     }
+
+    // 3 all other cases
 
     const vector<RiskFactorKey>& keys = scenario->keys();
 
@@ -2977,3 +3032,4 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const string& yieldS
 
 } // namespace analytics
 } // namespace ore
+

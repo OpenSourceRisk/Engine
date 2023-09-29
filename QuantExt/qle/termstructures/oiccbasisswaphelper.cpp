@@ -18,6 +18,7 @@
 
 #include <ql/currencies/europe.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/utilities/null_deleter.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/termstructures/oiccbasisswaphelper.hpp>
 
@@ -26,10 +27,6 @@ using boost::shared_ptr;
 using namespace QuantLib;
 
 namespace QuantExt {
-
-namespace {
-void no_deletion(YieldTermStructure*) {}
-} // namespace
 
 OICCBSHelper::OICCBSHelper(Natural settlementDays,
                            const Period& term, // swap maturity
@@ -80,7 +77,7 @@ void OICCBSHelper::initializeDates() {
 void OICCBSHelper::setTermStructure(YieldTermStructure* t) {
     // do not set the relinkable handle as an observer -
     // force recalculation when needed
-    termStructureHandle_.linkTo(shared_ptr<YieldTermStructure>(t, no_deletion), false);
+    termStructureHandle_.linkTo(boost::shared_ptr<YieldTermStructure>(t, null_deleter()), false);
     RelativeDateRateHelper::setTermStructure(t);
 }
 

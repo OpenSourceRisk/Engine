@@ -302,8 +302,45 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console,
     if (params_->has("setup", "logMask")) {
         logMask = static_cast<Size>(parseInteger(params_->get("setup", "logMask")));
     }
+
+    string progressLogFile, structuredLogFile;
+    Size progressLogRotationSize = 100 * 1024 * 1024;
+    bool progressLogToConsole = false;
+    Size structuredLogRotationSize = 100 * 1024 * 1024;
     
-    setupLog(outputPath, logFile, logMask, logRootPath);
+    if (params_->hasGroup("logging")) {
+        string logFileOverride = params_->get("logging", "logFile", false);
+        if (!logFileOverride.empty()) {
+            logFile = outputPath + '/' + logFileOverride;
+        }
+        string logMaskOverride = params_->get("logging", "logMask", false);
+        if (!logMaskOverride.empty()) {
+            logMask = static_cast<Size>(parseInteger(logMaskOverride));
+        }
+        progressLogFile = params_->get("logging", "progressLogFile", false);
+        if (!progressLogFile.empty()) {
+            progressLogFile = outputPath + '/' + progressLogFile;
+        }
+        string tmp = params_->get("logging", "progressLogRotationSize", false);
+        if (!tmp.empty()) {
+            progressLogRotationSize = static_cast<Size>(parseInteger(tmp));
+        }
+        tmp = params_->get("logging", "progressLogToConsole", false);
+        if (!tmp.empty()) {
+            progressLogToConsole = ore::data::parseBool(tmp);
+        }
+        structuredLogFile = params_->get("logging", "structuredLogFile", false);
+        if (!structuredLogFile.empty()) {
+            structuredLogFile = outputPath + '/' + structuredLogFile;
+        }
+        tmp = params_->get("logging", "structuredLogRotationSize", false);
+        if (!tmp.empty()) {
+            structuredLogRotationSize = static_cast<Size>(parseInteger(tmp));
+        }
+    }
+    
+    setupLog(outputPath, logFile, logMask, logRootPath, progressLogFile, progressLogRotationSize, progressLogToConsole,
+             structuredLogFile, structuredLogRotationSize);
 
     // Log the input parameters
     params_->log();
@@ -527,6 +564,16 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         WLOG("Reference data not found");
     }
 
+    tmp = params_->get("setup", "scriptLibrary", false);
+    if (tmp != "") {
+        string scriptFile = inputPath + "/" + tmp;
+        LOG("Loading script library from file: " << scriptFile);
+        inputs->setScriptLibraryFromFile(scriptFile);        
+    }
+    else {
+        WLOG("Script library not loaded");
+    }
+    
     if (params_->has("setup", "conventionsFile") && params_->get("setup", "conventionsFile") != "") {
         string conventionsFile = inputPath + "/" + params_->get("setup", "conventionsFile");
         LOG("Loading conventions from file: " << conventionsFile);
@@ -1301,6 +1348,41 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
     }
 
+    /**********************
+     * Scenario_Statistics
+     **********************/
+
+    tmp = params_->get("scenarioStatistics", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        inputs->insertAnalytic("SCENARIO_STATISTICS");
+        tmp = params_->get("scenarioStatistics", "distributionBuckets", false);
+        if (tmp != "")
+            inputs->setScenarioDistributionSteps(parseInteger(tmp));
+
+        tmp = params_->get("scenarioStatistics", "outputZeroRate", false);
+        if (tmp != "")
+            inputs->setScenarioOutputZeroRate(parseBool(tmp));
+
+        tmp = params_->get("scenarioStatistics", "simulationConfigFile", false);
+        if (tmp != "") {
+            string simulationConfigFile = inputPath + "/" + tmp;
+            LOG("Loading simulation config from file" << simulationConfigFile);
+            inputs->setExposureSimMarketParamsFromFile(simulationConfigFile);
+            inputs->setCrossAssetModelDataFromFile(simulationConfigFile);
+            inputs->setScenarioGeneratorDataFromFile(simulationConfigFile);
+            auto grid = inputs->scenarioGeneratorData()->getGrid();
+            DLOG("grid size=" << grid->size() << ", dates=" << grid->dates().size()
+                                << ", valuationDates=" << grid->valuationDates().size()
+                                << ", closeOutDates=" << grid->closeOutDates().size());
+        } else {
+            ALOG("Simulation market, model and scenario generator data not loaded");
+        }
+
+        tmp = params_->get("scenarioStatistics", "scenariodump", false);
+        if (tmp != "")
+            inputs->setWriteScenarios(true);
+    }
+
     if (inputs->analytics().size() == 0) {
         inputs->insertAnalytic("MARKETDATA");
         inputs->setOutputTodaysMarketCalibration(true);
@@ -1313,7 +1395,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 }
 
 void OREApp::setupLog(const std::string& path, const std::string& file, Size mask,
-                      const boost::filesystem::path& logRootPath) {
+                      const boost::filesystem::path& logRootPath, const std::string& progressLogFile, Size progressLogRotationSize, bool progressLogToConsole, const std::string& structuredLogFile, Size structuredLogRotationSize) {
     closeLog();
     
     boost::filesystem::path p{path};
@@ -1331,6 +1413,19 @@ void OREApp::setupLog(const std::string& path, const std::string& file, Size mas
     Log::instance().setRootPath(oreRootPath);
     Log::instance().setMask(mask);
     Log::instance().switchOn();
+
+    // Progress logger
+    auto progressLogger = boost::make_shared<ProgressLogger>();
+    string progressLogFilePath = progressLogFile.empty() ? path + '/' + "log_progress_%N.json" : progressLogFile;
+    progressLogger->setFileLog(progressLogFilePath, path, progressLogRotationSize);
+    progressLogger->setCoutLog(progressLogToConsole);
+    Log::instance().registerIndependentLogger(progressLogger);
+
+    // Structured message logger
+    auto structuredLogger = boost::make_shared<StructuredLogger>();
+    string structuredLogFilePath = structuredLogFile.empty() ? path + '/' + "log_structured_%N.json" : structuredLogFile;
+    structuredLogger->setFileLog(structuredLogFilePath, path, structuredLogRotationSize);
+    Log::instance().registerIndependentLogger(structuredLogger);
 }
 
 void OREApp::closeLog() { Log::instance().removeAllLoggers(); }

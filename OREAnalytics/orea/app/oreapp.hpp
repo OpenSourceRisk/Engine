@@ -75,6 +75,10 @@ public:
 
     //! time for executing run(...) in seconds
     Real getRunTime();
+
+    std::string version() {
+        return std::string(OPEN_SOURCE_RISK_VERSION);
+    }
     
 protected:
     virtual void analytics();
@@ -85,8 +89,10 @@ protected:
     vector<string> getFileNames(const string& fileString, const string& path);
     boost::shared_ptr<CSVLoader> buildCsvLoader(const boost::shared_ptr<Parameters>& params);
     //! set up logging
-    void setupLog(const std::string& path, const std::string& file, Size mask,
-                  const boost::filesystem::path& logRootPath);
+    void setupLog(const std::string& path, const std::string& file, QuantLib::Size mask,
+                  const boost::filesystem::path& logRootPath, const std::string& progressLogFile = "",
+                  QuantLib::Size progressLogRotationSize = 100 * 1024 * 1024, bool progressLogToConsole = false,
+                  const std::string& structuredLogFile = "", QuantLib::Size structuredLogRotationSize = 100 * 1024 * 1024);
     //! remove logs
     void closeLog();
 

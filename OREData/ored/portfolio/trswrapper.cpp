@@ -117,18 +117,20 @@ TRSWrapper::TRSWrapper(
         registerWith(f);
     registerWith(fxIndexReturn);
     registerWith(fxIndexAdditionalCashflows);
+
+    // compute last payment date, after this date the TRS is considered expired
+
+    lastDate_ = Date::minDate();
+    for (auto const& d : paymentSchedule_)
+        lastDate_ = std::max(lastDate_, d);
+    for (auto const& l : fundingLegs_)
+        for (auto const& c : l)
+            lastDate_ = std::max(lastDate_, c->date());
+    for (auto const& c : additionalCashflowLeg_)
+        lastDate_ = std::max(lastDate_, c->date());
 }
 
-bool TRSWrapper::isExpired() const {
-    for (auto const& u : underlying_) {
-        if (u->instrument()->qlInstrument())
-            if (u->instrument()->qlInstrument()->isExpired())
-                return true;
-    }
-    return false;
-}
-
-void TRSWrapper::setupExpired() const { Instrument::setupExpired(); }
+bool TRSWrapper::isExpired() const { return detail::simple_event(lastDate_).hasOccurred(); }
 
 void TRSWrapper::setupArguments(PricingEngine::arguments* args) const {
     TRSWrapper::arguments* a = dynamic_cast<TRSWrapper::arguments*>(args);
@@ -366,9 +368,8 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
     } catch (const std::exception&) {
         if (adjustedDate == today)
             return arguments_.underlying_[i]->instrument()->NPV() / arguments_.underlyingMultiplier_[i];
-        else {
+        else
             throw;
-        }
     }
 }
 

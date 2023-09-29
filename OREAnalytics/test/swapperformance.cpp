@@ -53,7 +53,8 @@
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <test/oreatoplevelfixture.hpp>
-#include <test/testmarket.hpp>
+
+#include "testmarket.hpp"
 
 using namespace std;
 using namespace QuantLib;

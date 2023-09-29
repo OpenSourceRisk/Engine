@@ -181,10 +181,9 @@ private:
 
 struct BondBuilder {
     struct Result {
+        std::string builderLabel;
         boost::shared_ptr<QuantLib::Bond> bond;
         boost::shared_ptr<QuantExt::ModelBuilder> modelBuilder; // might be nullptr
-
-        
         bool isInflationLinked = false;
         bool hasCreditRisk = true;
         std::string currency;
@@ -204,7 +203,7 @@ struct BondBuilder {
 
 class BondFactory : public QuantLib::Singleton<BondFactory, std::integral_constant<bool, true>> {
     map<std::string, boost::shared_ptr<BondBuilder>> builders_;
-    mutable boost::shared_mutex mutex_;
+    mutable std::shared_mutex mutex_;
 
 public:
     BondBuilder::Result build(const boost::shared_ptr<EngineFactory>& engineFactory,

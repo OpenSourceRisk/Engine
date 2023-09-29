@@ -131,7 +131,7 @@
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Acadia Inc.}
-\date{16 June 2023}
+\date{September 2023}
 \maketitle
 
 \newpage
@@ -154,6 +154,7 @@ Date & Author & Comment \\
 6 December 2022 & Acadia & updates for release 8\\
 31 March 2023 & Acadia & updates for release 9\\
 16 June 2023 & Acadia & updates for release 10\\
+26 September 2023 & Acadia & updates for release 11\\
 \hline
 \end{supertabular}
 \end{center}
@@ -312,8 +313,10 @@ Convertible Bonds & Y & Y & Y & N \\
 \hline
 ASCOTs & Y & Y & Y & Y \\
 \hline
+Scripted Trades & Y & Y & Y & Y \\
+\hline
 \end{tabular}
-\caption{ORE product coverage. FX/Equity Exotics include Barrier, Digital, Digital Barrier (FX only), Double Barrier, European Barrier, KIKO Barrier (FX only), Touch and Double Touch Options.}
+\caption{ORE product coverage. FX/Equity Exotics include Barrier, Digital, Digital Barrier (FX only), Double Barrier, European Barrier, KIKO Barrier (FX only), Touch and Double Touch Options. Scripted Trades cover single and multi-asset products across all asset classes except Credit (so far), see Example\_52 and the separate documentation in Docs/ScriptedTrade.}
 \label{tab_coverage}
 \end{center}
 \end{table}
@@ -1270,11 +1273,33 @@ Example & Description \\
 41 & Multi-threaded Exposure Simulation \\
 \hline
 42 & ORE Python Module \\
+\hline
+43 & Credit Portfolio Model \\
+\hline
+44 & ISDA SIMM Model \\
+\hline
+45 & Collateralized Bond Obligation \\
+\hline
+46 & Generic Total Return Swap \\
+\hline
+47 & Composite Trade \\
+\hline
+48 & Convertible Bond and ASCOT \\
+\hline
+49 & Bond Yield Shifted \\
+\hline
+50 & Par Sensitivity Conversion of external "Raw" Sensis \\
+\hline
+51 & Custom Trade Fixings\\
+\hline
+52 & Scripted Trades \\
+\hline
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
 \end{center}
 \end{table}
+\clearpage
 
 All example results can be produced with the Python scripts {\tt run.py} in the ORE release's {\tt Examples/Example\_\#}
 folders which work on both Windows and Unix platforms. In a nutshell, all scripts call ORE's command line application
@@ -3469,11 +3494,77 @@ See also section \ref{sec:sensitivity}.
 
 
 %--------------------------------------------------------------------
-\subsection{Custom trade fixings}% Example 51
+\subsection{Custom Trade Fixings}% Example 51
 \label{example:51}
 %--------------------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_51} demonstrates ORE's capability to use custom trade specific fixings. For OIS and Ibor floating legs one can specify historical fixing on a trade level, see \ref{ss:floatingleg_data}. Those trade level fixings will be only use for the specific trade, all other trades will use the global fixings.
+
+%--------------------------------------------------------------------
+\subsection{Scripted Trade}% Example 52
+\label{example:52}
+%--------------------------------------------------------------------
+
+The scripted trade was added to ORE to gain more flexibility in representing exotic products, with hyprid payoffs across
+asset classes, path-dependence, multiple kinds of early termination options. The scripted trade module uses Monte Carlo and
+Finite Difference pricing approaches, it is an evolving interface to implement parallel processing with GPUs and a central
+interface to implement AD methods in ORE. See the separate documentation in folder Docs/ScriptedTrade for an introduction to trade
+representation, scripting language, model and pricing engine configuration. 
+
+\medskip
+The example in this folder {\tt Examples/Example\_52} is a basic demonstration of ORE's scripted trade functionality.
+In this example we provide a self-contained case that can be run as usual calling
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+
+This generates an NPV and cash flow report for the following portfolio
+\begin{itemize}
+\item Trade 1: Vanilla European Equity Option, represented as standard ORE XML with analytical pricing
+\item Trade 2: Same Option as above, represented as ``generic'' scripted trade with scripted payoff embedded into the trade XML,
+  pricing via Monte Carlo
+\item Trade 3: Same Option as above, same representation, pricing via Finite Differences triggered by a {\tt ProductTag} assigned
+  to the script and used in {\tt pricingengine.xml} 
+\item Trade 4: Same Option as above, the scripted trade now refers to an ``external'' script in {\tt scriptlibrary.xml},
+  MC pricing
+\item Trade 4b: Same as trade 4, but ``compact'' scripted trade representation (uncomment trade 4b in {\tt portfolio.xml})
+\item Trade 5: Barrier Option with single continuously observed Up \& Out barrier, represented as standard ORE XML with
+  analytical pricing
+\item Trade 6: Same Barrier Option as above, approximated as generic scripted trade with daily barrier observation
+\item Trade 6b: Same Barrier Option as above, approximated as ``compact'' scripted trade with daily barrier observation
+  (uncomment trade 6b in {\tt portfolio.xml})
+\item Trade 7: Same Barrier Option as above, represented as generic scripted trade with continuously observed barrier,
+  i.e. adjusting for the probability of knock-out between daily observations
+\item Trade 7b: Same Barrier Option as of above, represented as ``compact'' scripted trade
+  (uncomment trade 7b in {\tt portfolio.xml})
+\item Trade 8: Equity Accumulator, represented as generic scripted trade with external payoff script
+\item Trade 8b: Same Equity Accumulator as above, represented as compact scripted trade with external payoff script
+  (uncomment trade 8b in {\tt portfolio.xml})
+\end{itemize}
+
+Note:
+\begin{itemize}
+\item In all cases we use the Black-Scholes model to drive the Equity process.
+\item The Barrier Option pricing using the scripted trade deviates noticeably from the analytical pricing when we use daily
+  observations (trade 6 and 6b), but matches quite closely when we adjust for the probability of knock-out between observation
+  dates (trade 7 and 7b)
+\item We are not aware of analytical pricing for the Accumulator product in trade 8 to benchmark against; trade 8 is priced with MC,
+  FD pricing of the Accumulator is possible as well but requires a separate payoff script, only in the vanilla European option case
+  we can utilize the same script for both MC and FD pricing
+\end{itemize}
+
+Though this initial Example\_52 shows only single-asset Equity cases, the scripted trade in its current version is
+  significantly more versatile, more examples and scripts to follow.
+
+%--------------------------------------------------------------------
+\subsection{GBP OIS Curve using MPC Swaps}% Example 53
+\label{example:53}
+%--------------------------------------------------------------------
+
+This example demonstrates the build of a GBP OIS curve using MPC Swaps at the short end.
+
 
 \clearpage
 %========================================================
@@ -3580,6 +3671,7 @@ as the selection and configuration of analytics. The file has an opening and clo
   </ORE>} with three sections
 \begin{itemize}
 \item Setup
+\item Logging
 \item Markets
 \item Analytics
 \end{itemize}
@@ -3678,6 +3770,41 @@ If not given, the parameter defaults to {\tt false}.
 
 \medskip If the parameter {\tt nThreads} is given, multiple threads will be used for valuation engine runs where
 applicable (Sensitivity, Exposure Classic, Exposure AMC). If not given, the parameter defaults to $1$.
+
+\subsubsection{Logging}\label{sec:master_input_logging}
+
+The {\tt Logging} section (see listing \ref{lst:ore_logging}) is used to configure some ORE logging options.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Logging>
+  <Parameter name="logFile">log.txt</Parameter>
+  <Parameter name="logMask">31</Parameter>
+  <Parameter name="progressLogFile">my_log_progress_%N.json</Parameter>
+  <Parameter name="progressLogRotationSize">102400</Parameter>
+  <Parameter name="progressLogToConsole">false</Parameter>
+  <Parameter name="structuredLogFile">my_structured_logs_%N.txt</Parameter>
+  <Parameter name="structuredLogRotationSize">102400</Parameter>
+</Logging>
+\end{minted}
+%\hrule
+\caption{ORE logging}
+\label{lst:ore_logging}
+\end{listing}
+
+Parameter {\tt logFile} and {\tt logMask} will override the same parameters in the {\tt Setup} section.
+
+Parameters {\tt progressLogFile} and {\tt structuredLogFile} are the filename where progress log messages
+and structured log messages are written out to, respectively, which supports Boost string patterns.This defaults to ``log\_progress\_\%N.json'' and ``log\_structured\_\%N.json'', respectively, where {\tt N} will be an integer (beginning at 0) used for log file rotation.
+
+Parameters {\tt progressLogRotationSize} and {\tt structuredLogRotationSize} are the size limit (in bytes)
+of each log file before applying log file rotation to the progress log file and structured log message file,
+respectively.. For example, $10 * 1024 * 1024 = 10 \text{MiB}$. Defaults to 100 MiB.
+
+If the parameter {\tt progressLogToConsole} is set to true, then progress logs will be written to std::cout.
+This can be used simultaneously with {\tt progressLogFile}, i.e.\ progress logs can be written out
+to both file and std::cout.
 
 \subsubsection{Markets}\label{sec:master_input_markets}
 

@@ -64,7 +64,7 @@ std::string EngineBuilder::modelParameter(const std::string& p, const std::vecto
 
 void EngineBuilderFactory::addEngineBuilder(const std::function<boost::shared_ptr<EngineBuilder>()>& builder,
                                             const bool allowOverwrite) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     auto tmp = builder();
     auto key = make_tuple(tmp->model(), tmp->engine(), tmp->tradeTypes());
     auto it = std::remove_if(engineBuilderBuilders_.begin(), engineBuilderBuilders_.end(),
@@ -84,7 +84,7 @@ void EngineBuilderFactory::addAmcEngineBuilder(
     const std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                                          const std::vector<Date>& grid)>& builder,
     const bool allowOverwrite) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     auto tmp = builder(nullptr, {});
     auto key = make_tuple(tmp->model(), tmp->engine(), tmp->tradeTypes());
     auto it = std::remove_if(
@@ -104,7 +104,7 @@ void EngineBuilderFactory::addAmcEngineBuilder(
 
 void EngineBuilderFactory::addLegBuilder(const std::function<boost::shared_ptr<LegBuilder>()>& builder,
                                          const bool allowOverwrite) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     auto key = builder()->legType();
     auto it =
         std::remove_if(legBuilderBuilders_.begin(), legBuilderBuilders_.end(),
@@ -116,7 +116,7 @@ void EngineBuilderFactory::addLegBuilder(const std::function<boost::shared_ptr<L
 }
 
 std::vector<boost::shared_ptr<EngineBuilder>> EngineBuilderFactory::generateEngineBuilders() const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     std::vector<boost::shared_ptr<EngineBuilder>> result;
     for (auto const& b : engineBuilderBuilders_)
         result.push_back(b());
@@ -126,7 +126,7 @@ std::vector<boost::shared_ptr<EngineBuilder>> EngineBuilderFactory::generateEngi
 std::vector<boost::shared_ptr<EngineBuilder>>
 EngineBuilderFactory::generateAmcEngineBuilders(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                                 const std::vector<Date>& grid) const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     std::vector<boost::shared_ptr<EngineBuilder>> result;
     for (auto const& b : amcEngineBuilderBuilders_)
         result.push_back(b(cam, grid));
@@ -134,7 +134,7 @@ EngineBuilderFactory::generateAmcEngineBuilders(const boost::shared_ptr<QuantExt
 }
 
 std::vector<boost::shared_ptr<LegBuilder>> EngineBuilderFactory::generateLegBuilders() const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     std::vector<boost::shared_ptr<LegBuilder>> result;
     for (auto const& b : legBuilderBuilders_)
         result.push_back(b());
@@ -176,13 +176,15 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
     const string& model = engineData_->model(tradeType);
     const string& engine = engineData_->engine(tradeType);
     typedef pair<tuple<string, string, set<string>>, boost::shared_ptr<EngineBuilder>> map_type;
-    auto it =
-        std::find_if(builders_.begin(), builders_.end(), [&model, &engine, &tradeType](const map_type& v) -> bool {
-            const set<string>& types = std::get<2>(v.first);
-            return std::get<0>(v.first) == model && std::get<1>(v.first) == engine &&
-                   std::find(types.begin(), types.end(), tradeType) != types.end();
-        });
+    auto pred = [&model, &engine, &tradeType](const map_type& v) -> bool {
+        const set<string>& types = std::get<2>(v.first);
+        return std::get<0>(v.first) == model && std::get<1>(v.first) == engine &&
+               std::find(types.begin(), types.end(), tradeType) != types.end();
+    };
+    auto it = std::find_if(builders_.begin(), builders_.end(), pred);
     QL_REQUIRE(it != builders_.end(), "No EngineBuilder for " << model << "/" << engine << "/" << tradeType);
+    QL_REQUIRE(std::find_if(std::next(it, 1), builders_.end(), pred) == builders_.end(),
+               "Ambiguous EngineBuilder for " << model << "/" << engine << "/" << tradeType);
 
     boost::shared_ptr<EngineBuilder> builder = it->second;
     string effectiveTradeType = tradeType;

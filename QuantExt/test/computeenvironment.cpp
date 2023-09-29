@@ -43,12 +43,12 @@ struct ComputeEnvironmentCleanUp {
 
 namespace {
 void outputTimings(const ComputeContext& c) {
-    BOOST_TEST_MESSAGE("  " << (float)c.debugInfo().numberOfOperations / c.debugInfo().nanoSecondsCalculation * 1.0E3
+    BOOST_TEST_MESSAGE("  " << (double)c.debugInfo().numberOfOperations / c.debugInfo().nanoSecondsCalculation * 1.0E3
                             << " MFLOPS (raw)");
-    BOOST_TEST_MESSAGE("  " << (float)c.debugInfo().numberOfOperations /
+    BOOST_TEST_MESSAGE("  " << (double)c.debugInfo().numberOfOperations /
                                    (c.debugInfo().nanoSecondsCalculation + c.debugInfo().nanoSecondsDataCopy) * 1.0E3
                             << " MFLOPS (raw + data copy)");
-    BOOST_TEST_MESSAGE("  " << (float)c.debugInfo().numberOfOperations /
+    BOOST_TEST_MESSAGE("  " << (double)c.debugInfo().numberOfOperations /
                                    (c.debugInfo().nanoSecondsCalculation + c.debugInfo().nanoSecondsDataCopy +
                                     c.debugInfo().nanoSecondsProgramBuild) *
                                    1.0E3
@@ -80,28 +80,28 @@ BOOST_AUTO_TEST_CASE(testSimpleCalc) {
         BOOST_TEST_MESSAGE("  do first calc");
 
         auto [id, _] = c.initiateCalculation(n);
-        std::vector<float> rx(n, 4.0);
+        std::vector<double> rx(n, 4.0);
         auto x = c.createInputVariable(&rx[0]);
         auto y = c.createInputVariable(3.0);
         auto z = c.applyOperation(RandomVariableOpCode::Add, {x, y});
         auto w = c.applyOperation(RandomVariableOpCode::Mult, {z, z});
         c.declareOutputVariable(w);
-        std::vector<std::vector<float>> output(1, std::vector<float>(n));
+        std::vector<std::vector<double>> output(1, std::vector<double>(n));
         c.finalizeCalculation(output);
         for (auto const& v : output.front()) {
-            BOOST_CHECK_CLOSE(v, 49.0f, 1.0E-8);
+            BOOST_CHECK_CLOSE(v, 49.0, 1.0E-8);
         }
 
         BOOST_TEST_MESSAGE("  do second calc using same kernel");
 
         c.initiateCalculation(n, id, 0);
-        std::vector<float> rx2(n, 5.0);
+        std::vector<double> rx2(n, 5.0);
         c.createInputVariable(&rx2[0]);
         c.createInputVariable(1.0);
-        std::vector<std::vector<float>> output2(1, std::vector<float>(n));
+        std::vector<std::vector<double>> output2(1, std::vector<double>(n));
         c.finalizeCalculation(output2);
         for (auto const& v : output2.front()) {
-            BOOST_CHECK_CLOSE(v, 36.0f, 1.0E-8);
+            BOOST_CHECK_CLOSE(v, 36.0, 1.0E-8);
         }
     }
 }
@@ -118,8 +118,8 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
         ComputeEnvironment::instance().selectContext(d);
         auto& c = ComputeEnvironment::instance().context();
         std::vector<std::size_t> values(m);
-        std::vector<float> data(n, 0.9f);
-        std::vector<std::vector<float>> output(1, std::vector<float>(n));
+        std::vector<double> data(n, 0.9f);
+        std::vector<std::vector<double>> output(1, std::vector<double>(n));
 
         // first calc
 
@@ -185,20 +185,20 @@ BOOST_AUTO_TEST_CASE(testRngGeneration) {
                 c.declareOutputVariable(r);
             }
         }
-        std::vector<std::vector<float>> output(6, std::vector<float>(n));
+        std::vector<std::vector<double>> output(6, std::vector<double>(n));
         c.finalizeCalculation(output);
         outputTimings(c);
         for (auto const& o : output) {
             boost::accumulators::accumulator_set<
-                float, boost::accumulators::stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance>>
+                double, boost::accumulators::stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance>>
                 acc;
             for (auto const& v : o) {
                 acc(v);
             }
             BOOST_TEST_MESSAGE("  mean = " << boost::accumulators::mean(acc)
-                                         << ", variance = " << boost::accumulators::variance(acc));
-            BOOST_CHECK_SMALL(boost::accumulators::mean(acc), 0.05f);
-            BOOST_CHECK_CLOSE(boost::accumulators::variance(acc), 1.0f, 1.0f);
+                                           << ", variance = " << boost::accumulators::variance(acc));
+            BOOST_CHECK_SMALL(boost::accumulators::mean(acc), 0.05);
+            BOOST_CHECK_CLOSE(boost::accumulators::variance(acc), 1.0, 1.0);
         }
     }
 }

@@ -18,6 +18,7 @@ aggregation/xvacalculator.cpp
 app/analytic.cpp
 app/analytics/parconversionanalytic.cpp
 app/analytics/pricinganalytic.cpp
+app/analytics/scenariostatisticsanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
@@ -58,7 +59,6 @@ engine/parsensitivitycubestream.cpp
 engine/riskfilter.cpp
 engine/sensitivityaggregator.cpp
 engine/sensitivityanalysis.cpp
-engine/sensitivityanalysisplus.cpp
 engine/sensitivitycubestream.cpp
 engine/sensitivityfilestream.cpp
 engine/sensitivityinmemorystream.cpp
@@ -80,10 +80,10 @@ scenario/lgmscenariogenerator.cpp
 scenario/scenario.cpp
 scenario/scenariogeneratorbuilder.cpp
 scenario/scenariogeneratordata.cpp
+scenario/scenariogeneratortransform.cpp
 scenario/scenarioshiftcalculator.cpp
 scenario/scenariosimmarket.cpp
 scenario/scenariosimmarketparameters.cpp
-scenario/scenariosimmarketplus.cpp
 scenario/scenariowriter.cpp
 scenario/sensitivityscenariodata.cpp
 scenario/sensitivityscenariogenerator.cpp
@@ -145,6 +145,7 @@ aggregation/xvacalculator.hpp
 app/analytic.hpp
 app/analytics/parconversionanalytic.hpp
 app/analytics/pricinganalytic.hpp
+app/analytics/scenariostatisticsanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
@@ -194,7 +195,6 @@ engine/parsensitivitycubestream.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp
 engine/sensitivityanalysis.hpp
-engine/sensitivityanalysisplus.hpp
 engine/sensitivitycubestream.hpp
 engine/sensitivityfilestream.hpp
 engine/sensitivityinmemorystream.hpp
@@ -223,10 +223,10 @@ scenario/scenariofilter.hpp
 scenario/scenariogenerator.hpp
 scenario/scenariogeneratorbuilder.hpp
 scenario/scenariogeneratordata.hpp
+scenario/scenariogeneratortransform.hpp
 scenario/scenarioshiftcalculator.hpp
 scenario/scenariosimmarket.hpp
 scenario/scenariosimmarketparameters.hpp
-scenario/scenariosimmarketplus.hpp
 scenario/scenariowriter.hpp
 scenario/sensitivityscenariodata.hpp
 scenario/sensitivityscenariogenerator.hpp

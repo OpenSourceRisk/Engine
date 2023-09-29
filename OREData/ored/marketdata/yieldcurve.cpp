@@ -1690,15 +1690,25 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
                     oisTenor, oisQuote->quote(), brlCdiIndex,
                     discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
             } else {
-                oisHelper = boost::make_shared<QuantExt::OISRateHelper>(
-                    oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
-                    oisConvention->fixedCalendar(), oisConvention->paymentLag(), oisConvention->eom(),
-                    oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
-                    oisConvention->fixedPaymentConvention(), oisConvention->rule(),
-                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true,
-                    oisSegment->pillarChoice());
+                
+                if (oisQuote->startDate() == Null<Date>() || oisQuote->maturityDate() == Null<Date>())
+                    oisHelper = boost::make_shared<QuantExt::OISRateHelper>(
+                        oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
+                        oisConvention->fixedCalendar(), oisConvention->paymentLag(), oisConvention->eom(),
+                        oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
+                        oisConvention->fixedPaymentConvention(), oisConvention->rule(),
+                        discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true,
+                        oisSegment->pillarChoice());
+                else {
+                    oisHelper = boost::make_shared<QuantExt::DatedOISRateHelper>(oisQuote->startDate(),
+                        oisQuote->maturityDate(), oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
+                        oisConvention->fixedCalendar(), oisConvention->paymentLag(),
+                        oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
+                        oisConvention->fixedPaymentConvention(), oisConvention->rule(),
+                        discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true,
+                        oisSegment->pillarChoice());
+                }
             }
-
             instruments.push_back(oisHelper);
         }
     }
@@ -1733,7 +1743,8 @@ void YieldCurve::addSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::IR_SWAP,
                        "Market quote not of type swap.");
             swapQuote = boost::dynamic_pointer_cast<SwapQuote>(marketQuote);
-
+            QL_REQUIRE(swapQuote->startDate() == Null<Date>(),
+                       "swap quote with fixed start date is not supported for ibor / subperiods swap instruments");
             // Create a swap helper if we do.
             Period swapTenor = swapQuote->term();
             boost::shared_ptr<RateHelper> swapHelper;
@@ -1811,6 +1822,8 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::IR_SWAP,
                        "Market quote not of type swap.");
             swapQuote = boost::dynamic_pointer_cast<SwapQuote>(marketQuote);
+            QL_REQUIRE(swapQuote->startDate() == Null<Date>(),
+                       "swap quote with fixed start date is not supported for average ois instrument");
 
             // Secondly, the basis spread quote.
             marketQuote = loader_.get(averageOisQuoteIDs[i + 1], asofDate_);

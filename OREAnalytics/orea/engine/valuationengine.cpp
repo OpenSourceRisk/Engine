@@ -16,9 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/cube/npvcube.hpp>
+#include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
 #include <orea/simulation/simmarket.hpp>
+
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -26,9 +30,11 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/dategrid.hpp>
+
+#include <ql/errors.hpp>
 
 #include <boost/timer/timer.hpp>
-#include <ql/errors.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -67,6 +73,12 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                                 boost::shared_ptr<analytics::NPVCube> outputCubeNettingSet,
                                 boost::shared_ptr<analytics::NPVCube> outputCptyCube,
                                 vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators, bool dryRun) {
+
+    struct SimMarketResetter {
+        SimMarketResetter(boost::shared_ptr<SimMarket> simMarket) : simMarket_(simMarket) {}
+        ~SimMarketResetter() { simMarket_->reset(); }
+        boost::shared_ptr<SimMarket> simMarket_;
+    } simMarketResetter(simMarket_);
 
     LOG("Build cube with mporStickyDate=" << mporStickyDate << ", dryRun=" << std::boolalpha << dryRun);
 
@@ -165,6 +177,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     // e.g. MC convergence tests
     for (Size sample = 0; sample < (dryRun ? std::min<Size>(1, outputCube->samples()) : outputCube->samples());
          ++sample) {
+        TLOG("ValuationEngine: apply scenario sample #" << sample);
         updateProgress(sample, outputCube->samples());
 
         for (auto& [tradeId, trade] : portfolio->trades())
@@ -265,7 +278,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         }
     }
 
-    simMarket_->reset();
     updateProgress(outputCube->samples(), outputCube->samples());
     loopTimer.stop();
     LOG("ValuationEngine completed: loop " << setprecision(2) << loopTimer.format(2, "%w") << " sec, "

@@ -18,8 +18,8 @@
 
 #include "sensitivityperformanceplus.hpp"
 #include <test/oreatoplevelfixture.hpp>
-#include <test/testmarket.hpp>
-#include <test/testportfolio.hpp>
+#include "testmarket.hpp"
+#include "testportfolio.hpp"
 
 #include <boost/timer/timer.hpp>
 #include <orea/app/reportwriter.hpp>
@@ -52,7 +52,6 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
-#include <orea/engine/sensitivityanalysisplus.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
@@ -753,9 +752,8 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     boost::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize);
 
     boost::timer::cpu_timer timer;
-    boost::shared_ptr<SensitivityAnalysis> sa =
-        boost::make_shared<SensitivityAnalysisPlus>(
-            portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
+    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
     sa->generateSensitivities();
     timer.stop();
     Real elapsed = timer.elapsed().wall * 1e-9;
@@ -803,9 +801,8 @@ void BT_Benchmark(bool crossGammas, ObservationMode::Mode om) {
     boost::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize, true);
 
     boost::timer::cpu_timer timer;
-    boost::shared_ptr<SensitivityAnalysis> sa =
-        boost::make_shared<SensitivityAnalysisPlus>(
-            portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
+    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
     sa->generateSensitivities();
 
     // TODO: do we really want to write a report in the unit tests?

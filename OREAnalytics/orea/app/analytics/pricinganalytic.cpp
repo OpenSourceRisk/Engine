@@ -21,7 +21,6 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
-#include <orea/engine/sensitivityanalysisplus.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 
@@ -167,7 +166,7 @@ void PricingAnalyticImpl::runAnalytic(
                 LOG("Single-threaded sensi analysis");
                 std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
                 std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
-                sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
+                sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
                     analytic()->portfolio(), analytic()->market(), configuration, inputs_->pricingEngine(),
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
                     recalibrateModels, analytic()->configurations().curveConfig,
@@ -182,13 +181,12 @@ void PricingAnalyticImpl::runAnalytic(
                     extraTradeBuilders = {};
                 std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuilders = {};
                 std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuilders = {};
-                sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
-                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(),
-                    Market::defaultConfiguration, inputs_->pricingEngine(),
-                    analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData, 
-                    recalibrateModels, analytic()->configurations().curveConfig,
-                    analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
-                    *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
+                sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
+                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(), Market::defaultConfiguration,
+                    inputs_->pricingEngine(), analytic()->configurations().simMarketParams,
+                    analytic()->configurations().sensiScenarioData, recalibrateModels,
+                    analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
+                    inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
             // FIXME: Why are these disabled?
@@ -209,7 +207,7 @@ void PricingAnalyticImpl::runAnalytic(
             }
 
             LOG("Sensi analysis - generate");
-            sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities", 100, ORE_NOTICE));
+            sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities", 100, oreSeverity::notice));
             sensiAnalysis->generateSensitivities();
 
             LOG("Sensi analysis - write sensitivity report in memory");
@@ -225,6 +223,14 @@ void PricingAnalyticImpl::runAnalytic(
                 .writeScenarioReport(*scenarioReport, sensiAnalysis->sensiCube(),
                                      inputs_->sensiThreshold());
             analytic()->reports()[type]["sensitivity_scenario"] = scenarioReport;
+
+            auto simmSensitivityConfigReport = boost::make_shared<InMemoryReport>();
+            ReportWriter(inputs_->reportNaString())
+                .writeSensitivityConfigReport(*simmSensitivityConfigReport,
+                                              sensiAnalysis->scenarioGenerator()->shiftSizes(),
+                                              sensiAnalysis->scenarioGenerator()->baseValues(),
+                                              sensiAnalysis->scenarioGenerator()->keyToFactor());
+            analytic()->reports()[type]["sensitivity_config"] = simmSensitivityConfigReport;
 
             if (inputs_->parSensi()) {
                 LOG("Sensi analysis - par conversion");

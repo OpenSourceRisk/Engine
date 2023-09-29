@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified">
+  <xs:complexType name="ore_script">
+    <xs:all>
+      <xs:element type="xs:string" name="Code"/>
+      <xs:element type="xs:string" name="NPV"/>
+      <xs:element name="Results" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Result" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="rename" type="xs:string" use="optional"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="CalibrationSpec" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Calibration" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="xs:string" name="Index"/>
+                  <xs:element name="Strikes">
+                    <xs:complexType>
+                      <xs:sequence>
+                        <xs:element type="xs:string" name="Strike" maxOccurs="unbounded"/>
+                      </xs:sequence>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="ScheduleCoarsening" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="EligibleSchedule" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="NewSchedules" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="NewSchedule" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:all>
+                  <xs:element type="xs:string" name="Name"/>
+                  <xs:element type="xs:string" name="Operation"/>
+                  <xs:element name="Schedules">
+                    <xs:complexType>
+                      <xs:sequence>
+                        <xs:element type="xs:string" name="Schedule" maxOccurs="unbounded"/>
+                      </xs:sequence>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:all>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="StickyCloseOutStates" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="StickyCloseOutState" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="ConditionalExpectation" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element name="ModelStates" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="ModelState" minOccurs="0" maxOccurs="unbounded"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+    <xs:attribute type="xs:string" name="purpose" use="optional"/>
+  </xs:complexType>
+  <xs:element name="ScriptLibrary">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Script" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="Name"/>
+              <xs:element type="xs:string" name="ProductTag" minOccurs="0"/>
+              <xs:element type="ore_script" name="Script" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

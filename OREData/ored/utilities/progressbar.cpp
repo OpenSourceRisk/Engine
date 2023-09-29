@@ -95,7 +95,7 @@ void SimpleProgressBar::reset() {
     finalized_ = false;
 }
 
-ProgressLog::ProgressLog(const std::string& message, const unsigned int numberOfMessages, const int logLevel)
+ProgressLog::ProgressLog(const std::string& message, const unsigned int numberOfMessages, const oreSeverity logLevel)
     : message_(message), numberOfMessages_(numberOfMessages), logLevel_(logLevel), messageCounter_(0) {}
 
 void ProgressLog::updateProgress(const unsigned long progress, const unsigned long total) {
@@ -105,6 +105,7 @@ void ProgressLog::updateProgress(const unsigned long progress, const unsigned lo
     MLOG(logLevel_, message_ << " " << progress << " out of " << total << " steps ("
                              << static_cast<int>(static_cast<double>(progress) / static_cast<double>(total) * 100.0)
                              << "%) completed");
+    ProgressMessage(message_, progress, total).log();
     messageCounter_++;
 }
 
@@ -115,7 +116,7 @@ MultiThreadedProgressIndicator::MultiThreadedProgressIndicator(
     : indicators_(indicators) {}
 
 void MultiThreadedProgressIndicator::updateProgress(const unsigned long progress, const unsigned long total) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     threadData_[std::this_thread::get_id()] = std::make_pair(progress, total);
     unsigned long progressTmp = 0;
     unsigned long totalTmp = 0;
@@ -128,7 +129,7 @@ void MultiThreadedProgressIndicator::updateProgress(const unsigned long progress
 }
 
 void MultiThreadedProgressIndicator::reset() {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     for (auto& i : indicators_)
         i->reset();
     threadData_.clear();

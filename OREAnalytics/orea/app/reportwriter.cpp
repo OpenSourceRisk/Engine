@@ -44,6 +44,20 @@
 #include <boost/range/adaptor/indexed.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/framework/accumulator_set.hpp>
+#include <boost/accumulators/statistics.hpp>
+#include <boost/accumulators/statistics/count.hpp>
+#include <boost/accumulators/statistics/covariance.hpp>
+#include <boost/accumulators/statistics/kurtosis.hpp>
+#include <boost/accumulators/statistics/max.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/min.hpp>
+#include <boost/accumulators/statistics/skewness.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/tail_quantile.hpp>
+#include <boost/accumulators/statistics/variates/covariate.hpp>
+
 #include <ostream>
 #include <stdio.h>
 
@@ -166,30 +180,23 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
 
     for (auto [tradeId, trade]: trades) {
 
-        // if trade is marked as not having cashflows, we skip it
-
-        if (!trade->hasCashflows()) {
-            WLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
-            continue;
-        }
-
-        // if trade provides cashflows as additional results, we use that information instead of the legs
-
-        bool useAdditionalResults = false;
         try {
-            const auto& addResults = trade->instrument()->additionalResults();
-            useAdditionalResults = addResults.find("cashFlowResults") != addResults.end();
-        } catch (const std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(),
-                                             "Error during cashflow reporting / checking for cashFlowResults",
-                                             e.what()));
-        }
 
-        try {
+            // if trade is marked as not having cashflows, we skip it
+
+            if (!trade->hasCashflows()) {
+                WLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
+                continue;
+            }
+
+            // if trade provides cashflows as additional results, we use that information instead of the legs
+
+            auto addResults = trade->instrument()->additionalResults();
+            auto cashFlowResults = addResults.find("cashFlowResults");
 
             const Real multiplier = trade->instrument()->multiplier();
 
-            if (!useAdditionalResults) {
+            if (cashFlowResults == addResults.end()) {
 
                 // leg based cashflow reporting
 
@@ -487,13 +494,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
 
                 // additional result based cashflow reporting
 
-                auto tmp = trade->instrument()->additionalResults().find("cashFlowResults");
-                QL_REQUIRE(
-                    tmp != trade->instrument()->additionalResults().end(),
-                    "internal error: expected cashFlowResults in additional results when writing cashflow report");
-                QL_REQUIRE(tmp->second.type() == typeid(std::vector<CashFlowResults>),
-                           "cashflowResults type not handlded");
-                std::vector<CashFlowResults> cfResults = boost::any_cast<std::vector<CashFlowResults>>(tmp->second);
+                QL_REQUIRE(cashFlowResults->second.type() == typeid(std::vector<CashFlowResults>),
+                           "internal error: cashflowResults type does not match CashFlowResults: '"
+                               << cashFlowResults->second.type().name() << "'");
+                std::vector<CashFlowResults> cfResults =
+                    boost::any_cast<std::vector<CashFlowResults>>(cashFlowResults->second);
                 std::map<Size, Size> cashflowNumber;
                 for (auto const& cf : cfResults) {
                     string ccy = "";
@@ -1850,6 +1855,111 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
     }
 
     report->end();
+}
+
+void ReportWriter::writeScenarioStatistics(const boost::shared_ptr<ScenarioGenerator>& generator,
+    const std::vector<RiskFactorKey>& keys, const Size numPaths,
+    const std::vector<Date>& dates, ore::data::Report& report) {
+    report.addColumn("Date", Date())
+        .addColumn("Key", string())
+        .addColumn("min", double(), 8)
+        .addColumn("mean", double(), 8)
+        .addColumn("max", double(), 8)
+        .addColumn("stddev", double(), 8)
+        .addColumn("skewness", double(), 8)
+        .addColumn("kurtosis", double(), 8);
+
+    std::vector<boost::accumulators::accumulator_set<
+        double, boost::accumulators::stats<boost::accumulators::tag::min, boost::accumulators::tag::max,
+        boost::accumulators::tag::mean, boost::accumulators::tag::variance,
+        boost::accumulators::tag::skewness, boost::accumulators::tag::kurtosis>>>
+        acc(keys.size() * dates.size());
+
+    for (Size i = 0; i < numPaths; ++i) {
+        for (Size d = 0; d < dates.size(); ++d) {
+            boost::shared_ptr<Scenario> currentScenario = generator->next(dates[d]);
+            for (Size k = 0; k < keys.size(); ++k) {
+                acc[d * keys.size() + k](currentScenario->get(keys[k]));
+            }
+        }
+    }
+    for (Size d = 0; d < dates.size(); ++d) {
+        for (Size k = 0; k < keys.size(); ++k) {
+            Size idx = d * keys.size() + k;
+            report.next()
+                .add(dates[d])
+                .add(to_string(keys[k]))
+                .add(boost::accumulators::min(acc[idx]))
+                .add(boost::accumulators::mean(acc[idx]))
+                .add(boost::accumulators::max(acc[idx]))
+                .add(std::sqrt(boost::accumulators::variance(acc[idx])));
+            if (!close_enough(boost::accumulators::variance(acc[idx]), 0.0)) {
+                report.add(boost::accumulators::skewness(acc[idx])).add(boost::accumulators::kurtosis(acc[idx]));
+            }
+            else {
+                // avoid ReportWriter::non-sensical output
+                report.add(0.0).add(0.0);
+            }
+        }
+    }
+    report.end();
+}
+
+namespace {
+template <class I>
+void distributionCount(I begin, I end, const Size steps, std::vector<Real>& bounds, std::vector<Size>& counts) {
+    Real xmin = *std::min_element(begin, end);
+    Real xmax = *std::max_element(begin, end);
+    std::vector<Real> v(begin, end);
+    std::sort(v.begin(), v.end());
+    Real h = (xmax - xmin) / static_cast<Real>(steps);
+    Size idx0 = 0;
+    counts.resize(steps);
+    bounds.resize(steps);
+    for (Size i = 0; i < steps; ++i) {
+        Real v1 = xmin + static_cast<Real>(i + 1) * h;
+        // Need the `i == steps - 1` here because noticed in backtest regression tests that xmax is not getting
+        // included in the count in the last bucket due to numerical accuracy. This ensures that it does.
+        Size idx1 = i == steps - 1 ? v.size() : std::upper_bound(v.begin(), v.end(), v1) - v.begin();
+        counts[i] = idx1 - idx0;
+        bounds[i] = v1;
+        idx0 = idx1;
+    }
+} // distributionCount
+} // namespace
+
+void ReportWriter::writeScenarioDistributions(const boost::shared_ptr<ScenarioGenerator>& generator,
+                                              const std::vector<RiskFactorKey>& keys, const Size numPaths,
+                                              const std::vector<Date>& dates, const Size distSteps,
+                                              ore::data::Report& report) {
+    report.addColumn("Date", Date())
+        .addColumn("Key", string())
+        .addColumn("Bound", double(), 8)
+        .addColumn("Count", Size());
+
+    std::vector<std::vector<std::vector<Real>>> values(
+        dates.size(), std::vector<std::vector<Real>>(keys.size(), std::vector<Real>(numPaths, 0.0)));
+
+    for (Size i = 0; i < numPaths; ++i) {
+        for (Size d = 0; d < dates.size(); ++d) {
+            boost::shared_ptr<Scenario> currentScenario = generator->next(dates[d]);
+            for (Size k = 0; k < keys.size(); ++k) {
+                values[d][k][i] = currentScenario->get(keys[k]);
+            }
+        }
+    }
+
+    std::vector<Real> bounds;
+    std::vector<Size> counts;
+    for (Size d = 0; d < dates.size(); ++d) {
+        for (Size k = 0; k < keys.size(); ++k) {
+            distributionCount(values[d][k].begin(), values[d][k].end(), distSteps, bounds, counts);
+            for (Size i = 0; i < distSteps; ++i) {
+                report.next().add(dates[d]).add(to_string(keys[k])).add(bounds[i]).add(counts[i]);
+            }
+        }
+    }
+    report.end();
 }
 
 } // namespace analytics

@@ -1,6 +1,9 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt_SRC calendars/amendedcalendar.cpp
+set(QuantExt_SRC ad/computationgraph.cpp
+ad/external_randomvariable_ops.cpp
+ad/ssaform.cpp
+calendars/amendedcalendar.cpp
 calendars/austria.cpp
 calendars/belgium.cpp
 calendars/cme.cpp
@@ -63,6 +66,7 @@ cashflows/strippedcapflooredcpicoupon.cpp
 cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/subperiodscoupon.cpp
 cashflows/subperiodscouponpricer.cpp
+cashflows/trscashflow.cpp
 cashflows/yoyinflationcoupon.cpp
 cashflows/zerofixedcoupon.cpp
 currencies/africa.cpp
@@ -85,7 +89,6 @@ indexes/genericiborindex.cpp
 indexes/ibor/ameribor.cpp
 indexes/ibor/boebaserate.cpp
 indexes/ibor/brlcdi.cpp
-indexes/ibor/ester.cpp
 indexes/ibor/primeindex.cpp
 indexes/ibor/sofr.cpp
 indexes/ibor/sonia.cpp
@@ -121,7 +124,6 @@ instruments/doubleoibasisswap.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/forwardbond.cpp
-instruments/forwardrateagreement.cpp
 instruments/fxforward.cpp
 instruments/genericswaption.cpp
 instruments/impliedbondspread.cpp
@@ -142,6 +144,7 @@ instruments/subperiodsswap.cpp
 instruments/syntheticcdo.cpp
 instruments/tenorbasisswap.cpp
 instruments/varianceswap.cpp
+math/basiccpuenvironment.cpp
 math/blockmatrixinverse.cpp
 math/bucketeddistribution.cpp
 math/computeenvironment.cpp
@@ -153,10 +156,14 @@ math/matrixfunctions.cpp
 math/openclenvironment.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
+math/randomvariable_ops.cpp
 math/randomvariablelsmbasissystem.cpp
 methods/brownianbridgepathinterpolator.cpp
+methods/fdmblackscholesmesher.cpp
+methods/fdmblackscholesop.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
+methods/fdmquantohelper.cpp
 methods/interpolatedvariatemultipathgenerator.cpp
 methods/multipathgeneratorbase.cpp
 methods/multipathvariategenerator.cpp
@@ -192,6 +199,7 @@ models/gaussian1dcrossassetadaptor.cpp
 models/gaussianlhplossmodel.cpp
 models/hullwhitebucketing.cpp
 models/hwmodel.cpp
+models/infdkvectorised.cpp
 models/infjyparameterization.cpp
 models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
@@ -210,6 +218,8 @@ models/normalsabrsmilesection.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
 models/projectedcrossassetmodel.cpp
+models/representativefxoption.cpp
+models/representativeswaption.cpp
 models/transitionmatrix.cpp
 models/yoycapfloorhelper.cpp
 models/yoyinflationmodeltermstructure.cpp
@@ -380,7 +390,13 @@ utilities/time.cpp)
 
 # hpp files, this list is maintained manually
 
-set(QuantExt_HDR auto_link.hpp
+set(QuantExt_HDR ad/backwardderivatives.hpp
+ad/computationgraph.hpp
+ad/external_randomvariable_ops.hpp
+ad/forwardderivatives.hpp
+ad/forwardevaluation.hpp
+ad/ssaform.hpp
+auto_link.hpp
 calendars/amendedcalendar.hpp
 calendars/austria.hpp
 calendars/belgium.hpp
@@ -446,6 +462,7 @@ cashflows/strippedcapflooredcpicoupon.hpp
 cashflows/strippedcapflooredyoyinflationcoupon.hpp
 cashflows/subperiodscoupon.hpp
 cashflows/subperiodscouponpricer.hpp
+cashflows/trscashflow.hpp
 cashflows/yoyinflationcoupon.hpp
 cashflows/zerofixedcoupon.hpp
 currencies/africa.hpp
@@ -475,10 +492,8 @@ indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/genericindex.hpp
-indexes/iborindexfixingoverride.hpp
 indexes/ibor/ambor.hpp
 indexes/ibor/ameribor.hpp
-indexes/ibor/audbbsw.hpp
 indexes/ibor/boebaserate.hpp
 indexes/ibor/brlcdi.hpp
 indexes/ibor/chfsaron.hpp
@@ -494,7 +509,6 @@ indexes/ibor/demlibor.hpp
 indexes/ibor/dkkcibor.hpp
 indexes/ibor/dkkcita.hpp
 indexes/ibor/dkkois.hpp
-indexes/ibor/ester.hpp
 indexes/ibor/hkdhibor.hpp
 indexes/ibor/hkdhonia.hpp
 indexes/ibor/hufbubor.hpp
@@ -513,10 +527,8 @@ indexes/ibor/nowa.hpp
 indexes/ibor/nzdbkbm.hpp
 indexes/ibor/phpphiref.hpp
 indexes/ibor/plnpolonia.hpp
-indexes/ibor/plnwibor.hpp
 indexes/ibor/primeindex.hpp
 indexes/ibor/rubkeyrate.hpp
-indexes/ibor/rubmosprime.hpp
 indexes/ibor/saibor.hpp
 indexes/ibor/seksior.hpp
 indexes/ibor/sekstibor.hpp
@@ -532,6 +544,7 @@ indexes/ibor/thbbibor.hpp
 indexes/ibor/thor.hpp
 indexes/ibor/tonar.hpp
 indexes/ibor/twdtaibor.hpp
+indexes/iborindexfixingoverride.hpp
 indexes/inflationindexobserver.hpp
 indexes/inflationindexwrapper.hpp
 indexes/offpeakpowerindex.hpp
@@ -566,7 +579,6 @@ instruments/doubleoibasisswap.hpp
 instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
 instruments/forwardbond.hpp
-instruments/forwardrateagreement.hpp
 instruments/fxforward.hpp
 instruments/genericswaption.hpp
 instruments/impliedbondspread.hpp
@@ -590,6 +602,7 @@ instruments/tenorbasisswap.hpp
 instruments/vanillaforwardoption.hpp
 instruments/varianceswap.hpp
 interpolators/optioninterpolator2d.hpp
+math/basiccpuenvironment.hpp
 math/blockmatrixinverse.hpp
 math/bucketeddistribution.hpp
 math/computeenvironment.hpp
@@ -601,6 +614,7 @@ math/discretedistribution.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
 math/flatextrapolation2d.hpp
+math/kendallrankcorrelation.hpp
 math/logquadraticinterpolation.hpp
 math/matrixfunctions.hpp
 math/method_mt.hpp
@@ -611,12 +625,16 @@ math/quadraticinterpolation.hpp
 math/randomvariable.hpp
 math/randomvariable_io.hpp
 math/randomvariable_opcodes.hpp
+math/randomvariable_ops.hpp
 math/randomvariablelsmbasissystem.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
 methods/brownianbridgepathinterpolator.hpp
+methods/fdmblackscholesmesher.hpp
+methods/fdmblackscholesop.hpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
 methods/fdmdefaultableequityjumpdiffusionop.hpp
+methods/fdmquantohelper.hpp
 methods/interpolatedvariatemultipathgenerator.hpp
 methods/multipathgeneratorbase.hpp
 methods/multipathvariategenerator.hpp
@@ -673,6 +691,7 @@ models/hwconstantparametrization.hpp
 models/hwmodel.hpp
 models/hwparametrization.hpp
 models/infdkparametrization.hpp
+models/infdkvectorised.hpp
 models/infjyparameterization.hpp
 models/inhomogeneouspooldef.hpp
 models/irlgm1fconstantparametrization.hpp
@@ -703,6 +722,8 @@ models/piecewiseconstanthelper.hpp
 models/poollossmodel.hpp
 models/projectedcrossassetmodel.hpp
 models/pseudoparameter.hpp
+models/representativefxoption.hpp
+models/representativeswaption.hpp
 models/transitionmatrix.hpp
 models/yoycapfloorhelper.hpp
 models/yoyinflationmodeltermstructure.hpp

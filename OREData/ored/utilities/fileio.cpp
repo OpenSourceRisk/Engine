@@ -67,7 +67,7 @@ FILE* FileIO::fopen(const char* filename, const char* mode) {
 
     for (Size i = 0; i <= maxRetries(); i++) {
         if (i > 0) {
-            auto em = EventMessage("Error opening file '" + std::string(filename) + "'. Retrying...");
+            auto em = EventMessage("Error opening file '" + std::string(filename) + "'. Retrying...", "exception_message");
             em.set("retry_count", i);
             Real backoffMillis = currentBackoff * 1000;
             em.set("retry_interval", backoffMillis);
@@ -91,7 +91,7 @@ bool FileIO::create_directories(const path& p) {
 
     for (Size i = 0; i <= maxRetries(); i++) {
         if (i > 0) {
-            auto em = EventMessage("Error creating directory '" + p.string() + "'. Retrying...");
+            auto em = EventMessage("Error creating directory '" + p.string() + "'. Retrying...", "exception_message");
             em.set("retry_count", i);
             Real backoffMillis = currentBackoff * 1000;
             em.set("retry_interval", backoffMillis);
@@ -118,7 +118,7 @@ bool FileIO::remove_all(const path& p) {
 
     for (Size i = 0; i <= maxRetries(); i++) {
         if (i > 0) {
-            auto em = EventMessage("Error emptying directory '" + p.string() + "'. Retrying...");
+            auto em = EventMessage("Error emptying directory '" + p.string() + "'. Retrying...", "exception_message");
             em.set("retry_count", i);
             Real backoffMillis = currentBackoff * 1000;
             em.set("retry_interval", backoffMillis);
