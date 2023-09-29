@@ -19,6 +19,7 @@
 #include <orea/engine/historicalpnlgenerator.hpp>
 
 #include <orea/engine/multithreadedvaluationengine.hpp>
+#include <orea/engine/valuationcalculator.hpp>
 
 #include <orea/cube/jointnpvcube.hpp>
 #include <orea/cube/inmemorycube.hpp>

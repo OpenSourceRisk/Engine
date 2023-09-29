@@ -30,56 +30,6 @@
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
-#include <ql/quotes/all.hpp>
-#include <ql/termstructures/credit/defaultprobabilityhelpers.hpp>
-#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
-#include <qle/termstructures/averageoisratehelper.hpp>
-#include <qle/termstructures/basistwoswaphelper.hpp>
-#include <qle/termstructures/blackinvertedvoltermstructure.hpp>
-#include <qle/termstructures/blackvariancecurve3.hpp>
-#include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
-#include <qle/termstructures/blackvolsurfacewithatm.hpp>
-#include <qle/termstructures/crossccybasisswaphelper.hpp>
-#include <qle/termstructures/datedstrippedoptionlet.hpp>
-#include <qle/termstructures/datedstrippedoptionletadapter.hpp>
-#include <qle/termstructures/datedstrippedoptionletbase.hpp>
-#include <qle/termstructures/discountratiomodifiedcurve.hpp>
-#include <qle/termstructures/dynamicblackvoltermstructure.hpp>
-#include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>
-#include <qle/termstructures/dynamicstype.hpp>
-#include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
-#include <qle/termstructures/dynamicyoyoptionletvolatilitystructure.hpp>
-#include <qle/termstructures/fxblackvolsurface.hpp>
-#include <qle/termstructures/fxsmilesection.hpp>
-#include <qle/termstructures/fxvannavolgasmilesection.hpp>
-#include <qle/termstructures/hazardspreadeddefaulttermstructure.hpp>
-#include <qle/termstructures/immfraratehelper.hpp>
-#include <qle/termstructures/interpolateddiscountcurve.hpp>
-#include <qle/termstructures/interpolateddiscountcurve2.hpp>
-#include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
-#include <qle/termstructures/oibasisswaphelper.hpp>
-#include <qle/termstructures/oiccbasisswaphelper.hpp>
-#include <qle/termstructures/oisratehelper.hpp>
-#include <qle/termstructures/optionletstripper1.hpp>
-#include <qle/termstructures/optionletstripper2.hpp>
-#include <qle/termstructures/pricecurve.hpp>
-#include <qle/termstructures/pricetermstructure.hpp>
-#include <qle/termstructures/pricetermstructureadapter.hpp>
-#include <qle/termstructures/spreadedoptionletvolatility.hpp>
-#include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
-#include <qle/termstructures/strippedoptionletadapter2.hpp>
-#include <qle/termstructures/subperiodsswaphelper.hpp>
-#include <qle/termstructures/survivalprobabilitycurve.hpp>
-#include <qle/termstructures/swaptionvolatilityconverter.hpp>
-#include <qle/termstructures/swaptionvolconstantspread.hpp>
-#include <qle/termstructures/swaptionvolcube2.hpp>
-#include <qle/termstructures/swaptionvolcubewithatm.hpp>
-#include <qle/termstructures/tenorbasisswaphelper.hpp>
-#include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
-#include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
-#include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
-#include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
-#include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
 
 #include <map>
 
@@ -185,7 +135,7 @@ public:
     virtual bool isSimulated(const RiskFactorKey::KeyType& factor) const;
 
 protected:
-    virtual void applyScenario(const boost::shared_ptr<Scenario>& scenario);
+    void applyScenario(const boost::shared_ptr<Scenario>& scenario);
 
     void writeSimData(std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>>& simDataTmp,
                       std::map<RiskFactorKey, Real>& absoluteSimDataTmp);
@@ -228,6 +178,9 @@ protected:
     bool cacheSimData_;
     bool allowPartialScenarios_;
     IborFallbackConfig iborFallbackConfig_;
+
+    // for delta scenario application
+    std::set<ore::analytics::RiskFactorKey> diffToBaseKeys_;
 
     mutable boost::shared_ptr<Scenario> currentScenario_;
 };
