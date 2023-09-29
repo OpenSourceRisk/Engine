@@ -128,7 +128,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
             opsExternal_ = getExternalRandomVariableOps();
             gradsExternal_ = getExternalRandomVariableGradients();
         } else {
-            ops_ = getRandomVariableOps(model_->size());
+            ops_ = getRandomVariableOps(model_->size(), regressionOrder_);
             grads_ = getRandomVariableGradients(model_->size());
         }
 
@@ -269,7 +269,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
         // extract npv result and set it
 
         if (useExternalComputeFramework_) {
-            ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr_);
+            ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr_, {regressionOrder_});
             baseNpv_ = results_.value = externalAverage(externalOutput_[0]);
         } else {
             baseNpv_ = results_.value = model_->extractT0Result(values[baseNpvNode]);

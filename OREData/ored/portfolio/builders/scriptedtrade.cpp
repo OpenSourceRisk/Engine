@@ -289,7 +289,8 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         bool useCachedSensis = useAd_ && (rt != globalParameters_.end() && rt->second == "SensitivityDelta");
         bool useExternalDev = useExternalComputeDevice_ && !generateAdditionalResults && !useCachedSensis;
         engine = boost::make_shared<ScriptedInstrumentPricingEngineCG>(
-            script.npv(), script.results(), modelCG_, ast_, context, script.code(), interactive_, amcCam_ != nullptr,
+            script.npv(), script.results(), modelCG_, ast_, context, regressionOrder_, script.code(), interactive_,
+            amcCam_ != nullptr,
             std::set<std::string>(script.stickyCloseOutStates().begin(), script.stickyCloseOutStates().end()),
             generateAdditionalResults, useCachedSensis, useExternalDev);
         if (useExternalDev) {

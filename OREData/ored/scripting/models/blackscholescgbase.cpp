@@ -40,7 +40,7 @@ using namespace QuantExt;
 BlackScholesCGBase::BlackScholesCGBase(const Size paths, const std::string& currency,
                                        const Handle<YieldTermStructure>& curve, const std::string& index,
                                        const std::string& indexCurrency, const Handle<BlackScholesModelWrapper>& model,
-                                       const Size regressionOrder, const std::set<Date>& simulationDates,
+                                       const std::set<Date>& simulationDates,
                                        const IborFallbackConfig& iborFallbackConfig)
     : BlackScholesCGBase(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, regressionOrder,
                          simulationDates, iborFallbackConfig) {}

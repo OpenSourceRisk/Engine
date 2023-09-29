@@ -56,8 +56,7 @@ public:
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
         const Handle<BlackScholesModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const Size regressionOrder, const std::set<Date>& simulationDates,
-        const IborFallbackConfig& iborFallbackConfig);
+        const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig);
 
     // ctor for single underlying
     BlackScholesCGBase(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,

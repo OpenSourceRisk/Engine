@@ -32,12 +32,12 @@ GaussianCamCG::GaussianCamCG(
     const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
     const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-    const std::set<Date>& simulationDates, const Size regressionOrder, const Size timeStepsPerYear,
-    const IborFallbackConfig& iborFallbackConfig, const std::vector<Size>& projectedStateProcessIndices,
+    const std::set<Date>& simulationDates, const Size timeStepsPerYear, const IborFallbackConfig& iborFallbackConfig,
+    const std::vector<Size>& projectedStateProcessIndices,
     const std::vector<std::string>& conditionalExpectationModelStates)
     : cam_(cam), paths_(paths), currencies_(currencies), curves_(curves), fxSpots_(fxSpots), irIndices_(irIndices),
       infIndices_(infIndices), indices_(indices), indexCurrencies_(indexCurrencies), simulationDates_(simulationDates),
-      regressionOrder_(regressionOrder), timeStepsPerYear_(timeStepsPerYear), iborFallbackConfig_(iborFallbackConfig),
+      timeStepsPerYear_(timeStepsPerYear), iborFallbackConfig_(iborFallbackConfig),
       projectedStateProcessIndices_(projectedStateProcessIndices),
       conditionalExpectationModelStates_(conditionalExpectationModelStates) {
 

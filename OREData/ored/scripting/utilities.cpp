@@ -527,6 +527,9 @@ boost::shared_ptr<FallbackOvernightIndex> IndexInfo::irOvernightFallback(const I
 
 std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
 multiPathBasisSystem(Size dim, Size order, Size basisSystemSizeBound) {
+    thread_local static std::map<std::pair<Size, Size>,
+                                 std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>>
+        cache;
     QL_REQUIRE(order > 0, "multiPathBasisSystem: order must be > 0");
     Size originalOrder = order;
     if (basisSystemSizeBound != Null<Size>()) {
@@ -544,7 +547,11 @@ multiPathBasisSystem(Size dim, Size order, Size basisSystemSizeBound) {
         DLOG("Generate LSM basis system of order " << order << " for dim " << dim << ", size will be "
                                                    << RandomVariableLsmBasisSystem::size(dim, order));
     }
-    return RandomVariableLsmBasisSystem::multiPathBasisSystem(dim, order);
+    if (auto c = cache.find(std::make_pair(dim, order)) != cache.end())
+        return c->second;
+    auto tmp = RandomVariableLsmBasisSystem::multiPathBasisSystem(dim, order);
+    cache[std::make_pair(dim, order)] = tmp;
+    return tmp;
 }
 
 boost::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(const std::string& indexName,

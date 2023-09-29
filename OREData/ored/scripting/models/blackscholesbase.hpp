@@ -101,8 +101,6 @@ protected:
     const std::vector<Date> simulationDates_;
 
     // these all except underlyingPaths_ are initialised when the interface functions above are called
-    mutable std::map<Size, std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>>
-        basisFns_;
     mutable Date referenceDate_;                      // the model reference date
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
