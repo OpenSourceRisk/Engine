@@ -44,6 +44,7 @@ void StressScenarioGenerator::generateScenarios() {
     Date asof = baseScenario_->asof();
     for (Size i = 0; i < stressData_->data().size(); ++i) {
         StressTestScenarioData::StressTestData data = stressData_->data().at(i);
+        DLOG("Generate stress scenario #" << i << " '" << data.label << "'");
         boost::shared_ptr<Scenario> scenario = stressScenarioFactory_->buildScenario(asof, data.label);
 
         if (simMarketData_->simulateFxSpots())
@@ -70,7 +71,7 @@ void StressScenarioGenerator::generateScenarios() {
         scenarios_.push_back(scenario);
     }
 
-    LOG("stress scenario generator initialised");
+    DLOG("stress scenario generator: all scenarios generated.");
 }
 
 void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData& std,
@@ -95,7 +96,7 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
                    "SensitivityScenarioGenerator does not support cross FX pairs("
                        << ccypair << ", but base currency is " << baseCcy << ")");
 
-        LOG("Apply stress scenario to fx " << ccypair);
+        TLOG("Apply stress scenario to fx " << ccypair);
 
         StressTestScenarioData::SpotShiftData data = d.second;
         ShiftType type = parseShiftType(data.shiftType);
@@ -108,7 +109,7 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         scenario->add(RiskFactorKey(RiskFactorKey::KeyType::FXSpot, ccypair), newRate);
     }
-    LOG("FX scenarios done");
+    DLOG("FX scenarios done");
 }
 
 void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTestData& std,
@@ -127,7 +128,7 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         scenario->add(RiskFactorKey(RiskFactorKey::KeyType::EquitySpot, equity), newRate);
     }
-    LOG("Equity scenarios done");
+    DLOG("Equity scenarios done");
 }
 
 void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::StressTestData& std,
@@ -136,7 +137,7 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
 
     for (auto d : std.discountCurveShifts) {
         string ccy = d.first;
-        LOG("Apply stress scenario to discount curve " << ccy);
+        TLOG("Apply stress scenario to discount curve " << ccy);
 
         Size n_ten = simMarketData_->yieldCurveTenors(ccy).size();
         // original curves' buffer
@@ -181,7 +182,7 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
             scenario->add(RiskFactorKey(RiskFactorKey::KeyType::DiscountCurve, ccy, k), shiftedDiscount);
         }
     }
-    LOG("Discount curve stress scenarios done");
+    DLOG("Discount curve stress scenarios done");
 }
 
 void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioData::StressTestData& std,
@@ -190,7 +191,7 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
 
     for (auto d : std.survivalProbabilityShifts) {
         string name = d.first;
-        LOG("Apply stress scenario to " << name);
+        TLOG("Apply stress scenario to " << name);
 
         Size n_ten = simMarketData_->defaultTenors(name).size();
         // original curves' buffer
@@ -236,7 +237,7 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
                           shiftedSurvivalProbability);
         }
     }
-    LOG("Default Curve stress scenarios done");
+    DLOG("Default Curve stress scenarios done");
 }
 
 void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::StressTestData& std,
@@ -245,7 +246,7 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
 
     for (auto d : std.indexCurveShifts) {
         string indexName = d.first;
-        LOG("Apply stress scenario to index curve " << indexName);
+        TLOG("Apply stress scenario to index curve " << indexName);
 
         Size n_ten = simMarketData_->yieldCurveTenors(indexName).size();
 
@@ -291,7 +292,7 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
             scenario->add(RiskFactorKey(RiskFactorKey::KeyType::IndexCurve, indexName, k), shiftedDiscount);
         }
     }
-    LOG("Index curve scenarios done");
+    DLOG("Index curve scenarios done");
 }
 
 void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::StressTestData& std,
@@ -300,7 +301,7 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
 
     for (auto d : std.yieldCurveShifts) {
         string name = d.first;
-        LOG("Apply stress scenario to yield curve " << name);
+        TLOG("Apply stress scenario to yield curve " << name);
 
         Size n_ten = simMarketData_->yieldCurveTenors(name).size();
 
@@ -352,7 +353,7 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
             //                        << shiftedZeros[k] - zeros[k]);
         }
     } // end of shift curve tenors
-    LOG("Yield curve scenarios done");
+    DLOG("Yield curve scenarios done");
 }
 
 void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestData& std,
@@ -361,7 +362,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
 
     for (auto d : std.fxVolShifts) {
         string ccypair = d.first;
-        LOG("Apply stress scenario to fx vol structure " << ccypair);
+        TLOG("Apply stress scenario to fx vol structure " << ccypair);
 
         Size n_fxvol_exp = simMarketData_->fxVolExpiries(ccypair).size();
 
@@ -408,7 +409,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
         for (Size k = 0; k < n_fxvol_exp; ++k)
             scenario->add(RiskFactorKey(RiskFactorKey::KeyType::FXVolatility, ccypair, k), shiftedValues[k]);
     }
-    LOG("FX vol scenarios done");
+    DLOG("FX vol scenarios done");
 }
 
 void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressTestData& std,
@@ -417,7 +418,7 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
 
     for (auto d : std.equityVolShifts) {
         string equity = d.first;
-        LOG("Apply stress scenario to equity vol structure " << equity);
+        TLOG("Apply stress scenario to equity vol structure " << equity);
         Size n_eqvol_exp = simMarketData_->equityVolExpiries(equity).size();
 
         std::vector<Real> values(n_eqvol_exp);
@@ -463,7 +464,7 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
         for (Size k = 0; k < n_eqvol_exp; ++k)
             scenario->add(RiskFactorKey(RiskFactorKey::KeyType::EquityVolatility, equity, k), shiftedValues[k]);
     }
-    LOG("Equity vol scenarios done");
+    DLOG("Equity vol scenarios done");
 }
 
 void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::StressTestData& std,
@@ -472,7 +473,7 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
 
     for (auto d : std.swaptionVolShifts) {
         std::string key = d.first;
-        LOG("Apply stress scenario to swaption vol structure '" << key << "'");
+        TLOG("Apply stress scenario to swaption vol structure '" << key << "'");
 
         Size n_swvol_term = simMarketData_->swapVolTerms(key).size();
         Size n_swvol_exp = simMarketData_->swapVolExpiries(key).size();
@@ -549,7 +550,7 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
             }
         }
     }
-    LOG("Swaption vol scenarios done");
+    DLOG("Swaption vol scenarios done");
 }
 
 void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::StressTestData& std,
@@ -558,7 +559,7 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
 
     for (auto d : std.capVolShifts) {
         std::string key = d.first;
-        LOG("Apply stress scenario to cap/floor vol structure " << key);
+        TLOG("Apply stress scenario to cap/floor vol structure " << key);
 
         vector<Real> volStrikes = simMarketData_->capFloorVolStrikes(key);
         // Strikes may be empty which indicates that the optionlet structure in the simulation market is an ATM curve
@@ -619,13 +620,14 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
             }
         }
     }
-    LOG("Optionlet vol scenarios done");
+    DLOG("Optionlet vol scenarios done");
 }
 
 void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::StressTestData& std,
                                                       boost::shared_ptr<Scenario>& scenario) {
     for (auto d : std.securitySpreadShifts) {
         string bond = d.first;
+        TLOG("Apply stress scenario to security spread " << bond);
         StressTestScenarioData::SpotShiftData data = d.second;
         ShiftType type = parseShiftType(data.shiftType);
         bool relShift = (type == ShiftType::Relative);
@@ -637,13 +639,14 @@ void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::St
         Real newSpread = relShift ? base_spread * (1.0 + size) : (base_spread + size);
         scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SecuritySpread, bond), newSpread);
     }
-    LOG("Security spread scenarios done");
+    DLOG("Security spread scenarios done");
 }
 
 void StressScenarioGenerator::addRecoveryRateShifts(StressTestScenarioData::StressTestData& std,
                                                     boost::shared_ptr<Scenario>& scenario) {
     for (auto d : std.recoveryRateShifts) {
         string isin = d.first;
+        TLOG("Apply stress scenario to recovery rate " << isin);
         StressTestScenarioData::SpotShiftData data = d.second;
         ShiftType type = parseShiftType(data.shiftType);
         bool relShift = (type == ShiftType::Relative);
@@ -654,6 +657,7 @@ void StressScenarioGenerator::addRecoveryRateShifts(StressTestScenarioData::Stre
         Real new_recoveryRate = relShift ? base_recoveryRate * (1.0 + size) : (base_recoveryRate + size);
         scenario->add(RiskFactorKey(RiskFactorKey::KeyType::RecoveryRate, isin), new_recoveryRate);
     }
+    DLOG("Recovery rate scenarios done");
 }
 
 } // namespace analytics

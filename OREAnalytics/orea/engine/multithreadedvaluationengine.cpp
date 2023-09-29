@@ -16,18 +16,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/engine/multithreadedvaluationengine.hpp>
-
-#include <orea/scenario/scenariosimmarketplus.hpp>
-
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/engine/multithreadedvaluationengine.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/clonedscenariogenerator.hpp>
 
 #include <ored/marketdata/clonedloader.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/trade.hpp>
+#include <ored/utilities/dategrid.hpp>
 
 #include <boost/timer/timer.hpp>
 
@@ -281,7 +280,7 @@ void MultiThreadedValuationEngine::buildCube(
                 // build sim market
 
                 boost::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket =
-                    boost::make_shared<ore::analytics::ScenarioSimMarketPlus>(
+                    boost::make_shared<ore::analytics::ScenarioSimMarket>(
                         initMarket, simMarketData_, configuration_, *curveConfigs_, *todaysMarketParams_, true,
                         useSpreadedTermStructures_, cacheSimData_, false, iborFallbackConfig_,
                         handlePseudoCurrenciesSimMarket_);

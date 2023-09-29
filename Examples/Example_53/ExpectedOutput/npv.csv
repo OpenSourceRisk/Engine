@@ -1,0 +1,2 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+OIS,Swap,2033-09-21,10.000000,-34.653454,GBP,-34.653454,GBP,10000.00,GBP,10000.00,CPTY,CPTY
