@@ -99,6 +99,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         info.amountCalculator = [flow](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             return RandomVariable(n, flow->amount());
         };
+
         return info;
     }
 
@@ -128,11 +129,13 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
             RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
             Size fxIdx = 0;
             if (fxLinkedSourceCcyIdx > 0)
-                RandomVariable fxSource = exp(*states.at(0).at(fxIdx++));
+                fxSource = exp(*states.at(0).at(fxIdx++));
             if (fxLinkedTargetCcyIdx > 0)
-                RandomVariable fxTarget = exp(*states.at(0).at(fxIdx));
+                fxTarget = exp(*states.at(0).at(fxIdx));
             return RandomVariable(n, fxl->foreignAmount()) * fxSource / fxTarget;
         };
+
+        return info;
     }
 
     // handle some wrapped coupon types: extract the wrapper info and continue with underlying flow
@@ -143,7 +146,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
 
     bool isFxLinked = false;
     Date fxLinkedFixingDate;
-    Size fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx;
+    Size fxLinkedSourceCcyIdx = Null<Size>(), fxLinkedTargetCcyIdx = Null<Size>();
     Real fxLinkedFixedFxRate = Null<Real>(); // if fx fixing date <= today
     Real fxLinkedSimTime = Null<Real>();     // if fx fixing date > today
     std::vector<Size> fxLinkedModelIndices;  // if fx fixing date > today
@@ -212,9 +215,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                     RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
                     Size fxIdx = 0;
                     if (fxLinkedSourceCcyIdx > 0)
-                        RandomVariable fxSource = exp(*states.at(1).at(fxIdx++));
+                        fxSource = exp(*states.at(1).at(fxIdx++));
                     if (fxLinkedTargetCcyIdx > 0)
-                        RandomVariable fxTarget = exp(*states.at(1).at(fxIdx));
+                        fxTarget = exp(*states.at(1).at(fxIdx));
                     fxFixing = fxSource / fxTarget;
                 }
             }
@@ -272,9 +275,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                     RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
                     Size fxIdx = 0;
                     if (fxLinkedSourceCcyIdx > 0)
-                        RandomVariable fxSource = exp(*states.at(1).at(fxIdx++));
+                        fxSource = exp(*states.at(1).at(fxIdx++));
                     if (fxLinkedTargetCcyIdx > 0)
-                        RandomVariable fxTarget = exp(*states.at(1).at(fxIdx));
+                        fxTarget = exp(*states.at(1).at(fxIdx));
                     fxFixing = fxSource / fxTarget;
                 }
             }
@@ -329,9 +332,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                     RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
                     Size fxIdx = 0;
                     if (fxLinkedSourceCcyIdx > 0)
-                        RandomVariable fxSource = exp(*states.at(1).at(fxIdx++));
+                        fxSource = exp(*states.at(1).at(fxIdx++));
                     if (fxLinkedTargetCcyIdx > 0)
-                        RandomVariable fxTarget = exp(*states.at(1).at(fxIdx));
+                        fxTarget = exp(*states.at(1).at(fxIdx));
                     fxFixing = fxSource / fxTarget;
                 }
             }
@@ -369,9 +372,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                         RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
                         Size fxIdx = 0;
                         if (fxLinkedSourceCcyIdx > 0)
-                            RandomVariable fxSource = exp(*states.at(1).at(fxIdx++));
+                            fxSource = exp(*states.at(1).at(fxIdx++));
                         if (fxLinkedTargetCcyIdx > 0)
-                            RandomVariable fxTarget = exp(*states.at(1).at(fxIdx));
+                            fxTarget = exp(*states.at(1).at(fxIdx));
                         fxFixing = fxSource / fxTarget;
                     }
                 }
@@ -407,9 +410,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                     RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
                     Size fxIdx = 0;
                     if (fxLinkedSourceCcyIdx > 0)
-                        RandomVariable fxSource = exp(*states.at(1).at(fxIdx++));
+                        fxSource = exp(*states.at(1).at(fxIdx++));
                     if (fxLinkedTargetCcyIdx > 0)
-                        RandomVariable fxTarget = exp(*states.at(1).at(fxIdx));
+                        fxTarget = exp(*states.at(1).at(fxIdx));
                     fxFixing = fxSource / fxTarget;
                 }
             }
@@ -447,9 +450,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                         RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
                         Size fxIdx = 0;
                         if (fxLinkedSourceCcyIdx > 0)
-                            RandomVariable fxSource = exp(*states.at(1).at(fxIdx++));
+                            fxSource = exp(*states.at(1).at(fxIdx++));
                         if (fxLinkedTargetCcyIdx > 0)
-                            RandomVariable fxTarget = exp(*states.at(1).at(fxIdx));
+                            fxTarget = exp(*states.at(1).at(fxIdx));
                         fxFixing = fxSource / fxTarget;
                     }
                 }
@@ -485,9 +488,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                         RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
                         Size fxIdx = 0;
                         if (fxLinkedSourceCcyIdx > 0)
-                            RandomVariable fxSource = exp(*states.at(1).at(fxIdx++));
+                            fxSource = exp(*states.at(1).at(fxIdx++));
                         if (fxLinkedTargetCcyIdx > 0)
-                            RandomVariable fxTarget = exp(*states.at(1).at(fxIdx));
+                            fxTarget = exp(*states.at(1).at(fxIdx));
                         fxFixing = fxSource / fxTarget;
                     }
                 }
@@ -524,9 +527,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                     RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
                     Size fxIdx = 0;
                     if (fxLinkedSourceCcyIdx > 0)
-                        RandomVariable fxSource = exp(*states.at(1).at(fxIdx++));
+                        fxSource = exp(*states.at(1).at(fxIdx++));
                     if (fxLinkedTargetCcyIdx > 0)
-                        RandomVariable fxTarget = exp(*states.at(1).at(fxIdx));
+                        fxTarget = exp(*states.at(1).at(fxIdx));
                     fxFixing = fxSource / fxTarget;
                 }
             }
@@ -561,9 +564,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                     RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
                     Size fxIdx = 0;
                     if (fxLinkedSourceCcyIdx > 0)
-                        RandomVariable fxSource = exp(*states.at(1).at(fxIdx++));
+                        fxSource = exp(*states.at(1).at(fxIdx++));
                     if (fxLinkedTargetCcyIdx > 0)
-                        RandomVariable fxTarget = exp(*states.at(1).at(fxIdx));
+                        fxTarget = exp(*states.at(1).at(fxIdx));
                     fxFixing = fxSource / fxTarget;
                 }
             }
@@ -761,12 +764,13 @@ void McMultiLegBaseEngine::calculate() const {
                this must be ensured by the createCashflowInfo method */
 
             if (cfStatus[i] == CfStatus::open) {
-                auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
                 if (cashflowInfo[i].exIntoCriterionTime > *t) {
+                    auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
                     pathValueUndDirty += tmp;
                     pathValueUndExInto += tmp;
                     cfStatus[i] = CfStatus::done;
                 } else if (cashflowInfo[i].payTime > *t) {
+                    auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
                     pathValueUndDirty += tmp;
                     amountCache[i] = tmp;
                     cfStatus[i] = CfStatus::cached;
