@@ -24,10 +24,14 @@
 #pragma warning(disable : 4503)
 #endif
 
-#include <iostream>
 
 #include <orea/app/oreapp.hpp>
+
 #include <ored/utilities/initbuilders.hpp>
+
+#include <qle/version.hpp>
+
+#include <iostream>
 
 #ifdef BOOST_MSVC
 #include <orea/auto_link.hpp>

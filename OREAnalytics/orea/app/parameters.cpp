@@ -17,11 +17,10 @@
 */
 
 #include <orea/app/parameters.hpp>
-#include <orea/orea.hpp>
-#include <ored/ored.hpp>
-#include <ostream>
+
+#include <ored/utilities/log.hpp>
+
 #include <ql/errors.hpp>
-#include <stdio.h>
 
 using QuantLib::Date;
 using std::string;
