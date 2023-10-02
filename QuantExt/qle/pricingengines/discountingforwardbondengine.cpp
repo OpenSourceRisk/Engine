@@ -387,7 +387,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
     results_.additionalResults["compensationPaymentDiscount"] = discountCurve_->discount(cmpPaymentDate);
 
     fwdBondCashflows.push_back(forwardContractForwardValue);
-    fwdBondCashflowPayDates.push_back(settlementDate);
+    fwdBondCashflowPayDates.push_back(computeDate);
     fwdBondCashflowSurvivalProbabilities.push_back(creditCurvePtr->survivalProbability(computeDate));
     fwdBondCashflowDiscountFactors.push_back(discountCurve_->discount(computeDate));
 
