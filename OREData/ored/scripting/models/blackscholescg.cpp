@@ -247,7 +247,7 @@ void BlackScholesCG::performCalculations() const {
     if (indices_.empty() || !underlyingPaths_.empty())
         return;
 
-    // exit if only one simulation date in the future
+    // exit if there are no future simulation dates (i.e. only the reference date)
 
     if (effectiveSimulationDates_.size() == 1)
         return;

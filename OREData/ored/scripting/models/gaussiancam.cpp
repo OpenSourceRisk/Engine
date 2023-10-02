@@ -136,8 +136,10 @@ void GaussianCam::performCalculations() const {
     // clear underlying paths
 
     underlyingPaths_.clear();
+    irStates_.clear();
+    infStates_.clear();
 
-    // init times vector and underlying path where we map a date to a randomvariable representing the path values
+    // init underlying path where we map a date to a randomvariable representing the path values
 
     for (auto const& d : effectiveSimulationDates_) {
         underlyingPaths_[d] = std::vector<RandomVariable>(indices_.size(), RandomVariable(size(), 0.0));
