@@ -513,13 +513,13 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
                "dim regression output grid points size (" << dimOutputGridPoints.size() << ") "
                << "and file names size (" << dimRegressionFileNames_.size() << ") do not match");
     for (Size i = 0; i < dimRegressionFileNames_.size(); ++i)
-        fileNameMap_["dim_regression_" + to_string(i)] = dimRegressionFileNames_[i];
+        fileNameMap_["dim_regression_" + std::to_string(i)] = dimRegressionFileNames_[i];
 
     tmp = params->get("xva", "creditMigrationTimeSteps", false);
     if (tmp != "") {
         auto ts = parseListOfValues<Size>(tmp, &parseInteger);
         for (auto const& t : ts) {
-            fileNameMap_["credit_migration_" + to_string(t)] =
+            fileNameMap_["credit_migration_" + std::to_string(t)] =
                 params->get("xva", "creditMigrationOutputFiles") + "_" + std::to_string(t);
         }
     }

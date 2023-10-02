@@ -19,8 +19,13 @@
 */
 
 #include <orea/app/reportwriter.hpp>
+#include <orea/app/structuredanalyticserror.hpp>
+#include <orea/simm/utilities.hpp>
 
+#include <ored/utilities/marketdata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
@@ -39,9 +44,6 @@
 #include <ql/errors.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 
-#include <boost/range/adaptor/indexed.hpp>
-#include <boost/lexical_cast.hpp>
-
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/framework/accumulator_set.hpp>
 #include <boost/accumulators/statistics.hpp>
@@ -55,6 +57,8 @@
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/tail_quantile.hpp>
 #include <boost/accumulators/statistics/variates/covariate.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/range/adaptor/indexed.hpp>
 
 #include <ostream>
 #include <stdio.h>
@@ -646,7 +650,7 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
         .addColumn("Horizon", string());        
 
     for (auto r: npvMap)
-        report.next().add(r.first).add(r.second).add(baseCcy).add(horizon < Date::maxDate() ? to_string(horizon) : "infinite");
+        report.next().add(r.first).add(r.second).add(baseCcy).add(horizon < Date::maxDate() ? ore::data::to_string(horizon) : "infinite");
 
     report.end();
     LOG("Cashflow NPV report written");
@@ -1125,7 +1129,7 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
         if (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold)) {
             report.next();
             report.add(sr.tradeId);
-            report.add(to_string(sr.isPar));
+            report.add(ore::data::to_string(sr.isPar));
             report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
             report.add(sr.shift_1);
             report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
@@ -1212,7 +1216,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                         boost::trim(tokens[i]);
                         report.next()
                             .add(tradeId)
-                            .add(kv.first + "[" + to_string(i) + "]")
+                            .add(kv.first + "[" + std::to_string(i) + "]")
                             .add(p.first.substr(7))
                             .add(tokens[i]);
                     }
@@ -1261,7 +1265,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
 
                 // Trade ID suffix for additional instruments. Put underscores to reduce risk of clash with other IDs in
                 // the portfolio (still a risk).
-                tradeId = i == 0 ? trade->id() : ("_" + trade->id() + "_" + to_string(i));
+                tradeId = i == 0 ? trade->id() : ("_" + trade->id() + "_" + std::to_string(i));
 
                 // Add the multiplier if there are additional results.
                 // Check on 'instMultiplier' already existing is probably unnecessary.
@@ -1289,7 +1293,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                                 boost::trim(tokens[i]);
                                 report.next()
                                     .add(tradeId)
-                                    .add(kv.first + "[" + to_string(i) + "]")
+                                    .add(kv.first + "[" + std::to_string(i) + "]")
                                     .add(p.first.substr(7))
                                     .add(tokens[i]);
                             }
@@ -1547,7 +1551,7 @@ void ReportWriter::writeSIMMReport(
 
     const vector<SimmSide> sides({SimmSide::Call, SimmSide::Post});
     for (const SimmSide side : sides) {
-        const string& sideString = to_string(side);
+        const string& sideString = ore::data::to_string(side);
 
         // Variable to hold sum of initial margin over all portfolios
         Real sumSidePortfolios = 0.0;
@@ -1594,9 +1598,9 @@ void ReportWriter::writeSIMMReport(
                             for (const string& field : NettingSetDetails::fieldNames(hasNettingSetDetails)) {
                                 report->add(nettingSetMap[field]);
                             }
-                            report->add(to_string(pc))
-                                .add(to_string(rc))
-                                .add(to_string(mt))
+                            report->add(ore::data::to_string(pc))
+                                .add(ore::data::to_string(rc))
+                                .add(ore::data::to_string(mt))
                                 .add(b)
                                 .add(sideString)
                                 .add(regulation)
@@ -1707,8 +1711,8 @@ void ReportWriter::writeSIMMData(const SimmNetSensitivities& simmData, const boo
         map<string, string> nettingSetMap = cr.nettingSetDetails.mapRepresentation();
         for (const string& field : NettingSetDetails::fieldNames(hasNettingSetDetails))
             dataReport->add(nettingSetMap[field]);
-        dataReport->add(to_string(cr.riskType))
-            .add(to_string(cr.productClass))
+        dataReport->add(ore::data::to_string(cr.riskType))
+            .add(ore::data::to_string(cr.productClass))
             .add(cr.bucket)
             .add(cr.qualifier)
             .add(cr.label1)
@@ -1819,8 +1823,8 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
                 report->add(crNettingSetDetailsMap[optionalField]);
         }
 
-        report->add(to_string(cr.productClass))
-            .add(to_string(cr.riskType))
+        report->add(ore::data::to_string(cr.productClass))
+            .add(ore::data::to_string(cr.riskType))
             .add(cr.qualifier)
             .add(cr.bucket)
             .add(cr.label1)
@@ -1886,7 +1890,7 @@ void ReportWriter::writeScenarioStatistics(const boost::shared_ptr<ScenarioGener
             Size idx = d * keys.size() + k;
             report.next()
                 .add(dates[d])
-                .add(to_string(keys[k]))
+                .add(ore::data::to_string(keys[k]))
                 .add(boost::accumulators::min(acc[idx]))
                 .add(boost::accumulators::mean(acc[idx]))
                 .add(boost::accumulators::max(acc[idx]))
@@ -1953,7 +1957,7 @@ void ReportWriter::writeScenarioDistributions(const boost::shared_ptr<ScenarioGe
         for (Size k = 0; k < keys.size(); ++k) {
             distributionCount(values[d][k].begin(), values[d][k].end(), distSteps, bounds, counts);
             for (Size i = 0; i < distSteps; ++i) {
-                report.next().add(dates[d]).add(to_string(keys[k])).add(bounds[i]).add(counts[i]);
+                report.next().add(dates[d]).add(ore::data::to_string(keys[k])).add(bounds[i]).add(counts[i]);
             }
         }
     }
