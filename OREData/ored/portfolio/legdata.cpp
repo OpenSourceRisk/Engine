@@ -1662,6 +1662,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     bool finalFlowCapFloor = cpiLegData->finalFlowCap() != Null<Real>() || cpiLegData->finalFlowFloor() != Null<Real>();
 
     applyAmortization(notionals, data, schedule, false);
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
 
     QuantExt::CPILeg cpiLeg =
         QuantExt::CPILeg(schedule, index,
@@ -1672,6 +1673,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
             .withPaymentDayCounter(dc)
             .withPaymentAdjustment(bdc)
             .withPaymentCalendar(paymentCalendar)
+            .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
             .withFixedRates(rates)
             .withObservationInterpolation(interpolationMethod)
             .withSubtractInflationNominal(cpiLegData->subtractInflationNominal())
