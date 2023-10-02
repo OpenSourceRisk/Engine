@@ -19,9 +19,7 @@
 */
 
 #include <orea/app/reportwriter.hpp>
-#include <orea/orea.hpp>
 
-#include <ored/ored.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>

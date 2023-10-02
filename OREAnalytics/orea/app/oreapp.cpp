@@ -27,8 +27,6 @@
 
 #include <orea/app/marketdatainmemoryloader.hpp>
 #include <orea/app/oreapp.hpp>
-#include <orea/orea.hpp>
-#include <ored/ored.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
