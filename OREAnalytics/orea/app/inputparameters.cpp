@@ -23,7 +23,6 @@
 #include <orea/engine/sensitivityfilestream.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>
-#include <ored/ored.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
 #include <ored/utilities/parsers.hpp>
