@@ -965,6 +965,25 @@ if(ORE_ENABLE_OPENCL)
   endif()
 endif()
 
+if(NOT USE_GLOBAL_ORE_BUILD)
+ target_precompile_headers(${QLE_LIB_NAME}
+   PUBLIC
+    <ql/any.hpp>
+    <ql/errors.hpp>
+    <ql/index.hpp>
+    <ql/indexes/indexmanager.hpp>
+    <ql/instrument.hpp>
+    <ql/indexes/interestrateindex.hpp>
+    <ql/math/array.hpp>
+    <ql/math/statistics/incrementalstatistics.hpp>
+    <ql/math/interpolations/cubicinterpolation.hpp>
+    <ql/math/matrix.hpp>
+    <ql/methods/finitedifferences/operators/fdmlinearop.hpp>
+    <ql/patterns/observable.hpp>
+    <ql/qldefines.hpp>
+    <ql/termstructure.hpp>)
+endif()
+
 install(DIRECTORY . DESTINATION include/qle
         FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
 
