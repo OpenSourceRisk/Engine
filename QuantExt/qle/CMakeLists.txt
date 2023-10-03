@@ -975,7 +975,6 @@ if(NOT USE_GLOBAL_ORE_BUILD)
     <ql/instrument.hpp>
     <ql/indexes/interestrateindex.hpp>
     <ql/math/array.hpp>
-    <ql/math/statistics/incrementalstatistics.hpp>
     <ql/math/interpolations/cubicinterpolation.hpp>
     <ql/math/matrix.hpp>
     <ql/methods/finitedifferences/operators/fdmlinearop.hpp>
