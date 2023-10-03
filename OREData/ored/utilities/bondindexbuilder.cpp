@@ -112,6 +112,7 @@ void BondIndexBuilder::buildIndex(const bool relative, const Calendar& fixingCal
 boost::shared_ptr<QuantExt::BondIndex> BondIndexBuilder::bondIndex() const { return bondIndex_; }
 
 void BondIndexBuilder::addRequiredFixings(RequiredFixings& requiredFixings, Leg leg) {
+    requiredFixings.addData(fixings_.filteredFixingDates());
     if (dirty_) {
         QL_REQUIRE(leg.size() > 0, "BondIndexBuild: Leg is required if dirty flag set to true");
         RequiredFixings legFixings;
@@ -131,8 +132,7 @@ void BondIndexBuilder::addRequiredFixings(RequiredFixings& requiredFixings, Leg 
                 }
             }
         }
-    } else
-        requiredFixings.addData(fixings_);
+    }
 }
 
 Real BondIndexBuilder::priceAdjustment(Real price) {
