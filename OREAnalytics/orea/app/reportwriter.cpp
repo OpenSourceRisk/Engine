@@ -163,19 +163,19 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
 
     for (auto [tradeId, trade]: trades) {
 
-        // if trade is marked as not having cashflows, we skip it
-
-        if (!trade->hasCashflows()) {
-            WLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
-            continue;
-        }
-
-        // if trade provides cashflows as additional results, we use that information instead of the legs
-
-        auto addResults = trade->instrument()->additionalResults();
-        auto cashFlowResults = addResults.find("cashFlowResults");
-
         try {
+
+            // if trade is marked as not having cashflows, we skip it
+
+            if (!trade->hasCashflows()) {
+                WLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
+                continue;
+            }
+
+            // if trade provides cashflows as additional results, we use that information instead of the legs
+
+            auto addResults = trade->instrument()->additionalResults();
+            auto cashFlowResults = addResults.find("cashFlowResults");
 
             const Real multiplier = trade->instrument()->multiplier();
 
