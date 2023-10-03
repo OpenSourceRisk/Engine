@@ -134,9 +134,7 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
 Real BondIndex::pastFixing(const Date& fixingDate) const {
     QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date for '" << name() << "'");
 
-    Date fd = fixingDate;
-    if (bondIssueDateFallback_ && fd < issueDate_)
-        fd = issueDate_;
+    Date fd = (bondIssueDateFallback_ && fixingDate < issueDate_) ? issueDate_ : fixingDate;
 
     Real price = timeSeries()[fd] + bidAskAdjustment_;
     if (price == Null<Real>())
