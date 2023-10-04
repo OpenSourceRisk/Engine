@@ -73,5 +73,43 @@ std::ostream& operator<<(std::ostream& out, const Context& context) {
     return out;
 }
 
+namespace {
+void resetSize(ValueType& v, const Size n) {
+    switch (v.which()) {
+    case ValueTypeWhich::Number:
+        boost::get<RandomVariable>(v).resetSize(n);
+        break;
+    case ValueTypeWhich::Filter:
+        boost::get<Filter>(v).resetSize(n);
+        break;
+    case ValueTypeWhich::Event:
+        boost::get<EventVec>(v).size = n;
+        break;
+    case ValueTypeWhich::Currency:
+        boost::get<CurrencyVec>(v).size = n;
+        break;
+    case ValueTypeWhich::Index:
+        boost::get<IndexVec>(v).size = n;
+        break;
+    case ValueTypeWhich::Daycounter:
+        boost::get<DaycounterVec>(v).size = n;
+        break;
+    default:
+        QL_FAIL("resetSize(): value type not handled. internal error, contact dev.");
+    }
+}
+} // namespace
+
+void Context::resetSize(const std::size_t n) {
+    for (auto& [_, v] : scalars) {
+        ::ore::data::resetSize(v, n);
+    }
+    for (auto& [_, a] : arrays) {
+        for (auto& v : a) {
+            ::ore::data::resetSize(v, n);
+        }
+    }
+}
+
 } // namespace data
 } // namespace ore
