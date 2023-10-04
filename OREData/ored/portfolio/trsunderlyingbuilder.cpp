@@ -361,7 +361,7 @@ void BondPositionTrsUnderlyingBuilder::build(
         // relative index, because weights are supposed to include any amortization factors
 
         BondIndexBuilder bondIndexBuilder(t->data().underlyings()[i].name(), true, false, 
-            NullCalendar(), true, engineFactory, t->data().underlyings()[i].bidAskAdjustment());
+            NullCalendar(), true, engineFactory, t->data().underlyings()[i].bidAskAdjustment(), true);
 
         auto assetCurr = bondIndexBuilder.bond().bondData().currency();
         auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
@@ -392,7 +392,7 @@ void BondPositionTrsUnderlyingBuilder::build(
         w.push_back(t->weights()[i]);
     }
     underlyingIndex =
-        boost::make_shared<QuantExt::CompositeIndex>("Composite Index trade id " + parentId, indices, w, fxConversion, true);
+        boost::make_shared<QuantExt::CompositeIndex>("Composite Index trade id " + parentId, indices, w, fxConversion);
     DLOG("underlying bond position index built with " << indices.size() << " constituents.");
     underlyingMultiplier = t->data().quantity();
 
