@@ -96,7 +96,7 @@ public:
               const bool conditionalOnSurvival = true, const Date& issueDate = Date(),
               const PriceQuoteMethod priceQuoteMethod = PriceQuoteMethod::PercentageOfPar,
               const double priceQuoteBaseValue = 1.0, const bool isInflationLinked = false,
-              const double bidAskAdjustment = 0.0);
+              const double bidAskAdjustment = 0.0, const bool bondIssueDateFallback = false);
 
     //! \name Index interface
     //@{
@@ -151,6 +151,7 @@ protected:
     bool isInflationLinked_;
     double bidAskAdjustment_;
     boost::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
+    bool bondIssueDateFallback_ = false;
 };
 
 //! Bond Futures Index

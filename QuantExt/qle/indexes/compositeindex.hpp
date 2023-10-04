@@ -38,8 +38,7 @@ public:
       do not require a conversion, a nullptr should be given, otherwise a FxIndex with domestic ccy
       equal to the target currency of the index */
     CompositeIndex(const std::string& name, const std::vector<boost::shared_ptr<QuantLib::Index>>& indices,
-                   const std::vector<Real>& weights, const std::vector<boost::shared_ptr<FxIndex>>& fxConversion = {},
-                   const bool bondIssueDateFallback = false);
+                   const std::vector<Real>& weights, const std::vector<boost::shared_ptr<FxIndex>>& fxConversion = {});
 
     //! Index interface
     std::string name() const override;
@@ -67,7 +66,6 @@ private:
     std::vector<boost::shared_ptr<QuantLib::Index>> indices_;
     std::vector<Real> weights_;
     std::vector<boost::shared_ptr<FxIndex>> fxConversion_;
-    bool bondIssueDateFallback_ = false;
     //
     Calendar fixingCalendar_;
 };
