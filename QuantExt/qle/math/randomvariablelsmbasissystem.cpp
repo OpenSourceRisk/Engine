@@ -138,26 +138,79 @@ VV next_order_tuples(const VV& v) {
 
 // LsmBasisSystem static methods
 
-VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order) {
+VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasisSystem::PolynomialType type) {
     VF_R ret(order + 1);
     for (Size i = 0; i <= order; ++i) {
-        ret[i] = MonomialFct(i);
+        switch (type) {
+        case QuantLib::LsmBasisSystem::Monomial:
+            ret[i] = MonomialFct(i);
+            break;
+        case QuantLib::LsmBasisSystem::Laguerre: {
+            GaussLaguerrePolynomial p;
+            ret[i] = [=](RandomVariable x) {
+                for (std::size_t i = 0; i < x.size(); ++i) {
+                    x.set(i, p.weightedValue(i, x[i]));
+                }
+                return x;
+            };
+        } break;
+        case QuantLib::LsmBasisSystem::Hermite: {
+            GaussHermitePolynomial p;
+            ret[i] = [=](RandomVariable x) {
+                for (std::size_t i = 0; i < x.size(); ++i) {
+                    x.set(i, p.weightedValue(i, x[i]));
+                }
+                return x;
+            };
+        } break;
+        case QuantLib::LsmBasisSystem::Hyperbolic: {
+            GaussHyperbolicPolynomial p;
+            ret[i] = [=](RandomVariable x) {
+                for (std::size_t i = 0; i < x.size(); ++i) {
+                    x.set(i, p.weightedValue(i, x[i]));
+                }
+                return x;
+            };
+        } break;
+        case QuantLib::LsmBasisSystem::Legendre: {
+            GaussLegendrePolynomial p;
+            ret[i] = [=](RandomVariable x) {
+                for (std::size_t i = 0; i < x.size(); ++i) {
+                    x.set(i, p.weightedValue(i, x[i]));
+                }
+                return x;
+            };
+        } break;
+        case QuantLib::LsmBasisSystem::Chebyshev: {
+            GaussChebyshevPolynomial p;
+            ret[i] = [=](RandomVariable x) {
+                for (std::size_t i = 0; i < x.size(); ++i) {
+                    x.set(i, p.weightedValue(i, x[i]));
+                }
+                return x;
+            };
+        } break;
+        case QuantLib::LsmBasisSystem::Chebyshev2nd: {
+            GaussChebyshev2ndPolynomial p;
+            ret[i] = [=](RandomVariable x) {
+                for (std::size_t i = 0; i < x.size(); ++i) {
+                    x.set(i, p.weightedValue(i, x[i]));
+                }
+                return x;
+            };
+        } break;
+        default:
+            QL_FAIL("unknown regression type");
+        }
     }
     return ret;
 }
 
-Real RandomVariableLsmBasisSystem::size(Size dim, Size order) {
-    // see e.g. proposition 3 in https://murphmath.wordpress.com/2012/08/22/counting-monomials/
-    return boost::math::binomial_coefficient<Real>(
-        dim + order, order,
-        boost::math::policies::make_policy(
-            boost::math::policies::overflow_error<boost::math::policies::ignore_error>()));
-}
-
-VF_A RandomVariableLsmBasisSystem::multiPathBasisSystem(Size dim, Size order) {
+VF_A RandomVariableLsmBasisSystem::multiPathBasisSystem(Size dim, Size order,
+                                                        QuantLib::LsmBasisSystem::PolynomialType type) {
     QL_REQUIRE(dim > 0, "zero dimension");
     // get single factor basis
-    VF_R pathBasis = pathBasisSystem(order);
+    VF_R pathBasis = pathBasisSystem(order, type);
     VF_A ret;
     // 0-th order term
     VF_R term(dim, pathBasis[0]);
@@ -176,6 +229,14 @@ VF_A RandomVariableLsmBasisSystem::multiPathBasisSystem(Size dim, Size order) {
         }
     }
     return ret;
+}
+
+Real RandomVariableLsmBasisSystem::size(Size dim, Size order) {
+    // see e.g. proposition 3 in https://murphmath.wordpress.com/2012/08/22/counting-monomials/
+    return boost::math::binomial_coefficient<Real>(
+        dim + order, order,
+        boost::math::policies::make_policy(
+            boost::math::policies::overflow_error<boost::math::policies::ignore_error>()));
 }
 
 } // namespace QuantExt
