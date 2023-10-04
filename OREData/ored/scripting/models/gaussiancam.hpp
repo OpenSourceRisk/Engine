@@ -50,7 +50,7 @@ public:
                 const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
                 const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
                 const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-                const std::set<Date>& simulationDates, const McParams& mcParams, const Size timeStepsPerYear = 1,
+                const std::set<Date>& simulationDates, const Size regressionOrder, const Size timeStepsPerYear = 1,
                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                 const std::vector<Size>& projectedStateProcessIndices = {},
                 const std::vector<std::string>& conditionalExpectationModelStates = {});
@@ -69,8 +69,6 @@ public:
                               const bool localCapFloor) const override;
     void releaseMemory() override;
     void resetNPVMem() override;
-    void toggleTrainingPaths() const override;
-    Size trainingSamples() const override;
 
     // AMCModel interface implementation
     void injectPaths(const std::vector<QuantLib::Real>* pathTimes,
@@ -96,15 +94,11 @@ private:
     RandomVariable getDiscount(const Size idx, const Date& s, const Date& t,
                                const Handle<YieldTermStructure>& targetCurve) const;
 
-    void populatePathValues(std::map<Date, std::vector<RandomVariable>>& paths,
-                            std::map<Date, std::vector<RandomVariable>>& irStates,
-                            std::map<Date, std::vector<std::pair<RandomVariable, RandomVariable>>>& infStates,
-                            const std::vector<Real>& times, const bool isTraining) const;
     // input parameters
     const Handle<CrossAssetModel> cam_;
     const std::vector<Handle<YieldTermStructure>> curves_;
     const std::vector<Handle<Quote>> fxSpots_;
-    const McParams mcParams_;
+    const Size regressionOrder_;
     const Size timeStepsPerYear_;
     const std::vector<Size> projectedStateProcessIndices_; // if data is injected via the AMCModel interface
 
@@ -117,11 +111,7 @@ private:
     mutable std::map<Date, std::vector<RandomVariable>> underlyingPaths_; // per simulation date index states
     mutable std::map<Date, std::vector<RandomVariable>> irStates_;        // per sim date ir states for currencies_
     mutable std::map<Date, std::vector<std::pair<RandomVariable, RandomVariable>>>
-        infStates_; // per sim date inf states dk (x,y) or jy (x,y)
-    mutable std::map<Date, std::vector<RandomVariable>> underlyingPathsTraining_; // ditto (training)
-    mutable std::map<Date, std::vector<RandomVariable>> irStatesTraining_;        // ditto (training)
-    mutable std::map<Date, std::vector<std::pair<RandomVariable, RandomVariable>>>
-        infStatesTraining_;                               // ditto (training)
+        infStates_;                                       // per sim date inf states dk (x,y) or jy (x,y)
     mutable std::vector<Size> indexPositionInProcess_;    // maps index no to position in state process
     mutable std::vector<Size> infIndexPositionInProcess_; // maps inf index no to position in state process
     mutable std::vector<Size> currencyPositionInProcess_; // maps currency no to position in state process

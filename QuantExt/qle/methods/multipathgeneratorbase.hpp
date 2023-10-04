@@ -37,7 +37,6 @@ using namespace QuantLib;
 
 enum SequenceType { MersenneTwister, MersenneTwisterAntithetic, Sobol, SobolBrownianBridge };
 
-
 //! Multi Path Generator Base
 /*! \ingroup methods
  */

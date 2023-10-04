@@ -526,27 +526,6 @@ QuantLib::LsmBasisSystem::PolynomialType parsePolynomType(const std::string& s) 
     }
 }
 
-std::ostream& operator<<(std::ostream& os, QuantLib::LsmBasisSystem::PolynomialType a) {
-    switch (a) {
-    case LsmBasisSystem::PolynomialType::Monomial:
-        return os << "Monomial";
-    case LsmBasisSystem::PolynomialType::Laguerre:
-        return os << "Laguerre";
-    case LsmBasisSystem::PolynomialType::Hermite:
-        return os << "Hermite";
-    case LsmBasisSystem::PolynomialType::Hyperbolic:
-        return os << "Hyperbolic";
-    case LsmBasisSystem::PolynomialType::Legendre:
-        return os << "Legendre";
-    case LsmBasisSystem::PolynomialType::Chebyshev:
-        return os << "Chebychev";
-    case LsmBasisSystem::PolynomialType::Chebyshev2nd:
-        return os << "Chebychev2nd";
-    default:
-        QL_FAIL("unknown LsmBasisSystem::PolynomialType '" << static_cast<int>(a) << "'");
-    }
-}
-
 SobolBrownianGenerator::Ordering parseSobolBrownianGeneratorOrdering(const std::string& s) {
     static map<string, SobolBrownianGenerator::Ordering> m = {{"Factors", SobolBrownianGenerator::Ordering::Factors},
                                                               {"Steps", SobolBrownianGenerator::Ordering::Steps},

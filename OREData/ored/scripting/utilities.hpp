@@ -156,8 +156,13 @@ std::ostream& operator<<(std::ostream& o, const IndexInfo& i);
 /*! helper function that returns a LSM basis system with size restriction: the order is reduced until
   the size of the basis system is not greater than the given bound (if this is not null) or the order is 1 */
 std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
-multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type,
-                     Size basisSystemSizeBound = Null<Size>());
+multiPathBasisSystem(Size dim, Size order, Size basisSystemSizeBound = Null<Size>());
+
+/*! helper functions that return a brownian generator or MultiPathGenerator using certain hardcoded parameters;
+  if the dimension allows a Sobol generator is returned, otherwise we fall back to a MT generator */
+boost::shared_ptr<BrownianGenerator> getBrownianGenerator(const Size dim, const Size steps);
+boost::shared_ptr<MultiPathGeneratorBase> getMultiPathGenerator(const boost::shared_ptr<StochasticProcess>& p,
+                                                                const TimeGrid& t);
 
 /*! This method tries to parse an commodity index name used in the scripting context
 

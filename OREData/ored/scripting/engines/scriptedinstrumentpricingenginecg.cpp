@@ -23,7 +23,6 @@
 #include <qle/ad/backwardderivatives.hpp>
 #include <qle/ad/forwardevaluation.hpp>
 #include <qle/ad/ssaform.hpp>
-#include <qle/methods/multipathvariategenerator.hpp>
 
 #include <ored/utilities/log.hpp>
 
@@ -73,8 +72,6 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
     QL_REQUIRE(!useExternalComputeFramework_ || !useCachedSensis_,
                "ScriptedInstrumentPricingEngineCG: when using external compute framework, usage of cached sensis is "
                "not supported yet");
-    QL_REQUIRE(model_->trainingPaths() == Null<Size>(), "ScriptedInstrumentPricingEngineCG: separate training phase "
-                                                        "not supported, trainingSamples can not be specified.");
 
     lastCalculationWasValid_ = false;
 
@@ -207,14 +204,14 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                         valuesExternal[rv[k][j]] = ExternalRandomVariable(gen[k][j]);
                 }
             } else {
-                auto gen =
-                    makeMultiPathVariateGenerator(mcParams_.sequenceType, rv.size(), rv.front().size(), mcParams_.seed,
-                                                  mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers);
+                auto gen = getBrownianGenerator(rv.size(), rv.front().size());
+                std::vector<Real> r(rv.size());
                 for (Size path = 0; path < model_->size(); ++path) {
-                    auto p = gen->next();
+                    gen->nextPath();
                     for (Size j = 0; j < rv.front().size(); ++j) {
+                        gen->nextStep(r);
                         for (Size k = 0; k < rv.size(); ++k) {
-                            values[rv[k][j]].set(path, p.value[j][k]);
+                            values[rv[k][j]].set(path, r[k]);
                         }
                     }
                 }

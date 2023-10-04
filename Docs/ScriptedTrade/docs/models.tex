@@ -110,22 +110,6 @@ The engine parameters have the following meaning:
   true.
 \item RegressionOrder: The order of the polynomial basis to compute conditional expectations via regression
   analysis. Applies to MC only.
-\item SequenceType: The sequence type used for pricing. Defaults to SobolBrownianBridge. Possible values
-  SobolBrownianBridge, MersenneTwister, MersenneTwisterAnithetic, Sobol.
-\item PolynomType: The polynom type used for regression analysis. Defaults to Monomial. Possible values Monomial,
-  Laguerre, Hermite, Hyperbolic, Legendre, Chebyshev, Chebychev2nd.
-\item TrainingSamples: If given, pricing and training are separate phases and traning phase is using this number of
-  samples. Notice that NPVMEM() should be used to reuse regression coefficients from the training phase in the pricing
-  phase.
-\item TrainingSeed: The seed used for rng in training phase. Only applies if TrainingSamples are given (and thus
-  training and pricing phases are separate). Defaults to 43.
-\item TrainingSequenceType: The sequence type used for training. Only applies if TrainingSamples are given (and thus
-  training and pricing phases are separate). See SequenceType for possible values. Defaults to MersenneTwister.
-\item SobolOrdering: Sobol sequence ordering for brownian bridge. Defaults to Steps. Possible values Steps, Factors,
-  Diagonal.
-\item SobolDirectionIntegers: Sobol direction integers. Defaults to JoeKuoD7. Possible values Unit, Jaeckel,
-  SobolLevitan, SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo, Kuo2, Kuo3.
-\item Seed: The seed for rng in pricing phase. Defaults to 42.
 \item TimeStepsPerYear: The number of time steps used to discretise the process. For 0 only the relevant simulation
   times are used. Otherwise at least the given number of step are used in the discretisation grid per year.
 \item CalibrationMoneyness: Moneyness of options used for smile calibration. Applies to the LocalVolAndreasenHuge model

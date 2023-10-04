@@ -86,10 +86,8 @@ void CliquetOptionMcScriptEngine::calculate() const {
                                                                 std::set<Date>(), 0);
     // the black scholes model wrapper won't notify the model of changes in curves and vols, so we register manually
     builder->model()->registerWith(p_);
-    Model::McParams mcParams;
-    mcParams.regressionOrder = regressionOrder_;
     auto model = boost::make_shared<BlackScholes>(samples_, baseCcy_, p_->riskFreeRate(), underlying_, underlyingCcy_,
-                                                  builder->model(), mcParams, arguments_.valuationDates);
+                                                  builder->model(), regressionOrder_, arguments_.valuationDates);
 
     // populate context
 

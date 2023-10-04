@@ -132,8 +132,7 @@ protected:
     // model / engine parameters
     std::string modelParam_, infModelType_, engineParam_, baseCcyParam_, gridCoarsening_;
     bool fullDynamicFx_, fullDynamicIr_, enforceBaseCcy_;
-    Size modelSize_, timeStepsPerYear_;
-    Model::McParams mcParams_;
+    Size modelSize_, regressionOrder_, timeStepsPerYear_;
     bool interactive_, zeroVolatility_, continueOnCalibrationError_;
     std::vector<Real> calibrationMoneyness_;
     Real mesherEpsilon_, mesherScaling_, mesherConcentration_;
