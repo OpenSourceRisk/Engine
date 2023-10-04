@@ -39,9 +39,9 @@ using namespace QuantExt;
 BlackScholesBase::BlackScholesBase(const Size paths, const std::string& currency,
                                    const Handle<YieldTermStructure>& curve, const std::string& index,
                                    const std::string& indexCurrency, const Handle<BlackScholesModelWrapper>& model,
-                                   const Size regressionOrder, const std::set<Date>& simulationDates,
+                                   const Model::McParams& mcParams, const std::set<Date>& simulationDates,
                                    const IborFallbackConfig& iborFallbackConfig)
-    : BlackScholesBase(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, regressionOrder,
+    : BlackScholesBase(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, mcParams,
                        simulationDates, iborFallbackConfig) {}
 
 BlackScholesBase::BlackScholesBase(
@@ -52,11 +52,11 @@ BlackScholesBase::BlackScholesBase(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const Size regressionOrder, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
+    const Model::McParams& mcParams, const std::set<Date>& simulationDates,
+    const IborFallbackConfig& iborFallbackConfig)
     : ModelImpl(curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
                 simulationDates, iborFallbackConfig),
-      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations),
-      regressionOrder_(regressionOrder) {
+      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations), mcParams_(mcParams) {
 
     // check inputs
 
@@ -128,6 +128,7 @@ void BlackScholesBase::performCalculations() const {
         positionInTimeGrid_[i] = timeGrid_.index(times[i]);
 
     underlyingPaths_.clear();
+    underlyingPathsTraining_.clear();
 }
 
 RandomVariable BlackScholesBase::getIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
@@ -262,7 +263,8 @@ RandomVariable BlackScholesBase::npv(const RandomVariable& amount, const Date& o
     // generate basis if not yet done
 
     if (basisFns_.find(state.size()) == basisFns_.end())
-        basisFns_[state.size()] = multiPathBasisSystem(state.size(), regressionOrder_, size());
+        basisFns_[state.size()] = multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
+                                                       std::min(size(), trainingSamples()));
 
     // if a memSlot is given and coefficients are stored, we use them
 
@@ -296,7 +298,16 @@ RandomVariable BlackScholesBase::npv(const RandomVariable& amount, const Date& o
     return conditionalExpectation(state, basisFns_.at(state.size()), coeff);
 }
 
-void BlackScholesBase::releaseMemory() { underlyingPaths_.clear(); }
+void BlackScholesBase::releaseMemory() {
+    underlyingPaths_.clear();
+    underlyingPathsTraining_.clear();
+}
+
+void BlackScholesBase::resetNPVMem() { storedRegressionCoeff_.clear(); }
+
+void BlackScholesBase::toggleTrainingPaths() const { std::swap(underlyingPaths_, underlyingPathsTraining_); }
+
+Size BlackScholesBase::trainingSamples() const { return mcParams_.trainingSamples; }
 
 } // namespace data
 } // namespace ore
