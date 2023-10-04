@@ -48,8 +48,6 @@ struct Context {
     Size varSize() const;
     // is context empty?
     bool empty() const { return scalars.empty() && arrays.empty(); }
-    // reset size to given value
-    void resetSize(const std::size_t n);
 };
 
 std::ostream& operator<<(std::ostream& out, const Context& context);

@@ -25,7 +25,6 @@
 #include <qle/math/randomvariable.hpp>
 
 #include <ql/qldefines.hpp>
-#include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
 #include <vector>
 
@@ -33,11 +32,10 @@ namespace QuantExt {
 
 class RandomVariableLsmBasisSystem {
 public:
-    static std::vector<std::function<RandomVariable(const RandomVariable&)>>
-    pathBasisSystem(Size order, QuantLib::LsmBasisSystem::PolynomialType type);
+    static std::vector<std::function<RandomVariable(const RandomVariable&)>> pathBasisSystem(Size order);
 
     static std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
-    multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type);
+    multiPathBasisSystem(Size dim, Size order);
 
     // return the size of a basis system (or std::numeric_limits<Real>::infinity() if too big)
     static Real size(Size dim, Size order);

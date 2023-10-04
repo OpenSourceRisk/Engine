@@ -35,11 +35,11 @@ using namespace QuantExt;
 
 BlackScholesCG::BlackScholesCG(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
                                const std::string& index, const std::string& indexCurrency,
-                               const Handle<BlackScholesModelWrapper>& model, const std::set<Date>& simulationDates,
-                               const IborFallbackConfig& iborFallbackConfig, const std::string& calibration,
-                               const std::vector<Real>& calibrationStrikes)
-    : BlackScholesCG(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, simulationDates,
-                     iborFallbackConfig, calibration, {{index, calibrationStrikes}}) {}
+                               const Handle<BlackScholesModelWrapper>& model, const Size regressionOrder,
+                               const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
+                               const std::string& calibration, const std::vector<Real>& calibrationStrikes)
+    : BlackScholesCG(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, regressionOrder,
+                     simulationDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}}) {}
 
 BlackScholesCG::BlackScholesCG(
     const Size paths, const std::vector<std::string>& currencies, const std::vector<Handle<YieldTermStructure>>& curves,
@@ -49,10 +49,10 @@ BlackScholesCG::BlackScholesCG(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig, const std::string& calibration,
-    const std::map<std::string, std::vector<Real>>& calibrationStrikes)
+    const Size regressionOrder, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
+    const std::string& calibration, const std::map<std::string, std::vector<Real>>& calibrationStrikes)
     : BlackScholesCGBase(paths, currencies, curves, fxSpots, irIndices, infIndices, indices, indexCurrencies, model,
-                         correlations, simulationDates, iborFallbackConfig),
+                         correlations, regressionOrder, simulationDates, iborFallbackConfig),
       calibration_(calibration), calibrationStrikes_(calibrationStrikes) {}
 
 namespace {

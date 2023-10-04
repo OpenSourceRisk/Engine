@@ -58,12 +58,6 @@ public:
     // number of paths
     virtual QuantLib::Size size() const { return n_; }
 
-    // if not null, this model uses a separate mc training phase for NPV() calcs
-    virtual Size trainingPaths() const { return QuantLib::Null<Size>(); }
-
-    // enable / disable the usage of the training paths (if trainingPaths() is not null)
-    virtual void enableTrainingPaths(const bool enable) const {}
-
     // the eval date
     virtual const Date& referenceDate() const = 0;
 

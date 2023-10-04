@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
     auto gaussianCam = boost::make_shared<GaussianCam>(
         model, paths, modelCcys, modelCurves, modelFxSpots, irIndices,
         std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>(), indices, indexCurrencies,
-        std::set<Date>(calibrationExpiries.begin(), calibrationExpiries.end()), Model::McParams());
+        std::set<Date>(calibrationExpiries.begin(), calibrationExpiries.end()), 2);
 
     // generate MC prices for the calibration instruments and compare them with analytical prices
 

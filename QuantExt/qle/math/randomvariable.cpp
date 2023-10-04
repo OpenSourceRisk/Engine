@@ -137,11 +137,6 @@ void Filter::setAll(const bool v) {
     deterministic_ = true;
 }
 
-void Filter::resetSize(const Size n) {
-    QL_REQUIRE(deterministic_, "Filter::resetSize(): only possible for deterministic variables.");
-    n_ = n;
-}
-
 bool Filter::operator[](const Size i) const {
     if (deterministic_)
         return constantData_;
@@ -416,11 +411,6 @@ void RandomVariable::setAll(const Real v) {
     }
     constantData_ = v;
     deterministic_ = true;
-}
-
-void RandomVariable::resetSize(const Size n) {
-    QL_REQUIRE(deterministic_, "RandomVariable::resetSize(): only possible for deterministic variables.");
-    n_ = n;
 }
 
 Real RandomVariable::operator[](const Size i) const {

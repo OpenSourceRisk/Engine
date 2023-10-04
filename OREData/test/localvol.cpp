@@ -71,10 +71,8 @@ void testCalibrationInstrumentRepricing(const std::vector<Date>& expiries, const
     LocalVolModelBuilder builder(process->riskFreeRate(), process, simDates, std::set<Date>(), timeStepsPerYear,
                                  LocalVolModelBuilder::Type::AndreasenHuge, moneyness, false);
 
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 1;
     auto localVol = boost::make_shared<LocalVol>(paths, "EUR", process->riskFreeRate(), "EQ-DUMMY", "EUR",
-                                                 builder.model(), mcParams, simDates);
+                                                 builder.model(), 1, simDates);
 
     // loop over the calibration options and price them in the local vol model using MC
     // the result should be close to the market price of the options

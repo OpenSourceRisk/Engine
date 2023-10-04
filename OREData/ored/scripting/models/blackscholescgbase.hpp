@@ -24,7 +24,6 @@
 #pragma once
 
 #include <ored/scripting/models/modelcgimpl.hpp>
-#include <ored/scripting/models/model.hpp>
 
 #include <qle/models/blackscholesmodelwrapper.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
@@ -57,13 +56,14 @@ public:
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
         const Handle<BlackScholesModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig);
+        const Size regressionOrder, const std::set<Date>& simulationDates,
+        const IborFallbackConfig& iborFallbackConfig);
 
     // ctor for single underlying
     BlackScholesCGBase(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
                        const std::string& index, const std::string& indexCurrency,
-                       const Handle<BlackScholesModelWrapper>& model, const std::set<Date>& simulationDates,
-                       const IborFallbackConfig& iborFallbackConfig);
+                       const Handle<BlackScholesModelWrapper>& model, const Size regressionOrder,
+                       const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig);
 
     // Model interface implementation
     Type type() const override { return Type::MC; }
@@ -95,6 +95,7 @@ protected:
     const std::vector<Handle<Quote>> fxSpots_;
     const Handle<BlackScholesModelWrapper> model_;
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> correlations_;
+    const Size regressionOrder_;
     const std::vector<Date> simulationDates_;
 
     // updated in performCalculations()
