@@ -1057,6 +1057,8 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
         paymentCalendar = parseCalendar(data.paymentCalendar());
 
     BusinessDayConvention payConvention = parseBusinessDayConvention(data.paymentConvention());
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
+    Natural paymentLagDays = boost::apply_visitor(PaymentLagInteger(), paymentLag);
 
     DayCounter dc = parseDayCounter(data.dayCounter());
 
@@ -1087,7 +1089,7 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
         double currentNotional = i < notionals.size() ? notionals[i] : notionals.back();
         double currentRate = i < rates.size() ? rates[i] : rates.back();
         cpnDates.push_back(dates[i + 1]);
-        Date paymentDate = paymentCalendar.adjust(dates[i + 1], payConvention);
+        Date paymentDate = paymentCalendar.advance(dates[i + 1], paymentLagDays, Days, payConvention);
         leg.push_back(boost::make_shared<ZeroFixedCoupon>(paymentDate, currentNotional, currentRate, dc, cpnDates, comp,
                                                           zcFixedLegData->subtractNotional()));
     }
