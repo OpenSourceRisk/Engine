@@ -27,10 +27,12 @@
 #include <ored/scripting/value.hpp>
 
 #include <qle/models/modelbuilder.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
 
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/settings.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
 #include <boost/any.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -44,6 +46,19 @@ class Model : public LazyObject {
 public:
     enum class Type { MC, FD };
 
+    struct McParams {
+        McParams() = default;
+        Size seed = 42;
+        Size trainingSeed = 43;
+        Size trainingSamples = Null<Size>();
+        QuantExt::SequenceType sequenceType = QuantExt::SequenceType::SobolBrownianBridge;
+        QuantExt::SequenceType trainingSequenceType = QuantExt::SequenceType::MersenneTwister;
+        Size regressionOrder = 2;
+        QuantLib::LsmBasisSystem::PolynomialType polynomType = QuantLib::LsmBasisSystem::PolynomialType::Monomial;
+        QuantLib::SobolBrownianGenerator::Ordering sobolOrdering = QuantLib::SobolBrownianGenerator::Steps;
+        QuantLib::SobolRsg::DirectionIntegers sobolDirectionIntegers = QuantLib::SobolRsg::DirectionIntegers::JoeKuoD7;
+    };
+
     explicit Model(const Size n) : n_(n) {}
     virtual ~Model() {}
 
@@ -52,6 +67,12 @@ public:
 
     // number of paths
     virtual Size size() const { return n_; }
+
+    // if not null, this model uses a separate mc training phase for NPV() calcs
+    virtual Size trainingSamples() const { return Null<Size>(); }
+
+    // enable / disable the usage of the training paths (if trainingPaths() is not null)
+    virtual void toggleTrainingPaths() const {}
 
     // the eval date
     virtual const Date& referenceDate() const = 0;

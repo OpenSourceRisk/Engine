@@ -25,6 +25,8 @@
 
 #include <ored/scripting/models/blackscholesbase.hpp>
 
+#include <qle/methods/multipathvariategenerator.hpp>
+
 namespace ore {
 namespace data {
 
@@ -44,23 +46,29 @@ public:
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
         const Handle<BlackScholesModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const Size regressionOrder, const std::set<Date>& simulationDates,
+        const McParams& mcparams, const std::set<Date>& simulationDates,
         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
 
     // ctor for a single underlying
     LocalVol(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
              const std::string& index, const std::string& indexCurrency, const Handle<BlackScholesModelWrapper>& model,
-             const Size regressionOrder, const std::set<Date>& simulationDates,
+             const McParams& mcparams, const std::set<Date>& simulationDates,
              const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
 
 private:
     // ModelImpl interface implementation
     RandomVariable getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                        const RandomVariable& barrier, const bool above) const override {
-        QL_FAIL("getFutureBarrierProb not implemented by LocalVol");
-    }
+                                        const RandomVariable& barrier, const bool above) const override;
+
     // BlackScholesBase interface implementation
     void performCalculations() const override;
+
+    // helper method to populate path values
+    void populatePathValues(std::map<Date, std::vector<RandomVariable>>& paths,
+                            const boost::shared_ptr<MultiPathVariateGeneratorBase>& gen, const Matrix& correlation,
+                            const Matrix& sqrtCorr, const std::vector<Array>& deterministicDrift,
+                            const std::vector<Size>& eqComIdx, const std::vector<Real>& t, const std::vector<Real>& dt,
+                            const std::vector<Real>& sqrtdt) const;
 };
 
 } // namespace data
