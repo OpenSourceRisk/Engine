@@ -64,7 +64,7 @@ private:
     void performCalculations() const override;
 
     // helper method to populate path values
-    void populatePathValues(std::map<Date, std::vector<RandomVariable>>& paths,
+    void populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                             const boost::shared_ptr<MultiPathVariateGeneratorBase>& gen, const Matrix& correlation,
                             const Matrix& sqrtCorr, const std::vector<Array>& deterministicDrift,
                             const std::vector<Size>& eqComIdx, const std::vector<Real>& t, const std::vector<Real>& dt,

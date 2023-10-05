@@ -79,6 +79,7 @@ public:
     void resetNPVMem() override;
     void toggleTrainingPaths() const override;
     Size trainingSamples() const override;
+    Size size() const override;
 
 protected:
     // ModelImpl interface implementation (except initiModelState, this is done in the derived classes)
@@ -110,6 +111,7 @@ protected:
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
     mutable std::map<Date, std::vector<RandomVariable>> underlyingPaths_;         // per simulation date index states
     mutable std::map<Date, std::vector<RandomVariable>> underlyingPathsTraining_; // ditto (training phase)
+    mutable bool inTrainingPhase_ = false; // are we currently using training paths?
 
     // stored regression coefficients
     mutable std::map<long, std::pair<Array, Size>> storedRegressionCoeff_;

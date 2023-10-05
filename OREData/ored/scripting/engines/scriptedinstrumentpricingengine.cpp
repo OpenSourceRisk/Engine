@@ -82,7 +82,7 @@ void ScriptedInstrumentPricingEngine::calculate() const {
     // if the model uses a separate training phase for NPV(), run this
 
     if (model_->trainingSamples() != Null<Size>()) {
-        auto trainingContext = boost::make_shared<Context>(*context_);
+        auto trainingContext = boost::make_shared<Context>(*workingContext);
         trainingContext->resetSize(model_->trainingSamples());
         struct TrainingPathToggle {
             TrainingPathToggle(boost::shared_ptr<Model> model) : model(model) { model->toggleTrainingPaths(); }

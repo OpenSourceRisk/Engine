@@ -111,6 +111,10 @@ const Date& BlackScholesBase::referenceDate() const {
 
 void BlackScholesBase::performCalculations() const {
 
+    QL_REQUIRE(!inTrainingPhase_,
+               "BlackScholesBase::performCalculations(): state inTrainingPhase should be false, this was "
+               "not resetted appropriately.");
+
     referenceDate_ = curves_.front()->referenceDate();
 
     // set up time grid
@@ -305,9 +309,19 @@ void BlackScholesBase::releaseMemory() {
 
 void BlackScholesBase::resetNPVMem() { storedRegressionCoeff_.clear(); }
 
-void BlackScholesBase::toggleTrainingPaths() const { std::swap(underlyingPaths_, underlyingPathsTraining_); }
+void BlackScholesBase::toggleTrainingPaths() const {
+    std::swap(underlyingPaths_, underlyingPathsTraining_);
+    inTrainingPhase_ = !inTrainingPhase_;
+}
 
 Size BlackScholesBase::trainingSamples() const { return mcParams_.trainingSamples; }
+
+Size BlackScholesBase::size() const {
+    if (inTrainingPhase_)
+        return mcParams_.trainingSamples;
+    else
+        return Model::size();
+}
 
 } // namespace data
 } // namespace ore
