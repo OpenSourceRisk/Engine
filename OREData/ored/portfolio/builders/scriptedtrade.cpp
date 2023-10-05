@@ -496,7 +496,7 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
         modelSize_ = parseInteger(engineParameter("Samples", {resolvedProductTag_}));
         mcParams_.regressionOrder = parseInteger(engineParameter("RegressionOrder", {resolvedProductTag_}));
         mcParams_.sequenceType =
-            parseSequenceType(engineParameter("SequenceType", {resolvedProductTag_}, false, "SobolBrowninanBridge"));
+            parseSequenceType(engineParameter("SequenceType", {resolvedProductTag_}, false, "SobolBrownianBridge"));
         mcParams_.polynomType =
             parsePolynomType(engineParameter("PolynomType", {resolvedProductTag_}, false, "Monomial"));
         mcParams_.trainingSequenceType =
