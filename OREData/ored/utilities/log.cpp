@@ -419,7 +419,7 @@ void StructuredMessage::addSubFields(const map<string, string>& subFields) {
 
         for (const auto& sf : subFields) {
             map<string, boost::any> subField({{"name", sf.first}, {"value", sf.second}});
-            boost::any_cast<vector<boost::any>>(data_.at("sub_fields")).push_back(subField);
+            boost::any_cast<vector<boost::any>&>(data_.at("sub_fields")).push_back(subField);
         }
     }
 }
