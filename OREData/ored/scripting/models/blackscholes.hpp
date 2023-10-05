@@ -65,7 +65,7 @@ private:
     // BlackScholesBase interface implementation
     void performCalculations() const override;
 
-    void populatePathValues(std::map<Date, std::vector<RandomVariable>>& paths,
+    void populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                             const boost::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                             const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const;
     // covariance per effective simulation date

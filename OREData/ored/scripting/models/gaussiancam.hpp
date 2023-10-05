@@ -96,7 +96,7 @@ private:
     RandomVariable getDiscount(const Size idx, const Date& s, const Date& t,
                                const Handle<YieldTermStructure>& targetCurve) const;
 
-    void populatePathValues(std::map<Date, std::vector<RandomVariable>>& paths,
+    void populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                             std::map<Date, std::vector<RandomVariable>>& irStates,
                             std::map<Date, std::vector<std::pair<RandomVariable, RandomVariable>>>& infStates,
                             const std::vector<Real>& times, const bool isTraining) const;
@@ -122,6 +122,7 @@ private:
     mutable std::map<Date, std::vector<RandomVariable>> irStatesTraining_;        // ditto (training)
     mutable std::map<Date, std::vector<std::pair<RandomVariable, RandomVariable>>>
         infStatesTraining_;                               // ditto (training)
+    mutable bool inTrainingPhase_ = false;                // are we currently using training paths?
     mutable std::vector<Size> indexPositionInProcess_;    // maps index no to position in state process
     mutable std::vector<Size> infIndexPositionInProcess_; // maps inf index no to position in state process
     mutable std::vector<Size> currencyPositionInProcess_; // maps currency no to position in state process

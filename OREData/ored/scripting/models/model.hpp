@@ -71,7 +71,8 @@ public:
     // if not null, this model uses a separate mc training phase for NPV() calcs
     virtual Size trainingSamples() const { return Null<Size>(); }
 
-    // enable / disable the usage of the training paths (if trainingPaths() is not null)
+    /* enable / disable the usage of the training paths (if trainingPaths() is not null)
+       the model should be using training paths only temporarily and reset to normal model via RAII */
     virtual void toggleTrainingPaths() const {}
 
     // the eval date

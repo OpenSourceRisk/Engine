@@ -58,8 +58,8 @@ GaussianCam::GaussianCam(const Handle<CrossAssetModel>& cam, const Size paths,
                          const std::vector<std::string>& conditionalExpectationModelStates)
     : ModelImpl(curves.front()->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
                 simulationDates, iborFallbackConfig),
-      cam_(cam), curves_(curves), fxSpots_(fxSpots), mcParams_(mcParams),
-      timeStepsPerYear_(timeStepsPerYear), projectedStateProcessIndices_(projectedStateProcessIndices) {
+      cam_(cam), curves_(curves), fxSpots_(fxSpots), mcParams_(mcParams), timeStepsPerYear_(timeStepsPerYear),
+      projectedStateProcessIndices_(projectedStateProcessIndices) {
 
     QL_REQUIRE(!cam_.empty(), "model is empty");
 
@@ -91,7 +91,10 @@ GaussianCam::GaussianCam(const Handle<CrossAssetModel>& cam, const Size paths,
 
 Size GaussianCam::size() const {
     if (injectedPathTimes_ == nullptr)
-        return Model::size();
+        if (inTrainingPhase_)
+            return mcParams_.trainingSamples;
+        else
+            return Model::size();
     else {
         return overwriteModelSize_;
     }
@@ -111,6 +114,9 @@ const Date& GaussianCam::referenceDate() const {
 }
 
 void GaussianCam::performCalculations() const {
+
+    QL_REQUIRE(!inTrainingPhase_, "GaussianCam::performCalculations(): state inTrainingPhase should be false, this was "
+                                  "not resetted appropriately.");
 
     referenceDate_ = curves_.front()->referenceDate();
 
@@ -192,13 +198,14 @@ void GaussianCam::performCalculations() const {
 
     // populate path values
 
-    populatePathValues(underlyingPaths_, irStates_, infStates_, times, false);
-    if (trainingSamples() != Null<Size>()) {
-        populatePathValues(underlyingPathsTraining_, irStatesTraining_, infStatesTraining_, times, true);
+    populatePathValues(size(), underlyingPaths_, irStates_, infStates_, times, false);
+    if (trainingSamples() != Null<Size>() && injectedPathTimes_ == nullptr) {
+        populatePathValues(trainingSamples(), underlyingPathsTraining_, irStatesTraining_, infStatesTraining_, times,
+                           true);
     }
 }
 
-void GaussianCam::populatePathValues(std::map<Date, std::vector<RandomVariable>>& paths,
+void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                                      std::map<Date, std::vector<RandomVariable>>& irStates,
                                      std::map<Date, std::vector<std::pair<RandomVariable, RandomVariable>>>& infStates,
                                      const std::vector<Real>& times, const bool isTraining) const {
@@ -221,8 +228,8 @@ void GaussianCam::populatePathValues(std::map<Date, std::vector<RandomVariable>>
     // INF DK or JY state, we happen to have two components (x,y) for each, so no case distinction needed
     for (Size k = 0; k < infIndices_.size(); ++k) {
         infStates[referenceDate()].push_back(
-            std::make_pair(RandomVariable(size(), process->initialValues().at(infIndexPositionInProcess_[k])),
-                           RandomVariable(size(), process->initialValues().at(infIndexPositionInProcess_[k] + 1))));
+            std::make_pair(RandomVariable(nSamples, process->initialValues().at(infIndexPositionInProcess_[k])),
+                           RandomVariable(nSamples, process->initialValues().at(infIndexPositionInProcess_[k] + 1))));
     }
 
     if (effectiveSimulationDates_.size() == 1)
@@ -248,7 +255,7 @@ void GaussianCam::populatePathValues(std::map<Date, std::vector<RandomVariable>>
                                           times.size() - 1, isTraining ? mcParams_.trainingSeed : mcParams_.seed,
                                           mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers);
 
-        for (Size path = 0; path < size(); ++path) {
+        for (Size path = 0; path < nSamples; ++path) {
             auto p = gen->next();
             Real state = 0.0;
             auto date = effectiveSimulationDates_.begin();
@@ -269,7 +276,7 @@ void GaussianCam::populatePathValues(std::map<Date, std::vector<RandomVariable>>
         // below - for efficiency reasons the loop over the paths should be the innermost loop there!
         std::vector<std::vector<std::vector<Real>>> pathValues(
             effectiveSimulationDates_.size() - 1,
-            std::vector<std::vector<Real>>(process->size(), std::vector<Real>(size())));
+            std::vector<std::vector<Real>>(process->size(), std::vector<Real>(nSamples)));
 
         if (injectedPathTimes_ == nullptr) {
             // the usual path generator
@@ -277,7 +284,7 @@ void GaussianCam::populatePathValues(std::map<Date, std::vector<RandomVariable>>
                 makeMultiPathGenerator(isTraining ? mcParams_.trainingSequenceType : mcParams_.sequenceType, process,
                                        timeGrid_, isTraining ? mcParams_.trainingSeed : mcParams_.seed,
                                        mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers);
-            for (Size i = 0; i < size(); ++i) {
+            for (Size i = 0; i < nSamples; ++i) {
                 MultiPath path = pathGen->next().value;
                 for (Size j = 0; j < effectiveSimulationDates_.size() - 1; ++j) {
                     for (Size k = 0; k < process->size(); ++k) {
@@ -301,7 +308,7 @@ void GaussianCam::populatePathValues(std::map<Date, std::vector<RandomVariable>>
             auto pathInterpolator =
                 LinearFlat().interpolate(relevantPathTimes.begin(), relevantPathTimes.end(), y.begin());
             pathInterpolator.enableExtrapolation();
-            for (Size i = 0; i < size(); ++i) {
+            for (Size i = 0; i < nSamples; ++i) {
                 for (Size k = 0; k < process->size(); ++k) {
                     for (Size j = 0; j < relevantPathTimes.size(); ++j) {
                         y[j] = (*injectedPaths_)[relevantPathIndices[j]][projectedStateProcessIndices_[k]][i];
@@ -326,7 +333,7 @@ void GaussianCam::populatePathValues(std::map<Date, std::vector<RandomVariable>>
         }
         for (Size k = 0; k < indices_.size(); ++k) {
             for (Size j = 1; j < effectiveSimulationDates_.size(); ++j) {
-                for (Size i = 0; i < size(); ++i) {
+                for (Size i = 0; i < nSamples; ++i) {
                     rvs[k][j - 1]->set(i, std::exp(pathValues[j - 1][indexPositionInProcess_[k]][i]));
                 }
             }
@@ -344,7 +351,7 @@ void GaussianCam::populatePathValues(std::map<Date, std::vector<RandomVariable>>
         }
         for (Size k = 0; k < currencies_.size(); ++k) {
             for (Size j = 1; j < effectiveSimulationDates_.size(); ++j) {
-                for (Size i = 0; i < size(); ++i) {
+                for (Size i = 0; i < nSamples; ++i) {
                     rvs2[k][j - 1]->set(i, pathValues[j - 1][currencyPositionInProcess_[k]][i]);
                 }
             }
@@ -365,7 +372,7 @@ void GaussianCam::populatePathValues(std::map<Date, std::vector<RandomVariable>>
         }
         for (Size k = 0; k < infIndices_.size(); ++k) {
             for (Size j = 1; j < effectiveSimulationDates_.size(); ++j) {
-                for (Size i = 0; i < size(); ++i) {
+                for (Size i = 0; i < nSamples; ++i) {
                     rvs3a[k][j - 1]->set(i, pathValues[j - 1][infIndexPositionInProcess_[k]][i]);
                     rvs3b[k][j - 1]->set(i, pathValues[j - 1][infIndexPositionInProcess_[k] + 1][i]);
                 }
@@ -613,6 +620,7 @@ void GaussianCam::toggleTrainingPaths() const {
     std::swap(underlyingPaths_, underlyingPathsTraining_);
     std::swap(irStates_, irStatesTraining_);
     std::swap(infStates_, infStatesTraining_);
+    inTrainingPhase_ = !inTrainingPhase_;
 }
 
 Size GaussianCam::trainingSamples() const { return mcParams_.trainingSamples; }

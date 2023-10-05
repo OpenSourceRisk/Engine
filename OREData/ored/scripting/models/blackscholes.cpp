@@ -198,14 +198,14 @@ void BlackScholes::performCalculations() const {
 
     // evolve the process using correlated normal variates and set the underlying path values
 
-    populatePathValues(underlyingPaths_,
+    populatePathValues(size(), underlyingPaths_,
                        makeMultiPathVariateGenerator(mcParams_.sequenceType, indices_.size(),
                                                      effectiveSimulationDates_.size() - 1, mcParams_.seed,
                                                      mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers),
                        drift, sqrtCov);
 
     if (trainingSamples() != Null<Size>()) {
-        populatePathValues(underlyingPathsTraining_,
+        populatePathValues(trainingSamples(), underlyingPathsTraining_,
                            makeMultiPathVariateGenerator(mcParams_.trainingSequenceType, indices_.size(),
                                                          effectiveSimulationDates_.size() - 1, mcParams_.trainingSeed,
                                                          mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers),
@@ -244,7 +244,7 @@ void BlackScholes::performCalculations() const {
     }
 }
 
-void BlackScholes::populatePathValues(std::map<Date, std::vector<RandomVariable>>& paths,
+void BlackScholes::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                                       const boost::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                                       const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const {
 
@@ -263,7 +263,7 @@ void BlackScholes::populatePathValues(std::map<Date, std::vector<RandomVariable>
         logState0[j] = std::log(model_->processes()[j]->x0());
     }
 
-    for (Size path = 0; path < size(); ++path) {
+    for (Size path = 0; path < nSamples; ++path) {
         auto seq = gen->next();
         logState = logState0;
         for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {

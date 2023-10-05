@@ -131,14 +131,14 @@ void LocalVol::performCalculations() const {
 
     // evolve the process using correlated normal variates and set the underlying path values
 
-    populatePathValues(underlyingPaths_,
+    populatePathValues(size(), underlyingPaths_,
                        makeMultiPathVariateGenerator(mcParams_.sequenceType, indices_.size(), timeGrid_.size() - 1,
                                                      mcParams_.seed, mcParams_.sobolOrdering,
                                                      mcParams_.sobolDirectionIntegers),
                        correlation, sqrtCorr, deterministicDrift, eqComIdx, t, dt, sqrtdt);
 
     if (trainingSamples() != Null<Size>()) {
-        populatePathValues(underlyingPathsTraining_,
+        populatePathValues(trainingSamples(), underlyingPathsTraining_,
                            makeMultiPathVariateGenerator(mcParams_.trainingSequenceType, indices_.size(),
                                                          timeGrid_.size() - 1, mcParams_.trainingSeed,
                                                          mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers),
@@ -147,7 +147,7 @@ void LocalVol::performCalculations() const {
 
 } // initPaths()
 
-void LocalVol::populatePathValues(std::map<Date, std::vector<RandomVariable>>& paths,
+void LocalVol::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                                   const boost::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                                   const Matrix& correlation, const Matrix& sqrtCorr,
                                   const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
