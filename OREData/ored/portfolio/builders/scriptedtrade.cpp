@@ -212,6 +212,9 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
                "model/engine = GaussianCam/MC required to build an amc model, got " << modelParam_ << "/"
                                                                                     << engineParam_);
 
+    if(staticAnalyser_->regressionDates().empty())
+        mcParams_.trainingSamples = Null<Size>();
+
     if (modelParam_ == "BlackScholes" && engineParam_ == "MC") {
         buildBlackScholes(id, iborFallbackConfig);
     } else if (modelParam_ == "BlackScholes" && engineParam_ == "FD") {
