@@ -825,9 +825,10 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
     auto tmp = dependencies_.find(configuration);
     if (tmp == dependencies_.end()) {
         if (configuration != Market::defaultConfiguration) {
-            ALOG(StructuredCurveErrorMessage(ore::data::to_string(o) + "(" + name + ")", "Failed to Build Curve",
-                                             "Configuration '" + configuration +
-                                                 "' not known, retry with default configuration."));
+            ALOG(StructuredCurveWarningMessage(
+                ore::data::to_string(o) + "(" + name + ")", "Unknown market configuration.",
+                "Configuration '" + configuration +
+                    "' not known - check wyh this is used. Will retry with default configuration."));
             require(o, name, Market::defaultConfiguration);
             return;
         } else {
