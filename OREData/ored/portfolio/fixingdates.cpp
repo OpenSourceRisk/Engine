@@ -658,30 +658,27 @@ void FixingDateGetter::visit(TRSCashFlow& bc) {
 
     for (const auto& ind : indexes) {
         if (ind) {
-            if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_) {
-                Date adjStartDate = ind->fixingCalendar().adjust(bc.fixingStartDate(), Preceding);
-                requiredFixings_.addFixingDate(adjStartDate,
-                                               IndexNameTranslator::instance().oreName(ind->name()), bc.date());
-            }
-            Date adjEndDate = ind->fixingCalendar().adjust(bc.fixingEndDate(), Preceding);
-            requiredFixings_.addFixingDate(adjEndDate, IndexNameTranslator::instance().oreName(ind->name()), bc.date());
+            if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_)
+                requiredFixings_.addFixingDate(ind->fixingCalendar().adjust(bc.fixingStartDate()), 
+                    IndexNameTranslator::instance().oreName(ind->name()), bc.date());
+
+            requiredFixings_.addFixingDate(ind->fixingCalendar().adjust(bc.fixingEndDate()), 
+                IndexNameTranslator::instance().oreName(ind->name()), bc.date());
         }
     }
 
     for (const auto& fx : fxIndexes) {
         if (fx) {
-            Date adjStartDate = fx->fixingCalendar().adjust(bc.fixingStartDate(), Preceding);
-            requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(adjStartDate, Preceding),
+            requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(bc.fixingStartDate(), Preceding),
                                            IndexNameTranslator::instance().oreName(fx->name()), bc.date());
-            Date adjEndDate = fx->fixingCalendar().adjust(bc.fixingEndDate(), Preceding);
-            requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(adjEndDate, Preceding),
+            requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
                                            IndexNameTranslator::instance().oreName(fx->name()), bc.date());
 
             // also add using the underlyingIndex calendar, as FX Conversion is done within a CompositeIndex
             // for a basket of underlyings
-            requiredFixings_.addFixingDate(bc.index()->fixingCalendar().adjust(adjStartDate, Preceding),
+            requiredFixings_.addFixingDate(bc.index()->fixingCalendar().adjust(bc.fixingStartDate(), Preceding),
                                            IndexNameTranslator::instance().oreName(fx->name()), bc.date(), false);
-            requiredFixings_.addFixingDate(bc.index()->fixingCalendar().adjust(adjEndDate, Preceding),
+            requiredFixings_.addFixingDate(bc.index()->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
                                            IndexNameTranslator::instance().oreName(fx->name()), bc.date(), false);
         }
     }
