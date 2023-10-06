@@ -750,7 +750,8 @@ void McMultiLegBaseEngine::calculate() const {
     std::vector<Array> coeffsContinuationValue(exerciseXvaTimes.size()); // available on ex times
     std::vector<Array> coeffsOption(exerciseXvaTimes.size());            // available on xva and ex times
 
-    auto basisFns = RandomVariableLsmBasisSystem::multiPathBasisSystem(model_->stateProcess()->size(), polynomOrder_);
+    auto basisFns =
+        RandomVariableLsmBasisSystem::multiPathBasisSystem(model_->stateProcess()->size(), polynomOrder_, polynomType_);
 
     enum class CfStatus { open, cached, done };
     std::vector<CfStatus> cfStatus(cashflowInfo.size(), CfStatus::open);
