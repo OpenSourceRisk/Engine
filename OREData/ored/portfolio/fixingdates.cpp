@@ -662,7 +662,7 @@ void FixingDateGetter::visit(TRSCashFlow& bc) {
                 requiredFixings_.addFixingDate(ind->fixingCalendar().adjust(bc.fixingStartDate(), Preceding), 
                     IndexNameTranslator::instance().oreName(ind->name()), bc.date());
 
-            requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
+            requiredFixings_.addFixingDate(ind->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
                                            IndexNameTranslator::instance().oreName(ind->name()), bc.date());
         }
     }
