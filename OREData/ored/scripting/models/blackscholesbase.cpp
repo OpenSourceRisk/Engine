@@ -39,9 +39,9 @@ using namespace QuantExt;
 BlackScholesBase::BlackScholesBase(const Size paths, const std::string& currency,
                                    const Handle<YieldTermStructure>& curve, const std::string& index,
                                    const std::string& indexCurrency, const Handle<BlackScholesModelWrapper>& model,
-                                   const Size regressionOrder, const std::set<Date>& simulationDates,
+                                   const Model::McParams& mcParams, const std::set<Date>& simulationDates,
                                    const IborFallbackConfig& iborFallbackConfig)
-    : BlackScholesBase(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, regressionOrder,
+    : BlackScholesBase(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, mcParams,
                        simulationDates, iborFallbackConfig) {}
 
 BlackScholesBase::BlackScholesBase(
@@ -52,11 +52,11 @@ BlackScholesBase::BlackScholesBase(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const Size regressionOrder, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
+    const Model::McParams& mcParams, const std::set<Date>& simulationDates,
+    const IborFallbackConfig& iborFallbackConfig)
     : ModelImpl(curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
                 simulationDates, iborFallbackConfig),
-      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations),
-      regressionOrder_(regressionOrder) {
+      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations), mcParams_(mcParams) {
 
     // check inputs
 
@@ -111,6 +111,10 @@ const Date& BlackScholesBase::referenceDate() const {
 
 void BlackScholesBase::performCalculations() const {
 
+    QL_REQUIRE(!inTrainingPhase_,
+               "BlackScholesBase::performCalculations(): state inTrainingPhase should be false, this was "
+               "not resetted appropriately.");
+
     referenceDate_ = curves_.front()->referenceDate();
 
     // set up time grid
@@ -128,6 +132,7 @@ void BlackScholesBase::performCalculations() const {
         positionInTimeGrid_[i] = timeGrid_.index(times[i]);
 
     underlyingPaths_.clear();
+    underlyingPathsTraining_.clear();
 }
 
 RandomVariable BlackScholesBase::getIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
@@ -262,7 +267,8 @@ RandomVariable BlackScholesBase::npv(const RandomVariable& amount, const Date& o
     // generate basis if not yet done
 
     if (basisFns_.find(state.size()) == basisFns_.end())
-        basisFns_[state.size()] = multiPathBasisSystem(state.size(), regressionOrder_, size());
+        basisFns_[state.size()] = multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
+                                                       std::min(size(), trainingSamples()));
 
     // if a memSlot is given and coefficients are stored, we use them
 
@@ -296,7 +302,26 @@ RandomVariable BlackScholesBase::npv(const RandomVariable& amount, const Date& o
     return conditionalExpectation(state, basisFns_.at(state.size()), coeff);
 }
 
-void BlackScholesBase::releaseMemory() { underlyingPaths_.clear(); }
+void BlackScholesBase::releaseMemory() {
+    underlyingPaths_.clear();
+    underlyingPathsTraining_.clear();
+}
+
+void BlackScholesBase::resetNPVMem() { storedRegressionCoeff_.clear(); }
+
+void BlackScholesBase::toggleTrainingPaths() const {
+    std::swap(underlyingPaths_, underlyingPathsTraining_);
+    inTrainingPhase_ = !inTrainingPhase_;
+}
+
+Size BlackScholesBase::trainingSamples() const { return mcParams_.trainingSamples; }
+
+Size BlackScholesBase::size() const {
+    if (inTrainingPhase_)
+        return mcParams_.trainingSamples;
+    else
+        return Model::size();
+}
 
 } // namespace data
 } // namespace ore

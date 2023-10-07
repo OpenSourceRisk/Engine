@@ -36,6 +36,15 @@
 namespace ore {
 namespace data {
 
+void addTRSRequiredFixings(RequiredFixings& fixings, const std::vector<Leg>& returnLegs, 
+    const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& ind = nullptr) {
+    QL_REQUIRE(returnLegs.size() > 0, "TrsUnderlyingBuilder: No returnLeg built");
+    auto fdg = boost::make_shared<FixingDateGetter>(fixings);
+    fdg->setAdditionalFxIndex(ind);
+    for (const auto& rl : returnLegs)
+        addToRequiredFixings(rl, fdg);
+}
+
 void TRS::ReturnData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ReturnData");
     payer_ = XMLUtils::getChildValueAsBool(node, "Payer", true);
@@ -398,7 +407,8 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         std::map<std::string, double> localIndexNamesAndQuantities;
         std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>> localFxIndices = initialFxIndices;
         Real dummyInitialPrice = 1.0; // initial price is only updated if we have one underlying
-
+        
+        std::vector<Leg> returnLegs;
         auto builder = TrsUnderlyingBuilderFactory::instance().getBuilder(
             underlyingDerivativeId_[i].empty() ? underlying_[i]->tradeType() : "Derivative");
         builder->build(id(), underlying_[i], valuationDates, paymentDates, fundingCurrency,
@@ -408,9 +418,9 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                        assetCurrency[i], localCreditRiskCurrency, creditQualifierMapping_, localMaturity,
                        std::bind(&TRS::getFxIndex, this, std::placeholders::_1, std::placeholders::_2,
                                  std::placeholders::_3, std::placeholders::_4, std::placeholders::_5),
-                       underlyingDerivativeId_[i]);
+                       underlyingDerivativeId_[i], requiredFixings_, returnLegs);
 
-        requiredFixings_.addData(builder->requiredFixings(fxIndexReturn));
+        addTRSRequiredFixings(requiredFixings_, returnLegs, fxIndexReturn);
 
         // update global credit risk currency
 

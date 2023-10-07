@@ -128,7 +128,7 @@ struct CBOTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
               getFxIndex,
-          const std::string& underlyingDerivativeId) const override;
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 } // namespace data
