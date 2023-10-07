@@ -20,10 +20,13 @@
 
 #include <ql/errors.hpp>
 #include <ql/math/array.hpp>
+#include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
+#include <ql/patterns/singleton.hpp>
 #include <ql/types.hpp>
 
 #include <boost/function.hpp>
+#include <boost/timer/timer.hpp>
 
 #include <initializer_list>
 #include <vector>
@@ -31,6 +34,20 @@
 namespace QuantExt {
 
 using namespace QuantLib;
+
+// statistics
+
+struct RandomVariableStats : public QuantLib::Singleton<RandomVariableStats> {
+    RandomVariableStats() {
+        data_timer.stop();
+        calc_timer.stop();
+    }
+    bool enabled = false;
+    std::size_t data_ops = 0;
+    std::size_t calc_ops = 0;
+    boost::timer::cpu_timer data_timer;
+    boost::timer::cpu_timer calc_timer;
+};
 
 // filter class
 
@@ -76,6 +93,35 @@ private:
     bool* data_;
     bool deterministic_;
 };
+
+// inline element-wise access operators
+
+inline void Filter::set(const Size i, const bool v) {
+    QL_REQUIRE(i < n_, "Filter::set(" << i << "): out of bounds, size is " << n_);
+    if (deterministic_) {
+        if (v != constantData_)
+            expand();
+        else
+            return;
+    }
+    data_[i] = v;
+}
+
+inline bool Filter::operator[](const Size i) const {
+    if (deterministic_)
+        return constantData_;
+    else
+        return data_[i];
+}
+
+inline bool Filter::at(const Size i) const {
+    QL_REQUIRE(n_ > 0, "Filter::at(" << i << "): dimension is zero");
+    if (deterministic_)
+        return constantData_;
+    QL_REQUIRE(i < n_, "Filter::at(" << i << "): out of bounds, size is " << n_);
+    return operator[](i);
+}
+
 
 bool operator==(const Filter& a, const Filter& b);
 bool operator!=(const Filter& a, const Filter& b);
@@ -246,5 +292,34 @@ RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const
 
 // derivative of indicator function 1_{x>0}
 RandomVariable indicatorDerivative(const RandomVariable& x, const double eps);
+
+// inline element-wise access operators
+
+inline void RandomVariable::set(const Size i, const Real v) {
+    QL_REQUIRE(i < n_, "RandomVariable::set(" << i << "): out of bounds, size is " << n_);
+    if (deterministic_) {
+        if (!QuantLib::close_enough(v, constantData_)) {
+            expand();
+        } else {
+            return;
+        }
+    }
+    data_[i] = v;
+}
+
+inline Real RandomVariable::operator[](const Size i) const {
+    if (deterministic_)
+        return constantData_;
+    else
+        return data_[i];
+}
+
+inline Real RandomVariable::at(const Size i) const {
+    QL_REQUIRE(n_ > 0, "RandomVariable::at(" << i << "): dimension is zero");
+    if (deterministic_)
+        return constantData_;
+    QL_REQUIRE(i < n_, "RandomVariable::at(" << i << "): out of bounds, size is " << n_);
+    return operator[](i);
+}
 
 } // namespace QuantExt
