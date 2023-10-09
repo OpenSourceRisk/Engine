@@ -181,14 +181,16 @@
       }
     },
     {
+        "name": "_relwithdebinfo",
+        "hidden": true,
+        "cacheVariables": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+        }
+    },
+    {
       "name": "_ninja",
       "hidden": true,
       "generator": "Ninja"
-    },
-    {
-      "name": "_make",
-      "hidden": true,
-      "generator": "Unix Makefiles"
     },
     {
       "name": "linux-gcc-ninja-debug",
@@ -205,7 +207,15 @@
         "_ninja",
         "_release"
       ]
-    }
+    },
+    {
+        "name": "linux-gcc-ninja-relwithdebinfo",
+        "inherits": [
+          "linux-gcc-base",
+          "_ninja",
+          "_relwithdebinfo"
+        ]
+      }
   ],
   "buildPresets": [
     {
