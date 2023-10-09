@@ -27,7 +27,7 @@
 #include <iostream>
 
 // if defined, RandomVariableStats are updated, default is undefined
-// #define ENABLE_RANDOMVARIABLE_STATS
+//#define ENABLE_RANDOMVARIABLE_STATS
 
 namespace QuantExt {
 
@@ -59,12 +59,12 @@ inline void stopCalcStats(const std::size_t n) {
     }
 }
 
-#elif
+#else
 
-inline resumeDataStats() {}
-inline stopDataStats(const std::size_t n) {}
-inline resumeCalcStats() {}
-inline stopCalcStats(const std::size_t n) {}
+inline void resumeDataStats() {}
+inline void stopDataStats(const std::size_t n) {}
+inline void resumeCalcStats() {}
+inline void stopCalcStats(const std::size_t n) {}
 
 #endif
 

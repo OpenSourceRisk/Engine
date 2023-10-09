@@ -39,7 +39,9 @@ using namespace QuantLib;
 
 struct RandomVariableStats : public QuantLib::Singleton<RandomVariableStats> {
     RandomVariableStats() {
+        data_timer.start();
         data_timer.stop();
+        calc_timer.start();
         calc_timer.stop();
     }
     bool enabled = false;
@@ -86,6 +88,9 @@ struct Filter {
     // expand vector to full size and set deterministic to false
     void expand();
 
+    // pointer to raw data, this is null for deterministic variables
+    bool* data();
+
 private:
     // for invariants see the corresponding section below in class RandomVariable
     Size n_;
@@ -122,6 +127,7 @@ inline bool Filter::at(const Size i) const {
     return operator[](i);
 }
 
+inline bool* Filter::data() { return data_; }
 
 bool operator==(const Filter& a, const Filter& b);
 bool operator!=(const Filter& a, const Filter& b);
@@ -201,6 +207,8 @@ struct RandomVariable {
     friend RandomVariable indicatorGeq(RandomVariable, const RandomVariable&, const Real trueVal, const Real falseVal);
 
     void expand();
+    // pointer to raw data, this is null for deterministic variables
+    double* data();
 
     static std::function<void(RandomVariable&)> deleter;
 
@@ -321,5 +329,7 @@ inline Real RandomVariable::at(const Size i) const {
     QL_REQUIRE(i < n_, "RandomVariable::at(" << i << "): out of bounds, size is " << n_);
     return operator[](i);
 }
+
+inline double* RandomVariable::data() { return data_; }
 
 } // namespace QuantExt
