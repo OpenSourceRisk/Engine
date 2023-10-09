@@ -57,16 +57,16 @@ void ScriptedInstrumentPricingEngine::calculate() const {
 
     lastCalculationWasValid_ = false;
 
-    // set up copy of initial context to run the script engine on
-
-    auto workingContext = boost::make_shared<Context>(*context_);
-
     // make sure we release the memory allocated by the model after the pricing
     struct MemoryReleaser {
         ~MemoryReleaser() { model->releaseMemory(); }
         boost::shared_ptr<Model> model;
     };
     MemoryReleaser memoryReleaser{model_};
+
+    // set up copy of initial context to run the script engine on
+
+    auto workingContext = boost::make_shared<Context>(*context_);
 
     // set TODAY in the context
 
@@ -78,6 +78,20 @@ void ScriptedInstrumentPricingEngine::calculate() const {
     // clear NPVMem() regression coefficients
 
     model_->resetNPVMem();
+
+    // if the model uses a separate training phase for NPV(), run this
+
+    if (model_->trainingSamples() != Null<Size>()) {
+        auto trainingContext = boost::make_shared<Context>(*workingContext);
+        trainingContext->resetSize(model_->trainingSamples());
+        struct TrainingPathToggle {
+            TrainingPathToggle(boost::shared_ptr<Model> model) : model(model) { model->toggleTrainingPaths(); }
+            ~TrainingPathToggle() { model->toggleTrainingPaths(); }
+            boost::shared_ptr<Model> model;
+        } toggle(model_);
+        ScriptEngine trainingEngine(ast_, trainingContext, model_);
+        trainingEngine.run(script_, interactive_);
+    }
 
     // set up script engine and run it
 

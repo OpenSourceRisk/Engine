@@ -21,6 +21,7 @@
 #include <qle/calendars/largejointcalendar.hpp>
 #include <qle/indexes/bondindex.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/genericindex.hpp>
 
 namespace QuantExt {
 
@@ -63,9 +64,12 @@ Real CompositeIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) c
         try {
             indexFixing = indices_[i]->fixing(fixingDate, forecastTodaysFixing);
         } catch (const std::exception&) {
-            throw;
+            auto gi = QuantLib::ext::dynamic_pointer_cast<QuantExt::GenericIndex>(indices_[i]);
+            if (gi && gi->expiry() != Date() && fixingDate >= gi->expiry())
+                indexFixing = 0.0; 
+            else
+                throw;
         }
-
 
         // if the fixing date is not a valid fx fixing date, adjust the latter to the preceding valid date
         result += indexFixing * weights_[i] *

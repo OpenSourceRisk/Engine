@@ -44,7 +44,6 @@ protected:
 
         Current limitations:
         - the parameter minimalObsDate is ignored, the corresponding optimization is not implemented yet
-        - polynomType is ignored, Mononimal is used always
         - pricingSamples are ignored, the npv from the training phase is used alway
     */
     McMultiLegBaseEngine(
