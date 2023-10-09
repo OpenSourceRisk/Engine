@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "configurePresets": [
     {
       "name": "windows-ninja-x64-debug",
@@ -153,8 +153,7 @@
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "g++",
-        "BOOST_INCLUDEDIR": "$env{BOOST}",
-        "BOOST_LIBRARYDIR": "$env{BOOST_LIB64}",
+        "BOOST_ROOT": "$env{BOOST}",
         "QL_BUILD_EXAMPLES": false,
         "QL_BUILD_TEST_SUITE": false,
         "QL_BUILD_BENCHMARK": false,
