@@ -281,6 +281,9 @@ void simulation(string dateGridString, bool checkFixings) {
     // Path generator
     BigNatural seed = 5;
     bool antithetic = false;
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(model->stateProcess())) {
+        tmp->resetCache(dg->timeGrid().size() - 1);
+    }
     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen =
         boost::make_shared<MultiPathGeneratorMersenneTwister>(model->stateProcess(), dg->timeGrid(), seed, antithetic);
 
