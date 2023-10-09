@@ -664,13 +664,13 @@ void FixingDateGetter::visit(TRSCashFlow& bc) {
 
             auto gi = QuantLib::ext::dynamic_pointer_cast<QuantExt::GenericIndex>(ind);
             
-            if (!gi || (gi->expiry() != Date() && startDate < gi->expiry())) {
+            if (!gi || gi->expiry() == Date() || startDate < gi->expiry()) {
                 if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_)
                     requiredFixings_.addFixingDate(startDate, IndexNameTranslator::instance().oreName(ind->name()),
                                                    bc.date());
             }
 
-            if (!gi || (gi->expiry() != Date() && endDate < gi->expiry()))
+            if (!gi || gi->expiry() == Date() || endDate < gi->expiry())
                 requiredFixings_.addFixingDate(endDate,
                                            IndexNameTranslator::instance().oreName(ind->name()), bc.date());
         }
