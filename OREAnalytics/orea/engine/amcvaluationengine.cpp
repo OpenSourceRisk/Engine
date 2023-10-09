@@ -207,6 +207,22 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     timer.start();
     Size progressCounter = 0;
 
+    // reset timing stats
+    RandomVariableStats::instance().enabled = true;
+    RandomVariableStats::instance().data_ops = 0;
+    RandomVariableStats::instance().calc_ops = 0;
+    RandomVariableStats::instance().data_timer.start();
+    RandomVariableStats::instance().data_timer.stop();
+    RandomVariableStats::instance().calc_timer.start();
+    RandomVariableStats::instance().calc_timer.stop();
+    McEngineStats::instance().other_timer.start();
+    McEngineStats::instance().other_timer.stop();
+    McEngineStats::instance().path_timer.start();
+    McEngineStats::instance().path_timer.stop();
+    McEngineStats::instance().calc_timer.start();
+    McEngineStats::instance().calc_timer.stop();
+
+
     auto extractAmcCalculator = [&amcCalculators, &tradeId, &tradeLabel, &tradeType, &effectiveMultiplier,
                                  &currencyIndex, &tradeFees, &model,
                                  &outputCube](const std::pair<std::string, boost::shared_ptr<Trade>>& trade,
@@ -521,6 +537,21 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     LOG("residual time        : " << residualTime << " sec");
     LOG("total time           : " << totalTime << " sec");
     LOG("AMCValuationEngine finished for one of possibly multiple threads.");
+    LOG("RandomVariableStats  : ");
+    LOG("Data Ops             : " << RandomVariableStats::instance().data_ops / 1E6 << " MOPS");
+    LOG("Calc Ops             : " << RandomVariableStats::instance().calc_ops / 1E6 << " MOPS");
+    LOG("Data Timer           : " << RandomVariableStats::instance().data_timer.elapsed().wall / 1E9 << " sec");
+    LOG("Calc Timer           : " << RandomVariableStats::instance().calc_timer.elapsed().wall / 1E9 << " sec");
+    LOG("Data Performace      : " << RandomVariableStats::instance().data_ops * 1E3 /
+                                         RandomVariableStats::instance().data_timer.elapsed().wall
+                                  << " MFLOPS");
+    LOG("Calc Performace      : " << RandomVariableStats::instance().calc_ops * 1E3 /
+                                         RandomVariableStats::instance().calc_timer.elapsed().wall
+                                  << " MFLOPS");
+    LOG("MC Other Timer       : " << McEngineStats::instance().other_timer.elapsed().wall / 1E9 << " sec");
+    LOG("MC Path Timer        : " << McEngineStats::instance().path_timer.elapsed().wall / 1E9 << " sec");
+    LOG("MC Calc Timer        : " << McEngineStats::instance().calc_timer.elapsed().wall / 1E9 << " sec");
+
 } // runCoreEngine()
 
 } // namespace
