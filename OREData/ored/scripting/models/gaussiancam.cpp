@@ -103,6 +103,10 @@ Size GaussianCam::size() const {
 void GaussianCam::releaseMemory() {
     underlyingPaths_.clear();
     underlyingPathsTraining_.clear();
+    irStates_.clear();
+    infStates_.clear();
+    irStatesTraining_.clear();
+    infStatesTraining_.clear();
     irIndexValueCache_.clear();
 }
 
@@ -152,6 +156,11 @@ void GaussianCam::performCalculations() const {
         irStates_[d] = std::vector<RandomVariable>(currencies_.size(), RandomVariable(size(), 0.0));
         infStates_[d] = std::vector<std::pair<RandomVariable, RandomVariable>>(
             infIndices_.size(), std::make_pair(RandomVariable(size(), 0.0), RandomVariable(size(), 0.0)));
+        if(trainingSamples() != Null<Size>() && injectedPathTimes_ == nullptr) {
+            irStatesTraining_[d] = std::vector<RandomVariable>(currencies_.size(), RandomVariable(size(), 0.0));
+            infStatesTraining_[d] = std::vector<std::pair<RandomVariable, RandomVariable>>(
+                infIndices_.size(), std::make_pair(RandomVariable(size(), 0.0), RandomVariable(size(), 0.0)));
+        }
     }
 
     // populate index mappings
