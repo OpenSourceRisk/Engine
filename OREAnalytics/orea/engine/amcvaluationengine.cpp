@@ -301,6 +301,9 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     // set up cache for paths
 
     auto process = model->stateProcess();
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        tmp->resetCache(sgd->getGrid()->timeGrid().size() - 1);
+    }
     Size nStates = process->size();
     QL_REQUIRE(sgd->getGrid()->timeGrid().size() > 0, "AMCValuationEngine: empty time grid given");
     std::vector<Real> pathTimes(std::next(sgd->getGrid()->timeGrid().begin(), 1), sgd->getGrid()->timeGrid().end());
