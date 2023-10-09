@@ -197,7 +197,7 @@ void DiscountingBondTRSEngine::calculate() const {
 
         // 5c skip cashflows that are paid <= today
 
-        if (bondFlowPayDate <= settlementDate)
+        if (bondFlowPayDate <= today)
             continue;
 
         hasLiveCashFlow = true;
