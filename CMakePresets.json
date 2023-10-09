@@ -181,11 +181,11 @@
       }
     },
     {
-        "name": "_relwithdebinfo",
-        "hidden": true,
-        "cacheVariables": {
-            "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-        }
+      "name": "_relwithdebinfo",
+      "hidden": true,
+      "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
     },
     {
       "name": "_ninja",
@@ -209,13 +209,13 @@
       ]
     },
     {
-        "name": "linux-gcc-ninja-relwithdebinfo",
-        "inherits": [
-          "linux-gcc-base",
-          "_ninja",
-          "_relwithdebinfo"
-        ]
-      }
+      "name": "linux-gcc-ninja-relwithdebinfo",
+      "inherits": [
+        "linux-gcc-base",
+        "_ninja",
+        "_relwithdebinfo"
+      ]
+    }
   ],
   "buildPresets": [
     {
