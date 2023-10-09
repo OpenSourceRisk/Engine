@@ -169,7 +169,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 }
             }
 
-            LOG("GenericYieldVolCurve: read " << quotesRead << " vols");
+            LOG("GenericYieldVolCurve: read " << quotesRead << " vols and " << shiftedQuotesRead << " shift quotes");
 
             // check we have found all requires values
             bool haveAllAtmValues = true;
