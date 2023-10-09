@@ -194,6 +194,7 @@ portfolio/commodityposition.cpp
 portfolio/commodityspreadoption.cpp
 portfolio/commodityswap.cpp
 portfolio/commodityswaption.cpp
+portfolio/compositeinstrumentwrapper.cpp
 portfolio/compositetrade.cpp
 portfolio/convertiblebond.cpp
 portfolio/convertiblebonddata.cpp
@@ -246,6 +247,7 @@ portfolio/indexcreditdefaultswapdata.cpp
 portfolio/indexcreditdefaultswapoption.cpp
 portfolio/indexing.cpp
 portfolio/inflationswap.cpp
+portfolio/instrumentwrapper.cpp
 portfolio/knockoutswap.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
@@ -314,7 +316,6 @@ scripting/models/gaussiancam.cpp
 scripting/models/localvol.cpp
 scripting/models/modelcgimpl.cpp
 scripting/models/modelimpl.cpp
-utilities/bondindexbuilder.cpp
 scripting/paylog.cpp
 scripting/randomastgenerator.cpp
 scripting/scriptedinstrument.cpp
@@ -323,6 +324,7 @@ scripting/scriptparser.cpp
 scripting/staticanalyser.cpp
 scripting/utilities.cpp
 scripting/value.cpp
+utilities/bondindexbuilder.cpp
 utilities/calendaradjustmentconfig.cpp
 utilities/calendarparser.cpp
 utilities/conventionsbasedfutureexpiry.cpp
@@ -345,6 +347,7 @@ utilities/osutils.cpp
 utilities/parsers.cpp
 utilities/progressbar.cpp
 utilities/strike.cpp
+utilities/timeperiod.cpp
 utilities/to_string.cpp
 utilities/wildcard.cpp
 utilities/xmlutils.cpp)
@@ -664,7 +667,6 @@ portfolio/worstofbasketswap.hpp
 report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
-utilities/bondindexbuilder.hpp
 scripting/ast.hpp
 scripting/astprinter.hpp
 scripting/astresetter.hpp
@@ -703,6 +705,7 @@ scripting/scriptparser.hpp
 scripting/staticanalyser.hpp
 scripting/utilities.hpp
 scripting/value.hpp
+utilities/bondindexbuilder.hpp
 utilities/calendaradjustmentconfig.hpp
 utilities/calendarparser.hpp
 utilities/conventionsbasedfutureexpiry.hpp

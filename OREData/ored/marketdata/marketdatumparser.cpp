@@ -46,6 +46,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"FRA", MarketDatum::InstrumentType::FRA},
         {"IMM_FRA", MarketDatum::InstrumentType::IMM_FRA},
         {"IR_SWAP", MarketDatum::InstrumentType::IR_SWAP},
+        // {"IR_DATED_SWAP", MarketDatum::InstrumentType::IR_DATED_SWAP},
         {"BASIS_SWAP", MarketDatum::InstrumentType::BASIS_SWAP},
         {"CC_BASIS_SWAP", MarketDatum::InstrumentType::CC_BASIS_SWAP},
         {"CC_FIX_FLOAT_SWAP", MarketDatum::InstrumentType::CC_FIX_FLOAT_SWAP},
@@ -316,10 +317,23 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
             indexName = tokens[3];
             offset = 1;
         }
-        Period fwdStart = parsePeriod(tokens[3 + offset]);
         Period tenor = parsePeriod(tokens[4 + offset]);
-        Period term = parsePeriod(tokens[5 + offset]);
-        return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term, tenor, indexName);
+        boost::variant<QuantLib::Date, QuantLib::Period> start = parseDateOrPeriod(tokens[3 + offset]);
+        boost::variant<QuantLib::Date, QuantLib::Period> end = parseDateOrPeriod(tokens[5 + offset]);
+
+        if (start.type() == typeid(QuantLib::Period) && end.type() == typeid(QuantLib::Period)) {
+            Period fwdStart = boost::get<QuantLib::Period>(start);
+            Period term = boost::get<QuantLib::Period>(end);
+            return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term, tenor,
+                                                 indexName);
+        } else if (start.type() == typeid(QuantLib::Date) && end.type() == typeid(QuantLib::Date)) {
+            Date startDate = boost::get<QuantLib::Date>(start);
+            Date maturityDate = boost::get<QuantLib::Date>(end);
+            return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, startDate, maturityDate, tenor,
+                                                 indexName);
+        } else {
+            QL_FAIL("Expect swap quote with start/end as either periods or dates");
+        }
     }
 
     case MarketDatum::InstrumentType::BASIS_SWAP: {

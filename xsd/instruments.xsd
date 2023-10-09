@@ -276,7 +276,7 @@
   <xs:complexType name="optionExerciseData">
     <xs:all>
       <xs:element type="date" name="Date"/>
-      <xs:element type="xs:decimal" name="Price"/>
+      <xs:element type="xs:decimal" name="Price" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
   

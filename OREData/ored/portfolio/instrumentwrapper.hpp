@@ -32,6 +32,7 @@
 
 namespace ore {
 namespace data {
+
 using QuantLib::Real;
 
 //! Instrument Wrapper
@@ -45,17 +46,11 @@ using QuantLib::Real;
 */
 class InstrumentWrapper {
 public:
-    InstrumentWrapper() : multiplier_(1.0) {}
+    InstrumentWrapper();
     InstrumentWrapper(const boost::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier = 1.0,
                       const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
                           std::vector<boost::shared_ptr<QuantLib::Instrument>>(),
-                      const std::vector<Real>& additionalMultipliers = std::vector<Real>())
-        : instrument_(inst), multiplier_(multiplier), additionalInstruments_(additionalInstruments),
-          additionalMultipliers_(additionalMultipliers) {
-        QL_REQUIRE(additionalInstruments_.size() == additionalMultipliers_.size(),
-                   "vector size mismatch, instruments (" << additionalInstruments_.size() << ") vs multipliers ("
-                                                         << additionalMultipliers_.size() << ")");
-    }
+                      const std::vector<Real>& additionalMultipliers = std::vector<Real>());
 
     virtual ~InstrumentWrapper() {}
 
@@ -73,58 +68,42 @@ public:
     //! Return the additional results of this instrument
     virtual const std::map<std::string, boost::any>& additionalResults() const = 0;
 
-    QuantLib::Real additionalInstrumentsNPV() const {
-        Real npv = 0.0;
-        for (QuantLib::Size i = 0; i < additionalInstruments_.size(); ++i)
-            npv += additionalInstruments_[i]->NPV() * additionalMultipliers_[i];
-        return npv;
-    }
+    QuantLib::Real additionalInstrumentsNPV() const;
 
     //! call update on enclosed instrument(s)
-    virtual void updateQlInstruments() {
-        // the instrument might contain nested lazy objects which we also want to be updated
-        instrument_->deepUpdate();
-        for (QuantLib::Size i = 0; i < additionalInstruments_.size(); ++i)
-            additionalInstruments_[i]->deepUpdate();
-    }
+    virtual void updateQlInstruments();
 
     //! is it an Option?
-    virtual bool isOption() { return false; }
+    virtual bool isOption();
 
     //! Inspectors
     //@{
     /*! The "QuantLib" instrument
         Pass true if you trigger a calculation on the returned instrument and want to record
         the timing for that calculation. If in doubt whether a calculation is triggered, pass false. */
-    boost::shared_ptr<QuantLib::Instrument> qlInstrument(const bool calculate = false) const {
-        if (calculate && instrument_ != nullptr) {
-            getTimedNPV(instrument_);
-        }
-        return instrument_;
-    }
+    boost::shared_ptr<QuantLib::Instrument> qlInstrument(const bool calculate = false) const;
+
     /*! The multiplier */
-    const Real& multiplier() const { return multiplier_; }
+    Real multiplier() const;
+
     /*! multiplier to be applied on top of multiplier(), e.g. -1 for short options  */
-    virtual Real multiplier2() const { return 1.0; }
+    virtual Real multiplier2() const;
+
     /*! additional instruments */
-    const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments() const {
-        return additionalInstruments_;
-    }
+    const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments() const;
+
     /*! multipliers for additional instruments */
-    const std::vector<Real>& additionalMultipliers() const { return additionalMultipliers_; }
+    const std::vector<Real>& additionalMultipliers() const;
     //@}
 
     //! Get cumulative timing spent on pricing
-    boost::timer::nanosecond_type getCumulativePricingTime() const { return cumulativePricingTime_; }
+    boost::timer::nanosecond_type getCumulativePricingTime() const;
 
     //! Get number of pricings
-    std::size_t getNumberOfPricings() const { return numberOfPricings_; }
+    std::size_t getNumberOfPricings() const;
 
     //! Reset pricing statistics
-    void resetPricingStats() const {
-        numberOfPricings_ = 0;
-        cumulativePricingTime_ = 0;
-    }
+    void resetPricingStats() const;
 
 protected:
     boost::shared_ptr<QuantLib::Instrument> instrument_;
@@ -133,17 +112,7 @@ protected:
     std::vector<Real> additionalMultipliers_;
 
     // all NPV calls to be logged in the timings should go through this method
-    Real getTimedNPV(const boost::shared_ptr<QuantLib::Instrument>& instr) const {
-        if (instr == nullptr)
-            return 0.0;
-        if (instr->isCalculated() || instr->isExpired())
-            return instr->NPV();
-        boost::timer::cpu_timer timer_;
-        Real tmp = instr->NPV();
-        cumulativePricingTime_ += timer_.elapsed().wall;
-        ++numberOfPricings_;
-        return tmp;
-    }
+    Real getTimedNPV(const boost::shared_ptr<QuantLib::Instrument>& instr) const;
 
     mutable std::size_t numberOfPricings_ = 0;
     mutable boost::timer::nanosecond_type cumulativePricingTime_ = 0;
@@ -161,20 +130,14 @@ public:
     VanillaInstrument(const boost::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier = 1.0,
                       const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
                           std::vector<boost::shared_ptr<QuantLib::Instrument>>(),
-                      const std::vector<Real>& additionalMultipliers = std::vector<Real>())
-        : InstrumentWrapper(inst, multiplier, additionalInstruments, additionalMultipliers) {}
+                      const std::vector<Real>& additionalMultipliers = std::vector<Real>());
 
     void initialise(const std::vector<QuantLib::Date>&) override{};
     void reset() override {}
 
-    QuantLib::Real NPV() const override { return getTimedNPV(instrument_) * multiplier_ + additionalInstrumentsNPV(); }
-    const std::map<std::string, boost::any>& additionalResults() const override {
-        static std::map<std::string, boost::any> empty;
-        if (instrument_ == nullptr)
-            return empty;
-        getTimedNPV(instrument_);
-        return instrument_->additionalResults();
-    }
+    QuantLib::Real NPV() const override;
+    const std::map<std::string, boost::any>& additionalResults() const override;
 };
+
 } // namespace data
 } // namespace ore

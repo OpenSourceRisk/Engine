@@ -266,6 +266,12 @@ void parseDateOrPeriod(const string& s, QuantLib::Date& d, QuantLib::Period& p, 
 */
 QuantLib::LsmBasisSystem::PolynomialType parsePolynomType(const std::string& s);
 
+//! Write QuantLib::LsmBasisSystem::PolynomialType to stream
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, QuantLib::LsmBasisSystem::PolynomialType a);
+
 //! Convert text to QuantLib::SobolBrownianGenerator::Ordering
 /*!
 \ingroup utilities

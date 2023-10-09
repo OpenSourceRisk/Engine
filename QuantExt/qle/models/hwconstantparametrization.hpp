@@ -55,9 +55,9 @@ HwConstantParametrization<TS>::HwConstantParametrization(const QuantLib::Currenc
                                                          const std::string& name)
     : HwParametrization<TS>(kappa.size(), sigma.rows(), currency, termStructure, name.empty() ? currency.code() : name),
       sigma_(std::move(sigma)), kappa_(std::move(kappa)) {
-    QL_REQUIRE(sigma.columns() == kappa.size(), "HwConstantParametrization: sigma ("
-                                                    << sigma.rows() << "x" << sigma.columns()
-                                                    << ") not consistent with kappa (" << kappa.size() << ")");
+    QL_REQUIRE(sigma_.columns() == kappa_.size(), "HwConstantParametrization: sigma ("
+                                                      << sigma_.rows() << "x" << sigma_.columns()
+                                                      << ") not consistent with kappa (" << kappa_.size() << ")");
 }
 
 template <class TS> QuantLib::Matrix HwConstantParametrization<TS>::y(const QuantLib::Time t) const {

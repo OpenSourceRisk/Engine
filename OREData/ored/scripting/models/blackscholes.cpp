@@ -33,10 +33,10 @@ using namespace QuantLib;
 
 BlackScholes::BlackScholes(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
                            const std::string& index, const std::string& indexCurrency,
-                           const Handle<BlackScholesModelWrapper>& model, const Size regressionOrder,
+                           const Handle<BlackScholesModelWrapper>& model, const McParams& mcParams,
                            const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
                            const std::string& calibration, const std::vector<Real>& calibrationStrikes)
-    : BlackScholes(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, regressionOrder,
+    : BlackScholes(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, mcParams,
                    simulationDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}}) {}
 
 BlackScholes::BlackScholes(
@@ -47,10 +47,10 @@ BlackScholes::BlackScholes(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const Size regressionOrder, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
+    const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
     const std::string& calibration, const std::map<std::string, std::vector<Real>>& calibrationStrikes)
     : BlackScholesBase(paths, currencies, curves, fxSpots, irIndices, infIndices, indices, indexCurrencies, model,
-                       correlations, regressionOrder, simulationDates, iborFallbackConfig),
+                       correlations, mcParams, simulationDates, iborFallbackConfig),
       calibration_(calibration), calibrationStrikes_(calibrationStrikes) {}
 
 void BlackScholes::performCalculations() const {
@@ -64,8 +64,12 @@ void BlackScholes::performCalculations() const {
 
     // init underlying path where we map a date to a randomvariable representing the path values
 
-    for (auto const& d : effectiveSimulationDates_)
+    for (auto const& d : effectiveSimulationDates_) {
         underlyingPaths_[d] = std::vector<RandomVariable>(model_->processes().size(), RandomVariable(size(), 0.0));
+        if (trainingSamples() != Null<Size>())
+            underlyingPathsTraining_[d] =
+                std::vector<RandomVariable>(model_->processes().size(), RandomVariable(trainingSamples(), 0.0));
+    }
 
     // compile the correlation matrix
 
@@ -95,6 +99,9 @@ void BlackScholes::performCalculations() const {
 
     for (Size l = 0; l < indices_.size(); ++l) {
         underlyingPaths_[*effectiveSimulationDates_.begin()][l].setAll(model_->processes()[l]->x0());
+        if (trainingSamples() != Null<Size>()) {
+            underlyingPathsTraining_[*effectiveSimulationDates_.begin()][l].setAll(model_->processes()[l]->x0());
+        }
     }
 
     if (effectiveSimulationDates_.size() == 1)
@@ -191,37 +198,18 @@ void BlackScholes::performCalculations() const {
 
     // evolve the process using correlated normal variates and set the underlying path values
 
-    auto gen = getBrownianGenerator(indices_.size(), effectiveSimulationDates_.size() - 1);
+    populatePathValues(size(), underlyingPaths_,
+                       makeMultiPathVariateGenerator(mcParams_.sequenceType, indices_.size(),
+                                                     effectiveSimulationDates_.size() - 1, mcParams_.seed,
+                                                     mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers),
+                       drift, sqrtCov);
 
-    Array logState(indices_.size()), logState0(indices_.size());
-    for (Size j = 0; j < indices_.size(); ++j) {
-        logState0[j] = std::log(model_->processes()[j]->x0());
-    }
-
-    std::vector<std::vector<RandomVariable*>> rvs(indices_.size(),
-                                                  std::vector<RandomVariable*>(effectiveSimulationDates_.size() - 1));
-    auto date = effectiveSimulationDates_.begin();
-    for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
-        ++date;
-        for (Size j = 0; j < indices_.size(); ++j) {
-            rvs[j][i] = &underlyingPaths_[*date][j];
-        }
-    }
-
-    std::vector<Real> r(indices_.size());
-    for (Size path = 0; path < size(); ++path) {
-        gen->nextPath();
-        logState = logState0;
-        for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
-            gen->nextStep(r);
-            for (Size j = 0; j < indices_.size(); ++j) {
-                for (Size k = 0; k < indices_.size(); ++k)
-                    logState[j] += sqrtCov[i][j][k] * r[k];
-            }
-            logState += drift[i];
-            for (Size j = 0; j < indices_.size(); ++j)
-                rvs[j][i]->set(path, std::exp(logState[j]));
-        }
+    if (trainingSamples() != Null<Size>()) {
+        populatePathValues(trainingSamples(), underlyingPathsTraining_,
+                           makeMultiPathVariateGenerator(mcParams_.trainingSequenceType, indices_.size(),
+                                                         effectiveSimulationDates_.size() - 1, mcParams_.trainingSeed,
+                                                         mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers),
+                           drift, sqrtCov);
     }
 
     // set additional results provided by this model
@@ -255,6 +243,40 @@ void BlackScholes::performCalculations() const {
         }
     }
 }
+
+void BlackScholes::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+                                      const boost::shared_ptr<MultiPathVariateGeneratorBase>& gen,
+                                      const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const {
+
+    std::vector<std::vector<RandomVariable*>> rvs(indices_.size(),
+                                                  std::vector<RandomVariable*>(effectiveSimulationDates_.size() - 1));
+    auto date = effectiveSimulationDates_.begin();
+    for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
+        ++date;
+        for (Size j = 0; j < indices_.size(); ++j) {
+            rvs[j][i] = &paths[*date][j];
+        }
+    }
+
+    Array logState(indices_.size()), logState0(indices_.size());
+    for (Size j = 0; j < indices_.size(); ++j) {
+        logState0[j] = std::log(model_->processes()[j]->x0());
+    }
+
+    for (Size path = 0; path < nSamples; ++path) {
+        auto seq = gen->next();
+        logState = logState0;
+        for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
+            for (Size j = 0; j < indices_.size(); ++j) {
+                for (Size k = 0; k < indices_.size(); ++k)
+                    logState[j] += sqrtCov[i][j][k] * seq.value[i][k];
+            }
+            logState += drift[i];
+            for (Size j = 0; j < indices_.size(); ++j)
+                rvs[j][i]->set(path, std::exp(logState[j]));
+        }
+    }
+} // populatePathValues()
 
 namespace {
 struct comp {

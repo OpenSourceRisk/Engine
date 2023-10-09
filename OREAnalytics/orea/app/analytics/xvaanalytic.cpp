@@ -23,6 +23,7 @@
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/jointnpvcube.hpp>
 #include <orea/engine/amcvaluationengine.hpp>
+#include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/mporcalculator.hpp>
 #include <orea/engine/multistatenpvcalculator.hpp>
 #include <orea/engine/multithreadedvaluationengine.hpp>

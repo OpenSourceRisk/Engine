@@ -242,6 +242,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
         boost::shared_ptr<AmcCalculator> amcCalc;
         try {
             auto inst = trade.second->instrument()->qlInstrument(true);
+            QL_REQUIRE(inst != nullptr,
+                       "instrument has no ql instrument, this is not supported by the amc valuation engine.");
             Real multiplier = trade.second->instrument()->multiplier() *
                 trade.second->instrument()->multiplier2();
 

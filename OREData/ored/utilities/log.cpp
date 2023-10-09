@@ -359,7 +359,12 @@ string JSONMessage::jsonify(const boost::any& obj) {
         arrayStr += " ]";
         return arrayStr;
     } else if (obj.type() == typeid(string)) {
-        return '\"' + boost::any_cast<string>(obj) + '\"';
+        string str = boost::any_cast<string>(obj);
+        boost::replace_all(str, "\\", "\\\\"); // do this before the below otherwise we get \\"
+        boost::replace_all(str, "\"", "\\\"");
+        boost::replace_all(str, "\r", "\\r");
+        boost::replace_all(str, "\n", "\\n");
+        return '\"' + str + '\"';
     } else if (obj.type() == typeid(StructuredMessage::Category)) {
         return to_string(boost::any_cast<StructuredMessage::Category>(obj));
     } else if (obj.type() == typeid(StructuredMessage::Group)) {
@@ -414,8 +419,7 @@ void StructuredMessage::addSubFields(const map<string, string>& subFields) {
 
         for (const auto& sf : subFields) {
             map<string, boost::any> subField({{"name", sf.first}, {"value", sf.second}});
-            auto subFields = boost::any_cast<vector<boost::any>>(data_.at("sub_fields"));
-            subFields.push_back(subField);
+            boost::any_cast<vector<boost::any>&>(data_.at("sub_fields")).push_back(subField);
         }
     }
 }

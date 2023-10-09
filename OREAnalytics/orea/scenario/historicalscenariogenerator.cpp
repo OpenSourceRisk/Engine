@@ -169,7 +169,7 @@ HistoricalScenarioGenerator::HistoricalScenarioGenerator(
     const bool overlapping, const ReturnConfiguration& returnConfiguration,
     const std::string& labelPrefix)
     : i_(0), historicalScenarioLoader_(historicalScenarioLoader), scenarioFactory_(scenarioFactory), 
-      cal_(cal), adjFactors_(adjFactors), mporDays_(mporDays), overlapping_(overlapping),
+      cal_(cal), mporDays_(mporDays), adjFactors_(adjFactors), overlapping_(overlapping),
       returnConfiguration_(returnConfiguration), labelPrefix_(labelPrefix) {
 
     QL_REQUIRE(mporDays > 0, "Invalid mpor days of 0");
@@ -429,6 +429,17 @@ HistoricalScenarioGeneratorWithFilteredDates::HistoricalScenarioGeneratorWithFil
     // set base scenario
 
     baseScenario_ = gen->baseScenario();
+
+    for (auto const& f : filter) {
+        // Check that backtest and benchmark periods are covered by the historical scenario generator
+        Date minDate = *std::min_element(f.startDates().begin(), f.startDates().end());
+        Date maxDate = *std::max_element(f.endDates().begin(), f.endDates().end());
+         
+        QL_REQUIRE(startDates_.front() <= minDate && maxDate <= endDates_.back(),
+             "The backtesting period " << f << " is not covered by the historical scenario generator: Required dates = ["
+             << ore::data::to_string(minDate) << "," << ore::data::to_string(maxDate)
+             << "], Covered dates = [" << startDates_.front() << "," << endDates_.back() << "]");
+    }
 
     // filter start / end dates on relevant scenarios
 

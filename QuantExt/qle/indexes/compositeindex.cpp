@@ -26,9 +26,8 @@ namespace QuantExt {
 
 CompositeIndex::CompositeIndex(const std::string& name, const std::vector<boost::shared_ptr<QuantLib::Index>>& indices,
                                const std::vector<Real>& weights,
-                               const std::vector<boost::shared_ptr<FxIndex>>& fxConversion,
-                               const bool bondIssueDateFallback)
-    : name_(name), indices_(indices), weights_(weights), fxConversion_(fxConversion), bondIssueDateFallback_(bondIssueDateFallback) {
+                               const std::vector<boost::shared_ptr<FxIndex>>& fxConversion)
+    : name_(name), indices_(indices), weights_(weights), fxConversion_(fxConversion) {
     QL_REQUIRE(indices_.size() == weights_.size(), "CompositeIndex: indices size (" << indices_.size()
                                                                                     << ") must match weights size ("
                                                                                     << weights_.size() << ")");
@@ -64,14 +63,7 @@ Real CompositeIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) c
         try {
             indexFixing = indices_[i]->fixing(fixingDate, forecastTodaysFixing);
         } catch (const std::exception&) {
-            if (auto bi = QuantLib::ext::dynamic_pointer_cast<BondIndex>(indices_[i])) {
-                // if we have a bond index check if the issue date falls after the date
-                auto issueDate = bi->issueDate();
-                if (fixingDate < issueDate)
-                    indexFixing = indices_[i]->fixing(issueDate);
-            } else {
-                throw;
-            }
+            throw;
         }
 
 
