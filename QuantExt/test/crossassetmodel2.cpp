@@ -1143,6 +1143,9 @@ BOOST_AUTO_TEST_CASE(testLgm31fMoments) {
 
     const Size dim = 31;
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(grid.size() - 1 - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Steps, seed);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > e_eu[dim];
@@ -1259,6 +1262,12 @@ BOOST_AUTO_TEST_CASE(testLgm31fMartingaleProperty) {
 
     const Size dim = 31, nIr = 13 + 3;
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(grid.size() - 1);
+    }
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Steps, seed);
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid, SobolBrownianGenerator::Steps, seed);
 

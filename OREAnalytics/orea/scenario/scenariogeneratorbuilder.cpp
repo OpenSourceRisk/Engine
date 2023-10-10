@@ -49,7 +49,13 @@ ScenarioGeneratorBuilder::build(boost::shared_ptr<QuantExt::CrossAssetModel> mod
 
     QL_REQUIRE(initMarket != NULL, "ScenarioGeneratorBuilder: initMarket is null");
 
-    auto pathGen = pf->build(data_->sequenceType(), model->stateProcess(), data_->getGrid()->timeGrid(), data_->seed(),
+    // enable cache
+    auto process = model->stateProcess();
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        tmp->resetCache(data_->getGrid()->timeGrid().size() - 1);
+    }
+
+    auto pathGen = pf->build(data_->sequenceType(), process, data_->getGrid()->timeGrid(), data_->seed(),
                              data_->ordering(), data_->directionIntegers());
 
     return boost::make_shared<CrossAssetModelScenarioGenerator>(model, pathGen, scenarioFactory, marketConfig, asof,

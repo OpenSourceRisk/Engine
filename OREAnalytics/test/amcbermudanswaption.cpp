@@ -417,9 +417,6 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = ccLgm;
 
-    // State process
-    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
-
     // Simulation market parameters, we just need the yield curve structure here
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
     simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
