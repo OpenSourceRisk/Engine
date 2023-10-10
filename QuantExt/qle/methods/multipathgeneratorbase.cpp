@@ -120,7 +120,7 @@ const Sample<MultiPath>& MultiPathGeneratorSobolBrownianBridge::next() const {
         Real dt = grid_.dt(i - 1);
         gen_->nextStep(output);
         if (process1D_) {
-            path[0][i] = process1D_->evolve(t, asset[0], dt, output[0]);
+            path[0][i] = asset[0] = process1D_->evolve(t, asset[0], dt, output[0]);
         } else {
             Array tmp(output.begin(), output.end());
             asset = process_->evolve(t, asset, dt, tmp);
