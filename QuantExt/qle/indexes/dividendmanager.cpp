@@ -28,7 +28,6 @@ using boost::algorithm::to_upper_copy;
 namespace QuantExt {
 
 void applyDividends(const set<Dividend>& dividends) {
-    Size count = 0;
     map<string, boost::shared_ptr<EquityIndex2>> cache;
     boost::shared_ptr<EquityIndex2> index;
     std::string lastIndexName;
@@ -39,9 +38,7 @@ void applyDividends(const set<Dividend>& dividends) {
                 lastIndexName = d.name;
             }
             index->addDividend(d, true);
-            count++;
-        } catch (const std::exception& e) {
-        }
+        } catch (...) {}
     }
 }
 
