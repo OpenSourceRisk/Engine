@@ -75,16 +75,6 @@ void TrsUnderlyingBuilderFactory::addBuilder(const std::string& tradeType,
                "TrsUnderlyingBuidlerFactory::addBuilder(" << tradeType << "): builder for key already exists.");
 }
 
-const RequiredFixings& TrsUnderlyingBuilder::requiredFixings(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& ind) const {
-    QL_REQUIRE(returnLegs.size() > 0, "TrsUnderlyingBuilder: No returnLeg built");
-    auto fdg = boost::make_shared<FixingDateGetter>(fixings);
-    fdg->setAdditionalFxIndex(ind);
-    for (const auto& rl : returnLegs) 
-        addToRequiredFixings(rl, fdg);
-    return fixings;
-}
-
-
 void BondTrsUnderlyingBuilder::build(
     const std::string& parentId, const boost::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
     const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
@@ -97,7 +87,7 @@ void BondTrsUnderlyingBuilder::build(
         const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     auto t = boost::dynamic_pointer_cast<ore::data::Bond>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::Bond, this is unexpected");
     auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(underlying->instrument()->qlInstrument());
@@ -146,7 +136,7 @@ void ForwardBondTrsUnderlyingBuilder::build(
         const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     auto t = boost::dynamic_pointer_cast<ore::data::ForwardBond>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::ForwardBond, this is unexpected");
     auto qlBond = boost::dynamic_pointer_cast<QuantExt::ForwardBond>(underlying->instrument()->qlInstrument());
@@ -196,7 +186,7 @@ void AssetPositionTrsUnderlyingBuilder<T>::build(
         const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     auto t = boost::dynamic_pointer_cast<T>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::EquityPosition, this is unexpected");
     if (t->isSingleCurrency()) {
@@ -282,7 +272,7 @@ void EquityOptionPositionTrsUnderlyingBuilder::build(
         const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     auto t = boost::dynamic_pointer_cast<ore::data::EquityOptionPosition>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::EquityOptionPosition, this is unexpected");
     if (t->isSingleCurrency()) {
@@ -340,7 +330,7 @@ void BondPositionTrsUnderlyingBuilder::build(
         const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     auto t = boost::dynamic_pointer_cast<ore::data::BondPosition>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::BondPosition, this is unexpected");
     if (t->isSingleCurrency()) {
@@ -361,7 +351,7 @@ void BondPositionTrsUnderlyingBuilder::build(
         // relative index, because weights are supposed to include any amortization factors
 
         BondIndexBuilder bondIndexBuilder(t->data().underlyings()[i].name(), true, false, 
-            NullCalendar(), true, engineFactory, t->data().underlyings()[i].bidAskAdjustment());
+            NullCalendar(), true, engineFactory, t->data().underlyings()[i].bidAskAdjustment(), true);
 
         auto assetCurr = bondIndexBuilder.bond().bondData().currency();
         auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
@@ -392,7 +382,7 @@ void BondPositionTrsUnderlyingBuilder::build(
         w.push_back(t->weights()[i]);
     }
     underlyingIndex =
-        boost::make_shared<QuantExt::CompositeIndex>("Composite Index trade id " + parentId, indices, w, fxConversion, true);
+        boost::make_shared<QuantExt::CompositeIndex>("Composite Index trade id " + parentId, indices, w, fxConversion);
     DLOG("underlying bond position index built with " << indices.size() << " constituents.");
     underlyingMultiplier = t->data().quantity();
 
@@ -415,7 +405,7 @@ void DerivativeTrsUnderlyingBuilder::build(
         const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     assetCurrency = underlying->npvCurrency();
     auto indexName = "GENERIC-" + underlyingDerivativeId;
     IndexNameTranslator::instance().add(indexName, indexName);

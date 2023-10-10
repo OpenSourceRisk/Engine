@@ -212,6 +212,9 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
                "model/engine = GaussianCam/MC required to build an amc model, got " << modelParam_ << "/"
                                                                                     << engineParam_);
 
+    if(staticAnalyser_->regressionDates().empty())
+        mcParams_.trainingSamples = Null<Size>();
+
     if (modelParam_ == "BlackScholes" && engineParam_ == "MC") {
         buildBlackScholes(id, iborFallbackConfig);
     } else if (modelParam_ == "BlackScholes" && engineParam_ == "FD") {
@@ -250,8 +253,18 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     DLOG("timeStepsPerYear     = " << timeStepsPerYear_);
     DLOG("fullDynamicFx        = " << std::boolalpha << fullDynamicFx_);
     if (engineParam_ == "MC") {
+        DLOG("seed                 = " << mcParams_.seed);
         DLOG("paths                = " << modelSize_);
-        DLOG("regressionOrder      = " << regressionOrder_);
+        DLOG("regressionOrder      = " << mcParams_.regressionOrder);
+        DLOG("sequence type        = " << mcParams_.sequenceType);
+        DLOG("polynom type         = " << mcParams_.polynomType);
+        if (mcParams_.trainingSamples != Null<Size>()) {
+            DLOG("training seed        = " << mcParams_.trainingSeed);
+            DLOG("training paths       = " << mcParams_.trainingSamples);
+            DLOG("training seq. type   = " << mcParams_.trainingSequenceType);
+        }
+        DLOG("sobol bb ordering    = " << mcParams_.sobolOrdering);
+        DLOG("sobol direction int. = " << mcParams_.sobolDirectionIntegers);
     } else if (engineParam_ == "FD") {
         DLOG("stateGridPoints      = " << modelSize_);
         DLOG("mesherEpsilon        = " << mesherEpsilon_);
@@ -289,7 +302,8 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         bool useCachedSensis = useAd_ && (rt != globalParameters_.end() && rt->second == "SensitivityDelta");
         bool useExternalDev = useExternalComputeDevice_ && !generateAdditionalResults && !useCachedSensis;
         engine = boost::make_shared<ScriptedInstrumentPricingEngineCG>(
-            script.npv(), script.results(), modelCG_, ast_, context, script.code(), interactive_, amcCam_ != nullptr,
+            script.npv(), script.results(), modelCG_, ast_, context, mcParams_, script.code(), interactive_,
+            amcCam_ != nullptr,
             std::set<std::string>(script.stickyCloseOutStates().begin(), script.stickyCloseOutStates().end()),
             generateAdditionalResults, useCachedSensis, useExternalDev);
         if (useExternalDev) {
@@ -449,6 +463,7 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     useExternalComputeDevice_ =
         parseBool(engineParameter("UseExternalComputeDevice", {resolvedProductTag_}, false, "false"));
     externalComputeDevice_ = engineParameter("ExternalComputeDevice", {}, false, "");
+
     // usage of ad or an external device implies usage of cg
     if (useAd_ || useExternalComputeDevice_)
         useCg_ = true;
@@ -480,8 +495,25 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     }
 
     if (engineParam_ == "MC") {
+        mcParams_.seed = parseInteger(engineParameter("Seed", {resolvedProductTag_}, false, "42"));
         modelSize_ = parseInteger(engineParameter("Samples", {resolvedProductTag_}));
-        regressionOrder_ = parseInteger(engineParameter("RegressionOrder", {resolvedProductTag_}));
+        mcParams_.regressionOrder = parseInteger(engineParameter("RegressionOrder", {resolvedProductTag_}));
+        mcParams_.sequenceType =
+            parseSequenceType(engineParameter("SequenceType", {resolvedProductTag_}, false, "SobolBrownianBridge"));
+        mcParams_.polynomType =
+            parsePolynomType(engineParameter("PolynomType", {resolvedProductTag_}, false, "Monomial"));
+        mcParams_.trainingSequenceType =
+            parseSequenceType(engineParameter("TrainingSequenceType", {resolvedProductTag_}, false, "MersenneTwister"));
+        mcParams_.sobolOrdering = parseSobolBrownianGeneratorOrdering(
+            engineParameter("SobolOrdering", {resolvedProductTag_}, false, "Steps"));
+        mcParams_.sobolDirectionIntegers = parseSobolRsgDirectionIntegers(
+            engineParameter("SobolDirectionIntegers", {resolvedProductTag_}, false, "JoeKuoD7"));
+        if (auto tmp = engineParameter("TrainingSamples", {resolvedProductTag_}, false, ""); !tmp.empty()) {
+            mcParams_.trainingSamples = parseInteger(tmp);
+            mcParams_.trainingSeed = parseInteger(engineParameter("TrainingSeed", {resolvedProductTag_}, false, "43"));
+        } else {
+            mcParams_.trainingSamples = Null<Size>();
+        }
     } else if (engineParam_ == "FD") {
         modelSize_ = parseInteger(engineParameter("StateGridPoints", {resolvedProductTag_}));
         mesherEpsilon_ = parseReal(engineParameter("MesherEpsilon", {resolvedProductTag_}, false, "1.0E-4"));
@@ -1127,12 +1159,12 @@ void ScriptedTradeEngineBuilder::buildBlackScholes(const std::string& id,
     if (useCg_) {
         modelCG_ = boost::make_shared<BlackScholesCG>(
             modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_, modelIndices_,
-            modelIndicesCurrencies_, builder->model(), correlations_, regressionOrder_, simulationDates_,
-            iborFallbackConfig, calibration_, filteredStrikes);
+            modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_, iborFallbackConfig,
+            calibration_, filteredStrikes);
     } else {
         model_ = boost::make_shared<BlackScholes>(modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_,
                                                   modelInfIndices_, modelIndices_, modelIndicesCurrencies_,
-                                                  builder->model(), correlations_, regressionOrder_, simulationDates_,
+                                                  builder->model(), correlations_, mcParams_, simulationDates_,
                                                   iborFallbackConfig, calibration_, filteredStrikes);
     }
     modelBuilders_.insert(std::make_pair(id, builder));
@@ -1167,7 +1199,7 @@ void ScriptedTradeEngineBuilder::buildLocalVol(const std::string& id, const Ibor
                                                             !calibrate_ || zeroVolatility_);
     model_ = boost::make_shared<LocalVol>(modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_,
                                           modelInfIndices_, modelIndices_, modelIndicesCurrencies_, builder->model(),
-                                          correlations_, regressionOrder_, simulationDates_, iborFallbackConfig);
+                                          correlations_, mcParams_, simulationDates_, iborFallbackConfig);
     modelBuilders_.insert(std::make_pair(id, builder));
 }
 
@@ -1452,8 +1484,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
     // TODO hardcode timeStepsPerYear to 0 and exact discretisation (we might want Euler for AD...)
     model_ = boost::make_shared<GaussianCam>(camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_,
                                              modelIrIndices_, modelInfIndices_, modelIndices_, modelIndicesCurrencies_,
-                                             simulationDates_, regressionOrder_, 0, iborFallbackConfig,
-                                             std::vector<Size>(), conditionalExpectationModelStates);
+                                             simulationDates_, mcParams_, 0, iborFallbackConfig, std::vector<Size>(),
+                                             conditionalExpectationModelStates);
 
     modelBuilders_.insert(std::make_pair(id, camBuilder));
 }
@@ -1497,7 +1529,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
     // TODO hardcode timeStepsPerYear to 1 and exact discretisation (we might want Euler for AD...)
     model_ = boost::make_shared<GaussianCam>(projectedModel, modelSize_, modelCcys_, modelCurves_, modelFxSpots_,
                                              modelIrIndices_, modelInfIndices_, modelIndices_, modelIndicesCurrencies_,
-                                             simulationDates_, regressionOrder_, 1, iborFallbackConfig,
+                                             simulationDates_, mcParams_, 1, iborFallbackConfig,
                                              projectedStateProcessIndices, conditionalExpectationModelStates);
 
     DLOG("built GuassianCam model as projection of xva evolution model");

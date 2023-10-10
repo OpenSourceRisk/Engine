@@ -629,7 +629,7 @@ protected:
      *************/
     bool outputAdditionalResults_ = false;
     bool outputCurves_ = false;
-    std::string curvesMarketConfig_ = "";
+    std::string curvesMarketConfig_ = Market::defaultConfiguration;
     std::string curvesGrid_ = "240,1M";
     bool outputTodaysMarketCalibration_ = false;
 

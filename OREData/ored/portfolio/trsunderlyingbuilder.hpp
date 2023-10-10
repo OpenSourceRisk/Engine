@@ -41,13 +41,10 @@ struct TrsUnderlyingBuilder {
           const std::function<boost::shared_ptr<QuantExt::FxIndex>(
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
-              getFxIndex,
-          const std::string& underlyingDerivativeId) const = 0;
+              getFxIndex, 
+        const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const = 0;
     virtual void updateUnderlying(const boost::shared_ptr<ReferenceDataManager>& refData,
                                   boost::shared_ptr<Trade>& underlying, const std::string& parentId) const {}
-    const RequiredFixings& requiredFixings(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& ind = nullptr) const;
-    mutable RequiredFixings fixings;
-    mutable std::vector<Leg> returnLegs;
 };
 
 class TrsUnderlyingBuilderFactory
@@ -79,7 +76,7 @@ struct BondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
               getFxIndex,
-          const std::string& underlyingDerivativeId) const override;
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 struct ForwardBondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
@@ -94,9 +91,8 @@ struct ForwardBondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
           const std::function<boost::shared_ptr<QuantExt::FxIndex>(
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
-              getFxIndex,
-          const std::string& underlyingDerivativeId) const override;
+              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 template<class T>
@@ -112,9 +108,8 @@ struct AssetPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
           const std::function<boost::shared_ptr<QuantExt::FxIndex>(
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
-              getFxIndex,
-          const std::string& underlyingDerivativeId) const override;
+              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 
     void updateQuantities(std::map<std::string, double>& indexQuantities, const std::string& indexName,
                           const double qty) const;
@@ -137,9 +132,8 @@ struct EquityOptionPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
           const std::function<boost::shared_ptr<QuantExt::FxIndex>(
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
-              getFxIndex,
-          const std::string& underlyingDerivativeId) const override;
+              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 
@@ -154,9 +148,8 @@ struct BondPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
           const std::function<boost::shared_ptr<QuantExt::FxIndex>(
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
-              getFxIndex,
-          const std::string& underlyingDerivativeId) const override;
+              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 struct DerivativeTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
@@ -170,9 +163,8 @@ struct DerivativeTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
           const std::function<boost::shared_ptr<QuantExt::FxIndex>(
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
-              getFxIndex,
-          const std::string& underlyingDerivativeId) const override;
+              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 // utility functions for bond TRS

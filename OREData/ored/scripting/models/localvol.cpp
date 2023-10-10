@@ -33,11 +33,10 @@ using namespace QuantExt;
 
 LocalVol::LocalVol(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
                    const std::string& index, const std::string& indexCurrency,
-                   const Handle<BlackScholesModelWrapper>& model, const Size regressionOrder,
-                   const std::set<Date>& simulationDates,
-                   const IborFallbackConfig& iborFallbackConfig)
-    : LocalVol(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, regressionOrder,
-               simulationDates, iborFallbackConfig) {}
+                   const Handle<BlackScholesModelWrapper>& model, const McParams& mcParams,
+                   const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
+    : LocalVol(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, mcParams, simulationDates,
+               iborFallbackConfig) {}
 
 LocalVol::LocalVol(
     const Size paths, const std::vector<std::string>& currencies, const std::vector<Handle<YieldTermStructure>>& curves,
@@ -47,10 +46,9 @@ LocalVol::LocalVol(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const Size regressionOrder, const std::set<Date>& simulationDates,
-    const IborFallbackConfig& iborFallbackConfig)
+    const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
     : BlackScholesBase(paths, currencies, curves, fxSpots, irIndices, infIndices, indices, indexCurrencies, model,
-                       correlations, regressionOrder, simulationDates, iborFallbackConfig) {}
+                       correlations, mcParams, simulationDates, iborFallbackConfig) {}
 
 void LocalVol::performCalculations() const {
 
@@ -65,6 +63,9 @@ void LocalVol::performCalculations() const {
 
     for (auto const& d : effectiveSimulationDates_) {
         underlyingPaths_[d] = std::vector<RandomVariable>(model_->processes().size(), RandomVariable(size(), 0.0));
+        if (trainingSamples() != Null<Size>())
+            underlyingPathsTraining_[d] =
+                std::vector<RandomVariable>(model_->processes().size(), RandomVariable(trainingSamples(), 0.0));
     }
 
     // compile the correlation matrix
@@ -75,6 +76,9 @@ void LocalVol::performCalculations() const {
 
     for (Size l = 0; l < indices_.size(); ++l) {
         underlyingPaths_[*effectiveSimulationDates_.begin()][l].setAll(model_->processes()[l]->x0());
+        if (trainingSamples() != Null<Size>()) {
+            underlyingPathsTraining_[*effectiveSimulationDates_.begin()][l].setAll(model_->processes()[l]->x0());
+        }
     }
 
     if (effectiveSimulationDates_.size() == 1)
@@ -127,7 +131,28 @@ void LocalVol::performCalculations() const {
 
     // evolve the process using correlated normal variates and set the underlying path values
 
-    auto gen = getBrownianGenerator(indices_.size(), timeGrid_.size() - 1);
+    populatePathValues(size(), underlyingPaths_,
+                       makeMultiPathVariateGenerator(mcParams_.sequenceType, indices_.size(), timeGrid_.size() - 1,
+                                                     mcParams_.seed, mcParams_.sobolOrdering,
+                                                     mcParams_.sobolDirectionIntegers),
+                       correlation, sqrtCorr, deterministicDrift, eqComIdx, t, dt, sqrtdt);
+
+    if (trainingSamples() != Null<Size>()) {
+        populatePathValues(trainingSamples(), underlyingPathsTraining_,
+                           makeMultiPathVariateGenerator(mcParams_.trainingSequenceType, indices_.size(),
+                                                         timeGrid_.size() - 1, mcParams_.trainingSeed,
+                                                         mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers),
+                           correlation, sqrtCorr, deterministicDrift, eqComIdx, t, dt, sqrtdt);
+    }
+
+} // initPaths()
+
+void LocalVol::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+                                  const boost::shared_ptr<MultiPathVariateGeneratorBase>& gen,
+                                  const Matrix& correlation, const Matrix& sqrtCorr,
+                                  const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
+                                  const std::vector<Real>& t, const std::vector<Real>& dt,
+                                  const std::vector<Real>& sqrtdt) const {
 
     Array stateDiff(indices_.size()), logState(indices_.size()), logState0(indices_.size());
     for (Size j = 0; j < indices_.size(); ++j) {
@@ -140,21 +165,18 @@ void LocalVol::performCalculations() const {
     for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
         ++date;
         for (Size j = 0; j < indices_.size(); ++j) {
-            rvs[j][i] = &underlyingPaths_[*date][j];
+            rvs[j][i] = &paths[*date][j];
         }
     }
 
-
-    std::vector<Real> r(indices_.size());
     for (Size path = 0; path < size(); ++path) {
-        gen->nextPath();
+        auto p = gen->next();
         logState = logState0;
         std::size_t date = 0;
         auto pos = positionInTimeGrid_.begin();
         ++pos;
         // evolve the process on the refined time grid
         for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
-            gen->nextStep(r);
             for (Size j = 0; j < indices_.size(); ++j) {
                 // localVol might throw / return nan, inf, handle these cases here
                 // by setting the local vol to zero
@@ -167,7 +189,7 @@ void LocalVol::performCalculations() const {
                     volj = 0.0;
                 Real dw = 0;
                 for (Size k = 0; k < indices_.size(); ++k) {
-                    dw += sqrtCorr[j][k] * r[k];
+                    dw += sqrtCorr[j][k] * p.value[i][k];
                 }
                 stateDiff[j] = volj * dw * sqrtdt[i] - 0.5 * volj * volj * dt[i];
                 // drift adjustment for eq / com indices that are not in base ccy
@@ -188,7 +210,12 @@ void LocalVol::performCalculations() const {
             }
         }
     }
-} // initPaths()
+} // populatePathValues()
+
+RandomVariable LocalVol::getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
+                                              const RandomVariable& barrier, const bool above) const {
+    QL_FAIL("getFutureBarrierProb not implemented by LocalVol");
+}
 
 } // namespace data
 } // namespace ore

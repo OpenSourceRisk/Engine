@@ -3,6 +3,8 @@ version: '3'
 services:
   env_quantlib:
     image: env_quantlib:${QL_TAG}
+    cap_drop:
+      - NET_RAW
     build:
       context: ../
       dockerfile: Docker/Dockerfile-QuantLib
