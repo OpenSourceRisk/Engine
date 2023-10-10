@@ -472,11 +472,6 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
     RandomVariable result(size());
 
     if (cam_->modelType(CrossAssetModel::AssetType::INF, camIndex) == CrossAssetModel::ModelType::DK) {
-        //// TODO vectorise this computation
-        // for (Size p = 0; p < size(); ++p) {
-        //    auto dk = cam_->infdkI(camIndex, t, T, state.first[p], state.second[p]);
-        // result.set(p, baseFixing * dk.first * (fixingDate != obsDate ? dk.second : 1.0));
-        //}
         InfDkVectorised infdkv(*cam_);
         RandomVariable baseFixingVec(size(), baseFixing);
         QL_REQUIRE(t < T || close_enough(t, T), "infdkI: t (" << t << ") <= T (" << T << ") required");
