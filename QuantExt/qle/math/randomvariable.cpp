@@ -26,7 +26,7 @@
 
 #include <iostream>
 
-// if defined, RandomVariableStats are updated, default is undefined
+// if defined, RandomVariableStats are updated (this might impact perfomance!), default is undefined
 //#define ENABLE_RANDOMVARIABLE_STATS
 
 namespace QuantExt {
