@@ -2118,7 +2118,7 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
 
     if (!optionUnderlyingFutureConvention_.empty()) {
         XMLUtils::addChild(doc, node, "OptionUnderlyingFutureConvention", optionUnderlyingFutureConvention_);
-        XMLUtils::addChild(doc, node, "OptionContractFrequency", to_string(optionContractFrequency_));
+        XMLUtils::addChild(doc, node, "OptionContractFrequency", strOptionContractFrequency_);
     }
 
     return node;
