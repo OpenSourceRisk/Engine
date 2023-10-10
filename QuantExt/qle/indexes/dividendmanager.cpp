@@ -38,7 +38,6 @@ void applyDividends(const set<Dividend>& dividends) {
                 lastIndexName = d.name;
             }
             index->addDividend(d, true);
-            count++;
         } catch (...) {}
     }
 }
