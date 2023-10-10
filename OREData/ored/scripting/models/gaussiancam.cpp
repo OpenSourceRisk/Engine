@@ -288,12 +288,19 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
 
         // build a temporary repository of the state prcess values, since we want to access them not path by path
         // below - for efficiency reasons the loop over the paths should be the innermost loop there!
+
         std::vector<std::vector<std::vector<Real>>> pathValues(
             effectiveSimulationDates_.size() - 1,
             std::vector<std::vector<Real>>(process->size(), std::vector<Real>(nSamples)));
 
         if (injectedPathTimes_ == nullptr) {
+
             // the usual path generator
+
+            if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+                tmp->resetCache(timeGrid_.size() - 1);
+            }
+
             auto pathGen =
                 makeMultiPathGenerator(isTraining ? mcParams_.trainingSequenceType : mcParams_.sequenceType, process,
                                        timeGrid_, isTraining ? mcParams_.trainingSeed : mcParams_.seed,
@@ -307,7 +314,9 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
                 }
             }
         } else {
+
             // simple linear interpolation of injected paths, TODO explore the usage of Brownian Bridges here
+
             std::vector<Real> relevantPathTimes;
             std::vector<Size> relevantPathIndices;
             QL_REQUIRE(!injectedPathStickyCloseOutRun_ || !((*injectedPathIsRelevantTime_)[0]),
