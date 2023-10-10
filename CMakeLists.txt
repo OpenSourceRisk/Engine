@@ -18,7 +18,11 @@ include("cmake/commonSettings.cmake")
 
 set(USE_GLOBAL_ORE_BUILD ON)
 
+# work around boost issue https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=271488
+set(CMAKE_CXX_STANDARD 14)
 add_subdirectory("QuantLib")
+set(CMAKE_CXX_STANDARD 17)
+
 add_subdirectory("QuantExt")
 add_subdirectory("OREData")
 add_subdirectory("OREAnalytics")
