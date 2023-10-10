@@ -20,7 +20,6 @@
 #include <qle/models/infdkvectorised.hpp>
 
 #include <qle/math/randomvariablelsmbasissystem.hpp>
-#include <qle/methods/interpolatedvariatemultipathgenerator.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 
 #include <ored/utilities/indexparser.hpp>
