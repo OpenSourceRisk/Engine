@@ -68,12 +68,13 @@ SensitivityAnalysis::SensitivityAnalysis(
     const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
     const bool nonShiftedBaseCurrencyConversion, const boost::shared_ptr<ReferenceDataManager>& referenceData,
     const IborFallbackConfig& iborFallbackConfig, const bool continueOnError, bool dryRun, const std::string& context)
-    : asof_(asof), simMarketData_(simMarketData), sensitivityData_(sensitivityData),
-      recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
-      overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
-      referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError),
-      engineData_(engineData), portfolio_(portfolio), dryRun_(dryRun), initialized_(false),
-      useSingleThreadedEngine_(false), nThreads_(nThreads), loader_(loader), context_(context) {}
+    : marketConfiguration_(marketConfiguration), asof_(asof), simMarketData_(simMarketData),
+      sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs),
+      todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
+      nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), referenceData_(referenceData),
+      iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError), engineData_(engineData),
+      portfolio_(portfolio), dryRun_(dryRun), initialized_(false), useSingleThreadedEngine_(false), nThreads_(nThreads),
+      loader_(loader), context_(context) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -141,7 +142,9 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
 
         // handle request to use multi-threaded engine
 
-        LOG("SensitivitiyAnalysis::generateSensitivities(): use multi-threaded engine to generate sensi cube.");
+        LOG("SensitivitiyAnalysis::generateSensitivities(): use multi-threaded engine to generate sensi cube. Using "
+            "configuration '"
+            << marketConfiguration_ << "'");
 
         market_ =
             boost::make_shared<ore::data::TodaysMarket>(asof_, todaysMarketParams_, loader_, curveConfigs_, true, true,

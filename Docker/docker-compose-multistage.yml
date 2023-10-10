@@ -3,6 +3,8 @@ version: '3'
 services:
   ore_app:
     image: ore_app:${ORE_TAG}
+    cap_drop:
+      - NET_RAW
     build:
       context: ../
       dockerfile: Docker/Dockerfile-multistage

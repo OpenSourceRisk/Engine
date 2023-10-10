@@ -48,6 +48,8 @@ struct Filter {
     void clear();
     void set(const Size i, const bool v);
     void setAll(const bool v);
+    void resetSize(const Size n);
+
     // inspectors
     // true => det., but false => non-det. only after updateDeterministic()
     bool deterministic() const { return deterministic_; }
@@ -106,8 +108,9 @@ struct RandomVariable {
     void set(const Size i, const Real v);
     // all negative times are treated as 0 ( = deterministic value )
     void setTime(const Real time) { time_ = std::max(time, 0.0); }
-
     void setAll(const Real v);
+    void resetSize(const Size n);
+
     // inspectors
     // true => det., but false => non-det. only after updateDeterministic()
     bool deterministic() const { return deterministic_; }
