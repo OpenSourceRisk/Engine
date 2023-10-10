@@ -269,6 +269,10 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
                                           times.size() - 1, isTraining ? mcParams_.trainingSeed : mcParams_.seed,
                                           mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers);
 
+        for (auto s = std::next(irStates.begin(), 1); s != irStates.end(); ++s)
+            for (auto& r : s->second)
+                r.expand();
+
         for (Size path = 0; path < nSamples; ++path) {
             auto p = gen->next();
             Real state = 0.0;
@@ -276,7 +280,7 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
             for (Size i = 0; i < times.size() - 1; ++i) {
                 state += stdDevs[i] * p.value[i][0];
                 ++date;
-                irStates[*date][0].set(path, state);
+                irStates[*date][0].data()[path] = state;
             }
         }
 
@@ -352,12 +356,13 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
             ++date;
             for (Size j = 0; j < indices_.size(); ++j) {
                 rvs[j][i] = &paths[*date][j];
+                rvs[j][i]->expand();
             }
         }
         for (Size k = 0; k < indices_.size(); ++k) {
             for (Size j = 1; j < effectiveSimulationDates_.size(); ++j) {
                 for (Size i = 0; i < nSamples; ++i) {
-                    rvs[k][j - 1]->set(i, std::exp(pathValues[j - 1][indexPositionInProcess_[k]][i]));
+                    rvs[k][j - 1]->data()[i] = std::exp(pathValues[j - 1][indexPositionInProcess_[k]][i]);
                 }
             }
         }
@@ -370,12 +375,13 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
             ++date2;
             for (Size j = 0; j < currencies_.size(); ++j) {
                 rvs2[j][i] = &irStates[*date2][j];
+                rvs2[j][i]->expand();
             }
         }
         for (Size k = 0; k < currencies_.size(); ++k) {
             for (Size j = 1; j < effectiveSimulationDates_.size(); ++j) {
                 for (Size i = 0; i < nSamples; ++i) {
-                    rvs2[k][j - 1]->set(i, pathValues[j - 1][currencyPositionInProcess_[k]][i]);
+                    rvs2[k][j - 1]->data()[i] = pathValues[j - 1][currencyPositionInProcess_[k]][i];
                 }
             }
         }
@@ -391,13 +397,15 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
             for (Size j = 0; j < infIndices_.size(); ++j) {
                 rvs3a[j][i] = &infStates[*date3][j].first;
                 rvs3b[j][i] = &infStates[*date3][j].second;
+                rvs3a[j][i]->expand();
+                rvs3b[j][i]->expand();
             }
         }
         for (Size k = 0; k < infIndices_.size(); ++k) {
             for (Size j = 1; j < effectiveSimulationDates_.size(); ++j) {
                 for (Size i = 0; i < nSamples; ++i) {
-                    rvs3a[k][j - 1]->set(i, pathValues[j - 1][infIndexPositionInProcess_[k]][i]);
-                    rvs3b[k][j - 1]->set(i, pathValues[j - 1][infIndexPositionInProcess_[k] + 1][i]);
+                    rvs3a[k][j - 1]->data()[i] = pathValues[j - 1][infIndexPositionInProcess_[k]][i];
+                    rvs3b[k][j - 1]->data()[i] = pathValues[j - 1][infIndexPositionInProcess_[k] + 1][i];
                 }
             }
         }
@@ -479,9 +487,10 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
         if (fixingDate != obsDate) {
             // we need a forward cpi, TODO vectorise this computation
             RandomVariable growthFactor(size());
+            growthFactor.expand();
             for (Size p = 0; p < size(); ++p) {
-                growthFactor.set(
-                    p, inflationGrowth(*cam_, indexNo, t, T, state.first[p], state.second[p], isInterpolated));
+                growthFactor.data()[p] =
+                    inflationGrowth(*cam_, indexNo, t, T, state.first[p], state.second[p], isInterpolated);
             }
             result *= growthFactor;
         }
