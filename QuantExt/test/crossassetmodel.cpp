@@ -3792,6 +3792,7 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
     if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
         tmp->resetCache(0);
     }
+
     if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
         tmp->resetCache(grid_euler.size() - 1);
     }
