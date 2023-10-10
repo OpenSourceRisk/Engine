@@ -2913,7 +2913,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
     IrFxInfCrEqModelTestData d;
 
     boost::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
-    boost::shared_ptr<StochasticProcess> process2 = d.modelExact->stateProcess();
+    boost::shared_ptr<StochasticProcess> process2 = d.modelEuler->stateProcess();
 
     Size n = 50000;                         // number of paths
     Size seed = 18;                         // rng seed
@@ -3697,6 +3697,7 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
         tmp->resetCache(grid_euler.size() - 1);
     }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid_euler);
+
     if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
         tmp->resetCache(grid_exact.size() - 1);
     }
@@ -3786,6 +3787,16 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
     }
 
     BOOST_TEST_MESSAGE("Testing correlation matrix recovery in presence of equity simulation");
+
+    // reset caching so that we can retrieve further info from the processes
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(0);
+    }
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+        tmp->resetCache(grid_euler.size() - 1);
+    }
+
+
     Matrix corr_input = d.ccLgmExact->correlation();
     BOOST_CHECK(corr_input.rows() == corr_input.columns());
     Size dim = corr_input.rows();
