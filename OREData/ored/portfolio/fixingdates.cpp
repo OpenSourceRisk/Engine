@@ -41,6 +41,7 @@
 #include <qle/indexes/compositeindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/fallbackovernightindex.hpp>
+#include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
 #include <ql/cashflow.hpp>
 #include <ql/cashflows/averagebmacoupon.hpp>
@@ -658,11 +659,19 @@ void FixingDateGetter::visit(TRSCashFlow& bc) {
 
     for (const auto& ind : indexes) {
         if (ind) {
-            if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_)
-                requiredFixings_.addFixingDate(ind->fixingCalendar().adjust(bc.fixingStartDate(), Preceding), 
-                    IndexNameTranslator::instance().oreName(ind->name()), bc.date());
+            auto startDate = ind->fixingCalendar().adjust(bc.fixingStartDate(), Preceding);
+            auto endDate = ind->fixingCalendar().adjust(bc.fixingEndDate(), Preceding);
 
-            requiredFixings_.addFixingDate(ind->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
+            auto gi = QuantLib::ext::dynamic_pointer_cast<QuantExt::GenericIndex>(ind);
+            
+            if (!gi || gi->expiry() == Date() || startDate < gi->expiry()) {
+                if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_)
+                    requiredFixings_.addFixingDate(startDate, IndexNameTranslator::instance().oreName(ind->name()),
+                                                   bc.date());
+            }
+
+            if (!gi || gi->expiry() == Date() || endDate < gi->expiry())
+                requiredFixings_.addFixingDate(endDate,
                                            IndexNameTranslator::instance().oreName(ind->name()), bc.date());
         }
     }
