@@ -1,5 +1,7 @@
 include(CheckCXXCompilerFlag)
-include(CheckLinkerFlag)
+if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
+    include(CheckLinkerFlag)
+endif()
 
 option(MSVC_LINK_DYNAMIC_RUNTIME "Link against dynamic runtime" ON)
 option(MSVC_PARALLELBUILD "Use flag /MP" ON)
@@ -143,7 +145,9 @@ else()
 
     # add pthread flag
     add_compiler_flag("-pthread" usePThreadCompilerFlag)
-    add_linker_flag("-pthread" usePThreadLinkerFlag)
+    if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
+        add_linker_flag("-pthread" usePThreadLinkerFlag)
+    endif()
 
     # enable boost assert handler
     add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)
