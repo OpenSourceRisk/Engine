@@ -146,7 +146,6 @@ void DiscountingBondTRSEngine::calculate() const {
 
     boost::shared_ptr<Bond> bd = arguments_.bondIndex->bond();
 
-    Date settlementDate = bd->settlementDate(today);
     Date start = bd->settlementDate(arguments_.valuationDates.front());
     Date end = bd->settlementDate(arguments_.valuationDates.back());
 
