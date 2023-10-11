@@ -61,6 +61,8 @@ GaussianCam::GaussianCam(const Handle<CrossAssetModel>& cam, const Size paths,
       cam_(cam), curves_(curves), fxSpots_(fxSpots), regressionOrder_(regressionOrder),
       timeStepsPerYear_(timeStepsPerYear), projectedStateProcessIndices_(projectedStateProcessIndices) {
 
+    // check inputs
+
     QL_REQUIRE(!cam_.empty(), "model is empty");
 
     // register with observables
