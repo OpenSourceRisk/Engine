@@ -41,13 +41,14 @@ public:
     ScriptedInstrumentPricingEngineCG(const std::string& npv,
                                       const std::vector<std::pair<std::string, std::string>>& additionalResults,
                                       const boost::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
-                                      const boost::shared_ptr<Context>& context, const std::string& script = "",
-                                      const bool interactive = false, const bool amcEnabled = false,
+                                      const boost::shared_ptr<Context>& context, const Model::McParams& mcParams,
+                                      const std::string& script = "", const bool interactive = false,
+                                      const bool amcEnabled = false,
                                       const std::set<std::string>& amcStickyCloseOutStates = {},
                                       const bool generateAdditionalResults = false, const bool useCachedSensis = false,
                                       const bool useExternalComputeFramework = false)
         : npv_(npv), additionalResults_(additionalResults), model_(model), ast_(ast), context_(context),
-          script_(script), interactive_(interactive), amcEnabled_(amcEnabled),
+          mcParams_(mcParams), script_(script), interactive_(interactive), amcEnabled_(amcEnabled),
           amcStickyCloseOutStates_(amcStickyCloseOutStates), generateAdditionalResults_(generateAdditionalResults),
           useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework) {
         registerWith(model_);
@@ -106,6 +107,7 @@ private:
     const boost::shared_ptr<ModelCG> model_;
     const ASTNodePtr ast_;
     const boost::shared_ptr<Context> context_;
+    const Model::McParams mcParams_;
     const std::string script_;
     const bool interactive_;
     const bool amcEnabled_;

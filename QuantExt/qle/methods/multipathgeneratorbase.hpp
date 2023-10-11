@@ -21,8 +21,7 @@
     \ingroup methods
 */
 
-#ifndef quantext_multi_path_generator_base_hpp
-#define quantext_multi_path_generator_base_hpp
+#pragma once
 
 #include <ql/math/randomnumbers/rngtraits.hpp>
 #include <ql/methods/montecarlo/brownianbridge.hpp>
@@ -62,9 +61,11 @@ private:
     TimeGrid grid_;
     BigNatural seed_;
 
-    boost::shared_ptr<MultiPathGenerator<PseudoRandom::rsg_type> > pg_;
+    boost::shared_ptr<MultiPathGenerator<PseudoRandom::rsg_type>> pg_;
+    boost::shared_ptr<PathGenerator<PseudoRandom::rsg_type>> pg1D_;
     bool antitheticSampling_;
     mutable bool antitheticVariate_;
+    mutable Sample<MultiPath> next_;
 };
 
 class MultiPathGeneratorMersenneTwisterAntithetic : public MultiPathGeneratorMersenneTwister {
@@ -93,7 +94,9 @@ private:
     BigNatural seed_;
     SobolRsg::DirectionIntegers directionIntegers_;
 
-    boost::shared_ptr<MultiPathGenerator<LowDiscrepancy::rsg_type> > pg_;
+    boost::shared_ptr<MultiPathGenerator<LowDiscrepancy::rsg_type>> pg_;
+    boost::shared_ptr<PathGenerator<LowDiscrepancy::rsg_type>> pg1D_;
+    mutable Sample<MultiPath> next_;
 };
 
 //! Instantiation using SobolBrownianGenerator from  models/marketmodels/browniangenerators
@@ -116,6 +119,7 @@ private:
     SobolRsg::DirectionIntegers directionIntegers_;
     boost::shared_ptr<SobolBrownianGenerator> gen_;
     mutable Sample<MultiPath> next_;
+    boost::shared_ptr<StochasticProcess1D> process1D_;
 };
 
 //! Make function for path generators
@@ -128,19 +132,4 @@ makeMultiPathGenerator(const SequenceType s, const boost::shared_ptr<StochasticP
 //! Output function
 std::ostream& operator<<(std::ostream& out, const SequenceType s);
 
-// inline
-
-inline const Sample<MultiPath>& MultiPathGeneratorMersenneTwister::next() const {
-    if (antitheticSampling_) {
-        antitheticVariate_ = !antitheticVariate_;
-        return antitheticVariate_ ? pg_->antithetic() : pg_->next();
-    } else {
-        return pg_->next();
-    }
-}
-
-inline const Sample<MultiPath>& MultiPathGeneratorSobol::next() const { return pg_->next(); }
-
 } // namespace QuantExt
-
-#endif

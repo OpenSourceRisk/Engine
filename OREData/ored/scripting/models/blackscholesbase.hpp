@@ -56,15 +56,13 @@ public:
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
         const Handle<BlackScholesModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const Size regressionOrder, const std::set<Date>& simulationDates,
-        const IborFallbackConfig& iborFallbackConfig);
+        const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig);
 
     // ctor for single underlying
     BlackScholesBase(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
                      const std::string& index, const std::string& indexCurrency,
-                     const Handle<BlackScholesModelWrapper>& model, const Size regressionOrder,
-                     const std::set<Date>& simulationDates,
-                     const IborFallbackConfig& iborFallbackConfig);
+                     const Handle<BlackScholesModelWrapper>& model, const Model::McParams& mcParams,
+                     const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig);
 
     // Model interface implementation
     Type type() const override { return Type::MC; }
@@ -78,6 +76,10 @@ public:
                               const Real cap, const Real floor, const bool nakedOption,
                               const bool localCapFloor) const override;
     void releaseMemory() override;
+    void resetNPVMem() override;
+    void toggleTrainingPaths() const override;
+    Size trainingSamples() const override;
+    Size size() const override;
 
 protected:
     // ModelImpl interface implementation (except initiModelState, this is done in the derived classes)
@@ -97,7 +99,7 @@ protected:
     const std::vector<Handle<Quote>> fxSpots_;
     const Handle<BlackScholesModelWrapper> model_;
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> correlations_;
-    const Size regressionOrder_;
+    const McParams mcParams_;
     const std::vector<Date> simulationDates_;
 
     // these all except underlyingPaths_ are initialised when the interface functions above are called
@@ -107,7 +109,9 @@ protected:
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
-    mutable std::map<Date, std::vector<RandomVariable>> underlyingPaths_; // per simulation date index states
+    mutable std::map<Date, std::vector<RandomVariable>> underlyingPaths_;         // per simulation date index states
+    mutable std::map<Date, std::vector<RandomVariable>> underlyingPathsTraining_; // ditto (training phase)
+    mutable bool inTrainingPhase_ = false; // are we currently using training paths?
 
     // stored regression coefficients
     mutable std::map<long, std::pair<Array, Size>> storedRegressionCoeff_;

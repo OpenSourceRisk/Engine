@@ -26,6 +26,7 @@
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
+#include <qle/processes/irlgm1fstateprocess.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -640,6 +641,8 @@ RandomVariable McMultiLegBaseEngine::cashflowPathValue(const CashflowInfo& cf,
 
 void McMultiLegBaseEngine::calculate() const {
 
+    McEngineStats::instance().other_timer.resume();
+
     // check data set by derived engines
 
     QL_REQUIRE(currency_.size() == leg_.size(), "McMultiLegBaseEngine: number of legs ("
@@ -722,7 +725,11 @@ void McMultiLegBaseEngine::calculate() const {
     simulationTimes.insert(exerciseTimes.begin(), exerciseTimes.end());
     simulationTimes.insert(xvaTimes.begin(), xvaTimes.end());
 
+    McEngineStats::instance().other_timer.stop();
+
     // simulate the paths for the calibration
+
+    McEngineStats::instance().path_timer.resume();
 
     QL_REQUIRE(!simulationTimes.empty(),
                "McMultiLegBaseEngine::calculate(): no simulation times, this is not expected.");
@@ -730,18 +737,38 @@ void McMultiLegBaseEngine::calculate() const {
         simulationTimes.size(),
         std::vector<RandomVariable>(model_->stateProcess()->size(), RandomVariable(calibrationSamples_)));
 
+    for (auto& p : pathValues)
+        for (auto& r : p)
+            r.expand();
+
     TimeGrid timeGrid(simulationTimes.begin(), simulationTimes.end());
-    auto pathGenerator = makeMultiPathGenerator(calibrationPathGenerator_, model_->stateProcess(), timeGrid,
-                                                calibrationSeed_, ordering_, directionIntegers_);
+
+    auto process = model_->stateProcess();
+    if (model_->dimension() == 1) {
+        // use lgm process if possible for better performance
+        auto tmp = boost::make_shared<IrLgm1fStateProcess>(model_->irlgm1f(0));
+        tmp->resetCache(timeGrid.size() - 1);
+        process = tmp;
+    } else if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        // enable cache
+        tmp->resetCache(timeGrid.size() - 1);
+    }
+
+    auto pathGenerator = makeMultiPathGenerator(calibrationPathGenerator_, process, timeGrid, calibrationSeed_,
+                                                ordering_, directionIntegers_);
 
     for (Size i = 0; i < calibrationSamples_; ++i) {
-        MultiPath path = pathGenerator->next().value;
+        const MultiPath& path = pathGenerator->next().value;
         for (Size j = 0; j < simulationTimes.size(); ++j) {
             for (Size k = 0; k < model_->stateProcess()->size(); ++k) {
-                pathValues[j][k].set(i, path[k][j + 1]);
+                pathValues[j][k].data()[i] = path[k][j + 1];
             }
         }
     }
+
+    McEngineStats::instance().path_timer.stop();
+
+    McEngineStats::instance().calc_timer.resume();
 
     // for each xva and exercise time collect the relevant cashflow amounts and train a model on them
 
@@ -750,7 +777,8 @@ void McMultiLegBaseEngine::calculate() const {
     std::vector<Array> coeffsContinuationValue(exerciseXvaTimes.size()); // available on ex times
     std::vector<Array> coeffsOption(exerciseXvaTimes.size());            // available on xva and ex times
 
-    auto basisFns = RandomVariableLsmBasisSystem::multiPathBasisSystem(model_->stateProcess()->size(), polynomOrder_);
+    auto basisFns =
+        RandomVariableLsmBasisSystem::multiPathBasisSystem(model_->stateProcess()->size(), polynomOrder_, polynomType_);
 
     enum class CfStatus { open, cached, done };
     std::vector<CfStatus> cfStatus(cashflowInfo.size(), CfStatus::open);
@@ -841,6 +869,8 @@ void McMultiLegBaseEngine::calculate() const {
     resultValue_ = exercise_ == nullptr
                        ? resultUnderlyingNpv_
                        : expectation(pathValueOption).at(0) * model_->numeraire(0, 0.0, 0.0, discountCurves_[0]);
+
+    McEngineStats::instance().calc_timer.stop();
 
     // construct the amc calculator
 

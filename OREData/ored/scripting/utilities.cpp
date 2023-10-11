@@ -526,7 +526,7 @@ boost::shared_ptr<FallbackOvernightIndex> IndexInfo::irOvernightFallback(const I
 }
 
 std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
-multiPathBasisSystem(Size dim, Size order, Size basisSystemSizeBound) {
+multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type, Size basisSystemSizeBound) {
     QL_REQUIRE(order > 0, "multiPathBasisSystem: order must be > 0");
     Size originalOrder = order;
     if (basisSystemSizeBound != Null<Size>()) {
@@ -544,7 +544,7 @@ multiPathBasisSystem(Size dim, Size order, Size basisSystemSizeBound) {
         DLOG("Generate LSM basis system of order " << order << " for dim " << dim << ", size will be "
                                                    << RandomVariableLsmBasisSystem::size(dim, order));
     }
-    return RandomVariableLsmBasisSystem::multiPathBasisSystem(dim, order);
+    return RandomVariableLsmBasisSystem::multiPathBasisSystem(dim, order, type);
 }
 
 boost::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(const std::string& indexName,
@@ -619,11 +619,6 @@ parseScriptedInflationIndex(const std::string& indexName) {
     if (tokens.size() == 1) {
         interpolated = false;
     } else if (tokens.size() == 2) {
-        ALOG(StructuredMessage(
-            StructuredMessage::Category::Warning, StructuredMessage::Group::Trade,
-            "interpolated inflation indices is deprecated, interpolation should be handled in the script. "
-            "This feature will be removed in the future, please adjust the script.",
-            std::pair<string, string>()));
         QL_REQUIRE(tokens[1] == "F" || tokens[1] == "L", "parseScriptedInflationIndex(): expected ...#[L|F], got ...#"
                                                              << tokens[1] << " in '" << indexName << "'");
         interpolated = tokens[1] == "L";
@@ -635,27 +630,6 @@ parseScriptedInflationIndex(const std::string& indexName) {
         plainIndexName);
 }
 QL_DEPRECATED_ENABLE_WARNING
-
-boost::shared_ptr<BrownianGenerator> getBrownianGenerator(const Size dim, const Size steps) {
-    try {
-        return boost::make_shared<SobolBrownianGenerator>(dim, steps, SobolBrownianGenerator::Steps, 42,
-                                                          SobolRsg::JoeKuoD7);
-    } catch (...) {
-        // might throw sind the required dimensionality exceeds what is supported in QL
-    }
-    return boost::make_shared<MTBrownianGenerator>(dim, steps, 42);
-}
-
-boost::shared_ptr<MultiPathGeneratorBase> getMultiPathGenerator(const boost::shared_ptr<StochasticProcess>& p,
-                                                                const TimeGrid& t) {
-    try {
-        return boost::make_shared<MultiPathGeneratorSobolBrownianBridge>(p, t, SobolBrownianGenerator::Steps, 42,
-                                                                         SobolRsg::JoeKuoD7);
-    } catch (...) {
-        // might throw sind the required dimensionality exceeds what is supported in QL
-    }
-    return boost::make_shared<MultiPathGeneratorMersenneTwister>(p, t, 42);
-}
 
 std::string scriptedIndexName(const boost::shared_ptr<Underlying>& underlying) {
     if (underlying->type() == "Equity") {

@@ -79,11 +79,14 @@ Size CrossAssetStateProcess::size() const { return model_->dimension(); }
 
 Size CrossAssetStateProcess::factors() const { return model_->brownians() + model_->auxBrownians(); }
 
-void CrossAssetStateProcess::flushCache() const {
+void CrossAssetStateProcess::resetCache(const Size timeSteps) const {
+    cacheNotReady_m_ = cacheNotReady_d_ = true;
+    timeStepsToCache_m_ = timeStepsToCache_d_ = timeSteps;
+    timeStepCache_m_ = timeStepCache_d_ = 0;
     cache_m_.clear();
     cache_d_.clear();
     if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess::ExactDiscretization>(discretization_))
-        tmp->flushCache();
+        tmp->resetCache(timeSteps);
     updateSqrtCorrelation();
 }
 
@@ -133,8 +136,7 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
     Real Hprime0 = model_->irlgm1f(0)->Hprime(t);
     Real alpha0 = model_->irlgm1f(0)->alpha(t);
     Real zeta0 = model_->irlgm1f(0)->zeta(t);
-    auto i = cache_m_.find(t);
-    if (i == cache_m_.end()) {
+    if (cacheNotReady_m_) {
         /* z0 has drift 0 in the LGM measure but non-zero drift in the bank account measure, so start loop at i = 0 */
         for (Size i = 0; i < n; ++i) {
             Real Hi = model_->irlgm1f(i)->H(t);
@@ -265,9 +267,15 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
             }
         }
 
-        cache_m_.insert(std::make_pair(t, res));
+        if(timeStepsToCache_m_ > 0) {
+            cache_m_.push_back(res);
+            if(cache_m_.size() == timeStepsToCache_m_)
+                cacheNotReady_m_ = false;
+        }
     } else {
-        res = i->second;
+        res = cache_m_[timeStepCache_m_++];
+        if (timeStepCache_m_ == timeStepsToCache_m_)
+            timeStepCache_m_ = 0;
     }
     // non-cacheable sections of drifts
     for (Size i = 1; i < n; ++i) {
@@ -334,13 +342,19 @@ Matrix CrossAssetStateProcess::diffusion(Time t, const Array& x) const {
 }
 
 Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrownians(Time t, const Array& x) const {
-    auto i = cache_d_.find(t);
-    if (i == cache_d_.end()) {
+    if (cacheNotReady_d_) {
         Matrix tmp = diffusionOnCorrelatedBrowniansImpl(t, x);
-        cache_d_.insert(std::make_pair(t, tmp));
+        if(timeStepsToCache_d_ > 0) {
+            cache_d_.push_back(tmp);
+            if(cache_d_.size() == timeStepsToCache_d_)
+                cacheNotReady_d_ = false;
+        }
         return tmp;
     } else {
-        return i->second;
+        Matrix tmp = cache_d_[timeStepCache_d_++];
+        if(timeStepCache_d_ == timeStepsToCache_d_)
+            timeStepCache_d_ = 0;
+        return tmp;
     }
 }
 
@@ -570,13 +584,17 @@ CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(const CrossAsse
 Array CrossAssetStateProcess::ExactDiscretization::drift(const StochasticProcess& p, Time t0, const Array& x0,
                                                          Time dt) const {
     Array res;
-    cache_key k = {t0, dt};
-    auto i = cache_m_.find(k);
-    if (i == cache_m_.end()) {
+    if (cacheNotReady_m_) {
         res = driftImpl1(p, t0, x0, dt);
-        cache_m_.insert(std::make_pair(k, res));
+        if (timeStepsToCache_m_ > 0) {
+            cache_m_.push_back(res);
+            if (cache_m_.size() == timeStepsToCache_m_)
+                cacheNotReady_m_ = false;
+        }
     } else {
-        res = i->second;
+        res = cache_m_[timeStepCache_m_++];
+        if (timeStepCache_m_ == timeStepsToCache_m_)
+            timeStepCache_m_ = 0;
     }
     Array res2 = driftImpl2(p, t0, x0, dt);
     for (Size i = 0; i < res.size(); ++i) {
@@ -587,28 +605,38 @@ Array CrossAssetStateProcess::ExactDiscretization::drift(const StochasticProcess
 
 Matrix CrossAssetStateProcess::ExactDiscretization::diffusion(const StochasticProcess& p, Time t0, const Array& x0,
                                                               Time dt) const {
-    cache_key k = {t0, dt};
-    auto i = cache_d_.find(k);
-    if (i == cache_d_.end()) {
+    if (cacheNotReady_d_) {
         Matrix res = pseudoSqrt(covariance(p, t0, x0, dt), salvaging_);
         // note that covariance actually does not depend on x0
-        cache_d_.insert(std::make_pair(k, res));
+        if(timeStepsToCache_d_ > 0) {
+            cache_d_.push_back(res);
+            if(cache_d_.size() == timeStepsToCache_d_)
+                cacheNotReady_d_ = false;
+        }
         return res;
     } else {
-        return i->second;
+        Matrix res = cache_d_[timeStepCache_d_++];
+        if (timeStepCache_d_ == timeStepsToCache_d_)
+            timeStepCache_d_ = 0;
+        return res;
     }
 }
 
 Matrix CrossAssetStateProcess::ExactDiscretization::covariance(const StochasticProcess& p, Time t0, const Array& x0,
                                                                Time dt) const {
-    cache_key k = {t0, dt};
-    auto i = cache_v_.find(k);
-    if (i == cache_v_.end()) {
+    if (cacheNotReady_v_) {
         Matrix res = covarianceImpl(p, t0, x0, dt);
-        cache_v_.insert(std::make_pair(k, res));
+        if(timeStepsToCache_v_ > 0) {
+            cache_v_.push_back(res);
+            if(cache_v_.size() == timeStepsToCache_v_)
+                cacheNotReady_v_ = false;
+        }
         return res;
     } else {
-        return i->second;
+        Matrix res = cache_v_[timeStepCache_v_++];
+        if (timeStepCache_v_ == timeStepsToCache_v_)
+            timeStepCache_v_ = 0;
+        return res;
     }
 }
 
@@ -950,7 +978,10 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
     return res;
 }
 
-void CrossAssetStateProcess::ExactDiscretization::flushCache() const {
+void CrossAssetStateProcess::ExactDiscretization::resetCache(const Size timeSteps) const {
+    cacheNotReady_m_ = cacheNotReady_d_ = cacheNotReady_v_ = true;
+    timeStepsToCache_m_ = timeStepsToCache_d_ = timeStepsToCache_v_ = timeSteps;
+    timeStepCache_m_ = timeStepCache_d_ = timeStepCache_v_ = 0;
     cache_m_.clear();
     cache_v_.clear();
     cache_d_.clear();
