@@ -1,3 +1,44 @@
+Changes for the 11th ORE release (1.8.11.0):
+============================================
+
+ORE 1.8.11.0 includes the following notable changes, details can be
+found in the commits between July 2023 and beginning of October 2023.
+
+INSTRUMENTS
+- Add the Scripted Trade framework, see Example 52
+- Add support for fixings at trade level, see Example 51
+- Add Commodity Heat Rate Option
+- Add support for FRA on OIS
+- Add support for SIFMA Cap/Floor
+
+MARKETS
+- Support Optionlet volatility input
+- Add Dated OIS Rate Helper to the ORE yield curve to support instruments
+  tailored to Central Bank meeting dates, see Example 53
+
+ANALYTICS
+- Add SIMM 2.6
+- Add support for SIMM with one-day horizon, see updated Example 44
+- Convert pre-computed zero sensitivities into par sensitivities, see Example 50 
+- Add support for Cross Currency MtM Reset Swaps to AMC exposure simulation
+
+TEST
+- QuantExt: 272 test functions (vs 267 in the previous release)
+- OREData: 257 test functions (vs. 206 in the previous release)
+- OREAnalytics: 78 test functions 
+
+DOCUMENTATION
+- A separate guide for the Scripted Trade has been added,
+  see Docs/ScriptedTrade/scriptedtrade.tex
+
+LANGUAGE BINDINGS
+- Upgrade to QuantLib-SWIG-v1.31.1
+
+OTHER
+- Upgrade of ORE's QuantLib fork to QuantLib-v1.31.1
+- Introduced Blackduck and Coverity scans before releases
+
+
 Changes for the 10th ORE release (1.8.10.0):
 ============================================
 
@@ -42,7 +83,7 @@ LANGUAGE BINDINGS & PYTHON MODULE
   see oreswig/OREAnalytics-SWIG/Python/Examples/Notebooks
 
 OTHER
-- Upgraded ORE's QUantLib fork to QuantLib-v1.30
+- Upgraded ORE's QuantLib fork to QuantLib-v1.30
 
 
 Changes for the 9th ORE release (1.8.9.0):
