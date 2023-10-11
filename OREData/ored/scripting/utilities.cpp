@@ -619,11 +619,6 @@ parseScriptedInflationIndex(const std::string& indexName) {
     if (tokens.size() == 1) {
         interpolated = false;
     } else if (tokens.size() == 2) {
-        ALOG(StructuredMessage(
-            StructuredMessage::Category::Warning, StructuredMessage::Group::Trade,
-            "interpolated inflation indices is deprecated, interpolation should be handled in the script. "
-            "This feature will be removed in the future, please adjust the script.",
-            std::pair<string, string>()));
         QL_REQUIRE(tokens[1] == "F" || tokens[1] == "L", "parseScriptedInflationIndex(): expected ...#[L|F], got ...#"
                                                              << tokens[1] << " in '" << indexName << "'");
         interpolated = tokens[1] == "L";
