@@ -594,7 +594,7 @@
   </xs:complexType>
 
   <xs:complexType name="inflationCapFloorVolatility">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="inflationType" name="Type" minOccurs="1" maxOccurs="1"/>
@@ -603,11 +603,9 @@
       <xs:element type="bool" name="Extrapolation"/>
       <xs:element type="xs:string" name="Tenors" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="SettlementDays" minOccurs="0" maxOccurs="1"/>
-      <xs:sequence>
-        <xs:element type="xs:string" name="CapStrikes" minOccurs="1" maxOccurs="1"/>
-        <xs:element type="xs:string" name="FloorStrikes" minOccurs="1" maxOccurs="1"/>
-      </xs:sequence>
-      <xs:element type="xs:string" name="Strikes" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="CapStrikes" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FloorStrikes" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Strikes" minOccurs="0" maxOccurs="1"/>
       <xs:element type="calendar" name="Calendar" minOccurs="1" maxOccurs="1"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="1" maxOccurs="1"/>
@@ -619,7 +617,7 @@
       <xs:element type="xs:string" name="QuoteIndex" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="UseLastFixingDate" minOccurs="0" maxOccurs="1"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="yieldCurves">
