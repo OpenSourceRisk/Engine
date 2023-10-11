@@ -25,6 +25,8 @@
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_opcodes.hpp>
 
+#include <ql/methods/montecarlo/lsmbasissystem.hpp>
+
 #include <map>
 
 namespace QuantExt {
@@ -33,7 +35,8 @@ namespace QuantExt {
 
 using RandomVariableOp = std::function<RandomVariable(const std::vector<const RandomVariable*>&)>;
 
-std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size regressionOrder);
+std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size regressionOrder,
+                                                   const QuantLib::LsmBasisSystem::PolynomialType polynomType);
 
 // random variable gradients
 
@@ -41,6 +44,7 @@ using RandomVariableGrad =
     std::function<std::vector<RandomVariable>(const std::vector<const RandomVariable*>&, const RandomVariable*)>;
 
 std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, const Size regressionOrder,
+                                                           const QuantLib::LsmBasisSystem::PolynomialType polynomType,
                                                            const double eps = 0.2);
 
 // random variable flags which values are needed to compute the gradient
