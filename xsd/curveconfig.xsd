@@ -988,7 +988,7 @@
   <xs:complexType name="discountRatioType">
     <xs:all>
       <xs:element type="discountRatioTypeType" name="Type"/>
-	  <xs:element type="xs:string" name="PillarChoice"/>
+	  <xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="discountRatioCurveElement" name="BaseCurve"/>
       <xs:element type="discountRatioCurveElement" name="NumeratorCurve"/>
@@ -1014,7 +1014,7 @@
     <xs:all>
       <xs:element type="xs:string" name="Type" fixed="FittedBond"/>
       <xs:element type="quoteType" name="Quotes"/>
-		<xs:element type="xs:string" name="PillarChoice"/>
+		<xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
       <xs:element name="IborIndexCurves" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
