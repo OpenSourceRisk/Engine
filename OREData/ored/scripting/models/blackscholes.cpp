@@ -255,6 +255,7 @@ void BlackScholes::populatePathValues(const Size nSamples, std::map<Date, std::v
         ++date;
         for (Size j = 0; j < indices_.size(); ++j) {
             rvs[j][i] = &paths[*date][j];
+            rvs[j][i]->expand();
         }
     }
 
@@ -273,7 +274,7 @@ void BlackScholes::populatePathValues(const Size nSamples, std::map<Date, std::v
             }
             logState += drift[i];
             for (Size j = 0; j < indices_.size(); ++j)
-                rvs[j][i]->set(path, std::exp(logState[j]));
+                rvs[j][i]->data()[path] = std::exp(logState[j]);
         }
     }
 } // populatePathValues()

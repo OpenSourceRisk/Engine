@@ -26,28 +26,71 @@ namespace QuantExt {
 
 MultiPathGeneratorMersenneTwister::MultiPathGeneratorMersenneTwister(
     const boost::shared_ptr<StochasticProcess>& process, const TimeGrid& grid, BigNatural seed, bool antitheticSampling)
-    : process_(process), grid_(grid), seed_(seed), antitheticSampling_(antitheticSampling), antitheticVariate_(true) {
+    : process_(process), grid_(grid), seed_(seed), antitheticSampling_(antitheticSampling), antitheticVariate_(true),
+      next_(MultiPath(process->size(), grid), 1.0) {
     reset();
 }
 
 void MultiPathGeneratorMersenneTwister::reset() {
     PseudoRandom::rsg_type rsg = PseudoRandom::make_sequence_generator(process_->factors() * (grid_.size() - 1), seed_);
-    pg_ = boost::make_shared<MultiPathGenerator<PseudoRandom::rsg_type> >(process_, grid_, rsg, false);
+    if (auto tmp = boost::dynamic_pointer_cast<StochasticProcess1D>(process_)) {
+        pg1D_ = boost::make_shared<PathGenerator<PseudoRandom::rsg_type>>(tmp, grid_, rsg, false);
+    } else {
+        pg_ = boost::make_shared<MultiPathGenerator<PseudoRandom::rsg_type>>(process_, grid_, rsg, false);
+    }
     antitheticVariate_ = true;
+}
+
+const Sample<MultiPath>& MultiPathGeneratorMersenneTwister::next() const {
+    if (antitheticSampling_) {
+        antitheticVariate_ = !antitheticVariate_;
+        if (pg_) {
+            return antitheticVariate_ ? pg_->antithetic() : pg_->next();
+        } else {
+            next_.value.at(0) = antitheticVariate_ ? pg1D_->antithetic().value : pg1D_->next().value;
+            return next_;
+        }
+    } else {
+        if (pg_)
+            return pg_->next();
+        else {
+            next_.value.at(0) = pg1D_->next().value;
+            return next_;
+        }
+    }
 }
 
 MultiPathGeneratorSobol::MultiPathGeneratorSobol(const boost::shared_ptr<StochasticProcess>& process,
                                                  const TimeGrid& grid, BigNatural seed,
                                                  SobolRsg::DirectionIntegers directionIntegers)
-    : process_(process), grid_(grid), seed_(seed), directionIntegers_(directionIntegers) {
+    : process_(process), grid_(grid), seed_(seed), directionIntegers_(directionIntegers),
+      next_(MultiPath(process->size(), grid), 1.0) {
     reset();
 }
 
 void MultiPathGeneratorSobol::reset() {
-    pg_ = boost::make_shared<MultiPathGenerator<InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal> > >(
-        process_, grid_,
-        InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal>(
-            SobolRsg(process_->factors() * (grid_.size() - 1), seed_, directionIntegers_)));
+    if (auto tmp = boost::dynamic_pointer_cast<StochasticProcess1D>(process_)) {
+        pg1D_ = boost::make_shared<PathGenerator<InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal>>>(
+            tmp, grid_,
+            InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal>(
+                SobolRsg(process_->factors() * (grid_.size() - 1), seed_, directionIntegers_)),
+            false);
+
+    } else {
+        pg_ = boost::make_shared<MultiPathGenerator<InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal>>>(
+            process_, grid_,
+            InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal>(
+                SobolRsg(process_->factors() * (grid_.size() - 1), seed_, directionIntegers_)));
+    }
+}
+
+const Sample<MultiPath>& MultiPathGeneratorSobol::next() const {
+    if (pg_)
+        return pg_->next();
+    else {
+        next_.value.at(0) = pg1D_->next().value;
+        return next_;
+    }
 }
 
 MultiPathGeneratorSobolBrownianBridge::MultiPathGeneratorSobolBrownianBridge(
@@ -56,6 +99,7 @@ MultiPathGeneratorSobolBrownianBridge::MultiPathGeneratorSobolBrownianBridge(
     : process_(process), grid_(grid), ordering_(ordering), seed_(seed), directionIntegers_(directionIntegers),
       next_(MultiPath(process->size(), grid), 1.0) {
     reset();
+    process1D_ = boost::dynamic_pointer_cast<StochasticProcess1D>(process);
 }
 
 void MultiPathGeneratorSobolBrownianBridge::reset() {
@@ -75,10 +119,14 @@ const Sample<MultiPath>& MultiPathGeneratorSobolBrownianBridge::next() const {
         Real t = grid_[i - 1];
         Real dt = grid_.dt(i - 1);
         gen_->nextStep(output);
-        Array tmp(output.begin(), output.end());
-        asset = process_->evolve(t, asset, dt, tmp);
-        for (Size j = 0; j < asset.size(); ++j) {
-            path[j][i] = asset[j];
+        if (process1D_) {
+            path[0][i] = asset[0] = process1D_->evolve(t, asset[0], dt, output[0]);
+        } else {
+            Array tmp(output.begin(), output.end());
+            asset = process_->evolve(t, asset, dt, tmp);
+            for (Size j = 0; j < asset.size(); ++j) {
+                path[j][i] = asset[j];
+            }
         }
     }
     return next_;
