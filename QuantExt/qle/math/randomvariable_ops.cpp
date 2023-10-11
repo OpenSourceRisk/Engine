@@ -30,7 +30,7 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
 
     // None = 0
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return RandomVariable(); });
-s
+
     // Add = 1
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return *args[0] + (*args[1]); });
 
@@ -47,7 +47,7 @@ s
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return *args[0] / (*args[1]); });
 
     // ConditionalExpectation = 6
-    ops.push_back([size, regressionOrder, polynomtype](const std::vector<const RandomVariable*>& args) {
+    ops.push_back([size, regressionOrder, polynomType](const std::vector<const RandomVariable*>& args) {
         std::vector<const RandomVariable*> regressor;
         for (auto r = std::next(args.begin(), 2); r != args.end(); ++r) {
             if ((*r)->initialised() && !(*r)->deterministic())
@@ -57,8 +57,7 @@ s
             return expectation(*args[0]);
         else {
             auto tmp = multiPathBasisSystem(regressor.size(), regressionOrder, polynomType, size);
-            return conditionalExpectation(*args[0], regressor, it->second,
-                                          !close_enough(*args[1], RandomVariable(size, 0.0)));
+            return conditionalExpectation(*args[0], regressor, tmp, !close_enough(*args[1], RandomVariable(size, 0.0)));
         }
     });
 
@@ -101,8 +100,7 @@ s
     return ops;
 }
 
-std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, const double eps,
-                                                           const Size regressionOrder,
+std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, const Size regressionOrder,
                                                            const QuantLib::LsmBasisSystem::PolynomialType polynomType,
                                                            const double eps) {
 

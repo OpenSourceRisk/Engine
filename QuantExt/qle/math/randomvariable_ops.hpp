@@ -35,17 +35,19 @@ namespace QuantExt {
 
 using RandomVariableOp = std::function<RandomVariable(const std::vector<const RandomVariable*>&)>;
 
-std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size regressionOrder,
-                                                   const QuantLib::LsmBasisSystem::PolynomialType polynomType);
+std::vector<RandomVariableOp>
+getRandomVariableOps(const Size size, const Size regressionOrder = 2,
+                     const QuantLib::LsmBasisSystem::PolynomialType polynomType = QuantLib::LsmBasisSystem::Monomial);
 
 // random variable gradients
 
 using RandomVariableGrad =
     std::function<std::vector<RandomVariable>(const std::vector<const RandomVariable*>&, const RandomVariable*)>;
 
-std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, const Size regressionOrder,
-                                                           const QuantLib::LsmBasisSystem::PolynomialType polynomType,
-                                                           const double eps = 0.2);
+std::vector<RandomVariableGrad> getRandomVariableGradients(
+    const Size size, const Size regressionOrder = 2,
+    const QuantLib::LsmBasisSystem::PolynomialType polynomType = QuantLib::LsmBasisSystem::Monomial,
+    const double eps = 0.2);
 
 // random variable flags which values are needed to compute the gradient
 
