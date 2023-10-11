@@ -1241,7 +1241,7 @@ XMLNode* InflationSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "InflationConvention", strInfConvention_);
 
     if (publicationRoll_ != PublicationRoll::None) {
-        XMLUtils::addChild(doc, node, "RollOnPublication", to_string(publicationRoll_));
+        XMLUtils::addChild(doc, node, "PublicationRoll", to_string(publicationRoll_));
         QL_REQUIRE(publicationScheduleData_, "PublicationRoll is " << publicationRoll_ << " for "
             << id() << " so expect PublicationSchedule.");
 
@@ -2043,6 +2043,7 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
         XMLNode* nthNode = doc.allocNode("OptionNthWeekday");
         XMLUtils::addChild(doc, nthNode, "Nth", strOptionNth_);
         XMLUtils::addChild(doc, nthNode, "Weekday", strOptionWeekday_);
+        XMLUtils::appendNode(node, nthNode);
     } else if (optionAnchorType_ == OptionAnchorType::LastWeekday) {
         XMLUtils::addChild(doc, node, "OptionExpiryLastWeekdayOfMonth", strOptionWeekday_);
     } else if (optionAnchorType_ == OptionAnchorType::WeeklyDayOfTheWeek) {
@@ -2117,6 +2118,7 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
 
     if (!optionUnderlyingFutureConvention_.empty()) {
         XMLUtils::addChild(doc, node, "OptionUnderlyingFutureConvention", optionUnderlyingFutureConvention_);
+        XMLUtils::addChild(doc, node, "OptionContractFrequency", strOptionContractFrequency_);
     }
 
     return node;
