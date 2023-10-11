@@ -220,8 +220,6 @@ private:
     //! Give the \f$\lambda\f$ used in the curvature margin calculation
     QuantLib::Real lambda(QuantLib::Real theta) const;
 
-    //! Convert all results to the calculation currency
-    void convert();
 };
 
 } // namespace analytics
