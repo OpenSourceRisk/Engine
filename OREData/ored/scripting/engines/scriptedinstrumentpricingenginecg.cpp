@@ -131,8 +131,8 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
             opsExternal_ = getExternalRandomVariableOps();
             gradsExternal_ = getExternalRandomVariableGradients();
         } else {
-            ops_ = getRandomVariableOps(model_->size(), regressionOrder_);
-            grads_ = getRandomVariableGradients(model_->size());
+            ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType);
+            grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOders, mcParams_.polynomType);
         }
 
         // build graph

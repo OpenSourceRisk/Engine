@@ -266,7 +266,8 @@ RandomVariable BlackScholesBase::npv(const RandomVariable& amount, const Date& o
 
     // get basis fns
 
-    auto basisFns = multiPathBasisSystem(state.size(), regressionOrder_, size());
+    auto basisFns = multiPathBasisSystem(state.size(), mcParams.regressionOrder, mcParams, polynomType,
+                                         std::min(trainingSamples(), Model::size()));
 
     // if a memSlot is given and coefficients are stored, we use them
 
