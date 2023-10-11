@@ -35,9 +35,11 @@ LANGUAGE BINDINGS
 - Upgrade to QuantLib-SWIG-v1.31.1
 
 OTHER
+- Added an external compute device interface (to utilise GPUs)
+- Logging enhancements (progress, structured logs)
+- Introduced Blackduck and Coverity scans of the code base before releases
 - Upgrade of ORE's QuantLib fork to QuantLib-v1.31.1
-- Introduced Blackduck and Coverity scans before releases
-
+ 
 
 Changes for the 10th ORE release (1.8.10.0):
 ============================================
