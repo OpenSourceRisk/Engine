@@ -1549,13 +1549,6 @@ void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
             projectedModel->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
             iborFallbackConfig, projectedStateProcessIndices, conditionalExpectationModelStates);
     }
-=======
-    // TODO hardcode timeStepsPerYear to 1 and exact discretisation (we might want Euler for AD...)
-    model_ = boost::make_shared<GaussianCam>(projectedModel, modelSize_, modelCcys_, modelCurves_, modelFxSpots_,
-                                             modelIrIndices_, modelInfIndices_, modelIndices_, modelIndicesCurrencies_,
-                                             simulationDates_, mcParams_, 1, iborFallbackConfig,
-                                             projectedStateProcessIndices, conditionalExpectationModelStates);
->>>>>>> origin/master
 
     DLOG("built GuassianCam model as projection of xva evolution model");
     for (auto const& p : projectedStateProcessIndices)
