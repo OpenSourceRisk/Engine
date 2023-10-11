@@ -148,6 +148,13 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 
 Allowable values:  See section \ref{ss:premiums}
 
+\item \lstinline!ExerciseData! [Optional]: Marks the swaption as exercised. The effective date is the next exercise date
+  greater or equal the given date in ExerciseData. For a cash-settled swaption, the price given in ExerciseData
+  represents the cash settlement amount. It is paid according to the PaymentData: If an explicit list of dates is given,
+  the payment takes place on the next date following the effective exercise date. If the payment data is rules-based,
+  the payment date is derived from the effective exercise date using the given calendar, lag and convention (only
+  ``Exercise'' is allowed in the RelativeTo field).
+
 \end{itemize}
 
 

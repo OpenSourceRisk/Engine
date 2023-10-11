@@ -42,8 +42,8 @@ BlackScholesCGBase::BlackScholesCGBase(const Size paths, const std::string& curr
                                        const std::string& indexCurrency, const Handle<BlackScholesModelWrapper>& model,
                                        const std::set<Date>& simulationDates,
                                        const IborFallbackConfig& iborFallbackConfig)
-    : BlackScholesCGBase(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, regressionOrder,
-                         simulationDates, iborFallbackConfig) {}
+    : BlackScholesCGBase(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, simulationDates,
+                         iborFallbackConfig) {}
 
 BlackScholesCGBase::BlackScholesCGBase(
     const Size paths, const std::vector<std::string>& currencies, const std::vector<Handle<YieldTermStructure>>& curves,
@@ -53,11 +53,10 @@ BlackScholesCGBase::BlackScholesCGBase(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const Size regressionOrder, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
+    const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
     : ModelCGImpl(curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
                   simulationDates, iborFallbackConfig),
-      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations),
-      regressionOrder_(regressionOrder) {
+      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations) {
 
     // check inputs
 

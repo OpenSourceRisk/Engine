@@ -258,7 +258,7 @@ void CBOTrsUnderlyingBuilder::build(
         const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     auto t = boost::dynamic_pointer_cast<ore::data::CBO>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::CBO, this is unexpected");
     string indexName = "GENERIC-" + t->investedTrancheName();

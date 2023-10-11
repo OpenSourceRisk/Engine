@@ -120,7 +120,9 @@ void MultiThreadedValuationEngine::buildCube(
 
     // build portfolio against init market and trigger single pricing to generate pricing stats
 
-    LOG("Reset and build portfolio against init market to produce pricing stats from a single pricing.");
+    LOG("Reset and build portfolio against init market to produce pricing stats from a single pricing. Using pricing "
+        "configuration '"
+        << configuration_ << "'.");
 
     boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<ore::data::TodaysMarket>(
         today_, todaysMarketParams_, loader_, curveConfigs_, true, true, true, referenceData_, false,

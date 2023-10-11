@@ -35,6 +35,22 @@
 
 namespace QuantExt {
 
+// statistics
+
+struct McEngineStats : public QuantLib::Singleton<McEngineStats> {
+    McEngineStats() {
+        other_timer.start();
+        other_timer.stop();
+        path_timer.stop();
+        path_timer.start();
+        calc_timer.start();
+        calc_timer.stop();
+    }
+    boost::timer::cpu_timer other_timer;
+    boost::timer::cpu_timer path_timer;
+    boost::timer::cpu_timer calc_timer;
+};
+
 class McMultiLegBaseEngine {
 
 protected:
@@ -44,8 +60,7 @@ protected:
 
         Current limitations:
         - the parameter minimalObsDate is ignored, the corresponding optimization is not implemented yet
-        - polynomType is ignored, Mononimal is used always
-        - prixingSamples are ignored, the npv from the training phase is used alway
+        - pricingSamples are ignored, the npv from the training phase is used alway
     */
     McMultiLegBaseEngine(
         const Handle<CrossAssetModel>& model, const SequenceType calibrationPathGenerator,
